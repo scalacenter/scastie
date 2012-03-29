@@ -1,0 +1,65 @@
+#!/bin/bash
+# The logic to stop your application should be put in this script.
+
+# debug
+# set -x
+
+LOG_FILE="${OPENSHIFT_LOG_DIR}play.log"
+
+function kill_app {
+	COMMAND="$1"
+	# try 5 times to kill it
+	for c in `seq 1 5`; do
+		echo "Trying to kill proccess, attempt number $c" >> $LOG_FILE
+		echo "$COMMAND" >> $LOG_FILE
+		bash -c "$COMMAND &>> $LOG_FILE 2>&1" &> /dev/null
+		sleep $c
+		#killed it
+		if [[ -z `ps -A | grep ' java$'` ]]; then
+			if [[ -f "RUNNING_PID" ]]; then
+				rm RUNNING_PID
+			fi
+			popd > /dev/null
+			exit 0
+		fi
+	done
+}
+
+if [[ ! $? -eq 0 ]]; then
+	exit $?
+fi
+
+pushd "$OPENSHIFT_REPO_DIR" > /dev/null
+
+#kill play if it was running
+if [[ -f "RUNNING_PID" ]]; then
+
+	pid=`cat RUNNING_PID`
+	echo "Stopping play application" >> $LOG_FILE
+
+	if [[ -n $pid ]]; then
+		#try to kill it nicely
+		kill_app "kill -SIGTERM $pid"
+		#try to kill it harshly
+		kill_app "kill -SIGKILL $pid"
+	fi
+fi
+
+#it survived, try to kill java
+if [[ -n `ps -A | grep java` ]]; then
+	echo "Stopping java proccess" >> $LOG_FILE
+	#try to kill it nicely
+	kill_app "pkill -SIGTERM java"
+	#try to kill it harshly
+	kill_app "pkill -SIGKILL java"
+fi
+
+#couldn't kill it
+if [[ -n `ps -A | grep java` ]]; then
+	echo "Error: could not stop play application, error executing 'pkill java'" >> $LOG_FILE
+	popd
+	exit 1
+fi
+
+popd > /dev/null
+exit 0
