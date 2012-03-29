@@ -1,0 +1,29 @@
+
+if [[ "$1" == "-q" ]] || [[ "$1" == "-Q" ]]; then
+	QUICK="$1"
+	MESSAGE=""
+else
+	MESSAGE="$1"
+	QUICK="$2"
+fi
+
+if [[ -z "$MESSAGE" ]]; then
+	MESSAGE="deployed on `date`"
+fi
+
+if [[ "$QUICK" == "-q" ]] || [[ "$QUICK" == "-Q" ]]; then
+	echo "[info] running: play stage"
+	play stage
+else
+	echo "[info] running: play clean compile stage"
+	play clean compile stage
+fi
+
+echo "[info] running: git add . -A"
+git add . -A
+
+echo "[info] running: git commit -m \"$MESSAGE\""
+git commit -m "$MESSAGE"
+
+echo "[info] running: git push origin"
+git push origin

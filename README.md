@@ -1,30 +1,49 @@
-Play framework 2 Scala application on OpenShift Express
+Play framework 2 application on OpenShift Express
 ============================
 
-This git repository will help you get up and running quickly with a Play framework 2 (with Scala) application
+This git repository will help you get up and running quickly with a Play framework 2 application
 on OpenShift Express taking advantage of the do-it-yourself cartridge.
 
 
 Running on OpenShift
 --------------------
 
+Create a new Play framework 2 application
+
+    play new play2demo
+    cd play2demo
+
+    git init
+
 Register at http://openshift.redhat.com/, and then create a diy (do-it-yourself) application:
 
-    rhc app create -a play2scala -t diy-0.1
+    rhc app create -a play2demo -t diy-0.1 --nogit
 
-Add this upstream play-example repo:
+You will see something like the following:
 
-    cd play2scala
-    git remote add upstream -m master git://github.com/opensas/play2-scala-openshift-quickstart.git
+```bash
+    Confirming application 'play2demo' is available:  Success!
+
+    play2demo published:  http://play2demo-opensas.rhcloud.com/
+    git url:  ssh://uuis@play2demo-yourdomain.rhcloud.com/~/git/play2demo.git/
+    Disclaimer: This is an experimental cartridge that provides a way to try unsupported languages, frameworks, and middleware on Openshift.
+```
+
+Copy paste the git url to add it as a remote repo
+
+    git remote add origin ssh://uuis@play2demo-yourdomain.rhcloud.com/~/git/play2demo.git/
+    git pull origin
+    
+And then this repository as upstream:
+
+    git remote add upstream -m master git://github.com/opensas/play2-openshift-quickstart.git
     git pull -s recursive -X theirs upstream master
 
-Now you should update your appName setting in project/Build.scala to match your application name.
-
-And use the stage task to prepare your deployment
+Then use the stage task to prepare your deployment
 
     play clean compile stage
 
-Then add your changes to git's index, commit and push the repo upstream:
+And add your changes to git's index, commit and push the repo upstream:
 
     git add .
     git commit -m "a nice message"
