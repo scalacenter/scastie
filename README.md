@@ -25,19 +25,20 @@ You will see something like the following:
     Confirming application 'play2demo' is available:  Success!
 
     play2demo published:  http://play2demo-opensas.rhcloud.com/
-    git url:  ssh://uuis@play2demo-yourdomain.rhcloud.com/~/git/play2demo.git/
-    Disclaimer: This is an experimental cartridge that provides a way to try unsupported languages, frameworks, and middleware on Openshift.
+    git url:  ssh://uuid@play2demo-yourdomain.rhcloud.com/~/git/play2demo.git/
 ```
 
-Copy paste the git url to add it as a remote repo
+Copy and paste the git url to add it as a remote repo (replace the uuid part with your own!)
 
-    git remote add origin ssh://uuis@play2demo-yourdomain.rhcloud.com/~/git/play2demo.git/
-    git pull origin
-    
-And then this repository as upstream:
+    git remote add origin ssh://uuid@play2demo-yourdomain.rhcloud.com/~/git/play2demo.git/
+    git pull -s recursive -X theirs origin master
+    git add .
+    git commit -m "initial deploy"
 
-    git remote add upstream -m master git://github.com/opensas/play2-openshift-quickstart.git
-    git pull -s recursive -X theirs upstream master
+And then this repository as quickstart:
+
+    git remote add quickstart -m master git://github.com/opensas/play2-openshift-quickstart.git
+    git pull -s recursive -X theirs quickstart master
 
 Then use the stage task to prepare your deployment
 
