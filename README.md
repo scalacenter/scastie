@@ -93,24 +93,26 @@ To deploy your changes to openshift just run the stage task, add your changes to
 
 If you want to do a quick test, you can skip the "clean compile" stuff and just run "play stage"
 
-All right, I know you are lazy, just like me. Si I added a little script to help you with that, just run
+All right, I know you are lazy, just like me. So I added a little script to help you with that, just run
 
 ```bash
-    rhc_deploy "a nice message"
+    openshift_deploy "a nice message"
 ```
 
 You may leave the message empty and it will add something like "deployed on Thu Mar 29 04:07:30 ART 2012", you can also pass a "-q" parameter to skip the "clean compile" option.
 
-Deploying an existing application to openshift
+A step by step exampe: deploying zentasks sample app to openshift
 -------------------------
 
-You can add openshift support to an already existing play application. Let's take the forms application.
+You can add openshift support to an already existing play application. 
+
+Let's take the zentasks sample application.
 
 ```bash
-    cd PLAY_INSTALL_FOLDER/samples/scala/forms
+    cd PLAY_INSTALL_FOLDER/samples/scala/zentasks
 
     git init
-    rhc app create -a forms -t diy-0.1 --nogit
+    rhc app create -a zentasks -t diy-0.1 --nogit
 ```
 
 We add the "--nogit" parameter to tell openshift to create the remote repo but don't pull it locally. You'll see something like this:
@@ -118,55 +120,78 @@ We add the "--nogit" parameter to tell openshift to create the remote repo but d
 ```bash
     Confirming application 'forms' is available:  Success!
 
-    zentasks published:  http://forms-opensas.rhcloud.com/
-    git url:  ssh://uuid@forms-yournamespace.rhcloud.com/~/git/forms.git/
-    Disclaimer: This is an experimental cartridge that provides a way to try unsupported languages, frameworks, and middleware on Openshift.
+    zentasks published:  http://zentasks-yournamespace.rhcloud.com/
+    git url:  ssh://uuid@zentasks-yournamespace.rhcloud.com/~/git/zentasks.git/
 ```
-So we will manually add it as a remote repo
+Copy and paste the git url to add it as a remote repo (replace the uuid part with your own!)
 
-    git remote add origin ssh://uuid@forms-yournamespace.rhcloud.com/~/git/forms.git/
-
-And the rest is just the same
-
-    git remote add upstream -m master git://github.com/opensas/play2-scala-openshift-quickstart.git
-    git pull -s recursive -X theirs upstream master
-    play clean compile stage
-
-Then add your changes to git's index, commit and push the repo upstream:
-
+    git remote add origin ssh://uuid@play2demo-yourdomain.rhcloud.com/~/git/play2demo.git/
+    git pull -s recursive -X theirs origin master
     git add .
-    git commit -m "deploying forms application"
+    git commit -m "initial deploy"
+
+That's it, you have just cloned your openshift repo, now we will add the quickstart repo:
+
+    git remote add quickstart -m master ggit://github.com/opensas/play2-openshift-quickstart.git
+    git pull -s recursive -X theirs quickstart master
+
+Then tun the stage task, add your changes to git's index, commit and push the repo upstream (you can also just run the *openshift_deploy* script):
+
+    play clean compile stage
+    git add .
+    git commit -m "deploying zentasks application"
     git push origin
 
+But when you go to http://zentasks-yournamespace.rhcloud.com, you'll see a 503 error message, telling you that your application is not currrently running, let's troubleshoot it.
+
+The first thing you'll have to do, is have a look at the logs, just issue:
+
+```
+    rhc app tail -a zentasks --opts '-n 50'
+```
+
+The "--opts -n 50" stuff is just to see some more lines.
+
+In the output you'll see something like:
+
+```
+[warn] play - Run with -DapplyEvolutions.default=true if you want to run them automatically (be careful)
+Oops, cannot start the server.
+PlayException: Database 'default' needs evolution! [An SQL script need to be run on your database.]
+    at play.api.db.evolutions.EvolutionsPlugin$$anonfun$onStart$1.apply(Evolutions.scala:422)
+    at play.api.db.evolutions.EvolutionsPlugin$$anonfun$onStart$1.apply(Evolutions.scala:410)
+    at scala.collection.LinearSeqOptimized$class.foreach(LinearSeqOptimized.scala:59)
+    
+```
+
+So the zentasks project needs to run evolution to set the initial data. Let's add it to the conf/openshift.conf file:
+
+```
+    # openshift action_hooks scripts configuration
+    # ~~~~~
+    openshift.play.params=-DapplyEvolutions.default=true
+```
+
+Let's deploy it all againg with *openshift_deploy -q*, but once again our application is not running. Let's check the log:
+
+```
+Caused by: com.typesafe.config.ConfigException$Parse: openshift.conf: 45: Invalid number: '-' (if you intended '-' to be part of the value for 'openshift.play.params', try enclosing the value in double quotes, or you may be able to rename the file .properties rather than .conf)
+    at com.typesafe.config.impl.Parser$ParseContext.nextToken(Parser.java:178)
+```
+
+So it seems like we have to enclose play.params in quotes:
+
+```
+    # openshift action_hooks scripts configuration
+    # ~~~~~
+    openshift.play.params="-DapplyEvolutions.default=true"
+```
+
+Let's *openshift_deploy -q" once again, and now everything works as expected. With this short example you learnt how to deploy an existing play 2 application to openshift, and also how to check the logs to troubleshoot it.
 
 That's it, you can now see zentasks demo application running at:
 
     http://zentasks-yournamespace.rhcloud.com
-
-Trouble shooting
-----------------------------
-
-To find out what's going on in openshift, issue
-
-    rhc app tail -a play2scala
-
-If you feel like investigating further, you can
-
-    rhc app show -a play2scala
-
-    Application Info
-    ================
-    play
-        Framework: raw-0.1
-        Creation: 2012-03-18T12:39:18-04:00
-        UUID: youruuid
-        Git URL: ssh://youruuid@play-yournamespace.rhcloud.com/~/git/raw.git/
-        Public URL: http://play-yournamespace.rhcloud.com
-
-Then you can connect using ssh like this:
-
-    ssh youruuid@play-yournamespace.rhcloud.com
-
 
 Configuration
 -------------
@@ -177,7 +202,34 @@ You can also specify additional parameters to pass to play's executable with the
 
     # play framework command configuration
     # ~~~~~
-    #openshift.play.params=-Xmx512M
+    #openshift.play.params="-Xmx512M"
+
+Don't forget to enclose each param in quotes.
+
+
+Trouble shooting
+----------------------------
+
+To find out what's going on in openshift, issue
+
+    rhc app tail -a play2demo
+
+If you feel like investigating further, you can
+
+    rhc app show -a play2demo
+
+    Application Info
+    ================
+    play
+        Framework: diy-0.1
+        Creation: 2012-03-18T12:39:18-04:00
+        UUID: youruuid
+        Git URL: ssh://youruuid@play-yournamespace.rhcloud.com/~/git/raw.git/
+        Public URL: http://play-yournamespace.rhcloud.com
+
+Then you can connect using ssh like this:
+
+    ssh youruuid@play-yournamespace.rhcloud.com
 
 
 Having a look under the hood
