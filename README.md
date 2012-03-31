@@ -55,6 +55,8 @@ That's it, you can now see your application running at:
 
 The first time you do it, it will take quite a few minutes to complete, because git has to upload play's dependencies, but after that git is smart enough to just upload the differences.
 
+To deploy your changes, you can just repeat the steps from play stage, or use the helper script 'openshift_deploy'.
+
 Working with a mysql database
 ----------------------------
 
@@ -71,6 +73,12 @@ Then uncomment the following lines from your conf/openshift.conf, like this:
     db.default.url="jdbc:mysql://"${OPENSHIFT_DB_HOST}":"${OPENSHIFT_DB_PORT}/${OPENSHIFT_APP_NAME}
     db.default.user=${OPENSHIFT_DB_USERNAME}
     db.default.password=${OPENSHIFT_DB_USERNAME}
+
+You'll also have to include the mysql driver as a dependency. Add this line to project/Build.scala file:
+
+    val appDependencies = Seq( 
+        "mysql" % "mysql-connector-java" % "5.1.18" 
+    ) 
 
 You can manage your new MySQL database by embedding phpmyadmin-3.4.
 
@@ -100,31 +108,31 @@ All right, I know you are lazy, just like me. So I added a little script to help
 
 You may leave the message empty and it will add something like "deployed on Thu Mar 29 04:07:30 ART 2012", you can also pass a "-q" parameter to skip the "clean compile" option.
 
-A step by step exampe: deploying zentasks sample app to openshift
+A step by step example: deploying computer-database sample app to openshift
 -------------------------
 
 You can add openshift support to an already existing play application. 
 
-Let's take the zentasks sample application.
+Let's take the computer-database sample application.
 
 ```bash
     cd PLAY_INSTALL_FOLDER/samples/scala/zentasks
 
     git init
-    rhc app create -a zentasks -t diy-0.1 --nogit
+    rhc app create -a computerdb -t diy-0.1 --nogit
 ```
 
 We add the "--nogit" parameter to tell openshift to create the remote repo but don't pull it locally. You'll see something like this:
 
 ```bash
-    Confirming application 'forms' is available:  Success!
+    Confirming application 'computerdb' is available:  Success!
 
-    zentasks published:  http://zentasks-yournamespace.rhcloud.com/
-    git url:  ssh://uuid@zentasks-yournamespace.rhcloud.com/~/git/zentasks.git/
+    zentasks published:  http://computerdb-yournamespace.rhcloud.com/
+    git url:  ssh://uuid@computerdb-yournamespace.rhcloud.com/~/git/computerdb.git/
 ```
 Copy and paste the git url to add it as a remote repo (replace the uuid part with your own!)
 
-    git remote add origin ssh://uuid@play2demo-yourdomain.rhcloud.com/~/git/play2demo.git/
+    git remote add origin ssh://uuid@computerdb-yourdomain.rhcloud.com/~/git/computerdb.git/
     git pull -s recursive -X theirs origin master
     git add .
     git commit -m "initial deploy"
@@ -134,18 +142,22 @@ That's it, you have just cloned your openshift repo, now we will add the quickst
     git remote add quickstart -m master git://github.com/opensas/play2-openshift-quickstart.git
     git pull -s recursive -X theirs quickstart master
 
-Then tun the stage task, add your changes to git's index, commit and push the repo upstream (you can also just run the *openshift_deploy* script):
+Then run the stage task, add your changes to git's index, commit and push the repo upstream (you can also just run the *openshift_deploy* script):
 
     play clean compile stage
     git add .
-    git commit -m "deploying zentasks application"
+    git commit -m "deploying computerdb application"
     git push origin
 
+To see if the push was successful, open another console and check the logs with the following command:
 
-That's it, you can now see zentasks demo application running at:
+    rhc app tail -a computerdb
 
-    http://zentasks-yournamespace.rhcloud.com
+    
 
+That's it, you can now see computerdb demo application running at:
+
+    http://computerdb-yournamespace.rhcloud.com
 
 Configuration
 -------------
