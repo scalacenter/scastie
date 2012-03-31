@@ -4,7 +4,6 @@ Play framework 2 application on OpenShift Express
 This git repository will help you get up and running quickly with a Play framework 2 application
 on OpenShift Express taking advantage of the do-it-yourself cartridge.
 
-
 Running on OpenShift
 --------------------
 
@@ -35,7 +34,7 @@ Copy and paste the git url to add it as a remote repo (replace the uuid part wit
     git add .
     git commit -m "initial deploy"
 
-And then this repository as quickstart:
+And then add this repository as a remote repo named quickstart:
 
     git remote add quickstart -m master git://github.com/opensas/play2-openshift-quickstart.git
     git pull -s recursive -X theirs quickstart master
@@ -65,13 +64,13 @@ Just issue:
 
 Don't forget to write down the credentials.
 
-Then uncomment the following lines from your conf/application.conf, like this:
+Then uncomment the following lines from your conf/openshift.conf, like this:
 
     # openshift mysql database
-    %openshift.db.url=jdbc:mysql://${OPENSHIFT_DB_HOST}:${OPENSHIFT_DB_PORT}/${OPENSHIFT_APP_NAME}
-    %openshift.db.driver=com.mysql.jdbc.Driver
-    %openshift.db.user=admin
-    %openshift.db.pass=<write your password here>
+    db.default.driver=com.mysql.jdbc.Driver
+    db.default.url="jdbc:mysql://"${OPENSHIFT_DB_HOST}":"${OPENSHIFT_DB_PORT}/${OPENSHIFT_APP_NAME}
+    db.default.user=${OPENSHIFT_DB_USERNAME}
+    db.default.password=${OPENSHIFT_DB_USERNAME}
 
 You can manage your new MySQL database by embedding phpmyadmin-3.4.
 
@@ -132,7 +131,7 @@ Copy and paste the git url to add it as a remote repo (replace the uuid part wit
 
 That's it, you have just cloned your openshift repo, now we will add the quickstart repo:
 
-    git remote add quickstart -m master ggit://github.com/opensas/play2-openshift-quickstart.git
+    git remote add quickstart -m master git://github.com/opensas/play2-openshift-quickstart.git
     git pull -s recursive -X theirs quickstart master
 
 Then tun the stage task, add your changes to git's index, commit and push the repo upstream (you can also just run the *openshift_deploy* script):
@@ -142,56 +141,11 @@ Then tun the stage task, add your changes to git's index, commit and push the re
     git commit -m "deploying zentasks application"
     git push origin
 
-But when you go to http://zentasks-yournamespace.rhcloud.com, you'll see a 503 error message, telling you that your application is not currrently running, let's troubleshoot it.
-
-The first thing you'll have to do, is have a look at the logs, just issue:
-
-```
-    rhc app tail -a zentasks --opts '-n 50'
-```
-
-The "--opts -n 50" stuff is just to see some more lines.
-
-In the output you'll see something like:
-
-```
-[warn] play - Run with -DapplyEvolutions.default=true if you want to run them automatically (be careful)
-Oops, cannot start the server.
-PlayException: Database 'default' needs evolution! [An SQL script need to be run on your database.]
-    at play.api.db.evolutions.EvolutionsPlugin$$anonfun$onStart$1.apply(Evolutions.scala:422)
-    at play.api.db.evolutions.EvolutionsPlugin$$anonfun$onStart$1.apply(Evolutions.scala:410)
-    at scala.collection.LinearSeqOptimized$class.foreach(LinearSeqOptimized.scala:59)
-    
-```
-
-So the zentasks project needs to run evolution to set the initial data. Let's add it to the conf/openshift.conf file:
-
-```
-    # openshift action_hooks scripts configuration
-    # ~~~~~
-    openshift.play.params=-DapplyEvolutions.default=true
-```
-
-Let's deploy it all againg with *openshift_deploy -q*, but once again our application is not running. Let's check the log:
-
-```
-Caused by: com.typesafe.config.ConfigException$Parse: openshift.conf: 45: Invalid number: '-' (if you intended '-' to be part of the value for 'openshift.play.params', try enclosing the value in double quotes, or you may be able to rename the file .properties rather than .conf)
-    at com.typesafe.config.impl.Parser$ParseContext.nextToken(Parser.java:178)
-```
-
-So it seems like we have to enclose play.params in quotes:
-
-```
-    # openshift action_hooks scripts configuration
-    # ~~~~~
-    openshift.play.params="-DapplyEvolutions.default=true"
-```
-
-Let's *openshift_deploy -q" once again, and now everything works as expected. With this short example you learnt how to deploy an existing play 2 application to openshift, and also how to check the logs to troubleshoot it.
 
 That's it, you can now see zentasks demo application running at:
 
     http://zentasks-yournamespace.rhcloud.com
+
 
 Configuration
 -------------
