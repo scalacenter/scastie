@@ -72,7 +72,7 @@ Then uncomment the following lines from your conf/openshift.conf, like this:
     db.default.driver=com.mysql.jdbc.Driver
     db.default.url="jdbc:mysql://"${OPENSHIFT_DB_HOST}":"${OPENSHIFT_DB_PORT}/${OPENSHIFT_APP_NAME}
     db.default.user=${OPENSHIFT_DB_USERNAME}
-    db.default.password=${OPENSHIFT_DB_USERNAME}
+    db.default.password=${OPENSHIFT_DB_PASSWORD}
 
 You'll also have to include the mysql driver as a dependency. Add this line to project/Build.scala file:
 
@@ -116,7 +116,7 @@ You can add openshift support to an already existing play application.
 Let's take the computer-database sample application.
 
 ```bash
-    cd PLAY_INSTALL_FOLDER/samples/scala/zentasks
+    cd PLAY_INSTALL_FOLDER/samples/scala/computer-database
 
     git init
     rhc app create -a computerdb -t diy-0.1 --nogit
@@ -127,7 +127,7 @@ We add the "--nogit" parameter to tell openshift to create the remote repo but d
 ```bash
     Confirming application 'computerdb' is available:  Success!
 
-    zentasks published:  http://computerdb-yournamespace.rhcloud.com/
+    computerdb published:  http://computerdb-yournamespace.rhcloud.com/
     git url:  ssh://uuid@computerdb-yournamespace.rhcloud.com/~/git/computerdb.git/
 ```
 Copy and paste the git url to add it as a remote repo (replace the uuid part with your own!)
@@ -181,6 +181,34 @@ But there's one more thing you could do. Right now, your application is using th
 db.default.driver=org.h2.Driver
 db.default.url="jdbc:h2:"${OPENSHIFT_DATA_DIR}db/computerdb
 ```
+
+Now, if you feel brave, you may port it to mysql. Add the mysql cartridge to you openshift application:
+
+```
+rhc app cartridge add -a computerdb -c mysql-5.1
+```
+
+There are a couple of differences you'll have to handle. I'll give you a few tips: the sample app uses H2 sequences instead of mysql auto_increment fields; you'll also have to modify the computer.insert method not to pass the id field; in order for the referential integrity to work you'll have to create the tables using the innodb engine; and you'll have to replace 'SET REFERENTIAL_INTEGRITY FALSE | TRUE' command with 'SET FOREIGN_KEY_CHECKS = 0 | 1;'.
+
+Then edit you conf/openshift.conf file like this
+
+    # openshift mysql database
+    db.default.driver=com.mysql.jdbc.Driver
+    db.default.url="jdbc:mysql://"${OPENSHIFT_DB_HOST}":"${OPENSHIFT_DB_PORT}/${OPENSHIFT_APP_NAME}
+    db.default.user=${OPENSHIFT_DB_USERNAME}
+    db.default.password=${OPENSHIFT_DB_PASSWORD}
+
+And add the mysql driver to your project/Build.scala file:
+
+You'll also have to include the mysql driver as a dependency. Add this line to project/Build.scala file:
+
+    val appDependencies = Seq( 
+        "mysql" % "mysql-connector-java" % "5.1.18" 
+    ) 
+
+You can manage your new MySQL database by embedding phpmyadmin-3.4.
+
+    rhc app cartridge add -a computerdb -c phpmyadmin-3.4
 
 Configuration
 -------------
