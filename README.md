@@ -188,7 +188,9 @@ Now, if you feel brave, you may port it to mysql. Add the mysql cartridge to you
 rhc app cartridge add -a computerdb -c mysql-5.1
 ```
 
-There are a couple of differences you'll have to handle. I'll give you a few tips: the sample app uses H2 sequences instead of mysql auto_increment fields; you'll also have to modify the computer.insert method not to pass the id field; in order for the referential integrity to work you'll have to create the tables using the innodb engine; and you'll have to replace 'SET REFERENTIAL_INTEGRITY FALSE | TRUE' command with 'SET FOREIGN_KEY_CHECKS = 0 | 1;'.
+There are a couple of differences you'll have to handle. Have a look at this quickstart to see what needs to be changed: https://github.com/opensas/openshift-play2-computerdb
+
+I'll give you a few tips: the sample app uses H2 sequences instead of mysql auto_increment fields; you'll also have to modify the computer.insert method not to pass the id field; in order for the referential integrity to work you'll have to create the tables using the innodb engine; and you'll have to replace 'SET REFERENTIAL_INTEGRITY FALSE | TRUE' command with 'SET FOREIGN_KEY_CHECKS = 0 | 1;'.
 
 Then edit you conf/openshift.conf file like this
 
@@ -197,8 +199,6 @@ Then edit you conf/openshift.conf file like this
     db.default.url="jdbc:mysql://"${OPENSHIFT_DB_HOST}":"${OPENSHIFT_DB_PORT}/${OPENSHIFT_APP_NAME}
     db.default.user=${OPENSHIFT_DB_USERNAME}
     db.default.password=${OPENSHIFT_DB_PASSWORD}
-
-And add the mysql driver to your project/Build.scala file:
 
 You'll also have to include the mysql driver as a dependency. Add this line to project/Build.scala file:
 
@@ -209,6 +209,10 @@ You'll also have to include the mysql driver as a dependency. Add this line to p
 You can manage your new MySQL database by embedding phpmyadmin-3.4.
 
     rhc app cartridge add -a computerdb -c phpmyadmin-3.4
+
+Deploy once again, and you'll have your computerdb application running on openshift with mysql at:
+
+    http://computerdb-yournamespace.rhcloud.com
 
 Configuration
 -------------
