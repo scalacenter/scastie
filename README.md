@@ -153,11 +153,34 @@ To see if the push was successful, open another console and check the logs with 
 
     rhc app tail -a computerdb
 
-    
+Oops, looks like there's a problem.
+
+```
+[warn] play - Run with -DapplyEvolutions.default=true if you want to run them automatically (be careful)
+Oops, cannot start the server.
+PlayException: Database 'default' needs evolution! [An SQL script need to be run on your database.]
+```
+
+On development mode, play will ask you to run pending evolutions to database, but when in prod mode, you have to specify it form the command line. Let's configure play to automatically apply evolutions. Edit the file conf/openshift.conf like this:
+
+```
+# openshift action_hooks scripts configuration
+# ~~~~~
+openshift.play.params="-DapplyEvolutions.default=true"
+```
+
+Now deploy your app once again with './openshift_deploy -q'
 
 That's it, you can now see computerdb demo application running at:
 
     http://computerdb-yournamespace.rhcloud.com
+
+But there's one more thing you could do. Right now, your application is using the h2 in memory database that comes bundled with play. Openshift may decide to swap your application out of memory if it detects there's no activity. So you'd better persist the information somewhere. That's easy, just edit your count/openshift.conf file to tell play to use a file database whenever it's running on openshift, like this:
+
+```
+db.default.driver=org.h2.Driver
+db.default.url="jdbc:h2:"${OPENSHIFT_DATA_DIR}db/computerdb
+```
 
 Configuration
 -------------
