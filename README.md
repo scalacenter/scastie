@@ -16,7 +16,7 @@ Create a new Play framework 2 application
 
 Register at http://openshift.redhat.com/, and then create a diy (do-it-yourself) application:
 
-    rhc app create -a play2demo -t diy-0.1 --nogit -l yourlogin -p yourpass
+    rhc app create -a play2demo -t diy-0.1 --nogit -l yourlogin
 
 You will see something like the following:
 
