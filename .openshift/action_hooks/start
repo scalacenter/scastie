@@ -19,4 +19,4 @@ APP_COMMAND="${OPENSHIFT_REPO_DIR}target/start $PLAY_PARAMS "\
 "-Dconfig.resource=openshift.conf"
 
 echo $APP_COMMAND &>> $LOG_FILE
-nohup bash -c "$APP_COMMAND &>> ${LOG_FILE} 2>&1" &> /dev/null &
+nohup bash -c "${APP_COMMAND} &>> ${LOG_FILE} 2>&1" &> /dev/null &
