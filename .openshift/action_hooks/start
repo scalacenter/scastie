@@ -13,6 +13,8 @@ fi
 
 LOG_FILE="${OPENSHIFT_LOG_DIR}play.log"
 
+chmod +x ${OPENSHIFT_REPO_DIR}target/start
+
 APP_COMMAND="${OPENSHIFT_REPO_DIR}target/start $PLAY_PARAMS "\
 "-Dhttp.port=${OPENSHIFT_INTERNAL_PORT} "\
 "-Dhttp.address=${OPENSHIFT_INTERNAL_IP} "\
