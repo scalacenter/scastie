@@ -1,0 +1,9 @@
+.idea/libraries
+.idea/dictionaries
+.idea/workspace.xml
+.idea/misc.xml
+.idea/ant.xml
+**/*.iml
+**/target
+target
+project/project
