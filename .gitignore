@@ -4,6 +4,9 @@
 .idea/misc.xml
 .idea/ant.xml
 **/*.iml
-**/target
 target
 project/project
+logs
+target
+tmp
+.history
