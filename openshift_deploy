@@ -11,14 +11,6 @@ if [[ -z "$MESSAGE" ]]; then
 	MESSAGE="deployed on `date`"
 fi
 
-if [[ "$QUICK" == "-q" ]] || [[ "$QUICK" == "-Q" ]]; then
-	echo "[info] running: play stage"
-	play stage
-else
-	echo "[info] running: play clean compile stage"
-	play clean compile stage
-fi
-
 echo "[info] running: git add . -A"
 git add . -A
 
