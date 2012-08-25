@@ -13,7 +13,7 @@ fi
 
 LOG_FILE="${OPENSHIFT_LOG_DIR}play.log"
 
-export HOME=${OPENSHIFT_DATA_DIR}
+export SBT_OPTS="-Dsbt.boot.directory=${OPENSHIFT_REPO_DIR}/project/target/boot -Dsbt.ivy.home=${OPENSHIFT_REPO_DIR}/project/target/repo"
 
 ${OPENSHIFT_REPO_DIR}xsbt.sh clean stage
 
