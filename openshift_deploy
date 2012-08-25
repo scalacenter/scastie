@@ -25,5 +25,5 @@ git add . -A
 echo "[info] running: git commit -m \"$MESSAGE\""
 git commit -m "$MESSAGE"
 
-echo "[info] running: git push origin"
-git push origin
+echo "[info] running: git push shift"
+git push shift
