@@ -1,7 +1,12 @@
 @(message: String)
 
 @main("Welcome to Play 2.0") {
-    
-    @welcome(message)
-    
+
+<pre>
+    @message
+</pre>
+<form action="@routes.Pastes.add" method="post">
+  <textarea name="paste"></textarea>
+  <input type="submit"/>
+</form>
 }
