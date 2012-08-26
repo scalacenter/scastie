@@ -1,1 +1,1 @@
-alias gi = idea sbt-classifiers with-sources no-fsc
+alias gi = idea sbt-classifiers with-sources
