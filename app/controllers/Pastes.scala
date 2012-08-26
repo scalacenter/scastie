@@ -22,7 +22,7 @@ object Pastes extends Controller {
 
 
   def sbt(command: String): String = {
-    (if (org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS) "xsbt.cmd " else "xsbt.sh ") + command
+    (if (org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS) "xsbt.cmd " else "./xsbt.sh ") + command
   }
   def show(id: String) = Action { implicit request =>
     Ok(views.html.index(id + " " + request.flash.get("paste").getOrElse("") + " Pasted!"))
