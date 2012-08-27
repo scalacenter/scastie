@@ -3,10 +3,21 @@ package controllers
 import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
-import scala.sys.process._
+import akka.actor.Props
+import com.olegych.scastie.RendererActor
+import akka.pattern.ask
+import akka.util.duration._
+import play.api.libs.concurrent._
+import akka.util.Timeout
 
 
 object Pastes extends Controller {
+
+  import play.api.Play.current
+  import concurrent.ExecutionContext.Implicits.global
+
+  val renderer = Akka.system.actorOf(Props[RendererActor])
+  implicit val timeout = Timeout(100 second)
 
   val pasteForm = Form(
     single(
@@ -15,13 +26,11 @@ object Pastes extends Controller {
   )
 
   def add = Action { implicit request =>
-    val res = sbt("hello").lines_!.toList.mkString("\n")
-    Redirect(routes.Pastes.show("111"))
-        .flashing("paste" -> (res + pasteForm.bindFromRequest().apply("paste").value))
-  }
-
-  def sbt(command: String): String = {
-    (if (org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS) "xsbt.cmd " else "./xsbt.sh ") + command
+    Async {
+      (renderer ? pasteForm.bindFromRequest().apply("paste").value).mapTo[String].asPromise.map { response =>
+        Redirect(routes.Pastes.show("111")).flashing("paste" -> response)
+      }
+    }
   }
 
   def show(id: String) = Action { implicit request =>
