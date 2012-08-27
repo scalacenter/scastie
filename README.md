@@ -20,4 +20,5 @@ Plans
 * running in sandbox with sbt
 * reusing sbt instances for fast compilation
 * linking with sxr-processed libraries
+* interface for uploading pre-sxred libraries
 * integration with multibot
