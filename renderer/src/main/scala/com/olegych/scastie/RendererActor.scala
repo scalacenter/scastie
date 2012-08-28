@@ -1,18 +1,25 @@
 package com.olegych.scastie
 
-import akka.actor.Actor
+import akka.actor.{ActorLogging, Actor}
 
 /**
- */
-class RendererActor extends Actor {
-  protected def receive = {case paste => {
-    import scala.sys.process._
+  */
+class RendererActor extends Actor with ActorLogging {
+  var sbt: Sbt = _
 
-    def sbt(command: String): String = {
-      (if (org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS) "xsbt.cmd " else "./xsbt.sh ") + command
+  override def preStart() {
+    log.info("starting sbt")
+    sbt = new Sbt("renderer-template")
+  }
+
+  override def postStop() {
+    log.info("stopping sbt")
+    sbt.close()
+  }
+
+  protected def receive = {
+    case paste => {
+      sender ! sbt.process("hello")
     }
-
-    val res = sbt("hello").lines_!.toList.mkString("\n")
-    sender ! (res + paste)
-  }}
+  }
 }

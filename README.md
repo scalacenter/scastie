@@ -18,6 +18,7 @@ Plans
 * highlighting with Scala X-Ray
 * building with sbt, with support for inline dependency specification
 * running in sandbox with sbt
+* support execution of tests\specs
 * reusing sbt instances for fast compilation
 * linking with sxr-processed libraries
 * allow pastes deletion

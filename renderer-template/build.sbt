@@ -19,3 +19,6 @@ ScalariformKeys.preferences := FormattingPreferences().
   setPreference(CompactControlReadability, true).
   setPreference(PreserveDanglingCloseParenthesis, true).
   setPreference(DoubleIndentClassDeclaration, true)
+
+//to be able to detect prompt
+shellPrompt := (_ => ">\n")
