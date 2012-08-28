@@ -1,6 +1,7 @@
 package com.olegych.scastie
 
 import akka.actor.{ActorLogging, Actor}
+import akka.event.LoggingReceive
 
 /**
   */
@@ -17,9 +18,12 @@ class RendererActor extends Actor with ActorLogging {
     sbt.close()
   }
 
-  protected def receive = {
-    case paste => {
-      sender ! sbt.process("hello")
+  protected def receive = LoggingReceive {
+    case paste: String => {
+      log.info("paste " + paste)
+      val result = sbt.process(paste)
+      log.info("result " + result)
+      sender ! result
     }
   }
 }

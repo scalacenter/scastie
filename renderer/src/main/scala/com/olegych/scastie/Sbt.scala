@@ -1,60 +1,76 @@
 package com.olegych.scastie
 
-import collection.JavaConverters.asJavaIterableConverter
 import java.io.File
+import collection.mutable.ListBuffer
 
 /**
   */
 case class Sbt(dir: String) {
 
-  import java.io
 
-  val process = start
-
-  var fout: io.InputStream = _
-  var ferr: io.InputStream = _
-  var fin: io.OutputStream = _
-
-  import scalax.io.JavaConverters._
-
-  //can't use .lines since it eats all input
-  lazy val output = fout.asUnmanagedInput.bytes
-  lazy val input = fin.asUnmanagedOutput
-
-  def start = {
-    import scala.sys.process._
-    val sbtCommand = if (org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS) "xsbt.cmd " else "./xsbt.sh "
-    //race condition here
-//    val process = Process(sbtCommand, new io.File(dir)).run(new ProcessIO(fin = _, fout = _, ferr = _))
-//    while (fin == null || fout == null || ferr == null) {
-//      Thread.sleep(100)
-//    }
-//    waitForPrompt
-//    process
-    null.asInstanceOf[sys.process.Process]
+  val (process, fin, input, fout, output) = {
+    val builder = new java.lang.ProcessBuilder("xsbt.cmd")
+    builder.environment()
+        .put("SBT_OPTS", "-Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true")
+    val process = builder.directory(new File(dir)).start()
+    import scalax.io.JavaConverters._
+    //can't use .lines since it eats all input
+    (process,
+        process.getOutputStream, process.getOutputStream.asUnmanagedOutput,
+        process.getInputStream, process.getInputStream.asUnmanagedInput.bytes)
   }
+  waitForPrompt
 
-  val start1 = new java.lang.ProcessBuilder("xsbt.cmd").directory(new File(dir)).start()
-  fin = start1.getOutputStream
-  fout = start1.getInputStream
-
-  def process(command: String): String = {
-    import collection.JavaConversions._
-    (command + "\r\n").foreach(c => fin.write(c.toInt))
-    (command + "\r\n").foreach(c => fin.write(c.toInt))
+  def process(command: String) = {
+    input.write(command + "\n")
     fin.flush()
-//    fin.close()
     waitForPrompt
   }
 
-  def waitForPrompt: String = {
+  def waitForPrompt = {
+    //    val lines = Stream.continually {
+    //      Stream.continually(fout.read()).takeWhile(read => read != 10.toByte).map(_.toChar).mkString
+    ////      output.takeWhile(_ != 10.toByte).map(_.toChar).mkString
+    //    }
+    //    lines.takeWhile(_ != ">").mkString("\n")
+    val lines = ListBuffer[String]()
+    val chars = ListBuffer[Char]()
+    var read: Int = 0
+    while (read != -1 && lines.lastOption != Some(">")) {
+      read = fout.read()
+      if (read == 10) {
+        lines += chars.mkString
+        chars.clear()
+      } else {
+        chars += read.toChar
+      }
+    }
+    lines.dropRight(1).mkString("\n")
+  }
+
+  def f1 = {
     val lines = Stream.continually {
-      val string = Stream.continually(fout.read()).takeWhile(_ != 10.toByte).map(_.toChar).mkString
-      println(string)
-      string
+      Stream.continually(fout.read()).takeWhile(_ != 10).map(_.toChar).mkString
     }
     lines.takeWhile(_ != ">").mkString("\n")
   }
+
+  def f2 = {
+    val lines = ListBuffer[String]()
+    val chars = ListBuffer[Char]()
+    var read: Int = 0
+    while (read != -1 && lines.lastOption != Some(">")) {
+      read = fout.read()
+      if (read == 10) {
+        lines += chars.mkString
+        chars.clear()
+      } else {
+        chars += read.toChar
+      }
+    }
+    lines.dropRight(1).mkString("\n")
+  }
+
   def close() {
     process.destroy()
   }

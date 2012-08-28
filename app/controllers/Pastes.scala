@@ -27,7 +27,7 @@ object Pastes extends Controller {
 
   def add = Action { implicit request =>
     Async {
-      (renderer ? pasteForm.bindFromRequest().apply("paste").value).mapTo[String].asPromise.map { response =>
+      (renderer ? pasteForm.bindFromRequest().apply("paste").value.get).mapTo[String].asPromise.map { response =>
         Redirect(routes.Pastes.show("111")).flashing("paste" -> response)
       }
     }
