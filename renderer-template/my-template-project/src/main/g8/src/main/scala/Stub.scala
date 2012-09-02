@@ -1,0 +1,3 @@
+class Stub {
+  // $description$
+}
