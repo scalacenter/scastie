@@ -4,11 +4,13 @@ import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
 import akka.actor.Props
-import com.olegych.scastie.RendererActor
+import com.olegych.scastie.{PastesContainer, RendererActor}
 import akka.pattern.ask
 import akka.util.duration._
 import play.api.libs.concurrent._
 import akka.util.Timeout
+import play.api.Play
+import java.io.File
 
 
 object Pastes extends Controller {
@@ -16,7 +18,9 @@ object Pastes extends Controller {
   import play.api.Play.current
   import concurrent.ExecutionContext.Implicits.global
 
-  val renderer = Akka.system.actorOf(Props[RendererActor])
+  val pastesDir = new File(Play.configuration.getString("pastes.data.dir").getOrElse("./target/pastes/"))
+  val renderer = Akka.system.actorOf(Props(new RendererActor(PastesContainer(pastesDir))))
+
   implicit val timeout = Timeout(100 second)
 
   val pasteForm = Form(
@@ -27,7 +31,8 @@ object Pastes extends Controller {
 
   def add = Action { implicit request =>
     Async {
-      (renderer ? pasteForm.bindFromRequest().apply("paste").value.get).mapTo[String].asPromise.map { response =>
+      val paste = pasteForm.bindFromRequest().apply("paste").value.get
+      (renderer ? paste).mapTo[String].asPromise.map { response =>
         Redirect(routes.Pastes.show("111")).flashing("paste" -> response)
       }
     }

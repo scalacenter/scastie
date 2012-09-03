@@ -2,17 +2,18 @@ package com.olegych.scastie
 
 import java.io.File
 import collection.mutable.ListBuffer
+import org.apache.commons.lang3.SystemUtils
 
 /**
   */
-case class Sbt(dir: String) {
+case class Sbt(dir: File) {
 
-
-  val (process, fin, input, fout, output) = {
-    val builder = new java.lang.ProcessBuilder("xsbt.cmd")
+  private val (process, fin, input, fout, output) = {
+    def absolutePath(command: String) = new File(command).getAbsolutePath
+    val builder = new ProcessBuilder(absolutePath(if (SystemUtils.IS_OS_WINDOWS) "xsbt.cmd" else "./xsbt.sh"))
     builder.environment()
         .put("SBT_OPTS", "-Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true")
-    val process = builder.directory(new File(dir)).start()
+    val process = builder.directory(dir).start()
     import scalax.io.JavaConverters._
     //can't use .lines since it eats all input
     (process,
@@ -40,6 +41,7 @@ case class Sbt(dir: String) {
       read = fout.read()
       if (read == 10) {
         lines += chars.mkString
+//        println(lines.last)
         chars.clear()
       } else {
         chars += read.toChar
