@@ -13,10 +13,10 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
 
   override def preStart() {
     log.info("creating paste sbt project")
-    val l = new RendererTemplate(sbtDir.file).create
+    val l = new RendererTemplate(sbtDir.sbtRoot).create
     log.info(l)
     log.info("starting sbt")
-    sbt = Option(new Sbt(sbtDir.file))
+    sbt = Option(new Sbt(sbtDir.sbtRoot))
   }
 
   override def postStop() {
@@ -28,14 +28,19 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
     case paste: String => {
       sbt match {
         case Some(sbt) =>
-          log.info("paste " + paste)
-          val result = sbt.process(paste)
-          log.info("result " + result)
+          import scalax.io.Resource._
+          val pasteFile = fromFile(sbtDir.pasteFile)
+          pasteFile.truncate(0)
+          pasteFile.write(paste)
+          val result = sbt.process("compile")
           sender ! result
+        case _ => sender ! "sbt not started"
       }
     }
   }
 }
-case class PastesContainer(file:java.io.File) {
-  def child(id:String) = copy(file = new File(file, id))
+
+case class PastesContainer(sbtRoot: java.io.File) {
+  def child(id: String) = copy(sbtRoot = new File(sbtRoot, id))
+  def pasteFile = new File(sbtRoot, "src/main/scala/test.scala")
 }
