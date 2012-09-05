@@ -7,7 +7,7 @@ import java.io.File
 class RendererTemplate(dir: File) {
   def create = {
     val log = for {
-      sbt <- resource.managed(new Sbt(new File("renderer-template/my-template-project")))
+      sbt <- resource.managed(new Sbt(new File("renderer-template")))
     } yield {
       val path = dir.getAbsolutePath.replaceAll("\\\\", "/")
       sbt.process(

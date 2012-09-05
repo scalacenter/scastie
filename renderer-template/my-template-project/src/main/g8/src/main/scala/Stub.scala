@@ -1,3 +1,0 @@
-class Stub {
-  // $description$
-}
