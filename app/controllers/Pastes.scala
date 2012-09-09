@@ -9,8 +9,9 @@ import akka.pattern.ask
 import akka.util.duration._
 import play.api.libs.concurrent._
 import akka.util.Timeout
-import play.api.Play
+import play.api.{http, Play}
 import java.io.File
+import play.api.templates.Html
 
 
 object Pastes extends Controller {
@@ -21,7 +22,7 @@ object Pastes extends Controller {
   val pastesDir = new File(Play.configuration.getString("pastes.data.dir").getOrElse("./target/pastes/"))
   val renderer = Akka.system.actorOf(Props(new RendererActor(PastesContainer(pastesDir))))
 
-  implicit val timeout = Timeout(100 second)
+  implicit val timeout = Timeout(100 seconds)
 
   val pasteForm = Form(
     single(
@@ -39,6 +40,6 @@ object Pastes extends Controller {
   }
 
   def show(id: String) = Action { implicit request =>
-    Ok(views.html.index(id + " " + request.flash.get("paste").getOrElse("") + " Pasted!"))
+    Ok(views.html.index(Html(id + " " + request.flash.get("paste").getOrElse("") + " Pasted!")))
   }
 }

@@ -33,14 +33,20 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
           pasteFile.truncate(0)
           pasteFile.write(paste)
           val result = sbt.process("compile")
-          sender ! result
+          val sxrSource = fromFile(sbtDir.sxrSource).slurpString
+          sender ! (result + "\n" + cleanSource(sxrSource))
         case _ => sender ! "sbt not started"
       }
     }
+  }
+
+  def cleanSource(sxrSource: String): String = {
+    sxrSource.replaceFirst("^(?mis).*<body>", "").replaceFirst("(?mis)</body>\\s*</html>$", "")
   }
 }
 
 case class PastesContainer(sbtRoot: java.io.File) {
   def child(id: String) = copy(sbtRoot = new File(sbtRoot, id))
   def pasteFile = new File(sbtRoot, "src/main/scala/test.scala")
+  def sxrSource = new File(sbtRoot, "target/scala-2.9.2/classes.sxr/test.scala.html")
 }
