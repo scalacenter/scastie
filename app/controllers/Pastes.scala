@@ -4,14 +4,15 @@ import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
 import akka.actor.Props
-import com.olegych.scastie.{PastesContainer, RendererActor}
+import com.olegych.scastie.{PastesActor, PastesContainer}
 import akka.pattern.ask
 import akka.util.duration._
 import play.api.libs.concurrent._
 import akka.util.Timeout
-import play.api.{http, Play}
+import play.api.Play
 import java.io.File
 import play.api.templates.Html
+import com.olegych.scastie.PastesActor.{GetPaste, Paste, AddPaste}
 
 
 object Pastes extends Controller {
@@ -20,7 +21,7 @@ object Pastes extends Controller {
   import concurrent.ExecutionContext.Implicits.global
 
   val pastesDir = new File(Play.configuration.getString("pastes.data.dir").getOrElse("./target/pastes/"))
-  val renderer = Akka.system.actorOf(Props(new RendererActor(PastesContainer(pastesDir))))
+  val renderer = Akka.system.actorOf(Props(new PastesActor(PastesContainer(pastesDir))))
 
   implicit val timeout = Timeout(100 seconds)
 
@@ -33,13 +34,17 @@ object Pastes extends Controller {
   def add = Action { implicit request =>
     Async {
       val paste = pasteForm.bindFromRequest().apply("paste").value.get
-      (renderer ? paste).mapTo[String].asPromise.map { response =>
-        Redirect(routes.Pastes.show("111")).flashing("paste" -> response)
+      (renderer ? AddPaste(paste)).mapTo[Paste].asPromise.map { paste =>
+        Redirect(routes.Pastes.show(paste.id))
       }
     }
   }
 
-  def show(id: String) = Action { implicit request =>
-    Ok(views.html.index(Html(id + " " + request.flash.get("paste").getOrElse("") + " Pasted!")))
+  def show(id: Long) = Action { implicit request =>
+    Async {
+      (renderer ? GetPaste(id)).mapTo[Paste].asPromise.map { paste =>
+        Ok(views.html.show(Html(paste.content)))
+      }
+    }
   }
 }

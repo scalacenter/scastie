@@ -22,10 +22,14 @@ case class Sbt(dir: File) {
   }
   waitForPrompt
 
-  def process(command: String) = {
+  def process(command: String, waitForPrompt:Boolean = true) = {
     input.write(command + "\n")
     fin.flush()
-    waitForPrompt
+    if (waitForPrompt){
+      this.waitForPrompt
+    } else {
+      ""
+    }
   }
 
   def waitForPrompt = {
@@ -74,6 +78,7 @@ case class Sbt(dir: File) {
   }
 
   def close() {
+    process("exit", waitForPrompt = false)
     process.destroy()
   }
 }
