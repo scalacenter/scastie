@@ -13,7 +13,7 @@ case class Sbt(dir: File, log: LoggingAdapter) {
     def absolutePath(command: String) = new File(command).getAbsolutePath
     val builder = new ProcessBuilder(absolutePath(if (SystemUtils.IS_OS_WINDOWS) "xsbt.cmd" else "xsbt.sh"))
         .directory(dir)
-    val currentOpts = System.getenv("SBT_OPTS")
+    val currentOpts = Option(System.getenv("SBT_OPTS")).getOrElse("")
         .replaceAll("-agentlib:jdwp=transport=dt_shmem,server=n,address=.*,suspend=y", "")
     builder.environment()
         .put("SBT_OPTS", currentOpts + " -Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true")
