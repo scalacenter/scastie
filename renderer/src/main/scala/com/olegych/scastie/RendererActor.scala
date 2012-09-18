@@ -48,7 +48,7 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
 
 case class PastesContainer(root: java.io.File) {
   val PasteFormat = "paste(\\d+)".r
-  lazy val lastPasteId = new AtomicLong(root.listFiles().collect {
+  lazy val lastPasteId = new AtomicLong(Option(root.listFiles()).getOrElse(Array()).collect {
     case PasteFormat(id) => id.toLong
   }.sorted.lastOption.getOrElse(0L))
 

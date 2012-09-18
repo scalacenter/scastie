@@ -34,10 +34,13 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
 
   def readPaste(id: Long) = {
     val paste = pastesContainer.paste(id)
-    import scalax.io.Resource._
-    val pasteFile = fromFile(paste.pasteFile)
-
-    Paste(id = id, content = pasteFile.slurpString(), output = "Done")
+    if (paste.pasteFile.exists()){
+      import scalax.io.Resource._
+      val pasteFile = fromFile(paste.pasteFile)
+      Paste(id = id, content = pasteFile.slurpString(), output = "Done")
+    } else {
+      Paste(id = id, content = "", output = "")
+    }
   }
 
   def nextPasteId = pastesContainer.lastPasteId.getAndIncrement
