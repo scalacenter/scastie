@@ -10,3 +10,5 @@ logs
 target
 tmp
 .history
+hs_err_pid*
+java.exe.stackdump
