@@ -10,7 +10,7 @@ case class Sbt(dir: File) {
 
   private val (process, fin, input, fout, output) = {
     def absolutePath(command: String) = new File(command).getAbsolutePath
-    val builder = new ProcessBuilder(absolutePath(if (SystemUtils.IS_OS_WINDOWS) "xsbt.cmd" else "./xsbt.sh"))
+    val builder = new ProcessBuilder(absolutePath(if (SystemUtils.IS_OS_WINDOWS) "xsbt.cmd" else "xsbt.sh"))
     builder.environment()
         .put("SBT_OPTS", "-Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true")
     val process = builder.directory(dir).start()
