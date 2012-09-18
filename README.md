@@ -12,15 +12,16 @@ Goals
 
 Current Features
 -----------
+* highlighting with Scala X-Ray
+* reusing sbt instances for fast compilation
 
 Plans
 ----------
-* highlighting with Scala X-Ray
-* reusing sbt instances for fast compilation
 * building with sbt, with support for inline dependency specification
 * running in sandbox with sbt
 * support execution of tests\specs
 * linking with sxr-processed libraries
+* spawn multiple sbt instances
 * allow pastes deletion
 * detect fragment pastes and wrap them in top level declaration so that they will be compilable and\or runnable
 * detect pastes to gist.github.com pastie.net pastebin.com etc with multibot and copy to scastie
