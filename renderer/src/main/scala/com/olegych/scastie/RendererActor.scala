@@ -15,10 +15,10 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
 
   override def preStart() {
     log.info("creating paste sbt project")
-    val l = new RendererTemplate(sbtDir.root).create
-    log.info(l)
+    val out = new RendererTemplate(sbtDir.root, log).create
+    log.info(out)
     log.info("starting sbt")
-    sbt = Option(new Sbt(sbtDir.root))
+    sbt = Option(new Sbt(sbtDir.root, log))
   }
 
   override def postStop() {
@@ -48,7 +48,7 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
 
 case class PastesContainer(root: java.io.File) {
   val PasteFormat = "paste(\\d+)".r
-  lazy val lastPasteId = new AtomicLong(Option(root.listFiles()).getOrElse(Array()).collect {
+  lazy val lastPasteId = new AtomicLong(Option(root.listFiles()).getOrElse(Array()).map(_.getName).collect {
     case PasteFormat(id) => id.toLong
   }.sorted.lastOption.getOrElse(0L))
 

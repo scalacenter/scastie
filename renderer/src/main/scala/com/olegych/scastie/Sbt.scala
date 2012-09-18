@@ -3,18 +3,22 @@ package com.olegych.scastie
 import java.io.File
 import collection.mutable.ListBuffer
 import org.apache.commons.lang3.SystemUtils
+import akka.event.LoggingAdapter
 
 /**
   */
-case class Sbt(dir: File) {
+case class Sbt(dir: File, log: LoggingAdapter) {
 
   private val (process, fin, input, fout, output) = {
     def absolutePath(command: String) = new File(command).getAbsolutePath
     val builder = new ProcessBuilder(absolutePath(if (SystemUtils.IS_OS_WINDOWS) "xsbt.cmd" else "xsbt.sh"))
+        .directory(dir)
     val currentOpts = System.getenv("SBT_OPTS")
+        .replaceAll("-agentlib:jdwp=transport=dt_shmem,server=n,address=.*,suspend=y", "")
     builder.environment()
         .put("SBT_OPTS", currentOpts + " -Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true")
-    val process = builder.directory(dir).start()
+    log.info("Starting sbt with {} {} {}", builder.command(), builder.environment(), builder.directory())
+    val process = builder.start()
     import scalax.io.JavaConverters._
     //can't use .lines since it eats all input
     (process,
@@ -46,7 +50,7 @@ case class Sbt(dir: File) {
       read = fout.read()
       if (read == 10) {
         lines += chars.mkString
-        //        println(lines.last)
+        log.info("sbt: " + lines.last)
         chars.clear()
       } else {
         chars += read.toChar

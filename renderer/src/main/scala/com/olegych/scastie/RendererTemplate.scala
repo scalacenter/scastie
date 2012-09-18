@@ -1,13 +1,14 @@
 package com.olegych.scastie
 
 import java.io.File
+import akka.event.LoggingAdapter
 
 /**
   */
-class RendererTemplate(dir: File) {
+class RendererTemplate(dir: File, log: LoggingAdapter) {
   def create = {
-    val log = for {
-      sbt <- resource.managed(new Sbt(new File("renderer-template")))
+    val out = for {
+      sbt <- resource.managed(new Sbt(new File("renderer-template"), log))
     } yield {
       val path = dir.getAbsolutePath.replaceAll("\\\\", "/")
       sbt.process(
@@ -15,9 +16,9 @@ class RendererTemplate(dir: File) {
           sbt.process( """set G8Keys.properties in G8Keys.g8 in Compile := Map(("name", "helloname")) """) +
           sbt.process( """g8""")
     }
-    log.either match {
-      case Left(Seq(error, _*)) => throw error
-      case Right(log) => log
+    out.either match {
+      case Left(errors) => errors.foreach(log.error(_, "Exception creating template")); throw errors.head
+      case Right(out) => out
     }
   }
 }
