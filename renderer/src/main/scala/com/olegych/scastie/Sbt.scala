@@ -11,8 +11,9 @@ case class Sbt(dir: File) {
   private val (process, fin, input, fout, output) = {
     def absolutePath(command: String) = new File(command).getAbsolutePath
     val builder = new ProcessBuilder(absolutePath(if (SystemUtils.IS_OS_WINDOWS) "xsbt.cmd" else "xsbt.sh"))
+    val currentOpts = System.getenv("SBT_OPTS")
     builder.environment()
-        .put("SBT_OPTS", "-Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true")
+        .put("SBT_OPTS", currentOpts + " -Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true")
     val process = builder.directory(dir).start()
     import scalax.io.JavaConverters._
     //can't use .lines since it eats all input
@@ -22,10 +23,10 @@ case class Sbt(dir: File) {
   }
   waitForPrompt
 
-  def process(command: String, waitForPrompt:Boolean = true) = {
+  def process(command: String, waitForPrompt: Boolean = true) = {
     input.write(command + "\n")
     fin.flush()
-    if (waitForPrompt){
+    if (waitForPrompt) {
       this.waitForPrompt
     } else {
       ""
@@ -45,7 +46,7 @@ case class Sbt(dir: File) {
       read = fout.read()
       if (read == 10) {
         lines += chars.mkString
-//        println(lines.last)
+        //        println(lines.last)
         chars.clear()
       } else {
         chars += read.toChar
