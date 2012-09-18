@@ -28,6 +28,7 @@ case class Sbt(dir: File, log: LoggingAdapter) {
   waitForPrompt
 
   def process(command: String, waitForPrompt: Boolean = true) = {
+    log.info("Executing {}", command)
     input.write(command + "\n")
     fin.flush()
     if (waitForPrompt) {
