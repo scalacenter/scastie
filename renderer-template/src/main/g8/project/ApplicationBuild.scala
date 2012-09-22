@@ -60,7 +60,7 @@ object ScriptSM extends SecurityManager {
         "accessClassInPackage.sun.reflect", "getStackTrace").contains(perm.getName)
       val file = perm.isInstanceOf[FilePermission]
       val allowedFiles = Seq(".class", ".jar", "classes", "library.properties")
-      //      can't use closures because will get java.lang.ClassCircularityError: ScriptSM$$anonfun$9
+      //      can't use closures because will get java.lang.ClassCircularityError: ScriptSM
       //      val isClass = allowedFiles.exists(perm.getName.endsWith)
       val isClass = {
         val iterator = allowedFiles.iterator

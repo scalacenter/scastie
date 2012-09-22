@@ -3,7 +3,7 @@
 .idea/workspace.xml
 .idea/misc.xml
 .idea/ant.xml
-**/*.iml
+*.iml
 target
 project/project
 logs
