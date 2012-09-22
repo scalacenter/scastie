@@ -31,6 +31,9 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
       val pasteFile = fromFile(pasteDir.pasteFile)
       pasteFile.truncate(0)
       pasteFile.write(paste.content)
+      val outputFile = fromFile(pasteDir.outputFile)
+      outputFile.truncate(0)
+      outputFile.write(paste.output)
     }
   }
 
@@ -38,8 +41,8 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
     val paste = pastesContainer.paste(id)
     if (paste.pasteFile.exists()) {
       import scalax.io.Resource._
-      val pasteFile = fromFile(paste.pasteFile)
-      Paste(id = id, content = pasteFile.slurpString(), output = "Done")
+      Paste(id = id, content = fromFile(paste.pasteFile).slurpString(),
+        output = fromFile(paste.outputFile).slurpString())
     } else {
       Paste(id = id, content = "", output = "")
     }

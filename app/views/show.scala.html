@@ -1,6 +1,8 @@
-@(message: Html)
+@(content: Html, output: String)
 
 @main("Welcome to Scastie", includeLinkJs = true) {
-
-  @message
+  @content
+  <pre>
+  @output
+  </pre>
 }

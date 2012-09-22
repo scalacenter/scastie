@@ -34,7 +34,7 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
           val pasteFile = fromFile(sbtDir.pasteFile)
           pasteFile.truncate(0)
           pasteFile.write(content)
-          val result = sbt.process("compile")
+          val result = sbt.process("run")
           val sxrSource = fromFile(sbtDir.sxrSource).slurpString
           sender ! paste.copy(content = cleanSource(sxrSource), output = result)
       }
@@ -56,5 +56,6 @@ case class PastesContainer(root: java.io.File) {
   def paste(id: Long) = child("paste%20d".format(id).replaceAll(" ", "0"))
   private def child(id: String) = copy(root = new File(root, id))
   def pasteFile = new File(root, "src/main/scala/test.scala")
+  def outputFile = new File(root, "src/main/scala/output.txt")
   def sxrSource = new File(root, "target/scala-2.9.2/classes.sxr/test.scala.html")
 }
