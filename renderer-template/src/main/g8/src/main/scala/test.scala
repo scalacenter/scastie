@@ -1,3 +1,5 @@
-object swc { type ListModel = javax.swing.ListModel[Any] }
-class qwe(i: Int,
-          c: Int)
+object test extends App {
+  println("hello")
+  new java.io.File("d:/hello").delete
+  println("done")
+}

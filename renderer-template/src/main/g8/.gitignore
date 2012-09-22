@@ -1,0 +1,14 @@
+.idea/libraries
+.idea/dictionaries
+.idea/workspace.xml
+.idea/misc.xml
+.idea/ant.xml
+**/*.iml
+target
+project/project
+logs
+target
+tmp
+.history
+hs_err_pid*
+java.exe.stackdump
