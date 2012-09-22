@@ -1,8 +1,10 @@
 import scalariform.formatter.preferences._
 
-resolvers += "xuwei-k repo" at "http://xuwei-k.github.com/mvn"
+scalaVersion := "2.9.2"
 
-addCompilerPlugin("org.scala-tools.sxr" % "sxr_2.9.1" % "0.2.8-SNAPSHOT" )
+resolvers += Resolver.url("olegych-repo", url("https://bitbucket.org/olegych/mvn/raw/default/ivy2/"))(Resolver.ivyStylePatterns)
+
+addCompilerPlugin("org.scala-tools.sxr" %% "sxr" % "0.2.8-SNAPSHOT" )
 
 scalacOptions <+= scalaSource in Compile map { "-P:sxr:base-directory:" + _.getAbsolutePath }
 
