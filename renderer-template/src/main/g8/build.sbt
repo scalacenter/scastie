@@ -22,3 +22,5 @@ ScalariformKeys.preferences := FormattingPreferences().
 
 //to be able to detect prompt
 shellPrompt := (_ => ">\n")
+
+traceLevel := 1000

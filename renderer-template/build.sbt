@@ -11,3 +11,4 @@ sources in (Compile, G8Keys.g8) ~= { (src) =>
 //to be able to detect prompt
 shellPrompt := (_ => ">\n")
 
+traceLevel := 1000
