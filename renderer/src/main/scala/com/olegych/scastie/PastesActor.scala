@@ -44,7 +44,7 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
       Paste(id = id, content = fromFile(paste.pasteFile).slurpString(),
         output = fromFile(paste.outputFile).slurpString())
     } else {
-      Paste(id = id, content = "", output = "")
+      Paste(id = id, content = "", output = "Not found")
     }
   }
 
