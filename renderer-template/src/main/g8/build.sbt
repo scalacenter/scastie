@@ -23,6 +23,6 @@ ScalariformKeys.preferences := FormattingPreferences().
   setPreference(DoubleIndentClassDeclaration, true)
 
 //to be able to detect prompt
-shellPrompt := (_ => ">\n")
+shellPrompt := (_ => "$uniqueId$\n")
 
 traceLevel := 1000

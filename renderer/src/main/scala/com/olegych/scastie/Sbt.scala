@@ -1,13 +1,13 @@
 package com.olegych.scastie
 
 import java.io.File
-import collection.mutable.ListBuffer
+import collection.mutable.ArrayBuffer
 import org.apache.commons.lang3.SystemUtils
 import akka.event.LoggingAdapter
 
 /**
   */
-case class Sbt(dir: File, log: LoggingAdapter) {
+case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
 
   private val (process, fin, input, fout, output) = {
     def absolutePath(command: String) = new File(command).getAbsolutePath
@@ -39,15 +39,10 @@ case class Sbt(dir: File, log: LoggingAdapter) {
   }
 
   def waitForPrompt: Seq[String] = {
-    //    val lines = Stream.continually {
-    //      Stream.continually(fout.read()).takeWhile(read => read != 10.toByte).map(_.toChar).mkString
-    ////      output.takeWhile(_ != 10.toByte).map(_.toChar).mkString
-    //    }
-    //    lines.takeWhile(_ != ">").mkString("\n")
-    val lines = ListBuffer[String]()
-    val chars = ListBuffer[Char]()
+    val lines = ArrayBuffer[String]()
+    val chars = ArrayBuffer[Char]()
     var read: Int = 0
-    while (read != -1 && lines.lastOption != Some(">")) {
+    while (read != -1 && lines.lastOption != Some(uniqueId)) {
       read = fout.read()
       if (read == 10) {
         lines += chars.mkString
@@ -60,36 +55,10 @@ case class Sbt(dir: File, log: LoggingAdapter) {
     lines.dropRight(1)
   }
 
-  def f1 = {
-    val lines = Stream.continually {
-      Stream.continually(fout.read()).takeWhile(_ != 10).map(_.toChar).mkString
-    }
-    lines.takeWhile(_ != ">").mkString("\n")
-  }
-
-  def f2 = {
-    val lines = ListBuffer[String]()
-    val chars = ListBuffer[Char]()
-    var read: Int = 0
-    while (read != -1 && lines.lastOption != Some(">")) {
-      read = fout.read()
-      if (read == 10) {
-        lines += chars.mkString
-        chars.clear()
-      } else {
-        chars += read.toChar
-      }
-    }
-    lines.dropRight(1).mkString("\n")
-  }
-
   def close() {
     process("exit", waitForPrompt = false)
     process.destroy()
   }
-}
-
-object Sbt {
 
   object Success {
     val SuccessParser = """(?mis)\[success\].*""".r
@@ -99,5 +68,5 @@ object Sbt {
     }
   }
 
-  def resultAsString(result: Seq[String]) = result.mkString("\n")
+  def resultAsString(result: Seq[String]) = result.mkString("\n").replaceAll(uniqueId, "")
 }

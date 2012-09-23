@@ -9,16 +9,14 @@ import java.util.concurrent.atomic.AtomicLong
 /**
   */
 class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLogging {
-  val sbtDir = pastesContainer.renderer(util.Random.alphanumeric.take(10).mkString)
+  def generateId: String = util.Random.alphanumeric.take(10).mkString
+
+  val sbtDir = pastesContainer.renderer(generateId)
 
   var sbt: Option[Sbt] = None
 
   override def preStart() {
-    log.info("creating paste sbt project")
-    val out = new RendererTemplate(sbtDir.root, log).create
-    log.info(Sbt.resultAsString(out))
-    log.info("starting sbt")
-    sbt = Option(new Sbt(sbtDir.root, log))
+    sbt = Option(new RendererTemplate(sbtDir.root, log, generateId).create)
   }
 
   override def postStop() {
@@ -32,22 +30,22 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
         import scalax.io.Resource._
         sbtDir.writeFile(sbtDir.pasteFile, content)
         sbt.process("compile") match {
-          case Sbt.Success(compileResult) =>
+          case sbt.Success(compileResult) =>
             val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).slurpString))
             sender !
                 paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running"))
             sbt.process("run") match {
-              case Sbt.Success(runResult) =>
+              case sbt.Success(runResult) =>
                 sender !
                     paste.copy(content = sxrSource, output = Option(compileResult + runResult))
               case errorResult =>
                 sender !
                     paste.copy(content = sxrSource,
-                      output = Option(compileResult + Sbt.resultAsString(errorResult)))
+                      output = Option(compileResult + sbt.resultAsString(errorResult)))
             }
           case errorResult =>
             sender !
-                paste.copy(content = content, output = Option(Sbt.resultAsString(errorResult)))
+                paste.copy(content = content, output = Option(sbt.resultAsString(errorResult)))
         }
       }
     }
