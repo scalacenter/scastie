@@ -48,7 +48,7 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
     }
   }
 
-  def nextPasteId = pastesContainer.lastPasteId.getAndIncrement
+  def nextPasteId = pastesContainer.lastPasteId.incrementAndGet()
 }
 
 object PastesActor {
