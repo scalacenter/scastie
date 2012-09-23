@@ -34,11 +34,11 @@ case class Sbt(dir: File, log: LoggingAdapter) {
     if (waitForPrompt) {
       this.waitForPrompt
     } else {
-      ""
+      Seq("")
     }
   }
 
-  def waitForPrompt = {
+  def waitForPrompt: Seq[String] = {
     //    val lines = Stream.continually {
     //      Stream.continually(fout.read()).takeWhile(read => read != 10.toByte).map(_.toChar).mkString
     ////      output.takeWhile(_ != 10.toByte).map(_.toChar).mkString
@@ -57,7 +57,7 @@ case class Sbt(dir: File, log: LoggingAdapter) {
         chars += read.toChar
       }
     }
-    lines.dropRight(1).mkString("\n")
+    lines.dropRight(1)
   }
 
   def f1 = {
@@ -87,4 +87,17 @@ case class Sbt(dir: File, log: LoggingAdapter) {
     process("exit", waitForPrompt = false)
     process.destroy()
   }
+}
+
+object Sbt {
+
+  object Success {
+    val SuccessParser = """(?mis)\[success\].*""".r
+    def unapply(result: Seq[String]): Option[String] = result.lastOption match {
+      case Some(SuccessParser()) => Option(resultAsString(result))
+      case _ => None
+    }
+  }
+
+  def resultAsString(result: Seq[String]) = result.mkString("\n")
 }

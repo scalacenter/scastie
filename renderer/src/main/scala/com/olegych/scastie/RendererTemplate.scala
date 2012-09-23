@@ -12,8 +12,8 @@ class RendererTemplate(dir: File, log: LoggingAdapter) {
     } yield {
       val path = dir.getAbsolutePath.replaceAll("\\\\", "/")
       sbt.process(
-        """set G8Keys.outputPath in G8Keys.g8 in Compile := file("%s") """.format(path)) +
-          sbt.process( """set G8Keys.properties in G8Keys.g8 in Compile := Map(("name", "helloname")) """) +
+        """set G8Keys.outputPath in G8Keys.g8 in Compile := file("%s") """.format(path)) ++
+          sbt.process( """set G8Keys.properties in G8Keys.g8 in Compile := Map(("name", "helloname")) """) ++
           sbt.process( """g8""")
     }
     out.either match {

@@ -43,7 +43,7 @@ object Pastes extends Controller {
   def show(id: Long) = Action { implicit request =>
     Async {
       (renderer ? GetPaste(id)).mapTo[Paste].asPromise.map { paste =>
-        Ok(views.html.show(Html(paste.content), paste.output))
+        Ok(views.html.show(Html(paste.content.getOrElse("")), paste.output.getOrElse("")))
       }
     }
   }

@@ -5,6 +5,7 @@ import akka.event.LoggingReceive
 import com.olegych.scastie.PastesActor.GetPaste
 import com.olegych.scastie.PastesActor.AddPaste
 import com.olegych.scastie.PastesActor.Paste
+import java.io.File
 
 /**
   */
@@ -14,7 +15,7 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
   protected def receive = LoggingReceive {
     case AddPaste(content) =>
       val id = nextPasteId
-      val paste = Paste(id = id, content = content, output = "Processing")
+      val paste = Paste(id = id, content = Option(content), output = Option("Processing"))
       renderer ! paste
       sender ! paste
       writePaste(paste)
@@ -25,26 +26,19 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
   }
 
   def writePaste(paste: Paste) {
-    if (paste.content.size > 0) {
-      val pasteDir = pastesContainer.paste(paste.id)
-      import scalax.io.Resource._
-      val pasteFile = fromFile(pasteDir.pasteFile)
-      pasteFile.truncate(0)
-      pasteFile.write(paste.content)
-      val outputFile = fromFile(pasteDir.outputFile)
-      outputFile.truncate(0)
-      outputFile.write(paste.output)
-    }
+    val pasteDir = pastesContainer.paste(paste.id)
+    pasteDir.writeFile(pasteDir.pasteFile, paste.content)
+    pasteDir.writeFile(pasteDir.outputFile, paste.output)
   }
 
   def readPaste(id: Long) = {
     val paste = pastesContainer.paste(id)
     if (paste.pasteFile.exists()) {
       import scalax.io.Resource._
-      Paste(id = id, content = fromFile(paste.pasteFile).slurpString(),
-        output = fromFile(paste.outputFile).slurpString())
+      Paste(id = id, content = Option(fromFile(paste.pasteFile).slurpString()),
+        output = Option(fromFile(paste.outputFile).slurpString()))
     } else {
-      Paste(id = id, content = "", output = "Not found")
+      Paste(id = id, content = None, output = Option("Not found"))
     }
   }
 
@@ -59,6 +53,6 @@ object PastesActor {
 
   case class GetPaste(id: Long) extends PasteMessage
 
-  case class Paste(id: Long, content: String, output: String) extends PasteMessage
+  case class Paste(id: Long, content: Option[String], output: Option[String]) extends PasteMessage
 
 }

@@ -16,7 +16,7 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
   override def preStart() {
     log.info("creating paste sbt project")
     val out = new RendererTemplate(sbtDir.root, log).create
-    log.info(out)
+    log.info(Sbt.resultAsString(out))
     log.info("starting sbt")
     sbt = Option(new Sbt(sbtDir.root, log))
   }
@@ -27,16 +27,28 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
   }
 
   protected def receive = LoggingReceive {
-    case paste@Paste(id, content, output) => {
-      sbt match {
-        case Some(sbt) =>
-          import scalax.io.Resource._
-          val pasteFile = fromFile(sbtDir.pasteFile)
-          pasteFile.truncate(0)
-          pasteFile.write(content)
-          val result = sbt.process("run")
-          val sxrSource = fromFile(sbtDir.sxrSource).slurpString
-          sender ! paste.copy(content = cleanSource(sxrSource), output = result)
+    case paste@Paste(id, content, _) => {
+      sbt map { sbt =>
+        import scalax.io.Resource._
+        sbtDir.writeFile(sbtDir.pasteFile, content)
+        sbt.process("compile") match {
+          case Sbt.Success(compileResult) =>
+            val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).slurpString))
+            sender !
+                paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running"))
+            sbt.process("run") match {
+              case Sbt.Success(runResult) =>
+                sender !
+                    paste.copy(content = sxrSource, output = Option(compileResult + runResult))
+              case errorResult =>
+                sender !
+                    paste.copy(content = sxrSource,
+                      output = Option(compileResult + Sbt.resultAsString(errorResult)))
+            }
+          case errorResult =>
+            sender !
+                paste.copy(content = content, output = Option(Sbt.resultAsString(errorResult)))
+        }
       }
     }
   }
@@ -58,4 +70,13 @@ case class PastesContainer(root: java.io.File) {
   def pasteFile = new File(root, "src/main/scala/test.scala")
   def outputFile = new File(root, "src/main/scala/output.txt")
   def sxrSource = new File(root, "target/scala-2.9.2/classes.sxr/test.scala.html")
+
+  def writeFile(file: File, content: Option[String]) {
+    content.map { content =>
+      import scalax.io.Resource._
+      val writer = fromFile(file)
+      writer.truncate(0)
+      writer.write(content)
+    }
+  }
 }
