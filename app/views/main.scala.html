@@ -11,12 +11,14 @@
     <script src=" @routes.Assets.at("javascripts/jquery-1.7.1.min.js") " type="text/javascript"></script>
     @if(includeLinkJs) {
       <script src=" @routes.Assets.at("javascripts/linked.js") " type="text/javascript"></script>
-      <link href="http://alexgorbatchev.com/pub/sh/current/styles/shThemeDefault.css" rel="stylesheet" type="text/css"/>
+      <link href="http://agorbatchev.typepad.com/pub/sh/3_0_83/styles/shThemeDefault.css" rel="stylesheet" type="text/css"/>
       <script src="http://alexgorbatchev.com/pub/sh/current/scripts/shCore.js" type="text/javascript"></script>
       <script src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushScala.js" type="text/javascript"></script>
     }
   </head>
   <body>
+    <div id="content">
   @content
+    </div>
   </body>
 </html>

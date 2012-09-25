@@ -44,8 +44,11 @@ object Pastes extends Controller {
     Async {
       (renderer ? GetPaste(id)).mapTo[Paste].asPromise.map { paste =>
         val content = paste.content.getOrElse("")
+        val output = paste.output.getOrElse("")
         val typedContent = if (content.matches("(?mis)\\s*<pre>.*")) Left(Html(content)) else Right(content)
-        Ok(views.html.show(typedContent, paste.output.getOrElse("")))
+        val ref = """\[error\].*test.scala:(\d+)""".r
+        val highlights = ref.findAllIn(output).matchData.map(_.group(1).toInt).toSeq
+        Ok(views.html.show(typedContent, output, highlights))
       }
     }
   }
