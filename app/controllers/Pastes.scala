@@ -43,7 +43,9 @@ object Pastes extends Controller {
   def show(id: Long) = Action { implicit request =>
     Async {
       (renderer ? GetPaste(id)).mapTo[Paste].asPromise.map { paste =>
-        Ok(views.html.show(Html(paste.content.getOrElse("")), paste.output.getOrElse("")))
+        val content = paste.content.getOrElse("")
+        val typedContent = if (content.matches("(?mis)\\s*<pre>.*")) Left(Html(content)) else Right(content)
+        Ok(views.html.show(typedContent, paste.output.getOrElse("")))
       }
     }
   }

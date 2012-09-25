@@ -45,7 +45,8 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
             }
           case errorResult =>
             sender !
-                paste.copy(content = content, output = Option(sbt.resultAsString(errorResult)))
+                paste.copy(content = Option(fromFile(sbtDir.pasteFile).slurpString),
+                  output = Option(sbt.resultAsString(errorResult)))
         }
       }
     }

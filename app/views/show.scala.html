@@ -1,8 +1,16 @@
-@(content: Html, output: String)
+@(content: Either[Html, String], output: String)
 
 @main("Welcome to Scastie", includeLinkJs = true) {
-  @content
+  @content.fold(
+    html => html,
+    string =>
+      <pre class="brush: scala">{string}</pre>
+      <script type="text/javascript">
+           SyntaxHighlighter.all()
+      </script>
+  )
   <pre>
-  @output
+
+@output
   </pre>
 }
