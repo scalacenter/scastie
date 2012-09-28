@@ -61,10 +61,17 @@ case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
   }
 
   object Success {
-    val SuccessParser = """(?mis)\[success\].*""".r
+    val SuccessParser = """(?s)\[success\].*""".r
     def unapply(result: Seq[String]): Option[String] = result.lastOption match {
       case Some(SuccessParser()) => Option(resultAsString(result))
       case _ => None
+    }
+  }
+
+  object ExpectedClassOrObject {
+    val ErrorParser = """(?s)\[error\].*expected class or object definition.*""".r
+    def unapply(result: Seq[String]): Option[String] = result.collectFirst {
+      case ErrorParser() => resultAsString(result)
     }
   }
 

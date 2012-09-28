@@ -25,10 +25,14 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
   }
 
   protected def receive = LoggingReceive {
-    case paste@Paste(id, content, _) => {
+    case paste@Paste(id, Some(content), _) => {
       sbt map { sbt =>
         import scalax.io.Resource._
-        sbtDir.writeFile(sbtDir.pasteFile, content)
+        def sendPasteFile(result: String) {
+          sender !
+              paste.copy(content = Option(fromFile(sbtDir.pasteFile).slurpString), output = Option(result))
+        }
+        sbtDir.writeFile(sbtDir.pasteFile, Option(content))
         sbt.process("compile") match {
           case sbt.Success(compileResult) =>
             val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).slurpString))
@@ -43,10 +47,12 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
                     paste.copy(content = sxrSource,
                       output = Option(compileResult + sbt.resultAsString(errorResult)))
             }
+          case sbt.ExpectedClassOrObject(compileResult) =>
+            sendPasteFile(compileResult + "\nAdding top level object and recompiling...")
+            val fixedContent = "object Main extends App {\n%s\n}".format(content)
+            self forward paste.copy(content = Option(fixedContent))
           case errorResult =>
-            sender !
-                paste.copy(content = Option(fromFile(sbtDir.pasteFile).slurpString),
-                  output = Option(sbt.resultAsString(errorResult)))
+            sendPasteFile(sbt.resultAsString(errorResult))
         }
       }
     }
