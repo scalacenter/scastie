@@ -15,6 +15,8 @@ Current Features
 * highlighting with Scala X-Ray
 * reusing sbt instances for fast compilation
 * running in sandbox with sbt
+* detect fragment pastes and wrap them in top level declaration so that they will be compilable and\or runnable
+
 
 Plans
 ----------
@@ -22,7 +24,6 @@ Plans
 * linking with lots of sxr-processed libraries
 * support execution of tests\specs
 * spawn multiple sbt instances
-* detect fragment pastes and wrap them in top level declaration so that they will be compilable and\or runnable
 * detect pastes to gist.github.com pastie.net pastebin.com etc with multibot and copy to scastie
 * allow pastes deletion
 * link stacktraces and compilation errors to source
@@ -30,3 +31,4 @@ Plans
 * evaluate pastes with no dependencies in multibot
 * interface for uploading pre-sxred libraries
 * generate seo friendly names from paste content
+* support repl mode (one paste can depend on another)
