@@ -56,7 +56,9 @@ case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
   }
 
   def close() {
-    process("exit", waitForPrompt = false)
+    try process("exit", waitForPrompt = false) catch {
+      case e: Throwable => log.error(e, "Error while soft exit")
+    }
     process.destroy()
   }
 

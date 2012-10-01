@@ -20,7 +20,6 @@ Current Features
 
 Plans
 ----------
-* handle sbt crashes
 * building with sbt, with support for inline dependency specification
 * linking with lots of sxr-processed libraries
 * support execution of tests\specs
