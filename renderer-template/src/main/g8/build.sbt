@@ -6,6 +6,8 @@ resolvers += Resolver.url("olegych-repo", url("https://bitbucket.org/olegych/mvn
 
 addCompilerPlugin("org.scala-tools.sxr" %% "sxr" % "0.2.8-SNAPSHOT" )
 
+addCompilerPlugin("com.foursquare.lint" %% "linter" % "0.1-SNAPSHOT")
+
 scalacOptions <+= scalaSource in Compile map { "-P:sxr:base-directory:" + _.getAbsolutePath }
 
 scalacOptions <+= baseDirectory map { base =>

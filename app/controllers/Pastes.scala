@@ -46,7 +46,7 @@ object Pastes extends Controller {
         val content = paste.content.getOrElse("")
         val output = paste.output.getOrElse("")
         val typedContent = if (content.matches("(?mis)\\s*<pre>.*")) Left(Html(content)) else Right(content)
-        val ref = """\[error\].*test.scala:(\d+)""".r
+        val ref = """\[(?:error|warn)\].*test.scala:(\d+)""".r
         val highlights = ref.findAllIn(output).matchData.map(_.group(1).toInt).toSeq
         Ok(views.html.show(typedContent, output, highlights))
       }

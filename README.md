@@ -16,10 +16,11 @@ Current Features
 * reusing sbt instances for fast compilation
 * running in sandbox with sbt
 * detect fragment pastes and wrap them in top level declaration so that they will be compilable and\or runnable
-
+* apply scalariform and linter to paste
 
 Plans
 ----------
+* handle sbt crashes
 * building with sbt, with support for inline dependency specification
 * linking with lots of sxr-processed libraries
 * support execution of tests\specs

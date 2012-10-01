@@ -1,13 +1,10 @@
 @(content: Either[Html, String], output: String, highlights:Seq[Int])
 
-@main("Welcome to Scastie", includeLinkJs = true) {
+@main("Welcome to Scastie", includeLinkJs = true, highlight = true) {
   @content.fold(
     html => html,
     string =>
       <pre class={"brush: scala; toolbar: false; tab-size: 2; highlight: [" + highlights.mkString(",") + "]"}>{string}</pre>
-      <script type="text/javascript">
-           SyntaxHighlighter.all()
-      </script>
   )
   <pre>
 
