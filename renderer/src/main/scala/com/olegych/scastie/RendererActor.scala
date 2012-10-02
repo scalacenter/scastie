@@ -47,7 +47,7 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
                     paste.copy(content = sxrSource,
                       output = Option(compileResult + sbt.resultAsString(errorResult)))
             }
-          case sbt.ExpectedClassOrObject(compileResult) =>
+          case sbt.NotTopLevelExpression(compileResult) =>
             sendPasteFile(compileResult + "\nAdding top level object and recompiling...")
             val fixedContent = "object Main extends App {\n%s\n}".format(content)
             self forward paste.copy(content = Option(fixedContent))

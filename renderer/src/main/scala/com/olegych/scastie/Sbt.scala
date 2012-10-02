@@ -70,8 +70,9 @@ case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
     }
   }
 
-  object ExpectedClassOrObject {
-    val ErrorParser = """(?s)\[error\].*expected class or object definition.*""".r
+  object NotTopLevelExpression {
+    val ErrorParser =
+      """(?s)^\[error\].*(?:expected class or object definition|expected start of definition).*""".r
     def unapply(result: Seq[String]): Option[String] = result.collectFirst {
       case ErrorParser() => resultAsString(result)
     }
