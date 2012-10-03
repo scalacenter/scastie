@@ -17,10 +17,11 @@ Current Features
 * running in sandbox with sbt
 * detect fragment pastes and wrap them in top level declaration so that they will be compilable and\or runnable
 * apply scalariform and linter to paste
+* building with sbt, with support for inline dependency specification (see https://github.com/harrah/xsbt/wiki/Scripts, only libraryDependencies setting is allowed)
 
 Plans
 ----------
-* building with sbt, with support for inline dependency specification
+* timeout long-running pastes
 * linking with lots of sxr-processed libraries
 * support execution of tests\specs
 * spawn multiple sbt instances

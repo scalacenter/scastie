@@ -157,11 +157,6 @@
             <option name="CONTINUATION_INDENT_SIZE" value="4" />
           </indentOptions>
         </codeStyleSettings>
-        <codeStyleSettings language="SQL">
-          <indentOptions>
-            <option name="CONTINUATION_INDENT_SIZE" value="4" />
-          </indentOptions>
-        </codeStyleSettings>
         <codeStyleSettings language="Scala">
           <option name="BLANK_LINES_AROUND_METHOD" value="0" />
           <option name="BLANK_LINES_AROUND_METHOD_IN_INTERFACE" value="0" />
