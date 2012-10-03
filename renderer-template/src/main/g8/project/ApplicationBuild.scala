@@ -14,7 +14,8 @@ object ApplicationBuild extends Build {
 
   def addDepsToState(state: State): State = {
     val sessionSettings = state.get(Keys.sessionSettings).get
-    val dependencies = extractDependencies(sessionSettings.currentEval(), getClass.getClassLoader, state)
+    val dependencies = extractDependencies(sessionSettings.currentEval(),
+      Project.extract(state).currentLoader, state)
     SessionSettings
         .reapply(sessionSettings.appendRaw(dependencies).appendRaw(onLoad in Global := idFun), state)
   }
@@ -36,6 +37,7 @@ object ApplicationBuild extends Build {
       }
     } catch {
       case e: Throwable =>
+        //        e.printStackTrace()
         state.log.error(e.getMessage)
         state.log.trace(e)
         Nil
