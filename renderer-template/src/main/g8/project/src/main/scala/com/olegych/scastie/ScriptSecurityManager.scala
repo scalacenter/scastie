@@ -32,10 +32,11 @@ object ScriptSecurityManager extends SecurityManager {
       deactivate
       val notExistingFile = !new File(perm.getName).exists()
 
+      //g8 replaces \\ with \
       val allowedFiles =
         Seq( """.*\.class""", """.*\.jar""", """.*classes.*""", """.*library\.properties""",
           """.*src/main/scala.*""")
-      val isClass = allowedFiles.exists(perm.getName.replaceAll("\\\\", "/").matches(_))
+      val isClass = allowedFiles.exists(perm.getName.replaceAll( """\""" + """\""", "/").matches(_))
       activate
 
       val readClass = file && isClass && read

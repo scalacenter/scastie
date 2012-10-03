@@ -37,8 +37,9 @@ object ApplicationBuild extends Build {
       }
     } catch {
       case e: Throwable =>
-        //        e.printStackTrace()
+        state.log.error(e.getClass.toString)
         state.log.error(e.getMessage)
+        e.getStackTrace.take(100).foreach(e => state.log.error(e.toString))
         state.log.trace(e)
         Nil
     }
