@@ -16,24 +16,24 @@ object ScriptSecurityManager extends SecurityManager {
       val allowedMethods = Seq("accessDeclaredMembers", "suppressAccessChecks", "createClassLoader",
         "accessClassInPackage.sun.reflect", "getStackTrace").contains(perm.getName)
       val file = perm.isInstanceOf[FilePermission]
+
+      deactivate
+      val notExistingFile = !new File(perm.getName).exists()
+
       val allowedFiles =
         Seq(".*\\.class", ".*\\.jar", ".*classes.*", ".*library\\.properties", ".*src/main/scala.*")
-      //      can't use closures because will get java.lang.ClassCircularityError: ScriptSecurityManager
-      //      val isClass = allowedFiles.exists(perm.getName.endsWith)
-      val isClass = {
-        deactivate
-        val iterator = allowedFiles.iterator
-        var result = false
-        while (!result && iterator.hasNext) {
-          result |= perm.getName.replaceAll("\\\\", "/").matches(iterator.next()) ||
-              !new File(perm.getName).exists()
-        }
-        activate
-        result
-      }
+      val isClass = allowedFiles.exists(perm.getName.replaceAll("\\\\", "/").matches(_))
+      activate
+
       val readClass = file && isClass && read
-      val allow = readClass || (read && !file) || allowedMethods ||
-          new Throwable().getStackTrace.exists(_.getClassName == "sbt.compiler.Eval")
+      val readMissingFile = file && notExistingFile && read
+      lazy val allowedClass = new Throwable().getStackTrace.exists { element =>
+        val name = element.getFileName
+        //todo apply more robust checks
+        List("BytecodeWriters.scala", "Settings.scala", "PathResolver.scala").contains(name)
+      }
+
+      val allow = readMissingFile || readClass || (read && !file) || allowedMethods || allowedClass
       if (!allow) {
         throw new SecurityException(perm.toString)
       }
@@ -61,15 +61,6 @@ object ScriptSecurityManager extends SecurityManager {
       f
     } finally {
       deactivate
-    }
-  }
-
-  def relaxPermissions[T](f: => T): T = this.synchronized {
-    try {
-      deactivate
-      f
-    } finally {
-      activate
     }
   }
 }
