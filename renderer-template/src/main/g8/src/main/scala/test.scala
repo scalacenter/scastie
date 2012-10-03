@@ -1,5 +1,4 @@
 object Main extends App {
-// format: OFF
 /***
 scalaVersion := "ololo"
 
@@ -8,11 +7,10 @@ libraryDependencies ++= Seq(
   "net.databinder" % "dispatch-http_2.9.0-1" % "0.8.3"
 )
 */
-// format: ON
 
-  import dispatch.{json, Http, Request}
+  import dispatch.{ json, Http, Request }
   import dispatch.twitter.Search
-  import json.{Js, JsObject}
+  import json.{ Js, JsObject }
 
   def process(param: JsObject) = {
     val Search.text(txt) = param
