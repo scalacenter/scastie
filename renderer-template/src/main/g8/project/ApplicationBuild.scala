@@ -1,4 +1,5 @@
 import sbt._
+import EvaluateConfigurations.{evaluateConfiguration => evaluate}
 import sbt.Keys._
 import com.olegych.scastie.SecuredRun
 
@@ -7,6 +8,32 @@ object ApplicationBuild extends Build {
     settings = Defaults.defaultSettings ++ Seq(
       runner in(Compile, run) <<= (taskTemporaryDirectory, scalaInstance) map { (nativeTmp, instance) =>
         new SecuredRun(instance, false, nativeTmp)
-      }
+      },
+      onLoad in Global := addDepsToState
     ))
+
+  def addDepsToState(state: State): State = {
+    val sessionSettings = state.get(Keys.sessionSettings).get
+    val dependencies = extractDependencies(sessionSettings.currentEval(), getClass.getClassLoader)
+    SessionSettings
+        .reapply(sessionSettings.appendRaw(dependencies).appendRaw(onLoad in Global := idFun), state)
+  }
+
+  def extractDependencies(eval: compiler.Eval, loader: ClassLoader): Seq[Setting[_]] = {
+    val scriptArg = "src/main/scala/test.scala"
+    val script = file(scriptArg).getAbsoluteFile
+    try {
+      val embeddedSettings = Script.blocks(script).flatMap { block =>
+        val imports = List("import sbt._", "import Keys._")
+        evaluate(eval, script.getPath, block.lines, imports, block.offset + 1)(loader)
+      }
+      embeddedSettings.flatMap {
+        case setting if setting.key == libraryDependencies.scopedKey =>
+          Project.transform(_ => GlobalScope, setting)
+        case _ => Nil
+      }
+    } catch {
+      case e => Nil
+    }
+  }
 }
