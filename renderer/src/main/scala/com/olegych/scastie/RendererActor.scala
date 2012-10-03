@@ -33,6 +33,7 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
               paste.copy(content = Option(fromFile(sbtDir.pasteFile).slurpString), output = Option(result))
         }
         sbtDir.writeFile(sbtDir.pasteFile, Option(content))
+        sbt.process("reload")
         sbt.process("compile") match {
           case sbt.Success(compileResult) =>
             val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).slurpString))
@@ -41,7 +42,7 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
             sbt.process("run") match {
               case sbt.Success(runResult) =>
                 sender !
-                    paste.copy(content = sxrSource, output = Option(compileResult + runResult))
+                    paste.copy(content = sxrSource, output = Option(compileResult + "\n" + runResult))
               case errorResult =>
                 sender !
                     paste.copy(content = sxrSource,
