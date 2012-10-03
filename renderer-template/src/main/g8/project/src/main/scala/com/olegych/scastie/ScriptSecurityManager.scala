@@ -1,6 +1,6 @@
 package com.olegych.scastie
 
-import java.security.Permission
+import java.security.{SecurityPermission, Permission}
 import java.io.{File, FilePermission}
 
 /**
@@ -27,6 +27,7 @@ object ScriptSecurityManager extends SecurityManager {
       val allowedMethods = Seq("accessDeclaredMembers", "suppressAccessChecks", "createClassLoader",
         "accessClassInPackage.sun.reflect", "getStackTrace").contains(perm.getName)
       val file = perm.isInstanceOf[FilePermission]
+      val security = perm.isInstanceOf[SecurityPermission]
 
       deactivate
       val notExistingFile = !new File(perm.getName).exists()
@@ -45,7 +46,8 @@ object ScriptSecurityManager extends SecurityManager {
         List("BytecodeWriters.scala", "Settings.scala", "PathResolver.scala").contains(name)
       }
 
-      val allow = readMissingFile || readClass || (read && !file) || allowedMethods || allowedClass
+      val allow = readMissingFile || readClass || (read && !file) || allowedMethods ||
+          (security && perm.getName.startsWith("getProperty.")) || allowedClass
       if (!allow) {
         throw new SecurityException(perm.toString)
       }
