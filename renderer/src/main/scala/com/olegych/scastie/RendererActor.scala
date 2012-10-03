@@ -33,20 +33,17 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
               paste.copy(content = Option(fromFile(sbtDir.pasteFile).slurpString), output = Option(result))
         }
         sbtDir.writeFile(sbtDir.pasteFile, Option(content))
-        sbt.process("reload")
+        val reloadResult = sbt.resultAsString(sbt.process("reload"))
+        sendPasteFile(reloadResult)
         sbt.process("compile") match {
           case sbt.Success(compileResult) =>
             val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).slurpString))
-            sender !
-                paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running"))
+            sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running"))
             sbt.process("run") match {
               case sbt.Success(runResult) =>
-                sender !
-                    paste.copy(content = sxrSource, output = Option(compileResult + "\n" + runResult))
+                sender ! paste.copy(content = sxrSource, output = Option(runResult))
               case errorResult =>
-                sender !
-                    paste.copy(content = sxrSource,
-                      output = Option(compileResult + sbt.resultAsString(errorResult)))
+                sender ! paste.copy(content = sxrSource, output = Option(sbt.resultAsString(errorResult)))
             }
           case sbt.NotTopLevelExpression(compileResult) =>
             sendPasteFile(compileResult + "\nAdding top level object and recompiling...")
@@ -77,11 +74,15 @@ case class PastesContainer(root: java.io.File) {
   def outputFile = new File(root, "src/main/scala/output.txt")
   def sxrSource = new File(root, "target/scala-2.9.2/classes.sxr/test.scala.html")
 
-  def writeFile(file: File, content: Option[String]) {
+  def writeFile(file: File, content: Option[String], truncate: Boolean = true) {
     content.map { content =>
       import scalax.io.Resource._
       val writer = fromFile(file)
-      writer.truncate(0)
+      if (truncate) {
+        writer.truncate(0)
+      } else {
+        writer.write("\n")
+      }
       writer.write(content)
     }
   }

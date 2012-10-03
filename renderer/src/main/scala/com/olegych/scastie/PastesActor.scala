@@ -28,7 +28,7 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
   def writePaste(paste: Paste) {
     val pasteDir = pastesContainer.paste(paste.id)
     pasteDir.writeFile(pasteDir.pasteFile, paste.content)
-    pasteDir.writeFile(pasteDir.outputFile, paste.output)
+    pasteDir.writeFile(pasteDir.outputFile, paste.output, truncate = false)
   }
 
   def readPaste(id: Long) = {
