@@ -7,8 +7,19 @@ import java.io.{File, FilePermission}
   */
 object ScriptSecurityManager extends SecurityManager {
   System.setProperty("actors.enableForkJoin", false + "")
-  val sm = System.getSecurityManager
-  var activated = false
+
+  private val lock = new Object
+  private val sm = System.getSecurityManager
+  @transient private var activated = false
+
+  def hardenPermissions[T](f: => T): T = lock.synchronized {
+    try {
+      activate
+      f
+    } finally {
+      deactivate
+    }
+  }
 
   override def checkPermission(perm: Permission) {
     if (activated) {
@@ -21,7 +32,8 @@ object ScriptSecurityManager extends SecurityManager {
       val notExistingFile = !new File(perm.getName).exists()
 
       val allowedFiles =
-        Seq(""".*\.class""", """.*\.jar""", """.*classes.*""", """.*library\.properties""", """.*src/main/scala.*""")
+        Seq( """.*\.class""", """.*\.jar""", """.*classes.*""", """.*library\.properties""",
+          """.*src/main/scala.*""")
       val isClass = allowedFiles.exists(perm.getName.replaceAll("\\\\", "/").matches(_))
       activate
 
@@ -45,22 +57,13 @@ object ScriptSecurityManager extends SecurityManager {
 
   }
 
-  def deactivate {
+  private def deactivate {
     activated = false
     System.setSecurityManager(sm)
   }
 
-  def activate {
+  private def activate {
     System.setSecurityManager(this)
     activated = true
-  }
-
-  def hardenPermissions[T](f: => T): T = this.synchronized {
-    try {
-      activate
-      f
-    } finally {
-      deactivate
-    }
   }
 }
