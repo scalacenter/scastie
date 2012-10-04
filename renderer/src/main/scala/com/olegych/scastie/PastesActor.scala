@@ -10,7 +10,7 @@ import java.io.File
 /**
   */
 class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogging {
-  val renderer = context.actorOf(Props(new RendererActor(pastesContainer)))
+  val renderer = context.actorOf(Props[RendererActor])
 
   protected def receive = LoggingReceive {
     case AddPaste(content) =>
