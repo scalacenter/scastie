@@ -39,7 +39,7 @@ class RendererActor(pastesContainer: PastesContainer) extends Actor with ActorLo
           case sbt.Success(compileResult) =>
             val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).slurpString))
             sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running"))
-            sbt.process("run") match {
+            sbt.process("run-all") match {
               case sbt.Success(runResult) =>
                 sender ! paste.copy(content = sxrSource, output = Option(runResult))
               case errorResult =>

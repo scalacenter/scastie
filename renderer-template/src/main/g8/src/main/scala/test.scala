@@ -22,3 +22,6 @@ libraryDependencies ++= Seq(
 
   Http.x((Search("#scala") lang "en") ~> (_ map process foreach println))
 }
+object X extends App {
+  println("hello")
+}
