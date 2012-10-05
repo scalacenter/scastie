@@ -1,5 +1,6 @@
 import sbt._
 import PlayProject._
+import com.typesafe.startscript.StartScriptPlugin
 
 object ApplicationBuild extends Build {
 
@@ -19,10 +20,13 @@ object ApplicationBuild extends Build {
         "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.0",
         "org.apache.commons" % "commons-lang3" % "3.1"
       )
-    ))
+    ) ++ StartScriptPlugin.startScriptForClassesSettings
+        ++ Seq(Keys.mainClass in Compile := Option("com.olegych.scastie.RendererMain"))
+  )
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
-    // Add your own project settings here
+    (StartScriptPlugin.startScriptForClassesSettings :+
+        (Keys.mainClass in Compile := Option("play.core.server.NettyServer"))): _*
   ) dependsOn (renderer) aggregate (renderer)
 
 }
