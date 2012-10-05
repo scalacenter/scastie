@@ -6,11 +6,12 @@ import com.olegych.scastie.PastesActor.GetPaste
 import com.olegych.scastie.PastesActor.AddPaste
 import com.olegych.scastie.PastesActor.Paste
 import java.io.File
+import akka.routing.FromConfig
 
 /**
   */
 class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogging {
-  val renderer = context.actorOf(Props[RendererActor])
+  val renderer = context.actorOf(Props[RendererActor].withRouter(FromConfig()), "renderer")
 
   protected def receive = LoggingReceive {
     case AddPaste(content) =>

@@ -15,6 +15,7 @@ object ApplicationBuild extends Build {
     settings = Defaults.defaultSettings ++ PlayProject.intellijCommandSettings("SCALA") ++ Seq(
       Keys.libraryDependencies ++= Seq(
         "com.typesafe.akka" % "akka-actor" % "2.0.3",
+        "com.typesafe.akka" % "akka-remote" % "2.0.3",
         "com.typesafe.akka" % "akka-slf4j" % "2.0.3",
         "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.0",
         "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.0",
