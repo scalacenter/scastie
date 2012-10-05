@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BashSupportProjectSettings">
+    <option name="globalVariables">
+      <set>
+        <option value="OPENSHIFT_APP_NAME" />
+        <option value="OPENSHIFT_DATA_DIR" />
+        <option value="OPENSHIFT_INTERNAL_IP" />
+        <option value="OPENSHIFT_INTERNAL_PORT" />
+        <option value="OPENSHIFT_LOG_DIR" />
+        <option value="OPENSHIFT_REPO_DIR" />
+      </set>
+    </option>
+  </component>
+</project>
+

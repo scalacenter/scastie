@@ -14,14 +14,23 @@ export SBT_OPTS="-Dsbt.boot.directory=${OPENSHIFT_DATA_DIR}/project/target/boot 
 
 cd ${OPENSHIFT_REPO_DIR}
 
-./xsbt.sh clean start-script
+function start_app {
+  project=$1
+  conf=$2
+  export JAVA_OPTS="-Dhttp.port=${OPENSHIFT_INTERNAL_PORT} -Dhttp.address=${OPENSHIFT_INTERNAL_IP} -Dconfig.resource=${conf}"
+  APP_COMMAND="${OPENSHIFT_REPO_DIR}${project}target/start"
+  echo $JAVA_OPTS &>> $LOG_FILE
+  echo $APP_COMMAND &>> $LOG_FILE
 
-chmod +x ${OPENSHIFT_REPO_DIR}target/start
+  ./xsbt.sh clean ${project}start-script
+  chmod +x ${APP_COMMAND}
+  nohup bash -c "${APP_COMMAND} &>> ${LOG_FILE} 2>&1" &> /dev/null &
+}
 
-export JAVA_OPTS="-Dhttp.port=${OPENSHIFT_INTERNAL_PORT} -Dhttp.address=${OPENSHIFT_INTERNAL_IP} -Dconfig.resource=openshift.conf"
-
-APP_COMMAND="${OPENSHIFT_REPO_DIR}target/start"
-
-echo $JAVA_OPTS &>> $LOG_FILE
-echo $APP_COMMAND &>> $LOG_FILE
-nohup bash -c "${APP_COMMAND} &>> ${LOG_FILE} 2>&1" &> /dev/null &
+app_name=${OPENSHIFT_APP_NAME}
+if [[ "${app_name}" =~ "renderer" ]]
+then
+  start_app renderer/ openshift-renderer.conf
+else
+  start_app "" openshift.conf
+fi
