@@ -17,5 +17,8 @@ git add . -A
 echo "[info] running: git commit -m \"$MESSAGE\""
 git commit -m "$MESSAGE"
 
-echo "[info] running: git push shift"
+echo "[info] running: git push"
+
+git push shiftrenderer1
+git push shiftrenderer2
 git push shift
