@@ -10,3 +10,4 @@ object RendererMain extends App {
     ConfigFactory.load(getClass.getClassLoader, Properties.propOrElse("config.resource", "renderer")))
       .awaitTermination()
 }
+

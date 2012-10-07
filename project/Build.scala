@@ -18,6 +18,7 @@ object ApplicationBuild extends Build {
         "com.typesafe.akka" % "akka-remote" % "2.0.3",
         "com.typesafe.akka" % "akka-slf4j" % "2.0.3",
         "com.typesafe" % "config" % "0.5.2",
+        "ch.qos.logback" % "logback-classic" % "1.0.3",
         "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.0",
         "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.0",
         "org.apache.commons" % "commons-lang3" % "3.1"
