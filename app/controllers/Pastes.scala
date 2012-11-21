@@ -6,14 +6,14 @@ import play.api.data.Forms._
 import akka.actor.Props
 import com.olegych.scastie.{PastesActor, PastesContainer}
 import akka.pattern.ask
-import akka.util.duration._
 import play.api.libs.concurrent._
-import akka.util.Timeout
 import play.api.Play
 import java.io.File
 import play.api.templates.Html
 import com.olegych.scastie.PastesActor.{GetPaste, Paste, AddPaste}
 import com.typesafe.config.ConfigFactory
+import akka.util.Timeout
+import concurrent.duration._
 
 
 object Pastes extends Controller {
@@ -26,7 +26,7 @@ object Pastes extends Controller {
 //      ConfigFactory.load(getClass.getClassLoader, "application-renderer"))
   val renderer = Akka.system.actorOf(Props(new PastesActor(PastesContainer(pastesDir))), "pastes")
 
-  implicit val timeout = Timeout(100 seconds)
+  implicit val timeout = Timeout(100.seconds)
 
   val pasteForm = Form(
     single(
@@ -37,7 +37,7 @@ object Pastes extends Controller {
   def add = Action { implicit request =>
     Async {
       val paste = pasteForm.bindFromRequest().apply("paste").value.get
-      (renderer ? AddPaste(paste)).mapTo[Paste].asPromise.map { paste =>
+      (renderer ? AddPaste(paste)).mapTo[Paste].map { paste =>
         Redirect(routes.Pastes.show(paste.id))
       }
     }
@@ -45,7 +45,7 @@ object Pastes extends Controller {
 
   def show(id: Long) = Action { implicit request =>
     Async {
-      (renderer ? GetPaste(id)).mapTo[Paste].asPromise.map { paste =>
+      (renderer ? GetPaste(id)).mapTo[Paste].map { paste =>
         val content = paste.content.getOrElse("")
         val output = paste.output.getOrElse("")
         val typedContent = if (content.matches("(?mis)\\s*<pre>.*")) Left(Html(content)) else Right(content)

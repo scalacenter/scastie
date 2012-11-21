@@ -23,20 +23,20 @@ class RendererActor() extends Actor with ActorLogging {
     sbt.foreach(_.close())
   }
 
-  protected def receive = LoggingReceive {
+  def receive = LoggingReceive {
     case paste@Paste(id, Some(content), _) => {
       sbt map { sbt =>
         import scalax.io.Resource._
         def sendPasteFile(result: String) {
           sender !
-              paste.copy(content = Option(fromFile(sbtDir.pasteFile).slurpString), output = Option(result))
+              paste.copy(content = Option(fromFile(sbtDir.pasteFile).string), output = Option(result))
         }
         sbtDir.writeFile(sbtDir.pasteFile, Option(content))
         val reloadResult = sbt.resultAsString(sbt.process("reload"))
         sendPasteFile(reloadResult)
         sbt.process("compile") match {
           case sbt.Success(compileResult) =>
-            val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).slurpString))
+            val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).string))
             sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running"))
             sbt.process("run-all") match {
               case sbt.Success(runResult) =>

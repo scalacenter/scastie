@@ -14,7 +14,7 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
   val renderer = context.actorOf(Props[RendererActor], "renderer")
 //  val renderer = context.actorOf(Props[RendererActor].withRouter(FromConfig()), "renderer")
 
-  protected def receive = LoggingReceive {
+  def receive = LoggingReceive {
     case AddPaste(content) =>
       val id = nextPasteId
       val paste = Paste(id = id, content = Option(content), output = Option("Processing"))
@@ -37,8 +37,8 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
     val paste = pastesContainer.paste(id)
     if (paste.pasteFile.exists()) {
       import scalax.io.Resource._
-      Paste(id = id, content = Option(fromFile(paste.pasteFile).slurpString()),
-        output = Option(fromFile(paste.outputFile).slurpString()))
+      Paste(id = id, content = Option(fromFile(paste.pasteFile).string),
+        output = Option(fromFile(paste.outputFile).string))
     } else {
       Paste(id = id, content = None, output = Option("Not found"))
     }

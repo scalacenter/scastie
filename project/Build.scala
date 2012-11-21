@@ -1,5 +1,4 @@
 import sbt._
-import PlayProject._
 import com.typesafe.startscript.StartScriptPlugin
 
 object ApplicationBuild extends Build {
@@ -7,22 +6,30 @@ object ApplicationBuild extends Build {
   val appName = "scastie"
   val appVersion = "1.0"
 
+  val scalaVersion = "2.10.0-RC1"
+  val akkaVersion = "2.1.0-RC1"
+
   val appDependencies = Seq(
     // Add your project dependencies here,
   )
-
   val renderer = {
-    val akkaVersion = "2.0.4"
+    def akka(module: String) = {
+      "com.typesafe.akka" % ("akka-" + module) % akkaVersion cross (CrossVersion.full)
+    }
+    def scalaIo(module: String) = {
+      "com.github.scala-incubator.io" % ("scala-io-" + module) % "0.4.1" cross (CrossVersion.full)
+    }
     Project(id = "renderer", base = file("renderer"),
-      settings = Defaults.defaultSettings ++ PlayProject.intellijCommandSettings("SCALA") ++ Seq(
-        Keys.libraryDependencies ++= Seq(
-          "com.typesafe.akka" % "akka-actor" % akkaVersion,
-          "com.typesafe.akka" % "akka-remote" % akkaVersion,
-          "com.typesafe.akka" % "akka-slf4j" % akkaVersion,
+      settings = Defaults.defaultSettings ++ play.Project.intellijCommandSettings("SCALA") ++ Seq(
+        Keys.scalaVersion := scalaVersion
+        , Keys.libraryDependencies ++= Seq(
+          akka("actor"),
+          akka("remote"),
+          akka("slf4j"),
           "com.typesafe" % "config" % "1.0.0",
           "ch.qos.logback" % "logback-classic" % "1.0.3",
-          "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.0",
-          "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.0",
+          scalaIo("core"),
+          scalaIo("file"),
           "org.apache.commons" % "commons-lang3" % "3.1"
         )
       ) ++ StartScriptPlugin.startScriptForClassesSettings
@@ -30,9 +37,11 @@ object ApplicationBuild extends Build {
     )
   }
 
-  val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
-    (StartScriptPlugin.startScriptForClassesSettings :+
-        (Keys.mainClass in Compile := Option("play.core.server.NettyServer"))): _*
+  val main = play.Project(appName, appVersion, appDependencies).settings(
+    (StartScriptPlugin.startScriptForClassesSettings ++
+        Seq(Keys.mainClass in Compile := Option("play.core.server.NettyServer")
+          , Keys.scalaVersion := scalaVersion
+        )): _*
   ) dependsOn (renderer) aggregate (renderer)
 
 }
