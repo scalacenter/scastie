@@ -22,9 +22,9 @@ object Pastes extends Controller {
   import concurrent.ExecutionContext.Implicits.global
 
   val pastesDir = new File(Play.configuration.getString("pastes.data.dir").getOrElse("./target/pastes/"))
-  val system = akka.actor.ActorSystem("actors",
-      ConfigFactory.load(getClass.getClassLoader, "application-renderer"))
-  val renderer = system.actorOf(Props(new PastesActor(PastesContainer(pastesDir))), "pastes")
+//  val system = akka.actor.ActorSystem("actors",
+//      ConfigFactory.load(getClass.getClassLoader, "application-renderer"))
+  val renderer = Akka.system.actorOf(Props(new PastesActor(PastesContainer(pastesDir))), "pastes")
 
   implicit val timeout = Timeout(100 seconds)
 

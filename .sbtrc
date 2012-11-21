@@ -1,1 +1,0 @@
-alias gi = idea with-sources=yes sbt-classifiers

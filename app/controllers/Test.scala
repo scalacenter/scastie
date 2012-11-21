@@ -10,7 +10,7 @@ import com.olegych.scastie.PastesActor.AddPaste
  */
 object Test extends App {
   val system = akka.actor.ActorSystem("actors",
-    ConfigFactory.load(getClass.getClassLoader, "application-renderer"))
+    ConfigFactory.load(getClass.getClassLoader, "application"))
   val pastesDir = new File("./target/pastes/")
   val renderer = system.actorOf(Props(new PastesActor(PastesContainer(pastesDir))), "pastes")
   renderer ! AddPaste("hello")
