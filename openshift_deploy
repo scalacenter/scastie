@@ -19,6 +19,6 @@ git commit -m "$MESSAGE"
 
 echo "[info] running: git push"
 
-git push shiftrenderer1
-git push shiftrenderer2
+git push shiftrenderer1 &
+git push shiftrenderer2 &
 git push shift

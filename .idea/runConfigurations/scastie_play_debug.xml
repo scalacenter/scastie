@@ -11,6 +11,12 @@
       <option name="TRANSPORT" value="1" />
       <option name="LOCAL" value="false" />
     </RunnerSettings>
+    <RunnerSettings RunnerId="Debug">
+      <option name="DEBUG_PORT" value="scastie-play-debug" />
+      <option name="TRANSPORT" value="1" />
+      <option name="LOCAL" value="false" />
+    </RunnerSettings>
+    <ConfigurationWrapper RunnerId="Debug" />
     <ConfigurationWrapper RunnerId="Debug" />
     <method>
       <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_scastie-play-debug" />

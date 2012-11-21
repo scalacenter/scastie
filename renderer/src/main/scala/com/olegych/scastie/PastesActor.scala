@@ -11,7 +11,8 @@ import akka.routing.FromConfig
 /**
   */
 class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogging {
-  val renderer = context.actorOf(Props[RendererActor].withRouter(FromConfig()), "renderer")
+  val renderer = context.actorOf(Props[RendererActor], "renderer")
+//  val renderer = context.actorOf(Props[RendererActor].withRouter(FromConfig()), "renderer")
 
   protected def receive = LoggingReceive {
     case AddPaste(content) =>
