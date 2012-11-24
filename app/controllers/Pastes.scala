@@ -21,12 +21,16 @@ object Pastes extends Controller {
   import play.api.Play.current
   import concurrent.ExecutionContext.Implicits.global
 
-  val pastesDir = new File(Play.configuration.getString("pastes.data.dir").getOrElse("./target/pastes/"))
-//  val system = akka.actor.ActorSystem("actors",
-//      ConfigFactory.load(getClass.getClassLoader, "application-renderer"))
-  val renderer = Akka.system.actorOf(Props(new PastesActor(PastesContainer(pastesDir))), "pastes")
+  val pastesDir = new File(Play.configuration.getString("pastes.data.dir").get)
+  val system = {
+    val classloader = Play.application.classloader
+    akka.actor.ActorSystem("actors",
+      ConfigFactory.load(classloader, Play.configuration.getString("actors.conf").get), classloader)
+  }
 
-  implicit val timeout = Timeout(100.seconds)
+  val renderer = system.actorOf(Props(new PastesActor(PastesContainer(pastesDir))), "pastes")
+
+  implicit val timeout = Timeout(100 seconds)
 
   val pasteForm = Form(
     single(
