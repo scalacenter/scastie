@@ -4,7 +4,7 @@
 # debug 
 # set -x
 
-LOG_FILE="${OPENSHIFT_LOG_DIR}play.log"
+LOG_FILE="${OPENSHIFT_LOG_DIR}application.log"
 
 function kill_app {
 	COMMAND="$1"

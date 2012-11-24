@@ -2,7 +2,6 @@ import sbt._
 import com.typesafe.startscript.StartScriptPlugin
 
 object ApplicationBuild extends Build {
-
   val appName = "scastie"
   val appVersion = "1.0"
 
@@ -23,6 +22,7 @@ object ApplicationBuild extends Build {
       settings = Defaults.defaultSettings ++ play.Project.intellijCommandSettings("SCALA") ++ Seq(
         Keys.scalaVersion := scalaVersion
         , Keys.libraryDependencies ++= Seq(
+          "org.slf4j" % "jul-to-slf4j" % "1.6.6",
           akka("actor"),
           akka("remote"),
           akka("slf4j"),

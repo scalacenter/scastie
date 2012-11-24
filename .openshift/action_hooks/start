@@ -8,7 +8,7 @@ if [[ ! $? -eq 0 ]]; then
 	exit $?
 fi
 
-LOG_FILE="${OPENSHIFT_LOG_DIR}play.log"
+LOG_FILE="${OPENSHIFT_LOG_DIR}application.log"
 
 export SBT_OPTS="-Dsbt.boot.directory=${OPENSHIFT_DATA_DIR}/project/target/boot -Dsbt.ivy.home=${OPENSHIFT_DATA_DIR}/project/target/repo"
 
@@ -17,7 +17,7 @@ cd ${OPENSHIFT_REPO_DIR}
 function start_app {
   project=$1
   conf=$2
-  export JAVA_OPTS="-Dhttp.port=${OPENSHIFT_INTERNAL_PORT} -Dhttp.address=${OPENSHIFT_INTERNAL_IP} -Dconfig.resource=${conf}"
+  export JAVA_OPTS="-Dhttp.port=${OPENSHIFT_INTERNAL_PORT} -Dhttp.address=${OPENSHIFT_INTERNAL_IP} -Dconfig.resource=${conf} -Dlogger.resource=logging.xml"
   APP_COMMAND="${OPENSHIFT_REPO_DIR}${project}target/start"
   echo $JAVA_OPTS &>> $LOG_FILE
   echo $APP_COMMAND &>> $LOG_FILE
