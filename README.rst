@@ -79,11 +79,13 @@ To start application in dev mode just execute './xsbt.sh run' and go to http://l
 
 To start application in debug mode in intellij on cygwin use the included 'scastie-play-debug' run configuration.
 
-Currently the application contains separate configuration tailored for deployment on OpenShift. .openshift directory contains hooks to build and start app on git receive. Openshift specific configs are stored in
-openshift*.conf files and are applied when the run script detect specific environment properties.
+Currently the application contains separate configuration tailored for deployment on OpenShift.
+.openshift directory contains hooks to build and start app on git receive. Openshift specific configs are stored in
+openshift*.conf files and are applied when starting application via openshift hooks.
 
 To test how application will behave when deployed with OpenShift configs, use test-openshift.sh script which
 sets mocks OpenShift environment and starts the post-receive hook.
 
 The remote workers can be started via RendererMain class in renderer module. This can be done via sbt or via
-intellij, or via the same post-receive hook which starts main application if OPENSHIFT_APP_NAME env property matches "renderer". The urls of remote worker should be specified when running main application in *actors.conf.
+intellij, or via the same post-receive hook which starts main application if OPENSHIFT_APP_NAME env property matches "renderer".
+The urls of remote worker should be specified when running main application in *actors.conf.

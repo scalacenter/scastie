@@ -1,12 +1,11 @@
 package com.olegych.scastie
 
-import akka.actor.{Props, Actor, ActorLogging}
+import akka.actor._
 import akka.event.LoggingReceive
+import akka.routing.FromConfig
 import com.olegych.scastie.PastesActor.GetPaste
 import com.olegych.scastie.PastesActor.AddPaste
 import com.olegych.scastie.PastesActor.Paste
-import java.io.File
-import akka.routing.FromConfig
 
 /**
   */
