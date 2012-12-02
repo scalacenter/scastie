@@ -20,10 +20,10 @@ Current Features
    (see https://github.com/harrah/xsbt/wiki/Scripts, only
    libraryDependencies setting is allowed)
 -  distributes workload amongst multiple sbt instances (including remote)
+-  realtime update of paste compilation/running progress
 
 Plans
 -----
--  realtime update of paste compilation/running progress
 -  allow specifying scala version
 -  timeout long-running pastes
 -  allow pastes deletion
