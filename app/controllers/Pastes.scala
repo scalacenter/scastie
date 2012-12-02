@@ -6,7 +6,6 @@ import play.api.data.Forms._
 import akka.actor.Props
 import com.olegych.scastie.{PastesActor, PastesContainer}
 import akka.pattern.ask
-import play.api.libs.concurrent._
 import play.api.Play
 import java.io.File
 import play.api.templates.Html
@@ -14,6 +13,9 @@ import com.olegych.scastie.PastesActor.{GetPaste, Paste, AddPaste}
 import com.typesafe.config.ConfigFactory
 import akka.util.Timeout
 import concurrent.duration._
+import play.api.libs.json.JsValue
+import controllers.Progress.{MonitorChannel, MonitorProgress}
+import concurrent.Future
 
 
 object Pastes extends Controller {
@@ -28,7 +30,8 @@ object Pastes extends Controller {
       ConfigFactory.load(classloader, Play.configuration.getString("actors.conf").get), classloader)
   }
 
-  val renderer = system.actorOf(Props(new PastesActor(PastesContainer(pastesDir))), "pastes")
+  val progressActor = system.actorOf(Props[Progress])
+  val renderer = system.actorOf(Props(new PastesActor(PastesContainer(pastesDir), progressActor)), "pastes")
 
   implicit val timeout = Timeout(100 seconds)
 
@@ -55,8 +58,16 @@ object Pastes extends Controller {
         val typedContent = if (content.matches("(?mis)\\s*<pre>.*")) Left(Html(content)) else Right(content)
         val ref = """\[(?:error|warn)\].*test.scala:(\d+)""".r
         val highlights = ref.findAllIn(output).matchData.map(_.group(1).toInt).toSeq
-        Ok(views.html.show(typedContent, output, highlights))
+        Ok(views.html.show(typedContent, output, highlights, id))
       }
     }
+  }
+
+  def progress(id: Long) = WebSocket.async[JsValue] { request =>
+    Future {
+      Thread.sleep(100)
+      progressActor ! Paste(1, None, None)
+    }
+    (progressActor ? MonitorProgress(id)).mapTo[MonitorChannel].map(_.value)
   }
 }

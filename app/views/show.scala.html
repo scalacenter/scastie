@@ -1,4 +1,4 @@
-@(content: Either[Html, String], output: String, highlights:Seq[Int])
+@(content: Either[Html, String], output: String, highlights: Seq[Int], id: Long)(implicit request: RequestHeader)
 
 @main("Welcome to Scastie", includeLinkJs = true, highlight = true) {
   @content.fold(
@@ -6,8 +6,19 @@
     string =>
       <pre class={"brush: scala; toolbar: false; tab-size: 2; highlight: [" + highlights.mkString(",") + "]"}>{string}</pre>
   )
-  <pre>
-
-@output
+  <pre id="output">
+  @output
   </pre>
+  <script type="text/javascript" charset="utf-8">
+    $(function() {
+    var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
+    var chatSocket = new WS(" @routes.Pastes.progress(id).webSocketURL() ")
+    var receiveEvent = function(event) {
+    var data = JSON.parse(event.data)
+    $("#output").text($("#output").text() + data)
+    }
+    chatSocket.onmessage = receiveEvent
+    })
+  </script>
 }
+

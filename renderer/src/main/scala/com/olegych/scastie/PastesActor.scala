@@ -9,7 +9,7 @@ import com.olegych.scastie.PastesActor.Paste
 
 /**
   */
-class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogging {
+class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef) extends Actor with ActorLogging {
   val renderer = context.actorOf(Props[RendererActor].withRouter(FromConfig()), "renderer")
 
   def receive = LoggingReceive {
@@ -26,6 +26,7 @@ class PastesActor(pastesContainer: PastesContainer) extends Actor with ActorLogg
   }
 
   def writePaste(paste: Paste) {
+    progressActor ! paste
     val pasteDir = pastesContainer.paste(paste.id)
     pasteDir.writeFile(pasteDir.pasteFile, paste.content)
     pasteDir.writeFile(pasteDir.outputFile, paste.output, truncate = false)
