@@ -3,9 +3,7 @@ package com.olegych.scastie
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
-import com.olegych.scastie.PastesActor.GetPaste
-import com.olegych.scastie.PastesActor.AddPaste
-import com.olegych.scastie.PastesActor.Paste
+import com.olegych.scastie.PastesActor.{PasteProgress, GetPaste, AddPaste, Paste}
 
 /**
   */
@@ -15,7 +13,7 @@ class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef) ext
   def receive = LoggingReceive {
     case AddPaste(content) =>
       val id = nextPasteId
-      val paste = Paste(id = id, content = Option(content), output = Option("Processing"))
+      val paste = Paste(id = id, content = Option(content), output = Option("Processing..."))
       renderer ! paste
       sender ! paste
       writePaste(paste)
@@ -26,9 +24,10 @@ class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef) ext
   }
 
   def writePaste(paste: Paste) {
-    progressActor ! paste
     val pasteDir = pastesContainer.paste(paste.id)
+    val contentChanged = readPaste(paste.id).content != paste.content
     pasteDir.writeFile(pasteDir.pasteFile, paste.content)
+    progressActor ! PasteProgress(paste.id, contentChanged, paste.output.getOrElse(""))
     pasteDir.writeFile(pasteDir.outputFile, paste.output, truncate = false)
   }
 
@@ -55,5 +54,7 @@ object PastesActor {
   case class GetPaste(id: Long) extends PasteMessage
 
   case class Paste(id: Long, content: Option[String], output: Option[String]) extends PasteMessage
+
+  case class PasteProgress(id: Long, contentChanged: Boolean, output: String)
 
 }

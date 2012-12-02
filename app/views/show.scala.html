@@ -14,8 +14,11 @@
     var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
     var chatSocket = new WS(" @routes.Pastes.progress(id).webSocketURL() ")
     var receiveEvent = function(event) {
-    var data = JSON.parse(event.data)
-    $("#output").text($("#output").text() + data)
+      var data = JSON.parse(event.data)
+      if (data.contentChanged) {
+        window.setTimeout('window.location.reload()', 1000)
+      }
+      $("#output").text($("#output").text() + "\n" + data.output)
     }
     chatSocket.onmessage = receiveEvent
     })

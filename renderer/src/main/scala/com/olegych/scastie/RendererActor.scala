@@ -37,7 +37,7 @@ class RendererActor() extends Actor with ActorLogging {
         sbt.process("compile") match {
           case sbt.Success(compileResult) =>
             val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).string))
-            sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running"))
+            sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running..."))
             sbt.process("run-all") match {
               case sbt.Success(runResult) =>
                 sender ! paste.copy(content = sxrSource, output = Option(runResult))
@@ -46,7 +46,7 @@ class RendererActor() extends Actor with ActorLogging {
             }
           case sbt.NotTopLevelExpression(compileResult) =>
             sendPasteFile(compileResult + "\nAdding top level object and recompiling...")
-            val fixedContent = "object Main extends App {\n%s\n}".format(content)
+            val fixedContent = s"object Main extends App {\n$content\n}"
             self forward paste.copy(content = Option(fixedContent))
           case errorResult =>
             sendPasteFile(sbt.resultAsString(errorResult))

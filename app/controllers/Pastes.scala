@@ -15,7 +15,6 @@ import akka.util.Timeout
 import concurrent.duration._
 import play.api.libs.json.JsValue
 import controllers.Progress.{MonitorChannel, MonitorProgress}
-import concurrent.Future
 
 
 object Pastes extends Controller {
@@ -64,10 +63,6 @@ object Pastes extends Controller {
   }
 
   def progress(id: Long) = WebSocket.async[JsValue] { request =>
-    Future {
-      Thread.sleep(100)
-      progressActor ! Paste(1, None, None)
-    }
     (progressActor ? MonitorProgress(id)).mapTo[MonitorChannel].map(_.value)
   }
 }
