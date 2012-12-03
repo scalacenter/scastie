@@ -30,7 +30,8 @@ object ApplicationBuild extends Build {
           "ch.qos.logback" % "logback-classic" % "1.0.7",
           scalaIo("core"),
           scalaIo("file"),
-          "org.apache.commons" % "commons-lang3" % "3.1"
+          "org.apache.commons" % "commons-lang3" % "3.1",
+          "net.sourceforge.collections" % "collections-generic" % "4.01"
         )
       ) ++ StartScriptPlugin.startScriptForClassesSettings
           ++ Seq(Keys.mainClass in Compile := Option("com.olegych.scastie.RendererMain"))

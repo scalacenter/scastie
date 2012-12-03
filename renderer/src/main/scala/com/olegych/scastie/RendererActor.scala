@@ -23,6 +23,7 @@ class RendererActor() extends Actor with ActorLogging {
   override def preRestart(reason: Throwable, message: Option[Any]) {
     super.preRestart(reason, message)
     if (message != lastFailedMessage) {
+      //todo properly store in some other place
       lastFailedMessage = message
       message.foreach(self forward _)
     }

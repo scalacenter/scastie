@@ -1,9 +1,11 @@
 package com.olegych.scastie
 
 import java.io.File
-import collection.mutable.ArrayBuffer
 import org.apache.commons.lang3.SystemUtils
 import akka.event.LoggingAdapter
+import akka.util.BoundedBlockingQueue
+import java.util
+import org.apache.commons.collections15.buffer.CircularFifoBuffer
 
 /**
   */
@@ -39,20 +41,21 @@ case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
   }
 
   def waitForPrompt: Seq[String] = {
-    val lines = ArrayBuffer[String]()
-    val chars = ArrayBuffer[Char]()
+    import collection.JavaConversions._
+    val lines = new CircularFifoBuffer[String](200)
+    val chars = new CircularFifoBuffer[Character](1000)
     var read: Int = 0
     while (read != -1 && lines.lastOption != Some(uniqueId)) {
       read = fout.read()
       if (read == 10) {
-        lines += chars.mkString
+        lines.add(chars.mkString)
         log.info("sbt: " + lines.last)
         chars.clear()
       } else {
-        chars += read.toChar
+        chars.add(read.toChar)
       }
     }
-    lines.dropRight(1)
+    lines.dropRight(1).toSeq
   }
 
   def close() {
