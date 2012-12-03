@@ -1,6 +1,6 @@
 package com.olegych.scastie
 
-import akka.actor.{PoisonPill, ActorLogging, Actor}
+import akka.actor.{ActorLogging, Actor}
 import akka.event.LoggingReceive
 import java.io.File
 import com.olegych.scastie.PastesActor.Paste
@@ -12,7 +12,7 @@ import concurrent.duration._
 class RendererActor extends Actor with ActorLogging {
   val failures = context.actorFor("../../failures")
 
-  val killer = TimeoutActor(30 seconds, message => {
+  val killer = TimeoutActor(2 minutes, message => {
     message match {
       case paste: Paste => sender ! paste.copy(output = Some("Killed because of timeout!"), content = None)
       case _ => log.info("unknown message {}", message)
