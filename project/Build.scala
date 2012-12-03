@@ -27,7 +27,7 @@ object ApplicationBuild extends Build {
           akka("remote"),
           akka("slf4j"),
           "com.typesafe" % "config" % "1.0.0",
-          "ch.qos.logback" % "logback-classic" % "1.0.3",
+          "ch.qos.logback" % "logback-classic" % "1.0.7",
           scalaIo("core"),
           scalaIo("file"),
           "org.apache.commons" % "commons-lang3" % "3.1"
