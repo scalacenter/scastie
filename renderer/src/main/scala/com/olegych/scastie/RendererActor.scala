@@ -18,6 +18,16 @@ class RendererActor() extends Actor with ActorLogging {
     sbt = Option(new RendererTemplate(sbtDir.root, log, generateId).create)
   }
 
+  var lastFailedMessage: Option[Any] = None
+
+  override def preRestart(reason: Throwable, message: Option[Any]) {
+    super.preRestart(reason, message)
+    if (message != lastFailedMessage) {
+      lastFailedMessage = message
+      message.foreach(self forward _)
+    }
+  }
+
   override def postStop() {
     log.info("stopping sbt")
     sbt.foreach(_.close())
