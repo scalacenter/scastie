@@ -77,14 +77,15 @@ For convenience sbt launch scripts for cygwin (xsbt.cmd) and *nix (xsbt.sh) are 
 
 To start application in dev mode just execute './xsbt.sh run' and go to http://localhost:9000
 
-To start application in debug mode in intellij on cygwin use the included 'scastie-play-debug' run configuration.
+To start application in debug mode in intellij use the included 'scastie-play' run configuration. Use JRebel to emulate play reloading.
 
-Currently the application contains separate configuration tailored for deployment on OpenShift.
-.openshift directory contains hooks to build and start app on git receive. Openshift specific configs are stored in
+Currently the application contains separate configuration tailored for deployment on single AWS t1.micro instance.
+The configs and launch scripts were initially created for deployment on OpenShift, but later adapted for AWS as it was somewhat faster and allowed supporting WebSockets.
+.openshift directory contains hooks to build and start app on git receive. Production specific configs are stored in
 openshift*.conf files and are applied when starting application via openshift hooks.
 
-To test how application will behave when deployed with OpenShift configs, use test-openshift.sh script which
-sets mocks OpenShift environment and starts the post-receive hook.
+To test how application will behave when deployed on production, use test-openshift.sh script which
+mocks OpenShift environment and starts the post-receive hook.
 
 The remote workers can be started via RendererMain class in renderer module. This can be done via sbt or via
 intellij, or via the same post-receive hook which starts main application if OPENSHIFT_APP_NAME env property matches "renderer".
