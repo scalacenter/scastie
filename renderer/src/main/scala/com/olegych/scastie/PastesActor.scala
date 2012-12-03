@@ -9,6 +9,7 @@ import com.olegych.scastie.PastesActor.{PasteProgress, GetPaste, AddPaste, Paste
   */
 class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef) extends Actor with ActorLogging {
   val renderer = context.actorOf(Props[RendererActor].withRouter(FromConfig()), "renderer")
+  val failures = context.actorOf(Props[FailuresActor], "failures")
 
   def receive = LoggingReceive {
     case AddPaste(content) =>

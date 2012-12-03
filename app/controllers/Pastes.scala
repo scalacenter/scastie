@@ -36,15 +36,20 @@ object Pastes extends Controller {
 
   val pasteForm = Form(
     single(
-      "paste" -> text
+      "paste" -> text.verifying("Too Long", _.length < 10000)
     )
   )
 
   def add = Action { implicit request =>
-    Async {
-      val paste = pasteForm.bindFromRequest().apply("paste").value.get
-      (renderer ? AddPaste(paste)).mapTo[Paste].map { paste =>
-        Redirect(routes.Pastes.show(paste.id))
+    val form = pasteForm.bindFromRequest()
+    val paste = form.apply("paste").value.get
+    if (form.hasErrors) {
+      Redirect(routes.Application.index()).flashing("error" -> form.errors.map(_.message).mkString, "paste" -> paste)
+    } else {
+      Async {
+        (renderer ? AddPaste(paste)).mapTo[Paste].map { paste =>
+          Redirect(routes.Pastes.show(paste.id))
+        }
       }
     }
   }

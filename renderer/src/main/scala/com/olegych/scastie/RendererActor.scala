@@ -4,10 +4,13 @@ import akka.actor.{ActorLogging, Actor}
 import akka.event.LoggingReceive
 import java.io.File
 import com.olegych.scastie.PastesActor.Paste
+import com.olegych.scastie.FailuresActor.AddFailure
 
 /**
   */
-class RendererActor() extends Actor with ActorLogging {
+class RendererActor extends Actor with ActorLogging {
+  val failures = context.actorFor("../../failures")
+
   def generateId: String = util.Random.alphanumeric.take(10).mkString
 
   val sbtDir = PastesContainer(new File(System.getProperty("java.io.tmpdir"))).renderer(generateId)
@@ -18,14 +21,10 @@ class RendererActor() extends Actor with ActorLogging {
     sbt = Option(new RendererTemplate(sbtDir.root, log, generateId).create)
   }
 
-  var lastFailedMessage: Option[Any] = None
-
   override def preRestart(reason: Throwable, message: Option[Any]) {
     super.preRestart(reason, message)
-    if (message != lastFailedMessage) {
-      //todo properly store in some other place
-      lastFailedMessage = message
-      message.foreach(self forward _)
+    message match {
+      case Some(message@Paste(_, content, _)) => failures ! AddFailure(reason, message, sender, content)
     }
   }
 

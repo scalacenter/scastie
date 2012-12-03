@@ -1,9 +1,9 @@
-@(message: Html)
+@(message: Html, paste: String)
 
 @main("Welcome to Scastie") {
   @message
   <form action=" @routes.Pastes.add " method="post">
-    <textarea name="paste" rows="50" cols="110" style="font-family: monospace" autofocus=""></textarea>
+    <textarea name="paste" rows="50" cols="110" style="font-family: monospace" autofocus="" maxlength="10000">@paste</textarea>
   <br/>
   <input type="submit"/>
   </form>

@@ -6,7 +6,9 @@ import play.api.templates.Html
 object Application extends Controller {
 
   def index = Action { implicit request =>
-    Ok(views.html.index(Html("Enter your code and hit Submit:")))
+    val message = request.flash.get("error").map(Html(_)).getOrElse(Html("Enter your code and hit Submit:"))
+    val paste = request.flash.get("paste").getOrElse("")
+    Ok(views.html.index(message, paste))
   }
 
 }
