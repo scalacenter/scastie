@@ -1,15 +1,24 @@
 package com.olegych.scastie
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{PoisonPill, ActorLogging, Actor}
 import akka.event.LoggingReceive
 import java.io.File
 import com.olegych.scastie.PastesActor.Paste
-import com.olegych.scastie.FailuresActor.AddFailure
+import com.olegych.scastie.FailuresActor.{FatalFailure, AddFailure}
+import concurrent.duration._
 
 /**
   */
 class RendererActor extends Actor with ActorLogging {
   val failures = context.actorFor("../../failures")
+
+  val killer = TimeoutActor(30 seconds, message => {
+    message match {
+      case paste: Paste => sender ! paste.copy(output = Some("Killed because of timeout!"), content = None)
+      case _ => log.info("unknown message {}", message)
+    }
+    preRestart(FatalFailure, Some(message))
+  })
 
   def generateId: String = util.Random.alphanumeric.take(10).mkString
 
@@ -23,8 +32,8 @@ class RendererActor extends Actor with ActorLogging {
 
   override def preRestart(reason: Throwable, message: Option[Any]) {
     super.preRestart(reason, message)
-    message match {
-      case Some(message@Paste(_, content, _)) => failures ! AddFailure(reason, message, sender, content)
+    message.collect {
+      case message@Paste(_, content, _) => failures ! AddFailure(reason, message, sender, content)
     }
   }
 
@@ -34,32 +43,34 @@ class RendererActor extends Actor with ActorLogging {
   }
 
   def receive = LoggingReceive {
-    case paste@Paste(id, Some(content), _) => {
-      sbt map { sbt =>
-        import scalax.io.Resource._
-        def sendPasteFile(result: String) {
-          sender !
-              paste.copy(content = Option(fromFile(sbtDir.pasteFile).string), output = Option(result))
-        }
-        sbtDir.writeFile(sbtDir.pasteFile, Option(content))
-        val reloadResult = sbt.resultAsString(sbt.process("reload"))
-        sendPasteFile(reloadResult)
-        sbt.process("compile") match {
-          case sbt.Success(compileResult) =>
-            val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).string))
-            sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running..."))
-            sbt.process("run-all") match {
-              case sbt.Success(runResult) =>
-                sender ! paste.copy(content = sxrSource, output = Option(runResult))
-              case errorResult =>
-                sender ! paste.copy(content = sxrSource, output = Option(sbt.resultAsString(errorResult)))
-            }
-          case sbt.NotTopLevelExpression(compileResult) =>
-            sendPasteFile(compileResult + "\nAdding top level object and recompiling...")
-            val fixedContent = s"object Main extends App {\n$content\n}"
-            self forward paste.copy(content = Option(fixedContent))
-          case errorResult =>
-            sendPasteFile(sbt.resultAsString(errorResult))
+    killer {
+      case paste@Paste(id, Some(content), _) => {
+        sbt map { sbt =>
+          import scalax.io.Resource._
+          def sendPasteFile(result: String) {
+            sender !
+                paste.copy(content = Option(fromFile(sbtDir.pasteFile).string), output = Option(result))
+          }
+          sbtDir.writeFile(sbtDir.pasteFile, Option(content))
+          val reloadResult = sbt.resultAsString(sbt.process("reload"))
+          sendPasteFile(reloadResult)
+          sbt.process("compile") match {
+            case sbt.Success(compileResult) =>
+              val sxrSource = Option(cleanSource(fromFile(sbtDir.sxrSource).string))
+              sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running..."))
+              sbt.process("run-all") match {
+                case sbt.Success(runResult) =>
+                  sender ! paste.copy(content = sxrSource, output = Option(runResult))
+                case errorResult =>
+                  sender ! paste.copy(content = sxrSource, output = Option(sbt.resultAsString(errorResult)))
+              }
+            case sbt.NotTopLevelExpression(compileResult) =>
+              sendPasteFile(compileResult + "\nAdding top level object and recompiling...")
+              val fixedContent = s"object Main extends App {\n$content\n}"
+              self forward paste.copy(content = Option(fixedContent))
+            case errorResult =>
+              sendPasteFile(sbt.resultAsString(errorResult))
+          }
         }
       }
     }

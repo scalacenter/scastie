@@ -21,11 +21,11 @@ Current Features
    libraryDependencies setting is allowed)
 -  distributes workload amongst multiple sbt instances (including remote)
 -  realtime update of paste compilation/running progress
+-  timeout long-running pastes
 
 Plans
 -----
 -  allow specifying scala version
--  timeout long-running pastes
 -  allow pastes deletion
 -  detect pastes to gist.github.com pastie.net pastebin.com etc with
    multibot and copy to scastie
