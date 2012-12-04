@@ -18,7 +18,7 @@ case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
     val currentOpts = Option(System.getenv("SBT_OPTS")).getOrElse("")
         .replaceAll("-agentlib:jdwp=transport=dt_shmem,server=n,address=.*,suspend=y", "")
     builder.environment()
-        .put("SBT_OPTS", currentOpts + " -Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true")
+        .put("SBT_OPTS", currentOpts + " -Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true -Xmx412M -XX:MaxPermSize=100m" )
     log.info("Starting sbt with {} {} {}", builder.command(), builder.environment(), builder.directory())
     val process = builder.start()
     import scalax.io.JavaConverters._
