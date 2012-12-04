@@ -62,7 +62,7 @@ case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
     try process("exit", waitForPrompt = false) catch {
       case e: Throwable => log.error(e, "Error while soft exit")
     }
-    process.destroy()
+    ProcessKiller.instance.kill(process)
   }
 
   object Success {
