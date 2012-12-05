@@ -52,3 +52,8 @@ div#pop-out input {
 	margin-right: .75em;
 	vertical-align: middle;
 }
+
+div#reload-nag {
+  font-weight: bold;
+  font-size: large;
+}

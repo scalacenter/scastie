@@ -9,6 +9,7 @@
   <pre id="output">
   @output
   </pre>
+  <div id="reload-nag"></div>
   <script type="text/javascript" charset="utf-8">
     $(function() {
     var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
@@ -16,7 +17,8 @@
     var receiveEvent = function(event) {
       var data = JSON.parse(event.data)
       if (data.contentChanged) {
-        window.setTimeout('window.location.reload()', 1000)
+        $("#reload-nag").text("Reload to see highlights")
+        $("#reload-nag").click(function(){window.location.reload()})
       }
       $("#output").text($("#output").text() + "\n" + data.output)
     }
