@@ -1,10 +1,15 @@
 @(content: Either[Html, String], output: String, highlights: Seq[Int], id: Long)(implicit request: RequestHeader)
 
 @main("Welcome to Scastie", includeLinkJs = true, highlight = true) {
+  <div class="toolbar">
   @helper.form(action = routes.Pastes.edit()) {
     <input type="hidden" name="paste" id="paste"></input>
     <input type="submit" value="Edit"></input>
   }
+  @helper.form(action = routes.Pastes.delete(id)) {
+    <input type="submit" value="Delete"></input>
+  }
+  </div>
   </br>
   @content.fold(
     html => html,

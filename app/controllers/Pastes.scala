@@ -9,7 +9,7 @@ import akka.pattern.ask
 import play.api.Play
 import java.io.File
 import play.api.templates.Html
-import com.olegych.scastie.PastesActor.{GetPaste, Paste, AddPaste}
+import com.olegych.scastie.PastesActor.{DeletePaste, GetPaste, Paste, AddPaste}
 import com.typesafe.config.ConfigFactory
 import akka.util.Timeout
 import concurrent.duration._
@@ -62,6 +62,14 @@ object Pastes extends Controller {
   def edit = Action { implicit request =>
     val form = pasteForm.bindFromRequest()
     Redirect(routes.Application.index()).flashing("paste" -> form("paste").value.get)
+  }
+
+  def delete(id: Long) = Action { implicit request =>
+    Async {
+      (renderer ? DeletePaste(id)).map { _ =>
+        Redirect(routes.Pastes.show(id))
+      }
+    }
   }
 
   def show(id: Long) = Action { implicit request =>

@@ -3,7 +3,11 @@ package com.olegych.scastie
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
-import com.olegych.scastie.PastesActor.{PasteProgress, GetPaste, AddPaste, Paste}
+import com.olegych.scastie.PastesActor._
+import com.olegych.scastie.PastesActor.PasteProgress
+import com.olegych.scastie.PastesActor.GetPaste
+import com.olegych.scastie.PastesActor.AddPaste
+import com.olegych.scastie.PastesActor.Paste
 
 /**
   */
@@ -20,6 +24,9 @@ class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef) ext
       writePaste(paste)
     case GetPaste(id) =>
       sender ! readPaste(id)
+    case DeletePaste(id) =>
+      deletePaste(id)
+      sender ! Paste(id, None, None)
     case paste@Paste(id, content, output) =>
       writePaste(paste)
   }
@@ -43,6 +50,12 @@ class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef) ext
     }
   }
 
+  def deletePaste(id: Long) {
+    val paste = pastesContainer.paste(id)
+    paste.outputFile.delete()
+    paste.pasteFile.delete()
+  }
+
   def nextPasteId = pastesContainer.lastPasteId.incrementAndGet()
 }
 
@@ -53,6 +66,8 @@ object PastesActor {
   case class AddPaste(content: String) extends PasteMessage
 
   case class GetPaste(id: Long) extends PasteMessage
+
+  case class DeletePaste(id: Long) extends PasteMessage
 
   case class Paste(id: Long, content: Option[String], output: Option[String]) extends PasteMessage
 
