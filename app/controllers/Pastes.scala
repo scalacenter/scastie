@@ -36,15 +36,20 @@ object Pastes extends Controller {
 
   val pasteForm = Form(
     single(
-      "paste" -> text.verifying("Too Long", _.length < 10000)
+      "paste" -> text(maxLength = 10000)
     )
   )
 
   def add = Action { implicit request =>
     val form = pasteForm.bindFromRequest()
-    val paste = form.apply("paste").value.get
+    createPaste(form)
+  }
+
+  def createPaste(form: Form[String]): Result = {
+    val paste = form("paste").value.get
     if (form.hasErrors) {
-      Redirect(routes.Application.index()).flashing("error" -> form.errors.map(_.message).mkString, "paste" -> paste)
+      Redirect(routes.Application.index())
+          .flashing("error" -> form.errors.map(_.message).mkString, "paste" -> paste)
     } else {
       Async {
         (renderer ? AddPaste(paste)).mapTo[Paste].map { paste =>
@@ -52,6 +57,11 @@ object Pastes extends Controller {
         }
       }
     }
+  }
+
+  def edit = Action { implicit request =>
+    val form = pasteForm.bindFromRequest()
+    Redirect(routes.Application.index()).flashing("paste" -> form("paste").value.get)
   }
 
   def show(id: Long) = Action { implicit request =>
@@ -70,4 +80,5 @@ object Pastes extends Controller {
   def progress(id: Long) = WebSocket.async[JsValue] { request =>
     (progressActor ? MonitorProgress(id)).mapTo[MonitorChannel].map(_.value)
   }
+
 }

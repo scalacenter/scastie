@@ -1,6 +1,11 @@
 @(content: Either[Html, String], output: String, highlights: Seq[Int], id: Long)(implicit request: RequestHeader)
 
 @main("Welcome to Scastie", includeLinkJs = true, highlight = true) {
+  @helper.form(action = routes.Pastes.edit()) {
+    <input type="hidden" name="paste" id="paste"></input>
+    <input type="submit" value="Edit"></input>
+  }
+  </br>
   @content.fold(
     html => html,
     string =>
@@ -12,9 +17,9 @@
   <div id="reload-nag"></div>
   <script type="text/javascript" charset="utf-8">
     $(function() {
+    $("#paste").val($("td.code").text() || $("pre:first").text())
     var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
-    var chatSocket = new WS(" @routes.Pastes.progress(id).webSocketURL() ")
-    var receiveEvent = function(event) {
+    new WS(" @routes.Pastes.progress(id).webSocketURL() ").onmessage = function(event) {
       var data = JSON.parse(event.data)
       if (data.contentChanged) {
         $("#reload-nag").text("Reload to see highlights")
@@ -22,7 +27,6 @@
       }
       $("#output").text($("#output").text() + "\n" + data.output)
     }
-    chatSocket.onmessage = receiveEvent
     })
   </script>
 }
