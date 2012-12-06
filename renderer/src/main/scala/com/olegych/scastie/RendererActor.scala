@@ -33,7 +33,7 @@ class RendererActor extends Actor with ActorLogging {
   override def preRestart(reason: Throwable, message: Option[Any]) {
     super.preRestart(reason, message)
     message.collect {
-      case message@Paste(_, content, _) => failures ! AddFailure(reason, message, sender, content)
+      case message@Paste(_, content, _, _) => failures ! AddFailure(reason, message, sender, content)
     }
   }
 
@@ -44,14 +44,14 @@ class RendererActor extends Actor with ActorLogging {
 
   def receive = LoggingReceive {
     killer {
-      case paste@Paste(id, Some(content), _) => {
+      case paste@Paste(_, Some(content), _, _) => {
         sbt map { sbt =>
           import scalax.io.Resource._
           def sendPasteFile(result: String) {
             sender !
                 paste.copy(content = Option(fromFile(sbtDir.pasteFile).string), output = Option(result))
           }
-          sbtDir.writeFile(sbtDir.pasteFile, Option(content))
+          sbtDir.pasteFile.write(Option(content))
           val reloadResult = sbt.resultAsString(sbt.process("reload"))
           sendPasteFile(reloadResult)
           sbt.process("compile") match {

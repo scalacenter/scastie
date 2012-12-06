@@ -15,6 +15,7 @@ import akka.util.Timeout
 import concurrent.duration._
 import play.api.libs.json.JsValue
 import controllers.Progress.{MonitorChannel, MonitorProgress}
+import play.api.i18n.Messages
 
 
 object Pastes extends Controller {
@@ -42,17 +43,17 @@ object Pastes extends Controller {
 
   def add = Action { implicit request =>
     val form = pasteForm.bindFromRequest()
-    createPaste(form)
+    createPaste(form, Application.uid)
   }
 
-  def createPaste(form: Form[String]): Result = {
+  def createPaste(form: Form[String], uid: String): Result = {
     val paste = form("paste").value.get
     if (form.hasErrors) {
       Redirect(routes.Application.index())
           .flashing("error" -> form.errors.map(_.message).mkString, "paste" -> paste)
     } else {
       Async {
-        (renderer ? AddPaste(paste)).mapTo[Paste].map { paste =>
+        (renderer ? AddPaste(paste, uid)).mapTo[Paste].map { paste =>
           Redirect(routes.Pastes.show(paste.id))
         }
       }
@@ -66,8 +67,10 @@ object Pastes extends Controller {
 
   def delete(id: Long) = Action { implicit request =>
     Async {
-      (renderer ? DeletePaste(id)).map { _ =>
-        Redirect(routes.Pastes.show(id))
+      (renderer ? DeletePaste(id, Application.uid)).mapTo[Paste].map { paste =>
+        val result = Redirect(routes.Pastes.show(id))
+        paste.uid.fold[PlainResult](ifEmpty = result)(
+          _ => result.flashing("error" -> Messages("invalid.user")))
       }
     }
   }
@@ -76,7 +79,7 @@ object Pastes extends Controller {
     Async {
       (renderer ? GetPaste(id)).mapTo[Paste].map { paste =>
         val content = paste.content.getOrElse("")
-        val output = paste.output.getOrElse("")
+        val output = request.flash.get("error").map(_ + "\n").getOrElse("") + paste.output.getOrElse("")
         val typedContent = if (content.matches("(?mis)\\s*<pre>.*")) Left(Html(content)) else Right(content)
         val ref = """\[(?:error|warn)\].*test.scala:(\d+)""".r
         val highlights = ref.findAllIn(output).matchData.map(_.group(1).toInt).toSeq

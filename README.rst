@@ -22,11 +22,11 @@ Current Features
 -  distributes workload amongst multiple sbt instances (including remote)
 -  realtime update of paste compilation/running progress
 -  timeout long-running pastes
+-  allow deleting and cloning pastes
 
 Plans
 -----
 -  allow specifying scala version
--  allow pastes deletion
 -  detect pastes to gist.github.com pastie.net pastebin.com etc with
    multibot and copy to scastie
 -  interface for uploading pre-sxred libraries
