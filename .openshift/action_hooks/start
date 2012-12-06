@@ -10,7 +10,7 @@ fi
 
 LOG_FILE="${OPENSHIFT_LOG_DIR}application.log"
 
-export SBT_OPTS="-Dsbt.boot.directory=${OPENSHIFT_DATA_DIR}/project/target/boot -Dsbt.ivy.home=${OPENSHIFT_DATA_DIR}/project/target/repo"
+export SBT_OPTS="${SBT_OPTS} -Dsbt.boot.directory=${OPENSHIFT_DATA_DIR}/project/target/boot -Dsbt.ivy.home=${OPENSHIFT_DATA_DIR}/project/target/repo"
 
 cd ${OPENSHIFT_REPO_DIR}
 
