@@ -17,6 +17,11 @@
       <option name="TRANSPORT" value="0" />
       <option name="LOCAL" value="true" />
     </RunnerSettings>
+    <RunnerSettings RunnerId="JProfiler">
+      <option name="WINDOW" value="false" />
+      <option name="JVMPI" value="false" />
+      <option name="INTERPRETED" value="false" />
+    </RunnerSettings>
     <RunnerSettings RunnerId="JRebel Debug">
       <option name="bootstrapPath" />
       <option name="debugPort" value="" />
@@ -28,8 +33,10 @@
       <option name="TRANSPORT" value="0" />
       <option name="LOCAL" value="true" />
     </RunnerSettings>
+    <RunnerSettings RunnerId="Run" />
     <ConfigurationWrapper RunnerId="Debug" />
     <ConfigurationWrapper RunnerId="JRebel Debug" />
+    <ConfigurationWrapper RunnerId="Run" />
     <method />
   </configuration>
 </component>
