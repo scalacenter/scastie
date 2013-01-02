@@ -9,8 +9,8 @@ object ScriptSecurityManager extends SecurityManager {
   System.setProperty("actors.enableForkJoin", false + "")
 
   private val lock = new Object
-  private val sm = System.getSecurityManager
-  @transient private var activated = false
+  @volatile private var sm: Option[SecurityManager] = None
+  @volatile private var activated = false
 
   def hardenPermissions[T](f: => T): T = lock.synchronized {
     try {
@@ -53,8 +53,9 @@ object ScriptSecurityManager extends SecurityManager {
         throw new SecurityException(perm.toString)
       }
     } else {
-      if (sm != null) {
-        sm.checkPermission(perm)
+      //don't use closures here to avoid SOE
+      if (sm.isDefined && sm.get != this) {
+        sm.get.checkPermission(perm)
       }
     }
 
@@ -62,11 +63,15 @@ object ScriptSecurityManager extends SecurityManager {
 
   private def deactivate {
     activated = false
-    System.setSecurityManager(sm)
+    if (System.getSecurityManager == this) sm.foreach(System.setSecurityManager(_))
   }
 
   private def activate {
-    System.setSecurityManager(this)
+    val manager = System.getSecurityManager
+    if (manager != this) {
+      sm = Option(manager)
+      System.setSecurityManager(this)
+    }
     activated = true
   }
 }
