@@ -8,7 +8,7 @@ object ApplicationBuild extends Build {
   val runAll = TaskKey[Unit]("run-all")
 
   val rendererWorker = Project(id = "rendererWorker", base = file("."),
-    settings = Defaults.defaultSettings ++ Seq(
+    settings = Defaults.defaultSettings ++ DefaultSettings.apply ++ Seq(
       runAll <<=
           (discoveredMainClasses in Compile, fullClasspath in Compile, runner in(Compile, run), streams) map
               runAllTask,
