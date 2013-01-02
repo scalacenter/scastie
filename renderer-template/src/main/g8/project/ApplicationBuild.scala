@@ -48,14 +48,11 @@ object ApplicationBuild extends Build {
           val imports = List("import sbt._", "import Keys._")
           evaluate(eval, script.getPath, block.lines, imports, block.offset + 1)(loader)
         }
-        println(embeddedSettings.mkString("\n"))
-        val result = embeddedSettings.flatMap {
+        embeddedSettings.flatMap {
           case setting if allowedKeys.exists(_.scopedKey == setting.key) =>
             Project.transform(_ => GlobalScope, setting)
           case _ => Nil
         }
-        println(result.mkString("\n"))
-        result
       }
     } catch {
       case e: Throwable =>
