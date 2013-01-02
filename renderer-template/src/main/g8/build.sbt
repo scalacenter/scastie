@@ -1,7 +1,5 @@
 import scalariform.formatter.preferences._
 
-scalaVersion := "2.9.2"
-
 resolvers += Resolver.url("olegych-repo", url("https://bitbucket.org/olegych/mvn/raw/default/ivy2/"))(Resolver.ivyStylePatterns)
 
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"

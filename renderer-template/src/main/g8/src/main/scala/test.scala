@@ -1,5 +1,5 @@
 /***
-scalaVersion := "ololo"
+scalaVersion := "2.10.0"
 
 libraryDependencies ++= Seq("play" % "play_2.9.1" % "2.0.4")
 */

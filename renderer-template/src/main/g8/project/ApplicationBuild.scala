@@ -37,6 +37,8 @@ object ApplicationBuild extends Build {
         .reapply(sessionSettings.appendRaw(dependencies).appendRaw(onLoad in Global := idFun), state)
   }
 
+  val allowedKeys = Set(libraryDependencies, scalaVersion)
+
   def extractDependencies(eval: compiler.Eval, loader: ClassLoader, state: State): Seq[Setting[_]] = {
     val scriptArg = "src/main/scala/test.scala"
     val script = file(scriptArg).getAbsoluteFile
@@ -46,11 +48,14 @@ object ApplicationBuild extends Build {
           val imports = List("import sbt._", "import Keys._")
           evaluate(eval, script.getPath, block.lines, imports, block.offset + 1)(loader)
         }
-        embeddedSettings.flatMap {
-          case setting if setting.key == libraryDependencies.scopedKey =>
+        println(embeddedSettings.mkString("\n"))
+        val result = embeddedSettings.flatMap {
+          case setting if allowedKeys.exists(_.scopedKey == setting.key) =>
             Project.transform(_ => GlobalScope, setting)
           case _ => Nil
         }
+        println(result.mkString("\n"))
+        result
       }
     } catch {
       case e: Throwable =>
