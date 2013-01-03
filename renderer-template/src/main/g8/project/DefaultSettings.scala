@@ -25,6 +25,7 @@ object DefaultSettings {
     //to be able to detect prompt
     , shellPrompt := (_ => "$uniqueId$\n")
     , traceLevel := 1000
+    , crossPaths := false
   )
 
   val pluginVersions: PartialFunction[(String, ModuleID), ModuleID] = {

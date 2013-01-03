@@ -16,7 +16,7 @@ case class PastesContainer(root: java.io.File) {
   def pasteFile = new ExtendedFile("src/main/scala/test.scala")
   def outputFile = new ExtendedFile("src/main/scala/output.txt")
   def uidFile = new ExtendedFile("src/main/scala/uid.txt")
-  def sxrSource = new ExtendedFile("target/scala-2.9.2/classes.sxr/test.scala.html")
+  def sxrSource = new ExtendedFile("target/classes.sxr/test.scala.html")
 
   class ExtendedFile(path: String) extends File(root, path) {
 
