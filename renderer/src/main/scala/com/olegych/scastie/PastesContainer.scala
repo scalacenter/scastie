@@ -23,8 +23,8 @@ case class PastesContainer(root: java.io.File) {
 
     import scalax.io.Resource._
 
-    def read = {
-      fromFile(file).string
+    def read:Option[String] = {
+      Option(fromFile(file).string).filter(! _.isEmpty)
     }
 
     def write(content: Option[String], truncate: Boolean = true) = {

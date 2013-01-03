@@ -48,14 +48,15 @@ class RendererActor extends Actor with ActorLogging {
         sbt map { sbt =>
           def sendPasteFile(result: String) {
             sender !
-                paste.copy(content = Option(sbtDir.pasteFile.read), output = Option(result))
+                paste.copy(content = sbtDir.pasteFile.read, output = Option(result))
           }
           sbtDir.pasteFile.write(Option(content))
           val reloadResult = sbt.resultAsString(sbt.process("reload"))
           sendPasteFile(reloadResult)
+          sbtDir.sxrSource.delete()
           sbt.process("compile") match {
             case sbt.Success(compileResult) =>
-              val sxrSource = Option(cleanSource(sbtDir.sxrSource.read))
+              val sxrSource = sbtDir.sxrSource.read.map(cleanSource)
               sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running..."))
               sbt.process("run-all") match {
                 case sbt.Success(runResult) =>
