@@ -16,19 +16,20 @@ case class PastesContainer(root: java.io.File) {
   def pasteFile = new ExtendedFile("src/main/scala/test.scala")
   def outputFile = new ExtendedFile("src/main/scala/output.txt")
   def uidFile = new ExtendedFile("src/main/scala/uid.txt")
-  def sxrSource = new ExtendedFile("target/classes.sxr/test.scala.html")
+  def sxrSource = new ExtendedFile("target/classes.sxr/src/main/scala/test.scala.html")
 
-  class ExtendedFile(path: String) extends File(root, path) {
+  class ExtendedFile(path: String) {
+    val file = new File(root, path)
 
     import scalax.io.Resource._
 
     def read = {
-      fromFile(this).string
+      fromFile(file).string
     }
 
     def write(content: Option[String], truncate: Boolean = true) = {
       content.map { content =>
-        val writer = fromFile(this)
+        val writer = fromFile(file)
         if (truncate) {
           writer.truncate(0)
         } else {
@@ -37,6 +38,10 @@ case class PastesContainer(root: java.io.File) {
         writer.write(content)
       }
     }
+
+    def exists = file.exists()
+
+    def delete() = file.delete()
   }
 
 }

@@ -41,7 +41,7 @@ class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef) ext
 
   def readPaste(id: Long) = {
     val paste = pastesContainer.paste(id)
-    if (paste.pasteFile.exists()) {
+    if (paste.pasteFile.exists) {
       Paste(id = id, content = Option(paste.pasteFile.read),
         output = Option(paste.outputFile.read), uid = Option(paste.uidFile.read))
     } else {
