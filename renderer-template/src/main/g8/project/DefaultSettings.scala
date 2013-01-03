@@ -29,7 +29,7 @@ object DefaultSettings {
 
   val pluginVersions: PartialFunction[(String, ModuleID), ModuleID] = {
     case ("2.9.2", module) => module.cross(CrossVersion.full)
-    case ("2.10.0", module) => module.cross(CrossVersion.full)
+    case ("2.10.0", module) => module.cross(CrossVersion.binary)
   }
 
   def addSupportedCompilerPlugin(module: ModuleID)
