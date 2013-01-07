@@ -5,7 +5,7 @@
 .idea/ant.xml
 *.iml
 target
-project/project
+project/project/target
 logs
 target
 tmp
