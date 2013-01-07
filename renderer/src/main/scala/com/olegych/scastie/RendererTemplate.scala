@@ -12,16 +12,18 @@ object RendererTemplate {
     val templateRoot = new File("renderer-template")
     val defaultUniqueId = "$uniqueId$"
     withSbt(templateRoot, log, defaultUniqueId)(_.process("compile"))
-    Path(templateRoot).copyTo(Path(dir), copyAttributes = true)
-    def children(root: File) = Path(root).descendants().toSeq.sortBy(_.toString())
-    children(templateRoot).zip(children(dir)).foreach {
-      case (from, to) =>
-        to.lastModified = from.lastModified
-    }
+    Path(templateRoot).copyTo(Path(dir))
+//    def children(root: File) = Path(root).descendants().toSeq.sortBy(_.toString())
+//    children(templateRoot).zip(children(dir)).foreach {
+//      case (from, to) =>
+//        to.lastModified = from.lastModified
+//    }
     val buildSbt = Path(dir) / "build.sbt"
     val content = buildSbt.string.replaceAllLiterally(defaultUniqueId, uniqueId)
     buildSbt.truncate(0)
     buildSbt.write(content)
+    val pluginsSbt = Path(dir) / "project" / "plugins.sbt"
+    pluginsSbt.append("\n\nskip := true\n")
     log.info("starting sbt")
     new Sbt(dir, log, clearOnExit = true, uniqueId)
   }
