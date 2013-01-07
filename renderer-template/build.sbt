@@ -1,0 +1,1 @@
+shellPrompt := (_ => "$uniqueId$\n")
