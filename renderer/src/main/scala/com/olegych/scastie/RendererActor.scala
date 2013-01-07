@@ -27,7 +27,7 @@ class RendererActor extends Actor with ActorLogging {
   var sbt: Option[Sbt] = None
 
   override def preStart() {
-    sbt = Option(new RendererTemplate(sbtDir.root, log, generateId).create)
+    sbt = Option(RendererTemplate.create(sbtDir.root, log, generateId))
   }
 
   override def preRestart(reason: Throwable, message: Option[Any]) {

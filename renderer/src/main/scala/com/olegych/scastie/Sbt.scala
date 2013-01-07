@@ -3,17 +3,12 @@ package com.olegych.scastie
 import java.io.File
 import org.apache.commons.lang3.SystemUtils
 import akka.event.LoggingAdapter
-import akka.util.BoundedBlockingQueue
-import java.util
 import org.apache.commons.collections15.buffer.CircularFifoBuffer
-import java.nio.file.Files
-import scalax.io.support.FileUtils
 import scalax.file.Path
 
 /**
   */
-case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
-
+case class Sbt(dir: File, log: LoggingAdapter, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUniqueId) {
   private val (process, fin, input, fout, output) = {
     def absolutePath(command: String) = new File(command).getAbsolutePath
     val builder = new ProcessBuilder(absolutePath(if (SystemUtils.IS_OS_WINDOWS) "xsbt.cmd" else "xsbt.sh"))
@@ -21,7 +16,7 @@ case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
     val currentOpts = Option(System.getenv("SBT_OPTS")).getOrElse("")
         .replaceAll("-agentlib:jdwp=transport=dt_shmem,server=n,address=.*,suspend=y", "")
     builder.environment()
-        .put("SBT_OPTS", currentOpts + " -Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true" )
+        .put("SBT_OPTS", currentOpts + " -Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true")
     log.info("Starting sbt with {} {} {}", builder.command(), builder.environment(), builder.directory())
     val process = builder.start()
     import scalax.io.JavaConverters._
@@ -66,7 +61,9 @@ case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
       case e: Throwable => log.error(e, "Error while soft exit")
     }
     ProcessKiller.instance.kill(process)
-    Path(dir).deleteRecursively(force = true, continueOnFailure = true)
+    if (clearOnExit) {
+      Path(dir).deleteRecursively(force = true, continueOnFailure = true)
+    }
   }
 
   object Success {
@@ -86,4 +83,8 @@ case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
   }
 
   def resultAsString(result: Seq[String]) = result.mkString("\n").replaceAll(uniqueId, "")
+}
+
+object Sbt {
+  def defaultUniqueId: String = ">"
 }
