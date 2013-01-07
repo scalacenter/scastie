@@ -6,6 +6,9 @@ import akka.event.LoggingAdapter
 import akka.util.BoundedBlockingQueue
 import java.util
 import org.apache.commons.collections15.buffer.CircularFifoBuffer
+import java.nio.file.Files
+import scalax.io.support.FileUtils
+import scalax.file.Path
 
 /**
   */
@@ -63,6 +66,7 @@ case class Sbt(dir: File, log: LoggingAdapter, uniqueId: String = ">") {
       case e: Throwable => log.error(e, "Error while soft exit")
     }
     ProcessKiller.instance.kill(process)
+    Path(dir).deleteRecursively(force = true, continueOnFailure = true)
   }
 
   object Success {
