@@ -19,7 +19,6 @@ object DefaultSettings {
         setPreference(CompactControlReadability, true).
         setPreference(PreserveDanglingCloseParenthesis, true).
         setPreference(DoubleIndentClassDeclaration, true)
-    //to be able to detect prompt
     , traceLevel := 1000
     , crossPaths := false
   )
@@ -52,3 +51,4 @@ object DefaultSettings {
       version.lift(scalaVersion, module).map(compilerPlugin(_)).toList
     }
 }
+
