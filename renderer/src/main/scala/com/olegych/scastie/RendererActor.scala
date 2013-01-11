@@ -12,13 +12,22 @@ import concurrent.duration._
 class RendererActor extends Actor with ActorLogging {
   val failures = context.actorFor("../../failures")
 
-  val killer = TimeoutActor(2 minutes, message => {
-    message match {
-      case paste: Paste => sender ! paste.copy(output = Some("Killed because of timeout!"), content = None)
-      case _ => log.info("unknown message {}", message)
-    }
-    preRestart(FatalFailure, Some(message))
-  })
+  val killer = createKiller(2 minutes)
+  val runKiller = createKiller(30 seconds)
+
+  def applyRunKiller(paste: Paste)(block: => Unit) {
+    runKiller { case _ => block} apply paste
+  }
+
+  def createKiller(timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
+    TimeoutActor(timeout, message => {
+      message match {
+        case paste: Paste => sender ! paste.copy(output = Some(s"Killed because of timeout $timeout"), content = None)
+        case _ => log.info("unknown message {}", message)
+      }
+      preRestart(FatalFailure, Some(message))
+    })
+  }
 
   def generateId: String = util.Random.alphanumeric.take(10).mkString
 
@@ -43,36 +52,37 @@ class RendererActor extends Actor with ActorLogging {
   }
 
   def receive = LoggingReceive {
-    killer {
-      case paste@Paste(_, Some(content), _, _) => {
-        sbt map { sbt =>
-          def sendPasteFile(result: String) {
-            sender !
-                paste.copy(content = sbtDir.pasteFile.read, output = Option(result))
-          }
-          sbtDir.pasteFile.write(Option(content))
-          val reloadResult = sbt.resultAsString(sbt.process("reload"))
-          sendPasteFile(reloadResult)
-          sbtDir.sxrSource.delete()
-          sbt.process("compile") match {
-            case sbt.Success(compileResult) =>
-              val sxrSource = sbtDir.sxrSource.read.map(cleanSource)
-              sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running..."))
+    killer { case paste@Paste(_, Some(content), _, _) => {
+      sbt map { sbt =>
+        def sendPasteFile(result: String) {
+          sender !
+              paste.copy(content = sbtDir.pasteFile.read, output = Option(result))
+        }
+        sbtDir.pasteFile.write(Option(content))
+        val reloadResult = sbt.resultAsString(sbt.process("reload"))
+        sendPasteFile(reloadResult)
+        sbtDir.sxrSource.delete()
+        sbt.process("compile") match {
+          case sbt.Success(compileResult) =>
+            val sxrSource = sbtDir.sxrSource.read.map(cleanSource)
+            sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running..."))
+            applyRunKiller(paste) {
               sbt.process("run-all") match {
                 case sbt.Success(runResult) =>
                   sender ! paste.copy(content = sxrSource, output = Option(runResult))
                 case errorResult =>
                   sender ! paste.copy(content = sxrSource, output = Option(sbt.resultAsString(errorResult)))
               }
-            case sbt.NotTopLevelExpression(compileResult) =>
-              sendPasteFile(compileResult + "\nAdding top level object and recompiling...")
-              val fixedContent = s"object Main extends App {\n$content\n}"
-              self forward paste.copy(content = Option(fixedContent))
-            case errorResult =>
-              sendPasteFile(sbt.resultAsString(errorResult))
-          }
+            }
+          case sbt.NotTopLevelExpression(compileResult) =>
+            sendPasteFile(compileResult + "\nAdding top level object and recompiling...")
+            val fixedContent = s"object Main extends App {\n$content\n}"
+            self forward paste.copy(content = Option(fixedContent))
+          case errorResult =>
+            sendPasteFile(sbt.resultAsString(errorResult))
         }
       }
+    }
     }
   }
 
