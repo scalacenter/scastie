@@ -34,9 +34,13 @@ object DefaultSettings {
         } else {
           Nil
         }
-        Seq("-deprecation", "-unchecked") ++ sxrOptions
+        val featureOptions = if (is210(scalaVersion)) Seq("-feature") else Nil
+        Seq("-deprecation", "-unchecked", "-Ywarn-all", "-Xcheckinit") ++ sxrOptions ++ featureOptions
     }
   }
+
+
+  def is210(scalaVersion: String) = scalaVersion.startsWith("2.10")
 
   def sxrSupported(scalaVersion: String) = pluginVersions.isDefinedAt(scalaVersion, sxrModule)
 
