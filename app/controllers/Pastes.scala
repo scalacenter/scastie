@@ -31,14 +31,18 @@ object Pastes extends Controller {
   }
 
   val progressActor = system.actorOf(Props[Progress])
-  val renderer = system.actorOf(Props(new PastesActor(PastesContainer(pastesDir), progressActor)), "pastes")
+  val container = PastesContainer(pastesDir)
+  val renderer = system.actorOf(Props(new PastesActor(container, progressActor)), "pastes")
 
   implicit val timeout = Timeout(100 seconds)
 
+  case class NewPaste(paste: String, id: Option[Long])
+
   val pasteForm = Form(
-    single(
-      "paste" -> text(maxLength = 10000)
-    )
+    mapping(
+      "paste" -> text(maxLength = 10000),
+      "id" -> optional(longNumber)
+    )(NewPaste.apply)(NewPaste.unapply)
   )
 
   def add = Action { implicit request =>
@@ -46,7 +50,7 @@ object Pastes extends Controller {
     createPaste(form, Application.uid)
   }
 
-  def createPaste(form: Form[String], uid: String): Result = {
+  def createPaste(form: Form[NewPaste], uid: String): Result = {
     val paste = form("paste").value.get
     if (form.hasErrors) {
       Redirect(routes.Application.index())
@@ -61,8 +65,9 @@ object Pastes extends Controller {
   }
 
   def edit = Action { implicit request =>
-    val form = pasteForm.bindFromRequest()
-    Redirect(routes.Application.index()).flashing("paste" -> form("paste").value.get)
+    val form = pasteForm.bindFromRequest().get
+    val pasteById = form.id.map(id => container.paste(id).pasteFile.read.getOrElse(""))
+    Redirect(routes.Application.index()).flashing("paste" -> pasteById.getOrElse(form.paste))
   }
 
   def delete(id: Long) = Action { implicit request =>

@@ -23,11 +23,12 @@ case class PastesContainer(root: java.io.File) {
 
     import scalax.io.Resource._
 
-    def read:Option[String] = {
-      Option(fromFile(file).string).filter(! _.isEmpty)
+    def read: Option[String] = {
+      Option(fromFile(file).string).filter(!_.isEmpty)
     }
 
     def write(content: Option[String], truncate: Boolean = true) = {
+      file.getParentFile.mkdirs()
       content.map { content =>
         val writer = fromFile(file)
         if (truncate) {
