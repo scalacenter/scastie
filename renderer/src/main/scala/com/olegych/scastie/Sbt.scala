@@ -58,11 +58,13 @@ case class Sbt(dir: File, log: LoggingAdapter, clearOnExit: Boolean, uniqueId: S
 
   def close() {
     try process("exit", waitForPrompt = false) catch {
-      case e: Throwable => log.error(e, "Error while soft exit")
+      case e: Exception => log.error(e, "Error while soft exit")
     }
     ProcessKiller.instance.kill(process)
     if (clearOnExit) {
-      Path(dir).deleteRecursively(force = true, continueOnFailure = true)
+      try Path(dir).deleteRecursively(force = true, continueOnFailure = true) catch {
+        case e: Exception => log.error(e, "Error while cleaning up")
+      }
     }
   }
 
