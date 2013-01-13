@@ -27,8 +27,6 @@ class Progress extends Actor with ActorLogging {
     case StopMonitorProgress(monitorChannel) =>
       monitors.removeBinding(monitorChannel.id, monitorChannel)
     case pasteProgress: PasteProgress =>
-      //required for macros json to work
-      import play.api.libs.functional.syntax._
       implicit val format = Json.format[PasteProgress]
       monitors.get(pasteProgress.id).toList.flatten.map(_.channel.push(Json.toJson(pasteProgress)))
   }
