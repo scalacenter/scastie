@@ -2,6 +2,7 @@ package com.olegych.scastie
 
 import java.security.{SecurityPermission, Permission}
 import java.io.{File, FilePermission}
+import java.util.PropertyPermission
 
 /**
   */
@@ -24,15 +25,19 @@ object ScriptSecurityManager extends SecurityManager {
   override def checkPermission(perm: Permission) {
     if (activated) {
       val read = perm.getActions == ("read")
-      val allowedMethods = Seq("accessDeclaredMembers", "suppressAccessChecks", "createClassLoader",
-        "accessClassInPackage.sun.reflect", "getStackTrace").contains(perm.getName)
+      val readWrite = perm.getActions == ("read,write")
+      val allowedMethods = Seq(
+        "accessDeclaredMembers", "suppressAccessChecks", "createClassLoader",
+        "accessClassInPackage.sun.reflect", "getStackTrace", "getClassLoader"
+      ).contains(perm.getName)
+      val getenv = perm.getName.startsWith("getenv")
       val file = perm.isInstanceOf[FilePermission]
+      val property = perm.isInstanceOf[PropertyPermission]
       val security = perm.isInstanceOf[SecurityPermission]
 
       deactivate
       val notExistingFile = !new File(perm.getName).exists()
 
-      //g8 replaces \ with \
       val allowedFiles =
         Seq( """.*\.class""", """.*\.jar""", """.*classes.*""", """.*library\.properties""",
           """.*src/main/scala.*""", """.*/?target""")
@@ -44,13 +49,16 @@ object ScriptSecurityManager extends SecurityManager {
       lazy val allowedClass = new Throwable().getStackTrace.exists { element =>
         val name = element.getFileName
         //todo apply more robust checks
-        List("BytecodeWriters.scala", "Settings.scala", "PathResolver.scala").contains(name)
+        List("BytecodeWriters.scala", "Settings.scala", "PathResolver.scala", "JavaMirrors.scala")
+            .contains(name)
       }
 
-      val allow = readMissingFile || readClass || (read && !file) || allowedMethods ||
-          (security && perm.getName.startsWith("getProperty.")) || allowedClass
+      val allow = readMissingFile || readClass || (read && !file) || allowedMethods || getenv ||
+          (property && readWrite) || (security && perm.getName.startsWith("getProperty.")) || allowedClass
       if (!allow) {
-        throw new SecurityException(perm.toString)
+        val exception = new SecurityException(perm.toString)
+        exception.printStackTrace()
+        throw exception
       }
     } else {
       //don't use closures here to avoid SOE

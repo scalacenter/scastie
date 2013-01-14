@@ -1,15 +1,31 @@
 /***
 scalaVersion := "2.10.0"
 
-libraryDependencies ++= Seq("play" % "play_2.9.1" % "2.0.4")
+libraryDependencies ++= Seq("org.scala-lang" % "scala-compiler" % "2.10.0")
 */
-object Main extends App {
-  import play.api.data.Form
-  import play.api.data.Forms._
-  case class A(i: Int)
-  val f = Form(mapping("i" -> number)(A.apply)(A.unapply))
-  println(f.fill(A(1)).get)
+package controllers
+
+/**
+  */
+package object evil {
+
+  import scala.reflect.runtime._
+  import scala.reflect.runtime.universe._
+  import scala.tools.reflect.ToolBox
+
+  class Foo
+
+  val toolBox = universe.runtimeMirror(getClass.getClassLoader).mkToolBox()
+
+  def membersOf[T](implicit tag: TypeTag[T]) = tag.tpe.members
+
+  def members(clazz: String) = {
+    import toolBox._
+    eval(parse(s"controllers.evil.membersOf[$clazz]"))
+  }
+
 }
-object X extends App {
-  println("hello")
+
+case object Main extends App {
+  println(evil.members("controllers.evil.Foo"))
 }
