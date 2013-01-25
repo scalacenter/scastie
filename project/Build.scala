@@ -41,7 +41,7 @@ object ApplicationBuild extends Build {
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
     (StartScriptPlugin.startScriptForClassesSettings ++
-        Seq(Keys.mainClass in Compile := Option("play.core.server.NettyServer")
+        Seq(Keys.mainClass in Compile := Option("DevNettyServer")
           , Keys.scalaVersion := scalaVersion
         )): _*
   ) dependsOn (renderer) aggregate (renderer)

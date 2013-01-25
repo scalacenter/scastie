@@ -2,10 +2,12 @@
 path=`pwd`
 win_dir=`cygpath -w "${path}" || echo "${path}"`
 
-export OPENSHIFT_APP_NAME=scastie
+if [ -z ${OPENSHIFT_APP_NAME} ]; then
+  export OPENSHIFT_APP_NAME=scastie
+fi
 #export OPENSHIFT_APP_NAME=scastierenderer1
 export OPENSHIFT_REPO_DIR=$path/
-export OPENSHIFT_INTERNAL_IP=`hostname -i || echo localhost`
+export OPENSHIFT_INTERNAL_IP=`hostname -i || echo 0.0.0.0`
 if [ -z ${OPENSHIFT_INTERNAL_PORT} ]; then
   export OPENSHIFT_INTERNAL_PORT=8080
 fi
