@@ -16,7 +16,7 @@ object ApplicationBuild extends Build {
       "com.typesafe.akka" %% ("akka-" + module) % akkaVersion
     }
     def scalaIo(module: String) = {
-      "com.github.scala-incubator.io" % ("scala-io-" + module + "_2.10.0-RC1") % "0.4.1"
+      "com.github.scala-incubator.io" %% ("scala-io-" + module) % "0.4.2"
     }
     Project(id = "renderer", base = file("renderer"),
       settings = Defaults.defaultSettings ++ play.Project.intellijCommandSettings("SCALA") ++ Seq(
