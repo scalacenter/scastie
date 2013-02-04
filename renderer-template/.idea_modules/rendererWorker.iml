@@ -29,6 +29,7 @@
     <orderEntry type="library" name="org.scala-lang_scala-compiler_2.10.0" level="project" />
     <orderEntry type="library" name="org.scala-lang_scala-library_2.10.0" level="project" />
     <orderEntry type="library" name="org.scala-lang_scala-reflect_2.10.0" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.10.0" level="project" />
   </component>
 </module>
 
