@@ -5,7 +5,7 @@ object ApplicationBuild extends Build {
   val appName = "scastie"
   val appVersion = "1.0"
 
-  val scalaVersion = "2.10.0"
+  val scalaVersion = "2.10.1-RC1"
   val akkaVersion = "2.1.0"
 
   val appDependencies = Seq(
@@ -41,8 +41,9 @@ object ApplicationBuild extends Build {
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
     (StartScriptPlugin.startScriptForClassesSettings ++
-        Seq(Keys.mainClass in Compile := Option("DevNettyServer")
+        Seq(Keys.mainClass in Compile := Option("ProdNettyServer")
           , Keys.scalaVersion := scalaVersion
+          , Keys.watchSources <++= Keys.baseDirectory map { path => ((path / "public") ** "*").get }
         )): _*
   ) dependsOn (renderer) aggregate (renderer)
 

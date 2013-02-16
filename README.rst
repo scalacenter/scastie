@@ -24,10 +24,10 @@ Current Features
 -  timeout long-running pastes
 -  allow deleting and cloning pastes
 -  allow specifying scala version
+-  provide several useful templates (e.g. scalaz, akka, play, scala 2.10)
 
 Plans
 -----
--  provide several useful templates (e.g. scalaz, akka, play, scala 2.10)
 -  detect pastes to gist.github.com pastie.net pastebin.com etc with
    multibot and copy to scastie
 -  interface for uploading pre-sxred libraries
