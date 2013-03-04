@@ -76,14 +76,6 @@ case class Sbt(dir: File, log: LoggingAdapter, clearOnExit: Boolean, uniqueId: S
     }
   }
 
-  object NotTopLevelExpression {
-    val ErrorParser =
-      """(?s)^\[error\].*(?:expected class or object definition|expected start of definition).*""".r
-    def unapply(result: Seq[String]): Option[String] = result.collectFirst {
-      case ErrorParser() => resultAsString(result)
-    }
-  }
-
   def resultAsString(result: Seq[String]) = result.mkString("\n").replaceAll(uniqueId, "")
 }
 

@@ -74,10 +74,6 @@ class RendererActor extends Actor with ActorLogging {
                   sender ! paste.copy(content = sxrSource, output = Option(sbt.resultAsString(errorResult)))
               }
             }
-          case sbt.NotTopLevelExpression(compileResult) =>
-            sendPasteFile(compileResult + "\nAdding top level object and recompiling...")
-            val fixedContent = s"object Main extends App {\n$content\n}"
-            self forward paste.copy(content = Option(fixedContent))
           case errorResult =>
             sendPasteFile(sbt.resultAsString(errorResult))
         }
