@@ -1,5 +1,4 @@
 import com.typesafe.sbtscalariform.ScalariformPlugin._
-import scala.Predef._
 import scalariform.formatter.preferences._
 import sbt._
 import sbt.Keys._
@@ -34,19 +33,25 @@ object DefaultSettings {
         } else {
           Nil
         }
-        val featureOptions = if (is210(scalaVersion)) Seq("-feature") else Nil
+        val featureOptions = if (Is210(scalaVersion)) Seq("-feature") else Nil
         Seq("-deprecation", "-unchecked", "-Ywarn-all", "-Xcheckinit") ++ sxrOptions ++ featureOptions
     }
   }
 
 
-  def is210(scalaVersion: String) = scalaVersion.startsWith("2.10")
+  class IsStartsWith(startsWith: String) {
+    def apply(scalaVersion: String) = scalaVersion.startsWith(startsWith)
+  }
+
+  object Is29 extends IsStartsWith("2.9")
+
+  object Is210 extends IsStartsWith("2.10")
 
   def sxrSupported(scalaVersion: String) = pluginVersions.isDefinedAt(scalaVersion, sxrModule)
 
   val pluginVersions: PartialFunction[(String, ModuleID), ModuleID] = {
-    case ("2.9.2", module) => module.cross(CrossVersion.full)
-    case ("2.10.0", module) => module.cross(CrossVersion.binary)
+    case (v, module) if Is29(v) => module.copy(name = module.name + "_2.9.2")
+    case (v, module) if Is210(v) => module.cross(CrossVersion.binary)
   }
 
   def addSupportedCompilerPlugin(module: ModuleID)

@@ -13,7 +13,7 @@ object TemplatePastes {
 
   val default = nextPaste( """
 /***
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.1"
 
 */
 object Main extends App {
@@ -24,9 +24,9 @@ object Main extends App {
     List(
       "scalaz" -> nextPaste( """
 /***
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.1"
 
-libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.0-M7")
+libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.0-RC1")
 */
 import scalaz._, Scalaz._
 object Main extends App {
@@ -36,9 +36,9 @@ object Main extends App {
       ,
       "play&akka" -> nextPaste( """
 /***
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.1"
 
-libraryDependencies ++= Seq("play" %% "play" % "2.1-RC2")
+libraryDependencies ++= Seq("play" %% "play" % "2.1.1")
 */
 import play.api._
 import play.api.mvc._
@@ -53,7 +53,7 @@ object Main extends App {
       ,
       "2.9" -> nextPaste( """
 /***
-scalaVersion := "2.9.2"
+scalaVersion := "2.9.3"
 
 */
 object Main extends App {
