@@ -8,8 +8,7 @@ LOG_FILE="${OPENSHIFT_LOG_DIR}application.log"
 
 function kill_app {
 	COMMAND="$1"
-	# try 5 times to kill it
-	for c in `seq 1 5`; do
+    for ((c = 0 ; c < 5 ; c++)); do
 		echo "Trying to kill proccess, attempt number $c" >> $LOG_FILE
 		echo "$COMMAND" >> $LOG_FILE
 		bash -c "$COMMAND &>> $LOG_FILE 2>&1" &> /dev/null
