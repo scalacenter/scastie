@@ -23,14 +23,13 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jgit/org.eclipse.jgit/jars/org.eclipse.jgit-1.3.0.201202151440-r.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/asm/asm-commons/jars/asm-commons-3.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/jars/commons-io-2.0.1.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/net.virtual-void/sbt-dependency-graph/jars/sbt-dependency-graph-0.7.0.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/sbt-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.github.scala-incubator.io/scala-io-core_2.9.1/jars/scala-io-core_2.9.1-0.4.0-seq.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/net.liftweb/lift-json_2.9.1/jars/lift-json_2.9.1-2.4.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/actions-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/command-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/run-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/jars/commons-codec-1.4.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.1.2.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/commons-httpclient-3.1.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/tasks-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.google.guava/guava/jars/guava-10.0.1.jar!/" />
@@ -38,7 +37,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.parboiled/parboiled-core/jars/parboiled-core-1.0.2.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.github.scala-incubator.io/scala-io-file_2.9.2/jars/scala-io-file_2.9.2-0.4.1.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/process-0.12.3.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.1.4.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/completion-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/com.typesafe.startscript/xsbt-start-script-plugin/jars/xsbt-start-script-plugin-0.5.3.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/incremental-compiler-0.12.3.jar!/" />
@@ -46,15 +44,12 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.clapper/grizzled-slf4j_2.9.1/jars/grizzled-slf4j_2.9.1-0.6.5.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/testing-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/jline/jline/jars/jline-0.9.94.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/net.databinder/dispatch-http_2.9.2/jars/dispatch-http_2.9.2-0.8.8.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.scala-lang/scalap/jars/scalap-2.9.1.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/net.virtual-void/sbt-dependency-graph/jars/sbt-dependency-graph-0.7.3.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/io-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.typesafe.akka/akka-actor/jars/akka-actor-2.0.1.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/me.lessis/pj_2.9.2/jars/pj_2.9.2-0.1.0.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/commons-logging-1.0.4.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/jline-1.0.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.github.scala-incubator.io/scala-io-file_2.9.1/jars/scala-io-file_2.9.1-0.4.0-seq.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/net.databinder/dispatch-futures_2.9.2/jars/dispatch-futures_2.9.2-0.8.8.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.h2database/h2/jars/h2-1.3.168.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.pegdown/pegdown/jars/pegdown-1.1.0.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/jars/commons-logging-1.1.1.jar!/" />
@@ -77,17 +72,14 @@
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/jsch-0.1.46.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/play/templates-compiler_2.9.2/jars/templates-compiler_2.9.2-2.1.1.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/task-system-0.12.3.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/me.lessis/ls_2.9.2/jars/ls_2.9.2-0.1.2.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/classpath-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/play/sbt-link/jars/sbt-link-2.1.1.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.avaje.ebeanorm/avaje-ebeanorm-agent/jars/avaje-ebeanorm-agent-3.1.1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.github.jsuereth.scala-arm/scala-arm_2.9.1/jars/scala-arm_2.9.1-1.1.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/api-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.avaje.ebeanorm/avaje-ebeanorm/jars/avaje-ebeanorm-3.1.2.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.1.2.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/launcher-interface-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/com.typesafe.sbtidea/sbt-idea/jars/sbt-idea-1.1.1.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.1.3.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/net.databinder/dispatch-core_2.9.2/jars/dispatch-core_2.9.2-0.8.8.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/xsbti/interface-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.javassist/javassist/jars/javassist-3.16.1-GA.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/asm/asm/jars/asm-3.3.1.jar!/" />
@@ -107,12 +99,9 @@
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/control-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.avaje.ebeanorm/avaje-ebeanorm-api/jars/avaje-ebeanorm-api-3.1.1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.jcraft/jsch/jars/jsch-0.1.44-1.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/me.lessis/ls-sbt/jars/ls-sbt-0.1.2.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/ivy-2.3.0-rc1.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/compiler-integration-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/cache-0.12.3.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.thoughtworks.paranamer/paranamer/jars/paranamer-2.3.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.codehaus.jackson/jackson-core-asl/jars/jackson-core-asl-1.9.0.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/play/sbt-plugin/jars/sbt-plugin-2.1.1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/asm/asm-tree/jars/asm-tree-3.3.1.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/lib/jline.jar!/" />
@@ -131,6 +120,7 @@
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.3/compile-0.12.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.scalaz/scalaz-core_2.9.2/jars/scalaz-core_2.9.2-6.0.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.clapper/scalasti_2.9.1/jars/scalasti_2.9.1-0.5.5.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.avaje.ebeanorm/avaje-ebeanorm-agent/jars/avaje-ebeanorm-agent-3.2.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
@@ -175,22 +165,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.scala-sbt/precompiled-2_10_1/srcs/precompiled-2_10_1-0.12.3-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/com.github.mpeltonen/sbt-idea/srcs/sbt-idea-1.3.0-SNAPSHOT-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/srcs/commons-io-2.0.1-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/net.virtual-void/sbt-dependency-graph/srcs/sbt-dependency-graph-0.7.0-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.github.mdr/ascii-graphs_2.9.2/srcs/ascii-graphs_2.9.2-0.0.2-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/me.lessis/ls-sbt/srcs/ls-sbt-0.1.2-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/me.lessis/pj_2.9.2/srcs/pj_2.9.2-0.1.0-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.codehaus.jackson/jackson-core-asl/srcs/jackson-core-asl-1.9.0-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/net.liftweb/lift-json_2.9.1/srcs/lift-json_2.9.1-2.4-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.thoughtworks.paranamer/paranamer/srcs/paranamer-2.3-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.scala-lang/scalap/srcs/scalap-2.9.1-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/me.lessis/ls_2.9.2/srcs/ls_2.9.2-0.1.2-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/net.databinder/dispatch-http_2.9.2/srcs/dispatch-http_2.9.2-0.8.8-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/net.databinder/dispatch-core_2.9.2/srcs/dispatch-core_2.9.2-0.8.8-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/srcs/httpclient-4.1.3-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/srcs/httpcore-4.1.4-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/srcs/commons-logging-1.1.1-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/srcs/commons-codec-1.4-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/net.databinder/dispatch-futures_2.9.2/srcs/dispatch-futures_2.9.2-0.8.8-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/play/sbt-plugin/srcs/sbt-plugin-2.1.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/play/sbt-link/srcs/sbt-link-2.1.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.javassist/javassist/srcs/javassist-3.16.1-GA-sources.jar!/" />
@@ -210,6 +184,10 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/me.lessis/ls_2.9.1/srcs/ls_2.9.1-0.1.2-RC2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/net.databinder/dispatch-http_2.9.1/srcs/dispatch-http_2.9.1-0.8.6-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/net.databinder/dispatch-core_2.9.1/srcs/dispatch-core_2.9.1-0.8.6-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/srcs/httpclient-4.1.2-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/srcs/httpcore-4.1.2-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/srcs/commons-logging-1.1.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/srcs/commons-codec-1.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/net.databinder/dispatch-futures_2.9.1/srcs/dispatch-futures_2.9.1-0.8.6-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jgit/org.eclipse.jgit/srcs/org.eclipse.jgit-1.3.0.201202151440-r-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.github.scala-incubator.io/scala-io-file_2.9.1/srcs/scala-io-file_2.9.1-0.4.0-seq-sources.jar!/" />
@@ -219,7 +197,7 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.google.javascript/closure-compiler/srcs/closure-compiler-rr2079.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.google.guava/guava/srcs/guava-10.0.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.avaje.ebeanorm/avaje-ebeanorm-api/srcs/avaje-ebeanorm-api-3.1.1-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.avaje.ebeanorm/avaje-ebeanorm-agent/srcs/avaje-ebeanorm-agent-3.1.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.avaje.ebeanorm/avaje-ebeanorm-agent/srcs/avaje-ebeanorm-agent-3.2.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.persistence/persistence-api/srcs/persistence-api-1.0-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.avaje.ebeanorm/avaje-ebeanorm-server/srcs/avaje-ebeanorm-server-3.1.2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.h2database/h2/srcs/h2-1.3.168-sources.jar!/" />
@@ -233,6 +211,8 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.jarjar/jarjar/srcs/jarjar-1.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/junit/junit/srcs/junit-4.8.2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/com.typesafe.startscript/xsbt-start-script-plugin/srcs/xsbt-start-script-plugin-0.5.3-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/net.virtual-void/sbt-dependency-graph/srcs/sbt-dependency-graph-0.7.3-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.github.mdr/ascii-graphs_2.9.2/srcs/ascii-graphs_2.9.2-0.0.2-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

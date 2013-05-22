@@ -6,7 +6,7 @@ object ApplicationBuild extends Build {
   val appVersion = "1.0"
 
   val scalaVersion = "2.10.1"
-  val akkaVersion = "2.1.2"
+  val akkaVersion = "2.1.4"
 
   val appDependencies = Seq(
     // Add your project dependencies here,
