@@ -10,7 +10,7 @@ import concurrent.duration._
 /**
   */
 class RendererActor extends Actor with ActorLogging {
-  val failures = context.actorFor("../../failures")
+  val failures = context.actorSelection("../../failures")
 
   val killer = createKiller(2 minutes)
   val runKiller = createKiller(30 seconds)
