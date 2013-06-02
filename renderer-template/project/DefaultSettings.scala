@@ -10,7 +10,7 @@ object DefaultSettings {
       url("https://bitbucket.org/olegych/mvn/raw/default/ivy2/"))(Resolver.ivyStylePatterns)
     , resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
     , addSupportedCompilerPlugin(sxrModule)(sxrVersion)
-    , addSupportedCompilerPlugin("com.foursquare.lint" % "linter" % "0.1-SNAPSHOT")(pluginVersions)
+    , addSupportedCompilerPlugin("com.foursquare.lint" % "linter" % "0.1.0")(pluginVersions)
     , scalacOptions
     , ScalariformKeys.preferences := FormattingPreferences().
         setPreference(AlignParameters, true).
@@ -48,7 +48,7 @@ object DefaultSettings {
   object Is210 extends IsStartsWith("2.10")
 
   val sxrVersion: PartialFunction[(String, ModuleID), ModuleID] = {
-    case (v, module) if Is29(v)  => module.copy(organization = "org.scala-tools.sxr", revision = "0.2.8-SNAPSHOT")
+    case (v, module) if Is29(v)  => "org.scala-tools.sxr" % "sxr_2.9.2" % "0.2.8-SNAPSHOT"
     case (v, module) if Is210(v) => module
   }
   val pluginVersions: PartialFunction[(String, ModuleID), ModuleID] = {
