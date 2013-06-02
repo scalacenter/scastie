@@ -11,9 +11,10 @@ import com.olegych.scastie.PastesActor.Paste
 
 /**
   */
-class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef) extends Actor with ActorLogging {
-  val renderer = context.actorOf(Props[RendererActor].withRouter(FromConfig()), "renderer")
-  val failures = context.actorOf(Props[FailuresActor], "failures")
+case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef)
+    extends Actor with ActorLogging {
+  private val failures = context.actorOf(Props[FailuresActor], "failures")
+  private val renderer = createRenderer(context, failures)
 
   def receive = LoggingReceive {
     case AddPaste(content, uid) =>
@@ -22,11 +23,11 @@ class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef) ext
       renderer ! paste
       sender ! paste
       writePaste(paste)
-    case GetPaste(id) =>
+    case GetPaste(id)           =>
       sender ! readPaste(id)
-    case DeletePaste(id, uid) =>
+    case DeletePaste(id, uid)   =>
       sender ! deletePaste(id, uid)
-    case paste: Paste =>
+    case paste: Paste           =>
       writePaste(paste)
   }
 
@@ -64,6 +65,8 @@ class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef) ext
 }
 
 object PastesActor {
+  private def createRenderer(context: ActorContext, failures: ActorRef) =
+    context.actorOf(Props(RendererActor(failures)).withRouter(FromConfig()), "renderer")
 
   sealed trait PasteMessage
 

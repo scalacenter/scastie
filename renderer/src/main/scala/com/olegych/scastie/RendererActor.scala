@@ -1,6 +1,6 @@
 package com.olegych.scastie
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ActorRef, ActorLogging, Actor}
 import akka.event.LoggingReceive
 import java.io.File
 import com.olegych.scastie.PastesActor.Paste
@@ -9,9 +9,7 @@ import concurrent.duration._
 
 /**
   */
-class RendererActor extends Actor with ActorLogging {
-  val failures = context.actorSelection("../../failures")
-
+case class RendererActor(failures:ActorRef) extends Actor with ActorLogging {
   val killer = createKiller(2 minutes)
   val runKiller = createKiller(30 seconds)
 
