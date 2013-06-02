@@ -1,31 +1,15 @@
 /***
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.1"
 
-libraryDependencies ++= Seq("org.scala-lang" % "scala-compiler" % "2.10.0")
+libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.0",
+                            "com.chuusai" %% "shapeless" % "1.2.4",
+                            "org.spire-math" %% "spire" % "0.4.0")
 */
-package controllers
 
-/**
- */
-package object evil {
-
-  import scala.reflect.runtime._ //hello
-  import scala.reflect.runtime.universe._
-  import scala.tools.reflect.ToolBox
-
-  class Foo
-
-  val toolBox = universe.runtimeMirror(getClass.getClassLoader).mkToolBox()
-
-  def membersOf[T](implicit tag: TypeTag[T]) = tag.tpe.members
-
-  def members(clazz: String) = {
-    import toolBox._
-    eval(parse(s"controllers.evil.membersOf[$clazz]"))
-  }
+object Main extends App {
+  import scala.concurrent._
+  import ExecutionContext.Implicits.global
+  println(future { Thread.sleep(10 * 1000); println("hello") })
 
 }
 
-case object Main extends App {
-  println(evil.members("controllers.evil.Foo"))
-}
