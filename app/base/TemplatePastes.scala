@@ -22,19 +22,38 @@ object Main extends App {
 
   val templates = {
     List(
-      "scalaz" -> nextPaste( """
+      "scalaz+shapeless+spire" -> nextPaste( """
 /***
 scalaVersion := "2.10.1"
 
-libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.0-RC1")
+libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.0",
+                            "com.chuusai" %% "shapeless" % "1.2.4",
+                            "org.spire-math" %% "spire" % "0.4.0")
 */
-import scalaz._, Scalaz._
 object Main extends App {
+  import scalaz._, Scalaz._
   println(List(some(1), none).suml)
+
+  import shapeless._
+  object combine extends Poly2 {
+    implicit def caseCharString = at[Char, String]((c, s) => s.indexOf(c))
+    implicit def caseIntBoolean = at[Int, Boolean]((i, b) => if ((i >= 0) == b) "pass" else "fail")
+  }
+  val l1 = "foo" :: true :: HNil
+  val f1 = l1.foldLeft('o')(combine)
+  println(f1)
+
+  import spire.math._ // provides functions, types, and type classes
+  import spire.implicits._ // provides infix operators, instances and conversions
+  import spire.random._
+  val rng = Cmwc5()
+  implicit val nextmap = Dist.map[Int, Complex[Double]](2, 5)
+  val m = rng.next[Map[Int, Complex[Double]]]
+  println(m)
 }
-                             """)
+                                """)
       ,
-      "play&akka" -> nextPaste( """
+      "play+akka" -> nextPaste( """
 /***
 scalaVersion := "2.10.1"
 
