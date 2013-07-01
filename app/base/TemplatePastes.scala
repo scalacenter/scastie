@@ -13,7 +13,7 @@ object TemplatePastes {
 
   val default = nextPaste( """
 /***
-scalaVersion := "2.10.1"
+scalaVersion := "2.10.2"
 
 */
 object Main extends App {
@@ -24,11 +24,11 @@ object Main extends App {
     List(
       "scalaz+shapeless+spire" -> nextPaste( """
 /***
-scalaVersion := "2.10.1"
+scalaVersion := "2.10.2"
 
-libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.0",
+libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.1",
                             "com.chuusai" %% "shapeless" % "1.2.4",
-                            "org.spire-math" %% "spire" % "0.4.0")
+                            "org.spire-math" %% "spire" % "0.5.0")
 */
 object Main extends App {
   import scalaz._, Scalaz._
@@ -55,7 +55,7 @@ object Main extends App {
       ,
       "play+akka" -> nextPaste( """
 /***
-scalaVersion := "2.10.1"
+scalaVersion := "2.10.2"
 
 libraryDependencies ++= Seq("play" %% "play" % "2.1.1")
 */

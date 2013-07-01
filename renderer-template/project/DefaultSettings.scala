@@ -10,7 +10,7 @@ object DefaultSettings {
       url("https://bitbucket.org/olegych/mvn/raw/default/ivy2/"))(Resolver.ivyStylePatterns)
     , resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
     , addSupportedCompilerPlugin(sxrModule)(sxrVersion)
-    , addSupportedCompilerPlugin("com.foursquare.lint" % "linter" % "0.1.0")(pluginVersions)
+    , addSupportedCompilerPlugin("com.foursquare.lint" % "linter" % "0.1.1")(pluginVersions)
     , scalacOptions
     , ScalariformKeys.preferences := FormattingPreferences().
         setPreference(AlignParameters, true).
