@@ -946,3 +946,25 @@ aside a[href^="http"]:after, .doc a[href^="http"]:after {
   vertical-align: middle;
   margin-left: 5px;
 }
+
+#editor {
+  position: absolute;
+  width: 650px;
+  height: 700px;
+  top: 0px;
+  right: 100px;
+  left: 0;
+}
+
+
+.submit-paste {
+  position: absolute;
+  top: 700px;
+  left: 0;  
+}
+
+.templates-form {
+  position: absolute;
+  top: 750px;
+  left: 0;  
+}

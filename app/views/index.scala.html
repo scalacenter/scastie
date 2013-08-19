@@ -1,18 +1,31 @@
 @(message: Html, paste: String)
 
 @main("Welcome to Scastie") {
-  @message
   <form action=" @routes.Pastes.add " method="post">
-    <textarea name="paste" rows="50" cols="110" style="font-family: monospace" autofocus="" maxlength="10000">@paste</textarea>
+    <textarea name="paste">@paste</textarea>
+    <div name="paste" rows="50" cols="110" style="font-family: monospace" autofocus="" maxlength="10000" id='editor'>@paste</div>
+
+    <script src="https://raw.github.com/ajaxorg/ace-builds/master/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+      var editor = ace.edit("editor");
+      editor.setTheme("ace/theme/solarized_light");
+      editor.getSession().setMode("ace/mode/scala");
+      editor.getSession().setTabSize(2);
+      var textarea = $('textarea[name="paste"]').hide();
+      editor.getSession().setValue(textarea.val());
+      editor.getSession().on('change', function(){
+        textarea.val(editor.getSession().getValue());
+      });
+    </script>
   <br/>
-  <input type="submit"/>
+  <input type="submit" class='submit-paste' value="Submit" />
   </form>
-  @helper.form(action = routes.Pastes.edit()) {
+  @helper.form(action = routes.Pastes.edit(), 'class -> "templates-form") {
     @helper.inputRadioGroup(Pastes.pasteForm("id")
       , base.TemplatePastes.templates.map { case (label, paste) => (paste.id.toString, label)}
       , '_label -> Messages("choose.template")
     )
-    <input type="hidden" name="paste" id="paste"></input>
-    <input type="submit" value="Clone"></input>
+    <input type="hidden" name="paste" id="paste"/>
+    <input type="submit" value="Clone"/>
   }
 }
