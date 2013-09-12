@@ -936,6 +936,7 @@ form dl {
 dd.info {
   color: #888;
   font-size: 12px;
+  display: none;
 }
 
 dd.error {
