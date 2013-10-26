@@ -7,9 +7,16 @@
     <facet type="scala" name="Scala">
       <configuration>
         <option name="compilerLibraryLevel" value="Project" />
-        <option name="compilerLibraryName" value="scala-2.10.0" />
+        <option name="compilerLibraryName" value="SBT: scala:2.10.2" />
+        <option name="compilerOptions" value="-deprecation -unchecked" />
         <option name="deprecationWarnings" value="true" />
         <option name="fsc" value="true" />
+        <option name="pluginPaths">
+          <array>
+            <option value="C:\Users\OlegYch\.ivy2\cache\org.scala-sbt.sxr\sxr_2.10\jars\sxr_2.10-0.3.0.jar" />
+            <option value="C:\Users\OlegYch\.ivy2\local\com.foursquare.lint\linter_2.10\0.1.2\jars\linter_2.10.jar" />
+          </array>
+        </option>
         <option name="uncheckedWarnings" value="true" />
       </configuration>
     </facet>
@@ -29,10 +36,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="org.scala-lang_scala-compiler_2.10.0" level="project" />
-    <orderEntry type="library" name="org.scala-lang_scala-library_2.10.0" level="project" />
-    <orderEntry type="library" name="org.scala-lang_scala-reflect_2.10.0" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.10.0" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.10.2" level="project" />
   </component>
 </module>
 

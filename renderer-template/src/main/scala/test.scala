@@ -1,5 +1,5 @@
 /***
-scalaVersion := "2.10.1"
+scalaVersion := "2.10.3"
 
 libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.0",
                             "com.chuusai" %% "shapeless" % "1.2.4",

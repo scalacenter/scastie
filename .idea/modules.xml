@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea_modules/renderer.iml" filepath="$PROJECT_DIR$/.idea_modules/renderer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/renderer-template/.idea_modules/rendererWorker.iml" filepath="$PROJECT_DIR$/renderer-template/.idea_modules/rendererWorker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/renderer-template/.idea_modules/rendererWorker-build.iml" filepath="$PROJECT_DIR$/renderer-template/.idea_modules/rendererWorker-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea_modules/scastie.iml" filepath="$PROJECT_DIR$/.idea_modules/scastie.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea_modules/scastie-build.iml" filepath="$PROJECT_DIR$/.idea_modules/scastie-build.iml" />
     </modules>

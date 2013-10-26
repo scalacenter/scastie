@@ -1,5 +1,5 @@
 import sbt._
-import EvaluateConfigurations.{evaluateConfiguration => evaluate}
+import EvaluateConfigurations._
 import sbt.Build._
 import sbt.Keys._
 import com.olegych.scastie.{ScriptSecurityManager, SecuredRun}
@@ -37,7 +37,7 @@ object ApplicationBuild extends Build {
         .reapply(sessionSettings.appendRaw(dependencies).appendRaw(onLoad in Global := idFun), state)
   }
 
-  val allowedKeys = Set(libraryDependencies, scalaVersion)
+  val allowedKeys = Set[Init[_]#KeyedInitialize[_]](libraryDependencies, scalaVersion, resolvers, scalacOptions)
 
   def extractDependencies(eval: compiler.Eval, loader: ClassLoader, state: State): Seq[Setting[_]] = {
     val scriptArg = "src/main/scala/test.scala"
@@ -46,7 +46,7 @@ object ApplicationBuild extends Build {
       ScriptSecurityManager.hardenPermissions {
         val embeddedSettings = Script.blocks(script).flatMap { block =>
           val imports = List("import sbt._", "import Keys._")
-          evaluate(eval, script.getPath, block.lines, imports, block.offset + 1)(loader)
+          evaluateConfiguration(eval, script, block.lines, imports, block.offset + 1)(loader)
         }
         embeddedSettings.flatMap {
           case setting if allowedKeys.exists(_.scopedKey == setting.key) =>

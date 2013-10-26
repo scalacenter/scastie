@@ -1,9 +1,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea_modules/rendererWorker-build.iml" filepath="$PROJECT_DIR$/.idea_modules/rendererWorker-build.iml" >
-      </module>
-      <module fileurl="file://$PROJECT_DIR$/.idea_modules/rendererWorker.iml" filepath="$PROJECT_DIR$/.idea_modules/rendererWorker.iml" ></module>
+      <module fileurl="file://$PROJECT_DIR$/.idea_modules/rendererWorker-build.iml" filepath="$PROJECT_DIR$/.idea_modules/rendererWorker-build.iml"/>
+      <module fileurl="file://$PROJECT_DIR$/.idea_modules/rendererWorker.iml" filepath="$PROJECT_DIR$/.idea_modules/rendererWorker.iml"/>
     </modules>
   </component>
 </project>

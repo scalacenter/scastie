@@ -24,8 +24,8 @@ object ScriptSecurityManager extends SecurityManager {
 
   override def checkPermission(perm: Permission) {
     if (activated) {
-      val read = perm.getActions == ("read")
-      val readWrite = perm.getActions == ("read,write")
+      val read = perm.getActions == "read"
+      val readWrite = perm.getActions == "read,write"
       val allowedMethods = Seq(
         "accessDeclaredMembers", "suppressAccessChecks", "createClassLoader",
         "accessClassInPackage.sun.reflect", "getStackTrace", "getClassLoader"
@@ -41,7 +41,7 @@ object ScriptSecurityManager extends SecurityManager {
       val allowedFiles =
         Seq( """.*\.class""", """.*\.jar""", """.*classes.*""", """.*library\.properties""",
           """.*src/main/scala.*""", """.*/?target""")
-      val isClass = allowedFiles.exists(perm.getName.replaceAll( """\""" + """\""", "/").matches(_))
+      val isClass = allowedFiles.exists(perm.getName.replaceAll( """\""" + """\""", "/").matches)
       activate
 
       val readClass = file && isClass && read
@@ -49,7 +49,7 @@ object ScriptSecurityManager extends SecurityManager {
       lazy val allowedClass = new Throwable().getStackTrace.exists { element =>
         val name = element.getFileName
         //todo apply more robust checks
-        List("BytecodeWriters.scala", "Settings.scala", "PathResolver.scala", "JavaMirrors.scala", "ForkJoinPool.java")
+        List("BytecodeWriters.scala", "Settings.scala", "PathResolver.scala", "JavaMirrors.scala", "ForkJoinPool.java", "Using.scala")
             .contains(name)
       }
 
@@ -71,7 +71,7 @@ object ScriptSecurityManager extends SecurityManager {
 
   private def deactivate {
     activated = false
-    if (System.getSecurityManager == this) sm.foreach(System.setSecurityManager(_))
+    if (System.getSecurityManager == this) sm.foreach(System.setSecurityManager)
   }
 
   private def activate {
