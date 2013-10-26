@@ -10,4 +10,8 @@
   </root>
   <logger name="sun.rmi" level="INFO"/>
   <logger name="javax.management" level="INFO"/>
+  <logger name="akka.remote.EndpointWriter" level="INFO"/>
+  <logger name="akka.remote.RemoteWatcher" level="INFO"/>
+  <logger name="akka.actor.LocalActorRefProvider$SystemGuardian" level="INFO"/>
+  <logger name="akka.actor.LocalActorRefProvider$Guardian" level="INFO"/>
 </configuration>
