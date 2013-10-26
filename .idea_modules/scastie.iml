@@ -133,6 +133,8 @@
     <orderEntry type="library" scope="TEST" name="SBT: org.easytesting:fest-assert:1.4:test" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.easytesting:fest-util:1.1.6:test" level="project" />
     <orderEntry type="module" module-name="renderer" exported="" />
+    <orderEntry type="library" name="jquery.qtip" level="application" />
+    <orderEntry type="library" name="jquery-1.10.1" level="application" />
   </component>
 </module>
 

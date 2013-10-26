@@ -24,35 +24,19 @@ function scrollTo(def) {
   return false;
 }
 $(function () {
-  $("pre [id]").live("mouseover",
+  $("pre [id]").on("mouseover",
       function () { $(this).references().highlight() }
-  ).live("mouseout",
+  ).on("mouseout",
       function () { $(this).references().unhighlight() }
-  ).live("click", function () { $(this).attr("href") ? false : scrollTo($(this)) });
+  ).on("click", function () { $(this).attr("href") ? false : scrollTo($(this)) });
 
-  $("pre a[href^='#']").live("mouseover",
+  $("pre a[href^='#']").on("mouseover",
       function () { $(this).definition().highlight() }
-  ).live("mouseout",
+  ).on("mouseout",
       function () { $(this).definition().unhighlight() }
-  ).live("click",
+  ).on("click",
       function () { return scrollTo($(this).definition()); }
   );
-
-  $('[title]').live("mouseover", function () {
-    if ($(this).data('qtip') !== 'object') {
-      $(this).qtip({
-        style:{
-          name:'dark',
-          tip:true,
-          border:{ width:7, radius:5 },
-          width:{ max:500 }
-        },
-        content:{ prerender:true },
-        show:{ delay:{ length:0 } },
-        position:{ corner:{ tooltip:"bottomLeft", target:"topMiddle" } }
-      }).qtip("show");
-    }
-  });
 });
 
 $(window).load(function () {
