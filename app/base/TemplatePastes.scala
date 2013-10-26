@@ -71,7 +71,17 @@ object Main extends App {
 }
                                 """)
       ,
-      "2.9" -> nextPaste( """
+      "sbt 0.13" -> nextPaste( """
+/***
+sbtPlugin := true
+*/
+import sbt._
+object Build extends Build {
+  val p = project.settings(Keys.scalaVersion := Keys.name.value)
+}
+                          """)
+      ,
+      "scala 2.9" -> nextPaste( """
 /***
 scalaVersion := "2.9.3"
 

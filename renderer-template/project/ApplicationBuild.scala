@@ -37,7 +37,7 @@ object ApplicationBuild extends Build {
         .reapply(sessionSettings.appendRaw(dependencies).appendRaw(onLoad in Global := idFun), state)
   }
 
-  val allowedKeys = Set[Init[_]#KeyedInitialize[_]](libraryDependencies, scalaVersion, resolvers, scalacOptions)
+  val allowedKeys = Set[Init[_]#KeyedInitialize[_]](libraryDependencies, scalaVersion, resolvers, scalacOptions, sbtPlugin)
 
   def extractDependencies(eval: compiler.Eval, loader: ClassLoader, state: State): Seq[Setting[_]] = {
     val scriptArg = "src/main/scala/test.scala"

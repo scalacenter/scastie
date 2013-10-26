@@ -20,10 +20,11 @@ object DefaultSettings {
         setPreference(DoubleIndentClassDeclaration, true)
     , traceLevel := 1000
     , crossPaths := false
+    , crossTarget := file("target")
   )
 
 
-  def scalacOptions: Project.Setting[Task[Seq[String]]] = {
+  def scalacOptions: Def.Setting[Task[Seq[String]]] = {
     Keys.scalacOptions <++= (scalaSource in Compile, baseDirectory, scalaVersion) map {
       (scalaSource, baseDirectory, scalaVersion) =>
         val sxrOptions = if (sxrVersion.isDefinedAt(scalaVersion, sxrModule)) {
@@ -57,9 +58,9 @@ object DefaultSettings {
   }
 
   def addSupportedCompilerPlugin(module: ModuleID)
-                                (version: PartialFunction[(String, ModuleID), ModuleID]): Project.Setting[Seq[ModuleID]] =
+                                (version: PartialFunction[(String, ModuleID), ModuleID]): Def.Setting[Seq[ModuleID]] =
     libraryDependencies <++= scalaVersion { scalaVersion =>
-      version.lift(scalaVersion, module).map(compilerPlugin(_)).toList
+      version.lift(scalaVersion, module).map(compilerPlugin).toList
     }
 }
 
