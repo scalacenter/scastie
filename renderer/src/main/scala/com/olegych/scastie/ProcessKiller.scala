@@ -20,7 +20,8 @@ class WindowsProcessKiller extends ProcessKiller {
     //    val pid = handleField.get(p).asInstanceOf[Long]
     //    import sys.process._
     //    s"TASKKILL /F /T /PID $pid".! == 0
-    p.destroy() != null
+    p.destroy()
+    true
   }
 }
 

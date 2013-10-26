@@ -16,12 +16,14 @@ import concurrent.duration._
 import play.api.libs.json.JsValue
 import controllers.Progress.{MonitorChannel, MonitorProgress}
 import play.api.i18n.Messages
+import scalaz._
+import Scalaz._
 
 
 object Pastes extends Controller {
 
   import play.api.Play.current
-  import concurrent.ExecutionContext.Implicits.global
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   val pastesDir = new File(Play.configuration.getString("pastes.data.dir").get)
   val system = {
@@ -70,18 +72,14 @@ object Pastes extends Controller {
     Redirect(routes.Application.index()).flashing("paste" -> pasteById.getOrElse(form.paste))
   }
 
-  def delete(id: Long) = Action { implicit request =>
-    Async {
+  def delete(id: Long) = Action.async { implicit request =>
       (renderer ? DeletePaste(id, Application.uid)).mapTo[Paste].map { paste =>
         val result = Redirect(routes.Pastes.show(id))
-        paste.uid.fold[PlainResult](ifEmpty = result)(
-          _ => result.flashing("error" -> Messages("invalid.user")))
+        paste.uid.cata(_ => result.flashing("error" -> Messages("invalid.user")), result)
       }
-    }
   }
 
-  def show(id: Long) = Action { implicit request =>
-    Async {
+  def show(id: Long) = Action.async { implicit request =>
       (renderer ? GetPaste(id)).mapTo[Paste].map { paste =>
         val content = paste.content.getOrElse("")
         val output = request.flash.get("error").map(_ + "\n").getOrElse("") + paste.output.getOrElse("")
@@ -89,7 +87,6 @@ object Pastes extends Controller {
         val ref = """\[(?:error|warn)\].*test.scala:(\d+)""".r
         val highlights = ref.findAllIn(output).matchData.map(_.group(1).toInt).toSeq
         Ok(views.html.show(typedContent, output, highlights, id))
-      }
     }
   }
 

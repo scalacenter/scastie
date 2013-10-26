@@ -13,7 +13,7 @@ object TemplatePastes {
 
   val default = nextPaste( """
 /***
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
 */
 object Main extends App {
@@ -22,13 +22,14 @@ object Main extends App {
 
   val templates = {
     List(
-      "scalaz+shapeless+spire" -> nextPaste( """
+      "typelevel" -> nextPaste( """
 /***
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
-libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.1",
-                            "com.chuusai" %% "shapeless" % "1.2.4",
-                            "org.spire-math" %% "spire" % "0.5.0")
+libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.4",
+                            "org.typelevel" %% "shapeless-spire" % "0.1.2",
+                            "org.typelevel" %% "shapeless-scalaz" % "0.1.2"
+                            )
 */
 object Main extends App {
   import scalaz._, Scalaz._
@@ -51,13 +52,13 @@ object Main extends App {
   val m = rng.next[Map[Int, Complex[Double]]]
   println(m)
 }
-                                """)
+                                             """)
       ,
-      "play+akka" -> nextPaste( """
+      "typesafe" -> nextPaste( """
 /***
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
-libraryDependencies ++= Seq("play" %% "play" % "2.1.1")
+libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.2.1-RC1")
 */
 import play.api._
 import play.api.mvc._
