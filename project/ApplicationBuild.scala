@@ -6,14 +6,14 @@ object ApplicationBuild extends Build {
   val appVersion = "1.0"
 
   val scalaVersion = "2.10.3"
-  val akkaVersion = "2.1.4"
+  val akkaVersion = "2.2.3"
 
   val renderer = {
     def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % akkaVersion
     def scalaIo(module: String) = "com.github.scala-incubator.io" %% ("scala-io-" + module) % "0.4.2"
     Project(id = "renderer", base = file("renderer"),
       settings = Defaults.defaultSettings ++
-        play.Project.intellijCommandSettings("SCALA") ++
+        play.Project.intellijCommandSettings ++
         Seq(
           Keys.scalaVersion := scalaVersion
           , Keys.libraryDependencies ++= Seq(

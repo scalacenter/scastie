@@ -8,6 +8,7 @@ import com.olegych.scastie.PastesActor.PasteProgress
 import com.olegych.scastie.PastesActor.GetPaste
 import com.olegych.scastie.PastesActor.AddPaste
 import com.olegych.scastie.PastesActor.Paste
+import akka.actor.SupervisorStrategy.{Escalate, Restart}
 
 /**
   */
@@ -62,6 +63,7 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
   }
 
   def nextPasteId = pastesContainer.lastPasteId.incrementAndGet()
+  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy(){case _ => Escalate}
 }
 
 object PastesActor {
