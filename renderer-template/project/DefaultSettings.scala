@@ -4,7 +4,7 @@ import sbt._
 import sbt.Keys._
 
 object DefaultSettings {
-  val sxrModule = "org.scala-sbt.sxr" %% "sxr" % "0.3.0"
+  val sxrModule = "org.scala-sbt.sxr" %% "sxr" % "0.3.1-SCASTIE"
   def apply: Seq[Setting[_]] = scalariformSettings ++ Seq(
     resolvers += Resolver.url("olegych-repo",
       url("https://bitbucket.org/olegych/mvn/raw/default/ivy2/"))(Resolver.ivyStylePatterns)
