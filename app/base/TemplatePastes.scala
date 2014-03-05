@@ -26,7 +26,7 @@ object Main extends App {
 /***
 scalaVersion := "2.10.3"
 
-libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.4",
+libraryDependencies ++= Seq("org.scalaz" %% "scalaz-core" % "7.0.6",
                             "org.typelevel" %% "shapeless-spire" % "0.1.2",
                             "org.typelevel" %% "shapeless-scalaz" % "0.1.2"
                             )
@@ -52,13 +52,13 @@ object Main extends App {
   val m = rng.next[Map[Int, Complex[Double]]]
   println(m)
 }
-                                             """)
+                                """)
       ,
       "typesafe" -> nextPaste( """
 /***
 scalaVersion := "2.10.3"
 
-libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.2.1-RC1")
+libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.2.2")
 */
 import play.api._
 import play.api.mvc._
