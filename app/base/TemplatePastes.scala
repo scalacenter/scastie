@@ -76,6 +76,7 @@ object Main extends App {
 sbtPlugin := true
 */
 import sbt._
+import Keys._
 object Build extends Build {
   val p = project.settings(Keys.scalaVersion := Keys.name.value)
 }
