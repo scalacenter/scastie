@@ -13,8 +13,8 @@
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/../target/scala-2.10/classes" />
-    <output-test url="file://$MODULE_DIR$/../target/scala-2.10/test-classes" />
+    <output url="file://$MODULE_DIR$/../target\scala-2.10\classes" />
+    <output-test url="file://$MODULE_DIR$/../target\scala-2.10\test-classes" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/..">
       <sourceFolder url="file://$MODULE_DIR$/../app" isTestSource="false" />
@@ -22,17 +22,14 @@
       <sourceFolder url="file://$MODULE_DIR$/../conf" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../test/resources" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/../target/native_libraries" />
       <excludeFolder url="file://$MODULE_DIR$/../target/pastes" />
       <excludeFolder url="file://$MODULE_DIR$/../target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/cache" />
       <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/classes" />
       <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/classes_managed" />
-      <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/resource_managed" />
       <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/test-classes" />
       <excludeFolder url="file://$MODULE_DIR$/../target/specs2-reports" />
       <excludeFolder url="file://$MODULE_DIR$/../target/streams" />
-      <excludeFolder url="file://$MODULE_DIR$/../target/target" />
       <excludeFolder url="file://$MODULE_DIR$/../target/test-reports" />
     </content>
     <orderEntry type="inheritedJdk" />
@@ -84,6 +81,12 @@
     <orderEntry type="library" name="SBT: xml-apis:xml-apis:1.4.01" level="project" />
     <orderEntry type="library" name="SBT: net.sf.ehcache:ehcache-core:2.6.0" level="project" />
     <orderEntry type="library" name="SBT: javax.transaction:jta:1.1" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:syntaxhighlighter:3.0.83" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:webjars-play_2.10:2.1.0-3" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:requirejs:2.1.5" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:webjars-locator:0.5" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:bootstrap:3.1.0" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: play:play-test_2.10:2.1.4" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.hamcrest:hamcrest-core:1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2_2.10:1.13" level="project" />

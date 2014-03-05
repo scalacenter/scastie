@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/../project/target/scala_2.9.2" />
-    <output-test url="file://$MODULE_DIR$/../project/target/scala_2.9.2" />
+    <output url="file://D:\Distrib\Coding\Java\scala\scastie\project\target\scala_2.9.2" />
+    <output-test url="file://D:\Distrib\Coding\Java\scala\scastie\project\target\scala_2.9.2" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../project">
       <sourceFolder url="file://$MODULE_DIR$/../project" isTestSource="false" />
@@ -35,6 +35,7 @@
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.4/logging-0.12.4.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.4/tracking-0.12.4.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.4/command-0.12.4.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.github.mdr/ascii-graphs_2.9.2/jars/ascii-graphs_2.9.2-0.0.2.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.clapper/grizzled-slf4j_2.9.1/jars/grizzled-slf4j_2.9.1-0.6.5.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/jline/jline/jars/jline-0.9.94.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.4/compiler-integration-0.12.4.jar!/" />
@@ -84,6 +85,7 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.parboiled/parboiled-java/jars/parboiled-java-1.0.2.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.9.2/org.scala-sbt/sbt/0.12.4/compiler-ivy-integration-0.12.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.google.javascript/closure-compiler/jars/closure-compiler-rr2079.1.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/net.virtual-void/sbt-dependency-graph/jars/sbt-dependency-graph-0.7.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/play/templates-compiler_2.9.2/jars/templates-compiler_2.9.2-2.1.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/play/sbt-link/jars/sbt-link-2.1.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/junit/junit/jars/junit-3.8.1.jar!/" />
@@ -204,6 +206,8 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.jarjar/jarjar/srcs/jarjar-1.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/junit/junit/srcs/junit-4.8.2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/com.typesafe.sbt/sbt-start-script/srcs/sbt-start-script-0.9.0-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.9.2/sbt_0.12/net.virtual-void/sbt-dependency-graph/srcs/sbt-dependency-graph-0.7.4-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.github.mdr/ascii-graphs_2.9.2/srcs/ascii-graphs_2.9.2-0.0.2-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
