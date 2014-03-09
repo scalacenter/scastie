@@ -39,7 +39,6 @@ object ApplicationBuild extends Build {
     def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % akkaVersion
     Project(id = "renderer", base = file("renderer"),
       settings = Defaults.defaultSettings ++ defaultSettings ++
-        play.Project.intellijCommandSettings ++
         Seq(
           Keys.libraryDependencies ++= Seq(
             akka("actor"),
@@ -54,7 +53,7 @@ object ApplicationBuild extends Build {
     )
   }
 
-  val main = play.Project(appName, appVersion).settings(defaultSettings:_*).settings(
+  val main = play.Project(appName, appVersion).settings(defaultSettings: _*).settings(
     SbtStartScript.startScriptForClassesSettings ++
       Seq(Keys.mainClass in Compile := Option("ProdNettyServer")
         , Keys.watchSources <++= Keys.baseDirectory map { path => ((path / "public") ** "*").get}
