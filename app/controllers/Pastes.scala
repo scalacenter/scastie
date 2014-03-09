@@ -18,6 +18,7 @@ import controllers.Progress.{MonitorChannel, MonitorProgress}
 import play.api.i18n.Messages
 import scalaz._
 import Scalaz._
+import scala.concurrent.Future
 
 
 object Pastes extends Controller {
@@ -47,22 +48,19 @@ object Pastes extends Controller {
     )(NewPaste.apply)(NewPaste.unapply)
   )
 
-  def add = Action { implicit request =>
+  def add = Action.async { implicit request =>
     val form = pasteForm.bindFromRequest()
     createPaste(form, Application.uid)
   }
 
-  def createPaste(form: Form[NewPaste], uid: String): Result = {
+  def createPaste(form: Form[NewPaste], uid: String): Future[SimpleResult] = {
     val paste = form("paste").value.get
     if (form.hasErrors) {
-      Redirect(routes.Application.index())
-          .flashing("error" -> form.errors.map(_.message).mkString, "paste" -> paste)
+      Future.successful(Redirect(routes.Application.index())
+        .flashing("error" -> form.errors.map(_.message).mkString, "paste" -> paste))
     } else {
-      scala.concurrent.future()
-      Async {
-        (renderer ? AddPaste(paste, uid)).mapTo[Paste].map { paste =>
-          Redirect(routes.Pastes.show(paste.id))
-        }
+      (renderer ? AddPaste(paste, uid)).mapTo[Paste].map { paste =>
+        Redirect(routes.Pastes.show(paste.id))
       }
     }
   }
@@ -74,20 +72,20 @@ object Pastes extends Controller {
   }
 
   def delete(id: Long) = Action.async { implicit request =>
-      (renderer ? DeletePaste(id, Application.uid)).mapTo[Paste].map { paste =>
-        val result = Redirect(routes.Pastes.show(id))
-        paste.uid.cata(_ => result.flashing("error" -> Messages("invalid.user")), result)
-      }
+    (renderer ? DeletePaste(id, Application.uid)).mapTo[Paste].map { paste =>
+      val result = Redirect(routes.Pastes.show(id))
+      paste.uid.cata(_ => result.flashing("error" -> Messages("invalid.user")), result)
+    }
   }
 
   def show(id: Long) = Action.async { implicit request =>
-      (renderer ? GetPaste(id)).mapTo[Paste].map { paste =>
-        val content = paste.content.getOrElse("")
-        val output = request.flash.get("error").map(_ + "\n").getOrElse("") + paste.output.getOrElse("")
-        val typedContent = if (content.matches("(?mis)\\s*<pre>.*")) Left(Html(content)) else Right(content)
-        val ref = """\[(?:error|warn)\].*test.scala:(\d+)""".r
-        val highlights = ref.findAllIn(output).matchData.map(_.group(1).toInt).toSeq
-        Ok(views.html.show(typedContent, output, highlights, id))
+    (renderer ? GetPaste(id)).mapTo[Paste].map { paste =>
+      val content = paste.content.getOrElse("")
+      val output = request.flash.get("error").map(_ + "\n").getOrElse("") + paste.output.getOrElse("")
+      val typedContent = if (content.matches("(?mis)\\s*<pre>.*")) Left(Html(content)) else Right(content)
+      val ref = """\[(?:error|warn)\].*test.scala:(\d+)""".r
+      val highlights = ref.findAllIn(output).matchData.map(_.group(1).toInt).toSeq
+      Ok(views.html.show(typedContent, output, highlights, id))
     }
   }
 

@@ -20,6 +20,7 @@ class Progress extends Actor with ActorLogging {
     case MonitorProgress(id)                 =>
       val (enumerator, channel) = Concurrent.broadcast[JsValue]
       val monitorChannel = MonitorChannel(id, null, channel)
+      import concurrent.ExecutionContext.Implicits.global
       val iteratee = Iteratee.ignore[JsValue].map { _ =>
         self ! StopMonitorProgress(monitorChannel)
       }

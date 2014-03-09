@@ -3,14 +3,14 @@
 @main("Welcome to Scastie", includeLinkJs = true, highlight = true) {
   <div class="toolbar">
   @helper.form(action = routes.Pastes.edit()) {
-    <input type="hidden" name="paste" id="paste"></input>
-    <input type="submit" value="Clone"></input>
+    <input type="hidden" name="paste" id="paste"/>
+    <input type="submit" value="Clone"/>
   }
   @helper.form(action = routes.Pastes.delete(id)) {
-    <input type="submit" value="Delete"></input>
+    <input type="submit" value="Delete"/>
   }
   </div>
-  </br>
+  <br/>
   @content.fold(
     html => html,
     string =>

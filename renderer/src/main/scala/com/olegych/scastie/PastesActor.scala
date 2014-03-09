@@ -61,7 +61,6 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
   }
 
   def nextPasteId = pastesContainer.lastPasteId.incrementAndGet()
-  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy(){case _ => Escalate}
 }
 
 object PastesActor {
