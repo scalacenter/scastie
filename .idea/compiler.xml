@@ -19,10 +19,5 @@
       </profile>
     </annotationProcessing>
   </component>
-  <component name="SbtSettings">
-    <option name="sbtLauncherJarPath" value="$PROJECT_DIR$/sbt-launcher/xsbt-launch.jar" />
-    <option name="sbtLauncherVmParameters" value="-Xmx512M -XX:MaxPermSize=256M -Xss1M" />
-    <option name="useApplicationSettings" value="false" />
-  </component>
 </project>
 

@@ -41,14 +41,6 @@
         <option name="PARAMETER_ANNOTATION_WRAP" value="1" />
         <option name="VARIABLE_ANNOTATION_WRAP" value="1" />
         <option name="ENUM_CONSTANTS_WRAP" value="1" />
-        <ScalaCodeStyleSettings>
-          <option name="PLACE_CLOSURE_PARAMETERS_ON_NEW_LINE" value="false" />
-          <option name="PLACE_SELF_TYPE_ON_NEW_LINE" value="false" />
-          <option name="ALIGN_IN_COLUMNS_CASE_BRANCH" value="true" />
-          <option name="KEEP_XML_FORMATTING" value="true" />
-          <option name="MULTILINE_STRING_SUPORT" value="1" />
-          <option name="PROCESS_MARGIN_ON_COPY_PASTE" value="false" />
-        </ScalaCodeStyleSettings>
         <XML>
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
         </XML>
@@ -176,13 +168,11 @@
           </indentOptions>
         </codeStyleSettings>
         <codeStyleSettings language="Scala">
+          <option name="BLANK_LINES_BEFORE_IMPORTS" value="0" />
+          <option name="BLANK_LINES_AFTER_IMPORTS" value="0" />
+          <option name="BLANK_LINES_AROUND_CLASS" value="0" />
           <option name="BLANK_LINES_AROUND_METHOD" value="0" />
           <option name="BLANK_LINES_AROUND_METHOD_IN_INTERFACE" value="0" />
-          <option name="CALL_PARAMETERS_WRAP" value="1" />
-          <option name="METHOD_PARAMETERS_WRAP" value="1" />
-          <option name="EXTENDS_LIST_WRAP" value="1" />
-          <option name="EXTENDS_KEYWORD_WRAP" value="1" />
-          <option name="METHOD_CALL_CHAIN_WRAP" value="1" />
           <option name="KEEP_SIMPLE_BLOCKS_IN_ONE_LINE" value="true" />
           <option name="KEEP_SIMPLE_METHODS_IN_ONE_LINE" value="true" />
           <option name="METHOD_ANNOTATION_WRAP" value="0" />
