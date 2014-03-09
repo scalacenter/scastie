@@ -4,10 +4,7 @@ import akka.actor._
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import com.olegych.scastie.PastesActor._
-import com.olegych.scastie.PastesActor.PasteProgress
-import com.olegych.scastie.PastesActor.GetPaste
-import com.olegych.scastie.PastesActor.AddPaste
-import com.olegych.scastie.PastesActor.Paste
+import scalaz.Scalaz._
 
 /**
   */
@@ -33,10 +30,12 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
 
   def writePaste(paste: Paste) {
     val pasteDir = pastesContainer.paste(paste.id)
-    val contentChanged = readPaste(paste.id).content != paste.content
-    pasteDir.pasteFile.write(paste.content)
+    val oldContent = readPaste(paste.id).content
+    val newContent = paste.content
+    val contentChanged = oldContent.nonEmpty && oldContent =/= newContent
+    pasteDir.pasteFile.write(newContent)
     pasteDir.uidFile.write(paste.uid)
-    progressActor ! PasteProgress(paste.id, contentChanged, paste.output.getOrElse(""))
+    progressActor ! PasteProgress(paste.id, contentChanged, paste.output.orZero)
     pasteDir.outputFile.write(paste.output, truncate = false)
   }
 
