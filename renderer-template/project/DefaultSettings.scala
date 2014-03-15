@@ -34,8 +34,9 @@ object DefaultSettings {
         } else {
           Nil
         }
-        val featureOptions = if (Is210(scalaVersion)) Seq("-feature") else Nil
-        Seq("-deprecation", "-unchecked", "-Ywarn-all", "-Xcheckinit") ++ sxrOptions ++ featureOptions
+        val featureOptions = if (Is210(scalaVersion) || Is211(scalaVersion)) List("-feature") else Nil
+        val warnAll = if (Is210(scalaVersion)) List("-Ywarn-all") else Nil
+        List("-deprecation", "-unchecked", "-Xcheckinit") ++ sxrOptions ++ featureOptions ++ warnAll
     }
   }
 
@@ -47,6 +48,8 @@ object DefaultSettings {
   object Is29 extends IsStartsWith("2.9")
 
   object Is210 extends IsStartsWith("2.10")
+
+  object Is211 extends IsStartsWith("2.11")
 
   val sxrVersion: PartialFunction[(String, ModuleID), ModuleID] = {
     case (v, module) if Is29(v)  => "org.scala-tools.sxr" % "sxr_2.9.2" % "0.2.8-SNAPSHOT"
