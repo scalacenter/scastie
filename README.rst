@@ -13,12 +13,10 @@ Current Features
 -  highlighting with Scala X-Ray
 -  reusing sbt instances for fast compilation
 -  running in sandbox with sbt
--  detect fragment pastes and wrap them in top level declaration so that
-   they will be compilable and runnable
 -  apply scalariform and linter to paste
 -  building with sbt, with support for inline dependency specification
    (see https://github.com/harrah/xsbt/wiki/Scripts, only
-   libraryDependencies setting is allowed)
+   libraryDependencies, scalaVersion, resolvers, scalacOptions, sbtPlugin settings are allowed)
 -  distributes workload amongst multiple sbt instances (including remote)
 -  realtime update of paste compilation/running progress
 -  timeout long-running pastes
