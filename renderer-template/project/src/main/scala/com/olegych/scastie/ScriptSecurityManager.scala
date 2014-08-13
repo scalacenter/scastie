@@ -39,7 +39,7 @@ object ScriptSecurityManager extends SecurityManager {
       val notExistingFile = !new File(perm.getName).exists()
 
       val allowedFiles =
-        Seq( """.*\.class""", """.*\.jar""", """.*classes.*""", """.*library\.properties""",
+        Seq( """.*\.class""", """.*\.jar""", """.*classes.*""", """.*\.properties""",
           """.*src/main/scala.*""", """.*/?target""")
       val isClass = allowedFiles.exists(perm.getName.replaceAll( """\""" + """\""", "/").matches)
       activate
