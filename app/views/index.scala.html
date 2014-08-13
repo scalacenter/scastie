@@ -1,9 +1,9 @@
 @(message: Html, paste: String)
 
-@main("Welcome to Scastie") {
+@main("scastie") {
   <form action=" @routes.Pastes.add " method="post">
-    <textarea name="paste">@paste</textarea>
-    <div name="paste" rows="50" cols="110" style="font-family: monospace" autofocus="" maxlength="10000" id='editor'>@paste</div>
+    <textarea name="paste" style="display: none;">@paste</textarea>
+    <div name="paste" rows="50" cols="110" style="font-family: monospace" autofocus="" maxlength="10000" id='editor'></div>
 
     <script src="http://ace.c9.io/build/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -11,8 +11,8 @@
       editor.setTheme("ace/theme/solarized_light");
       editor.getSession().setMode("ace/mode/scala");
       editor.getSession().setTabSize(2);
-      var textarea = $('textarea[name="paste"]').hide();
-      editor.getSession().setValue(textarea.val());
+      var textarea = $('textarea[name="paste"]');
+      editor.getSession().setValue(textarea.val()).hide();
       editor.getSession().on('change', function(){
         textarea.val(editor.getSession().getValue());
       });
@@ -21,6 +21,7 @@
   <input type="submit" class='submit-paste' value="Submit" />
   </form>
   @helper.form(action = routes.Pastes.edit(), 'class -> "templates-form") {
+    <div>Put sbt config inside top comment and your scala code after it. <a href="https://github.com/OlegYch/scastie">More info</a></div>
     @helper.inputRadioGroup(Pastes.pasteForm("id")
       , base.TemplatePastes.templates.map { case (label, paste) => (paste.id.toString, label)}
       , '_label -> Messages("choose.template")
