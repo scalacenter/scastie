@@ -12,7 +12,7 @@
       editor.getSession().setMode("ace/mode/scala");
       editor.getSession().setTabSize(2);
       var textarea = $('textarea[name="paste"]');
-      editor.getSession().setValue(textarea.val()).hide();
+      editor.getSession().setValue(textarea.val());
       editor.getSession().on('change', function(){
         textarea.val(editor.getSession().getValue());
       });
