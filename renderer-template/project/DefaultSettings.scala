@@ -55,8 +55,10 @@ object DefaultSettings {
       case Is211(v) => Some("2.11")
       case _ => None
     }
-    val noExternalIndex = if (Is211(scalaVersion)) List("-P:sxr:no-external-index") else Nil
-    noExternalIndex ++ linksVersion.map(v => Seq("-P:sxr:base-directory:" + baseDirectory.getAbsolutePath, "-P:sxr:link-file:" + (baseDirectory / s"sxr$v.links").getAbsolutePath)).getOrElse(Nil)
+    linksVersion.map(v => Seq(
+      "-P:sxr:base-directory:" + baseDirectory.getAbsolutePath
+      , "-P:sxr:link-file:" + (baseDirectory / s"sxr$v.links").getAbsolutePath
+    )).getOrElse(Nil)
   }
   val linterVersion: PartialFunction[String, ModuleID] = {
     case Is29(v) => "com.foursquare.lint" % "linter_2.9.2" % "0.1.2"
