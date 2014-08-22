@@ -1,11 +1,11 @@
 package com.olegych.scastie
 
-import akka.actor.{ActorRef, ActorLogging, Actor}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.event.LoggingReceive
-import java.io.File
+import com.olegych.scastie.FailuresActor.{AddFailure, FatalFailure}
 import com.olegych.scastie.PastesActor.Paste
-import com.olegych.scastie.FailuresActor.{FatalFailure, AddFailure}
-import concurrent.duration._
+
+import scala.concurrent.duration._
 
 /**
   */
@@ -21,8 +21,8 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
     TimeoutActor(timeout, message => {
       message match {
         case paste: Paste => sender ! paste
-            .copy(output = Some(s"Killed because of timeout $timeout"), content = None)
-        case _            => log.info("unknown message {}", message)
+          .copy(output = Some(s"Killed because of timeout $timeout"), content = None)
+        case _ => log.info("unknown message {}", message)
       }
       preRestart(FatalFailure, Some(message))
     })
@@ -30,7 +30,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
   def generateId: String = util.Random.alphanumeric.take(10).mkString
 
-  val sbtDir = PastesContainer(new File(System.getProperty("java.io.tmpdir"))).renderer(generateId)
+  val sbtDir = PastesContainer(new java.io.File(System.getProperty("java.io.tmpdir"))).renderer(generateId)
 
   var sbt: Option[Sbt] = None
 
@@ -41,7 +41,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   override def preRestart(reason: Throwable, message: Option[Any]) {
     super.preRestart(reason, message)
     message.collect {
-      case message@Paste(_, content, _, _) => failures ! AddFailure(reason, message, sender, content)
+      case message@Paste(_, content, _, _, _) => failures ! AddFailure(reason, message, sender, content)
     }
   }
 
@@ -51,7 +51,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   }
 
   def receive = LoggingReceive {
-    killer { case paste@Paste(_, Some(content), _, _) => sbt foreach { sbt =>
+    killer { case paste@Paste(_, Some(content), _, _, _) => sbt foreach { sbt =>
       def sendPasteFile(result: String) {
         sender ! paste.copy(content = sbtDir.pasteFile.read, output = Option(result))
       }
@@ -61,17 +61,19 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
       sbtDir.sxrSource.delete()
       sbt.process("compile") match {
         case sbt.Success(compileResult) =>
-          val sxrSource = sbtDir.sxrSource.read.map(cleanSource)
-          sender ! paste.copy(content = sxrSource, output = Option(compileResult + "\nNow running..."))
+          sender ! paste.copy(
+            content = sbtDir.pasteFile.read
+            , renderedContent = sbtDir.sxrSource.read.map(cleanSource)
+            , output = Option(compileResult + "\nNow running..."))
           applyRunKiller(paste) {
             sbt.process("run-all") match {
               case sbt.Success(runResult) =>
-                sender ! paste.copy(content = sxrSource, output = Option(runResult))
-              case errorResult            =>
-                sender ! paste.copy(content = sxrSource, output = Option(sbt.resultAsString(errorResult)))
+                sender ! paste.copy(output = Option(runResult))
+              case errorResult =>
+                sender ! paste.copy(output = Option(sbt.resultAsString(errorResult)))
             }
           }
-        case errorResult                =>
+        case errorResult =>
           sendPasteFile(sbt.resultAsString(errorResult))
       }
     }

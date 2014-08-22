@@ -4,6 +4,7 @@
   <div class="toolbar">
   @helper.form(action = routes.Pastes.edit()) {
     <input type="hidden" name="paste" id="paste"/>
+    <input type="hidden" name="id" id="id" value="@id"/>
     <input type="submit" value="Clone"/>
   }
   @helper.form(action = routes.Pastes.delete(id)) {

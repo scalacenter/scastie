@@ -4,36 +4,38 @@ import akka.actor._
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import com.olegych.scastie.PastesActor._
+
+import scalaz.Equal
 import scalaz.Scalaz._
 
 /**
   */
 case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef)
-    extends Actor with ActorLogging {
+  extends Actor with ActorLogging {
   private val failures = context.actorOf(Props[FailuresActor], "failures")
   private val renderer = createRenderer(context, failures)
 
   def receive = LoggingReceive {
     case AddPaste(content, uid) =>
       val id = nextPasteId
-      val paste = Paste(id = id, content = Option(content), output = Option("Processing..."), uid = Some(uid))
+      val paste = Paste(id = id, content = Option(content), output = Option("Processing..."), uid = Some(uid), renderedContent = None)
+      writePaste(paste)
       renderer ! paste
       sender ! paste
-      writePaste(paste)
-    case GetPaste(id)           =>
+    case GetPaste(id) =>
       sender ! readPaste(id)
-    case DeletePaste(id, uid)   =>
+    case DeletePaste(id, uid) =>
       sender ! deletePaste(id, uid)
-    case paste: Paste           =>
+    case paste: Paste =>
       writePaste(paste)
   }
 
   def writePaste(paste: Paste) {
     val pasteDir = pastesContainer.paste(paste.id)
-    val oldContent = readPaste(paste.id).content
-    val newContent = paste.content
-    val contentChanged = oldContent.nonEmpty && oldContent =/= newContent
-    pasteDir.pasteFile.write(newContent)
+    val oldPaste = readPaste(paste.id)
+    val contentChanged = oldPaste.content.nonEmpty && oldPaste =/= paste
+    pasteDir.pasteFile.write(paste.content)
+    pasteDir.sxrSource.write(paste.renderedContent)
     pasteDir.uidFile.write(paste.uid)
     progressActor ! PasteProgress(paste.id, contentChanged, paste.output.orZero)
     pasteDir.outputFile.write(paste.output, truncate = false)
@@ -42,9 +44,9 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
   def readPaste(id: Long) = {
     val paste = pastesContainer.paste(id)
     if (paste.pasteFile.exists) {
-      Paste(id = id, content = paste.pasteFile.read, output = paste.outputFile.read, uid = paste.uidFile.read)
+      Paste(id = id, content = paste.pasteFile.read, output = paste.outputFile.read, uid = paste.uidFile.read, renderedContent = paste.sxrSource.read)
     } else {
-      Paste(id = id, content = None, output = Option("Not found"), uid = None)
+      Paste(id = id, content = None, output = Option("Not found"), uid = None, renderedContent = None)
     }
   }
 
@@ -54,6 +56,7 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
       val paste = pastesContainer.paste(id)
       paste.outputFile.delete()
       paste.pasteFile.delete()
+      paste.sxrSource.delete()
       readPaste(id)
     } else {
       storedPaste
@@ -75,9 +78,12 @@ object PastesActor {
 
   case class DeletePaste(id: Long, uid: String) extends PasteMessage
 
-  case class Paste(id: Long, content: Option[String], output: Option[String], uid: Option[String])
-      extends PasteMessage
+  case class Paste(id: Long, content: Option[String], output: Option[String], uid: Option[String], renderedContent: Option[String])
+    extends PasteMessage
 
+  object Paste {
+    implicit val PasteEqual: Equal[Paste] = Equal.equalA
+  }
   case class PasteProgress(id: Long, contentChanged: Boolean, output: String)
 
 }

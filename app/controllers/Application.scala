@@ -1,17 +1,22 @@
 package controllers
 
-import play.api.mvc._
-import play.api.templates.Html
-import util.Random
 import base.TemplatePastes
 import play.api.i18n.Messages
+import play.api.mvc._
+import play.twirl.api.Html
+
+import scala.util.Random
+import scalaz.Scalaz._
 
 object Application extends Controller {
 
   def index = Action { implicit request =>
-    val message = request.flash.get("error").map(Html(_)).getOrElse(Html(Messages("enter.code")))
-    val paste = request.flash.get("paste").getOrElse(TemplatePastes.default.content.get)
-    Ok(views.html.index(message, paste)).withCookies(Cookie("uid", uid, maxAge = Some(Int.MaxValue)))
+    edit(TemplatePastes.default.content.orZero)
+  }
+
+  def edit(content: String)(implicit request: Request[AnyContent]): Result = {
+    val message = Html(request.flash.get("error") | Messages("enter.code"))
+    Ok(views.html.index(message, content)).withCookies(Cookie("uid", uid, maxAge = Some(Int.MaxValue)))
   }
 
   def uid(implicit request: Request[AnyContent]): String = {
