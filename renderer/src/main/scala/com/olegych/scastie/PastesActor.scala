@@ -33,7 +33,7 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
   def writePaste(paste: Paste) {
     val pasteDir = pastesContainer.paste(paste.id)
     val oldPaste = readPaste(paste.id)
-    val contentChanged = oldPaste.content.nonEmpty && oldPaste =/= paste
+    val contentChanged = oldPaste.content.nonEmpty && (oldPaste.content =/= paste.content || oldPaste.renderedContent =/= paste.renderedContent)
     pasteDir.pasteFile.write(paste.content)
     pasteDir.sxrSource.write(paste.renderedContent)
     pasteDir.uidFile.write(paste.uid)
@@ -81,9 +81,6 @@ object PastesActor {
   case class Paste(id: Long, content: Option[String], output: Option[String], uid: Option[String], renderedContent: Option[String])
     extends PasteMessage
 
-  object Paste {
-    implicit val PasteEqual: Equal[Paste] = Equal.equalA
-  }
   case class PasteProgress(id: Long, contentChanged: Boolean, output: String)
 
 }
