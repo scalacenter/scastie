@@ -41,6 +41,9 @@
         <option name="PARAMETER_ANNOTATION_WRAP" value="1" />
         <option name="VARIABLE_ANNOTATION_WRAP" value="1" />
         <option name="ENUM_CONSTANTS_WRAP" value="1" />
+        <ScalaCodeStyleSettings>
+          <option name="PLACE_SELF_TYPE_ON_NEW_LINE" value="false" />
+        </ScalaCodeStyleSettings>
         <XML>
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
         </XML>
@@ -50,11 +53,6 @@
             <option name="CONTINUATION_INDENT_SIZE" value="2" />
             <option name="TAB_SIZE" value="2" />
           </indentOptions>
-        </codeStyleSettings>
-        <codeStyleSettings language="CoffeeScript">
-          <option name="METHOD_PARAMETERS_WRAP" value="1" />
-          <option name="KEEP_SIMPLE_METHODS_IN_ONE_LINE" value="true" />
-          <option name="PARENT_SETTINGS_INSTALLED" value="true" />
         </codeStyleSettings>
         <codeStyleSettings language="HAML">
           <indentOptions>
