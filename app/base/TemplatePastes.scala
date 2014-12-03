@@ -13,7 +13,7 @@ object TemplatePastes {
 
   val default = nextPaste( """
 /***
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.4"
 
 */
 object Main extends App {
@@ -24,7 +24,7 @@ object Main extends App {
     List(
       "typelevel" -> nextPaste( """
 /***
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.4"
 
 resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases"
 
@@ -32,7 +32,7 @@ libraryDependencies ++= {
   val scalazVersion = "7.1.0"
   val scalazStreamVersion = "0.5a"
   val shapelessVersion = "2.0.0"
-  val monocleVersion = "0.5.0"
+  val monocleVersion = "1.0.0-M1"
   val spireVersion = "0.8.2"
   Seq(
     "org.scalaz" %% "scalaz-iteratee" % scalazVersion,
@@ -73,7 +73,6 @@ object Main extends App {
 
   import monocle._
   import monocle.syntax._
-  import monocle.function.HeadOption._ // to use headOption (a polymorphic optic)
 
   import monocle.std.string._ // to get String instance for HeadOption
 
@@ -84,9 +83,9 @@ object Main extends App {
       ,
       "typesafe" -> nextPaste( """
 /***
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.4"
 
-libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.3.3")
+libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.3.6")
 */
 import play.api._
 import play.api.mvc._

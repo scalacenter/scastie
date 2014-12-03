@@ -1,30 +1,31 @@
-import sbt._
-import EvaluateConfigurations._
-import sbt.Build._
-import sbt.Keys._
 import com.olegych.scastie.{ScriptSecurityManager, SecuredRun}
+import sbt.EvaluateConfigurations._
+import sbt.Keys._
+import sbt._
 
 object ApplicationBuild extends Build {
   val runAll = TaskKey[Unit]("run-all")
+  val jdkVersion = settingKey[String]("")
 
-  val rendererWorker = Project(id = "rendererWorker", base = file("."),
-    settings = Defaults.defaultSettings ++ DefaultSettings.apply ++ Seq(
-      runAll <<=
-          (discoveredMainClasses in Compile, fullClasspath in Compile, runner in(Compile, run), streams) map
-              runAllTask,
-      runner in(Compile, run) <<= (taskTemporaryDirectory, scalaInstance) map { (nativeTmp, instance) =>
-        new SecuredRun(instance, false, nativeTmp)
-      },
-      onLoad in Global := addDepsToState
-    ))
-
+  val rendererWorker = Project(id = "rendererWorker", base = file(".")).settings(DefaultSettings.apply ++ Seq(
+    updateOptions := updateOptions.value.withCachedResolution(true).withLatestSnapshots(false)
+    , jdkVersion := "1.7"
+    , scalacOptions += s"-target:jvm-${jdkVersion.value}"
+    , javacOptions ++= Seq("-source", jdkVersion.value, "-target", jdkVersion.value)
+    , runAll <<=
+      (discoveredMainClasses in Compile, fullClasspath in Compile, runner in(Compile, run), streams) map runAllTask
+    , runner in(Compile, run) <<= (taskTemporaryDirectory, scalaInstance) map { (nativeTmp, instance) =>
+      new SecuredRun(instance, false, nativeTmp)
+    }
+    , onLoad in Global := addDepsToState
+  ): _*)
 
   def runAllTask(discoveredMainClasses: Seq[String], fullClasspath: Keys.Classpath, runner: ScalaRun,
                  streams: Keys.TaskStreams) {
     val errors = discoveredMainClasses.flatMap { mainClass =>
-      runner.run(mainClass, data(fullClasspath), Nil, streams.log)
+      runner.run(mainClass, Attributed.data(fullClasspath), Nil, streams.log)
     }
-    if (!errors.isEmpty) {
+    if (errors.nonEmpty) {
       sys.error(errors.mkString("\n"))
     }
   }
@@ -34,7 +35,7 @@ object ApplicationBuild extends Build {
     val dependencies = extractDependencies(sessionSettings.currentEval(),
       Project.extract(state).currentLoader, state)
     SessionSettings
-        .reapply(sessionSettings.appendRaw(dependencies).appendRaw(onLoad in Global := idFun), state)
+      .reapply(sessionSettings.appendRaw(dependencies).appendRaw(onLoad in Global := idFun), state)
   }
 
   val allowedKeys = Set[Init[_]#KeyedInitialize[_]](libraryDependencies, scalaVersion, resolvers, scalacOptions, sbtPlugin)

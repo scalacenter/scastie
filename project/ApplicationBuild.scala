@@ -4,8 +4,9 @@ import sbt.Keys._
 import sbt._
 
 object ApplicationBuild extends Build {
-  val scalaVersion = "2.11.1"
-  val akkaVersion = "2.3.2"
+  val scalaVersion = "2.11.4"
+  val akkaVersion = "2.3.6"
+  val jdkVersion = settingKey[String]("")
 
   def logging(allDependencies: Seq[ModuleID]): Seq[ModuleID] = {
     Seq(
@@ -27,10 +28,14 @@ object ApplicationBuild extends Build {
 
   val defaultSettings = Seq(
     Keys.incOptions := Keys.incOptions.value.withNameHashing(true)
+    , jdkVersion := "1.7"
+    , scalacOptions += s"-target:jvm-${jdkVersion.value}"
+    , javacOptions ++= Seq("-source", jdkVersion.value, "-target", jdkVersion.value)
+    , updateOptions := updateOptions.value.withCachedResolution(true).withLatestSnapshots(false)
     , Keys.scalaVersion := scalaVersion
     , Keys.libraryDependencies ++= Seq(
       "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3-1"
-      , "org.scalaz" %% "scalaz-core" % "7.1.0-RC1"
+      , "org.scalaz" %% "scalaz-core" % "7.1.0"
     )
     , Keys.allDependencies ~= logging
   )

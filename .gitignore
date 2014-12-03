@@ -2,7 +2,7 @@
 !/.idea/codeStyleSettings.xml
 !/.idea/projectCodeStyle.xml
 !/.idea/runConfigurations
-/.idea_modules
+/.idea_modules/*
 target
 project/project
 logs
