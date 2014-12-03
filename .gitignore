@@ -1,8 +1,8 @@
-.idea/libraries
-.idea/dictionaries
-.idea/workspace.xml
-.idea/misc.xml
-.idea/ant.xml
+/.idea/*
+!/.idea/codeStyleSettings.xml
+!/.idea/projectCodeStyle.xml
+!/.idea/runConfigurations
+/.idea_modules
 target
 project/project
 logs

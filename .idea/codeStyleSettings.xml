@@ -41,10 +41,6 @@
         <option name="PARAMETER_ANNOTATION_WRAP" value="1" />
         <option name="VARIABLE_ANNOTATION_WRAP" value="1" />
         <option name="ENUM_CONSTANTS_WRAP" value="1" />
-        <ScalaCodeStyleSettings>
-          <option name="PLACE_CLOSURE_PARAMETERS_ON_NEW_LINE" value="false" />
-          <option name="PLACE_SELF_TYPE_ON_NEW_LINE" value="false" />
-        </ScalaCodeStyleSettings>
         <XML>
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
         </XML>
@@ -175,4 +171,3 @@
     <option name="USE_PER_PROJECT_SETTINGS" value="true" />
   </component>
 </project>
-

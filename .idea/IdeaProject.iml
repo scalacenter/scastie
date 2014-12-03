@@ -2,6 +2,8 @@
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output/>
     <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/.idea"/>
+      <excludeFolder url="file://$MODULE_DIR$/.idea_modules"/>
       <excludeFolder url="file://$MODULE_DIR$/target"/>
     </content>
     <orderEntry type="inheritedJdk"/>
