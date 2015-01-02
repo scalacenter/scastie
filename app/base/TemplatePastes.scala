@@ -32,7 +32,7 @@ libraryDependencies ++= {
   val scalazVersion = "7.1.0"
   val scalazStreamVersion = "0.5a"
   val shapelessVersion = "2.0.0"
-  val monocleVersion = "1.0.0-M1"
+  val monocleVersion = "1.0.1"
   val spireVersion = "0.8.2"
   Seq(
     "org.scalaz" %% "scalaz-iteratee" % scalazVersion,
