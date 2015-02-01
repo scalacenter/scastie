@@ -12,8 +12,8 @@ import scalaz.Scalaz._
 /**
   */
 case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
-  private val killer = createKiller(2 minutes)
-  private val runKiller = createKiller(30 seconds)
+  private val killer = createKiller(2.minutes)
+  private val runKiller = createKiller(30.seconds)
 
   private def applyRunKiller(paste: Paste)(block: => Unit) {
     runKiller { case _ => block} apply paste
@@ -36,6 +36,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
   private var sbt: Option[Sbt] = None
   private var settings = ""
+  private var reloadResult = ""
 
   override def preStart() {
     sbt = blocking {Option(RendererTemplate.create(sbtDir.root, log, generateId))}
@@ -61,11 +62,13 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
       sbtDir.pasteFile.write(Option(content))
       val settings = paste.settings
       if (this.settings =/= settings) {
-        sbtDir.pasteSettingsFile.write(Option(settings))
         val reloadResult = sbt.resultAsString(sbt.process(s"reload"))
-        sendPasteFile(reloadResult)
+        this.reloadResult = reloadResult
         this.settings = settings
+      } else {
+        sendPasteFile("Reused last reload result")
       }
+      sendPasteFile(reloadResult)
       sbtDir.sxrSource.delete()
       sbt.process("compile") match {
         case sbt.Success(compileResult) =>

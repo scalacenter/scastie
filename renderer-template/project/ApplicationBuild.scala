@@ -17,7 +17,7 @@ object ApplicationBuild extends Build {
     , runner in(Compile, run) <<= (taskTemporaryDirectory, scalaInstance) map { (nativeTmp, instance) =>
       new SecuredRun(instance, false, nativeTmp)
     }
-//    , onLoad in Global := addDepsToState
+    , onLoad in Global := addDepsToState
   ): _*)
 
   def runAllTask(discoveredMainClasses: Seq[String], fullClasspath: Keys.Classpath, runner: ScalaRun,
@@ -52,7 +52,9 @@ object ApplicationBuild extends Build {
         embeddedSettings.flatMap {
           case setting if allowedKeys.exists(_.scopedKey == setting.key) =>
             Project.transform(_ => GlobalScope, setting)
-          case _ => Nil
+          case setting =>
+            state.log.warn(s"ignored unsafe ${setting.toString}")
+            Nil
         }
       }
     } catch {
