@@ -17,7 +17,7 @@ object ApplicationBuild extends Build {
     , runner in(Compile, run) <<= (taskTemporaryDirectory, scalaInstance) map { (nativeTmp, instance) =>
       new SecuredRun(instance, false, nativeTmp)
     }
-    , onLoad in Global := addDepsToState
+//    , onLoad in Global := addDepsToState
   ): _*)
 
   def runAllTask(discoveredMainClasses: Seq[String], fullClasspath: Keys.Classpath, runner: ScalaRun,

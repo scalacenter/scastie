@@ -5,7 +5,6 @@ import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import com.olegych.scastie.PastesActor._
 
-import scalaz.Equal
 import scalaz.Scalaz._
 
 /**
@@ -14,19 +13,21 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
   extends Actor with ActorLogging {
   private val failures = context.actorOf(Props[FailuresActor], "failures")
   private val renderer = createRenderer(context, failures)
+  private var rendererBySettings = Map[String, ActorRef]()
 
   def receive = LoggingReceive {
     case AddPaste(content, uid) =>
       val id = nextPasteId
       val paste = Paste(id = id, content = Option(content), output = Option("Processing..."), uid = Some(uid), renderedContent = None)
       writePaste(paste)
-      renderer ! paste
+      rendererBySettings.getOrElse(paste.settings, renderer) ! paste
       sender ! paste
     case GetPaste(id) =>
       sender ! readPaste(id)
     case DeletePaste(id, uid) =>
       sender ! deletePaste(id, uid)
     case paste: Paste =>
+      rendererBySettings += (paste.settings -> sender())
       writePaste(paste)
   }
 
@@ -79,7 +80,10 @@ object PastesActor {
   case class DeletePaste(id: Long, uid: String) extends PasteMessage
 
   case class Paste(id: Long, content: Option[String], output: Option[String], uid: Option[String], renderedContent: Option[String])
-    extends PasteMessage
+    extends PasteMessage {
+    lazy val settings = Script.blocks(content.orZero.split("\r\n".toCharArray)).flatMap(_.lines).
+      mkString("com.olegych.scastie.ScriptSecurityManager.hardenPermissions {", ";", "}")
+  }
 
   case class PasteProgress(id: Long, contentChanged: Boolean, output: String)
 

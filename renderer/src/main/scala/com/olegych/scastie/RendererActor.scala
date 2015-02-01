@@ -6,18 +6,19 @@ import com.olegych.scastie.FailuresActor.{AddFailure, FatalFailure}
 import com.olegych.scastie.PastesActor.Paste
 
 import scala.concurrent.duration._
+import scalaz.Scalaz._
 
 /**
   */
 case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
-  val killer = createKiller(2 minutes)
-  val runKiller = createKiller(30 seconds)
+  private val killer = createKiller(2 minutes)
+  private val runKiller = createKiller(30 seconds)
 
-  def applyRunKiller(paste: Paste)(block: => Unit) {
+  private def applyRunKiller(paste: Paste)(block: => Unit) {
     runKiller { case _ => block} apply paste
   }
 
-  def createKiller(timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
+  private def createKiller(timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
     TimeoutActor(timeout, message => {
       message match {
         case paste: Paste => sender ! paste
@@ -28,11 +29,12 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
     })
   }
 
-  def generateId: String = util.Random.alphanumeric.take(10).mkString
+  private def generateId: String = util.Random.alphanumeric.take(10).mkString
 
-  val sbtDir = PastesContainer(new java.io.File(System.getProperty("java.io.tmpdir"))).renderer(generateId)
+  private val sbtDir = PastesContainer(new java.io.File(System.getProperty("java.io.tmpdir"))).renderer(generateId)
 
-  var sbt: Option[Sbt] = None
+  private var sbt: Option[Sbt] = None
+  private var settings = ""
 
   override def preStart() {
     sbt = Option(RendererTemplate.create(sbtDir.root, log, generateId))
@@ -56,8 +58,12 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
         sender ! paste.copy(content = sbtDir.pasteFile.read, output = Option(result))
       }
       sbtDir.pasteFile.write(Option(content))
-      val reloadResult = sbt.resultAsString(sbt.process("reload"))
-      sendPasteFile(reloadResult)
+      val settings = paste.settings
+      if (this.settings =/= settings) {
+        val reloadResult = sbt.resultAsString(sbt.process(s"set $settings"))
+        sendPasteFile(reloadResult)
+        this.settings = settings
+      }
       sbtDir.sxrSource.delete()
       sbt.process("compile") match {
         case sbt.Success(compileResult) =>
@@ -84,5 +90,3 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
     sxrSource.replaceFirst("^(?mis).*<body>", "").replaceFirst("(?mis)</body>\\s*</html>$", "")
   }
 }
-
-
