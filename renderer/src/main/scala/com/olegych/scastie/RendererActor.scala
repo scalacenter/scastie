@@ -5,6 +5,7 @@ import akka.event.LoggingReceive
 import com.olegych.scastie.FailuresActor.{AddFailure, FatalFailure}
 import com.olegych.scastie.PastesActor.Paste
 
+import scala.concurrent._
 import scala.concurrent.duration._
 import scalaz.Scalaz._
 
@@ -29,7 +30,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
     })
   }
 
-  private def generateId: String = util.Random.alphanumeric.take(10).mkString
+  private def generateId: String = scala.util.Random.alphanumeric.take(10).mkString
 
   private val sbtDir = PastesContainer(new java.io.File(System.getProperty("java.io.tmpdir"))).renderer(generateId)
 
@@ -37,7 +38,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   private var settings = ""
 
   override def preStart() {
-    sbt = Option(RendererTemplate.create(sbtDir.root, log, generateId))
+    sbt = blocking {Option(RendererTemplate.create(sbtDir.root, log, generateId))}
   }
 
   override def preRestart(reason: Throwable, message: Option[Any]) {
@@ -60,7 +61,8 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
       sbtDir.pasteFile.write(Option(content))
       val settings = paste.settings
       if (this.settings =/= settings) {
-        val reloadResult = sbt.resultAsString(sbt.process(s"set $settings"))
+        sbtDir.pasteSettingsFile.write(Option(settings))
+        val reloadResult = sbt.resultAsString(sbt.process(s"reload"))
         sendPasteFile(reloadResult)
         this.settings = settings
       }

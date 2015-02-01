@@ -1,12 +1,12 @@
 package com.olegych.scastie
 
+import akka.actor.Actor._
 import akka.actor._
 import akka.event.LoggingReceive
-import concurrent.duration.FiniteDuration
-import akka.actor.Actor._
-import com.olegych.scastie.TimeoutActor.StartWatch
-import com.olegych.scastie.TimeoutActor.StopWatch
-import com.olegych.scastie.TimeoutActor.Kill
+import com.olegych.scastie.TimeoutActor.{Kill, StartWatch, StopWatch}
+
+import scala.concurrent._
+import scala.concurrent.duration.FiniteDuration
 
 /**
   */
@@ -15,7 +15,7 @@ private class TimeoutActor(timeout: FiniteDuration, kill: Any => Unit) extends A
   def receive = LoggingReceive {
     case StartWatch(message) =>
       messages += message
-      import concurrent.ExecutionContext.Implicits.global
+      import scala.concurrent.ExecutionContext.Implicits.global
       context.system.scheduler.scheduleOnce(timeout, self, Kill(message))
     case StopWatch(message) =>
       messages -= message
@@ -44,7 +44,7 @@ object TimeoutActor {
   private def create(killer: ActorRef)(r: Receive)(implicit context: ActorContext): Receive = {
     case m =>
       killer ! StartWatch(m)
-      r(m)
+      blocking(r(m))
       killer ! StopWatch(m)
   }
 }

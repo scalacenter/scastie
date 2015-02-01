@@ -82,7 +82,7 @@ object PastesActor {
   case class Paste(id: Long, content: Option[String], output: Option[String], uid: Option[String], renderedContent: Option[String])
     extends PasteMessage {
     lazy val settings = Script.blocks(content.orZero.split("\r\n".toCharArray)).flatMap(_.lines).
-      mkString("com.olegych.scastie.ScriptSecurityManager.hardenPermissions {", ";", "}")
+      mkString("\n", "\n", "\n")
   }
 
   case class PasteProgress(id: Long, contentChanged: Boolean, output: String)
