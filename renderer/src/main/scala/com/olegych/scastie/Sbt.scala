@@ -1,6 +1,6 @@
 package com.olegych.scastie
 
-import java.io.File
+import java.io.{InputStreamReader, File}
 import org.apache.commons.lang3.SystemUtils
 import akka.event.LoggingAdapter
 import org.apache.commons.collections15.buffer.CircularFifoBuffer
@@ -9,7 +9,7 @@ import scalax.file.Path
 /**
   */
 case class Sbt(dir: File, log: LoggingAdapter, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUniqueId) {
-  private val (process, fin, input, fout, output) = {
+  private val (process, fin, input, fout) = {
     def absolutePath(command: String) = new File(command).getAbsolutePath
     val builder = new ProcessBuilder(absolutePath(if (SystemUtils.IS_OS_WINDOWS) "xsbt.cmd" else "xsbt.sh"))
         .directory(dir)
@@ -23,7 +23,7 @@ case class Sbt(dir: File, log: LoggingAdapter, clearOnExit: Boolean, uniqueId: S
     //can't use .lines since it eats all input
     (process,
         process.getOutputStream, process.getOutputStream.asUnmanagedOutput,
-        process.getInputStream, process.getInputStream.asUnmanagedInput.bytes)
+        new InputStreamReader(process.getInputStream))
   }
   waitForPrompt
 
