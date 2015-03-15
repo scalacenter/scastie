@@ -40,6 +40,8 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
   override def preStart() {
     sbt = blocking {Option(RendererTemplate.create(sbtDir.root, log, generateId))}
+    settings = ""
+    reloadResult = ""
   }
 
   override def preRestart(reason: Throwable, message: Option[Any]) {
