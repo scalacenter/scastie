@@ -15,7 +15,7 @@ Current Features
 -  running in sandbox with sbt
 -  apply scalariform and linter to paste
 -  building with sbt, with support for inline dependency specification
-   (see https://github.com/harrah/xsbt/wiki/Scripts, only
+   (see http://www.scala-sbt.org/release/docs/Scripts.html, only
    libraryDependencies, scalaVersion, resolvers, scalacOptions, sbtPlugin settings are allowed)
 -  distributes workload amongst multiple sbt instances (including remote)
 -  realtime update of paste compilation/running progress
