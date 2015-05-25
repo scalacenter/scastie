@@ -13,7 +13,7 @@ object TemplatePastes {
 
   val default = nextPaste( """
 /***
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 
 */
 object Main extends App {
@@ -24,15 +24,15 @@ object Main extends App {
     List(
       "typelevel" -> nextPaste( """
 /***
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 
 resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases"
 
 libraryDependencies ++= {
-  val scalazVersion = "7.1.1"
+  val scalazVersion = "7.1.2"
   val scalazStreamVersion = "0.5a"
   val shapelessVersion = "2.0.0"
-  val monocleVersion = "1.0.1"
+  val monocleVersion = "1.1.1"
   val spireVersion = "0.8.2"
   Seq(
     "org.scalaz" %% "scalaz-iteratee" % scalazVersion,
@@ -83,9 +83,9 @@ object Main extends App {
       ,
       "typesafe" -> nextPaste( """
 /***
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 
-libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.3.6")
+libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.3.9")
 */
 import play.api._
 import play.api.mvc._

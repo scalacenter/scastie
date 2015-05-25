@@ -4,8 +4,8 @@ import sbt.Keys._
 import sbt._
 
 object ApplicationBuild extends Build {
-  val scalaVersion = "2.11.4"
-  val akkaVersion = "2.3.6"
+  val scalaVersion = "2.11.6"
+  val akkaVersion = "2.3.11"
   val jdkVersion = settingKey[String]("")
 
   def logging(allDependencies: Seq[ModuleID]): Seq[ModuleID] = {
