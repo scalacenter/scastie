@@ -557,7 +557,7 @@ header nav a.download:active {
 }
 
 #content {
-  padding: 20px;
+  padding: 0;
 }
 
 #top {
@@ -948,12 +948,13 @@ aside a[href^="http"]:after, .doc a[href^="http"]:after {
   margin-left: 5px;
 }
 
-#editor {
+.paste {
+  padding: 0;
+  font-family: monospace;
   position: absolute;
   width: 650px;
   height: 700px;
-  top: 0px;
-  right: 100px;
+  top: 0;
   left: 0;
 }
 
