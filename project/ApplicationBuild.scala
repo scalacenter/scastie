@@ -4,7 +4,7 @@ import sbt.Keys._
 import sbt._
 
 object ApplicationBuild extends Build {
-  val scalaVersion = "2.11.6"
+  val scalaVersion = "2.11.7"
   val akkaVersion = "2.3.11"
   val jdkVersion = settingKey[String]("")
 
@@ -35,7 +35,7 @@ object ApplicationBuild extends Build {
     , Keys.scalaVersion := scalaVersion
     , Keys.libraryDependencies ++= Seq(
       "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3-1"
-      , "org.scalaz" %% "scalaz-core" % "7.1.0"
+      , "org.scalaz" %% "scalaz-core" % "7.1.3"
     )
     , Keys.allDependencies ~= logging
   )

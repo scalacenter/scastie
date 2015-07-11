@@ -30,6 +30,8 @@
     <ConfigurationWrapper RunnerId="Debug" />
     <ConfigurationWrapper RunnerId="JRebel Debug" />
     <ConfigurationWrapper RunnerId="Run" />
-    <method />
+    <method>
+      <option name="SBT.BeforeRunTask" enabled="true" action="test:products" runInCurrentModule="true" />
+    </method>
   </configuration>
 </component>
