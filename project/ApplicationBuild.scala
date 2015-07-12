@@ -36,6 +36,7 @@ object ApplicationBuild extends Build {
     , Keys.libraryDependencies ++= Seq(
       "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3-1"
       , "org.scalaz" %% "scalaz-core" % "7.1.3"
+      , "io.netty" % "netty" % "3.10.4.Final"
     )
     , Keys.allDependencies ~= logging
   )
