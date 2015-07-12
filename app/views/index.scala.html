@@ -10,6 +10,7 @@
       var mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       var textarea = $('textarea[name="paste"]');
       if (mobile) {
+        $('div[name="paste"]').hide();
         textarea.css('display', '')
       } else {
         var editor = ace.edit("paste");
