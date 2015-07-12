@@ -16,7 +16,7 @@ object Application extends Controller {
 
   def edit(content: String)(implicit request: Request[AnyContent]): Result = {
     val message = Html(request.flash.get("error") | Messages("enter.code"))
-    Ok(views.html.index(message, content)).withCookies(Cookie("uid", uid, maxAge = Some(Int.MaxValue)))
+    Ok(views.html.index(message, content)).withCookies(Cookie("uid", uid, maxAge = Some(Int.MaxValue / 4)))
   }
 
   def uid(implicit request: Request[AnyContent]): String = {
