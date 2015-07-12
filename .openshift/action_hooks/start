@@ -19,11 +19,12 @@ function start_app {
   conf=$2
   export JAVA_OPTS="-Dfile.encoding=utf-8 -Dhttp.port=${OPENSHIFT_INTERNAL_PORT} -Dhttp.address=${OPENSHIFT_INTERNAL_IP} -Dconfig.resource=${conf} ${JAVA_OPTS}"
   APP_COMMAND="${OPENSHIFT_REPO_DIR}${project}target/start"
-  echo $JAVA_OPTS &>> $LOG_FILE
-  echo $APP_COMMAND &>> $LOG_FILE
+#  echo ${JAVA_OPTS} &>> ${LOG_FILE}
+#  echo ${APP_COMMAND} &>> ${LOG_FILE}
 
   ./xsbt.sh ${project}start-script
   chmod +x ${APP_COMMAND}
+  ${OPENSHIFT_REPO_DIR}/.openshift/action_hooks/stop || true
   nohup bash -c "${APP_COMMAND} &>> ${LOG_FILE} 2>&1" &> /dev/null &
 }
 
