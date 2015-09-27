@@ -49,8 +49,8 @@ object ScriptSecurityManager extends SecurityManager {
       lazy val allowedClass = new Throwable().getStackTrace.exists { element =>
         val name = element.getFileName
         //todo apply more robust checks
-        List("BytecodeWriters.scala", "Settings.scala", "PathResolver.scala", "JavaMirrors.scala", "ForkJoinPool.java", "Using.scala", "TimeZone.java")
-            .contains(name)
+        List("BytecodeWriters.scala", "Settings.scala", "PathResolver.scala", "JavaMirrors.scala", "Using.scala", ".*.java")
+            .exists(_.r.findFirstMatchIn(name).isDefined)
       }
 
       val allow = readMissingFile || readClass || (read && !file) || allowedMethods || getenv ||
