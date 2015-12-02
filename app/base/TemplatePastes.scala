@@ -27,18 +27,14 @@ object Main extends App {
 scalaVersion := "2.11.7"
 resolvers += "bintray/non" at "http://dl.bintray.com/non/maven"
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.6.0")
-resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases"
 libraryDependencies ++= {
-  val scalazVersion = "7.1.3"
-  val scalazStreamVersion = "0.6a"
-  val shapelessVersion = "2.0.0"
-  val monocleVersion = "1.1.1"
-  val spireVersion = "0.9.1"
+  val scalazVersion = "7.1.5"
+  val scalazStreamVersion = "0.8"
+  val shapelessVersion = "2.2.5"
+  val monocleVersion = "1.2.0-M2"
+  val spireVersion = "0.11.0"
   Seq(
-    "org.scalaz" %% "scalaz-iteratee" % scalazVersion,
-    "org.scalaz" %% "scalaz-effect" % scalazVersion,
-    "org.scalaz" %% "scalaz-typelevel" % scalazVersion,
-    "org.scalaz" %% "scalaz-scalacheck-binding" % scalazVersion,
+    "org.scalaz" %% "scalaz-core" % scalazVersion,
     "org.scalaz" %% "scalaz-concurrent" % scalazVersion,
     "com.chuusai" %% "shapeless" % shapelessVersion,
     "com.github.julien-truffaut" %% "monocle-generic" % monocleVersion,
@@ -85,7 +81,7 @@ object Main extends App {
 /***
 scalaVersion := "2.11.7"
 
-libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.4.2")
+libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.4.4")
 */
 import play.api._
 import play.api.mvc._
