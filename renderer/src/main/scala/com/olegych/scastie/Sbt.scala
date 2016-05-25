@@ -1,14 +1,18 @@
 package com.olegych.scastie
 
-import java.io.{InputStreamReader, File}
+import java.io.{File, InputStreamReader}
+
 import org.apache.commons.lang3.SystemUtils
 import akka.event.LoggingAdapter
 import org.apache.commons.collections15.buffer.CircularFifoBuffer
+import org.slf4j.LoggerFactory
+
 import scalax.file.Path
 
 /**
   */
-case class Sbt(dir: File, log: LoggingAdapter, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUniqueId) {
+case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUniqueId) {
+  private val log = LoggerFactory.getLogger(getClass)
   private val (process, fin, input, fout) = {
     def absolutePath(command: String) = new File(command).getAbsolutePath
     val builder = new ProcessBuilder(absolutePath(if (SystemUtils.IS_OS_WINDOWS) "xsbt.cmd" else "xsbt.sh"))
@@ -58,12 +62,12 @@ case class Sbt(dir: File, log: LoggingAdapter, clearOnExit: Boolean, uniqueId: S
 
   def close() {
     try process("exit", waitForPrompt = false) catch {
-      case e: Exception => log.error(e, "Error while soft exit")
+      case e: Exception => log.error("Error while soft exit", e)
     }
     ProcessKiller.instance.kill(process)
     if (clearOnExit) {
       try Path(dir).deleteRecursively(force = true, continueOnFailure = true) catch {
-        case e: Exception => log.error(e, "Error while cleaning up")
+        case e: Exception => log.error("Error while cleaning up", e)
       }
     }
   }

@@ -39,7 +39,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   private var reloadResult = ""
 
   override def preStart() {
-    sbt = blocking {Option(RendererTemplate.create(sbtDir.root, log, generateId))}
+    sbt = blocking {Option(RendererTemplate.create(sbtDir.root, generateId))}
     settings = ""
     reloadResult = ""
   }
