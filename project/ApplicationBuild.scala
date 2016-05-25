@@ -4,7 +4,7 @@ import sbt.Keys._
 import sbt._
 
 object ApplicationBuild extends Build {
-  val scalaVersion = "2.11.7"
+  val scalaVersion = "2.11.8"
   val akkaVersion = "2.3.11"
   val jdkVersion = settingKey[String]("")
 

@@ -13,7 +13,7 @@ object TemplatePastes {
 
   val default = nextPaste( """
 /***
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 */
 object Main extends App {
@@ -24,14 +24,13 @@ object Main extends App {
     List(
       "typelevel" -> nextPaste( """
 /***
-scalaVersion := "2.11.7"
-resolvers += "bintray/non" at "http://dl.bintray.com/non/maven"
-addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.6.0")
+scalaVersion := "2.11.8"
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.7.1")
 libraryDependencies ++= {
-  val scalazVersion = "7.1.5"
-  val scalazStreamVersion = "0.8"
+  val scalazVersion = "7.2.2"
+  val scalazStreamVersion = "0.8.1a"
   val shapelessVersion = "2.2.5"
-  val monocleVersion = "1.2.0-M2"
+  val monocleVersion = "1.2.1"
   val spireVersion = "0.11.0"
   Seq(
     "org.scalaz" %% "scalaz-core" % scalazVersion,
@@ -79,9 +78,9 @@ object Main extends App {
       ,
       "typesafe" -> nextPaste( """
 /***
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
-libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.4.4")
+libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.5.3")
 */
 import play.api._
 import play.api.mvc._
