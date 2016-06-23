@@ -1,11 +1,10 @@
-import com.typesafe.sbt.SbtScalariform._
 import sbt.Keys._
 import sbt._
 
 import scalariform.formatter.preferences._
 
 object DefaultSettings {
-  def apply: Seq[Setting[_]] = scalariformSettings ++ Seq(
+  def apply: Seq[Setting[_]] = com.typesafe.sbt.SbtScalariform.reformatOnCompileSettings ++ Seq(
     resolvers += Resolver.url("olegych-repo",
       url("https://bitbucket.org/olegych/mvn/raw/default/ivy2/"))(Resolver.ivyStylePatterns)
     , resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
