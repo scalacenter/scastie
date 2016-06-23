@@ -104,10 +104,18 @@ object Build extends Build {
 }
                           """)
       ,
-      "scala 2.10" -> nextPaste( """
+      "scala 2.12" -> nextPaste( """
 /***
-scalaVersion := "2.10.4"
+scalaVersion := "2.12.0-M4"
 
+*/
+object Main extends App {
+}
+                          """)
+      ,
+      "dotty" -> nextPaste( """
+/***
+enablePlugins(DottyPlugin)
 */
 object Main extends App {
 }
