@@ -1,14 +1,23 @@
+import com.typesafe.sbt.SbtScalariform._
 import sbt.Keys._
 import sbt._
 
+import scalariform.formatter.preferences._
+
 object DefaultSettings {
-  def apply: Seq[Setting[_]] = org.scalafmt.sbt.ScalaFmtPlugin.autoImport.reformatOnCompileSettings ++ Seq(
+  def apply: Seq[Setting[_]] = scalariformSettings ++ Seq(
     resolvers += Resolver.url("olegych-repo",
       url("https://bitbucket.org/olegych/mvn/raw/default/ivy2/"))(Resolver.ivyStylePatterns)
     , resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
     , addSupportedCompilerPlugin(sxrVersion)
     , addSupportedCompilerPlugin(linterVersion)
     , scalacOptions
+    , ScalariformKeys.preferences := FormattingPreferences().
+      setPreference(AlignParameters, true).
+      setPreference(AlignSingleLineCaseStatements, true).
+      setPreference(CompactControlReadability, true).
+      setPreference(PreserveDanglingCloseParenthesis, true).
+      setPreference(DoubleIndentClassDeclaration, true)
     , traceLevel := 1000
     , crossPaths := false
     , crossTarget := file("target")
