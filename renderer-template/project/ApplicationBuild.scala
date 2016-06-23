@@ -18,11 +18,12 @@ object ApplicationBuild extends Build {
       new SecuredRun(instance, false, nativeTmp)
     }
     , onLoad in Global := addDepsToState
-  ): _*)
+  ): _*).disablePlugins(coursier.CoursierPlugin)
 
   def runAllTask(discoveredMainClasses: Seq[String], fullClasspath: Keys.Classpath, runner: ScalaRun,
                  streams: Keys.TaskStreams) {
-    val errors = discoveredMainClasses.flatMap { mainClass =>
+    val mainClasses = if (discoveredMainClasses.isEmpty) Seq("Main") else discoveredMainClasses
+    val errors = mainClasses.flatMap { mainClass =>
       runner.run(mainClass, Attributed.data(fullClasspath), Nil, streams.log)
     }
     if (errors.nonEmpty) {
@@ -31,14 +32,13 @@ object ApplicationBuild extends Build {
   }
 
   def addDepsToState(state: State): State = {
-    val sessionSettings = state.get(Keys.sessionSettings).get
-    val dependencies = extractDependencies(sessionSettings.currentEval(),
-      Project.extract(state).currentLoader, state)
-    SessionSettings
-      .reapply(sessionSettings.appendRaw(dependencies).appendRaw(onLoad in Global := idFun), state)
+    val extracted = Project.extract(state)
+    val settings = extractDependencies(state.get(Keys.sessionSettings).get.currentEval(), extracted.currentLoader, state)
+    val sessionSettings = sbt.Shim.SettingCompletions.setThis(state, extracted, settings, "").session
+    BuiltinCommands.reapply(sessionSettings.appendRaw(onLoad in Global := idFun), extracted.structure, state)
   }
 
-  val allowedKeys = Set[Init[_]#KeyedInitialize[_]](libraryDependencies, scalaVersion, resolvers, scalacOptions, sbtPlugin)
+  val forbiddenKeys = Set(fork, compile, onLoad, runAll)
 
   def extractDependencies(eval: compiler.Eval, loader: ClassLoader, state: State): Seq[Setting[_]] = {
     val scriptArg = "src/main/scala/test.scala"
@@ -50,8 +50,8 @@ object ApplicationBuild extends Build {
           evaluateConfiguration(eval, script, block.lines, imports, block.offset + 1)(loader)
         }
         embeddedSettings.flatMap {
-          case setting if allowedKeys.exists(_.scopedKey == setting.key) =>
-            Project.transform(_ => GlobalScope, setting)
+          case setting if !forbiddenKeys.exists(_.scopedKey == setting.key) =>
+            setting
           case setting =>
             state.log.warn(s"ignored unsafe ${setting.toString}")
             Nil
