@@ -39,6 +39,7 @@ object ApplicationBuild extends Build {
 //      , "io.netty" % "netty" % "3.10.4.Final"
     )
     , Keys.allDependencies ~= logging
+    , aggregate in spray.revolver.RevolverPlugin.autoImport.reStart := false
   )
   def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % akkaVersion
   val renderer = project.settings(defaultSettings: _*).settings(SbtStartScript.startScriptForClassesSettings: _*).
@@ -56,7 +57,7 @@ object ApplicationBuild extends Build {
   val scastie = project.in(file(".")).enablePlugins(com.typesafe.sbt.web.SbtWeb, play.PlayScala).settings(defaultSettings: _*).
     settings(SbtStartScript.startScriptForClassesSettings: _*).settings(
       Keys.allDependencies ~= (_.map(_.exclude("com.typesafe.play", "play-doc_2.11").exclude("com.typesafe.play", "play-docs_2.11")))
-      , Keys.mainClass in Compile := Option("ProdNettyServer")
+      , Keys.mainClass in run in Compile := Option("ProdNettyServer")
       , (WebKeys.public in Assets) := (classDirectory in Compile).value / "public"
       , (compile in Compile) <<= (compile in Compile).dependsOn(WebKeys.assets in Assets)
       , Keys.libraryDependencies ++=

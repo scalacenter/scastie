@@ -78,6 +78,18 @@ To start application in dev mode just execute './xsbt.sh run' and go to http://l
 
 To start application in debug mode in intellij use the included 'scastie-play' run configuration. Use JRebel to emulate play reloading.
 
+It is also possible to use sbt-revolver like this:
+``
+./xsbt.sh
+~scastie/reStart
+``
+or if you want to take advantage of JRebel and avoid full restart on every code change:
+``
+./xsbt.sh
+scastie/reStart
+~products
+``
+
 Currently the application contains separate configuration tailored for deployment on single AWS t1.micro instance.
 The configs and launch scripts were initially created for deployment on OpenShift, but later adapted for AWS as it was somewhat faster and allowed supporting WebSockets.
 .openshift directory contains hooks to build and start app on git receive. Production specific configs are stored in
