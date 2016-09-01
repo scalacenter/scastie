@@ -1,0 +1,104 @@
+@import '_solarized.less';
+
+.cm-s-solarized {
+  .solarized-pallette;
+
+  .autocomplete .signature {
+    color: @cyan;
+  }
+
+  &.cm-s-dark {
+    .CodeMirror-widget .fold,
+    .CodeMirror-linewidget .line,
+    .CodeMirror-linewidget .inline,
+    .CodeMirror-hints {
+      background-color: @base02;
+    }
+
+    .CodeMirror-widget .code,
+    .CodeMirror-hint-active {
+      color: inherit;
+      background-color: @base02;
+    }
+
+    .CodeMirror-dialog {
+      background-color: @base02;
+      color: @base01;
+    }
+
+    & + .menu,
+    & .menu,
+    & + .menu + #shared,
+    ::-webkit-scrollbar-thumb,
+    .CodeMirror-simplescroll-horizontal div,
+    .CodeMirror-simplescroll-vertical div,
+    .CodeMirror-hints {
+      box-shadow: 1px 1px 5px 1px rgba(0, 0, 0, 0.75);
+    }
+
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-corner {
+      background: @base03;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: @base02;
+    }
+
+    .CodeMirror-simplescroll-horizontal,
+    .CodeMirror-simplescroll-vertical,
+    .CodeMirror-hints {
+      & {
+        background: @base03;
+      }
+
+      div {
+        background: @base02;
+      }
+    }
+  }
+
+  &.cm-s-light {
+    box-shadow: none;
+    
+    .CodeMirror-widget .fold,
+    .CodeMirror-linewidget .line,
+    .CodeMirror-linewidget .inline,
+    .CodeMirror-hints {
+      background-color: @base2;
+    }
+
+    .CodeMirror-widget .code,
+    .CodeMirror-hint-active {
+      color: inherit;
+      background-color: @base2;
+    }
+
+    .CodeMirror-dialog {
+      background-color: @base2;
+      color: @base1;
+    }
+
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-corner {
+      background: @base3;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: @base2;
+    }
+
+    .CodeMirror-simplescroll-horizontal,
+    .CodeMirror-simplescroll-vertical,
+    .CodeMirror-hints {
+      & {
+        background: @base3;
+      }
+
+      div {
+        background: @base2;
+        box-shadow: 0 0 1px grey inset;
+      }
+    }
+  }
+}

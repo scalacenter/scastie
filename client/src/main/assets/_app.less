@@ -1,0 +1,35 @@
+body {
+  margin: 0;
+}
+
+body, .app, .editor, .sidebar {
+  height: 100%;
+}
+
+.app {
+  @sidebar-width: 400px;
+  @dt: 0.3s;
+  .editor {
+    transition: "margin-right @dt";
+    &.sidebar-open {
+      margin-right: @sidebar-width;
+    }
+    &.sidebar-closed {
+      margin-right: 0; 
+    }
+  }
+  .sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transition: "width @dt";
+    &.sidebar-open {
+      width: @sidebar-width;
+      display: block;
+    }
+    &.sidebar-closed {
+      width: 0;
+      display: none;
+    }
+  }
+}

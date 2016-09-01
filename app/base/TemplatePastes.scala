@@ -7,9 +7,11 @@ import com.olegych.scastie.PastesActor
 /**
   */
 object TemplatePastes {
-  private val pasteIds = new AtomicLong(1L) {
+  class PasteId extends AtomicLong(1L) {
     def next = incrementAndGet()
   }
+
+  private val pasteIds = new PasteId()
 
   val default = nextPaste( """
 /***

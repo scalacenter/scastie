@@ -2,7 +2,6 @@ package com.olegych.scastie
 
 import java.io.File
 
-import akka.event.{LoggingAdapter, NoLogging}
 import org.slf4j.LoggerFactory
 
 import scalax.file.Path

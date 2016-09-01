@@ -1,40 +1,22 @@
-@(message: Html, paste: String)
+<!DOCTYPE html>
+<html>
+  <head>
+    <base href="/">
+    <meta charset="utf-8">
 
-@main("scastie") {
-  @helper.form(action = routes.Pastes.add()) {
-    <textarea name="paste" style="display : none ;" rows="50" cols="110" autofocus="" maxlength="10000" class='paste'>@paste</textarea>
-    <div name="paste" rows="50" cols="110" autofocus="" maxlength="10000" class='paste' id="paste"></div>
-
-    <script src="https://ace.c9.io/build/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <link href="/assets/lib/codemirror/addon/dialog/dialog.css"           rel="stylesheet">
+    <link href="/assets/lib/codemirror/addon/fold/foldgutter.css"         rel="stylesheet">
+    <link href="/assets/lib/codemirror/addon/hint/show-hint.css"          rel="stylesheet">
+    <link href="/assets/lib/codemirror/addon/scroll/simplescrollbars.css" rel="stylesheet">
+    <link href="/assets/lib/codemirror/lib/codemirror.css"                rel="stylesheet">
+    <link href="/assets/lib/codemirror/theme/mdn-like.css"                rel="stylesheet">
+    <link href="/assets/lib/client/main.css"                              rel="stylesheet">
+  </head>
+  <body>
+    <script src="/assets/client-jsdeps.js"></script>
+    <script src="/assets/client-fastopt.js"></script>
     <script>
-      var mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      var textarea = $('textarea[name="paste"]');
-      if (mobile) {
-        $('div[name="paste"]').hide();
-        textarea.css('display', '')
-      } else {
-        var editor = ace.edit("paste");
-        editor.setTheme("ace/theme/solarized_light");
-        editor.getSession().setMode("ace/mode/scala");
-        editor.getSession().setTabSize(2);
-        editor.getSession().setValue(textarea.val());
-        editor.getSession().on('change', function(){
-          textarea.val(editor.getSession().getValue());
-        });
-      }
+      client.Client().main()
     </script>
-    <br/>
-    <input type="submit" class='submit-paste' value="Submit" />
-  }
-  @helper.form(action = routes.Pastes.edit(), 'class -> "templates-form") {
-    <div>
-      Put sbt config inside top comment and your scala code after it. <a href="https://github.com/OlegYch/scastie">
-      More info</a></div>
-    @helper.inputRadioGroup(Pastes.pasteForm("id")
-      , base.TemplatePastes.templates.map { case (label, paste) => (paste.id.toString, label) }
-      , '_label -> Messages("choose.template")
-    )
-    <input type="hidden" name="paste" id="paste"/>
-    <input type="submit" value="Clone"/>
-  }
-}
+  </body>
+</html>

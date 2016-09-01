@@ -3,7 +3,6 @@ package com.olegych.scastie
 import java.io.{File, InputStreamReader}
 
 import org.apache.commons.lang3.SystemUtils
-import akka.event.LoggingAdapter
 import org.apache.commons.collections15.buffer.CircularFifoBuffer
 import org.slf4j.LoggerFactory
 

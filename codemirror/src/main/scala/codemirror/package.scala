@@ -1,0 +1,1 @@
+package object codemirror extends codemirror.Extensions
