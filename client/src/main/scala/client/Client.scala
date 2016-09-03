@@ -7,6 +7,10 @@ import scala.scalajs.js.annotation.JSExport
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 
+import api._
+import autowire._
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
+
 sealed trait Page
 case object Home extends Page
 
@@ -26,6 +30,10 @@ object Client extends JSApp {
     
   @JSExport
   override def main(): Unit = {
+    api.Client[Api].run("test").call().onSuccess{ case response ⇒
+      dom.console.log(response)
+    }
+
     ReactDOM.render(
       Router(BaseUrl.fromWindowOrigin_/, routerConfig.logToConsole)(),
       dom.document.body

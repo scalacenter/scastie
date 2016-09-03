@@ -1,13 +1,16 @@
 package controllers
 
-// import base.TemplatePastes
+import api._
 
-// import play.api.i18n.Messages
 import play.api.mvc._
-// import play.twirl.api.Html
+import scala.concurrent.Future
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import java.nio.ByteBuffer
+import upickle.default.{read => uread}
 
-// import scala.util.Random
-// import scalaz.Scalaz._
+class ApiImpl() extends Api {
+  def run(code: String): Future[String] = Future.successful(code)
+}
 
 object Application extends Controller {
 
@@ -15,12 +18,20 @@ object Application extends Controller {
     Ok(views.html.index())
   }
 
-  // def edit(content: String)(implicit request: Request[AnyContent]): Result = {
-  //   val message = Html(request.flash.get("error") | Messages("enter.code"))
-  //   Ok(views.html.index(message, content)).withCookies(Cookie("uid", uid, maxAge = Some(Int.MaxValue / 4)))
-  // }
+  private val api = new ApiImpl()
 
-  // def uid(implicit request: Request[AnyContent]): String = {
-  //   request.cookies.get("uid").map(_.value).getOrElse(Random.alphanumeric.take(30).mkString)
-  // }
+  def autowireApi(path: String) = Action.async { implicit request =>
+    // get the request body as ByteString
+
+    val text = request.body.asText.getOrElse("")
+    
+    AutowireServer.route[Api](api)(
+      autowire.Core.Request(path.split("/"), uread[Map[String, String]](text))
+    ).map(buffer => {
+      // val data = Array.ofDim[Byte](buffer.remaining())
+      // buffer.get(data)
+      println(buffer)
+      Ok(buffer)
+    })
+  }
 }

@@ -87,8 +87,7 @@ lazy val scastie = project.in(file("."))
   , unmanagedResourceDirectories in Compile += (WebKeys.public in Assets).value
   )
   .enablePlugins(SbtWeb, play.PlayScala)
-  .dependsOn(renderer, client)
-  .aggregate(renderer, client)
+  .dependsOn(renderer, apiJVM)
 
 lazy val baseSettings = Seq(
   scalaVersion := "2.11.8"
@@ -157,4 +156,19 @@ lazy val client = project
   , libraryDependencies += "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.1"
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
-  .dependsOn(codemirror)
+  .dependsOn(codemirror, apiJS)
+
+lazy val api = crossProject
+  .settings(baseSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "autowire" % "0.2.5"
+    , "com.lihaoyi" %%% "upickle"  % "0.4.0"
+    )
+  )
+  .jsSettings(
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
+  )
+
+lazy val apiJVM = api.jvm
+lazy val apiJS = api.js
