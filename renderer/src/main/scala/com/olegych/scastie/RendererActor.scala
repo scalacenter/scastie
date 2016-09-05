@@ -23,7 +23,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
     TimeoutActor(timeout, message => {
       message match {
         case paste: Paste => sender ! paste
-          .copy(output = Some(s"Killed because of timeout $timeout"), content = None)
+          .copy(output = Seq(s"Killed because of timeout $timeout"), content = None)
         case _ => log.info("unknown message {}", message)
       }
       preRestart(FatalFailure, Some(message))
@@ -36,12 +36,12 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
   private var sbt: Option[Sbt] = None
   private var settings = ""
-  private var reloadResult = ""
+  private var reloadResult: Seq[String] = Seq()
 
   override def preStart() {
     sbt = blocking {Option(RendererTemplate.create(sbtDir.root, generateId))}
     settings = ""
-    reloadResult = ""
+    reloadResult = Seq()
   }
 
   override def preRestart(reason: Throwable, message: Option[Any]) {
@@ -58,17 +58,16 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
   def receive = LoggingReceive {
     killer { case paste@Paste(_, Some(content), _, _, _) => sbt foreach { sbt =>
-      def sendPasteFile(result: String) {
-        sender ! paste.copy(content = sbtDir.pasteFile.read, output = Option(result))
+      def sendPasteFile(result: Seq[String]) {
+        sender ! paste.copy(content = sbtDir.pasteFile.read, output = result)
       }
       sbtDir.pasteFile.write(Option(content))
       val settings = paste.settings
       if (this.settings =/= settings) {
-        val reloadResult = sbt.resultAsString(sbt.process(s"reload"))
-        this.reloadResult = reloadResult
+        this.reloadResult = sbt.process(s"reload")
         this.settings = settings
       } else {
-        sendPasteFile("Reused last reload result")
+        sendPasteFile(Seq("Reused last reload result"))
       }
       sendPasteFile(reloadResult)
       sbtDir.sxrSource.delete()
@@ -77,17 +76,17 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
           sender ! paste.copy(
             content = sbtDir.pasteFile.read
             , renderedContent = sbtDir.sxrSource.read.map(cleanSource)
-            , output = Option(compileResult + "\nNow running..."))
+            , output = compileResult ++ Seq("Now running..."))
           applyRunKiller(paste) {
             sbt.process("run-all") match {
               case sbt.Success(runResult) =>
-                sender ! paste.copy(output = Option(runResult))
+                sender ! paste.copy(output = runResult)
               case errorResult =>
-                sender ! paste.copy(output = Option(sbt.resultAsString(errorResult)))
+                sender ! paste.copy(output = errorResult)
             }
           }
         case errorResult =>
-          sendPasteFile(sbt.resultAsString(errorResult))
+          sendPasteFile(errorResult)
       }
     }
     }

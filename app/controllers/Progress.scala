@@ -12,12 +12,11 @@ import akka.event.LoggingReceive
 /**
   */
 class Progress extends Actor with ActorLogging {
-  private val monitors = new
-          mutable.HashMap[Long, mutable.Set[MonitorChannel]] with mutable.MultiMap[Long, MonitorChannel]
+  private val monitors = new mutable.HashMap[Long, mutable.Set[MonitorChannel]] with mutable.MultiMap[Long, MonitorChannel]
   private val progressBuffer = mutable.Map[Long, PasteProgress]()
 
   def receive = LoggingReceive {
-    case MonitorProgress(id)                 =>
+    case MonitorProgress(id) =>
       val (enumerator, channel) = Concurrent.broadcast[JsValue]
       val monitorChannel = MonitorChannel(id, null, channel)
       import concurrent.ExecutionContext.Implicits.global
@@ -27,9 +26,11 @@ class Progress extends Actor with ActorLogging {
       monitors.addBinding(id, monitorChannel)
       sender ! monitorChannel.copy(value = iteratee -> enumerator)
       progressBuffer.get(id).foreach(sendProgress)
+
     case StopMonitorProgress(monitorChannel) =>
       monitors.removeBinding(monitorChannel.id, monitorChannel)
-    case pasteProgress: PasteProgress        =>
+
+    case pasteProgress: PasteProgress =>
       sendProgress(pasteProgress)
   }
 
@@ -46,14 +47,8 @@ class Progress extends Actor with ActorLogging {
 }
 
 object Progress {
-
   sealed trait ProgressMessage
-
   case class MonitorProgress(id: Long) extends ProgressMessage
-
   case class StopMonitorProgress(monitorChannel: MonitorChannel) extends ProgressMessage
-
-  case class MonitorChannel(id: Long, value: (Iteratee[JsValue, _], Enumerator[JsValue]),
-                            channel: Channel[JsValue])
-
+  case class MonitorChannel(id: Long, value: (Iteratee[JsValue, _], Enumerator[JsValue]), channel: Channel[JsValue])
 }

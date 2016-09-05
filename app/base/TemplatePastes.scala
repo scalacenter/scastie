@@ -110,5 +110,5 @@ object Main extends App {
     )
   }
 
-  def nextPaste(x: String): PastesActor.Paste = Paste(pasteIds.next, Some(x), None, None, None)
+  def nextPaste(x: String): PastesActor.Paste = Paste(pasteIds.next, Some(x), Seq(), None, None)
 }

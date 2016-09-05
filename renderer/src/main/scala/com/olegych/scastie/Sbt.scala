@@ -73,13 +73,13 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
 
   object Success {
     val SuccessParser = """(?s)\[success\].*""".r
-    def unapply(result: Seq[String]): Option[String] = result.lastOption match {
-      case Some(SuccessParser()) => Option(resultAsString(result))
+    def unapply(result: Seq[String]): Option[Seq[String]] = result.lastOption match {
+      case Some(SuccessParser()) => Option(result)
       case _ => None
     }
   }
 
-  def resultAsString(result: Seq[String]) = result.mkString(System.lineSeparator).replaceAll(uniqueId, "")
+  // def resultAsString(result: Seq[String]) = result.mkString(System.lineSeparator).replaceAll(uniqueId, "")
 }
 
 object Sbt {

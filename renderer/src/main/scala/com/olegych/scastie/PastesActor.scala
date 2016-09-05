@@ -18,7 +18,7 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
   def receive = LoggingReceive {
     case AddPaste(content, uid) =>
       val id = nextPasteId
-      val paste = Paste(id = id, content = Option(content), output = Option("Processing..."), uid = Some(uid), renderedContent = None)
+      val paste = Paste(id = id, content = Option(content), output = Seq("Processing..."), uid = Some(uid), renderedContent = None)
       writePaste(paste)
       rendererBySettings.getOrElse(paste.settings, renderer) ! paste
       sender ! paste
@@ -38,16 +38,22 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
     pasteDir.pasteFile.write(paste.content)
     pasteDir.sxrSource.write(paste.renderedContent)
     pasteDir.uidFile.write(paste.uid)
-    progressActor ! PasteProgress(paste.id, contentChanged, paste.output.orZero)
-    pasteDir.outputFile.write(paste.output, truncate = false)
+    progressActor ! PasteProgress(paste.id, contentChanged, paste.output)
+    pasteDir.outputFile.write(Some(paste.output.mkString(System.lineSeparator)), truncate = false)
   }
 
   def readPaste(id: Long) = {
     val paste = pastesContainer.paste(id)
     if (paste.pasteFile.exists) {
-      Paste(id = id, content = paste.pasteFile.read, output = paste.outputFile.read, uid = paste.uidFile.read, renderedContent = paste.sxrSource.read)
+      Paste(
+        id = id, 
+        content = paste.pasteFile.read,
+        output = paste.outputFile.read.map(_.split(System.lineSeparator).toList).getOrElse(Seq()),
+        uid = paste.uidFile.read,
+        renderedContent = paste.sxrSource.read
+      )
     } else {
-      Paste(id = id, content = None, output = Option("Not found"), uid = None, renderedContent = None)
+      Paste(id = id, content = None, output = Seq("Not found"), uid = None, renderedContent = None)
     }
   }
 
@@ -79,11 +85,11 @@ object PastesActor {
 
   case class DeletePaste(id: Long, uid: String) extends PasteMessage
 
-  case class Paste(id: Long, content: Option[String], output: Option[String], uid: Option[String], renderedContent: Option[String])
+  case class Paste(id: Long, content: Option[String], output: Seq[String], uid: Option[String], renderedContent: Option[String])
     extends PasteMessage {
     lazy val settings = Script.blocks(content.orZero.split("\r\n".toCharArray)).flatMap(_.lines).mkString("\n")
   }
 
-  case class PasteProgress(id: Long, contentChanged: Boolean, output: String)
+  case class PasteProgress(id: Long, contentChanged: Boolean, output: Seq[String])
 
 }
