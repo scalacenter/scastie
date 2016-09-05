@@ -2,23 +2,59 @@ package controllers
 
 import api._
 
-import play.api.mvc._
-import scala.concurrent.Future
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import java.nio.ByteBuffer
-import upickle.default.{read => uread}
+import com.olegych.scastie._
+import com.olegych.scastie.PastesActor._
+import controllers.Progress.{MonitorChannel, MonitorProgress}
 
-class ApiImpl() extends Api {
-  def run(code: String): Future[String] = Future.successful(code)
+import play.api.Play
+import play.api.mvc._
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.JsValue
+
+import akka.util.Timeout
+import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.pattern.ask
+import com.typesafe.config.ConfigFactory
+
+import upickle.default.{read => uread}
+import java.nio.ByteBuffer
+import scala.concurrent.Future
+
+import scala.concurrent.duration._
+
+
+class ApiImpl(renderer: ActorRef)(implicit timeout: Timeout) extends Api {
+  def run(code: String): Future[Long] = {
+    (renderer ? AddPaste(code, "-no-uid-")).mapTo[Paste].map(_.id)
+  }
 }
 
 object Application extends Controller {
+
+  import play.api.Play.current
+  implicit val timeout = Timeout(100.seconds)
+  
+
+  val system = {
+    val classloader = Play.application.classloader
+    val config = ConfigFactory.load(classloader, Play.configuration.getString("actors.conf").get)
+    ActorSystem("actors", config, classloader)
+  }
+
+  val progressActor = system.actorOf(Props[Progress])
+  val container = PastesContainer(new java.io.File(Play.configuration.getString("pastes.data.dir").get))
+  val renderer = system.actorOf(Props(new PastesActor(container, progressActor)), "pastes")
+
 
   def index = Action { implicit request =>
     Ok(views.html.index())
   }
 
-  private val api = new ApiImpl()
+  private val api = new ApiImpl(renderer)
+
+  def progress(id: Long) = WebSocket.tryAccept[JsValue] { request =>
+    (progressActor ? MonitorProgress(id)).mapTo[MonitorChannel].map(m => Right(m.value))
+  }
 
   def autowireApi(path: String) = Action.async { implicit request =>
     // get the request body as ByteString

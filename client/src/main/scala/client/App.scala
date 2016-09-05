@@ -2,88 +2,112 @@ package client
 
 import japgolly.scalajs.react._, vdom.all._
 
+import api._
+import autowire._
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+import org.scalajs.dom
+import org.scalajs.dom.{WebSocket, MessageEvent, Event, CloseEvent, ErrorEvent, window}
+import scala.util.{Success, Failure}
+
 object App {
   case class State(
     code: String,
+    websocket: Option[WebSocket] = None,
+    output: Vector[String] = Vector(),
     dark: Boolean = false,
     compilationInfos: Set[CompilationInfo] = Set(),
     sideBarClosed: Boolean = false) {
 
-    def toogleTheme = copy(dark = !dark)
-    def toogleSidebar = copy(sideBarClosed = !sideBarClosed)
+    def toogleTheme       = copy(dark = !dark)
+    def toogleSidebar     = copy(sideBarClosed = !sideBarClosed)
+    def log(line: String) = copy(output = output :+ line)
   }
 
   class Backend(scope: BackendScope[_, State]) {
-    def codeChange(newCode: String)      = scope.modState(_.copy(code = newCode))
-    def toogleTheme(e: ReactEventI)   = toogleTheme2()
-    def toogleTheme2()                = scope.modState(_.toogleTheme)
-    def toogleSidebar(e: ReactEventI) = scope.modState(_.toogleSidebar)
-    def templateOne(e: ReactEventI)   = scope.modState(_.copy(code = "code 1"))
-    def templateTwo(e: ReactEventI)   = scope.modState(_.copy(code = "code 2"))
-    def templateThree(e: ReactEventI) = scope.modState(_.copy(code = "code 3"))
+    def codeChange(newCode: String) = scope.modState(_.copy(code = newCode))
+
+    private def connect(id: Long) = CallbackTo[WebSocket]{
+      val direct = scope.accessDirect
+
+      def onopen(e: Event): Unit           = direct.modState(_.log("Connected."))
+      def onmessage(e: MessageEvent): Unit = direct.modState(_.log(s"Echo: ${e.data.toString}"))
+      def onerror(e: ErrorEvent): Unit     = direct.modState(_.log(s"Error: ${e.message}"))
+      def onclose(e: CloseEvent): Unit     = direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}"))
+
+      val protocol = if(window.location.protocol == "https:") "wss" else "ws"
+      val uri = s"$protocol://${window.location.host}/progress/$id"
+      val socket = new WebSocket(uri)
+
+      socket.onopen = onopen _
+      socket.onclose = onclose _
+      socket.onmessage = onmessage _
+      socket.onerror = onerror _
+      socket
+    }
+
+    def run(e: ReactEventI) = {
+      dom.console.log("run")
+      scope.state.map(s =>
+        api.Client[Api].run(s.code).call().onSuccess{ case id =>
+          val direct = scope.accessDirect
+          connect(id).attemptTry.map {
+            case Success(ws)    => direct.modState(_.log("Connecting...").copy(websocket = Some(ws)))
+            case Failure(error) => direct.modState(_.log(error.toString))
+          }.runNow()
+        }
+      )
+    }
+    // def toogleTheme(e: ReactEventI)   = toogleTheme2()
+    def toogleTheme()                = scope.modState(_.toogleTheme)
+    // def toogleSidebar(e: ReactEventI) = scope.modState(_.toogleSidebar)
+    // def templateOne(e: ReactEventI)   = scope.modState(_.copy(code = "code 1"))
+    // def templateTwo(e: ReactEventI)   = scope.modState(_.copy(code = "code 2"))
+    // def templateThree(e: ReactEventI) = scope.modState(_.copy(code = "code 3"))
 
 
-    def clearError(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set()))
-    def addError(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set(e1, e2, e3)))
-    def addError2(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set(e2)))
-    def addError3(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set(e1, e3)))
+    // def clearError(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set()))
+    // def addError(e: ReactEventI)    = scope.modState(_.copy(compilationInfos = Set(e1, e2, e3)))
+    // def addError2(e: ReactEventI)  = scope.modState(_.copy(compilationInfos = Set(e2)))
+    // def addError3(e: ReactEventI)  = scope.modState(_.copy(compilationInfos = Set(e1, e3)))
   }
 
-  val e1 = CompilationInfo(severity = Error, position = Position(0, 10), message = "error: foo is baz")
-  val e2 = CompilationInfo(severity = Warning, position = Position(40, 50), message = "warning: ...")
-  val e3 = CompilationInfo(severity = Info, position = Position(60, 80), message = "info: ...")
+  // val e1 = CompilationInfo(severity = Error, position = Position(0, 10), message = "error: foo is baz")
+  // val e2 = CompilationInfo(severity = Warning, position = Position(40, 50), message = "warning: ...")
+  // val e3 = CompilationInfo(severity = Info, position = Position(60, 80), message = "info: ...")
 
   val SideBar = ReactComponentB[(State, Backend)]("SideBar")
     .render_P { case (state, backend) =>
       val label = if(state.dark) "light" else "dark"
       ul(
-        li(button(onClick ==> backend.toogleSidebar)("X")),
-        li(button(onClick ==> backend.toogleTheme)(label)),
-        li(button(onClick ==> backend.templateOne)("template 1")),
-        li(button(onClick ==> backend.templateTwo)("template 2")),
-        li(button(onClick ==> backend.templateThree)("template 3")),
-        li(button(onClick ==> backend.addError)("addError")),
-        li(button(onClick ==> backend.addError2)("addError2")),
-        li(button(onClick ==> backend.addError3)("addError3")),
-        li(button(onClick ==> backend.clearError)("clearError")),
-        li(pre(state.code))
+        // li(button(onClick ==> backend.toogleSidebar)("X")),
+        li(button(onClick ==> backend.run)("run")),
+        // li(button(onClick ==> backend.toogleTheme)(label)),
+        // li(button(onClick ==> backend.templateOne)("template 1")),
+        // li(button(onClick ==> backend.templateTwo)("template 2")),
+        // li(button(onClick ==> backend.templateThree)("template 3")),
+        // li(button(onClick ==> backend.addError)("addError")),
+        // li(button(onClick ==> backend.addError2)("addError2")),
+        // li(button(onClick ==> backend.addError3)("addError3")),
+        // li(button(onClick ==> backend.clearError)("clearError")),
+        li(pre(state.code)),
+        ul(
+          state.output.map(o => li(o))
+        )
       )
     }
     .build
 
   val defaultCode = 
-    """
-import akka.http.scaladsl._
-import server.Directives._
-
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
-
-import scala.concurrent.duration._
-import scala.concurrent.Await
-
-object Main {
-  def main(args: Array[String]): Unit = {
-
-    implicit val system = ActorSystem("server")
-    import system.dispatcher
-    implicit val materializer = ActorMaterializer()
-
-    val route = {
-      path("assets" / Remaining) { path ⇒
-        getFromResource(path)
-      } ~
-      pathSingleSlash {
-        getFromResource("index.html")
-      }
-    }
-
-    Await.result(Http().bindAndHandle(route, "localhost", 8080), 20.seconds)
-
-    ()
-  }
-}
-    """
+    """|/***
+       |coursier.CoursierPlugin.projectSettings
+       |scalaVersion := "2.11.8"
+       |*/
+       |object Example {
+       |  def main(args: Array[String]): Unit = {
+       |    println("Hello, world!")
+       |  }
+       |}""".stripMargin
 
   val defualtState = State(
     code = defaultCode

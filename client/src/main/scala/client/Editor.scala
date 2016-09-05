@@ -84,7 +84,7 @@ object Editor {
         }
 
         CodeMirror.commands.solarizedToggle = (editor: CodeMirrorEditor) ⇒ {
-          backend.toogleTheme2().runNow
+          backend.toogleTheme().runNow
         }
 
         scope.modState(_.copy(editor = Some(editor)))
@@ -108,9 +108,11 @@ object Editor {
     def setCode() = {
       if(current.code != next.code) {
         val doc = editor.getDoc()
-        val cursor = doc.getCursor()
-        doc.setValue(next.code)
-        doc.setCursor(cursor)
+        if(doc.getValue() != next.code) {
+          val cursor = doc.getCursor()
+          doc.setValue(next.code)
+          doc.setCursor(cursor)
+        }
       }    
     }
 
