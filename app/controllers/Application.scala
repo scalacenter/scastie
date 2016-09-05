@@ -6,6 +6,8 @@ import com.olegych.scastie._
 import com.olegych.scastie.PastesActor._
 import controllers.Progress.{MonitorChannel, MonitorProgress}
 
+import autowire.Core.Request
+
 import play.api.Play
 import play.api.mvc._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -23,7 +25,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 
-class ApiImpl(renderer: ActorRef)(implicit timeout: Timeout) extends Api {
+class ApiImpl(renderer: ActorRef)(implicit timeout: Timeout)
+ extends Api {
   def run(code: String): Future[Long] = {
     (renderer ? AddPaste(code, "-no-uid-")).mapTo[Paste].map(_.id)
   }
@@ -33,8 +36,6 @@ object Application extends Controller {
 
   import play.api.Play.current
   implicit val timeout = Timeout(100.seconds)
-  
-
   val system = {
     val classloader = Play.application.classloader
     val config = ConfigFactory.load(classloader, Play.configuration.getString("actors.conf").get)
@@ -44,7 +45,6 @@ object Application extends Controller {
   val progressActor = system.actorOf(Props[Progress])
   val container = PastesContainer(new java.io.File(Play.configuration.getString("pastes.data.dir").get))
   val renderer = system.actorOf(Props(new PastesActor(container, progressActor)), "pastes")
-
 
   def index = Action { implicit request =>
     Ok(views.html.index())
@@ -57,17 +57,8 @@ object Application extends Controller {
   }
 
   def autowireApi(path: String) = Action.async { implicit request =>
-    // get the request body as ByteString
-
     val text = request.body.asText.getOrElse("")
-    
-    AutowireServer.route[Api](api)(
-      autowire.Core.Request(path.split("/"), uread[Map[String, String]](text))
-    ).map(buffer => {
-      // val data = Array.ofDim[Byte](buffer.remaining())
-      // buffer.get(data)
-      println(buffer)
-      Ok(buffer)
-    })
+    val autowireRequest = Request(path.split("/"), uread[Map[String, String]](text))
+    AutowireServer.route[Api](api)(autowireRequest).map(buffer => Ok(buffer))
   }
 }

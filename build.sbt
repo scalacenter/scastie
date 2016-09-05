@@ -77,17 +77,18 @@ lazy val scastie = project.in(file("."))
        "-Ywarn-unused-import"
     ,  "-Xfatal-warnings"
     )
-  , allDependencies ~= (_.map(_.exclude("com.typesafe.play", "play-doc_2.11")
-      .exclude("com.typesafe.play", "play-docs_2.11"))
-    )
+  , allDependencies ~= (_.map(
+      _.exclude("com.typesafe.play", "play-doc_2.11")
+       .exclude("com.typesafe.play", "play-docs_2.11")
+       .exclude("com.lihaoyi", "upickle_sjs0.6_2.11")
+    ))
   , mainClass in Compile := Option("ProdNettyServer")
   , products in Compile <<= (products in Compile).dependsOn(WebKeys.assets in Assets)
   , reStart <<= reStart.dependsOn(WebKeys.assets in Assets)
   , WebKeys.public in Assets := (classDirectory in Compile).value / "public"
-  , unmanagedResourceDirectories in Compile += (WebKeys.public in Assets).value
   )
   .enablePlugins(SbtWeb, play.PlayScala)
-  .dependsOn(renderer, apiJVM)
+  .dependsOn(renderer, client, apiJVM)
 
 lazy val baseSettings = Seq(
   scalaVersion := "2.11.8"

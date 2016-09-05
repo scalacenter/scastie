@@ -6,7 +6,6 @@ import api._
 import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-import org.scalajs.dom
 import org.scalajs.dom.{WebSocket, MessageEvent, Event, CloseEvent, ErrorEvent, window}
 import scala.util.{Success, Failure}
 
@@ -46,18 +45,23 @@ object App {
       socket
     }
 
-    def run(e: ReactEventI) = {
-      dom.console.log("run")
+    def run() = {
       scope.state.map(s =>
         api.Client[Api].run(s.code).call().onSuccess{ case id =>
           val direct = scope.accessDirect
           connect(id).attemptTry.map {
-            case Success(ws)    => direct.modState(_.log("Connecting...").copy(websocket = Some(ws)))
+            case Success(ws)    => 
+              direct.modState(_.log("Connecting...").copy(
+                websocket = Some(ws),
+                output = Vector())
+              )
             case Failure(error) => direct.modState(_.log(error.toString))
           }.runNow()
         }
       )
     }
+    def runE(e: ReactEventI) = run()
+
     // def toogleTheme(e: ReactEventI)   = toogleTheme2()
     def toogleTheme()                = scope.modState(_.toogleTheme)
     // def toogleSidebar(e: ReactEventI) = scope.modState(_.toogleSidebar)
@@ -81,7 +85,7 @@ object App {
       val label = if(state.dark) "light" else "dark"
       ul(
         // li(button(onClick ==> backend.toogleSidebar)("X")),
-        li(button(onClick ==> backend.run)("run")),
+        li(button(onClick ==> backend.runE)("run")),
         // li(button(onClick ==> backend.toogleTheme)(label)),
         // li(button(onClick ==> backend.templateOne)("template 1")),
         // li(button(onClick ==> backend.templateTwo)("template 2")),
@@ -90,13 +94,11 @@ object App {
         // li(button(onClick ==> backend.addError2)("addError2")),
         // li(button(onClick ==> backend.addError3)("addError3")),
         // li(button(onClick ==> backend.clearError)("clearError")),
-        li(pre(state.code)),
-        ul(
-          state.output.map(o => li(o))
-        )
+        li(pre(state.code))
       )
     }
     .build
+
 
   val defaultCode = 
     """|/***
@@ -122,7 +124,12 @@ object App {
         else "sidebar-open"
 
       div(`class` := "app")(
-        div(`class` := s"editor $sideStyle")(Editor(state, scope.backend)),
+        div(`class` := s"editor $sideStyle")(
+          Editor(state, scope.backend),
+          ul(`class` := "output")(
+            state.output.map(o => li(o))
+          )  
+        ),
         div(`class` := s"sidebar $sideStyle")(SideBar((state, scope.backend)))
       )
     })

@@ -79,7 +79,7 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
     }
   }
 
-  def resultAsString(result: Seq[String]) = result.mkString("\n").replaceAll(uniqueId, "")
+  def resultAsString(result: Seq[String]) = result.mkString(System.lineSeparator).replaceAll(uniqueId, "")
 }
 
 object Sbt {

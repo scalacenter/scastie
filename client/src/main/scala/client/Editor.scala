@@ -80,7 +80,7 @@ object Editor {
         )
 
         CodeMirror.commands.run = (editor: CodeMirrorEditor) ⇒ {
-
+          backend.run().runNow
         }
 
         CodeMirror.commands.solarizedToggle = (editor: CodeMirrorEditor) ⇒ {

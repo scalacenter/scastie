@@ -17,6 +17,12 @@ body, .app, .editor, .sidebar {
     &.sidebar-closed {
       margin-right: 0; 
     }
+    .output {
+      position: absolute;
+      bottom: 0;
+      height: 200px;
+      width: calc(~"100% - "@sidebar-width);
+    }
   }
   .sidebar {
     position: absolute;
