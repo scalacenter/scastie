@@ -101,3 +101,8 @@ mocks OpenShift environment and starts the post-receive hook.
 The remote workers can be started via RendererMain class in renderer module. This can be done via sbt or via
 intellij, or via the same post-receive hook which starts main application if OPENSHIFT_APP_NAME env property matches "renderer".
 The urls of remote worker should be specified when running main application in *actors.conf.
+
+
+.. image:: https://badges.gitter.im/scastie/Lobby.svg
+   :alt: Join the chat at https://gitter.im/scastie/Lobby
+   :target: https://gitter.im/scastie/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
