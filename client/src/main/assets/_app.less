@@ -6,6 +6,16 @@ body, .app, .editor, .sidebar {
   height: 100%;
 }
 
+.solarized-pallette;
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: @base3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: @base2;
+}
+
 .app {
   @sidebar-width: 400px;
   @dt: 0.3s;
@@ -15,13 +25,24 @@ body, .app, .editor, .sidebar {
       margin-right: @sidebar-width;
     }
     &.sidebar-closed {
-      margin-right: 0; 
+      margin-right: 0;
     }
     .output {
-      position: absolute;
       bottom: 0;
-      height: 200px;
+      left: 0;
+      position: absolute;
+      height: 650px;
       width: calc(~"100% - "@sidebar-width);
+
+      overflow-y: scroll;
+      z-index: 1000;
+
+      margin: 0;
+      padding: 0;
+
+      li {
+        display: block;
+      }
     }
   }
   .sidebar {

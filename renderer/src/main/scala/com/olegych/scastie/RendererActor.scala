@@ -58,36 +58,50 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
   def receive = LoggingReceive {
     killer { case paste@Paste(_, Some(content), _, _, _) => sbt foreach { sbt =>
-      def sendPasteFile(result: Seq[String]) {
-        sender ! paste.copy(content = sbtDir.pasteFile.read, output = result)
-      }
+      // def sendPasteFile(result: Seq[String]) {
+      //   sender ! paste.copy(content = sbtDir.pasteFile.read, output = result)
+      // }
       sbtDir.pasteFile.write(Option(content))
       val settings = paste.settings
       if (this.settings =/= settings) {
-        this.reloadResult = sbt.process(s"reload")
         this.settings = settings
+        sbt.process("reload", (line, _) =>
+          sender ! paste.copy(content = sbtDir.pasteFile.read, output = line +: paste.output)
+        )
       } else {
-        sendPasteFile(Seq("Reused last reload result"))
+        sender ! paste.copy(content = sbtDir.pasteFile.read, output = Seq())
       }
-      sendPasteFile(reloadResult)
+
+      // sendPasteFile(reloadResult)
       sbtDir.sxrSource.delete()
-      sbt.process("compile") match {
-        case sbt.Success(compileResult) =>
+      sbt.process("compile", (line, done) => {
+        println(line)
+        if(done) {
           sender ! paste.copy(
             content = sbtDir.pasteFile.read
             , renderedContent = sbtDir.sxrSource.read.map(cleanSource)
-            , output = compileResult ++ Seq("Now running..."))
+            , output = Seq("Now running...")
+          )
           applyRunKiller(paste) {
-            sbt.process("run-all") match {
-              case sbt.Success(runResult) =>
-                sender ! paste.copy(output = runResult)
-              case errorResult =>
-                sender ! paste.copy(output = errorResult)
-            }
+            sbt.process("run-all", (line, done) =>
+              sender ! paste.copy(output = line +: paste.output)
+            )
           }
-        case errorResult =>
-          sendPasteFile(errorResult)
-      }
+        } else {
+          println("still going")
+          sender ! paste.copy(output = line +: paste.output)
+        }
+        // line match {
+        //   case sbt.Success(compileResult) => {
+        //     println("sucess")
+        //
+        //   }
+        //   case _ => {
+        //
+        //   }
+        // }
+          // sendPasteFile(errorResult)
+      })
     }
     }
   }

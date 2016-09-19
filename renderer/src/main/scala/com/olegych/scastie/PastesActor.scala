@@ -18,7 +18,7 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
   def receive = LoggingReceive {
     case AddPaste(content, uid) =>
       val id = nextPasteId
-      val paste = Paste(id = id, content = Option(content), output = Seq("Processing..."), uid = Some(uid), renderedContent = None)
+      val paste = Paste(id = id, content = Option(content), output = Seq(), uid = Some(uid), renderedContent = None)
       writePaste(paste)
       rendererBySettings.getOrElse(paste.settings, renderer) ! paste
       sender ! paste
@@ -46,7 +46,7 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
     val paste = pastesContainer.paste(id)
     if (paste.pasteFile.exists) {
       Paste(
-        id = id, 
+        id = id,
         content = paste.pasteFile.read,
         output = paste.outputFile.read.map(_.split(System.lineSeparator).toList).getOrElse(Seq()),
         uid = paste.uidFile.read,

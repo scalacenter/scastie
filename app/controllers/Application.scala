@@ -52,7 +52,7 @@ object Application extends Controller {
 
   private val api = new ApiImpl(renderer)
 
-  def progress(id: Long) = WebSocket.tryAccept[JsValue] { request =>
+  def progress(id: Long) = WebSocket.tryAccept[String] { request =>
     (progressActor ? MonitorProgress(id)).mapTo[MonitorChannel].map(m => Right(m.value))
   }
 

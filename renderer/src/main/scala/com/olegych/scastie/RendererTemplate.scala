@@ -14,7 +14,10 @@ object RendererTemplate {
   val templateRoot = new File("renderer-template")
   val defaultUniqueId = "$uniqueId$"
 
-  withSbt(templateRoot, defaultUniqueId)(_.process("update"))
+  withSbt(templateRoot, defaultUniqueId)(sbt => {
+    sbt.process("update", (line, _) => println(s"discarded $line"))
+    Seq()
+  })
 
   def create(dir: File, uniqueId: String) = this.synchronized {
     log.info("creating paste sbt project")

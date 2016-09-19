@@ -9,6 +9,8 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scalajs.dom.{WebSocket, MessageEvent, Event, CloseEvent, ErrorEvent, window}
 import scala.util.{Success, Failure}
 
+import upickle.default.{read => uread}
+
 object App {
   case class State(
     code: String,
@@ -18,9 +20,10 @@ object App {
     compilationInfos: Set[CompilationInfo] = Set(),
     sideBarClosed: Boolean = false) {
 
-    def toogleTheme       = copy(dark = !dark)
-    def toogleSidebar     = copy(sideBarClosed = !sideBarClosed)
-    def log(line: String) = copy(output = output :+ line)
+    def toogleTheme             = copy(dark = !dark)
+    def toogleSidebar           = copy(sideBarClosed = !sideBarClosed)
+    def log(line: String)       = copy(output = output :+ line)
+    def log(lines: Seq[String]) = copy(output = output ++ lines)
   }
 
   class Backend(scope: BackendScope[_, State]) {
@@ -30,7 +33,10 @@ object App {
       val direct = scope.accessDirect
 
       def onopen(e: Event): Unit           = direct.modState(_.log("Connected."))
-      def onmessage(e: MessageEvent): Unit = direct.modState(_.log(s"Echo: ${e.data.toString}"))
+      def onmessage(e: MessageEvent): Unit = {
+        val progress = uread[PasteProgress](e.data.toString)
+        direct.modState(_.log(progress.output))
+      }
       def onerror(e: ErrorEvent): Unit     = direct.modState(_.log(s"Error: ${e.message}"))
       def onclose(e: CloseEvent): Unit     = direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}"))
 

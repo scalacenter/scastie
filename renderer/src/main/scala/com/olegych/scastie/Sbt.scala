@@ -28,39 +28,50 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
         process.getOutputStream, process.getOutputStream.asUnmanagedOutput,
         new InputStreamReader(process.getInputStream))
   }
-  waitForPrompt
+  // waitForPrompt
 
-  def process(command: String, waitForPrompt: Boolean = true) = {
-    log.info("Executing {}", command)
-    input.write(command + "\n")
+  def process(command: String, lineCallback: (String, Boolean) => Unit): Unit = {
     fin.flush()
-    if (waitForPrompt) {
-      this.waitForPrompt
-    } else {
-      Seq("")
-    }
-  }
+    input.write(command + System.lineSeparator)
 
-  def waitForPrompt: Seq[String] = {
     import collection.JavaConversions._
-    val lines = new CircularFifoBuffer[String](200)
     val chars = new CircularFifoBuffer[Character](1000)
-    var read: Int = 0
-    while (read != -1 && lines.lastOption != Some(uniqueId)) {
+    var read = 0
+    var prompt = false
+    while (read != -1 && !prompt) {
       read = fout.read()
       if (read == 10) {
-        lines.add(chars.mkString)
-        log.info("sbt: " + lines.last)
+        val line = chars.mkString
+        prompt = line == uniqueId
+        lineCallback(line, prompt)
+        log.info("sbt: " + line)
         chars.clear()
       } else {
         chars.add(read.toChar)
       }
     }
-    lines.dropRight(1).toSeq
   }
 
+  // def waitForPrompt: Seq[String] = {
+  //   import collection.JavaConversions._
+  //   val lines = new CircularFifoBuffer[String](200)
+  //   val chars = new CircularFifoBuffer[Character](1000)
+  //   var read: Int = 0
+  //   while (read != -1 && lines.lastOption != Some(uniqueId)) {
+  //     read = fout.read()
+  //     if (read == 10) {
+  //       lines.add(chars.mkString)
+  //       log.info("sbt: " + lines.last)
+  //       chars.clear()
+  //     } else {
+  //       chars.add(read.toChar)
+  //     }
+  //   }
+  //   lines.dropRight(1).toSeq
+  // }
+
   def close() {
-    try process("exit", waitForPrompt = false) catch {
+    try process("exit", (_, _) => ()) catch {
       case e: Exception => log.error("Error while soft exit", e)
     }
     ProcessKiller.instance.kill(process)
@@ -73,8 +84,8 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
 
   object Success {
     val SuccessParser = """(?s)\[success\].*""".r
-    def unapply(result: Seq[String]): Option[Seq[String]] = result.lastOption match {
-      case Some(SuccessParser()) => Option(result)
+    def unapply(result: String): Option[String] = result match {
+      case SuccessParser() => Option(result)
       case _ => None
     }
   }
