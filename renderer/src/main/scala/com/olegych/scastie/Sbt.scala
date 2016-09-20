@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory
 
 import scalax.file.Path
 
-/**
-  */
 case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUniqueId) {
   private val log = LoggerFactory.getLogger(getClass)
   private val (process, fin, input, fout) = {
@@ -70,7 +68,7 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
   //   lines.dropRight(1).toSeq
   // }
 
-  def close() {
+  def close(): Unit = {
     try process("exit", (_, _) => ()) catch {
       case e: Exception => log.error("Error while soft exit", e)
     }
@@ -82,13 +80,13 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
     }
   }
 
-  object Success {
-    val SuccessParser = """(?s)\[success\].*""".r
-    def unapply(result: String): Option[String] = result match {
-      case SuccessParser() => Option(result)
-      case _ => None
-    }
-  }
+  // object Success {
+  //   val SuccessParser = """(?s)\[success\].*""".r
+  //   def unapply(result: String): Option[String] = result match {
+  //     case SuccessParser() => Option(result)
+  //     case _ => None
+  //   }
+  // }
 
   // def resultAsString(result: Seq[String]) = result.mkString(System.lineSeparator).replaceAll(uniqueId, "")
 }

@@ -1,17 +1,49 @@
+package sbt
+
 import com.olegych.scastie.{ScriptSecurityManager, SecuredRun}
 import sbt.EvaluateConfigurations._
 import sbt.Keys._
 import sbt._
+import xsbti.{Reporter, Problem, Position, Severity, Maybe}
 
 object ApplicationBuild extends Build {
   val runAll = TaskKey[Unit]("run-all")
   val jdkVersion = settingKey[String]("")
+  val compileInfo = TaskKey[Unit]("compile-info")
 
-  val rendererWorker = Project(id = "rendererWorker", base = file(".")).settings(DefaultSettings.apply ++ Seq(
-    updateOptions := updateOptions.value.withCachedResolution(true).withLatestSnapshots(false)
+
+  val rendererWorker = Project(id = "rendererWorker", base = file(".")).settings(Seq(
+      updateOptions := updateOptions.value.withCachedResolution(true).withLatestSnapshots(false)
     , jdkVersion := "1.7"
     , scalacOptions += s"-target:jvm-${jdkVersion.value}"
     , javacOptions ++= Seq("-source", jdkVersion.value, "-target", jdkVersion.value)
+    , compilerReporter in (Compile, compile) := Some(new xsbti.Reporter {
+      private val buffer = collection.mutable.ArrayBuffer.empty[Problem]
+      def toOption[T](m: Maybe[T]): Option[T] = {
+        if(m.isEmpty) None
+        else Some(m.get)
+      }
+      def reset(): Unit = buffer.clear()
+      def hasErrors: Boolean = buffer.exists(_.severity == Severity.Error)
+      def hasWarnings: Boolean = buffer.exists(_.severity == Severity.Warn)
+      def printSummary(): Unit = {
+        println(problems.map(p =>
+          s"${p.severity} ${toOption(p.position.offset)} ${p.message}"
+        ).mkString(System.lineSeparator))
+      }
+      def problems: Array[Problem] = buffer.toArray
+      def log(pos: Position, msg: String, sev: Severity): Unit = {
+        object MyProblem extends Problem {
+          def category: String = null
+          def severity: Severity = sev
+          def message: String = msg
+          def position: Position = pos
+          override def toString = s"$position:$severity: $message"
+        }
+        buffer.append(MyProblem)
+      }
+      def comment(pos: xsbti.Position, msg: String): Unit = ()
+    })
     , runAll <<=
       (discoveredMainClasses in Compile, fullClasspath in Compile, runner in(Compile, run), streams) map runAllTask
     , runner in(Compile, run) <<= (taskTemporaryDirectory, scalaInstance) map { (nativeTmp, instance) =>

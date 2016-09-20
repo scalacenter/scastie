@@ -18,26 +18,34 @@ libraryDependencies ++= {
   )
 }
 */
-object Main extends sbt.Build with App {
-  //  import fs2.{ io, text }
-  //  import fs2.util.Task
-  //  import fs2.{ io, text }
-  //  import fs2.util.Task
-  //  import java.nio.file.Paths
-  //
-  //  def fahrenheitToCelsius(f: Double): Double =
-  //    (f - 32.0) * (5.0 / 9.0)
-  //
-  //  val converter: Task[Unit] =
-  //    io.file.readAll[Task](Paths.get("build.sbt"), 4096)
-  //      .through(text.utf8Decode)
-  //      .through(text.lines)
-  //      .filter(s => !s.trim.isEmpty && !s.startsWith("//"))
-  //      .map(line => fahrenheitToCelsius(line.getBytes.sum).toString)
-  //      .intersperse("\n")
-  //      .through(text.utf8Encode)
-  //      .run
-  //
-  //  // at the end of the universe...
-  //  val u: Unit = converter.unsafeRun
+object Main {
+  def main(args: Array[String]): Unit = {
+    e1
+
+    e2
+
+    e3
+    //  import fs2.{ io, text }
+    //  import fs2.util.Task
+    //  import fs2.{ io, text }
+    //  import fs2.util.Task
+    //  import java.nio.file.Paths
+    //
+    //  def fahrenheitToCelsius(f: Double): Double =
+    //    (f - 32.0) * (5.0 / 9.0)
+    //
+    //  val converter: Task[Unit] =
+    //    io.file.readAll[Task](Paths.get("build.sbt"), 4096)
+    //      .through(text.utf8Decode)
+    //      .through(text.lines)
+    //      .filter(s => !s.trim.isEmpty && !s.startsWith("//"))
+    //      .map(line => fahrenheitToCelsius(line.getBytes.sum).toString)
+    //      .intersperse("\n")
+    //      .through(text.utf8Encode)
+    //      .run
+    //
+    //  // at the end of the universe...
+    //  val u: Unit = converter.unsafeRun
+  }
+  "warn me"
 }

@@ -56,7 +56,7 @@ object App {
         api.Client[Api].run(s.code).call().onSuccess{ case id =>
           val direct = scope.accessDirect
           connect(id).attemptTry.map {
-            case Success(ws)    => 
+            case Success(ws)    =>
               direct.modState(_.log("Connecting...").copy(
                 websocket = Some(ws),
                 output = Vector())
@@ -88,25 +88,14 @@ object App {
 
   val SideBar = ReactComponentB[(State, Backend)]("SideBar")
     .render_P { case (state, backend) =>
-      val label = if(state.dark) "light" else "dark"
-      ul(
-        // li(button(onClick ==> backend.toogleSidebar)("X")),
-        li(button(onClick ==> backend.runE)("run")),
-        // li(button(onClick ==> backend.toogleTheme)(label)),
-        // li(button(onClick ==> backend.templateOne)("template 1")),
-        // li(button(onClick ==> backend.templateTwo)("template 2")),
-        // li(button(onClick ==> backend.templateThree)("template 3")),
-        // li(button(onClick ==> backend.addError)("addError")),
-        // li(button(onClick ==> backend.addError2)("addError2")),
-        // li(button(onClick ==> backend.addError3)("addError3")),
-        // li(button(onClick ==> backend.clearError)("clearError")),
-        li(pre(state.code))
-      )
+      // val label = if(state.dark) "light" else "dark"
+
+      button(onClick ==> backend.runE)("run")
     }
     .build
 
 
-  val defaultCode = 
+  val defaultCode =
     """|/***
        |coursier.CoursierPlugin.projectSettings
        |scalaVersion := "2.11.8"
@@ -125,7 +114,7 @@ object App {
     .initialState(State(code = defaultCode))
     .backend(new Backend(_))
     .renderPS((scope, _, state) => {
-      val sideStyle = 
+      val sideStyle =
         if(state.sideBarClosed) "sidebar-closed"
         else "sidebar-open"
 
@@ -134,7 +123,7 @@ object App {
           Editor(state, scope.backend),
           ul(`class` := "output")(
             state.output.map(o => li(o))
-          )  
+          )
         ),
         div(`class` := s"sidebar $sideStyle")(SideBar((state, scope.backend)))
       )
