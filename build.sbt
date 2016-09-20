@@ -174,15 +174,8 @@ lazy val api = crossProject
 lazy val apiJVM = api.jvm
 lazy val apiJS = api.js
 
-// crossScalaVersions would not help here since we use ProjectRef
-lazy val sbtApi210 = project.settings(
-  scalaVersion := "2.10.6"
-, libraryDependencies += "com.lihaoyi" %%% "upickle"  % "0.4.0"
-, scalaSource in Compile := (baseDirectory in ThisBuild).value / "sbt-api"
-)
-
 lazy val sbtApi211 = project.settings(
   scalaVersion := "2.11.8"
 , libraryDependencies += "com.lihaoyi" %%% "upickle"  % "0.4.0"
-, scalaSource in Compile := (baseDirectory in ThisBuild).value / "sbt-api"
+, scalaSource in Compile := (baseDirectory in ThisBuild).value / "renderer-template" / "project" / "sbt-api"
 )

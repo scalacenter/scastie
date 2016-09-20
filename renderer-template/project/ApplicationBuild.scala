@@ -1,5 +1,3 @@
-package sbt
-
 import com.olegych.scastie.{ScriptSecurityManager, SecuredRun}
 import sbt.EvaluateConfigurations._
 import sbt.Keys._
@@ -10,17 +8,16 @@ import upickle.default.{write ⇒ uwrite}
 object ApplicationBuild extends Build {
   val runAll = TaskKey[Unit]("run-all")
   val jdkVersion = settingKey[String]("")
-  val compileInfo = TaskKey[Unit]("compile-info")
-
+  // this guy is private[sbt] ...
+  val hack = TaskKey[Option[Reporter]]("compilerReporter", "")
 
   val rendererWorker = Project(id = "rendererWorker", base = file(".")).settings(Seq(
       updateOptions := updateOptions.value.withCachedResolution(true).withLatestSnapshots(false)
     , jdkVersion := "1.7"
     , scalacOptions += s"-target:jvm-${jdkVersion.value}"
     , javacOptions ++= Seq("-source", jdkVersion.value, "-target", jdkVersion.value)
-    , compilerReporter in (Compile, compile) := Some(new xsbti.Reporter {
+    , hack in (Compile, compile) := Some(new xsbti.Reporter {
       private val buffer = collection.mutable.ArrayBuffer.empty[Problem]
-
       def reset(): Unit = buffer.clear()
       def hasErrors: Boolean = buffer.exists(_.severity == Severity.Error)
       def hasWarnings: Boolean = buffer.exists(_.severity == Severity.Warn)
@@ -30,18 +27,14 @@ object ApplicationBuild extends Build {
             if(m.isEmpty) None
             else Some(m.get)
           }
-
           val severity =
             p.severity match {
               case xsbti.Severity.Info  => sbtapi.Info
               case xsbti.Severity.Warn  => sbtapi.Warning
               case xsbti.Severity.Error => sbtapi.Error
             }
-
           sbtapi.Problem(severity, toOption(p.position.offset).map(_.toInt), p.message)
         }
-
-
         println(uwrite(problems.map(toApi)))
       }
       def problems: Array[Problem] = buffer.toArray

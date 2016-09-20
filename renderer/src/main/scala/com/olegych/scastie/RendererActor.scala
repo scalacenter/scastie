@@ -9,6 +9,8 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import scalaz.Scalaz._
 
+import upickle.default.{read => uread}
+
 /**
   */
 case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
@@ -89,6 +91,13 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
           }
         } else {
           println("still going")
+
+          val problems =
+            try{ Right(uread[sbtapi.Problem](line)) }
+            catch { case scala.util.control.NonFatal(e) => Left(e) }
+
+          println(problems)
+
           sender ! paste.copy(output = line +: paste.output)
         }
         // line match {
