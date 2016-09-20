@@ -38,7 +38,7 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
     pasteDir.pasteFile.write(paste.content)
     pasteDir.sxrSource.write(paste.renderedContent)
     pasteDir.uidFile.write(paste.uid)
-    progressActor ! PasteProgress(paste.id, contentChanged, paste.output)
+    progressActor ! PasteProgress(paste.id, contentChanged, paste.output, paste.problems)
     pasteDir.outputFile.write(Some(paste.output.mkString(System.lineSeparator)), truncate = false)
   }
 
@@ -85,11 +85,10 @@ object PastesActor {
 
   case class DeletePaste(id: Long, uid: String) extends PasteMessage
 
-  case class Paste(id: Long, content: Option[String], output: Seq[String], uid: Option[String], renderedContent: Option[String])
+  case class Paste(id: Long, content: Option[String], output: Seq[String], uid: Option[String], renderedContent: Option[String], problems: List[api.Problem] = List())
     extends PasteMessage {
     lazy val settings = Script.blocks(content.orZero.split("\r\n".toCharArray)).flatMap(_.lines).mkString("\n")
   }
 
-  case class PasteProgress(id: Long, contentChanged: Boolean, output: Seq[String])
-
+  case class PasteProgress(id: Long, contentChanged: Boolean, output: Seq[String], compilationInfos: List[api.Problem])
 }

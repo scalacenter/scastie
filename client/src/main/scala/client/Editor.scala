@@ -19,7 +19,7 @@ object Editor {
 
     val isMac = dom.window.navigator.userAgent.contains("Mac")
     val ctrl = if(isMac) "Cmd" else "Ctrl"
-  
+
     js.Dictionary[Any](
       "mode"                      -> "text/x-scala",
       "autofocus"                 -> true,
@@ -47,8 +47,8 @@ object Editor {
     ).asInstanceOf[codemirror.Options]
   }
 
-  private[Editor] sealed trait Annotation { 
-    def clear(): Unit 
+  private[Editor] sealed trait Annotation {
+    def clear(): Unit
   }
 
   private[Editor] case class Line(lw: LineWidget) extends Annotation {
@@ -61,7 +61,7 @@ object Editor {
 
   private[Editor] case class EditorState(
     editor: Option[TextAreaEditor] = None,
-    annotations: Map[CompilationInfo, Annotation] = Map()
+    annotations: Map[api.Problem, Annotation] = Map()
   )
 
   private[Editor] class Backend(scope: BackendScope[(App.State, App.Backend), EditorState]) {
@@ -75,7 +75,7 @@ object Editor {
       scope.props.flatMap{ case (props, backend) =>
         val editor = codemirror.CodeMirror.fromTextArea(codemirrorTextarea(scope).get, options(props.dark))
 
-        editor.onChange((_, _) => 
+        editor.onChange((_, _) =>
           backend.codeChange(editor.getDoc().getValue()).runNow
         )
 
@@ -97,7 +97,7 @@ object Editor {
   private def runDelta(editor: TextAreaEditor, scope: Scope, state: EditorState, current: App.State, next: App.State): Callback = {
     def setTheme() = {
       if(current.dark != next.dark) {
-        val theme = 
+        val theme =
           if(next.dark) "dark"
           else "light"
 
@@ -113,7 +113,7 @@ object Editor {
           doc.setValue(next.code)
           doc.setCursor(cursor)
         }
-      }    
+      }
     }
 
     def setAnnotations() = {
@@ -121,10 +121,11 @@ object Editor {
 
       val added = next.compilationInfos -- current.compilationInfos
 
-      val toAdd = 
+      val toAdd =
         CallbackTo.sequence(
           added.map{ info =>
-            val pos = doc.posFromIndex(info.position.end)
+
+            val pos = doc.posFromIndex(info.offset.getOrElse(0))
             val el = dom.document.createElement("div")
             el.textContent = info.message
 
@@ -139,11 +140,11 @@ object Editor {
           case (info, annot) => CallbackTo({annot.clear(); info})
         }.toList
       )
-      
+
       for {
         added   <- toAdd
         removed <- toRemove
-        _       <- scope.modState(s => s.copy(annotations = 
+        _       <- scope.modState(s => s.copy(annotations =
                     ((s.annotations ++ added) -- removed)
                    ))
       } yield ()
@@ -155,22 +156,22 @@ object Editor {
   val component = ReactComponentB[(App.State, App.Backend)]("CodemirrorEditor")
     .initialState(EditorState())
     .backend(new Backend(_))
-    .renderPS{ case (scope, (props, backend), _) => 
+    .renderPS{ case (scope, (props, backend), _) =>
       textarea(defaultValue := props.code, onChange ==> backend.codeChange, ref := codemirrorTextarea, autoComplete := "off")
     }
-    .componentWillReceiveProps{v => 
+    .componentWillReceiveProps{v =>
       val (current, _) = v.currentProps
       val (next, _) = v.nextProps
       val state = v.currentState
       val scope = v.$
 
-      state.editor.map(editor => 
+      state.editor.map(editor =>
         runDelta(editor, scope, state, current, next)
       ).getOrElse(Callback(()))
     }
     .componentDidMount(_.backend.start())
     .componentWillUnmount(_.backend.stop())
     .build
- 
+
   def apply(state: App.State, backend: App.Backend) = component((state, backend))
 }

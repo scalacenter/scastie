@@ -9,7 +9,7 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import scalaz.Scalaz._
 
-import upickle.default.{read => uread}
+// import upickle.default.{read => uread}
 
 /**
   */
@@ -49,7 +49,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   override def preRestart(reason: Throwable, message: Option[Any]) {
     super.preRestart(reason, message)
     message.collect {
-      case message@Paste(_, content, _, _, _) => failures ! AddFailure(reason, message, sender, content)
+      case message@Paste(_, content, _, _, _, _) => failures ! AddFailure(reason, message, sender, content)
     }
   }
 
@@ -59,7 +59,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   }
 
   def receive = LoggingReceive {
-    killer { case paste@Paste(_, Some(content), _, _, _) => sbt foreach { sbt =>
+    killer { case paste@Paste(_, Some(content), _, _, _, _) => sbt foreach { sbt =>
       // def sendPasteFile(result: Seq[String]) {
       //   sender ! paste.copy(content = sbtDir.pasteFile.read, output = result)
       // }
@@ -76,9 +76,44 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
       // sendPasteFile(reloadResult)
       sbtDir.sxrSource.delete()
+      var hasErrors = false
       sbt.process("compile", (line, done) => {
-        println(line)
-        if(done) {
+
+        if(line.contains("sbtapi.Error")){
+          println("************************")
+          println("boom")
+          println(done)
+          println("************************")
+        }
+
+        if(done && !hasErrors) {
+          // val sbtProblems =
+          //   try{
+          //     val r = uread[List[sbtapi.Problem]](line)
+          //     println("************************")
+          //     println(r)
+          //     println("************************")
+          //     r
+          //   }
+          //   catch { case scala.util.control.NonFatal(e) =>
+          //     println(e)
+          //     List()
+          //
+          //   }
+          //
+          // hasErrors = sbtProblems.exists(_.severity == sbtapi.Error)
+          //
+          // def toApi(p: sbtapi.Problem): api.Problem = {
+          //   val severity = p.severity match {
+          //     case sbtapi.Info    => api.Info
+          //     case sbtapi.Warning => api.Warning
+          //     case sbtapi.Error   => api.Error
+          //   }
+          //   api.Problem(severity, p.offset, p.message)
+          // }
+          //
+          // val problems = sbtProblems.map(toApi)
+
           sender ! paste.copy(
             content = sbtDir.pasteFile.read
             , renderedContent = sbtDir.sxrSource.read.map(cleanSource)
@@ -90,26 +125,8 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
             )
           }
         } else {
-          println("still going")
-
-          val problems =
-            try{ Right(uread[sbtapi.Problem](line)) }
-            catch { case scala.util.control.NonFatal(e) => Left(e) }
-
-          println(problems)
-
           sender ! paste.copy(output = line +: paste.output)
         }
-        // line match {
-        //   case sbt.Success(compileResult) => {
-        //     println("sucess")
-        //
-        //   }
-        //   case _ => {
-        //
-        //   }
-        // }
-          // sendPasteFile(errorResult)
       })
     }
     }

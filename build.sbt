@@ -67,7 +67,7 @@ lazy val renderer = project
     ,  "org.apache.commons"          % "commons-lang3"       % "3.1"
     ,  "net.sourceforge.collections" % "collections-generic" % "4.01"
     )
-  ).dependsOn(sbtApi211)
+  ).dependsOn(sbtApi211, apiJVM)
 
 lazy val scastie = project.in(file("."))
   .settings(defaultSettings)

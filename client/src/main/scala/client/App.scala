@@ -5,6 +5,7 @@ import japgolly.scalajs.react._, vdom.all._
 import api._
 import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import org.scalajs.dom
 
 import org.scalajs.dom.{WebSocket, MessageEvent, Event, CloseEvent, ErrorEvent, window}
 import scala.util.{Success, Failure}
@@ -17,7 +18,7 @@ object App {
     websocket: Option[WebSocket] = None,
     output: Vector[String] = Vector(),
     dark: Boolean = false,
-    compilationInfos: Set[CompilationInfo] = Set(),
+    compilationInfos: Set[api.Problem] = Set(),
     sideBarClosed: Boolean = false) {
 
     def toogleTheme             = copy(dark = !dark)
@@ -35,7 +36,12 @@ object App {
       def onopen(e: Event): Unit           = direct.modState(_.log("Connected."))
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[PasteProgress](e.data.toString)
-        direct.modState(_.log(progress.output))
+        dom.console.log(progress.toString)
+        direct.modState( s =>
+            s.log(progress.output).copy(
+              compilationInfos = s.compilationInfos ++ progress.compilationInfos.toSet
+            )
+        )
       }
       def onerror(e: ErrorEvent): Unit     = direct.modState(_.log(s"Error: ${e.message}"))
       def onclose(e: CloseEvent): Unit     = direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}"))
@@ -90,7 +96,10 @@ object App {
     .render_P { case (state, backend) =>
       // val label = if(state.dark) "light" else "dark"
 
-      button(onClick ==> backend.runE)("run")
+      div(
+        button(onClick ==> backend.runE)("run"),
+        pre(state.compilationInfos.mkString("\n"))
+      )
     }
     .build
 
@@ -102,8 +111,11 @@ object App {
        |*/
        |object Example {
        |  def main(args: Array[String]): Unit = {
-       |    println("Hello, world!")
+       |    e1
+       |
+       |    e1
        |  }
+       |  "warn"
        |}""".stripMargin
 
   val defualtState = State(
