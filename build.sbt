@@ -67,7 +67,7 @@ lazy val renderer = project
     ,  "org.apache.commons"          % "commons-lang3"       % "3.1"
     ,  "net.sourceforge.collections" % "collections-generic" % "4.01"
     )
-  )
+  ).dependsOn(sbtApi211)
 
 lazy val scastie = project.in(file("."))
   .settings(defaultSettings)
@@ -138,7 +138,7 @@ lazy val codemirror = project
   )
   .enablePlugins(ScalaJSPlugin)
 
-def react(artifact: String, name: String): JSModuleID = 
+def react(artifact: String, name: String): JSModuleID =
   "org.webjars.bower" % "react" % "15.2.1" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
 def react(artifact: String, name: String, depends: String): JSModuleID =
@@ -173,3 +173,16 @@ lazy val api = crossProject
 
 lazy val apiJVM = api.jvm
 lazy val apiJS = api.js
+
+// crossScalaVersions would not help here since we use ProjectRef
+lazy val sbtApi210 = project.settings(
+  scalaVersion := "2.10.6"
+, libraryDependencies += "com.lihaoyi" %%% "upickle"  % "0.4.0"
+, scalaSource in Compile := (baseDirectory in ThisBuild).value / "sbt-api"
+)
+
+lazy val sbtApi211 = project.settings(
+  scalaVersion := "2.11.8"
+, libraryDependencies += "com.lihaoyi" %%% "upickle"  % "0.4.0"
+, scalaSource in Compile := (baseDirectory in ThisBuild).value / "sbt-api"
+)

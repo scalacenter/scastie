@@ -5,6 +5,7 @@ import sbt.EvaluateConfigurations._
 import sbt.Keys._
 import sbt._
 import xsbti.{Reporter, Problem, Position, Severity, Maybe}
+import upickle.default.{write ⇒ uwrite}
 
 object ApplicationBuild extends Build {
   val runAll = TaskKey[Unit]("run-all")
@@ -19,17 +20,29 @@ object ApplicationBuild extends Build {
     , javacOptions ++= Seq("-source", jdkVersion.value, "-target", jdkVersion.value)
     , compilerReporter in (Compile, compile) := Some(new xsbti.Reporter {
       private val buffer = collection.mutable.ArrayBuffer.empty[Problem]
-      def toOption[T](m: Maybe[T]): Option[T] = {
-        if(m.isEmpty) None
-        else Some(m.get)
-      }
+
       def reset(): Unit = buffer.clear()
       def hasErrors: Boolean = buffer.exists(_.severity == Severity.Error)
       def hasWarnings: Boolean = buffer.exists(_.severity == Severity.Warn)
       def printSummary(): Unit = {
-        println(problems.map(p =>
-          s"${p.severity} ${toOption(p.position.offset)} ${p.message}"
-        ).mkString(System.lineSeparator))
+        def toApi(p: Problem): sbtapi.Problem = {
+          def toOption[T](m: Maybe[T]): Option[T] = {
+            if(m.isEmpty) None
+            else Some(m.get)
+          }
+
+          val severity =
+            p.severity match {
+              case xsbti.Severity.Info  => sbtapi.Info
+              case xsbti.Severity.Warn  => sbtapi.Warning
+              case xsbti.Severity.Error => sbtapi.Error
+            }
+
+          sbtapi.Problem(severity, toOption(p.position.offset).map(_.toInt), p.message)
+        }
+
+
+        println(uwrite(problems.map(toApi)))
       }
       def problems: Array[Problem] = buffer.toArray
       def log(pos: Position, msg: String, sev: Severity): Unit = {
