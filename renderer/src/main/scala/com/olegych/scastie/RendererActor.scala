@@ -9,7 +9,7 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import scalaz.Scalaz._
 
-// import upickle.default.{read => uread}
+import upickle.default.{read => uread}
 
 /**
   */
@@ -76,60 +76,46 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
       // sendPasteFile(reloadResult)
       sbtDir.sxrSource.delete()
-      var hasErrors = false
-      sbt.process("compile", (line, done) => {
+      applyRunKiller(paste) {
+        sbt.process("run-all", (line, done) => {
+          println("+++++++++++")
+          println(line)
+          println("+++++++++++")
 
-        if(line.contains("sbtapi.Error")){
-          println("************************")
-          println("boom")
-          println(done)
-          println("************************")
-        }
-
-        if(done && !hasErrors) {
-          // val sbtProblems =
-          //   try{
-          //     val r = uread[List[sbtapi.Problem]](line)
-          //     println("************************")
-          //     println(r)
-          //     println("************************")
-          //     r
-          //   }
-          //   catch { case scala.util.control.NonFatal(e) =>
-          //     println(e)
-          //     List()
-          //
-          //   }
-          //
+          val sbtProblems =
+            try{
+              val r = uread[List[sbtapi.Problem]](line)
+              // println("************************")
+              // println(r)
+              // println("************************")
+              r
+            }
+            catch { case scala.util.control.NonFatal(e) =>
+              // println("xxxxxxxxxxxx")
+              // println(line)
+              // println(e)
+              // println("xxxxxxxxxxxx")
+              List()
+          
+            }
+          
           // hasErrors = sbtProblems.exists(_.severity == sbtapi.Error)
-          //
-          // def toApi(p: sbtapi.Problem): api.Problem = {
-          //   val severity = p.severity match {
-          //     case sbtapi.Info    => api.Info
-          //     case sbtapi.Warning => api.Warning
-          //     case sbtapi.Error   => api.Error
-          //   }
-          //   api.Problem(severity, p.offset, p.message)
-          // }
-          //
-          // val problems = sbtProblems.map(toApi)
-
-          sender ! paste.copy(
-            content = sbtDir.pasteFile.read
-            , renderedContent = sbtDir.sxrSource.read.map(cleanSource)
-            , output = Seq("Now running...")
-          )
-          applyRunKiller(paste) {
-            sbt.process("run-all", (line, done) =>
-              sender ! paste.copy(output = line +: paste.output)
-            )
+          
+          def toApi(p: sbtapi.Problem): api.Problem = {
+            val severity = p.severity match {
+              case sbtapi.Info    => api.Info
+              case sbtapi.Warning => api.Warning
+              case sbtapi.Error   => api.Error
+            }
+            api.Problem(severity, p.offset, p.message)
           }
-        } else {
-          sender ! paste.copy(output = line +: paste.output)
-        }
-      })
-    }
-    }
+          
+          val problems = sbtProblems.map(toApi)
+
+          sender ! paste.copy(output = line +: paste.output, problems = problems)
+        })
+      }
+    }}
   }
 
   def cleanSource(sxrSource: String): String = {
