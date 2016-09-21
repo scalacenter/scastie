@@ -2,6 +2,10 @@
 
 .cm-s-solarized {
   .solarized-pallette;
+  
+  &.CodeMirror {
+    box-shadow: none;
+  }
 
   .autocomplete .signature {
     color: @cyan;
@@ -26,23 +30,15 @@
       color: @base01;
     }
 
-    & + .menu,
-    & .menu,
-    & + .menu + #shared,
-    ::-webkit-scrollbar-thumb,
-    .CodeMirror-simplescroll-horizontal div,
-    .CodeMirror-simplescroll-vertical div,
-    .CodeMirror-hints {
-      box-shadow: 1px 1px 5px 1px rgba(0, 0, 0, 0.75);
-    }
-
-    ::-webkit-scrollbar-track,
-    ::-webkit-scrollbar-corner {
-      background: @base03;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: @base02;
+    & + .output {
+      color: @base0;
+      &::-webkit-scrollbar-track,
+      &::-webkit-scrollbar-corner {
+        background: @base03;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: @base02;
+      }
     }
 
     .CodeMirror-simplescroll-horizontal,
@@ -56,11 +52,14 @@
         background: @base02;
       }
     }
+    // .CodeMirror-simplescroll-horizontal div,
+    // .CodeMirror-simplescroll-vertical div,
+    // .CodeMirror-hints {
+    //   box-shadow: 1px 1px 5px 1px rgba(0, 0, 0, 0.75);
+    // }
   }
 
   &.cm-s-light {
-    box-shadow: none;
-    
     .CodeMirror-widget .fold,
     .CodeMirror-linewidget .line,
     .CodeMirror-linewidget .inline,
@@ -86,6 +85,17 @@
 
     ::-webkit-scrollbar-thumb {
       background: @base2;
+    }
+
+    & + .output {
+      color: @base00;
+      &::-webkit-scrollbar-track,
+      &::-webkit-scrollbar-corner {
+        background: @base3;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: @base2;
+      }
     }
 
     .CodeMirror-simplescroll-horizontal,

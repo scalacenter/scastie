@@ -6,15 +6,9 @@ body, .app, .editor, .sidebar {
   height: 100%;
 }
 
-.solarized-pallette;
-::-webkit-scrollbar-track,
-::-webkit-scrollbar-corner {
-  background: @base3;
-}
-
-::-webkit-scrollbar-thumb {
-  background: @base2;
-}
+// ::-webkit-scrollbar-thumb {
+//   background: @base2;
+// }
 
 .app {
   @sidebar-width: 400px;
@@ -23,16 +17,22 @@ body, .app, .editor, .sidebar {
     transition: "margin-right @dt";
     &.sidebar-open {
       margin-right: @sidebar-width;
+      .output {
+        width: calc(~"100% - "@sidebar-width);  
+      }
     }
     &.sidebar-closed {
       margin-right: 0;
+      .output {
+        width: 100%;
+      }
     }
     .output {
       bottom: 0;
       left: 0;
       position: absolute;
       height: 200px;
-      width: calc(~"100% - "@sidebar-width);
+      
 
       overflow-y: scroll;
       z-index: 1000;
