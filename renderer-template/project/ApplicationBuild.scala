@@ -1,22 +1,26 @@
 import com.olegych.scastie.{ScriptSecurityManager, SecuredRun}
 import sbt.EvaluateConfigurations._
-import sbt.Keys._
+
 import sbt._
+import Keys._
+import KeyRanks.DTask
+
 import xsbti.{Reporter, Problem, Position, Severity, Maybe}
 import upickle.default.{write ⇒ uwrite}
 
 object ApplicationBuild extends Build {
   val runAll = TaskKey[Unit]("run-all")
   val jdkVersion = settingKey[String]("")
-  // this guy is private[sbt] ...
-  val hack = TaskKey[Option[Reporter]]("compilerReporter", "")
+
+  // compilerReporter is marked private in sbt
+  lazy val compilerReporter = TaskKey[Option[xsbti.Reporter]]("compilerReporter", "Experimental hook to listen (or send) compilation failure messages.", DTask)
 
   val rendererWorker = Project(id = "rendererWorker", base = file(".")).settings(Seq(
       updateOptions := updateOptions.value.withCachedResolution(true).withLatestSnapshots(false)
     , jdkVersion := "1.7"
     , scalacOptions += s"-target:jvm-${jdkVersion.value}"
     , javacOptions ++= Seq("-source", jdkVersion.value, "-target", jdkVersion.value)
-    , hack in (Compile, compile) := Some(new xsbti.Reporter {
+    , compilerReporter in (Compile, compile) := Some(new xsbti.Reporter {
       private val buffer = collection.mutable.ArrayBuffer.empty[Problem]
       def reset(): Unit = buffer.clear()
       def hasErrors: Boolean = buffer.exists(_.severity == Severity.Error)

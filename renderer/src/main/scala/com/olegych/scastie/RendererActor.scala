@@ -60,9 +60,6 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
   def receive = LoggingReceive {
     killer { case paste@Paste(_, Some(content), _, _, _, _) => sbt foreach { sbt =>
-      // def sendPasteFile(result: Seq[String]) {
-      //   sender ! paste.copy(content = sbtDir.pasteFile.read, output = result)
-      // }
       sbtDir.pasteFile.write(Option(content))
       val settings = paste.settings
       if (this.settings =/= settings) {
@@ -74,32 +71,13 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
         sender ! paste.copy(content = sbtDir.pasteFile.read, output = Seq())
       }
 
-      // sendPasteFile(reloadResult)
       sbtDir.sxrSource.delete()
       applyRunKiller(paste) {
         sbt.process("run-all", (line, done) => {
-          println("+++++++++++")
-          println(line)
-          println("+++++++++++")
 
           val sbtProblems =
-            try{
-              val r = uread[List[sbtapi.Problem]](line)
-              // println("************************")
-              // println(r)
-              // println("************************")
-              r
-            }
-            catch { case scala.util.control.NonFatal(e) =>
-              // println("xxxxxxxxxxxx")
-              // println(line)
-              // println(e)
-              // println("xxxxxxxxxxxx")
-              List()
-          
-            }
-          
-          // hasErrors = sbtProblems.exists(_.severity == sbtapi.Error)
+            try{ uread[List[sbtapi.Problem]](line) }
+            catch { case scala.util.control.NonFatal(e) => List()}
           
           def toApi(p: sbtapi.Problem): api.Problem = {
             val severity = p.severity match {

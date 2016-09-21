@@ -26,12 +26,8 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
         process.getOutputStream, process.getOutputStream.asUnmanagedOutput,
         new InputStreamReader(process.getInputStream))
   }
-  // waitForPrompt
 
-  def process(command: String, lineCallback: (String, Boolean) => Unit): Unit = {
-    fin.flush()
-    input.write(command + System.lineSeparator)
-
+  private def collect(lineCallback: (String, Boolean) => Unit): Unit = {
     import collection.JavaConversions._
     val chars = new CircularFifoBuffer[Character](1000)
     var read = 0
@@ -50,23 +46,11 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
     }
   }
 
-  // def waitForPrompt: Seq[String] = {
-  //   import collection.JavaConversions._
-  //   val lines = new CircularFifoBuffer[String](200)
-  //   val chars = new CircularFifoBuffer[Character](1000)
-  //   var read: Int = 0
-  //   while (read != -1 && lines.lastOption != Some(uniqueId)) {
-  //     read = fout.read()
-  //     if (read == 10) {
-  //       lines.add(chars.mkString)
-  //       log.info("sbt: " + lines.last)
-  //       chars.clear()
-  //     } else {
-  //       chars.add(read.toChar)
-  //     }
-  //   }
-  //   lines.dropRight(1).toSeq
-  // }
+  def process(command: String, lineCallback: (String, Boolean) => Unit): Unit = {
+    fin.flush()
+    input.write(command + System.lineSeparator)
+    collect(lineCallback)
+  }
 
   def close(): Unit = {
     try process("exit", (_, _) => ()) catch {
@@ -79,16 +63,6 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
       }
     }
   }
-
-  // object Success {
-  //   val SuccessParser = """(?s)\[success\].*""".r
-  //   def unapply(result: String): Option[String] = result match {
-  //     case SuccessParser() => Option(result)
-  //     case _ => None
-  //   }
-  // }
-
-  // def resultAsString(result: Seq[String]) = result.mkString(System.lineSeparator).replaceAll(uniqueId, "")
 }
 
 object Sbt {
