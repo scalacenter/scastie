@@ -1,6 +1,6 @@
 package codemirror
 
-import org.scalajs.dom.raw.{Element, HTMLTextAreaElement}
+import org.scalajs.dom.raw.{Element, HTMLTextAreaElement, HTMLElement}
 
 import scala.scalajs.js
 import js.{|, UndefOr}
@@ -40,11 +40,12 @@ trait Editor extends js.Object {
   def clearGutter(gutterID: String): Unit
   def lineInfo(line: Int|LineHandle): js.Object
   def addWidget(pos: Position, node: Element, scrollIntoView: Boolean): Unit
+  def addLineWidget(line: Int, node: HTMLElement, options: UndefOr[js.Any]): LineWidget
   def setSize(width: Int | String, height: Int | String): Unit
   def scrollTo(x: Int, y: Int): Unit
   // def getScrollInfo():{left, top, width, height, clientWidth, clientHeight}
   // def scrollIntoView(what: Position|{left, top, right, bottom}|{from, to}|null, ?margin: number)
-  // def cursorCoords(where: Boolean | Position , mode: String):{left, top, bottom}
+  def cursorCoords(where: Boolean | Position , mode: String): CursorCoords
   // def charCoords(pos: Position, ?mode: String): {left, right, top, bottom}
   // def coordsChar(js.Object: {left, top}, ?mode: String): Position
   def lineAtHeight(height: Int, mode: UndefOr[String]): Int
@@ -136,6 +137,13 @@ class EditorEventHandler(val editor: Editor) extends AnyVal {
   // "dragover", 
   // "dragleave", 
   // "drop" 
+}
+
+@ScalaJSDefined
+trait CursorCoords extends js.Object {
+  val left: Double
+  val top: Double
+  val bottom: Double
 }
 
 trait Extensions {

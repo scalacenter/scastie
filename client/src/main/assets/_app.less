@@ -17,21 +17,16 @@ body, .app, .editor, .sidebar {
     transition: "margin-right @dt";
     &.sidebar-open {
       margin-right: @sidebar-width;
-      .output {
-        width: calc(~"100% - "@sidebar-width);  
-      }
     }
     &.sidebar-closed {
       margin-right: 0;
-      .output {
-        width: 100%;
-      }
     }
     .output {
-      bottom: 0;
-      left: 0;
+      top: 0;
+      left: 50%;
       position: absolute;
-      height: 200px;
+      height: 100%;
+      width: 50%;
       
 
       overflow-y: scroll;

@@ -1,21 +1,23 @@
 /***
-scalaVersion := "0.1-SNAPSHOT"
-scalaOrganization := "ch.epfl.lamp"
-scalacOptions ++= Seq("-language:Scala2")
-scalaBinaryVersion := "2.11"
-autoScalaLibrary := false
-libraryDependencies += "org.scala-lang" % "scala-library" % "2.11.5"
-scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-bridge" % "0.1.1-SNAPSHOT" % "component").sources()
+scalaVersion := "2.11.8"
+
+libraryDependencies ++= Seq(
+  compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+  "com.scalakata" %% "annotation" % "1.1.5"
+)
+
+resolvers += "masseguillaume" at "http://dl.bintray.com/content/masseguillaume/maven"
 */
 
-object Example {
+import com.scalakata._
+object Main {
   def main(args: Array[String]): Unit = {
-    e1
+    val p = new Playground
+    println(p.instrumentation$)
   }
-  trait A
-  trait B
+}
 
-  trait Wr {
-    val z: A with B
-  }
+@instrument
+class Playground {
+  1
 }

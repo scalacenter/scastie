@@ -159,20 +159,8 @@ lazy val client = project
   .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror, apiJS)
 
-lazy val api = crossProject
-  .settings(baseSettings: _*)
-  .settings(
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "autowire" % "0.2.5"
-    , "com.lihaoyi" %%% "upickle"  % "0.4.0"
-    )
-  )
-  .jsSettings(
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
-  )
-
-lazy val apiJVM = api.jvm
-lazy val apiJS = api.js
+lazy val apiJVM = ProjectRef(file("renderer-template"), "apiJVM")
+lazy val apiJS  = ProjectRef(file("renderer-template"), "apiJS")
 
 lazy val sbtApi211 = project.settings(
   scalaVersion := "2.11.8"

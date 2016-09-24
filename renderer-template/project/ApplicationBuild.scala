@@ -7,6 +7,7 @@ import KeyRanks.DTask
 
 import xsbti.{Reporter, Problem, Position, Severity, Maybe}
 import upickle.default.{write ⇒ uwrite}
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 
 object ApplicationBuild extends Build {
   val runAll = TaskKey[Unit]("run-all")
@@ -15,7 +16,40 @@ object ApplicationBuild extends Build {
   // compilerReporter is marked private in sbt
   lazy val compilerReporter = TaskKey[Option[xsbti.Reporter]]("compilerReporter", "Experimental hook to listen (or send) compilation failure messages.", DTask)
 
-  val rendererWorker = Project(id = "rendererWorker", base = file(".")).settings(Seq(
+
+  lazy val baseSettings = Seq(
+    scalaVersion := "2.11.8"
+  , scalacOptions := Seq(
+      "-deprecation"
+    , "-encoding", "UTF-8"
+    , "-feature"
+    , "-unchecked"
+    , "-Xfatal-warnings"
+    , "-Xlint"
+    , "-Yinline-warnings"
+    , "-Yno-adapted-args"
+    , "-Ywarn-dead-code"
+    , "-Ywarn-numeric-widen"
+    , "-Ywarn-unused-import"
+    , "-Ywarn-value-discard"
+    )
+  )
+
+  lazy val api = crossProject
+    .settings(baseSettings: _*)
+    .settings(
+      libraryDependencies ++= Seq(
+        "com.lihaoyi" %%% "autowire" % "0.2.5"
+      , "com.lihaoyi" %%% "upickle"  % "0.4.0"
+      )
+    )
+    .jsSettings(
+      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
+    )
+  lazy val apiJVM = api.jvm
+  lazy val apiJS = api.js
+
+  val rendererWorker = Project(id = "rendererWorker", base = file(".")).settings(
       updateOptions := updateOptions.value.withCachedResolution(true).withLatestSnapshots(false)
     , jdkVersion := "1.7"
     , scalacOptions += s"-target:jvm-${jdkVersion.value}"
@@ -60,7 +94,7 @@ object ApplicationBuild extends Build {
       new SecuredRun(instance, false, nativeTmp)
     }
     , onLoad in Global := addDepsToState
-  ): _*).disablePlugins(coursier.CoursierPlugin)
+  ).disablePlugins(coursier.CoursierPlugin).dependsOn(apiJVM)
 
   def runAllTask(discoveredMainClasses: Seq[String], fullClasspath: Keys.Classpath, runner: ScalaRun,
                  streams: Keys.TaskStreams) {

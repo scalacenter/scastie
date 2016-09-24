@@ -1,11 +1,19 @@
 package client
 
+import api.{Instrumentation, Value}
+
 import japgolly.scalajs.react._, vdom.all._
 
-import org.scalajs.dom.raw.{Element, HTMLTextAreaElement}
+import org.scalajs.dom.raw.{
+  Element, HTMLTextAreaElement, HTMLElement, HTMLPreElement, HTMLDivElement
+}
 import org.scalajs.dom
 
-import codemirror.{TextAreaEditor, LineWidget, CodeMirror, Editor => CodeMirrorEditor}
+import codemirror.{
+  Position => CMPosition,
+  TextAreaEditor, LineWidget, CodeMirror, Editor => CodeMirrorEditor, 
+  TextMarker, TextMarkerOptions
+}
 
 import scala.scalajs._
 
@@ -55,13 +63,14 @@ object Editor {
     def clear() = lw.clear()
   }
 
-  // private[Editor] case class Marked(tm: TextMarker) extends Annotation {
-  //   def clear() = tm.clear()
-  // }
+  private[Editor] case class Marked(tm: TextMarker) extends Annotation {
+    def clear() = tm.clear()
+  }
 
   private[Editor] case class EditorState(
     editor: Option[TextAreaEditor] = None,
-    annotations: Map[api.Problem, Annotation] = Map()
+    problemAnnotations: Map[api.Problem, Annotation] = Map(),
+    renderAnnotations: Map[api.Instrumentation, Annotation] = Map()
   )
 
   private[Editor] class Backend(scope: BackendScope[(App.State, App.Backend), EditorState]) {
@@ -116,7 +125,100 @@ object Editor {
       }
     }
 
-    def setAnnotations() = {
+    val nl = '\n'
+    val modeScala = "text/x-scala"
+
+    def noop[T](v: T): Unit = ()
+
+
+    def setRenderAnnotations() = {
+      val doc = editor.getDoc()
+      def nextline2(endPos: CMPosition, node: HTMLElement, process: (HTMLElement ⇒ Unit) = noop, options: js.Any = null): Annotation = {
+        process(node)
+        Line(editor.addLineWidget(endPos.line, node, options))
+      }
+
+      def nextline(endPos: CMPosition, content: String, process: (HTMLElement ⇒ Unit) = noop, options: js.Any = null): Annotation = {
+        val node = dom.document.createElement("pre").asInstanceOf[HTMLPreElement]
+        node.className = "line"
+        node.innerHTML = content
+
+        nextline2(endPos, node, process, options)
+      }
+
+      def fold(startPos: CMPosition, endPos: CMPosition, content: String, process: (HTMLElement ⇒ Unit) = noop): Annotation = {
+        val node = dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+        node.className = "fold"
+        node.innerHTML = content
+        process(node)
+        Marked(doc.markText(startPos, endPos, 
+          js.Dictionary[Any]("replacedWith" -> node).asInstanceOf[TextMarkerOptions]
+        ))
+      }
+      def inline(startPos: CMPosition, content: String, process: (HTMLElement ⇒ Unit) = noop): Annotation = {
+        // inspired by blink/devtools WebInspector.JavaScriptSourceFrame::_renderDecorations
+
+        val basePos = new CMPosition{ line = startPos.line; ch = 0 }
+        val offsetPos = new CMPosition{ line = startPos.line; ch = doc.getLine(startPos.line).length }
+
+        val mode = "local"
+        val base = editor.cursorCoords(basePos, mode)
+        val offset = editor.cursorCoords(offsetPos, mode)
+
+        val node = dom.document.createElement("pre").asInstanceOf[HTMLPreElement]
+        node.className = "inline"
+        dom.console.log(offset.left - base.left)
+        node.style.left = (offset.left - base.left) + "px"
+        node.innerHTML = content
+        process(node)
+
+        Line(editor.addLineWidget(startPos.line, node, null))
+      }
+
+      val added = next.instrumentations -- current.instrumentations
+
+      val toAdd =
+        CallbackTo.sequence(
+          added.map{
+            case instrumentation @ Instrumentation(api.Position(start, end), Value(value, tpe)) => {
+              val startPos = doc.posFromIndex(start)
+              val endPos = doc.posFromIndex(end)
+
+              val process = (node: HTMLElement) ⇒ {
+                CodeMirror.runMode(s"$value: $tpe", modeScala, node)
+                node.title = tpe
+                ()
+              }
+              val annotation = 
+                if(value.contains(nl)) nextline(endPos, value, process)
+                else inline(startPos, value, process)
+
+              CallbackTo((instrumentation, annotation))
+            }
+            // case Markdown(content, folded) => ???
+            // case Html(content, folded) =>  ???
+          }
+        ).map(_.toMap)
+
+      val removed = current.instrumentations -- next.instrumentations
+
+      val toRemove = CallbackTo.sequence(
+        state.renderAnnotations.filterKeys(removed.contains).map{
+          case (info, annot) => CallbackTo({annot.clear(); info})
+        }.toList
+      )
+
+      for {
+        added   <- toAdd
+        removed <- toRemove
+        _       <- scope.modState(s => s.copy(renderAnnotations =
+                    ((s.renderAnnotations ++ added) -- removed)
+                   ))
+      } yield ()
+
+    }
+
+    def setProblemAnnotations() = {
       val doc = editor.getDoc()
 
       val added = next.compilationInfos -- current.compilationInfos
@@ -136,7 +238,7 @@ object Editor {
       val removed = current.compilationInfos -- next.compilationInfos
 
       val toRemove = CallbackTo.sequence(
-        state.annotations.filterKeys(removed.contains).map{
+        state.problemAnnotations.filterKeys(removed.contains).map{
           case (info, annot) => CallbackTo({annot.clear(); info})
         }.toList
       )
@@ -144,13 +246,13 @@ object Editor {
       for {
         added   <- toAdd
         removed <- toRemove
-        _       <- scope.modState(s => s.copy(annotations =
-                    ((s.annotations ++ added) -- removed)
+        _       <- scope.modState(s => s.copy(problemAnnotations =
+                    ((s.problemAnnotations ++ added) -- removed)
                    ))
       } yield ()
     }
 
-    Callback(setTheme()) >> Callback(setCode()) >> setAnnotations()
+    Callback(setTheme()) >> Callback(setCode()) >> setProblemAnnotations() >> setRenderAnnotations()
   }
 
   val component = ReactComponentB[(App.State, App.Backend)]("CodemirrorEditor")

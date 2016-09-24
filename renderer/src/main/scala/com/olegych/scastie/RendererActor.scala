@@ -49,7 +49,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   override def preRestart(reason: Throwable, message: Option[Any]) {
     super.preRestart(reason, message)
     message.collect {
-      case message@Paste(_, content, _, _, _, _) => failures ! AddFailure(reason, message, sender, content)
+      case message@Paste(_, content, _, _, _, _, _) => failures ! AddFailure(reason, message, sender, content)
     }
   }
 
@@ -59,7 +59,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   }
 
   def receive = LoggingReceive {
-    killer { case paste@Paste(_, Some(content), _, _, _, _) => sbt foreach { sbt =>
+    killer { case paste@Paste(_, Some(content), _, _, _, _, _) => sbt foreach { sbt =>
       sbtDir.pasteFile.write(Option(content))
       val settings = paste.settings
       if (this.settings =/= settings) {
@@ -78,7 +78,11 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
           val sbtProblems =
             try{ uread[List[sbtapi.Problem]](line) }
             catch { case scala.util.control.NonFatal(e) => List()}
-          
+
+          val instrumentations =
+            try{ uread[List[api.Instrumentation]](line) }
+            catch { case scala.util.control.NonFatal(e) => List()}
+
           def toApi(p: sbtapi.Problem): api.Problem = {
             val severity = p.severity match {
               case sbtapi.Info    => api.Info
@@ -90,7 +94,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
           
           val problems = sbtProblems.map(toApi)
 
-          sender ! paste.copy(output = line +: paste.output, problems = problems)
+          sender ! paste.copy(output = line +: paste.output, problems = problems, instrumentations = instrumentations)
         })
       }
     }}

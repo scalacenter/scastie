@@ -15,3 +15,5 @@ lazy val template = project.in(file("."))
   // , addSbtPlugin("com.geirsson" % "sbt-scalafmt" % "0.2.6")
   , addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1")
   ).dependsOn(sbtApi210)
+
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.11")

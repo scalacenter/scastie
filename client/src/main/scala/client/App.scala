@@ -5,7 +5,6 @@ import japgolly.scalajs.react._, vdom.all._
 import api._
 import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
-import org.scalajs.dom
 
 import org.scalajs.dom.{WebSocket, MessageEvent, Event, CloseEvent, ErrorEvent, window}
 import scala.util.{Success, Failure}
@@ -19,6 +18,7 @@ object App {
     output: Vector[String] = Vector(),
     dark: Boolean = true,
     compilationInfos: Set[api.Problem] = Set(),
+    instrumentations: Set[api.Instrumentation] = Set(),
     sideBarClosed: Boolean = true) {
 
     def toogleTheme             = copy(dark = !dark)
@@ -33,18 +33,18 @@ object App {
     private def connect(id: Long) = CallbackTo[WebSocket]{
       val direct = scope.accessDirect
 
-      def onopen(e: Event): Unit           = direct.modState(_.log("Connected."))
+      def onopen(e: Event): Unit = direct.modState(_.log("Connected."))
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[PasteProgress](e.data.toString)
-        dom.console.log(progress.toString)
         direct.modState( s =>
-            s.log(progress.output).copy(
-              compilationInfos = s.compilationInfos ++ progress.compilationInfos.toSet
-            )
+          s.log(progress.output).copy(
+            compilationInfos = s.compilationInfos ++ progress.compilationInfos.toSet,
+            instrumentations = s.instrumentations ++ progress.instrumentations.toSet
+          )
         )
       }
-      def onerror(e: ErrorEvent): Unit     = direct.modState(_.log(s"Error: ${e.message}"))
-      def onclose(e: CloseEvent): Unit     = direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}"))
+      def onerror(e: ErrorEvent): Unit = direct.modState(_.log(s"Error: ${e.message}"))
+      def onclose(e: CloseEvent): Unit = direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}"))
 
       val protocol = if(window.location.protocol == "https:") "wss" else "ws"
       val uri = s"$protocol://${window.location.host}/progress/$id"
@@ -66,7 +66,8 @@ object App {
               direct.modState(_.log("Connecting...").copy(
                 websocket = Some(ws),
                 output = Vector(),
-                compilationInfos = Set())
+                compilationInfos = Set(),
+                instrumentations = Set())
               )
             case Failure(error) => direct.modState(_.log(error.toString).copy(compilationInfos = Set()))
           }.runNow()
@@ -80,38 +81,50 @@ object App {
 
   val SideBar = ReactComponentB[(State, Backend)]("SideBar")
     .render_P { case (state, backend) =>
-      // val label = if(state.dark) "light" else "dark"
-
       div(
-        button(onClick ==> backend.runE)("run"),
-        pre(state.compilationInfos.mkString("\n"))
+        button(onClick ==> backend.runE)("run")
       )
     }
     .build
 
-
-  val defaultCode =
-    """|/***
-       |scalaVersion := "0.1-SNAPSHOT"
-       |scalaOrganization := "ch.epfl.lamp"
-       |scalacOptions ++= Seq("-language:Scala2")
-       |scalaBinaryVersion := "2.11"
-       |autoScalaLibrary := false
-       |libraryDependencies += "org.scala-lang" % "scala-library" % "2.11.5"
-       |scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-bridge" % "0.1.1-SNAPSHOT" % "component").sources()
-       |*/
-       |
-       |object Example {
-       |  def main(args: Array[String]): Unit = {
-       |    e1
-       |  }
-       |  trait A
-       |  trait B
-       |
-       |  trait Wr {
-       |    val z: A with B
-       |  }
-       |}""".stripMargin
+val defaultCode =
+   """|/***
+      |scalaVersion := "2.11.8"
+      |scalacOptions ++= Seq(
+      |  "-deprecation",
+      |  "-encoding", "UTF-8",
+      |  "-feature",
+      |  "-Yrangepos"
+      |)
+      |libraryDependencies ++= Seq(
+      |  compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+      |  "com.scalakata" %% "annotation" % "1.1.5"
+      |)
+      |resolvers += "masseguillaume" at "http://dl.bintray.com/content/masseguillaume/maven"
+      |*/
+      |
+      |import com.scalakata._
+      |import upickle.default.{write => uwrite}
+      |import api.{Instrumentation, Position}
+      |object Main {
+      |  def main(args: Array[String]): Unit = {
+      |    val p = new Playground
+      |    println(
+      |      uwrite(
+      |        p.instrumentation$.collect{
+      |          case (RangePosition(start, _, end), com.scalakata.Value(v, tpe)) =>
+      |            Instrumentation(Position(start, end), api.Value(v, tpe))
+      |        }
+      |      )
+      |    )
+      |  }
+      |}
+      |
+      |@instrument
+      |class Playground {
+      |  1
+      |  List(1, 2, 3)
+      |}""".stripMargin
 
   val component = ReactComponentB[Unit]("App")
     .initialState(State(code = defaultCode))
