@@ -175,80 +175,64 @@ object Editor {
         Line(editor.addLineWidget(startPos.line, node, null))
       }
 
-      val added = next.instrumentations -- current.instrumentations
+      setAnnotations[api.Instrumentation](
+        _.instrumentations,
+        { 
+          case instrumentation @ Instrumentation(api.Position(start, end), Value(value, tpe)) => {
+            val startPos = doc.posFromIndex(start)
+            val endPos = doc.posFromIndex(end)
 
-      val toAdd =
-        CallbackTo.sequence(
-          added.map{
-            case instrumentation @ Instrumentation(api.Position(start, end), Value(value, tpe)) => {
-              val startPos = doc.posFromIndex(start)
-              val endPos = doc.posFromIndex(end)
-
-              val process = (node: HTMLElement) ⇒ {
-                CodeMirror.runMode(s"$value: $tpe", modeScala, node)
-                node.title = tpe
-                ()
-              }
-              val annotation = 
-                if(value.contains(nl)) nextline(endPos, value, process)
-                else inline(startPos, value, process)
-
-              CallbackTo((instrumentation, annotation))
+            val process = (node: HTMLElement) ⇒ {
+              CodeMirror.runMode(s"$value: $tpe", modeScala, node)
+              node.title = tpe
+              ()
             }
-            // case Markdown(content, folded) => ???
-            // case Html(content, folded) =>  ???
+            if(value.contains(nl)) nextline(endPos, value, process)
+            else inline(startPos, value, process)
           }
-        ).map(_.toMap)
-
-      val removed = current.instrumentations -- next.instrumentations
-
-      val toRemove = CallbackTo.sequence(
-        state.renderAnnotations.filterKeys(removed.contains).map{
-          case (info, annot) => CallbackTo({annot.clear(); info})
-        }.toList
+          // case Markdown(content, folded) => ???
+          // case Html(content, folded) =>  ???
+        },
+        _.renderAnnotations,
+        f => state => state.copy(renderAnnotations = f(state.renderAnnotations))
       )
-
-      for {
-        added   <- toAdd
-        removed <- toRemove
-        _       <- scope.modState(s => s.copy(renderAnnotations =
-                    ((s.renderAnnotations ++ added) -- removed)
-                   ))
-      } yield ()
 
     }
 
     def setProblemAnnotations() = {
       val doc = editor.getDoc()
+      setAnnotations[api.Problem](
+        _.compilationInfos,
+        info => {
+          val pos = doc.posFromIndex(info.offset.getOrElse(0))
+          val el = dom.document.createElement("div")
+          el.textContent = info.message
+          Line(doc.addLineWidget(pos.line, el))
+        },
+        _.problemAnnotations,
+        f => state => state.copy(problemAnnotations = f(state.problemAnnotations))
+      )
+    }
 
-      val added = next.compilationInfos -- current.compilationInfos
+    def setAnnotations[T](fromState: App.State => Set[T], 
+                          annotate: T => Annotation, 
+                          fromEditorState: EditorState => Map[T, Annotation],
+                          updateEditorState: (Map[T, Annotation] => Map[T, Annotation]) => EditorState => EditorState): Callback = {
 
-      val toAdd =
-        CallbackTo.sequence(
-          added.map{ info =>
+      val added = fromState(next) -- fromState(current)
+      val toAdd = CallbackTo.sequence(added.map(item => CallbackTo((item, annotate(item))))).map(_.toMap)
 
-            val pos = doc.posFromIndex(info.offset.getOrElse(0))
-            val el = dom.document.createElement("div")
-            el.textContent = info.message
-
-            CallbackTo((info, Line(doc.addLineWidget(pos.line, el))))
-          }
-        ).map(_.toMap)
-
-      val removed = current.compilationInfos -- next.compilationInfos
-
+      val removed = fromState(current) -- fromState(next)
       val toRemove = CallbackTo.sequence(
-        state.problemAnnotations.filterKeys(removed.contains).map{
-          case (info, annot) => CallbackTo({annot.clear(); info})
+        fromEditorState(state).filterKeys(removed.contains).map{
+          case (item, annot) => CallbackTo({annot.clear(); item})
         }.toList
       )
 
       for {
         added   <- toAdd
         removed <- toRemove
-        _       <- scope.modState(s => s.copy(problemAnnotations =
-                    ((s.problemAnnotations ++ added) -- removed)
-                   ))
+        _       <- scope.modState(updateEditorState(items => (items ++ added) -- removed))
       } yield ()
     }
 
