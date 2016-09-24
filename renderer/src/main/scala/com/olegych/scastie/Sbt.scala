@@ -49,9 +49,7 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
   def process(command: String, lineCallback: (String, Boolean) => Unit): Unit = {
     fin.flush()
     input.write(command + System.lineSeparator)
-    println("running: " + command)
     collect(lineCallback)
-    println("done running: " + command)
   }
 
   def close(): Unit = {

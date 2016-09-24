@@ -73,7 +73,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
       sbtDir.sxrSource.delete()
       applyRunKiller(paste) {
-        sbt.process("run-all", (line, done) => {
+        sbt.process("+ run-all", (line, done) => {
 
           val sbtProblems =
             try{ uread[List[sbtapi.Problem]](line) }

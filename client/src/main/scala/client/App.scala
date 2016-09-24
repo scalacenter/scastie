@@ -87,44 +87,12 @@ object App {
     }
     .build
 
-val defaultCode =
-   """|/***
-      |scalaVersion := "2.11.8"
-      |scalacOptions ++= Seq(
-      |  "-deprecation",
-      |  "-encoding", "UTF-8",
-      |  "-feature",
-      |  "-Yrangepos"
-      |)
-      |libraryDependencies ++= Seq(
-      |  compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
-      |  "com.scalakata" %% "annotation" % "1.1.5"
-      |)
-      |resolvers += "masseguillaume" at "http://dl.bintray.com/content/masseguillaume/maven"
-      |*/
-      |
-      |import com.scalakata._
-      |import upickle.default.{write => uwrite}
-      |import api.{Instrumentation, Position}
-      |object Main {
-      |  def main(args: Array[String]): Unit = {
-      |    val p = new Playground
-      |    println(
-      |      uwrite(
-      |        p.instrumentation$.collect{
-      |          case (RangePosition(start, _, end), com.scalakata.Value(v, tpe)) =>
-      |            Instrumentation(Position(start, end), api.Value(v, tpe))
-      |        }
-      |      )
-      |    )
-      |  }
-      |}
-      |
-      |@instrument
-      |class Playground {
-      |  1
-      |  List(1, 2, 3)
-      |}""".stripMargin
+  val defaultCode =
+    """|object Main {
+       |  def main(args: Array[String]): Unit = {
+       |    println("Hey")
+       |  }
+       |}""".stripMargin
 
   val component = ReactComponentB[Unit]("App")
     .initialState(State(code = defaultCode))

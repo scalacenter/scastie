@@ -16,7 +16,6 @@ object ApplicationBuild extends Build {
   // compilerReporter is marked private in sbt
   lazy val compilerReporter = TaskKey[Option[xsbti.Reporter]]("compilerReporter", "Experimental hook to listen (or send) compilation failure messages.", DTask)
 
-
   lazy val baseSettings = Seq(
     scalaVersion := "2.11.8"
   , scalacOptions := Seq(
@@ -24,20 +23,13 @@ object ApplicationBuild extends Build {
     , "-encoding", "UTF-8"
     , "-feature"
     , "-unchecked"
-    , "-Xfatal-warnings"
-    , "-Xlint"
-    , "-Yinline-warnings"
-    , "-Yno-adapted-args"
-    , "-Ywarn-dead-code"
-    , "-Ywarn-numeric-widen"
-    , "-Ywarn-unused-import"
-    , "-Ywarn-value-discard"
     )
   )
 
   lazy val api = crossProject
     .settings(baseSettings: _*)
     .settings(
+      crossScalaVersions := Seq("2.10.6", "2.11.8"),
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "autowire" % "0.2.5"
       , "com.lihaoyi" %%% "upickle"  % "0.4.0"
@@ -104,6 +96,7 @@ object ApplicationBuild extends Build {
     }
     if (errors.nonEmpty) {
       sys.error(errors.mkString("\n"))
+
     }
   }
 

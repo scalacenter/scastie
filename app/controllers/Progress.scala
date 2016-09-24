@@ -44,11 +44,6 @@ class Progress extends Actor with ActorLogging {
       // monitorChannels.map(_.channel.push(uwrite(pasteProgress)))
     }
 
-    if(!pasteProgress.compilationInfos.isEmpty) {
-      println("************************")
-      println("************************")
-    }
-
     val apiModel = api.PasteProgress(
       id = pasteProgress.id,
       output = pasteProgress.output,

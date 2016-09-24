@@ -130,7 +130,6 @@ object Editor {
 
     def noop[T](v: T): Unit = ()
 
-
     def setRenderAnnotations() = {
       val doc = editor.getDoc()
       def nextline2(endPos: CMPosition, node: HTMLElement, process: (HTMLElement ⇒ Unit) = noop, options: js.Any = null): Annotation = {

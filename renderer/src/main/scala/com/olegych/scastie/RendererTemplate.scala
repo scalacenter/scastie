@@ -15,7 +15,7 @@ object RendererTemplate {
   val defaultUniqueId = "$uniqueId$"
 
   withSbt(templateRoot, defaultUniqueId)(sbt => {
-    sbt.process("update", (line, _) => println(s"discarded $line"))
+    sbt.process("update", (_, _) => ())
     Seq()
   })
 
