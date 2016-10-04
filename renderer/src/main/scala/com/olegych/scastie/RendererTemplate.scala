@@ -26,8 +26,6 @@ object RendererTemplate {
     val content = buildSbt.string.replaceAllLiterally(defaultUniqueId, uniqueId)
     buildSbt.truncate(0)
     buildSbt.write(content)
-    val pluginsSbt = Path(dir) / "project" / "plugins.sbt"
-    pluginsSbt.append("\n\nskip := true\n")
     log.info("starting sbt")
     new Sbt(dir, clearOnExit = true, uniqueId)
   }

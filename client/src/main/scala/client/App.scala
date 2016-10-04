@@ -88,9 +88,16 @@ object App {
     .build
 
   val defaultCode =
-    """|object Main {
+    """|/***
+       |
+       |scalaVersion := "2.11.8"
+       |// scalaVersion := "2.10.6"
+       |
+       |*/
+       |
+       |object Main {
        |  def main(args: Array[String]): Unit = {
-       |    println("Hey")
+       |    println(util.Properties.versionString)
        |  }
        |}""".stripMargin
 

@@ -67,7 +67,7 @@ lazy val renderer = project
     ,  "org.apache.commons"          % "commons-lang3"       % "3.1"
     ,  "net.sourceforge.collections" % "collections-generic" % "4.01"
     )
-  ).dependsOn(sbtApi211, apiJVM)
+  ).dependsOn(sbtApi, apiJVM)
 
 lazy val scastie = project.in(file("."))
   .settings(defaultSettings)
@@ -159,11 +159,28 @@ lazy val client = project
   .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror, apiJS)
 
-lazy val apiJVM = ProjectRef(file("renderer-template"), "apiJVM")
-lazy val apiJS  = ProjectRef(file("renderer-template"), "apiJS")
+// server => frontend
+// paste => server => frontend (annotations)
+lazy val api = crossProject
+  .settings(baseSettings: _*)
+  .settings(
+    crossScalaVersions := Seq("2.10.6", "2.11.8"), // no autowire for 2.12.0-RC1
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "autowire" % "0.2.5"
+    , "com.lihaoyi" %%% "upickle"  % "0.4.0"
+    )
+  )
+  .jsSettings(
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
+  )
+lazy val apiJVM = api.jvm
+lazy val apiJS = api.js
 
-lazy val sbtApi211 = project.settings(
-  scalaVersion := "2.11.8"
+// paste sbt => server (compilation info)
+lazy val sbtApi = project.settings(
+  organization := "org.scastie"
+, version      := "0.1.0-SNAPSHOT"
+, scalaVersion := "2.11.8"
+, crossScalaVersions := Seq("2.10.6", "2.11.8")
 , libraryDependencies += "com.lihaoyi" %%% "upickle"  % "0.4.0"
-, scalaSource in Compile := (baseDirectory in ThisBuild).value / "renderer-template" / "project" / "sbt-api"
 )

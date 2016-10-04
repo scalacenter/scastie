@@ -37,8 +37,8 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
       if (read == 10) {
         val line = chars.mkString
         prompt = line == uniqueId
-        lineCallback(line, prompt)
-        // log.info("sbt: " + line)
+        lineCallback(line, false)
+        log.info(" sbt: " + line)
         chars.clear()
       } else {
         chars.add(read.toChar)
@@ -46,14 +46,19 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
     }
   }
 
-  def process(command: String, lineCallback: (String, Boolean) => Unit): Unit = {
-    fin.flush()
+  collect((line, _) => ())
+
+  def process(command: String, lineCallback: (String, Boolean) => Unit, waitForPrompt: Boolean = true): Unit = {
     input.write(command + System.lineSeparator)
-    collect(lineCallback)
+    fin.flush()
+    log.info("sbt: " + command)
+    if(waitForPrompt) {
+      collect(lineCallback)
+    }
   }
 
   def close(): Unit = {
-    try process("exit", (_, _) => ()) catch {
+    try process("exit", (_, _) => (), waitForPrompt = false) catch {
       case e: Exception => log.error("Error while soft exit", e)
     }
     ProcessKiller.instance.kill(process)
@@ -63,6 +68,7 @@ case class Sbt(dir: File, clearOnExit: Boolean, uniqueId: String = Sbt.defaultUn
       }
     }
   }
+  def resultAsString(result: Seq[String]) = result.mkString(System.lineSeparator).replaceAll(uniqueId, "")
 }
 
 object Sbt {

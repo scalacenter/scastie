@@ -7,7 +7,6 @@ import KeyRanks.DTask
 
 import xsbti.{Reporter, Problem, Position, Severity, Maybe}
 import upickle.default.{write ⇒ uwrite}
-import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 
 object ApplicationBuild extends Build {
   val runAll = TaskKey[Unit]("run-all")
@@ -15,31 +14,6 @@ object ApplicationBuild extends Build {
 
   // compilerReporter is marked private in sbt
   lazy val compilerReporter = TaskKey[Option[xsbti.Reporter]]("compilerReporter", "Experimental hook to listen (or send) compilation failure messages.", DTask)
-
-  lazy val baseSettings = Seq(
-    scalaVersion := "2.11.8"
-  , scalacOptions := Seq(
-      "-deprecation"
-    , "-encoding", "UTF-8"
-    , "-feature"
-    , "-unchecked"
-    )
-  )
-
-  lazy val api = crossProject
-    .settings(baseSettings: _*)
-    .settings(
-      crossScalaVersions := Seq("2.10.6", "2.11.8"),
-      libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "autowire" % "0.2.5"
-      , "com.lihaoyi" %%% "upickle"  % "0.4.0"
-      )
-    )
-    .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
-    )
-  lazy val apiJVM = api.jvm
-  lazy val apiJS = api.js
 
   val rendererWorker = Project(id = "rendererWorker", base = file(".")).settings(
       updateOptions := updateOptions.value.withCachedResolution(true).withLatestSnapshots(false)
@@ -80,13 +54,23 @@ object ApplicationBuild extends Build {
       }
       def comment(pos: xsbti.Position, msg: String): Unit = ()
     })
-    , runAll <<=
-      (discoveredMainClasses in Compile, fullClasspath in Compile, runner in(Compile, run), streams) map runAllTask
-    , runner in(Compile, run) <<= (taskTemporaryDirectory, scalaInstance) map { (nativeTmp, instance) =>
-      new SecuredRun(instance, false, nativeTmp)
+    , runAll := {
+      runAllTask(
+        (discoveredMainClasses in Compile).value,
+        (fullClasspath in Compile).value,
+        (runner in(Compile, run)).value,
+        streams.value
+      )
+    }
+    , runner in(Compile, run) := {
+      new SecuredRun(
+        scalaInstance.value,
+        false,
+        taskTemporaryDirectory.value
+      )
     }
     , onLoad in Global := addDepsToState
-  ).disablePlugins(coursier.CoursierPlugin).dependsOn(apiJVM)
+  ).disablePlugins(coursier.CoursierPlugin)
 
   def runAllTask(discoveredMainClasses: Seq[String], fullClasspath: Keys.Classpath, runner: ScalaRun,
                  streams: Keys.TaskStreams) {

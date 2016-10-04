@@ -2,7 +2,7 @@ package com.olegych.scastie
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.event.LoggingReceive
-import com.olegych.scastie.FailuresActor.{AddFailure, FatalFailure}
+import com.olegych.scastie.FailuresActor.{FatalFailure, AddFailure}
 import com.olegych.scastie.PastesActor.Paste
 
 import scala.concurrent._
@@ -18,7 +18,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   private val runKiller = createKiller(30.seconds)
 
   private def applyRunKiller(paste: Paste)(block: => Unit) {
-    runKiller { case _ => block} apply paste
+    runKiller { case _ => block } apply paste
   }
 
   private def createKiller(timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
@@ -31,19 +31,15 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
       preRestart(FatalFailure, Some(message))
     })
   }
-
+  
   private def generateId: String = scala.util.Random.alphanumeric.take(10).mkString
-
   private val sbtDir = PastesContainer(new java.io.File(System.getProperty("java.io.tmpdir"))).renderer(generateId)
-
   private var sbt: Option[Sbt] = None
   private var settings = ""
-  private var reloadResult: Seq[String] = Seq()
 
   override def preStart() {
     sbt = blocking {Option(RendererTemplate.create(sbtDir.root, generateId))}
     settings = ""
-    reloadResult = Seq()
   }
 
   override def preRestart(reason: Throwable, message: Option[Any]) {
@@ -59,28 +55,25 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   }
 
   def receive = LoggingReceive {
-    killer { case paste@Paste(_, Some(content), _, _, _, _, _) => sbt foreach { sbt =>
+    killer { case paste@Paste(_, Some(content), _, _, _, _, _) =>  sbt.foreach { sbt =>
       sbtDir.pasteFile.write(Option(content))
-      val settings = paste.settings
-      if (this.settings =/= settings) {
-        this.settings = settings
-        sbt.process("reload", (line, _) =>
+
+      if (settings =/= paste.settings) {
+        settings = paste.settings
+        sbt.process("reload", (line, _) => {
+          println(line)
           sender ! paste.copy(content = sbtDir.pasteFile.read, output = line +: paste.output)
-        )
+        })
       } else {
         sender ! paste.copy(content = sbtDir.pasteFile.read, output = Seq())
       }
 
       sbtDir.sxrSource.delete()
       applyRunKiller(paste) {
-        sbt.process("+ run-all", (line, done) => {
+        sbt.process(";compile ;run-all", (line, done) => {
 
           val sbtProblems =
             try{ uread[List[sbtapi.Problem]](line) }
-            catch { case scala.util.control.NonFatal(e) => List()}
-
-          val instrumentations =
-            try{ uread[List[api.Instrumentation]](line) }
             catch { case scala.util.control.NonFatal(e) => List()}
 
           def toApi(p: sbtapi.Problem): api.Problem = {
@@ -91,8 +84,12 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
             }
             api.Problem(severity, p.offset, p.message)
           }
-          
+
           val problems = sbtProblems.map(toApi)
+
+          val instrumentations =
+            try{ uread[List[api.Instrumentation]](line) }
+            catch { case scala.util.control.NonFatal(e) => List()}
 
           sender ! paste.copy(output = line +: paste.output, problems = problems, instrumentations = instrumentations)
         })
