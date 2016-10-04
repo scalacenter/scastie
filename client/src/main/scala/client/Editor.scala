@@ -166,7 +166,6 @@ object Editor {
 
         val node = dom.document.createElement("pre").asInstanceOf[HTMLPreElement]
         node.className = "inline"
-        dom.console.log(offset.left - base.left)
         node.style.left = (offset.left - base.left) + "px"
         node.innerHTML = content
         process(node)
@@ -258,5 +257,6 @@ object Editor {
     .componentWillUnmount(_.backend.stop())
     .build
 
-  def apply(state: App.State, backend: App.Backend) = component((state, backend))
+  def apply(state: App.State, backend: App.Backend) = 
+    component((state, backend))
 }

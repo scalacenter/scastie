@@ -25,10 +25,12 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 
-class ApiImpl(renderer: ActorRef)(implicit timeout: Timeout)
- extends Api {
+class ApiImpl(renderer: ActorRef)(implicit timeout: Timeout) extends Api {
   def run(code: String): Future[Long] = {
     (renderer ? AddPaste(code, "-no-uid-")).mapTo[Paste].map(_.id)
+  }
+  def fetch(id: Long): Future[String] = {
+    (renderer ? GetPaste(id)).mapTo[Paste].map(_.content.getOrElse(""))
   }
 }
 
@@ -47,6 +49,10 @@ object Application extends Controller {
   val renderer = system.actorOf(Props(new PastesActor(container, progressActor)), "pastes")
 
   def index = Action { implicit request =>
+    Ok(views.html.index())
+  }
+
+  def index2(rest: String) = Action { implicit request =>
     Ok(views.html.index())
   }
 
