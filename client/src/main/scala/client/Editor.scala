@@ -166,7 +166,6 @@ object Editor {
 
         val node = dom.document.createElement("pre").asInstanceOf[HTMLPreElement]
         node.className = "inline"
-        dom.console.log(offset.left - base.left)
         node.style.left = (offset.left - base.left) + "px"
         node.innerHTML = content
         process(node)

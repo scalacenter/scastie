@@ -27,7 +27,7 @@ object App {
     def log(lines: Seq[String]) = copy(output = output ++ lines)
   }
 
-  class Backend(scope: BackendScope[_, State]) {
+  class Backend(scope: BackendScope[(RouterCtl[Page], Option[Snippet]), State]) {
     def codeChange(newCode: String) = scope.modState(_.copy(code = newCode))
 
     private def connect(id: Long) = CallbackTo[WebSocket]{
@@ -57,24 +57,32 @@ object App {
       socket
     }
 
-    def run() = {
-      scope.state.map(s =>
-        api.Client[Api].run(s.code).call().onSuccess{ case id =>
-          val direct = scope.accessDirect
-          connect(id).attemptTry.map {
-            case Success(ws)    =>
-              direct.modState(_.log("Connecting...").copy(
-                websocket = Some(ws),
-                output = Vector(),
-                compilationInfos = Set(),
-                instrumentations = Set())
-              )
-            case Failure(error) => direct.modState(_.log(error.toString).copy(compilationInfos = Set()))
-          }.runNow()
-        }
+    def run(): Callback = {
+      scope.state.flatMap(s =>
+        Callback.future(api.Client[Api].run(s.code).call().map(id =>
+          connect(id).attemptTry.map{
+            case Success(ws) => {
+              def clearLogs = {
+                scope.modState(_.log("Connecting...").copy(
+                  websocket = Some(ws),
+                  output = Vector(),
+                  compilationInfos = Set(),
+                  instrumentations = Set())
+                )
+              }
+              def urlRewrite = {
+                scope.props.flatMap{ case (router, snippet) =>
+                  router.set(Snippet(id))
+                }
+              }
+              clearLogs >> urlRewrite
+            }
+            case Failure(error) => scope.modState(_.log(error.toString).copy(compilationInfos = Set()))
+          }
+        ))
       )
     }
-    def runE(e: ReactEventI) = run()
+    def runE(e: ReactEventI): Callback = run()
     def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
       val (router, snippet) = props
 
