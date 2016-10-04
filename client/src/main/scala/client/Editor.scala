@@ -258,5 +258,6 @@ object Editor {
     .componentWillUnmount(_.backend.stop())
     .build
 
-  def apply(state: App.State, backend: App.Backend) = component((state, backend))
+  def apply(state: App.State, backend: App.Backend) = 
+    component((state, backend))
 }

@@ -1,6 +1,6 @@
 package client
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra.router.RouterCtl
 
 import api._
 import autowire._
@@ -75,6 +75,14 @@ object App {
       )
     }
     def runE(e: ReactEventI) = run()
+    def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
+      val (router, snippet) = props
+
+      snippet match {
+        case Some(Snippet(id)) => Callback.future(api.Client[Api].fetch(id).call().map(codeChange))
+        case None              => Callback(())
+      }
+    }
 
     def toogleTheme() = scope.modState(_.toogleTheme)
   }
@@ -101,15 +109,17 @@ object App {
        |  }
        |}""".stripMargin
 
-  val component = ReactComponentB[Unit]("App")
+  val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")
     .initialState(State(code = defaultCode))
     .backend(new Backend(_))
-    .renderPS((scope, _, state) => {
+    .renderPS{ case (scope, (router, snippet), state) => {
       val sideStyle =
         if(state.sideBarClosed) "sidebar-closed"
         else "sidebar-open"
 
-      val hideOutput = if(state.output.isEmpty) display.none else display.block
+      val hideOutput = 
+        if(state.output.isEmpty) display.none
+        else display.block
 
       div(`class` := "app")(
         div(`class` := s"editor $sideStyle")(
@@ -120,8 +130,9 @@ object App {
         ),
         div(`class` := s"sidebar $sideStyle")(SideBar((state, scope.backend)))
       )
-    })
+    }}
+    .componentDidMount(s => s.backend.start(s.props))
     .build
 
-  def apply() = component()
+  def apply(router: RouterCtl[Page], snippet: Option[Snippet]) = component((router, snippet))
 }

@@ -4,6 +4,7 @@ import scala.concurrent.Future
 
 trait Api {
   def run(code: String): Future[Long]
+  def fetch(id: Long): Future[String]
 }
 
 case class PasteProgress(
