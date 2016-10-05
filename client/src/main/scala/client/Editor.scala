@@ -50,6 +50,7 @@ object Editor {
         ctrl + "-L"     -> null,
         ctrl + "-l"     -> null,
         ctrl + "-Enter" -> "run",
+        "Esc"           -> "clear",
         "F1"            -> "help",
         "F2"            -> "solarizedToggle"
       )
@@ -91,6 +92,10 @@ object Editor {
 
         CodeMirror.commands.run = (editor: CodeMirrorEditor) ⇒ {
           backend.run().runNow
+        }
+
+        CodeMirror.commands.clear = (editor: CodeMirrorEditor) ⇒ {
+          backend.clear().runNow
         }
 
         CodeMirror.commands.solarizedToggle = (editor: CodeMirrorEditor) ⇒ {
