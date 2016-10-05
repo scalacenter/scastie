@@ -13,22 +13,30 @@ import upickle.default.{read => uread}
 
 object App {
   case class State(
-    code: String,
+    // ui
+    sideBarClosed: Boolean = true,
     websocket: Option[WebSocket] = None,
-    output: Vector[String] = Vector(),
     dark: Boolean = true,
-    compilationInfos: Set[api.Problem] = Set(),
-    instrumentations: Set[api.Instrumentation] = Set(),
-    sideBarClosed: Boolean = true) {
 
+    inputs: Inputs = Inputs(),
+    outputs: Outputs = Outputs()
+  ) {
     def toogleTheme             = copy(dark = !dark)
     def toogleSidebar           = copy(sideBarClosed = !sideBarClosed)
-    def log(line: String)       = copy(output = output :+ line)
-    def log(lines: Seq[String]) = copy(output = output ++ lines)
+    def log(line: String): State       = log(Seq(line))
+    def log(lines: Seq[String]): State = copy(outputs = outputs.copy(console = outputs.console ++ lines))
+
+    def setCode(code: String) = copy(inputs = inputs.copy(code = code))
+    def resetOutputs = copy(outputs = Outputs())
+    def addOutputs(compilationInfos: List[api.Problem], instrumentations: List[api.Instrumentation]) =
+      copy(outputs = outputs.copy(
+        compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet,
+        instrumentations = outputs.instrumentations ++ instrumentations.toSet
+      ))
   }
 
   class Backend(scope: BackendScope[(RouterCtl[Page], Option[Snippet]), State]) {
-    def codeChange(newCode: String) = scope.modState(_.copy(code = newCode))
+    def codeChange(newCode: String) = scope.modState(_.setCode(newCode))
 
     private def connect(id: Long) = CallbackTo[WebSocket]{
       val direct = scope.accessDirect
@@ -36,12 +44,7 @@ object App {
       def onopen(e: Event): Unit = direct.modState(_.log("Connected."))
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[PasteProgress](e.data.toString)
-        direct.modState( s =>
-          s.log(progress.output).copy(
-            compilationInfos = s.compilationInfos ++ progress.compilationInfos.toSet,
-            instrumentations = s.instrumentations ++ progress.instrumentations.toSet
-          )
-        )
+        direct.modState(_.addOutputs(progress.compilationInfos, progress.instrumentations).log(progress.output))
       }
       def onerror(e: ErrorEvent): Unit = direct.modState(_.log(s"Error: ${e.message}"))
       def onclose(e: CloseEvent): Unit = direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}"))
@@ -59,25 +62,24 @@ object App {
 
     def run(): Callback = {
       scope.state.flatMap(s =>
-        Callback.future(api.Client[Api].run(s.code).call().map(id =>
-          connect(id).attemptTry.map{
+        Callback.future(api.Client[Api].run(s.inputs.code).call().map(id =>
+          connect(id).attemptTry.flatMap{
             case Success(ws) => {
-              def clearLogs = {
-                scope.modState(_.log("Connecting...").copy(
-                  websocket = Some(ws),
-                  output = Vector(),
-                  compilationInfos = Set(),
-                  instrumentations = Set())
+              def clearLogs = 
+                scope.modState(
+                  _.resetOutputs
+                   .copy(websocket = Some(ws))
+                   .log("Connecting...")
                 )
-              }
-              def urlRewrite = {
+
+              def urlRewrite =
                 scope.props.flatMap{ case (router, snippet) =>
                   router.set(Snippet(id))
                 }
-              }
+
               clearLogs >> urlRewrite
             }
-            case Failure(error) => scope.modState(_.log(error.toString).copy(compilationInfos = Set()))
+            case Failure(error) => scope.modState(_.resetOutputs.log(error.toString))
           }
         ))
       )
@@ -104,21 +106,14 @@ object App {
     .build
 
   val defaultCode =
-    """|/***
-       |
-       |scalaVersion := "2.11.8"
-       |// scalaVersion := "2.10.6"
-       |
-       |*/
-       |
-       |object Main {
+    """|object Main {
        |  def main(args: Array[String]): Unit = {
        |    println(util.Properties.versionString)
        |  }
        |}""".stripMargin
 
   val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")
-    .initialState(State(code = defaultCode))
+    .initialState(State(inputs = Inputs(code = defaultCode)))
     .backend(new Backend(_))
     .renderPS{ case (scope, (router, snippet), state) => {
       val sideStyle =
@@ -126,14 +121,14 @@ object App {
         else "sidebar-open"
 
       val hideOutput = 
-        if(state.output.isEmpty) display.none
+        if(state.outputs.console.isEmpty) display.none
         else display.block
 
       div(`class` := "app")(
         div(`class` := s"editor $sideStyle")(
           Editor(state, scope.backend),
           ul(`class` := "output", hideOutput)(
-            state.output.map(o => li(o))
+            state.outputs.console.map(o => li(o))
           )
         ),
         div(`class` := s"sidebar $sideStyle")(SideBar((state, scope.backend)))

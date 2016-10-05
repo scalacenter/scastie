@@ -46,11 +46,12 @@ object Editor {
       "autofocus"                 -> true,
       "highlightSelectionMatches" -> js.Dictionary("showToken" -> js.Dynamic.global.RegExp("\\w")),
       "extraKeys"                 -> js.Dictionary(
-        "Tab"          -> "defaultTab",
-        s"$ctrl-l"     -> null,
-        s"$ctrl-Enter" -> "run",
-        "F1"           -> "help",
-        "F2"           -> "solarizedToggle"
+        "Tab"           -> "defaultTab",
+        ctrl + "-L"     -> null,
+        ctrl + "-l"     -> null,
+        ctrl + "-Enter" -> "run",
+        "F1"            -> "help",
+        "F2"            -> "solarizedToggle"
       )
     ).asInstanceOf[codemirror.Options]
   }
@@ -115,11 +116,11 @@ object Editor {
     }
 
     def setCode() = {
-      if(current.code != next.code) {
+      if(current.inputs.code != next.inputs.code) {
         val doc = editor.getDoc()
-        if(doc.getValue() != next.code) {
+        if(doc.getValue() != next.inputs.code) {
           val cursor = doc.getCursor()
-          doc.setValue(next.code)
+          doc.setValue(next.inputs.code)
           doc.setCursor(cursor)
         }
       }
@@ -174,7 +175,7 @@ object Editor {
       }
 
       setAnnotations[api.Instrumentation](
-        _.instrumentations,
+        _.outputs.instrumentations,
         { 
           case instrumentation @ Instrumentation(api.Position(start, end), Value(value, tpe)) => {
             val startPos = doc.posFromIndex(start)
@@ -200,7 +201,7 @@ object Editor {
     def setProblemAnnotations() = {
       val doc = editor.getDoc()
       setAnnotations[api.Problem](
-        _.compilationInfos,
+        _.outputs.compilationInfos,
         info => {
           val pos = doc.posFromIndex(info.offset.getOrElse(0))
           val el = dom.document.createElement("div")
@@ -241,7 +242,7 @@ object Editor {
     .initialState(EditorState())
     .backend(new Backend(_))
     .renderPS{ case (scope, (props, backend), _) =>
-      textarea(defaultValue := props.code, onChange ==> backend.codeChange, ref := codemirrorTextarea, autoComplete := "off")
+      textarea(defaultValue := props.inputs.code, onChange ==> backend.codeChange, ref := codemirrorTextarea, autoComplete := "off")
     }
     .componentWillReceiveProps{v =>
       val (current, _) = v.currentProps
