@@ -60,6 +60,8 @@ object App {
       socket
     }
 
+    def clear(): Callback = scope.modState(_.resetOutputs)
+
     def run(): Callback = {
       scope.state.flatMap(s =>
         Callback.future(api.Client[Api].run(s.inputs.code).call().map(id =>
