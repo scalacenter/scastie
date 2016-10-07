@@ -1,3 +1,5 @@
+@import '_solarized.less';
+
 body {
   margin: 0;
 }
@@ -11,15 +13,16 @@ body, .app, .editor, .sidebar {
 // }
 
 .app {
-  @sidebar-width: 400px;
+  @sidebar-width: 75px;
   @dt: 0.3s;
+
   .editor {
-    transition: "margin-right @dt";
+    transition: "margin-left @dt";
     &.sidebar-open {
-      margin-right: @sidebar-width;
+      margin-left: @sidebar-width;
     }
     &.sidebar-closed {
-      margin-right: 0;
+      margin-left: 0;
     }
     .output {
       top: 0;
@@ -41,17 +44,70 @@ body, .app, .editor, .sidebar {
     }
   }
   .sidebar {
+    .solarized-pallette;
+
+    li {
+      cursor: pointer;
+    }
+
+    &.dark {
+      background-color: @base02;
+      color: @base01;
+      li {
+        &.selected {
+          background-color: @base03;
+          color: @base02;
+        }
+        &:hover{
+          color: @base1;
+        }
+      }
+    }
+
+    &.light {
+      background-color: @base2;
+      color: @base1;
+      li {
+        &.selected {
+          background-color: @base3;
+          color: @base2;
+        }
+        &:hover{
+          color: @base01;
+        }
+      }
+    }
+
+    // color: green;
+    
     position: absolute;
     top: 0;
-    right: 0;
+    left: 0;
     transition: "width @dt";
+
     &.sidebar-open {
       width: @sidebar-width;
       display: block;
     }
+
     &.sidebar-closed {
       width: 0;
       display: none;
+    }
+
+    nav {
+      ul {
+        padding-left: 0;
+        margin: 0;
+      }
+
+      li {
+        @size: 35px;
+
+        display: block;
+        font-size: @size;
+        padding: (@sidebar-width - @size) / 2;
+      }
     }
   }
 }

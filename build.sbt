@@ -154,10 +154,18 @@ lazy val client = project
     , react("react-dom", "ReactDOM", "react-with-addons")
     , react("react-dom-server", "ReactDOMServer", "react-dom")
     )
-  , libraryDependencies += "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.1"
+  , libraryDependencies ++= Seq(
+      "com.github.japgolly.scalajs-react" %%% "extra"       % "0.11.1"
+    , "org.webjars.bower"                   % "open-iconic" % "1.1.1"
+    )
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
-  .dependsOn(codemirror, apiJS)
+  .dependsOn(codemirror, scaladexApi, apiJS)
+
+lazy val scaladexApi = project
+  .settings(baseSettings)
+  .settings(libraryDependencies += "com.lihaoyi" %%% "upickle"   % "0.4.1")
+  .enablePlugins(ScalaJSPlugin)
 
 // server => frontend
 // paste => server => frontend (annotations)

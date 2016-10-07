@@ -1,11 +1,20 @@
 package client
 
+case class Project(
+  
+)
+
+// case class JvmDependency(mavenReference: MavenReference)
+// case class ScalaDependency()
+
+case class MavenReference(groupId: String, artifactId: String, version: String)
+
 // input
 case class Inputs(
   code: String = "",
   libraries: Set[Library] = Set()
 )
-case class Library(groupId: String, artifactId: String, version: String)
+case class Library()
 
 // outputs
 case class Outputs(

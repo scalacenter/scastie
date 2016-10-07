@@ -11,10 +11,12 @@ import scala.util.{Success, Failure}
 
 import upickle.default.{read => uread}
 
+import iconic._
+
 object App {
   case class State(
     // ui
-    sideBarClosed: Boolean = true,
+    sideBarClosed: Boolean = false,
     websocket: Option[WebSocket] = None,
     dark: Boolean = true,
 
@@ -86,7 +88,7 @@ object App {
         ))
       )
     }
-    def runE(e: ReactEventI): Callback = run()
+    def run(e: ReactEventI): Callback = run()
     def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
       val (router, snippet) = props
 
@@ -96,13 +98,20 @@ object App {
       }
     }
 
-    def toogleTheme() = scope.modState(_.toogleTheme)
+    def toogleTheme(e: ReactEventI): Callback = toogleTheme()
+    def toogleTheme(): Callback = scope.modState(_.toogleTheme)
   }
 
   val SideBar = ReactComponentB[(State, Backend)]("SideBar")
     .render_P { case (state, backend) =>
-      div(
-        button(onClick ==> backend.runE)("run")
+      import backend._
+
+      nav(
+        ul(
+          li(`class` := "selected")(mediaPlay(onClick ==> run)), // clock()
+          li(terminal),
+          li(cog)
+        )
       )
     }
     .build
@@ -118,22 +127,26 @@ object App {
     .initialState(State(inputs = Inputs(code = defaultCode)))
     .backend(new Backend(_))
     .renderPS{ case (scope, (router, snippet), state) => {
+      import state._
+
       val sideStyle =
-        if(state.sideBarClosed) "sidebar-closed"
+        if(sideBarClosed) "sidebar-closed"
         else "sidebar-open"
 
       val hideOutput = 
-        if(state.outputs.console.isEmpty) display.none
+        if(outputs.console.isEmpty) display.none
         else display.block
+
+      val theme = if(dark) "dark" else "light"
 
       div(`class` := "app")(
         div(`class` := s"editor $sideStyle")(
           Editor(state, scope.backend),
           ul(`class` := "output", hideOutput)(
-            state.outputs.console.map(o => li(o))
+            outputs.console.map(o => li(o))
           )
         ),
-        div(`class` := s"sidebar $sideStyle")(SideBar((state, scope.backend)))
+        div(`class` := s"sidebar $sideStyle $theme")(SideBar((state, scope.backend)))
       )
     }}
     .componentDidMount(s => s.backend.start(s.props))
