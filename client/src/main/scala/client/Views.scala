@@ -9,8 +9,8 @@ import iconic._
 sealed trait View
 object View {
   case object Editor extends View
-  case object Output extends View
   case object Settings extends View
+  case object Output extends View
 }
 
 object MainPannel {
@@ -18,10 +18,14 @@ object MainPannel {
     .render_P { case (state, backend) =>
       // import backend._
 
+      def show(view: View): TagMod = 
+        if(view == state.view) TagMod(display.block)
+        else TagMod(display.none)
+
       div(`class` := "main-pannel")(
-        Editor(state, backend),
-        Settings(state, backend),
-        ConsoleOutput(state.outputs.console)
+        div(`class` := "pannel", show(View.Editor))(Editor(state, backend)),
+        div(`class` := "pannel", show(View.Settings))(Settings(state, backend)),
+        div(`class` := "pannel", show(View.Output))(ConsoleOutput(state.outputs.console))
       )
     }
     .build
@@ -57,11 +61,13 @@ object SideBar {
 
       val theme = if(state.dark) "dark" else "light"
 
+      def selected(view: View) = if(view == state.view) TagMod(`class` := "selected") else EmptyTag
+
       nav(`class` := s"sidebar $theme")(
         ul(
-          li(`class` := "selected")(mediaPlay(onClick ==> setView(View.Editor))), // clock()
-          li(cog(onClick ==> setView(View.Settings))),
-          li(terminal(onClick ==> setView(View.Output)))
+          li(selected(View.Editor))(mediaPlay(onClick ==> setView(View.Editor))), // clock()
+          li(selected(View.Settings))(cog(onClick ==> setView(View.Settings))),
+          li(selected(View.Output))(terminal(onClick ==> setView(View.Output)))
         )
       )
     }
