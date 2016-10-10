@@ -31,7 +31,7 @@ object Editor {
     js.Dictionary[Any](
       "mode"                      -> "text/x-scala",
       "autofocus"                 -> true,
-      "lineNumbers"               -> false,
+      "lineNumbers"               -> true,
       "lineWrapping"              -> false,
       "tabSize"                   -> 2,
       "indentWithTabs"            -> false,

@@ -11,24 +11,32 @@ import scala.util.{Success, Failure}
 
 import upickle.default.{read => uread}
 
-import iconic._
-
 object App {
   case class State(
+
+    view: View = View.Editor,
     // ui
     sideBarClosed: Boolean = false,
     websocket: Option[WebSocket] = None,
     dark: Boolean = true,
 
     inputs: Inputs = Inputs(),
-    outputs: Outputs = Outputs()
+    outputs: Outputs = Outputs(console = 
+      Vector(
+        "csdfsdf",
+        "csdfsdfsdfsd eet 45 4",
+        "csdfsdfe56 456 45"
+      )
+    )
   ) {
-    def toogleTheme             = copy(dark = !dark)
-    def toogleSidebar           = copy(sideBarClosed = !sideBarClosed)
-    def log(line: String): State       = log(Seq(line))
+    def toogleTheme = copy(dark = !dark)
+    def toogleSidebar = copy(sideBarClosed = !sideBarClosed)
+    def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State = copy(outputs = outputs.copy(console = outputs.console ++ lines))
 
     def setCode(code: String) = copy(inputs = inputs.copy(code = code))
+    def setView(newView: View) = copy(view = newView)
+
     def resetOutputs = copy(outputs = Outputs())
     def addOutputs(compilationInfos: List[api.Problem], instrumentations: List[api.Instrumentation]) =
       copy(outputs = outputs.copy(
@@ -89,6 +97,9 @@ object App {
       )
     }
     def run(e: ReactEventI): Callback = run()
+    
+    def setView(newView: View)(e: ReactEventI): Callback = scope.modState(_.setView(newView))
+
     def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
       val (router, snippet) = props
 
@@ -101,20 +112,6 @@ object App {
     def toogleTheme(e: ReactEventI): Callback = toogleTheme()
     def toogleTheme(): Callback = scope.modState(_.toogleTheme)
   }
-
-  val SideBar = ReactComponentB[(State, Backend)]("SideBar")
-    .render_P { case (state, backend) =>
-      import backend._
-
-      nav(
-        ul(
-          li(`class` := "selected")(mediaPlay(onClick ==> run)), // clock()
-          li(terminal),
-          li(cog)
-        )
-      )
-    }
-    .build
 
   val defaultCode =
     """|object Main {
@@ -133,20 +130,11 @@ object App {
         if(sideBarClosed) "sidebar-closed"
         else "sidebar-open"
 
-      val hideOutput = 
-        if(outputs.console.isEmpty) display.none
-        else display.block
-
       val theme = if(dark) "dark" else "light"
 
       div(`class` := "app")(
-        div(`class` := s"editor $sideStyle")(
-          Editor(state, scope.backend),
-          ul(`class` := "output", hideOutput)(
-            outputs.console.map(o => li(o))
-          )
-        ),
-        div(`class` := s"sidebar $sideStyle $theme")(SideBar((state, scope.backend)))
+        SideBar(state, scope.backend),
+        MainPannel(state, scope.backend)
       )
     }}
     .componentDidMount(s => s.backend.start(s.props))
