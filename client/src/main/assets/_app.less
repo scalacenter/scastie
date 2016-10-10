@@ -4,55 +4,52 @@ body {
   margin: 0;
 }
 
-body, .app, .editor, .sidebar {
+body, .root, .app, .main-pannel, .editor, .sidebar {
   height: 100%;
 }
 
-// ::-webkit-scrollbar-thumb {
-//   background: @base2;
-// }
-
 .app {
   @sidebar-width: 75px;
+  @sidebar-border: 1px;
   @dt: 0.3s;
 
-  .editor {
-    transition: "margin-left @dt";
-    &.sidebar-open {
-      margin-left: @sidebar-width;
-    }
-    &.sidebar-closed {
-      margin-left: 0;
-    }
-    .output {
-      top: 0;
-      left: 50%;
-      position: absolute;
-      height: 100%;
-      width: 50%;
-      
-
-      overflow-y: scroll;
-      z-index: 1000;
-
-      margin: 0;
-      padding: 0;
-
-      li {
-        display: block;
-      }
-    }
+  .main-pannel {
+    margin-left: @sidebar-width;
   }
   .sidebar {
-    .solarized-pallette;
+
+    width: @sidebar-width - @sidebar-border;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    border-right-style: solid;
+    border-right-width: @sidebar-border;
+
+    ul {
+      padding-left: 0;
+      margin: 0;
+    }
 
     li {
       cursor: pointer;
+
+      @size: 35px;
+
+      display: block;
+      font-size: @size;
+      padding: (@sidebar-width - @size) / 2;
     }
+
+
+    // THEME
+
+    .solarized-pallette;
 
     &.dark {
       background-color: @base02;
       color: @base01;
+      border-right-color: @base03;
       li {
         &.selected {
           background-color: @base03;
@@ -67,6 +64,7 @@ body, .app, .editor, .sidebar {
     &.light {
       background-color: @base2;
       color: @base1;
+      border-right-color: @base3;
       li {
         &.selected {
           background-color: @base3;
@@ -75,38 +73,6 @@ body, .app, .editor, .sidebar {
         &:hover{
           color: @base01;
         }
-      }
-    }
-
-    // color: green;
-    
-    position: absolute;
-    top: 0;
-    left: 0;
-    transition: "width @dt";
-
-    &.sidebar-open {
-      width: @sidebar-width;
-      display: block;
-    }
-
-    &.sidebar-closed {
-      width: 0;
-      display: none;
-    }
-
-    nav {
-      ul {
-        padding-left: 0;
-        margin: 0;
-      }
-
-      li {
-        @size: 35px;
-
-        display: block;
-        font-size: @size;
-        padding: (@sidebar-width - @size) / 2;
       }
     }
   }

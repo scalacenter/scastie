@@ -38,7 +38,6 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   private var settings = ""
 
   override def preStart() {
-    sbt = blocking {Option(RendererTemplate.create(sbtDir.root, generateId))}
     settings = ""
   }
 
@@ -55,44 +54,50 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   }
 
   def receive = LoggingReceive {
-    killer { case paste@Paste(_, Some(content), _, _, _, _, _) =>  sbt.foreach { sbt =>
-      sbtDir.pasteFile.write(Option(content))
-
-      if (settings =/= paste.settings) {
-        settings = paste.settings
-        sbt.process("reload", (line, _) => {
-          println(line)
-          sender ! paste.copy(content = sbtDir.pasteFile.read, output = line +: paste.output)
-        })
-      } else {
-        sender ! paste.copy(content = sbtDir.pasteFile.read, output = Seq())
+    killer { case paste@Paste(_, Some(content), _, _, _, _, _) =>  {
+      if(sbt.isEmpty) {
+        sbt = blocking {Option(RendererTemplate.create(sbtDir.root, generateId))}    
       }
 
-      sbtDir.sxrSource.delete()
-      applyRunKiller(paste) {
-        sbt.process(";compile ;run-all", (line, done) => {
+      sbt.foreach { sbt =>
+        sbtDir.pasteFile.write(Option(content))
 
-          val sbtProblems =
-            try{ uread[List[sbtapi.Problem]](line) }
-            catch { case scala.util.control.NonFatal(e) => List()}
+        if (settings =/= paste.settings) {
+          settings = paste.settings
+          sbt.process("reload", (line, _) => {
+            println(line)
+            sender ! paste.copy(content = sbtDir.pasteFile.read, output = line +: paste.output)
+          })
+        } else {
+          sender ! paste.copy(content = sbtDir.pasteFile.read, output = Seq())
+        }
 
-          def toApi(p: sbtapi.Problem): api.Problem = {
-            val severity = p.severity match {
-              case sbtapi.Info    => api.Info
-              case sbtapi.Warning => api.Warning
-              case sbtapi.Error   => api.Error
+        sbtDir.sxrSource.delete()
+        applyRunKiller(paste) {
+          sbt.process(";compile ;run-all", (line, done) => {
+
+            val sbtProblems =
+              try{ uread[List[sbtapi.Problem]](line) }
+              catch { case scala.util.control.NonFatal(e) => List()}
+
+            def toApi(p: sbtapi.Problem): api.Problem = {
+              val severity = p.severity match {
+                case sbtapi.Info    => api.Info
+                case sbtapi.Warning => api.Warning
+                case sbtapi.Error   => api.Error
+              }
+              api.Problem(severity, p.offset, p.message)
             }
-            api.Problem(severity, p.offset, p.message)
-          }
 
-          val problems = sbtProblems.map(toApi)
+            val problems = sbtProblems.map(toApi)
 
-          val instrumentations =
-            try{ uread[List[api.Instrumentation]](line) }
-            catch { case scala.util.control.NonFatal(e) => List()}
+            val instrumentations =
+              try{ uread[List[api.Instrumentation]](line) }
+              catch { case scala.util.control.NonFatal(e) => List()}
 
-          sender ! paste.copy(output = line +: paste.output, problems = problems, instrumentations = instrumentations)
-        })
+            sender ! paste.copy(output = line +: paste.output, problems = problems, instrumentations = instrumentations)
+          })
+        }
       }
     }}
   }

@@ -1,11 +1,11 @@
 package client
 
 import org.scalajs.dom
+
 import scala.scalajs.js.JSApp
 import scala.scalajs.js.annotation.JSExport
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.router._
+import japgolly.scalajs.react._, extra.router._
 
 sealed trait Page
 case object Home extends Page
@@ -30,10 +30,12 @@ object Client extends JSApp {
     
   @JSExport
   override def main(): Unit = {
-    ReactDOM.render(
-      Router(BaseUrl.fromWindowOrigin_/, routerConfig.logToConsole)(),
-      dom.document.body
-    )
+    val cont = dom.document.createElement("div").asInstanceOf[dom.raw.HTMLDivElement]
+    cont.className = "root"
+    dom.document.body.appendChild(cont)
+
+    ReactDOM.render(Router(BaseUrl.fromWindowOrigin_/, routerConfig.logToConsole)(), cont)
+    
     ()
   }
 }
