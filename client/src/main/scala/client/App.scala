@@ -14,7 +14,7 @@ import upickle.default.{read => uread}
 object App {
   case class State(
 
-    view: View = View.Editor,
+    view: View = View.Settings,
     // ui
     sideBarClosed: Boolean = false,
     websocket: Option[WebSocket] = None,

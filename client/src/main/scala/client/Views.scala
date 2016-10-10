@@ -16,16 +16,17 @@ object View {
 object MainPannel {
   private val component = ReactComponentB[(State, Backend)]("MainPannel")
     .render_P { case (state, backend) =>
-      // import backend._
 
       def show(view: View): TagMod = 
         if(view == state.view) TagMod(display.block)
         else TagMod(display.none)
 
+      val theme = if(state.dark) "dark" else "light"
+
       div(`class` := "main-pannel")(
         div(`class` := "pannel", show(View.Editor))(Editor(state, backend)),
-        div(`class` := "pannel", show(View.Settings))(Settings(state, backend)),
-        div(`class` := "pannel", show(View.Output))(ConsoleOutput(state.outputs.console))
+        div(`class` := s"pannel $theme", show(View.Settings))(Settings(state, backend)),
+        div(`class` := s"pannel $theme", show(View.Output))(ConsoleOutput(state.outputs.console))
       )
     }
     .build

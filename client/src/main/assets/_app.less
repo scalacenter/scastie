@@ -15,6 +15,22 @@ body, .root, .app, .main-pannel, .pannel, .editor, .sidebar {
 
   .main-pannel {
     margin-left: @sidebar-width;
+
+    .pannel {
+
+      // THEME
+      .solarized-pallette;
+
+      &.dark {
+        background-color: @base02;
+        color: @base01;
+      }
+
+      &.light {
+        background-color: @base2;
+        color: @base1;
+      }
+    }
   }
   .sidebar {
 

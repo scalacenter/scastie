@@ -240,7 +240,15 @@ object Editor {
       } yield ()
     }
 
-    Callback(setTheme()) >> Callback(setCode()) >> setProblemAnnotations() >> setRenderAnnotations()
+    def refresh(): Unit = {
+      editor.refresh()
+    }
+
+    Callback(setTheme()) >> 
+      Callback(setCode()) >>
+      setProblemAnnotations() >>
+      setRenderAnnotations() >>
+      Callback(refresh())
   }
 
   val component = ReactComponentB[(App.State, App.Backend)]("CodemirrorEditor")
