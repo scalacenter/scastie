@@ -22,6 +22,9 @@
 }
 
 .settings {
+  height: 100%;
+  overflow: scroll;
+
   padding-left: 0;
 
   & > li {
@@ -81,5 +84,16 @@
 
   .scaladex {
     display: block;
+    ul {
+      padding-left: 0;
+      li {
+        display: block;
+        margin: 15px;
+        border: 1px solid black;
+        img {
+          height: 40px;
+        }
+      }
+    }
   }
 }
