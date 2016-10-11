@@ -1,0 +1,80 @@
+@import '_solarized.less';
+
+.solarized-pallette;
+
+.dark {
+  .settings {
+    fieldset legend {
+      background-color: @base02;
+    }  
+  }
+}
+
+.light {
+  .settings {
+    fieldset legend {
+      background-color: @base2;
+    }  
+  }
+}
+
+.settings {
+  & > ul {
+    padding-left: 0;
+    li {
+      display: block;
+      margin-bottom: 20px;
+      margin-top: 20px;
+    }
+  }
+
+  fieldset {
+    border: none;
+    box-shadow: 1px 1px 1px 1px black
+  }
+
+  fieldset legend {
+    padding: 5px 10px;
+    font-size: 32px;
+    margin-left: 20px;
+  }
+
+  .targets, .versions {
+    ul {
+      padding-left: 0;
+      display: table;
+
+      li {
+        padding: 20px;
+
+        display: table-cell;
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      label {
+        cursor: pointer;
+        display: block;
+        width: 100px;
+
+        input[type="radio"] {
+          display: none;
+
+          &:checked ~ span {
+            text-decoration: underline;
+          }
+        }
+
+        img {
+          height: 75px;
+        }
+
+        span {
+          display: block;
+          text-align: center;
+          font-size: 32px;
+        }
+      }
+    }
+  }
+}
