@@ -4,28 +4,32 @@
 
 .dark {
   .settings {
-    fieldset legend {
+    fieldset legend,
+    input {
       background-color: @base02;
-    }  
+    }
+
   }
 }
 
 .light {
   .settings {
-    fieldset legend {
+    fieldset legend,
+    input {
       background-color: @base2;
-    }  
+    }
   }
 }
 
 .settings {
-  & > ul {
-    padding-left: 0;
-    li {
-      display: block;
-      margin-bottom: 20px;
-      margin-top: 20px;
-    }
+  height: 100%;
+  overflow: scroll;
+
+  padding-left: 0;
+
+  & > li {
+    display: inline-block;
+    margin: 20px;
   }
 
   fieldset {
@@ -73,6 +77,21 @@
           display: block;
           text-align: center;
           font-size: 32px;
+        }
+      }
+    }
+  }
+
+  .scaladex {
+    display: block;
+    ul {
+      padding-left: 0;
+      li {
+        display: block;
+        margin: 15px;
+        border: 1px solid black;
+        img {
+          height: 40px;
         }
       }
     }
