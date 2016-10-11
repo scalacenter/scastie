@@ -18,10 +18,10 @@ object App {
     // ui
     sideBarClosed: Boolean = false,
     websocket: Option[WebSocket] = None,
-    dark: Boolean = true,
+    dark: Boolean = false,
 
     inputs: Inputs = Inputs(),
-    outputs: Outputs = Outputs(console = 
+    outputs: Outputs = Outputs(console =
       Vector(
         "csdfsdf",
         "csdfsdfsdfsd eet 45 4",
@@ -97,7 +97,7 @@ object App {
       )
     }
     def run(e: ReactEventI): Callback = run()
-    
+
     def setView(newView: View)(e: ReactEventI): Callback = scope.modState(_.setView(newView))
 
     def setTarget(target: ScalaTarget)(e: ReactEventI): Callback = scope.modState(_.setTarget(target))

@@ -4,28 +4,29 @@
 
 .dark {
   .settings {
-    fieldset legend {
+    fieldset legend,
+    input {
       background-color: @base02;
-    }  
+    }
+
   }
 }
 
 .light {
   .settings {
-    fieldset legend {
+    fieldset legend,
+    input {
       background-color: @base2;
-    }  
+    }
   }
 }
 
 .settings {
-  & > ul {
-    padding-left: 0;
-    li {
-      display: block;
-      margin-bottom: 20px;
-      margin-top: 20px;
-    }
+  padding-left: 0;
+
+  & > li {
+    display: inline-block;
+    margin: 20px;
   }
 
   fieldset {
@@ -76,5 +77,9 @@
         }
       }
     }
+  }
+
+  .scaladex {
+    display: block;
   }
 }
