@@ -33,9 +33,9 @@ object App {
     def toogleSidebar = copy(sideBarClosed = !sideBarClosed)
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State = copy(outputs = outputs.copy(console = outputs.console ++ lines))
-
     def setCode(code: String) = copy(inputs = inputs.copy(code = code))
     def setView(newView: View) = copy(view = newView)
+    def setTarget(target: ScalaTarget) = copy(inputs = inputs.copy(target = target))
 
     def resetOutputs = copy(outputs = Outputs())
     def addOutputs(compilationInfos: List[api.Problem], instrumentations: List[api.Instrumentation]) =
@@ -99,6 +99,8 @@ object App {
     def run(e: ReactEventI): Callback = run()
     
     def setView(newView: View)(e: ReactEventI): Callback = scope.modState(_.setView(newView))
+
+    def setTarget(target: ScalaTarget)(e: ReactEventI): Callback = scope.modState(_.setTarget(target))
 
     def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
       val (router, snippet) = props

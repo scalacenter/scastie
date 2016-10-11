@@ -31,18 +31,6 @@ object MainPannel {
     }
     .build
 
-
-  def apply(state: State, backend: Backend) = component((state, backend))
-}
-
-object Settings {
-  private val component = ReactComponentB[(State, Backend)]("Settings")
-    .render_P { case (state, backend) =>
-      // import backend._
-
-      div("settings")
-    }
-    .build
   def apply(state: State, backend: Backend) = component((state, backend))
 }
 
