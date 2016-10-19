@@ -9,6 +9,11 @@
       background-color: @base02;
     }
 
+    .scaladex {
+      li.selected, input[type="search"] {
+        background-color: @base03;
+      }
+    }
   }
 }
 
@@ -17,6 +22,12 @@
     fieldset legend,
     input {
       background-color: @base2;
+    }
+
+    .scaladex {
+      li.selected, input[type="search"] {
+        background-color: @base3;
+      }
     }
   }
 }
@@ -27,12 +38,22 @@
 
   padding-left: 0;
 
-  & > li {
-    display: inline-block;
-    margin: 20px;
+  display: flex;
+  flex-direction: row;
+
+  .p1, .p2 {
+    margin: 10px;
   }
 
   fieldset {
+    margin: 10px;
+  }
+
+  fieldset ul {
+    margin: 0;
+  }
+
+  fieldset, .scaladex .added {
     border: none;
     box-shadow: 1px 1px 1px 1px black
   }
@@ -49,11 +70,12 @@
       display: table;
 
       li {
-        padding: 20px;
-
         display: table-cell;
         text-align: center;
         vertical-align: middle;
+
+        padding-left: 15px;
+        padding-right: 15px;
       }
 
       label {
@@ -70,7 +92,7 @@
         }
 
         img {
-          height: 75px;
+          height: 50px;
         }
 
         span {
@@ -83,13 +105,31 @@
   }
 
   .scaladex {
-    display: block;
+    
+
+    display: flex;
+
+    input[type="search"] {
+      border: none;
+      font-size: 32px;
+      padding: 15px;
+    }
+
     ul {
       padding-left: 0;
       li {
         display: block;
-        margin: 15px;
-        border: 1px solid black;
+        margin: 10px 0 10px 0;
+
+        img, span {
+          vertical-align: middle;
+        }
+
+        span {
+          font-size: 24px;
+          padding-left: 10px;
+        }
+
         img {
           height: 40px;
         }
