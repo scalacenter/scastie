@@ -19,7 +19,7 @@ object App {
     sideBarClosed: Boolean = false,
     websocket: Option[WebSocket] = None,
     dark: Boolean = false,
-
+    codemirrorSettings: Option[codemirror.Options] = None,
     inputs: Inputs = Inputs(),
     outputs: Outputs = Outputs(console =
       Vector(

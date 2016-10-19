@@ -3,8 +3,7 @@ package client
 case class Project(
   organization: String,
   repository: String,
-  logo: Option[String] = None,
-  artifacts: List[String] = Nil
+  logo: Option[String] = None
 )
 
 // case class JvmDependency(mavenReference: MavenReference)
