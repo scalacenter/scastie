@@ -67,14 +67,10 @@ object Settings {
   private val component = ReactComponentB[(State, Backend)]("Settings")
     .render_P { case (state, backend) =>
       div(`class` := "settings")(
-        div(`class` := "p1")(
-          renderTarget(state.inputs.target, backend),
-          renderVersions(state.inputs.target, backend),
-          renderCodemirrorSettings(state.codemirrorSettings, backend)
-        ),
-        div(`class` := "p2")(
-          ScaladexSearch(state, backend)
-        )
+        ScaladexSearch(state, backend),
+        renderTarget(state.inputs.target, backend),
+        renderVersions(state.inputs.target, backend),
+        renderCodemirrorSettings(state.codemirrorSettings, backend)
       )
     }
     .build

@@ -33,13 +33,11 @@
 }
 
 .settings {
-  height: 100%;
+  .flex();
+
   overflow: scroll;
 
   padding-left: 0;
-
-  display: flex;
-  flex-direction: row;
 
   .p1, .p2 {
     margin: 10px;
@@ -53,7 +51,7 @@
     margin: 0;
   }
 
-  fieldset, .scaladex .added {
+  fieldset {
     border: none;
     box-shadow: 1px 1px 1px 1px black
   }
@@ -106,13 +104,11 @@
 
   .scaladex {
     
-
-    display: flex;
-
     input[type="search"] {
       border: none;
       font-size: 32px;
       padding: 15px;
+      width: 100%;
     }
 
     ul {

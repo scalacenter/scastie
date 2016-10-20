@@ -7,6 +7,8 @@ import japgolly.scalajs.react._, vdom.all._
 import org.scalajs.dom
 import dom.ext.Ajax
 import dom.ext.KeyCode
+import dom.raw.HTMLInputElement
+
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import upickle.default.{read ⇒ uread}
@@ -15,13 +17,15 @@ object ScaladexSearch {
 
   private[ScaladexSearch] case class SearchState(
     query: String = "",
-    projects: List[Project] = Nil,
-    addedProjects: List[Project] = Nil,
+    projects: List[Project] = List(),
+    addedProjects: Set[Project] = Set(),
     selected: Int = 0
   )
 
+  private val searchInputRef = Ref[HTMLInputElement]("searchInputRef")
+
   private[ScaladexSearch] class SearchBackend(scope: BackendScope[(State, Backend), SearchState]) {
-    def keyDown(e: ReactKeyboardEventI) = {
+    def keyDown(e: ReactKeyboardEventI): Callback = {
 
       if(e.keyCode == KeyCode.Down || e.keyCode == KeyCode.Up) {
         val diff = 
@@ -38,11 +42,12 @@ object ScaladexSearch {
         ) >> e.preventDefaultCB
 
       } else if(e.keyCode == KeyCode.Enter) {
-        scope.modState(s =>
-          if(0 >= s.selected && s.selected < s.projects.length)
-            s.copy(addedProjects = s.projects(s.selected) :: s.addedProjects)
+        scope.modState{s =>
+          if(0 <= s.selected && s.selected < s.projects.size) {
+            s.copy(addedProjects = s.addedProjects + s.projects(s.selected))
+          }
           else s
-        )
+        } >> searchInputRef(scope).tryFocus
       } else {
         Callback(())
       }
@@ -61,7 +66,7 @@ object ScaladexSearch {
               uread[List[Project]](ret.responseText)
             }.map(projects => scope.modState(_.copy(projects = projects)))
           )
-        } else scope.modState(_.copy(projects = Nil))
+        } else scope.modState(_.copy(projects = List()))
       }
 
       e.extract(_.target.value)(value =>
@@ -84,39 +89,43 @@ object ScaladexSearch {
         else EmptyTag
       }
 
-      div(`class` := "scaladex")(
-        fieldset(
-          legend("Scala Libraries"),
+      def renderProject(project: Project, mod: TagMod = EmptyTag) = {
+        val Project(organization, repository, logo) = project
+
+        li(mod)(
+          logo.map(url => 
+            img(src := url, alt := s"$organization logo or avatar")
+          ).getOrElse(
+            img(src := "/assets/placeholder.svg", alt := s"placeholder for $organization")
+          ),
+          span(repository)
+        )
+      }
+
+      val added = 
+        if(!searchState.addedProjects.isEmpty) 
+          ul(`class` := "added")(searchState.addedProjects.toList.map(p => renderProject(p)))
+        else EmptyTag
+
+      fieldset(`class` := "scaladex")(
+        legend("Scala Libraries"),
+
+        div(`class` := "search")(
+          added,
           input.search(
+            ref := searchInputRef,
             placeholder := "Search for 'time'",
             value := searchState.query,
             onChange ==> scope.backend.setQuery,
             onKeyDown ==> scope.backend.keyDown
           ),
-          ul(searchState.projects.zipWithIndex.map{ case (Project(organization, repository, logo), index) =>
-            li(selected(index, searchState.selected))(
-              logo.map(url => 
-                img(src := url, alt := "project logo")
-              ).getOrElse(
-                img(src := "/assets/placeholder.svg", alt := "project logo placeholder")
-              ),
-              span(s"$organization / $repository")
-            )
+          ul(searchState.projects.zipWithIndex.map{ case (project, index) =>
+            renderProject(project, selected(index, searchState.selected))
           })
-        ),
-        ul(`class` := "added")(searchState.addedProjects.map{ case Project(organization, repository, logo) =>
-          li(
-            logo.map(url => 
-              img(src := url, alt := "project logo")
-            ).getOrElse(
-              img(src := "/assets/placeholder.svg", alt := "project logo placeholder")
-            ),
-            span(s"$organization / $repository")
-          )
-        })
-
+        )
       )
     }
+    .componentDidMount(s => searchInputRef(s).tryFocus)
     .build
 
   def apply(state: State, backend: Backend) = component((state, backend))
