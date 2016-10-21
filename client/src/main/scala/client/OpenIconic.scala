@@ -461,7 +461,7 @@ trait Iconic {
     val allMods = mods.foldLeft(TagMod(`class` :="oi", dataGlyph := name, aria.hidden := true))(_ + _)
 
     ReactComponentB[Unit](s"OpenIconic-$name")
-      .render_P(name => span(allMods))
+      .render_P(name => i(allMods))
       .build()
   }
 

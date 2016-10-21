@@ -139,7 +139,7 @@ lazy val codemirror = project
   .enablePlugins(ScalaJSPlugin)
 
 def react(artifact: String, name: String): JSModuleID =
-  "org.webjars.bower" % "react" % "15.2.1" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+  "org.webjars.bower" % "react" % "15.3.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
 def react(artifact: String, name: String, depends: String): JSModuleID =
   react(artifact, name).dependsOn(s"$depends.js")
@@ -155,8 +155,8 @@ lazy val client = project
     , react("react-dom-server", "ReactDOMServer", "react-dom")
     )
   , libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra"       % "0.11.1"
-    , "org.webjars.bower"                   % "open-iconic" % "1.1.1"
+      "com.github.japgolly.scalajs-react" %%% "extra"        % "0.11.2"
+    , "org.webjars.bower"                   % "open-iconic"  % "1.1.1"
     )
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)

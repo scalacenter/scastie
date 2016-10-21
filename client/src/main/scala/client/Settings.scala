@@ -59,8 +59,7 @@ object Settings {
 
   def renderCodemirrorSettings(settings: Option[codemirror.Options], backend: Backend) = {
     fieldset(
-      legend("Code Editor Settings"),
-      div("empty")
+      legend("Code Editor")
     )
   }
 
