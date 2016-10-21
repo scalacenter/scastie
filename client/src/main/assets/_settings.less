@@ -111,22 +111,31 @@
       width: 100%;
     }
 
-    ul {
+    ol {
       padding-left: 0;
       li {
         display: block;
         margin: 10px 0 10px 0;
 
-        img, span {
+        .remove {
+          padding-right: 15px;
+          font-size: 40px;
+        }
+
+        * > {
           vertical-align: middle;
         }
 
-        span {
+        .logo, .artifact {
+          vertical-align: middle;
+        }
+
+        .artifact {
           font-size: 24px;
           padding-left: 10px;
         }
 
-        img {
+        .logo {
           height: 40px;
         }
       }
