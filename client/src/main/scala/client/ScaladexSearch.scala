@@ -140,7 +140,7 @@ object ScaladexSearch {
     .backend(new SearchBackend(_))
     .renderPS { case (scope, (state, backend), searchState) =>
 
-      def selected(index: Int, selected: Int) = {
+      def selectedIndex(index: Int, selected: Int) = {
         if(index == selected) TagMod(`class` := "selected")
         else EmptyTag
       }
@@ -186,16 +186,9 @@ object ScaladexSearch {
         dom.console.log(searchState.projectOptions.toString)
         searchState.projectOptions.get(project) match {
           case Some(options) =>
-            div(
-              select(
-                options.artifacts.map(a =>
-                  option(a)
-                )
-              ),
-              select(
-                options.versions.map(v =>
-                  option(v)
-                )
+            select(
+              options.versions.reverse.map(v =>
+                option(selected := v == options.version)(v)
               )
             )
           case None => EmptyTag
@@ -231,7 +224,7 @@ object ScaladexSearch {
           ),
           ol(searchState.projects.zipWithIndex.toList.map{ case ((project, artifact), index) =>
             renderProject(project, artifact, 
-              selected = selected(index, searchState.selected),
+              selected = selectedIndex(index, searchState.selected),
               handlers = TagMod(
                 onClick ==> scope.backend.addArtifact((project, artifact)),
                 onMouseOver ==> scope.backend.selectIndex(index)
