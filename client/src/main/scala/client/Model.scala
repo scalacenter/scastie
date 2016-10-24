@@ -7,6 +7,15 @@ case class Project(
   artifacts: List[String] = Nil
 )
 
+case class ReleaseOptions(
+  artifacts: List[String],
+  versions: List[String],
+  
+  groupId: String,
+  artifactId: String,
+  version: String
+)
+
 // case class JvmDependency(mavenReference: MavenReference)
 // case class ScalaDependency()
 
@@ -72,7 +81,7 @@ object ScalaTarget {
   // }
   case object Dotty extends ScalaTarget {
     def targetType = ScalaTargetType.Dotty
-    def scaladexRequest = Map()
+    def scaladexRequest = Map("target" -> "JVM", "scalaVersion" -> "2.11")
   }
 }
 

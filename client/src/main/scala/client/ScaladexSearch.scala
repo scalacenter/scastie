@@ -28,6 +28,7 @@ object ScaladexSearch {
     query: String = "",
     projects: SortedSet[(Project, String)] = SortedSet(),
     addedProjects: SortedSet[(Project, String)] = SortedSet(),
+    projectOptions: Map[Project, ReleaseOptions] = Map(),
     selected: Int = 0
   )
 
@@ -49,42 +50,74 @@ object ScaladexSearch {
         scope.modState(s => 
           s.copy(selected = clamp(s.projects.size, s.selected + diff))
         ) >> e.preventDefaultCB
-
       } else if(e.keyCode == KeyCode.Enter) {
-        scope.modState{s =>
-          if(0 <= s.selected && s.selected < s.projects.size) {
-            s.copy(addedProjects = s.addedProjects + s.projects.toList(s.selected))
-          }
-          else s
-        } >> searchInputRef(scope).tryFocus
+        scope.state.flatMap( s =>
+          if(0 <= s.selected && s.selected < s.projects.size)
+            addArtifact(s.projects.toList(s.selected))
+          else 
+            Callback(())
+        ) >> searchInputRef(scope).tryFocus
       } else {
         Callback(())
       }
     }
 
+    def addArtifact(artifact: (Project, String))(e: ReactEventI): Callback = {
+      addArtifact(artifact)
+    }
+
     def removeArtifact(project: Project, artifact: String)(e: ReactEventI): Callback = {
       scope.modState(s => s.copy(addedProjects = s.addedProjects - (project -> artifact)), fetchProjects())
     }
-    def addArtifact(artifact: (Project, String))(e: ReactEventI): Callback = {
-      scope.modState(s => s.copy(addedProjects = s.addedProjects + artifact), fetchProjects())
-    }
-
+    
     def selectIndex(index: Int)(e: ReactEventI): Callback = {
       scope.modState(s => s.copy(selected = index))
     }
 
-    def fetchProjects(): Callback = {
+    def setQuery(e: ReactEventI): Callback = {
+      e.extract(_.target.value){ value => 
+        scope.modState(_.copy(query = value, selected = 0), fetchProjects())
+      }
+    }
+
+    private def addArtifact(pa: (Project, String)): Callback = {
+      val (p, a) = pa
+      scope.modState(s =>
+        s.copy(addedProjects = s.addedProjects + pa),
+        fetchProjects() >> fetchReleaseOptions(p)
+      )
+    }
+
+    private val scaladexUrl = "http://localhost:8080/api/scastie"
+
+    private def toQuery(in: Map[String, String]): String =
+      in.map{ case (k, v) => s"$k=$v" }.mkString("?", "&", "")
+
+    private def fetchReleaseOptions(project: Project): Callback = {
+      val query = 
+        toQuery(Map(
+          "organization" -> project.organization,
+          "repository" -> project.repository
+        ))
+
+      Callback.future(
+        Ajax.get(scaladexUrl + "/project" + query).map(ret =>
+          uread[ReleaseOptions](ret.responseText)
+        ).map(options =>
+          scope.modState(s => s.copy(projectOptions = s.projectOptions + (project -> options)))
+        )
+      )
+    }
+
+    private def fetchProjects(): Callback = {
       def fetch(appState: State, searchState: SearchState): Callback = {
         if(!searchState.query.isEmpty) {
-          val query = 
-            (Map("q" -> searchState.query) ++ appState.inputs.target.scaladexRequest).map{ 
-              case (k, v) => s"$k=$v"
-            }.mkString("?", "&", "")
+          val query = toQuery(Map("q" -> searchState.query) ++ appState.inputs.target.scaladexRequest)
 
           Callback.future(
-            Ajax.get("http://localhost:8080/api/scastie/search" + query).map{ ret =>
+            Ajax.get(scaladexUrl + "/search" + query).map( ret =>
               uread[List[Project]](ret.responseText)
-            }.map{ projects =>            
+            ).map{ projects =>            
               val artifacts = projects.flatMap(project => project.artifacts.map(a => (project, a))).to[SortedSet]
               val filtered = (artifacts -- searchState.addedProjects).take(10)
               scope.modState(_.copy(projects = filtered))
@@ -100,16 +133,8 @@ object ScaladexSearch {
         _ <- fetch(appState, searchState)
       } yield ()
     }
-
-    def setQuery(e: ReactEventI): Callback = {
-      e.extract(_.target.value){ value => 
-        scope.modState(_.copy(query = value, selected = 0), fetchProjects())
-      }
-    }
   }
 
-
-     
   private val component = ReactComponentB[(State, Backend)]("Scaladex Search")
     .initialState(SearchState())
     .backend(new SearchBackend(_))
@@ -120,7 +145,11 @@ object ScaladexSearch {
         else EmptyTag
       }
 
-      def renderProject(project: Project, artifact: String, mod: TagMod = EmptyTag, extra: TagMod = EmptyTag) = {
+      def renderProject(project: Project, artifact: String, 
+        selected: TagMod = EmptyTag,
+        handlers: TagMod = EmptyTag,
+        remove: TagMod = EmptyTag,
+        options: TagMod = EmptyTag) = {
         import project._
 
         val common = TagMod(title := organization, `class` := "logo")
@@ -135,15 +164,42 @@ object ScaladexSearch {
         val scaladexLink =
           s"https://index.scala-lang.org/$organization/$repository/$artifact"
 
-        li(mod)(
-          extra,
-          logo.map(url => 
-            img(src := url, common, alt := s"$organization logo or avatar")
-          ).getOrElse(
-            img(src := "/assets/placeholder.svg", common, alt := s"placeholder for $organization")
+        li(selected)(
+          a(`class` := "scaladex", href := scaladexLink, target := "_blank")(
+            iconic.externalLink
           ),
-          a(`class` := "artifact", href := scaladexLink, target := "_blank")(label)
+          remove,
+          span(handlers)(
+            logo.map(url => 
+              img(src := url, common, alt := s"$organization logo or avatar")
+            ).getOrElse(
+              img(src := "/assets/placeholder.svg", common, alt := s"placeholder for $organization")
+            ),
+            span(`class` := "artifact")(label)
+          ),
+          options
         )
+      }
+
+      def renderOptions(project: Project) = {
+        dom.console.log(project.toString)
+        dom.console.log(searchState.projectOptions.toString)
+        searchState.projectOptions.get(project) match {
+          case Some(options) =>
+            div(
+              select(
+                options.artifacts.map(a =>
+                  option(a)
+                )
+              ),
+              select(
+                options.versions.map(v =>
+                  option(v)
+                )
+              )
+            )
+          case None => EmptyTag
+        }
       }
 
       val added = {
@@ -152,16 +208,18 @@ object ScaladexSearch {
           else EmptyTag
 
         ol(`class` := "added", hideAdded)(searchState.addedProjects.toList.map{ case(p, a) => 
-          renderProject(p, a, extra = iconic.x(
-            `class` := "remove",
-            onClick ==> scope.backend.removeArtifact(p, a)
-          ))
+          renderProject(p, a, 
+            remove = iconic.x(
+              `class` := "remove",
+              onClick ==> scope.backend.removeArtifact(p, a)
+            ),
+            options = renderOptions(p)
+          )
         })
       }
-        
+       
       fieldset(`class` := "scaladex")(
         legend("Scala Libraries"),
-
         div(`class` := "search")(
           added,
           input.search(
@@ -172,12 +230,13 @@ object ScaladexSearch {
             onKeyDown ==> scope.backend.keyDown
           ),
           ol(searchState.projects.zipWithIndex.toList.map{ case ((project, artifact), index) =>
-              renderProject(project, artifact, mod = 
-                selected(index, searchState.selected) + TagMod(
-                  onClick ==> scope.backend.addArtifact((project, artifact)),
-                  onMouseOver ==> scope.backend.selectIndex(index)
-                )
+            renderProject(project, artifact, 
+              selected = selected(index, searchState.selected),
+              handlers = TagMod(
+                onClick ==> scope.backend.addArtifact((project, artifact)),
+                onMouseOver ==> scope.backend.selectIndex(index)
               )
+            )
           })
         )
       )
