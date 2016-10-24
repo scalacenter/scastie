@@ -65,8 +65,8 @@ object ScaladexSearch {
     def removeArtifact(project: Project, artifact: String)(e: ReactEventI): Callback = {
       scope.modState(s => s.copy(addedProjects = s.addedProjects - (project -> artifact)), fetchProjects())
     }
-    def addArtifact(project: Project, artifact: String)(e: ReactEventI): Callback = {
-      scope.modState(s => s.copy(addedProjects = s.addedProjects + (project -> artifact)), fetchProjects())
+    def addArtifact(artifact: (Project, String))(e: ReactEventI): Callback = {
+      scope.modState(s => s.copy(addedProjects = s.addedProjects + artifact), fetchProjects())
     }
 
     def selectIndex(index: Int)(e: ReactEventI): Callback = {
@@ -74,7 +74,6 @@ object ScaladexSearch {
     }
 
     def fetchProjects(): Callback = {
-      dom.console.log("fetch")
       def fetch(appState: State, searchState: SearchState): Callback = {
         if(!searchState.query.isEmpty) {
           val query = 
@@ -104,7 +103,6 @@ object ScaladexSearch {
 
     def setQuery(e: ReactEventI): Callback = {
       e.extract(_.target.value){ value => 
-        dom.console.log(value)
         scope.modState(_.copy(query = value, selected = 0), fetchProjects())
       }
     }
@@ -162,7 +160,7 @@ object ScaladexSearch {
       }
         
       fieldset(`class` := "scaladex")(
-        legend("Scala Libraries: " + searchState.query),
+        legend("Scala Libraries"),
 
         div(`class` := "search")(
           added,
@@ -176,7 +174,7 @@ object ScaladexSearch {
           ol(searchState.projects.zipWithIndex.toList.map{ case ((project, artifact), index) =>
               renderProject(project, artifact, mod = 
                 selected(index, searchState.selected) + TagMod(
-                  onClick ==> scope.backend.addArtifact(project, artifact),
+                  onClick ==> scope.backend.addArtifact((project, artifact)),
                   onMouseOver ==> scope.backend.selectIndex(index)
                 )
               )
