@@ -6,7 +6,7 @@ import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom
 import dom.ext.KeyCode
-import dom.raw.HTMLInputElement
+import dom.raw.{HTMLInputElement, HTMLElement}
 import dom.ext.Ajax
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -14,6 +14,8 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import upickle.default.{read ⇒ uread}
 
 import scala.collection.immutable.SortedSet
+
+import scala.language.higherKinds
 
 object ScaladexSearch {
 
@@ -32,7 +34,13 @@ object ScaladexSearch {
     selected: Int = 0
   )
 
+  private val projectListRef = Ref[HTMLElement]("projectListRef")
   private val searchInputRef = Ref[HTMLInputElement]("searchInputRef")
+
+  implicit final class ReactExt_DomNodeO[O[_], N <: dom.raw.Node](o: O[N])(implicit O: OptionLike[O]) {
+    def tryTo(f: HTMLElement => Unit) = Callback(O.toOption(o).flatMap(_.domToHtml).foreach(f))
+    def tryFocus: Callback = tryTo(_.focus())
+  }
 
   private[ScaladexSearch] class SearchBackend(scope: BackendScope[(State, Backend), SearchState]) {
     def keyDown(e: ReactKeyboardEventI): Callback = {
@@ -47,9 +55,20 @@ object ScaladexSearch {
           else if(v < 0) 0
           else v
 
+        def interpolate(b: Int, d: Int, x: Int): Double = {
+          b.toDouble / d.toDouble * x.toDouble
+        }
+
+        def scrollToSelected(selected: Int, total: Int) = 
+          projectListRef(scope).tryTo(el => 
+            el.scrollTop = Math.abs(interpolate(el.scrollHeight, total, selected + diff))
+          )
+
         scope.modState(s => 
           s.copy(selected = clamp(s.projects.size, s.selected + diff))
-        ) >> e.preventDefaultCB
+        ) >> e.preventDefaultCB >> scope.state.flatMap(s => scrollToSelected(s.selected, s.projects.size))
+
+
       } else if(e.keyCode == KeyCode.Enter) {
         scope.state.flatMap( s =>
           if(0 <= s.selected && s.selected < s.projects.size)
@@ -67,7 +86,22 @@ object ScaladexSearch {
     }
 
     def removeArtifact(project: Project, artifact: String)(e: ReactEventI): Callback = {
-      scope.modState(s => s.copy(addedProjects = s.addedProjects - (project -> artifact)), fetchProjects())
+      scope.modState(s => 
+        s.copy(addedProjects = s.addedProjects - (project -> artifact)),
+        fetchProjects()
+      )
+    }
+
+    def changeVersion(project: Project)(e: ReactEventI): Callback = {
+      e.extract(_.target.value){ version => 
+        scope.modState(s =>
+          s.projectOptions.get(project) match {
+            case Some(options) =>
+              s.copy(projectOptions = s.projectOptions.updated(project, options.copy(version = version)))
+            case None => s
+          }
+        )
+      }
     }
     
     def selectIndex(index: Int)(e: ReactEventI): Callback = {
@@ -119,7 +153,7 @@ object ScaladexSearch {
               uread[List[Project]](ret.responseText)
             ).map{ projects =>            
               val artifacts = projects.flatMap(project => project.artifacts.map(a => (project, a))).to[SortedSet]
-              val filtered = (artifacts -- searchState.addedProjects).take(10)
+              val filtered = (artifacts -- searchState.addedProjects)
               scope.modState(_.copy(projects = filtered))
             }
           )
@@ -182,13 +216,11 @@ object ScaladexSearch {
       }
 
       def renderOptions(project: Project) = {
-        dom.console.log(project.toString)
-        dom.console.log(searchState.projectOptions.toString)
         searchState.projectOptions.get(project) match {
           case Some(options) =>
-            select(
+            select(value := options.version, onChange ==> scope.backend.changeVersion(project))(
               options.versions.reverse.map(v =>
-                option(selected := v == options.version)(v)
+                option(value := v)(v)
               )
             )
           case None => EmptyTag
@@ -222,7 +254,7 @@ object ScaladexSearch {
             onChange ==> scope.backend.setQuery,
             onKeyDown ==> scope.backend.keyDown
           ),
-          ol(searchState.projects.zipWithIndex.toList.map{ case ((project, artifact), index) =>
+          ol(`class` := "results", ref := projectListRef)(searchState.projects.zipWithIndex.toList.map{ case ((project, artifact), index) =>
             renderProject(project, artifact, 
               selected = selectedIndex(index, searchState.selected),
               handlers = TagMod(

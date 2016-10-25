@@ -21,13 +21,7 @@ object App {
     dark: Boolean = false,
     codemirrorSettings: Option[codemirror.Options] = None,
     inputs: Inputs = Inputs(),
-    outputs: Outputs = Outputs(console =
-      Vector(
-        "csdfsdf",
-        "csdfsdfsdfsd eet 45 4",
-        "csdfsdfe56 456 45"
-      )
-    )
+    outputs: Outputs = Outputs()
   ) {
     def toogleTheme = copy(dark = !dark)
     def toogleSidebar = copy(sideBarClosed = !sideBarClosed)
@@ -36,6 +30,11 @@ object App {
     def setCode(code: String) = copy(inputs = inputs.copy(code = code))
     def setView(newView: View) = copy(view = newView)
     def setTarget(target: ScalaTarget) = copy(inputs = inputs.copy(target = target))
+
+    def addRelease(release: MavenReference) = 
+      copy(inputs = inputs.copy(libraries = inputs.libraries - release))
+    def removeRelease(release: MavenReference) = 
+      copy(inputs = inputs.copy(libraries = inputs.libraries + release))
 
     def resetOutputs = copy(outputs = Outputs())
     def addOutputs(compilationInfos: List[api.Problem], instrumentations: List[api.Instrumentation]) =
@@ -101,6 +100,9 @@ object App {
     def setView(newView: View)(e: ReactEventI): Callback = scope.modState(_.setView(newView))
 
     def setTarget(target: ScalaTarget)(e: ReactEventI): Callback = scope.modState(_.setTarget(target))
+
+    def addRelease(release: MavenReference): Callback = scope.modState(_.addRelease(release))
+    def removeRelease(release: MavenReference): Callback = scope.modState(_.removeRelease(release))
 
     def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
       val (router, snippet) = props
