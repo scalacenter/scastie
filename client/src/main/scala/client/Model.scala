@@ -14,7 +14,9 @@ case class ReleaseOptions(
   groupId: String,
   artifactId: String,
   version: String
-)
+) {
+  def toMaven = MavenReference(groupId, artifactId, version)
+}
 
 // case class JvmDependency(mavenReference: MavenReference)
 // case class ScalaDependency()
@@ -89,9 +91,8 @@ object ScalaTarget {
 case class Inputs(
   code: String = "",
   target: ScalaTarget = ScalaTarget.Jvm(),
-  libraries: Set[Library] = Set()
+  libraries: Set[MavenReference] = Set()
 )
-case class Library()
 
 // outputs
 case class Outputs(

@@ -4,7 +4,8 @@ body {
   margin: 0;
 }
 
-body, .root, .app, .main-pannel, .pannel, .editor, .sidebar {
+body, .root, .app, .main-pannel, .pannel, .sidebar,
+.editor, .settings, .output {
   height: 100%;
 }
 
@@ -24,11 +25,27 @@ body, .root, .app, .main-pannel, .pannel, .editor, .sidebar {
       &.dark {
         background-color: @base02;
         color: @base01;
+        
+        // &::-webkit-scrollbar-track,
+        // &::-webkit-scrollbar-corner {
+        //   background: @base03;
+        // }
+        // &::-webkit-scrollbar-thumb {
+        //   background: @base02;
+        // }
       }
 
       &.light {
         background-color: @base2;
         color: @base1;
+
+        // &::-webkit-scrollbar-track,
+        // &::-webkit-scrollbar-corner {
+        //   background: @base3;
+        // }
+        // &::-webkit-scrollbar-thumb {
+        //   background: @base2;
+        // }
       }
     }
   }
