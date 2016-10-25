@@ -20,9 +20,12 @@ import scala.language.higherKinds
 object ScaladexSearch {
 
   private implicit def ordering = new Ordering[(Project, String)]{
-    private val cmp  = implicitly[Ordering[String]]
-    def compare(a: (Project, String), b: (Project, String)): Int = {
-      cmp.compare(a._2, b._2)
+    private val cmp  = implicitly[Ordering[(String, String, String)]]
+    def compare(pa1: (Project, String), pa2: (Project, String)): Int = {
+      val (Project(organization1, repository1, _, _), artifact1) = pa1
+      val (Project(organization2, repository2, _, _), artifact2) = pa2
+
+      cmp.compare((organization1, repository1, artifact1), (organization2, repository2, artifact2))
     }
   }
 
