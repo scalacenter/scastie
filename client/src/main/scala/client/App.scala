@@ -18,7 +18,7 @@ object App {
     // ui
     sideBarClosed: Boolean = false,
     websocket: Option[WebSocket] = None,
-    dark: Boolean = false,
+    dark: Boolean = true,
     codemirrorSettings: Option[codemirror.Options] = None,
     inputs: Inputs = Inputs(),
     outputs: Outputs = Outputs()
@@ -31,10 +31,16 @@ object App {
     def setView(newView: View) = copy(view = newView)
     def setTarget(target: ScalaTarget) = copy(inputs = inputs.copy(target = target))
 
-    def addRelease(release: MavenReference) = 
-      copy(inputs = inputs.copy(libraries = inputs.libraries - release))
-    def removeRelease(release: MavenReference) = 
-      copy(inputs = inputs.copy(libraries = inputs.libraries + release))
+    def addScalaDependency(scalaDependency: ScalaDependency) = 
+      copy(inputs = inputs.copy(libraries = inputs.libraries + scalaDependency))
+
+    def removeScalaDependency(scalaDependency: ScalaDependency) = 
+      copy(inputs = inputs.copy(libraries = inputs.libraries - scalaDependency))
+
+    def changeDependencyVersion(scalaDependency: ScalaDependency, version: String) = {
+      val newScalaDependency = scalaDependency.copy(version = version)
+      copy(inputs = inputs.copy(libraries = (inputs.libraries - scalaDependency) + newScalaDependency))
+    }
 
     def resetOutputs = copy(outputs = Outputs())
     def addOutputs(compilationInfos: List[api.Problem], instrumentations: List[api.Instrumentation]) =
@@ -73,7 +79,12 @@ object App {
 
     def run(): Callback = {
       scope.state.flatMap(s =>
-        Callback.future(api.Client[Api].run(s.inputs.code).call().map(id =>
+        Callback.future(api.Client[Api].run(
+          s.inputs.code,
+          s.inputs.sbtConfig,
+          s.inputs.target.targetType
+        ).call().map(id =>
+
           connect(id).attemptTry.flatMap{
             case Success(ws) => {
               def clearLogs = 
@@ -101,8 +112,14 @@ object App {
 
     def setTarget(target: ScalaTarget)(e: ReactEventI): Callback = scope.modState(_.setTarget(target))
 
-    def addRelease(release: MavenReference): Callback = scope.modState(_.addRelease(release))
-    def removeRelease(release: MavenReference): Callback = scope.modState(_.removeRelease(release))
+    def addScalaDependency(scalaDependency: ScalaDependency): Callback = 
+      scope.modState(_.addScalaDependency(scalaDependency))
+
+    def removeScalaDependency(scalaDependency: ScalaDependency): Callback = 
+      scope.modState(_.removeScalaDependency(scalaDependency))
+
+    def changeDependencyVersion(scalaDependency: ScalaDependency, version: String): Callback = 
+      scope.modState(_.changeDependencyVersion(scalaDependency, version))    
 
     def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
       val (router, snippet) = props

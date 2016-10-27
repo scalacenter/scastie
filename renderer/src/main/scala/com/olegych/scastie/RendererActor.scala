@@ -1,5 +1,7 @@
 package com.olegych.scastie
 
+import api.ScalaTargetType
+
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.event.LoggingReceive
 import com.olegych.scastie.FailuresActor.{FatalFailure, AddFailure}
@@ -35,16 +37,16 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   private def generateId: String = scala.util.Random.alphanumeric.take(10).mkString
   private val sbtDir = PastesContainer(new java.io.File(System.getProperty("java.io.tmpdir"))).renderer(generateId)
   private var sbt: Option[Sbt] = None
-  private var settings = ""
+  private var sbtConfig = ""
 
   override def preStart() {
-    settings = ""
+    sbtConfig = ""
   }
 
   override def preRestart(reason: Throwable, message: Option[Any]) {
     super.preRestart(reason, message)
     message.collect {
-      case message@Paste(_, content, _, _, _, _, _) => failures ! AddFailure(reason, message, sender, content)
+        case message@Paste(_, content, _, _, _, _, _, _, _) => failures ! AddFailure(reason, message, sender, content)
     }
   }
 
@@ -54,7 +56,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
   }
 
   def receive = LoggingReceive {
-    killer { case paste@Paste(_, Some(content), _, _, _, _, _) =>  {
+    killer { case paste@Paste(_, Some(content), Some(pasteSbtConfig), Some(scalaTargetType), _, _, _, _, _) =>  {
       if(sbt.isEmpty) {
         sbt = blocking {Option(RendererTemplate.create(sbtDir.root, generateId))}    
       }
@@ -62,8 +64,8 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
       sbt.foreach { sbt =>
         sbtDir.pasteFile.write(Option(content))
 
-        if (settings =/= paste.settings) {
-          settings = paste.settings
+        if (sbtConfig =/= pasteSbtConfig) {
+          sbtConfig = pasteSbtConfig
           sbt.process("reload", (line, _) => {
             println(line)
             sender ! paste.copy(content = sbtDir.pasteFile.read, output = line +: paste.output)
@@ -72,31 +74,56 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
           sender ! paste.copy(content = sbtDir.pasteFile.read, output = Seq())
         }
 
+        def extractProblems(line: String): List[api.Problem] = {
+          val sbtProblems =
+            try{ uread[List[sbtapi.Problem]](line) }
+            catch { case scala.util.control.NonFatal(e) => List()}
+
+          def toApi(p: sbtapi.Problem): api.Problem = {
+            val severity = p.severity match {
+              case sbtapi.Info    => api.Info
+              case sbtapi.Warning => api.Warning
+              case sbtapi.Error   => api.Error
+            }
+            api.Problem(severity, p.offset, p.message)
+          }
+
+          sbtProblems.map(toApi)
+        }
+
         sbtDir.sxrSource.delete()
         applyRunKiller(paste) {
-          sbt.process(";compile ;run-all", (line, done) => {
+          if(scalaTargetType == ScalaTargetType.JVM || 
+            scalaTargetType == ScalaTargetType.Dotty) {
 
-            val sbtProblems =
-              try{ uread[List[sbtapi.Problem]](line) }
-              catch { case scala.util.control.NonFatal(e) => List()}
+            sbt.process(";compile ;run-all", (line, done) => {
+              val instrumentations =
+                try{ uread[List[api.Instrumentation]](line) }
+                catch { case scala.util.control.NonFatal(e) => List()}
 
-            def toApi(p: sbtapi.Problem): api.Problem = {
-              val severity = p.severity match {
-                case sbtapi.Info    => api.Info
-                case sbtapi.Warning => api.Warning
-                case sbtapi.Error   => api.Error
-              }
-              api.Problem(severity, p.offset, p.message)
-            }
-
-            val problems = sbtProblems.map(toApi)
-
-            val instrumentations =
-              try{ uread[List[api.Instrumentation]](line) }
-              catch { case scala.util.control.NonFatal(e) => List()}
-
-            sender ! paste.copy(output = line +: paste.output, problems = problems, instrumentations = instrumentations)
-          })
+              sender ! paste.copy(
+                output = line +: paste.output,
+                problems = extractProblems(line),
+                instrumentations = instrumentations
+              )
+            })
+          }
+          else if(scalaTargetType == ScalaTargetType.JS) {
+            sbt.process("fast-opt", (line, done) => {
+              sender ! paste.copy(
+                output = line +: paste.output,
+                problems = extractProblems(line)
+              )
+            })
+          }
+          else if(scalaTargetType == ScalaTargetType.Native) {
+            sbt.process("compile", (line, done) => {
+              sender ! paste.copy(
+                output = line +: paste.output,
+                problems = extractProblems(line)
+              )
+            })
+          }
         }
       }
     }}

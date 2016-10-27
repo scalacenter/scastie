@@ -3,8 +3,16 @@ package api
 import scala.concurrent.Future
 
 trait Api {
-  def run(code: String): Future[Long]
+  def run(code: String, sbtConfig: String, target: ScalaTargetType): Future[Long]
   def fetch(id: Long): Future[String]
+}
+
+sealed trait ScalaTargetType
+object ScalaTargetType {
+  case object JVM extends ScalaTargetType 
+  case object Dotty extends ScalaTargetType 
+  case object JS extends ScalaTargetType 
+  case object Native extends ScalaTargetType 
 }
 
 case class PasteProgress(

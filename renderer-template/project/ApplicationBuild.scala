@@ -85,38 +85,37 @@ object ApplicationBuild extends Build {
   }
 
   def addDepsToState(state: State): State = {
+    def extractDependencies(eval: compiler.Eval, loader: ClassLoader, state: State): Seq[Setting[_]] = {
+      val forbiddenKeys = Set(fork, compile, onLoad, runAll)
+      val scriptArg = "src/main/scala/config.sbt"
+      val script = file(scriptArg).getAbsoluteFile
+      try {
+        ScriptSecurityManager.hardenPermissions {
+          val embeddedSettings = Script.blocks(script).flatMap { block =>
+            val imports = List("import sbt._", "import Keys._")
+            evaluateConfiguration(eval, script, block.lines, imports, block.offset + 1)(loader)
+          }
+          embeddedSettings.flatMap {
+            case setting if !forbiddenKeys.exists(_.scopedKey == setting.key) =>
+              setting
+            case setting =>
+              state.log.warn(s"ignored unsafe ${setting.toString}")
+              Nil
+          }
+        }
+      } catch {
+        case e: Throwable =>
+          state.log.error(e.getClass.toString)
+          state.log.error(e.getMessage)
+          e.getStackTrace.take(100).foreach(e => state.log.error(e.toString))
+          state.log.trace(e)
+          Nil
+      }
+    }
+
     val extracted = Project.extract(state)
     val settings = extractDependencies(state.get(Keys.sessionSettings).get.currentEval(), extracted.currentLoader, state)
     val sessionSettings = sbt.Shim.SettingCompletions.setThis(state, extracted, settings, "").session
     BuiltinCommands.reapply(sessionSettings.appendRaw(onLoad in Global := idFun), extracted.structure, state)
-  }
-
-  val forbiddenKeys = Set(fork, compile, onLoad, runAll)
-
-  def extractDependencies(eval: compiler.Eval, loader: ClassLoader, state: State): Seq[Setting[_]] = {
-    val scriptArg = "src/main/scala/test.scala"
-    val script = file(scriptArg).getAbsoluteFile
-    try {
-      ScriptSecurityManager.hardenPermissions {
-        val embeddedSettings = Script.blocks(script).flatMap { block =>
-          val imports = List("import sbt._", "import Keys._")
-          evaluateConfiguration(eval, script, block.lines, imports, block.offset + 1)(loader)
-        }
-        embeddedSettings.flatMap {
-          case setting if !forbiddenKeys.exists(_.scopedKey == setting.key) =>
-            setting
-          case setting =>
-            state.log.warn(s"ignored unsafe ${setting.toString}")
-            Nil
-        }
-      }
-    } catch {
-      case e: Throwable =>
-        state.log.error(e.getClass.toString)
-        state.log.error(e.getMessage)
-        e.getStackTrace.take(100).foreach(e => state.log.error(e.toString))
-        state.log.trace(e)
-        Nil
-    }
   }
 }

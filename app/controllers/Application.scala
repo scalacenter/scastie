@@ -26,8 +26,8 @@ import scala.concurrent.duration._
 
 
 class ApiImpl(renderer: ActorRef)(implicit timeout: Timeout) extends Api {
-  def run(code: String): Future[Long] = {
-    (renderer ? AddPaste(code, "-no-uid-")).mapTo[Paste].map(_.id)
+  def run(code: String, sbtConfig: String, scalaTargetType: ScalaTargetType): Future[Long] = {
+    (renderer ? AddPaste(code, sbtConfig, scalaTargetType, "-no-uid-")).mapTo[Paste].map(_.id)
   }
   def fetch(id: Long): Future[String] = {
     (renderer ? GetPaste(id)).mapTo[Paste].map(_.content.getOrElse(""))

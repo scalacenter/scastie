@@ -55,8 +55,8 @@ object SideBar {
       nav(`class` := s"sidebar $theme")(
         ul(
           li(selected(View.Editor))(mediaPlay(onClick ==> setView(View.Editor))), // clock()
-          li(selected(View.Settings))(cog(onClick ==> setView(View.Settings))),
-          li(selected(View.Output))(terminal(onClick ==> setView(View.Output)))
+          li(selected(View.Output))(terminal(onClick ==> setView(View.Output))),
+          li(selected(View.Settings))(cog(onClick ==> setView(View.Settings)))
         )
       )
     }
