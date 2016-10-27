@@ -34,44 +34,39 @@ object Settings {
       targetType match {
         case ScalaTargetType.JVM    => ScalaTarget.Jvm()
         case ScalaTargetType.JS     => ScalaTarget.Js()
-        case ScalaTargetType.Dotty  => ScalaTarget.Native
-        case ScalaTargetType.Native => ScalaTarget.Dotty
+        case ScalaTargetType.Dotty  => ScalaTarget.Dotty
+        case ScalaTargetType.Native => ScalaTarget.Native
       }
     }
 
     def logo(targetType: ScalaTargetType) = {
       targetType match {
         case ScalaTargetType.JVM    => "smooth-spiral.png"
-        case ScalaTargetType.JS     => "dotty3.svg"
-        case ScalaTargetType.Dotty  => "scala-js.svg"
+        case ScalaTargetType.Dotty  => "dotty3.svg"
+        case ScalaTargetType.JS     => "scala-js.svg"
         case ScalaTargetType.Native => "native2.png"
       }
     }
 
     def labelFor(targetType: ScalaTargetType) = {
       targetType match {
-        case ScalaTargetType.JVM    => "Scalac (JVM)"
-        case ScalaTargetType.JS     => "Scala.js (Browser)"
-        case ScalaTargetType.Dotty  => "Dotty (JVM)"
-        case ScalaTargetType.Native => "Native (LLVM)"
+        case ScalaTargetType.JVM    => "Scalac"
+        case ScalaTargetType.JS     => "Scala.js"
+        case ScalaTargetType.Dotty  => "Dotty"
+        case ScalaTargetType.Native => "Native"
       }
     }
 
-
+    def selected(targetType: ScalaTargetType) =
+      if(targetType == scalaTarget.targetType) TagMod(`class` := "selected")
+      else EmptyTag
+      
     fieldset(`class` := "targets")(
       legend("Target"),
       ul(targetTypes.map(targetType =>
-        li(
+        li(onClick ==> backend.setTarget(defaultTarget(targetType)), selected(targetType))(
           img(src := s"/assets/${logo(targetType)}", alt := s"logo for ${labelFor(targetType)}"),
           span(labelFor(targetType))
-          // label(
-            // input.radio(
-            //   checked := scalaTarget.targetType == targetType,
-            //   onChange ==> backend.setTarget(defaultTarget(targetType)),
-            //   name := "target"
-            // ),
-            
-          // )
         )
       ))
     )
@@ -84,20 +79,17 @@ object Settings {
       ("next", Version(2, 12, 0, "-RC1"))
     )
 
+    def selected(v1: Version, v2: Version) =
+      if(v1 == v2) TagMod(`class` := "selected")
+      else EmptyTag
+
     target match {
       case ScalaTarget.Jvm(scalaVersion) =>
         fieldset(`class` := "versions")(
           legend("Scala Version"),
           ul(suggestedVersions.map{ case (versionStatus, version) =>
-            li(
-              label(
-                input.radio(
-                  checked := scalaVersion == version,
-                  onChange ==> backend.setTarget(ScalaTarget.Jvm(version)),
-                  name := "version"
-                ),
-                span(s"${version.binary} ($versionStatus)")
-              )
+            li(onClick ==> backend.setTarget(ScalaTarget.Jvm(version)), selected(version, scalaVersion))(
+              s"${version.binary} ($versionStatus)"
             )
           })
         )
