@@ -10,8 +10,11 @@
     }
 
     .scaladex {
-      .selected, input[type="search"] {
+      .selected, input[type="search"], select {
         background-color: @base03;
+      }
+      & > *, input[type="search"], select {
+        color: @base01;
       }
     }
   }
@@ -25,7 +28,7 @@
     }
 
     .scaladex {
-      .selected, input[type="search"] {
+      .selected, input[type="search"], select {
         background-color: @base3;
       }
     }
@@ -64,15 +67,16 @@
   .targets, .versions {
     ul {
       padding-left: 0;
-      display: table;
 
       li {
-        display: table-cell;
+        display: inline-block;
         text-align: center;
         vertical-align: middle;
 
-        padding-left: 15px;
-        padding-right: 15px;
+        padding-left: 30px;
+        padding-right: 30px;
+
+        width: 150px;
       }
 
       label {
@@ -115,6 +119,7 @@
         height: 32px;
         font-size: 24px;
         display: inline-block;
+        border: none;
       }
     }
 

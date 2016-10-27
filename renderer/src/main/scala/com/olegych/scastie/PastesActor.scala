@@ -1,5 +1,7 @@
 package com.olegych.scastie
 
+import api.ScalaTargetType
+
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
@@ -16,18 +18,27 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
   private var rendererBySettings = Map[String, ActorRef]()
 
   def receive = LoggingReceive {
-    case AddPaste(content, uid) =>
+    case AddPaste(content, sbtConfig, scalaTargetType, uid) =>
       val id = nextPasteId
-      val paste = Paste(id = id, content = Option(content), output = Seq(), uid = Some(uid), renderedContent = None)
+      val paste = Paste(
+        id = id,
+        content = Some(content),
+        sbtConfig = Some(sbtConfig),
+        scalaTargetType = Some(scalaTargetType),
+        output = Seq(),
+        uid = Some(uid),
+        renderedContent = None
+      )
+
       writePaste(paste)
-      rendererBySettings.getOrElse(paste.settings, renderer) ! paste
+      rendererBySettings.getOrElse(sbtConfig, renderer) ! paste
       sender ! paste
     case GetPaste(id) =>
       sender ! readPaste(id)
     case DeletePaste(id, uid) =>
       sender ! deletePaste(id, uid)
     case paste: Paste =>
-      rendererBySettings += (paste.settings -> sender())
+      paste.sbtConfig.foreach(c => rendererBySettings += (c -> sender()))
       writePaste(paste)
   }
 
@@ -43,17 +54,35 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
   }
 
   def readPaste(id: Long) = {
+    def readScalaTargetType(v: String) = v match {
+      case "JVM"    => ScalaTargetType.JVM
+      case "Dotty"  => ScalaTargetType.Dotty
+      case "JS"     => ScalaTargetType.JS
+      case "Native" => ScalaTargetType.Native
+    }
+
+
     val paste = pastesContainer.paste(id)
     if (paste.pasteFile.exists) {
       Paste(
         id = id,
         content = paste.pasteFile.read,
+        sbtConfig = paste.sbtConfigFile.read,
+        scalaTargetType = paste.scalaTargetTypeFile.read.map(s => readScalaTargetType(s.trim)),
         output = paste.outputFile.read.map(_.split(System.lineSeparator).toList).getOrElse(Seq()),
         uid = paste.uidFile.read,
         renderedContent = paste.sxrSource.read
       )
     } else {
-      Paste(id = id, content = None, output = Seq("Not found"), uid = None, renderedContent = None)
+      Paste(
+        id = id,
+        content = None,
+        sbtConfig = None,
+        scalaTargetType = None,
+        output = Seq("Not found"),
+        uid = None,
+        renderedContent = None
+      )
     }
   }
 
@@ -79,7 +108,7 @@ object PastesActor {
 
   sealed trait PasteMessage
 
-  case class AddPaste(content: String, uid: String) extends PasteMessage
+  case class AddPaste(content: String, sbtConfig: String, scalaTargetType: ScalaTargetType, uid: String) extends PasteMessage
 
   case class GetPaste(id: Long) extends PasteMessage
 
@@ -88,14 +117,14 @@ object PastesActor {
   case class Paste(
     id: Long,
     content: Option[String],
+    sbtConfig: Option[String],
+    scalaTargetType: Option[ScalaTargetType],
     output: Seq[String],
     uid: Option[String], 
     renderedContent: Option[String],
     problems: List[api.Problem] = List(),
     instrumentations: List[api.Instrumentation] = List()
-  ) extends PasteMessage {
-    lazy val settings = Script.blocks(content.orZero.split("\r\n".toCharArray)).flatMap(_.lines).mkString("\n")
-  }
+  ) extends PasteMessage
 
   case class PasteProgress(
     id: Long,

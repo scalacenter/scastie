@@ -13,20 +13,24 @@ object TemplatePastes {
 
   private val pasteIds = new PasteId()
 
-  val default = nextPaste( """
-/***
+  val default = nextPaste(
+"""
 coursier.CoursierPlugin.projectSettings
 scalaVersion := "2.11.8"
-*/
-object Main extends App {
-
+""",
+"""
+object Main {
+  def main(args: Array[String]) {
+    
+  }
 }
-                           """)
+"""
+)
 
   val templates = {
     List(
-      "typelevel" -> nextPaste( """
-/***
+      "typelevel" -> nextPaste( 
+"""
 coursier.CoursierPlugin.projectSettings
 scalaVersion := "2.11.8"
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.7.1")
@@ -48,7 +52,8 @@ libraryDependencies ++= {
     "co.fs2" %% "fs2-io" % fs2Version
   )
 }
-*/
+""",
+"""
 import scalaz._, Scalaz._
 import shapeless._
 import spire.math._
@@ -59,56 +64,71 @@ import fs2.util.Task
 import monocle._
 import monocle.syntax._
 import monocle.std.string._
-object Main extends App {
+object Main {
+  def main(args: Array[String]) {
 
+  }
 }
-        """)
+""")
       ,
-      "typesafe" -> nextPaste( """
-/***
+      "typesafe" -> nextPaste(
+"""
 coursier.CoursierPlugin.projectSettings
 scalaVersion := "2.11.8"
 libraryDependencies ++= Seq("com.typesafe.play" %% "play" % "2.5.3")
-*/
+""",
+"""
 import play.api
 import akka.actor
-object Main extends App {
-
+object Main {
+  def main(args: Array[String]) {
+    
+  }
 }
-                                """)
+""")
       ,
-      "sbt 0.13" -> nextPaste( """
-/***
+      "sbt 0.13" -> nextPaste(
+"""
 coursier.CoursierPlugin.projectSettings
 sbtPlugin := true
-*/
+""",
+"""
 import sbt._
 import Keys._
-object Build extends Build with App {
-
+object Main extends Build {
+  def main(args: Array[String]) {
+    
+  }
 }
-                          """)
+""")
       ,
-      "scala 2.12" -> nextPaste( """
-/***
+      "scala 2.12" -> nextPaste(
+"""
 coursier.CoursierPlugin.projectSettings
-scalaVersion := "2.12.0-M4"
-*/
-object Main extends App {
-
+scalaVersion := "2.12.0-RC2"
+""",
+"""
+object Main {
+  def main(args: Array[String]) {
+    
+  }
 }
-                          """)
+""")
       ,
-      "dotty" -> nextPaste( """
-/***
+      "dotty" -> nextPaste(
+"""
 com.felixmulder.dotty.plugin.DottyPlugin.projectSettings
-*/
-object Main extends App {
-
+""",
+"""
+object Main {
+  def main(args: Array[String]) {
+    
+  }
 }
-                          """)
+""")
     )
   }
 
-  def nextPaste(x: String): PastesActor.Paste = Paste(pasteIds.next, Some(x), Seq(), None, None)
+  def nextPaste(code: String, sbtConfig: String): PastesActor.Paste = 
+    Paste(pasteIds.next, Some(code), Some(sbtConfig), None, Seq(), None, None)
 }
