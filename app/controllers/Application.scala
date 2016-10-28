@@ -24,7 +24,6 @@ import scala.concurrent.Future
 
 import scala.concurrent.duration._
 
-
 class ApiImpl(renderer: ActorRef)(implicit timeout: Timeout) extends Api {
   def run(code: String, sbtConfig: String, scalaTargetType: ScalaTargetType): Future[Long] = {
     (renderer ? AddPaste(code, sbtConfig, scalaTargetType, "-no-uid-")).mapTo[Paste].map(_.id)

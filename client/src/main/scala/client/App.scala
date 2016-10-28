@@ -59,7 +59,10 @@ object App {
       def onopen(e: Event): Unit = direct.modState(_.log("Connected."))
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[PasteProgress](e.data.toString)
-        direct.modState(_.addOutputs(progress.compilationInfos, progress.instrumentations).log(progress.output))
+        direct.modState(_.addOutputs(
+          progress.compilationInfos,
+          progress.instrumentations
+        ).log(progress.output))
       }
       def onerror(e: ErrorEvent): Unit = direct.modState(_.log(s"Error: ${e.message}"))
       def onclose(e: CloseEvent): Unit = direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}"))

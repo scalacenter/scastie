@@ -9,11 +9,13 @@ import xsbti.{Reporter, Problem, Position, Severity, Maybe}
 import upickle.default.{write ⇒ uwrite}
 
 object ApplicationBuild extends Build {
-  val runAll = TaskKey[Unit]("run-all")
-  val jdkVersion = settingKey[String]("")
+  private val nl = System.lineSeparator
+
+  private val runAll = TaskKey[Unit]("run-all")
+  private val jdkVersion = settingKey[String]("")
 
   // compilerReporter is marked private in sbt
-  lazy val compilerReporter = TaskKey[Option[xsbti.Reporter]]("compilerReporter", "Experimental hook to listen (or send) compilation failure messages.", DTask)
+  private lazy val compilerReporter = TaskKey[Option[xsbti.Reporter]]("compilerReporter", "Experimental hook to listen (or send) compilation failure messages.", DTask)
 
   val rendererWorker = Project(id = "rendererWorker", base = file(".")).settings(
       updateOptions := updateOptions.value.withCachedResolution(true).withLatestSnapshots(false)
@@ -72,36 +74,30 @@ object ApplicationBuild extends Build {
     , onLoad in Global := addDepsToState
   ).disablePlugins(coursier.CoursierPlugin)
 
-  def runAllTask(discoveredMainClasses: Seq[String], fullClasspath: Keys.Classpath, runner: ScalaRun,
-                 streams: Keys.TaskStreams) {
+  private def runAllTask(
+    discoveredMainClasses: Seq[String],
+    fullClasspath: Keys.Classpath,
+    runner: ScalaRun,
+    streams: Keys.TaskStreams) {
+
     val mainClasses = if (discoveredMainClasses.isEmpty) Seq("Main") else discoveredMainClasses
     val errors = mainClasses.flatMap { mainClass =>
       runner.run(mainClass, Attributed.data(fullClasspath), Nil, streams.log)
     }
     if (errors.nonEmpty) {
-      sys.error(errors.mkString("\n"))
-
+      sys.error(errors.mkString(nl))
     }
   }
 
-  def addDepsToState(state: State): State = {
+  private def addDepsToState(state: State): State = {
     def extractDependencies(eval: compiler.Eval, loader: ClassLoader, state: State): Seq[Setting[_]] = {
-      val forbiddenKeys = Set(fork, compile, onLoad, runAll)
       val scriptArg = "src/main/scala/config.sbt"
       val script = file(scriptArg).getAbsoluteFile
+
       try {
         ScriptSecurityManager.hardenPermissions {
-          val embeddedSettings = Script.blocks(script).flatMap { block =>
-            val imports = List("import sbt._", "import Keys._")
-            evaluateConfiguration(eval, script, block.lines, imports, block.offset + 1)(loader)
-          }
-          embeddedSettings.flatMap {
-            case setting if !forbiddenKeys.exists(_.scopedKey == setting.key) =>
-              setting
-            case setting =>
-              state.log.warn(s"ignored unsafe ${setting.toString}")
-              Nil
-          }
+          val imports = Seq("import sbt._", "import Keys._")
+          evaluateConfiguration(eval, script, imports)(loader)
         }
       } catch {
         case e: Throwable =>

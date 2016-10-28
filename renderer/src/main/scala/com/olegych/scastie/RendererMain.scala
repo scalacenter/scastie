@@ -1,7 +1,9 @@
 package com.olegych.scastie
 
 import com.typesafe.config.ConfigFactory
+
 import util.Properties
+
 import java.io.{FileOutputStream, File}
 
 /**
