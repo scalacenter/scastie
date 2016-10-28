@@ -17,7 +17,7 @@ object ScalaTargetType {
 
 case class PasteProgress(
   id: Long,
-  output: Seq[String],
+  output: String,
   compilationInfos: List[Problem],
   instrumentations: List[Instrumentation]
 )

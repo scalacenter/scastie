@@ -1,8 +1,11 @@
 package com.olegych.scastie
 
+
+import FailuresActor.{FatalFailure, AddFailure}
+
 import akka.actor.{ActorRef, ActorLogging, Actor}
-import com.olegych.scastie.FailuresActor.{FatalFailure, AddFailure}
 import akka.event.LoggingReceive
+
 import util.control.NoStackTrace
 
 /**

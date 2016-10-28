@@ -86,13 +86,13 @@ case class Inputs(
     val targetConfig =
       target match {
         case ScalaTarget.Jvm(scalaVersion) => {
-          s"scalaVersion := $scalaVersion"
+          s"""scalaVersion := "$scalaVersion""""
         }
         case ScalaTarget.Js(scalaVersion, _) => {
           // TODO change scalajs version
           s"""|org.scalajs.sbtplugin.ScalaJSPlugin.projectSettings
               |
-              |s"scalaVersion := $scalaVersion"
+              |scalaVersion := "$scalaVersion"
               |""".stripMargin
         }
         case ScalaTarget.Dotty => {

@@ -1,11 +1,11 @@
 package com.olegych.scastie
 
 import api.ScalaTargetType
+import PastesActor._
 
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
-import com.olegych.scastie.PastesActor._
 
 import scalaz.Scalaz._
 
@@ -37,6 +37,10 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
       sender ! readPaste(id)
     case DeletePaste(id, uid) =>
       sender ! deletePaste(id, uid)
+
+    case progress: PasteProgress =>
+      progressActor ! progress
+
     case paste: Paste =>
       paste.sbtConfig.foreach(c => rendererBySettings += (c -> sender()))
       writePaste(paste)
@@ -45,11 +49,14 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
   def writePaste(paste: Paste) {
     val pasteDir = pastesContainer.paste(paste.id)
     val oldPaste = readPaste(paste.id)
-    val contentChanged = oldPaste.content.nonEmpty && (oldPaste.content =/= paste.content || oldPaste.renderedContent =/= paste.renderedContent)
+
     pasteDir.pasteFile.write(paste.content)
     pasteDir.sxrSource.write(paste.renderedContent)
+
+    println("wrote" + paste.sbtConfig)
+    pasteDir.sbtConfigFile.write(paste.sbtConfig)
+
     pasteDir.uidFile.write(paste.uid)
-    progressActor ! PasteProgress(paste.id, contentChanged, paste.output, paste.problems, paste.instrumentations)
     pasteDir.outputFile.write(Some(paste.output.mkString(System.lineSeparator)), truncate = false)
   }
 
@@ -60,7 +67,6 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
       case "JS"     => ScalaTargetType.JS
       case "Native" => ScalaTargetType.Native
     }
-
 
     val paste = pastesContainer.paste(id)
     if (paste.pasteFile.exists) {
@@ -128,9 +134,9 @@ object PastesActor {
 
   case class PasteProgress(
     id: Long,
-    contentChanged: Boolean,
-    output: Seq[String],
-    compilationInfos: List[api.Problem],
-    instrumentations: List[api.Instrumentation]
+    done: Boolean = false,
+    output: String = "",
+    compilationInfos: List[api.Problem] = Nil,
+    instrumentations: List[api.Instrumentation] = Nil
   )
 }

@@ -270,7 +270,7 @@ object ScaladexSearch {
           added,
           input.search(
             ref := searchInputRef,
-            placeholder := "Search for 'time'",
+            placeholder := "Search for 'fp'",
             value := searchState.query,
             onChange ==> scope.backend.setQuery,
             onKeyDown ==> scope.backend.keyDown
