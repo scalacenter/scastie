@@ -86,12 +86,13 @@ case class Inputs(
     val targetConfig =
       target match {
         case ScalaTarget.Jvm(scalaVersion) => {
-          s"""scalaVersion := "$scalaVersion""""
+          s"""|coursier.CoursierPlugin.projectSettings
+              |scalaVersion := "$scalaVersion"""".stripMargin
         }
         case ScalaTarget.Js(scalaVersion, _) => {
           // TODO change scalajs version
-          s"""|org.scalajs.sbtplugin.ScalaJSPlugin.projectSettings
-              |
+          s"""|coursier.CoursierPlugin.projectSettings
+              |org.scalajs.sbtplugin.ScalaJSPlugin.projectSettings
               |scalaVersion := "$scalaVersion"
               |""".stripMargin
         }
@@ -99,7 +100,8 @@ case class Inputs(
           "com.felixmulder.dotty.plugin.DottyPlugin.projectSettings"
         }
         case ScalaTarget.Native => {
-          "scala.scalanative.ScalaNativePlugin.projectSettings"
+          """|coursier.CoursierPlugin.projectSettings
+             |scala.scalanative.ScalaNativePlugin.projectSettings""".stripMargin
         }
       }
 
@@ -117,7 +119,7 @@ case class Inputs(
           )
       }
     
-    s"""|coursier.CoursierPlugin.projectSettings
+    s"""|
         |
         |$targetConfig
         |
