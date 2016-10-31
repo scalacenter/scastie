@@ -138,10 +138,8 @@ object App {
   }
 
   val defaultCode =
-    """|object Main {
-       |  def main(args: Array[String]): Unit = {
-       |    println(util.Properties.versionString)
-       |  }
+    """|class Worksheet$ {
+       |  1 + 1
        |}""".stripMargin
 
   val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")

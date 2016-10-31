@@ -74,7 +74,6 @@ object ScalaTarget {
   }
 }
 
-
 // input
 case class Inputs(
   code: String = "",
@@ -86,18 +85,21 @@ case class Inputs(
     val targetConfig =
       target match {
         case ScalaTarget.Jvm(scalaVersion) => {
-          s"""|coursier.CoursierPlugin.projectSettings
+          s"""|libraryDependencies += "org.scastie" %% "runtimescala" % "0.1.0-SNAPSHOT"
+              |coursier.CoursierPlugin.projectSettings
               |scalaVersion := "$scalaVersion"""".stripMargin
         }
         case ScalaTarget.Js(scalaVersion, _) => {
           // TODO change scalajs version
-          s"""|coursier.CoursierPlugin.projectSettings
+          s"""|libraryDependencies += "org.scastie" %% "runtimescala" % "0.1.0-SNAPSHOT"
+              |coursier.CoursierPlugin.projectSettings
               |org.scalajs.sbtplugin.ScalaJSPlugin.projectSettings
               |scalaVersion := "$scalaVersion"
               |""".stripMargin
         }
         case ScalaTarget.Dotty => {
-          "com.felixmulder.dotty.plugin.DottyPlugin.projectSettings"
+          s"""|libraryDependencies += "org.scastie" %% "runtimedotty" % "0.1.0-SNAPSHOT"
+              |com.felixmulder.dotty.plugin.DottyPlugin.projectSettings""".stripMargin
         }
         case ScalaTarget.Native => {
           """|coursier.CoursierPlugin.projectSettings

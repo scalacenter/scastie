@@ -1,5 +1,3 @@
-object Main {
-  def main(args: Array[String]): Unit = {
-    println(util.Properties.versionString)
-  }
+class Worksheet$ {
+  1 + 1
 }

@@ -83,7 +83,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
 
   private def extractInstrumentations(line: String): List[api.Instrumentation] = {
     try{ uread[List[api.Instrumentation]](line) }
-    catch { case NonFatal(e) => List()}
+    catch { case NonFatal(e) => List() }
   }
 
   def processSbtOutput(sender: ActorRef, id: Long,
@@ -108,8 +108,13 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
       }
 
       sbt.foreach { sbt =>
-        sbtDir.pasteFile.write(Some(content))
+
+        val nl = System.lineSeparator
         sbtDir.sbtConfigFile.write(Some(pasteSbtConfig))
+        
+        println("sbtConfig" + nl + sbtConfig)
+        println("*****")
+        println("pasteSbtConfig" + nl + pasteSbtConfig)
 
         if (sbtConfig != pasteSbtConfig) {
           sbtConfig = pasteSbtConfig
@@ -117,6 +122,10 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
             sender ! PasteProgress(id = id, output = line)
           })
         }
+
+        val instrumented = instrumentation.Instrument(content)
+        
+        sbtDir.pasteFile.write(Some(instrumented))
 
         sbtDir.sxrSource.delete()
         applyRunKiller(paste) {
