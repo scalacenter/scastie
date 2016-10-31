@@ -106,6 +106,11 @@ lazy val baseSettings = Seq(
   , "-Ywarn-unused-import"
   , "-Ywarn-value-discard"
   )
+,  console <<= console in Test
+,  scalacOptions in (Test, console) -= "-Ywarn-unused-import"
+,  scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"
+,  libraryDependencies += "com.lihaoyi" % "ammonite-repl" % "0.6.0" % "test" cross CrossVersion.full
+,  initialCommands in (Test, console) := """ammonite.repl.Main().run()"""
 )
 
 def codemirrorD(path: String): JSModuleID =
@@ -161,6 +166,14 @@ lazy val client = project
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror, scaladexApi, apiJS)
+
+lazy val instumentation = project
+  .settings(baseSettings)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "scalameta" % "1.2.0"
+    )
+  )
 
 lazy val scaladexApi = project
   .settings(baseSettings)
