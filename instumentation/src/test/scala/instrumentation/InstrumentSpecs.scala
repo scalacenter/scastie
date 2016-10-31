@@ -8,7 +8,7 @@ import scala.collection.JavaConverters._
 object InstrumentSpecs {
 
   private def slurp(path: Path): String = {
-    Files.readAllLines(path).toArray.mkString("")
+    Files.readAllLines(path).toArray.mkString(System.lineSeparator)
   }
 
   def main(args: Array[String]): Unit = {
@@ -27,9 +27,10 @@ object InstrumentSpecs {
           slurp(p.resolve("original.scala")),
           slurp(p.resolve("instrumented.scala"))
         ))
-        .map{ case (path, instrumented, original) =>
+        .map{ case (path, original, instrumented) =>
+          val out = Instrument(original)
           val assertion =
-            if(Instrument(original) == instrumented) "✓"
+            if(out == instrumented) "✓"
             else "✘"
 
           assertion + " " + path.getFileName
