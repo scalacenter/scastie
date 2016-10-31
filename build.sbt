@@ -67,7 +67,7 @@ lazy val renderer = project
     ,  "org.apache.commons"          % "commons-lang3"       % "3.1"
     ,  "net.sourceforge.collections" % "collections-generic" % "4.01"
     )
-  ).dependsOn(sbtApi, apiJVM)
+  ).dependsOn(sbtApi, apiJVM, instrumentation)
 
 lazy val scastie = project.in(file("."))
   .settings(defaultSettings)
@@ -92,6 +92,8 @@ lazy val scastie = project.in(file("."))
 
 lazy val baseSettings = Seq(
   scalaVersion := "2.11.8"
+, organization := "org.scastie"
+, version      := "0.1.0-SNAPSHOT"
 , scalacOptions := Seq(
     "-deprecation"
   , "-encoding", "UTF-8"
@@ -167,17 +169,46 @@ lazy val client = project
   .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror, scaladexApi, apiJS)
 
-lazy val instumentation = project
+lazy val instrumentation = project
   .settings(baseSettings)
   .settings(
     libraryDependencies ++= Seq(
       "org.scalameta" %% "scalameta" % "1.2.0"
     )
   )
+  // .dependsOn(apiJVM)
+
+lazy val runtimeScala = crossProject
+  .settings(baseSettings: _*)
+  .settings(libraryDependencies ++= Seq(
+    "com.lihaoyi" %%% "upickle" % "0.4.3",
+    "com.lihaoyi" %%% "pprint" % "0.4.3"
+  ))
+  .dependsOn(api)
+
+lazy val runtimeScalaJVM = runtimeScala.jvm
+lazy val runtimeScalaJS = runtimeScala.js
+
+lazy val runtimeDotty = project
+  .settings(
+    organization := "org.scastie",
+    version      := "0.1.0-SNAPSHOT",
+
+    scalaVersion := "0.1-SNAPSHOT",
+    scalaOrganization := "ch.epfl.lamp",
+    scalaBinaryVersion := "2.11",
+    scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-bridge" % "0.1.1-SNAPSHOT" % "component").sources(),
+    autoScalaLibrary := false,
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-library" % "2.11.5",
+      "com.lihaoyi" %% "upickle"  % "0.4.3"
+    )
+  )
+  .dependsOn(apiJVM)
 
 lazy val scaladexApi = project
   .settings(baseSettings)
-  .settings(libraryDependencies += "com.lihaoyi" %%% "upickle"   % "0.4.1")
+  .settings(libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3")
   .enablePlugins(ScalaJSPlugin)
 
 // server => frontend
@@ -188,7 +219,7 @@ lazy val api = crossProject
     crossScalaVersions := Seq("2.10.6", "2.11.8"), // no autowire for 2.12.0-RC1
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "autowire" % "0.2.5"
-    , "com.lihaoyi" %%% "upickle"  % "0.4.0"
+    , "com.lihaoyi" %%% "upickle"  % "0.4.3"
     )
   )
   .jsSettings(
@@ -203,5 +234,5 @@ lazy val sbtApi = project.settings(
 , version      := "0.1.0-SNAPSHOT"
 , scalaVersion := "2.11.8"
 , crossScalaVersions := Seq("2.10.6", "2.11.8")
-, libraryDependencies += "com.lihaoyi" %%% "upickle"  % "0.4.0"
+, libraryDependencies += "com.lihaoyi" %%% "upickle"  % "0.4.3"
 )
