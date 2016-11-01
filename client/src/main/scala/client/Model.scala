@@ -91,8 +91,7 @@ case class Inputs(
         }
         case ScalaTarget.Js(scalaVersion, _) => {
           // TODO change scalajs version
-          s"""|libraryDependencies += "org.scastie" %% "runtimescala" % "0.1.0-SNAPSHOT"
-              |coursier.CoursierPlugin.projectSettings
+          s"""|coursier.CoursierPlugin.projectSettings
               |org.scalajs.sbtplugin.ScalaJSPlugin.projectSettings
               |scalaVersion := "$scalaVersion"
               |""".stripMargin
@@ -103,7 +102,12 @@ case class Inputs(
         }
         case ScalaTarget.Native => {
           """|coursier.CoursierPlugin.projectSettings
-             |scala.scalanative.ScalaNativePlugin.projectSettings""".stripMargin
+             |scalaVersion := "2.11.8"
+             |scala.scalanative.sbtplugin.ScalaNativePlugin.projectSettings
+             |scala.scalanative.sbtplugin.ScalaNativePlugin.autoImport.nativeClangOptions := Stream(
+             |  "-I/nix/store/rxvzdlp5x3r60b02fk95v404y3mhs2in-boehm-gc-7.2f-dev/include",
+             |  "-L/nix/store/bw1p8rairfwv2yif2g1cc0yg8hv25mnl-boehm-gc-7.2f/lib"
+             |)""".stripMargin
         }
       }
 
@@ -113,7 +117,7 @@ case class Inputs(
       else {
         val nl = "\n"
         val tab = "  "
-        "libraryDependencies += " + 
+        "libraryDependencies ++= " + 
           libraries.map(target.renderSbt).mkString(
             "Seq(" + nl + tab,
             "," + nl + tab,
@@ -121,10 +125,7 @@ case class Inputs(
           )
       }
     
-    s"""|
-        |
-        |$targetConfig
-        |
+    s"""|$targetConfig
         |$librariesConfig""".stripMargin
   }
 }

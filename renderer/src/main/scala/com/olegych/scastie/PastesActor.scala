@@ -53,7 +53,6 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
     pasteDir.pasteFile.write(paste.content)
     pasteDir.sxrSource.write(paste.renderedContent)
 
-    println("wrote" + paste.sbtConfig)
     pasteDir.sbtConfigFile.write(paste.sbtConfig)
 
     pasteDir.uidFile.write(paste.uid)

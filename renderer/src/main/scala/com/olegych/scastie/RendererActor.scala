@@ -108,14 +108,9 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
       }
 
       sbt.foreach { sbt =>
-
         val nl = System.lineSeparator
         sbtDir.sbtConfigFile.write(Some(pasteSbtConfig))
         
-        println("sbtConfig" + nl + sbtConfig)
-        println("*****")
-        println("pasteSbtConfig" + nl + pasteSbtConfig)
-
         if (sbtConfig != pasteSbtConfig) {
           sbtConfig = pasteSbtConfig
           sbt.process("reload", (line, _) => {
@@ -123,9 +118,14 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
           })
         }
 
-        val instrumented = instrumentation.Instrument(content)
+        val content2 =
+          if(scalaTargetType == ScalaTargetType.Native ||
+             scalaTargetType == ScalaTargetType.JS) {
+            content
+          }
+          else instrumentation.Instrument(content)
         
-        sbtDir.pasteFile.write(Some(instrumented))
+        sbtDir.pasteFile.write(Some(content2))
 
         sbtDir.sxrSource.delete()
         applyRunKiller(paste) {
@@ -137,7 +137,7 @@ case class RendererActor(failures: ActorRef) extends Actor with ActorLogging {
             sbt.process("fast-opt", processSbtOutput(sender, id))
           }
           else if(scalaTargetType == ScalaTargetType.Native) {
-            sbt.process("compile", processSbtOutput(sender, id))
+            sbt.process(";compile ;run", processSbtOutput(sender, id))
           }
         }
       }

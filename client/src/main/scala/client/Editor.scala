@@ -192,7 +192,7 @@ object Editor {
               ()
             }
             if(value.contains(nl)) nextline(endPos, value, process)
-            else inline(endPos, value, process)
+            else inline(startPos, value, process)
           }
           // case Markdown(content, folded) => ???
           // case Html(content, folded) =>  ???
