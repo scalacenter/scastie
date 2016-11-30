@@ -1,6 +1,6 @@
 package client
 
-import api.{Instrumentation, Value}
+import api.{Instrumentation, Value, Html}
 
 import japgolly.scalajs.react._, vdom.all._
 
@@ -194,8 +194,14 @@ object Editor {
             if(value.contains(nl)) nextline(endPos, value, process)
             else inline(startPos, value, process)
           }
-          // case Markdown(content, folded) => ???
-          // case Html(content, folded) =>  ???
+          case instrumentation @ Instrumentation(api.Position(start, end), Html(content, folded)) => {
+            val startPos = doc.posFromIndex(start)
+            val endPos = doc.posFromIndex(end)
+
+            val process: (HTMLElement ⇒ Unit) = _.innerHTML = content
+            if(!folded) nextline(endPos, content, process)
+            else fold(startPos, endPos, content, process)
+          }
         },
         _.renderAnnotations,
         f => state => state.copy(renderAnnotations = f(state.renderAnnotations))
