@@ -44,7 +44,7 @@ object Settings {
         case ScalaTargetType.JVM    => "smooth-spiral.png"
         case ScalaTargetType.Dotty  => "dotty3.svg"
         case ScalaTargetType.JS     => "scala-js.svg"
-        case ScalaTargetType.Native => "native2.png"
+        case ScalaTargetType.Native => "native.png"
       }
     }
 
@@ -75,8 +75,8 @@ object Settings {
   def renderVersions(target: ScalaTarget, backend: Backend) = {
     val suggestedVersions = List(
       ("old", Version(2, 10, 6)),
-      ("latest", Version(2, 11, 8)),
-      ("next", Version(2, 12, 0, "-RC1"))
+      ("stable", Version(2, 11, 8)),
+      ("latest", Version(2, 12, 0))
     )
 
     def selected(v1: Version, v2: Version) =
@@ -99,20 +99,13 @@ object Settings {
     }
   }
 
-  // def renderCodemirrorSettings(settings: Option[codemirror.Options], backend: Backend) = {
-  //   fieldset(
-  //     legend("Code Editor")
-  //   )
-  // }
-
   private val component = ReactComponentB[(State, Backend)]("Settings")
     .render_P { case (state, backend) =>
       div(`class` := "settings")(
-        pre(state.inputs.sbtConfig),
+        // pre(state.inputs.sbtConfig),
         ScaladexSearch(state, backend),
         renderTarget(state.inputs.target, backend),
         renderVersions(state.inputs.target, backend)
-        // renderCodemirrorSettings(state.codemirrorSettings, backend)
       )
     }
     .build
