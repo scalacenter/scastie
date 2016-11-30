@@ -103,11 +103,7 @@ case class Inputs(
         case ScalaTarget.Native => {
           """|coursier.CoursierPlugin.projectSettings
              |scalaVersion := "2.11.8"
-             |scala.scalanative.sbtplugin.ScalaNativePlugin.projectSettings
-             |scala.scalanative.sbtplugin.ScalaNativePlugin.autoImport.nativeClangOptions := Stream(
-             |  "-I/nix/store/rxvzdlp5x3r60b02fk95v404y3mhs2in-boehm-gc-7.2f-dev/include",
-             |  "-L/nix/store/bw1p8rairfwv2yif2g1cc0yg8hv25mnl-boehm-gc-7.2f/lib"
-             |)""".stripMargin
+             |scala.scalanative.sbtplugin.ScalaNativePlugin.projectSettings""".stripMargin
         }
       }
 

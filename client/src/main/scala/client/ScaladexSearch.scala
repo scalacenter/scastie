@@ -13,13 +13,12 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import upickle.default.{read ⇒ uread}
 
-import scala.collection.immutable.SortedSet
 
 import scala.language.higherKinds
 
 object ScaladexSearch {
-  // private val scaladexUrl = "http://localhost:8080/api/scastie"
-  private val scaladexUrl = "https://index.scala-lang.org/api/scastie"
+  // private val scaladexUrl = "http://localhost:8080/api"
+  private val scaladexUrl = "https://index.scala-lang.org/api"
 
   private implicit val projectOrdering = 
     Ordering.by{project: Project => (project.organization, project.repository)}
@@ -29,12 +28,12 @@ object ScaladexSearch {
 
   private[ScaladexSearch] case class SearchState(
     query: String = "",   
-    searchingProjects: SortedSet[(Project, String)] = SortedSet(),
+    searchingProjects: List[(Project, String)] = List(),
     
     // transition state to fetch project details
     projectOptions: Map[(Project, String), ReleaseOptions] = Map(),
 
-    scalaDependencies: SortedSet[(Project, ScalaDependency)] = SortedSet(),
+    scalaDependencies: List[(Project, ScalaDependency)] = List(),
 
     selected: Int = 0
   )
@@ -97,7 +96,7 @@ object ScaladexSearch {
 
     def removeScalaDependency(project: Project, scalaDependency: ScalaDependency)(e: ReactEventI): Callback = {
       scope.modState(s => 
-        s.copy(scalaDependencies = s.scalaDependencies - (project -> scalaDependency))
+        s.copy(scalaDependencies = s.scalaDependencies.filterNot(_ == (project -> scalaDependency)))
       ) >> scope.props.flatMap{ case (_, backend) =>
         backend.removeScalaDependency(scalaDependency)
       }
@@ -107,9 +106,9 @@ object ScaladexSearch {
       e.extract(_.target.value){ version =>
         scope.modState(s =>
           s.copy(
-            scalaDependencies = s.scalaDependencies
-              - (project -> scalaDependency)
-              + (project -> scalaDependency.copy(version = version))
+            scalaDependencies = 
+              project -> scalaDependency.copy(version = version) ::
+              s.scalaDependencies.filterNot(_ == (project -> scalaDependency))
           )
         ) >> scope.props.flatMap{ case (_, backend) =>
           backend.changeDependencyVersion(scalaDependency, version)
@@ -128,10 +127,12 @@ object ScaladexSearch {
     }
 
     def filterAddedDependencies(state: SearchState) = {
-      val filtered = (state.searchingProjects -- state.scalaDependencies.map{ 
-        case (p, s) => (p, s.artifact)
-      })
-      state.copy(searchingProjects = filtered)
+      val added = 
+        state.scalaDependencies.map{ 
+          case (p, s) => (p, s.artifact)
+        }.toSet
+
+      state.copy(searchingProjects = state.searchingProjects.filter(s => !added.contains(s)))
     }
 
     private def fetchProjects(): Callback = {
@@ -148,11 +149,11 @@ object ScaladexSearch {
             ).map{ projects =>            
               val artifacts = projects.flatMap(project => 
                 project.artifacts.map(a => (project, a))
-              ).to[SortedSet]
+              )
               scope.modState(s => filterAddedDependencies(s.copy(searchingProjects = artifacts)))
             }
           )
-        } else scope.modState(_.copy(searchingProjects = SortedSet()))
+        } else scope.modState(_.copy(searchingProjects = List()))
       }
 
       for {
@@ -180,7 +181,7 @@ object ScaladexSearch {
           val scalaDependency = ScalaDependency(options.groupId, artifact, target, options.versions.last)
           scope.modState(s => filterAddedDependencies(s.copy(
             projectOptions = s.projectOptions + ((project, artifact) -> options),
-            scalaDependencies = s.scalaDependencies + ((project, scalaDependency))
+            scalaDependencies = ((project, scalaDependency)) :: s.scalaDependencies
           ))) >> scope.props.flatMap{ case (_, backend) =>
             backend.addScalaDependency(scalaDependency)
           }
