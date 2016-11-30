@@ -47,6 +47,10 @@ object Application extends Controller {
   val container = PastesContainer(new java.io.File(Play.configuration.getString("pastes.data.dir").get))
   val renderer = system.actorOf(Props(new PastesActor(container, progressActor)), "pastes")
 
+  def tmp(file: String) = Action { implicit request =>
+    Ok.sendFile(new java.io.File("/tmp/" + file))
+  }
+
   def index = Action { implicit request =>
     Ok(views.html.index())
   }
