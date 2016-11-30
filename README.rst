@@ -74,10 +74,10 @@ Instructions that detail how the project is compiled, deployed and used
 
 publish the sbt api first
 
-``
+```
 > project sbtApi
 > + publishLocal
-``
+```
 
 As this is a regular Play2 application all standard techniques apply.
 For convenience sbt launch scripts for cygwin (xsbt.cmd) and *nix (xsbt.sh) are included in repository.
@@ -87,14 +87,14 @@ To start application in dev mode just execute './xsbt.sh run' and go to http://l
 To start application in debug mode in intellij use the included 'scastie-play' run configuration. Use JRebel to emulate play reloading.
 
 It is also possible to use sbt-revolver like this:
-``
+```
 > ~scastie/reStart
-``
+```
 or if you want to take advantage of JRebel and avoid full restart on every code change:
-``
+```
 > scastie/reStart
 > ~products
-``
+```
 
 Currently the application contains separate configuration tailored for deployment on single AWS t1.micro instance.
 The configs and launch scripts were initially created for deployment on OpenShift, but later adapted for AWS as it was somewhat faster and allowed supporting WebSockets.
