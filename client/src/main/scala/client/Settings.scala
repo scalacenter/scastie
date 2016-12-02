@@ -10,8 +10,8 @@ object Settings {
   def renderTarget(scalaTarget: ScalaTarget, backend: App.Backend) = {
     val targetTypes = List(
       ScalaTargetType.JVM,
-      ScalaTargetType.JS,
       ScalaTargetType.Dotty,
+      ScalaTargetType.JS,
       ScalaTargetType.Native
     )
 
@@ -45,11 +45,22 @@ object Settings {
     def selected(targetType: ScalaTargetType) =
       if(targetType == scalaTarget.targetType) TagMod(`class` := "selected")
       else EmptyTag
-      
+
+    val disabledTargets: Set[ScalaTargetType] = Set(
+      ScalaTargetType.Dotty,
+      ScalaTargetType.JS,
+      ScalaTargetType.Native
+    )
+
+    def handler(targetType: ScalaTargetType) =
+      if(disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
+      else TagMod(onClick ==> backend.setTarget(defaultTarget(targetType)))
+
     fieldset(`class` := "targets")(
       legend("Target"),
       ul(targetTypes.map(targetType =>
-        li(onClick ==> backend.setTarget(defaultTarget(targetType)), selected(targetType))(
+        li(handler(targetType), 
+           selected(targetType))(
           img(src := s"/assets/${logo(targetType)}", alt := s"logo for ${labelFor(targetType)}"),
           span(labelFor(targetType))
         )

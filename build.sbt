@@ -15,12 +15,13 @@ def logging(allDependencies: Seq[ModuleID]): Seq[ModuleID] = {
   ) ++
     allDependencies.map(
       _.exclude("commons-logging", "commons-logging")
-        .exclude("log4j", "log4j")
-        .exclude("org.slf4j", "slf4j-log4j12")
-        .exclude("org.slf4j", "slf4j-jcl")
-        .exclude("org.slf4j", "slf4j-jdk14")
+       .exclude("log4j", "log4j")
+       .exclude("org.slf4j", "slf4j-log4j12")
+       .exclude("org.slf4j", "slf4j-jcl")
+       .exclude("org.slf4j", "slf4j-jdk14")
     )
 }
+
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.3.11"
 
 val defaultSettings = Seq(
@@ -88,7 +89,7 @@ lazy val scastie = project.in(file("."))
   , WebKeys.public in Assets := (classDirectory in Compile).value / "public"
   )
   .enablePlugins(SbtWeb, play.PlayScala)
-  .dependsOn(renderer, client, apiJVM)
+  .dependsOn(client, apiJVM)
 
 lazy val baseSettings = Seq(
   scalaVersion := "2.11.8"

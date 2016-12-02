@@ -72,7 +72,7 @@ object ApplicationBuild extends Build {
       )
     }
     , onLoad in Global := addDepsToState
-  ).disablePlugins(coursier.CoursierPlugin)
+  )
 
   private def runAllTask(
     discoveredMainClasses: Seq[String],
