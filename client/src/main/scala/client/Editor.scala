@@ -11,7 +11,7 @@ import org.scalajs.dom
 
 import codemirror.{
   Position => CMPosition,
-  TextAreaEditor, LineWidget, CodeMirror, Editor => CodeMirrorEditor, 
+  TextAreaEditor, LineWidget, CodeMirror, Editor => CodeMirrorEditor2, 
   TextMarker, TextMarkerOptions
 }
 
@@ -90,15 +90,15 @@ object Editor {
           backend.codeChange(editor.getDoc().getValue()).runNow
         )
 
-        CodeMirror.commands.run = (editor: CodeMirrorEditor) ⇒ {
+        CodeMirror.commands.run = (editor: CodeMirrorEditor2) ⇒ {
           backend.run().runNow
         }
 
-        CodeMirror.commands.clear = (editor: CodeMirrorEditor) ⇒ {
+        CodeMirror.commands.clear = (editor: CodeMirrorEditor2) ⇒ {
           backend.clear().runNow
         }
 
-        CodeMirror.commands.solarizedToggle = (editor: CodeMirrorEditor) ⇒ {
+        CodeMirror.commands.solarizedToggle = (editor: CodeMirrorEditor2) ⇒ {
           backend.toogleTheme().runNow
         }
 

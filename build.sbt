@@ -176,7 +176,6 @@ lazy val instrumentation = project
       "org.scalameta" %% "scalameta" % "1.2.0"
     )
   )
-  // .dependsOn(apiJVM)
 
 lazy val runtimeScala = crossProject
   .settings(baseSettings: _*)

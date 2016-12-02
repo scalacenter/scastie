@@ -28,6 +28,7 @@ object App {
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State = copy(outputs = outputs.copy(console = outputs.console ++ lines))
     def setCode(code: String) = copy(inputs = inputs.copy(code = code))
+    def setSbtConfigExtra(config: String) = copy(inputs = inputs.copy(sbtConfigExtra = config))
     def setView(newView: View) = copy(view = newView)
     def setTarget(target: ScalaTarget) = copy(inputs = inputs.copy(target = target))
 
@@ -52,6 +53,8 @@ object App {
 
   class Backend(scope: BackendScope[(RouterCtl[Page], Option[Snippet]), State]) {
     def codeChange(newCode: String) = scope.modState(_.setCode(newCode))
+    def sbtConfigChange(newConfig: String) = 
+      scope.modState(_.setSbtConfigExtra(newConfig))
 
     private def connect(id: Long) = CallbackTo[WebSocket]{
       val direct = scope.accessDirect

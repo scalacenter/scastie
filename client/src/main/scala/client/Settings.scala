@@ -7,22 +7,7 @@ import japgolly.scalajs.react._, vdom.all._
 
 object Settings {
 
-  // private[Settings] case class SettingsState(
-  //   scalaTargetType: ScalaTargetType,
-  //   scalaVersion: Version,
-  //   scalaJsVersion: Version
-  // ) {
-  //   def scalaTarget = {
-  //     scalaTargetType match {
-  //       case ScalaTargetType.JVM    => ScalaTarget.JVM(scalaVersion)
-  //       case ScalaTargetType.JS     => ScalaTarget.JS(scalaVersion, scala)
-  //       case ScalaTargetType.Native => ScalaTarget.Native
-  //       case ScalaTargetType.Dotty  => ScalaTarget.Dotty
-  //     }
-  //   }
-  // }
-
-  def renderTarget(scalaTarget: ScalaTarget, backend: Backend) = {
+  def renderTarget(scalaTarget: ScalaTarget, backend: App.Backend) = {
     val targetTypes = List(
       ScalaTargetType.JVM,
       ScalaTargetType.JS,
@@ -72,7 +57,7 @@ object Settings {
     )
   }
 
-  def renderVersions(target: ScalaTarget, backend: Backend) = {
+  def renderVersions(target: ScalaTarget, backend: App.Backend) = {
     val suggestedVersions = List(
       ("old", Version(2, 10, 6)),
       ("stable", Version(2, 11, 8)),
@@ -99,15 +84,25 @@ object Settings {
     }
   }
 
-  private val component = ReactComponentB[(State, Backend)]("Settings")
-    .render_P { case (state, backend) =>
+  private val component = ReactComponentB[(State, App.Backend)]("Settings")
+    .render_P{ case (props, backend) =>
+
+      val theme = if(props.dark) "dark" else "light"
+
       div(`class` := "settings")(
-        // pre(state.inputs.sbtConfig),
-        ScaladexSearch(state, backend),
-        renderTarget(state.inputs.target, backend),
-        renderVersions(state.inputs.target, backend)
+        renderTarget(props.inputs.target, backend),
+        renderVersions(props.inputs.target, backend),
+        ScaladexSearch(props, backend),
+        fieldset(
+          legend("SBT"),
+          pre(props.inputs.sbtConfig),
+          CodeMirrorEditor(
+            CodeMirrorEditor.Settings(value = props.inputs.sbtConfigExtra, theme = s"solarized $theme"), 
+            CodeMirrorEditor.Handler(updatedSettings => backend.sbtConfigChange(updatedSettings))
+          )
+        )        
       )
     }
     .build
-  def apply(state: State, backend: Backend) = component((state, backend))
+  def apply(state: State, backend: App.Backend) = component((state, backend))
 }
