@@ -78,7 +78,8 @@ object ScalaTarget {
 case class Inputs(
   code: String = "",
   target: ScalaTarget = ScalaTarget.Jvm(),
-  libraries: Set[ScalaDependency] = Set()
+  libraries: Set[ScalaDependency] = Set(),
+  sbtConfigExtra: String = ""
 ) {
   def sbtConfig: String = {
 
@@ -122,7 +123,8 @@ case class Inputs(
       }
     
     s"""|$targetConfig
-        |$librariesConfig""".stripMargin
+        |$librariesConfig
+        |$sbtConfigExtra""".stripMargin
   }
 }
 
