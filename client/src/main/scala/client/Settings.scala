@@ -46,7 +46,11 @@ object Settings {
       if(targetType == scalaTarget.targetType) TagMod(`class` := "selected")
       else EmptyTag
 
-    val disabledTargets: Set[ScalaTargetType] = Set(ScalaTargetType.JS, ScalaTargetType.Native)
+    val disabledTargets: Set[ScalaTargetType] = Set(
+      ScalaTargetType.Dotty,
+      ScalaTargetType.JS,
+      ScalaTargetType.Native
+    )
 
     def handler(targetType: ScalaTargetType) =
       if(disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
