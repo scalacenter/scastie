@@ -89,7 +89,7 @@ lazy val scastie = project.in(file("."))
   , WebKeys.public in Assets := (classDirectory in Compile).value / "public"
   )
   .enablePlugins(SbtWeb, play.PlayScala)
-  .dependsOn(renderer, client, apiJVM)
+  .dependsOn(client, apiJVM)
 
 lazy val baseSettings = Seq(
   scalaVersion := "2.11.8"

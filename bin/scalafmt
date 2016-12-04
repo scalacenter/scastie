@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# set -x
+
+HERE="`dirname $0`"
+
+if [ ! -f $HERE/.coursier ]; then
+  curl -L -o $HERE/.coursier https://git.io/vgvpD
+  chmod +x $HERE/.coursier
+fi
+
+if [ ! -f $HERE/.scalafmt ]; then
+  $HERE/.coursier bootstrap com.geirsson:scalafmt-cli_2.11:0.4.7 --main org.scalafmt.cli.Cli -o $HERE/.scalafmt
+  chmod +x $HERE/.scalafmt
+fi
+
+$HERE/.scalafmt "$@"
