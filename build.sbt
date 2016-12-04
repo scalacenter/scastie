@@ -206,9 +206,11 @@ lazy val instrumentation = project
       "org.scalameta" %% "scalameta" % "1.2.0"
     )
   )
+  .disablePlugins(play.PlayScala)
 
 /* runtime* pretty print values and type */
 lazy val runtimeScala = crossProject
+  .in(file("runtime-scala"))
   .crossType(CrossType.Pure)
   .settings(baseSettings: _*)
   .settings(
@@ -217,11 +219,13 @@ lazy val runtimeScala = crossProject
       "com.lihaoyi" %%% "pprint"  % "0.4.3"
     ))
   .dependsOn(api)
+  .disablePlugins(play.PlayScala)
 
 lazy val runtimeScalaJVM = runtimeScala.jvm
 lazy val runtimeScalaJS  = runtimeScala.js
 
 lazy val runtimeDotty = project
+  .in(file("runtime-dotty"))
   .settings(
     organization := "org.scastie",
     version := "0.1.0-SNAPSHOT",
@@ -237,6 +241,7 @@ lazy val runtimeDotty = project
     )
   )
   .dependsOn(apiJVM)
+  .disablePlugins(play.PlayScala)
 
 /* webApi is for the communication between the server and the frontend */
 lazy val webApi = crossProject
@@ -251,14 +256,18 @@ lazy val webApi = crossProject
   .jsSettings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   )
+  .disablePlugins(play.PlayScala)
+
 lazy val webApiJVM = webApi.jvm
 lazy val webApiJS  = webApi.js
 
 /* sbtApi is for the communication between sbt and the renderer */
-lazy val sbtApi = project.settings(
-  organization := "org.scastie",
-  version := "0.1.0-SNAPSHOT",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.10.6", "2.11.8"),
-  libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3"
-)
+lazy val sbtApi = project
+  .settings(
+    organization := "org.scastie",
+    version := "0.1.0-SNAPSHOT",
+    scalaVersion := "2.11.8",
+    crossScalaVersions := Seq("2.10.6", "2.11.8"),
+    libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3"
+  )
+  .disablePlugins(play.PlayScala)
