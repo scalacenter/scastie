@@ -6,20 +6,28 @@ import java.io.File
 //todo split into worker and main containers to remove confusion (or replace with proper db)
 case class PastesContainer(root: java.io.File) {
   val PasteFormat = "paste(\\d+)".r
-  lazy val lastPasteId = new AtomicLong(Option(root.listFiles()).getOrElse(Array()).map(_.getName).collect {
-    case PasteFormat(id) => id.toLong
-  }.sorted.lastOption.getOrElse(0L))
+  lazy val lastPasteId = new AtomicLong(
+    Option(root.listFiles())
+      .getOrElse(Array())
+      .map(_.getName)
+      .collect {
+        case PasteFormat(id) => id.toLong
+      }
+      .sorted
+      .lastOption
+      .getOrElse(0L))
 
-  def renderer(id: String) = child("renderer" + id)
-  def paste(id: Long) = child("paste%20d".format(id).replaceAll(" ", "0"))
+  def renderer(id: String)      = child("renderer" + id)
+  def paste(id: Long)           = child("paste%20d".format(id).replaceAll(" ", "0"))
   private def child(id: String) = copy(root = new File(root, id))
-  def pasteFile = new ExtendedFile("src/main/scala/test.scala")
-  def sbtConfigFile = new ExtendedFile("src/main/scala/config.sbt")
-  def scalaTargetTypeFile = new ExtendedFile("src/main/scala/scala-target")
-  
+  def pasteFile                 = new ExtendedFile("src/main/scala/test.scala")
+  def sbtConfigFile             = new ExtendedFile("src/main/scala/config.sbt")
+  def scalaTargetTypeFile       = new ExtendedFile("src/main/scala/scala-target")
+
   def outputFile = new ExtendedFile("src/main/scala/output.txt")
-  def uidFile = new ExtendedFile("src/main/scala/uid.txt")
-  def sxrSource = new ExtendedFile("target/classes.sxr/src/main/scala/test.scala.html")
+  def uidFile    = new ExtendedFile("src/main/scala/uid.txt")
+  def sxrSource =
+    new ExtendedFile("target/classes.sxr/src/main/scala/test.scala.html")
 
   class ExtendedFile(path: String) {
     val file = new File(root, path)

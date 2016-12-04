@@ -10,11 +10,13 @@ import akka.routing.FromConfig
 import scalaz.Scalaz._
 
 /**
-  */
-case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef)
-  extends Actor with ActorLogging {
-  private val failures = context.actorOf(Props[FailuresActor], "failures")
-  private val renderer = createRenderer(context, failures)
+ */
+case class PastesActor(pastesContainer: PastesContainer,
+                       progressActor: ActorRef)
+    extends Actor
+    with ActorLogging {
+  private val failures           = context.actorOf(Props[FailuresActor], "failures")
+  private val renderer           = createRenderer(context, failures)
   private var rendererBySettings = Map[String, ActorRef]()
 
   def receive = LoggingReceive {
@@ -56,7 +58,9 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
     pasteDir.sbtConfigFile.write(paste.sbtConfig)
 
     pasteDir.uidFile.write(paste.uid)
-    pasteDir.outputFile.write(Some(paste.output.mkString(System.lineSeparator)), truncate = false)
+    pasteDir.outputFile.write(
+      Some(paste.output.mkString(System.lineSeparator)),
+      truncate = false)
   }
 
   def readPaste(id: Long) = {
@@ -73,8 +77,11 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
         id = id,
         content = paste.pasteFile.read,
         sbtConfig = paste.sbtConfigFile.read,
-        scalaTargetType = paste.scalaTargetTypeFile.read.map(s => readScalaTargetType(s.trim)),
-        output = paste.outputFile.read.map(_.split(System.lineSeparator).toList).getOrElse(Seq()),
+        scalaTargetType =
+          paste.scalaTargetTypeFile.read.map(s => readScalaTargetType(s.trim)),
+        output = paste.outputFile.read
+          .map(_.split(System.lineSeparator).toList)
+          .getOrElse(Seq()),
         uid = paste.uidFile.read,
         renderedContent = paste.sxrSource.read
       )
@@ -109,33 +116,38 @@ case class PastesActor(pastesContainer: PastesContainer, progressActor: ActorRef
 
 object PastesActor {
   private def createRenderer(context: ActorContext, failures: ActorRef) =
-    context.actorOf(Props(RendererActor(failures)).withRouter(FromConfig()), "renderer")
+    context.actorOf(Props(RendererActor(failures)).withRouter(FromConfig()),
+                    "renderer")
 
   sealed trait PasteMessage
 
-  case class AddPaste(content: String, sbtConfig: String, scalaTargetType: ScalaTargetType, uid: String) extends PasteMessage
+  case class AddPaste(content: String,
+                      sbtConfig: String,
+                      scalaTargetType: ScalaTargetType,
+                      uid: String)
+      extends PasteMessage
 
   case class GetPaste(id: Long) extends PasteMessage
 
   case class DeletePaste(id: Long, uid: String) extends PasteMessage
 
   case class Paste(
-    id: Long,
-    content: Option[String],
-    sbtConfig: Option[String],
-    scalaTargetType: Option[ScalaTargetType],
-    output: Seq[String],
-    uid: Option[String], 
-    renderedContent: Option[String],
-    problems: List[api.Problem] = List(),
-    instrumentations: List[api.Instrumentation] = List()
+      id: Long,
+      content: Option[String],
+      sbtConfig: Option[String],
+      scalaTargetType: Option[ScalaTargetType],
+      output: Seq[String],
+      uid: Option[String],
+      renderedContent: Option[String],
+      problems: List[api.Problem] = List(),
+      instrumentations: List[api.Instrumentation] = List()
   ) extends PasteMessage
 
   case class PasteProgress(
-    id: Long,
-    done: Boolean = false,
-    output: String = "",
-    compilationInfos: List[api.Problem] = Nil,
-    instrumentations: List[api.Instrumentation] = Nil
+      id: Long,
+      done: Boolean = false,
+      output: String = "",
+      compilationInfos: List[api.Problem] = Nil,
+      instrumentations: List[api.Instrumentation] = Nil
   )
 }

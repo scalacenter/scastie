@@ -19,8 +19,6 @@
 // import scala.concurrent.Future
 // import scala.concurrent.duration._
 // import scalaz.Scalaz._
-
-
 // object Pastes extends Controller {
 
 //   import play.api.Play.current

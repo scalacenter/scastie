@@ -3,13 +3,15 @@ package com.olegych.scastie
 import org.apache.commons.lang3.SystemUtils
 
 /**
-  */
+ */
 trait ProcessKiller {
   def kill(p: Process): Boolean
 }
 
 object ProcessKiller {
-  val instance = if (SystemUtils.IS_OS_WINDOWS) new WindowsProcessKiller else new UnixProcessKiller
+  val instance =
+    if (SystemUtils.IS_OS_WINDOWS) new WindowsProcessKiller
+    else new UnixProcessKiller
 }
 
 class WindowsProcessKiller extends ProcessKiller {

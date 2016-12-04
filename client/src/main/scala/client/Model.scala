@@ -3,20 +3,25 @@ package client
 import api._
 
 case class Project(
-  organization: String,
-  repository: String,
-  logo: Option[String] = None,
-  artifacts: List[String] = Nil
+    organization: String,
+    repository: String,
+    logo: Option[String] = None,
+    artifacts: List[String] = Nil
 )
 
-case class ReleaseOptions(groupId: String, artifacts: List[String], versions: List[String])
+case class ReleaseOptions(groupId: String,
+                          artifacts: List[String],
+                          versions: List[String])
 
-case class ScalaDependency(groupId: String, artifact: String, target: ScalaTarget, version: String)
+case class ScalaDependency(groupId: String,
+                           artifact: String,
+                           target: ScalaTarget,
+                           version: String)
 
 // case class MavenReference(groupId: String, artifactId: String, version: String)
 
 case class Version(_1: Int, _2: Int, _3: Int, extra: String = "") {
-  def binary: String = s"${_1}.${_2}" // like 2.11
+  def binary: String            = s"${_1}.${_2}" // like 2.11
   override def toString: String = s"${_1}.${_2}.${_3}$extra"
 }
 
@@ -26,24 +31,27 @@ sealed trait ScalaTarget {
   def renderSbt(lib: ScalaDependency): String
 }
 object ScalaTarget {
-  private val defaultScalaVersion = Version(2, 11, 8)
+  private val defaultScalaVersion   = Version(2, 11, 8)
   private val defaultScalaJsVersion = Version(0, 6, 12)
 
-  case class Jvm(scalaVersion: Version = defaultScalaVersion) extends ScalaTarget {
+  case class Jvm(scalaVersion: Version = defaultScalaVersion)
+      extends ScalaTarget {
     def targetType = ScalaTargetType.JVM
-    def scaladexRequest = Map("target" -> "JVM", "scalaVersion" -> scalaVersion.binary)
+    def scaladexRequest =
+      Map("target" -> "JVM", "scalaVersion" -> scalaVersion.binary)
     def renderSbt(lib: ScalaDependency): String = {
       import lib._
       s""" "$groupId" %% "$artifact" % "$version" """
     }
   }
-  case class Js(scalaVersion: Version = defaultScalaVersion, 
-                scalaJsVersion: Version = defaultScalaJsVersion) extends ScalaTarget {
+  case class Js(scalaVersion: Version = defaultScalaVersion,
+                scalaJsVersion: Version = defaultScalaJsVersion)
+      extends ScalaTarget {
 
     def targetType = ScalaTargetType.JS
     def scaladexRequest = Map(
-      "target" -> "JS",
-      "scalaVersion" -> scalaVersion.binary,
+      "target"         -> "JS",
+      "scalaVersion"   -> scalaVersion.binary,
       "scalaJsVersion" -> scalaJsVersion.binary
     )
     def renderSbt(lib: ScalaDependency): String = {
@@ -55,8 +63,8 @@ object ScalaTarget {
     def targetType = ScalaTargetType.Native
     // ... not really
     def scaladexRequest = Map(
-      "target" -> "JS",
-      "scalaVersion" -> "2.11",
+      "target"         -> "JS",
+      "scalaVersion"   -> "2.11",
       "scalaJsVersion" -> "0.6"
     )
     def renderSbt(lib: ScalaDependency): String = {
@@ -65,7 +73,7 @@ object ScalaTarget {
     }
   }
   case object Dotty extends ScalaTarget {
-    def targetType = ScalaTargetType.Dotty
+    def targetType      = ScalaTargetType.Dotty
     def scaladexRequest = Map("target" -> "JVM", "scalaVersion" -> "2.11")
     def renderSbt(lib: ScalaDependency): String = {
       import lib._
@@ -76,10 +84,10 @@ object ScalaTarget {
 
 // input
 case class Inputs(
-  code: String = "",
-  target: ScalaTarget = ScalaTarget.Jvm(),
-  libraries: Set[ScalaDependency] = Set(),
-  sbtConfigExtra: String = ""
+    code: String = "",
+    target: ScalaTarget = ScalaTarget.Jvm(),
+    libraries: Set[ScalaDependency] = Set(),
+    sbtConfigExtra: String = ""
 ) {
   def sbtConfig: String = {
 
@@ -108,20 +116,23 @@ case class Inputs(
         }
       }
 
-    val librariesConfig = 
-      if(libraries.isEmpty) ""
-      else if(libraries.size == 1) s"libraryDependencies += " + target.renderSbt(libraries.head)
+    val librariesConfig =
+      if (libraries.isEmpty) ""
+      else if (libraries.size == 1)
+        s"libraryDependencies += " + target.renderSbt(libraries.head)
       else {
-        val nl = "\n"
+        val nl  = "\n"
         val tab = "  "
-        "libraryDependencies ++= " + 
-          libraries.map(target.renderSbt).mkString(
-            "Seq(" + nl + tab,
-            "," + nl + tab,
-            nl + ")"
-          )
+        "libraryDependencies ++= " +
+          libraries
+            .map(target.renderSbt)
+            .mkString(
+              "Seq(" + nl + tab,
+              "," + nl + tab,
+              nl + ")"
+            )
       }
-    
+
     s"""|$targetConfig
         |$librariesConfig
         |$sbtConfigExtra""".stripMargin
@@ -130,20 +141,20 @@ case class Inputs(
 
 // outputs
 case class Outputs(
-  console: Vector[String] = Vector(),
-  compilationInfos: Set[api.Problem] = Set(),
-  instrumentations: Set[api.Instrumentation] = Set()
+    console: Vector[String] = Vector(),
+    compilationInfos: Set[api.Problem] = Set(),
+    instrumentations: Set[api.Instrumentation] = Set()
 )
 
 sealed trait Severity
-final case object Info extends Severity
+final case object Info    extends Severity
 final case object Warning extends Severity
-final case object Error extends Severity
+final case object Error   extends Severity
 
 case class Position(start: Int, end: Int)
 
 case class CompilationInfo(
-  severity: Severity,
-  position: Position,
-  message: String
+    severity: Severity,
+    position: Position,
+    message: String
 )
