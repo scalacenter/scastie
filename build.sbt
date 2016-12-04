@@ -62,6 +62,10 @@ val defaultSettings = Seq(
     aggregate in reStart := false
   ) ++ SbtStartScript.startScriptForClassesSettings
 
+lazy val remoteApi = project
+  .settings(defaultSettings)
+  .disablePlugins(play.PlayScala)
+
 lazy val renderer = project
   .settings(defaultSettings)
   .settings(
@@ -74,10 +78,11 @@ lazy val renderer = project
       "net.sourceforge.collections" % "collections-generic" % "4.01"
     )
   )
-  .dependsOn(sbtApi, apiJVM, instrumentation)
+  .dependsOn(sbtApi, webApiJVM, instrumentation)
+  .disablePlugins(play.PlayScala)
 
 lazy val scastie = project
-  .in(file("."))
+  .in(file("server"))
   .settings(defaultSettings)
   .settings(packageScalaJS(client))
   .settings(
@@ -97,7 +102,7 @@ lazy val scastie = project
     WebKeys.public in Assets := (classDirectory in Compile).value / "public"
   )
   .enablePlugins(SbtWeb, play.PlayScala)
-  .dependsOn(client, apiJVM)
+  .dependsOn(renderer, client, webApiJVM)
 
 lazy val baseSettings = Seq(
   scalaVersion := "2.11.8",
@@ -125,14 +130,15 @@ lazy val baseSettings = Seq(
   initialCommands in (Test, console) := """ammonite.repl.Main().run()"""
 )
 
-def codemirrorD(path: String): JSModuleID =
-  "org.webjars.bower" % "codemirror" % "5.18.2" % "compile" / s"$path.js" minified s"$path.js"
-
+/* codemirror is a facade to the javascript rich editor codemirror*/
 lazy val codemirror = project
   .settings(baseSettings)
   .settings(
     scalacOptions -= "-Ywarn-dead-code",
-    jsDependencies ++=
+    jsDependencies ++= {
+      def codemirrorD(path: String): JSModuleID =
+        "org.webjars.bower" % "codemirror" % "5.18.2" % "compile" / s"$path.js" minified s"$path.js"
+
       List(
         "lib/codemirror",
         "addon/comment/comment",
@@ -150,35 +156,49 @@ lazy val codemirror = project
         "addon/search/searchcursor",
         "keymap/sublime",
         "mode/clike/clike"
-      ).map(codemirrorD),
+      ).map(codemirrorD)
+    },
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   )
   .enablePlugins(ScalaJSPlugin)
+  .disablePlugins(play.PlayScala)
 
-def react(artifact: String, name: String): JSModuleID =
-  "org.webjars.bower" % "react" % "15.3.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
-
-def react(artifact: String, name: String, depends: String): JSModuleID =
-  react(artifact, name).dependsOn(s"$depends.js")
-
+/* frontend code */
 lazy val client = project
   .settings(baseSettings)
   .settings(
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     skip in packageJSDependencies := false,
-    jsDependencies ++= Seq(
-      react("react-with-addons", "React"),
-      react("react-dom", "ReactDOM", "react-with-addons"),
-      react("react-dom-server", "ReactDOMServer", "react-dom")
-    ),
+    jsDependencies ++= {
+      def react(artifact: String, name: String): JSModuleID =
+        "org.webjars.bower" % "react" % "15.3.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+
+      def react(artifact: String, name: String, depends: String): JSModuleID =
+        react(artifact, name).dependsOn(s"$depends.js")
+
+      Seq(
+        react("react-with-addons", "React"),
+        react("react-dom", "ReactDOM", "react-with-addons"),
+        react("react-dom-server", "ReactDOMServer", "react-dom")
+      )
+    },
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra"     % "0.11.2",
       "org.webjars.bower"                 % "open-iconic" % "1.1.1"
     )
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
-  .dependsOn(codemirror, scaladexApi, apiJS)
+  .dependsOn(codemirror, apiJS)
+  .disablePlugins(play.PlayScala)
 
+/*  instrument a program to add a Map[Position, (Value, Type)]
+
+class A {
+  val a = 1 + 1 // << 2: Int
+  3 + 3         // << 6: Int
+}
+
+*/
 lazy val instrumentation = project
   .settings(baseSettings)
   .settings(
@@ -187,7 +207,9 @@ lazy val instrumentation = project
     )
   )
 
+/* runtime* pretty print values and type */
 lazy val runtimeScala = crossProject
+  .crossType(CrossType.Pure)
   .settings(baseSettings: _*)
   .settings(
     libraryDependencies ++= Seq(
@@ -216,14 +238,8 @@ lazy val runtimeDotty = project
   )
   .dependsOn(apiJVM)
 
-lazy val scaladexApi = project
-  .settings(baseSettings)
-  .settings(libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3")
-  .enablePlugins(ScalaJSPlugin)
-
-// server => frontend
-// paste => server => frontend (annotations)
-lazy val api = crossProject
+/* webApi is for the communication between the server and the frontend */
+lazy val webApi = crossProject
   .settings(baseSettings: _*)
   .settings(
     crossScalaVersions := Seq("2.10.6", "2.11.8"), // no autowire for 2.12.0-RC1
@@ -235,10 +251,10 @@ lazy val api = crossProject
   .jsSettings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   )
-lazy val apiJVM = api.jvm
-lazy val apiJS  = api.js
+lazy val webApiJVM = webApi.jvm
+lazy val webApiJS  = webApi.js
 
-// paste sbt => server (compilation info)
+/* sbtApi is for the communication between sbt and the renderer */
 lazy val sbtApi = project.settings(
   organization := "org.scastie",
   version := "0.1.0-SNAPSHOT",

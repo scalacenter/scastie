@@ -16,6 +16,13 @@ import upickle.default.{read ⇒ uread}
 import scala.language.higherKinds
 
 object ScaladexSearch {
+  case class Project(
+      logo: String,
+      description: String,
+      organization: String,
+      repository: String,
+      artifacts: List[String]
+  )
   // private val scaladexUrl = "http://localhost:8080/api"
   private val scaladexUrl = "https://index.scala-lang.org/api"
 

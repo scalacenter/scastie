@@ -11,5 +11,4 @@ tmp
 .history
 hs_err_pid*
 java.exe.stackdump
-openshift_data
 RUNNING_PID
