@@ -5,15 +5,16 @@ object Main {
   }
 }
 class Worksheet$ {
-  private val instrumentationMap$ = scala.collection.mutable.Map.empty[api.Position, api.Render]
-  def instrumentations$ = instrumentationMap$.toList.map({
-    case (pos, r) => api.Instrumentation(pos, r)
-  })
-  {
-    val t = println(1)
-    instrumentationMap$(api.Position(21, 31)) = Runtime.render(t)
-    t
-  }
+  private val instrumentationMap$ =
+    scala.collection.mutable.Map.empty[api.Position, api.Render]
+  def instrumentations$ =
+    instrumentationMap$.toList.map({
+      case (pos, r) => api.Instrumentation(pos, r)
+    }) {
+      val t = println(1)
+      instrumentationMap$(api.Position(21, 31)) = Runtime.render(t)
+      t
+    }
   if (true) {
     val t = 42
     instrumentationMap$(api.Position(46, 48)) = Runtime.render(t)

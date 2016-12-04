@@ -11,15 +11,16 @@ import akka.event.LoggingReceive
 import upickle.default.{write => uwrite}
 
 /**
-  */
+ */
 class Progress extends Actor with ActorLogging {
-  private val monitors = new mutable.HashMap[Long, mutable.Set[MonitorChannel]] with mutable.MultiMap[Long, MonitorChannel]
+  private val monitors = new mutable.HashMap[Long, mutable.Set[MonitorChannel]]
+  with mutable.MultiMap[Long, MonitorChannel]
   private val progressBuffer = mutable.Map[Long, PasteProgress]()
 
   def receive = LoggingReceive {
     case MonitorProgress(id) =>
       val (enumerator, channel) = Concurrent.broadcast[String]
-      val monitorChannel = MonitorChannel(id, null, channel)
+      val monitorChannel        = MonitorChannel(id, null, channel)
       import concurrent.ExecutionContext.Implicits.global
       val iteratee = Iteratee.ignore[String].map { _ =>
         self ! StopMonitorProgress(monitorChannel)
@@ -57,6 +58,9 @@ class Progress extends Actor with ActorLogging {
 object Progress {
   sealed trait ProgressMessage
   case class MonitorProgress(id: Long) extends ProgressMessage
-  case class StopMonitorProgress(monitorChannel: MonitorChannel) extends ProgressMessage
-  case class MonitorChannel(id: Long, value: (Iteratee[String, _], Enumerator[String]), channel: Channel[String])
+  case class StopMonitorProgress(monitorChannel: MonitorChannel)
+      extends ProgressMessage
+  case class MonitorChannel(id: Long,
+                            value: (Iteratee[String, _], Enumerator[String]),
+                            channel: Channel[String])
 }

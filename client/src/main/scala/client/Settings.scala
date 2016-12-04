@@ -43,7 +43,7 @@ object Settings {
     }
 
     def selected(targetType: ScalaTargetType) =
-      if(targetType == scalaTarget.targetType) TagMod(`class` := "selected")
+      if (targetType == scalaTarget.targetType) TagMod(`class` := "selected")
       else EmptyTag
 
     val disabledTargets: Set[ScalaTargetType] = Set(
@@ -53,18 +53,19 @@ object Settings {
     )
 
     def handler(targetType: ScalaTargetType) =
-      if(disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
+      if (disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
       else TagMod(onClick ==> backend.setTarget(defaultTarget(targetType)))
 
     fieldset(`class` := "targets")(
       legend("Target"),
-      ul(targetTypes.map(targetType =>
-        li(handler(targetType), 
-           selected(targetType))(
-          img(src := s"/assets/${logo(targetType)}", alt := s"logo for ${labelFor(targetType)}"),
-          span(labelFor(targetType))
-        )
-      ))
+      ul(
+        targetTypes.map(
+          targetType =>
+            li(handler(targetType), selected(targetType))(
+              img(src := s"/assets/${logo(targetType)}",
+                  alt := s"logo for ${labelFor(targetType)}"),
+              span(labelFor(targetType))
+          )))
     )
   }
 
@@ -76,44 +77,47 @@ object Settings {
     )
 
     def selected(v1: Version, v2: Version) =
-      if(v1 == v2) TagMod(`class` := "selected")
+      if (v1 == v2) TagMod(`class` := "selected")
       else EmptyTag
 
     target match {
       case ScalaTarget.Jvm(scalaVersion) =>
         fieldset(`class` := "versions")(
           legend("Scala Version"),
-          ul(suggestedVersions.map{ case (versionStatus, version) =>
-            li(onClick ==> backend.setTarget(ScalaTarget.Jvm(version)), selected(version, scalaVersion))(
-              s"${version.binary} ($versionStatus)"
-            )
+          ul(suggestedVersions.map {
+            case (versionStatus, version) =>
+              li(onClick ==> backend.setTarget(ScalaTarget.Jvm(version)),
+                 selected(version, scalaVersion))(
+                s"${version.binary} ($versionStatus)"
+              )
           })
         )
       case ScalaTarget.Js(scalaVersion, scalaJsVersion) => EmptyTag
-      case ScalaTarget.Dotty => EmptyTag
-      case ScalaTarget.Native => EmptyTag
+      case ScalaTarget.Dotty                            => EmptyTag
+      case ScalaTarget.Native                           => EmptyTag
     }
   }
 
-  private val component = ReactComponentB[(State, App.Backend)]("Settings")
-    .render_P{ case (props, backend) =>
+  private val component =
+    ReactComponentB[(State, App.Backend)]("Settings").render_P {
+      case (props, backend) =>
+        val theme = if (props.dark) "dark" else "light"
 
-      val theme = if(props.dark) "dark" else "light"
-
-      div(`class` := "settings")(
-        renderTarget(props.inputs.target, backend),
-        renderVersions(props.inputs.target, backend),
-        ScaladexSearch(props, backend),
-        fieldset(
-          legend("SBT"),
-          pre(props.inputs.sbtConfig),
-          CodeMirrorEditor(
-            CodeMirrorEditor.Settings(value = props.inputs.sbtConfigExtra, theme = s"solarized $theme"), 
-            CodeMirrorEditor.Handler(updatedSettings => backend.sbtConfigChange(updatedSettings))
+        div(`class` := "settings")(
+          renderTarget(props.inputs.target, backend),
+          renderVersions(props.inputs.target, backend),
+          ScaladexSearch(props, backend),
+          fieldset(
+            legend("SBT"),
+            pre(props.inputs.sbtConfig),
+            CodeMirrorEditor(
+              CodeMirrorEditor.Settings(value = props.inputs.sbtConfigExtra,
+                                        theme = s"solarized $theme"),
+              CodeMirrorEditor.Handler(updatedSettings =>
+                backend.sbtConfigChange(updatedSettings))
+            )
           )
-        )        
-      )
-    }
-    .build
+        )
+    }.build
   def apply(state: State, backend: App.Backend) = component((state, backend))
 }

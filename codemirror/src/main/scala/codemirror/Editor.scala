@@ -27,8 +27,8 @@ trait Editor extends js.Object {
   def addKeyMap(map: js.Object, bottom: Boolean): Unit
   def removeKeyMap(map: js.Object): Unit
   def addOverlay(mode: String | js.Object, options: UndefOr[js.Object]): Unit
-  def removeOverlay(mode: String|js.Object): Unit
-  
+  def removeOverlay(mode: String | js.Object): Unit
+
   // use EditorEventHandler
   protected[codemirror] def on(t: String, f: js.Function): Unit
 
@@ -36,16 +36,20 @@ trait Editor extends js.Object {
   // def off(type: String, func: (...args)): Unit
   def getDoc(): Document
   def swapDoc(document: Document): Document
-  def setGutterMarker(line: Int | LineHandle, gutterID: String, value: Element): LineHandle
+  def setGutterMarker(line: Int | LineHandle,
+                      gutterID: String,
+                      value: Element): LineHandle
   def clearGutter(gutterID: String): Unit
-  def lineInfo(line: Int|LineHandle): js.Object
+  def lineInfo(line: Int | LineHandle): js.Object
   def addWidget(pos: Position, node: Element, scrollIntoView: Boolean): Unit
-  def addLineWidget(line: Int, node: HTMLElement, options: UndefOr[js.Any]): LineWidget
+  def addLineWidget(line: Int,
+                    node: HTMLElement,
+                    options: UndefOr[js.Any]): LineWidget
   def setSize(width: Int | String, height: Int | String): Unit
   def scrollTo(x: Int, y: Int): Unit
   // def getScrollInfo():{left, top, width, height, clientWidth, clientHeight}
   // def scrollIntoView(what: Position|{left, top, right, bottom}|{from, to}|null, ?margin: number)
-  def cursorCoords(where: Boolean | Position , mode: String): CursorCoords
+  def cursorCoords(where: Boolean | Position, mode: String): CursorCoords
   // def charCoords(pos: Position, ?mode: String): {left, right, top, bottom}
   // def coordsChar(js.Object: {left, top}, ?mode: String): Position
   def lineAtHeight(height: Int, mode: UndefOr[String]): Int
@@ -90,19 +94,21 @@ trait BeforeEditorChange extends EditorChange {
 }
 
 class EditorEventHandler(val editor: Editor) extends AnyVal {
-  def onDelete(f: () => Unit)                                 = editor.on("delete"           , f)
-  def onBeforeCursorEnter(f: () => Unit)                      = editor.on("beforeCursorEnter", f)
-  def onHide(f: () => Unit)                                   = editor.on("hide"             , f)
-  def onUnhide(f: () => Unit)                                 = editor.on("unhide"           , f)
-  def onRedraw(f: () => Unit)                                 = editor.on("redraw"           , f)
-  def onCursorActivity(f: Editor => Unit)                     = editor.on("cursorActivity"   , f)
-  def onFocus(f: Editor => Unit)                              = editor.on("focus"            , f)
-  def onBlur(f: Editor => Unit)                               = editor.on("blur"             , f)
-  def onScroll(f: Editor => Unit)                             = editor.on("scroll"           , f)
-  def onUpdate(f: Editor => Unit)                             = editor.on("update"           , f)
-  def onBeforeChange(f: (Editor, BeforeEditorChange) => Unit) = editor.on("beforeChange"     , f)
-  def onChange(f: (Editor, EditorChange) => Unit)             = editor.on("change"           , f)
-  def onChanges(f: (Editor, Array[EditorChange]) => Unit)     = editor.on("changes"          , f)
+  def onDelete(f: () => Unit)             = editor.on("delete", f)
+  def onBeforeCursorEnter(f: () => Unit)  = editor.on("beforeCursorEnter", f)
+  def onHide(f: () => Unit)               = editor.on("hide", f)
+  def onUnhide(f: () => Unit)             = editor.on("unhide", f)
+  def onRedraw(f: () => Unit)             = editor.on("redraw", f)
+  def onCursorActivity(f: Editor => Unit) = editor.on("cursorActivity", f)
+  def onFocus(f: Editor => Unit)          = editor.on("focus", f)
+  def onBlur(f: Editor => Unit)           = editor.on("blur", f)
+  def onScroll(f: Editor => Unit)         = editor.on("scroll", f)
+  def onUpdate(f: Editor => Unit)         = editor.on("update", f)
+  def onBeforeChange(f: (Editor, BeforeEditorChange) => Unit) =
+    editor.on("beforeChange", f)
+  def onChange(f: (Editor, EditorChange) => Unit) = editor.on("change", f)
+  def onChanges(f: (Editor, Array[EditorChange]) => Unit) =
+    editor.on("changes", f)
 
 // "clear"                    (from: {line, ch}, to: {line, ch})
 // "change"                   (CodeMirror, changeObj: object)
@@ -122,21 +128,21 @@ class EditorEventHandler(val editor: Editor) extends AnyVal {
 // "beforeSelectionChange"    (doc: CodeMirror.Doc, selection: {head, anchor})
 
 // (CodeMirror, dom event)
-  // "mousedown", 
-  // "dblclick", 
-  // "touchstart", 
-  // "contextmenu", 
-  // "keydown", 
-  // "keypress", 
-  // "keyup", 
-  // "cut", 
-  // "copy", 
-  // "paste", 
-  // "dragstart", 
-  // "dragenter", 
-  // "dragover", 
-  // "dragleave", 
-  // "drop" 
+  // "mousedown",
+  // "dblclick",
+  // "touchstart",
+  // "contextmenu",
+  // "keydown",
+  // "keypress",
+  // "keyup",
+  // "cut",
+  // "copy",
+  // "paste",
+  // "dragstart",
+  // "dragenter",
+  // "dragover",
+  // "dragleave",
+  // "drop"
 }
 
 @ScalaJSDefined
@@ -147,5 +153,6 @@ trait CursorCoords extends js.Object {
 }
 
 trait Extensions {
-  implicit def toEditorEventHandler(editor: Editor) = new EditorEventHandler(editor)
+  implicit def toEditorEventHandler(editor: Editor) =
+    new EditorEventHandler(editor)
 }

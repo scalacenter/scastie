@@ -21,7 +21,7 @@
 // """
 // object Main {
 //   def main(args: Array[String]) {
-    
+
 //   }
 // }
 // """
@@ -29,7 +29,7 @@
 
 //   val templates = {
 //     List(
-//       "typelevel" -> nextPaste( 
+//       "typelevel" -> nextPaste(
 // """
 // coursier.CoursierPlugin.projectSettings
 // scalaVersion := "2.11.8"
@@ -82,7 +82,7 @@
 // import akka.actor
 // object Main {
 //   def main(args: Array[String]) {
-    
+
 //   }
 // }
 // """)
@@ -97,7 +97,7 @@
 // import Keys._
 // object Main extends Build {
 //   def main(args: Array[String]) {
-    
+
 //   }
 // }
 // """)
@@ -110,7 +110,7 @@
 // """
 // object Main {
 //   def main(args: Array[String]) {
-    
+
 //   }
 // }
 // """)
@@ -122,13 +122,13 @@
 // """
 // object Main {
 //   def main(args: Array[String]) {
-    
+
 //   }
 // }
 // """)
 //     )
 //   }
 
-//   def nextPaste(code: String, sbtConfig: String): PastesActor.Paste = 
+//   def nextPaste(code: String, sbtConfig: String): PastesActor.Paste =
 //     Paste(pasteIds.next, Some(code), Some(sbtConfig), None, Seq(), None, None)
 // }

@@ -5,13 +5,13 @@ import java.io.{File, FilePermission}
 import java.util.PropertyPermission
 
 /**
-  */
+ */
 object ScriptSecurityManager extends SecurityManager {
   System.setProperty("actors.enableForkJoin", false + "")
 
-  private val lock = new Object
+  private val lock                                  = new Object
   @volatile private var sm: Option[SecurityManager] = None
-  @volatile private var activated = false
+  @volatile private var activated                   = false
 
   def hardenPermissions[T](f: => T): T = lock.synchronized {
     try {
@@ -24,14 +24,18 @@ object ScriptSecurityManager extends SecurityManager {
 
   override def checkPermission(perm: Permission) {
     if (activated) {
-      val read = perm.getActions == "read"
+      val read      = perm.getActions == "read"
       val readWrite = perm.getActions == "read,write"
       val allowedMethods = Seq(
-        "accessDeclaredMembers", "suppressAccessChecks", "createClassLoader",
-        "accessClassInPackage.sun.reflect", "getStackTrace", "getClassLoader"
+        "accessDeclaredMembers",
+        "suppressAccessChecks",
+        "createClassLoader",
+        "accessClassInPackage.sun.reflect",
+        "getStackTrace",
+        "getClassLoader"
       ).contains(perm.getName)
-      val getenv = perm.getName.startsWith("getenv")
-      val file = perm.isInstanceOf[FilePermission]
+      val getenv   = perm.getName.startsWith("getenv")
+      val file     = perm.isInstanceOf[FilePermission]
       val property = perm.isInstanceOf[PropertyPermission]
       val security = perm.isInstanceOf[SecurityPermission]
 
@@ -39,22 +43,32 @@ object ScriptSecurityManager extends SecurityManager {
       val notExistingFile = !new File(perm.getName).exists()
 
       val allowedFiles =
-        Seq( """.*\.class""", """.*\.jar""", """.*classes.*""", """.*\.properties""",
-          """.*src/main/scala.*""", """.*/?target""")
-      val isClass = allowedFiles.exists(perm.getName.replaceAll( """\""" + """\""", "/").matches)
+        Seq(""".*\.class""",
+            """.*\.jar""",
+            """.*classes.*""",
+            """.*\.properties""",
+            """.*src/main/scala.*""",
+            """.*/?target""")
+      val isClass = allowedFiles.exists(
+        perm.getName.replaceAll("""\""" + """\""", "/").matches)
       activate
 
-      val readClass = file && isClass && read
+      val readClass       = file && isClass && read
       val readMissingFile = file && notExistingFile && read
       lazy val allowedClass = new Throwable().getStackTrace.exists { element =>
         val name = element.getFileName
         //todo apply more robust checks
-        List("BytecodeWriters.scala", "Settings.scala", "PathResolver.scala", "JavaMirrors.scala", "Using.scala", ".*.java")
-            .exists(_.r.findFirstMatchIn(name).isDefined)
+        List("BytecodeWriters.scala",
+             "Settings.scala",
+             "PathResolver.scala",
+             "JavaMirrors.scala",
+             "Using.scala",
+             ".*.java").exists(_.r.findFirstMatchIn(name).isDefined)
       }
 
       val allow = readMissingFile || readClass || (read && !file) || allowedMethods || getenv ||
-          (property && readWrite) || (security && perm.getName.startsWith("getProperty.")) || allowedClass
+          (property && readWrite) || (security && perm.getName.startsWith(
+          "getProperty.")) || allowedClass
       if (!allow) {
         val exception = new SecurityException(perm.toString)
         exception.printStackTrace()
@@ -71,7 +85,8 @@ object ScriptSecurityManager extends SecurityManager {
 
   private def deactivate {
     activated = false
-    if (System.getSecurityManager == this) sm.foreach(System.setSecurityManager)
+    if (System.getSecurityManager == this)
+      sm.foreach(System.setSecurityManager)
   }
 
   private def activate {

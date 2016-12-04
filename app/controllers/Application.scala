@@ -25,8 +25,12 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class ApiImpl(renderer: ActorRef)(implicit timeout: Timeout) extends Api {
-  def run(code: String, sbtConfig: String, scalaTargetType: ScalaTargetType): Future[Long] = {
-    (renderer ? AddPaste(code, sbtConfig, scalaTargetType, "-no-uid-")).mapTo[Paste].map(_.id)
+  def run(code: String,
+          sbtConfig: String,
+          scalaTargetType: ScalaTargetType): Future[Long] = {
+    (renderer ? AddPaste(code, sbtConfig, scalaTargetType, "-no-uid-"))
+      .mapTo[Paste]
+      .map(_.id)
   }
   def fetch(id: Long): Future[String] = {
     (renderer ? GetPaste(id)).mapTo[Paste].map(_.content.getOrElse(""))
@@ -39,13 +43,16 @@ object Application extends Controller {
   implicit val timeout = Timeout(100.seconds)
   val system = {
     val classloader = Play.application.classloader
-    val config = ConfigFactory.load(classloader, Play.configuration.getString("actors.conf").get)
+    val config = ConfigFactory
+      .load(classloader, Play.configuration.getString("actors.conf").get)
     ActorSystem("actors", config, classloader)
   }
 
   val progressActor = system.actorOf(Props[Progress])
-  val container = PastesContainer(new java.io.File(Play.configuration.getString("pastes.data.dir").get))
-  val renderer = system.actorOf(Props(new PastesActor(container, progressActor)), "pastes")
+  val container = PastesContainer(
+    new java.io.File(Play.configuration.getString("pastes.data.dir").get))
+  val renderer =
+    system.actorOf(Props(new PastesActor(container, progressActor)), "pastes")
 
   def tmp(file: String) = Action { implicit request =>
     Ok.sendFile(new java.io.File("/tmp/" + file))
@@ -62,12 +69,15 @@ object Application extends Controller {
   private val api = new ApiImpl(renderer)
 
   def progress(id: Long) = WebSocket.tryAccept[String] { request =>
-    (progressActor ? MonitorProgress(id)).mapTo[MonitorChannel].map(m => Right(m.value))
+    (progressActor ? MonitorProgress(id))
+      .mapTo[MonitorChannel]
+      .map(m => Right(m.value))
   }
 
   def autowireApi(path: String) = Action.async { implicit request =>
     val text = request.body.asText.getOrElse("")
-    val autowireRequest = Request(path.split("/"), uread[Map[String, String]](text))
+    val autowireRequest =
+      Request(path.split("/"), uread[Map[String, String]](text))
     AutowireServer.route[Api](api)(autowireRequest).map(buffer => Ok(buffer))
   }
 }

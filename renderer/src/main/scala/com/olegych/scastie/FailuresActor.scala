@@ -1,6 +1,5 @@
 package com.olegych.scastie
 
-
 import FailuresActor.{FatalFailure, AddFailure}
 
 import akka.actor.{ActorRef, ActorLogging, Actor}
@@ -9,7 +8,7 @@ import akka.event.LoggingReceive
 import util.control.NoStackTrace
 
 /**
-  */
+ */
 class FailuresActor extends Actor with ActorLogging {
   val failures = collection.mutable.Set[Any]()
   def receive = LoggingReceive {
@@ -27,7 +26,11 @@ object FailuresActor {
 
   sealed trait FailureMessage
 
-  case class AddFailure(cause: Throwable, message: Any, sender: ActorRef, content: Any) extends FailureMessage
+  case class AddFailure(cause: Throwable,
+                        message: Any,
+                        sender: ActorRef,
+                        content: Any)
+      extends FailureMessage
 
   object FatalFailure extends Throwable with NoStackTrace
 
