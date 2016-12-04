@@ -1,6 +1,0 @@
-GET         /assets/*file         controllers.Assets.at(path="/public", file)
-GET         /tmp/*file            controllers.Application.tmp(file)
-POST        /api/*path            controllers.Application.autowireApi(path: String)
-GET         /progress/*id         controllers.Application.progress(id:Long)
-GET         /                     controllers.Application.index
-GET         /*rest                controllers.Application.index2(rest: String)

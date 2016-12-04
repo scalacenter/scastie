@@ -62,6 +62,11 @@ val defaultSettings = Seq(
     aggregate in reStart := false
   ) ++ SbtStartScript.startScriptForClassesSettings
 
+lazy val remoteApi = project
+  .in(file("remote-api"))
+  .settings(defaultSettings)
+  .disablePlugins(play.PlayScala)
+
 lazy val renderer = project
   .settings(defaultSettings)
   .settings(
@@ -74,10 +79,11 @@ lazy val renderer = project
       "net.sourceforge.collections" % "collections-generic" % "4.01"
     )
   )
-  .dependsOn(sbtApi, apiJVM, instrumentation)
+  .dependsOn(sbtApi, webApiJVM, instrumentation)
+  .disablePlugins(play.PlayScala)
 
-lazy val scastie = project
-  .in(file("."))
+lazy val server = project
+  .in(file("scastie"))
   .settings(defaultSettings)
   .settings(packageScalaJS(client))
   .settings(
@@ -91,13 +97,17 @@ lazy val scastie = project
         .exclude("com.lihaoyi", "upickle_sjs0.6_2.11")
     )),
     mainClass in Compile := Option("ProdNettyServer"),
-    products in Compile <<= (products in Compile).dependsOn(
-      WebKeys.assets in Assets),
-    reStart <<= reStart.dependsOn(WebKeys.assets in Assets),
+    products in Compile := (products in Compile).dependsOn(WebKeys.assets in Assets).value,
+    reStart := reStart.dependsOn(WebKeys.assets in Assets).evaluated,
     WebKeys.public in Assets := (classDirectory in Compile).value / "public"
   )
   .enablePlugins(SbtWeb, play.PlayScala)
-  .dependsOn(client, apiJVM)
+  .dependsOn(renderer, client, webApiJVM)
+
+lazy val scastie = project
+  .in(file("."))
+  .aggregate(server)
+  .settings(reStart := (reStart in server).evaluated)
 
 lazy val baseSettings = Seq(
   scalaVersion := "2.11.8",
@@ -118,21 +128,22 @@ lazy val baseSettings = Seq(
     "-Ywarn-unused-import",
     "-Ywarn-value-discard"
   ),
-  console <<= console in Test,
+  console := (console in Test).value,
   scalacOptions in (Test, console) -= "-Ywarn-unused-import",
   scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import",
   libraryDependencies += "com.lihaoyi" % "ammonite-repl" % "0.6.0" % "test" cross CrossVersion.full,
   initialCommands in (Test, console) := """ammonite.repl.Main().run()"""
 )
 
-def codemirrorD(path: String): JSModuleID =
-  "org.webjars.bower" % "codemirror" % "5.18.2" % "compile" / s"$path.js" minified s"$path.js"
-
+/* codemirror is a facade to the javascript rich editor codemirror*/
 lazy val codemirror = project
   .settings(baseSettings)
   .settings(
     scalacOptions -= "-Ywarn-dead-code",
-    jsDependencies ++=
+    jsDependencies ++= {
+      def codemirrorD(path: String): JSModuleID =
+        "org.webjars.bower" % "codemirror" % "5.18.2" % "compile" / s"$path.js" minified s"$path.js"
+
       List(
         "lib/codemirror",
         "addon/comment/comment",
@@ -150,11 +161,14 @@ lazy val codemirror = project
         "addon/search/searchcursor",
         "keymap/sublime",
         "mode/clike/clike"
-      ).map(codemirrorD),
+      ).map(codemirrorD)
+    },
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   )
   .enablePlugins(ScalaJSPlugin)
+  .disablePlugins(play.PlayScala)
 
+/* frontend code */
 def react(artifact: String, name: String): JSModuleID =
   "org.webjars.bower" % "react" % "15.3.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
@@ -177,8 +191,17 @@ lazy val client = project
     )
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
-  .dependsOn(codemirror, scaladexApi, apiJS)
+  .dependsOn(codemirror, webApiJS)
+  .disablePlugins(play.PlayScala)
 
+/*  instrument a program to add a Map[Position, (Value, Type)]
+
+class A {
+  val a = 1 + 1 // << 2: Int
+  3 + 3         // << 6: Int
+}
+
+*/
 lazy val instrumentation = project
   .settings(baseSettings)
   .settings(
@@ -186,20 +209,26 @@ lazy val instrumentation = project
       "org.scalameta" %% "scalameta" % "1.2.0"
     )
   )
+  .disablePlugins(play.PlayScala)
 
+/* runtime* pretty print values and type */
 lazy val runtimeScala = crossProject
+  .crossType(CrossType.Pure)
+  .in(file("runtime-scala"))
   .settings(baseSettings: _*)
   .settings(
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "upickle" % "0.4.3",
       "com.lihaoyi" %%% "pprint"  % "0.4.3"
     ))
-  .dependsOn(api)
+  .dependsOn(webApi)
+  .disablePlugins(play.PlayScala)
 
 lazy val runtimeScalaJVM = runtimeScala.jvm
 lazy val runtimeScalaJS  = runtimeScala.js
 
 lazy val runtimeDotty = project
+  .in(file("runtime-dotty"))
   .settings(
     organization := "org.scastie",
     version := "0.1.0-SNAPSHOT",
@@ -214,16 +243,12 @@ lazy val runtimeDotty = project
       "com.lihaoyi"    %% "upickle"      % "0.4.3"
     )
   )
-  .dependsOn(apiJVM)
+  .dependsOn(webApiJVM)
+  .disablePlugins(play.PlayScala)
 
-lazy val scaladexApi = project
-  .settings(baseSettings)
-  .settings(libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3")
-  .enablePlugins(ScalaJSPlugin)
-
-// server => frontend
-// paste => server => frontend (annotations)
-lazy val api = crossProject
+/* webApi is for the communication between the server and the frontend */
+lazy val webApi = crossProject
+  .in(file("web-api"))
   .settings(baseSettings: _*)
   .settings(
     crossScalaVersions := Seq("2.10.6", "2.11.8"), // no autowire for 2.12.0-RC1
@@ -235,14 +260,19 @@ lazy val api = crossProject
   .jsSettings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   )
-lazy val apiJVM = api.jvm
-lazy val apiJS  = api.js
+  .disablePlugins(play.PlayScala)
 
-// paste sbt => server (compilation info)
-lazy val sbtApi = project.settings(
-  organization := "org.scastie",
-  version := "0.1.0-SNAPSHOT",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.10.6", "2.11.8"),
-  libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3"
-)
+lazy val webApiJVM = webApi.jvm
+lazy val webApiJS  = webApi.js
+
+/* sbtApi is for the communication between sbt and the renderer */
+lazy val sbtApi = project
+  .in(file("sbt-api"))
+  .settings(
+    organization := "org.scastie",
+    version := "0.1.0-SNAPSHOT",
+    scalaVersion := "2.11.8",
+    crossScalaVersions := Seq("2.10.6", "2.11.8"),
+    libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3"
+  )
+  .disablePlugins(play.PlayScala)

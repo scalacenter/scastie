@@ -12,7 +12,7 @@ import upickle.default.{write => uwrite}
 
 /**
  */
-class Progress extends Actor with ActorLogging {
+class ProgressActor extends Actor with ActorLogging {
   private val monitors = new mutable.HashMap[Long, mutable.Set[MonitorChannel]]
   with mutable.MultiMap[Long, MonitorChannel]
   private val progressBuffer = mutable.Map[Long, PasteProgress]()
