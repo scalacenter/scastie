@@ -63,6 +63,7 @@ val defaultSettings = Seq(
   ) ++ SbtStartScript.startScriptForClassesSettings
 
 lazy val remoteApi = project
+  .in(file("remote-api"))
   .settings(defaultSettings)
   .disablePlugins(play.PlayScala)
 
@@ -81,8 +82,8 @@ lazy val renderer = project
   .dependsOn(sbtApi, webApiJVM, instrumentation)
   .disablePlugins(play.PlayScala)
 
-lazy val scastie = project
-  .in(file("server"))
+lazy val server = project
+  .in(file("scastie"))
   .settings(defaultSettings)
   .settings(packageScalaJS(client))
   .settings(
@@ -96,13 +97,17 @@ lazy val scastie = project
         .exclude("com.lihaoyi", "upickle_sjs0.6_2.11")
     )),
     mainClass in Compile := Option("ProdNettyServer"),
-    products in Compile <<= (products in Compile).dependsOn(
-      WebKeys.assets in Assets),
-    reStart <<= reStart.dependsOn(WebKeys.assets in Assets),
+    products in Compile := (products in Compile).dependsOn(WebKeys.assets in Assets).value,
+    reStart := reStart.dependsOn(WebKeys.assets in Assets).evaluated,
     WebKeys.public in Assets := (classDirectory in Compile).value / "public"
   )
   .enablePlugins(SbtWeb, play.PlayScala)
   .dependsOn(renderer, client, webApiJVM)
+
+lazy val scastie = project
+  .in(file("."))
+  .aggregate(server)
+  .settings(reStart := (reStart in server).evaluated)
 
 lazy val baseSettings = Seq(
   scalaVersion := "2.11.8",
@@ -123,7 +128,7 @@ lazy val baseSettings = Seq(
     "-Ywarn-unused-import",
     "-Ywarn-value-discard"
   ),
-  console <<= console in Test,
+  console := (console in Test).value,
   scalacOptions in (Test, console) -= "-Ywarn-unused-import",
   scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import",
   libraryDependencies += "com.lihaoyi" % "ammonite-repl" % "0.6.0" % "test" cross CrossVersion.full,
@@ -164,31 +169,29 @@ lazy val codemirror = project
   .disablePlugins(play.PlayScala)
 
 /* frontend code */
+def react(artifact: String, name: String): JSModuleID =
+  "org.webjars.bower" % "react" % "15.3.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+
+def react(artifact: String, name: String, depends: String): JSModuleID =
+  react(artifact, name).dependsOn(s"$depends.js")
+
 lazy val client = project
   .settings(baseSettings)
   .settings(
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     skip in packageJSDependencies := false,
-    jsDependencies ++= {
-      def react(artifact: String, name: String): JSModuleID =
-        "org.webjars.bower" % "react" % "15.3.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
-
-      def react(artifact: String, name: String, depends: String): JSModuleID =
-        react(artifact, name).dependsOn(s"$depends.js")
-
-      Seq(
-        react("react-with-addons", "React"),
-        react("react-dom", "ReactDOM", "react-with-addons"),
-        react("react-dom-server", "ReactDOMServer", "react-dom")
-      )
-    },
+    jsDependencies ++= Seq(
+      react("react-with-addons", "React"),
+      react("react-dom", "ReactDOM", "react-with-addons"),
+      react("react-dom-server", "ReactDOMServer", "react-dom")
+    ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra"     % "0.11.2",
       "org.webjars.bower"                 % "open-iconic" % "1.1.1"
     )
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
-  .dependsOn(codemirror, apiJS)
+  .dependsOn(codemirror, webApiJS)
   .disablePlugins(play.PlayScala)
 
 /*  instrument a program to add a Map[Position, (Value, Type)]
@@ -210,15 +213,15 @@ lazy val instrumentation = project
 
 /* runtime* pretty print values and type */
 lazy val runtimeScala = crossProject
-  .in(file("runtime-scala"))
   .crossType(CrossType.Pure)
+  .in(file("runtime-scala"))
   .settings(baseSettings: _*)
   .settings(
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "upickle" % "0.4.3",
       "com.lihaoyi" %%% "pprint"  % "0.4.3"
     ))
-  .dependsOn(api)
+  .dependsOn(webApi)
   .disablePlugins(play.PlayScala)
 
 lazy val runtimeScalaJVM = runtimeScala.jvm
@@ -240,11 +243,12 @@ lazy val runtimeDotty = project
       "com.lihaoyi"    %% "upickle"      % "0.4.3"
     )
   )
-  .dependsOn(apiJVM)
+  .dependsOn(webApiJVM)
   .disablePlugins(play.PlayScala)
 
 /* webApi is for the communication between the server and the frontend */
 lazy val webApi = crossProject
+  .in(file("web-api"))
   .settings(baseSettings: _*)
   .settings(
     crossScalaVersions := Seq("2.10.6", "2.11.8"), // no autowire for 2.12.0-RC1
@@ -263,6 +267,7 @@ lazy val webApiJS  = webApi.js
 
 /* sbtApi is for the communication between sbt and the renderer */
 lazy val sbtApi = project
+  .in(file("sbt-api"))
   .settings(
     organization := "org.scastie",
     version := "0.1.0-SNAPSHOT",

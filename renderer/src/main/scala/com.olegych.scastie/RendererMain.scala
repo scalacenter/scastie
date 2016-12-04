@@ -1,6 +1,6 @@
 package com.olegych.scastie
 
-import akka.actor.ActorSystem
+import akka.actor._
 import com.typesafe.config.ConfigFactory
 
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -53,7 +53,7 @@ object RendererMain {
 
     val system = ActorSystem("SbtRemote", config)
 
-    val remoteActor = system.actorOf(Props[RemoteActor], name = "RemoteActor")
+    // val remoteActor = system.actorOf(Props[RemoteActor], name = "RemoteActor")
 
     system.awaitTermination()
   }
