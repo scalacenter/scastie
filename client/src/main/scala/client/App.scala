@@ -66,7 +66,9 @@ object App {
   }
 
   class Backend(scope: BackendScope[(RouterCtl[Page], Option[Snippet]), State]) {
-    def codeChange(newCode: String) = scope.modState(_.setCode(newCode))
+    def codeChange(newCode: String) =
+        scope.modState(_.setCode(newCode))
+
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
 
@@ -157,7 +159,9 @@ object App {
 
       snippet match {
         case Some(Snippet(id)) =>
-          Callback.future(api.Client[Api].fetch(id).call().map(codeChange))
+          Callback.future(api.Client[Api].fetch(id).call().map(code =>
+            codeChange(code.getOrElse("// not found"))
+          ))
         case None => Callback(())
       }
     }

@@ -16,11 +16,11 @@ object CodeMirror extends js.Object {
     js.native
 }
 
-@ScalaJSDefined
+@js.native
 @JSName("CodeMirror.Pos")
 class Position extends js.Object {
-  var line: Int = 0
-  var ch: Int   = 0
+  var line: Int = js.native
+  var ch: Int   = js.native
 }
 
 @ScalaJSDefined

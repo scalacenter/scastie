@@ -2,8 +2,6 @@ import java.io.File
 import play.api.{Play, DefaultApplication, Mode}
 import play.core.ApplicationProvider
 import scala.util.{Try, Properties}
-import scalaz._
-import Scalaz._
 
 /**
  */
@@ -31,7 +29,7 @@ class NettyServer(mode: Mode.Value) {
     new StaticApplication(new File(System.getProperty("user.dir")), mode),
     Option(System.getProperty("http.port"))
       .map(Integer.parseInt)
-      .orElse(9000.some),
+      .orElse(Some(9000)),
     Option(System.getProperty("https.port")).map(Integer.parseInt),
     Option(System.getProperty("http.address")).getOrElse("0.0.0.0"),
     mode

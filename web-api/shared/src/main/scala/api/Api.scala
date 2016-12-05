@@ -6,7 +6,7 @@ trait Api {
   def run(code: String,
           sbtConfig: String,
           target: ScalaTargetType): Future[Long]
-  def fetch(id: Long): Future[String]
+  def fetch(id: Long): Future[Option[String]]
 }
 
 sealed trait ScalaTargetType
