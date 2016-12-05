@@ -12,14 +12,14 @@ case class PasteProgress(
 )
 
 case class RunPaste(
-  id: Long,
-  code: String,
-  sbtConfig: String,
-  scalaTargetType: api.ScalaTargetType,
-  progressActor: ActorRef
+    id: Long,
+    code: String,
+    sbtConfig: String,
+    scalaTargetType: api.ScalaTargetType,
+    progressActor: ActorRef
 )
 
 case class RunPasteError(
-  id: Long,
-  cause: String
+    id: Long,
+    cause: String
 )

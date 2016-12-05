@@ -15,10 +15,11 @@ class Sbt() {
   copyDir(src = Paths.get("../sbt-template"), dst = sbtDir)
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
-  write(sbtDir.resolve("build.sbt"), s"""shellPrompt := (_ => "$uniqueId\\n")""")
+  write(sbtDir.resolve("build.sbt"),
+        s"""shellPrompt := (_ => "$uniqueId\\n")""")
 
   private val sbtConfigFile = sbtDir.resolve("scastie/config.sbt")
-  var currentSbtConfig = read(sbtConfigFile).getOrElse("")
+  var currentSbtConfig      = read(sbtConfigFile).getOrElse("")
 
   private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
 
@@ -30,8 +31,8 @@ class Sbt() {
   }
 
   private def collect(lineCallback: (String, Boolean) => Unit): Unit = {
-    val chars = new collection.mutable.Queue[Character]()
-    var read = 0
+    val chars  = new collection.mutable.Queue[Character]()
+    var read   = 0
     var prompt = false
     while (read != -1 && !prompt) {
       read = fout.read()
@@ -50,15 +51,18 @@ class Sbt() {
 
   collect((line, _) => ())
 
-  private def process(command: String, lineCallback: (String, Boolean) => Unit): Unit = {
+  private def process(command: String,
+                      lineCallback: (String, Boolean) => Unit): Unit = {
     fin.write((command + nl).getBytes)
     fin.flush()
     println("running command: " + command)
     collect(lineCallback)
   }
 
-  def eval(command: String, paste: RunPaste, lineCallback: (String, Boolean) => Unit): Unit = {
-    if(paste.sbtConfig != currentSbtConfig) {
+  def eval(command: String,
+           paste: RunPaste,
+           lineCallback: (String, Boolean) => Unit): Unit = {
+    if (paste.sbtConfig != currentSbtConfig) {
       write(sbtConfigFile, paste.sbtConfig, truncate = true)
       currentSbtConfig = paste.sbtConfig
       process("reload", lineCallback)

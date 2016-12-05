@@ -45,18 +45,17 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 
 /* autowire => PasteActor */
 case class AddPaste(
-  code: String,
-  sbtConfig: String,
-  scalaTargetType: ScalaTargetType
+    code: String,
+    sbtConfig: String,
+    scalaTargetType: ScalaTargetType
 ) {
-  def toRunPaste(id: Long, progressActor: ActorRef) = 
+  def toRunPaste(id: Long, progressActor: ActorRef) =
     RunPaste(id, code, sbtConfig, scalaTargetType, progressActor)
 }
 
-
 case class GetPaste(id: Long)
 case class Paste(
-  id: Long,
-  code: String,
-  sbtConfig: String
+    id: Long,
+    code: String,
+    sbtConfig: String
 )

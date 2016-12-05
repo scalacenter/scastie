@@ -10,7 +10,9 @@ import akka.event.LoggingReceive
 import scala.concurrent._
 import scala.concurrent.duration.FiniteDuration
 
-private class TimeoutActor(timeout: FiniteDuration, kill: Any => Unit) extends Actor with ActorLogging {
+private class TimeoutActor(timeout: FiniteDuration, kill: Any => Unit)
+    extends Actor
+    with ActorLogging {
   import context._
 
   val messages = collection.mutable.Set[Any]()
@@ -46,10 +48,14 @@ object TimeoutActor {
 
   case class Kill(message: Any)
 
-  def apply(actorName: String, timeout: FiniteDuration, kill: Any => Unit)(implicit context: ActorContext) =
-    create(context.actorOf(Props(new TimeoutActor(timeout, kill)), name = actorName)) _
+  def apply(actorName: String, timeout: FiniteDuration, kill: Any => Unit)(
+      implicit context: ActorContext) =
+    create(
+      context.actorOf(Props(new TimeoutActor(timeout, kill)),
+                      name = actorName)) _
 
-  private def create(killer: ActorRef)(r: Receive)(implicit context: ActorContext): Receive = {
+  private def create(killer: ActorRef)(r: Receive)(
+      implicit context: ActorContext): Receive = {
     case m =>
       killer ! StartWatch(m)
       blocking(r(m))

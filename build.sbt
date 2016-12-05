@@ -12,36 +12,36 @@ lazy val crossSettings = Seq(
 )
 
 lazy val baseSettings = Seq(
-  scalaVersion := "2.11.8",
-  scalacOptions := Seq(
-    "-deprecation",
-    "-encoding",
-    "UTF-8",
-    "-feature",
-    "-unchecked",
-    "-Xfatal-warnings",
-    "-Xlint",
-    "-Yinline-warnings",
-    "-Yno-adapted-args",
-    "-Ywarn-dead-code",
-    "-Ywarn-numeric-widen",
-    "-Ywarn-unused-import",
-    "-Ywarn-value-discard"
-  ),
-  console := (console in Test).value,
-  scalacOptions in (Test, console) -= "-Ywarn-unused-import",
-  scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import",
-  allDependencies ~= logging
-) ++ orgSettings
+    scalaVersion := "2.11.8",
+    scalacOptions := Seq(
+      "-deprecation",
+      "-encoding",
+      "UTF-8",
+      "-feature",
+      "-unchecked",
+      "-Xfatal-warnings",
+      "-Xlint",
+      "-Yinline-warnings",
+      "-Yno-adapted-args",
+      "-Ywarn-dead-code",
+      "-Ywarn-numeric-widen",
+      "-Ywarn-unused-import",
+      "-Ywarn-value-discard"
+    ),
+    console := (console in Test).value,
+    scalacOptions in (Test, console) -= "-Ywarn-unused-import",
+    scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import",
+    allDependencies ~= logging
+  ) ++ orgSettings
 
 def logging(allDependencies: Seq[ModuleID]): Seq[ModuleID] = {
   Seq(
-    "org.slf4j"      % "slf4j-api"        % "1.7.6"
-  , "org.slf4j"      % "jul-to-slf4j"     % "1.7.6"
-  , "ch.qos.logback" % "logback-core"     % "1.1.1" % Runtime
-  , "ch.qos.logback" % "logback-classic"  % "1.1.1" % Runtime
-  , "org.slf4j"      % "jcl-over-slf4j"   % "1.7.6" % Runtime
-  , "org.slf4j"      % "log4j-over-slf4j" % "1.7.6" % Runtime
+    "org.slf4j" % "slf4j-api"    % "1.7.6",
+    "org.slf4j" % "jul-to-slf4j" % "1.7.6",
+    "ch.qos.logback" % "logback-core"     % "1.1.1" % Runtime,
+    "ch.qos.logback" % "logback-classic"  % "1.1.1" % Runtime,
+    "org.slf4j"      % "jcl-over-slf4j"   % "1.7.6" % Runtime,
+    "org.slf4j"      % "log4j-over-slf4j" % "1.7.6" % Runtime
   ) ++
     allDependencies.map(
       _.exclude("commons-logging", "commons-logging")

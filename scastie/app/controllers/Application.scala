@@ -24,7 +24,9 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
-class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext) extends Api {
+class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
+                                    executionContext: ExecutionContext)
+    extends Api {
   def run(code: String,
           sbtConfig: String,
           scalaTargetType: ScalaTargetType): Future[Long] = {
@@ -48,8 +50,10 @@ object Application extends Controller {
   }
   import system.dispatcher
 
-  val progressActor = system.actorOf(Props[ProgressActor], name = "ProgressActor")
-  val pasteActor = system.actorOf(Props(new PasteActor(progressActor)), name = "PasteActor")
+  val progressActor =
+    system.actorOf(Props[ProgressActor], name = "ProgressActor")
+  val pasteActor =
+    system.actorOf(Props(new PasteActor(progressActor)), name = "PasteActor")
 
   def tmp(file: String) = Action { implicit request =>
     Ok.sendFile(new java.io.File("/tmp/" + file))
