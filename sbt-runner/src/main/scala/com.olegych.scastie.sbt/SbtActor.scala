@@ -20,11 +20,22 @@ class SbtActor() extends Actor with ActorLogging {
       case paste: RunPaste => {
         import paste.scalaTargetType
 
-        val instrumentedCode =
+
+        val instrumentedCode =        
           if (scalaTargetType == ScalaTargetType.Native ||
               scalaTargetType == ScalaTargetType.JS) {
             paste.code
-          } else instrumentation.Instrument(paste.code)
+          } else {
+            
+            var compilationFail = false
+            sbt.eval("compile", paste, (line, _) => {
+              val compilationInfos = extractProblems(line)
+              compilationFail = compilationFail || compilationInfos.exists(_.severity == api.Error)
+            })
+
+            if(compilationFail) paste.code
+            else instrumentation.Instrument(paste.code)
+          }
 
         val paste0 = paste.copy(code = instrumentedCode)
 
