@@ -189,6 +189,7 @@ lazy val runtimeScala = crossProject
   .in(file("runtime-scala"))
   .settings(baseSettings)
   .settings(
+    moduleName := "runtime-scala",
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "upickle" % "0.4.3",
       "com.lihaoyi" %%% "pprint"  % "0.4.3"
@@ -203,10 +204,11 @@ lazy val runtimeDotty = project
   .in(file("runtime-dotty"))
   .settings(orgSettings)
   .settings(
-    scalaVersion := "0.1-SNAPSHOT",
+    moduleName := "runtime-dotty",
+    scalaVersion := "0.1-20161203-9ceed92-NIGHTLY",
     scalaOrganization := "ch.epfl.lamp",
     scalaBinaryVersion := "2.11",
-    scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-bridge" % "0.1.1-SNAPSHOT" % "component")
+    scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-sbt-bridge" % "0.1.1-20161203-9ceed92-NIGHTLY" % "component")
       .sources(),
     autoScalaLibrary := false,
     libraryDependencies ++= Seq(

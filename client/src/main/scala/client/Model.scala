@@ -94,8 +94,8 @@ case class Inputs(
     val targetConfig =
       target match {
         case ScalaTarget.Jvm(scalaVersion) => {
-          s"""|libraryDependencies += "org.scastie" %% "runtimescala" % "0.1.0-SNAPSHOT"
-              |coursier.CoursierPlugin.projectSettings
+          s"""|coursier.CoursierPlugin.projectSettings
+              |libraryDependencies += "org.scastie" %% "runtime-scala" % "0.1.0-SNAPSHOT"
               |scalaVersion := "$scalaVersion"""".stripMargin
         }
         case ScalaTarget.Js(scalaVersion, _) => {
@@ -106,8 +106,19 @@ case class Inputs(
               |""".stripMargin
         }
         case ScalaTarget.Dotty => {
-          s"""|libraryDependencies += "org.scastie" %% "runtimedotty" % "0.1.0-SNAPSHOT"
-              |com.felixmulder.dotty.plugin.DottyPlugin.projectSettings""".stripMargin
+          // http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
+          s"""|scalaVersion := "0.1-20161203-9ceed92-NIGHTLY"
+              |scalaOrganization := "ch.epfl.lamp"
+              |scalaBinaryVersion := "2.11"
+              |autoScalaLibrary := false
+              |libraryDependencies ++= Seq(
+              |  "ch.epfl.lamp" % "scala-library_2.11" % "0.1-20161203-9ceed92-NIGHTLY",
+              |  "ch.epfl.lamp" % "dotty_2.11"         % "0.1-20161203-9ceed92-NIGHTLY" % "scala-tool",
+              |  "org.scastie"  % "runtime-dotty_2.11" % "0.1.0-SNAPSHOT"
+              |)
+              |scalaCompilerBridgeSource := 
+              |  ("ch.epfl.lamp" % "dotty-sbt-bridge" % "0.1.1-20161203-9ceed92-NIGHTLY" % "component").sources()
+              |""".stripMargin
         }
         case ScalaTarget.Native => {
           """|coursier.CoursierPlugin.projectSettings

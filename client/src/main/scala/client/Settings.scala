@@ -47,7 +47,6 @@ object Settings {
       else EmptyTag
 
     val disabledTargets: Set[ScalaTargetType] = Set(
-      ScalaTargetType.Dotty,
       ScalaTargetType.JS,
       ScalaTargetType.Native
     )
