@@ -102,7 +102,10 @@ lazy val server = project
 lazy val scastie = project
   .in(file("."))
   .aggregate(server)
-  .settings(reStart := (reStart in server).evaluated)
+  .settings(run := {
+    (reStart in sbtRunner).toTask("").value
+    (reStart in server).toTask("").value
+  })
 
 /* codemirror is a facade to the javascript rich editor codemirror*/
 lazy val codemirror = project

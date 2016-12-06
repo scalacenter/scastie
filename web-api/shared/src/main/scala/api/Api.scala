@@ -6,8 +6,14 @@ trait Api {
   def run(code: String,
           sbtConfig: String,
           target: ScalaTargetType): Future[Long]
-  def fetch(id: Long): Future[Option[String]]
+  def fetch(id: Long): Future[Option[Paste]]
 }
+
+case class Paste(
+  id: Long,
+  code: String,
+  sbt: String
+)
 
 sealed trait ScalaTargetType
 object ScalaTargetType {

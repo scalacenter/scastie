@@ -164,7 +164,16 @@ object App {
               .Client[Api]
               .fetch(id)
               .call()
-              .map(code => codeChange(code.getOrElse("// not found"))))
+              .map(paste =>
+                paste match {
+                  case Some(Paste(_, code, sbtConfig)) => {
+                    scope.modState(_.setCode(code).setSbtConfigExtra(sbtConfig))
+                  }
+                  case None =>
+                    scope.modState(_.setCode(s"//paste $id not found"))
+                }
+              )
+          )
         case None => Callback(())
       }
     }

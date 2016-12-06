@@ -56,6 +56,5 @@ Instructions that detail how the project is compiled, deployed and used
 sbt
 > project sbtApi
 > + publishLocal
-> ~sbtRunner/reStart
-> ~scastie/reStart
+> scastie/run
 ``

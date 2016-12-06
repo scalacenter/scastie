@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package web
 
+import api.Paste
+
 import java.nio.file._
 import java.util.concurrent.atomic.AtomicLong
 import System.{lineSeparator => nl}
@@ -15,7 +17,7 @@ class PastesContainer(root: Path) {
         s"trying to write paste to existing folder: ${pasteDir(id).toString}")
 
     val codeFilePath = codeFile(id)
-    codeFilePath.toFile.mkdirs()
+    codeFilePath.getParent.toFile.mkdirs()
     write(codeFilePath, paste.code)
     write(sbtConfigFile(id), paste.sbtConfig)
 

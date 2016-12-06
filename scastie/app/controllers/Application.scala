@@ -32,8 +32,8 @@ class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
           scalaTargetType: ScalaTargetType): Future[Long] = {
     (pasteActor ? AddPaste(code, sbtConfig, scalaTargetType)).mapTo[Long]
   }
-  def fetch(id: Long): Future[Option[String]] = {
-    (pasteActor ? GetPaste(id)).mapTo[Option[String]]
+  def fetch(id: Long): Future[Option[Paste]] = {
+    (pasteActor ? GetPaste(id)).mapTo[Option[Paste]]
   }
 }
 

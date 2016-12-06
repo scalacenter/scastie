@@ -54,8 +54,3 @@ case class AddPaste(
 }
 
 case class GetPaste(id: Long)
-case class Paste(
-    id: Long,
-    code: String,
-    sbtConfig: String
-)

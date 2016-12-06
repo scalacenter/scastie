@@ -4,6 +4,7 @@ import japgolly.scalajs.react._, vdom.all._
 
 import codemirror.TextAreaEditor
 
+import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLTextAreaElement
 
 import scala.scalajs._
@@ -47,7 +48,8 @@ object CodeMirrorEditor {
                 "showCursorWhenSelecting" -> true,
                 "autofocus"               -> true,
                 "highlightSelectionMatches" -> js.Dictionary(
-                  "showToken" -> js.Dynamic.global.RegExp("\\w")),
+                  "showToken" -> js.Dynamic.global.RegExp("\\w")
+                ),
                 "extraKeys" -> js.Dictionary("Tab" -> "defaultTab")
               )
               .asInstanceOf[codemirror.Options]
@@ -55,6 +57,8 @@ object CodeMirrorEditor {
             val editor0 = codemirror.CodeMirror.fromTextArea(textArea, options)
 
             editor0.getDoc.setValue(settings.value)
+
+            dom.console.log(settings.value)
 
             editor0.onChange((_, _) =>
               handler.onChange(editor0.getDoc().getValue()).runNow)
@@ -73,6 +77,25 @@ object CodeMirrorEditor {
     }
   }
 
+  private def runDelta(editor: TextAreaEditor,
+                       state: State,
+                       current: Settings,
+                       next: Settings): Callback = {
+
+    def setCode(): Unit = {
+      if (current.value != next.value) {
+        val doc = editor.getDoc()
+        if (doc.getValue() != next.value) {
+          val cursor = doc.getCursor()
+          doc.setValue(next.value)
+          doc.setCursor(cursor)
+        }
+      }
+    }
+
+    Callback(setCode())
+  }
+
   private val component =
     ReactComponentB[(Settings, Handler)]("CodeMirrorEditor")
       .initialState(State())
@@ -80,11 +103,20 @@ object CodeMirrorEditor {
       .renderPS {
         case (scope, (props, handler), _) =>
           textarea(
-            defaultValue := "",
+            defaultValue := props.value,
             onChange ==> handler.onChange,
             ref := texteareaRef,
             autoComplete := "off"
           )
+      }
+      .componentWillReceiveProps { v =>
+        val (current, _) = v.currentProps
+        val (next, _)    = v.nextProps
+        val state        = v.currentState
+
+        state.editor
+          .map(editor => runDelta(editor, state, current, next))
+          .getOrElse(Callback(()))
       }
       .componentDidMount(_.backend.start())
       .componentWillUnmount(_.backend.stop())
