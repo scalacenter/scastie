@@ -5,11 +5,12 @@ import sbt._
 import Keys._
 import KeyRanks.DTask
 
+import System.{lineSeparator => nl}
+
 import xsbti.{Reporter, Problem, Position, Severity, Maybe}
 import upickle.default.{write ⇒ uwrite}
 
 object ApplicationBuild extends Build {
-  private val nl = System.lineSeparator
 
   private val runAll     = TaskKey[Unit]("run-all")
   private val jdkVersion = settingKey[String]("")
@@ -97,11 +98,13 @@ object ApplicationBuild extends Build {
 
     val mainClasses =
       if (discoveredMainClasses.isEmpty) Seq("Main") else discoveredMainClasses
+
     val errors = mainClasses.flatMap { mainClass =>
       runner.run(mainClass, Attributed.data(fullClasspath), Nil, streams.log)
     }
+
     if (errors.nonEmpty) {
-      sys.error(errors.mkString("\n"))
+      sys.error(errors.mkString(nl))
     }
   }
 
@@ -116,31 +119,8 @@ object ApplicationBuild extends Build {
 
       try {
         ScriptSecurityManager.hardenPermissions {
-
-          // val full = Seq(BlockStart + nl) ++ lines ++ Seq(nl + BlockEnd)
-
-          // println("++++++")
-          // println(full.mkString(nl))
-          // println("++++++")
-
-          // val blocks = extractBlocks(full)
-          // val embeddedSettings = blocks.flatMap { block =>
-          //
-          //   println("******")
-          //   println(block.lines.mkString(nl))
-          //   println("******")
-
-          // }
           val imports = Seq("import sbt._", "import Keys._")
           evaluateConfiguration(eval, script, imports)(loader)
-
-          // embeddedSettings.flatMap {
-          //   case setting if !forbiddenKeys.exists(_.scopedKey == setting.key) =>
-          //     setting
-          //   case setting =>
-          //     state.log.warn(s"ignored unsafe ${setting.toString}")
-          //     Nil
-          // }
         }
       } catch {
         case e: Throwable =>
@@ -165,30 +145,4 @@ object ApplicationBuild extends Build {
       extracted.structure,
       state)
   }
-
-  /*
-  Copyright (c) 2008-2014 Typesafe Inc, Mark Harrah, Grzegorz Kossakowski, Josh Suereth, Indrajit Raychaudhuri, Eugene Yokota, and other contributors.
-  All rights reserved.
-   */
-  private final case class Block(offset: Int, lines: Seq[String])
-  private val BlockStart = "/***"
-  private val BlockEnd   = "*/"
-  private def extractBlocks(lines: Seq[String]): Seq[Block] = {
-    def blocks(b: Block, acc: List[Block]): List[Block] =
-      if (b.lines.isEmpty)
-        acc.reverse
-      else {
-        val (dropped, blockToEnd) = b.lines.span { line =>
-          !line.startsWith(BlockStart)
-        }
-        val (block, remaining) = blockToEnd.span { line =>
-          !line.startsWith(BlockEnd)
-        }
-        val offset = b.offset + dropped.length
-        blocks(Block(offset + block.length, remaining),
-               Block(offset, block.drop(1)) :: acc)
-      }
-    blocks(Block(0, lines), Nil)
-  }
-  // End Copyright
 }

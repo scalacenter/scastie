@@ -25,6 +25,17 @@ class Sbt() {
 
   private val (process, fin, fout) = {
     val builder = new ProcessBuilder("sbt").directory(sbtDir.toFile)
+    val currentOpts = sys.env.get("SBT_OPTS").getOrElse("")
+
+    builder.environment().put(
+      "SBT_OPTS",
+      Seq(
+        currentOpts, 
+        "-Djline.terminal=jline.UnsupportedTerminal", 
+        "-Dsbt.log.noformat=true"
+      ).mkString(" ")
+    )
+
     val process = builder.start()
 
     (process, process.getOutputStream, process.getInputStream)

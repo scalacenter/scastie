@@ -4,8 +4,6 @@ import sbt._
 import classpath.ClasspathUtilities
 import java.lang.reflect.{Method, InvocationTargetException}
 
-/**
- */
 class SecuredRun(instance: ScalaInstance, trapExit: Boolean, nativeTmp: File)
     extends Run(instance, false, nativeTmp) {
   override def run(mainClass: String,
