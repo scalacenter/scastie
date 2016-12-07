@@ -107,6 +107,7 @@ object App {
 
     def clear(): Callback = scope.modState(_.resetOutputs)
 
+    def run2(e: CloseEvent): Callback = run()
     def run(): Callback = {
       scope.state.flatMap(
         s =>

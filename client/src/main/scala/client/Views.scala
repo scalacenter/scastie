@@ -60,7 +60,7 @@ object SideBar {
           } else {
             if(View.Editor == state.view){
               // RUN
-              mediaPlay(onClick ==> setView(View.Editor))
+              mediaPlay(onClick ==> run2, `class` := "runnable")
             } else {
               mediaPlay(onClick ==> setView(View.Editor))
             }
@@ -69,8 +69,6 @@ object SideBar {
         nav(`class` := s"sidebar $theme")(
           ul(
             li(selected(View.Editor))(editor),
-
-               // clock()
             li(selected(View.Output))(
               terminal(onClick ==> setView(View.Output))),
             li(selected(View.Settings))(
