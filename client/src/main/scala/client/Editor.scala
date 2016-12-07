@@ -254,8 +254,29 @@ object Editor {
         _.outputs.compilationInfos,
         info => {
           val pos = doc.posFromIndex(info.offset.getOrElse(0))
-          val el  = dom.document.createElement("div")
-          el.textContent = info.message
+
+          val icon = dom.document.createElement("i").asInstanceOf[HTMLDivElement] 
+
+          val iconSeverity = 
+            info.severity match {
+              case api.Info ⇒ "info"
+              case api.Warning ⇒ "warning"
+              case api.Error ⇒ "circle-x"
+            }
+
+          icon.setAttribute("data-glyph", iconSeverity)
+          icon.className = "oi"
+
+          val el = dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+          el.className = "compilation-info"
+
+          val msg = dom.document.createElement("pre")
+          msg.textContent = info.message
+
+          el.appendChild(icon)
+          el.appendChild(msg)
+
+
           Line(doc.addLineWidget(pos.line, el))
         },
         _.problemAnnotations,
