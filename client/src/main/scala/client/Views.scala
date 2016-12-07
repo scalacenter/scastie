@@ -54,10 +54,23 @@ object SideBar {
         def selected(view: View) =
           if (view == state.view) TagMod(`class` := "selected") else EmptyTag
 
+        val editor =
+          if(state.running) {
+            clock(onClick ==> setView(View.Editor))
+          } else {
+            if(View.Editor == state.view){
+              // RUN
+              mediaPlay(onClick ==> setView(View.Editor))
+            } else {
+              mediaPlay(onClick ==> setView(View.Editor))
+            }
+          }
+
         nav(`class` := s"sidebar $theme")(
           ul(
-            li(selected(View.Editor))(
-              mediaPlay(onClick ==> setView(View.Editor))), // clock()
+            li(selected(View.Editor))(editor),
+
+               // clock()
             li(selected(View.Output))(
               terminal(onClick ==> setView(View.Output))),
             li(selected(View.Settings))(

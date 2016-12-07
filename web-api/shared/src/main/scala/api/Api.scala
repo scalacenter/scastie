@@ -27,7 +27,8 @@ case class PasteProgress(
     id: Long,
     output: String,
     compilationInfos: List[Problem],
-    instrumentations: List[Instrumentation]
+    instrumentations: List[Instrumentation],
+    done: Boolean
 )
 
 sealed trait Severity

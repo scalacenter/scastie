@@ -21,7 +21,7 @@ import upickle.default.{read => uread}
 object App {
   case class State(
       view: View = View.Settings,
-      // ui
+      running: Boolean = false,
       sideBarClosed: Boolean = false,
       websocket: Option[WebSocket] = None,
       dark: Boolean = true,
@@ -29,6 +29,7 @@ object App {
       inputs: Inputs = Inputs(),
       outputs: Outputs = Outputs()
   ) {
+    def setRunning(v: Boolean)   = copy(running = v)
     def toogleTheme              = copy(dark = !dark)
     def toogleSidebar            = copy(sideBarClosed = !sideBarClosed)
     def log(line: String): State = log(Seq(line))
@@ -80,9 +81,13 @@ object App {
         val progress = uread[PasteProgress](e.data.toString)
         direct.modState(
           _.addOutputs(
-            progress.compilationInfos,
-            progress.instrumentations
-          ).log(progress.output))
+             progress.compilationInfos,
+             progress.instrumentations
+           )
+           .log(progress.output)
+           .setRunning(!progress.done)
+
+        )
       }
       def onerror(e: ErrorEvent): Unit =
         direct.modState(_.log(s"Error: ${e.message}"))
@@ -120,6 +125,7 @@ object App {
                     def clearLogs =
                       scope.modState(
                         _.resetOutputs
+                          .setRunning(true)
                           .copy(websocket = Some(ws))
                           .log("Connecting...")
                       )
@@ -133,7 +139,10 @@ object App {
                     clearLogs >> urlRewrite
                   }
                   case Failure(error) =>
-                    scope.modState(_.resetOutputs.log(error.toString))
+                    scope.modState(
+                      _.resetOutputs.log(error.toString)
+                       .setRunning(false)
+                    )
               })))
     }
     def run(e: ReactEventI): Callback = run()

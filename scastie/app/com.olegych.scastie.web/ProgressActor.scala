@@ -56,7 +56,8 @@ class ProgressActor extends Actor with ActorLogging {
       id = pasteProgress.id,
       output = pasteProgress.output,
       compilationInfos = pasteProgress.compilationInfos,
-      instrumentations = pasteProgress.instrumentations
+      instrumentations = pasteProgress.instrumentations,
+      done = pasteProgress.done
     )
     monitorChannels.foreach(_.channel.push(uwrite(apiModel)))
   }
