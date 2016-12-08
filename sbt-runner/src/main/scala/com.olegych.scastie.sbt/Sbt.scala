@@ -12,7 +12,7 @@ class Sbt() {
   private val log = LoggerFactory.getLogger(getClass)
 
   private val sbtDir = Files.createTempDirectory("scastie")
-  copyDir(src = Paths.get("../sbt-template"), dst = sbtDir)
+  copyDir(src = Paths.get("sbt-template"), dst = sbtDir)
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
   write(sbtDir.resolve("build.sbt"),

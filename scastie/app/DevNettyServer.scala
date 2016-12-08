@@ -17,7 +17,7 @@ class NettyServer(mode: Mode.Value) {
   if (Properties.propIsSet("config.file"))
     System.clearProperty("config.resource")
 
-  "-Dfile.encoding=utf-8 -Djava.net.preferIPv4Stack=true -Dlogger.resource=logback-test.xml"
+  "-Dfile.encoding=utf-8 -Djava.net.preferIPv4Stack=true"
     .split(" ")
     .foreach { prop =>
       prop.split("=") match {
