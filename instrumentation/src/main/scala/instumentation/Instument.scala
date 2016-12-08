@@ -86,7 +86,7 @@ object Instrument {
       }
     }
 
-    def instrumentTerm(term: Term, tpeTree: Option[Type] = None, local: Boolean = false): Term = {
+    def instrumentTerm(term: Term, tpeTree: Option[Type] = None): Term = {
       def posToApi(position: Position) = {
         def tuple2(v1: Int, v2: Int) = Seq(Lit(v1), Lit(v2))
 
@@ -105,23 +105,14 @@ object Instrument {
           case None      ⇒ q"val t = $term"
           case Some(tpe) ⇒ q"val t: $tpe = $term"
         }
-
-      val block =  
-        q"""
-        {
-          $treeQuote
-          $instrumentationMap(${posToApi(term.pos)}) = scastie.runtime.Runtime.render(t)
-          t
-        }
-        """
-
-      if(local) {
-        q"""
-        locally {
-          $block
-        }
-        """
-      } else block
+    
+      q"""
+      locally {
+        $treeQuote
+        $instrumentationMap(${posToApi(term.pos)}) = scastie.runtime.Runtime.render(t)
+        t
+      }
+      """
     }
 
     val instrumentedCode =
