@@ -69,9 +69,30 @@ lazy val sbtRunner = project
       akka("actor"),
       akka("remote"),
       akka("slf4j")
-    )
+    ),
+    imageNames in docker := Seq(
+      ImageName(
+        namespace = Some("masseguillaume"),
+        repository = "scastie",
+        tag = Some(version.value)
+      )
+    ),
+    dockerfile in docker := {
+      
+      val artifact = assembly.value
+      val artifactTargetPath = s"/app/${artifact.name}"
+
+      new Dockerfile {
+        from("vadivelk/alpine-sbt")
+        add(artifact, artifactTargetPath)
+        add(file("sbt-template"), "/sbt-template")
+        expose(5150)
+        entryPoint("java", "-Xmx2G", "-Xms512M", "-jar", artifactTargetPath)
+      }
+    }
   )
   .dependsOn(sbtApi, remoteApi, webApiJVM, instrumentation)
+  .enablePlugins(DockerPlugin)
   .disablePlugins(play.PlayScala)
 
 lazy val server = project
