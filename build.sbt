@@ -84,8 +84,11 @@ lazy val sbtRunner = project
 
       new Dockerfile {
         from("vadivelk/alpine-sbt")
+
         add(artifact, artifactTargetPath)
+        
         add(file("sbt-template"), "/sbt-template")
+
         expose(5150)
         entryPoint("java", "-Xmx2G", "-Xms512M", "-jar", artifactTargetPath)
       }
@@ -115,7 +118,8 @@ lazy val server = project
       .dependsOn(WebKeys.assets in Assets)
       .value,
     reStart := reStart.dependsOn(WebKeys.assets in Assets).evaluated,
-    WebKeys.public in Assets := (classDirectory in Compile).value / "public"
+    WebKeys.public in Assets := (classDirectory in Compile).value / "public",
+    mappings in (Compile,packageBin) += (fullOptJS in (client, Compile)).value.data -> "public/client-opt.js"
   )
   .enablePlugins(SbtWeb, play.PlayScala)
   .dependsOn(remoteApi, client, webApiJVM)
