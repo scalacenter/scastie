@@ -81,12 +81,9 @@ object App {
         val progress = uread[PasteProgress](e.data.toString)
         direct.modState(
           _.addOutputs(
-             progress.compilationInfos,
-             progress.instrumentations
-           )
-           .log(progress.output)
-           .setRunning(!progress.done)
-
+            progress.compilationInfos,
+            progress.instrumentations
+          ).log(progress.output).setRunning(!progress.done)
         )
       }
       def onerror(e: ErrorEvent): Unit =
@@ -141,8 +138,7 @@ object App {
                   }
                   case Failure(error) =>
                     scope.modState(
-                      _.resetOutputs.log(error.toString)
-                       .setRunning(false)
+                      _.resetOutputs.log(error.toString).setRunning(false)
                     )
               })))
     }
@@ -177,12 +173,12 @@ object App {
               .map(paste =>
                 paste match {
                   case Some(Paste(_, code, sbtConfig)) => {
-                    scope.modState(_.setCode(code).setSbtConfigExtra(sbtConfig))
+                    scope.modState(
+                      _.setCode(code).setSbtConfigExtra(sbtConfig))
                   }
                   case None =>
                     scope.modState(_.setCode(s"//paste $id not found"))
-                }
-              )
+              })
           )
         case None => Callback(())
       }

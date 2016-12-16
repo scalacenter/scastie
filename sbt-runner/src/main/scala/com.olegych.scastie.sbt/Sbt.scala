@@ -8,11 +8,11 @@ import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
 import java.nio.file._
 
-class Sbt() {
+class Sbt(sbtTemplatePath: Path) {
   private val log = LoggerFactory.getLogger(getClass)
 
   private val sbtDir = Files.createTempDirectory("scastie")
-  copyDir(src = Paths.get("sbt-template"), dst = sbtDir)
+  copyDir(src = sbtTemplatePath, dst = sbtDir)
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
   write(sbtDir.resolve("build.sbt"),
@@ -24,17 +24,19 @@ class Sbt() {
   private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
 
   private val (process, fin, fout) = {
-    val builder = new ProcessBuilder("sbt").directory(sbtDir.toFile)
+    val builder     = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     val currentOpts = sys.env.get("SBT_OPTS").getOrElse("")
 
-    builder.environment().put(
-      "SBT_OPTS",
-      Seq(
-        currentOpts, 
-        "-Djline.terminal=jline.UnsupportedTerminal", 
-        "-Dsbt.log.noformat=true"
-      ).mkString(" ")
-    )
+    builder
+      .environment()
+      .put(
+        "SBT_OPTS",
+        Seq(
+          currentOpts,
+          "-Djline.terminal=jline.UnsupportedTerminal",
+          "-Dsbt.log.noformat=true"
+        ).mkString(" ")
+      )
 
     val process = builder.start()
 

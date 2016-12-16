@@ -55,10 +55,10 @@ object SideBar {
           if (view == state.view) TagMod(`class` := "selected") else EmptyTag
 
         val editor =
-          if(state.running) {
+          if (state.running) {
             clock(onClick ==> setView(View.Editor))
           } else {
-            if(View.Editor == state.view){
+            if (View.Editor == state.view) {
               // RUN
               mediaPlay(onClick ==> run2, `class` := "runnable")
             } else {

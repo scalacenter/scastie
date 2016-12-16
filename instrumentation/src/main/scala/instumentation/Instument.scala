@@ -24,10 +24,10 @@ object Instrument {
           """
         )
 
-      val result = 
+      val result =
         templ.stats.map(stats ⇒ stats.map(s ⇒ instrumentStat(s))) match {
           case Some(instrumented) ⇒ Some(instrumentationApi ++ instrumented)
-          case None        ⇒ Some(instrumentationApi)
+          case None               ⇒ Some(instrumentationApi)
         }
 
       templ.copy(stats = result)
@@ -105,7 +105,7 @@ object Instrument {
           case None      ⇒ q"val t = $term"
           case Some(tpe) ⇒ q"val t: $tpe = $term"
         }
-    
+
       q"""
       locally {
         $treeQuote

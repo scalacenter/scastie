@@ -255,19 +255,21 @@ object Editor {
         info => {
           val pos = doc.posFromIndex(info.offset.getOrElse(0))
 
-          val icon = dom.document.createElement("i").asInstanceOf[HTMLDivElement] 
+          val icon =
+            dom.document.createElement("i").asInstanceOf[HTMLDivElement]
 
-          val iconSeverity = 
+          val iconSeverity =
             info.severity match {
-              case api.Info ⇒ "info"
+              case api.Info    ⇒ "info"
               case api.Warning ⇒ "warning"
-              case api.Error ⇒ "circle-x"
+              case api.Error   ⇒ "circle-x"
             }
 
           icon.setAttribute("data-glyph", iconSeverity)
           icon.className = "oi"
 
-          val el = dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+          val el =
+            dom.document.createElement("div").asInstanceOf[HTMLDivElement]
           el.className = "compilation-info"
 
           val msg = dom.document.createElement("pre")
@@ -275,7 +277,6 @@ object Editor {
 
           el.appendChild(icon)
           el.appendChild(msg)
-
 
           Line(doc.addLineWidget(pos.line, el))
         },

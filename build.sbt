@@ -61,6 +61,8 @@ lazy val remoteApi = project
   .disablePlugins(play.PlayScala)
   .dependsOn(webApiJVM)
 
+lazy val foo = taskKey[String]("foo")
+
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
@@ -72,22 +74,39 @@ lazy val sbtRunner = project
     ),
     imageNames in docker := Seq(
       ImageName(
-        namespace = Some("masseguillaume"),
-        repository = "scastie",
+        namespace = Some("scalacenter"),
+        repository = "scastie-sbt-runner",
         tag = Some(version.value)
       )
     ),
+    /*assemblyMergeStrategy in assembly := {
+     case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+     case x => MergeStrategy.first
+    },*/
     dockerfile in docker := {
-      
+      val forcePublishLocal = (publishLocal in sbtApi).value
+
+      val ivy = ivyPaths.value.ivyHome.get
+
+      val org = (organization in sbtApi).value
+      val ver = (version in sbtApi).value
+      val cross = (crossVersion in sbtApi).value
+      val module = (moduleName in sbtApi).value
+      val fullScala = (scalaVersion in sbtApi).value
+      val binaryScala = (scalaBinaryVersion in sbtApi).value
+      val crossModule = CrossVersion(cross, fullScala, binaryScala).map(f => f(module)).getOrElse(module)
+
       val artifact = assembly.value
       val artifactTargetPath = s"/app/${artifact.name}"
 
       new Dockerfile {
-        from("vadivelk/alpine-sbt")
+        from("scalacenter/scastie-docker-sbt")
 
         add(artifact, artifactTargetPath)
-        
+
         add(file("sbt-template"), "/sbt-template")
+
+        add(ivy / "local" / org / crossModule / ver, s"/root/.ivy2/local/$org/$crossModule/$ver")
 
         expose(5150)
         entryPoint("java", "-Xmx2G", "-Xms512M", "-jar", artifactTargetPath)
@@ -119,7 +138,7 @@ lazy val server = project
       .value,
     reStart := reStart.dependsOn(WebKeys.assets in Assets).evaluated,
     WebKeys.public in Assets := (classDirectory in Compile).value / "public",
-    mappings in (Compile,packageBin) += (fullOptJS in (client, Compile)).value.data -> "public/client-opt.js"
+    mappings in (Compile, packageBin) += (fullOptJS in (client, Compile)).value.data -> "public/client-opt.js"
   )
   .enablePlugins(SbtWeb, play.PlayScala)
   .dependsOn(remoteApi, client, webApiJVM)
@@ -128,6 +147,8 @@ lazy val scastie = project
   .in(file("."))
   .aggregate(server)
   .settings(run := {
+    val forcePublishLocal = (publishLocal in sbtApi).value
+
     (reStart in sbtRunner).toTask("").value
     (reStart in server).toTask("").value
   })
@@ -213,12 +234,11 @@ lazy val runtimeScala = crossProject
   .crossType(CrossType.Pure)
   .in(file("runtime-scala"))
   .settings(baseSettings)
-  .settings(
-    moduleName := "runtime-scala",
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "upickle" % "0.4.3",
-      "com.lihaoyi" %%% "pprint"  % "0.4.3"
-    ))
+  .settings(moduleName := "runtime-scala",
+            libraryDependencies ++= Seq(
+              "com.lihaoyi" %%% "upickle" % "0.4.3",
+              "com.lihaoyi" %%% "pprint"  % "0.4.3"
+            ))
   .dependsOn(webApi)
   .disablePlugins(play.PlayScala)
 
@@ -268,5 +288,8 @@ lazy val sbtApi = project
   .in(file("sbt-api"))
   .settings(orgSettings)
   .settings(crossSettings)
-  .settings(libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3")
+  .settings(
+    scalaVersion := "2.10.6",
+    libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3"
+  )
   .disablePlugins(play.PlayScala)

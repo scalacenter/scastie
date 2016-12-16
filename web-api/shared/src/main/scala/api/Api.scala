@@ -10,9 +10,9 @@ trait Api {
 }
 
 case class Paste(
-  id: Long,
-  code: String,
-  sbt: String
+    id: Long,
+    code: String,
+    sbt: String
 )
 
 sealed trait ScalaTargetType

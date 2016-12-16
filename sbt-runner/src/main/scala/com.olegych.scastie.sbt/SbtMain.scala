@@ -15,7 +15,7 @@ object SbtMain {
       .headOption
       .foreach { pid =>
         val pidFile = Paths.get(Properties.userDir, "RUNNING_PID")
-        println("Play server process ID is " + pid)
+        println(s"Runner PID: $pid")
         Files.write(pidFile, pid.getBytes)
         Runtime.getRuntime.addShutdownHook(new Thread {
           override def run: Unit = {
@@ -29,21 +29,29 @@ object SbtMain {
   def main(args: Array[String]): Unit = {
     writeRunningPid()
 
-    val config = ConfigFactory.parseString(s"""|akka {
-                                               |  actor {
-                                               |    provider = "akka.remote.RemoteActorRefProvider"
-                                               |   }
-                                               |   remote {
-                                               |     transport = "akka.remote.netty.NettyRemoteTransport"
-                                               |     netty.tcp {
-                                               |       hostname = "127.0.0.1"
-                                               |       port = 5150
-                                               |     }
-                                               |   }
-                                               |}""".stripMargin)
+    val config = ConfigFactory.parseString(
+      s"""|akka {
+          |  actor {
+          |    provider = "akka.remote.RemoteActorRefProvider"
+          |   }
+          |   remote {
+          |     transport = "akka.remote.netty.NettyRemoteTransport"
+          |     netty.tcp {
+          |       hostname = "127.0.0.1"
+          |       port = 5150
+          |     }
+          |   }
+          |}""".stripMargin
+    )
+
+    val sbtTemplatePath = 
+      args.toList match {
+        case h :: _ => h
+        case _      => "../sbt-template"
+      }
 
     val system      = ActorSystem("SbtRemote", config)
-    val remoteActor = system.actorOf(Props[SbtActor], name = "SbtActor")
+    val remoteActor = system.actorOf(Props(new SbtActor(Paths.get(sbtTemplatePath))), name = "SbtActor")
     system.awaitTermination()
   }
 }

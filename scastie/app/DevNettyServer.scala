@@ -17,13 +17,12 @@ class NettyServer(mode: Mode.Value) {
   if (Properties.propIsSet("config.file"))
     System.clearProperty("config.resource")
 
-  "-Dfile.encoding=utf-8 -Djava.net.preferIPv4Stack=true"
-    .split(" ")
-    .foreach { prop =>
+  "-Dfile.encoding=utf-8 -Djava.net.preferIPv4Stack=true".split(" ").foreach {
+    prop =>
       prop.split("=") match {
         case Array(name, value) => System.setProperty(name.drop(2), value)
       }
-    }
+  }
 
   new play.core.server.NettyServer(
     new StaticApplication(new File(System.getProperty("user.dir")), mode),
