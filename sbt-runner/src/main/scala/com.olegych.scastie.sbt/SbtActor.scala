@@ -15,7 +15,7 @@ import scala.util.control.{NonFatal, NoStackTrace}
 import java.nio.file._
 
 class SbtActor(sbtTemplatePath: Path) extends Actor with ActorLogging {
-  private val sbt = new Sbt()
+  private val sbt = new Sbt(sbtTemplatePath)
 
   def receive = LoggingReceive {
     compilationKiller {

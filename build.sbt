@@ -60,9 +60,7 @@ lazy val remoteApi = project
   .settings(libraryDependencies += akka("actor"))
   .disablePlugins(play.PlayScala)
   .dependsOn(webApiJVM)
-
-lazy val foo = taskKey[String]("foo")
-
+ 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
@@ -79,10 +77,14 @@ lazy val sbtRunner = project
         tag = Some(version.value)
       )
     ),
-    /*assemblyMergeStrategy in assembly := {
-     case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-     case x => MergeStrategy.first
-    },*/
+    assemblyMergeStrategy in assembly := {
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case in @ PathList("reference.conf", xs @ _*) => {
+        val old = (assemblyMergeStrategy in assembly).value
+        old(in)
+      }
+      case x => MergeStrategy.first
+    },
     dockerfile in docker := {
       val forcePublishLocal = (publishLocal in sbtApi).value
 
