@@ -98,17 +98,42 @@ lazy val sbtRunner = project
       val binaryScala = (scalaBinaryVersion in sbtApi).value
       val crossModule = CrossVersion(cross, fullScala, binaryScala).map(f => f(module)).getOrElse(module)
 
+      val sbtVer = sbtVersion.value
+
       val artifact = assembly.value
       val artifactTargetPath = s"/app/${artifact.name}"
 
       new Dockerfile {
-        from("scalacenter/scastie-docker-sbt")
+        from("openjdk:8u111-jdk-alpine")
+        runRaw("apk add --update bash")
+        runRaw("apk add --update ncurses")
 
-        add(artifact, artifactTargetPath)
+        // install sbt
+        runRaw(s"wget http://dl.bintray.com/sbt/native-packages/sbt/$sbtVer/sbt-$sbtVer.tgz -O /tmp/sbt-$sbtVer.tgz")
+        runRaw("mkdir /tmp/sbt")
+        runRaw(s"tar -xzvf /tmp/sbt-$sbtVer.tgz -C /tmp")
+        runRaw("mv /tmp/sbt-launcher-packaging-0.13.13/bin/sbt /usr/local/bin")
+        runRaw("mv /tmp/sbt-launcher-packaging-0.13.13/bin/sbt-launch-lib.bash /usr/local/bin")
+        runRaw("mv /tmp/sbt-launcher-packaging-0.13.13/bin/sbt-launch.jar /usr/local/bin")
+
+        runRaw("mkdir /root/.sbt")
+        runRaw("mkdir /root/.sbt/0.13")
+        runRaw("mkdir /root/.sbt/0.13/plugins")
+        runRaw("""echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M14")' >> /root/.sbt/0.13/plugins/plugins.sbt""")
 
         add(file("sbt-template"), "/sbt-template")
 
+        runRaw("mkdir /root/.ivy2")
+        runRaw("mkdir /root/.ivy2/local")
+        runRaw("mkdir /root/.ivy2/local/org.scastie")
         add(ivy / "local" / org / crossModule / ver, s"/root/.ivy2/local/$org/$crossModule/$ver")
+
+        runRaw("cd /sbt-template; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal sbtVersion")
+        runRaw("cd /sbt-template; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal compile")
+
+        add(artifact, artifactTargetPath)
+
+        // >> add more commands here to take advantage of layer caching <<
 
         expose(5150)
         entryPoint("java", "-Xmx2G", "-Xms512M", "-jar", artifactTargetPath)
