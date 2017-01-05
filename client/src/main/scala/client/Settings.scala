@@ -72,7 +72,7 @@ object Settings {
     val suggestedVersions = List(
       ("old", Version(2, 10, 6)),
       ("stable", Version(2, 11, 8)),
-      ("latest", Version(2, 12, 0))
+      ("latest", Version(2, 12, 1))
     )
 
     def selected(v1: Version, v2: Version) =

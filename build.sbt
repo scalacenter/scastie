@@ -6,28 +6,46 @@ lazy val orgSettings = Seq(
   version := "0.1.0-SNAPSHOT"
 )
 
-lazy val crossSettings = Seq(
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.10.6", "2.11.8")
-)
+val crossPublishLocalRuntime = "crossPublishLocalRuntime"
+
+commands in Global += Command.command(crossPublishLocalRuntime){ state =>
+  List(
+    "project runtimeScalaJVM",
+    "+ publishLocal",
+    "project runtimeScalaJS",
+    "+ publishLocal",
+    "reload",
+    "project webApiJVM",
+    "+ publishLocal",
+    "project webApiJS",
+    "+ publishLocal",
+    "reload"
+  ) ::: state
+}
+
+addCommandAlias("docker", s";$crossPublishLocalRuntime; sbtRunner/docker")
 
 lazy val baseSettings = Seq(
     scalaVersion := "2.11.8",
-    scalacOptions := Seq(
-      "-deprecation",
-      "-encoding",
-      "UTF-8",
-      "-feature",
-      "-unchecked",
-      "-Xfatal-warnings",
-      "-Xlint",
-      "-Yinline-warnings",
-      "-Yno-adapted-args",
-      "-Ywarn-dead-code",
-      "-Ywarn-numeric-widen",
-      "-Ywarn-unused-import",
-      "-Ywarn-value-discard"
-    ),
+    scalacOptions := {
+      val extraOptions = 
+        if(scalaBinaryVersion.value != "2.10") {
+          Seq("-Ywarn-unused-import")
+        } else Seq()
+      Seq(
+        "-deprecation",
+        "-encoding",
+        "UTF-8",
+        "-feature",
+        "-unchecked",
+        "-Xfatal-warnings",
+        "-Xlint",
+        "-Yno-adapted-args",
+        "-Ywarn-dead-code",
+        "-Ywarn-numeric-widen",
+        "-Ywarn-value-discard"
+      ) ++ extraOptions
+    },
     console := (console in Test).value,
     scalacOptions in (Test, console) -= "-Ywarn-unused-import",
     scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import",
@@ -53,6 +71,8 @@ def logging(allDependencies: Seq[ModuleID]): Seq[ModuleID] = {
 }
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.3.11"
+
+val upickleVersion = "0.4.4"
 
 lazy val remoteApi = project
   .in(file("remote-api"))
@@ -86,54 +106,25 @@ lazy val sbtRunner = project
       case x => MergeStrategy.first
     },
     dockerfile in docker := {
-      val forcePublishLocal = (publishLocal in sbtApi).value
+      // run crossPublishLocalRuntime
 
       val ivy = ivyPaths.value.ivyHome.get
 
       val org = (organization in sbtApi).value
-      val ver = (version in sbtApi).value
-      val cross = (crossVersion in sbtApi).value
-      val module = (moduleName in sbtApi).value
-      val fullScala = (scalaVersion in sbtApi).value
-      val binaryScala = (scalaBinaryVersion in sbtApi).value
-      val crossModule = CrossVersion(cross, fullScala, binaryScala).map(f => f(module)).getOrElse(module)
-
-      val sbtVer = sbtVersion.value
-
       val artifact = assembly.value
       val artifactTargetPath = s"/app/${artifact.name}"
 
       new Dockerfile {
-        from("openjdk:8u111-jdk-alpine")
-        runRaw("apk add --update bash")
-        runRaw("apk add --update ncurses")
+        // docker run --network=host -p 5150:5150 scalacenter/scastie-sbt-runner:0.1.0-SNAPSHOT
 
-        // install sbt
-        runRaw(s"wget http://dl.bintray.com/sbt/native-packages/sbt/$sbtVer/sbt-$sbtVer.tgz -O /tmp/sbt-$sbtVer.tgz")
-        runRaw("mkdir /tmp/sbt")
-        runRaw(s"tar -xzvf /tmp/sbt-$sbtVer.tgz -C /tmp")
-        runRaw("mv /tmp/sbt-launcher-packaging-0.13.13/bin/sbt /usr/local/bin")
-        runRaw("mv /tmp/sbt-launcher-packaging-0.13.13/bin/sbt-launch-lib.bash /usr/local/bin")
-        runRaw("mv /tmp/sbt-launcher-packaging-0.13.13/bin/sbt-launch.jar /usr/local/bin")
-
-        runRaw("mkdir /root/.sbt")
-        runRaw("mkdir /root/.sbt/0.13")
-        runRaw("mkdir /root/.sbt/0.13/plugins")
-        runRaw("""echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M14")' >> /root/.sbt/0.13/plugins/plugins.sbt""")
+        from("scalacenter/scastie-docker-sbt:0.13.13")
 
         add(file("sbt-template"), "/sbt-template")
+        add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 
-        runRaw("mkdir /root/.ivy2")
-        runRaw("mkdir /root/.ivy2/local")
-        runRaw("mkdir /root/.ivy2/local/org.scastie")
-        add(ivy / "local" / org / crossModule / ver, s"/root/.ivy2/local/$org/$crossModule/$ver")
-
-        runRaw("cd /sbt-template; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal sbtVersion")
         runRaw("cd /sbt-template; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal compile")
 
         add(artifact, artifactTargetPath)
-
-        // >> add more commands here to take advantage of layer caching <<
 
         expose(5150)
         entryPoint("java", "-Xmx2G", "-Xms512M", "-jar", artifactTargetPath)
@@ -261,11 +252,14 @@ lazy val runtimeScala = crossProject
   .crossType(CrossType.Pure)
   .in(file("runtime-scala"))
   .settings(baseSettings)
-  .settings(moduleName := "runtime-scala",
-            libraryDependencies ++= Seq(
-              "com.lihaoyi" %%% "upickle" % "0.4.3",
-              "com.lihaoyi" %%% "pprint"  % "0.4.3"
-            ))
+  .settings(
+    crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
+    moduleName := "runtime-scala",
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "upickle" % upickleVersion,
+      "com.lihaoyi" %%% "pprint"  % upickleVersion
+    )
+  )
   .dependsOn(webApi)
   .disablePlugins(play.PlayScala)
 
@@ -285,7 +279,7 @@ lazy val runtimeDotty = project
     autoScalaLibrary := false,
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-library" % "2.11.5",
-      "com.lihaoyi"    %% "upickle"      % "0.4.3"
+      "com.lihaoyi"    %% "upickle"      % upickleVersion
     )
   )
   .dependsOn(webApiJVM)
@@ -295,11 +289,11 @@ lazy val runtimeDotty = project
 lazy val webApi = crossProject
   .in(file("web-api"))
   .settings(baseSettings)
-  .settings(crossSettings)
   .settings(
+    crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "autowire" % "0.2.5",
-      "com.lihaoyi" %%% "upickle"  % "0.4.3"
+      "com.lihaoyi" %%% "autowire" % "0.2.6",
+      "com.lihaoyi" %%% "upickle"  % upickleVersion
     )
   )
   .jsSettings(
@@ -314,9 +308,8 @@ lazy val webApiJS  = webApi.js
 lazy val sbtApi = project
   .in(file("sbt-api"))
   .settings(orgSettings)
-  .settings(crossSettings)
   .settings(
     scalaVersion := "2.10.6",
-    libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3"
+    libraryDependencies += "com.lihaoyi" %%% "upickle" % upickleVersion
   )
   .disablePlugins(play.PlayScala)
