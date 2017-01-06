@@ -29,8 +29,9 @@ class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
     extends Api {
   def run(code: String,
           sbtConfig: String,
+          sbtPluginConfig: String,
           scalaTargetType: ScalaTargetType): Future[Long] = {
-    (pasteActor ? AddPaste(code, sbtConfig, scalaTargetType)).mapTo[Long]
+    (pasteActor ? AddPaste(code, sbtConfig, sbtPluginConfig, scalaTargetType)).mapTo[Long]
   }
   def fetch(id: Long): Future[Option[Paste]] = {
     (pasteActor ? GetPaste(id)).mapTo[Option[Paste]]

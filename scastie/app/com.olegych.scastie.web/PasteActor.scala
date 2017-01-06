@@ -47,10 +47,11 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 case class AddPaste(
     code: String,
     sbtConfig: String,
+    sbtPluginsConfig: String,
     scalaTargetType: ScalaTargetType
 ) {
   def toRunPaste(id: Long, progressActor: ActorRef) =
-    RunPaste(id, code, sbtConfig, scalaTargetType, progressActor)
+    RunPaste(id, code, sbtConfig, sbtPluginsConfig, scalaTargetType, progressActor)
 }
 
 case class GetPaste(id: Long)

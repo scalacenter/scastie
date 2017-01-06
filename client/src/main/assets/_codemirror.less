@@ -82,8 +82,18 @@ body.pc kbd.mac { display: none }
   .CodeMirror-linewidget {
     overflow: visible !important;
 
-    .compilation-info p {
-      display: inline-block;
+    .compilation-info {
+      &.error {
+        color: red;
+      }
+
+      &.warning {
+        color: yellow;
+      }
+
+      pre {
+        display: inline-block;
+      }
     }
 
     .inline {

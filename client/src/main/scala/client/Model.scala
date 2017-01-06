@@ -87,23 +87,20 @@ case class Inputs(
     code: String = "",
     target: ScalaTarget = ScalaTarget.Jvm(),
     libraries: Set[ScalaDependency] = Set(),
-    sbtConfigExtra: String = ""
+    sbtConfigExtra: String = "",
+    sbtPluginsConfig: String = ""
 ) {
   def sbtConfig: String = {
 
     val targetConfig =
       target match {
         case ScalaTarget.Jvm(scalaVersion) => {
-          s"""|coursier.CoursierPlugin.projectSettings
-              |libraryDependencies += "org.scastie" %% "runtime-scala" % "0.1.0-SNAPSHOT"
+          s"""|libraryDependencies += "org.scastie" %% "runtime-scala" % "0.1.0-SNAPSHOT"
               |scalaVersion := "$scalaVersion"""".stripMargin
         }
         case ScalaTarget.Js(scalaVersion, _) => {
           // TODO change scalajs version
-          s"""|coursier.CoursierPlugin.projectSettings
-              |org.scalajs.sbtplugin.ScalaJSPlugin.projectSettings
-              |scalaVersion := "$scalaVersion"
-              |""".stripMargin
+          s"""|scalaVersion := "$scalaVersion"""".stripMargin
         }
         case ScalaTarget.Dotty => {
           // http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
@@ -121,8 +118,7 @@ case class Inputs(
               |""".stripMargin
         }
         case ScalaTarget.Native => {
-          """|coursier.CoursierPlugin.projectSettings
-             |scalaVersion := "2.11.8"
+          """|scalaVersion := "2.11.8"
              |scala.scalanative.sbtplugin.ScalaNativePlugin.projectSettings""".stripMargin
         }
       }

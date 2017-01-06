@@ -19,7 +19,9 @@ commands in Global += Command.command(crossPublishLocalRuntime){ state =>
     "+ publishLocal",
     "project webApiJS",
     "+ publishLocal",
-    "reload"
+    "reload",
+    "project sbtScastie",
+    "publishLocal"
   ) ::: state
 }
 
@@ -110,7 +112,7 @@ lazy val sbtRunner = project
 
       val ivy = ivyPaths.value.ivyHome.get
 
-      val org = (organization in sbtApi).value
+      val org = organization.value
       val artifact = assembly.value
       val artifactTargetPath = s"/app/${artifact.name}"
 
@@ -119,10 +121,7 @@ lazy val sbtRunner = project
 
         from("scalacenter/scastie-docker-sbt:0.13.13")
 
-        add(file("sbt-template"), "/sbt-template")
         add(ivy / "local" / org, s"/root/.ivy2/local/$org")
-
-        runRaw("cd /sbt-template; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal compile")
 
         add(artifact, artifactTargetPath)
 
@@ -313,3 +312,13 @@ lazy val sbtApi = project
     libraryDependencies += "com.lihaoyi" %%% "upickle" % upickleVersion
   )
   .disablePlugins(play.PlayScala)
+
+lazy val sbtScastie = project
+  .in(file("sbt-scastie"))
+  .settings(orgSettings)
+  .settings(
+    moduleName := "sbt-scastie",
+    scalaVersion := "2.10.6",
+    sbtPlugin := true
+  )
+  .dependsOn(sbtApi)

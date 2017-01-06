@@ -1,7 +1,7 @@
 package com.olegych
 
 import java.nio.file._
-import attribute.BasicFileAttributes
+// import attribute.BasicFileAttributes
 
 import System.{lineSeparator => nl}
 
@@ -21,21 +21,20 @@ package object scastie {
     }
   }
 
-  def copyDir(src: Path, dst: Path): Unit = {
-    Files.walkFileTree(src, new SimpleFileVisitor[Path] {
-      override def preVisitDirectory(
-          dir: Path,
-          attrs: BasicFileAttributes): FileVisitResult = {
-        Files.createDirectories(dst.resolve(src.relativize(dir)))
-        FileVisitResult.CONTINUE
-      }
-      override def visitFile(file: Path,
-                             attrs: BasicFileAttributes): FileVisitResult = {
-        Files.copy(file, dst.resolve(src.relativize(file)))
-        FileVisitResult.CONTINUE
-      }
-    })
-
-    ()
-  }
+  // def copyDir(src: Path, dst: Path): Unit = {
+  //   Files.walkFileTree(src, new SimpleFileVisitor[Path] {
+  //     override def preVisitDirectory(
+  //         dir: Path,
+  //         attrs: BasicFileAttributes): FileVisitResult = {
+  //       Files.createDirectories(dst.resolve(src.relativize(dir)))
+  //       FileVisitResult.CONTINUE
+  //     }
+  //     override def visitFile(file: Path,
+  //                            attrs: BasicFileAttributes): FileVisitResult = {
+  //       Files.copy(file, dst.resolve(src.relativize(file)))
+  //       FileVisitResult.CONTINUE
+  //     }
+  //   })
+  //   ()
+  // }
 }

@@ -5,6 +5,7 @@ import scala.concurrent.Future
 trait Api {
   def run(code: String,
           sbtConfig: String,
+          sbtPluginConfig: String,
           target: ScalaTargetType): Future[Long]
   def fetch(id: Long): Future[Option[Paste]]
 }

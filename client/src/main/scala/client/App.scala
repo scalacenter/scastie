@@ -114,6 +114,7 @@ object App {
               .run(
                 s.inputs.code,
                 s.inputs.sbtConfig,
+                s.inputs.sbtPluginsConfig,
                 s.inputs.target.targetType
               )
               .call()

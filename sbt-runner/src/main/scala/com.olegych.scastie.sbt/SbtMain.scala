@@ -44,14 +44,8 @@ object SbtMain {
           |}""".stripMargin
     )
 
-    val sbtTemplatePath = 
-      args.toList match {
-        case h :: _ => h
-        case _      => "../sbt-template"
-      }
-
     val system      = ActorSystem("SbtRemote", config)
-    val remoteActor = system.actorOf(Props(new SbtActor(Paths.get(sbtTemplatePath))), name = "SbtActor")
+    val remoteActor = system.actorOf(Props[SbtActor], name = "SbtActor")
     system.awaitTermination()
   }
 }

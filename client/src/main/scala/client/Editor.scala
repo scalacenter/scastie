@@ -265,12 +265,19 @@ object Editor {
               case api.Error   ⇒ "circle-x"
             }
 
+          val classSeverity =
+            info.severity match {
+              case api.Info    ⇒ "info"
+              case api.Warning ⇒ "warning"
+              case api.Error   ⇒ "error"
+            }
+
           icon.setAttribute("data-glyph", iconSeverity)
           icon.className = "oi"
 
           val el =
             dom.document.createElement("div").asInstanceOf[HTMLDivElement]
-          el.className = "compilation-info"
+          el.className = s"compilation-info $classSeverity"
 
           val msg = dom.document.createElement("pre")
           msg.textContent = info.message

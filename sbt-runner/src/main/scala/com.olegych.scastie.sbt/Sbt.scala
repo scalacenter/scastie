@@ -8,25 +8,35 @@ import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
 import java.nio.file._
 
-class Sbt(sbtTemplatePath: Path) {
+class Sbt() {
   private val log = LoggerFactory.getLogger(getClass)
 
   private val sbtDir = Files.createTempDirectory("scastie")
-  copyDir(src = sbtTemplatePath, dst = sbtDir)
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
-  write(sbtDir.resolve("build.sbt"),
-        s"""shellPrompt := (_ => "$uniqueId\\n")""")
+  
+  private var currentSbtConfig       = ""
+  private var currentSbtPluginConfig = ""
 
-  private val sbtConfigFile = sbtDir.resolve("scastie/config.sbt")
-  var currentSbtConfig      = read(sbtConfigFile).getOrElse("")
+  private val sbtConfigFile = sbtDir.resolve("config.sbt")
+  private val prompt = s"""shellPrompt := (_ => "$uniqueId\\n")"""
+  write(sbtConfigFile, prompt)
+
+  private val projectDir = sbtDir.resolve("project")
+  Files.createDirectories(projectDir)
+
+  write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.13")
+
+  private val pluginFile = projectDir.resolve("plugins.sbt")
+  write(pluginFile, """addSbtPlugin("org.scastie" % "sbt-scastie" % "0.1.0-SNAPSHOT")""")
 
   private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
 
+  Files.createDirectories(codeFile.getParent)
+  
   private val (process, fin, fout) = {
     val builder     = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     val currentOpts = sys.env.get("SBT_OPTS").getOrElse("")
-
     builder
       .environment()
       .put(
@@ -53,8 +63,7 @@ class Sbt(sbtTemplatePath: Path) {
         val line = chars.mkString
         prompt = line == uniqueId
         lineCallback(line, prompt)
-        println(line)
-        // log.info(" sbt: " + line)
+        log.info(" sbt: " + line)
         chars.clear()
       } else {
         chars += read.toChar
@@ -62,7 +71,7 @@ class Sbt(sbtTemplatePath: Path) {
     }
   }
 
-  collect((line, _) => ())
+  collect((line, _) => log.info(" sbt: " + line))
 
   private def process(command: String,
                       lineCallback: (String, Boolean) => Unit): Unit = {
@@ -75,9 +84,22 @@ class Sbt(sbtTemplatePath: Path) {
   def eval(command: String,
            paste: RunPaste,
            lineCallback: (String, Boolean) => Unit): Unit = {
+
+    var configChange = false
+
     if (paste.sbtConfig != currentSbtConfig) {
-      write(sbtConfigFile, paste.sbtConfig, truncate = true)
+      configChange = true
+      write(sbtConfigFile, prompt + nl + paste.sbtConfig, truncate = true)
       currentSbtConfig = paste.sbtConfig
+    }
+
+    if (paste.sbtPluginsConfig != currentSbtPluginConfig) {
+      configChange = true
+      write(pluginFile, paste.sbtPluginsConfig, truncate = true)
+      currentSbtPluginConfig = paste.sbtPluginsConfig
+    }
+
+    if (configChange) {
       process("reload", lineCallback)
     }
 

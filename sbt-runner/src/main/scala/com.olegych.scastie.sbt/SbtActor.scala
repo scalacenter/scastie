@@ -12,10 +12,10 @@ import akka.event.LoggingReceive
 import scala.concurrent.duration._
 import scala.util.control.{NonFatal, NoStackTrace}
 
-import java.nio.file._
+// import java.nio.file._
 
-class SbtActor(sbtTemplatePath: Path) extends Actor with ActorLogging {
-  private val sbt = new Sbt(sbtTemplatePath)
+class SbtActor() extends Actor with ActorLogging {
+  private val sbt = new Sbt()
 
   def receive = LoggingReceive {
     compilationKiller {
@@ -51,12 +51,12 @@ class SbtActor(sbtTemplatePath: Path) extends Actor with ActorLogging {
         applyRunKiller(paste0) {
           if (scalaTargetType == ScalaTargetType.JVM ||
               scalaTargetType == ScalaTargetType.Dotty) {
-
-            eval(";compile ;run-all")
+            eval("run")
           } else if (scalaTargetType == ScalaTargetType.JS) {
             eval("fast-opt")
           } else if (scalaTargetType == ScalaTargetType.Native) {
-            eval(";compile ;run")
+            // run with timer
+            eval("run")
           }
         }
       }

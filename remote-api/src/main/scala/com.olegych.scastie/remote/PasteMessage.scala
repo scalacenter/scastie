@@ -15,6 +15,7 @@ case class RunPaste(
     id: Long,
     code: String,
     sbtConfig: String,
+    sbtPluginsConfig: String,
     scalaTargetType: api.ScalaTargetType,
     progressActor: ActorRef
 )
