@@ -175,13 +175,14 @@ object App {
                 paste match {
                   case Some(Paste(_, code, sbtConfig)) => {
                     scope.modState(
-                      _.setCode(code).setSbtConfigExtra(sbtConfig))
+                      _.setCode(code).setSbtConfigExtra(sbtConfig)
+                    ) >> run()
                   }
                   case None =>
                     scope.modState(_.setCode(s"//paste $id not found"))
               })
           )
-        case None => Callback(())
+        case None => Callback(()) >> run()
       }
     }
 
