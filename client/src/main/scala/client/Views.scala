@@ -56,7 +56,12 @@ object SideBar {
 
         val editor =
           if (state.running) {
-            clock(onClick ==> setView(View.Editor))
+            div(`class` := "sk-folding-cube")(
+              div(`class` := "sk-cube1 sk-cube"),
+              div(`class` := "sk-cube2 sk-cube"),
+              div(`class` := "sk-cube4 sk-cube"),
+              div(`class` := "sk-cube3 sk-cube")
+            )
           } else {
             if (View.Editor == state.view) {
               // RUN

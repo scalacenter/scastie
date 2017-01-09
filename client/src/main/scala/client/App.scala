@@ -20,11 +20,11 @@ import upickle.default.{read => uread}
 
 object App {
   case class State(
-      view: View = View.Settings,
+      view: View = View.Editor,
       running: Boolean = false,
       sideBarClosed: Boolean = false,
       websocket: Option[WebSocket] = None,
-      dark: Boolean = true,
+      dark: Boolean = false,
       codemirrorSettings: Option[codemirror.Options] = None,
       inputs: Inputs = Inputs(),
       outputs: Outputs = Outputs()
