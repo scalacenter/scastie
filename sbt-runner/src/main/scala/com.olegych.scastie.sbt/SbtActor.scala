@@ -12,7 +12,8 @@ import akka.event.LoggingReceive
 import scala.concurrent.duration._
 import scala.util.control.{NonFatal, NoStackTrace}
 
-// import java.nio.file._
+import java.nio.file._
+import System.{lineSeparator => nl}
 
 class SbtActor() extends Actor with ActorLogging {
   private val sbt = new Sbt()
@@ -22,10 +23,16 @@ class SbtActor() extends Actor with ActorLogging {
       case paste: RunPaste => {
         import paste.scalaTargetType
 
-        val instrumentedCode =
-          if (scalaTargetType == ScalaTargetType.Native ||
-              scalaTargetType == ScalaTargetType.JS) {
-            paste.code
+        val paste0 =
+          if (scalaTargetType == ScalaTargetType.JS) {
+            val fastOptJsDest = Paths.get("/tmp", "scastie", paste.id.toString)
+            Files.createDirectories(fastOptJsDest)
+
+            paste.copy(
+              sbtConfig = 
+                s"""artifactPath in (Compile, fastOptJS) := file("$fastOptJsDest")""" + nl +
+                paste.sbtConfig
+            )
           } else {
 
             var compilationFail = false
@@ -35,27 +42,28 @@ class SbtActor() extends Actor with ActorLogging {
                   _.severity == api.Error)
             })
 
-            if (compilationFail) paste.code
-            else instrumentation.Instrument(paste.code)
+            if (compilationFail) paste
+            else paste.copy(code = instrumentation.Instrument(paste.code))
           }
 
-        println(instrumentedCode)
-
-        val paste0 = paste.copy(code = instrumentedCode)
+        println(paste0.code)
 
         def eval(command: String) =
           sbt.eval(command,
                    paste0,
-                   processSbtOutput(paste.progressActor, paste.id))
+                   processSbtOutput(
+                     paste.progressActor,
+                     paste.id
+                   )
+          )
 
         applyRunKiller(paste0) {
           if (scalaTargetType == ScalaTargetType.JVM ||
               scalaTargetType == ScalaTargetType.Dotty) {
             eval("run")
           } else if (scalaTargetType == ScalaTargetType.JS) {
-            eval("fast-opt")
+            eval("fastOptJs")
           } else if (scalaTargetType == ScalaTargetType.Native) {
-            // run with timer
             eval("run")
           }
         }
@@ -66,15 +74,13 @@ class SbtActor() extends Actor with ActorLogging {
   private def processSbtOutput(progressActor: ActorRef,
                                id: Long): (String, Boolean) => Unit = {
     (line, done) =>
-      {
-        progressActor ! PasteProgress(
-          id = id,
-          output = line,
-          done = done,
-          compilationInfos = extractProblems(line),
-          instrumentations = extractInstrumentations(line)
-        )
-      }
+      progressActor ! PasteProgress(
+        id = id,
+        output = line,
+        done = done,
+        compilationInfos = extractProblems(line),
+        instrumentations = extractInstrumentations(line)
+      )
   }
 
   private def extractProblems(line: String): List[api.Problem] = {

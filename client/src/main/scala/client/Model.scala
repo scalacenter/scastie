@@ -32,7 +32,7 @@ sealed trait ScalaTarget {
 }
 object ScalaTarget {
   private val defaultScalaVersion   = Version(2, 11, 8)
-  private val defaultScalaJsVersion = Version(0, 6, 12)
+  private val defaultScalaJsVersion = Version(0, 6, 13)
 
   case class Jvm(scalaVersion: Version = defaultScalaVersion)
       extends ScalaTarget {
@@ -88,8 +88,24 @@ case class Inputs(
     target: ScalaTarget = ScalaTarget.Jvm(),
     libraries: Set[ScalaDependency] = Set(),
     sbtConfigExtra: String = "",
-    sbtPluginsConfig: String = ""
+    sbtPluginsConfigExtra: String = ""
 ) {
+
+  def sbtPluginsConfig: String = {
+    target match {
+      case ScalaTarget.Js(_, scalaJsVersion) =>
+        s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
+
+      case ScalaTarget.Native => 
+        s"""|resolvers += Resolver.sonatypeRepo("snapshots")
+            |addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "0.1.0-SNAPSHOT")""".stripMargin
+
+      case ScalaTarget.Dotty => "" //use sbt-dotty
+
+      case _ :ScalaTarget.Jvm => ""
+    }
+  }
+
   def sbtConfig: String = {
 
     val targetConfig =
@@ -99,27 +115,30 @@ case class Inputs(
               |scalaVersion := "$scalaVersion"""".stripMargin
         }
         case ScalaTarget.Js(scalaVersion, _) => {
-          // TODO change scalajs version
-          s"""|scalaVersion := "$scalaVersion"""".stripMargin
+          s"""|libraryDependencies += "org.scastie" %%% "runtime-scala" % "0.1.0-SNAPSHOT"
+              |scalaVersion := "$scalaVersion"
+              |enablePlugins(ScalaJSPlugin)""".stripMargin
         }
         case ScalaTarget.Dotty => {
           // http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
-          s"""|scalaVersion := "0.1-20161203-9ceed92-NIGHTLY"
+          s"""|scalaVersion := "0.1-20170105-42eb864-NIGHTLY"
               |scalaOrganization := "ch.epfl.lamp"
               |scalaBinaryVersion := "2.11"
-              |autoScalaLibrary := false
+              |autoScalaLibrary := false  
+              |scalacOptions += "-color:never"
               |libraryDependencies ++= Seq(
-              |  "ch.epfl.lamp" % "scala-library_2.11" % "0.1-20161203-9ceed92-NIGHTLY",
-              |  "ch.epfl.lamp" % "dotty_2.11"         % "0.1-20161203-9ceed92-NIGHTLY" % "scala-tool",
+              |  "ch.epfl.lamp" % "scala-library_2.11" % "0.1-20170105-42eb864-NIGHTLY",
+              |  "ch.epfl.lamp" % "dotty_2.11"         % "0.1-20170105-42eb864-NIGHTLY" % "scala-tool",
               |  "org.scastie"  % "runtime-dotty_2.11" % "0.1.0-SNAPSHOT"
               |)
               |scalaCompilerBridgeSource := 
-              |  ("ch.epfl.lamp" % "dotty-sbt-bridge" % "0.1.1-20161203-9ceed92-NIGHTLY" % "component").sources()
+              |  ("ch.epfl.lamp" % "dotty-sbt-bridge" % "0.1.1-20170105-42eb864-NIGHTLY" % "component").sources()
               |""".stripMargin
         }
         case ScalaTarget.Native => {
-          """|scalaVersion := "2.11.8"
-             |scala.scalanative.sbtplugin.ScalaNativePlugin.projectSettings""".stripMargin
+          """|libraryDependencies += "org.scastie" %%% "runtime-scala" % "0.1.0-SNAPSHOT"
+             |scalaVersion := "2.11.8"
+             |resolvers += Resolver.sonatypeRepo("snapshots")""".stripMargin
         }
       }
 
@@ -140,8 +159,11 @@ case class Inputs(
             )
       }
 
-    s"""|$targetConfig
+    s"""|// target
+        |$targetConfig
+        |// libs
         |$librariesConfig
+        |// extra
         |$sbtConfigExtra""".stripMargin
   }
 }

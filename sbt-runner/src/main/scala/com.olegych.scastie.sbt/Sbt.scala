@@ -25,7 +25,8 @@ class Sbt() {
   private val projectDir = sbtDir.resolve("project")
   Files.createDirectories(projectDir)
 
-  write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.13")
+  // bug with Dotty in 0.13.13 (https://github.com/sbt/sbt/issues/2895)
+  write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.11")
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
   write(pluginFile, """addSbtPlugin("org.scastie" % "sbt-scastie" % "0.1.0-SNAPSHOT")""")
