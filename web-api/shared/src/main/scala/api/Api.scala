@@ -40,7 +40,10 @@ object ScalaTarget {
   private val defaultScalaVersion   = Version(2, 11, 8)
   private val defaultScalaJsVersion = Version(0, 6, 13)
 
-  case class Jvm(scalaVersion: Version = defaultScalaVersion)
+  object Jvm {
+    def default = ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
+  }
+  case class Jvm(scalaVersion: Version)
       extends ScalaTarget {
     def targetType = ScalaTargetType.JVM
     def scaladexRequest =
@@ -50,8 +53,15 @@ object ScalaTarget {
       s""" "$groupId" %% "$artifact" % "$version" """
     }
   }
-  case class Js(scalaVersion: Version = defaultScalaVersion,
-                scalaJsVersion: Version = defaultScalaJsVersion)
+  object Js {
+    def default = 
+      ScalaTarget.Js(
+                                         scalaVersion = ScalaTarget.defaultScalaVersion,
+                                         scalaJsVersion = ScalaTarget.defaultScalaJsVersion
+                                       )
+  }
+  case class Js(scalaVersion: Version,
+                scalaJsVersion: Version)
       extends ScalaTarget {
 
     def targetType = ScalaTargetType.JS
@@ -88,12 +98,27 @@ object ScalaTarget {
   }
 }
 
+object Inputs {
+  val defaultCode =
+    """|class Playground {
+       |  1 + 1
+       |}""".stripMargin
+
+  def default = Inputs(
+    code = defaultCode,
+    target = ScalaTarget.Jvm.default,
+    libraries = Set(),
+    sbtConfigExtra = "",
+    sbtPluginsConfigExtra = ""
+  )
+}
+
 case class Inputs(
-    code: String = "",
-    target: ScalaTarget = ScalaTarget.Jvm(),
-    libraries: Set[ScalaDependency] = Set(),
-    sbtConfigExtra: String = "",
-    sbtPluginsConfigExtra: String = ""
+    code: String,
+    target: ScalaTarget,
+    libraries: Set[ScalaDependency],
+    sbtConfigExtra: String,
+    sbtPluginsConfigExtra: String
 ) {
 
   def sbtPluginsConfig: String = {

@@ -3,6 +3,8 @@ package web
 
 import api._
 
+import upickle.default.{write => uwrite, read => uread}
+
 import java.nio.file._
 import java.util.concurrent.atomic.AtomicLong
 import System.{lineSeparator => nl}
@@ -10,54 +12,41 @@ import System.{lineSeparator => nl}
 class PastesContainer(root: Path) {
 
   def writePaste(inputs: Inputs): Long = {
-    val id = lastId.incrementAndGet()
+    val id = lastId 
+    lastId += 1
 
-    // if (Files.exists(pasteDir(id)))
-    //   throw new Exception(
-    //     s"trying to write paste to existing folder: ${pasteDir(id).toString}")
-
-    // val codeFilePath = codeFile(id)
-    // codeFilePath.getParent.toFile.mkdirs()
-    // write(codeFilePath, paste.code)
-    // write(sbtConfigFile(id), paste.sbtConfig)
+    write(inputsFile(id), uwrite(inputs))
 
     id
   }
 
   def readPaste(id: Long): Option[Inputs] = {
-    None
-    // if (Files.exists(pasteDir(id))) {
-    //   (read(codeFile(id)), read(sbtConfigFile(id))) match {
-    //     case (Some(code), Some(sbtConfig)) => Some(Paste(id, code, sbtConfig))
-    //     case _                             => None
-    //   }
-    // } else None
+    if (Files.exists(inputsFile(id))) {
+      read(inputsFile(id)).map(content => uread[Inputs](content))
+    } else None
   }
 
-  private val lastId = {
-    val last =
-      if (Files.exists(root)) {
-        import scala.collection.JavaConverters._
-        val PasteFormat = "paste(\\d+)".r
-        val ds          = Files.newDirectoryStream(root)
-        val lastPasteNumber =
-          ds.asScala
-            .map(_.getFileName.toString)
-            .collect {
-              case PasteFormat(id) => id.toLong
-            }
-            .max
-        ds.close()
-        lastPasteNumber
-      } else 0L
+  private val json = ".json"
 
-    new AtomicLong(last)
-  }
-
-  private def pasteDir(id: Long): Path = root.resolve("paste" + id)
-  private def codeFile(id: Long) =
-    pasteDir(id).resolve(Paths.get("main.scala"))
+  private var lastId = {
+    import scala.collection.JavaConverters._
     
-  private def sbtConfigFile(id: Long) =
-    pasteDir(id).resolve(Paths.get("config.sbt"))
+    Files.createDirectories(root)
+    val ds = Files.newDirectoryStream(root)
+    
+    try {
+      ds.asScala
+        .map(_.getFileName.toString.stripSuffix(json).toLong)
+        .max
+    } 
+    catch {
+      case util.control.NonFatal(e) => 0L
+    }
+    finally {
+      ds.close()
+    }
+  }
+
+  private def inputsFile(id: Long) =
+    root.resolve(Paths.get(id + json))
 }

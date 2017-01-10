@@ -26,7 +26,7 @@ object App {
       websocket: Option[WebSocket] = None,
       dark: Boolean = false,
       codemirrorSettings: Option[codemirror.Options] = None,
-      inputs: Inputs = Inputs(),
+      inputs: Inputs = Inputs.default,
       outputs: Outputs = Outputs()
   ) {
     def setRunning(v: Boolean)   = copy(running = v)
@@ -186,13 +186,8 @@ object App {
     def toogleTheme(): Callback               = scope.modState(_.toogleTheme)
   }
 
-  val defaultCode =
-    """|class Playground {
-       |  1 + 1
-       |}""".stripMargin
-
   val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")
-    .initialState(State(inputs = Inputs(code = defaultCode)))
+    .initialState(State())
     .backend(new Backend(_))
     .renderPS {
       case (scope, (router, snippet), state) => {
