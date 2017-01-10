@@ -58,3 +58,6 @@ sbt
 > + publishLocal
 > scastie/run
 ``
+.. image:: https://badges.gitter.im/scastie/Lobby.svg
+   :alt: Join the chat at https://gitter.im/scastie/Lobby
+   :target: https://gitter.im/scastie/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
