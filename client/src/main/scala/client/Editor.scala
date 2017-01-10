@@ -285,7 +285,7 @@ object Editor {
           el.appendChild(icon)
           el.appendChild(msg)
 
-          Line(doc.addLineWidget(line, el))
+          Line(doc.addLineWidget(line - 1, el))
         },
         _.problemAnnotations,
         f =>
