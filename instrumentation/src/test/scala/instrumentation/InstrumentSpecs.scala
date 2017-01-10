@@ -32,6 +32,4 @@ class InstrumentSpecs extends FunSuite {
   private def slurp(path: Path): String = {
     Files.readAllLines(path).toArray.mkString(nl)
   }
-
-  def main(args: Array[String]): Unit = {}
 }
