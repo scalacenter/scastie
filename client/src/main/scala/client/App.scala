@@ -36,6 +36,7 @@ object App {
     def log(lines: Seq[String]): State =
       copy(outputs = outputs.copy(console = outputs.console ++ lines))
     def setCode(code: String) = copy(inputs = inputs.copy(code = code))
+    def setInputs(inputs: Inputs) = copy(inputs = inputs)
     def setSbtConfigExtra(config: String) =
       copy(inputs = inputs.copy(sbtConfigExtra = config))
     def setView(newView: View) = copy(view = newView)
@@ -157,29 +158,26 @@ object App {
       scope.modState(_.changeDependencyVersion(scalaDependency, version))
 
     def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
-      // val (router, snippet) = props
+      val (router, snippet) = props
 
-      // snippet match {
-      //   case Some(Snippet(id)) =>
-      //     Callback.future(
-      //       api
-      //         .Client[Api]
-      //         .fetch(id)
-      //         .call()
-      //         .map(paste =>
-      //           paste match {
-      //             case Some(Paste(_, code, sbtConfig)) => {
-      //               scope.modState(
-      //                 _.setCode(code).setSbtConfigExtra(sbtConfig)
-      //               ) >> run()
-      //             }
-      //             case None =>
-      //               scope.modState(_.setCode(s"//paste $id not found"))
-      //         })
-      //     )
-      //   case None => Callback(()) >> run()
-      // }
-      Callback(())
+      snippet match {
+        case Some(Snippet(id)) =>
+          Callback.future(
+            api
+              .Client[Api]
+              .fetch(id)
+              .call()
+              .map(paste =>
+                paste match {
+                  case Some(inputs) => {
+                    scope.modState(_.setInputs(inputs)) >> run()
+                  }
+                  case None =>
+                    scope.modState(_.setCode(s"//paste $id not found"))
+              })
+          )
+        case None => Callback(()) >> run()
+      }
     }
 
     def toogleTheme(e: ReactEventI): Callback = toogleTheme()
