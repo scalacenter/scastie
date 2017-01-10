@@ -43,7 +43,7 @@ object ScastiePlugin extends AutoPlugin {
               case xsbti.Severity.Error => sbtapi.Error
             }
           sbtapi.Problem(severity,
-                         toOption(p.position.offset).map(_.toInt),
+                         toOption(p.position.line).map(_.toInt),
                          p.message)
         }
         println(uwrite(problems.filterNot(annoying).map(toApi)))

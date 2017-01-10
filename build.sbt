@@ -19,7 +19,7 @@ commands in Global += Command.command(crossPublishLocalRuntime) { state =>
     "+ publishLocal",
     "project webApiJS",
     "+ publishLocal",
-    "reload",
+    "reload", // sbt crossVersion changes scalaVersion but does not set it back
     "project sbtScastie",
     "publishLocal"
   ) ::: state
@@ -241,7 +241,8 @@ lazy val instrumentation = project
   .settings(baseSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "1.2.0"
+      "org.scalameta" %% "scalameta" % "1.2.0",
+      "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
   .disablePlugins(play.PlayScala)

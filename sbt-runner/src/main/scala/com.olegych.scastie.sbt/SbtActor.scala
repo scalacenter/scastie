@@ -34,16 +34,7 @@ class SbtActor() extends Actor with ActorLogging {
                   paste.sbtConfig
             )
           } else {
-
-            var compilationFail = false
-            sbt.eval("compile", paste, (line, _) => {
-              val compilationInfos = extractProblems(line)
-              compilationFail = compilationFail || compilationInfos.exists(
-                  _.severity == api.Error)
-            })
-
-            if (compilationFail) paste
-            else paste.copy(code = instrumentation.Instrument(paste.code))
+            paste.copy(code = instrumentation.Instrument(paste.code))
           }
 
         println(paste0.code)
@@ -94,7 +85,7 @@ class SbtActor() extends Actor with ActorLogging {
         case sbtapi.Warning => api.Warning
         case sbtapi.Error   => api.Error
       }
-      api.Problem(severity, p.offset, p.message)
+      api.Problem(severity, p.line, p.message)
     }
 
     sbtProblems.map(toApi)

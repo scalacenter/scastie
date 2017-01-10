@@ -253,7 +253,7 @@ object Editor {
       setAnnotations[api.Problem](
         _.outputs.compilationInfos,
         info => {
-          val pos = doc.posFromIndex(info.offset.getOrElse(0))
+          val line = info.line.getOrElse(0)
 
           val icon =
             dom.document.createElement("i").asInstanceOf[HTMLDivElement]
@@ -285,7 +285,7 @@ object Editor {
           el.appendChild(icon)
           el.appendChild(msg)
 
-          Line(doc.addLineWidget(pos.line, el))
+          Line(doc.addLineWidget(line, el))
         },
         _.problemAnnotations,
         f =>
