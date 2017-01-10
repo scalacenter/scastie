@@ -33,7 +33,7 @@ object Instrument {
     val replacement =
       Seq(
         "locally {",
-        treeQuote + ";",
+        treeQuote + "; ",
         s"$instrumentationMap(${posToApi(term.pos)}) = scastie.runtime.Runtime.render(t);",
         "t}"
       ).mkString("")
@@ -73,9 +73,9 @@ object Instrument {
 
     s"""|$instrumentedCode
         |object Main {
-        |  val worksheet = new $instrumnedClass
+        |  val playground = new $instrumnedClass
         |  def main(args: Array[String]): Unit = {
-        |    println(scastie.runtime.Runtime.write(worksheet.${instrumentationMethod}))
+        |    println(scastie.runtime.Runtime.write(playground.${instrumentationMethod}))
         |  }
         |}
         |""".stripMargin

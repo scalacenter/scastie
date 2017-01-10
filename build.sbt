@@ -28,8 +28,7 @@ commands in Global += Command.command(crossPublishLocalRuntime) { state =>
 addCommandAlias("docker", s";$crossPublishLocalRuntime; sbtRunner/docker")
 
 lazy val baseSettings = Seq(
-    libraryDependencies += "com.lihaoyi" %% "utest" % "0.4.5" % "test",
-    testFrameworks += new TestFramework("utest.runner.Framework"),
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test",
     scalaVersion := "2.11.8",
     scalacOptions := {
     val extraOptions =
@@ -162,9 +161,20 @@ lazy val server = project
   .enablePlugins(SbtWeb, play.PlayScala)
   .dependsOn(remoteApi, client, webApiJVM)
 
+// lazy val remoteApi = project
+// lazy val sbtRunner = project
+// lazy val server = project
+// lazy val scastie = project
+// lazy val codemirror = project
+// lazy val client = project
+// lazy val instrumentation = project
+// lazy val runtimeDotty = project
+// lazy val sbtApi = project
+// lazy val sbtScastie = project
+
 lazy val scastie = project
   .in(file("."))
-  .aggregate(server)
+  .aggregate(server, instrumentation)
   .settings(run := {
     val forcePublishLocal = (publishLocal in sbtApi).value
 

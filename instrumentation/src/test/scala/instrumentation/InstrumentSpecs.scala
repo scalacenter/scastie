@@ -6,9 +6,10 @@ import scala.collection.JavaConverters._
 
 import System.{lineSeparator => nl}
 
-import utest._
+import org.scalatest.FunSuite
 
-object InstrumentSpecs extends TestSuite {
+class InstrumentSpecs extends FunSuite {
+
   private val testFiles = {
     val path = Paths.get("instrumentation", "src", "test", "resources")
     val s    = Files.newDirectoryStream(path)
@@ -17,19 +18,14 @@ object InstrumentSpecs extends TestSuite {
     t
   }
 
-  val tests = this {
-    'instrumentation {
-      val results =
-        tests.map { path =>
-          val original = slurp(p.resolve("original.scala"))
-          val expected = slurp(p.resolve("instrumented.scala"))
+  testFiles.foreach { path =>
+    test(path.toString) {
+      val original = slurp(path.resolve("original.scala"))
+      val expected = slurp(path.resolve("instrumented.scala"))
 
-          val obtained = Instrument(original)
+      val obtained = Instrument(original)
 
-          Diff.assertNoDiff(obtained, expected)
-        }
-
-      println(results.mkString(System.lineSeparator))
+      Diff.assertNoDiff(obtained, expected)
     }
   }
 

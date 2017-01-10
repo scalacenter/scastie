@@ -1,10 +1,12 @@
 package instrumentation
 
+import System.{lineSeparator => nl}
+
 case class DiffFailure(title: String,
-                     expected: String,
-                     obtained: String,
-                     diff: String
-) extends Exception(title + nl + Diff.error2message(obtained, expected))
+                       expected: String,
+                       obtained: String,
+                       diff: String)
+    extends Exception(title + nl + Diff.error2message(obtained, expected))
 
 object Diff {
   def error2message(obtained: String, expected: String): String = {
