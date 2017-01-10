@@ -1,8 +1,9 @@
 build:
-  image: danieletorelli/sbt
+  image: scalacenter/scastie-docker-sbt:0.13.13
   environment:
     - COURSIER_CACHE=/drone/cache/coursier
   commands:
+    - apk add nodejs
     - export SBT_OPTS="-Xmx24G -XX:MaxPermSize=4G -Xss4M"
     - test -d /drone/.sbt && cp -a /drone/.sbt /root
     - rm -rf /drone/.sbt
