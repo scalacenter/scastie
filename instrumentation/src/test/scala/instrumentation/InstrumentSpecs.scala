@@ -9,9 +9,9 @@ import System.{lineSeparator => nl}
 object InstrumentSpecs {
 
   case class DiffFailure(title: String,
-                       expected: String,
-                       obtained: String,
-                       diff: String) {
+                         expected: String,
+                         obtained: String,
+                         diff: String) {
     override def toString = title + nl + error2message(obtained, expected)
   }
 
@@ -91,9 +91,9 @@ object InstrumentSpecs {
             val out = Instrument(original)
 
             assertNoDiff(out, instrumented) match {
-              case Some(diff) => 
-                "✘" + nl + 
-                diff.toString
+              case Some(diff) =>
+                "✘" + nl +
+                  diff.toString
               case None => "✓"
             }
         }

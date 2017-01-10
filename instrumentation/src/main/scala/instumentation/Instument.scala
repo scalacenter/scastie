@@ -5,7 +5,7 @@ import inputs.Position
 import scala.collection.immutable.Seq
 
 object Instrument {
-  private val instrumnedClass = "Playground"
+  private val instrumnedClass       = "Playground"
   private val instrumentationMethod = "instrumentations$"
   private val instrumentationMap    = "instrumentationMap$"
 
@@ -42,12 +42,12 @@ object Instrument {
   }
 
   private def instrument(source: Source): String = {
-    
+
     val instrumentedCodePatches =
       source.stats.collect {
-        case c: Defn.Class if 
-          c.name.value == instrumnedClass && 
-          c.templ.stats.nonEmpty ⇒ {
+        case c: Defn.Class
+            if c.name.value == instrumnedClass &&
+              c.templ.stats.nonEmpty ⇒ {
 
           val openCurlyBrace = c.templ.tokens.head
 
@@ -56,14 +56,16 @@ object Instrument {
             s"def $instrumentationMethod = ${instrumentationMap}.toList.map{ case (pos, r) => api.Instrumentation(pos, r) }"
           ).mkString(";")
 
-          val instrumentationMapPatch = Patch(openCurlyBrace, openCurlyBrace, instrumentationMapCode)
+          val instrumentationMapPatch =
+            Patch(openCurlyBrace, openCurlyBrace, instrumentationMapCode)
 
           instrumentationMapPatch +:
-          c.templ.stats.get.collect {
-            case term: Term   ⇒ instrumentOne(term)
-            case vl: Defn.Val ⇒ instrumentOne(vl.rhs, vl.decltpe)
-            case vr: Defn.Var if vr.rhs.nonEmpty ⇒ instrumentOne(vr.rhs.get, vr.decltpe)
-          }
+            c.templ.stats.get.collect {
+              case term: Term   ⇒ instrumentOne(term)
+              case vl: Defn.Val ⇒ instrumentOne(vl.rhs, vl.decltpe)
+              case vr: Defn.Var if vr.rhs.nonEmpty ⇒
+                instrumentOne(vr.rhs.get, vr.decltpe)
+            }
         }
       }.flatten
 
@@ -82,7 +84,7 @@ object Instrument {
   def apply(code: String): String = {
     code.parse[Source] match {
       case parsers.Parsed.Success(k) => instrument(k)
-      case _ => code
+      case _                         => code
     }
   }
 }
