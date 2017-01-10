@@ -174,7 +174,11 @@ lazy val server = project
 
 lazy val scastie = project
   .in(file("."))
-  .aggregate(server, instrumentation)
+  .aggregate(
+    server,
+    instrumentation,
+    sbtRunner
+  )
   .settings(run := {
     val forcePublishLocal = (publishLocal in sbtApi).value
 

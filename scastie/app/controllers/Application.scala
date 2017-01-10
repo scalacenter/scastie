@@ -27,15 +27,11 @@ import scala.concurrent.ExecutionContext
 class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
                                     executionContext: ExecutionContext)
     extends Api {
-  def run(code: String,
-          sbtConfig: String,
-          sbtPluginConfig: String,
-          scalaTargetType: ScalaTargetType): Future[Long] = {
-    (pasteActor ? AddPaste(code, sbtConfig, sbtPluginConfig, scalaTargetType))
-      .mapTo[Long]
+  def run(inputs: Inputs): Future[Long] = {
+    (pasteActor ? inputs).mapTo[Long]
   }
-  def fetch(id: Long): Future[Option[Paste]] = {
-    (pasteActor ? GetPaste(id)).mapTo[Option[Paste]]
+  def fetch(id: Long): Future[Option[Inputs]] = {
+    (pasteActor ? GetPaste(id)).mapTo[Option[Inputs]]
   }
 }
 

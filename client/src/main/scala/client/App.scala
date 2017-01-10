@@ -111,12 +111,7 @@ object App {
           Callback.future(
             api
               .Client[Api]
-              .run(
-                s.inputs.code,
-                s.inputs.sbtConfig,
-                s.inputs.sbtPluginsConfig,
-                s.inputs.target.targetType
-              )
+              .run(s.inputs)
               .call()
               .map(id =>
                 connect(id).attemptTry.flatMap {
@@ -162,28 +157,29 @@ object App {
       scope.modState(_.changeDependencyVersion(scalaDependency, version))
 
     def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
-      val (router, snippet) = props
+      // val (router, snippet) = props
 
-      snippet match {
-        case Some(Snippet(id)) =>
-          Callback.future(
-            api
-              .Client[Api]
-              .fetch(id)
-              .call()
-              .map(paste =>
-                paste match {
-                  case Some(Paste(_, code, sbtConfig)) => {
-                    scope.modState(
-                      _.setCode(code).setSbtConfigExtra(sbtConfig)
-                    ) >> run()
-                  }
-                  case None =>
-                    scope.modState(_.setCode(s"//paste $id not found"))
-              })
-          )
-        case None => Callback(()) >> run()
-      }
+      // snippet match {
+      //   case Some(Snippet(id)) =>
+      //     Callback.future(
+      //       api
+      //         .Client[Api]
+      //         .fetch(id)
+      //         .call()
+      //         .map(paste =>
+      //           paste match {
+      //             case Some(Paste(_, code, sbtConfig)) => {
+      //               scope.modState(
+      //                 _.setCode(code).setSbtConfigExtra(sbtConfig)
+      //               ) >> run()
+      //             }
+      //             case None =>
+      //               scope.modState(_.setCode(s"//paste $id not found"))
+      //         })
+      //     )
+      //   case None => Callback(()) >> run()
+      // }
+      Callback(())
     }
 
     def toogleTheme(e: ReactEventI): Callback = toogleTheme()

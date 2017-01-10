@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package web
 
-import api.Paste
+import api._
 
 import java.nio.file._
 import java.util.concurrent.atomic.AtomicLong
@@ -9,28 +9,29 @@ import System.{lineSeparator => nl}
 
 class PastesContainer(root: Path) {
 
-  def writePaste(paste: AddPaste): Long = {
+  def writePaste(inputs: Inputs): Long = {
     val id = lastId.incrementAndGet()
 
-    if (Files.exists(pasteDir(id)))
-      throw new Exception(
-        s"trying to write paste to existing folder: ${pasteDir(id).toString}")
+    // if (Files.exists(pasteDir(id)))
+    //   throw new Exception(
+    //     s"trying to write paste to existing folder: ${pasteDir(id).toString}")
 
-    val codeFilePath = codeFile(id)
-    codeFilePath.getParent.toFile.mkdirs()
-    write(codeFilePath, paste.code)
-    write(sbtConfigFile(id), paste.sbtConfig)
+    // val codeFilePath = codeFile(id)
+    // codeFilePath.getParent.toFile.mkdirs()
+    // write(codeFilePath, paste.code)
+    // write(sbtConfigFile(id), paste.sbtConfig)
 
     id
   }
 
-  def readPaste(id: Long): Option[Paste] = {
-    if (Files.exists(pasteDir(id))) {
-      (read(codeFile(id)), read(sbtConfigFile(id))) match {
-        case (Some(code), Some(sbtConfig)) => Some(Paste(id, code, sbtConfig))
-        case _                             => None
-      }
-    } else None
+  def readPaste(id: Long): Option[Inputs] = {
+    None
+    // if (Files.exists(pasteDir(id))) {
+    //   (read(codeFile(id)), read(sbtConfigFile(id))) match {
+    //     case (Some(code), Some(sbtConfig)) => Some(Paste(id, code, sbtConfig))
+    //     case _                             => None
+    //   }
+    // } else None
   }
 
   private val lastId = {
@@ -56,6 +57,7 @@ class PastesContainer(root: Path) {
   private def pasteDir(id: Long): Path = root.resolve("paste" + id)
   private def codeFile(id: Long) =
     pasteDir(id).resolve(Paths.get("main.scala"))
+    
   private def sbtConfigFile(id: Long) =
     pasteDir(id).resolve(Paths.get("config.sbt"))
 }

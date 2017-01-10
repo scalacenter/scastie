@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package sbt
 
-import remote.RunPaste
+import api._
 
 import scala.util.Random
 import System.{lineSeparator => nl}
@@ -84,28 +84,28 @@ class Sbt() {
   }
 
   def eval(command: String,
-           paste: RunPaste,
+           inputs: Inputs,
            lineCallback: (String, Boolean) => Unit): Unit = {
 
     var configChange = false
 
-    if (paste.sbtConfig != currentSbtConfig) {
+    if (inputs.sbtConfig != currentSbtConfig) {
       configChange = true
-      write(sbtConfigFile, prompt + nl + paste.sbtConfig, truncate = true)
-      currentSbtConfig = paste.sbtConfig
+      write(sbtConfigFile, prompt + nl + inputs.sbtConfig, truncate = true)
+      currentSbtConfig = inputs.sbtConfig
     }
 
-    if (paste.sbtPluginsConfig != currentSbtPluginConfig) {
+    if (inputs.sbtPluginsConfig != currentSbtPluginConfig) {
       configChange = true
-      write(pluginFile, paste.sbtPluginsConfig, truncate = true)
-      currentSbtPluginConfig = paste.sbtPluginsConfig
+      write(pluginFile, inputs.sbtPluginsConfig, truncate = true)
+      currentSbtPluginConfig = inputs.sbtPluginsConfig
     }
 
     if (configChange) {
       process("reload", lineCallback)
     }
 
-    write(codeFile, paste.code, truncate = true)
+    write(codeFile, inputs.code, truncate = true)
     process(command, lineCallback)
   }
 }
