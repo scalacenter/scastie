@@ -8,7 +8,7 @@ class B extends Base {
   def message: String = "Dotty!"
 }
 
-class Worksheet$ {
+class Playground {
   def helloDotty(msgs: (A | B)*): String = msgs.map(_.message).mkString(", ")
 
   helloDotty(new A, new B)

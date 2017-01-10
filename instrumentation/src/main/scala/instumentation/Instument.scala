@@ -5,6 +5,7 @@ import inputs.Position
 import scala.collection.immutable.Seq
 
 object Instrument {
+  private val instrumnedClass = "Playground"
   private val instrumentationMethod = "instrumentations$"
   private val instrumentationMap    = "instrumentationMap$"
 
@@ -45,7 +46,7 @@ object Instrument {
     val instrumentedCodePatches =
       source.stats.collect {
         case c: Defn.Class if 
-          c.name.value == "Worksheet$" && 
+          c.name.value == instrumnedClass && 
           c.templ.stats.nonEmpty ⇒ {
 
           val openCurlyBrace = c.templ.tokens.head
@@ -70,7 +71,7 @@ object Instrument {
 
     s"""|$instrumentedCode
         |object Main {
-        |  val worksheet = new Worksheet$$
+        |  val worksheet = new $instrumnedClass
         |  def main(args: Array[String]): Unit = {
         |    println(scastie.runtime.Runtime.write(worksheet.${instrumentationMethod}))
         |  }
@@ -79,6 +80,9 @@ object Instrument {
   }
 
   def apply(code: String): String = {
-    instrument(code.parse[Source].get)
+    code.parse[Source] match {
+      case parsers.Parsed.Success(k) => instrument(k)
+      case _ => code
+    }
   }
 }

@@ -191,7 +191,7 @@ object App {
   }
 
   val defaultCode =
-    """|class Worksheet$ {
+    """|class Playground {
        |  1 + 1
        |}""".stripMargin
 

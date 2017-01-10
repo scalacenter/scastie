@@ -1,4 +1,4 @@
-class Worksheet$ {
+class Playground {
   import com.sksamuel.scrimage._
   import com.sksamuel.scrimage.filter._
 

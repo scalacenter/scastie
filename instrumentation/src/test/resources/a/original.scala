@@ -1,4 +1,4 @@
-class Worksheet$ {
+class Playground {
   val a = 1 + 1
 
   1 +

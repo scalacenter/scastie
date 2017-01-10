@@ -37,8 +37,6 @@ class SbtActor() extends Actor with ActorLogging {
             paste.copy(code = instrumentation.Instrument(paste.code))
           }
 
-        println(paste0.code)
-
         def eval(command: String) =
           sbt.eval(command,
                    paste0,
