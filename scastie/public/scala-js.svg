@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 19.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1"
+	 id="svg3021" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" inkscape:version="0.48.4 r9939" sodipodi:docname="scala-js-logo-darkening-and-perspective.svg" inkscape:export-filename="C:\Users\Sepi\Documents\Projets\scalajs-website\images\scala-js-logo-perspective-256.png" inkscape:export-ydpi="41.890907" inkscape:export-xdpi="41.890907"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1024px" height="768px"
+	 viewBox="0 0 1024 768" style="enable-background:new 0 0 1024 768;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#D6BA32;}
+	.st1{fill:#FFDA3E;}
+	.st2{fill:url(#path3043_1_);}
+	.st3{fill:url(#path3041_1_);}
+	.st4{fill:url(#path3041-7_1_);}
+	.st5{fill:url(#path3043-4_1_);}
+	.st6{fill:url(#path3047_1_);}
+	.st7{fill:url(#path3049_1_);}
+	.st8{fill:url(#path3051_1_);}
+	.st9{fill:url(#path3047-7_1_);}
+	.st10{fill:url(#path3049-7_1_);}
+	.st11{fill:url(#path3051-9_1_);}
+</style>
+<sodipodi:namedview  id="namedview3053" fit-margin-right="50" pagecolor="#ffffff" gridtolerance="10" inkscape:cy="222.33713" showgrid="false" objecttolerance="10" bordercolor="#666666" guidetolerance="10" fit-margin-left="50" borderopacity="1" inkscape:cx="339.40934" inkscape:zoom="0.70710678" inkscape:window-y="41" inkscape:current-layer="svg3021" inkscape:window-height="890" inkscape:window-maximized="1" inkscape:window-width="1391" inkscape:window-x="418" inkscape:pageshadow="2" inkscape:pageopacity="0">
+	</sodipodi:namedview>
+<title  id="title3023">Scala.js</title>
+<desc  id="desc3025">The Scala Logo</desc>
+<g>
+	<polyline class="st0" points="249.2,674.5 190.9,19.4 833.1,19.4 774.8,674.5 511.3,748.6 	"/>
+	<polygon class="st1" points="512.7,696.5 724.9,638.1 774.8,77 512.7,77 	"/>
+</g>
+<g id="g3886" transform="translate(0.25,-0.66421356)">
+	
+		<linearGradient id="path3043_1_" gradientUnits="userSpaceOnUse" x1="30.7339" y1="692.7552" x2="340.5725" y2="692.7552" gradientTransform="matrix(1.0501 0 0 1.1201 317.15 -290.4122)">
+		<stop  offset="0" style="stop-color:#646464"/>
+		<stop  offset="1" style="stop-color:#000000"/>
+	</linearGradient>
+	<path id="path3043" inkscape:connector-curvature="0" class="st2" d="M511.9,411.8l0,124.1c74.9-2.5,144.2,0.9,142.9,23.4
+		l6.3-111.3C661.1,448,662.9,417,511.9,411.8L511.9,411.8"/>
+	
+		<linearGradient id="path3041_1_" gradientUnits="userSpaceOnUse" x1="30.7339" y1="698.1151" x2="340.5725" y2="698.1151" gradientTransform="matrix(1.0501 0 0 1.1201 317.15 -463.9336)">
+		<stop  offset="0" style="stop-color:#646464"/>
+		<stop  offset="1" style="stop-color:#000000"/>
+	</linearGradient>
+	<path id="path3041" inkscape:connector-curvature="0" class="st3" d="M511.9,227.3l0,141.4c79.6,4.3,152.9,14.6,151.5,39.9
+		l7.1-125.4C670.5,283.3,672.5,248.2,511.9,227.3L511.9,227.3"/>
+</g>
+<g id="g4325" transform="translate(1.3535534,0.35355339)">
+	
+		<linearGradient id="path3041-7_1_" gradientUnits="userSpaceOnUse" x1="29.6303" y1="663.3936" x2="339.469" y2="663.3936" gradientTransform="matrix(1.0501 0 0 1.1201 318.7462 -462.3903)">
+		<stop  offset="0" style="stop-color:#4B4B4B"/>
+		<stop  offset="1" style="stop-color:#000000"/>
+	</linearGradient>
+	<path id="path3041-7" inkscape:connector-curvature="0" class="st4" d="M347.4,192.6l7.5,133c0,0,76.4,17.5,157.4,43.1v-141
+		C467.4,215.8,412.9,203.8,347.4,192.6L347.4,192.6"/>
+	
+		<linearGradient id="path3043-4_1_" gradientUnits="userSpaceOnUse" x1="29.6303" y1="660.9951" x2="339.469" y2="660.9951" gradientTransform="matrix(1.0501 0 0 1.1201 318.7462 -288.8688)">
+		<stop  offset="0" style="stop-color:#4B4B4B"/>
+		<stop  offset="1" style="stop-color:#000000"/>
+	</linearGradient>
+	<path id="path3043-4" inkscape:connector-curvature="0" class="st5" d="M357.2,367.3l6.6,118c0,0,72.2,21.4,148.4,50.4V411.6
+		C470.2,397.5,419,382.5,357.2,367.3L357.2,367.3"/>
+</g>
+<g id="layer1" inkscape:label="JS logo" inkscape:groupmode="layer">
+</g>
+<g id="g3890" transform="translate(0.25,-0.66421356)">
+	
+		<linearGradient id="path3047_1_" gradientUnits="userSpaceOnUse" x1="30.7339" y1="665.1633" x2="340.5725" y2="665.1633" gradientTransform="matrix(1.0501 0 0 -1.1201 317.15 954.3288)">
+		<stop  offset="0" style="stop-color:#A00000"/>
+		<stop  offset="1" style="stop-color:#FF0000"/>
+	</linearGradient>
+	<path id="path3047" inkscape:connector-curvature="0" class="st6" d="M681.1,96.6c-1.8,31-83.2,58.1-169.2,78.8l0,146.5
+		C671,274.2,673,238.9,673,238.9L681.1,96.6L681.1,96.6"/>
+	
+		<linearGradient id="path3049_1_" gradientUnits="userSpaceOnUse" x1="30.7339" y1="504.7004" x2="340.5725" y2="504.7004" gradientTransform="matrix(1.0501 0 0 -1.1201 317.15 954.3288)">
+		<stop  offset="0" style="stop-color:#A00000"/>
+		<stop  offset="1" style="stop-color:#FF0000"/>
+	</linearGradient>
+	<path id="path3049" inkscape:connector-curvature="0" class="st7" d="M670.5,283.3c-1.5,27.2-78,57.8-158.6,83.1l0,128.3
+		c149.7-54.8,151.5-86,151.5-86L670.5,283.3L670.5,283.3"/>
+	
+		<linearGradient id="path3051_1_" gradientUnits="userSpaceOnUse" x1="30.7339" y1="363.1982" x2="340.5725" y2="363.1982" gradientTransform="matrix(1.0501 0 0 -1.1201 317.15 954.3288)">
+		<stop  offset="0" style="stop-color:#A00000"/>
+		<stop  offset="1" style="stop-color:#FF0000"/>
+	</linearGradient>
+	<path id="path3051" inkscape:connector-curvature="0" class="st8" d="M661.1,448c-1.4,24.1-73.5,57.2-149.2,85.8l0,113.2
+		c141.3-60,142.9-87.8,142.9-87.8L661.1,448L661.1,448"/>
+</g>
+<g id="g4329" transform="translate(1.3535534,0.35355339)">
+	
+		<linearGradient id="path3047-7_1_" gradientUnits="userSpaceOnUse" x1="29.6303" y1="627.9769" x2="339.469" y2="627.9769" gradientTransform="matrix(1.0501 0 0 -1.1201 318.7462 953.5922)">
+		<stop  offset="0" style="stop-color:#780000"/>
+		<stop  offset="1" style="stop-color:#C00000"/>
+	</linearGradient>
+	<path id="path3047-7" inkscape:connector-curvature="0" class="st9" d="M512.2,174.7c-85.5,13.2-164.8,18-164.8,18l7.5,133
+		c62.2,0.6,114.2-1.3,157.4-4.9V174.7L512.2,174.7"/>
+	
+		<linearGradient id="path3049-7_1_" gradientUnits="userSpaceOnUse" x1="29.6303" y1="468.1432" x2="339.469" y2="468.1432" gradientTransform="matrix(1.0501 0 0 -1.1201 318.7462 953.5922)">
+		<stop  offset="0" style="stop-color:#780000"/>
+		<stop  offset="1" style="stop-color:#C00000"/>
+	</linearGradient>
+	<path id="path3049-7" inkscape:connector-curvature="0" class="st10" d="M512.2,365.1c-80.2,4.6-155,2.2-155,2.2l6.6,118
+		c58.8,5.5,107.8,7.8,148.4,8.1V365.1L512.2,365.1"/>
+	
+		<linearGradient id="path3051-9_1_" gradientUnits="userSpaceOnUse" x1="29.6303" y1="329.7609" x2="339.469" y2="329.7609" gradientTransform="matrix(1.0501 0 0 -1.1201 318.7462 953.5922)">
+		<stop  offset="0" style="stop-color:#780000"/>
+		<stop  offset="1" style="stop-color:#C00000"/>
+	</linearGradient>
+	<path id="path3051-9" inkscape:connector-curvature="0" class="st11" d="M512.2,532.5c-75.6-2.2-146.3-10.1-146.3-10.1l5.9,105.4
+		c55.8,9.3,102.1,15,140.4,18.3V532.5L512.2,532.5"/>
+</g>
+</svg>

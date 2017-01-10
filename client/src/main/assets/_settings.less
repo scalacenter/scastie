@@ -1,0 +1,171 @@
+@import '_solarized.less';
+
+.solarized-pallette;
+
+.dark {
+  .settings {
+    fieldset legend,
+    input {
+      background-color: @base02;
+    }
+
+    .scaladex {
+      .selected, input[type="search"], select {
+        background-color: @base03;
+      }
+      & > *, input[type="search"], select {
+        color: @base01;
+      }
+    }
+  }
+}
+
+.light {
+  .settings {
+    fieldset legend,
+    input {
+      background-color: @base2;
+    }
+
+    .scaladex {
+      .selected, input[type="search"], select {
+        background-color: @base3;
+      }
+    }
+  }
+}
+
+.settings {
+
+  overflow: scroll;
+
+  padding-left: 0;
+
+  .p1, .p2 {
+    margin: 10px;
+  }
+
+  fieldset {
+    margin: 10px;
+  }
+
+  fieldset ul {
+    margin: 0;
+  }
+
+  fieldset {
+    border: none;
+    box-shadow: 1px 1px 1px 1px black
+  }
+
+  fieldset legend {
+    padding: 5px 10px;
+    font-size: 32px;
+    margin-left: 20px;
+  }
+
+  .targets, .versions {
+    ul {
+      padding-left: 0;
+
+      li {
+        display: inline-block;
+        text-align: center;
+        vertical-align: middle;
+
+        padding: 5px 10px 5px 10px;
+
+        width: 200px;
+
+        cursor: pointer;
+
+        &.selected {
+          border: 1px solid;
+        }
+
+        img {
+          height: 50px;
+        }
+
+        img, span {
+          margin: 5px;
+          display: inline-block;
+          vertical-align: middle;
+        }
+
+        text-align: center;
+        font-size: 32px;
+      }
+    }
+  }
+
+  .targets {
+    .disabled {
+      opacity: 0.1;
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  }
+
+
+  .scaladex {
+    
+    input[type="search"] {
+      border: none;
+      font-size: 32px;
+      padding: 15px;
+      width: 100%;
+    }
+
+    .added {
+      select {
+        height: 32px;
+        font-size: 24px;
+        display: inline-block;
+        border: none;
+      }
+    }
+
+    .results {
+      max-height: 500px;
+      overflow-y: scroll;
+    }
+
+    ol {
+      padding-left: 0;
+      li {
+        display: block;
+        margin: 10px 0 10px 0;
+
+        cursor: pointer;
+
+        span, a.scaladex, .remove {
+          display: inline-block;
+        }
+
+        a.scaladex, .remove {
+          font-size: 32px;
+          margin-right: 15px;
+        }
+
+        * > {
+          vertical-align: middle;
+        }
+
+        .logo, .artifact {
+          vertical-align: middle;
+        }
+
+        .artifact {
+          font-size: 24px;
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+
+        .logo {
+          height: 40px;
+        }
+      }
+    }
+  }
+}
