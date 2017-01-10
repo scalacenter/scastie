@@ -28,6 +28,8 @@ commands in Global += Command.command(crossPublishLocalRuntime) { state =>
 addCommandAlias("docker", s";$crossPublishLocalRuntime; sbtRunner/docker")
 
 lazy val baseSettings = Seq(
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.4.5" % "test",
+    testFrameworks += new TestFramework("utest.runner.Framework"),
     scalaVersion := "2.11.8",
     scalacOptions := {
     val extraOptions =
