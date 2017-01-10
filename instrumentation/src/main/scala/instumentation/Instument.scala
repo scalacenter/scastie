@@ -35,7 +35,7 @@ object Instrument {
 
     def instrumentStat(stat: Stat): Stat = {
       stat match {
-        case term: Term       ⇒ instrumentTerm(term)
+        case term: Term   ⇒ instrumentTerm(term)
         case vl: Defn.Val ⇒ vl.copy(rhs = instrumentTerm(vl.rhs, vl.decltpe))
         case vr: Defn.Var ⇒
           vr.copy(rhs = vr.rhs.map(rhs ⇒ instrumentTerm(rhs, vr.decltpe)))

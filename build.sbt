@@ -8,7 +8,7 @@ lazy val orgSettings = Seq(
 
 val crossPublishLocalRuntime = "crossPublishLocalRuntime"
 
-commands in Global += Command.command(crossPublishLocalRuntime){ state =>
+commands in Global += Command.command(crossPublishLocalRuntime) { state =>
   List(
     "project runtimeScalaJVM",
     "+ publishLocal",
@@ -30,24 +30,24 @@ addCommandAlias("docker", s";$crossPublishLocalRuntime; sbtRunner/docker")
 lazy val baseSettings = Seq(
     scalaVersion := "2.11.8",
     scalacOptions := {
-      val extraOptions = 
-        if(scalaBinaryVersion.value != "2.10") {
-          Seq("-Ywarn-unused-import")
-        } else Seq()
-      Seq(
-        "-deprecation",
-        "-encoding",
-        "UTF-8",
-        "-feature",
-        "-unchecked",
-        "-Xfatal-warnings",
-        "-Xlint",
-        "-Yno-adapted-args",
-        "-Ywarn-dead-code",
-        "-Ywarn-numeric-widen",
-        "-Ywarn-value-discard"
-      ) ++ extraOptions
-    },
+    val extraOptions =
+      if (scalaBinaryVersion.value != "2.10") {
+        Seq("-Ywarn-unused-import")
+      } else Seq()
+    Seq(
+      "-deprecation",
+      "-encoding",
+      "UTF-8",
+      "-feature",
+      "-unchecked",
+      "-Xfatal-warnings",
+      "-Xlint",
+      "-Yno-adapted-args",
+      "-Ywarn-dead-code",
+      "-Ywarn-numeric-widen",
+      "-Ywarn-value-discard"
+    ) ++ extraOptions
+  },
     console := (console in Test).value,
     scalacOptions in (Test, console) -= "-Ywarn-unused-import",
     scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import",
@@ -82,7 +82,7 @@ lazy val remoteApi = project
   .settings(libraryDependencies += akka("actor"))
   .disablePlugins(play.PlayScala)
   .dependsOn(webApiJVM)
- 
+
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
@@ -100,8 +100,8 @@ lazy val sbtRunner = project
       )
     ),
     assemblyMergeStrategy in assembly := {
-      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-      case in @ PathList("reference.conf", xs @ _*) => {
+      case PathList("META-INF", xs @ _ *) => MergeStrategy.discard
+      case in @ PathList("reference.conf", xs @ _ *) => {
         val old = (assemblyMergeStrategy in assembly).value
         old(in)
       }
@@ -112,8 +112,8 @@ lazy val sbtRunner = project
 
       val ivy = ivyPaths.value.ivyHome.get
 
-      val org = organization.value
-      val artifact = assembly.value
+      val org                = organization.value
+      val artifact           = assembly.value
       val artifactTargetPath = s"/app/${artifact.name}"
 
       new Dockerfile {

@@ -14,12 +14,12 @@ class Sbt() {
   private val sbtDir = Files.createTempDirectory("scastie")
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
-  
+
   private var currentSbtConfig       = ""
   private var currentSbtPluginConfig = ""
 
   private val sbtConfigFile = sbtDir.resolve("config.sbt")
-  private val prompt = s"""shellPrompt := (_ => "$uniqueId\\n")"""
+  private val prompt        = s"""shellPrompt := (_ => "$uniqueId\\n")"""
   write(sbtConfigFile, prompt)
 
   private val projectDir = sbtDir.resolve("project")
@@ -29,12 +29,13 @@ class Sbt() {
   write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.11")
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
-  write(pluginFile, """addSbtPlugin("org.scastie" % "sbt-scastie" % "0.1.0-SNAPSHOT")""")
+  write(pluginFile,
+        """addSbtPlugin("org.scastie" % "sbt-scastie" % "0.1.0-SNAPSHOT")""")
 
   private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
 
   Files.createDirectories(codeFile.getParent)
-  
+
   private val (process, fin, fout) = {
     val builder     = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     val currentOpts = sys.env.get("SBT_OPTS").getOrElse("")

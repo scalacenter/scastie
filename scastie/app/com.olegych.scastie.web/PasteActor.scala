@@ -51,7 +51,12 @@ case class AddPaste(
     scalaTargetType: ScalaTargetType
 ) {
   def toRunPaste(id: Long, progressActor: ActorRef) =
-    RunPaste(id, code, sbtConfig, sbtPluginsConfig, scalaTargetType, progressActor)
+    RunPaste(id,
+             code,
+             sbtConfig,
+             sbtPluginsConfig,
+             scalaTargetType,
+             progressActor)
 }
 
 case class GetPaste(id: Long)

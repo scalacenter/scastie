@@ -16,7 +16,7 @@ object ScastiePlugin extends AutoPlugin {
     DTask)
 
   override def requires = sbt.plugins.JvmPlugin
-  override def trigger = allRequirements
+  override def trigger  = allRequirements
 
   override lazy val projectSettings = Seq(
     compilerReporter in (Compile, compile) := Some(new xsbti.Reporter {
@@ -28,7 +28,7 @@ object ScastiePlugin extends AutoPlugin {
       def annoying(in: Problem): Boolean = {
         in.severity == xsbti.Severity.Warn &&
         in.message == "a pure expression does nothing in statement position; you may be omitting necessary parentheses"
-      } 
+      }
 
       def printSummary(): Unit = {
         def toApi(p: Problem): sbtapi.Problem = {

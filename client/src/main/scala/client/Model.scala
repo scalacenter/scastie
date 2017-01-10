@@ -96,13 +96,13 @@ case class Inputs(
       case ScalaTarget.Js(_, scalaJsVersion) =>
         s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
 
-      case ScalaTarget.Native => 
+      case ScalaTarget.Native =>
         s"""|resolvers += Resolver.sonatypeRepo("snapshots")
             |addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "0.1.0-SNAPSHOT")""".stripMargin
 
       case ScalaTarget.Dotty => "" //use sbt-dotty
 
-      case _ :ScalaTarget.Jvm => ""
+      case _: ScalaTarget.Jvm => ""
     }
   }
 

@@ -29,9 +29,9 @@ class SbtActor() extends Actor with ActorLogging {
             Files.createDirectories(fastOptJsDest)
 
             paste.copy(
-              sbtConfig = 
+              sbtConfig =
                 s"""artifactPath in (Compile, fastOptJS) := file("$fastOptJsDest")""" + nl +
-                paste.sbtConfig
+                  paste.sbtConfig
             )
           } else {
 
@@ -54,8 +54,7 @@ class SbtActor() extends Actor with ActorLogging {
                    processSbtOutput(
                      paste.progressActor,
                      paste.id
-                   )
-          )
+                   ))
 
         applyRunKiller(paste0) {
           if (scalaTargetType == ScalaTargetType.JVM ||
