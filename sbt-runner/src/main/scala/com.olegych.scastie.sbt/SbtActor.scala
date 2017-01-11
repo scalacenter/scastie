@@ -2,15 +2,11 @@ package com.olegych.scastie
 package sbt
 
 import api._
-import remote.{PasteProgress, RunPasteError}
+import remote.RunPasteError
 
 import upickle.default.{read => uread}
 
-import akka.actor.{
-  Actor,
-  ActorLogging,
-  ActorRef
-}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.event.LoggingReceive
 
 import scala.concurrent.duration._
@@ -28,28 +24,16 @@ class SbtActor() extends Actor with ActorLogging {
 
         val scalaTargetType = inputs.target.targetType
 
-        // val inputs0 =
-        //   if (scalaTargetType == ScalaTargetType.JS) {
-        //     val fastOptJsDest = Paths.get("/tmp", "scastie", id.toString)
-        //     Files.createDirectories(fastOptJsDest)
-
-        //     inputs.copy(
-        //       sbtConfigExtra =
-        //         s"""artifactPath in (Compile, fastOptJS) := file("$fastOptJsDest")""" + nl +
-        //           inputs.sbtConfigExtra
-        //     )
-        //   } else {
-        //     inputs.copy(code = instrumentation.Instrument(inputs.code))
-        //   }
-
-        val inputs0 = inputs.copy(code = instrumentation.Instrument(inputs.code))
+        val inputs0 =
+          inputs.copy(code = instrumentation.Instrument(inputs.code))
 
         def eval(command: String) =
           sbt.eval(command,
                    inputs0,
                    processSbtOutput(
                      progressActor,
-                     id
+                     id,
+                     sender
                    ))
 
         applyRunKiller(id) {
@@ -66,16 +50,22 @@ class SbtActor() extends Actor with ActorLogging {
     }
   }
 
-  private def processSbtOutput(progressActor: ActorRef,
-                               id: Long): (String, Boolean) => Unit = {
-    (line, done) =>
-      progressActor ! PasteProgress(
+  private def processSbtOutput(
+      progressActor: ActorRef,
+      id: Long,
+      pasteActor: ActorRef): (String, Boolean) => Unit = { (line, done) =>
+    {
+      val progress = PasteProgress(
         id = id,
         output = line,
         done = done,
         compilationInfos = extractProblems(line),
         instrumentations = extractInstrumentations(line)
       )
+
+      progressActor ! progress
+      pasteActor ! progress
+    }
   }
 
   private def extractProblems(line: String): List[api.Problem] = {
@@ -116,7 +106,8 @@ class SbtActor() extends Actor with ActorLogging {
     TimeoutActor(actorName, timeout, message => {
       message match {
         case pasteId: Long =>
-          sender ! RunPasteError(pasteId, s"Killed because of timeout $timeout")
+          sender ! RunPasteError(pasteId,
+                                 s"Killed because of timeout $timeout")
         case _ =>
           log.info("unknown message {}", message)
       }

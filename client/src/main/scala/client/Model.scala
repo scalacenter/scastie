@@ -13,9 +13,6 @@ case class ReleaseOptions(groupId: String,
 
 // case class MavenReference(groupId: String, artifactId: String, version: String)
 
-// input
-
-
 // outputs
 case class Outputs(
     console: Vector[String] = Vector(),

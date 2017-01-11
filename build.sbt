@@ -108,7 +108,7 @@ lazy val sbtRunner = project
       }
       case x => MergeStrategy.first
     },
-    dockerfile in docker := Def.task{
+    dockerfile in docker := Def.task {
       // run crossPublishLocalRuntime
       val ivy = ivyPaths.value.ivyHome.get
 
@@ -263,13 +263,15 @@ lazy val instrumentation = project
   .disablePlugins(play.PlayScala)
 
 def crossDir(projectId: String) = file(".cross/" + projectId)
-def dash(name: String) = name.replaceAllLiterally(".", "-")
+def dash(name: String)          = name.replaceAllLiterally(".", "-")
 
 /* webApi is for the communication between the server and the frontend */
 def webApi(scalaV: String) = {
   val projectName = "web-api"
-  val projectId = s"$projectName-${dash(scalaV)}"
-  CrossProject(id = projectId, base = crossDir(projectId), crossType = CrossType.Full)
+  val projectId   = s"$projectName-${dash(scalaV)}"
+  CrossProject(id = projectId,
+               base = crossDir(projectId),
+               crossType = CrossType.Full)
     .settings(baseSettings)
     .settings(
       scalaVersion := scalaV,
@@ -301,8 +303,10 @@ lazy val webApi212JS  = webApi212.js
 /* runtime* pretty print values and type */
 def runtimeScala(scalaV: String, webApi: CrossProject) = {
   val projectName = "runtime-scala"
-  val projectId = s"$projectName-${dash(scalaV)}"
-  CrossProject(id = projectId, base = crossDir(projectId), crossType = CrossType.Pure)
+  val projectId   = s"$projectName-${dash(scalaV)}"
+  CrossProject(id = projectId,
+               base = crossDir(projectId),
+               crossType = CrossType.Pure)
     .settings(baseSettings)
     .settings(
       scalaVersion := scalaV,
@@ -317,7 +321,6 @@ def runtimeScala(scalaV: String, webApi: CrossProject) = {
     .dependsOn(webApi)
     .disablePlugins(play.PlayScala)
 }
-
 
 val runtimeScala210 = runtimeScala("2.10.6", webApi210)
 val runtimeScala211 = runtimeScala("2.11.8", webApi211)
@@ -348,7 +351,6 @@ lazy val runtimeDotty = project
   )
   .dependsOn(webApi211JVM)
   .disablePlugins(play.PlayScala)
-
 
 /* sbtApi is for the communication between sbt and the sbt-runner */
 def sbtApi(scalaV: String) = {

@@ -4,7 +4,7 @@ package web
 import api._
 
 import java.nio.file._
-  
+
 import org.scalatest.FunSuite
 
 class PastesContainerTest extends FunSuite {
@@ -13,7 +13,7 @@ class PastesContainerTest extends FunSuite {
 
     val inputs = Inputs.default
 
-    val id = container.writePaste(inputs)
+    val id       = container.writePaste(inputs)
     val obtained = container.readPaste(id).get
 
     assert(obtained == inputs)

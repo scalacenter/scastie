@@ -2,7 +2,7 @@ package com.olegych.scastie
 package web
 
 import api._
-import remote.{RunPaste, PasteProgress}
+import remote._
 
 import play.api.Play
 import play.api.Play.current
@@ -38,7 +38,15 @@ class PasteActor(progressActor: ActorRef) extends Actor {
     }
 
     case GetPaste(id) => {
-      sender ! container.readPaste(id)
+      sender !
+        container.readPaste(id).zip(container.readOutput(id)).headOption.map {
+          case (inputs, progresses) =>
+            FetchResult(inputs, progresses)
+        }
+    }
+
+    case progress: api.PasteProgress => {
+      container.appendOutput(progress)
     }
   }
 }
