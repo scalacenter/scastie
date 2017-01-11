@@ -12,3 +12,4 @@ tmp
 hs_err_pid*
 java.exe.stackdump
 RUNNING_PID
+sbt-api-*

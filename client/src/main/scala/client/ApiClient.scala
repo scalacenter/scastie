@@ -1,4 +1,4 @@
-package api
+package client
 
 import upickle.default._
 
@@ -8,7 +8,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import upickle.default.{Reader, Writer, write ⇒ uwrite, read ⇒ uread}
 
-object Client extends autowire.Client[String, Reader, Writer] {
+object ApiClient extends autowire.Client[String, Reader, Writer] {
   override def doCall(req: Request): Future[String] = {
     dom.ext.Ajax
       .post(

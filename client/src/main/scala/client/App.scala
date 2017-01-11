@@ -110,34 +110,33 @@ object App {
       scope.state.flatMap(
         s =>
           Callback.future(
-            api
-              .Client[Api]
-              .run(s.inputs)
-              .call()
-              .map(id =>
-                connect(id).attemptTry.flatMap {
-                  case Success(ws) => {
-                    def clearLogs =
-                      scope.modState(
-                        _.resetOutputs
-                          .setRunning(true)
-                          .copy(websocket = Some(ws))
-                          .log("Connecting...")
-                      )
-
-                    def urlRewrite =
-                      scope.props.flatMap {
-                        case (router, snippet) =>
-                          router.set(Snippet(id))
-                      }
-
-                    clearLogs >> urlRewrite
-                  }
-                  case Failure(error) =>
+            ApiClient[Api]
+            .run(s.inputs)
+            .call()
+            .map(id =>
+              connect(id).attemptTry.flatMap {
+                case Success(ws) => {
+                  def clearLogs =
                     scope.modState(
-                      _.resetOutputs.log(error.toString).setRunning(false)
+                      _.resetOutputs
+                        .setRunning(true)
+                        .copy(websocket = Some(ws))
+                        .log("Connecting...")
                     )
-              })))
+
+                  def urlRewrite =
+                    scope.props.flatMap {
+                      case (router, snippet) =>
+                        router.set(Snippet(id))
+                    }
+
+                  clearLogs >> urlRewrite
+                }
+                case Failure(error) =>
+                  scope.modState(
+                    _.resetOutputs.log(error.toString).setRunning(false)
+                  )
+            })))
     }
     def run(e: ReactEventI): Callback = run()
 
@@ -163,18 +162,17 @@ object App {
       snippet match {
         case Some(Snippet(id)) =>
           Callback.future(
-            api
-              .Client[Api]
-              .fetch(id)
-              .call()
-              .map(paste =>
-                paste match {
-                  case Some(inputs) => {
-                    scope.modState(_.setInputs(inputs)) >> run()
-                  }
-                  case None =>
-                    scope.modState(_.setCode(s"//paste $id not found"))
-              })
+            ApiClient[Api]
+            .fetch(id)
+            .call()
+            .map(paste =>
+              paste match {
+                case Some(inputs) => {
+                  scope.modState(_.setInputs(inputs)) >> run()
+                }
+                case None =>
+                  scope.modState(_.setCode(s"//paste $id not found"))
+            })
           )
         case None => Callback(()) >> run()
       }

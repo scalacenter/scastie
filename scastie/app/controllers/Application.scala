@@ -7,7 +7,7 @@ import Progress._
 import api._
 
 import autowire.Core.Request
-import upickle.default.{read => uread}
+import upickle.default.{Reader, Writer, read => uread, write => uwrite}
 
 import play.api.Play
 import play.api.mvc._
@@ -23,6 +23,11 @@ import scala.concurrent.Future
 
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
+
+object AutowireServer extends autowire.Server[String, Reader, Writer] {
+  def read[R: Reader](p: String)  = uread[R](p)
+  def write[R: Writer](r: R) = uwrite(r)
+}
 
 class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
                                     executionContext: ExecutionContext)
