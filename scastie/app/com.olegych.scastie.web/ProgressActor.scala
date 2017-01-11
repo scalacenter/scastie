@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package web
 
-import remote.PasteProgress
+import api._
 
 import play.api.libs.iteratee.Concurrent.Channel
 

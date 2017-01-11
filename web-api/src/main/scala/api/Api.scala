@@ -4,8 +4,10 @@ import scala.concurrent.Future
 
 trait Api {
   def run(inputs: Inputs): Future[Long]
-  def fetch(id: Long): Future[Option[Inputs]]
+  def fetch(id: Long): Future[Option[FetchResult]]
 }
+
+case class FetchResult(inputs: Inputs, progresses: List[PasteProgress])
 
 case class Paste(
     id: Long,
@@ -43,8 +45,7 @@ object ScalaTarget {
   object Jvm {
     def default = ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
   }
-  case class Jvm(scalaVersion: Version)
-      extends ScalaTarget {
+  case class Jvm(scalaVersion: Version) extends ScalaTarget {
     def targetType = ScalaTargetType.JVM
     def scaladexRequest =
       Map("target" -> "JVM", "scalaVersion" -> scalaVersion.binary)
@@ -54,14 +55,13 @@ object ScalaTarget {
     }
   }
   object Js {
-    def default = 
+    def default =
       ScalaTarget.Js(
-                                         scalaVersion = ScalaTarget.defaultScalaVersion,
-                                         scalaJsVersion = ScalaTarget.defaultScalaJsVersion
-                                       )
+        scalaVersion = ScalaTarget.defaultScalaVersion,
+        scalaJsVersion = ScalaTarget.defaultScalaJsVersion
+      )
   }
-  case class Js(scalaVersion: Version,
-                scalaJsVersion: Version)
+  case class Js(scalaVersion: Version, scalaJsVersion: Version)
       extends ScalaTarget {
 
     def targetType = ScalaTargetType.JS
@@ -197,7 +197,6 @@ case class Inputs(
         |$sbtConfigExtra""".stripMargin
   }
 }
-
 
 case class PasteProgress(
     id: Long,

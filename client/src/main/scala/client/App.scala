@@ -35,7 +35,7 @@ object App {
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State =
       copy(outputs = outputs.copy(console = outputs.console ++ lines))
-    def setCode(code: String) = copy(inputs = inputs.copy(code = code))
+    def setCode(code: String)     = copy(inputs = inputs.copy(code = code))
     def setInputs(inputs: Inputs) = copy(inputs = inputs)
     def setSbtConfigExtra(config: String) =
       copy(inputs = inputs.copy(sbtConfigExtra = config))
@@ -59,6 +59,19 @@ object App {
     }
 
     def resetOutputs = copy(outputs = Outputs())
+
+    def addProgress(progress: PasteProgress) = {
+      addOutputs(progress.compilationInfos, progress.instrumentations)
+        .log(progress.output)
+        .setRunning(!progress.done)
+    }
+
+    def setProgresses(progresses: List[PasteProgress]) = {
+      progresses.foldLeft(this) {
+        case (state, progress) => state.addProgress(progress)
+      }
+    }
+
     def addOutputs(compilationInfos: List[api.Problem],
                    instrumentations: List[api.Instrumentation]) =
       copy(outputs = outputs.copy(
@@ -111,32 +124,32 @@ object App {
         s =>
           Callback.future(
             ApiClient[Api]
-            .run(s.inputs)
-            .call()
-            .map(id =>
-              connect(id).attemptTry.flatMap {
-                case Success(ws) => {
-                  def clearLogs =
+              .run(s.inputs)
+              .call()
+              .map(id =>
+                connect(id).attemptTry.flatMap {
+                  case Success(ws) => {
+                    def clearLogs =
+                      scope.modState(
+                        _.resetOutputs
+                          .setRunning(true)
+                          .copy(websocket = Some(ws))
+                          .log("Connecting...")
+                      )
+
+                    def urlRewrite =
+                      scope.props.flatMap {
+                        case (router, snippet) =>
+                          router.set(Snippet(id))
+                      }
+
+                    clearLogs >> urlRewrite
+                  }
+                  case Failure(error) =>
                     scope.modState(
-                      _.resetOutputs
-                        .setRunning(true)
-                        .copy(websocket = Some(ws))
-                        .log("Connecting...")
+                      _.resetOutputs.log(error.toString).setRunning(false)
                     )
-
-                  def urlRewrite =
-                    scope.props.flatMap {
-                      case (router, snippet) =>
-                        router.set(Snippet(id))
-                    }
-
-                  clearLogs >> urlRewrite
-                }
-                case Failure(error) =>
-                  scope.modState(
-                    _.resetOutputs.log(error.toString).setRunning(false)
-                  )
-            })))
+              })))
     }
     def run(e: ReactEventI): Callback = run()
 
@@ -163,18 +176,20 @@ object App {
         case Some(Snippet(id)) =>
           Callback.future(
             ApiClient[Api]
-            .fetch(id)
-            .call()
-            .map(paste =>
-              paste match {
-                case Some(inputs) => {
-                  scope.modState(_.setInputs(inputs)) >> run()
-                }
-                case None =>
-                  scope.modState(_.setCode(s"//paste $id not found"))
-            })
+              .fetch(id)
+              .call()
+              .map(result =>
+                result match {
+                  case Some(FetchResult(inputs, progresses)) => {
+                    scope.modState(
+                      _.setInputs(inputs).setProgresses(progresses)
+                    )
+                  }
+                  case _ =>
+                    scope.modState(_.setCode(s"//paste $id not found"))
+              })
           )
-        case None => Callback(()) >> run()
+        case None => Callback(())
       }
     }
 

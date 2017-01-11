@@ -25,8 +25,8 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
 object AutowireServer extends autowire.Server[String, Reader, Writer] {
-  def read[R: Reader](p: String)  = uread[R](p)
-  def write[R: Writer](r: R) = uwrite(r)
+  def read[R: Reader](p: String) = uread[R](p)
+  def write[R: Writer](r: R)     = uwrite(r)
 }
 
 class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
@@ -35,8 +35,8 @@ class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
   def run(inputs: Inputs): Future[Long] = {
     (pasteActor ? inputs).mapTo[Long]
   }
-  def fetch(id: Long): Future[Option[Inputs]] = {
-    (pasteActor ? GetPaste(id)).mapTo[Option[Inputs]]
+  def fetch(id: Long): Future[Option[FetchResult]] = {
+    (pasteActor ? GetPaste(id)).mapTo[Option[FetchResult]]
   }
 }
 
