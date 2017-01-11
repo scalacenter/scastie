@@ -1,5 +1,7 @@
 package client
 
+import api._
+
 import App._
 
 import japgolly.scalajs.react._, vdom.all._

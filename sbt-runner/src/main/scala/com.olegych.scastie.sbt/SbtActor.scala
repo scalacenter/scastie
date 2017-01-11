@@ -1,51 +1,58 @@
 package com.olegych.scastie
 package sbt
 
-import remote.{RunPaste, PasteProgress, RunPasteError}
-import api.ScalaTargetType
+import api._
+import remote.{PasteProgress, RunPasteError}
 
 import upickle.default.{read => uread}
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{
+  Actor,
+  ActorLogging,
+  ActorRef
+}
 import akka.event.LoggingReceive
 
 import scala.concurrent.duration._
 import scala.util.control.{NonFatal, NoStackTrace}
 
-import java.nio.file._
-import System.{lineSeparator => nl}
+// import java.nio.file._
+// import System.{lineSeparator => nl}
 
 class SbtActor() extends Actor with ActorLogging {
   private val sbt = new Sbt()
 
   def receive = LoggingReceive {
     compilationKiller {
-      case paste: RunPaste => {
-        import paste.scalaTargetType
+      case (id: Long, inputs: Inputs, progressActor: ActorRef) => {
 
-        val paste0 =
-          if (scalaTargetType == ScalaTargetType.JS) {
-            val fastOptJsDest = Paths.get("/tmp", "scastie", paste.id.toString)
-            Files.createDirectories(fastOptJsDest)
+        val scalaTargetType = inputs.target.targetType
 
-            paste.copy(
-              sbtConfig =
-                s"""artifactPath in (Compile, fastOptJS) := file("$fastOptJsDest")""" + nl +
-                  paste.sbtConfig
-            )
-          } else {
-            paste.copy(code = instrumentation.Instrument(paste.code))
-          }
+        // val inputs0 =
+        //   if (scalaTargetType == ScalaTargetType.JS) {
+        //     val fastOptJsDest = Paths.get("/tmp", "scastie", id.toString)
+        //     Files.createDirectories(fastOptJsDest)
+
+        //     inputs.copy(
+        //       sbtConfigExtra =
+        //         s"""artifactPath in (Compile, fastOptJS) := file("$fastOptJsDest")""" + nl +
+        //           inputs.sbtConfigExtra
+        //     )
+        //   } else {
+        //     inputs.copy(code = instrumentation.Instrument(inputs.code))
+        //   }
+
+        val inputs0 = inputs.copy(code = instrumentation.Instrument(inputs.code))
 
         def eval(command: String) =
           sbt.eval(command,
-                   paste0,
+                   inputs0,
                    processSbtOutput(
-                     paste.progressActor,
-                     paste.id
+                     progressActor,
+                     id
                    ))
 
-        applyRunKiller(paste0) {
+        applyRunKiller(id) {
           if (scalaTargetType == ScalaTargetType.JVM ||
               scalaTargetType == ScalaTargetType.Dotty) {
             eval("run")
@@ -99,8 +106,8 @@ class SbtActor() extends Actor with ActorLogging {
   private val compilationKiller = createKiller("CompilationKiller", 2.minutes)
   private val runKiller         = createKiller("RunKiller", 20.seconds)
 
-  private def applyRunKiller(paste: RunPaste)(block: => Unit) {
-    runKiller { case _ => block } apply paste
+  private def applyRunKiller(pasteId: Long)(block: => Unit) {
+    runKiller { case _ => block } apply pasteId
   }
 
   private def createKiller(
@@ -108,9 +115,8 @@ class SbtActor() extends Actor with ActorLogging {
       timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
     TimeoutActor(actorName, timeout, message => {
       message match {
-        case paste: RunPaste =>
-          sender ! RunPasteError(paste.id,
-                                 s"Killed because of timeout $timeout")
+        case pasteId: Long =>
+          sender ! RunPasteError(pasteId, s"Killed because of timeout $timeout")
         case _ =>
           log.info("unknown message {}", message)
       }

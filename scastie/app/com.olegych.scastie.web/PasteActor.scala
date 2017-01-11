@@ -1,8 +1,8 @@
 package com.olegych.scastie
 package web
 
+import api._
 import remote.{RunPaste, PasteProgress}
-import api.ScalaTargetType
 
 import play.api.Play
 import play.api.Play.current
@@ -31,9 +31,9 @@ class PasteActor(progressActor: ActorRef) extends Actor {
   }
 
   def receive = {
-    case add: AddPaste => {
-      val id = container.writePaste(add)
-      router.route(add.toRunPaste(id, progressActor), self)
+    case inputs: Inputs => {
+      val id = container.writePaste(inputs)
+      router.route((id, inputs, progressActor), self)
       sender ! id
     }
 
@@ -41,22 +41,6 @@ class PasteActor(progressActor: ActorRef) extends Actor {
       sender ! container.readPaste(id)
     }
   }
-}
-
-/* autowire => PasteActor */
-case class AddPaste(
-    code: String,
-    sbtConfig: String,
-    sbtPluginsConfig: String,
-    scalaTargetType: ScalaTargetType
-) {
-  def toRunPaste(id: Long, progressActor: ActorRef) =
-    RunPaste(id,
-             code,
-             sbtConfig,
-             sbtPluginsConfig,
-             scalaTargetType,
-             progressActor)
 }
 
 case class GetPaste(id: Long)

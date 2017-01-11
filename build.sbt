@@ -1,31 +1,11 @@
 import ScalaJSHelper._
 import org.scalajs.sbtplugin.JSModuleID
+import org.scalajs.sbtplugin.cross.CrossProject
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
   version := "0.1.0-SNAPSHOT"
 )
-
-val crossPublishLocalRuntime = "crossPublishLocalRuntime"
-
-commands in Global += Command.command(crossPublishLocalRuntime) { state =>
-  List(
-    "project runtimeScalaJVM",
-    "+ publishLocal",
-    "project runtimeScalaJS",
-    "+ publishLocal",
-    "reload",
-    "project webApiJVM",
-    "+ publishLocal",
-    "project webApiJS",
-    "+ publishLocal",
-    "reload", // sbt crossVersion changes scalaVersion but does not set it back
-    "project sbtScastie",
-    "publishLocal"
-  ) ::: state
-}
-
-addCommandAlias("docker", s";$crossPublishLocalRuntime; sbtRunner/docker")
 
 lazy val baseSettings = Seq(
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test",
@@ -82,12 +62,32 @@ lazy val remoteApi = project
   .settings(baseSettings)
   .settings(libraryDependencies += akka("actor"))
   .disablePlugins(play.PlayScala)
-  .dependsOn(webApiJVM)
+  .dependsOn(webApi211JVM)
+
+lazy val runnerRuntimeDependencies = Seq(
+  runtimeScala210JVM,
+  runtimeScala210JS,
+  runtimeScala211JVM,
+  runtimeScala211JS,
+  runtimeScala212JVM,
+  runtimeScala212JS,
+  webApi210JVM,
+  webApi210JS,
+  webApi211JVM,
+  webApi211JS,
+  webApi212JVM,
+  webApi212JS,
+  runtimeDotty,
+  sbtApi210,
+  sbtApi211,
+  sbtScastie
+).map(publishLocal in _)
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
   .settings(
+    reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     libraryDependencies ++= Seq(
       akka("actor"),
       akka("remote"),
@@ -108,9 +108,8 @@ lazy val sbtRunner = project
       }
       case x => MergeStrategy.first
     },
-    dockerfile in docker := {
+    dockerfile in docker := Def.task{
       // run crossPublishLocalRuntime
-
       val ivy = ivyPaths.value.ivyHome.get
 
       val org                = organization.value
@@ -129,9 +128,9 @@ lazy val sbtRunner = project
         expose(5150)
         entryPoint("java", "-Xmx2G", "-Xms512M", "-jar", artifactTargetPath)
       }
-    }
+    }.dependsOn(runnerRuntimeDependencies: _*).value
   )
-  .dependsOn(sbtApi, remoteApi, webApiJVM, instrumentation)
+  .dependsOn(sbtApi211, remoteApi, instrumentation)
   .enablePlugins(DockerPlugin)
   .disablePlugins(play.PlayScala)
 
@@ -159,25 +158,27 @@ lazy val server = project
     mappings in (Compile, packageBin) += (fullOptJS in (client, Compile)).value.data -> "public/client-opt.js"
   )
   .enablePlugins(SbtWeb, play.PlayScala)
-  .dependsOn(remoteApi, client, webApiJVM)
-
-// lazy val remoteApi = project
-// lazy val sbtRunner = project
-// lazy val server = project
-// lazy val scastie = project
-// lazy val codemirror = project
-// lazy val client = project
-// lazy val instrumentation = project
-// lazy val runtimeDotty = project
-// lazy val sbtApi = project
-// lazy val sbtScastie = project
+  .dependsOn(remoteApi, client, webApi211JVM)
 
 lazy val scastie = project
   .in(file("."))
-  .aggregate(server, instrumentation)
+  .aggregate(
+    server,
+    instrumentation,
+    sbtRunner,
+    remoteApi,
+    codemirror,
+    client,
+    runtimeDotty,
+    sbtApi210,
+    sbtApi211,
+    sbtScastie,
+    runtimeScala211JVM,
+    runtimeScala211JS,
+    webApi211JVM,
+    webApi211JS
+  )
   .settings(run := {
-    val forcePublishLocal = (publishLocal in sbtApi).value
-
     (reStart in sbtRunner).toTask("").value
     (reStart in server).toTask("").value
   })
@@ -186,6 +187,7 @@ lazy val scastie = project
 lazy val codemirror = project
   .settings(baseSettings)
   .settings(
+    test := {},
     scalacOptions -= "-Ywarn-dead-code",
     jsDependencies ++= {
       def codemirrorD(path: String): JSModuleID =
@@ -227,6 +229,7 @@ lazy val client = project
   .settings(
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     skip in packageJSDependencies := false,
+    test := {},
     jsDependencies ++= Seq(
       react("react-with-addons", "React"),
       react("react-dom", "ReactDOM", "react-with-addons"),
@@ -238,7 +241,7 @@ lazy val client = project
     )
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
-  .dependsOn(codemirror, webApiJS)
+  .dependsOn(codemirror, webApi211JS)
   .disablePlugins(play.PlayScala)
 
 /*  instrument a program to add a Map[Position, (Value, Type)]
@@ -259,24 +262,73 @@ lazy val instrumentation = project
   )
   .disablePlugins(play.PlayScala)
 
-/* runtime* pretty print values and type */
-lazy val runtimeScala = crossProject
-  .crossType(CrossType.Pure)
-  .in(file("runtime-scala"))
-  .settings(baseSettings)
-  .settings(
-    crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
-    moduleName := "runtime-scala",
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "upickle" % upickleVersion,
-      "com.lihaoyi" %%% "pprint"  % upickleVersion
-    )
-  )
-  .dependsOn(webApi)
-  .disablePlugins(play.PlayScala)
+def crossDir(projectId: String) = file(".cross/" + projectId)
+def dash(name: String) = name.replaceAllLiterally(".", "-")
 
-lazy val runtimeScalaJVM = runtimeScala.jvm
-lazy val runtimeScalaJS  = runtimeScala.js
+/* webApi is for the communication between the server and the frontend */
+def webApi(scalaV: String) = {
+  val projectName = "web-api"
+  val projectId = s"$projectName-${dash(scalaV)}"
+  CrossProject(id = projectId, base = crossDir(projectId), crossType = CrossType.Full)
+    .settings(baseSettings)
+    .settings(
+      scalaVersion := scalaV,
+      moduleName := projectName,
+      libraryDependencies ++= Seq(
+        "com.lihaoyi" %%% "autowire" % "0.2.6",
+        "com.lihaoyi" %%% "upickle"  % upickleVersion
+      ),
+      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "src" / "main" / "scala"
+    )
+    .jsSettings(
+      test := {},
+      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
+    )
+    .disablePlugins(play.PlayScala)
+}
+
+val webApi210 = webApi("2.10.6")
+val webApi211 = webApi("2.11.8")
+val webApi212 = webApi("2.12.1")
+
+lazy val webApi210JVM = webApi210.jvm
+lazy val webApi210JS  = webApi210.js
+lazy val webApi211JVM = webApi211.jvm
+lazy val webApi211JS  = webApi211.js
+lazy val webApi212JVM = webApi212.jvm
+lazy val webApi212JS  = webApi212.js
+
+/* runtime* pretty print values and type */
+def runtimeScala(scalaV: String, webApi: CrossProject) = {
+  val projectName = "runtime-scala"
+  val projectId = s"$projectName-${dash(scalaV)}"
+  CrossProject(id = projectId, base = crossDir(projectId), crossType = CrossType.Pure)
+    .settings(baseSettings)
+    .settings(
+      scalaVersion := scalaV,
+      moduleName := projectName,
+      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "src" / "main" / "scala",
+      libraryDependencies ++= Seq(
+        "com.lihaoyi" %%% "upickle" % upickleVersion,
+        "com.lihaoyi" %%% "pprint"  % upickleVersion
+      )
+    )
+    .jsSettings(test := {})
+    .dependsOn(webApi)
+    .disablePlugins(play.PlayScala)
+}
+
+
+val runtimeScala210 = runtimeScala("2.10.6", webApi210)
+val runtimeScala211 = runtimeScala("2.11.8", webApi211)
+val runtimeScala212 = runtimeScala("2.12.1", webApi212)
+
+lazy val runtimeScala210JVM = runtimeScala210.jvm
+lazy val runtimeScala210JS  = runtimeScala210.js
+lazy val runtimeScala211JVM = runtimeScala211.jvm
+lazy val runtimeScala211JS  = runtimeScala211.js
+lazy val runtimeScala212JVM = runtimeScala212.jvm
+lazy val runtimeScala212JS  = runtimeScala212.js
 
 lazy val runtimeDotty = project
   .in(file("runtime-dotty"))
@@ -294,37 +346,25 @@ lazy val runtimeDotty = project
       "com.lihaoyi"    %% "upickle"      % upickleVersion
     )
   )
-  .dependsOn(webApiJVM)
+  .dependsOn(webApi211JVM)
   .disablePlugins(play.PlayScala)
 
-/* webApi is for the communication between the server and the frontend */
-lazy val webApi = crossProject
-  .in(file("web-api"))
-  .settings(baseSettings)
-  .settings(
-    crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "autowire" % "0.2.6",
-      "com.lihaoyi" %%% "upickle"  % upickleVersion
+
+/* sbtApi is for the communication between sbt and the sbt-runner */
+def sbtApi(scalaV: String) = {
+  val projectId = s"sbt-api-${dash(scalaV)}"
+  Project(id = projectId, base = crossDir(projectId))
+    .settings(orgSettings)
+    .settings(
+      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / "sbt-api" / "src" / "main",
+      scalaVersion := scalaV,
+      libraryDependencies += "com.lihaoyi" %% "upickle" % upickleVersion
     )
-  )
-  .jsSettings(
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
-  )
-  .disablePlugins(play.PlayScala)
+    .disablePlugins(play.PlayScala)
+}
 
-lazy val webApiJVM = webApi.jvm
-lazy val webApiJS  = webApi.js
-
-/* sbtApi is for the communication between sbt and the renderer */
-lazy val sbtApi = project
-  .in(file("sbt-api"))
-  .settings(orgSettings)
-  .settings(
-    scalaVersion := "2.10.6",
-    libraryDependencies += "com.lihaoyi" %%% "upickle" % upickleVersion
-  )
-  .disablePlugins(play.PlayScala)
+lazy val sbtApi210 = sbtApi("2.10.6")
+lazy val sbtApi211 = sbtApi("2.11.8")
 
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))
@@ -334,4 +374,4 @@ lazy val sbtScastie = project
     scalaVersion := "2.10.6",
     sbtPlugin := true
   )
-  .dependsOn(sbtApi)
+  .dependsOn(sbtApi210)

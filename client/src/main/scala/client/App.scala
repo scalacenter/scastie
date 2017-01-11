@@ -26,7 +26,7 @@ object App {
       websocket: Option[WebSocket] = None,
       dark: Boolean = false,
       codemirrorSettings: Option[codemirror.Options] = None,
-      inputs: Inputs = Inputs(),
+      inputs: Inputs = Inputs.default,
       outputs: Outputs = Outputs()
   ) {
     def setRunning(v: Boolean)   = copy(running = v)
@@ -36,6 +36,7 @@ object App {
     def log(lines: Seq[String]): State =
       copy(outputs = outputs.copy(console = outputs.console ++ lines))
     def setCode(code: String) = copy(inputs = inputs.copy(code = code))
+    def setInputs(inputs: Inputs) = copy(inputs = inputs)
     def setSbtConfigExtra(config: String) =
       copy(inputs = inputs.copy(sbtConfigExtra = config))
     def setView(newView: View) = copy(view = newView)
@@ -109,39 +110,33 @@ object App {
       scope.state.flatMap(
         s =>
           Callback.future(
-            api
-              .Client[Api]
-              .run(
-                s.inputs.code,
-                s.inputs.sbtConfig,
-                s.inputs.sbtPluginsConfig,
-                s.inputs.target.targetType
-              )
-              .call()
-              .map(id =>
-                connect(id).attemptTry.flatMap {
-                  case Success(ws) => {
-                    def clearLogs =
-                      scope.modState(
-                        _.resetOutputs
-                          .setRunning(true)
-                          .copy(websocket = Some(ws))
-                          .log("Connecting...")
-                      )
-
-                    def urlRewrite =
-                      scope.props.flatMap {
-                        case (router, snippet) =>
-                          router.set(Snippet(id))
-                      }
-
-                    clearLogs >> urlRewrite
-                  }
-                  case Failure(error) =>
+            ApiClient[Api]
+            .run(s.inputs)
+            .call()
+            .map(id =>
+              connect(id).attemptTry.flatMap {
+                case Success(ws) => {
+                  def clearLogs =
                     scope.modState(
-                      _.resetOutputs.log(error.toString).setRunning(false)
+                      _.resetOutputs
+                        .setRunning(true)
+                        .copy(websocket = Some(ws))
+                        .log("Connecting...")
                     )
-              })))
+
+                  def urlRewrite =
+                    scope.props.flatMap {
+                      case (router, snippet) =>
+                        router.set(Snippet(id))
+                    }
+
+                  clearLogs >> urlRewrite
+                }
+                case Failure(error) =>
+                  scope.modState(
+                    _.resetOutputs.log(error.toString).setRunning(false)
+                  )
+            })))
     }
     def run(e: ReactEventI): Callback = run()
 
@@ -167,20 +162,17 @@ object App {
       snippet match {
         case Some(Snippet(id)) =>
           Callback.future(
-            api
-              .Client[Api]
-              .fetch(id)
-              .call()
-              .map(paste =>
-                paste match {
-                  case Some(Paste(_, code, sbtConfig)) => {
-                    scope.modState(
-                      _.setCode(code).setSbtConfigExtra(sbtConfig)
-                    ) >> run()
-                  }
-                  case None =>
-                    scope.modState(_.setCode(s"//paste $id not found"))
-              })
+            ApiClient[Api]
+            .fetch(id)
+            .call()
+            .map(paste =>
+              paste match {
+                case Some(inputs) => {
+                  scope.modState(_.setInputs(inputs)) >> run()
+                }
+                case None =>
+                  scope.modState(_.setCode(s"//paste $id not found"))
+            })
           )
         case None => Callback(()) >> run()
       }
@@ -190,13 +182,8 @@ object App {
     def toogleTheme(): Callback               = scope.modState(_.toogleTheme)
   }
 
-  val defaultCode =
-    """|class Playground {
-       |  1 + 1
-       |}""".stripMargin
-
   val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")
-    .initialState(State(inputs = Inputs(code = defaultCode)))
+    .initialState(State())
     .backend(new Backend(_))
     .renderPS {
       case (scope, (router, snippet), state) => {

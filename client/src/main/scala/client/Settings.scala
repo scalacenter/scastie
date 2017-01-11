@@ -17,8 +17,8 @@ object Settings {
 
     def defaultTarget(targetType: ScalaTargetType) = {
       targetType match {
-        case ScalaTargetType.JVM    => ScalaTarget.Jvm()
-        case ScalaTargetType.JS     => ScalaTarget.Js()
+        case ScalaTargetType.JVM    => ScalaTarget.Jvm.default
+        case ScalaTargetType.JS     => ScalaTarget.Js.default
         case ScalaTargetType.Dotty  => ScalaTarget.Dotty
         case ScalaTargetType.Native => ScalaTarget.Native
       }

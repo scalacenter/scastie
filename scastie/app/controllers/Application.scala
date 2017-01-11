@@ -7,7 +7,7 @@ import Progress._
 import api._
 
 import autowire.Core.Request
-import upickle.default.{read => uread}
+import upickle.default.{Reader, Writer, read => uread, write => uwrite}
 
 import play.api.Play
 import play.api.mvc._
@@ -24,18 +24,19 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
+object AutowireServer extends autowire.Server[String, Reader, Writer] {
+  def read[R: Reader](p: String)  = uread[R](p)
+  def write[R: Writer](r: R) = uwrite(r)
+}
+
 class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
                                     executionContext: ExecutionContext)
     extends Api {
-  def run(code: String,
-          sbtConfig: String,
-          sbtPluginConfig: String,
-          scalaTargetType: ScalaTargetType): Future[Long] = {
-    (pasteActor ? AddPaste(code, sbtConfig, sbtPluginConfig, scalaTargetType))
-      .mapTo[Long]
+  def run(inputs: Inputs): Future[Long] = {
+    (pasteActor ? inputs).mapTo[Long]
   }
-  def fetch(id: Long): Future[Option[Paste]] = {
-    (pasteActor ? GetPaste(id)).mapTo[Option[Paste]]
+  def fetch(id: Long): Future[Option[Inputs]] = {
+    (pasteActor ? GetPaste(id)).mapTo[Option[Inputs]]
   }
 }
 
