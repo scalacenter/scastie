@@ -117,7 +117,7 @@ lazy val sbtRunner = project
       val artifactTargetPath = s"/app/${artifact.name}"
 
       new Dockerfile {
-        // docker run --network=host -p 5150:5150 scalacenter/scastie-sbt-runner:0.1.0-SNAPSHOT
+        // docker run --network=host -e RUNNER_PORT=5150 scalacenter/scastie-sbt-runner:0.1.0-SNAPSHOT
 
         from("scalacenter/scastie-docker-sbt:0.13.13")
 
@@ -125,7 +125,6 @@ lazy val sbtRunner = project
 
         add(artifact, artifactTargetPath)
 
-        expose(5150)
         entryPoint("java", "-Xmx2G", "-Xms512M", "-jar", artifactTargetPath)
       }
     }.dependsOn(runnerRuntimeDependencies: _*).value

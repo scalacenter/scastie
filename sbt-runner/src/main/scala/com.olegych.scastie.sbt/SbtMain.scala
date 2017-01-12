@@ -2,10 +2,8 @@ package com.olegych.scastie
 package sbt
 
 import akka.actor.{ActorSystem, Props}
-import com.typesafe.config.ConfigFactory
 
 import util.Properties
-
 import java.nio.file._
 
 object SbtMain {
@@ -29,22 +27,7 @@ object SbtMain {
   def main(args: Array[String]): Unit = {
     writeRunningPid()
 
-    val config = ConfigFactory.parseString(
-      s"""|akka {
-          |  actor {
-          |    provider = "akka.remote.RemoteActorRefProvider"
-          |   }
-          |   remote {
-          |     transport = "akka.remote.netty.NettyRemoteTransport"
-          |     netty.tcp {
-          |       hostname = "127.0.0.1"
-          |       port = 5150
-          |     }
-          |   }
-          |}""".stripMargin
-    )
-
-    val system      = ActorSystem("SbtRemote", config)
+    val system      = ActorSystem("SbtRemote")
     val remoteActor = system.actorOf(Props[SbtActor], name = "SbtActor")
     system.awaitTermination()
   }

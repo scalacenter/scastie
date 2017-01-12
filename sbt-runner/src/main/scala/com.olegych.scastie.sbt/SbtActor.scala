@@ -12,9 +12,6 @@ import akka.event.LoggingReceive
 import scala.concurrent.duration._
 import scala.util.control.{NonFatal, NoStackTrace}
 
-// import java.nio.file._
-// import System.{lineSeparator => nl}
-
 class SbtActor() extends Actor with ActorLogging {
   private val sbt = new Sbt()
 

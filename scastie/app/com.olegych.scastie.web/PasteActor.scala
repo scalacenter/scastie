@@ -4,6 +4,8 @@ package web
 import api._
 import remote._
 
+import scala.collection.JavaConverters._
+
 import play.api.Play
 import play.api.Play.current
 
@@ -19,14 +21,20 @@ class PasteActor(progressActor: ActorRef) extends Actor {
   )
 
   private val router = {
+    val ports = Play.configuration.getIntList("sbt-remote-ports").get.asScala
+    val host = Play.configuration.getString("sbt-remote-host").get
+
     val routees =
-      Vector(
+      ports.map(port =>
         ActorSelectionRoutee(
           context.actorSelection(
-            s"akka.tcp://SbtRemote@127.0.0.1:5150/user/SbtActor"
+            s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
           )
         )
-      )
+      ).toVector
+
+    // routees.foreach(context.watch)
+
     Router(RoundRobinRoutingLogic(), routees)
   }
 
