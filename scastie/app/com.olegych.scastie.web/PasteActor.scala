@@ -2,7 +2,6 @@ package com.olegych.scastie
 package web
 
 import api._
-import remote._
 
 import scala.collection.JavaConverters._
 
@@ -10,33 +9,35 @@ import play.api.Play
 import play.api.Play.current
 
 import akka.actor.{Actor, ActorRef}
+import akka.remote.DisassociatedEvent
 import akka.routing.{ActorSelectionRoutee, RoundRobinRoutingLogic, Router}
 
 import java.nio.file._
 
 class PasteActor(progressActor: ActorRef) extends Actor {
 
+  override def preStart = {
+    context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
+    ()
+  }
+
   private val container = new PastesContainer(
     Paths.get(Play.configuration.getString("pastes.data.dir").get)
   )
 
-  private val router = {
-    val ports = Play.configuration.getIntList("sbt-remote-ports").get.asScala
-    val host = Play.configuration.getString("sbt-remote-host").get
+  private val ports = Play.configuration.getIntList("sbt-remote-ports").get.asScala
+  private val host = Play.configuration.getString("sbt-remote-host").get
 
-    val routees =
-      ports.map(port =>
-        ActorSelectionRoutee(
-          context.actorSelection(
-            s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
-          )
+  private var routees =
+    ports.map(port =>
+      (host, port) -> ActorSelectionRoutee(
+        context.actorSelection(
+          s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
         )
-      ).toVector
+      )
+    ).toMap
 
-    // routees.foreach(context.watch)
-
-    Router(RoundRobinRoutingLogic(), routees)
-  }
+  private var router = Router(RoundRobinRoutingLogic(), routees.values.toVector)
 
   def receive = {
     case inputs: Inputs => {
@@ -55,6 +56,18 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 
     case progress: api.PasteProgress => {
       container.appendOutput(progress)
+    }
+
+    case event: DisassociatedEvent => {
+      for {
+        host <- event.remoteAddress.host
+        port <- event.remoteAddress.port
+        selection <- routees.get((host, port))
+      } {
+        println("removing: " + selection)
+        routees = routees - ((host, port))
+        router = router.removeRoutee(selection)
+      }
     }
   }
 }

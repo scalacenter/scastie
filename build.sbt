@@ -53,16 +53,14 @@ def logging(allDependencies: Seq[ModuleID]): Seq[ModuleID] = {
     )
 }
 
+lazy val utils = project
+  .in(file("utils"))
+  .settings(baseSettings)
+  .disablePlugins(play.PlayScala)
+
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.3.11"
 
 val upickleVersion = "0.4.4"
-
-lazy val remoteApi = project
-  .in(file("remote-api"))
-  .settings(baseSettings)
-  .settings(libraryDependencies += akka("actor"))
-  .disablePlugins(play.PlayScala)
-  .dependsOn(webApi211JVM)
 
 lazy val runnerRuntimeDependencies = Seq(
   runtimeScala210JVM,
@@ -71,12 +69,12 @@ lazy val runnerRuntimeDependencies = Seq(
   runtimeScala211JS,
   runtimeScala212JVM,
   runtimeScala212JS,
-  webApi210JVM,
-  webApi210JS,
-  webApi211JVM,
-  webApi211JS,
-  webApi212JVM,
-  webApi212JS,
+  api210JVM,
+  api210JS,
+  api211JVM,
+  api211JS,
+  api212JVM,
+  api212JS,
   runtimeDotty,
   sbtApi210,
   sbtApi211,
@@ -129,7 +127,7 @@ lazy val sbtRunner = project
       }
     }.dependsOn(runnerRuntimeDependencies: _*).value
   )
-  .dependsOn(sbtApi211, remoteApi, instrumentation)
+  .dependsOn(sbtApi211, api211JVM, instrumentation, utils)
   .enablePlugins(DockerPlugin)
   .disablePlugins(play.PlayScala)
 
@@ -157,7 +155,7 @@ lazy val server = project
     mappings in (Compile, packageBin) += (fullOptJS in (client, Compile)).value.data -> "public/client-opt.js"
   )
   .enablePlugins(SbtWeb, play.PlayScala)
-  .dependsOn(remoteApi, client, webApi211JVM)
+  .dependsOn(client, api211JVM, utils)
 
 lazy val scastie = project
   .in(file("."))
@@ -165,7 +163,6 @@ lazy val scastie = project
     server,
     instrumentation,
     sbtRunner,
-    remoteApi,
     codemirror,
     client,
     runtimeDotty,
@@ -174,8 +171,8 @@ lazy val scastie = project
     sbtScastie,
     runtimeScala211JVM,
     runtimeScala211JS,
-    webApi211JVM,
-    webApi211JS
+    api211JVM,
+    api211JS
   )
   .settings(run := {
     (reStart in sbtRunner).toTask("").value
@@ -240,7 +237,7 @@ lazy val client = project
     )
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
-  .dependsOn(codemirror, webApi211JS)
+  .dependsOn(codemirror, api211JS)
   .disablePlugins(play.PlayScala)
 
 /*  instrument a program to add a Map[Position, (Value, Type)]
@@ -264,9 +261,9 @@ lazy val instrumentation = project
 def crossDir(projectId: String) = file(".cross/" + projectId)
 def dash(name: String)          = name.replaceAllLiterally(".", "-")
 
-/* webApi is for the communication between the server and the frontend */
-def webApi(scalaV: String) = {
-  val projectName = "web-api"
+/* api is for the communication between sbt <=> server <=> frontend */
+def api(scalaV: String) = {
+  val projectName = "api"
   val projectId   = s"$projectName-${dash(scalaV)}"
   CrossProject(id = projectId,
                base = crossDir(projectId),
@@ -288,19 +285,19 @@ def webApi(scalaV: String) = {
     .disablePlugins(play.PlayScala)
 }
 
-val webApi210 = webApi("2.10.6")
-val webApi211 = webApi("2.11.8")
-val webApi212 = webApi("2.12.1")
+val api210 = api("2.10.6")
+val api211 = api("2.11.8")
+val api212 = api("2.12.1")
 
-lazy val webApi210JVM = webApi210.jvm
-lazy val webApi210JS  = webApi210.js
-lazy val webApi211JVM = webApi211.jvm
-lazy val webApi211JS  = webApi211.js
-lazy val webApi212JVM = webApi212.jvm
-lazy val webApi212JS  = webApi212.js
+lazy val api210JVM = api210.jvm
+lazy val api210JS  = api210.js
+lazy val api211JVM = api211.jvm
+lazy val api211JS  = api211.js
+lazy val api212JVM = api212.jvm
+lazy val api212JS  = api212.js
 
 /* runtime* pretty print values and type */
-def runtimeScala(scalaV: String, webApi: CrossProject) = {
+def runtimeScala(scalaV: String, apiProject: CrossProject) = {
   val projectName = "runtime-scala"
   val projectId   = s"$projectName-${dash(scalaV)}"
   CrossProject(id = projectId,
@@ -317,13 +314,13 @@ def runtimeScala(scalaV: String, webApi: CrossProject) = {
       )
     )
     .jsSettings(test := {})
-    .dependsOn(webApi)
+    .dependsOn(apiProject)
     .disablePlugins(play.PlayScala)
 }
 
-val runtimeScala210 = runtimeScala("2.10.6", webApi210)
-val runtimeScala211 = runtimeScala("2.11.8", webApi211)
-val runtimeScala212 = runtimeScala("2.12.1", webApi212)
+val runtimeScala210 = runtimeScala("2.10.6", api210)
+val runtimeScala211 = runtimeScala("2.11.8", api211)
+val runtimeScala212 = runtimeScala("2.12.1", api212)
 
 lazy val runtimeScala210JVM = runtimeScala210.jvm
 lazy val runtimeScala210JS  = runtimeScala210.js
@@ -348,7 +345,7 @@ lazy val runtimeDotty = project
       "com.lihaoyi"    %% "upickle"      % upickleVersion
     )
   )
-  .dependsOn(webApi211JVM)
+  .dependsOn(api211JVM)
   .disablePlugins(play.PlayScala)
 
 /* sbtApi is for the communication between sbt and the sbt-runner */
