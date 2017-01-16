@@ -62,9 +62,9 @@ class Sbt() {
       read = fout.read()
       if (read == 10) {
         val line = chars.mkString
+        println(line)
         prompt = line == uniqueId
         lineCallback(line, prompt)
-        log.info(" sbt: " + line)
         chars.clear()
       } else {
         chars += read.toChar

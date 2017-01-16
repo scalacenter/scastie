@@ -8,39 +8,35 @@ import upickle.default.{read => uread}
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.event.LoggingReceive
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.FiniteDuration
 import scala.util.control.{NonFatal, NoStackTrace}
 
-class SbtActor() extends Actor with ActorLogging {
-  private val sbt = new Sbt()
-
+class SbtActor(timeout: FiniteDuration, sbt: Sbt) extends Actor with ActorLogging {
   def receive = LoggingReceive {
-    compilationKiller {
-      case (id: Long, inputs: Inputs, progressActor: ActorRef) => {
+    case (id: Long, inputs: Inputs, progressActor: ActorRef) => {
 
-        val scalaTargetType = inputs.target.targetType
+      val scalaTargetType = inputs.target.targetType
 
-        val inputs0 =
-          inputs.copy(code = instrumentation.Instrument(inputs.code))
+      val inputs0 =
+        inputs.copy(code = instrumentation.Instrument(inputs.code))
 
-        def eval(command: String) =
-          sbt.eval(command,
-                   inputs0,
-                   processSbtOutput(
-                     progressActor,
-                     id,
-                     sender
-                   ))
+      def eval(command: String) =
+        sbt.eval(command,
+                 inputs0,
+                 processSbtOutput(
+                   progressActor,
+                   id,
+                   sender
+                 ))
 
-        applyRunKiller(id, progressActor) {
-          if (scalaTargetType == ScalaTargetType.JVM ||
-              scalaTargetType == ScalaTargetType.Dotty) {
-            eval("run")
-          } else if (scalaTargetType == ScalaTargetType.JS) {
-            eval("fastOptJs")
-          } else if (scalaTargetType == ScalaTargetType.Native) {
-            eval("run")
-          }
+      applyTimeout(id, progressActor) {
+        if (scalaTargetType == ScalaTargetType.JVM ||
+            scalaTargetType == ScalaTargetType.Dotty) {
+          eval("run")
+        } else if (scalaTargetType == ScalaTargetType.JS) {
+          eval("fastOptJs")
+        } else if (scalaTargetType == ScalaTargetType.Native) {
+          eval("run")
         }
       }
     }
@@ -94,17 +90,14 @@ class SbtActor() extends Actor with ActorLogging {
     }
   }
 
-  private val compilationKiller = createKiller("CompilationKiller", 2.minutes)
-  private val runKiller         = createKiller("RunKiller", 20.seconds)
+  private val timeoutKiller = createKiller(timeout)
 
-  private def applyRunKiller(pasteId: Long, progressActor: ActorRef)(block: => Unit) {
-    runKiller{ case _ => block }((pasteId, progressActor))
+  private def applyTimeout(pasteId: Long, progressActor: ActorRef)(block: => Unit) {
+    timeoutKiller{ case _ => block }((pasteId, progressActor))
   }
 
-  private def createKiller(
-      actorName: String,
-      timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
-    TimeoutActor(actorName, timeout, message => {
+  private def createKiller(timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
+    TimeoutActor("killer", timeout, message => {
       message match {
         case (pasteId: Long, progressActor: ActorRef) =>
           progressActor ! PasteProgress(

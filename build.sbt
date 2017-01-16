@@ -88,6 +88,7 @@ lazy val sbtRunner = project
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     libraryDependencies ++= Seq(
       akka("actor"),
+      akka("testkit") % Test,
       akka("remote"),
       akka("slf4j")
     ),
