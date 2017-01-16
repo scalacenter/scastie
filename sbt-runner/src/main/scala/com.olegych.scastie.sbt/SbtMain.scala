@@ -30,7 +30,7 @@ object SbtMain {
     writeRunningPid()
 
     val system      = ActorSystem("SbtRemote")
-    val remoteActor = system.actorOf(Props(new SbtActor(40.seconds, new Sbt())), name = "SbtActor")
+    val remoteActor = system.actorOf(Props(new SbtActor(40.seconds)), name = "SbtActor")
     system.awaitTermination()
   }
 }

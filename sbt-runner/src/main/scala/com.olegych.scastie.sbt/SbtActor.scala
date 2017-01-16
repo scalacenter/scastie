@@ -11,10 +11,11 @@ import akka.event.LoggingReceive
 import scala.concurrent.duration.FiniteDuration
 import scala.util.control.{NonFatal, NoStackTrace}
 
-class SbtActor(timeout: FiniteDuration, sbt: Sbt) extends Actor with ActorLogging {
+class SbtActor(timeout: FiniteDuration) extends Actor with ActorLogging {
+  private lazy val sbt = new Sbt()
+
   def receive = LoggingReceive {
     case (id: Long, inputs: Inputs, progressActor: ActorRef) => {
-
       val scalaTargetType = inputs.target.targetType
 
       val inputs0 =
