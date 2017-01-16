@@ -1,8 +1,6 @@
 package com.olegych
 
 import java.nio.file._
-// import attribute.BasicFileAttributes
-
 import System.{lineSeparator => nl}
 
 package object scastie {
@@ -10,7 +8,6 @@ package object scastie {
     if (Files.exists(src)) Some(Files.readAllLines(src).toArray.mkString(nl))
     else None
   }
-
   def write(dst: Path,
             content: String,
             truncate: Boolean = false,
@@ -26,21 +23,4 @@ package object scastie {
       ()
     }
   }
-
-  // def copyDir(src: Path, dst: Path): Unit = {
-  //   Files.walkFileTree(src, new SimpleFileVisitor[Path] {
-  //     override def preVisitDirectory(
-  //         dir: Path,
-  //         attrs: BasicFileAttributes): FileVisitResult = {
-  //       Files.createDirectories(dst.resolve(src.relativize(dir)))
-  //       FileVisitResult.CONTINUE
-  //     }
-  //     override def visitFile(file: Path,
-  //                            attrs: BasicFileAttributes): FileVisitResult = {
-  //       Files.copy(file, dst.resolve(src.relativize(file)))
-  //       FileVisitResult.CONTINUE
-  //     }
-  //   })
-  //   ()
-  // }
 }

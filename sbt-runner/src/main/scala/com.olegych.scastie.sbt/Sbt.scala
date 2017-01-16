@@ -25,8 +25,7 @@ class Sbt() {
   private val projectDir = sbtDir.resolve("project")
   Files.createDirectories(projectDir)
 
-  // bug with Dotty in 0.13.13 (https://github.com/sbt/sbt/issues/2895)
-  write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.11")
+  write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.13")
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
   write(pluginFile,
@@ -81,6 +80,15 @@ class Sbt() {
     fin.flush()
     println("running command: " + command)
     collect(lineCallback)
+  }
+
+  def close(): Unit = {
+    val pidField = process.getClass.getDeclaredField("pid")
+    pidField.setAccessible(true)
+    val pid = pidField.get(process).asInstanceOf[Int]
+    import sys.process._
+    s"pkill -KILL -P $pid".!
+    ()
   }
 
   def eval(command: String,

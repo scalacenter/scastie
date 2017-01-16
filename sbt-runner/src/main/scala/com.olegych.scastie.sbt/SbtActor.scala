@@ -2,7 +2,6 @@ package com.olegych.scastie
 package sbt
 
 import api._
-import remote.RunPasteError
 
 import upickle.default.{read => uread}
 
@@ -11,9 +10,6 @@ import akka.event.LoggingReceive
 
 import scala.concurrent.duration._
 import scala.util.control.{NonFatal, NoStackTrace}
-
-// import java.nio.file._
-// import System.{lineSeparator => nl}
 
 class SbtActor() extends Actor with ActorLogging {
   private val sbt = new Sbt()
@@ -36,7 +32,7 @@ class SbtActor() extends Actor with ActorLogging {
                      sender
                    ))
 
-        applyRunKiller(id) {
+        applyRunKiller(id, progressActor) {
           if (scalaTargetType == ScalaTargetType.JVM ||
               scalaTargetType == ScalaTargetType.Dotty) {
             eval("run")
@@ -50,6 +46,11 @@ class SbtActor() extends Actor with ActorLogging {
     }
   }
 
+  override def postStop() {
+    log.info("stopping sbt")
+    sbt.close()
+  }
+
   private def processSbtOutput(
       progressActor: ActorRef,
       id: Long,
@@ -60,7 +61,8 @@ class SbtActor() extends Actor with ActorLogging {
         output = line,
         done = done,
         compilationInfos = extractProblems(line),
-        instrumentations = extractInstrumentations(line)
+        instrumentations = extractInstrumentations(line),
+        timeout = false
       )
 
       progressActor ! progress
@@ -86,8 +88,7 @@ class SbtActor() extends Actor with ActorLogging {
     sbtProblems.map(toApi)
   }
 
-  private def extractInstrumentations(
-      line: String): List[api.Instrumentation] = {
+  private def extractInstrumentations(line: String): List[api.Instrumentation] = {
     try { uread[List[api.Instrumentation]](line) } catch {
       case NonFatal(e) => List()
     }
@@ -96,8 +97,8 @@ class SbtActor() extends Actor with ActorLogging {
   private val compilationKiller = createKiller("CompilationKiller", 2.minutes)
   private val runKiller         = createKiller("RunKiller", 20.seconds)
 
-  private def applyRunKiller(pasteId: Long)(block: => Unit) {
-    runKiller { case _ => block } apply pasteId
+  private def applyRunKiller(pasteId: Long, progressActor: ActorRef)(block: => Unit) {
+    runKiller{ case _ => block }((pasteId, progressActor))
   }
 
   private def createKiller(
@@ -105,9 +106,15 @@ class SbtActor() extends Actor with ActorLogging {
       timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
     TimeoutActor(actorName, timeout, message => {
       message match {
-        case pasteId: Long =>
-          sender ! RunPasteError(pasteId,
-                                 s"Killed because of timeout $timeout")
+        case (pasteId: Long, progressActor: ActorRef) =>
+          progressActor ! PasteProgress(
+            id = pasteId,
+            output = "",
+            done = true,
+            compilationInfos = List(),
+            instrumentations = List(),
+            timeout = true
+          )
         case _ =>
           log.info("unknown message {}", message)
       }

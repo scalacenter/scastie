@@ -151,18 +151,18 @@ case class Inputs(
         }
         case ScalaTarget.Dotty => {
           // http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
-          s"""|scalaVersion := "0.1-20170105-42eb864-NIGHTLY"
+          s"""|val dottyVersion = "0.1.1-20170111-ba7e129-NIGHTLY"
+              |scalaVersion := dottyVersion
               |scalaOrganization := "ch.epfl.lamp"
               |scalaBinaryVersion := "2.11"
-              |autoScalaLibrary := false  
               |scalacOptions += "-color:never"
-              |libraryDependencies ++= Seq(
-              |  "ch.epfl.lamp" % "scala-library_2.11" % "0.1-20170105-42eb864-NIGHTLY",
-              |  "ch.epfl.lamp" % "dotty_2.11"         % "0.1-20170105-42eb864-NIGHTLY" % "scala-tool",
-              |  "org.scastie"  % "runtime-dotty_2.11" % "0.1.0-SNAPSHOT"
-              |)
-              |scalaCompilerBridgeSource := 
-              |  ("ch.epfl.lamp" % "dotty-sbt-bridge" % "0.1.1-20170105-42eb864-NIGHTLY" % "component").sources()
+              |// bug in sbt 0.13.13: https://github.com/sbt/sbt/issues/2867
+              |// should be fixed in 0.13.14
+              |ivyScala ~= (_ map (_ copy (overrideScalaVersion = false)))
+              |libraryDependencies += "ch.epfl.lamp" % "dotty_2.11" % dottyVersion % "scala-tool"
+              |scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-sbt-bridge" % scalaVersion.value % "component").sources()
+              |
+              |libraryDependencies += "org.scastie" % "runtime-dotty_2.11" % "0.1.0-SNAPSHOT"
               |""".stripMargin
         }
         case ScalaTarget.Native => {
@@ -203,7 +203,8 @@ case class PasteProgress(
     output: String,
     compilationInfos: List[Problem],
     instrumentations: List[Instrumentation],
-    done: Boolean
+    done: Boolean,
+    timeout: Boolean
 )
 
 sealed trait Severity

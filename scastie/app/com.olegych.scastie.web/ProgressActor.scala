@@ -49,17 +49,9 @@ class ProgressActor extends Actor with ActorLogging {
       progressBuffer += (pasteProgress.id -> pasteProgress)
     } else {
       progressBuffer.remove(pasteProgress.id)
-      // monitorChannels.map(_.channel.push(uwrite(pasteProgress)))
     }
 
-    val apiModel = api.PasteProgress(
-      id = pasteProgress.id,
-      output = pasteProgress.output,
-      compilationInfos = pasteProgress.compilationInfos,
-      instrumentations = pasteProgress.instrumentations,
-      done = pasteProgress.done
-    )
-    monitorChannels.foreach(_.channel.push(uwrite(apiModel)))
+    monitorChannels.foreach(_.channel.push(uwrite(pasteProgress)))
   }
 }
 

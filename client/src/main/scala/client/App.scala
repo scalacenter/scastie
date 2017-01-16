@@ -93,6 +93,9 @@ object App {
       def onopen(e: Event): Unit = direct.modState(_.log("Connected."))
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[PasteProgress](e.data.toString)
+        if(progress.timeout) {
+          window.alert("Evaluation timeout")
+        }
         direct.modState(
           _.addOutputs(
             progress.compilationInfos,
