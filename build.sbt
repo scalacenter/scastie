@@ -85,6 +85,14 @@ lazy val runnerRuntimeDependencies = Seq(
   sbtScastie
 ).map(publishLocal in _)
 
+lazy val sbtRunnerRuntimeDependencies = Seq(
+  publishLocal in sbtScastie,
+  publishLocal in runtimeScala211JVM,
+  publishLocal in api211JVM,
+  publishLocal in sbtApi210,
+  publishLocal in sbtApi211
+)
+
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
@@ -131,6 +139,11 @@ lazy val sbtRunner = project
         entryPoint("java", "-Xmx2G", "-Xms512M", "-jar", artifactTargetPath)
       }
     }.dependsOn(runnerRuntimeDependencies: _*).value
+  )
+  .settings(
+    test in Test := (test in Test).dependsOn(sbtRunnerRuntimeDependencies: _*).value,
+    testOnly in Test := (testOnly in Test).dependsOn(sbtRunnerRuntimeDependencies: _*).evaluated,
+    testQuick in Test := (testQuick in Test).dependsOn(sbtRunnerRuntimeDependencies: _*).evaluated
   )
   .dependsOn(sbtApi211, api211JVM, instrumentation, utils)
   .enablePlugins(DockerPlugin)

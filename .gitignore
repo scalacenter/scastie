@@ -1,8 +1,3 @@
-/.idea/*
-!/.idea/codeStyleSettings.xml
-!/.idea/projectCodeStyle.xml
-!/.idea/runConfigurations
-/.idea_modules/*
 target
 project/project
 logs
@@ -10,6 +5,6 @@ target
 tmp
 .history
 hs_err_pid*
-java.exe.stackdump
 RUNNING_PID
 sbt-api-*
+TODO
