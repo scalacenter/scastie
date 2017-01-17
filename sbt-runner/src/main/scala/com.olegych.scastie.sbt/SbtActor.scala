@@ -42,6 +42,10 @@ class SbtActor(timeout: FiniteDuration) extends Actor with ActorLogging {
     case x => log.warning("Received unknown message: {}", x)
   }
 
+  override def postStop(): Unit = {
+    sbt.close()
+  }
+
   private def processSbtOutput(
       progressActor: ActorRef,
       id: Long,
