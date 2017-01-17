@@ -37,7 +37,9 @@ class SbtActorTest()
     val helloWorld = Inputs.default.copy(code = "class Playground { 1 + 1 }")
     sbtActor ! SbtTask(1L, helloWorld, progressActor.ref)
 
-    progressActor.fishForMessage(timeout) {
+    val sbtReloadTime = 30.seconds
+
+    progressActor.fishForMessage(timeout + sbtReloadTime) {
       case progress: PasteProgress => {
         progress.instrumentations.nonEmpty
       }
