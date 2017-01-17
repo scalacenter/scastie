@@ -56,7 +56,11 @@ def logging(allDependencies: Seq[ModuleID]): Seq[ModuleID] = {
 lazy val utils = project
   .in(file("utils"))
   .settings(baseSettings)
+  .settings(
+    libraryDependencies += akka("actor")
+  )
   .disablePlugins(play.PlayScala)
+  .dependsOn(api211JVM)
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.3.11"
 
@@ -81,6 +85,14 @@ lazy val runnerRuntimeDependencies = Seq(
   sbtScastie
 ).map(publishLocal in _)
 
+lazy val sbtRunnerRuntimeDependencies = Seq(
+  publishLocal in sbtScastie,
+  publishLocal in runtimeScala211JVM,
+  publishLocal in api211JVM,
+  publishLocal in sbtApi210,
+  publishLocal in sbtApi211
+)
+
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
@@ -88,6 +100,7 @@ lazy val sbtRunner = project
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     libraryDependencies ++= Seq(
       akka("actor"),
+      akka("testkit") % Test,
       akka("remote"),
       akka("slf4j")
     ),
@@ -126,6 +139,11 @@ lazy val sbtRunner = project
         entryPoint("java", "-Xmx2G", "-Xms512M", "-jar", artifactTargetPath)
       }
     }.dependsOn(runnerRuntimeDependencies: _*).value
+  )
+  .settings(
+    test in Test := (test in Test).dependsOn(sbtRunnerRuntimeDependencies: _*).value,
+    testOnly in Test := (testOnly in Test).dependsOn(sbtRunnerRuntimeDependencies: _*).evaluated,
+    testQuick in Test := (testQuick in Test).dependsOn(sbtRunnerRuntimeDependencies: _*).evaluated
   )
   .dependsOn(sbtApi211, api211JVM, instrumentation, utils)
   .enablePlugins(DockerPlugin)

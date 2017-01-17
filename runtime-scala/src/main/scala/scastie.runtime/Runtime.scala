@@ -10,9 +10,9 @@ object Runtime {
   def render[T: pprint.PPrint](a: T)(implicit tp: pprint.TPrint[T]): Render = {
     import pprint.Config.Defaults._
     a match {
-      case md: Markdown ⇒ md
-      case html: Html   ⇒ html
-      case v            ⇒ Value(pprint.tokenize(v).mkString, tp.render)
+      case md: Markdown => md
+      case html: Html   => html
+      case v            => Value(pprint.tokenize(v).mkString, tp.render)
     }
   }
 }

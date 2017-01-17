@@ -3,6 +3,8 @@ package sbt
 
 import akka.actor.{ActorSystem, Props}
 
+import scala.concurrent.duration._
+
 import util.Properties
 import java.nio.file._
 
@@ -27,8 +29,9 @@ object SbtMain {
   def main(args: Array[String]): Unit = {
     writeRunningPid()
 
-    val system      = ActorSystem("SbtRemote")
-    val remoteActor = system.actorOf(Props[SbtActor], name = "SbtActor")
+    val system = ActorSystem("SbtRemote")
+    val remoteActor =
+      system.actorOf(Props(new SbtActor(40.seconds)), name = "SbtActor")
     system.awaitTermination()
   }
 }

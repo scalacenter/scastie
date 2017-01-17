@@ -25,24 +25,28 @@ class PasteActor(progressActor: ActorRef) extends Actor {
     Paths.get(Play.configuration.getString("pastes.data.dir").get)
   )
 
-  private val ports = Play.configuration.getIntList("sbt-remote-ports").get.asScala
+  private val ports =
+    Play.configuration.getIntList("sbt-remote-ports").get.asScala
   private val host = Play.configuration.getString("sbt-remote-host").get
 
   private var routees =
-    ports.map(port =>
-      (host, port) -> ActorSelectionRoutee(
-        context.actorSelection(
-          s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
-        )
-      )
-    ).toMap
+    ports
+      .map(
+        port =>
+          (host, port) -> ActorSelectionRoutee(
+            context.actorSelection(
+              s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
+            )
+        ))
+      .toMap
 
-  private var router = Router(RoundRobinRoutingLogic(), routees.values.toVector)
+  private var router =
+    Router(RoundRobinRoutingLogic(), routees.values.toVector)
 
   def receive = {
     case inputs: Inputs => {
       val id = container.writePaste(inputs)
-      router.route((id, inputs, progressActor), self)
+      router.route(SbtTask(id, inputs, progressActor), self)
       sender ! id
     }
 
@@ -60,8 +64,8 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 
     case event: DisassociatedEvent => {
       for {
-        host <- event.remoteAddress.host
-        port <- event.remoteAddress.port
+        host      <- event.remoteAddress.host
+        port      <- event.remoteAddress.port
         selection <- routees.get((host, port))
       } {
         println("removing: " + selection)

@@ -102,17 +102,18 @@ object Editor {
           editor.onChange((_, _) =>
             backend.codeChange(editor.getDoc().getValue()).runNow)
 
-          CodeMirror.commands.run = (editor: CodeMirrorEditor2) ⇒ {
+          CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
             backend.run().runNow
           }
 
-          CodeMirror.commands.clear = (editor: CodeMirrorEditor2) ⇒ {
+          CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
             backend.clear().runNow
           }
 
-          CodeMirror.commands.solarizedToggle = (editor: CodeMirrorEditor2) ⇒ {
-            backend.toogleTheme().runNow
-          }
+          CodeMirror.commands.solarizedToggle =
+            (editor: CodeMirrorEditor2) => {
+              backend.toogleTheme().runNow
+            }
 
           scope.modState(_.copy(editor = Some(editor)))
       }
@@ -159,7 +160,7 @@ object Editor {
       val doc = editor.getDoc()
       def nextline2(endPos: CMPosition,
                     node: HTMLElement,
-                    process: (HTMLElement ⇒ Unit) = noop,
+                    process: (HTMLElement => Unit) = noop,
                     options: js.Any = null): Annotation = {
         process(node)
         Line(editor.addLineWidget(endPos.line, node, options))
@@ -167,7 +168,7 @@ object Editor {
 
       def nextline(endPos: CMPosition,
                    content: String,
-                   process: (HTMLElement ⇒ Unit) = noop,
+                   process: (HTMLElement => Unit) = noop,
                    options: js.Any = null): Annotation = {
         val node =
           dom.document.createElement("pre").asInstanceOf[HTMLPreElement]
@@ -180,7 +181,7 @@ object Editor {
       def fold(startPos: CMPosition,
                endPos: CMPosition,
                content: String,
-               process: (HTMLElement ⇒ Unit) = noop): Annotation = {
+               process: (HTMLElement => Unit) = noop): Annotation = {
         val node =
           dom.document.createElement("div").asInstanceOf[HTMLDivElement]
         node.className = "fold"
@@ -194,7 +195,7 @@ object Editor {
       }
       def inline(startPos: CMPosition,
                  content: String,
-                 process: (HTMLElement ⇒ Unit) = noop): Annotation = {
+                 process: (HTMLElement => Unit) = noop): Annotation = {
         // inspired by blink/devtools WebInspector.JavaScriptSourceFrame::_renderDecorations
 
         val basePos = new CMPosition { line = startPos.line; ch = 0 }
@@ -223,7 +224,7 @@ object Editor {
             val startPos = doc.posFromIndex(start)
             val endPos   = doc.posFromIndex(end)
 
-            val process = (node: HTMLElement) ⇒ {
+            val process = (node: HTMLElement) => {
               CodeMirror.runMode(s"$value: $tpe", modeScala, node)
               node.title = tpe
               ()
@@ -236,7 +237,7 @@ object Editor {
             val startPos = doc.posFromIndex(start)
             val endPos   = doc.posFromIndex(end)
 
-            val process: (HTMLElement ⇒ Unit) = _.innerHTML = content
+            val process: (HTMLElement => Unit) = _.innerHTML = content
             if (!folded) nextline(endPos, content, process)
             else fold(startPos, endPos, content, process)
           }
@@ -260,16 +261,16 @@ object Editor {
 
           val iconSeverity =
             info.severity match {
-              case api.Info    ⇒ "info"
-              case api.Warning ⇒ "warning"
-              case api.Error   ⇒ "circle-x"
+              case api.Info    => "info"
+              case api.Warning => "warning"
+              case api.Error   => "circle-x"
             }
 
           val classSeverity =
             info.severity match {
-              case api.Info    ⇒ "info"
-              case api.Warning ⇒ "warning"
-              case api.Error   ⇒ "error"
+              case api.Info    => "info"
+              case api.Warning => "warning"
+              case api.Error   => "error"
             }
 
           icon.setAttribute("data-glyph", iconSeverity)

@@ -6,7 +6,7 @@ import org.scalajs.dom
 import scala.concurrent.Future
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-import upickle.default.{Reader, Writer, write ⇒ uwrite, read ⇒ uread}
+import upickle.default.{Reader, Writer, write => uwrite, read => uread}
 
 object ApiClient extends autowire.Client[String, Reader, Writer] {
   override def doCall(req: Request): Future[String] = {

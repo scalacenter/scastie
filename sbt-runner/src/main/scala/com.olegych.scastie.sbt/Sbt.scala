@@ -6,7 +6,9 @@ import api._
 import scala.util.Random
 import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
+
 import java.nio.file._
+import java.io.IOException
 
 class Sbt() {
   private val log = LoggerFactory.getLogger(getClass)
@@ -35,7 +37,11 @@ class Sbt() {
 
   Files.createDirectories(codeFile.getParent)
 
-  private val (process, fin, fout) = {
+  // dont block the actor from intializing.
+  // start sbt when the actor receive a message
+  // it's useful in testing where we start the actor and send an
+  // evaluation message right away.
+  private lazy val (process, fin, fout) = {
     val builder     = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     val currentOpts = sys.env.get("SBT_OPTS").getOrElse("")
     builder
@@ -63,8 +69,8 @@ class Sbt() {
       if (read == 10) {
         val line = chars.mkString
         prompt = line == uniqueId
+        log.info(line)
         lineCallback(line, prompt)
-        log.info(" sbt: " + line)
         chars.clear()
       } else {
         chars += read.toChar
@@ -78,7 +84,6 @@ class Sbt() {
                       lineCallback: (String, Boolean) => Unit): Unit = {
     fin.write((command + nl).getBytes)
     fin.flush()
-    println("running command: " + command)
     collect(lineCallback)
   }
 
@@ -114,6 +119,14 @@ class Sbt() {
     }
 
     write(codeFile, inputs.code, truncate = true)
-    process(command, lineCallback)
+    try {
+      process(command, lineCallback)
+    } catch {
+      case e: IOException => {
+        // when the paste is pkilled (timeout) the sbt output stream is closed
+        if (e.getMessage == "Stream closed") ()
+        else throw e
+      }
+    }
   }
 }

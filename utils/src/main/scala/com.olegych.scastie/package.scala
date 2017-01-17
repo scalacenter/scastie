@@ -4,6 +4,7 @@ import java.nio.file._
 import System.{lineSeparator => nl}
 
 package object scastie {
+
   def read(src: Path): Option[String] = {
     if (Files.exists(src)) Some(Files.readAllLines(src).toArray.mkString(nl))
     else None

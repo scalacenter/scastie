@@ -14,8 +14,8 @@ object Instrument {
 
     val lits =
       position match {
-        case Position.None ⇒ tuple2(0, 0)
-        case Position.Range(input, start, end) ⇒
+        case Position.None => tuple2(0, 0)
+        case Position.Range(input, start, end) =>
           tuple2(start.offset, end.offset)
       }
 
@@ -26,8 +26,8 @@ object Instrument {
 
     val treeQuote =
       tpeTree match {
-        case None      ⇒ s"val t = $term"
-        case Some(tpe) ⇒ s"val t: $tpe = $term"
+        case None      => s"val t = $term"
+        case Some(tpe) => s"val t: $tpe = $term"
       }
 
     val replacement =
@@ -47,23 +47,23 @@ object Instrument {
       source.stats.collect {
         case c: Defn.Class
             if c.name.value == instrumnedClass &&
-              c.templ.stats.nonEmpty ⇒ {
+              c.templ.stats.nonEmpty => {
 
           val openCurlyBrace = c.templ.tokens.head
 
           val instrumentationMapCode = Seq(
             s"{ private val $instrumentationMap = scala.collection.mutable.Map.empty[api.Position, api.Render]",
             s"def $instrumentationMethod = ${instrumentationMap}.toList.map{ case (pos, r) => api.Instrumentation(pos, r) }"
-          ).mkString(";")
+          ).mkString("", ";", ";")
 
           val instrumentationMapPatch =
             Patch(openCurlyBrace, openCurlyBrace, instrumentationMapCode)
 
           instrumentationMapPatch +:
             c.templ.stats.get.collect {
-              case term: Term   ⇒ instrumentOne(term)
-              case vl: Defn.Val ⇒ instrumentOne(vl.rhs, vl.decltpe)
-              case vr: Defn.Var if vr.rhs.nonEmpty ⇒
+              case term: Term   => instrumentOne(term)
+              case vl: Defn.Val => instrumentOne(vl.rhs, vl.decltpe)
+              case vr: Defn.Var if vr.rhs.nonEmpty =>
                 instrumentOne(vr.rhs.get, vr.decltpe)
             }
         }
