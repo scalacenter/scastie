@@ -4,12 +4,14 @@ package sbt
 import api._
 import ScalaTargetType._
 
-import upickle.default.{read => uread}
+import upickle.default.{read => uread, Reader}
 
 import akka.actor.{Actor, ActorRef, ActorLogging}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.util.control.{NonFatal, NoStackTrace}
+
+import System.{lineSeparator => nl}
 
 class SbtActor(timeout: FiniteDuration) extends Actor with ActorLogging {
   private var sbt = new Sbt()
@@ -51,12 +53,19 @@ class SbtActor(timeout: FiniteDuration) extends Actor with ActorLogging {
       id: Long,
       pasteActor: ActorRef): (String, Boolean) => Unit = { (line, done) =>
     {
+      val problems = extractProblems(line)
+      val instrumentations = extract[api.Instrumentation](line)
+
+      val output =
+        if(problems.isEmpty && instrumentations.isEmpty && !done) line + nl
+        else ""
+
       val progress = PasteProgress(
         id = id,
-        output = line,
+        output = output,
         done = done,
-        compilationInfos = extractProblems(line),
-        instrumentations = extractInstrumentations(line),
+        compilationInfos = problems.getOrElse(Nil),
+        instrumentations = instrumentations.getOrElse(Nil),
         timeout = false
       )
 
@@ -65,11 +74,8 @@ class SbtActor(timeout: FiniteDuration) extends Actor with ActorLogging {
     }
   }
 
-  private def extractProblems(line: String): List[api.Problem] = {
-    val sbtProblems =
-      try { uread[List[sbtapi.Problem]](line) } catch {
-        case NonFatal(e) => List()
-      }
+  private def extractProblems(line: String): Option[List[api.Problem]] = {
+    val sbtProblems = extract[sbtapi.Problem](line)
 
     def toApi(p: sbtapi.Problem): api.Problem = {
       val severity = p.severity match {
@@ -80,13 +86,12 @@ class SbtActor(timeout: FiniteDuration) extends Actor with ActorLogging {
       api.Problem(severity, p.line, p.message)
     }
 
-    sbtProblems.map(toApi)
+    sbtProblems.map(_.map(toApi))
   }
 
-  private def extractInstrumentations(
-      line: String): List[api.Instrumentation] = {
-    try { uread[List[api.Instrumentation]](line) } catch {
-      case NonFatal(e) => List()
+  private def extract[T: Reader](line: String): Option[List[T]] = {
+    try { Some(uread[List[T]](line)) } catch {
+      case NonFatal(e) => None
     }
   }
 
@@ -107,7 +112,7 @@ class SbtActor(timeout: FiniteDuration) extends Actor with ActorLogging {
         case (pasteId: Long, progressActor: ActorRef) =>
           progressActor ! PasteProgress(
             id = pasteId,
-            output = "",
+            output = s"Task timed out after $timeout",
             done = true,
             compilationInfos = List(),
             instrumentations = List(),

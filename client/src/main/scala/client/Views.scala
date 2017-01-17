@@ -6,31 +6,50 @@ import japgolly.scalajs.react._, vdom.all._
 
 import iconic._
 
+import org.scalajs.dom.raw.HTMLPreElement
+
 sealed trait View
 object View {
   case object Editor   extends View
   case object Settings extends View
-  case object Output   extends View
 }
 
 object MainPannel {
+  
+  val console = Ref[HTMLPreElement]("console")
+
   private val component =
-    ReactComponentB[(State, Backend)]("MainPannel").render_P {
-      case (state, backend) =>
-        def show(view: View): TagMod =
-          if (view == state.view) TagMod(display.block)
-          else TagMod(display.none)
+    ReactComponentB[(State, Backend)]("MainPannel")
+      .render_P {
+        case (state, backend) =>
+          def show(view: View): TagMod =
+            if (view == state.view) TagMod(display.block)
+            else TagMod(display.none)
 
-        val theme = if (state.dark) "dark" else "light"
+          val theme = if (state.dark) "dark" else "light"
 
-        div(`class` := "main-pannel")(
-          div(`class` := "pannel", show(View.Editor))(Editor(state, backend)),
-          div(`class` := s"pannel $theme", show(View.Settings))(
-            Settings(state, backend)),
-          div(`class` := s"pannel $theme", show(View.Output))(
-            ConsoleOutput(state.outputs.console))
-        )
-    }.build
+          val consoleCss =
+            if(state.console) "with-console"
+            else ""
+
+          div(`class` := "main-pannel")(
+            div(`class` := s"pannel $consoleCss $theme", show(View.Editor))(
+              Editor(state, backend),
+              pre(`class` := "output-console", ref := console)(
+                state.outputs.console.mkString("")
+              )
+            ),
+            div(`class` := s"pannel $theme", show(View.Settings))(
+              Settings(state, backend))
+          )
+      }
+      .componentDidUpdate(scope =>
+        Callback {
+          val consoleDom = console(scope.$).get
+          consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
+        }
+      )
+      .build
 
   def apply(state: State, backend: Backend) = component((state, backend))
 }
@@ -72,13 +91,15 @@ object SideBar {
             }
           }
 
+        val consoleSelected = 
+          if(state.console) TagMod(`class` := "console selected")
+          else EmptyTag
+
         nav(`class` := s"sidebar $theme")(
           ul(
             li(selected(View.Editor))(editor),
-            li(selected(View.Output))(
-              terminal(onClick ==> setView(View.Output))),
-            li(selected(View.Settings))(
-              cog(onClick ==> setView(View.Settings)))
+            li(selected(View.Settings))(cog(onClick ==> setView(View.Settings))),
+            li(consoleSelected)(terminal(onClick ==> toogleConsole))
           )
         )
     }.build

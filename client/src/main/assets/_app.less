@@ -5,7 +5,7 @@ body {
 }
 
 body, .root, .app, .main-pannel, .pannel, .sidebar,
-.editor, .settings, .output {
+.editor, .settings {
   height: 100%;
 }
 
@@ -88,12 +88,16 @@ body, .root, .app, .main-pannel, .pannel, .sidebar,
       background-color: @base02;
       color: @base01;
       border-right-color: @base03;
+      .output-console {
+        background-color: @base02;
+        color: @base01;
+      }
       li {
         &.selected {
           background-color: @base03;
           color: @base02;
         }
-        &:hover{
+        &:hover, &.console {
           color: @base1;
         }
       }
@@ -103,28 +107,46 @@ body, .root, .app, .main-pannel, .pannel, .sidebar,
       background-color: @base2;
       color: @base1;
       border-right-color: @base3;
+      .output-console {
+        background-color: @base2;
+        color: @base1;
+      }
       li {
         &.selected {
           background-color: @base3;
           color: @base2;
         }
-        &:hover{
+        &:hover, &.console {
           color: @base01;
         }
       }
     }
   }
 
-  .output, .settings {
+  .settings {
     margin: 0;
     padding: 20px;    
   }
+}
 
-  .output {
-    li { display: block; }
+.with-console {
+  @console-height: 20%;
+
+  .CodeMirror {
+    height: 100% - @console-height;
+  }
+  .output-console {
+    height: @console-height;
+    display: block;
   }
 }
 
+.output-console {
+  overflow: auto;
+
+  display: none;
+  margin-top: 0;
+}
 
 // http://tobiasahlin.com/spinkit/
 .sk-folding-cube {
