@@ -13,7 +13,7 @@ import dom.ext.Ajax
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-import upickle.default.{read ⇒ uread}
+import upickle.default.{read => uread}
 
 import scala.language.higherKinds
 

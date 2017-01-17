@@ -29,8 +29,9 @@ object SbtMain {
   def main(args: Array[String]): Unit = {
     writeRunningPid()
 
-    val system      = ActorSystem("SbtRemote")
-    val remoteActor = system.actorOf(Props(new SbtActor(40.seconds)), name = "SbtActor")
+    val system = ActorSystem("SbtRemote")
+    val remoteActor =
+      system.actorOf(Props(new SbtActor(40.seconds)), name = "SbtActor")
     system.awaitTermination()
   }
 }

@@ -56,7 +56,11 @@ def logging(allDependencies: Seq[ModuleID]): Seq[ModuleID] = {
 lazy val utils = project
   .in(file("utils"))
   .settings(baseSettings)
+  .settings(
+    libraryDependencies += akka("actor")
+  )
   .disablePlugins(play.PlayScala)
+  .dependsOn(api211JVM)
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.3.11"
 

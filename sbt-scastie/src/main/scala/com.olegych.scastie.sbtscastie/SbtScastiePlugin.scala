@@ -5,7 +5,7 @@ import KeyRanks.DTask
 import System.{lineSeparator => nl}
 
 import xsbti.{Reporter, Problem, Position, Severity, Maybe}
-import upickle.default.{write ⇒ uwrite}
+import upickle.default.{write => uwrite}
 
 object ScastiePlugin extends AutoPlugin {
 
