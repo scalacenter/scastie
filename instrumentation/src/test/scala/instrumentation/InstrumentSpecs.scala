@@ -12,8 +12,8 @@ class InstrumentSpecs extends FunSuite {
 
   private val testFiles = {
     val path = Paths.get("instrumentation", "src", "test", "resources")
-    val s    = Files.newDirectoryStream(path)
-    val t    = s.asScala.toList
+    val s = Files.newDirectoryStream(path)
+    val t = s.asScala.toList
     s.close()
     t
   }

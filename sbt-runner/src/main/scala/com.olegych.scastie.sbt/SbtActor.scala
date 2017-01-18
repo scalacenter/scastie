@@ -23,12 +23,16 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
       val scalaTargetType = inputs.target.targetType
 
       val inputs0 =
-        inputs.copy(code = instrumentation.Instrument(inputs.code))
+        if (inputs.isInstrumented)
+          inputs.copy(code = instrumentation.Instrument(inputs.code))
+        else
+          inputs
 
       def eval(command: String) =
         sbt.eval(command,
                  inputs0,
                  processSbtOutput(
+                   inputs.isInstrumented,
                    progressActor,
                    id,
                    sender
@@ -36,11 +40,7 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
 
       def timeout(duration: FiniteDuration): Unit = {
         println(s"== restarting sbt $id ==")
-
-        sbt.close()
-        sbt = new Sbt()
-
-        progressActor ! 
+        progressActor !
           PasteProgress(
             id = id,
             output = s"Task timed out after $duration",
@@ -49,12 +49,15 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
             instrumentations = Nil,
             timeout = true
           )
+
+        sbt.close()
+        sbt = new Sbt()
       }
 
       println(s"== updating $id ==")
 
       val sbtReloadTime = 40.seconds
-      if(sbt.needsReload(inputs0)) {
+      if (sbt.needsReload(inputs0)) {
         withTimeout(sbtReloadTime)(eval("compile"))(timeout(sbtReloadTime))
       }
 
@@ -63,7 +66,7 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
       withTimeout(runTimeout)({
         scalaTargetType match {
           case JVM | Dotty | Native => eval("run")
-          case JS                   => eval("fastOptJs")
+          case JS => eval("fastOptJs")
         }
       })(timeout(runTimeout))
 
@@ -71,7 +74,8 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
     }
   }
 
-  private def withTimeout(timeout: Duration)(block: ⇒ Unit)(onTimeout: => Unit): Unit = {
+  private def withTimeout(timeout: Duration)(block: ⇒ Unit)(
+      onTimeout: => Unit): Unit = {
     val task = new FutureTask(new Callable[Unit]() { def call = block })
     val thread = new Thread(task)
     try {
@@ -80,20 +84,21 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
     } catch {
       case e: TimeoutException ⇒ onTimeout
     } finally {
-      if(thread.isAlive) thread.stop()
+      if (thread.isAlive) thread.stop()
     }
   }
 
   private def processSbtOutput(
+      isInstrumented: Boolean,
       progressActor: ActorRef,
       id: Long,
       pasteActor: ActorRef): (String, Boolean) => Unit = { (line, done) =>
     {
-      val problems = extractProblems(line)
+      val problems = extractProblems(line, isInstrumented)
       val instrumentations = extract[api.Instrumentation](line)
 
       val output =
-        if(problems.isEmpty && instrumentations.isEmpty && !done) line + nl
+        if (problems.isEmpty && instrumentations.isEmpty && !done) line + nl
         else ""
 
       val progress = PasteProgress(
@@ -110,16 +115,22 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
     }
   }
 
-  private def extractProblems(line: String): Option[List[api.Problem]] = {
+  private def extractProblems(
+      line: String,
+      isInstrumented: Boolean): Option[List[api.Problem]] = {
     val sbtProblems = extract[sbtapi.Problem](line)
 
     def toApi(p: sbtapi.Problem): api.Problem = {
       val severity = p.severity match {
-        case sbtapi.Info    => api.Info
+        case sbtapi.Info => api.Info
         case sbtapi.Warning => api.Warning
-        case sbtapi.Error   => api.Error
+        case sbtapi.Error => api.Error
       }
-      api.Problem(severity, p.line, p.message)
+      val lineOffset =
+        if (isInstrumented) 2
+        else 0
+
+      api.Problem(severity, p.line.map(_ + lineOffset), p.message)
     }
 
     sbtProblems.map(_.map(toApi))

@@ -26,7 +26,7 @@ import scala.concurrent.ExecutionContext
 
 object AutowireServer extends autowire.Server[String, Reader, Writer] {
   def read[R: Reader](p: String) = uread[R](p)
-  def write[R: Writer](r: R)     = uwrite(r)
+  def write[R: Writer](r: R) = uwrite(r)
 }
 
 class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,

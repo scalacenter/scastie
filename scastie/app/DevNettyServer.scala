@@ -44,6 +44,6 @@ class StaticApplication(applicationPath: File, mode: Mode.Value)
 
   Play.start(application)
 
-  def get  = Try(application)
+  def get = Try(application)
   def path = applicationPath
 }

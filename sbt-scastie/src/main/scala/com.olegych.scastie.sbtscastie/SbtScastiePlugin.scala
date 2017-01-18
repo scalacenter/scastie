@@ -16,13 +16,13 @@ object ScastiePlugin extends AutoPlugin {
     DTask)
 
   override def requires = sbt.plugins.JvmPlugin
-  override def trigger  = allRequirements
+  override def trigger = allRequirements
 
   override lazy val projectSettings = Seq(
     compilerReporter in (Compile, compile) := Some(new xsbti.Reporter {
-      private val buffer       = collection.mutable.ArrayBuffer.empty[Problem]
-      def reset(): Unit        = buffer.clear()
-      def hasErrors: Boolean   = buffer.exists(_.severity == Severity.Error)
+      private val buffer = collection.mutable.ArrayBuffer.empty[Problem]
+      def reset(): Unit = buffer.clear()
+      def hasErrors: Boolean = buffer.exists(_.severity == Severity.Error)
       def hasWarnings: Boolean = buffer.exists(_.severity == Severity.Warn)
 
       def annoying(in: Problem): Boolean = {
@@ -38,8 +38,8 @@ object ScastiePlugin extends AutoPlugin {
           }
           val severity =
             p.severity match {
-              case xsbti.Severity.Info  => sbtapi.Info
-              case xsbti.Severity.Warn  => sbtapi.Warning
+              case xsbti.Severity.Info => sbtapi.Info
+              case xsbti.Severity.Warn => sbtapi.Warning
               case xsbti.Severity.Error => sbtapi.Error
             }
           sbtapi.Problem(severity,
@@ -51,11 +51,11 @@ object ScastiePlugin extends AutoPlugin {
       def problems: Array[Problem] = buffer.toArray
       def log(pos: Position, msg: String, sev: Severity): Unit = {
         object MyProblem extends Problem {
-          def category: String   = "foo"
+          def category: String = "foo"
           def severity: Severity = sev
-          def message: String    = msg
+          def message: String = msg
           def position: Position = pos
-          override def toString  = s"$position:$severity: $message"
+          override def toString = s"$position:$severity: $message"
         }
         buffer.append(MyProblem)
       }

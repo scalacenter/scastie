@@ -8,7 +8,7 @@ import scala.scalajs.js.annotation.JSExport
 import japgolly.scalajs.react._, extra.router._
 
 sealed trait Page
-case object Home             extends Page
+case object Home extends Page
 case class Snippet(id: Long) extends Page
 
 object Client extends JSApp {
@@ -30,6 +30,12 @@ object Client extends JSApp {
 
   @JSExport
   override def main(): Unit = {
+    val isMac = dom.window.navigator.userAgent.contains("Mac")
+
+    dom.document.body.className =
+      if (isMac) "mac"
+      else "pc"
+
     val cont =
       dom.document.createElement("div").asInstanceOf[dom.raw.HTMLDivElement]
     cont.className = "root"

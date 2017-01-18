@@ -38,8 +38,8 @@ class PastesContainer(root: Path) {
     else None
   }
 
-  private val json   = ".json"
-  private val input  = "input"
+  private val json = ".json"
+  private val input = "input"
   private val output = "output"
 
   private var lastId = {

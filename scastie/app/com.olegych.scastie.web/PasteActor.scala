@@ -64,8 +64,8 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 
     case event: DisassociatedEvent => {
       for {
-        host      <- event.remoteAddress.host
-        port      <- event.remoteAddress.port
+        host <- event.remoteAddress.host
+        port <- event.remoteAddress.port
         selection <- routees.get((host, port))
       } {
         println("removing: " + selection)

@@ -34,34 +34,34 @@ object Editor {
     val theme = if (dark) "dark" else "light"
 
     val isMac = dom.window.navigator.userAgent.contains("Mac")
-    val ctrl  = if (isMac) "Cmd" else "Ctrl"
+    val ctrl = if (isMac) "Cmd" else "Ctrl"
 
     js.Dictionary[Any](
-        "mode"                    -> "text/x-scala",
-        "autofocus"               -> true,
-        "lineNumbers"             -> true,
-        "lineWrapping"            -> false,
-        "tabSize"                 -> 2,
-        "indentWithTabs"          -> false,
-        "theme"                   -> s"solarized $theme",
-        "smartIndent"             -> true,
-        "keyMap"                  -> "sublime",
-        "scrollPastEnd"           -> true,
-        "scrollbarStyle"          -> "simple",
-        "autoCloseBrackets"       -> true,
-        "matchBrackets"           -> true,
+        "mode" -> "text/x-scala",
+        "autofocus" -> true,
+        "lineNumbers" -> true,
+        "lineWrapping" -> false,
+        "tabSize" -> 2,
+        "indentWithTabs" -> false,
+        "theme" -> s"solarized $theme",
+        "smartIndent" -> true,
+        "keyMap" -> "sublime",
+        "scrollPastEnd" -> true,
+        "scrollbarStyle" -> "simple",
+        "autoCloseBrackets" -> true,
+        "matchBrackets" -> true,
         "showCursorWhenSelecting" -> true,
-        "autofocus"               -> true,
+        "autofocus" -> true,
         "highlightSelectionMatches" -> js.Dictionary(
           "showToken" -> js.Dynamic.global.RegExp("\\w")),
         "extraKeys" -> js.Dictionary(
-          "Tab"           -> "defaultTab",
-          ctrl + "-L"     -> null,
-          ctrl + "-l"     -> null,
+          "Tab" -> "defaultTab",
+          ctrl + "-L" -> null,
+          ctrl + "-l" -> null,
           ctrl + "-Enter" -> "run",
-          "Esc"           -> "clear",
-          "F1"            -> "help",
-          "F2"            -> "solarizedToggle"
+          "Esc" -> "clear",
+          "F1" -> "help",
+          "F2" -> "solarizedToggle"
         )
       )
       .asInstanceOf[codemirror.Options]
@@ -112,7 +112,7 @@ object Editor {
 
           CodeMirror.commands.solarizedToggle =
             (editor: CodeMirrorEditor2) => {
-              backend.toogleTheme().runNow
+              backend.toggleTheme().runNow
             }
 
           scope.modState(_.copy(editor = Some(editor)))
@@ -151,7 +151,7 @@ object Editor {
       }
     }
 
-    val nl        = '\n'
+    val nl = '\n'
     val modeScala = "text/x-scala"
 
     def noop[T](v: T): Unit = ()
@@ -203,8 +203,8 @@ object Editor {
           line = startPos.line; ch = doc.getLine(startPos.line).length
         }
 
-        val mode   = "local"
-        val base   = editor.cursorCoords(basePos, mode)
+        val mode = "local"
+        val base = editor.cursorCoords(basePos, mode)
         val offset = editor.cursorCoords(offsetPos, mode)
 
         val node =
@@ -222,7 +222,7 @@ object Editor {
           case instrumentation @ Instrumentation(api.Position(start, end),
                                                  Value(value, tpe)) => {
             val startPos = doc.posFromIndex(start)
-            val endPos   = doc.posFromIndex(end)
+            val endPos = doc.posFromIndex(end)
 
             val process = (node: HTMLElement) => {
               CodeMirror.runMode(s"$value: $tpe", modeScala, node)
@@ -235,7 +235,7 @@ object Editor {
           case instrumentation @ Instrumentation(api.Position(start, end),
                                                  Html(content, folded)) => {
             val startPos = doc.posFromIndex(start)
-            val endPos   = doc.posFromIndex(end)
+            val endPos = doc.posFromIndex(end)
 
             val process: (HTMLElement => Unit) = _.innerHTML = content
             if (!folded) nextline(endPos, content, process)
@@ -261,16 +261,16 @@ object Editor {
 
           val iconSeverity =
             info.severity match {
-              case api.Info    => "info"
+              case api.Info => "info"
               case api.Warning => "warning"
-              case api.Error   => "circle-x"
+              case api.Error => "circle-x"
             }
 
           val classSeverity =
             info.severity match {
-              case api.Info    => "info"
+              case api.Info => "info"
               case api.Warning => "warning"
-              case api.Error   => "error"
+              case api.Error => "error"
             }
 
           icon.setAttribute("data-glyph", iconSeverity)
@@ -318,7 +318,7 @@ object Editor {
       )
 
       for {
-        added   <- toAdd
+        added <- toAdd
         removed <- toRemove
         _ <- scope.modState(
           updateEditorState(items => (items ++ added) -- removed))
@@ -348,9 +348,9 @@ object Editor {
     }
     .componentWillReceiveProps { v =>
       val (current, _) = v.currentProps
-      val (next, _)    = v.nextProps
-      val state        = v.currentState
-      val scope        = v.$
+      val (next, _) = v.nextProps
+      val state = v.currentState
+      val scope = v.$
 
       state.editor
         .map(editor => runDelta(editor, scope, state, current, next))

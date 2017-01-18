@@ -4,7 +4,7 @@ class Playground {
 
   import java.io.{File, FileInputStream}
 
-  val in    = new FileInputStream(new File("/tmp/scastie/lanzarote.jpg"))
+  val in = new FileInputStream(new File("/tmp/scastie/lanzarote.jpg"))
   val image = Image.fromStream(in)
   val small = image.scaleToWidth(200)
 

@@ -17,14 +17,14 @@ case class Paste(
 
 sealed trait ScalaTargetType
 object ScalaTargetType {
-  case object JVM    extends ScalaTargetType
-  case object Dotty  extends ScalaTargetType
-  case object JS     extends ScalaTargetType
+  case object JVM extends ScalaTargetType
+  case object Dotty extends ScalaTargetType
+  case object JS extends ScalaTargetType
   case object Native extends ScalaTargetType
 }
 
 case class Version(_1: Int, _2: Int, _3: Int, extra: String = "") {
-  def binary: String            = s"${_1}.${_2}" // like 2.11
+  def binary: String = s"${_1}.${_2}" // like 2.11
   override def toString: String = s"${_1}.${_2}.${_3}$extra"
 }
 
@@ -39,7 +39,7 @@ sealed trait ScalaTarget {
   def renderSbt(lib: ScalaDependency): String
 }
 object ScalaTarget {
-  private val defaultScalaVersion   = Version(2, 11, 8)
+  private val defaultScalaVersion = Version(2, 11, 8)
   private val defaultScalaJsVersion = Version(0, 6, 13)
 
   object Jvm {
@@ -66,8 +66,8 @@ object ScalaTarget {
 
     def targetType = ScalaTargetType.JS
     def scaladexRequest = Map(
-      "target"         -> "JS",
-      "scalaVersion"   -> scalaVersion.binary,
+      "target" -> "JS",
+      "scalaVersion" -> scalaVersion.binary,
       "scalaJsVersion" -> scalaJsVersion.binary
     )
     def renderSbt(lib: ScalaDependency): String = {
@@ -79,8 +79,8 @@ object ScalaTarget {
     def targetType = ScalaTargetType.Native
     // ... not really
     def scaladexRequest = Map(
-      "target"         -> "JS",
-      "scalaVersion"   -> "2.11",
+      "target" -> "JS",
+      "scalaVersion" -> "2.11",
       "scalaJsVersion" -> "0.6"
     )
     def renderSbt(lib: ScalaDependency): String = {
@@ -89,7 +89,7 @@ object ScalaTarget {
     }
   }
   case object Dotty extends ScalaTarget {
-    def targetType      = ScalaTargetType.Dotty
+    def targetType = ScalaTargetType.Dotty
     def scaladexRequest = Map("target" -> "JVM", "scalaVersion" -> "2.11")
     def renderSbt(lib: ScalaDependency): String = {
       import lib._
@@ -100,11 +100,12 @@ object ScalaTarget {
 
 object Inputs {
   val defaultCode =
-    """|class Playground {
-       |  1 + 1
-       |}""".stripMargin
+    """|List("Hello", "World").mkString("", ", ", "!")
+       |
+       |help""".stripMargin
 
   def default = Inputs(
+    isInstrumented = true,
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
@@ -114,6 +115,7 @@ object Inputs {
 }
 
 case class Inputs(
+    isInstrumented: Boolean,
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
@@ -177,7 +179,7 @@ case class Inputs(
       else if (libraries.size == 1)
         s"libraryDependencies += " + target.renderSbt(libraries.head)
       else {
-        val nl  = "\n"
+        val nl = "\n"
         val tab = "  "
         "libraryDependencies ++= " +
           libraries
@@ -208,9 +210,9 @@ case class PasteProgress(
 )
 
 sealed trait Severity
-case object Info    extends Severity
+case object Info extends Severity
 case object Warning extends Severity
-case object Error   extends Severity
+case object Error extends Severity
 
 case class Problem(severity: Severity, line: Option[Int], message: String)
 
@@ -220,11 +222,7 @@ case class Instrumentation(position: Position, render: Render)
 sealed trait Render
 case class Value(v: String, className: String) extends Render
 
-case class Markdown(a: String, folded: Boolean = false) extends Render {
-  def stripMargin = Markdown(a.stripMargin)
-  def fold        = copy(folded = true)
-}
 case class Html(a: String, folded: Boolean = false) extends Render {
   def stripMargin = copy(a = a.stripMargin)
-  def fold        = copy(folded = true)
+  def fold = copy(folded = true)
 }
