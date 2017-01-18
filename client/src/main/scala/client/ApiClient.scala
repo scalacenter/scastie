@@ -19,5 +19,5 @@ object ApiClient extends autowire.Client[String, Reader, Writer] {
   }
 
   def read[T: Reader](p: String) = uread[T](p)
-  def write[T: Writer](r: T)     = uwrite(r)
+  def write[T: Writer](r: T) = uwrite(r)
 }

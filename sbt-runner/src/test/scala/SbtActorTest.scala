@@ -17,11 +17,11 @@ class SbtActorTest()
 
   val progressActor = TestProbe()
 
-  val timeout  = 3.seconds
+  val timeout = 3.seconds
   val sbtActor = TestActorRef(new SbtActor(timeout))
 
   test("timeout") {
-    val id           = 0L
+    val id = 0L
     val infiniteLoop = Inputs.default.copy(
       code = "while(true){}".stripMargin
     )

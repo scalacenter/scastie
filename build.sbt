@@ -37,12 +37,12 @@ lazy val baseSettings = Seq(
 
 def logging(allDependencies: Seq[ModuleID]): Seq[ModuleID] = {
   Seq(
-    "org.slf4j" % "slf4j-api"    % "1.7.6",
+    "org.slf4j" % "slf4j-api" % "1.7.6",
     "org.slf4j" % "jul-to-slf4j" % "1.7.6",
-    "ch.qos.logback" % "logback-core"     % "1.1.1" % Runtime,
-    "ch.qos.logback" % "logback-classic"  % "1.1.1" % Runtime,
-    "org.slf4j"      % "jcl-over-slf4j"   % "1.7.6" % Runtime,
-    "org.slf4j"      % "log4j-over-slf4j" % "1.7.6" % Runtime
+    "ch.qos.logback" % "logback-core" % "1.1.1" % Runtime,
+    "ch.qos.logback" % "logback-classic" % "1.1.1" % Runtime,
+    "org.slf4j" % "jcl-over-slf4j" % "1.7.6" % Runtime,
+    "org.slf4j" % "log4j-over-slf4j" % "1.7.6" % Runtime
   ) ++
     allDependencies.map(
       _.exclude("commons-logging", "commons-logging")
@@ -124,8 +124,8 @@ lazy val sbtRunner = project
       // run crossPublishLocalRuntime
       val ivy = ivyPaths.value.ivyHome.get
 
-      val org                = organization.value
-      val artifact           = assembly.value
+      val org = organization.value
+      val artifact = assembly.value
       val artifactTargetPath = s"/app/${artifact.name}"
 
       new Dockerfile {
@@ -142,9 +142,15 @@ lazy val sbtRunner = project
     }.dependsOn(runnerRuntimeDependencies: _*).value
   )
   .settings(
-    test in Test := (test in Test).dependsOn(sbtRunnerRuntimeDependencies: _*).value,
-    testOnly in Test := (testOnly in Test).dependsOn(sbtRunnerRuntimeDependencies: _*).evaluated,
-    testQuick in Test := (testQuick in Test).dependsOn(sbtRunnerRuntimeDependencies: _*).evaluated
+    test in Test := (test in Test)
+      .dependsOn(sbtRunnerRuntimeDependencies: _*)
+      .value,
+    testOnly in Test := (testOnly in Test)
+      .dependsOn(sbtRunnerRuntimeDependencies: _*)
+      .evaluated,
+    testQuick in Test := (testQuick in Test)
+      .dependsOn(sbtRunnerRuntimeDependencies: _*)
+      .evaluated
   )
   .dependsOn(sbtApi211, api211JVM, instrumentation, utils)
   .enablePlugins(DockerPlugin)
@@ -251,8 +257,8 @@ lazy val client = project
       react("react-dom-server", "ReactDOMServer", "react-dom")
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra"     % "0.11.2",
-      "org.webjars.bower"                 % "open-iconic" % "1.1.1"
+      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.2",
+      "org.webjars.bower" % "open-iconic" % "1.1.1"
     )
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
@@ -278,12 +284,12 @@ lazy val instrumentation = project
   .disablePlugins(play.PlayScala)
 
 def crossDir(projectId: String) = file(".cross/" + projectId)
-def dash(name: String)          = name.replaceAllLiterally(".", "-")
+def dash(name: String) = name.replaceAllLiterally(".", "-")
 
 /* api is for the communication between sbt <=> server <=> frontend */
 def api(scalaV: String) = {
   val projectName = "api"
-  val projectId   = s"$projectName-${dash(scalaV)}"
+  val projectId = s"$projectName-${dash(scalaV)}"
   CrossProject(id = projectId,
                base = crossDir(projectId),
                crossType = CrossType.Full)
@@ -293,7 +299,7 @@ def api(scalaV: String) = {
       moduleName := projectName,
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "autowire" % "0.2.6",
-        "com.lihaoyi" %%% "upickle"  % upickleVersion
+        "com.lihaoyi" %%% "upickle" % upickleVersion
       ),
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "src" / "main" / "scala"
     )
@@ -309,16 +315,16 @@ val api211 = api("2.11.8")
 val api212 = api("2.12.1")
 
 lazy val api210JVM = api210.jvm
-lazy val api210JS  = api210.js
+lazy val api210JS = api210.js
 lazy val api211JVM = api211.jvm
-lazy val api211JS  = api211.js
+lazy val api211JS = api211.js
 lazy val api212JVM = api212.jvm
-lazy val api212JS  = api212.js
+lazy val api212JS = api212.js
 
 /* runtime* pretty print values and type */
 def runtimeScala(scalaV: String, apiProject: CrossProject) = {
   val projectName = "runtime-scala"
-  val projectId   = s"$projectName-${dash(scalaV)}"
+  val projectId = s"$projectName-${dash(scalaV)}"
   CrossProject(id = projectId,
                base = crossDir(projectId),
                crossType = CrossType.Pure)
@@ -329,7 +335,7 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "src" / "main" / "scala",
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "upickle" % upickleVersion,
-        "com.lihaoyi" %%% "pprint"  % upickleVersion
+        "com.lihaoyi" %%% "pprint" % upickleVersion
       )
     )
     .jsSettings(test := {})
@@ -342,11 +348,11 @@ val runtimeScala211 = runtimeScala("2.11.8", api211)
 val runtimeScala212 = runtimeScala("2.12.1", api212)
 
 lazy val runtimeScala210JVM = runtimeScala210.jvm
-lazy val runtimeScala210JS  = runtimeScala210.js
+lazy val runtimeScala210JS = runtimeScala210.js
 lazy val runtimeScala211JVM = runtimeScala211.jvm
-lazy val runtimeScala211JS  = runtimeScala211.js
+lazy val runtimeScala211JS = runtimeScala211.js
 lazy val runtimeScala212JVM = runtimeScala212.jvm
-lazy val runtimeScala212JS  = runtimeScala212.js
+lazy val runtimeScala212JS = runtimeScala212.js
 
 lazy val runtimeDotty = project
   .in(file("runtime-dotty"))
@@ -361,7 +367,7 @@ lazy val runtimeDotty = project
     autoScalaLibrary := false,
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-library" % "2.11.5",
-      "com.lihaoyi"    %% "upickle"      % upickleVersion
+      "com.lihaoyi" %% "upickle" % upickleVersion
     )
   )
   .dependsOn(api211JVM)

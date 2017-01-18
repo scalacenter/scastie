@@ -13,7 +13,7 @@ class PastesContainerTest extends FunSuite {
 
     val inputs = Inputs.default
 
-    val id       = container.writePaste(inputs)
+    val id = container.writePaste(inputs)
     val obtained = container.readPaste(id).get
 
     assert(obtained == inputs)

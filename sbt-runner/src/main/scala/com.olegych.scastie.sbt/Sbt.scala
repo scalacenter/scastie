@@ -17,11 +17,11 @@ class Sbt() {
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
 
-  private var currentSbtConfig       = ""
+  private var currentSbtConfig = ""
   private var currentSbtPluginConfig = ""
 
   private val sbtConfigFile = sbtDir.resolve("config.sbt")
-  private val prompt        = s"""shellPrompt := (_ => "$uniqueId\\n")"""
+  private val prompt = s"""shellPrompt := (_ => "$uniqueId\\n")"""
   write(sbtConfigFile, prompt)
 
   private val projectDir = sbtDir.resolve("project")
@@ -42,7 +42,7 @@ class Sbt() {
   // it's useful in testing where we start the actor and send an
   // evaluation message right away.
   private val (process, fin, fout) = {
-    val builder     = new ProcessBuilder("sbt").directory(sbtDir.toFile)
+    val builder = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     val currentOpts = sys.env.get("SBT_OPTS").getOrElse("")
     builder
       .environment()
@@ -61,15 +61,15 @@ class Sbt() {
   }
 
   private def collect(lineCallback: (String, Boolean) => Unit): Unit = {
-    val chars  = new collection.mutable.Queue[Character]()
-    var read   = 0
+    val chars = new collection.mutable.Queue[Character]()
+    var read = 0
     var prompt = false
     while (read != -1 && !prompt) {
       read = fout.read()
       if (read == 10) {
         val line = chars.mkString
         prompt = line == uniqueId
-        
+
         // log.info(line)
         println(line)
 
@@ -101,7 +101,7 @@ class Sbt() {
 
   def needsReload(inputs: Inputs): Boolean =
     inputs.sbtConfig != currentSbtConfig ||
-    inputs.sbtPluginsConfig != currentSbtPluginConfig
+      inputs.sbtPluginsConfig != currentSbtPluginConfig
 
   def eval(command: String,
            inputs: Inputs,

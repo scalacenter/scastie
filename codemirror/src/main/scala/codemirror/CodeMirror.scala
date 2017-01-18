@@ -8,7 +8,7 @@ import js.{UndefOr, RegExp, Dictionary, |}
 @js.native
 @JSName("CodeMirror")
 object CodeMirror extends js.Object {
-  var commands: js.Dynamic                                       = js.native
+  var commands: js.Dynamic = js.native
   def apply(element: Element, options: UndefOr[Options]): Editor = js.native
   def fromTextArea(textarea: HTMLTextAreaElement,
                    options: Options): TextAreaEditor = js.native
@@ -20,7 +20,7 @@ object CodeMirror extends js.Object {
 @JSName("CodeMirror.Pos")
 class Position extends js.Object {
   var line: Int = js.native
-  var ch: Int   = js.native
+  var ch: Int = js.native
 }
 
 @ScalaJSDefined
@@ -40,18 +40,18 @@ trait TextMarker extends js.Object {
 
 @js.native
 trait TextMarkerOptions extends js.Object {
-  var className: String         = js.native
-  var inclusiveLeft: Boolean    = js.native
-  var inclusiveRight: Boolean   = js.native
-  var atomic: Boolean           = js.native
-  var collapsed: Boolean        = js.native
-  var clearOnEnter: Boolean     = js.native
+  var className: String = js.native
+  var inclusiveLeft: Boolean = js.native
+  var inclusiveRight: Boolean = js.native
+  var atomic: Boolean = js.native
+  var collapsed: Boolean = js.native
+  var clearOnEnter: Boolean = js.native
   var replacedWith: HTMLElement = js.native
-  var readOnly: Boolean         = js.native
-  var addToHistory: Boolean     = js.native
-  var startStyle: String        = js.native
-  var endStyle: String          = js.native
-  var shared: Boolean           = js.native
+  var readOnly: Boolean = js.native
+  var addToHistory: Boolean = js.native
+  var startStyle: String = js.native
+  var endStyle: String = js.native
+  var shared: Boolean = js.native
 }
 
 @ScalaJSDefined

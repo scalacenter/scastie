@@ -17,27 +17,27 @@ object Settings {
 
     def defaultTarget(targetType: ScalaTargetType) = {
       targetType match {
-        case ScalaTargetType.JVM    => ScalaTarget.Jvm.default
-        case ScalaTargetType.JS     => ScalaTarget.Js.default
-        case ScalaTargetType.Dotty  => ScalaTarget.Dotty
+        case ScalaTargetType.JVM => ScalaTarget.Jvm.default
+        case ScalaTargetType.JS => ScalaTarget.Js.default
+        case ScalaTargetType.Dotty => ScalaTarget.Dotty
         case ScalaTargetType.Native => ScalaTarget.Native
       }
     }
 
     def logo(targetType: ScalaTargetType) = {
       targetType match {
-        case ScalaTargetType.JVM    => "smooth-spiral.png"
-        case ScalaTargetType.Dotty  => "dotty3.svg"
-        case ScalaTargetType.JS     => "scala-js.svg"
+        case ScalaTargetType.JVM => "smooth-spiral.png"
+        case ScalaTargetType.Dotty => "dotty3.svg"
+        case ScalaTargetType.JS => "scala-js.svg"
         case ScalaTargetType.Native => "native.png"
       }
     }
 
     def labelFor(targetType: ScalaTargetType) = {
       targetType match {
-        case ScalaTargetType.JVM    => "Scalac"
-        case ScalaTargetType.JS     => "Scala.js"
-        case ScalaTargetType.Dotty  => "Dotty"
+        case ScalaTargetType.JVM => "Scalac"
+        case ScalaTargetType.JS => "Scala.js"
+        case ScalaTargetType.Dotty => "Dotty"
         case ScalaTargetType.Native => "Native"
       }
     }
@@ -92,8 +92,8 @@ object Settings {
           })
         )
       case ScalaTarget.Js(scalaVersion, scalaJsVersion) => EmptyTag
-      case ScalaTarget.Dotty                            => EmptyTag
-      case ScalaTarget.Native                           => EmptyTag
+      case ScalaTarget.Dotty => EmptyTag
+      case ScalaTarget.Native => EmptyTag
     }
   }
 

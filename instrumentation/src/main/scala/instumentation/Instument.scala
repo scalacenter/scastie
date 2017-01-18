@@ -5,9 +5,9 @@ import inputs.Position
 import scala.collection.immutable.Seq
 
 object Instrument {
-  private val instrumnedClass       = "Playground"
+  private val instrumnedClass = "Playground"
   private val instrumentationMethod = "instrumentations$"
-  private val instrumentationMap    = "instrumentationMap$"
+  private val instrumentationMap = "instrumentationMap$"
 
   private def posToApi(position: Position, offset: Int) = {
     def tuple2(v1: Int, v2: Int) = Seq(Lit(v1), Lit(v2))
@@ -26,7 +26,7 @@ object Instrument {
 
     val treeQuote =
       tpeTree match {
-        case None      => s"val t = $term"
+        case None => s"val t = $term"
         case Some(tpe) => s"val t: $tpe = $term"
       }
 
@@ -61,7 +61,7 @@ object Instrument {
 
           instrumentationMapPatch +:
             c.templ.stats.get.collect {
-              case term: Term   => instrumentOne(term, None, offset)
+              case term: Term => instrumentOne(term, None, offset)
               case vl: Defn.Val => instrumentOne(vl.rhs, vl.decltpe, offset)
               case vr: Defn.Var if vr.rhs.nonEmpty =>
                 instrumentOne(vr.rhs.get, vr.decltpe, offset)
@@ -85,16 +85,16 @@ object Instrument {
     val prelude =
       s"""|import api.runtime._
           |class $instrumnedClass {""".stripMargin
-      
+
     val code0 =
       s"""|$prelude
           |$code
           |}""".stripMargin
 
     code0.parse[Source] match {
-      case parsers.Parsed.Success(k) => 
+      case parsers.Parsed.Success(k) =>
         instrument(k, offset = prelude.length + 1)
-      case _ => 
+      case _ =>
         code0
     }
   }

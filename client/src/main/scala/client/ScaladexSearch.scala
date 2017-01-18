@@ -181,7 +181,7 @@ object ScaladexSearch {
         props <- scope.props
         (appState, _) = props
         searchState <- scope.state
-        _           <- fetch(appState, searchState)
+        _ <- fetch(appState, searchState)
       } yield ()
     }
 
@@ -195,7 +195,7 @@ object ScaladexSearch {
         toQuery(
           Map(
             "organization" -> project.organization,
-            "repository"   -> project.repository
+            "repository" -> project.repository
           ))
 
       Callback.future(

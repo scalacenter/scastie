@@ -33,20 +33,20 @@ object CodeMirrorEditor {
           val editor = texteareaRef(scope).map { textArea =>
             val options = js
               .Dictionary[Any](
-                "mode"                    -> "text/x-scala",
-                "lineNumbers"             -> false,
-                "lineWrapping"            -> false,
-                "tabSize"                 -> 2,
-                "indentWithTabs"          -> false,
-                "theme"                   -> s"solarized ${settings.theme}",
-                "smartIndent"             -> true,
-                "keyMap"                  -> "sublime",
-                "scrollPastEnd"           -> true,
-                "scrollbarStyle"          -> "simple",
-                "autoCloseBrackets"       -> true,
-                "matchBrackets"           -> true,
+                "mode" -> "text/x-scala",
+                "lineNumbers" -> false,
+                "lineWrapping" -> false,
+                "tabSize" -> 2,
+                "indentWithTabs" -> false,
+                "theme" -> s"solarized ${settings.theme}",
+                "smartIndent" -> true,
+                "keyMap" -> "sublime",
+                "scrollPastEnd" -> true,
+                "scrollbarStyle" -> "simple",
+                "autoCloseBrackets" -> true,
+                "matchBrackets" -> true,
                 "showCursorWhenSelecting" -> true,
-                "autofocus"               -> true,
+                "autofocus" -> true,
                 "highlightSelectionMatches" -> js.Dictionary(
                   "showToken" -> js.Dynamic.global.RegExp("\\w")
                 ),
@@ -111,8 +111,8 @@ object CodeMirrorEditor {
       }
       .componentWillReceiveProps { v =>
         val (current, _) = v.currentProps
-        val (next, _)    = v.nextProps
-        val state        = v.currentState
+        val (next, _) = v.nextProps
+        val state = v.currentState
 
         state.editor
           .map(editor => runDelta(editor, state, current, next))

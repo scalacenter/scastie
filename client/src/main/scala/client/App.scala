@@ -30,19 +30,18 @@ object App {
       inputs: Inputs = Inputs.default,
       outputs: Outputs = Outputs()
   ) {
-    def setRunning(v: Boolean)    = copy(running = v)
-    def toggleTheme               = copy(dark = !dark)
-    def toggleConsole             = copy(console = !console)
-    def toggleInstrumentation     = copy(inputs = 
-      inputs.copy(isInstrumented = !inputs.isInstrumented)
-    )
+    def setRunning(v: Boolean) = copy(running = v)
+    def toggleTheme = copy(dark = !dark)
+    def toggleConsole = copy(console = !console)
+    def toggleInstrumentation =
+      copy(inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
 
-    def openConsole              = copy(console = true)
-    def toggleSidebar            = copy(sideBarClosed = !sideBarClosed)
+    def openConsole = copy(console = true)
+    def toggleSidebar = copy(sideBarClosed = !sideBarClosed)
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State =
       copy(outputs = outputs.copy(console = outputs.console ++ lines))
-    def setCode(code: String)     = copy(inputs = inputs.copy(code = code))
+    def setCode(code: String) = copy(inputs = inputs.copy(code = code))
     def setInputs(inputs: Inputs) = copy(inputs = inputs)
     def setSbtConfigExtra(config: String) =
       copy(inputs = inputs.copy(sbtConfigExtra = config))
@@ -113,8 +112,8 @@ object App {
         direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}\n"))
 
       val protocol = if (window.location.protocol == "https:") "wss" else "ws"
-      val uri      = s"$protocol://${window.location.host}/progress/$id"
-      val socket   = new WebSocket(uri)
+      val uri = s"$protocol://${window.location.host}/progress/$id"
+      val socket = new WebSocket(uri)
 
       socket.onopen = onopen _
       socket.onclose = onclose _
@@ -138,8 +137,7 @@ object App {
                   case Success(ws) => {
                     def clearLogs =
                       scope.modState(
-                        _.resetOutputs
-                          .openConsole
+                        _.resetOutputs.openConsole
                           .setRunning(true)
                           .copy(websocket = Some(ws))
                           .log("Connecting...\n")
@@ -202,9 +200,11 @@ object App {
     }
 
     def toggleTheme(e: ReactEventI): Callback = toggleTheme()
-    def toggleTheme(): Callback               = scope.modState(_.toggleTheme)
-    def toggleConsole(e: ReactEventI): Callback = scope.modState(_.toggleConsole)
-    def toggleInstrumentation(e: ReactEventI): Callback = scope.modState(_.toggleInstrumentation)
+    def toggleTheme(): Callback = scope.modState(_.toggleTheme)
+    def toggleConsole(e: ReactEventI): Callback =
+      scope.modState(_.toggleConsole)
+    def toggleInstrumentation(e: ReactEventI): Callback =
+      scope.modState(_.toggleInstrumentation)
   }
 
   val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")

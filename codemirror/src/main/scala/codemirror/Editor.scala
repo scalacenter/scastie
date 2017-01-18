@@ -94,16 +94,16 @@ trait BeforeEditorChange extends EditorChange {
 }
 
 class EditorEventHandler(val editor: Editor) extends AnyVal {
-  def onDelete(f: () => Unit)             = editor.on("delete", f)
-  def onBeforeCursorEnter(f: () => Unit)  = editor.on("beforeCursorEnter", f)
-  def onHide(f: () => Unit)               = editor.on("hide", f)
-  def onUnhide(f: () => Unit)             = editor.on("unhide", f)
-  def onRedraw(f: () => Unit)             = editor.on("redraw", f)
+  def onDelete(f: () => Unit) = editor.on("delete", f)
+  def onBeforeCursorEnter(f: () => Unit) = editor.on("beforeCursorEnter", f)
+  def onHide(f: () => Unit) = editor.on("hide", f)
+  def onUnhide(f: () => Unit) = editor.on("unhide", f)
+  def onRedraw(f: () => Unit) = editor.on("redraw", f)
   def onCursorActivity(f: Editor => Unit) = editor.on("cursorActivity", f)
-  def onFocus(f: Editor => Unit)          = editor.on("focus", f)
-  def onBlur(f: Editor => Unit)           = editor.on("blur", f)
-  def onScroll(f: Editor => Unit)         = editor.on("scroll", f)
-  def onUpdate(f: Editor => Unit)         = editor.on("update", f)
+  def onFocus(f: Editor => Unit) = editor.on("focus", f)
+  def onBlur(f: Editor => Unit) = editor.on("blur", f)
+  def onScroll(f: Editor => Unit) = editor.on("scroll", f)
+  def onUpdate(f: Editor => Unit) = editor.on("update", f)
   def onBeforeChange(f: (Editor, BeforeEditorChange) => Unit) =
     editor.on("beforeChange", f)
   def onChange(f: (Editor, EditorChange) => Unit) = editor.on("change", f)

@@ -12,12 +12,14 @@ package object runtime {
     val Space = s"""<kbd>${"&nbsp;" * 40}</kbd>"""
     val Ctrl = "<kbd class='pc'>Ctrl&nbsp;&nbsp;</kbd>"
     val Cmd = "<kbd class='mac'>&nbsp;⌘&nbsp;</kbd>"
-    val Enter = "<kbd>&nbsp;&nbsp;Enter&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</kbd>"
+    val Enter =
+      "<kbd>&nbsp;&nbsp;Enter&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</kbd>"
     val F2 = "<kbd>&nbsp;F2&nbsp;</kbd>"
     val F7 = "<kbd>&nbsp;F7&nbsp;</kbd>"
     val Esc = "<kbd>&nbsp;Esc&nbsp;</kbd>"
     val github = "https://github.com/scalacenter/scastie"
-    val sublime = "http://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html"
+    val sublime =
+      "http://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html"
 
     html"""|<h1>Welcome to Scastie!</h1>
            |Scastie is an interractive playground.
