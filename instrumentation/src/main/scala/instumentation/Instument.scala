@@ -9,20 +9,20 @@ object Instrument {
   private val instrumentationMethod = "instrumentations$"
   private val instrumentationMap    = "instrumentationMap$"
 
-  private def posToApi(position: Position) = {
+  private def posToApi(position: Position, offset: Int) = {
     def tuple2(v1: Int, v2: Int) = Seq(Lit(v1), Lit(v2))
 
     val lits =
       position match {
         case Position.None => tuple2(0, 0)
         case Position.Range(input, start, end) =>
-          tuple2(start.offset, end.offset)
+          tuple2(start.offset - offset, end.offset - offset)
       }
 
     Term.Apply(Term.Name("api.Position"), lits)
   }
 
-  def instrumentOne(term: Term, tpeTree: Option[Type] = None): Patch = {
+  def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int): Patch = {
 
     val treeQuote =
       tpeTree match {
@@ -34,14 +34,14 @@ object Instrument {
       Seq(
         "locally {",
         treeQuote + "; ",
-        s"$instrumentationMap(${posToApi(term.pos)}) = scastie.runtime.Runtime.render(t);",
+        s"$instrumentationMap(${posToApi(term.pos, offset)}) = scastie.runtime.Runtime.render(t);",
         "t}"
       ).mkString("")
 
     Patch(term.tokens.head, term.tokens.last, replacement)
   }
 
-  private def instrument(source: Source): String = {
+  private def instrument(source: Source, offset: Int): String = {
 
     val instrumentedCodePatches =
       source.stats.collect {
@@ -61,10 +61,10 @@ object Instrument {
 
           instrumentationMapPatch +:
             c.templ.stats.get.collect {
-              case term: Term   => instrumentOne(term)
-              case vl: Defn.Val => instrumentOne(vl.rhs, vl.decltpe)
+              case term: Term   => instrumentOne(term, None, offset)
+              case vl: Defn.Val => instrumentOne(vl.rhs, vl.decltpe, offset)
               case vr: Defn.Var if vr.rhs.nonEmpty =>
-                instrumentOne(vr.rhs.get, vr.decltpe)
+                instrumentOne(vr.rhs.get, vr.decltpe, offset)
             }
         }
       }.flatten
@@ -82,9 +82,20 @@ object Instrument {
   }
 
   def apply(code: String): String = {
-    code.parse[Source] match {
-      case parsers.Parsed.Success(k) => instrument(k)
-      case _                         => code
+    val prelude =
+      s"""|import api.runtime._
+          |class $instrumnedClass {""".stripMargin
+      
+    val code0 =
+      s"""|$prelude
+          |$code
+          |}""".stripMargin
+
+    code0.parse[Source] match {
+      case parsers.Parsed.Success(k) => 
+        instrument(k, offset = prelude.length + 1)
+      case _ => 
+        code0
     }
   }
 }

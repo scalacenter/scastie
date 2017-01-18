@@ -30,6 +30,12 @@ object Client extends JSApp {
 
   @JSExport
   override def main(): Unit = {
+    val isMac = dom.window.navigator.userAgent.contains("Mac")
+
+    dom.document.body.className =
+      if (isMac) "mac"
+      else "pc"
+      
     val cont =
       dom.document.createElement("div").asInstanceOf[dom.raw.HTMLDivElement]
     cont.className = "root"

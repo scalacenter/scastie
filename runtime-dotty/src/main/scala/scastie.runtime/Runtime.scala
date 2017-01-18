@@ -6,7 +6,6 @@ import upickle.Js._
 object Runtime {
   def render[T](a: T)(implicit ct: scala.reflect.ClassTag[T]): Render = {
     a match {
-      case md: Markdown => md
       case html: Html   => html
       case v            => Value(a.toString.take(1000), ct.toString)
     }
@@ -23,12 +22,6 @@ object Runtime {
             "$type"     -> Str("api.Value"),
             "v"         -> Str(v),
             "className" -> Str(className)
-          )
-        case Markdown(a, folded) =>
-          Obj(
-            "$type"  -> Str("api.Markdown"),
-            "a"      -> Str(a),
-            "folded" -> write2(folded)
           )
 
         case Html(a, folded) =>

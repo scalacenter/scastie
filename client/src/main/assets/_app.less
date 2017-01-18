@@ -9,6 +9,9 @@ body, .root, .app, .main-pannel, .pannel, .sidebar,
   height: 100%;
 }
 
+body.mac kbd.pc { display: none }
+body.pc kbd.mac { display: none }
+
 .app {
   @sidebar-width: 75px;
   @sidebar-border: 1px;
@@ -97,7 +100,7 @@ body, .root, .app, .main-pannel, .pannel, .sidebar,
           background-color: @base03;
           color: @base02;
         }
-        &:hover, &.console {
+        &:hover, &.toggle {
           color: @base1;
         }
       }
@@ -116,7 +119,7 @@ body, .root, .app, .main-pannel, .pannel, .sidebar,
           background-color: @base3;
           color: @base2;
         }
-        &:hover, &.console {
+        &:hover, &.toggle {
           color: @base01;
         }
       }

@@ -99,12 +99,13 @@ object ScalaTarget {
 }
 
 object Inputs {
-  val defaultCode =
-    """|class Playground {
-       |  1 + 1
-       |}""".stripMargin
+  val defaultCode = 
+    """|List("Hello", "World").mkString("", ", ", "!")
+       |
+       |help""".stripMargin
 
   def default = Inputs(
+    isInstrumented = true,
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
@@ -114,6 +115,7 @@ object Inputs {
 }
 
 case class Inputs(
+    isInstrumented: Boolean,
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
@@ -220,10 +222,6 @@ case class Instrumentation(position: Position, render: Render)
 sealed trait Render
 case class Value(v: String, className: String) extends Render
 
-case class Markdown(a: String, folded: Boolean = false) extends Render {
-  def stripMargin = Markdown(a.stripMargin)
-  def fold        = copy(folded = true)
-}
 case class Html(a: String, folded: Boolean = false) extends Render {
   def stripMargin = copy(a = a.stripMargin)
   def fold        = copy(folded = true)

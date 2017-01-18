@@ -75,7 +75,7 @@ object SideBar {
 
         val editor =
           if (state.running) {
-            div(`class` := "sk-folding-cube",
+            div(`class` := "sk-folding-cube", title := "Running...",
                 onClick ==> setView(View.Editor))(
               div(`class` := "sk-cube1 sk-cube"),
               div(`class` := "sk-cube2 sk-cube"),
@@ -85,21 +85,32 @@ object SideBar {
           } else {
             if (View.Editor == state.view) {
               // RUN
-              mediaPlay(onClick ==> run2, `class` := "runnable")
+              mediaPlay(onClick ==> run2, `class` := "runnable", title := "Run")
             } else {
-              mediaPlay(onClick ==> setView(View.Editor))
+              mediaPlay(onClick ==> setView(View.Editor), title := "Edit code")
             }
           }
 
         val consoleSelected = 
-          if(state.console) TagMod(`class` := "console selected")
+          if(state.console) TagMod(`class` := "toggle selected")
+          else EmptyTag
+
+        val instrumentationSelected =
+          if(state.inputs.isInstrumented) TagMod(`class` := "toggle selected")
           else EmptyTag
 
         nav(`class` := s"sidebar $theme")(
           ul(
             li(selected(View.Editor))(editor),
-            li(selected(View.Settings))(cog(onClick ==> setView(View.Settings))),
-            li(consoleSelected)(terminal(onClick ==> toogleConsole))
+            li(selected(View.Settings))(
+              cog(onClick ==> setView(View.Settings))
+            ),
+            li(consoleSelected, title := "Toggle console")(
+              terminal(onClick ==> toggleConsole)
+            ),
+            li(instrumentationSelected, title := "Toggle worksheet")(
+              iconic.script(onClick ==> toggleInstrumentation)
+            )
           )
         )
     }.build

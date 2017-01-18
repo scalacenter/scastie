@@ -30,11 +30,15 @@ object App {
       inputs: Inputs = Inputs.default,
       outputs: Outputs = Outputs()
   ) {
-    def setRunning(v: Boolean)   = copy(running = v)
-    def toogleTheme              = copy(dark = !dark)
-    def toogleConsole            = copy(console = !console)
+    def setRunning(v: Boolean)    = copy(running = v)
+    def toggleTheme               = copy(dark = !dark)
+    def toggleConsole             = copy(console = !console)
+    def toggleInstrumentation     = copy(inputs = 
+      inputs.copy(isInstrumented = !inputs.isInstrumented)
+    )
+
     def openConsole              = copy(console = true)
-    def toogleSidebar            = copy(sideBarClosed = !sideBarClosed)
+    def toggleSidebar            = copy(sideBarClosed = !sideBarClosed)
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State =
       copy(outputs = outputs.copy(console = outputs.console ++ lines))
@@ -96,9 +100,6 @@ object App {
       def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[PasteProgress](e.data.toString)
-        if (progress.timeout) {
-          window.alert("Evaluation timeout")
-        }
         direct.modState(
           _.addOutputs(
             progress.compilationInfos,
@@ -200,9 +201,10 @@ object App {
       }
     }
 
-    def toogleTheme(e: ReactEventI): Callback = toogleTheme()
-    def toogleTheme(): Callback               = scope.modState(_.toogleTheme)
-    def toogleConsole(e: ReactEventI): Callback = scope.modState(_.toogleConsole)
+    def toggleTheme(e: ReactEventI): Callback = toggleTheme()
+    def toggleTheme(): Callback               = scope.modState(_.toggleTheme)
+    def toggleConsole(e: ReactEventI): Callback = scope.modState(_.toggleConsole)
+    def toggleInstrumentation(e: ReactEventI): Callback = scope.modState(_.toggleInstrumentation)
   }
 
   val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")

@@ -23,12 +23,16 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
       val scalaTargetType = inputs.target.targetType
 
       val inputs0 =
-        inputs.copy(code = instrumentation.Instrument(inputs.code))
+        if(inputs.isInstrumented) 
+          inputs.copy(code = instrumentation.Instrument(inputs.code))
+        else 
+          inputs
 
       def eval(command: String) =
         sbt.eval(command,
                  inputs0,
                  processSbtOutput(
+                   inputs.isInstrumented,
                    progressActor,
                    id,
                    sender
@@ -36,10 +40,6 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
 
       def timeout(duration: FiniteDuration): Unit = {
         println(s"== restarting sbt $id ==")
-
-        sbt.close()
-        sbt = new Sbt()
-
         progressActor ! 
           PasteProgress(
             id = id,
@@ -49,6 +49,9 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
             instrumentations = Nil,
             timeout = true
           )
+
+        sbt.close()
+        sbt = new Sbt()
       }
 
       println(s"== updating $id ==")
@@ -85,11 +88,12 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
   }
 
   private def processSbtOutput(
+      isInstrumented: Boolean,
       progressActor: ActorRef,
       id: Long,
       pasteActor: ActorRef): (String, Boolean) => Unit = { (line, done) =>
     {
-      val problems = extractProblems(line)
+      val problems = extractProblems(line, isInstrumented)
       val instrumentations = extract[api.Instrumentation](line)
 
       val output =
@@ -110,7 +114,7 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
     }
   }
 
-  private def extractProblems(line: String): Option[List[api.Problem]] = {
+  private def extractProblems(line: String, isInstrumented: Boolean): Option[List[api.Problem]] = {
     val sbtProblems = extract[sbtapi.Problem](line)
 
     def toApi(p: sbtapi.Problem): api.Problem = {
@@ -119,7 +123,11 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
         case sbtapi.Warning => api.Warning
         case sbtapi.Error   => api.Error
       }
-      api.Problem(severity, p.line, p.message)
+      val lineOffset =
+        if(isInstrumented) 2
+        else 0
+
+      api.Problem(severity, p.line.map(_ + lineOffset) , p.message)
     }
 
     sbtProblems.map(_.map(toApi))

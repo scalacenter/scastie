@@ -112,7 +112,7 @@ object Editor {
 
           CodeMirror.commands.solarizedToggle =
             (editor: CodeMirrorEditor2) => {
-              backend.toogleTheme().runNow
+              backend.toggleTheme().runNow
             }
 
           scope.modState(_.copy(editor = Some(editor)))
