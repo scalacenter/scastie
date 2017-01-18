@@ -41,7 +41,7 @@ class Sbt() {
   // start sbt when the actor receive a message
   // it's useful in testing where we start the actor and send an
   // evaluation message right away.
-  private lazy val (process, fin, fout) = {
+  private val (process, fin, fout) = {
     val builder     = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     val currentOpts = sys.env.get("SBT_OPTS").getOrElse("")
     builder
@@ -69,7 +69,10 @@ class Sbt() {
       if (read == 10) {
         val line = chars.mkString
         prompt = line == uniqueId
-        log.info(line)
+        
+        // log.info(line)
+        println(line)
+
         lineCallback(line, prompt)
         chars.clear()
       } else {
@@ -78,7 +81,7 @@ class Sbt() {
     }
   }
 
-  collect((line, _) => log.info(" sbt: " + line))
+  collect((_, _) => ())
 
   private def process(command: String,
                       lineCallback: (String, Boolean) => Unit): Unit = {
@@ -96,20 +99,22 @@ class Sbt() {
     ()
   }
 
+  def needsReload(inputs: Inputs): Boolean =
+    inputs.sbtConfig != currentSbtConfig ||
+    inputs.sbtPluginsConfig != currentSbtPluginConfig
+
   def eval(command: String,
            inputs: Inputs,
            lineCallback: (String, Boolean) => Unit): Unit = {
 
-    var configChange = false
+    val configChange = needsReload(inputs)
 
     if (inputs.sbtConfig != currentSbtConfig) {
-      configChange = true
       write(sbtConfigFile, prompt + nl + inputs.sbtConfig, truncate = true)
       currentSbtConfig = inputs.sbtConfig
     }
 
     if (inputs.sbtPluginsConfig != currentSbtPluginConfig) {
-      configChange = true
       write(pluginFile, inputs.sbtPluginsConfig, truncate = true)
       currentSbtPluginConfig = inputs.sbtPluginsConfig
     }

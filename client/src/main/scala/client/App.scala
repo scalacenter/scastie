@@ -25,12 +25,15 @@ object App {
       sideBarClosed: Boolean = false,
       websocket: Option[WebSocket] = None,
       dark: Boolean = false,
+      console: Boolean = false,
       codemirrorSettings: Option[codemirror.Options] = None,
       inputs: Inputs = Inputs.default,
       outputs: Outputs = Outputs()
   ) {
     def setRunning(v: Boolean)   = copy(running = v)
     def toogleTheme              = copy(dark = !dark)
+    def toogleConsole            = copy(console = !console)
+    def openConsole              = copy(console = true)
     def toogleSidebar            = copy(sideBarClosed = !sideBarClosed)
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State =
@@ -58,7 +61,7 @@ object App {
         libraries = (inputs.libraries - scalaDependency) + newScalaDependency))
     }
 
-    def resetOutputs = copy(outputs = Outputs())
+    def resetOutputs = copy(outputs = Outputs(), console = false)
 
     def addProgress(progress: PasteProgress) = {
       addOutputs(progress.compilationInfos, progress.instrumentations)
@@ -90,7 +93,7 @@ object App {
     private def connect(id: Long) = CallbackTo[WebSocket] {
       val direct = scope.accessDirect
 
-      def onopen(e: Event): Unit = direct.modState(_.log("Connected."))
+      def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[PasteProgress](e.data.toString)
         if (progress.timeout) {
@@ -106,7 +109,7 @@ object App {
       def onerror(e: ErrorEvent): Unit =
         direct.modState(_.log(s"Error: ${e.message}"))
       def onclose(e: CloseEvent): Unit =
-        direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}"))
+        direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}\n"))
 
       val protocol = if (window.location.protocol == "https:") "wss" else "ws"
       val uri      = s"$protocol://${window.location.host}/progress/$id"
@@ -135,9 +138,10 @@ object App {
                     def clearLogs =
                       scope.modState(
                         _.resetOutputs
+                          .openConsole
                           .setRunning(true)
                           .copy(websocket = Some(ws))
-                          .log("Connecting...")
+                          .log("Connecting...\n")
                       )
 
                     def urlRewrite =
@@ -185,7 +189,7 @@ object App {
                 result match {
                   case Some(FetchResult(inputs, progresses)) => {
                     scope.modState(
-                      _.setInputs(inputs).setProgresses(progresses)
+                      _.setInputs(inputs).setProgresses(progresses).openConsole
                     )
                   }
                   case _ =>
@@ -198,6 +202,7 @@ object App {
 
     def toogleTheme(e: ReactEventI): Callback = toogleTheme()
     def toogleTheme(): Callback               = scope.modState(_.toogleTheme)
+    def toogleConsole(e: ReactEventI): Callback = scope.modState(_.toogleConsole)
   }
 
   val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")
