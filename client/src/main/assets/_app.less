@@ -130,10 +130,11 @@ body, .root, .app, .main-pannel, .pannel, .sidebar,
 }
 
 .with-console {
-  @console-height: 20%;
+  @console-height: 40%;
+  @padding: 10px;
 
   .CodeMirror {
-    height: 100% - @console-height;
+    height: calc(100% - @console-height ~"-" @padding);
   }
   .output-console {
     height: @console-height;

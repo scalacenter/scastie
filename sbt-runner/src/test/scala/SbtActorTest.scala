@@ -3,7 +3,7 @@ package sbt
 
 import api._
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.testkit.{TestKit, ImplicitSender, TestProbe, TestActorRef}
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 
@@ -16,17 +16,20 @@ class SbtActorTest()
     with BeforeAndAfterAll {
 
   val progressActor = TestProbe()
-  val timeout       = 10.seconds
-  val sbtActor      = TestActorRef(new SbtActor(timeout))
+
+  val timeout  = 3.seconds
+  val sbtActor = TestActorRef(new SbtActor(timeout))
 
   test("timeout") {
     val id           = 0L
-    val infiniteLoop = Inputs.default.copy(code = """|class Playground {
-                                                     |  while(true){}
-                                                     |}""".stripMargin)
+    val infiniteLoop = Inputs.default.copy(
+      code = """|class Playground {
+                |  while(true){}
+                |}""".stripMargin
+    )
     sbtActor ! SbtTask(id, infiniteLoop, progressActor.ref)
 
-    progressActor.fishForMessage(timeout + 5.seconds) {
+    progressActor.fishForMessage(timeout + 20.second) {
       case progress: PasteProgress => {
         progress.timeout
       }
@@ -34,12 +37,13 @@ class SbtActorTest()
   }
 
   test("after a timeout the sbt instance is ready to be used") {
+
     val helloWorld = Inputs.default.copy(code = "class Playground { 1 + 1 }")
     sbtActor ! SbtTask(1L, helloWorld, progressActor.ref)
 
-    val sbtReloadTime = 30.seconds
+    // val sbtReloadTime = 30.seconds
 
-    progressActor.fishForMessage(timeout + sbtReloadTime) {
+    progressActor.fishForMessage(timeout + 20.second) {
       case progress: PasteProgress => {
         progress.instrumentations.nonEmpty
       }

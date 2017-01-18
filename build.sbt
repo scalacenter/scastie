@@ -97,6 +97,7 @@ lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
   .settings(
+    scalacOptions -= "-Xfatal-warnings",
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     libraryDependencies ++= Seq(
       akka("actor"),

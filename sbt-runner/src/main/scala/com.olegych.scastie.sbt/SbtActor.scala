@@ -6,20 +6,20 @@ import ScalaTargetType._
 
 import upickle.default.{read => uread, Reader}
 
-import akka.actor.{Actor, ActorRef, ActorLogging}
+import akka.actor.{Actor, ActorRef}
 
-import scala.concurrent.duration.FiniteDuration
-import scala.util.control.{NonFatal, NoStackTrace}
+import scala.concurrent._
+import scala.concurrent.duration._
+import java.util.concurrent.{TimeoutException, Callable, FutureTask, TimeUnit}
 
+import scala.util.control.NonFatal
 import System.{lineSeparator => nl}
 
-class SbtActor(timeout: FiniteDuration) extends Actor with ActorLogging {
+class SbtActor(runTimeout: FiniteDuration) extends Actor {
   private var sbt = new Sbt()
 
   def receive = {
-    case task @ SbtTask(id, inputs, progressActor) => {
-      log.info("Got: {}", task)
-
+    case SbtTask(id, inputs, progressActor) => {
       val scalaTargetType = inputs.target.targetType
 
       val inputs0 =
@@ -34,18 +34,54 @@ class SbtActor(timeout: FiniteDuration) extends Actor with ActorLogging {
                    sender
                  ))
 
-      applyTimeout(id, progressActor) {
+      def timeout(duration: FiniteDuration): Unit = {
+        println(s"== restarting sbt $id ==")
+
+        sbt.close()
+        sbt = new Sbt()
+
+        progressActor ! 
+          PasteProgress(
+            id = id,
+            output = s"Task timed out after $duration",
+            done = true,
+            compilationInfos = Nil,
+            instrumentations = Nil,
+            timeout = true
+          )
+      }
+
+      println(s"== updating $id ==")
+
+      val sbtReloadTime = 40.seconds
+      if(sbt.needsReload(inputs0)) {
+        withTimeout(sbtReloadTime)(eval("compile"))(timeout(sbtReloadTime))
+      }
+
+      println(s"== running $id ==")
+
+      withTimeout(runTimeout)({
         scalaTargetType match {
           case JVM | Dotty | Native => eval("run")
           case JS                   => eval("fastOptJs")
         }
-      }
+      })(timeout(runTimeout))
+
+      println(s"== done  $id ==")
     }
-    case x => log.warning("Received unknown message: {}", x)
   }
 
-  override def postStop(): Unit = {
-    sbt.close()
+  private def withTimeout(timeout: Duration)(block: ⇒ Unit)(onTimeout: => Unit): Unit = {
+    val task = new FutureTask(new Callable[Unit]() { def call = block })
+    val thread = new Thread(task)
+    try {
+      thread.start()
+      task.get(timeout.toMillis, TimeUnit.MILLISECONDS)
+    } catch {
+      case e: TimeoutException ⇒ onTimeout
+    } finally {
+      if(thread.isAlive) thread.stop()
+    }
   }
 
   private def processSbtOutput(
@@ -94,35 +130,4 @@ class SbtActor(timeout: FiniteDuration) extends Actor with ActorLogging {
       case NonFatal(e) => None
     }
   }
-
-  private val timeoutKiller = createKiller(timeout)
-
-  private def applyTimeout(pasteId: Long, progressActor: ActorRef)(
-      block: => Unit) {
-    timeoutKiller { case _ => block }((pasteId, progressActor))
-  }
-
-  private def createKiller(
-      timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
-    TimeoutActor("killer", timeout, message => {
-      sbt.close()
-      sbt = new Sbt()
-
-      message match {
-        case (pasteId: Long, progressActor: ActorRef) =>
-          progressActor ! PasteProgress(
-            id = pasteId,
-            output = s"Task timed out after $timeout",
-            done = true,
-            compilationInfos = List(),
-            instrumentations = List(),
-            timeout = true
-          )
-        case _ =>
-        // log.info("unknown message {}", message)
-      }
-    })
-  }
 }
-
-object FatalFailure extends Throwable with NoStackTrace
