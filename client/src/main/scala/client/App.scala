@@ -23,6 +23,7 @@ object App {
       view: View = View.Editor,
       running: Boolean = false,
       sideBarClosed: Boolean = false,
+      saved: Boolean = false,
       websocket: Option[WebSocket] = None,
       dark: Boolean = false,
       console: Boolean = false,
@@ -36,8 +37,16 @@ object App {
     def toggleInstrumentation =
       copy(inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
 
+    def toggleAutoformat =
+      copy(inputs = inputs.copy(autoformat = !inputs.autoformat))
+
     def openConsole = copy(console = true)
     def toggleSidebar = copy(sideBarClosed = !sideBarClosed)
+
+    def save = copy(saved = true)
+    def update = this
+    def fork = this
+
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State =
       copy(outputs = outputs.copy(console = outputs.console ++ lines))
@@ -124,7 +133,6 @@ object App {
 
     def clear(): Callback = scope.modState(_.resetOutputs)
 
-    def run2(e: CloseEvent): Callback = run()
     def run(): Callback = {
       scope.state.flatMap(
         s =>
@@ -132,7 +140,7 @@ object App {
             ApiClient[Api]
               .run(s.inputs)
               .call()
-              .map(id =>
+              .map{ case RunResult(id, formattedCode) =>
                 connect(id).attemptTry.flatMap {
                   case Success(ws) => {
                     def clearLogs =
@@ -155,7 +163,7 @@ object App {
                     scope.modState(
                       _.resetOutputs.log(error.toString).setRunning(false)
                     )
-              })))
+              }}))
     }
     def run(e: ReactEventI): Callback = run()
 
@@ -205,6 +213,25 @@ object App {
       scope.modState(_.toggleConsole)
     def toggleInstrumentation(e: ReactEventI): Callback =
       scope.modState(_.toggleInstrumentation)
+
+    def toggleAutoformat(e: ReactEventI): Callback =
+      scope.state.flatMap(state =>
+        Callback.future(
+          ApiClient[Api]
+            .format(FormatRequest(state.inputs.code))
+            .call()
+            .map {
+              case FormatResponse(Some(formattedCode)) => 
+                scope.modState(_.setCode(formattedCode))
+              case _ => 
+                scope.modState(x => x)
+            }
+        )
+      )      
+
+    def save(e: ReactEventI): Callback = scope.modState(_.save)
+    def update(e: ReactEventI): Callback = scope.modState(_.update)
+    def fork(e: ReactEventI): Callback = scope.modState(_.fork)
   }
 
   val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")

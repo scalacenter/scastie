@@ -170,7 +170,10 @@ lazy val server = project
         .exclude("com.typesafe.play", "play-docs_2.11")
         .exclude("com.lihaoyi", "upickle_sjs0.6_2.11")
     )),
-    libraryDependencies += akka("remote"),
+    libraryDependencies ++= Seq(
+      akka("remote"),
+      "com.geirsson" %% "scalafmt" % "0.5.1"
+    ),
     mainClass in Compile := Option("ProdNettyServer"),
     products in Compile := (products in Compile)
       .dependsOn(WebKeys.assets in Assets)

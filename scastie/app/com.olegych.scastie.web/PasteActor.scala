@@ -3,6 +3,9 @@ package web
 
 import api._
 
+import org.scalafmt.{Scalafmt, Formatted}
+import org.scalafmt.config.{ScalafmtConfig, ScalafmtRunner}
+
 import scala.collection.JavaConverters._
 
 import play.api.Play
@@ -43,11 +46,22 @@ class PasteActor(progressActor: ActorRef) extends Actor {
   private var router =
     Router(RoundRobinRoutingLogic(), routees.values.toVector)
 
+  private def format(code: String): Option[String] = {
+    val sbtStyle = ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
+    Scalafmt.format(code, style = sbtStyle) match {
+      case Formatted.Success(formattedCode) => Some(formattedCode)
+      case Formatted.Failure(e) => e.printStackTrace(); None
+    }
+  }
+
   def receive = {
+    case FormatRequest(code) => {
+      sender ! FormatResponse(format(code))
+    }
     case inputs: Inputs => {
       val id = container.writePaste(inputs)
       router.route(SbtTask(id, inputs, progressActor), self)
-      sender ! id
+      sender ! RunResult(id, FormatResponse(format(inputs.code)))
     }
 
     case GetPaste(id) => {

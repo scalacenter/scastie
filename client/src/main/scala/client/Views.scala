@@ -72,22 +72,34 @@ object SideBar {
 
         val editor =
           if (state.running) {
-            div(`class` := "sk-folding-cube",
-                title := "Running...",
-                onClick ==> setView(View.Editor))(
-              div(`class` := "sk-cube1 sk-cube"),
-              div(`class` := "sk-cube2 sk-cube"),
-              div(`class` := "sk-cube4 sk-cube"),
-              div(`class` := "sk-cube3 sk-cube")
+            TagMod(
+              div(`class` := "sk-folding-cube",
+                  onClick ==> setView(View.Editor))(
+                div(`class` := "sk-cube1 sk-cube"),
+                div(`class` := "sk-cube2 sk-cube"),
+                div(`class` := "sk-cube4 sk-cube"),
+                div(`class` := "sk-cube3 sk-cube")
+              ),
+              p("Running")
             )
           } else {
             if (View.Editor == state.view) {
               // RUN
-              mediaPlay(onClick ==> run2,
-                        `class` := "runnable",
-                        title := "Run")
+              TagMod(
+                mediaPlay(
+                  onClick ==> run,
+                  `class` := "runnable"
+                ),
+                p("Run")
+              )
             } else {
-              mediaPlay(onClick ==> setView(View.Editor), title := "Edit code")
+              TagMod(
+                mediaPlay(
+                  onClick ==> setView(View.Editor),
+                  title := "Edit code"
+                ),
+                p("Edit")
+              )
             }
           }
 
@@ -99,17 +111,50 @@ object SideBar {
           if (state.inputs.isInstrumented) TagMod(`class` := "toggle selected")
           else EmptyTag
 
+        val sharing =
+          if(!state.saved) {
+            li(
+              iconic.pencil(onClick ==> save),
+              p("Save")
+            )
+          } else {
+            TagMod(
+              li(
+                iconic.pencil(onClick ==> update),
+                p("Update")
+              ),
+              li(
+                iconic.fork(onClick ==> fork),
+                p("Fork")
+              )
+            )
+          }
+
+        val autoformatSelected = 
+          if(state.inputs.autoformat) TagMod(`class` := "toggle selected")
+          else EmptyTag
+
         nav(`class` := s"sidebar $theme")(
           ul(
-            li(selected(View.Editor))(editor),
+            li(selected(View.Editor))(
+              editor
+            ),
+            sharing,
             li(selected(View.Settings))(
-              cog(onClick ==> setView(View.Settings))
+              cog(onClick ==> setView(View.Settings)),
+              p("Settings")
             ),
-            li(consoleSelected, title := "Toggle console")(
-              terminal(onClick ==> toggleConsole)
+            li(consoleSelected)(
+              terminal(onClick ==> toggleConsole),
+              p("Console")
             ),
-            li(instrumentationSelected, title := "Toggle worksheet")(
-              iconic.script(onClick ==> toggleInstrumentation)
+            li(autoformatSelected)(
+              iconic.justifyLeft(onClick ==> toggleAutoformat),
+              p("Format")
+            ),
+            li(instrumentationSelected)(
+              iconic.script(onClick ==> toggleInstrumentation),
+              p("Script")
             )
           )
         )

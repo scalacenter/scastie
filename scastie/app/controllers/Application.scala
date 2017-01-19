@@ -32,11 +32,14 @@ object AutowireServer extends autowire.Server[String, Reader, Writer] {
 class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
                                     executionContext: ExecutionContext)
     extends Api {
-  def run(inputs: Inputs): Future[Long] = {
-    (pasteActor ? inputs).mapTo[Long]
+  def run(inputs: Inputs): Future[RunResult] = {
+    (pasteActor ? inputs).mapTo[RunResult]
   }
   def fetch(id: Long): Future[Option[FetchResult]] = {
     (pasteActor ? GetPaste(id)).mapTo[Option[FetchResult]]
+  }
+  def format(formatRequest: FormatRequest): Future[FormatResponse] = {
+    (pasteActor ? formatRequest).mapTo[FormatResponse]
   }
 }
 
