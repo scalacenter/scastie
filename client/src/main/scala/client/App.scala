@@ -32,6 +32,7 @@ object App {
       outputs: Outputs = Outputs()
   ) {
     def setRunning(v: Boolean) = copy(running = v)
+
     def toggleTheme = copy(dark = !dark)
     def toggleConsole = copy(console = !console)
     def toggleInstrumentation =
@@ -219,9 +220,13 @@ object App {
             .call()
             .map {
               case FormatResponse(Some(formattedCode)) => 
-                scope.modState(_.setCode(formattedCode))
+                scope.modState{s =>
+                  // avoid overriding user's code if he/she types while it's formatting
+                  if(s.inputs.code == state.inputs.code) s.setCode(formattedCode)
+                  else s
+                }
               case _ => 
-                scope.modState(x => x)
+                scope.modState(s => s)
             }
         )
       )      

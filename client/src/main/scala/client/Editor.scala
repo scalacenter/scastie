@@ -294,13 +294,12 @@ object Editor {
       )
     }
 
-    def setAnnotations[T](fromState: App.State => Set[T],
-                          annotate: T => Annotation,
-                          fromEditorState: EditorState => Map[T, Annotation],
-                          updateEditorState: (Map[T, Annotation] => Map[
-                                                T,
-                                                Annotation]) => EditorState => EditorState)
-      : Callback = {
+    def setAnnotations[T](
+      fromState: App.State => Set[T],
+      annotate: T => Annotation,
+      fromEditorState: EditorState => Map[T, Annotation],
+      updateEditorState: (Map[T, Annotation] => Map[T,Annotation]) => EditorState => EditorState
+    ): Callback = {
 
       val added = fromState(next) -- fromState(current)
       val toAdd = CallbackTo
