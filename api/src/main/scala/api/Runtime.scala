@@ -10,28 +10,77 @@ package object runtime {
 
     val Dot = "<kbd>&nbsp;&nbsp;.&nbsp;&nbsp;</kbd>"
     val Space = s"""<kbd>${"&nbsp;" * 40}</kbd>"""
+    
+    // A stylesheets select the correct one to display
     val Ctrl = "<kbd class='pc'>Ctrl&nbsp;&nbsp;</kbd>"
     val Cmd = "<kbd class='mac'>&nbsp;⌘&nbsp;</kbd>"
+    val CC = Ctrl + Cmd
+
     val Enter =
       "<kbd>&nbsp;&nbsp;Enter&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</kbd>"
-    val F2 = "<kbd>&nbsp;F2&nbsp;</kbd>"
-    val F7 = "<kbd>&nbsp;F7&nbsp;</kbd>"
-    val Esc = "<kbd>&nbsp;Esc&nbsp;</kbd>"
-    val github = "https://github.com/scalacenter/scastie"
-    val sublime =
-      "http://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html"
+
+    def kbd(label: String): String = s"<kbd>&nbsp;$label&nbsp;</kbd>"
+    val F2 = kbd("F2")
+    val F7 = kbd("F7")
+    val Esc = kbd("Esc")
+
+    val key1 = kbd("1")
+    val key2 = kbd("2")
+
+    def a(url: String, text: String) = 
+      s"""<a target="_blank" href="$url" rel="nofollow">$text</a>"""
+
+    val scastieGithub = a("https://github.com/scalacenter/scastie", "scalacenter/scastie")
+    
+    val sublime = a(
+      "https://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html",
+      "Sublime Text Keyboard Shortcuts are also supported"
+    )
+
+    val scalafmtConfiguration = a(
+      "https://olafurpg.github.io/scalafmt/#Configuration",
+      "configuration section"
+    )
+
+    val sbt = a("http://www.scala-sbt.org/0.13/docs/index.html", "sbt")
 
     html"""|<h1>Welcome to Scastie!</h1>
-           |Scastie is an interractive playground.
-           |Evaluate expressions with $Ctrl $Cmd + $Enter.
-           |Clear the output with $Esc.
+           |Scastie is an interractive playground. It can run anything sbt can run.
+           |
+           |<h2>Keyboard Shortcuts</h2>
            |<pre>
-           |clear           $Esc
-           |run             $Ctrl $Cmd + $Enter
-           |toggle theme    $F2
-           |<a target="_blank" href="$sublime">Sublime Text Keyboard Shortcuts</a>
+           |Editor View $CC + $key1
+           |  Run                                       $CC + $Enter
+           |  Save                                      TODO
+           |  Update                                    TODO
+           |  Fork                                      TODO
+           |  Clear annotations, Close console output   $Esc
+           |  Toogle console                            TODO
+           |  Toggle Theme (Solarized Light/Dark)       $F2
+           |  Toogle Script Mode                        TODO
+           |
+           |Settings View $CC + $key2
+           |
+           |$sublime
            |</pre>
-           |The source code is available at <a target="_blank" href="$github">scalacenter/scastie</a>,
+           |
+           |<h2>Settings</h2>
+           |Targets
+           |Scala Version
+           |Scala Libraries
+           |Sbt
+           |It's possible to have additional sbt configuration such as scalacOptions.
+           |
+           |<h2>Script Mode</h2>
+           |The Script Mode will print the value and the type of each line.
+           |By default the script mode is active. Since you cannot add top-level code
+           |such as value classes (AnyVal) or package/package object it's possible to disable it.
+           |
+           |<h2>Formatting Code</h2>
+           |The code formatting is done by scalafmt. You can configure the formatting with comments
+           |in your code. Read the $scalafmtConfiguration
+           |
+           |$scastieGithub
            |published under the Apache2 license
            |""".stripMargin.fold
   }
