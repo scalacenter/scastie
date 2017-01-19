@@ -103,7 +103,8 @@ lazy val sbtRunner = project
       akka("actor"),
       akka("testkit") % Test,
       akka("remote"),
-      akka("slf4j")
+      akka("slf4j"),
+      "com.geirsson" %% "scalafmt" % "0.5.1"
     ),
     imageNames in docker := Seq(
       ImageName(

@@ -76,6 +76,12 @@ body.pc kbd.mac { display: none }
       display: block;
       font-size: @size;
       padding: (@sidebar-width - @size) / 2;
+
+      p {
+        font-size: 14px;
+        margin: 0;
+        text-align: center;
+      }
     }
 
     .runnable {
@@ -100,7 +106,7 @@ body.pc kbd.mac { display: none }
           background-color: @base03;
           color: @base02;
         }
-        &:hover, &.toggle {
+        &:hover, &.toggle, p {
           color: @base1;
         }
       }
@@ -119,7 +125,7 @@ body.pc kbd.mac { display: none }
           background-color: @base3;
           color: @base2;
         }
-        &:hover, &.toggle {
+        &:hover, &.toggle, p {
           color: @base01;
         }
       }

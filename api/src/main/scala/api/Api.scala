@@ -3,10 +3,15 @@ package api
 import scala.concurrent.Future
 
 trait Api {
-  def run(inputs: Inputs): Future[Long]
+  def run(inputs: Inputs): Future[RunResult]
   def fetch(id: Long): Future[Option[FetchResult]]
+  def format(code: FormatRequest): Future[FormatResponse]
 }
 
+case class FormatRequest(code: String, isInstrumented: Boolean)
+case class FormatResponse(formattedCode: Option[String])
+
+case class RunResult(id: Long)
 case class FetchResult(inputs: Inputs, progresses: List[PasteProgress])
 
 case class Paste(
@@ -106,6 +111,7 @@ object Inputs {
 
   def default = Inputs(
     isInstrumented = true,
+    persist = false,
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
@@ -116,13 +122,13 @@ object Inputs {
 
 case class Inputs(
     isInstrumented: Boolean,
+    persist: Boolean,
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
     sbtConfigExtra: String,
     sbtPluginsConfigExtra: String
 ) {
-
   def sbtPluginsConfig: String = {
     target match {
       case ScalaTarget.Js(_, scalaJsVersion) =>

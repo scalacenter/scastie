@@ -44,10 +44,14 @@ class PasteActor(progressActor: ActorRef) extends Actor {
     Router(RoundRobinRoutingLogic(), routees.values.toVector)
 
   def receive = {
+    case format: FormatRequest => {
+      println("paste actor format request")
+      router.route(format, sender)
+    }
     case inputs: Inputs => {
       val id = container.writePaste(inputs)
       router.route(SbtTask(id, inputs, progressActor), self)
-      sender ! id
+      sender ! RunResult(id)
     }
 
     case GetPaste(id) => {
