@@ -132,36 +132,33 @@ object App {
     def clear(): Callback = scope.modState(_.resetOutputs)
 
     def run(): Callback = {
-      scope.state.flatMap(
-        s =>
-          Callback.future(
-            ApiClient[Api]
-              .run(s.inputs)
-              .call()
-              .map{ case RunResult(id) =>
-                connect(id).attemptTry.flatMap {
-                  case Success(ws) => {
-                    def clearLogs =
-                      scope.modState(
-                        _.resetOutputs.openConsole
-                          .setRunning(true)
-                          .copy(websocket = Some(ws))
-                          .log("Connecting...\n")
-                      )
+      scope.state.flatMap(s =>
+        Callback.future(ApiClient[Api].run(s.inputs).call().map {
+          case RunResult(id) =>
+            connect(id).attemptTry.flatMap {
+              case Success(ws) => {
+                def clearLogs =
+                  scope.modState(
+                    _.resetOutputs.openConsole
+                      .setRunning(true)
+                      .copy(websocket = Some(ws))
+                      .log("Connecting...\n")
+                  )
 
-                    def urlRewrite =
-                      scope.props.flatMap {
-                        case (router, snippet) =>
-                          router.set(Snippet(id))
-                      }
-
-                    clearLogs >> urlRewrite
+                def urlRewrite =
+                  scope.props.flatMap {
+                    case (router, snippet) =>
+                      router.set(Snippet(id))
                   }
-                  case Failure(error) =>
-                    scope.modState(
-                      _.resetOutputs.log(error.toString).setRunning(false)
-                    )
-              }}))
+
+                clearLogs >> urlRewrite
+              }
+              case Failure(error) =>
+                scope.modState(
+                  _.resetOutputs.log(error.toString).setRunning(false)
+                )
+            }
+        }))
     }
     def run(e: ReactEventI): Callback = run()
 
@@ -213,23 +210,25 @@ object App {
       scope.modState(_.toggleInstrumentation)
 
     def autoformat(e: ReactEventI): Callback =
-      scope.state.flatMap(state =>
-        Callback.future(
-          ApiClient[Api]
-            .format(FormatRequest(state.inputs.code, state.inputs.isInstrumented))
-            .call()
-            .map {
-              case FormatResponse(Some(formattedCode)) => 
-                scope.modState{s =>
-                  // avoid overriding user's code if he/she types while it's formatting
-                  if(s.inputs.code == state.inputs.code) s.setCode(formattedCode)
-                  else s
-                }
-              case _ => 
-                scope.modState(s => s)
-            }
-        )
-      )      
+      scope.state.flatMap(
+        state =>
+          Callback.future(
+            ApiClient[Api]
+              .format(
+                FormatRequest(state.inputs.code, state.inputs.isInstrumented))
+              .call()
+              .map {
+                case FormatResponse(Some(formattedCode)) =>
+                  scope.modState { s =>
+                    // avoid overriding user's code if he/she types while it's formatting
+                    if (s.inputs.code == state.inputs.code)
+                      s.setCode(formattedCode)
+                    else s
+                  }
+                case _ =>
+                  scope.modState(s => s)
+              }
+        ))
 
     def save(e: ReactEventI): Callback = scope.modState(_.save)
     def update(e: ReactEventI): Callback = scope.modState(_.update)

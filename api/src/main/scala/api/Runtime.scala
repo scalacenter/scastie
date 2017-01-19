@@ -10,7 +10,7 @@ package object runtime {
 
     val Dot = "<kbd>&nbsp;&nbsp;.&nbsp;&nbsp;</kbd>"
     val Space = s"""<kbd>${"&nbsp;" * 40}</kbd>"""
-    
+
     // A stylesheets select the correct one to display
     val Ctrl = "<kbd class='pc'>Ctrl&nbsp;&nbsp;</kbd>"
     val Cmd = "<kbd class='mac'>&nbsp;⌘&nbsp;</kbd>"
@@ -27,11 +27,12 @@ package object runtime {
     val key1 = kbd("1")
     val key2 = kbd("2")
 
-    def a(url: String, text: String) = 
+    def a(url: String, text: String) =
       s"""<a target="_blank" href="$url" rel="nofollow">$text</a>"""
 
-    val scastieGithub = a("https://github.com/scalacenter/scastie", "scalacenter/scastie")
-    
+    val scastieGithub =
+      a("https://github.com/scalacenter/scastie", "scalacenter/scastie")
+
     val sublime = a(
       "https://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html",
       "Sublime Text Keyboard Shortcuts are also supported"

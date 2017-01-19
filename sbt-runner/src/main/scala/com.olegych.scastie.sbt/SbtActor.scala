@@ -21,16 +21,16 @@ import System.{lineSeparator => nl}
 class SbtActor(runTimeout: FiniteDuration) extends Actor {
   private var sbt = new Sbt()
 
-
   private def format(code: String, isInstrumented: Boolean): Option[String] = {
     val config =
-      if(isInstrumented)
+      if (isInstrumented)
         ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
       else
         ScalafmtConfig.default
 
     Scalafmt.format(code, style = config) match {
-      case Formatted.Success(formattedCode) => println("format success"); Some(formattedCode)
+      case Formatted.Success(formattedCode) =>
+        println("format success"); Some(formattedCode)
       case Formatted.Failure(e) => e.printStackTrace(); None
     }
   }
@@ -38,7 +38,7 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
   def receive = {
     case FormatRequest(code, isInstrumented) => {
       println("format in")
-      sender ! FormatResponse(format(code, isInstrumented)) 
+      sender ! FormatResponse(format(code, isInstrumented))
     }
     case SbtTask(id, inputs, progressActor) => {
       val scalaTargetType = inputs.target.targetType

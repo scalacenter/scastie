@@ -112,7 +112,7 @@ object SideBar {
           else EmptyTag
 
         val sharing =
-          if(!state.saved) {
+          if (!state.saved) {
             li(
               iconic.pencil(onClick ==> save),
               p("Save")
