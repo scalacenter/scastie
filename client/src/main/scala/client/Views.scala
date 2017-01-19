@@ -130,10 +130,6 @@ object SideBar {
             )
           }
 
-        val autoformatSelected = 
-          if(state.inputs.autoformat) TagMod(`class` := "toggle selected")
-          else EmptyTag
-
         nav(`class` := s"sidebar $theme")(
           ul(
             li(selected(View.Editor))(
@@ -148,8 +144,8 @@ object SideBar {
               terminal(onClick ==> toggleConsole),
               p("Console")
             ),
-            li(autoformatSelected)(
-              iconic.justifyLeft(onClick ==> toggleAutoformat),
+            li(
+              iconic.justifyLeft(onClick ==> autoformat),
               p("Format")
             ),
             li(instrumentationSelected)(

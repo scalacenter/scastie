@@ -37,9 +37,6 @@ object App {
     def toggleInstrumentation =
       copy(inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
 
-    def toggleAutoformat =
-      copy(inputs = inputs.copy(autoformat = !inputs.autoformat))
-
     def openConsole = copy(console = true)
     def toggleSidebar = copy(sideBarClosed = !sideBarClosed)
 
@@ -140,7 +137,7 @@ object App {
             ApiClient[Api]
               .run(s.inputs)
               .call()
-              .map{ case RunResult(id, formattedCode) =>
+              .map{ case RunResult(id) =>
                 connect(id).attemptTry.flatMap {
                   case Success(ws) => {
                     def clearLogs =
@@ -214,11 +211,11 @@ object App {
     def toggleInstrumentation(e: ReactEventI): Callback =
       scope.modState(_.toggleInstrumentation)
 
-    def toggleAutoformat(e: ReactEventI): Callback =
+    def autoformat(e: ReactEventI): Callback =
       scope.state.flatMap(state =>
         Callback.future(
           ApiClient[Api]
-            .format(FormatRequest(state.inputs.code))
+            .format(FormatRequest(state.inputs.code, state.inputs.isInstrumented))
             .call()
             .map {
               case FormatResponse(Some(formattedCode)) => 

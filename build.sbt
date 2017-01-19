@@ -103,7 +103,8 @@ lazy val sbtRunner = project
       akka("actor"),
       akka("testkit") % Test,
       akka("remote"),
-      akka("slf4j")
+      akka("slf4j"),
+      "com.geirsson" %% "scalafmt" % "0.5.1"
     ),
     imageNames in docker := Seq(
       ImageName(
@@ -170,10 +171,7 @@ lazy val server = project
         .exclude("com.typesafe.play", "play-docs_2.11")
         .exclude("com.lihaoyi", "upickle_sjs0.6_2.11")
     )),
-    libraryDependencies ++= Seq(
-      akka("remote"),
-      "com.geirsson" %% "scalafmt" % "0.5.1"
-    ),
+    libraryDependencies += akka("remote"),
     mainClass in Compile := Option("ProdNettyServer"),
     products in Compile := (products in Compile)
       .dependsOn(WebKeys.assets in Assets)
