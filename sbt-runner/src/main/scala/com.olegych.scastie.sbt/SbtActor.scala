@@ -29,15 +29,13 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
         ScalafmtConfig.default
 
     Scalafmt.format(code, style = config) match {
-      case Formatted.Success(formattedCode) =>
-        println("format success"); Some(formattedCode)
+      case Formatted.Success(formattedCode) => Some(formattedCode)
       case Formatted.Failure(e) => e.printStackTrace(); None
     }
   }
 
   def receive = {
     case FormatRequest(code, isInstrumented) => {
-      println("format in")
       sender ! FormatResponse(format(code, isInstrumented))
     }
     case SbtTask(id, inputs, progressActor) => {
