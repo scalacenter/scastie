@@ -296,7 +296,12 @@ def api(scalaV: String) = {
                crossType = CrossType.Full)
     .settings(baseSettings)
     .settings(
-      buildInfoKeys := Seq[BuildInfoKey](version),
+      buildInfoKeys := Seq[BuildInfoKey](
+        version,
+        BuildInfoKey.action("githash"){
+          import sys.process._
+        }
+      ),
       buildInfoPackage := "api",
 
       scalaVersion := scalaV,
