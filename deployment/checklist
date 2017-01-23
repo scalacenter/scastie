@@ -1,0 +1,10 @@
+== Checklist ==
+
+
+[ ] access to `ssh scastie@scastie.scala-lang.org`
+[ ] access to `ssh scastie@scalagesrv3.epfl.ch`
+[ ] bump version in `build.sbt` and `sbt.sh`
+[ ] git tag
+[ ] `sbt sbtRunner/dockerBuildAndPush`
+[ ] `sbt server/universal:packageBin`
+[ ] run `deploy.sh`

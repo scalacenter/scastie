@@ -3,6 +3,7 @@ build:
   environment:
     - COURSIER_CACHE=/drone/cache/coursier
   commands:
+    - apk update
     - apk add nodejs
     - export SBT_OPTS="-Xmx24G -XX:MaxPermSize=4G -Xss4M"
     - test -d /drone/.sbt && cp -a /drone/.sbt /root
@@ -17,6 +18,7 @@ build:
     - cp -a /root/.sbt /drone
 cache:
   mount:
+    - .git
     - /drone/.sbt
     - /drone/.ivy2
     - /drone/cache

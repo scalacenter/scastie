@@ -1,16 +1,24 @@
-import java.io.File
 import play.api.{Play, DefaultApplication, Mode}
 import play.core.ApplicationProvider
+
+import java.io.File
 import scala.util.{Try, Properties}
 
-/**
- */
-object DevNettyServer extends App {
-  new NettyServer(Mode.Dev)
+import com.olegych.scastie.writeRunningPid
+
+object DevNettyServer {
+  def main(args: Array[String]): Unit = {
+    new NettyServer(Mode.Dev)
+    ()
+  }
 }
 
-object ProdNettyServer extends App {
-  new NettyServer(Mode.Prod)
+object ProdNettyServer {
+  def main(args: Array[String]): Unit = {
+    writeRunningPid()
+    new NettyServer(Mode.Prod)
+    ()
+  }
 }
 
 class NettyServer(mode: Mode.Value) {

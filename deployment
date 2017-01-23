@@ -1,2 +1,0 @@
-frontend: ssh scastie@scastie.scala-lang.org
-sbt(s):   ssh scastie@scalagesrv3.epfl.ch

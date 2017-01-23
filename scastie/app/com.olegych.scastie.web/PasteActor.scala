@@ -32,6 +32,10 @@ class PasteActor(progressActor: ActorRef) extends Actor {
     Play.configuration.getIntList("sbt-remote-ports").get.asScala
   private val host = Play.configuration.getString("sbt-remote-host").get
 
+  val portsInfo = ports.mkString("[", ", ", "]")
+
+  log.info(s"connecting to: $host $portsInfo")
+
   private var routees =
     ports
       .map(
