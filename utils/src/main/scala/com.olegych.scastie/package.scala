@@ -1,6 +1,7 @@
 package com.olegych
 
 import java.nio.file._
+import util.Properties
 import System.{lineSeparator => nl}
 
 package object scastie {
@@ -23,5 +24,22 @@ package object scastie {
       Files.write(dst, content.getBytes, StandardOpenOption.APPEND)
       ()
     }
+  }
+
+  def writeRunningPid() {
+    java.lang.management.ManagementFactory.getRuntimeMXBean.getName
+      .split('@')
+      .headOption
+      .foreach { pid =>
+        val pidFile = Paths.get(Properties.userDir, "RUNNING_PID")
+        println(s"Runner PID: $pid")
+        Files.write(pidFile, pid.getBytes)
+        Runtime.getRuntime.addShutdownHook(new Thread {
+          override def run: Unit = {
+            Files.delete(pidFile)
+            ()
+          }
+        })
+      }
   }
 }

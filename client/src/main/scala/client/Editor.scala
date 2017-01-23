@@ -59,9 +59,12 @@ object Editor {
           ctrl + "-L" -> null,
           ctrl + "-l" -> null,
           ctrl + "-Enter" -> "run",
+          ctrl + "-S" -> "save",
           "Esc" -> "clear",
           "F1" -> "help",
-          "F2" -> "solarizedToggle"
+          "F2" -> "solarizedToggle",
+          "F3" -> "consoleToggle",
+          "F4" -> "scriptToggle"
         )
       )
       .asInstanceOf[codemirror.Options]
@@ -106,8 +109,20 @@ object Editor {
             backend.run().runNow
           }
 
+          CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
+            backend.save().runNow
+          }
+
           CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
             backend.clear().runNow
+          }
+
+          CodeMirror.commands.consoleToggle = (editor: CodeMirrorEditor2) => {
+            backend.toggleConsole().runNow
+          }
+
+          CodeMirror.commands.scriptToggle = (editor: CodeMirrorEditor2) => {
+            backend.toggleInstrumentation().runNow
           }
 
           CodeMirror.commands.solarizedToggle =

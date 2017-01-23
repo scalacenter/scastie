@@ -2,6 +2,8 @@ package api
 
 import scala.concurrent.Future
 
+import BuildInfo.{version => buildVersion}
+
 trait Api {
   def run(inputs: Inputs): Future[Ressource]
   def save(inputs: Inputs): Future[Ressource]
@@ -146,15 +148,14 @@ case class Inputs(
   }
 
   def sbtConfig: String = {
-
     val targetConfig =
       target match {
         case ScalaTarget.Jvm(scalaVersion) => {
-          s"""|libraryDependencies += "org.scastie" %% "runtime-scala" % "0.1.0-SNAPSHOT"
+          s"""|libraryDependencies += "org.scastie" %% "runtime-scala" % "$buildVersion"
               |scalaVersion := "$scalaVersion"""".stripMargin
         }
         case ScalaTarget.Js(scalaVersion, _) => {
-          s"""|libraryDependencies += "org.scastie" %%% "runtime-scala" % "0.1.0-SNAPSHOT"
+          s"""|libraryDependencies += "org.scastie" %%% "runtime-scala" % "$buildVersion"
               |scalaVersion := "$scalaVersion"
               |enablePlugins(ScalaJSPlugin)""".stripMargin
         }
@@ -171,13 +172,13 @@ case class Inputs(
               |libraryDependencies += "ch.epfl.lamp" % "dotty_2.11" % dottyVersion % "scala-tool"
               |scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-sbt-bridge" % scalaVersion.value % "component").sources()
               |
-              |libraryDependencies += "org.scastie" % "runtime-dotty_2.11" % "0.1.0-SNAPSHOT"
+              |libraryDependencies += "org.scastie" % "runtime-dotty_2.11" % "$buildVersion"
               |""".stripMargin
         }
         case ScalaTarget.Native => {
-          """|libraryDependencies += "org.scastie" %%% "runtime-scala" % "0.1.0-SNAPSHOT"
-             |scalaVersion := "2.11.8"
-             |resolvers += Resolver.sonatypeRepo("snapshots")""".stripMargin
+          s"""|libraryDependencies += "org.scastie" %%% "runtime-scala" % "$buildVersion"
+              |scalaVersion := "2.11.8"
+              |resolvers += Resolver.sonatypeRepo("snapshots")""".stripMargin
         }
       }
 

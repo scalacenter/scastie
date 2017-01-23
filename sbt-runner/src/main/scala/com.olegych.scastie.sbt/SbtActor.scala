@@ -17,11 +17,16 @@ import java.util.concurrent.{TimeoutException, Callable, FutureTask, TimeUnit}
 
 import scala.util.control.NonFatal
 import System.{lineSeparator => nl}
+import org.slf4j.LoggerFactory
 
 class SbtActor(runTimeout: FiniteDuration) extends Actor {
   private var sbt = new Sbt()
+  private val log = LoggerFactory.getLogger(getClass)
 
   private def format(code: String, isInstrumented: Boolean): Option[String] = {
+    log.info(s"format (isInstrumented: $isInstrumented)")
+    log.info(code)
+
     val config =
       if (isInstrumented)
         ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
@@ -39,6 +44,8 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
       sender ! FormatResponse(format(code, isInstrumented))
     }
     case SbtTask(id, inputs, progressActor) => {
+      log.info(s"run $inputs")
+
       val scalaTargetType = inputs.target.targetType
 
       val inputs0 =
@@ -58,7 +65,7 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
                  ))
 
       def timeout(duration: FiniteDuration): Unit = {
-        println(s"== restarting sbt $id ==")
+        log.info(s"restarting sbt: $inputs")
         progressActor !
           PasteProgress(
             id = id,
@@ -73,14 +80,14 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
         sbt = new Sbt()
       }
 
-      println(s"== updating $id ==")
+      log.info(s"== updating $id ==")
 
       val sbtReloadTime = 40.seconds
       if (sbt.needsReload(inputs0)) {
         withTimeout(sbtReloadTime)(eval("compile"))(timeout(sbtReloadTime))
       }
 
-      println(s"== running $id ==")
+      log.info(s"== running $id ==")
 
       withTimeout(runTimeout)({
         scalaTargetType match {
@@ -89,7 +96,7 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
         }
       })(timeout(runTimeout))
 
-      println(s"== done  $id ==")
+      log.info(s"== done  $id ==")
     }
   }
 
