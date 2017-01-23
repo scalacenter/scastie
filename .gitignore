@@ -8,3 +8,4 @@ hs_err_pid*
 RUNNING_PID
 sbt-api-*
 TODO
+*.log

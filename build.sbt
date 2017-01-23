@@ -131,7 +131,7 @@ lazy val sbtRunner = project
 
       new Dockerfile {
         from("scalacenter/scastie-docker-sbt:0.13.13")
-        
+
         add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 
         add(artifact, artifactTargetPath)
@@ -297,19 +297,17 @@ def api(scalaV: String) = {
     .settings(
       buildInfoKeys := Seq[BuildInfoKey](
         version,
-        BuildInfoKey.action("githash"){
+        BuildInfoKey.action("githash") {
           println(sys.props.mkString(System.lineSeparator))
           println(sys.env.mkString(System.lineSeparator))
 
           import sys.process._
-          if(!sys.env.contains("CI")) {
+          if (!sys.env.contains("CI")) {
             Process("git describe --long --dirty --tags").lines.mkString("")
-          }
-          else "CI"
+          } else "CI"
         }
       ),
       buildInfoPackage := "api",
-
       scalaVersion := scalaV,
       moduleName := projectName,
       libraryDependencies ++= Seq(

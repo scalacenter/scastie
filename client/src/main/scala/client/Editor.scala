@@ -60,7 +60,6 @@ object Editor {
           ctrl + "-l" -> null,
           ctrl + "-Enter" -> "run",
           ctrl + "-S" -> "save",
-
           "Esc" -> "clear",
           "F1" -> "help",
           "F2" -> "solarizedToggle",

@@ -117,11 +117,13 @@ object SideBar {
               editor
             ),
             li(
-              iconic.pencil(onClick ==> save ),
+              iconic.pencil(onClick ==> save),
               p("Save")
             ),
             li(selected(View.Settings))(
-              img(src := "/assets/dotty3.svg", alt := "settings", `class` := "libraries", 
+              img(src := "/assets/dotty3.svg",
+                  alt := "settings",
+                  `class` := "libraries",
                   onClick ==> setView(View.Settings)),
               p("Libraries")
             ),
