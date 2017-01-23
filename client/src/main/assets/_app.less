@@ -12,6 +12,8 @@ body, .root, .app, .main-pannel, .pannel, .sidebar,
 body.mac kbd.pc { display: none }
 body.pc kbd.mac { display: none }
 
+@sidebar-icon-size: 35px;
+
 .app {
   @sidebar-width: 75px;
   @sidebar-border: 1px;
@@ -70,17 +72,23 @@ body.pc kbd.mac { display: none }
 
     li {
       cursor: pointer;
-
-      @size: 35px;
-
       display: block;
-      font-size: @size;
-      padding: (@sidebar-width - @size) / 2;
+      font-size: @sidebar-icon-size;
+
+      padding: 10px;
+      margin: 0 auto;
+
+      i {
+        display: block;
+      }
+
+      i, p {
+        text-align: center;
+      }
 
       p {
         font-size: 14px;
         margin: 0;
-        text-align: center;
       }
     }
 
@@ -88,6 +96,11 @@ body.pc kbd.mac { display: none }
       color: green;
     }
 
+    .libraries {
+      height: @sidebar-icon-size;
+      margin: 0 auto;
+      width: 100%;
+    }
 
     // THEME
 
@@ -97,10 +110,6 @@ body.pc kbd.mac { display: none }
       background-color: @base02;
       color: @base01;
       border-right-color: @base03;
-      .output-console {
-        background-color: @base02;
-        color: @base01;
-      }
       li {
         &.selected {
           background-color: @base03;
@@ -116,10 +125,6 @@ body.pc kbd.mac { display: none }
       background-color: @base2;
       color: @base1;
       border-right-color: @base3;
-      .output-console {
-        background-color: @base2;
-        color: @base1;
-      }
       li {
         &.selected {
           background-color: @base3;
@@ -139,6 +144,7 @@ body.pc kbd.mac { display: none }
 }
 
 .with-console {
+
   @console-height: 40%;
   @padding: 10px;
 
@@ -146,8 +152,27 @@ body.pc kbd.mac { display: none }
     height: calc(100% - @console-height ~"-" @padding);
   }
   .output-console {
+    border-top-width: 10px;
+    border-top-style: solid;
+
     height: @console-height;
     display: block;
+  }
+
+  .solarized-pallette;
+  &.dark {
+    .output-console {
+      border-top-color: @base02;
+      background-color: @base03;
+      color: @base01;
+    }
+  }
+  &.light {
+    .output-console {
+      border-top-color: @base2;
+      background-color: @base3;
+      color: @base1;
+    }
   }
 }
 
@@ -161,8 +186,10 @@ body.pc kbd.mac { display: none }
 // http://tobiasahlin.com/spinkit/
 .sk-folding-cube {
   margin: 2px auto;
-  width: 40px;
-  height: 40px;
+  margin-bottom: 10px;
+
+  width: @sidebar-icon-size - 5px;
+  height: @sidebar-icon-size - 5px;
   position: relative;
   -webkit-transform: rotateZ(45deg);
           transform: rotateZ(45deg);

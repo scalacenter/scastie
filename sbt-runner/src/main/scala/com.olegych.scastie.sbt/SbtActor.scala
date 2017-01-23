@@ -146,7 +146,7 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
         case sbtapi.Error => api.Error
       }
       val lineOffset =
-        if (isInstrumented) 2
+        if (isInstrumented) -2
         else 0
 
       api.Problem(severity, p.line.map(_ + lineOffset), p.message)

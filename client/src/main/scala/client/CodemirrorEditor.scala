@@ -38,7 +38,7 @@ object CodeMirrorEditor {
                 "lineWrapping" -> false,
                 "tabSize" -> 2,
                 "indentWithTabs" -> false,
-                "theme" -> s"solarized ${settings.theme}",
+                "theme" -> settings.theme,
                 "smartIndent" -> true,
                 "keyMap" -> "sublime",
                 "scrollPastEnd" -> true,
@@ -93,7 +93,13 @@ object CodeMirrorEditor {
       }
     }
 
-    Callback(setCode())
+    def setTheme(): Unit = {
+      if (current.theme != next.theme) {
+        editor.setOption("theme", next.theme)
+      }
+    }
+
+    Callback(setCode()) >> Callback(setTheme())
   }
 
   private val component =

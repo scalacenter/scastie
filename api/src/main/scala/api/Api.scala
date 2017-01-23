@@ -3,7 +3,8 @@ package api
 import scala.concurrent.Future
 
 trait Api {
-  def run(inputs: Inputs): Future[RunResult]
+  def run(inputs: Inputs): Future[Ressource]
+  def save(inputs: Inputs): Future[Ressource]
   def fetch(id: Long): Future[Option[FetchResult]]
   def format(code: FormatRequest): Future[FormatResponse]
 }
@@ -11,7 +12,7 @@ trait Api {
 case class FormatRequest(code: String, isInstrumented: Boolean)
 case class FormatResponse(formattedCode: Option[String])
 
-case class RunResult(id: Long)
+case class Ressource(id: Long)
 case class FetchResult(inputs: Inputs, progresses: List[PasteProgress])
 
 case class Paste(

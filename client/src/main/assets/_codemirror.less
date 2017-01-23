@@ -33,6 +33,7 @@ body.pc kbd.mac { display: none }
   margin-left: -@margin;
 }
 .CodeMirror-linewidget .line,
+.CodeMirror-linewidget .compilation-info,
 .CodeMirror-widget .fold {
   margin-left: -(@margin + 4px);
   width: calc(~"100% + "(@margin + 4px));
@@ -83,11 +84,11 @@ body.pc kbd.mac { display: none }
     overflow: visible !important;
 
     .compilation-info {
-      &.error {
+      &.error i {
         color: red;
       }
 
-      &.warning {
+      &.warning i {
         color: yellow;
       }
 
@@ -109,23 +110,6 @@ body.pc kbd.mac { display: none }
       margin-left: 16px;
       margin-right: 6px;
       font-size: 12px;
-    }
-  }
-
-  .timeout,
-  .runtime-error,
-  .compiler.error {
-    i { color: red;}
-  }
-
-  .compiler.warning {
-    i { color: yellow; }
-  }
-
-  .runtime-error,
-  .compiler {
-    pre {
-      display: inline-block;
     }
   }
 }
@@ -198,14 +182,14 @@ kbd {
 }
 
 // ::-webkit-scrollbar:horizontal,
-// .CodeMirror-simplescroll-horizontal div {
-//   height: 12px;
-// }
+.CodeMirror-simplescroll-horizontal div {
+  height: 12px;
+}
 
 // ::-webkit-scrollbar:vertical,
-// .CodeMirror-simplescroll-vertical div {
-//   width: 12px;
-// }
+.CodeMirror-simplescroll-vertical div {
+  width: 12px;
+}
 
 // ::-webkit-scrollbar {
 //   width: 12px;
