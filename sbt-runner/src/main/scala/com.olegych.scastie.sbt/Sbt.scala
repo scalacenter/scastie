@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package sbt
 
+import BuildInfo.{version => buildVersion}
+
 import api._
 
 import scala.util.Random
@@ -31,16 +33,12 @@ class Sbt() {
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
   write(pluginFile,
-        """addSbtPlugin("org.scastie" % "sbt-scastie" % "0.1.0-SNAPSHOT")""")
+        s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")""")
 
   private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
 
   Files.createDirectories(codeFile.getParent)
 
-  // dont block the actor from intializing.
-  // start sbt when the actor receive a message
-  // it's useful in testing where we start the actor and send an
-  // evaluation message right away.
   private val (process, fin, fout) = {
     val builder = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     val currentOpts = sys.env.get("SBT_OPTS").getOrElse("")

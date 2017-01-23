@@ -4,7 +4,7 @@ import org.scalajs.sbtplugin.cross.CrossProject
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.1.0-SNAPSHOT"
+  version := "0.1.0"
 )
 
 lazy val baseSettings = Seq(
@@ -130,7 +130,7 @@ lazy val sbtRunner = project
       val artifactTargetPath = s"/app/${artifact.name}"
 
       new Dockerfile {
-        // docker run --network=host -e RUNNER_PORT=5150 scalacenter/scastie-sbt-runner:0.1.0-SNAPSHOT
+        // docker run --network=host -e RUNNER_PORT=5150 scalacenter/scastie-sbt-runner:0.1.0
 
         from("scalacenter/scastie-docker-sbt:0.13.13")
 
@@ -140,9 +140,9 @@ lazy val sbtRunner = project
 
         entryPoint("java", "-Xmx2G", "-Xms512M", "-jar", artifactTargetPath)
       }
-    }.dependsOn(runnerRuntimeDependencies: _*).value
-  )
-  .settings(
+    }.dependsOn(runnerRuntimeDependencies: _*).value,
+    buildInfoKeys := Seq[BuildInfoKey](version),
+    buildInfoPackage := "com.olegych.scastie.sbt",
     test in Test := (test in Test)
       .dependsOn(sbtRunnerRuntimeDependencies: _*)
       .value,
@@ -154,7 +154,7 @@ lazy val sbtRunner = project
       .evaluated
   )
   .dependsOn(sbtApi211, api211JVM, instrumentation, utils)
-  .enablePlugins(DockerPlugin)
+  .enablePlugins(DockerPlugin, BuildInfoPlugin)
   .disablePlugins(play.PlayScala)
 
 lazy val server = project
@@ -296,6 +296,14 @@ def api(scalaV: String) = {
                crossType = CrossType.Full)
     .settings(baseSettings)
     .settings(
+      buildInfoKeys := Seq[BuildInfoKey](
+        version,
+        BuildInfoKey.action("githash"){
+          import sys.process._
+        }
+      ),
+      buildInfoPackage := "api",
+
       scalaVersion := scalaV,
       moduleName := projectName,
       libraryDependencies ++= Seq(
@@ -308,6 +316,7 @@ def api(scalaV: String) = {
       test := {},
       libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
     )
+    .enablePlugins(BuildInfoPlugin)
     .disablePlugins(play.PlayScala)
 }
 

@@ -1,5 +1,7 @@
 package api
 
+import BuildInfo.{version => buildVersion, githash}
+
 package object runtime {
 
   val Html = api.Html
@@ -86,6 +88,7 @@ package object runtime {
            |
            |$scastieGithub
            |published under the Apache2 license
-           |""".stripMargin.fold
+           |Version: $buildVersion
+           |GitHash: $githash""".stripMargin.fold
   }
 }
