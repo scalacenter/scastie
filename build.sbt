@@ -274,6 +274,7 @@ class A {
 }
 
  */
+
 lazy val instrumentation = project
   .settings(baseSettings)
   .settings(
@@ -300,6 +301,7 @@ def api(scalaV: String) = {
         version,
         BuildInfoKey.action("githash"){
           import sys.process._
+          Process("git describe --long --dirty --tags").lines.mkString("")
         }
       ),
       buildInfoPackage := "api",

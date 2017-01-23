@@ -26,6 +26,8 @@ package object runtime {
 
     def kbd(label: String): String = s"<kbd>&nbsp;$label&nbsp;</kbd>"
     val F2 = kbd("F2")
+    val F3 = kbd("F3")
+    val F4 = kbd("F4")
     val F7 = kbd("F7")
     val Esc = kbd("Esc")
 
@@ -57,13 +59,11 @@ package object runtime {
            |<pre>
            |Editor View $CC + $key1
            |  Run                                       $CC + $Enter
-           |  Save                                      TODO
-           |  Update                                    TODO
-           |  Fork                                      TODO
+           |  Save                                      $CC + S
            |  Clear annotations, Close console output   $Esc
-           |  Toogle console                            TODO
            |  Toggle Theme (Solarized Light/Dark)       $F2
-           |  Toogle Script Mode                        TODO
+           |  Toogle console                            $F3
+           |  Toogle Script Mode                        $F4
            |
            |Settings View $CC + $key2
            |

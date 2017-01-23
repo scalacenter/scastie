@@ -138,10 +138,12 @@ object App {
 
     def toggleTheme(e: ReactEventI): Callback = toggleTheme()
     def toggleTheme(): Callback = scope.modState(_.toggleTheme)
-    def toggleConsole(e: ReactEventI): Callback =
-      scope.modState(_.toggleConsole)
-    def toggleInstrumentation(e: ReactEventI): Callback =
-      scope.modState(_.toggleInstrumentation)
+    
+    def toggleConsole(): Callback = scope.modState(_.toggleConsole)
+    def toggleConsole(e: ReactEventI): Callback = toggleConsole()
+      
+    def toggleInstrumentation(): Callback = scope.modState(_.toggleInstrumentation)
+    def toggleInstrumentation(e: ReactEventI): Callback = toggleInstrumentation()
 
     def run(e: ReactEventI): Callback = run()
     def run(): Callback = {

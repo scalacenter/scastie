@@ -13,8 +13,11 @@ import akka.remote.DisassociatedEvent
 import akka.routing.{ActorSelectionRoutee, RoundRobinRoutingLogic, Router}
 
 import java.nio.file._
+import org.slf4j.LoggerFactory
 
 class PasteActor(progressActor: ActorRef) extends Actor {
+
+  private val log = LoggerFactory.getLogger(getClass)
 
   override def preStart = {
     context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
@@ -45,7 +48,6 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 
   def receive = {
     case format: FormatRequest => {
-      println("paste actor format request")
       router.route(format, sender)
     }
     case inputs: Inputs => {
@@ -72,7 +74,7 @@ class PasteActor(progressActor: ActorRef) extends Actor {
         port <- event.remoteAddress.port
         selection <- routees.get((host, port))
       } {
-        println("removing: " + selection)
+        log.warn("removing disconnected: " + selection)
         routees = routees - ((host, port))
         router = router.removeRoutee(selection)
       }

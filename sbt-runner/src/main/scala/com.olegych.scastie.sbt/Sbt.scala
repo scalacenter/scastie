@@ -68,8 +68,7 @@ class Sbt() {
         val line = chars.mkString
         prompt = line == uniqueId
 
-        // log.info(line)
-        println(line)
+        log.info(line)
 
         lineCallback(line, prompt)
         chars.clear()
