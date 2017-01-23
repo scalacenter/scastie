@@ -111,34 +111,19 @@ object SideBar {
           if (state.inputs.isInstrumented) TagMod(`class` := "toggle selected")
           else EmptyTag
 
-        val sharing =
-          if (!state.saved) {
-            li(
-              iconic.pencil(onClick ==> save),
-              p("Save")
-            )
-          } else {
-            TagMod(
-              li(
-                iconic.pencil(onClick ==> update),
-                p("Update")
-              ),
-              li(
-                iconic.fork(onClick ==> fork),
-                p("Fork")
-              )
-            )
-          }
-
         nav(`class` := s"sidebar $theme")(
           ul(
             li(selected(View.Editor))(
               editor
             ),
-            sharing,
+            li(
+              iconic.pencil(onClick ==> save ),
+              p("Save")
+            ),
             li(selected(View.Settings))(
-              cog(onClick ==> setView(View.Settings)),
-              p("Settings")
+              img(src := "/assets/dotty3.svg", alt := "settings", `class` := "libraries", 
+                  onClick ==> setView(View.Settings)),
+              p("Libraries")
             ),
             li(consoleSelected)(
               terminal(onClick ==> toggleConsole),

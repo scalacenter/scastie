@@ -1,18 +1,20 @@
-class Playground {
-  import com.sksamuel.scrimage._
-  import com.sksamuel.scrimage.filter._
+/*
+libraryDependencies ++= Seq(
+  "com.sksamuel.scrimage" %% "scrimage-core" % "2.1.8" ,
+  "com.sksamuel.scrimage" %% "scrimage-filters" % "2.1.8" 
+)
+*/
+import com.sksamuel.scrimage._
+import com.sksamuel.scrimage.filter._
+import java.io.{File, FileInputStream}
 
-  import java.io.{File, FileInputStream}
 
-  val in = new FileInputStream(new File("/tmp/scastie/lanzarote.jpg"))
-  val image = Image.fromStream(in)
-  val small = image.scaleToWidth(200)
+val image = Image(new FileInputStream(new File("/tmp/scastie/lanzarote.jpg")))
 
-  small.output(new File("/tmp/scastie/small.jpg"))
-  api.Html("<img src='/tmp/scastie/small.jpg' alt='small lanzarote'>", true)
+val small = image.scaleToWidth(200)
 
-  small.filter(SepiaFilter).output(new File("/tmp/scastie/small-sepia.jpg"))
-  api.Html(
-    "<img src='/tmp/scastie/small-sepia.jpg' alt='small lanzarote sepia'>",
-    true)
-}
+small.output(new File("/tmp/scastie/small.jpg"))
+html"<img src='/tmp/scastie/small.jpg' alt='small lanzarote'>".fold
+
+small.filter(SepiaFilter).output(new File("/tmp/scastie/small-sepia.jpg"))
+html"<img src='/tmp/scastie/small-sepia.jpg' alt='small lanzarote sepia'>".fold

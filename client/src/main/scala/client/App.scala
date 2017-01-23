@@ -6,14 +6,8 @@ import api._
 import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-import org.scalajs.dom.{
-  WebSocket,
-  MessageEvent,
-  Event,
-  CloseEvent,
-  ErrorEvent,
-  window
-}
+import org.scalajs.dom._
+
 import scala.util.{Success, Failure}
 
 import upickle.default.{read => uread}
@@ -23,7 +17,6 @@ object App {
       view: View = View.Editor,
       running: Boolean = false,
       sideBarClosed: Boolean = false,
-      saved: Boolean = false,
       websocket: Option[WebSocket] = None,
       dark: Boolean = false,
       console: Boolean = false,
@@ -40,10 +33,6 @@ object App {
 
     def openConsole = copy(console = true)
     def toggleSidebar = copy(sideBarClosed = !sideBarClosed)
-
-    def save = copy(saved = true)
-    def update = this
-    def fork = this
 
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State =
@@ -131,37 +120,6 @@ object App {
 
     def clear(): Callback = scope.modState(_.resetOutputs)
 
-    def run(): Callback = {
-      scope.state.flatMap(s =>
-        Callback.future(ApiClient[Api].run(s.inputs).call().map {
-          case RunResult(id) =>
-            connect(id).attemptTry.flatMap {
-              case Success(ws) => {
-                def clearLogs =
-                  scope.modState(
-                    _.resetOutputs.openConsole
-                      .setRunning(true)
-                      .copy(websocket = Some(ws))
-                      .log("Connecting...\n")
-                  )
-
-                def urlRewrite =
-                  scope.props.flatMap {
-                    case (router, snippet) =>
-                      router.set(Snippet(id))
-                  }
-
-                clearLogs >> urlRewrite
-              }
-              case Failure(error) =>
-                scope.modState(
-                  _.resetOutputs.log(error.toString).setRunning(false)
-                )
-            }
-        }))
-    }
-    def run(e: ReactEventI): Callback = run()
-
     def setView(newView: View)(e: ReactEventI): Callback =
       scope.modState(_.setView(newView))
 
@@ -177,6 +135,46 @@ object App {
     def changeDependencyVersion(scalaDependency: ScalaDependency,
                                 version: String): Callback =
       scope.modState(_.changeDependencyVersion(scalaDependency, version))
+
+    def toggleTheme(e: ReactEventI): Callback = toggleTheme()
+    def toggleTheme(): Callback = scope.modState(_.toggleTheme)
+    def toggleConsole(e: ReactEventI): Callback =
+      scope.modState(_.toggleConsole)
+    def toggleInstrumentation(e: ReactEventI): Callback =
+      scope.modState(_.toggleInstrumentation)
+
+    def run(e: ReactEventI): Callback = run()
+    def run(): Callback = {
+      scope.state.flatMap(s =>
+        Callback.future(ApiClient[Api].run(s.inputs).call().map {
+          case Ressource(id) =>
+            connect(id).attemptTry.flatMap {
+              case Success(ws) => {
+                scope.modState(
+                  _.resetOutputs.openConsole
+                    .setRunning(true)
+                    .copy(websocket = Some(ws))
+                    .log("Connecting...\n")
+                )
+              }
+              case Failure(error) =>
+                scope.modState(
+                  _.resetOutputs.log(error.toString).setRunning(false)
+                )
+            }
+        }))
+    }
+    def save(e: ReactEventI): Callback = save()
+    def save(): Callback = {
+      scope.state.flatMap(s =>
+        Callback.future(ApiClient[Api].save(s.inputs).call().map {
+          case Ressource(id) =>
+            scope.props.flatMap {
+              case (router, snippet) =>
+                router.set(Snippet(id))
+            }
+        }))
+    }
 
     def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
       val (router, snippet) = props
@@ -202,13 +200,6 @@ object App {
       }
     }
 
-    def toggleTheme(e: ReactEventI): Callback = toggleTheme()
-    def toggleTheme(): Callback = scope.modState(_.toggleTheme)
-    def toggleConsole(e: ReactEventI): Callback =
-      scope.modState(_.toggleConsole)
-    def toggleInstrumentation(e: ReactEventI): Callback =
-      scope.modState(_.toggleInstrumentation)
-
     def autoformat(e: ReactEventI): Callback =
       scope.state.flatMap(
         state =>
@@ -229,10 +220,6 @@ object App {
                   scope.modState(s => s)
               }
         ))
-
-    def save(e: ReactEventI): Callback = scope.modState(_.save)
-    def update(e: ReactEventI): Callback = scope.modState(_.update)
-    def fork(e: ReactEventI): Callback = scope.modState(_.fork)
   }
 
   val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")

@@ -51,7 +51,7 @@ class PasteActor(progressActor: ActorRef) extends Actor {
     case inputs: Inputs => {
       val id = container.writePaste(inputs)
       router.route(SbtTask(id, inputs, progressActor), self)
-      sender ! RunResult(id)
+      sender ! Ressource(id)
     }
 
     case GetPaste(id) => {

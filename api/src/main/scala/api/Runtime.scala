@@ -1,6 +1,9 @@
 package api
 
 package object runtime {
+
+  val Html = api.Html
+
   implicit class HtmlHelper(val sc: StringContext) extends AnyVal {
     def html(args: Any*) = Html(sc.s(args: _*))
     def htmlRaw(args: Any*) = Html(sc.raw(args: _*))

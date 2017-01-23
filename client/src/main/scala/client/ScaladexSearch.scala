@@ -19,7 +19,7 @@ import scala.language.higherKinds
 
 object ScaladexSearch {
   // private val scaladexUrl = "http://localhost:8080/api"
-  private val scaladexUrl = "https://index.scala-lang.org/api"
+  private val scaladexUrl = "https://scaladex.scala-lang.org/api"
 
   private implicit val projectOrdering =
     Ordering.by { project: Project =>
@@ -251,7 +251,7 @@ object ScaladexSearch {
             else artifact
 
           val scaladexLink =
-            s"https://index.scala-lang.org/$organization/$repository/$artifact"
+            s"https://scaladex.scala-lang.org/$organization/$repository/$artifact"
 
           li(selected)(
             a(`class` := "scaladex", href := scaladexLink, target := "_blank")(
@@ -313,7 +313,7 @@ object ScaladexSearch {
             added,
             input.search(
               ref := searchInputRef,
-              placeholder := "Search for 'fp'",
+              placeholder := "Search for 'cats'",
               value := searchState.query,
               onChange ==> scope.backend.setQuery,
               onKeyDown ==> scope.backend.keyDown

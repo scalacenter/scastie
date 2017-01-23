@@ -32,12 +32,17 @@ object AutowireServer extends autowire.Server[String, Reader, Writer] {
 class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
                                     executionContext: ExecutionContext)
     extends Api {
-  def run(inputs: Inputs): Future[RunResult] = {
-    (pasteActor ? inputs).mapTo[RunResult]
+
+  def run(inputs: Inputs): Future[Ressource] = {
+    (pasteActor ? inputs).mapTo[Ressource]
   }
+
+  def save(inputs: Inputs): Future[Ressource] = run(inputs)
+
   def fetch(id: Long): Future[Option[FetchResult]] = {
     (pasteActor ? GetPaste(id)).mapTo[Option[FetchResult]]
   }
+
   def format(formatRequest: FormatRequest): Future[FormatResponse] = {
     (pasteActor ? formatRequest).mapTo[FormatResponse]
   }

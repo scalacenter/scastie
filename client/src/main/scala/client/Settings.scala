@@ -103,9 +103,9 @@ object Settings {
         val theme = if (props.dark) "dark" else "light"
 
         div(`class` := "settings")(
+          ScaladexSearch(props, backend),
           renderTarget(props.inputs.target, backend),
           renderVersions(props.inputs.target, backend),
-          ScaladexSearch(props, backend),
           fieldset(
             legend("SBT"),
             pre(props.inputs.sbtConfig),
