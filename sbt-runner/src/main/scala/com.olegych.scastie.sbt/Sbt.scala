@@ -46,10 +46,8 @@ class Sbt() {
       .put(
         "SBT_OPTS",
         Seq(
-          "-Xms1g",
-          "-Xmx2g",
-          "-XX:ReservedCodeCacheSize=128m",
-          "-XX:MaxMetaspaceSize=256m",
+          "-Xms256m",
+          "-Xmx512m",
           "-Djline.terminal=jline.UnsupportedTerminal",
           "-Dsbt.log.noformat=true"
         ).mkString(" ")

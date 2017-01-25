@@ -29,12 +29,12 @@ object AutowireServer extends autowire.Server[String, Reader, Writer] {
   def write[R: Writer](r: R) = uwrite(r)
 }
 
-class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout,
+class ApiImpl(pasteActor: ActorRef, ip: String)(implicit timeout: Timeout,
                                     executionContext: ExecutionContext)
     extends Api {
 
   def run(inputs: Inputs): Future[Ressource] = {
-    (pasteActor ? inputs).mapTo[Ressource]
+    (pasteActor ? InputsWithIp(inputs, ip)).mapTo[Ressource]
   }
 
   def save(inputs: Inputs): Future[Ressource] = run(inputs)
@@ -78,8 +78,6 @@ object Application extends Controller {
     Ok(views.html.index())
   }
 
-  private val api = new ApiImpl(pasteActor)
-
   def progress(id: Long) = WebSocket.tryAccept[String] { request =>
     (progressActor ? MonitorProgress(id))
       .mapTo[MonitorChannel]
@@ -88,8 +86,8 @@ object Application extends Controller {
 
   def autowireApi(path: String) = Action.async { implicit request =>
     val text = request.body.asText.getOrElse("")
-    val autowireRequest =
-      Request(path.split("/"), uread[Map[String, String]](text))
+    val api = new ApiImpl(pasteActor, request.remoteAddress)
+    val autowireRequest = Request(path.split("/"), uread[Map[String, String]](text))
     AutowireServer.route[Api](api)(autowireRequest).map(buffer => Ok(buffer))
   }
 }
