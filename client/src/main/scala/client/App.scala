@@ -139,7 +139,9 @@ object App {
     def setView(newView: View)(e: ReactEventI): Callback =
       scope.modState(_.setView(newView))
 
-    def setTarget(target: ScalaTarget)(e: ReactEventI): Callback =
+    def setTarget2(target: ScalaTarget)(e: ReactEventI): Callback = setTarget(target)
+
+    def setTarget(target: ScalaTarget): Callback =
       scope.modState(_.setTarget(target))
 
     def addScalaDependency(scalaDependency: ScalaDependency): Callback =
