@@ -27,7 +27,8 @@ import scala.scalajs._
 
 object Editor {
 
-  val codemirrorTextarea = Ref[HTMLTextAreaElement]("codemirror-textarea")
+  private val codemirrorTextarea =
+    Ref[HTMLTextAreaElement]("codemirror-textarea")
 
   private def options(dark: Boolean): codemirror.Options = {
 
@@ -64,7 +65,8 @@ object Editor {
           "F1" -> "help",
           "F2" -> "solarizedToggle",
           "F3" -> "consoleToggle",
-          "F4" -> "scriptToggle"
+          "F4" -> "scriptToggle",
+          "F6" -> "formatCode"
         )
       )
       .asInstanceOf[codemirror.Options]
@@ -100,7 +102,7 @@ object Editor {
       scope.props.flatMap {
         case (props, backend) =>
           val editor = codemirror.CodeMirror
-            .fromTextArea(codemirrorTextarea(scope).get, options(props.dark))
+            .fromTextArea(codemirrorTextarea(scope).get, options(props.isDarkTheme))
 
           editor.onChange((_, _) =>
             backend.codeChange(editor.getDoc().getValue()).runNow)
@@ -130,9 +132,20 @@ object Editor {
               backend.toggleTheme().runNow
             }
 
+          CodeMirror.commands.formatCode = (editor: CodeMirrorEditor2) => {
+            backend.formatCode().runNow
+          }
+
           scope.modState(_.copy(editor = Some(editor)))
       }
     }
+  }
+
+  private def setCode2(editor: TextAreaEditor, code: String): Unit = {
+    val doc = editor.getDoc()
+    val prevScrollPosition = editor.getScrollInfo()
+    doc.setValue(code)
+    editor.scrollTo(prevScrollPosition.left, prevScrollPosition.top)
   }
 
   type Scope = CompScope.DuringCallbackM[(App.State, App.Backend),
@@ -146,9 +159,9 @@ object Editor {
                        current: App.State,
                        next: App.State): Callback = {
     def setTheme() = {
-      if (current.dark != next.dark) {
+      if (current.isDarkTheme != next.isDarkTheme) {
         val theme =
-          if (next.dark) "dark"
+          if (next.isDarkTheme) "dark"
           else "light"
 
         editor.setOption("theme", s"solarized $theme")
@@ -159,9 +172,7 @@ object Editor {
       if (current.inputs.code != next.inputs.code) {
         val doc = editor.getDoc()
         if (doc.getValue() != next.inputs.code) {
-          val cursor = doc.getCursor()
-          doc.setValue(next.inputs.code)
-          doc.setCursor(cursor)
+          setCode2(editor, next.inputs.code)
         }
       }
     }
@@ -350,29 +361,31 @@ object Editor {
       Callback(refresh())
   }
 
-  val component = ReactComponentB[(App.State, App.Backend)]("CodemirrorEditor")
-    .initialState(EditorState())
-    .backend(new Backend(_))
-    .renderPS {
-      case (scope, (props, backend), _) =>
-        textarea(defaultValue := props.inputs.code,
-                 onChange ==> backend.codeChange,
-                 ref := codemirrorTextarea,
-                 autoComplete := "off")
-    }
-    .componentWillReceiveProps { v =>
-      val (current, _) = v.currentProps
-      val (next, _) = v.nextProps
-      val state = v.currentState
-      val scope = v.$
+  private val component =
+    ReactComponentB[(App.State, App.Backend)]("CodemirrorEditor")
+      .initialState(EditorState())
+      .backend(new Backend(_))
+      .renderPS {
+        case (scope, (props, backend), state) =>
+          textarea(onChange ==> backend.codeChange,
+                   value := props.inputs.code,
+                   ref := codemirrorTextarea,
+                   name := "CodeArea",
+                   autoComplete := "off")
+      }
+      .componentWillReceiveProps { v =>
+        val (current, _) = v.currentProps
+        val (next, _) = v.nextProps
+        val state = v.currentState
+        val scope = v.$
 
-      state.editor
-        .map(editor => runDelta(editor, scope, state, current, next))
-        .getOrElse(Callback(()))
-    }
-    .componentDidMount(_.backend.start())
-    .componentWillUnmount(_.backend.stop())
-    .build
+        state.editor
+          .map(editor => runDelta(editor, scope, state, current, next))
+          .getOrElse(Callback(()))
+      }
+      .componentDidMount(_.backend.start())
+      .componentWillUnmount(_.backend.stop())
+      .build
 
   def apply(state: App.State, backend: App.Backend) =
     component((state, backend))

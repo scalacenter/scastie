@@ -6,6 +6,7 @@ import api._
 import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
+import org.scalajs.dom.console
 import org.scalajs.dom._
 
 import scala.util.{Success, Failure}
@@ -13,26 +14,36 @@ import scala.util.{Success, Failure}
 import upickle.default.{read => uread}
 
 object App {
+  object State {
+    def default = State(
+      view = View.Editor,
+      running = false,
+      websocket = None,
+      isDarkTheme = false,
+      consoleIsOpen = false,
+      codemirrorSettings = None,
+      inputs = Inputs.default,
+      outputs = Outputs.default
+    )
+  }
   case class State(
-      view: View = View.Editor,
-      running: Boolean = false,
-      sideBarClosed: Boolean = false,
-      websocket: Option[WebSocket] = None,
-      dark: Boolean = false,
-      console: Boolean = false,
-      codemirrorSettings: Option[codemirror.Options] = None,
-      inputs: Inputs = Inputs.default,
-      outputs: Outputs = Outputs()
+      view: View,
+      running: Boolean,
+      websocket: Option[WebSocket],
+      isDarkTheme: Boolean,
+      consoleIsOpen: Boolean,
+      codemirrorSettings: Option[codemirror.Options],
+      inputs: Inputs,
+      outputs: Outputs
   ) {
     def setRunning(v: Boolean) = copy(running = v)
 
-    def toggleTheme = copy(dark = !dark)
-    def toggleConsole = copy(console = !console)
+    def toggleTheme = copy(isDarkTheme = !isDarkTheme)
+    def toggleConsole = copy(consoleIsOpen = !consoleIsOpen)
     def toggleInstrumentation =
       copy(inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
 
-    def openConsole = copy(console = true)
-    def toggleSidebar = copy(sideBarClosed = !sideBarClosed)
+    def openConsole = copy(consoleIsOpen = true)
 
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State =
@@ -60,7 +71,7 @@ object App {
         libraries = (inputs.libraries - scalaDependency) + newScalaDependency))
     }
 
-    def resetOutputs = copy(outputs = Outputs(), console = false)
+    def resetOutputs = copy(outputs = Outputs.default, consoleIsOpen = false)
 
     def addProgress(progress: PasteProgress) = {
       addOutputs(progress.compilationInfos, progress.instrumentations)
@@ -83,8 +94,13 @@ object App {
   }
 
   class Backend(scope: BackendScope[(RouterCtl[Page], Option[Snippet]), State]) {
-    def codeChange(newCode: String) =
-      scope.modState(_.setCode(newCode))
+    def codeChange(newCode: String) = {
+      console.log("code changes:\n" + newCode)
+      scope.modState { state =>
+        LocalStorage.saveCode(newCode)
+        state.setCode(newCode)
+      }
+    }
 
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
@@ -181,6 +197,8 @@ object App {
     }
 
     def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
+      console.log("== Welcome to Scastie ==")
+
       val (router, snippet) = props
 
       snippet match {
@@ -200,11 +218,19 @@ object App {
                     scope.modState(_.setCode(s"//paste $id not found"))
               })
           )
-        case None => Callback(())
+        case None => {
+            LocalStorage.loadCode.map(code =>
+              scope.modState { state =>
+                console.log("set code: " + code)
+                state.setCode(code)
+            })
+            .getOrElse(Callback(()))
+        }
       }
     }
 
-    def autoformat(e: ReactEventI): Callback =
+    def formatCode(e: ReactEventI): Callback = formatCode()
+    def formatCode(): Callback =
       scope.state.flatMap(
         state =>
           Callback.future(
@@ -227,17 +253,13 @@ object App {
   }
 
   val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")
-    .initialState(State())
+    .initialState(State.default)
     .backend(new Backend(_))
     .renderPS {
       case (scope, (router, snippet), state) => {
         import state._
 
-        val sideStyle =
-          if (sideBarClosed) "sidebar-closed"
-          else "sidebar-open"
-
-        val theme = if (dark) "dark" else "light"
+        val theme = if (isDarkTheme) "dark" else "light"
 
         div(`class` := "app")(
           SideBar(state, scope.backend),
@@ -245,7 +267,7 @@ object App {
         )
       }
     }
-    .componentDidMount(s => s.backend.start(s.props))
+    .componentWillMount(s => s.backend.start(s.props))
     .build
 
   def apply(router: RouterCtl[Page], snippet: Option[Snippet]) =

@@ -100,7 +100,7 @@ object Settings {
   private val component =
     ReactComponentB[(State, App.Backend)]("Settings").render_P {
       case (props, backend) =>
-        val theme = if (props.dark) "dark" else "light"
+        val theme = if (props.isDarkTheme) "dark" else "light"
 
         div(`class` := "settings")(
           ScaladexSearch(props, backend),

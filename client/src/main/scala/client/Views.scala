@@ -25,10 +25,10 @@ object MainPannel {
           if (view == state.view) TagMod(display.block)
           else TagMod(display.none)
 
-        val theme = if (state.dark) "dark" else "light"
+        val theme = if (state.isDarkTheme) "dark" else "light"
 
         val consoleCss =
-          if (state.console) "with-console"
+          if (state.consoleIsOpen) "with-console"
           else ""
 
         div(`class` := "main-pannel")(
@@ -65,7 +65,7 @@ object SideBar {
       case (state, backend) =>
         import backend._
 
-        val theme = if (state.dark) "dark" else "light"
+        val theme = if (state.isDarkTheme) "dark" else "light"
 
         def selected(view: View) =
           if (view == state.view) TagMod(`class` := "selected") else EmptyTag
@@ -104,7 +104,7 @@ object SideBar {
           }
 
         val consoleSelected =
-          if (state.console) TagMod(`class` := "toggle selected")
+          if (state.consoleIsOpen) TagMod(`class` := "toggle selected")
           else EmptyTag
 
         val instrumentationSelected =
@@ -132,7 +132,7 @@ object SideBar {
               p("Console")
             ),
             li(
-              iconic.justifyLeft(onClick ==> autoformat),
+              iconic.justifyLeft(onClick ==> formatCode),
               p("Format")
             ),
             li(instrumentationSelected)(
