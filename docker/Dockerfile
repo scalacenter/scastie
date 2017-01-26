@@ -17,30 +17,41 @@ RUN echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M14")' >> /ro
 
 RUN mkdir /root/scala-212
 RUN mkdir /root/scala-212/project
-RUN echo 'sbt.version' > /root/scala-212/project/build.properties
+RUN echo 'sbt.version = 0.13.13' > /root/scala-212/project/build.properties
 RUN echo 'scalaVersion := "2.12.1"' > /root/scala-212/build.sbt
 RUN mkdir /root/scala-212/src
 RUN mkdir /root/scala-212/src/main
 RUN mkdir /root/scala-212/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /root/scala-212/src/main/scala/Main.scala
-RUN cd /root/scala-212; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal compile
+RUN cd /root/scala-212; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal run
 
 RUN mkdir /root/scala-211
 RUN mkdir /root/scala-211/project
-RUN echo 'sbt.version' > /root/scala-211/project/build.properties
+RUN echo 'sbt.version = 0.13.13' > /root/scala-211/project/build.properties
 RUN echo 'scalaVersion := "2.11.8"' > /root/scala-211/build.sbt
 RUN mkdir /root/scala-211/src
 RUN mkdir /root/scala-211/src/main
 RUN mkdir /root/scala-211/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /root/scala-211/src/main/scala/Main.scala
-RUN cd /root/scala-211; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal compile
+RUN cd /root/scala-211; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal run
 
 RUN mkdir /root/scala-210
 RUN mkdir /root/scala-210/project
-RUN echo 'sbt.version' > /root/scala-210/project/build.properties
+RUN echo 'sbt.version = 0.13.13' > /root/scala-210/project/build.properties
 RUN echo 'scalaVersion := "2.10.6"' > /root/scala-210/build.sbt
 RUN mkdir /root/scala-210/src
 RUN mkdir /root/scala-210/src/main
 RUN mkdir /root/scala-210/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /root/scala-210/src/main/scala/Main.scala
-RUN cd /root/scala-210; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal compile
+RUN cd /root/scala-210; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal run
+
+RUN mkdir /root/dotty
+RUN mkdir /root/dotty/project
+RUN echo 'sbt.version = 0.13.13' > /root/dotty/project/build.properties
+RUN echo 'addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.8")' > /root/dotty/project/plugins.sbt
+RUN echo 'enablePlugins(DottyPlugin)' > /root/dotty/build.sbt
+RUN mkdir /root/dotty/src
+RUN mkdir /root/dotty/src/main
+RUN mkdir /root/dotty/src/main/scala
+RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /root/dotty/src/main/scala/Main.scala
+RUN cd /root/dotty; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal run
