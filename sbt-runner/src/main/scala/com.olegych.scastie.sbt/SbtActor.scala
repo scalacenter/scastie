@@ -19,7 +19,7 @@ import scala.util.control.NonFatal
 import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
 
-class SbtActor(runTimeout: FiniteDuration) extends Actor {
+class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private var sbt = new Sbt()
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -39,20 +39,35 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
     }
   }
 
+  override def preStart(): Unit = warmUp()
+
+  private def warmUp(): Unit = {
+    if (production) {
+      log.info("warming up sbt")
+      (1 to 5).foreach { _ =>
+        sbt
+          .eval("run", instrument(Inputs.default), (line, _) => log.info(line))
+      }
+    }
+  }
+
+  private def instrument(inputs: Inputs): Inputs = {
+    if (inputs.isInstrumented)
+      inputs.copy(code = instrumentation.Instrument(inputs.code))
+    else
+      inputs
+  }
+
   def receive = {
     case FormatRequest(code, isInstrumented) => {
       sender ! FormatResponse(format(code, isInstrumented))
     }
-    case SbtTask(id, inputs, progressActor) => {
-      log.info(s"run $inputs")
+    case SbtTask(id, inputs, ip, progressActor) => {
+      log.info(s"$ip run $inputs")
 
       val scalaTargetType = inputs.target.targetType
 
-      val inputs0 =
-        if (inputs.isInstrumented)
-          inputs.copy(code = instrumentation.Instrument(inputs.code))
-        else
-          inputs
+      val inputs0 = instrument(inputs)
 
       def eval(command: String) =
         sbt.eval(command,
@@ -78,6 +93,7 @@ class SbtActor(runTimeout: FiniteDuration) extends Actor {
 
         sbt.close()
         sbt = new Sbt()
+        warmUp()
       }
 
       log.info(s"== updating $id ==")

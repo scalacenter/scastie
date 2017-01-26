@@ -53,7 +53,7 @@ object Settings {
 
     def handler(targetType: ScalaTargetType) =
       if (disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
-      else TagMod(onClick ==> backend.setTarget(defaultTarget(targetType)))
+      else TagMod(onClick ==> backend.setTarget2(defaultTarget(targetType)))
 
     fieldset(`class` := "targets")(
       legend("Target"),
@@ -70,26 +70,94 @@ object Settings {
 
   def renderVersions(target: ScalaTarget, backend: App.Backend) = {
     val suggestedVersions = List(
-      ("old", Version(2, 10, 6)),
-      ("stable", Version(2, 11, 8)),
-      ("latest", Version(2, 12, 1))
+      "2.10.6",
+      "2.11.8",
+      "2.12.1"
     )
 
-    def selected(v1: Version, v2: Version) =
+    val allVersions = List(
+      "2.12.1",
+      "2.12.0",
+      "2.12.0-RC2",
+      "2.12.0-RC1",
+      "2.12.0-M5",
+      "2.12.0-M4",
+      "2.12.0-M3",
+      "2.12.0-M2",
+      "2.12.0-M1",
+      "2.11.8",
+      "2.11.6",
+      "2.11.5",
+      "2.11.4",
+      "2.11.3",
+      "2.11.2",
+      "2.11.1",
+      "2.11.0",
+      "2.11.0-RC4",
+      "2.11.0-RC3",
+      "2.11.0-RC1",
+      "2.11.0-M8",
+      "2.11.0-M7",
+      "2.11.0-M6",
+      "2.11.0-M5",
+      "2.11.0-M3",
+      "2.10.6",
+      "2.10.5",
+      "2.10.4-RC3",
+      "2.10.4-RC2",
+      "2.10.3",
+      "2.10.3-RC3",
+      "2.10.3-RC2",
+      "2.10.3-RC1",
+      "2.10.2",
+      "2.10.2-RC2",
+      "2.10.2-RC1",
+      "2.10.1",
+      "2.10.1-RC3",
+      "2.10.1-RC1",
+      "2.10.0",
+      "2.10.0-RC5",
+      "2.10.0-RC4",
+      "2.10.0-RC3",
+      "2.10.0-RC2",
+      "2.10.0-RC1",
+      "2.10.0-M7",
+      "2.10.0-M6",
+      "2.10.0-M5",
+      "2.10.0-M4",
+      "2.10.0-M2",
+      "2.10.0-M1",
+      "2.9.3",
+      "2.9.3-RC2",
+      "2.9.3-RC1",
+      "2.9.2",
+      "2.9.2-RC3",
+      "2.9.2-RC2",
+      "2.9.1-1-RC1",
+      "2.9.1-1",
+      "2.9.0"
+    )
+
+    def selected(v1: String, v2: String) =
       if (v1 == v2) TagMod(`class` := "selected")
       else EmptyTag
+
+    def setScalaVersion(e: ReactEventI): Callback =
+      backend.setTarget(ScalaTarget.Jvm(e.target.value))
 
     target match {
       case ScalaTarget.Jvm(scalaVersion) =>
         fieldset(`class` := "versions")(
           legend("Scala Version"),
-          ul(suggestedVersions.map {
-            case (versionStatus, version) =>
-              li(onClick ==> backend.setTarget(ScalaTarget.Jvm(version)),
-                 selected(version, scalaVersion))(
-                s"${version.binary} ($versionStatus)"
-              )
-          })
+          ul(
+            suggestedVersions.map(version =>
+              li(onClick ==> backend.setTarget2(ScalaTarget.Jvm(version)),
+                 selected(version, scalaVersion))(version))),
+          select(name := "scalaVersion",
+                 value := scalaVersion.toString,
+                 onChange ==> setScalaVersion)(
+            allVersions.map(version => option(version.toString))
+          )
         )
       case ScalaTarget.Js(scalaVersion, scalaJsVersion) => EmptyTag
       case ScalaTarget.Dotty => EmptyTag
@@ -100,7 +168,7 @@ object Settings {
   private val component =
     ReactComponentB[(State, App.Backend)]("Settings").render_P {
       case (props, backend) =>
-        val theme = if (props.dark) "dark" else "light"
+        val theme = if (props.isDarkTheme) "dark" else "light"
 
         div(`class` := "settings")(
           ScaladexSearch(props, backend),

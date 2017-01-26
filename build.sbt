@@ -4,7 +4,7 @@ import org.scalajs.sbtplugin.cross.CrossProject
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.1.0"
+  version := "0.1.0-SNAPSHOT"
 )
 
 lazy val baseSettings = Seq(
@@ -298,12 +298,9 @@ def api(scalaV: String) = {
       buildInfoKeys := Seq[BuildInfoKey](
         version,
         BuildInfoKey.action("githash") {
-          println(sys.props.mkString(System.lineSeparator))
-          println(sys.env.mkString(System.lineSeparator))
-
           import sys.process._
           if (!sys.env.contains("CI")) {
-            Process("git describe --long --dirty --tags").lines.mkString("")
+            Process("git describe --long --dirty --always").lines.mkString("")
           } else "CI"
         }
       ),

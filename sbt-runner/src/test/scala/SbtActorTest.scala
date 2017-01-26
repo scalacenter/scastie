@@ -18,14 +18,14 @@ class SbtActorTest()
   val progressActor = TestProbe()
 
   val timeout = 3.seconds
-  val sbtActor = TestActorRef(new SbtActor(timeout))
+  val sbtActor = TestActorRef(new SbtActor(timeout, production = false))
 
   test("timeout") {
     val id = 0L
     val infiniteLoop = Inputs.default.copy(
       code = "while(true){}".stripMargin
     )
-    sbtActor ! SbtTask(id, infiniteLoop, progressActor.ref)
+    sbtActor ! SbtTask(id, infiniteLoop, "ip0", progressActor.ref)
 
     progressActor.fishForMessage(timeout + 20.second) {
       case progress: PasteProgress => {
@@ -37,7 +37,7 @@ class SbtActorTest()
   test("after a timeout the sbt instance is ready to be used") {
 
     val helloWorld = Inputs.default.copy(code = "1 + 1")
-    sbtActor ! SbtTask(1L, helloWorld, progressActor.ref)
+    sbtActor ! SbtTask(1L, helloWorld, "ip0", progressActor.ref)
 
     val sbtReloadTime = 20.seconds
 

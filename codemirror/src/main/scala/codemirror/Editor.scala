@@ -16,6 +16,16 @@ trait TextAreaEditor extends Editor {
 }
 
 @ScalaJSDefined
+trait ScrollInfo extends js.Object {
+  val left: Double
+  val top: Double
+  val width: Double
+  val height: Double
+  val clientWidth: Double
+  val clientHeight: Double
+}
+
+@ScalaJSDefined
 trait Editor extends js.Object {
   // def replaceSelection(spaces)
   def hasFocus(): Boolean
@@ -46,8 +56,8 @@ trait Editor extends js.Object {
                     node: HTMLElement,
                     options: UndefOr[js.Any]): LineWidget
   def setSize(width: Int | String, height: Int | String): Unit
-  def scrollTo(x: Int, y: Int): Unit
-  // def getScrollInfo():{left, top, width, height, clientWidth, clientHeight}
+  def scrollTo(x: Double, y: Double): Unit
+  def getScrollInfo(): ScrollInfo
   // def scrollIntoView(what: Position|{left, top, right, bottom}|{from, to}|null, ?margin: number)
   def cursorCoords(where: Boolean | Position, mode: String): CursorCoords
   // def charCoords(pos: Position, ?mode: String): {left, right, top, bottom}

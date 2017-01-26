@@ -31,11 +31,6 @@ object ScalaTargetType {
   case object Native extends ScalaTargetType
 }
 
-case class Version(_1: Int, _2: Int, _3: Int, extra: String = "") {
-  def binary: String = s"${_1}.${_2}" // like 2.11
-  override def toString: String = s"${_1}.${_2}.${_3}$extra"
-}
-
 case class ScalaDependency(groupId: String,
                            artifact: String,
                            target: ScalaTarget,
@@ -47,16 +42,16 @@ sealed trait ScalaTarget {
   def renderSbt(lib: ScalaDependency): String
 }
 object ScalaTarget {
-  private val defaultScalaVersion = Version(2, 11, 8)
-  private val defaultScalaJsVersion = Version(0, 6, 13)
+  private val defaultScalaVersion = "2.11.8"
+  private val defaultScalaJsVersion = "0.6.13"
 
   object Jvm {
     def default = ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
   }
-  case class Jvm(scalaVersion: Version) extends ScalaTarget {
+  case class Jvm(scalaVersion: String) extends ScalaTarget {
     def targetType = ScalaTargetType.JVM
     def scaladexRequest =
-      Map("target" -> "JVM", "scalaVersion" -> scalaVersion.binary)
+      Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
     def renderSbt(lib: ScalaDependency): String = {
       import lib._
       s""" "$groupId" %% "$artifact" % "$version" """
@@ -69,14 +64,14 @@ object ScalaTarget {
         scalaJsVersion = ScalaTarget.defaultScalaJsVersion
       )
   }
-  case class Js(scalaVersion: Version, scalaJsVersion: Version)
+  case class Js(scalaVersion: String, scalaJsVersion: String)
       extends ScalaTarget {
 
     def targetType = ScalaTargetType.JS
     def scaladexRequest = Map(
       "target" -> "JS",
-      "scalaVersion" -> scalaVersion.binary,
-      "scalaJsVersion" -> scalaJsVersion.binary
+      "scalaVersion" -> scalaVersion,
+      "scalaJsVersion" -> scalaJsVersion
     )
     def renderSbt(lib: ScalaDependency): String = {
       import lib._

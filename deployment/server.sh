@@ -11,5 +11,6 @@ unzip -d server server.zip
 mv server/*/* server/
 
 nohup server/bin/server \
+  -DSERVER_HOSTNAME=scastie.scala-lang.org
   -Dconfig.file=production.conf \
   -Dlogback.configurationFile=logback.xml &
