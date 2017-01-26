@@ -21,6 +21,7 @@ object App {
       websocket = None,
       isDarkTheme = false,
       consoleIsOpen = false,
+      consoleHasUserOutput = false,
       codemirrorSettings = None,
       inputs = Inputs.default,
       outputs = Outputs.default
@@ -32,11 +33,16 @@ object App {
       websocket: Option[WebSocket],
       isDarkTheme: Boolean,
       consoleIsOpen: Boolean,
+      consoleHasUserOutput: Boolean,
       codemirrorSettings: Option[codemirror.Options],
       inputs: Inputs,
       outputs: Outputs
   ) {
-    def setRunning(v: Boolean) = copy(running = v)
+    def setRunning(running: Boolean) = {
+      val console = !running && !consoleHasUserOutput
+
+      copy(running = running, consoleIsOpen = !console)
+    }
 
     def toggleTheme = copy(isDarkTheme = !isDarkTheme)
     def toggleConsole = copy(consoleIsOpen = !consoleIsOpen)
@@ -44,13 +50,14 @@ object App {
       copy(inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
 
     def openConsole = copy(consoleIsOpen = true)
+    def setUserOutput = copy(consoleHasUserOutput = true)
 
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State =
       copy(outputs = outputs.copy(console = outputs.console ++ lines))
     def log(line: Option[String]): State =
       line match {
-        case Some(l) => log(l)
+        case Some(l) => log(l + "\n")
         case None => this
       }
 
@@ -77,7 +84,7 @@ object App {
         libraries = (inputs.libraries - scalaDependency) + newScalaDependency))
     }
 
-    def resetOutputs = copy(outputs = Outputs.default, consoleIsOpen = false)
+    def resetOutputs = copy(outputs = Outputs.default, consoleIsOpen = false, consoleHasUserOutput = false)
 
     def setRuntimeError(runtimeError: Option[RuntimeError]) =
       if (runtimeError.isEmpty) this
@@ -91,7 +98,7 @@ object App {
           .setRunning(!progress.done)
           .setRuntimeError(progress.runtimeError)
 
-      if (!progress.userOutput.isEmpty) state.openConsole
+      if (!progress.userOutput.isEmpty) state.setUserOutput
       else state
     }
 
