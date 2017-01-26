@@ -21,6 +21,7 @@ object App {
       websocket = None,
       isDarkTheme = false,
       consoleIsOpen = false,
+      consoleHasUserOutput = false,
       codemirrorSettings = None,
       inputs = Inputs.default,
       outputs = Outputs.default
@@ -32,11 +33,16 @@ object App {
       websocket: Option[WebSocket],
       isDarkTheme: Boolean,
       consoleIsOpen: Boolean,
+      consoleHasUserOutput: Boolean,
       codemirrorSettings: Option[codemirror.Options],
       inputs: Inputs,
       outputs: Outputs
   ) {
-    def setRunning(v: Boolean) = copy(running = v)
+    def setRunning(running: Boolean) = {
+      val console = !running && !consoleHasUserOutput
+
+      copy(running = running, consoleIsOpen = !console)
+    }
 
     def toggleTheme = copy(isDarkTheme = !isDarkTheme)
     def toggleConsole = copy(consoleIsOpen = !consoleIsOpen)
@@ -44,10 +50,17 @@ object App {
       copy(inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
 
     def openConsole = copy(consoleIsOpen = true)
+    def setUserOutput = copy(consoleHasUserOutput = true)
 
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State =
       copy(outputs = outputs.copy(console = outputs.console ++ lines))
+    def log(line: Option[String]): State =
+      line match {
+        case Some(l) => log(l + "\n")
+        case None => this
+      }
+
     def setCode(code: String) = copy(inputs = inputs.copy(code = code))
     def setInputs(inputs: Inputs) = copy(inputs = inputs)
     def setSbtConfigExtra(config: String) =
@@ -71,12 +84,22 @@ object App {
         libraries = (inputs.libraries - scalaDependency) + newScalaDependency))
     }
 
-    def resetOutputs = copy(outputs = Outputs.default, consoleIsOpen = false)
+    def resetOutputs = copy(outputs = Outputs.default, consoleIsOpen = false, consoleHasUserOutput = false)
+
+    def setRuntimeError(runtimeError: Option[RuntimeError]) =
+      if (runtimeError.isEmpty) this
+      else copy(outputs = outputs.copy(runtimeError = runtimeError))
 
     def addProgress(progress: PasteProgress) = {
-      addOutputs(progress.compilationInfos, progress.instrumentations)
-        .log(progress.output)
-        .setRunning(!progress.done)
+      val state =
+        addOutputs(progress.compilationInfos, progress.instrumentations)
+          .log(progress.userOutput)
+          .log(progress.sbtOutput)
+          .setRunning(!progress.done)
+          .setRuntimeError(progress.runtimeError)
+
+      if (!progress.userOutput.isEmpty) state.setUserOutput
+      else state
     }
 
     def setProgresses(progresses: List[PasteProgress]) = {
@@ -111,12 +134,7 @@ object App {
       def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[PasteProgress](e.data.toString)
-        direct.modState(
-          _.addOutputs(
-            progress.compilationInfos,
-            progress.instrumentations
-          ).log(progress.output).setRunning(!progress.done)
-        )
+        direct.modState(_.addProgress(progress))
       }
       def onerror(e: ErrorEvent): Unit =
         direct.modState(_.log(s"Error: ${e.message}"))
@@ -174,7 +192,7 @@ object App {
             connect(id).attemptTry.flatMap {
               case Success(ws) => {
                 scope.modState(
-                  _.resetOutputs.openConsole
+                  _.resetOutputs
                     .setRunning(true)
                     .copy(websocket = Some(ws))
                     .log("Connecting...\n")
@@ -214,7 +232,7 @@ object App {
                 result match {
                   case Some(FetchResult(inputs, progresses)) => {
                     scope.modState(
-                      _.setInputs(inputs).setProgresses(progresses).openConsole
+                      _.setInputs(inputs).setProgresses(progresses)
                     )
                   }
                   case _ =>

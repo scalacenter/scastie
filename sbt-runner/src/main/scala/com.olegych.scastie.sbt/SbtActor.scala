@@ -40,6 +40,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   override def preStart(): Unit = warmUp()
+  override def postStop(): Unit = sbt.exit()
 
   private def warmUp(): Unit = {
     if (production) {
@@ -84,14 +85,22 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         progressActor !
           PasteProgress(
             id = id,
-            output = s"Task timed out after $duration",
-            done = true,
-            compilationInfos = Nil,
+            userOutput = None,
+            sbtOutput = None,
+            compilationInfos = List(
+              Problem(
+                Error,
+                line = None,
+                message = s"timed out after $duration"
+              )
+            ),
             instrumentations = Nil,
+            runtimeError = None,
+            done = true,
             timeout = true
           )
 
-        sbt.close()
+        sbt.kill()
         sbt = new Sbt()
         warmUp()
       }
@@ -136,19 +145,41 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       id: Long,
       pasteActor: ActorRef): (String, Boolean) => Unit = { (line, done) =>
     {
-      val problems = extractProblems(line, isInstrumented)
-      val instrumentations = extract[api.Instrumentation](line)
+      val lineOffset =
+        if (isInstrumented) -2
+        else 0
 
-      val output =
-        if (problems.isEmpty && instrumentations.isEmpty && !done) line + nl
-        else ""
+      val problems = extractProblems(line, lineOffset)
+      val instrumentations = extract[List[api.Instrumentation]](line)
+      val runtimeError = extractRuntimeError(line, lineOffset)
+      val sbtOutput = extract[sbtapi.SbtOutput](line)
+
+      // sbt plugin is not loaded at this stage. we need to drop those messages
+      val initializationMessages = List(
+        "[info] Loading global plugins from",
+        "[info] Loading project definition from",
+        "[info] Set current project to scastie"
+      )
+
+      val userOutput =
+        if (problems.isEmpty
+            && instrumentations.isEmpty
+            && runtimeError.isEmpty
+            && !done
+            && !initializationMessages.exists(
+              message => line.startsWith(message))
+            && sbtOutput.isEmpty)
+          Some(line + nl)
+        else None
 
       val progress = PasteProgress(
         id = id,
-        output = output,
-        done = done,
+        userOutput = userOutput,
+        sbtOutput = sbtOutput.map(_.line),
         compilationInfos = problems.getOrElse(Nil),
         instrumentations = instrumentations.getOrElse(Nil),
+        runtimeError = runtimeError,
+        done = done,
         timeout = false
       )
 
@@ -157,10 +188,9 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
   }
 
-  private def extractProblems(
-      line: String,
-      isInstrumented: Boolean): Option[List[api.Problem]] = {
-    val sbtProblems = extract[sbtapi.Problem](line)
+  private def extractProblems(line: String,
+                              lineOffset: Int): Option[List[api.Problem]] = {
+    val sbtProblems = extract[List[sbtapi.Problem]](line)
 
     def toApi(p: sbtapi.Problem): api.Problem = {
       val severity = p.severity match {
@@ -168,9 +198,6 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         case sbtapi.Warning => api.Warning
         case sbtapi.Error => api.Error
       }
-      val lineOffset =
-        if (isInstrumented) -2
-        else 0
 
       api.Problem(severity, p.line.map(_ + lineOffset), p.message)
     }
@@ -178,8 +205,16 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     sbtProblems.map(_.map(toApi))
   }
 
-  private def extract[T: Reader](line: String): Option[List[T]] = {
-    try { Some(uread[List[T]](line)) } catch {
+  def extractRuntimeError(line: String,
+                          lineOffset: Int): Option[api.RuntimeError] = {
+    extract[sbtapi.RuntimeError](line).map {
+      case sbtapi.RuntimeError(message, line, fullStack) =>
+        api.RuntimeError(message, line.map(_ + lineOffset), fullStack)
+    }
+  }
+
+  private def extract[T: Reader](line: String): Option[T] = {
+    try { Some(uread[T](line)) } catch {
       case NonFatal(e) => None
     }
   }

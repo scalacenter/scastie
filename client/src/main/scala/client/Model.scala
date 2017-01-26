@@ -20,13 +20,15 @@ object Outputs {
   def default = Outputs(
     console = Vector(),
     compilationInfos = Set(),
-    instrumentations = Set()
+    instrumentations = Set(),
+    runtimeError = None
   )
 }
 case class Outputs(
     console: Vector[String],
     compilationInfos: Set[api.Problem],
-    instrumentations: Set[api.Instrumentation]
+    instrumentations: Set[api.Instrumentation],
+    runtimeError: Option[api.RuntimeError]
 )
 
 sealed trait Severity
