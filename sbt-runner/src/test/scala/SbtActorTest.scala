@@ -44,7 +44,7 @@ class SbtActorTest()
         val error = progress.runtimeError.get
         println(error)
         assert(error.message == "java.lang.ArithmeticException: / by zero")
-        assert(error.offset == Some(1))
+        assert(error.line == Some(1))
         assert(error.fullStack.size > 0)
       }
       gotRuntimeError

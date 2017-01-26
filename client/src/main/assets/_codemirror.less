@@ -34,6 +34,7 @@ body.pc kbd.mac { display: none }
 }
 .CodeMirror-linewidget .line,
 .CodeMirror-linewidget .compilation-info,
+.CodeMirror-linewidget .runtime-error,
 .CodeMirror-widget .fold {
   margin-left: -(@margin + 4px);
   width: calc(~"100% + "(@margin + 4px));
@@ -83,17 +84,25 @@ body.pc kbd.mac { display: none }
   .CodeMirror-linewidget {
     overflow: visible !important;
 
+    .runtime-error i,
+    .compilation-info.error i {
+      color: red;
+    }
+    .runtime-error,
     .compilation-info {
-      &.error i {
-        color: red;
-      }
-
       &.warning i {
         color: yellow;
       }
 
       pre {
+        padding-top: 0;
+      }
+      i, pre {
         display: inline-block;
+      }
+      i {
+        vertical-align: top;
+        font-size: 20px;
       }
     }
 

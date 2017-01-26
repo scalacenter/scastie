@@ -1,19 +1,26 @@
 
-// Does not work on scastie.scala-lang.org because the running instance and the 
-// web server are on different machines
-
 /*
-libraryDependencies ++= Seq(
-  "com.sksamuel.scrimage" %% "scrimage-core" % "2.1.8" ,
-  "com.sksamuel.scrimage" %% "scrimage-filters" % "2.1.8" 
-)
-*/
+resolvers += Resolver.bintrayRepo("underscoreio", "training")
 
+libraryDependencies ++= Seq(
+  "underscoreio" %% "doodle" % "0.6.5",
+  "com.sksamuel.scrimage" %% "scrimage-core" % "2.1.8",
+  "com.sksamuel.scrimage" %% "scrimage-filters" % "2.1.8"
+)
+
+*/
 import com.sksamuel.scrimage._
 import com.sksamuel.scrimage.filter._
+
+import java.io.ByteArrayOutputStream
 import java.io.{File, FileInputStream}
+
+import javax.imageio.ImageIO
+
+import java.util.Base64
 import java.net.URL
 import java.nio.file.{Files, Paths}
+
 import scala.util.Try
 
 // Download image to cache
@@ -28,11 +35,16 @@ if (!Files.exists(dest)) {
 
 val image =
   Image.fromStream(new FileInputStream(new File("/tmp/scastie/lanzarote.jpg")))
-
 val small = image.scaleToWidth(200)
 
-small.output(new File("/tmp/scastie/small.jpg"))
-html"<img src='/tmp/scastie/small.jpg' alt='small lanzarote'>".fold
+def toBase64(image: Image): Html = {
+  val os = new ByteArrayOutputStream
+  val b64 = Base64.getEncoder.wrap(os)
+  ImageIO.write(image.awt, "png", b64)
+  val encoded = os.toString("UTF-8")
+  html"""<image src="data:image/png;base64,$encoded">""".fold
+}
 
-small.filter(SepiaFilter).output(new File("/tmp/scastie/small-sepia.jpg"))
-html"<img src='/tmp/scastie/small-sepia.jpg' alt='small lanzarote sepia'>".fold
+toBase64(small)
+
+toBase64(small.filter(SepiaFilter))

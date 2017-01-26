@@ -14,6 +14,6 @@ case class Problem(severity: Severity, line: Option[Int], message: String)
 // int getLineNumber()
 // String  getMethodName()
 // TODO: range pos ?
-case class RuntimeError(message: String, offset: Option[Int], fullStack: String)
+case class RuntimeError(message: String, line: Option[Int], fullStack: String)
 
 case class SbtOutput(line: String)

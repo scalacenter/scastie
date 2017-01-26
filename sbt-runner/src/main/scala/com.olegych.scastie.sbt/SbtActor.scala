@@ -208,8 +208,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
   def extractRuntimeError(line: String, lineOffset: Int): Option[api.RuntimeError] = {
     extract[sbtapi.RuntimeError](line).map{ 
-      case sbtapi.RuntimeError(message, offset, fullStack) =>
-        api.RuntimeError(message, offset.map(_ + lineOffset), fullStack)
+      case sbtapi.RuntimeError(message, line, fullStack) =>
+        api.RuntimeError(message, line.map(_ + lineOffset), fullStack)
     }
   }
 

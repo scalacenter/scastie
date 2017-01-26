@@ -221,7 +221,7 @@ case object Error extends Severity
 
 case class Problem(severity: Severity, line: Option[Int], message: String)
 
-case class RuntimeError(message: String, offset: Option[Int], fullStack: String)
+case class RuntimeError(message: String, line: Option[Int], fullStack: String)
 
 case class Position(start: Int, end: Int)
 case class Instrumentation(position: Position, render: Render)
