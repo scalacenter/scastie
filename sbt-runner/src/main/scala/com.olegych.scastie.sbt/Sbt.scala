@@ -33,7 +33,8 @@ class Sbt() {
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
   write(pluginFile,
-        s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")""")
+        s"""|addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
+            |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")""".stripMargin)
 
   private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
 
@@ -87,7 +88,7 @@ class Sbt() {
     collect(lineCallback)
   }
 
-  def close(): Unit = {
+  def kill(): Unit = {
     val pidField = process.getClass.getDeclaredField("pid")
     pidField.setAccessible(true)
     val pid = pidField.get(process).asInstanceOf[Int]
@@ -99,6 +100,10 @@ class Sbt() {
   def needsReload(inputs: Inputs): Boolean =
     inputs.sbtConfig != currentSbtConfig ||
       inputs.sbtPluginsConfig != currentSbtPluginConfig
+
+  def exit(): Unit = {
+    process("exit", (line, _) => ())
+  }
 
   def eval(command: String,
            inputs: Inputs,

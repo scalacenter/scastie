@@ -205,9 +205,11 @@ case class Inputs(
 
 case class PasteProgress(
     id: Long,
-    output: String,
+    userOutput: Option[String],
+    sbtOutput: Option[String],
     compilationInfos: List[Problem],
     instrumentations: List[Instrumentation],
+    runtimeError: Option[RuntimeError],
     done: Boolean,
     timeout: Boolean
 )
@@ -218,6 +220,8 @@ case object Warning extends Severity
 case object Error extends Severity
 
 case class Problem(severity: Severity, line: Option[Int], message: String)
+
+case class RuntimeError(message: String, offset: Option[Int], fullStack: String)
 
 case class Position(start: Int, end: Int)
 case class Instrumentation(position: Position, render: Render)
