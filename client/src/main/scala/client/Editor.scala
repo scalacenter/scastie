@@ -101,8 +101,9 @@ object Editor {
     def start() = {
       scope.props.flatMap {
         case (props, backend) =>
-          val editor = codemirror.CodeMirror
-            .fromTextArea(codemirrorTextarea(scope).get, options(props.isDarkTheme))
+          val editor =
+            codemirror.CodeMirror.fromTextArea(codemirrorTextarea(scope).get,
+                                               options(props.isDarkTheme))
 
           editor.onChange((_, _) =>
             backend.codeChange(editor.getDoc().getValue()).runNow)

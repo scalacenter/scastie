@@ -42,12 +42,11 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   override def preStart(): Unit = warmUp()
 
   private def warmUp(): Unit = {
-    if(production) {
+    if (production) {
       log.info("warming up sbt")
-      (1 to 5).foreach{_ =>
-        sbt.eval("run", instrument(Inputs.default), 
-          (line, _) => log.info(line)
-        )
+      (1 to 5).foreach { _ =>
+        sbt
+          .eval("run", instrument(Inputs.default), (line, _) => log.info(line))
       }
     }
   }
@@ -69,7 +68,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       val scalaTargetType = inputs.target.targetType
 
       val inputs0 = instrument(inputs)
-        
+
       def eval(command: String) =
         sbt.eval(command,
                  inputs0,

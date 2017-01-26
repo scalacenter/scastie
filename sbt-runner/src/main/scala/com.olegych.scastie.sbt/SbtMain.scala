@@ -12,10 +12,11 @@ object SbtMain {
     val system = ActorSystem("SbtRemote")
 
     // val production = true
-      // sys.env.contains("RUNNER_PRODUCTION")
+    // sys.env.contains("RUNNER_PRODUCTION")
 
     val remoteActor =
-      system.actorOf(Props(new SbtActor(10.seconds, production = true)), name = "SbtActor")
+      system.actorOf(Props(new SbtActor(10.seconds, production = true)),
+                     name = "SbtActor")
     system.awaitTermination()
   }
 }

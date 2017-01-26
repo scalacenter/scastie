@@ -17,11 +17,11 @@ case class ReleaseOptions(
 
 // outputs
 object Outputs {
-    def default = Outputs(
-      console = Vector(),
-      compilationInfos = Set(),
-      instrumentations = Set()
-    )
+  def default = Outputs(
+    console = Vector(),
+    compilationInfos = Set(),
+    instrumentations = Set()
+  )
 }
 case class Outputs(
     console: Vector[String],

@@ -29,13 +29,15 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 
   private val ports = (0 until portsSize).map(portsFrom + _)
 
-  private var routees = ports.map( port =>
-      (host, port) -> ActorSelectionRoutee(
-        context.actorSelection(
-          s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
-        )
-      )
-    ).toMap
+  private var routees = ports
+    .map(
+      port =>
+        (host, port) -> ActorSelectionRoutee(
+          context.actorSelection(
+            s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
+          )
+      ))
+    .toMap
 
   private var router =
     Router(RoundRobinRoutingLogic(), routees.values.toVector)
@@ -92,9 +94,6 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 }
 
 case class GetPaste(id: Long)
-
-
-
 /*
 case class State(sbts: Vector[Sbt],
                  changed: Option[Int] = None,
@@ -113,7 +112,7 @@ case class State(sbts: Vector[Sbt],
     def cacheMiss = !sbts.exists(_.sbt == message)
 
     if(cacheMiss){
-      
+
     }
 
     // full
@@ -200,7 +199,7 @@ case class State(sbts: Vector[Sbt],
     def cacheMiss = !sbts.exists(_.sbt == message)
 
     if(cacheMiss){
-      
+
     }
 
     // full
@@ -236,4 +235,4 @@ var lastState = s
 
 
 
-*/
+ */

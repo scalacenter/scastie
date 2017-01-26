@@ -142,22 +142,21 @@ object Settings {
       if (v1 == v2) TagMod(`class` := "selected")
       else EmptyTag
 
-    def setScalaVersion(e: ReactEventI): Callback = 
+    def setScalaVersion(e: ReactEventI): Callback =
       backend.setTarget(ScalaTarget.Jvm(e.target.value))
 
     target match {
       case ScalaTarget.Jvm(scalaVersion) =>
         fieldset(`class` := "versions")(
           legend("Scala Version"),
-          ul(suggestedVersions.map(version =>
-            li(onClick ==> backend.setTarget2(ScalaTarget.Jvm(version)),
-               selected(version, scalaVersion))(version)
-          )),
-          select(name := "scalaVersion", value := scalaVersion.toString,
+          ul(
+            suggestedVersions.map(version =>
+              li(onClick ==> backend.setTarget2(ScalaTarget.Jvm(version)),
+                 selected(version, scalaVersion))(version))),
+          select(name := "scalaVersion",
+                 value := scalaVersion.toString,
                  onChange ==> setScalaVersion)(
-            allVersions.map(version =>
-              option(version.toString)
-            )
+            allVersions.map(version => option(version.toString))
           )
         )
       case ScalaTarget.Js(scalaVersion, scalaJsVersion) => EmptyTag
