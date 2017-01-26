@@ -10,7 +10,7 @@ scp sbt.sh scastie@scalagesrv3.epfl.ch:sbt.sh
 ssh scastie@scalagesrv3.epfl.ch ./sbt.sh
 
 # Server
-scp $HERE/../scastie/target/universal/server-0.1.0.zip scastie@scastie.scala-lang.org:server.zip
+scp $HERE/../scastie/target/universal/server-0.2.0.zip scastie@scastie.scala-lang.org:server.zip
 scp server.sh scastie@scastie.scala-lang.org:server.sh
 scp production.conf scastie@scastie.scala-lang.org:production.conf
 scp logback.xml scastie@scastie.scala-lang.org:logback.xml

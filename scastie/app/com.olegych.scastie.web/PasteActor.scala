@@ -80,15 +80,15 @@ class PasteActor(progressActor: ActorRef) extends Actor {
     }
 
     case event: DisassociatedEvent => {
-      ()
-      // for {
-      //   host <- event.remoteAddress.host
-      //   port <- event.remoteAddress.port
-      //   sbt <- sbts.get((host, port))
-      // } {
-      //   log.warn("removing disconnected: " + sbt)
-      //   sbts = sbts - Address(host, port)
-      // }
+      for {
+        host <- event.remoteAddress.host
+        port <- event.remoteAddress.port
+        router <- routees.get((host, port))
+      } {
+        log.warn(event.toString)
+        log.warn("removing disconnected: " + router)
+        routees = routees - ((host, port))
+      }
     }
   }
 }
