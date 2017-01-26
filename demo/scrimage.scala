@@ -37,7 +37,7 @@ val image =
   Image.fromStream(new FileInputStream(new File("/tmp/scastie/lanzarote.jpg")))
 val small = image.scaleToWidth(200)
 
-def toBase64(image: Image): Html = {
+def toBase64(image: Image): api.Html = {
   val os = new ByteArrayOutputStream
   val b64 = Base64.getEncoder.wrap(os)
   ImageIO.write(image.awt, "png", b64)
