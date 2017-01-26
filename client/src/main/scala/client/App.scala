@@ -79,8 +79,8 @@ object App {
 
     def resetOutputs = copy(outputs = Outputs.default, consoleIsOpen = false)
 
-    def setRuntimeError(runtimeError: Option[RuntimeError]) = 
-      if(runtimeError.isEmpty) this
+    def setRuntimeError(runtimeError: Option[RuntimeError]) =
+      if (runtimeError.isEmpty) this
       else copy(outputs = outputs.copy(runtimeError = runtimeError))
 
     def addProgress(progress: PasteProgress) = {
@@ -91,7 +91,7 @@ object App {
           .setRunning(!progress.done)
           .setRuntimeError(progress.runtimeError)
 
-      if(!progress.userOutput.isEmpty) state.openConsole
+      if (!progress.userOutput.isEmpty) state.openConsole
       else state
     }
 

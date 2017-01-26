@@ -162,13 +162,13 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       )
 
       val userOutput =
-        if (problems.isEmpty 
-              && instrumentations.isEmpty 
-              && runtimeError.isEmpty 
-              && !done
-              && !initializationMessages.exists(message => line.startsWith(message))
-              && sbtOutput.isEmpty
-        )
+        if (problems.isEmpty
+            && instrumentations.isEmpty
+            && runtimeError.isEmpty
+            && !done
+            && !initializationMessages.exists(
+              message => line.startsWith(message))
+            && sbtOutput.isEmpty)
           Some(line + nl)
         else None
 
@@ -188,9 +188,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
   }
 
-  private def extractProblems(
-      line: String,
-      lineOffset: Int): Option[List[api.Problem]] = {
+  private def extractProblems(line: String,
+                              lineOffset: Int): Option[List[api.Problem]] = {
     val sbtProblems = extract[List[sbtapi.Problem]](line)
 
     def toApi(p: sbtapi.Problem): api.Problem = {
@@ -199,15 +198,16 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         case sbtapi.Warning => api.Warning
         case sbtapi.Error => api.Error
       }
-      
+
       api.Problem(severity, p.line.map(_ + lineOffset), p.message)
     }
 
     sbtProblems.map(_.map(toApi))
   }
 
-  def extractRuntimeError(line: String, lineOffset: Int): Option[api.RuntimeError] = {
-    extract[sbtapi.RuntimeError](line).map{ 
+  def extractRuntimeError(line: String,
+                          lineOffset: Int): Option[api.RuntimeError] = {
+    extract[sbtapi.RuntimeError](line).map {
       case sbtapi.RuntimeError(message, line, fullStack) =>
         api.RuntimeError(message, line.map(_ + lineOffset), fullStack)
     }

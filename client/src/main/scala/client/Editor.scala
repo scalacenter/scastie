@@ -322,26 +322,28 @@ object Editor {
       )
     }
 
-    def setRuntimeError(): Callback =  {
+    def setRuntimeError(): Callback = {
       val doc = editor.getDoc()
-      setAnnotations[api.RuntimeError](_.outputs.runtimeError.toSet, runtimeError => {
+      setAnnotations[api.RuntimeError](
+        _.outputs.runtimeError.toSet,
+        runtimeError => {
           val line = runtimeError.line.getOrElse(0)
 
           val icon =
             dom.document.createElement("i").asInstanceOf[HTMLDivElement]
 
-          val iconSeverity = "circle-x"            
+          val iconSeverity = "circle-x"
           icon.setAttribute("data-glyph", iconSeverity)
           icon.className = "oi"
 
-          val el = dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+          val el =
+            dom.document.createElement("div").asInstanceOf[HTMLDivElement]
           el.className = "runtime-error"
 
           val msg = dom.document.createElement("pre")
-          msg.textContent = 
-            s"""|${runtimeError.message}
-                |
-                |${runtimeError.fullStack}""".stripMargin
+          msg.textContent = s"""|${runtimeError.message}
+                                |
+                                |${runtimeError.fullStack}""".stripMargin
 
           el.appendChild(icon)
           el.appendChild(msg)
@@ -350,8 +352,9 @@ object Editor {
         },
         _.runtimeErrorAnnotations,
         f =>
-          state => state.copy(runtimeErrorAnnotations = f(state.runtimeErrorAnnotations))
-      )
+          state =>
+            state.copy(
+              runtimeErrorAnnotations = f(state.runtimeErrorAnnotations)))
     }
 
     def setAnnotations[T](

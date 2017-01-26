@@ -8,13 +8,13 @@ import xsbti.{Reporter, Problem, Position, Severity, Maybe}
 import upickle.default.{write => uwrite}
 
 object CompilerReporter {
-    // compilerReporter is marked private in sbt
+  // compilerReporter is marked private in sbt
   private lazy val compilerReporter = TaskKey[Option[xsbti.Reporter]](
     "compilerReporter",
     "Experimental hook to listen (or send) compilation failure messages.",
     DTask)
 
-  val setting: sbt.Def.Setting[_] = 
+  val setting: sbt.Def.Setting[_] =
     compilerReporter in (Compile, compile) := Some(new xsbti.Reporter {
       private val buffer = collection.mutable.ArrayBuffer.empty[Problem]
       def reset(): Unit = buffer.clear()
@@ -42,7 +42,7 @@ object CompilerReporter {
                          toOption(p.position.line).map(_.toInt),
                          p.message)
         }
-        if(problems.nonEmpty) {
+        if (problems.nonEmpty) {
           println(uwrite(problems.filterNot(annoying).map(toApi)))
         }
       }

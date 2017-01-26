@@ -8,13 +8,13 @@ import upickle.default.{write => uwrite}
 
 object RuntimeErrorLogger {
   private object NoOp {
-    def apply(): NoOp = {     
+    def apply(): NoOp = {
       def out(in: String): Unit = println(uwrite(SbtOutput(in.trim)))
 
-      new NoOp(new OutputStream{
+      new NoOp(new OutputStream {
         override def close(): Unit = ()
         override def flush(): Unit = ()
-        override def write(b: Array[Byte]): Unit = 
+        override def write(b: Array[Byte]): Unit =
           out(new String(b))
         override def write(b: Array[Byte], off: Int, len: Int): Unit =
           out(new String(b, off, len))
@@ -33,13 +33,14 @@ object RuntimeErrorLogger {
           def trace(t: => Throwable): Unit = {
             def search(e: Throwable) = {
               e.getStackTrace
-               .find(trace => trace.getFileName == "main.scala" && trace.getLineNumber != -1)
-               .map(v ⇒ (e, Some(v.getLineNumber)))
+                .find(trace =>
+                  trace.getFileName == "main.scala" && trace.getLineNumber != -1)
+                .map(v ⇒ (e, Some(v.getLineNumber)))
             }
             def loop(e: Throwable): Option[(Throwable, Option[Int])] = {
               val s = search(e)
-              if(s.isEmpty)
-                if(e.getCause != null) loop(e.getCause)
+              if (s.isEmpty)
+                if (e.getCause != null) loop(e.getCause)
                 else Some((e, None))
               else s
             }
@@ -47,23 +48,26 @@ object RuntimeErrorLogger {
             // Nonzero exit code: 1
             val sbtTrap =
               t.isInstanceOf[RuntimeException] &&
-              t.getMessage == "Nonzero exit code: 1" &&
-              !t.getStackTrace.exists(e => e.getClassName == "sbt.Run" && e.getMethodName == "invokeMain")
+                t.getMessage == "Nonzero exit code: 1" &&
+                !t.getStackTrace.exists(e =>
+                  e.getClassName == "sbt.Run" && e.getMethodName == "invokeMain")
 
-            if(!sbtTrap) {
-              loop(t).map{ case (err, line) ⇒
-                val errors = new StringWriter()
-                t.printStackTrace(new PrintWriter(errors))
-                val fullStack = errors.toString()
+            if (!sbtTrap) {
+              loop(t).map {
+                case (err, line) ⇒
+                  val errors = new StringWriter()
+                  t.printStackTrace(new PrintWriter(errors))
+                  val fullStack = errors.toString()
 
-                println(uwrite(RuntimeError(err.toString, line, fullStack)))
+                  println(uwrite(RuntimeError(err.toString, line, fullStack)))
               }
             }
           }
         }
       }
       // val currentFunction = extraLoggers.value
-      (key: ScopedKey[_]) => Seq(clientLogger)
+      (key: ScopedKey[_]) =>
+        Seq(clientLogger)
     },
     showSuccess := false,
     logManager := LogManager.defaults(

@@ -20,27 +20,28 @@ class SbtActorTest()
   test("timeout") {
     run("while(true){}", _.timeout)
   }
-  
+
   test("after a timeout the sbt instance is ready to be used") {
     run("1 + 1", progress => {
       val gotInstrumentation = progress.instrumentations.nonEmpty
 
-      if(gotInstrumentation) {
+      if (gotInstrumentation) {
         val instrumentations = progress.instrumentations.head
-        assert(progress.instrumentations == List(
-          Instrumentation(Position(0, 5), Value("2", "Int"))
-        ))
+        assert(
+          progress.instrumentations == List(
+            Instrumentation(Position(0, 5), Value("2", "Int"))
+          ))
       }
 
       gotInstrumentation
     })
   }
-  
+
   test("capture runtime errors") {
     run("1/0", progress => {
       val gotRuntimeError = progress.runtimeError.nonEmpty
 
-      if(gotRuntimeError) {
+      if (gotRuntimeError) {
         val error = progress.runtimeError.get
         println(error)
         assert(error.message == "java.lang.ArithmeticException: / by zero")
@@ -50,13 +51,13 @@ class SbtActorTest()
       gotRuntimeError
     })
   }
-  
+
   test("capture user output separately from sbt output") {
     val message = "Hello"
     run(s"""println("$message")""", progress => {
       // we should only receive an hello message
       val gotHelloMessage = progress.userOutput == Some(message + nl)
-      if(!gotHelloMessage) assert(progress.userOutput == None)
+      if (!gotHelloMessage) assert(progress.userOutput == None)
       gotHelloMessage
     })
   }
@@ -66,9 +67,10 @@ class SbtActorTest()
   }
 
   private val timeout = 3.seconds
-  private val sbtActor = TestActorRef(new SbtActor(timeout, production = false))
+  private val sbtActor = TestActorRef(
+    new SbtActor(timeout, production = false))
   private var currentId = 0L
-  private def id = { 
+  private def id = {
     val t = currentId
     currentId += 1L
     t
@@ -77,12 +79,12 @@ class SbtActorTest()
   private def run(code: String, fish: PasteProgress => Boolean): Unit = {
     val ip = "my-ip"
     val progressActor = TestProbe()
-    
+
     val inputs = Inputs.default.copy(code = code)
     sbtActor ! SbtTask(id, inputs, ip, progressActor.ref)
 
-    val totalTimeout = 
-      if(firstRun) timeout + 10.second
+    val totalTimeout =
+      if (firstRun) timeout + 10.second
       else timeout
 
     progressActor.fishForMessage(totalTimeout) {
