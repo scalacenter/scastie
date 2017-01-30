@@ -18,8 +18,9 @@ import upickle.default.{read => uread}
 import scala.language.higherKinds
 
 object ScaladexSearch {
-  // private val scaladexUrl = "http://localhost:8080/api"
-  private val scaladexUrl = "https://scaladex.scala-lang.org/api"
+  // private val scaladexBaseUrl = "http://localhost:8080"
+  private val scaladexBaseUrl = "https://index.scala-lang.org"
+  private val scaladexApiUrl = scaladexBaseUrl + "/api"
 
   private implicit val projectOrdering =
     Ordering.by { project: Project =>
@@ -163,7 +164,7 @@ object ScaladexSearch {
 
           Callback.future(
             Ajax
-              .get(scaladexUrl + "/search" + query)
+              .get(scaladexApiUrl + "/search" + query)
               .map(ret => uread[List[Project]](ret.responseText))
               .map { projects =>
                 val artifacts = projects.flatMap(project =>
@@ -196,11 +197,12 @@ object ScaladexSearch {
           Map(
             "organization" -> project.organization,
             "repository" -> project.repository
-          ))
+          ) ++ target.scaladexRequest
+        )
 
       Callback.future(
         Ajax
-          .get(scaladexUrl + "/project" + query)
+          .get(scaladexApiUrl + "/project" + query)
           .map(ret => uread[ReleaseOptions](ret.responseText))
           .map { options =>
             val scalaDependency = ScalaDependency(options.groupId,

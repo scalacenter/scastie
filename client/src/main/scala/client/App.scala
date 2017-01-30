@@ -118,7 +118,6 @@ object App {
 
   class Backend(scope: BackendScope[(RouterCtl[Page], Option[Snippet]), State]) {
     def codeChange(newCode: String) = {
-      console.log("code changes:\n" + newCode)
       scope.modState { state =>
         LocalStorage.saveCode(newCode)
         state.setCode(newCode)
