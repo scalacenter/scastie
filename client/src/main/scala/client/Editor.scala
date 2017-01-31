@@ -226,19 +226,24 @@ object Editor {
                  process: (HTMLElement => Unit) = noop): Annotation = {
         // inspired by blink/devtools WebInspector.JavaScriptSourceFrame::_renderDecorations
 
-        val basePos = new CMPosition { line = startPos.line; ch = 0 }
-        val offsetPos = new CMPosition {
-          line = startPos.line; ch = doc.getLine(startPos.line).length
-        }
-
-        val mode = "local"
-        val base = editor.cursorCoords(basePos, mode)
-        val offset = editor.cursorCoords(offsetPos, mode)
-
         val node =
           dom.document.createElement("pre").asInstanceOf[HTMLPreElement]
         node.className = "inline"
-        node.style.left = (offset.left - base.left) + "px"
+
+        def updateLeft(editor2: codemirror.Editor): Unit = {
+          val doc2 = editor2.getDoc()
+          val basePos = new CMPosition { line = startPos.line; ch = 0 }
+          val offsetPos = new CMPosition {
+            line = startPos.line; ch = doc2.getLine(startPos.line).length
+          }
+          val mode = "local"
+          val base = editor2.cursorCoords(basePos, mode)
+          val offset = editor2.cursorCoords(offsetPos, mode)
+          node.style.left = (offset.left - base.left) + "px"  
+        }
+        updateLeft(editor)
+        editor.onChange((editor, _) => updateLeft(editor))
+
         node.innerHTML = content
         process(node)
 
