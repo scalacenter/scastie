@@ -7,9 +7,11 @@ case class MultiMap[K, V](vs: Map[K, List[V]])
 case class Server[C, S](ref: S, mailbox: Queue[C], tailConfig: C) {
   def add(config: C) = copy(mailbox = mailbox.enqueue(config), tailConfig = config)
   def cost: Int = {
-    // found those values by experimentation
-    val averageReloadTime = 10 // s
-    val averageRunTime = 3
+    // (found by experimentation)
+    val averageReloadTime = 10 //s 
+
+    //([0s, 10s] upper bound Defined in SbtMain)
+    val averageRunTime = 3 // s
 
     val reloadsPenalties =
       mailbox.sliding(2).foldLeft(0){(acc, slide) =>
@@ -45,17 +47,19 @@ case class History[C](data: Queue[Record[C]]){
     History(data0)
   }
 }
-case class LoadBalancing[C, S](
+case class LoadBalancer[C, S](
   servers: Vector[Server[C, S]],
   history: History[C]
 ) {
 
-  def done(ref: S): LoadBalancing[C, S] = ???
-  def add(record: Record[C]): (Server[C, S], LoadBalancing[C, S]) = {
+  def done(ref: S): LoadBalancer[C, S] = ???
+  def add(record: Record[C]): (Server[C, S], LoadBalancer[C, S]) = {
     val updatedHistory = history.add(record)
 
-    def cacheMiss = !servers.exists(_.tailConfig == record.config)
+    val hits = servers.filter(_.tailConfig == record.config)
+
     def overBooked = false // TODO
+    def cacheMiss = hits.isEmpty
 
     val selectedServerIndice = 
       if(cacheMiss || overBooked) {
@@ -94,8 +98,12 @@ case class LoadBalancing[C, S](
       servers.updated(i, servers(i).add(record.config))
     }
 
-    (servers(selectedServerIndice), LoadBalancing(updatedServers, updatedHistory))
+    (servers(selectedServerIndice), LoadBalancer(updatedServers, updatedHistory))
   }
+
+  // private def randomMinBy[T, R : Ordering](xs: Vector[T])(f: T => R): Int = {
+  //   val res = xs.indices.map(i => f)
+  // }
 
   private type Histogram[T] = Map[T, Double]
 
