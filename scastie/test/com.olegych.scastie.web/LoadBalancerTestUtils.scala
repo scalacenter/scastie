@@ -24,23 +24,8 @@ trait LoadBalancerTestUtils extends FunSuite {
     )
   }
 
-  def assertMultiset[T](xs: Seq[T], ys: Seq[T]): Assertion =
+  def assertMultiset[T: Ordering](xs: Seq[T], ys: Seq[T]): Assertion =
     assert(multiset(xs) == multiset(ys))
-
-  case class Multiset[T](inner: Map[T, Int]) {
-    override def toString: String =
-      inner.toList
-        .sortBy(_._2)
-        .reverse
-        .map {
-          case (k, v) =>
-            List.fill(v)(k).mkString(", ")
-        }
-        .mkString("Multiset(", ", ", ")")
-  }
-
-  def multiset[T](xs: Seq[T]): Multiset[T] =
-    Multiset(xs.groupBy(x => x).map { case (k, vs) => (k, vs.size) })
 
   var serverId = 0
   def server(config: String) = {
@@ -62,7 +47,8 @@ trait LoadBalancerTestUtils extends FunSuite {
 
   def history(columns: Seq[String]*): History[String] = {
     val records =
-      columns.to[Vector].flatten.map(config => Record(config, nextIp))
+      columns.to[Vector].flatten.map(config => Record(config, nextIp)).reverse
+
     History(Queue(records: _*))
   }
 }

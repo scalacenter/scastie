@@ -4,6 +4,8 @@ package web
 import api._
 
 class LoadBalancerTest extends LoadBalancerTestUtils {
+  util.Random.setSeed(0)
+
   test("simple cache miss") {
     val balancer =
       LoadBalancer(
@@ -20,9 +22,10 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
           1 * "c6",
           1 * "c5",
           1 * "c4",
-          1 * "c3" // last in queue
+          1 * "c3"
         )
       )
+
     assertConfigs(add(balancer, "c8"))(
       2 * "c1",
       1 * "c2",
@@ -30,7 +33,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
       1 * "c8"
     )
   }
-
+/*
   test("draw cache miss") {
     val balancer =
       LoadBalancer(
@@ -47,11 +50,24 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     )
   }
 
-  test("cache hit") {
-    pending
+  test("cache hit (simple)") {
+    val balancer =
+      LoadBalancer(
+        servers(
+          5 * "c1"
+        ),
+        history(
+          20 * "c1"
+        )
+      )
+
+    assertConfigs(add(balancer, "c1"))(
+      5 * "c1"
+    )
   }
 
   test("reconfigure busy configuration") {
     pending
   }  
+*/
 }

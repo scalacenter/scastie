@@ -2,6 +2,9 @@ package com.olegych.scastie
 package web
 
 import scala.collection.immutable.Queue
+import util.Random
+
+import System.{lineSeparator => nl}
 
 case class MultiMap[K, V](vs: Map[K, List[V]])
 case class Server[C, S](ref: S, mailbox: Queue[C], tailConfig: C) {
@@ -34,7 +37,7 @@ object Server {
 }
 case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
-case class History[C](data: Queue[Record[C]]){
+case class History[C: Ordering](data: Queue[Record[C]]){
   def add(record: Record[C]): History[C] = {
     // the user has changed configuration, we assume he will not go back to the
     // previous configuration
@@ -46,8 +49,25 @@ case class History[C](data: Queue[Record[C]]){
 
     History(data0)
   }
+  case class Multiset[T: Ordering](inner: Map[T, Int]) {
+    override def toString: String = {
+      val size = inner.values.sum
+
+      inner.toList
+        .sortBy{ case (k, v) => (v, k)}
+        .reverse
+        .map { case (k, v) => s"$k($v)"}
+        .mkString("Multiset(", ", ", s") {$size}")
+    }
+  }
+
+  def multiset[T: Ordering](xs: Seq[T]): Multiset[T] =
+    Multiset(xs.groupBy(x => x).map { case (k, vs) => (k, vs.size) })
+
+  override def toString: String =
+    multiset(data.map(_.config)).toString
 }
-case class LoadBalancer[C, S](
+case class LoadBalancer[C: Ordering, S](
   servers: Vector[Server[C, S]],
   history: History[C]
 ) {
@@ -56,26 +76,47 @@ case class LoadBalancer[C, S](
   def add(record: Record[C]): (Server[C, S], LoadBalancer[C, S]) = {
     val updatedHistory = history.add(record)
 
-    val hits = servers.filter(_.tailConfig == record.config)
+    val hits = servers.indices.to[Vector].filter(i =>
+      servers(i).tailConfig == record.config
+    )
 
     def overBooked = false // TODO
     def cacheMiss = hits.isEmpty
 
     val selectedServerIndice = 
       if(cacheMiss || overBooked) {
-        val historyHistogram = histogram(updatedHistory.data.map(_.config).toList)
+        val historyHistogram = histogram(updatedHistory.data.map(_.config))
+        val configs = servers.map(_.tailConfig)
+
+        println("History")
+        println(show(historyHistogram))
+        println("Configs")
+        println(show(histogram(configs)))
 
         // we try to find a new configuration to minimize the distance with
         // the historical data
-        val configs = servers.map(_.tailConfig)
         val newConfigsRanking =
           configs.indices.map{i =>
-            val serverLoad = servers(i).cost
+            val load = servers(i).cost
             val newConfigs = configs.updated(i, record.config)
-            val newConfigsHistogram = histogram(newConfigs.toList)
+            val newConfigsHistogram = histogram(newConfigs)
 
-            (i, distance(historyHistogram, newConfigsHistogram), serverLoad)
+            val d = distance(historyHistogram, newConfigsHistogram)
+
+            def debug(): Unit = {
+              val config = servers(i).tailConfig
+              val d2 = Math.floor(d * 100).toInt
+              println(s"== Server($i) load: $load config: $config distance: $d2 ==")
+              println(show(newConfigsHistogram))
+            }
+            debug()
+
+            (i, d, load)
           }
+
+        // newConfigsRanking.foreach{ case (i, d, l) =>
+        //   println("s" + i + " " + servers(i).tailConfig + " " + Math.floor(d * 100).toInt + " " + l)
+        // }
 
         val (_, dmin, lmin) = newConfigsRanking.minBy{ 
           case (index, distance, load) => (distance, load) 
@@ -84,12 +125,10 @@ case class LoadBalancer[C, S](
         val tops = newConfigsRanking.filter{ 
           case (_, d, l) => d == dmin && l == lmin
         }
-        val (index, _, _) = tops(util.Random.nextInt(tops.size))
+        val (index, _, _) = tops(Random.nextInt(tops.size))
         index
       } else {
-        // cache hit
-        // overwork ?
-        ???
+        random(hits)
       }
 
 
@@ -105,9 +144,20 @@ case class LoadBalancer[C, S](
   //   val res = xs.indices.map(i => f)
   // }
 
+  private def random[T](xs: Vector[T]): T = xs(Random.nextInt(xs.size))
+
   private type Histogram[T] = Map[T, Double]
 
-  private def histogram[T](xs: List[T]): Histogram[T] = {
+  private def show[T: Ordering](h: Histogram[T]): String = {
+    h.toList.sortBy(_._2).reverse.map{ 
+      case (k, v) => 
+        val pp = Math.floor(100 * v).toInt
+        s"$k ${"*" * pp}"
+
+    }.mkString(nl)
+  }
+
+  private def histogram[T](xs: Seq[T]): Histogram[T] = {
     xs.groupBy(x => x).mapValues(v => (v.size.toDouble / xs.size.toDouble))
   }
 
