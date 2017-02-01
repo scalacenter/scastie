@@ -1,8 +1,6 @@
 package com.olegych.scastie
 package web
 
-import api._
-
 class LoadBalancerTest extends LoadBalancerTestUtils {
   util.Random.setSeed(0)
 
@@ -33,22 +31,6 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
       1 * "c8"
     )
   }
-/*
-  test("draw cache miss") {
-    val balancer =
-      LoadBalancer(
-        servers(
-          5 * "c1"
-        ),
-        history(
-          20 * "c1"
-        )
-      )
-    assertConfigs(add(balancer, "c2"))(
-      4 * "c1",
-      1 * "c2"
-    )
-  }
 
   test("cache hit (simple)") {
     val balancer =
@@ -66,8 +48,24 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     )
   }
 
+  test("draw cache miss") {
+    val balancer =
+      LoadBalancer(
+        servers(
+          5 * "c1"
+        ),
+        history(
+          20 * "c1"
+        )
+      )
+    assertConfigs(add(balancer, "c2"))(
+      4 * "c1",
+      1 * "c2"
+    )
+  }
+
   test("reconfigure busy configuration") {
     pending
   }  
-*/
+
 }

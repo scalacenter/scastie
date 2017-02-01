@@ -5,11 +5,7 @@ import org.scalatest.{FunSuite, Assertion}
 
 import scala.collection.immutable.Queue
 
-trait LoadBalancerTestUtils extends FunSuite {
-  implicit class IntExtension(n: Int) {
-    def *(v: String): Seq[String] = List.fill(n)(v)
-  }
-
+trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   type TestLoadBalancer = LoadBalancer[String, String]
 
   def add(balancer: TestLoadBalancer, config: String): TestLoadBalancer = {

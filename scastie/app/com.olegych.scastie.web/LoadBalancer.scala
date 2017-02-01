@@ -66,17 +66,21 @@ case class LoadBalancer[C: Ordering, S](
     def overBooked = false // TODO
     def cacheMiss = hits.isEmpty
 
-    println(s"Adding ${record.config}")
+    // println(s"Adding ${record.config}")
 
     val selectedServerIndice = 
       if(cacheMiss || overBooked) {
-        val historyHistogram = Histogram(updatedHistory.data.map(_.config).toSeq)
+        val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
         val configs = servers.map(_.tailConfig)
 
-        println("History")
-        println(historyHistogram)
-        println("Configs")
-        println(Histogram(configs))
+        // println("History")
+        // println()
+        // println(historyHistogram)
+        // println()
+        // println("Configs")
+        // println()
+        // println(configs.to[Histogram])
+        // println()
 
         // we try to find a new configuration to minimize the distance with
         // the historical data
@@ -84,24 +88,22 @@ case class LoadBalancer[C: Ordering, S](
           configs.indices.map{i =>
             val load = servers(i).cost
             val newConfigs = configs.updated(i, record.config)
-            val newConfigsHistogram = Histogram(newConfigs)
+            val newConfigsHistogram = newConfigs.to[Histogram]
 
             val distance = historyHistogram.distance(newConfigsHistogram)
 
-            def debug(): Unit = {
-              val config = servers(i).tailConfig
-              val d2 = Math.floor(distance * 100).toInt
-              println(s"== Server($i) load: $load config: $config distance: $d2 ==")
-              println(newConfigsHistogram)
-            }
-            debug()
+            // def debug(): Unit = {
+            //   val config = servers(i).tailConfig
+            //   val d2 = Math.floor(distance * 100).toInt
+            //   println(s"== Server($i) load: $load(s) config: $config distance: $d2 ==")
+            //   println()
+            //   println(newConfigsHistogram)
+            //   println()
+            // }
+            // debug()
 
             (i, distance, load)
           }
-
-        // newConfigsRanking.foreach{ case (i, d, l) =>
-        //   println("s" + i + " " + servers(i).tailConfig + " " + Math.floor(d * 100).toInt + " " + l)
-        // }
 
         val (_, dmin, lmin) = newConfigsRanking.minBy{ 
           case (index, distance, load) => (distance, load) 
