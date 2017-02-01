@@ -37,7 +37,7 @@ object Server {
 }
 case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
-case class History[C: Ordering](data: Queue[Record[C]]){
+case class History[C](data: Queue[Record[C]]){
   def add(record: Record[C]): History[C] = {
     // the user has changed configuration, we assume he will not go back to the
     // previous configuration
@@ -49,23 +49,6 @@ case class History[C: Ordering](data: Queue[Record[C]]){
 
     History(data0)
   }
-  case class Multiset[T: Ordering](inner: Map[T, Int]) {
-    override def toString: String = {
-      val size = inner.values.sum
-
-      inner.toList
-        .sortBy{ case (k, v) => (v, k)}
-        .reverse
-        .map { case (k, v) => s"$k($v)"}
-        .mkString("Multiset(", ", ", s") {$size}")
-    }
-  }
-
-  def multiset[T: Ordering](xs: Seq[T]): Multiset[T] =
-    Multiset(xs.groupBy(x => x).map { case (k, vs) => (k, vs.size) })
-
-  override def toString: String =
-    multiset(data.map(_.config)).toString
 }
 case class LoadBalancer[C: Ordering, S](
   servers: Vector[Server[C, S]],
@@ -83,15 +66,17 @@ case class LoadBalancer[C: Ordering, S](
     def overBooked = false // TODO
     def cacheMiss = hits.isEmpty
 
+    println(s"Adding ${record.config}")
+
     val selectedServerIndice = 
       if(cacheMiss || overBooked) {
-        val historyHistogram = histogram(updatedHistory.data.map(_.config))
+        val historyHistogram = Histogram(updatedHistory.data.map(_.config).toSeq)
         val configs = servers.map(_.tailConfig)
 
         println("History")
-        println(show(historyHistogram))
+        println(historyHistogram)
         println("Configs")
-        println(show(histogram(configs)))
+        println(Histogram(configs))
 
         // we try to find a new configuration to minimize the distance with
         // the historical data
@@ -99,19 +84,19 @@ case class LoadBalancer[C: Ordering, S](
           configs.indices.map{i =>
             val load = servers(i).cost
             val newConfigs = configs.updated(i, record.config)
-            val newConfigsHistogram = histogram(newConfigs)
+            val newConfigsHistogram = Histogram(newConfigs)
 
-            val d = distance(historyHistogram, newConfigsHistogram)
+            val distance = historyHistogram.distance(newConfigsHistogram)
 
             def debug(): Unit = {
               val config = servers(i).tailConfig
-              val d2 = Math.floor(d * 100).toInt
+              val d2 = Math.floor(distance * 100).toInt
               println(s"== Server($i) load: $load config: $config distance: $d2 ==")
-              println(show(newConfigsHistogram))
+              println(newConfigsHistogram)
             }
             debug()
 
-            (i, d, load)
+            (i, distance, load)
           }
 
         // newConfigsRanking.foreach{ case (i, d, l) =>
@@ -145,31 +130,4 @@ case class LoadBalancer[C: Ordering, S](
   // }
 
   private def random[T](xs: Vector[T]): T = xs(Random.nextInt(xs.size))
-
-  private type Histogram[T] = Map[T, Double]
-
-  private def show[T: Ordering](h: Histogram[T]): String = {
-    h.toList.sortBy(_._2).reverse.map{ 
-      case (k, v) => 
-        val pp = Math.floor(100 * v).toInt
-        s"$k ${"*" * pp}"
-
-    }.mkString(nl)
-  }
-
-  private def histogram[T](xs: Seq[T]): Histogram[T] = {
-    xs.groupBy(x => x).mapValues(v => (v.size.toDouble / xs.size.toDouble))
-  }
-
-  private def distance[T](h1: Histogram[T], h2: Histogram[T]): Double = {
-    innerJoin(h1, h2)((x, y) => (x - y) * (x - y)).values.sum
-  }
-
-  private def innerJoin[K, X, Y, Z](m1: Map[K, X], m2: Map[K, Y])(
-      f: (X, Y) => Z): Map[K, Z] = {
-    m1.flatMap {
-      case (k, a) =>
-        m2.get(k).map(b => Map(k -> f(a, b))).getOrElse(Map.empty[K, Z])
-    }
-  }
 }

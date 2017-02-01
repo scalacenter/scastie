@@ -25,7 +25,7 @@ trait LoadBalancerTestUtils extends FunSuite {
   }
 
   def assertMultiset[T: Ordering](xs: Seq[T], ys: Seq[T]): Assertion =
-    assert(multiset(xs) == multiset(ys))
+    assert(Multiset(xs) == Multiset(ys))
 
   var serverId = 0
   def server(config: String) = {
