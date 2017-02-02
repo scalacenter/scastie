@@ -73,47 +73,40 @@ case class LoadBalancer[C: Ordering, S](
         val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
         val configs = servers.map(_.tailConfig)
 
-        // println("History")
-        // println()
-        // println(historyHistogram)
-        // println()
-        // println("Configs")
-        // println()
-        // println(configs.to[Histogram])
-        // println()
+        def debugHistory(): Unit = {
+          println("History")
+          println()
+          println(historyHistogram)
+          println()
+          println("Configs")
+          println()
+          println(configs.to[Histogram])
+          println()
+        }
+        // debugHistory()
 
         // we try to find a new configuration to minimize the distance with
         // the historical data
-        val newConfigsRanking =
-          configs.indices.map{i =>
-            val load = servers(i).cost
-            val newConfigs = configs.updated(i, record.config)
-            val newConfigsHistogram = newConfigs.to[Histogram]
+        randomMin(configs.indices){i =>
+          val load = servers(i).cost
+          val newConfigs = configs.updated(i, record.config)
+          val newConfigsHistogram = newConfigs.to[Histogram]
 
-            val distance = historyHistogram.distance(newConfigsHistogram)
+          val distance = historyHistogram.distance(newConfigsHistogram)
 
-            // def debug(): Unit = {
-            //   val config = servers(i).tailConfig
-            //   val d2 = Math.floor(distance * 100).toInt
-            //   println(s"== Server($i) load: $load(s) config: $config distance: $d2 ==")
-            //   println()
-            //   println(newConfigsHistogram)
-            //   println()
-            // }
-            // debug()
+            def debugMin(): Unit = {
+              val config = servers(i).tailConfig
+              val d2 = Math.floor(distance * 100).toInt
+              println(s"== Server($i) load: $load(s) config: $config distance: $d2 ==")
+              println()
+              println(newConfigsHistogram)
+              println()
+            }
+            // debugMin()
 
-            (i, distance, load)
-          }
-
-        val (_, dmin, lmin) = newConfigsRanking.minBy{ 
-          case (index, distance, load) => (distance, load) 
+          (distance, load)
         }
 
-        val tops = newConfigsRanking.filter{ 
-          case (_, d, l) => d == dmin && l == lmin
-        }
-        val (index, _, _) = tops(Random.nextInt(tops.size))
-        index
       } else {
         random(hits)
       }
@@ -127,9 +120,13 @@ case class LoadBalancer[C: Ordering, S](
     (servers(selectedServerIndice), LoadBalancer(updatedServers, updatedHistory))
   }
 
-  // private def randomMinBy[T, R : Ordering](xs: Vector[T])(f: T => R): Int = {
-  //   val res = xs.indices.map(i => f)
-  // }
+  // find min by f, select one min at random
+  private def randomMin[A, B: Ordering](xs: Seq[A])(f: A => B): A = {
+    val min = f(xs.minBy(f))
+    val ranking = xs.filter(x => f(x) == min)
+    ranking(util.Random.nextInt(ranking.size))
+  }
 
+  // select one at random
   private def random[T](xs: Vector[T]): T = xs(Random.nextInt(xs.size))
 }
