@@ -22,20 +22,12 @@ case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {
   def done: Server[C, S] = {
     val (task, mailbox0) = mailbox.dequeue
 
-    assert(task.config == lastConfig)
     assert(Some(task.id) == currentTaskId)
 
-    if(mailbox0.nonEmpty) {
-      val (nextTask, nextMailbox) = mailbox0.dequeue
-      copy(
-        lastConfig = nextTask.config, 
-        mailbox = nextMailbox
-      )
-    } else {
-      copy(
-        mailbox = Queue()
-      )
-    }
+    copy(
+      lastConfig = task.config,
+      mailbox = mailbox0
+    )
   }
 
   def add(task: Task[C]): Server[C, S] = {

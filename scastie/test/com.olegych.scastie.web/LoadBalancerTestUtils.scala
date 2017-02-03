@@ -8,7 +8,7 @@ import scala.collection.immutable.Queue
 trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   type TestLoadBalancer = LoadBalancer[String, String]
 
-  var taskId = 0l
+  private var taskId = 1000l
   def add(balancer: TestLoadBalancer, config: String): TestLoadBalancer = {
     val (_, balancer0) = balancer.add(Task(config, nextIp, taskId))
     taskId += 1
@@ -25,7 +25,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   def assertMultiset[T: Ordering](xs: Seq[T], ys: Seq[T]): Assertion =
     assert(Multiset(xs) == Multiset(ys))
 
-  var serverId = 0
+  private var serverId = 0
   def server(config: String) = {
     val t = Server("s" + serverId, config)
     serverId += 1
@@ -36,7 +36,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
     columns.to[Vector].flatten.map(server)
   }
 
-  var currentIp = 0
+  private var currentIp = 0
   def nextIp = {
     val t = Ip("ip" + currentIp)
     currentIp += 1

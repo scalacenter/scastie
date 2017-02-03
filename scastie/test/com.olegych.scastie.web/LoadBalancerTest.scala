@@ -149,6 +149,44 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(balancer1.servers.head.mailbox.size == 0)
   }
 
+  test("run two tasks") {
+    val balancer =
+      LoadBalancer(
+        servers(1 * "c1"),
+        history(1 * "c1")
+      )
+
+    val server = balancer.servers.head
+    assert(server.mailbox.size == 0)
+    assert(server.currentTaskId == None)
+    
+    val taskId1 = 1L
+    val (assigned0, balancer0) = balancer.add(Task("c1", nextIp, taskId1))
+
+    val server0 = balancer0.servers.head
+
+    assert(assigned0.ref == server.ref)
+    assert(server0.mailbox.size == 1)
+    assert(server0.currentTaskId == Some(taskId1))
+
+    val taskId2 = 2L
+    val (assigned1, balancer1) = balancer0.add(Task("c2", nextIp, taskId2))
+
+    val server1 = balancer1.servers.head
+    assert(server1.mailbox.size == 2)
+    assert(server1.currentTaskId == Some(taskId1))
+
+    val balancer2 = balancer1.done(taskId1)
+    val server2 = balancer2.servers.head
+    assert(server2.mailbox.size == 1)
+    assert(server2.currentTaskId == Some(taskId2))
+
+    val balancer3 = balancer2.done(taskId2)
+    val server3 = balancer3.servers.head
+    assert(server3.mailbox.size == 0)
+    assert(server3.currentTaskId == None)
+  }
+
   test("remove a server") {
     val ref = "s1"
     val balancer = LoadBalancer(
