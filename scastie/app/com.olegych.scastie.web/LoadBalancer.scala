@@ -9,7 +9,7 @@ import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
 
 case class MultiMap[K, V](vs: Map[K, List[V]])
-case class Server[C, S](ref: S, mailbox: Queue[C], tailConfig: C) {
+case class Server[C, S](ref: S, tailConfig: C, mailbox: Queue[C]) {
   def done(config: C): Server[C, S] = {
     val (topConfig, mailbox0) = mailbox.dequeue
     assert(config == topConfig)
@@ -17,11 +17,7 @@ case class Server[C, S](ref: S, mailbox: Queue[C], tailConfig: C) {
   }
   def add(config: C): Server[C, S] = copy(mailbox = mailbox.enqueue(config), tailConfig = config)
   def cost: Int = {
-    // (found by experimentation)
-    val averageReloadTime = 10 //s 
-
-    //([0s, 10s] upper bound Defined in SbtMain)
-    val averageRunTime = 3 // s
+    import Server._  
 
     val reloadsPenalties =
       mailbox.sliding(2).foldLeft(0){(acc, slide) =>
@@ -39,8 +35,14 @@ case class Server[C, S](ref: S, mailbox: Queue[C], tailConfig: C) {
   }
 }
 object Server {
+  // (found by experimentation)
+  val averageReloadTime = 10 //s 
+
+  //([0s, 10s] upper bound Defined in SbtMain)
+  val averageRunTime = 3 // s }
+
   def apply[C, S](ref: S, config: C): Server[C, S] = 
-    Server(ref, Queue(), config)
+    Server(ref, config, Queue())
 }
 case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
@@ -83,7 +85,7 @@ case class LoadBalancer[C: Ordering, S](
       servers(i).tailConfig == record.config
     )
 
-    def overBooked = false // TODO
+    def overBooked = hits.forall(i => servers(i).cost > Server.averageReloadTime)
     def cacheMiss = hits.isEmpty
 
     log.info(s"Balancing config: ${record.config.hashCode}")

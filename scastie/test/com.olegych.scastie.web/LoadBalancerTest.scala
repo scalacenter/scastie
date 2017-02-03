@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package web
 
+import scala.collection.immutable.Queue
+
 class LoadBalancerTest extends LoadBalancerTestUtils {
   util.Random.setSeed(0)
 
@@ -65,7 +67,63 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
   }
 
   test("reconfigure busy configuration") {
-    pending
+    val balancer =
+      LoadBalancer(
+        Vector(
+          Server("s1", "c1", Queue("c1", "c1", "c1", "c1")),
+          Server("s1", "c2", Queue()),
+          Server("s1", "c3", Queue()),
+          Server("s1", "c4", Queue()),
+          Server("s1", "c5", Queue())
+        ),
+        history(
+          10 * "c1",
+          5 * "c2",
+          1 * "c7",
+          1 * "c6",
+          1 * "c5",
+          1 * "c4",
+          1 * "c3"
+        )
+      )
+
+    assertConfigs(add(balancer, "c1"))(
+      1 * "c1",
+      1 * "c1",
+      1 * "c2",
+      1 * "c4",
+      1 * "c5"
+    )
+  }
+
+  test("dont reconfigure if some configuration if not busy") {
+    val balancer =
+      LoadBalancer(
+        Vector(
+          Server("s1", "c1", Queue("c1", "c1", "c1", "c1")),
+          Server("s1", "c1", Queue()),
+          Server("s1", "c2", Queue()),
+          Server("s1", "c3", Queue()),
+          Server("s1", "c4", Queue())
+        ),
+        history(
+          10 * "c1",
+          5 * "c2",
+          1 * "c7",
+          1 * "c6",
+          1 * "c5",
+          1 * "c4",
+          1 * "c3"
+        )
+      )
+
+    assertConfigs(add(balancer, "c1"))(
+      1 * "c1",
+      1 * "c1",
+      1 * "c2",
+      1 * "c3",
+      1 * "c4"
+    )
   }
 
   test("server notify when it's done") {
