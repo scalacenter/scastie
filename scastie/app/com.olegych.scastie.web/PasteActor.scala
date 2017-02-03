@@ -15,7 +15,9 @@ import akka.routing.{ActorSelectionRoutee, RoundRobinRoutingLogic, Router}
 import java.nio.file._
 import org.slf4j.LoggerFactory
 
-import scala.collection.mutable.{Map => MMap, Queue}
+import scala.collection.mutable.{Map => MMap}
+
+import scala.collection.immutable.Queue
 
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
@@ -31,18 +33,21 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 
   private val ports = (0 until portsSize).map(portsFrom + _)
 
-  private var routees = ports
-    .map(
-      port =>
-        (host, port) -> ActorSelectionRoutee(
-          context.actorSelection(
-            s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
-          )
-      ))
-    .toMap
+  private var remoteSelections = ports.map{port =>
+    val selection = context.actorSelection(
+      s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
+    )
+    (host, port) -> selection
+  }.toMap
 
-  private var router =
-    Router(RoundRobinRoutingLogic(), routees.values.toVector)
+  private var loadBalancer = {
+    val servers = remoteSelections.to[Vector].map{ case (_, ref) =>
+      Server(ref, Inputs.default.sbtConfig)
+    }
+
+    val history = History(Queue.empty[Record[String]], size = 100)
+    LoadBalancer(servers, history)
+  }
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -60,12 +65,16 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 
   def receive = {
     case format: FormatRequest => {
-      router.route(format, sender)
+      val server = loadBalancer.getRandomServer
+      server.ref.tell(format, sender)
       ()
     }
     case InputsWithIp(inputs, ip) => {
       val id = container.writePaste(inputs)
-      router.route(SbtTask(id, inputs, ip, progressActor), self)
+
+      val (server, balancer) = loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), id))
+      loadBalancer = balancer
+      server.ref.tell(SbtTask(id, inputs, ip, progressActor), self)
       sender ! Ressource(id)
     }
 
@@ -78,6 +87,9 @@ class PasteActor(progressActor: ActorRef) extends Actor {
     }
 
     case progress: api.PasteProgress => {
+      if(progress.done) {
+        loadBalancer = loadBalancer.done(progress.id)
+      }
       container.appendOutput(progress)
     }
 
@@ -85,11 +97,12 @@ class PasteActor(progressActor: ActorRef) extends Actor {
       for {
         host <- event.remoteAddress.host
         port <- event.remoteAddress.port
-        router <- routees.get((host, port))
+        ref  <- remoteSelections.get((host, port))
       } {
         log.warn(event.toString)
-        log.warn("removing disconnected: " + router)
-        routees = routees - ((host, port))
+        log.warn("removing disconnected: " + ref)
+        remoteSelections = remoteSelections - ((host, port))
+        loadBalancer.removeServer(ref)
       }
     }
   }

@@ -8,14 +8,40 @@ import System.{lineSeparator => nl}
 
 import org.slf4j.LoggerFactory
 
-case class MultiMap[K, V](vs: Map[K, List[V]])
-case class Server[C, S](ref: S, tailConfig: C, mailbox: Queue[C]) {
-  def done(config: C): Server[C, S] = {
-    val (topConfig, mailbox0) = mailbox.dequeue
-    assert(config == topConfig)
-    copy(mailbox = mailbox0)
+case class Ip(v: String)
+case class Record[C](config: C, ip: Ip)
+case class Task[C](config: C, ip: Ip, id: Long) {
+  def toRecord = Record(config, ip)
+}
+
+case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {
+
+  def currentTaskId: Option[Long] = mailbox.headOption.map(_.id)
+  def currentConfig: C = mailbox.headOption.map(_.config).getOrElse(lastConfig)
+
+  def done: Server[C, S] = {
+    val (task, mailbox0) = mailbox.dequeue
+
+    assert(task.config == lastConfig)
+    assert(Some(task.id) == currentTaskId)
+
+    if(mailbox0.nonEmpty) {
+      val (nextTask, nextMailbox) = mailbox0.dequeue
+      copy(
+        lastConfig = nextTask.config, 
+        mailbox = nextMailbox
+      )
+    } else {
+      copy(
+        mailbox = Queue()
+      )
+    }
   }
-  def add(config: C): Server[C, S] = copy(mailbox = mailbox.enqueue(config), tailConfig = config)
+
+  def add(task: Task[C]): Server[C, S] = {
+    copy(mailbox = mailbox.enqueue(task))
+  }
+
   def cost: Int = {
     import Server._  
 
@@ -24,7 +50,7 @@ case class Server[C, S](ref: S, tailConfig: C, mailbox: Queue[C]) {
         val reloadPenalty =
           slide match {
             case Queue(x, y) =>
-              if(x != y) averageReloadTime
+              if(x.config != y.config) averageReloadTime
               else 0
             case _ => 0
           }
@@ -42,21 +68,26 @@ object Server {
   val averageRunTime = 3 // s }
 
   def apply[C, S](ref: S, config: C): Server[C, S] = 
-    Server(ref, config, Queue())
+    Server(
+      ref = ref,
+      lastConfig = config,
+      mailbox = Queue()
+    )
 }
-case class Ip(v: String)
-case class Record[C](config: C, ip: Ip)
-case class History[C](data: Queue[Record[C]]){
+case class History[C](data: Queue[Record[C]], size: Int){
   def add(record: Record[C]): History[C] = {
     // the user has changed configuration, we assume he will not go back to the
     // previous configuration
-    val (_, data0) =
-      data
-        .filterNot(_.ip == record.ip)
-        .enqueue(record)
-        .dequeue
 
-    History(data0)
+    val data0 = data.filterNot(_.ip == record.ip).enqueue(record)
+
+    val data1 =
+      if(data0.size > size) {
+        val (_, q) = data0.dequeue
+        q
+      } else data0
+
+    History(data1, size)
   }
 }
 case class LoadBalancer[C: Ordering, S](
@@ -65,30 +96,37 @@ case class LoadBalancer[C: Ordering, S](
 ) {
   private val log = LoggerFactory.getLogger(getClass)
 
-  private lazy val configs = servers.map(_.tailConfig)
+  private lazy val configs = servers.map(_.currentConfig)
 
-  def done(ref: S, config: C): LoadBalancer[C, S] = {
-    log.info(s"Task done: ${config.hashCode}")
-    val res = servers.zipWithIndex.find(_._1.ref == ref)
+  def done(taskId: Long): LoadBalancer[C, S] = {
+    log.info(s"Task done: $taskId")
+    val res = servers.zipWithIndex.find(_._1.currentTaskId == Some(taskId))
     assert(res.nonEmpty, {
-      val refs = servers.map(_.ref).mkString("[", ", ", "]")
-      s"""cannot find server ref: $ref from $refs"""
+      val serversTaskIds = servers.flatMap(_.currentTaskId).mkString("[", ", ", "]")
+      s"""cannot find taskId: $taskId from servers task ids $serversTaskIds"""
     })
     val (server, i) = res.get
-    copy(servers = servers.updated(i, server.done(config)))
+    copy(servers = servers.updated(i, server.done))
   }
-  def add(record: Record[C]): (Server[C, S], LoadBalancer[C, S]) = {
-    val updatedHistory = history.add(record)
+
+  def removeServer(ref: S): LoadBalancer[C, S] = {
+    copy(servers = servers.filterNot(_.ref == ref))
+  }
+
+  def getRandomServer: Server[C, S] = random(servers)
+
+  def add(task: Task[C]): (Server[C, S], LoadBalancer[C, S]) = {
+    val updatedHistory = history.add(task.toRecord)
     lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
 
     val hits = servers.indices.to[Vector].filter(i =>
-      servers(i).tailConfig == record.config
+      servers(i).currentConfig == task.config
     )
 
     def overBooked = hits.forall(i => servers(i).cost > Server.averageReloadTime)
     def cacheMiss = hits.isEmpty
 
-    log.info(s"Balancing config: ${record.config.hashCode}")
+    log.info(s"Balancing config: ${task.config.hashCode}")
     debugState(historyHistogram)
 
     val selectedServerIndice = 
@@ -96,7 +134,7 @@ case class LoadBalancer[C: Ordering, S](
         // we try to find a new configuration to minimize the distance with
         // the historical data
         randomMin(configs.indices){i =>
-          val config = record.config
+          val config = task.config
           val distance = distanceFromHistory(i, config, historyHistogram)
           val load = servers(i).cost
           (distance, load)
@@ -107,7 +145,7 @@ case class LoadBalancer[C: Ordering, S](
 
     val updatedServers = {
       val i = selectedServerIndice
-      servers.updated(i, servers(i).add(record.config))
+      servers.updated(i, servers(i).add(task))
     }
 
     (servers(selectedServerIndice), LoadBalancer(updatedServers, updatedHistory))
@@ -127,9 +165,10 @@ case class LoadBalancer[C: Ordering, S](
 
   // find min by f, select one min at random
   private def randomMin[A, B: Ordering](xs: Seq[A])(f: A => B): A = {
-    val min = f(xs.minBy(f))
-    val ranking = xs.filter(x => f(x) == min)
-    ranking(util.Random.nextInt(ranking.size))
+    val evals = xs.map(x => (x, f(x)))
+    val min = evals.minBy(_._2)._2
+    val ranking = evals.filter{case (_, e) => e == min}
+    ranking(util.Random.nextInt(ranking.size))._1
   }
 
   // select one at random
@@ -138,7 +177,7 @@ case class LoadBalancer[C: Ordering, S](
   private def debugMin(targetServerIndex: Int, config: C,
     newConfigsHistogram: Histogram[C], distance: Double): Unit = {
     val i = targetServerIndex
-    val config = servers(i).tailConfig
+    val config = servers(i).currentConfig
     val d2 = Math.floor(distance * 100).toInt
 
     val load = servers(i).cost
@@ -147,7 +186,7 @@ case class LoadBalancer[C: Ordering, S](
   }
 
   private def debugState(updatedHistory: Histogram[C]): Unit = {
-    val configHistogram = servers.map(_.tailConfig).to[Histogram]
+    val configHistogram = servers.map(_.currentConfig).to[Histogram]
 
     log.debug("== History ==")
     log.debug(updatedHistory.toString)

@@ -8,14 +8,16 @@ import scala.collection.immutable.Queue
 trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   type TestLoadBalancer = LoadBalancer[String, String]
 
+  var taskId = 0l
   def add(balancer: TestLoadBalancer, config: String): TestLoadBalancer = {
-    val (_, balancer0) = balancer.add(Record(config, nextIp))
+    val (_, balancer0) = balancer.add(Task(config, nextIp, taskId))
+    taskId += 1
     balancer0
   }
 
   def assertConfigs(balancer: TestLoadBalancer)(columns: Seq[String]*): Assertion = {
     assertMultiset(
-      balancer.servers.map(_.tailConfig),
+      balancer.servers.map(_.currentConfig),
       columns.flatten
     )
   }
@@ -45,6 +47,6 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
     val records =
       columns.to[Vector].flatten.map(config => Record(config, nextIp)).reverse
 
-    History(Queue(records: _*))
+    History(Queue(records: _*), size = 20)
   }
 }
