@@ -6,9 +6,16 @@ import util.Random
 
 import System.{lineSeparator => nl}
 
+import org.slf4j.LoggerFactory
+
 case class MultiMap[K, V](vs: Map[K, List[V]])
 case class Server[C, S](ref: S, mailbox: Queue[C], tailConfig: C) {
-  def add(config: C) = copy(mailbox = mailbox.enqueue(config), tailConfig = config)
+  def done(config: C): Server[C, S] = {
+    val (topConfig, mailbox0) = mailbox.dequeue
+    assert(config == topConfig)
+    copy(mailbox = mailbox0)
+  }
+  def add(config: C): Server[C, S] = copy(mailbox = mailbox.enqueue(config), tailConfig = config)
   def cost: Int = {
     // (found by experimentation)
     val averageReloadTime = 10 //s 
@@ -33,7 +40,7 @@ case class Server[C, S](ref: S, mailbox: Queue[C], tailConfig: C) {
 }
 object Server {
   def apply[C, S](ref: S, config: C): Server[C, S] = 
-    Server(ref, Queue(config), config)
+    Server(ref, Queue(), config)
 }
 case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
@@ -54,10 +61,23 @@ case class LoadBalancer[C: Ordering, S](
   servers: Vector[Server[C, S]],
   history: History[C]
 ) {
+  private val log = LoggerFactory.getLogger(getClass)
 
-  def done(ref: S): LoadBalancer[C, S] = ???
+  private lazy val configs = servers.map(_.tailConfig)
+
+  def done(ref: S, config: C): LoadBalancer[C, S] = {
+    log.info(s"Task done: ${config.hashCode}")
+    val res = servers.zipWithIndex.find(_._1.ref == ref)
+    assert(res.nonEmpty, {
+      val refs = servers.map(_.ref).mkString("[", ", ", "]")
+      s"""cannot find server ref: $ref from $refs"""
+    })
+    val (server, i) = res.get
+    copy(servers = servers.updated(i, server.done(config)))
+  }
   def add(record: Record[C]): (Server[C, S], LoadBalancer[C, S]) = {
     val updatedHistory = history.add(record)
+    lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
 
     val hits = servers.indices.to[Vector].filter(i =>
       servers(i).tailConfig == record.config
@@ -66,51 +86,22 @@ case class LoadBalancer[C: Ordering, S](
     def overBooked = false // TODO
     def cacheMiss = hits.isEmpty
 
-    // println(s"Adding ${record.config}")
+    log.info(s"Balancing config: ${record.config.hashCode}")
+    debugState(historyHistogram)
 
     val selectedServerIndice = 
       if(cacheMiss || overBooked) {
-        val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
-        val configs = servers.map(_.tailConfig)
-
-        def debugHistory(): Unit = {
-          println("History")
-          println()
-          println(historyHistogram)
-          println()
-          println("Configs")
-          println()
-          println(configs.to[Histogram])
-          println()
-        }
-        // debugHistory()
-
         // we try to find a new configuration to minimize the distance with
         // the historical data
         randomMin(configs.indices){i =>
+          val config = record.config
+          val distance = distanceFromHistory(i, config, historyHistogram)
           val load = servers(i).cost
-          val newConfigs = configs.updated(i, record.config)
-          val newConfigsHistogram = newConfigs.to[Histogram]
-
-          val distance = historyHistogram.distance(newConfigsHistogram)
-
-            def debugMin(): Unit = {
-              val config = servers(i).tailConfig
-              val d2 = Math.floor(distance * 100).toInt
-              println(s"== Server($i) load: $load(s) config: $config distance: $d2 ==")
-              println()
-              println(newConfigsHistogram)
-              println()
-            }
-            // debugMin()
-
           (distance, load)
         }
-
       } else {
         random(hits)
       }
-
 
     val updatedServers = {
       val i = selectedServerIndice
@@ -118,6 +109,18 @@ case class LoadBalancer[C: Ordering, S](
     }
 
     (servers(selectedServerIndice), LoadBalancer(updatedServers, updatedHistory))
+  }
+
+  private def distanceFromHistory(targetServerIndex: Int, config: C, 
+    historyHistogram: Histogram[C]): Double = {
+    val i = targetServerIndex
+    val newConfigs = configs.updated(i, config)
+    val newConfigsHistogram = newConfigs.to[Histogram]
+    val distance = historyHistogram.distance(newConfigsHistogram)
+
+    debugMin(i, config, newConfigsHistogram, distance)
+
+    distance
   }
 
   // find min by f, select one min at random
@@ -129,4 +132,24 @@ case class LoadBalancer[C: Ordering, S](
 
   // select one at random
   private def random[T](xs: Vector[T]): T = xs(Random.nextInt(xs.size))
+
+  private def debugMin(targetServerIndex: Int, config: C,
+    newConfigsHistogram: Histogram[C], distance: Double): Unit = {
+    val i = targetServerIndex
+    val config = servers(i).tailConfig
+    val d2 = Math.floor(distance * 100).toInt
+
+    val load = servers(i).cost
+    log.debug(s"== Server($i) load: $load(s) config: $config distance: $d2 ==")
+    log.debug(newConfigsHistogram.toString)
+  }
+
+  private def debugState(updatedHistory: Histogram[C]): Unit = {
+    val configHistogram = servers.map(_.tailConfig).to[Histogram]
+
+    log.debug("== History ==")
+    log.debug(updatedHistory.toString)
+    log.debug("== Configs ==")
+    log.debug(configHistogram.toString)
+  }
 }

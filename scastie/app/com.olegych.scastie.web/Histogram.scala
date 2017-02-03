@@ -42,14 +42,17 @@ class Histogram[T: Ordering](protected val data: Map[T, Double]) {
     def padLeft(length: Int, value: String): String =
             String.format("%1$" + length + "s", value)
 
+    val window = 50
+    val box = nl + "-" * (window + 10) + nl
+
     data.toList
      .sortBy{ case (k, v) => (v, k)}
      .reverse
      .map{ 
         case (k, v) => 
-          val pp = Math.floor(100 * v).toInt
+          val pp = Math.floor(window * v).toInt
           val ppp = padLeft(2, pp.toString)
           s"$k ($ppp%) ${"*" * pp}"
-      }.mkString(nl)
+      }.mkString(box, nl, box)
   }
 }

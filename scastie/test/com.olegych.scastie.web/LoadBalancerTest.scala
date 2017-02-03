@@ -66,6 +66,25 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
   test("reconfigure busy configuration") {
     pending
-  }  
+  }
 
+  test("server notify when it's done") {
+    val balancer =
+      LoadBalancer(
+        servers(1 * "c1"),
+        history(1 * "c1")
+      )
+
+    val server = balancer.servers.head
+    assert(server.mailbox.size == 0)
+    
+    val config = "c1"
+    val (assigned, balancer0) = balancer.add(Record(config, nextIp))
+
+    assert(assigned.ref == server.ref)
+    assert(balancer0.servers.head.mailbox.size == 1)
+
+    val balancer1 = balancer0.done(server.ref, config)
+    assert(balancer1.servers.head.mailbox.size == 0)
+  }
 }
