@@ -1,6 +1,5 @@
-package scastie.runtime
-
-import api._
+package com.olegych.scastie.api
+package runtime
 
 import upickle.Js._
 object Runtime {

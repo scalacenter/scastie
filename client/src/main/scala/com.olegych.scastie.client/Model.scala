@@ -1,3 +1,4 @@
+package com.olegych.scastie
 package client
 
 case class Project(
@@ -23,6 +24,9 @@ object Outputs {
     instrumentations = Set(),
     runtimeError = None
   )
+
+  import upickle.default._
+  implicit val pkl: ReadWriter[Outputs] = macroRW[Outputs]
 }
 case class Outputs(
     console: Vector[String],

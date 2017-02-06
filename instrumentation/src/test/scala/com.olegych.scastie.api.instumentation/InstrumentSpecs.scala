@@ -1,4 +1,4 @@
-package instrumentation
+package com.olegych.scastie.instrumentation
 
 import java.nio.file._
 

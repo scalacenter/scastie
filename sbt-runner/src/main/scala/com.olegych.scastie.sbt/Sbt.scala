@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package sbt
 
-import BuildInfo.{version => buildVersion}
+import buildinfo.BuildInfo.{version => buildVersion}
 
 import api._
 

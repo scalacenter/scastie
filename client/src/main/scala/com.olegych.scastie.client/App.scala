@@ -1,3 +1,4 @@
+package com.olegych.scastie
 package client
 
 import japgolly.scalajs.react._, vdom.all._, extra.router.RouterCtl
@@ -11,9 +12,10 @@ import org.scalajs.dom._
 
 import scala.util.{Success, Failure}
 
-import upickle.default.{read => uread}
+import upickle.default.{read => uread, ReadWriter, macroRW => upickleMacroRW}
 
 object App {
+
   object State {
     def default = State(
       view = View.Editor,
@@ -22,11 +24,19 @@ object App {
       isDarkTheme = false,
       consoleIsOpen = false,
       consoleHasUserOutput = false,
-      codemirrorSettings = None,
       inputs = Inputs.default,
       outputs = Outputs.default
     )
+
+    def dontSerialize[T]: ReadWriter[Option[T]] = {
+      import upickle.Js
+      ReadWriter[Option[T]](_ => Js.Null, { case _ => None })
+    }
+
+    implicit val dontSerializeSocket = dontSerialize[WebSocket]
+    implicit val pkl: ReadWriter[State] = upickleMacroRW[State]
   }
+  
   case class State(
       view: View,
       running: Boolean,
@@ -34,61 +44,79 @@ object App {
       isDarkTheme: Boolean,
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
-      codemirrorSettings: Option[codemirror.Options],
       inputs: Inputs,
       outputs: Outputs
   ) {
-    def setRunning(running: Boolean) = {
-      val console = !running && !consoleHasUserOutput
+    def copyAndSave(
+      view: View = view,
+      running: Boolean = running,
+      websocket: Option[WebSocket] = websocket,
+      isDarkTheme: Boolean = isDarkTheme,
+      consoleIsOpen: Boolean = consoleIsOpen,
+      consoleHasUserOutput: Boolean = consoleHasUserOutput,
+      inputs: Inputs = inputs,
+      outputs: Outputs = outputs): State = {
 
-      copy(running = running, consoleIsOpen = !console)
+      val state0 = 
+        copy(view, running, websocket, 
+          isDarkTheme, consoleIsOpen, consoleHasUserOutput, inputs, outputs)
+
+      LocalStorage.save(state0)
+
+      state0
     }
 
-    def toggleTheme = copy(isDarkTheme = !isDarkTheme)
-    def toggleConsole = copy(consoleIsOpen = !consoleIsOpen)
-    def toggleInstrumentation =
-      copy(inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
 
-    def openConsole = copy(consoleIsOpen = true)
-    def setUserOutput = copy(consoleHasUserOutput = true)
+    def setRunning(running: Boolean) = {
+      val console = !running && !consoleHasUserOutput
+      copyAndSave(running = running, consoleIsOpen = !console)
+    }
+
+    def toggleTheme = copyAndSave(isDarkTheme = !isDarkTheme)
+    def toggleConsole = copyAndSave(consoleIsOpen = !consoleIsOpen)
+    def toggleInstrumentation =
+      copyAndSave(inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
+
+    def openConsole = copyAndSave(consoleIsOpen = true)
+    def setUserOutput = copyAndSave(consoleHasUserOutput = true)
 
     def log(line: String): State = log(Seq(line))
     def log(lines: Seq[String]): State =
-      copy(outputs = outputs.copy(console = outputs.console ++ lines))
+      copyAndSave(outputs = outputs.copy(console = outputs.console ++ lines))
     def log(line: Option[String]): State =
       line match {
         case Some(l) => log(l + "\n")
         case None => this
       }
 
-    def setCode(code: String) = copy(inputs = inputs.copy(code = code))
-    def setInputs(inputs: Inputs) = copy(inputs = inputs)
+    def setCode(code: String) = copyAndSave(inputs = inputs.copy(code = code))
+    def setInputs(inputs: Inputs) = copyAndSave(inputs = inputs)
     def setSbtConfigExtra(config: String) =
-      copy(inputs = inputs.copy(sbtConfigExtra = config))
-    def setView(newView: View) = copy(view = newView)
+      copyAndSave(inputs = inputs.copy(sbtConfigExtra = config))
+    def setView(newView: View) = copyAndSave(view = newView)
     def setTarget(target: ScalaTarget) =
-      copy(inputs = inputs.copy(target = target))
+      copyAndSave(inputs = inputs.copy(target = target))
 
     def addScalaDependency(scalaDependency: ScalaDependency) =
-      copy(
+      copyAndSave(
         inputs = inputs.copy(libraries = inputs.libraries + scalaDependency))
 
     def removeScalaDependency(scalaDependency: ScalaDependency) =
-      copy(
+      copyAndSave(
         inputs = inputs.copy(libraries = inputs.libraries - scalaDependency))
 
     def changeDependencyVersion(scalaDependency: ScalaDependency,
                                 version: String) = {
       val newScalaDependency = scalaDependency.copy(version = version)
-      copy(inputs = inputs.copy(
+      copyAndSave(inputs = inputs.copy(
         libraries = (inputs.libraries - scalaDependency) + newScalaDependency))
     }
 
-    def resetOutputs = copy(outputs = Outputs.default, consoleIsOpen = false, consoleHasUserOutput = false)
+    def resetOutputs = copyAndSave(outputs = Outputs.default, consoleIsOpen = false, consoleHasUserOutput = false)
 
     def setRuntimeError(runtimeError: Option[RuntimeError]) =
       if (runtimeError.isEmpty) this
-      else copy(outputs = outputs.copy(runtimeError = runtimeError))
+      else copyAndSave(outputs = outputs.copy(runtimeError = runtimeError))
 
     def addProgress(progress: PasteProgress) = {
       val state =
@@ -110,19 +138,15 @@ object App {
 
     def addOutputs(compilationInfos: List[api.Problem],
                    instrumentations: List[api.Instrumentation]) =
-      copy(outputs = outputs.copy(
+      copyAndSave(outputs = outputs.copy(
         compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet,
         instrumentations = outputs.instrumentations ++ instrumentations.toSet
       ))
   }
 
   class Backend(scope: BackendScope[(RouterCtl[Page], Option[Snippet]), State]) {
-    def codeChange(newCode: String) = {
-      scope.modState { state =>
-        LocalStorage.saveCode(newCode)
-        state.setCode(newCode)
-      }
-    }
+    def codeChange(newCode: String) =
+      scope.modState(_.setCode(newCode))
 
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
@@ -138,7 +162,7 @@ object App {
       def onerror(e: ErrorEvent): Unit =
         direct.modState(_.log(s"Error: ${e.message}"))
       def onclose(e: CloseEvent): Unit =
-        direct.modState(_.copy(websocket = None).log(s"Closed: ${e.reason}\n"))
+        direct.modState(_.copy(websocket = None, running = false).log(s"Closed: ${e.reason}\n"))
 
       val protocol = if (window.location.protocol == "https:") "wss" else "ws"
       val uri = s"$protocol://${window.location.host}/progress/$id"
@@ -239,12 +263,8 @@ object App {
               })
           )
         case None => {
-          LocalStorage.loadCode
-            .map(code =>
-              scope.modState { state =>
-                console.log("set code: " + code)
-                state.setCode(code)
-            })
+          LocalStorage.load
+            .map(state => scope.modState(_ => state))
             .getOrElse(Callback(()))
         }
       }

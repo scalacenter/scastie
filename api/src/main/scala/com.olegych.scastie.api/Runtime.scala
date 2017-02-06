@@ -1,6 +1,7 @@
+package com.olegych.scastie
 package api
 
-import BuildInfo.{version => buildVersion, githash}
+import buildinfo.BuildInfo.{version => buildVersion, githash}
 
 package object runtime {
 
@@ -18,7 +19,7 @@ package object runtime {
 
     // A stylesheets select the correct one to display
     val Ctrl = "<kbd class='pc'>Ctrl&nbsp;&nbsp;</kbd>"
-    val Cmd = """<kbd><span class="oi" data-glyph="command"></span></kbd>"""
+    val Cmd = """<kbd class='mac'><span class="oi" data-glyph="command"></span></kbd>"""
 
     val CC = Ctrl + Cmd
 

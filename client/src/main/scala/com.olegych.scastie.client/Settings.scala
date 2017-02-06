@@ -1,3 +1,4 @@
+package com.olegych.scastie
 package client
 
 import api._

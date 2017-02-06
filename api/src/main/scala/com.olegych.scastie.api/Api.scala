@@ -1,8 +1,11 @@
+package com.olegych.scastie
 package api
 
 import scala.concurrent.Future
 
-import BuildInfo.{version => buildVersion}
+import buildinfo.BuildInfo.{version => buildVersion}
+
+import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
 
 trait Api {
   def run(inputs: Inputs): Future[Ressource]
@@ -116,6 +119,8 @@ object Inputs {
     sbtConfigExtra = "",
     sbtPluginsConfigExtra = ""
   )
+
+  implicit val pkl: ReadWriter[Inputs] = upickleMacroRW[Inputs]
 }
 
 case class Inputs(
