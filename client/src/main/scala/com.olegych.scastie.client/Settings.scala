@@ -56,6 +56,20 @@ object Settings {
       if (disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
       else TagMod(onClick ==> backend.setTarget2(defaultTarget(targetType)))
 
+    def vote(targetType: ScalaTargetType) = {
+      val voteIssueId: Map[ScalaTargetType, Int] = Map(
+        ScalaTargetType.JS -> 38,
+        ScalaTargetType.Native -> 50
+      )
+      voteIssueId.get(targetType) match {
+        case Some(id) => {
+          val link = s"https://github.com/scalacenter/scastie/issues/$id"
+          a(href := link, target := "_blank")("Vote")
+        }
+        case None => EmptyTag
+      }
+    }
+
     fieldset(`class` := "targets")(
       legend("Target"),
       ul(
@@ -64,7 +78,8 @@ object Settings {
             li(handler(targetType), selected(targetType))(
               img(src := s"/assets/${logo(targetType)}",
                   alt := s"logo for ${labelFor(targetType)}"),
-              span(labelFor(targetType))
+              span(labelFor(targetType)),
+              vote(targetType)
           )))
     )
   }
@@ -146,24 +161,32 @@ object Settings {
     def setScalaVersion(e: ReactEventI): Callback =
       backend.setTarget(ScalaTarget.Jvm(e.target.value))
 
-    target match {
-      case ScalaTarget.Jvm(scalaVersion) =>
-        fieldset(`class` := "versions")(
-          legend("Scala Version"),
-          ul(
-            suggestedVersions.map(version =>
-              li(onClick ==> backend.setTarget2(ScalaTarget.Jvm(version)),
-                 selected(version, scalaVersion))(version))),
-          select(name := "scalaVersion",
-                 value := scalaVersion.toString,
-                 onChange ==> setScalaVersion)(
-            allVersions.map(version => option(version.toString))
+    val notSupported = div("Not supported")
+
+    val versionSelectors =
+      target match {
+        case ScalaTarget.Jvm(scalaVersion) =>
+          TagMod(
+            ul(
+              suggestedVersions.map(version =>
+                li(onClick ==> backend.setTarget2(ScalaTarget.Jvm(version)),
+                   selected(version, scalaVersion))(version))
+            ),
+            select(name := "scalaVersion",
+                   value := scalaVersion.toString,
+                   onChange ==> setScalaVersion)(
+              allVersions.map(version => option(version.toString))
+            )
           )
-        )
-      case ScalaTarget.Js(scalaVersion, scalaJsVersion) => EmptyTag
-      case ScalaTarget.Dotty => EmptyTag
-      case ScalaTarget.Native => EmptyTag
-    }
+        case ScalaTarget.Js(scalaVersion, scalaJsVersion) => notSupported
+        case ScalaTarget.Dotty => notSupported
+        case ScalaTarget.Native => notSupported
+      }
+
+    fieldset(`class` := "versions")(
+      legend("Scala Version"),
+      versionSelectors
+    )
   }
 
   private val component =
@@ -176,13 +199,24 @@ object Settings {
           renderTarget(props.inputs.target, backend),
           renderVersions(props.inputs.target, backend),
           fieldset(
-            legend("SBT"),
-            pre(props.inputs.sbtConfig),
+            legend("Sbt Configuration"),
+            div("add more"),
             CodeMirrorEditor(
               CodeMirrorEditor.Settings(value = props.inputs.sbtConfigExtra,
-                                        theme = s"solarized $theme"),
+                                        theme = s"solarized $theme",
+                                        readOnly = false),
               CodeMirrorEditor.Handler(updatedSettings =>
                 backend.sbtConfigChange(updatedSettings))
+            ),
+            hr,
+            div("resulting build.sbt"),
+            div(`class` := "result-sbt")(
+              CodeMirrorEditor(
+                CodeMirrorEditor.Settings(value = props.inputs.sbtConfig,
+                                          theme = s"solarized $theme",
+                                          readOnly = true),
+                CodeMirrorEditor.Handler(_ => Callback(()))
+              )
             )
           )
         )

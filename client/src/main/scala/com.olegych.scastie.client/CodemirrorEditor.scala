@@ -23,7 +23,8 @@ object CodeMirrorEditor {
 
   case class Settings(
       value: String,
-      theme: String
+      theme: String,
+      readOnly: Boolean
   )
 
   private[CodeMirrorEditor] class Backend(
@@ -35,6 +36,7 @@ object CodeMirrorEditor {
             val options = js
               .Dictionary[Any](
                 "mode" -> "text/x-scala",
+                "readOnly" -> settings.readOnly,
                 "lineNumbers" -> false,
                 "lineWrapping" -> false,
                 "tabSize" -> 2,
@@ -42,12 +44,12 @@ object CodeMirrorEditor {
                 "theme" -> settings.theme,
                 "smartIndent" -> true,
                 "keyMap" -> "sublime",
-                "scrollPastEnd" -> true,
+                "scrollPastEnd" -> false,
                 "scrollbarStyle" -> "simple",
                 "autoCloseBrackets" -> true,
                 "matchBrackets" -> true,
                 "showCursorWhenSelecting" -> true,
-                "autofocus" -> true,
+                "autofocus" -> false,
                 "highlightSelectionMatches" -> js.Dictionary(
                   "showToken" -> js.Dynamic.global.RegExp("\\w")
                 ),
