@@ -199,7 +199,7 @@ object Settings {
           renderTarget(props.inputs.target, backend),
           renderVersions(props.inputs.target, backend),
           fieldset(
-            legend("sbt configuration"),
+            legend("Sbt Configuration"),
             div("add more"),
             CodeMirrorEditor(
               CodeMirrorEditor.Settings(value = props.inputs.sbtConfigExtra,
@@ -210,11 +210,13 @@ object Settings {
             ),
             hr,
             div("resulting build.sbt"),
-            CodeMirrorEditor(
-              CodeMirrorEditor.Settings(value = props.inputs.sbtConfig,
-                                        theme = s"solarized $theme",
-                                        readOnly = true),
-              CodeMirrorEditor.Handler(_ => Callback(()))
+            div(`class` := "result-sbt")(
+              CodeMirrorEditor(
+                CodeMirrorEditor.Settings(value = props.inputs.sbtConfig,
+                                          theme = s"solarized $theme",
+                                          readOnly = true),
+                CodeMirrorEditor.Handler(_ => Callback(()))
+              )
             )
           )
         )

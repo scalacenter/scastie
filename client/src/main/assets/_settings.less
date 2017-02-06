@@ -9,6 +9,18 @@
       background-color: @base02;
     }
 
+    hr, .versions select {
+      border-color: @base03;
+    }
+
+    .selected, .versions select {
+      background-color: @base03;
+    }
+
+    .versions select {
+      color: @base01;
+    }
+
     .scaladex {
       .selected, input[type="search"], select {
         background-color: @base03;
@@ -25,6 +37,18 @@
     fieldset legend,
     input {
       background-color: @base2;
+    }
+
+    hr, .versions select {
+      border-color: @base3;
+    }
+    
+    .selected, .versions select {
+      background-color: @base3;
+    }
+
+    .versions select {
+      color: @base1;
     }
 
     .scaladex {
@@ -79,10 +103,6 @@
 
         cursor: pointer;
 
-        &.selected {
-          border: 1px solid;
-        }
-
         img {
           height: 50px;
         }
@@ -133,6 +153,9 @@
     }
   }
 
+  .result-sbt {
+    opacity: 0.5;
+  }
 
   .scaladex {
     
