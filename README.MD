@@ -24,8 +24,6 @@ Scastie relies on existing scala infrastructure to provide close to real world e
 a pastebin-like sandbox. This minimizes the effort to create meaningful paste but might require some
 prior experience to fully unleash its (and scala) power.
 
-It is not meant to be an online IDE, but rather a collaborative debugging tool.
-
 ## High-level design and architecture
 
 The application consists of two modules:

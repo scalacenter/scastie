@@ -47,8 +47,8 @@ class Sbt() {
       .put(
         "SBT_OPTS",
         Seq(
-          "-Xms256m",
-          "-Xmx512m",
+          "-Xms512m",
+          "-Xmx1g",
           "-Djline.terminal=jline.UnsupportedTerminal",
           "-Dsbt.log.noformat=true"
         ).mkString(" ")
