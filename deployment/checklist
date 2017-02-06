@@ -4,6 +4,4 @@
 [ ] access to `ssh scastie@scastie-sbt.scala-lang.org`
 [ ] bump version in `build.sbt`, `sbt.sh` and `deploy.sh`
 [ ] git tag
-[ ] `sbt sbtRunner/dockerBuildAndPush`
-[ ] `sbt server/universal:packageBin`
 [ ] run `deploy.sh`

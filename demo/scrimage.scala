@@ -1,4 +1,3 @@
-
 /*
 resolvers += Resolver.bintrayRepo("underscoreio", "training")
 
@@ -26,7 +25,6 @@ import scala.util.Try
 // Download image to cache
 val dest = Paths.get("/tmp/scastie/lanzarote.jpg")
 if (!Files.exists(dest)) {
-  println("downloading")
   Files.createDirectories(dest.getParent)
   val url = new URL(
     "https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/test/resources/lanzarote.jpg?raw=true")

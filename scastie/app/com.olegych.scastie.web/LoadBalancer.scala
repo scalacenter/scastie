@@ -93,12 +93,15 @@ case class LoadBalancer[C: Ordering, S](
   def done(taskId: Long): LoadBalancer[C, S] = {
     log.info(s"Task done: $taskId")
     val res = servers.zipWithIndex.find(_._1.currentTaskId == Some(taskId))
-    assert(res.nonEmpty, {
+    if(res.nonEmpty) {
+      val (server, i) = res.get
+      copy(servers = servers.updated(i, server.done))
+    }
+    else {
       val serversTaskIds = servers.flatMap(_.currentTaskId).mkString("[", ", ", "]")
-      s"""cannot find taskId: $taskId from servers task ids $serversTaskIds"""
-    })
-    val (server, i) = res.get
-    copy(servers = servers.updated(i, server.done))
+      log.info(s"""cannot find taskId: $taskId from servers task ids $serversTaskIds""")
+      this
+    }    
   }
 
   def removeServer(ref: S): LoadBalancer[C, S] = {

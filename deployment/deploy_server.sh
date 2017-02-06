@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+pushd ..
+sbt server/universal:packageBin
+popd
+
+HERE="`dirname $0`"
+
 # Server
 scp $HERE/../scastie/target/universal/server-0.3.0-SNAPSHOT.zip scastie@scastie.scala-lang.org:server.zip
 scp server.sh scastie@scastie.scala-lang.org:server.sh
