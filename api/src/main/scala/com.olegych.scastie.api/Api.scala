@@ -116,7 +116,13 @@ object Inputs {
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
-    sbtConfigExtra = "",
+    sbtConfigExtra = 
+      """|scalacOptions ++= Seq(
+         |  "-deprecation",
+         |  "-encoding", "UTF-8",
+         |  "-feature",
+         |  "-unchecked"
+         |)""".stripMargin,
     sbtPluginsConfigExtra = ""
   )
 
@@ -148,49 +154,60 @@ case class Inputs(
   }
 
   def sbtConfig: String = {
-    val targetConfig =
+    val (targetConfig, targetDependecy) =
       target match {
         case ScalaTarget.Jvm(scalaVersion) => {
-          s"""|libraryDependencies += "org.scastie" %% "runtime-scala" % "$buildVersion"
-              |scalaVersion := "$scalaVersion"""".stripMargin
+          (
+            s"""scalaVersion := "$scalaVersion"""",
+            ScalaDependency("org.scastie", "runtime-scala", target, buildVersion)
+          )
         }
         case ScalaTarget.Js(scalaVersion, _) => {
-          s"""|libraryDependencies += "org.scastie" %%% "runtime-scala" % "$buildVersion"
-              |scalaVersion := "$scalaVersion"
-              |enablePlugins(ScalaJSPlugin)""".stripMargin
+          (
+          s"""|scalaVersion := "$scalaVersion"
+              |enablePlugins(ScalaJSPlugin)""".stripMargin,
+            ScalaDependency("org.scastie", "runtime-scala", target, buildVersion)
+          )
         }
         case ScalaTarget.Dotty => {
-          // http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
-          s"""|val dottyVersion = "0.1.1-20170111-ba7e129-NIGHTLY"
-              |scalaVersion := dottyVersion
-              |scalaOrganization := "ch.epfl.lamp"
-              |scalaBinaryVersion := "2.11"
-              |scalacOptions += "-color:never"
-              |// bug in sbt 0.13.13: https://github.com/sbt/sbt/issues/2867
-              |// should be fixed in 0.13.14
-              |ivyScala ~= (_ map (_ copy (overrideScalaVersion = false)))
-              |libraryDependencies += "ch.epfl.lamp" % "dotty_2.11" % dottyVersion % "scala-tool"
-              |scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-sbt-bridge" % scalaVersion.value % "component").sources()
-              |
-              |libraryDependencies += "org.scastie" % "runtime-dotty_2.11" % "$buildVersion"
-              |""".stripMargin
+          (
+            // http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
+            s"""|val dottyVersion = "0.1.1-20170111-ba7e129-NIGHTLY"
+                |scalaVersion := dottyVersion
+                |scalaOrganization := "ch.epfl.lamp"
+                |scalaBinaryVersion := "2.11"
+                |scalacOptions += "-color:never"
+                |// bug in sbt 0.13.13: https://github.com/sbt/sbt/issues/2867
+                |// should be fixed in 0.13.14
+                |ivyScala ~= (_ map (_ copy (overrideScalaVersion = false)))
+                |libraryDependencies += "ch.epfl.lamp" % "dotty_2.11" % dottyVersion % "scala-tool"
+                |scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-sbt-bridge" % scalaVersion.value % "component").sources()
+                |
+                |libraryDependencies += "org.scastie" % "runtime-dotty_2.11" % "$buildVersion"
+                |""".stripMargin,
+            ScalaDependency("org.scastie", "runtime-dotty_2.11", target, buildVersion)
+          )
         }
         case ScalaTarget.Native => {
-          s"""|libraryDependencies += "org.scastie" %%% "runtime-scala" % "$buildVersion"
-              |scalaVersion := "2.11.8"
-              |resolvers += Resolver.sonatypeRepo("snapshots")""".stripMargin
+          (
+            s"""|scalaVersion := "2.11.8"
+                |resolvers += Resolver.sonatypeRepo("snapshots")""".stripMargin,
+            ScalaDependency("org.scastie", "runtime-scala", target, buildVersion)
+          )
         }
       }
 
+    val allLibraries = libraries + targetDependecy
+
     val librariesConfig =
-      if (libraries.isEmpty) ""
-      else if (libraries.size == 1)
-        s"libraryDependencies += " + target.renderSbt(libraries.head)
+      if (allLibraries.isEmpty) ""
+      else if (allLibraries.size == 1)
+        s"libraryDependencies += " + target.renderSbt(allLibraries.head)
       else {
         val nl = "\n"
         val tab = "  "
         "libraryDependencies ++= " +
-          libraries
+          allLibraries
             .map(target.renderSbt)
             .mkString(
               "Seq(" + nl + tab,
@@ -199,11 +216,10 @@ case class Inputs(
             )
       }
 
-    s"""|// target
-        |$targetConfig
-        |// libs
+    s"""|$targetConfig
+        |
         |$librariesConfig
-        |// extra
+        |
         |$sbtConfigExtra""".stripMargin
   }
 }

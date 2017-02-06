@@ -95,6 +95,16 @@
 
         text-align: center;
         font-size: 32px;
+        position: relative;
+
+        a {
+          position: absolute;
+          top: 0;
+          left: 0;
+          transform: rotate(-50deg);
+          font-weight: 900;
+          font-size: 30px;
+        }
       }
     }
   }
@@ -117,7 +127,7 @@
 
   .targets {
     .disabled {
-      opacity: 0.1;
+      opacity: 0.5;
       background-color: #ccc;
       cursor: not-allowed;
     }
