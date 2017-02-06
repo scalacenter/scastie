@@ -140,7 +140,7 @@ lazy val sbtRunner = project
       }
     }.dependsOn(runnerRuntimeDependencies: _*).value,
     buildInfoKeys := Seq[BuildInfoKey](version),
-    buildInfoPackage := "com.olegych.scastie.sbt",
+    buildInfoPackage := "com.olegych.scastie.buildinfo",
     test in Test := (test in Test)
       .dependsOn(sbtRunnerRuntimeDependencies: _*)
       .value,
@@ -260,9 +260,9 @@ lazy val client = project
       "org.webjars.bower" % "open-iconic" % "1.1.1"
     )
   )
+  .disablePlugins(play.PlayScala)
   .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror, api211JS)
-  .disablePlugins(play.PlayScala)
 
 /*  instrument a program to add a Map[Position, (Value, Type)]
 
@@ -304,7 +304,7 @@ def api(scalaV: String) = {
           } else "CI"
         }
       ),
-      buildInfoPackage := "api",
+      buildInfoPackage := "com.olegych.scastie.buildinfo",
       scalaVersion := scalaV,
       moduleName := projectName,
       libraryDependencies ++= Seq(

@@ -1,4 +1,4 @@
-package instrumentation
+package com.olegych.scastie.instrumentation
 
 import scala.meta._
 import inputs.Position
@@ -19,7 +19,7 @@ object Instrument {
           tuple2(start.offset - offset, end.offset - offset)
       }
 
-    Term.Apply(Term.Name("api.Position"), lits)
+    Term.Apply(Term.Name("_root_.com.olegych.scastie.api.Position"), lits)
   }
 
   def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int): Patch = {
@@ -34,7 +34,7 @@ object Instrument {
       Seq(
         "locally {",
         treeQuote + "; ",
-        s"$instrumentationMap(${posToApi(term.pos, offset)}) = scastie.runtime.Runtime.render(t);",
+        s"$instrumentationMap(${posToApi(term.pos, offset)}) = _root_.com.olegych.scastie.api.runtime.Runtime.render(t);",
         "t}"
       ).mkString("")
 
@@ -52,8 +52,8 @@ object Instrument {
           val openCurlyBrace = c.templ.tokens.head
 
           val instrumentationMapCode = Seq(
-            s"{ private val $instrumentationMap = scala.collection.mutable.Map.empty[api.Position, api.Render]",
-            s"def $instrumentationMethod = ${instrumentationMap}.toList.map{ case (pos, r) => api.Instrumentation(pos, r) }"
+            s"{ private val $instrumentationMap = _root_.scala.collection.mutable.Map.empty[_root_.com.olegych.scastie.api.Position, _root_.com.olegych.scastie.api.Render]",
+            s"def $instrumentationMethod = ${instrumentationMap}.toList.map{ case (pos, r) => _root_.com.olegych.scastie.api.Instrumentation(pos, r) }"
           ).mkString("", ";", ";")
 
           val instrumentationMapPatch =
@@ -75,7 +75,7 @@ object Instrument {
         |object Main {
         |  val playground = new $instrumnedClass
         |  def main(args: Array[String]): Unit = {
-        |    println(scastie.runtime.Runtime.write(playground.${instrumentationMethod}))
+        |    println(_root_.com.olegych.scastie.api.runtime.Runtime.write(playground.${instrumentationMethod}))
         |  }
         |}
         |""".stripMargin
@@ -83,7 +83,7 @@ object Instrument {
 
   def apply(code: String): String = {
     val prelude =
-      s"""|import api.runtime._
+      s"""|import _root_.com.olegych.scastie.api.runtime._
           |class $instrumnedClass {""".stripMargin
 
     val code0 =
