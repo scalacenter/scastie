@@ -9,3 +9,5 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.1.1")
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.0")
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.3")
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.6.1")
+
+libraryDependencies += "com.typesafe" % "config" % "1.3.1"

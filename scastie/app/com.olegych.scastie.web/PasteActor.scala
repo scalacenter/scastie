@@ -27,11 +27,11 @@ case class GetPaste(id: Int)
 
 class PasteActor(progressActor: ActorRef) extends Actor {
 
-  private val portsFrom = configuration.getInt("sbt-remote-ports-from").get
+  private val portsStart = configuration.getInt("sbt-remote-ports-start").get
   private val portsSize = configuration.getInt("sbt-remote-ports-size").get
-  private val host = configuration.getString("sbt-remote-host").get
+  private val host = configuration.getString("sbt-remote-hostname").get
 
-  private val ports = (0 until portsSize).map(portsFrom + _)
+  private val ports = (0 until portsSize).map(portsStart + _)
 
   private var remoteSelections = ports.map{port =>
     val selection = context.actorSelection(

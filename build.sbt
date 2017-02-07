@@ -1,4 +1,5 @@
 import ScalaJSHelper._
+import Deployment._
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 
@@ -198,10 +199,17 @@ lazy val scastie = project
     api211JVM,
     api211JS
   )
-  .settings(run := {
-    (reStart in sbtRunner).toTask("").value
-    (reStart in server).toTask("").value
-  })
+  .settings(orgSettings)
+  .settings(
+    deploy := deployTask(server, sbtRunner).value,
+    deployServer := deployServerTask(server, sbtRunner).value,
+    deployQuick := deployQuickTask(server, sbtRunner).value,
+    deployServerQuick := deployServerQuickTask(server, sbtRunner).value,
+    run := {
+      (reStart in sbtRunner).toTask("").value
+      (reStart in server).toTask("").value
+    }
+  )
 
 /* codemirror is a facade to the javascript rich editor codemirror*/
 lazy val codemirror = project
