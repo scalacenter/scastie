@@ -49,3 +49,11 @@ sbt
 > sbtRunner/reStart
 > ~server/reStart
 ```
+
+## How to deploy
+
+add your ssh key to
+scastie@scastie.scala-lang.org
+scastie@scastie-sbt.scala-lang.org
+
+`sbt deploy`
