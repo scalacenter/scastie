@@ -11,20 +11,15 @@ import japgolly.scalajs.react._, extra.router._
 sealed trait Page
 case object Home extends Page
 case class Snippet(id: Long) extends Page
-// case class AppParams(embedded: Boolean, snippet: Option[Snippet])
 
 object Client extends JSApp {
   val routerConfig = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
 
-    val embedded = "embedded"
-
     (trimSlashes
       | staticRoute(root, Home) ~> renderR(renderAppDefault)
       | dynamicRouteCT(long.caseClass[Snippet]) ~> dynRenderR(renderAppSnippet))
-     // | staticRoute(embedded, Home) ~> renderR(renderAppDefault))
-     // | dynamicRouteCT(embedded / long.caseClass[Snippet]) ~> dynRenderR(renderAppSnippet)
-    .notFound(redirectToPage(Home)(Redirect.Replace))
+      .notFound(redirectToPage(Home)(Redirect.Replace))
       .renderWith(layout)
   }
 

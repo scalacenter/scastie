@@ -47,5 +47,5 @@ web application and PastesActor).
 ```
 sbt
 > sbtRunner/reStart
-> server/reStart
+> ~server/reStart
 ```

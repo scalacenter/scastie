@@ -36,7 +36,7 @@ object App {
     implicit val dontSerializeSocket = dontSerialize[WebSocket]
     implicit val pkl: ReadWriter[State] = upickleMacroRW[State]
   }
-  
+
   case class State(
       view: View,
       running: Boolean,
@@ -47,25 +47,29 @@ object App {
       inputs: Inputs,
       outputs: Outputs
   ) {
-    def copyAndSave(
-      view: View = view,
-      running: Boolean = running,
-      websocket: Option[WebSocket] = websocket,
-      isDarkTheme: Boolean = isDarkTheme,
-      consoleIsOpen: Boolean = consoleIsOpen,
-      consoleHasUserOutput: Boolean = consoleHasUserOutput,
-      inputs: Inputs = inputs,
-      outputs: Outputs = outputs): State = {
+    def copyAndSave(view: View = view,
+                    running: Boolean = running,
+                    websocket: Option[WebSocket] = websocket,
+                    isDarkTheme: Boolean = isDarkTheme,
+                    consoleIsOpen: Boolean = consoleIsOpen,
+                    consoleHasUserOutput: Boolean = consoleHasUserOutput,
+                    inputs: Inputs = inputs,
+                    outputs: Outputs = outputs): State = {
 
-      val state0 = 
-        copy(view, running, websocket, 
-          isDarkTheme, consoleIsOpen, consoleHasUserOutput, inputs, outputs)
+      val state0 =
+        copy(view,
+             running,
+             websocket,
+             isDarkTheme,
+             consoleIsOpen,
+             consoleHasUserOutput,
+             inputs,
+             outputs)
 
       LocalStorage.save(state0)
 
       state0
     }
-
 
     def setRunning(running: Boolean) = {
       val console = !running && !consoleHasUserOutput
@@ -75,7 +79,8 @@ object App {
     def toggleTheme = copyAndSave(isDarkTheme = !isDarkTheme)
     def toggleConsole = copyAndSave(consoleIsOpen = !consoleIsOpen)
     def toggleInstrumentation =
-      copyAndSave(inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
+      copyAndSave(
+        inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
 
     def openConsole = copyAndSave(consoleIsOpen = true)
     def setUserOutput = copyAndSave(consoleHasUserOutput = true)
@@ -112,7 +117,10 @@ object App {
         libraries = (inputs.libraries - scalaDependency) + newScalaDependency))
     }
 
-    def resetOutputs = copyAndSave(outputs = Outputs.default, consoleIsOpen = false, consoleHasUserOutput = false)
+    def resetOutputs =
+      copyAndSave(outputs = Outputs.default,
+                  consoleIsOpen = false,
+                  consoleHasUserOutput = false)
 
     def setRuntimeError(runtimeError: Option[RuntimeError]) =
       if (runtimeError.isEmpty) this
@@ -144,7 +152,9 @@ object App {
       ))
   }
 
-  class Backend(scope: BackendScope[(RouterCtl[Page], Option[Snippet], Boolean), State]) {
+  class Backend(scope: BackendScope[
+    (RouterCtl[Page], Option[Snippet], Boolean),
+    State]) {
     def codeChange(newCode: String) =
       scope.modState(_.setCode(newCode))
 
@@ -162,7 +172,9 @@ object App {
       def onerror(e: ErrorEvent): Unit =
         direct.modState(_.log(s"Error: ${e.message}"))
       def onclose(e: CloseEvent): Unit =
-        direct.modState(_.copy(websocket = None, running = false).log(s"Closed: ${e.reason}\n"))
+        direct.modState(
+          _.copy(websocket = None, running = false)
+            .log(s"Closed: ${e.reason}\n"))
 
       val protocol = if (window.location.protocol == "https:") "wss" else "ws"
       val uri = s"$protocol://${window.location.host}/progress/$id"
@@ -175,6 +187,7 @@ object App {
       socket
     }
 
+    def clear(e: ReactEventI): Callback = clear()
     def clear(): Callback = scope.modState(_.resetOutputs)
 
     def setView(newView: View)(e: ReactEventI): Callback =
@@ -293,25 +306,27 @@ object App {
         ))
   }
 
-  val component = ReactComponentB[(RouterCtl[Page], Option[Snippet], Boolean)]("App")
-    .initialState(State.default)
-    .backend(new Backend(_))
-    .renderPS {
-      case (scope, (router, snippet, embedded), state) => {
-        import state._
+  val component =
+    ReactComponentB[(RouterCtl[Page], Option[Snippet], Boolean)]("App")
+      .initialState(State.default)
+      .backend(new Backend(_))
+      .renderPS {
+        case (scope, (router, snippet, embedded), state) => {
+          import state._
 
-        val theme = if (isDarkTheme) "dark" else "light"
-        val sideBar = if (!embedded) TagMod(SideBar(state, scope.backend)) else EmptyTag
-        val appClass = if (!embedded) "app" else "app embedded"
+          val theme = if (isDarkTheme) "dark" else "light"
+          val sideBar =
+            if (!embedded) TagMod(SideBar(state, scope.backend)) else EmptyTag
+          val appClass = if (!embedded) "app" else "app embedded"
 
-        div(`class` := appClass)(
-          sideBar,
-          MainPannel(state, scope.backend, embedded)
-        )
+          div(`class` := appClass)(
+            sideBar,
+            MainPannel(state, scope.backend, embedded)
+          )
+        }
       }
-    }
-    .componentWillMount(s => s.backend.start(s.props))
-    .build
+      .componentWillMount(s => s.backend.start(s.props))
+      .build
 
   def apply(router: RouterCtl[Page], snippet: Option[Snippet]) =
     component((router, snippet, true))
