@@ -105,13 +105,14 @@ class Deployment(rootFolder: File,
           |
           |kill `cat server/RUNNING_PID`
           |rm -rf server
+          |rm server*.sh
           |
           |unzip -d server $serverZipFileName
           |mv server/*/* server/
           |
           |nohup server/bin/server \\
           |  -Dconfig.file=/home/$userName/$productionConfigFileName \\
-          |  -Dlogging.config=/home/$userName/$logbackConfigFileName &>/dev/null &
+          |  -Dlogger.file=/home/$userName/$logbackConfigFileName &>/dev/null &
           |""".stripMargin
 
     Files.write(serverScript, content.getBytes)
@@ -143,6 +144,8 @@ class Deployment(rootFolder: File,
 
     val runnersPortsEnd = runnersPortsStart + runnersPortsSize
 
+    val dockerImagePath = s"$dockerNamespace/$dockerRepository:$version"
+
     val content =
       s"""|#!/usr/bin/env bash
           |
@@ -150,6 +153,10 @@ class Deployment(rootFolder: File,
           |
           |# kill all docker instances
           |docker kill $$(docker ps -q)
+          |
+          |docker rmi -f $dockerImagePath
+          |
+          |rm sbt*.sh
           |
           |# Run all instances
           |for i in `seq $runnersPortsStart $runnersPortsEnd`;
@@ -160,7 +167,7 @@ class Deployment(rootFolder: File,
           |    -e RUNNER_PRODUCTION=1 \\
           |    -e RUNNER_PORT=$$i \\
           |    -e RUNNER_HOSTNAME=$runnersHostname \\
-          |    $dockerNamespace/$dockerRepository:$version
+          |    $dockerImagePath
           |done
           |""".stripMargin
 
