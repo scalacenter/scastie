@@ -12,7 +12,7 @@ sealed trait Page
 case object Home extends Page
 case class Snippet(id: Long) extends Page
 
-object Client extends JSApp {
+object ClientMain extends JSApp {
   val routerConfig = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
 
@@ -37,14 +37,15 @@ object Client extends JSApp {
       if (isMac) "mac"
       else "pc"
 
-    val cont =
+    val container =
       dom.document.createElement("div").asInstanceOf[dom.raw.HTMLDivElement]
-    cont.className = "root"
-    dom.document.body.appendChild(cont)
+    container.className = "root"
+    dom.document.body.appendChild(container)
 
     ReactDOM.render(
       Router(BaseUrl.fromWindowOrigin_/, routerConfig.logToConsole)(),
-      cont)
+      container
+    )
 
     ()
   }
