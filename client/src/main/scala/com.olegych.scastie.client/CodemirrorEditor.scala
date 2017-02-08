@@ -5,7 +5,6 @@ import japgolly.scalajs.react._, vdom.all._
 
 import codemirror.TextAreaEditor
 
-import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLTextAreaElement
 
 import scala.scalajs._
@@ -60,8 +59,6 @@ object CodeMirrorEditor {
             val editor0 = codemirror.CodeMirror.fromTextArea(textArea, options)
 
             editor0.getDoc.setValue(settings.value)
-
-            dom.console.log(settings.value)
 
             editor0.onChange((_, _) =>
               handler.onChange(editor0.getDoc().getValue()).runNow)

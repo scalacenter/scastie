@@ -28,7 +28,7 @@ object Settings {
     def logo(targetType: ScalaTargetType) = {
       targetType match {
         case ScalaTargetType.JVM => "smooth-spiral.png"
-        case ScalaTargetType.Dotty => "dotty3.svg"
+        case ScalaTargetType.Dotty => "dotty-logo.svg"
         case ScalaTargetType.JS => "scala-js.svg"
         case ScalaTargetType.Native => "native.png"
       }

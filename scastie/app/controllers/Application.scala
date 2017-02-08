@@ -79,6 +79,10 @@ object Application extends Controller {
     Ok(views.html.index())
   }
 
+  def embedded = Action { implicit request =>
+    Ok(views.html.embedded())
+  }
+
   def progress(id: Long) = WebSocket.tryAccept[String] { request =>
     (progressActor ? MonitorProgress(id))
       .mapTo[MonitorChannel]

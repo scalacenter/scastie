@@ -1,3 +1,4 @@
+GET    /embedded      controllers.Application.embedded
 GET    /assets/*file  controllers.Assets.at(path="/public", file)
 GET    /tmp/*file     controllers.Application.tmp(file)
 POST   /api/*path     controllers.Application.autowireApi(path: String)

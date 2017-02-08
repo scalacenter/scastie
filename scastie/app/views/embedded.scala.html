@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base href="/">
+    <meta charset="utf-8">
+    <title>Scastie</title>
+
+    <link rel="shortcut icon" href="/assets/favicon.ico">
+
+    <link href="/assets/lib/codemirror/addon/dialog/dialog.css"           rel="stylesheet">
+    <link href="/assets/lib/codemirror/addon/fold/foldgutter.css"         rel="stylesheet">
+    <link href="/assets/lib/codemirror/addon/hint/show-hint.css"          rel="stylesheet">
+    <link href="/assets/lib/codemirror/addon/scroll/simplescrollbars.css" rel="stylesheet">
+    <link href="/assets/lib/codemirror/lib/codemirror.css"                rel="stylesheet">
+    <link href="/assets/lib/open-iconic/font/css/open-iconic.css"         rel="stylesheet">
+    <link href="/assets/lib/client/main.css"                              rel="stylesheet">
+  </head>
+  <body>
+    <style>
+      h1 {
+        border-bottom: 1px dashed black;
+      }
+      section, .app.embedded{
+        margin: 0 auto;
+      }
+      section {
+        width: 80%;
+      }
+      .app.embedded {
+        width: 60%;
+        height: 50%;
+      }
+    </style>
+
+    <section>
+      <h1>Embedding Example</h1>
+
+      <pre>
+        trait Base {
+          def message: String
+        }
+        class A extends Base {
+          def message: String = "Hello"
+        }
+        class B extends Base {
+          def message: String = "Dotty!"
+        }
+
+        object Main {
+          def printMessages(msgs: (A | B)*): Unit =
+            println(msgs.map(_.message).mkString(" "))
+          
+          def main(args: Array[String]): Unit =
+            printMessages(new A, new B)
+        }
+      </pre>
+    </section>
+
+    <script src="/assets/client-jsdeps.js"></script>
+    <script src="/assets/client-opt.js"></script>
+    <script src="/assets/client-fastopt.js"></script>
+    <script>
+      com.olegych.scastie.client.ClientMain().main()
+    </script>
+  </body>
+</html>
