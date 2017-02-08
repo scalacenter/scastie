@@ -31,7 +31,7 @@ object SideBar {
             li(`class` := "button", selected(View.Editor))(
               RunButton(state, backend)
             ),
-            li(`class` := "button" )(
+            li(`class` := "button")(
               iconic.pencil(onClick ==> save),
               p("Save")
             ),
@@ -58,5 +58,6 @@ object SideBar {
         )
     }.build
 
-  def apply(state: State, backend: Backend) = component((state, backend))
+  def apply(state: State, backend: Backend) = 
+    component((state, backend))
 }

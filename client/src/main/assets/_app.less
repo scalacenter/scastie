@@ -19,42 +19,49 @@ body.pc kbd.mac { display: none }
     margin-left: 0;
 
     .embedded-menu {
+      z-index: 2;
+      
       position: absolute;
       top: 0;
       right: 0;
       font-size: 34px;
       margin: 30px;
       margin-right: 40px;
-      padding: 10px;
+      
+      .run-button {
+        padding: 20px;
+      }
     }
   }
 }
 
 .app {
+  position: relative;
+  
   @sidebar-width: 75px;
   @sidebar-border: 1px;
   @dt: 0.3s;
 
   .button {
     cursor: pointer;
+    display: block;
+    font-size: @sidebar-icon-size;
+
+    padding: 10px;
+    margin: 0 auto;
+
+    i {
       display: block;
-      font-size: @sidebar-icon-size;
+    }
 
-      padding: 10px;
-      margin: 0 auto;
+    i, p {
+      text-align: center;
+    }
 
-      i {
-        display: block;
-      }
-
-      i, p {
-        text-align: center;
-      }
-
-      p {
-        font-size: 14px;
-        margin: 0;
-      }
+    p {
+      font-size: 14px;
+      margin: 0;
+    }
   }
 
   .main-pannel {

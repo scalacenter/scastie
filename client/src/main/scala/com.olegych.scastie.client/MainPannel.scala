@@ -9,16 +9,14 @@ import org.scalajs.dom.raw.HTMLPreElement
 
 object MainPannel {
 
-  val console = Ref[HTMLPreElement]("console")
+  private val console = Ref[HTMLPreElement]("console")
 
   private val component =
     ReactComponentB[(State, Backend, Boolean)]("MainPannel").render_P {
       case (state, backend, embedded) =>
         def show(view: View) = {
-          val showTag = TagMod(display.block)
-          if(embedded && view == View.Editor) showTag
-          if (view == state.view) showTag
-          else TagMod(display.none)
+          if (view == state.view) TagMod(display.block)
+          else TagMod(display.none)        
         }
           
         val theme = if (state.isDarkTheme) "dark" else "light"

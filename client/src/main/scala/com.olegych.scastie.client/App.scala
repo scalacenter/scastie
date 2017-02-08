@@ -256,7 +256,7 @@ object App {
     def start(props: (RouterCtl[Page], Option[Snippet], Boolean)): Callback = {
       console.log("== Welcome to Scastie ==")
 
-      val (router, snippet, _) = props
+      val (router, snippet, embedded) = props
 
       snippet match {
         case Some(Snippet(id)) =>
@@ -277,7 +277,13 @@ object App {
           )
         case None => {
           LocalStorage.load
-            .map(state => scope.modState(_ => state))
+            .map(state => {
+              val state0 =
+                if(embedded) state.setView(View.Editor)
+                else state
+
+              scope.modState(_ => state0.setRunning(false))
+            })
             .getOrElse(Callback(()))
         }
       }
@@ -312,6 +318,9 @@ object App {
       .backend(new Backend(_))
       .renderPS {
         case (scope, (router, snippet, embedded), state) => {
+
+          console.log(embedded)
+          
           import state._
 
           val theme = if (isDarkTheme) "dark" else "light"
@@ -328,6 +337,6 @@ object App {
       .componentWillMount(s => s.backend.start(s.props))
       .build
 
-  def apply(router: RouterCtl[Page], snippet: Option[Snippet]) =
-    component((router, snippet, true))
+  def apply(router: RouterCtl[Page], snippet: Option[Snippet], embedded: Boolean) =
+    component((router, snippet, embedded))
 }

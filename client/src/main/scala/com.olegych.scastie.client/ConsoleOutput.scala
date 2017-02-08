@@ -10,5 +10,3 @@ object ConsoleOutput {
 
   def apply(console: Vector[String]) = component(console)
 }
-
-

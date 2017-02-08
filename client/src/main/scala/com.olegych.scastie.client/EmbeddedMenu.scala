@@ -8,10 +8,11 @@ object EmbeddedMenu {
   def apply(state: State, backend: Backend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(State, Backend)]("RunButton").render_P { case (state, backend) =>
-      div(`class` := "embedded-menu")(
-        RunButton(state, backend)
-      )
+    ReactComponentB[(State, Backend)]("RunButton").render_P {
+      case (state, backend) =>
+        div(`class` := "embedded-menu")(
+          RunButton(state, backend)
+        )
 
       // nav(`class` := "embedded-menu")(
       //   ul(
