@@ -168,9 +168,10 @@ object Settings {
         case ScalaTarget.Jvm(scalaVersion) =>
           TagMod(
             ul(
-              suggestedVersions.map(version =>
-                li(onClick ==> backend.setTarget2(ScalaTarget.Jvm(version)),
-                   selected(version, scalaVersion))(version))
+              suggestedVersions.map(
+                version =>
+                  li(onClick ==> backend.setTarget2(ScalaTarget.Jvm(version)),
+                     selected(version, scalaVersion))(version))
             ),
             select(name := "scalaVersion",
                    value := scalaVersion.toString,

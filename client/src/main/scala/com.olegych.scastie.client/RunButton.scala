@@ -8,60 +8,45 @@ import iconic._
 
 object RunButton {
 
-
   def apply(state: State, backend: Backend) = component((state, backend))
-
 
   private val component =
     ReactComponentB[(State, Backend)]("RunButton").render_P {
       case (state, backend) =>
         import backend._
 
-          val runButton = if (state.running) {
-            TagMod(
-              div(`class` := "sk-folding-cube",
+        val runButton = if (state.running) {
+          TagMod(
+            div(`class` := "sk-folding-cube",
                 onClick ==> setView(View.Editor))(
-                div(`class` := "sk-cube1 sk-cube"),
-                div(`class` := "sk-cube2 sk-cube"),
-                div(`class` := "sk-cube4 sk-cube"),
-                div(`class` := "sk-cube3 sk-cube")
+              div(`class` := "sk-cube1 sk-cube"),
+              div(`class` := "sk-cube2 sk-cube"),
+              div(`class` := "sk-cube4 sk-cube"),
+              div(`class` := "sk-cube3 sk-cube")
+            ),
+            p("Running")
+          )
+        } else {
+          if (View.Editor == state.view) {
+            // RUN
+            TagMod(
+              mediaPlay(
+                onClick ==> run,
+                `class` := "runnable"
               ),
-              p("Running")
+              p("Run")
             )
           } else {
-            if (View.Editor == state.view) {
-              // RUN
-              TagMod(
-                mediaPlay(
-                  onClick ==> run,
-                  `class` := "runnable"
-                ),
-                p("Run")
-              )
-            } else {
-              TagMod(
-                mediaPlay(
-                  onClick ==> setView(View.Editor),
-                  title := "Edit code"
-                ),
-                p("Edit")
-              )
-            }
+            TagMod(
+              mediaPlay(
+                onClick ==> setView(View.Editor),
+                title := "Edit code"
+              ),
+              p("Edit")
+            )
           }
+        }
         div(`class` := "button run-button")(runButton)
     }.build
 
-}
-
-object EmbeddedRunButton {
-  def apply(state: State, backend: Backend) = component((state, backend))
-
-
-  private val component =
-    ReactComponentB[(State, Backend)]("RunButton").render_P {
-      case (state, backend) =>
-        div(`class` := "embedded-run")(
-          RunButton(state, backend)
-        )
-    }.build
 }

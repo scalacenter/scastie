@@ -240,7 +240,7 @@ object Editor {
           val mode = "local"
           val base = editor2.cursorCoords(basePos, mode)
           val offset = editor2.cursorCoords(offsetPos, mode)
-          node.style.left = (offset.left - base.left) + "px"  
+          node.style.left = (offset.left - base.left) + "px"
         }
         updateLeft(editor)
         editor.onChange((editor, _) => updateLeft(editor))
