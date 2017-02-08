@@ -144,7 +144,7 @@ object App {
       ))
   }
 
-  class Backend(scope: BackendScope[(RouterCtl[Page], Option[Snippet]), State]) {
+  class Backend(scope: BackendScope[(RouterCtl[Page], Option[Snippet], Boolean), State]) {
     def codeChange(newCode: String) =
       scope.modState(_.setCode(newCode))
 
@@ -234,16 +234,16 @@ object App {
         Callback.future(ApiClient[Api].save(s.inputs).call().map {
           case Ressource(id) =>
             scope.props.flatMap {
-              case (router, snippet) =>
+              case (router, snippet, _) =>
                 router.set(Snippet(id))
             }
         }))
     }
 
-    def start(props: (RouterCtl[Page], Option[Snippet])): Callback = {
+    def start(props: (RouterCtl[Page], Option[Snippet], Boolean)): Callback = {
       console.log("== Welcome to Scastie ==")
 
-      val (router, snippet) = props
+      val (router, snippet, _) = props
 
       snippet match {
         case Some(Snippet(id)) =>
@@ -293,18 +293,20 @@ object App {
         ))
   }
 
-  val component = ReactComponentB[(RouterCtl[Page], Option[Snippet])]("App")
+  val component = ReactComponentB[(RouterCtl[Page], Option[Snippet], Boolean)]("App")
     .initialState(State.default)
     .backend(new Backend(_))
     .renderPS {
-      case (scope, (router, snippet), state) => {
+      case (scope, (router, snippet, embedded), state) => {
         import state._
 
         val theme = if (isDarkTheme) "dark" else "light"
+        val sideBar = if (!embedded) TagMod(SideBar(state, scope.backend)) else EmptyTag
+        val appClass = if (!embedded) "app" else "app embedded"
 
-        div(`class` := "app")(
-          SideBar(state, scope.backend),
-          MainPannel(state, scope.backend)
+        div(`class` := appClass)(
+          sideBar,
+          MainPannel(state, scope.backend, embedded)
         )
       }
     }
@@ -312,5 +314,5 @@ object App {
     .build
 
   def apply(router: RouterCtl[Page], snippet: Option[Snippet]) =
-    component((router, snippet))
+    component((router, snippet, true))
 }
