@@ -19,6 +19,63 @@ body.pc kbd.mac { display: none }
   @sidebar-border: 1px;
   @dt: 0.3s;
 
+  &.embedded .main-pannel {
+    .panel {
+        .solarized-pallette;
+        &.dark {
+            .embedded-run {
+                background-color: @base02;
+            }
+        }
+        &.light {
+            .embedded-run {
+                background-color: @base2;
+            }
+        }
+    }
+    margin-left: 0;
+
+    .embedded-run {
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-size: 34px;
+      margin: 30px;
+      margin-right: 40px;
+      padding: 10px;
+    }
+  }
+
+  .button {
+    cursor: pointer;
+      display: block;
+      font-size: @sidebar-icon-size;
+
+      padding: 10px;
+      margin: 0 auto;
+
+      i {
+        display: block;
+      }
+
+      i, p {
+        text-align: center;
+      }
+
+      p {
+        font-size: 14px;
+        margin: 0;
+      }
+  }
+
+  .run-button {
+    .runnable {
+      color: green;
+    }
+  }
+
+
+
   .main-pannel {
     margin-left: @sidebar-width;
 
@@ -70,37 +127,16 @@ body.pc kbd.mac { display: none }
       margin: 0;
     }
 
-    li {
-      cursor: pointer;
-      display: block;
-      font-size: @sidebar-icon-size;
 
-      padding: 10px;
-      margin: 0 auto;
 
-      i {
-        display: block;
-      }
-
-      i, p {
-        text-align: center;
-      }
-
-      p {
-        font-size: 14px;
-        margin: 0;
-      }
-    }
-
-    .runnable {
-      color: green;
-    }
 
     .libraries {
       height: @sidebar-icon-size;
       margin: 0 auto;
       width: 100%;
     }
+
+
 
     // THEME
 
@@ -119,6 +155,7 @@ body.pc kbd.mac { display: none }
           color: @base1;
         }
       }
+
     }
 
     &.light {

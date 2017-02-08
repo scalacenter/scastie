@@ -9,3 +9,4 @@ RUNNING_PID
 sbt-api-*
 TODO
 *.log
+.idea

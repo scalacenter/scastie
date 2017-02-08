@@ -11,20 +11,25 @@ import japgolly.scalajs.react._, extra.router._
 sealed trait Page
 case object Home extends Page
 case class Snippet(id: Long) extends Page
+// case class AppParams(embedded: Boolean, snippet: Option[Snippet])
 
 object Client extends JSApp {
   val routerConfig = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
 
+    val embedded = "embedded"
+
     (trimSlashes
-      | dynamicRouteCT(long.caseClass[Snippet]) ~> dynRenderR(renderApp2)
-      | staticRoute(root, Home) ~> renderR(renderApp1))
-      .notFound(redirectToPage(Home)(Redirect.Replace))
+      | staticRoute(root, Home) ~> renderR(renderAppDefault)
+      | dynamicRouteCT(long.caseClass[Snippet]) ~> dynRenderR(renderAppSnippet))
+     // | staticRoute(embedded, Home) ~> renderR(renderAppDefault))
+     // | dynamicRouteCT(embedded / long.caseClass[Snippet]) ~> dynRenderR(renderAppSnippet)
+    .notFound(redirectToPage(Home)(Redirect.Replace))
       .renderWith(layout)
   }
 
-  def renderApp1(router: RouterCtl[Page]) = App(router, snippet = None)
-  def renderApp2(snippet: Snippet, router: RouterCtl[Page]) =
+  def renderAppDefault(router: RouterCtl[Page]) = App(router, snippet = None)
+  def renderAppSnippet(snippet: Snippet, router: RouterCtl[Page]) =
     App(router, Some(snippet))
 
   def layout(c: RouterCtl[Page], r: Resolution[Page]) = r.render()
