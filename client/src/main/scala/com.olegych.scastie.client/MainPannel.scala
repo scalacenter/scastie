@@ -16,16 +16,16 @@ object MainPannel {
       case (state, backend, embedded) =>
         def show(view: View) = {
           if (view == state.view) TagMod(display.block)
-          else TagMod(display.none)        
+          else TagMod(display.none)
         }
-          
+
         val theme = if (state.isDarkTheme) "dark" else "light"
 
         val consoleCss =
           if (state.consoleIsOpen) "with-console"
           else ""
 
-        val embeddedMenu = 
+        val embeddedMenu =
           if (embedded) TagMod(EmbeddedMenu(state, backend))
           else EmptyTag
 
@@ -41,12 +41,12 @@ object MainPannel {
             Settings(state, backend))
         )
     }.componentDidUpdate(scope =>
-      Callback {
-        val consoleDom = console(scope.$).get
-        consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
-      }
-    )
-    .build
+        Callback {
+          val consoleDom = console(scope.$).get
+          consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
+      })
+      .build
 
-  def apply(state: State, backend: Backend, embedded: Boolean) = component((state, backend, embedded))
+  def apply(state: State, backend: Backend, embedded: Boolean) =
+    component((state, backend, embedded))
 }

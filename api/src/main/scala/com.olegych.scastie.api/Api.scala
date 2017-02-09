@@ -10,24 +10,35 @@ import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
 trait Api {
   def run(inputs: Inputs): Future[Ressource]
   def save(inputs: Inputs): Future[Ressource]
-  def fetch(id: Long): Future[Option[FetchResult]]
+  def fetch(id: Int): Future[Option[FetchResult]]
   def format(code: FormatRequest): Future[FormatResponse]
 }
 
 case class FormatRequest(code: String, isInstrumented: Boolean)
 case class FormatResponse(formattedCode: Option[String])
 
-case class Ressource(id: Long)
+case class Ressource(id: Int)
 case class FetchResult(inputs: Inputs, progresses: List[PasteProgress])
 
 case class Paste(
-    id: Long,
+    id: Int,
     code: String,
     sbt: String
 )
 
 sealed trait ScalaTargetType
 object ScalaTargetType {
+
+  def parse(targetType: String): Option[ScalaTargetType] = {
+    targetType match {
+      case "JVM" => Some(JVM)
+      case "DOTTY" => Some(Dotty)
+      case "JS" => Some(JS)
+      case "NATIVE" => Some(Native)
+      case _ => None
+    }
+  }
+
   case object JVM extends ScalaTargetType
   case object Dotty extends ScalaTargetType
   case object JS extends ScalaTargetType
@@ -112,7 +123,6 @@ object Inputs {
 
   def default = Inputs(
     isInstrumented = true,
-    persist = false,
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
@@ -131,7 +141,6 @@ object Inputs {
 
 case class Inputs(
     isInstrumented: Boolean,
-    persist: Boolean,
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
@@ -225,7 +234,7 @@ case class Inputs(
 }
 
 case class PasteProgress(
-    id: Long,
+    id: Int,
     userOutput: Option[String],
     sbtOutput: Option[String],
     compilationInfos: List[Problem],

@@ -142,7 +142,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private def processSbtOutput(
       isInstrumented: Boolean,
       progressActor: ActorRef,
-      id: Long,
+      id: Int,
       pasteActor: ActorRef): (String, Boolean) => Unit = { (line, done) =>
     {
       val lineOffset =

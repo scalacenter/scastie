@@ -23,7 +23,7 @@ case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
 case class InputsWithIp(inputs: Inputs, ip: String)
 
-case class GetPaste(id: Long)
+case class GetPaste(id: Int)
 
 class PasteActor(progressActor: ActorRef) extends Actor {
 

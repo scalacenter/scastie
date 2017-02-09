@@ -2,7 +2,7 @@
 
 .pannel {
   &.dark {
-    background-color: @base02;
+    background-color: @base03;
     color: @base01;
 
     // &::-webkit-scrollbar-track,
@@ -18,7 +18,7 @@
     }
   }
   &.light {
-    background-color: @base2;
+    background-color: @base3;
     color: @base1;
 
     // &::-webkit-scrollbar-track,
@@ -102,6 +102,64 @@
   &.light {
     .sk-folding-cube .sk-cube:before {
       background-color: @base1;
+    }
+  }
+}
+
+
+.dark {
+  .settings {
+    fieldset legend,
+    input {
+      background-color: @base03;
+    }
+
+    hr, .versions select {
+      border-color: @base02;
+    }
+
+    .selected, .versions select {
+      background-color: @base02;
+    }
+
+    .versions select {
+      color: @base01;
+    }
+
+    .scaladex {
+      .selected, input[type="search"], select {
+        background-color: @base03;
+      }
+      & > *, input[type="search"], select {
+        color: @base01;
+      }
+    }
+  }
+}
+
+.light {
+  .settings {
+    fieldset legend,
+    input {
+      background-color: @base3;
+    }
+
+    hr, .versions select {
+      border-color: @base2;
+    }
+    
+    .selected, .versions select {
+      background-color: @base2;
+    }
+
+    .versions select {
+      color: @base1;
+    }
+
+    .scaladex {
+      .selected, input[type="search"], select {
+        background-color: @base3;
+      }
     }
   }
 }

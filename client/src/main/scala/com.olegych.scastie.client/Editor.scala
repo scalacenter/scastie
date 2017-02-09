@@ -41,7 +41,7 @@ object Editor {
     js.Dictionary[Any](
         "mode" -> "text/x-scala",
         "autofocus" -> true,
-        "lineNumbers" -> true,
+        "lineNumbers" -> false,
         "lineWrapping" -> false,
         "tabSize" -> 2,
         "indentWithTabs" -> false,
@@ -106,6 +106,8 @@ object Editor {
           val editor =
             codemirror.CodeMirror.fromTextArea(codemirrorTextarea(scope).get,
                                                options(props.isDarkTheme))
+
+          editor.onFocus(_.refresh())
 
           editor.onChange((_, _) =>
             backend.codeChange(editor.getDoc().getValue()).runNow)

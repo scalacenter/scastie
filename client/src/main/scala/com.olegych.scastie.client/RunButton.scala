@@ -38,7 +38,7 @@ object RunButton {
             )
           } else {
             TagMod(
-              mediaPlay(
+              pencil(
                 onClick ==> setView(View.Editor),
                 title := "Edit code"
               ),

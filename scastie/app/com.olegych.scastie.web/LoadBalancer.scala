@@ -10,13 +10,13 @@ import org.slf4j.LoggerFactory
 
 case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
-case class Task[C](config: C, ip: Ip, id: Long) {
+case class Task[C](config: C, ip: Ip, id: Int) {
   def toRecord = Record(config, ip)
 }
 
 case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {
 
-  def currentTaskId: Option[Long] = mailbox.headOption.map(_.id)
+  def currentTaskId: Option[Int] = mailbox.headOption.map(_.id)
   def currentConfig: C = mailbox.headOption.map(_.config).getOrElse(lastConfig)
 
   def done: Server[C, S] = {
@@ -90,7 +90,7 @@ case class LoadBalancer[C: Ordering, S](
 
   private lazy val configs = servers.map(_.currentConfig)
 
-  def done(taskId: Long): LoadBalancer[C, S] = {
+  def done(taskId: Int): LoadBalancer[C, S] = {
     log.info(s"Task done: $taskId")
     val res = servers.zipWithIndex.find(_._1.currentTaskId == Some(taskId))
     if(res.nonEmpty) {
