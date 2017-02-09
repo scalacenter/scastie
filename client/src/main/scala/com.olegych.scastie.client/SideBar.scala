@@ -32,8 +32,11 @@ object SideBar {
               RunButton(state, backend)
             ),
             li(`class` := "button")(
-              iconic.share(onClick ==> save),
-              p("Share")
+              img(src := "/assets/save.png",
+                  alt := "save",
+                  `class` := "save",
+                  onClick ==> save),
+              p("Save")
             ),
             li(`class` := "button", selected(View.Settings))(
               img(src := "/assets/dotty3.svg",
