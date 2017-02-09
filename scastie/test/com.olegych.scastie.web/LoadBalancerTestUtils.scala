@@ -8,7 +8,7 @@ import scala.collection.immutable.Queue
 trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   type TestLoadBalancer = LoadBalancer[String, String]
 
-  private var taskId = 1000l
+  private var taskId = 1000
   def add(balancer: TestLoadBalancer, config: String): TestLoadBalancer = {
     val (_, balancer0) = balancer.add(Task(config, nextIp, taskId))
     taskId += 1
