@@ -48,7 +48,13 @@ body.pc kbd.mac { display: none }
 
   .button {
     cursor: pointer;
-    display: block;
+    display: table;
+
+    img {
+      display: table-cell;
+      text-align: center;
+    }
+
     font-size: @sidebar-icon-size;
 
     padding: 10px;
@@ -86,10 +92,10 @@ body.pc kbd.mac { display: none }
       margin: 0;
     }
 
-    .libraries {
+    .libraries, .save {
       height: @sidebar-icon-size;
       margin: 0 auto;
-      width: 100%;
+      // width: 100%;
     }
   }
 
