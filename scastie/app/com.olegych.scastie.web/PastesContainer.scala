@@ -6,12 +6,11 @@ import api._
 import upickle.default.{write => uwrite, read => uread}
 
 import java.nio.file._
-import java.util.concurrent.atomic.AtomicLong
 import System.{lineSeparator => nl}
 
 class PastesContainer(root: Path) {
 
-  def writePaste(inputs: Inputs): Long = {
+  def writePaste(inputs: Inputs): Int = {
     val id = lastId
     lastId += 1
     write(inputsFile(id), uwrite(inputs))
@@ -22,13 +21,13 @@ class PastesContainer(root: Path) {
     write(outputFile(progress.id), uwrite(progress) + nl, append = true)
   }
 
-  def readPaste(id: Long): Option[Inputs] = {
+  def readPaste(id: Int): Option[Inputs] = {
     if (Files.exists(inputsFile(id))) {
       read(inputsFile(id)).map(content => uread[Inputs](content))
     } else None
   }
 
-  def readOutput(id: Long): Option[List[PasteProgress]] = {
+  def readOutput(id: Int): Option[List[PasteProgress]] = {
     if (Files.exists(outputFile(id)))
       read(outputFile(id)).map(
         _.lines
@@ -55,19 +54,19 @@ class PastesContainer(root: Path) {
             .stripPrefix(input)
             .stripPrefix(output)
             .stripSuffix(json)
-            .toLong
+            .toInt
         )
         .max
     } catch {
-      case util.control.NonFatal(e) => 0L
+      case util.control.NonFatal(e) => 0
     } finally {
       ds.close()
     }
   }
 
-  private def inputsFile(id: Long) =
+  private def inputsFile(id: Int) =
     root.resolve(Paths.get(input + id + json))
 
-  private def outputFile(id: Long) =
+  private def outputFile(id: Int) =
     root.resolve(Paths.get(output + id + json))
 }

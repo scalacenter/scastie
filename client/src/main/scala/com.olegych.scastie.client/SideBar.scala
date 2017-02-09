@@ -32,8 +32,8 @@ object SideBar {
               RunButton(state, backend)
             ),
             li(`class` := "button")(
-              iconic.pencil(onClick ==> save),
-              p("Save")
+              iconic.share(onClick ==> save),
+              p("Share")
             ),
             li(`class` := "button", selected(View.Settings))(
               img(src := "/assets/dotty3.svg",
@@ -42,10 +42,6 @@ object SideBar {
                   onClick ==> setView(View.Settings)),
               p("Libraries")
             ),
-            li(`class` := "button", consoleSelected)(
-              terminal(onClick ==> toggleConsole),
-              p("Console")
-            ),
             li(`class` := "button")(
               iconic.justifyLeft(onClick ==> formatCode),
               p("Format")
@@ -53,11 +49,15 @@ object SideBar {
             li(`class` := "button", instrumentationSelected)(
               iconic.script(onClick ==> toggleInstrumentation),
               p("Script")
+            ),
+            li(`class` := "button", consoleSelected)(
+              terminal(onClick ==> toggleConsole),
+              p("Console")
             )
           )
         )
     }.build
 
-  def apply(state: State, backend: Backend) = 
+  def apply(state: State, backend: Backend) =
     component((state, backend))
 }

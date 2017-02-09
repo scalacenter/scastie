@@ -16,9 +16,9 @@ import upickle.default.{write => uwrite}
 class ProgressActor extends Actor with ActorLogging {
   import Progress._
 
-  private val monitors = new mutable.HashMap[Long, mutable.Set[MonitorChannel]]
-  with mutable.MultiMap[Long, MonitorChannel]
-  private val progressBuffer = mutable.Map[Long, PasteProgress]()
+  private val monitors = new mutable.HashMap[Int, mutable.Set[MonitorChannel]]
+  with mutable.MultiMap[Int, MonitorChannel]
+  private val progressBuffer = mutable.Map[Int, PasteProgress]()
 
   def receive = LoggingReceive {
     case MonitorProgress(id) => {
@@ -57,10 +57,10 @@ class ProgressActor extends Actor with ActorLogging {
 
 object Progress {
   sealed trait ProgressMessage
-  case class MonitorProgress(id: Long) extends ProgressMessage
+  case class MonitorProgress(id: Int) extends ProgressMessage
   case class StopMonitorProgress(monitorChannel: MonitorChannel)
       extends ProgressMessage
-  case class MonitorChannel(id: Long,
+  case class MonitorChannel(id: Int,
                             value: (Iteratee[String, _], Enumerator[String]),
                             channel: Channel[String])
 }

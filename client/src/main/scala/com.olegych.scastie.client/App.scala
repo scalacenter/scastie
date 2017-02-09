@@ -16,6 +16,14 @@ import upickle.default.{read => uread, ReadWriter, macroRW => upickleMacroRW}
 
 object App {
 
+  case class Props(
+      router: Option[RouterCtl[Page]],
+      snippet: Option[Snippet],
+      embedded: Option[EmbededOptions]
+  ) {
+    def isEmbedded: Boolean = embedded.isDefined
+  }
+
   object State {
     def default = State(
       view = View.Editor,
@@ -152,16 +160,14 @@ object App {
       ))
   }
 
-  class Backend(scope: BackendScope[
-    (RouterCtl[Page], Option[Snippet], Boolean),
-    State]) {
+  class Backend(scope: BackendScope[Props, State]) {
     def codeChange(newCode: String) =
       scope.modState(_.setCode(newCode))
 
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
 
-    private def connect(id: Long) = CallbackTo[WebSocket] {
+    private def connect(id: Int) = CallbackTo[WebSocket] {
       val direct = scope.accessDirect
 
       def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
@@ -246,47 +252,52 @@ object App {
       scope.state.flatMap(s =>
         Callback.future(ApiClient[Api].save(s.inputs).call().map {
           case Ressource(id) =>
-            scope.props.flatMap {
-              case (router, snippet, _) =>
-                router.set(Snippet(id))
-            }
+            scope.props.flatMap(props =>
+              props.router.map(_.set(Snippet(id))).getOrElse(Callback(())))
         }))
     }
 
-    def start(props: (RouterCtl[Page], Option[Snippet], Boolean)): Callback = {
+    def start(props: Props): Callback = {
       console.log("== Welcome to Scastie ==")
 
-      val (router, snippet, embedded) = props
-
-      snippet match {
-        case Some(Snippet(id)) =>
-          Callback.future(
-            ApiClient[Api]
-              .fetch(id)
-              .call()
-              .map(result =>
-                result match {
-                  case Some(FetchResult(inputs, progresses)) => {
-                    scope.modState(
-                      _.setInputs(inputs).setProgresses(progresses)
-                    )
-                  }
-                  case _ =>
-                    scope.modState(_.setCode(s"//paste $id not found"))
-              })
-          )
-        case None => {
-          LocalStorage.load
-            .map(state => {
-              val state0 =
-                if(embedded) state.setView(View.Editor)
-                else state
-
-              scope.modState(_ => state0.setRunning(false))
+      def loadSnippet(id: Int): Callback = {
+        Callback.future(
+          ApiClient[Api]
+            .fetch(id)
+            .call()
+            .map(result =>
+              result match {
+                case Some(FetchResult(inputs, progresses)) => {
+                  scope.modState(
+                    _.setInputs(inputs).setProgresses(progresses)
+                  )
+                }
+                case _ =>
+                  scope.modState(_.setCode(s"//paste $id not found"))
             })
-            .getOrElse(Callback(()))
+        )
+      }
+
+      props.embedded match {
+        case None => {
+          props.snippet match {
+            case Some(Snippet(id)) => loadSnippet(id)
+            case None => {
+              LocalStorage.load
+                .map(state => scope.modState(_ => state.setRunning(false)))
+                .getOrElse(Callback(()))
+            }
+          }
+        }
+        case Some(embededOptions) => {
+          embededOptions match {
+            case EmbededOptions(Some(id), _) => loadSnippet(id)
+            case EmbededOptions(_, Some(inputs)) => scope.modState(_.setInputs(inputs))
+            case _ => Callback(())
+          }
         }
       }
+
     }
 
     def formatCode(e: ReactEventI): Callback = formatCode()
@@ -313,30 +324,31 @@ object App {
   }
 
   val component =
-    ReactComponentB[(RouterCtl[Page], Option[Snippet], Boolean)]("App")
+    ReactComponentB[Props]("App")
       .initialState(State.default)
       .backend(new Backend(_))
       .renderPS {
-        case (scope, (router, snippet, embedded), state) => {
+        case (scope, props, state) => {
+          val theme =
+            if (state.isDarkTheme) "dark"
+            else "light"
 
-          console.log(embedded)
-          
-          import state._
-
-          val theme = if (isDarkTheme) "dark" else "light"
           val sideBar =
-            if (!embedded) TagMod(SideBar(state, scope.backend)) else EmptyTag
-          val appClass = if (!embedded) "app" else "app embedded"
+            if (!props.isEmbedded) TagMod(SideBar(state, scope.backend))
+            else EmptyTag
+
+          val appClass =
+            if (!props.isEmbedded) "app"
+            else "app embedded"
 
           div(`class` := appClass)(
             sideBar,
-            MainPannel(state, scope.backend, embedded)
+            MainPannel(state, scope.backend, props.isEmbedded)
           )
         }
       }
       .componentWillMount(s => s.backend.start(s.props))
       .build
 
-  def apply(router: RouterCtl[Page], snippet: Option[Snippet], embedded: Boolean) =
-    component((router, snippet, embedded))
+  def apply(props: Props) = component(props)
 }

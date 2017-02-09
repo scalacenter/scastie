@@ -40,7 +40,7 @@ class ApiImpl(pasteActor: ActorRef, ip: String)(
 
   def save(inputs: Inputs): Future[Ressource] = run(inputs)
 
-  def fetch(id: Long): Future[Option[FetchResult]] = {
+  def fetch(id: Int): Future[Option[FetchResult]] = {
     (pasteActor ? GetPaste(id)).mapTo[Option[FetchResult]]
   }
 
@@ -75,7 +75,7 @@ object Application extends Controller {
     Ok(views.html.index())
   }
 
-  def index2(rest: String) = Action { implicit request =>
+  def index2(id: Int) = Action { implicit request =>
     Ok(views.html.index())
   }
 
@@ -83,7 +83,7 @@ object Application extends Controller {
     Ok(views.html.embedded())
   }
 
-  def progress(id: Long) = WebSocket.tryAccept[String] { request =>
+  def progress(id: Int) = WebSocket.tryAccept[String] { request =>
     (progressActor ? MonitorProgress(id))
       .mapTo[MonitorChannel]
       .map(m => Right(m.value))
