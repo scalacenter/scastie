@@ -10,6 +10,8 @@ import com.typesafe.sbt.SbtNativePackager.Universal
 import sbtdocker.DockerKeys.{docker, dockerBuildAndPush, imageNames}
 import sbtdocker.ImageName
 
+// TODO deploy scastie-secrets
+
 object Deployment {
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
 

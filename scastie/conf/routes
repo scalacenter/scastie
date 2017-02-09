@@ -1,8 +1,15 @@
 GET    /embedded-demo  controllers.Application.embedded
 GET    /assets/*file   controllers.Assets.at(path="/public", file)
-GET    /tmp/*file      controllers.Application.tmp(file)
+
+GET    /login          controllers.OAuth2.login
+GET    /logout         controllers.OAuth2.logout
+GET    /callback       controllers.OAuth2.callback(code: String, state: Option[String])
+GET    /beta           controllers.Application.beta
+
 POST   /api/*path      controllers.Application.autowireApi(path: String)
+
 GET    /progress/*id   controllers.Application.progress(id: Int)
+
 GET    /               controllers.Application.index
 GET    /embedded       controllers.Application.index
 GET    /embedded/*id   controllers.Application.index2(id: Int)

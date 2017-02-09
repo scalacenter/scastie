@@ -3,6 +3,7 @@ package sbt
 
 import akka.actor.{ActorSystem, Props}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object SbtMain {
@@ -11,12 +12,11 @@ object SbtMain {
 
     val system = ActorSystem("SbtRemote")
 
-    // val production = true
-    // sys.env.contains("RUNNER_PRODUCTION")
-
     val remoteActor =
       system.actorOf(Props(new SbtActor(10.seconds, production = true)),
                      name = "SbtActor")
-    system.awaitTermination()
+    Await.result(system.whenTerminated, Duration.Inf)
+
+    ()
   }
 }

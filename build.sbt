@@ -63,7 +63,7 @@ lazy val utils = project
   .disablePlugins(play.PlayScala)
   .dependsOn(api211JVM)
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.3.11"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.4.11"
 
 val upickleVersion = "0.4.4"
 
@@ -170,7 +170,11 @@ lazy val server = project
         .exclude("com.typesafe.play", "play-docs_2.11")
         .exclude("com.lihaoyi", "upickle_sjs0.6_2.11")
     )),
-    libraryDependencies += akka("remote"),
+    libraryDependencies ++= Seq(
+      akka("remote"), 
+      akka("http-experimental"),
+      "org.json4s" %% "json4s-native" % "3.4.2"
+    ),
     mainClass in Compile := Option("ProdNettyServer"),
     products in Compile := (products in Compile)
       .dependsOn(WebKeys.assets in Assets)
