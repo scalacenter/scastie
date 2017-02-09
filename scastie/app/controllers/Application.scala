@@ -2,6 +2,7 @@ package controllers
 
 import com.olegych.scastie._
 import web._
+import oauth2.{Github, Users}
 
 import Progress._
 import api._
@@ -20,6 +21,9 @@ import akka.pattern.ask
 
 import java.nio.ByteBuffer
 import scala.concurrent.Future
+
+import scala.util.Try
+import java.util.UUID
 
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
@@ -64,15 +68,33 @@ object Application extends Controller {
 
   val progressActor =
     system.actorOf(Props[ProgressActor], name = "ProgressActor")
+
   val pasteActor =
     system.actorOf(Props(new PasteActor(progressActor)), name = "PasteActor")
 
-  def tmp(file: String) = Action { implicit request =>
-    Ok.sendFile(new java.io.File("/tmp/" + file))
+  def userLogin(body: => Result)(implicit request: play.api.mvc.Request[AnyContent]): Result = {
+
+    val maybeUser =
+      for {
+        rawUuid <- request.session.get(OAuth2.sessionKey)
+        uuid <- Try(UUID.fromString(rawUuid)).toOption
+        user <- Users.get(uuid)
+      } yield user
+
+    maybeUser match {
+      case Some(user) => body
+      case None => TemporaryRedirect("/beta")
+    }
+  } 
+
+  def beta = Action { implicit request =>
+    Ok(views.html.beta())
   }
 
   def index = Action { implicit request =>
-    Ok(views.html.index())
+    userLogin {
+      Ok(views.html.index())
+    }
   }
 
   def index2(id: Int) = Action { implicit request =>
