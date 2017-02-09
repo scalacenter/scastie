@@ -69,10 +69,10 @@ class SbtActorTest()
   private val timeout = 3.seconds
   private val sbtActor = TestActorRef(
     new SbtActor(timeout, production = false))
-  private var currentId = 0L
+  private var currentId = 0
   private def id = {
     val t = currentId
-    currentId += 1L
+    currentId += 1
     t
   }
   private var firstRun = true
