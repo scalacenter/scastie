@@ -5,8 +5,6 @@ import App._
 
 import japgolly.scalajs.react._, vdom.all._
 
-import iconic._
-
 object SideBar {
   private val component =
     ReactComponentB[(State, Backend)]("SideBar").render_P {
@@ -28,33 +26,29 @@ object SideBar {
 
         nav(`class` := s"sidebar $theme")(
           ul(
-            li(`class` := "button", selected(View.Editor))(
-              RunButton(state, backend)
-            ),
-            li(`class` := "button")(
+            RunButton(state, backend),
+            li(`class` := "button", onClick ==> save)(
               img(src := "/assets/save.png",
                   alt := "save",
-                  `class` := "save",
-                  onClick ==> save),
+                  `class` := "save"),
               p("Save")
             ),
-            li(`class` := "button", selected(View.Settings))(
+            li(`class` := "button", selected(View.Settings), onClick ==> setView(View.Settings))(
               img(src := "/assets/dotty3.svg",
                   alt := "settings",
-                  `class` := "libraries",
-                  onClick ==> setView(View.Settings)),
+                  `class` := "libraries"),
               p("Libraries")
             ),
-            li(`class` := "button")(
-              iconic.justifyLeft(onClick ==> formatCode),
+            li(`class` := "button", onClick ==> formatCode)(
+              iconic.justifyLeft,
               p("Format")
             ),
-            li(`class` := "button", instrumentationSelected)(
-              iconic.script(onClick ==> toggleInstrumentation),
+            li(`class` := "button", instrumentationSelected, onClick ==> toggleInstrumentation)(
+              iconic.script,
               p("Script")
             ),
-            li(`class` := "button", consoleSelected)(
-              terminal(onClick ==> toggleConsole),
+            li(`class` := "button", consoleSelected, onClick ==> toggleConsole)(
+              iconic.terminal,
               p("Console")
             )
           )

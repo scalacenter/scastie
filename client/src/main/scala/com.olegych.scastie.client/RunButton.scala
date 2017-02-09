@@ -15,8 +15,25 @@ object RunButton {
       case (state, backend) =>
         import backend._
 
-        val runButton = if (state.running) {
-          TagMod(
+        def selected(view: View) =
+          if (view == state.view) TagMod(`class` := "selected") else EmptyTag
+
+        if (!state.running) {
+          if (View.Editor == state.view) {
+            // RUN
+            li(`class` := "button run-button", selected(View.Editor), onClick ==> run)(
+              mediaPlay(`class` := "runnable"),
+              p("Run")
+            )
+          } else {
+            li(`class` := "button run-button", selected(View.Editor),
+               onClick ==> setView(View.Editor))(
+              pencil(title := "Edit code"),
+              p("Edit")
+            )
+          }
+        } else {
+          li(`class` := "button run-button")(
             div(`class` := "sk-folding-cube",
                 onClick ==> setView(View.Editor))(
               div(`class` := "sk-cube1 sk-cube"),
@@ -26,27 +43,6 @@ object RunButton {
             ),
             p("Running")
           )
-        } else {
-          if (View.Editor == state.view) {
-            // RUN
-            TagMod(
-              mediaPlay(
-                onClick ==> run,
-                `class` := "runnable"
-              ),
-              p("Run")
-            )
-          } else {
-            TagMod(
-              pencil(
-                onClick ==> setView(View.Editor),
-                title := "Edit code"
-              ),
-              p("Edit")
-            )
-          }
         }
-        div(`class` := "button run-button")(runButton)
     }.build
-
 }
