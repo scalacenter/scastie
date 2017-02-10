@@ -30,6 +30,7 @@ The application consists of two modules:
 
 -  scastie - standard akka-http web application module
 -  sbt-runner - encapsulates pastes processing
+-  balancer - split the load across multiple sbt instances
 
 For each paste create/read request Application controller in scastie module creates a message 
 and sends it to PastesActor in renderer module. The PastesActor routes messages to a remote 
