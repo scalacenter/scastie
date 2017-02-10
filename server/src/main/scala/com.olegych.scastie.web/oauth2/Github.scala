@@ -7,11 +7,10 @@ import akka.http.scaladsl.model._
 import HttpMethods.POST
 import headers._
 import Uri._
-import unmarshalling.{Unmarshal, Unmarshaller}
+import unmarshalling.Unmarshal
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl._
 
 import scala.concurrent.Future
 
@@ -24,7 +23,7 @@ class Github(implicit system: ActorSystem, materializer: ActorMaterializer) exte
   import system.dispatcher
 
   private val config = ConfigFactory.load().getConfig("com.olegych.scastie.web.oauth2")
-  private val clientId = config.getString("client-id")
+  val clientId = config.getString("client-id")
   private val clientSecret = config.getString("client-secret")
   private val redirectUri = config.getString("uri") + "/callback/done"
   
