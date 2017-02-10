@@ -29,7 +29,7 @@ object ServerMain {
 
     val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
     val production = config.getBoolean("production")
-    
+
     if (production) {
       val pid = ManagementFactory.getRuntimeMXBean().getName().split("@").head
       val pidFile = Paths.get("PID")
@@ -46,13 +46,14 @@ object ServerMain {
     val github = new Github
     val session = new GithubUserSession
 
-    val progressActor = system.actorOf(Props[ProgressActor], name = "ProgressActor")
-    val pasteActor = system.actorOf(Props(new DispatchActor(progressActor)), name = "DispatchActor")
-
+    val progressActor =
+      system.actorOf(Props[ProgressActor], name = "ProgressActor")
+    val pasteActor = system
+      .actorOf(Props(new DispatchActor(progressActor)), name = "DispatchActor")
 
     def requireLogin[T](v: T): T = v // TODO
 
-    val userFacingRoutes = 
+    val userFacingRoutes =
       requireLogin(new FrontPage(session).routes)
 
     val programmaticRoutes = concat(

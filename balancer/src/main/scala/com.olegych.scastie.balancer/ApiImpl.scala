@@ -11,10 +11,14 @@ import akka.http.scaladsl.model.RemoteAddress
 import scala.concurrent.{Future, ExecutionContext}
 
 class ApiImpl(pasteActor: ActorRef, ip: RemoteAddress)(
-  implicit timeout: Timeout, executionContext: ExecutionContext) extends Api {
+    implicit timeout: Timeout,
+    executionContext: ExecutionContext)
+    extends Api {
 
   def run(inputs: Inputs): Future[Ressource] = {
-    (pasteActor ? InputsWithIp(inputs, ip.toIP.map(_.ip.toString).getOrElse("-no-ip-"))).mapTo[Ressource]
+    (pasteActor ? InputsWithIp(
+      inputs,
+      ip.toIP.map(_.ip.toString).getOrElse("-no-ip-"))).mapTo[Ressource]
   }
 
   def save(inputs: Inputs): Future[Ressource] = run(inputs)

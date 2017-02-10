@@ -25,8 +25,8 @@ class HistogramTest extends FunSuite with TestUtils {
   }
 
   test("distance overlap") {
-    val h1 = Histogram(1,2,3,4  )
-    val h2 = Histogram(  2,3,4,5)
+    val h1 = Histogram(1, 2, 3, 4)
+    val h2 = Histogram(2, 3, 4, 5)
 
     assert(Math.floor(h1.distance(h2) * 100).toInt == 50)
   }

@@ -292,7 +292,8 @@ object App {
         case Some(embededOptions) => {
           embededOptions match {
             case EmbededOptions(Some(id), _) => loadSnippet(id)
-            case EmbededOptions(_, Some(inputs)) => scope.modState(_.setInputs(inputs))
+            case EmbededOptions(_, Some(inputs)) =>
+              scope.modState(_.setInputs(inputs))
             case _ => Callback(())
           }
         }

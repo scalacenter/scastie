@@ -17,7 +17,8 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
     balancer0
   }
 
-  def assertConfigs(balancer: TestLoadBalancer)(columns: Seq[String]*): Assertion = {
+  def assertConfigs(balancer: TestLoadBalancer)(
+      columns: Seq[String]*): Assertion = {
     assertMultiset(
       balancer.servers.map(_.currentConfig),
       columns.flatten

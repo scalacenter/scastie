@@ -126,13 +126,12 @@ object Inputs {
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
-    sbtConfigExtra = 
-      """|scalacOptions ++= Seq(
-         |  "-deprecation",
-         |  "-encoding", "UTF-8",
-         |  "-feature",
-         |  "-unchecked"
-         |)""".stripMargin,
+    sbtConfigExtra = """|scalacOptions ++= Seq(
+                        |  "-deprecation",
+                        |  "-encoding", "UTF-8",
+                        |  "-feature",
+                        |  "-unchecked"
+                        |)""".stripMargin,
     sbtPluginsConfigExtra = ""
   )
 
@@ -168,14 +167,20 @@ case class Inputs(
         case ScalaTarget.Jvm(scalaVersion) => {
           (
             s"""scalaVersion := "$scalaVersion"""",
-            ScalaDependency("org.scastie", "runtime-scala", target, buildVersion)
+            ScalaDependency("org.scastie",
+                            "runtime-scala",
+                            target,
+                            buildVersion)
           )
         }
         case ScalaTarget.Js(scalaVersion, _) => {
           (
-          s"""|scalaVersion := "$scalaVersion"
-              |enablePlugins(ScalaJSPlugin)""".stripMargin,
-            ScalaDependency("org.scastie", "runtime-scala", target, buildVersion)
+            s"""|scalaVersion := "$scalaVersion"
+                |enablePlugins(ScalaJSPlugin)""".stripMargin,
+            ScalaDependency("org.scastie",
+                            "runtime-scala",
+                            target,
+                            buildVersion)
           )
         }
         case ScalaTarget.Dotty => {
@@ -194,14 +199,20 @@ case class Inputs(
                 |
                 |libraryDependencies += "org.scastie" % "runtime-dotty_2.11" % "$buildVersion"
                 |""".stripMargin,
-            ScalaDependency("org.scastie", "runtime-dotty_2.11", target, buildVersion)
+            ScalaDependency("org.scastie",
+                            "runtime-dotty_2.11",
+                            target,
+                            buildVersion)
           )
         }
         case ScalaTarget.Native => {
           (
             s"""|scalaVersion := "2.11.8"
                 |resolvers += Resolver.sonatypeRepo("snapshots")""".stripMargin,
-            ScalaDependency("org.scastie", "runtime-scala", target, buildVersion)
+            ScalaDependency("org.scastie",
+                            "runtime-scala",
+                            target,
+                            buildVersion)
           )
         }
       }

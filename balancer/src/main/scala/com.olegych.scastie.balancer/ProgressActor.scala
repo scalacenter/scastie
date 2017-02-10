@@ -14,9 +14,7 @@
 
 // class ProgressActor extends Actor with ActorLogging {
 //   import Progress._
-
-
-//   // private val monitors = 
+//   // private val monitors =
 //   //   new mutable.HashMap[Int, mutable.Set[MonitorChannel]]
 //   //   with mutable.MultiMap[Int, MonitorChannel]
 
@@ -25,9 +23,9 @@
 //   def receive = LoggingReceive {
 //     case MonitorProgress(id) => {
 
-//     }  
+//     }
 //     case pasteProgress: PasteProgress => {
-      
+
 //     }
 //   }
 

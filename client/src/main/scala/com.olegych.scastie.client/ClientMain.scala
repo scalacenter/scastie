@@ -29,43 +29,48 @@ object ClientMain extends JSApp {
 
     (
       trimSlashes
-      | staticRoute(root, Home) ~> renderR(renderAppDefault)
-      | dynamicRouteCT(int.caseClass[Snippet]) ~> dynRenderR(renderAppSnippet)
-      | staticRoute(embedded, Embeded) ~> renderR(renderAppDefaultEmbedded)
-      | dynamicRouteCT((embedded / int).caseClass[EmbeddedSnippet]) ~> dynRenderR(renderAppSnippetEmbedded)
-    )
-      .notFound(redirectToPage(Home)(Redirect.Replace))
-      .renderWith(layout)
+        | staticRoute(root, Home) ~> renderR(renderAppDefault)
+        | dynamicRouteCT(int.caseClass[Snippet]) ~> dynRenderR(
+          renderAppSnippet)
+        | staticRoute(embedded, Embeded) ~> renderR(renderAppDefaultEmbedded)
+        | dynamicRouteCT((embedded / int).caseClass[EmbeddedSnippet]) ~> dynRenderR(
+          renderAppSnippetEmbedded)
+    ).notFound(redirectToPage(Home)(Redirect.Replace)).renderWith(layout)
   }
 
   def renderAppDefault(router: RouterCtl[Page]) =
-    App(App.Props(
-      router = Some(router),
-      snippet = None,
-      embedded = None
-    )) 
-  
-  def renderAppSnippet(snippet: Snippet, router: RouterCtl[Page]) =
-    App(App.Props(
-      router = Some(router),
-      snippet = Some(snippet),
-      embedded = None
-    )) 
-  
-  def renderAppDefaultEmbedded(router: RouterCtl[Page]) = 
-    App(App.Props(
-      router = Some(router),
-      snippet = None,
-      embedded = Some(EmbededOptions.empty)
-    ))
+    App(
+      App.Props(
+        router = Some(router),
+        snippet = None,
+        embedded = None
+      ))
 
-  def renderAppSnippetEmbedded(embeddedSnippet: EmbeddedSnippet, router: RouterCtl[Page]) = {
+  def renderAppSnippet(snippet: Snippet, router: RouterCtl[Page]) =
+    App(
+      App.Props(
+        router = Some(router),
+        snippet = Some(snippet),
+        embedded = None
+      ))
+
+  def renderAppDefaultEmbedded(router: RouterCtl[Page]) =
+    App(
+      App.Props(
+        router = Some(router),
+        snippet = None,
+        embedded = Some(EmbededOptions.empty)
+      ))
+
+  def renderAppSnippetEmbedded(embeddedSnippet: EmbeddedSnippet,
+                               router: RouterCtl[Page]) = {
     val snippet = Some(embeddedSnippet.toSnippet)
-    App(App.Props(
-      router = Some(router),
-      snippet = snippet,
-      embedded = Some(EmbededOptions.empty)
-    ))
+    App(
+      App.Props(
+        router = Some(router),
+        snippet = snippet,
+        embedded = Some(EmbededOptions.empty)
+      ))
   }
 
   def layout(c: RouterCtl[Page], r: Resolution[Page]) = r.render()
@@ -92,7 +97,8 @@ object ClientMain extends JSApp {
   }
 
   @JSExport
-  def embedded(selector: String | Node, options: UndefOr[EmbededOptionsJs]): Unit = {
+  def embedded(selector: String | Node,
+               options: UndefOr[EmbededOptionsJs]): Unit = {
     val nodes =
       (selector: Any) match {
         case cssSelector: String => {
@@ -103,32 +109,34 @@ object ClientMain extends JSApp {
         }
       }
     val embeddedOptions =
-      options
-        .toOption.map(EmbededOptions.fromJs)
+      options.toOption
+        .map(EmbededOptions.fromJs)
         .getOrElse(EmbededOptions.empty)
 
-    nodes.foreach{ case node: dom.raw.HTMLElement =>
-      val container = dom.document.createElement("div")
+    nodes.foreach {
+      case node: dom.raw.HTMLElement =>
+        val container = dom.document.createElement("div")
 
-      val embeddedOptions0 =
-        if(node.textContent.isEmpty || embeddedOptions.hasCode) embeddedOptions
-        else embeddedOptions.setCode(node.textContent)
+        val embeddedOptions0 =
+          if (node.textContent.isEmpty || embeddedOptions.hasCode)
+            embeddedOptions
+          else embeddedOptions.setCode(node.textContent)
 
-      ReactDOM.render(
-        App(App.Props(
-          router = None,
-          snippet = None,
-          embedded = Some(embeddedOptions0)
-        )),
-        container
-      )
+        ReactDOM.render(
+          App(
+            App.Props(
+              router = None,
+              snippet = None,
+              embedded = Some(embeddedOptions0)
+            )),
+          container
+        )
 
-      node.parentNode.insertBefore(container, node.nextSibling)
-      node.style.display = "none"
+        node.parentNode.insertBefore(container, node.nextSibling)
+        node.style.display = "none"
     }
   }
 }
-
 
 @ScalaJSDefined
 trait EmbededOptionsJs extends js.Object {
@@ -139,7 +147,6 @@ trait EmbededOptionsJs extends js.Object {
   val scalaVersion: UndefOr[String]
   val sbtConfig: UndefOr[String]
 }
-
 
 object EmbededOptions {
   def empty: EmbededOptions = EmbededOptions(None, None)

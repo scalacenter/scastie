@@ -6,4 +6,3 @@ trait TestUtils {
     def *(v: String): Seq[String] = List.fill(n)(v)
   }
 }
-

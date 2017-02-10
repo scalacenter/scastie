@@ -6,7 +6,8 @@ import org.scalajs.sbtplugin.cross.CrossProject
 
 lazy val akkaVersion = "2.4.11"
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % akkaVersion
+def akka(module: String) =
+  "com.typesafe.akka" %% ("akka-" + module) % akkaVersion
 
 lazy val upickleVersion = "0.4.4"
 lazy val scalatagsVersion = "0.6.1"
@@ -21,47 +22,29 @@ lazy val baseSettings = Seq(
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test",
     scalaVersion := "2.11.8",
     scalacOptions := {
-    val extraOptions =
-      if (scalaBinaryVersion.value != "2.10") {
-        Seq("-Ywarn-unused-import")
-      } else Seq()
-    Seq(
-      "-deprecation",
-      "-encoding",
-      "UTF-8",
-      "-feature",
-      "-unchecked",
-      "-Xfatal-warnings",
-      "-Xlint",
-      "-Yno-adapted-args",
-      "-Ywarn-dead-code",
-      "-Ywarn-numeric-widen",
-      "-Ywarn-value-discard"
-    ) ++ extraOptions
-  },
+      val extraOptions =
+        if (scalaBinaryVersion.value != "2.10") {
+          Seq("-Ywarn-unused-import")
+        } else Seq()
+        
+      Seq(
+        "-deprecation",
+        "-encoding",
+        "UTF-8",
+        "-feature",
+        "-unchecked",
+        "-Xfatal-warnings",
+        "-Xlint",
+        "-Yno-adapted-args",
+        "-Ywarn-dead-code",
+        "-Ywarn-numeric-widen",
+        "-Ywarn-value-discard"
+      ) ++ extraOptions
+    },
     console := (console in Test).value,
     scalacOptions in (Test, console) -= "-Ywarn-unused-import",
-    scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import",
-    allDependencies ~= logging
+    scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"
   ) ++ orgSettings
-
-def logging(allDependencies: Seq[ModuleID]): Seq[ModuleID] = {
-  Seq(
-    "org.slf4j" % "slf4j-api" % "1.7.6",
-    "org.slf4j" % "jul-to-slf4j" % "1.7.6",
-    "ch.qos.logback" % "logback-core" % "1.1.1" % Runtime,
-    "ch.qos.logback" % "logback-classic" % "1.1.1" % Runtime,
-    "org.slf4j" % "jcl-over-slf4j" % "1.7.6" % Runtime,
-    "org.slf4j" % "log4j-over-slf4j" % "1.7.6" % Runtime
-  ) ++
-    allDependencies.map(
-      _.exclude("commons-logging", "commons-logging")
-        .exclude("log4j", "log4j")
-        .exclude("org.slf4j", "slf4j-log4j12")
-        .exclude("org.slf4j", "slf4j-jcl")
-        .exclude("org.slf4j", "slf4j-jdk14")
-    )
-}
 
 lazy val utils = project
   .in(file("utils"))
@@ -166,15 +149,16 @@ lazy val server = project
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     reStart := reStart.dependsOn(WebKeys.assets in Assets).evaluated,
     unmanagedResourceDirectories in Compile += (WebKeys.public in Assets).value,
-    libraryDependencies ++= Seq(      
+    libraryDependencies ++= Seq(
       "ch.megard" %% "akka-http-cors" % "0.1.8",
       "ch.qos.logback" % "logback-classic" % "1.1.7",
       "com.softwaremill.akka-http-session" %% "core" % "0.2.7",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+      "de.heikoseeberger" %% "akka-sse" % "2.0.0",
+      "org.json4s" %% "json4s-native" % "3.4.2",
       akka("http-experimental"),
       akka("remote"),
-      akka("slf4j"),
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-      "org.json4s" %% "json4s-native" % "3.4.2"
+      akka("slf4j")
     )
   )
   .enablePlugins(SbtWeb, JavaServerAppPackaging)
