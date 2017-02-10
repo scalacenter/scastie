@@ -106,7 +106,7 @@ class PasteActor(progressActor: ActorRef) extends Actor {
         log.warn(event.toString)
         log.warn("removing disconnected: " + ref)
         remoteSelections = remoteSelections - ((host, port))
-        loadBalancer.removeServer(ref)
+        loadBalancer = loadBalancer.removeServer(ref)
       }
     }
 
