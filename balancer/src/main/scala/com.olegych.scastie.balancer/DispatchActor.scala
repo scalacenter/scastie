@@ -1,6 +1,12 @@
 package com.olegych.scastie
 package balancer
 
+ import akka.actor.ActorSelection
+
+case object LoadBalancerStateRequest
+case class LoadBalancerStateResponse(loadBalancer: LoadBalancer[String, ActorSelection])
+
+
 // import api._
 
 // import scala.collection.JavaConverters._
@@ -20,8 +26,6 @@ package balancer
 // case class SbtConfig(config: String)
 // case class InputsWithIp(inputs: Inputs, ip: String)
 
-// case object LoadBalancerStateRequest
-// case class LoadBalancerStateResponse(loadBalancer: LoadBalancer[String, ActorSelection])
 
 // case class GetPaste(id: Int)
 
