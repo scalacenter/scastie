@@ -50,6 +50,8 @@ sbt
 > ~server/reStart
 ```
 
+open http://localhost:8080
+
 ## How to deploy
 
 add your ssh key to

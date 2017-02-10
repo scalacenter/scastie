@@ -2,10 +2,10 @@ package com.olegych.scastie
 package web
 
 import routes._
-import routes.api._
+import oauth2._
 
 import akka.http.scaladsl._
-import akka.http.scaladsl.model.StatusCodes
+// import akka.http.scaladsl.model.StatusCodes
 import server.Directives._
 
 import com.typesafe.config.ConfigFactory
@@ -30,10 +30,6 @@ object ServerMain {
     val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
     val production = config.getBoolean("production")
     
-
-    val github = new Github
-    val session = new GithubUserSession(config)
-
     if (production) {
       val pid = ManagementFactory.getRuntimeMXBean().getName().split("@").head
       val pidFile = Paths.get("PID")
@@ -47,17 +43,20 @@ object ServerMain {
     import system.dispatcher
     implicit val materializer = ActorMaterializer()
 
+    val github = new Github
+    val session = new GithubUserSession
+
     // val progressActor = system.actorOf(Props[ProgressActor], name = "ProgressActor")
     // val pasteActor = system.actorOf(Props(new PasteActor(progressActor)), name = "PasteActor")
 
 
-    def requireLogin[T](v: T): T = ??? // TODO
+    def requireLogin[T](v: T): T = v // TODO
 
     val userFacingRoutes = 
-      requireLogin(new FrontPage().routes)
+      requireLogin(new FrontPage(session).routes)
 
     val programmaticRoutes = concat(
-      requireLogin(new AutowireApi().routes),
+      // requireLogin(new AutowireApi().routes),
       Assets.routes,
       new OAuth2(github, session).routes
     )

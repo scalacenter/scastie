@@ -2,6 +2,8 @@ package com.olegych.scastie
 package web
 package routes
 
+import oauth2._
+
 import com.softwaremill.session._
 import SessionDirectives._
 import SessionOptions._
@@ -52,8 +54,8 @@ class OAuth2(github: Github, session: GithubUserSession) {
         pathPrefix("callback") {
           pathEnd {
             parameters('code, 'state.?) { (code, state) =>
-              onSuccess(github.getUserStateWithOauth2(code)) { userState =>
-                setSession(refreshable, usingCookies, session.addUser(userState)) {
+              onSuccess(github.getUserWithOauth2(code)) { user =>
+                setSession(refreshable, usingCookies, session.addUser(user)) {
                   setNewCsrfToken(checkHeader) { ctx =>
                     ctx.complete(
                       HttpResponse(

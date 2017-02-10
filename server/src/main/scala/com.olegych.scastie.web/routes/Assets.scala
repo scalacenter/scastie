@@ -1,10 +1,10 @@
-package ch.epfl.scala.index
-package server
+package com.olegych.scastie
+package web
 package routes
 
 import akka.http.scaladsl.server.Directives._
 
-object Assets (
+object Assets {
   val routes =
     get(
       concat(
@@ -31,4 +31,4 @@ object Assets (
         )
       )
     )
-)
+}

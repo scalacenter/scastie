@@ -6,9 +6,7 @@ import com.typesafe.config.ConfigFactory
 
 import com.softwaremill.session._
 
-import upickle.default.ReadWriter
-import upickle.default.{Reader, Writer, write => uwrite, read => uread}
-
+import upickle.default.{ReadWriter, write => uwrite, read => uread}
 
 import scala.collection.parallel.mutable.ParTrieMap
 import scala.concurrent.ExecutionContext
@@ -16,13 +14,13 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 import java.util.UUID
 import java.nio.file._
-import util.Properties
+// import util.Properties
 
 class GithubUserSession()(implicit val executionContext: ExecutionContext) {
 
-  private val config = ConfigFactory.load().getConfig("com.olegych.scastie.web.oauth2")
-  private val usersFile = Paths.get(config.getString("users-file").get)
-  private val usersSessions = Paths.get(config.getString("sessions-file").get)
+  private val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
+  private val usersFile = Paths.get(config.getString("oauth2.users-file"))
+  private val usersSessions = Paths.get(config.getString("oauth2.sessions-file"))
 
   private val sessionConfig = SessionConfig.default(config.getString("sesssion-secret"))
 
@@ -64,7 +62,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   def appendSessionsFile(uuid: UUID, user: User): Unit = {
     val pair = uuid -> user
     users += pair
-    val sessions = readSessions()
+    val sessions = readSessionsFile()
     val sessions0 = sessions :+ pair
 
     if(Files.exists(usersSessions)) {
@@ -80,14 +78,10 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
     ()
   }
 
-  def storeSession(user: User): UUID = {
+  def addUser(user: User): UUID = {
     val uuid = UUID.randomUUID
-    appendSession(uuid, user)
+    appendSessionsFile(uuid, user)
     uuid
-  }
-
-  def get(uuid: UUID): Option[User] = {
-    users.get(uuid)
   }
 
   def add(login: String): Unit = {
@@ -104,5 +98,6 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
     else false
   }
 
-  def getUser(id: Option[UUID]): Option[User] = id.flatMap(users.get)
+  def getUser(id: Option[UUID]): Option[User] = 
+    id.flatMap(users.get)
 }
