@@ -1,5 +1,7 @@
 package com.olegych.scastie
-package web
+package balancer
+
+import utils._
 
 import org.scalatest.{FunSuite, Assertion}
 

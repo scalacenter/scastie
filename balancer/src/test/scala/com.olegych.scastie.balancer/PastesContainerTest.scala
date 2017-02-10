@@ -1,5 +1,5 @@
 package com.olegych.scastie
-package web
+package balancer
 
 import api._
 

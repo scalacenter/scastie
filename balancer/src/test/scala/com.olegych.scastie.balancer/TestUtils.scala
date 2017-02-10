@@ -1,5 +1,5 @@
 package com.olegych.scastie
-package web
+package balancer
 
 trait TestUtils {
   implicit class IntExtension(n: Int) {

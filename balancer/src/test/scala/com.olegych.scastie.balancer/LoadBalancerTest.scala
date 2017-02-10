@@ -1,5 +1,5 @@
 package com.olegych.scastie
-package web
+package balancer
 
 import scala.collection.immutable.Queue
 
