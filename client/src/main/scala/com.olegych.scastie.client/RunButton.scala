@@ -21,12 +21,15 @@ object RunButton {
         if (!state.running) {
           if (View.Editor == state.view) {
             // RUN
-            li(`class` := "button run-button", selected(View.Editor), onClick ==> run)(
+            li(`class` := "button run-button",
+               selected(View.Editor),
+               onClick ==> run)(
               mediaPlay(`class` := "runnable"),
               p("Run")
             )
           } else {
-            li(`class` := "button run-button", selected(View.Editor),
+            li(`class` := "button run-button",
+               selected(View.Editor),
                onClick ==> setView(View.Editor))(
               pencil(title := "Edit code"),
               p("Edit")

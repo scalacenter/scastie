@@ -18,26 +18,31 @@ import java.nio.file._
 
 class GithubUserSession()(implicit val executionContext: ExecutionContext) {
 
-  private val configuration = ConfigFactory.load().getConfig("com.olegych.scastie.web")
-  private val usersFile = Paths.get(configuration.getString("oauth2.users-file"))
-  private val usersSessions = Paths.get(configuration.getString("oauth2.sessions-file"))
+  private val configuration =
+    ConfigFactory.load().getConfig("com.olegych.scastie.web")
+  private val usersFile =
+    Paths.get(configuration.getString("oauth2.users-file"))
+  private val usersSessions =
+    Paths.get(configuration.getString("oauth2.sessions-file"))
 
-  private val sessionConfig = SessionConfig.default(configuration.getString("sesssion-secret"))
+  private val sessionConfig =
+    SessionConfig.default(configuration.getString("sesssion-secret"))
 
   private lazy val users = {
     val trie = ParTrieMap[UUID, User]()
-    readSessionsFile().map{ case (uuid, user) =>
-      val pair = uuid -> user
-      trie += pair
+    readSessionsFile().map {
+      case (uuid, user) =>
+        val pair = uuid -> user
+        trie += pair
     }
     trie
   }
 
   import upickle.Js
-  private implicit val pkl: ReadWriter[UUID] = 
+  private implicit val pkl: ReadWriter[UUID] =
     ReadWriter[UUID](
-      uuid => Js.Str(uuid.toString), 
-      { case Js.Str(rawUUID) => UUID.fromString(rawUUID)}
+      uuid => Js.Str(uuid.toString),
+      { case Js.Str(rawUUID) => UUID.fromString(rawUUID) }
     )
 
   implicit def serializer: SessionSerializer[UUID, String] =
@@ -53,8 +58,11 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   }
 
   private def readSessionsFile(): Array[(UUID, User)] = {
-    if(Files.exists(usersSessions)) {
-      val content = Files.readAllLines(usersSessions).toArray.mkString(System.lineSeparator)
+    if (Files.exists(usersSessions)) {
+      val content = Files
+        .readAllLines(usersSessions)
+        .toArray
+        .mkString(System.lineSeparator)
       uread[Array[(UUID, User)]](content)
     } else Array()
   }
@@ -65,7 +73,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
     val sessions = readSessionsFile()
     val sessions0 = sessions :+ pair
 
-    if(Files.exists(usersSessions)) {
+    if (Files.exists(usersSessions)) {
       Files.delete(usersSessions)
     }
 
@@ -85,8 +93,11 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   }
 
   def add(login: String): Unit = {
-    if(!exists(login)) {
-      Files.write(usersFile, login.getBytes, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
+    if (!exists(login)) {
+      Files.write(usersFile,
+                  login.getBytes,
+                  StandardOpenOption.APPEND,
+                  StandardOpenOption.CREATE)
       ()
     }
   }
@@ -94,10 +105,9 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   def exists(login: String): Boolean = {
     if (Files.exists(usersFile)) {
       Files.readAllLines(usersFile).toArray.contains(login)
-    }
-    else false
+    } else false
   }
 
-  def getUser(id: Option[UUID]): Option[User] = 
+  def getUser(id: Option[UUID]): Option[User] =
     id.flatMap(users.get)
 }

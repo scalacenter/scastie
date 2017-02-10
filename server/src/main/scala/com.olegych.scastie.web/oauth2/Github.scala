@@ -19,15 +19,18 @@ import com.typesafe.config.ConfigFactory
 case class AccessToken(access_token: String)
 case class User(login: String, name: Option[String], avatar_url: String)
 
-class Github(implicit system: ActorSystem, materializer: ActorMaterializer) extends Json4sSupport {
+class Github(implicit system: ActorSystem, materializer: ActorMaterializer)
+    extends Json4sSupport {
   import system.dispatcher
 
-  private val config = ConfigFactory.load().getConfig("com.olegych.scastie.web.oauth2")
+  private val config =
+    ConfigFactory.load().getConfig("com.olegych.scastie.web.oauth2")
   val clientId = config.getString("client-id")
   private val clientSecret = config.getString("client-secret")
   private val redirectUri = config.getString("uri") + "/callback/done"
-  
-  private val poolClientFlow = Http().cachedHostConnectionPoolHttps[HttpRequest]("api.github.com")
+
+  private val poolClientFlow =
+    Http().cachedHostConnectionPoolHttps[HttpRequest]("api.github.com")
 
   def getUserWithToken(token: String): Future[User] = info(token)
   def getUserWithOauth2(code: String): Future[User] = {
@@ -45,7 +48,8 @@ class Github(implicit system: ActorSystem, materializer: ActorMaterializer) exte
               )),
             headers = List(Accept(MediaTypes.`application/json`))
           ))
-        .flatMap(response => Unmarshal(response).to[AccessToken].map(_.access_token))
+        .flatMap(response =>
+          Unmarshal(response).to[AccessToken].map(_.access_token))
     }
 
     access.flatMap(info)

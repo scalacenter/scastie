@@ -137,7 +137,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
     val server = balancer.servers.head
     assert(server.mailbox.size == 0)
-    
+
     val config = "c1"
     val taskId = 0
     val (assigned, balancer0) = balancer.add(Task(config, nextIp, taskId))
@@ -159,7 +159,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val server = balancer.servers.head
     assert(server.mailbox.size == 0)
     assert(server.currentTaskId == None)
-    
+
     val taskId1 = 1
     val (assigned0, balancer0) = balancer.add(Task("c1", nextIp, taskId1))
 

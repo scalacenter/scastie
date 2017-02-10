@@ -17,15 +17,15 @@ case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
 case class InputsWithIp(inputs: Inputs, ip: String)
 
-
 case class GetPaste(id: Int)
 case object LoadBalancerStateRequest
-case class LoadBalancerStateResponse(loadBalancer: LoadBalancer[String, ActorSelection])
-
+case class LoadBalancerStateResponse(
+    loadBalancer: LoadBalancer[String, ActorSelection])
 
 class DispatchActor(progressActor: ActorRef) extends Actor {
 
-  private val configuration = ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
+  private val configuration =
+    ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
 
   private val portsStart = configuration.getInt("remote-ports-start")
   private val portsSize = configuration.getInt("remote-ports-size")
@@ -33,7 +33,7 @@ class DispatchActor(progressActor: ActorRef) extends Actor {
 
   private val ports = (0 until portsSize).map(portsStart + _)
 
-  private var remoteSelections = ports.map{port =>
+  private var remoteSelections = ports.map { port =>
     val selection = context.actorSelection(
       s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
     )
@@ -41,8 +41,9 @@ class DispatchActor(progressActor: ActorRef) extends Actor {
   }.toMap
 
   private var loadBalancer: LoadBalancer[String, ActorSelection] = {
-    val servers = remoteSelections.to[Vector].map{ case (_, ref) =>
-      Server(ref, Inputs.default.sbtConfig)
+    val servers = remoteSelections.to[Vector].map {
+      case (_, ref) =>
+        Server(ref, Inputs.default.sbtConfig)
     }
 
     val history = History(Queue.empty[Record[String]], size = 100)
@@ -75,7 +76,8 @@ class DispatchActor(progressActor: ActorRef) extends Actor {
 
       val id = container.writePaste(inputs)
 
-      val (server, balancer) = loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), id))
+      val (server, balancer) =
+        loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), id))
       loadBalancer = balancer
       server.ref.tell(SbtTask(id, inputs, ip, progressActor), self)
       sender ! Ressource(id)
@@ -90,7 +92,7 @@ class DispatchActor(progressActor: ActorRef) extends Actor {
     }
 
     case progress: api.PasteProgress => {
-      if(progress.done) {
+      if (progress.done) {
         loadBalancer = loadBalancer.done(progress.id)
       }
       container.appendOutput(progress)
@@ -100,7 +102,7 @@ class DispatchActor(progressActor: ActorRef) extends Actor {
       for {
         host <- event.remoteAddress.host
         port <- event.remoteAddress.port
-        ref  <- remoteSelections.get((host, port))
+        ref <- remoteSelections.get((host, port))
       } {
         log.warn(event.toString)
         log.warn("removing disconnected: " + ref)

@@ -28,10 +28,12 @@ object SideBar {
           ul(
             RunButton(state, backend),
             li(`class` := "button", onClick ==> save)(
-              i(`class` :="fa fa-floppy-o"),
+              i(`class` := "fa fa-floppy-o"),
               p("Save")
             ),
-            li(`class` := "button", selected(View.Settings), onClick ==> setView(View.Settings))(
+            li(`class` := "button",
+               selected(View.Settings),
+               onClick ==> setView(View.Settings))(
               img(src := "/assets/public/dotty3.svg",
                   alt := "settings",
                   `class` := "libraries"),
@@ -41,11 +43,15 @@ object SideBar {
               iconic.justifyLeft,
               p("Format")
             ),
-            li(`class` := "button", instrumentationSelected, onClick ==> toggleInstrumentation)(
+            li(`class` := "button",
+               instrumentationSelected,
+               onClick ==> toggleInstrumentation)(
               iconic.script,
               p("Script")
             ),
-            li(`class` := "button", consoleSelected, onClick ==> toggleConsole)(
+            li(`class` := "button",
+               consoleSelected,
+               onClick ==> toggleConsole)(
               iconic.terminal,
               p("Console")
             )
