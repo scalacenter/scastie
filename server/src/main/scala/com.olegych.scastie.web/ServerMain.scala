@@ -3,6 +3,7 @@ package web
 
 import routes._
 import oauth2._
+import balancer._
 
 import akka.http.scaladsl._
 // import akka.http.scaladsl.model.StatusCodes
@@ -10,7 +11,7 @@ import server.Directives._
 
 import com.typesafe.config.ConfigFactory
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 
 import scala.concurrent.duration._
@@ -46,8 +47,8 @@ object ServerMain {
     val github = new Github
     val session = new GithubUserSession
 
-    // val progressActor = system.actorOf(Props[ProgressActor], name = "ProgressActor")
-    // val pasteActor = system.actorOf(Props(new PasteActor(progressActor)), name = "PasteActor")
+    val progressActor = system.actorOf(Props[ProgressActor], name = "ProgressActor")
+    val pasteActor = system.actorOf(Props(new DispatchActor(progressActor)), name = "PasteActor")
 
 
     def requireLogin[T](v: T): T = v // TODO
@@ -56,7 +57,7 @@ object ServerMain {
       requireLogin(new FrontPage(session).routes)
 
     val programmaticRoutes = concat(
-      // requireLogin(new AutowireApi().routes),
+      requireLogin(new AutowireApi(pasteActor).routes),
       Assets.routes,
       new OAuth2(github, session).routes
     )

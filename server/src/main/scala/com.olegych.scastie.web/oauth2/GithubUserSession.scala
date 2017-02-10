@@ -2,9 +2,9 @@ package com.olegych.scastie
 package web
 package oauth2
 
-import com.typesafe.config.ConfigFactory
-
 import com.softwaremill.session._
+
+import com.typesafe.config.ConfigFactory
 
 import upickle.default.{ReadWriter, write => uwrite, read => uread}
 
@@ -18,11 +18,11 @@ import java.nio.file._
 
 class GithubUserSession()(implicit val executionContext: ExecutionContext) {
 
-  private val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
-  private val usersFile = Paths.get(config.getString("oauth2.users-file"))
-  private val usersSessions = Paths.get(config.getString("oauth2.sessions-file"))
+  private val configuration = ConfigFactory.load().getConfig("com.olegych.scastie.web")
+  private val usersFile = Paths.get(configuration.getString("oauth2.users-file"))
+  private val usersSessions = Paths.get(configuration.getString("oauth2.sessions-file"))
 
-  private val sessionConfig = SessionConfig.default(config.getString("sesssion-secret"))
+  private val sessionConfig = SessionConfig.default(configuration.getString("sesssion-secret"))
 
   private lazy val users = {
     val trie = ParTrieMap[UUID, User]()
