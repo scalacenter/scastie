@@ -1,7 +1,16 @@
 import ScalaJSHelper._
 import Deployment._
+
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
+
+lazy val akkaVersion = "2.4.11"
+
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % akkaVersion
+
+lazy val upickleVersion = "0.4.3"
+lazy val scalatagsVersion = "0.6.1"
+lazy val autowireVersion = "0.2.5"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
@@ -60,12 +69,7 @@ lazy val utils = project
   .settings(
     libraryDependencies += akka("actor")
   )
-  .disablePlugins(play.PlayScala)
   .dependsOn(api211JVM)
-
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.4.11"
-
-val upickleVersion = "0.4.4"
 
 lazy val runnerRuntimeDependencies = Seq(
   runtimeScala210JVM,
@@ -153,43 +157,48 @@ lazy val sbtRunner = project
       .evaluated
   )
   .dependsOn(sbtApi211, api211JVM, instrumentation, utils)
-  .enablePlugins(DockerPlugin, BuildInfoPlugin)
-  .disablePlugins(play.PlayScala)
+  .enablePlugins(sbtdocker.DockerPlugin, BuildInfoPlugin)
 
 lazy val server = project
-  .in(file("scastie"))
   .settings(baseSettings)
   .settings(packageScalaJS(client))
   .settings(
-    scalacOptions --= Seq(
-      "-Ywarn-unused-import",
-      "-Xfatal-warnings"
-    ),
-    allDependencies ~= (_.map(
-      _.exclude("com.typesafe.play", "play-doc_2.11")
-        .exclude("com.typesafe.play", "play-docs_2.11")
-        .exclude("com.lihaoyi", "upickle_sjs0.6_2.11")
-    )),
-    libraryDependencies ++= Seq(
-      akka("remote"), 
-      akka("http-experimental"),
-      "org.json4s" %% "json4s-native" % "3.4.2"
-    ),
-    mainClass in Compile := Option("ProdNettyServer"),
-    products in Compile := (products in Compile)
-      .dependsOn(WebKeys.assets in Assets)
-      .value,
+    JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     reStart := reStart.dependsOn(WebKeys.assets in Assets).evaluated,
-    WebKeys.public in Assets := (classDirectory in Compile).value / "public",
-    mappings in (Compile, packageBin) += (fullOptJS in (client, Compile)).value.data -> "public/client-opt.js"
+    unmanagedResourceDirectories in Compile += (WebKeys.public in Assets).value,
+    libraryDependencies ++= Seq(      
+      "ch.megard" %% "akka-http-cors" % "0.1.8",
+      "ch.qos.logback" % "logback-classic" % "1.1.7",
+      "com.softwaremill.akka-http-session" %% "core" % "0.2.7",
+      akka("http-experimental"),
+      akka("remote"),
+      akka("slf4j"),
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+      "org.json4s" %% "json4s-native" % "3.4.2"
+    )
   )
-  .enablePlugins(SbtWeb, play.PlayScala)
-  .dependsOn(client, api211JVM, utils)
+  .enablePlugins(SbtWeb, JavaServerAppPackaging)
+  .dependsOn(client, api211JVM, utils, template)
+
+lazy val balancer = project
+  .settings(baseSettings)
+  .settings(
+    libraryDependencies += akka("remote")
+  )
+  .dependsOn(api211JVM, utils)
+
+lazy val template = project
+  .settings(baseSettings)
+  .settings(scalacOptions -= "-Ywarn-unused-import")
+  .enablePlugins(SbtTwirl)
+  .dependsOn(balancer)
 
 lazy val scastie = project
   .in(file("."))
   .aggregate(
     server,
+    balancer,
+    template,
     instrumentation,
     sbtRunner,
     codemirror,
@@ -247,7 +256,6 @@ lazy val codemirror = project
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   )
   .enablePlugins(ScalaJSPlugin)
-  .disablePlugins(play.PlayScala)
 
 /* frontend code */
 def react(artifact: String, name: String): JSModuleID =
@@ -273,7 +281,6 @@ lazy val client = project
       "org.webjars" % "font-awesome" % "4.7.0"
     )
   )
-  .disablePlugins(play.PlayScala)
   .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror, api211JS)
 
@@ -294,7 +301,6 @@ lazy val instrumentation = project
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
-  .disablePlugins(play.PlayScala)
 
 def crossDir(projectId: String) = file(".cross/" + projectId)
 def dash(name: String) = name.replaceAllLiterally(".", "-")
@@ -331,7 +337,6 @@ def api(scalaV: String) = {
       libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
     )
     .enablePlugins(BuildInfoPlugin)
-    .disablePlugins(play.PlayScala)
 }
 
 val api210 = api("2.10.6")
@@ -364,7 +369,6 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
     )
     .jsSettings(test := {})
     .dependsOn(apiProject)
-    .disablePlugins(play.PlayScala)
 }
 
 val runtimeScala210 = runtimeScala("2.10.6", api210)
@@ -395,7 +399,6 @@ lazy val runtimeDotty = project
     )
   )
   .dependsOn(api211JVM)
-  .disablePlugins(play.PlayScala)
 
 /* sbtApi is for the communication between sbt and the sbt-runner */
 def sbtApi(scalaV: String) = {
@@ -407,7 +410,6 @@ def sbtApi(scalaV: String) = {
       scalaVersion := scalaV,
       libraryDependencies += "com.lihaoyi" %% "upickle" % upickleVersion
     )
-    .disablePlugins(play.PlayScala)
 }
 
 lazy val sbtApi210 = sbtApi("2.10.6")
