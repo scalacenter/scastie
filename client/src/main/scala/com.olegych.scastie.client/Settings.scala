@@ -76,7 +76,7 @@ object Settings {
         targetTypes.map(
           targetType =>
             li(handler(targetType), selected(targetType))(
-              img(src := s"/assets/${logo(targetType)}",
+              img(src := s"/assets/public/${logo(targetType)}",
                   alt := s"logo for ${labelFor(targetType)}"),
               span(labelFor(targetType)),
               vote(targetType)

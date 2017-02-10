@@ -269,7 +269,7 @@ object ScaladexSearch {
                         common,
                         alt := s"$organization logo or avatar"))
                 .getOrElse(
-                  img(src := "/assets/placeholder.svg",
+                  img(src := "/assets/public/placeholder.svg",
                       common,
                       alt := s"placeholder for $organization")
                 ),
