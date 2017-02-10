@@ -32,7 +32,7 @@ object SideBar {
               p("Save")
             ),
             li(`class` := "button", selected(View.Settings), onClick ==> setView(View.Settings))(
-              img(src := "/assets/dotty3.svg",
+              img(src := "/assets/public/dotty3.svg",
                   alt := "settings",
                   `class` := "libraries"),
               p("Libraries")
