@@ -45,10 +45,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private def warmUp(): Unit = {
     if (production) {
       log.info("warming up sbt")
-      (1 to 5).foreach { _ =>
-        sbt
-          .eval("run", instrument(Inputs.default), (line, _) => log.info(line))
-      }
+      sbt.eval("run", instrument(Inputs.default), (line, _) => log.info(line))
     }
   }
 

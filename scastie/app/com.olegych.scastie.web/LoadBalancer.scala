@@ -8,9 +8,17 @@ import System.{lineSeparator => nl}
 
 import org.slf4j.LoggerFactory
 
+object Ip {
+  implicit val ord = Ordering.by(unapply)
+}
 case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
-case class Task[C](config: C, ip: Ip, id: Int) {
+
+object Task {
+  implicit def ord[C: Ordering]: Ordering[Task[C]] = Ordering.by(Task.unapply[C])
+}
+
+case class Task[C](config: C, ip: Ip, id: Int){
   def toRecord = Record(config, ip)
 }
 
@@ -111,6 +119,8 @@ case class LoadBalancer[C: Ordering, S](
   def getRandomServer: Server[C, S] = random(servers)
 
   def add(task: Task[C]): (Server[C, S], LoadBalancer[C, S]) = {
+    assert(servers.size > 0, "All instances are down")
+
     val updatedHistory = history.add(task.toRecord)
     lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
 
@@ -203,7 +213,15 @@ case class LoadBalancer[C: Ordering, S](
             |$config""".stripMargin
       ).mkString(nl)
 
-    s"""|== History ==
+    // ref: S, lastConfig: C, mailbox: Queue[Task[C]]
+    val serversDebug = 
+      servers.map(server =>
+        s"ref: ${server.ref}, lastConfig: ${server.lastConfig.hashCode}, tasks: ${Multiset(server.mailbox)}"
+      ).mkString(nl)
+
+    s"""|== Servers ==
+        |$serversDebug
+        |== History ==
         |$historyHistogram
         |== Servers ==
         |$serversHistogram

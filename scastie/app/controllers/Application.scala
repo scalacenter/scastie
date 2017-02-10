@@ -114,16 +114,21 @@ object Application extends Controller {
     requireLogin(Ok(views.html.embedded()))
   }
 
-  def progress(id: Int) = {
-    WebSocket.tryAccept[String] { implicit request =>
-      requireLoginBase(
-        (progressActor ? MonitorProgress(id))
-          .mapTo[MonitorChannel]
-          .map(m => Right(m.value)),
-        Future(Left(Forbidden))
-      )(request)
-    }
+
+  def progress(id: Int) = WebSocket.acceptWithActor[String, String] { request => out =>
+    WebSocketActor.props(id, out, progressActor)
   }
+
+  // def progress(id: Int) = {
+    // WebSocket.tryAccept[String] { implicit request =>
+    //   requireLoginBase(
+    //     (progressActor ? MonitorProgress(id))
+    //       .mapTo[MonitorChannel]
+    //       .map(m => Right(m.value)),
+    //     Future(Left(Forbidden))
+    //   )(request)
+    // }
+  // }
 
   // debug load balancer
   def loadBalancer = Action.async { implicit request =>

@@ -16,43 +16,54 @@ import upickle.default.{write => uwrite}
 class ProgressActor extends Actor with ActorLogging {
   import Progress._
 
-  private val monitors = new mutable.HashMap[Int, mutable.Set[MonitorChannel]]
-  with mutable.MultiMap[Int, MonitorChannel]
-  private val progressBuffer = mutable.Map[Int, PasteProgress]()
+
+  // private val monitors = 
+  //   new mutable.HashMap[Int, mutable.Set[MonitorChannel]]
+  //   with mutable.MultiMap[Int, MonitorChannel]
+
+  // private val progressBuffer = mutable.Map[Int, PasteProgress]()
 
   def receive = LoggingReceive {
     case MonitorProgress(id) => {
-      val (enumerator, channel) = Concurrent.broadcast[String]
-      val monitorChannel = MonitorChannel(id, null, channel)
-      import concurrent.ExecutionContext.Implicits.global
-      val iteratee = Iteratee.ignore[String].map { _ =>
-        self ! StopMonitorProgress(monitorChannel)
-      }
-      monitors.addBinding(id, monitorChannel)
-      sender ! monitorChannel.copy(value = iteratee -> enumerator)
-      progressBuffer.get(id).foreach(sendProgress)
-    }
 
-    case StopMonitorProgress(monitorChannel) => {
-      monitors.removeBinding(monitorChannel.id, monitorChannel)
-      ()
-    }
-
+    }  
     case pasteProgress: PasteProgress => {
-      sendProgress(pasteProgress)
+      
     }
   }
 
-  private def sendProgress(pasteProgress: PasteProgress): Unit = {
-    val monitorChannels = monitors.get(pasteProgress.id).toList.flatten
-    if (monitorChannels.isEmpty) {
-      progressBuffer += (pasteProgress.id -> pasteProgress)
-    } else {
-      progressBuffer.remove(pasteProgress.id)
-    }
+  //   case MonitorProgress(id) => {
+  //     val (enumerator, channel) = Concurrent.broadcast[String]
+  //     val monitorChannel = MonitorChannel(id, null, channel)
+  //     import concurrent.ExecutionContext.Implicits.global
+  //     val iteratee = Iteratee.ignore[String].map { _ =>
+  //       self ! StopMonitorProgress(monitorChannel)
+  //     }
+  //     monitors.addBinding(id, monitorChannel)
+  //     sender ! monitorChannel.copy(value = iteratee -> enumerator)
+  //     progressBuffer.get(id).foreach(sendProgress)
+  //   }
 
-    monitorChannels.foreach(_.channel.push(uwrite(pasteProgress)))
-  }
+  //   case StopMonitorProgress(monitorChannel) => {
+  //     monitors.removeBinding(monitorChannel.id, monitorChannel)
+  //     ()
+  //   }
+
+  //   case pasteProgress: PasteProgress => {
+  //     sendProgress(pasteProgress)
+  //   }
+  // }
+
+  // private def sendProgress(pasteProgress: PasteProgress): Unit = {
+  //   val monitorChannels = monitors.get(pasteProgress.id).toList.flatten
+  //   if (monitorChannels.isEmpty) {
+  //     progressBuffer += (pasteProgress.id -> pasteProgress)
+  //   } else {
+  //     progressBuffer.remove(pasteProgress.id)
+  //   }
+
+  //   monitorChannels.foreach(_.channel.push(uwrite(pasteProgress)))
+  // }
 }
 
 object Progress {

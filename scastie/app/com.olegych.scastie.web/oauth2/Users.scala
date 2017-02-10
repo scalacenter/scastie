@@ -51,10 +51,14 @@ object Users {
     val sessions = readSessions()
     val sessions0 = sessions :+ pair
 
+    if(Files.exists(usersSessions)) {
+      Files.delete(usersSessions)
+    }
+
     Files.write(
       usersSessions,
       uwrite(sessions0).getBytes,
-      StandardOpenOption.APPEND, StandardOpenOption.CREATE
+      StandardOpenOption.CREATE
     )
 
     ()
