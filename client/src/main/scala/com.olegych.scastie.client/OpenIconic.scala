@@ -6,6 +6,8 @@ import japgolly.scalajs.react._, vdom.all._
 package object iconic extends Iconic
 
 trait Iconic {
+  // also available: http://fontawesome.io/icons/
+  
   // https://useiconic.com/open/#q
 
   def accountLogin(mods: TagMod*): R = rc("account-login")(mods)

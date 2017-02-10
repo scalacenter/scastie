@@ -7,12 +7,12 @@ import oauth2.{Github, Users}
 import Progress._
 import api._
 
-import autowire.Core.Request
 import upickle.default.{Reader, Writer, read => uread, write => uwrite}
 
 import play.api.Play
 import play.api.mvc._
 import play.api.libs.json.JsValue
+import play.api.libs.iteratee.{Iteratee, Enumerator}
 
 import com.typesafe.config.ConfigFactory
 import akka.util.Timeout
@@ -72,7 +72,19 @@ object Application extends Controller {
   val pasteActor =
     system.actorOf(Props(new PasteActor(progressActor)), name = "PasteActor")
 
-  def requireLogin(body: => Result)(implicit request: play.api.mvc.Request[AnyContent]): Result = {
+  def requireLogin(body: => Result)(
+    implicit request: RequestHeader): Result = {
+
+    requireLoginBase(body, TemporaryRedirect("/beta"))
+  }
+  def requireLoginAsync(body: => Future[Result])(
+    implicit request: RequestHeader): Future[Result] = {
+
+    requireLoginBase(body, Future(TemporaryRedirect("/beta")))
+  }
+
+  private def requireLoginBase[T](body: => T, fail: => T)(
+    implicit request: RequestHeader): T = {
     val maybeUser =
       for {
         rawUuid <- request.session.get(OAuth2.sessionKey)
@@ -82,9 +94,9 @@ object Application extends Controller {
 
     maybeUser match {
       case Some(user) => body
-      case None => TemporaryRedirect("/beta")
+      case None => fail
     }
-  } 
+  }
 
   def beta = Action { implicit request =>
     Ok(views.html.beta())
@@ -102,17 +114,24 @@ object Application extends Controller {
     requireLogin(Ok(views.html.embedded()))
   }
 
-  def progress(id: Int) = WebSocket.tryAccept[String] { request =>
-    (progressActor ? MonitorProgress(id))
-      .mapTo[MonitorChannel]
-      .map(m => Right(m.value))
+  def progress(id: Int) = {
+    WebSocket.tryAccept[String] { implicit request =>
+      requireLoginBase(
+        (progressActor ? MonitorProgress(id))
+          .mapTo[MonitorChannel]
+          .map(m => Right(m.value)),
+        Future(Left(Forbidden))
+      )(request)
+    }
   }
 
   def autowireApi(path: String) = Action.async { implicit request =>
-    val text = request.body.asText.getOrElse("")
-    val api = new ApiImpl(pasteActor, request.remoteAddress)
-    val autowireRequest =
-      Request(path.split("/"), uread[Map[String, String]](text))
-    AutowireServer.route[Api](api)(autowireRequest).map(buffer => Ok(buffer))
+    requireLoginAsync {
+      val text = request.body.asText.getOrElse("")
+      val api = new ApiImpl(pasteActor, request.remoteAddress)
+      val autowireRequest =
+        autowire.Core.Request(path.split("/"), uread[Map[String, String]](text))
+      AutowireServer.route[Api](api)(autowireRequest).map(buffer => Ok(buffer))
+    }
   }
 }
