@@ -28,7 +28,7 @@ prior experience to fully unleash its (and scala) power.
 
 The application consists of two modules:
 
--  scastie - standard play2 web application module
+-  scastie - standard akka-http web application module
 -  sbt-runner - encapsulates pastes processing
 
 For each paste create/read request Application controller in scastie module creates a message 

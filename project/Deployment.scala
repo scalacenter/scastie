@@ -24,7 +24,8 @@ object Deployment {
   lazy val deployServerQuick =
     taskKey[Unit]("Deploy server without building server zip")
 
-  def deployServerTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployServerTask(server: Project,
+                       sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = (packageBin in (server, Universal)).value.toPath
@@ -32,7 +33,8 @@ object Deployment {
       deployment.deployServer(serverZip)
     }
 
-  def deployTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployTask(server: Project,
+                 sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = (packageBin in (server, Universal)).value.toPath
@@ -41,7 +43,8 @@ object Deployment {
       deployment.deploy(serverZip)
     }
 
-  def deployQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployQuickTask(server: Project,
+                      sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = serverZipTask(server).value
@@ -52,7 +55,8 @@ object Deployment {
       deployment.deploy(serverZip)
     }
 
-  def deployServerQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] = 
+  def deployServerQuickTask(server: Project,
+                            sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = serverZipTask(server).value
@@ -63,7 +67,8 @@ object Deployment {
       deployment.deployServer(serverZip)
     }
 
-  private def deploymentTask(sbtRunner: Project): Def.Initialize[Task[Deployment]] =
+  private def deploymentTask(
+      sbtRunner: Project): Def.Initialize[Task[Deployment]] =
     Def.task {
       new Deployment(
         rootFolder = (baseDirectory in ThisBuild).value,
