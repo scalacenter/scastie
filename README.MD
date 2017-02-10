@@ -57,3 +57,7 @@ scastie@scastie.scala-lang.org
 scastie@scastie-sbt.scala-lang.org
 
 `sbt deploy`
+
+## Embed Scastie into your website
+
+see https://scastie.scala-lang.org/embedded-demo

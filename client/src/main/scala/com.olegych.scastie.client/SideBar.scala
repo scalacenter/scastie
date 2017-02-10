@@ -28,9 +28,7 @@ object SideBar {
           ul(
             RunButton(state, backend),
             li(`class` := "button", onClick ==> save)(
-              img(src := "/assets/save.png",
-                  alt := "save",
-                  `class` := "save"),
+              i(`class` :="fa fa-floppy-o"),
               p("Save")
             ),
             li(`class` := "button", selected(View.Settings), onClick ==> setView(View.Settings))(

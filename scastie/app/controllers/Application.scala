@@ -72,8 +72,7 @@ object Application extends Controller {
   val pasteActor =
     system.actorOf(Props(new PasteActor(progressActor)), name = "PasteActor")
 
-  def userLogin(body: => Result)(implicit request: play.api.mvc.Request[AnyContent]): Result = {
-
+  def requireLogin(body: => Result)(implicit request: play.api.mvc.Request[AnyContent]): Result = {
     val maybeUser =
       for {
         rawUuid <- request.session.get(OAuth2.sessionKey)
@@ -92,17 +91,15 @@ object Application extends Controller {
   }
 
   def index = Action { implicit request =>
-    userLogin {
-      Ok(views.html.index())
-    }
+    requireLogin(Ok(views.html.index()))
   }
 
   def index2(id: Int) = Action { implicit request =>
-    Ok(views.html.index())
+    requireLogin(Ok(views.html.index()))
   }
 
   def embedded = Action { implicit request =>
-    Ok(views.html.embedded())
+    requireLogin(Ok(views.html.embedded()))
   }
 
   def progress(id: Int) = WebSocket.tryAccept[String] { request =>
