@@ -71,6 +71,8 @@ class DispatchActor(progressActor: ActorRef) extends Actor {
     }
 
     case InputsWithIp(inputs, ip) => {
+      println("== Got Task ==")
+
       val id = container.writePaste(inputs)
 
       val (server, balancer) = loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), id))

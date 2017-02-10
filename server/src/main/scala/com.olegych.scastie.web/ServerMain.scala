@@ -6,7 +6,6 @@ import oauth2._
 import balancer._
 
 import akka.http.scaladsl._
-// import akka.http.scaladsl.model.StatusCodes
 import server.Directives._
 
 import com.typesafe.config.ConfigFactory
@@ -48,7 +47,7 @@ object ServerMain {
     val session = new GithubUserSession
 
     val progressActor = system.actorOf(Props[ProgressActor], name = "ProgressActor")
-    val pasteActor = system.actorOf(Props(new DispatchActor(progressActor)), name = "PasteActor")
+    val pasteActor = system.actorOf(Props(new DispatchActor(progressActor)), name = "DispatchActor")
 
 
     def requireLogin[T](v: T): T = v // TODO
