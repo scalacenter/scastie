@@ -71,7 +71,7 @@ case class History[C](data: Queue[Record[C]], size: Int){
     // the user has changed configuration, we assume he will not go back to the
     // previous configuration
 
-    val data0 = data.filterNot(_.ip == record.ip).enqueue(record)
+    val data0 = data //.filterNot(_.ip == record.ip).enqueue(record)
 
     val data1 =
       if(data0.size > size) {
@@ -187,5 +187,27 @@ case class LoadBalancer[C: Ordering, S](
     log.debug(updatedHistory.toString)
     log.debug("== Configs ==")
     log.debug(configHistogram.toString)
+  }
+
+  def debug: String = {
+    val historyConfig = history.data.map(_.config)
+    val historyHistogram = historyConfig.map(_.hashCode).to[Histogram]
+
+    val serversConfig = servers.map(_.currentConfig)
+    val serversHistogram = serversConfig.map(_.hashCode).to[Histogram]
+
+    val configs = 
+      (serversConfig ++ historyConfig)
+      .map(config =>
+        s"""|Config #${config.hashCode}
+            |$config""".stripMargin
+      ).mkString(nl)
+
+    s"""|== History ==
+        |$historyHistogram
+        |== Servers ==
+        |$serversHistogram
+        |== Configs ==
+        |$configs""".stripMargin
   }
 }

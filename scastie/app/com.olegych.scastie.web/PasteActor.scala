@@ -8,7 +8,7 @@ import scala.collection.JavaConverters._
 import play.api.Play
 import play.api.Play.{current, configuration}
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, ActorSelection}
 import akka.remote.DisassociatedEvent
 import akka.routing.{ActorSelectionRoutee, RoundRobinRoutingLogic, Router}
 
@@ -22,6 +22,9 @@ import scala.collection.immutable.Queue
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
 case class InputsWithIp(inputs: Inputs, ip: String)
+
+case object LoadBalancerStateRequest
+case class LoadBalancerStateResponse(loadBalancer: LoadBalancer[String, ActorSelection])
 
 case class GetPaste(id: Int)
 
@@ -40,7 +43,7 @@ class PasteActor(progressActor: ActorRef) extends Actor {
     (host, port) -> selection
   }.toMap
 
-  private var loadBalancer = {
+  private var loadBalancer: LoadBalancer[String, ActorSelection] = {
     val servers = remoteSelections.to[Vector].map{ case (_, ref) =>
       Server(ref, Inputs.default.sbtConfig)
     }
@@ -69,6 +72,7 @@ class PasteActor(progressActor: ActorRef) extends Actor {
       server.ref.tell(format, sender)
       ()
     }
+
     case InputsWithIp(inputs, ip) => {
       val id = container.writePaste(inputs)
 
@@ -104,6 +108,10 @@ class PasteActor(progressActor: ActorRef) extends Actor {
         remoteSelections = remoteSelections - ((host, port))
         loadBalancer.removeServer(ref)
       }
+    }
+
+    case LoadBalancerStateRequest => {
+      sender ! LoadBalancerStateResponse(loadBalancer)
     }
   }
 }

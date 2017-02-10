@@ -6,6 +6,8 @@ GET    /logout         controllers.OAuth2.logout
 GET    /callback       controllers.OAuth2.callback(code: String, state: Option[String])
 GET    /beta           controllers.Application.beta
 
+GET    /load-balancer  controllers.Application.loadBalancer
+
 POST   /api/*path      controllers.Application.autowireApi(path: String)
 
 GET    /progress/*id   controllers.Application.progress(id: Int)

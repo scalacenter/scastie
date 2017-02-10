@@ -125,6 +125,13 @@ object Application extends Controller {
     }
   }
 
+  // debug load balancer
+  def loadBalancer = Action.async { implicit request =>
+    (pasteActor ? LoadBalancerStateRequest).mapTo[LoadBalancerStateResponse].map(state =>
+      requireLogin(Ok(views.html.loadbalancer(state)))
+    )
+  }
+
   def autowireApi(path: String) = Action.async { implicit request =>
     requireLoginAsync {
       val text = request.body.asText.getOrElse("")
