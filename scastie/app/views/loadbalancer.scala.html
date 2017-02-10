@@ -1,0 +1,21 @@
+@import com.olegych.scastie.web.LoadBalancerStateResponse
+
+@(state: LoadBalancerStateResponse)
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <h1>Load Balancer Debug</h1>
+  <pre>
+@state.loadBalancer.debug
+  </pre>
+  <script>
+    setTimeout(function(){
+     window.location.reload(1);
+    }, 1000);
+  </script>
+</body>
+</html>
