@@ -8,7 +8,7 @@ lazy val akkaVersion = "2.4.11"
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % akkaVersion
 
-lazy val upickleVersion = "0.4.3"
+lazy val upickleVersion = "0.4.4"
 lazy val scalatagsVersion = "0.6.1"
 lazy val autowireVersion = "0.2.5"
 
@@ -183,7 +183,10 @@ lazy val server = project
 lazy val balancer = project
   .settings(baseSettings)
   .settings(
-    libraryDependencies += akka("remote")
+    libraryDependencies ++= Seq(
+      akka("remote"),
+      akka("http-core")
+    )
   )
   .dependsOn(api211JVM, utils)
 
