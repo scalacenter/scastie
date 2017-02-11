@@ -4,10 +4,12 @@ import Deployment._
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 
-lazy val akkaVersion = "2.4.11"
 
-def akka(module: String) =
-  "com.typesafe.akka" %% ("akka-" + module) % akkaVersion
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.4.16"
+
+lazy val akkaHttpVersion = "10.0.3"
+def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
+def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 
 lazy val upickleVersion = "0.4.4"
 lazy val scalatagsVersion = "0.6.1"
@@ -154,11 +156,11 @@ lazy val server = project
     reStart := reStart.dependsOn(WebKeys.assets in Assets).evaluated,
     unmanagedResourceDirectories in Compile += (WebKeys.public in Assets).value,
     libraryDependencies ++= Seq(
-      "ch.megard" %% "akka-http-cors" % "0.1.8",
-      "com.softwaremill.akka-http-session" %% "core" % "0.2.7",      
+      "ch.megard" %% "akka-http-cors" % "0.1.11",
+      "com.softwaremill.akka-http-session" %% "core" % "0.4.0",
       "de.heikoseeberger" %% "akka-sse" % "2.0.0",
       "org.json4s" %% "json4s-native" % "3.4.2",
-      akka("http-experimental"),
+      akkaHttp,
       akka("remote"),
       akka("slf4j")
     )
@@ -171,7 +173,7 @@ lazy val balancer = project
   .settings(
     libraryDependencies ++= Seq(
       akka("remote"),
-      akka("http-core")
+      akkaHttpCore
     )
   )
   .dependsOn(api211JVM, utils)
