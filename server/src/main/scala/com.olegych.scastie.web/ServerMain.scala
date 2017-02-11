@@ -6,7 +6,6 @@ import oauth2._
 import balancer._
 
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.server._
 import Directives._
 
