@@ -154,7 +154,9 @@ lazy val server = project
   .settings(
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     reStart := reStart.dependsOn(WebKeys.assets in Assets).evaluated,
-    unmanagedResourceDirectories in Compile += (WebKeys.public in Assets).value,
+    
+    unmanagedResourceDirectories in Compile += (WebKeys.public in (client, Assets)).value,
+
     libraryDependencies ++= Seq(
       "ch.megard" %% "akka-http-cors" % "0.1.11",
       "com.softwaremill.akka-http-session" %% "core" % "0.4.0",
