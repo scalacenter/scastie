@@ -28,7 +28,7 @@ object App {
     def default = State(
       view = View.Editor,
       running = false,
-      websocket = None,
+      eventSource = None,
       isDarkTheme = false,
       consoleIsOpen = false,
       consoleHasUserOutput = false,
@@ -41,14 +41,14 @@ object App {
       ReadWriter[Option[T]](_ => Js.Null, { case _ => None })
     }
 
-    implicit val dontSerializeSocket = dontSerialize[WebSocket]
+    implicit val dontSerializeEventSource = dontSerialize[EventSource]
     implicit val pkl: ReadWriter[State] = upickleMacroRW[State]
   }
 
   case class State(
       view: View,
       running: Boolean,
-      websocket: Option[WebSocket],
+      eventSource: Option[EventSource],
       isDarkTheme: Boolean,
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
@@ -57,7 +57,7 @@ object App {
   ) {
     def copyAndSave(view: View = view,
                     running: Boolean = running,
-                    websocket: Option[WebSocket] = websocket,
+                    eventSource: Option[EventSource] = eventSource,
                     isDarkTheme: Boolean = isDarkTheme,
                     consoleIsOpen: Boolean = consoleIsOpen,
                     consoleHasUserOutput: Boolean = consoleHasUserOutput,
@@ -67,7 +67,7 @@ object App {
       val state0 =
         copy(view,
              running,
-             websocket,
+             eventSource,
              isDarkTheme,
              consoleIsOpen,
              consoleHasUserOutput,
@@ -167,7 +167,7 @@ object App {
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
 
-    private def connect(id: Int) = CallbackTo[WebSocket] {
+    private def connect(id: Int) = CallbackTo[EventSource] {
       val direct = scope.accessDirect
 
       def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
@@ -175,22 +175,16 @@ object App {
         val progress = uread[PasteProgress](e.data.toString)
         direct.modState(_.addProgress(progress))
       }
-      def onerror(e: ErrorEvent): Unit =
-        direct.modState(_.log(s"Error: ${e.message}"))
-      def onclose(e: CloseEvent): Unit =
-        direct.modState(
-          _.copy(websocket = None, running = false)
-            .log(s"Closed: ${e.reason}\n"))
+      def onerror(e: Event): Unit =
+        direct.modState(_.log(s"Error: ${e.toString}"))
 
-      val protocol = if (window.location.protocol == "https:") "wss" else "ws"
-      val uri = s"$protocol://${window.location.host}/progress/$id"
-      val socket = new WebSocket(uri)
 
-      socket.onopen = onopen _
-      socket.onclose = onclose _
-      socket.onmessage = onmessage _
-      socket.onerror = onerror _
-      socket
+      val eventSource = new EventSource(s"/progress/$id")
+
+      eventSource.onopen = onopen _
+      eventSource.onmessage = onmessage _
+      eventSource.onerror = onerror _
+      eventSource
     }
 
     def clear(e: ReactEventI): Callback = clear()
@@ -232,11 +226,11 @@ object App {
         Callback.future(ApiClient[Api].run(s.inputs).call().map {
           case Ressource(id) =>
             connect(id).attemptTry.flatMap {
-              case Success(ws) => {
+              case Success(eventSource) => {
                 scope.modState(
                   _.resetOutputs
                     .setRunning(true)
-                    .copy(websocket = Some(ws))
+                    .copy(eventSource = Some(eventSource))
                     .log("Connecting...\n")
                 )
               }

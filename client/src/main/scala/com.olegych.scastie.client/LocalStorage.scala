@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package client
 
+import scala.util.Try
+
 import org.scalajs.dom.window.localStorage
 
 import upickle.default.{write => uwrite, read => uread}
@@ -11,5 +13,7 @@ object LocalStorage {
     localStorage.setItem(stateKey, uwrite(state))
 
   def load: Option[App.State] =
-    Option(localStorage.getItem(stateKey)).map(raw => uread[App.State](raw))
+    Option(localStorage.getItem(stateKey)).flatMap(raw => 
+      Try(uread[App.State](raw)).toOption
+    )
 }
