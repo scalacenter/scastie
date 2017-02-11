@@ -15,6 +15,9 @@ object Assets {
         path("assets" / "client-opt.js")(
           getFromResource("client-opt.js")
         ),
+        path("assets" / "main.css")(
+          getFromResource("main.css")
+        ),
         path("assets" / "client-fastopt.js")(
           getFromResource("client-fastopt.js")
         ),
