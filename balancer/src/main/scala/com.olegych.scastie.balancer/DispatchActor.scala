@@ -3,13 +3,12 @@ package balancer
 
 import api._
 
-import akka.actor.{Actor, ActorRef, ActorSelection}
+import akka.actor.{Actor, ActorRef, ActorSelection, ActorLogging}
 import akka.remote.DisassociatedEvent
 
 import com.typesafe.config.ConfigFactory
 
 import java.nio.file._
-import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.Queue
 
@@ -22,7 +21,7 @@ case object LoadBalancerStateRequest
 case class LoadBalancerStateResponse(
     loadBalancer: LoadBalancer[String, ActorSelection])
 
-class DispatchActor(progressActor: ActorRef) extends Actor {
+class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
 
   private val configuration =
     ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
@@ -49,8 +48,6 @@ class DispatchActor(progressActor: ActorRef) extends Actor {
     val history = History(Queue.empty[Record[String]], size = 100)
     LoadBalancer(servers, history)
   }
-
-  private val log = LoggerFactory.getLogger(getClass)
 
   override def preStart = {
     context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
@@ -104,8 +101,8 @@ class DispatchActor(progressActor: ActorRef) extends Actor {
         port <- event.remoteAddress.port
         ref <- remoteSelections.get((host, port))
       } {
-        log.warn(event.toString)
-        log.warn("removing disconnected: " + ref)
+        log.warning(event.toString)
+        log.warning("removing disconnected: " + ref)
         remoteSelections = remoteSelections - ((host, port))
         loadBalancer = loadBalancer.removeServer(ref)
       }

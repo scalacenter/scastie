@@ -19,7 +19,11 @@ lazy val orgSettings = Seq(
 )
 
 lazy val baseSettings = Seq(
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test",
+    libraryDependencies ++= Seq(
+      "ch.qos.logback" % "logback-classic" % "1.1.7",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+      "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+    ),
     scalaVersion := "2.11.8",
     scalacOptions := {
       val extraOptions =
@@ -151,9 +155,7 @@ lazy val server = project
     unmanagedResourceDirectories in Compile += (WebKeys.public in Assets).value,
     libraryDependencies ++= Seq(
       "ch.megard" %% "akka-http-cors" % "0.1.8",
-      "ch.qos.logback" % "logback-classic" % "1.1.7",
-      "com.softwaremill.akka-http-session" %% "core" % "0.2.7",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+      "com.softwaremill.akka-http-session" %% "core" % "0.2.7",      
       "de.heikoseeberger" %% "akka-sse" % "2.0.0",
       "org.json4s" %% "json4s-native" % "3.4.2",
       akka("http-experimental"),
