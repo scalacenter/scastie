@@ -166,7 +166,7 @@ lazy val server = project
     )
   )
   .enablePlugins(SbtWeb, JavaServerAppPackaging)
-  .dependsOn(client, api211JVM, utils, template)
+  .dependsOn(api211JVM, utils, template)
 
 lazy val balancer = project
   .settings(baseSettings)
