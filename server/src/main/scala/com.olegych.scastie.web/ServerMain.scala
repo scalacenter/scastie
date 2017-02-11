@@ -5,8 +5,11 @@ import routes._
 import oauth2._
 import balancer._
 
-import akka.http.scaladsl._
-import server.Directives._
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server._
+import Directives._
+
 
 import com.typesafe.config.ConfigFactory
 
@@ -48,16 +51,15 @@ object ServerMain {
 
     val progressActor =
       system.actorOf(Props[ProgressActor], name = "ProgressActor")
-    val pasteActor = system
+
+    val dispatchActor = system
       .actorOf(Props(new DispatchActor(progressActor)), name = "DispatchActor")
 
-    def requireLogin[T](v: T): T = v // TODO
-
     val userFacingRoutes =
-      requireLogin(new FrontPage(session).routes)
+      new FrontPage(session).routes // TODO requireLogin
 
     val programmaticRoutes = concat(
-      requireLogin(new AutowireApi(pasteActor).routes),
+      new AutowireApi(dispatchActor).routes, // TODO requireLogin
       Assets.routes,
       new OAuth2(github, session).routes
     )

@@ -1,18 +1,16 @@
-// package com.olegych.scastie
-// package balancer
+package com.olegych.scastie
+package balancer
 
 // import api._
 
-// import play.api.libs.iteratee.Concurrent.Channel
-
-// import akka.actor.{ActorLogging, Actor}
-
-// import collection.mutable
-// import akka.event.LoggingReceive
-
+import akka.actor.{ActorLogging, Actor}
 // import upickle.default.{write => uwrite}
 
-// class ProgressActor extends Actor with ActorLogging {
+class ProgressActor extends Actor with ActorLogging {
+  def receive = {
+    case x => println("PROGRESS")
+  }
+}
 //   import Progress._
 //   // private val monitors =
 //   //   new mutable.HashMap[Int, mutable.Set[MonitorChannel]]
