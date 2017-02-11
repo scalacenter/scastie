@@ -21,11 +21,6 @@ lazy val orgSettings = Seq(
 )
 
 lazy val baseSettings = Seq(
-    libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-classic" % "1.1.7",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-      "org.scalatest" %% "scalatest" % "3.0.1" % "test"
-    ),
     scalaVersion := "2.11.8",
     scalacOptions := {
       val extraOptions =
@@ -52,9 +47,17 @@ lazy val baseSettings = Seq(
     scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"
   ) ++ orgSettings
 
+lazy val loggingAndTest =
+  libraryDependencies ++= Seq(
+    "ch.qos.logback" % "logback-classic" % "1.1.7",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+    "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+  )
+
 lazy val utils = project
   .in(file("utils"))
   .settings(baseSettings)
+
   .settings(
     libraryDependencies += akka("actor")
   )
@@ -90,6 +93,7 @@ lazy val sbtRunnerRuntimeDependencies = Seq(
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
+  .settings(loggingAndTest)
   .settings(
     scalacOptions -= "-Xfatal-warnings",
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
@@ -150,6 +154,7 @@ lazy val sbtRunner = project
 
 lazy val server = project
   .settings(baseSettings)
+  .settings(loggingAndTest)
   .settings(packageScalaJS(client))
   .settings(
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
@@ -172,6 +177,7 @@ lazy val server = project
 
 lazy val balancer = project
   .settings(baseSettings)
+  .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
       akka("remote"),
@@ -288,6 +294,7 @@ class A {
 
 lazy val instrumentation = project
   .settings(baseSettings)
+  .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
       "org.scalameta" %% "scalameta" % "1.2.0",
