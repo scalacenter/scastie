@@ -55,7 +55,7 @@ object ServerMain {
       .actorOf(Props(new DispatchActor(progressActor)), name = "DispatchActor")
 
     val userFacingRoutes =
-      new FrontPage(session).routes // TODO requireLogin
+      new FrontPage(session, production).routes // TODO requireLogin
 
     val programmaticRoutes = concat(
       new AutowireApi(dispatchActor, progressActor).routes, // TODO requireLogin
