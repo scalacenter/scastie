@@ -10,8 +10,6 @@ import com.typesafe.sbt.SbtNativePackager.Universal
 import sbtdocker.DockerKeys.{docker, dockerBuildAndPush, imageNames}
 import sbtdocker.ImageName
 
-// TODO deploy scastie-secrets
-
 object Deployment {
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
 
@@ -101,6 +99,7 @@ class Deployment(rootFolder: File,
     val serverScript = Files.createTempFile("server", ".sh")
     Files.setPosixFilePermissions(serverScript, executablePermissions)
 
+    val applicationRootConfig = "application.conf"
     val productionConfigFileName = productionConfig.getFileName
     val logbackConfigFileName = logbackConfig.getFileName
     val serverZipFileName = serverZip.getFileName
@@ -110,17 +109,18 @@ class Deployment(rootFolder: File,
           |
           |whoami
           |
-          |kill `cat server/RUNNING_PID`
+          |kill -9 `cat RUNNING_PID`
           |rm -rf server
+          |rm server.log
           |rm server*.sh
           |
           |unzip -d server $serverZipFileName
           |mv server/*/* server/
           |
           |nohup server/bin/server \\
-          |  -Dconfig.file=/home/$userName/$productionConfigFileName \\
+          |  -Dconfig.file=/home/$userName/$applicationRootConfig \\
           |  -Dlogger.file=/home/$userName/$logbackConfigFileName &>/dev/null &
-          |""".stripMargin
+          |""".stripMargin 
 
     Files.write(serverScript, content.getBytes)
 
@@ -128,8 +128,18 @@ class Deployment(rootFolder: File,
 
     def rsyncServer(file: Path) = rsync(file, userName, serverHostname, logger)
 
+    val scastieSecrets = "scastie-secrets"
+    val secretFolder = rootFolder / ".." / scastieSecrets
+
+    if(Files.exists(secretFolder.toPath)) {
+      Process("git pull origin master", secretFolder)
+    } else {
+      Process(s"git clone git@github.com:scalacenter/$scastieSecrets.git")
+    }
+
     Process("rm -rf server*.sh") ! logger
 
+    rsyncServer((secretFolder / applicationRootConfig).toPath)
     rsyncServer(serverZip)
     rsyncServer(serverScript)
     rsyncServer(productionConfig)
@@ -194,11 +204,18 @@ class Deployment(rootFolder: File,
   private val productionConfig = (deploymentFolder / "production.conf").toPath
   private val logbackConfig = (deploymentFolder / "logback.xml").toPath
 
-  private val config = ConfigFactory.parseFile(productionConfig.toFile)
+  private val config = 
+    ConfigFactory
+      .parseFile(productionConfig.toFile)
+  
+  
+  val balancerConfig = config.getConfig("com.olegych.scastie.balancer")
+  
   private val serverHostname = config.getString("server-hostname")
-  private val runnersHostname = config.getString("sbt-remote-hostname")
-  private val runnersPortsStart = config.getInt("sbt-remote-ports-start")
-  private val runnersPortsSize = config.getInt("sbt-remote-ports-size")
+
+  private val runnersHostname = balancerConfig.getString("remote-hostname")
+  private val runnersPortsStart = balancerConfig.getInt("remote-ports-start")
+  private val runnersPortsSize = balancerConfig.getInt("remote-ports-size")
 
   private val executablePermissions =
     PosixFilePermissions.fromString("rwxr-xr-x")

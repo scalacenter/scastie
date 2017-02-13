@@ -27,7 +27,7 @@ class Github(implicit system: ActorSystem, materializer: ActorMaterializer)
     ConfigFactory.load().getConfig("com.olegych.scastie.web.oauth2")
   val clientId = config.getString("client-id")
   private val clientSecret = config.getString("client-secret")
-  private val redirectUri = config.getString("uri") + "/callback/done"
+  private val redirectUri = config.getString("uri") + "/callback"
 
   private val poolClientFlow =
     Http().cachedHostConnectionPoolHttps[HttpRequest]("api.github.com")

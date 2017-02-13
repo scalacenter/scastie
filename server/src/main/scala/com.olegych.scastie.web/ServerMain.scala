@@ -5,7 +5,6 @@ import routes._
 import oauth2.{GithubUserSession, Github}
 import balancer._
 
-
 import akka.http.scaladsl._
 import server._
 import Directives._
@@ -21,36 +20,31 @@ import SessionOptions._
 
 import com.typesafe.config.ConfigFactory
 
+import com.typesafe.scalalogging.Logger
+
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 
 import scala.concurrent.duration._
 import scala.concurrent.Await
 
-import java.lang.management.ManagementFactory
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
-
 object ServerMain {
   def main(args: Array[String]): Unit = {
 
+    val logger = Logger("ServerMain")
+
     val port =
-      if (args.isEmpty) 8080
+      if (args.isEmpty) 9000
       else args.head.toInt
 
     val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
     val production = config.getBoolean("production")
 
     if (production) {
-      val pid = ManagementFactory.getRuntimeMXBean().getName().split("@").head
-      val pidFile = Paths.get("PID")
-      Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8))
-      sys.addShutdownHook {
-        Files.delete(pidFile)
-      }
+      writeRunningPid()
     }
 
-    implicit val system = ActorSystem("scaladex")
+    implicit val system = ActorSystem("scastie")
     import system.dispatcher
     implicit val materializer = ActorMaterializer()
 
@@ -93,10 +87,11 @@ object ServerMain {
 
     val routes = concat(publicRoutes, privateRoutes)
 
-    Await.result(Http().bindAndHandle(routes, "0.0.0.0", port), 20.seconds)
+    Await.result(Http().bindAndHandle(routes, "0.0.0.0", port), 1.seconds)
+    logger.info(s"Application started (port: $port)")
 
-    println(s"port: $port")
-    println("Application started")
-
+    Await.result(system.whenTerminated, Duration.Inf)
+    
+    ()
   }
 }

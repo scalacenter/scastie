@@ -11,12 +11,15 @@ import upickle.default.{ReadWriter, write => uwrite, read => uread}
 import scala.collection.parallel.mutable.ParTrieMap
 import scala.concurrent.ExecutionContext
 
+import com.typesafe.scalalogging.Logger
+
 import scala.util.Try
 import java.util.UUID
 import java.nio.file._
 // import util.Properties
 
 class GithubUserSession()(implicit val executionContext: ExecutionContext) {
+  val logger = Logger("GithubUserSession")
 
   private val configuration =
     ConfigFactory.load().getConfig("com.olegych.scastie.web")
@@ -54,7 +57,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   implicit val refreshTokenStorage = new InMemoryRefreshTokenStorage[UUID] {
     def log(msg: String) =
       if (msg.startsWith("Looking up token for selector")) () // borring
-      else println(msg)
+      else logger.info(msg)
   }
 
   private def readSessionsFile(): Array[(UUID, User)] = {

@@ -25,12 +25,16 @@ import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
 import org.json4s._
 
+import com.typesafe.scalalogging.Logger
+
 /**
  * Automatic to and from JSON marshalling/unmarshalling using an in-scope *Json4s* protocol.
  */
 private[oauth2] trait Json4sSupport {
   implicit val formats = DefaultFormats
   implicit val serialization = native.Serialization
+
+  private val logger = Logger("Json4sSupport")
 
   /**
    * HTTP entity => `A`
@@ -44,11 +48,15 @@ private[oauth2] trait Json4sSupport {
     Unmarshaller.byteStringUnmarshaller
       .forContentTypes(`application/json`)
       .mapWithCharset { (data, charset) =>
-        try serialization.read(data.decodeString(charset.nioCharset.name))
+        val ret = data.decodeString(charset.nioCharset.name)
+        try {
+          serialization.read(ret)
+        }
         catch {
-          case MappingException("unknown error",
-                                ite: InvocationTargetException) =>
+          case MappingException("unknown error", ite: InvocationTargetException) => {
+            logger.error(ret)
             throw ite.getCause
+          }
         }
       }
 

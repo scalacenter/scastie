@@ -69,8 +69,6 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
     }
 
     case InputsWithIp(inputs, ip) => {
-      println("== Got Task ==")
-
       val id = container.writePaste(inputs)
 
       val (server, balancer) =
