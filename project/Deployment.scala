@@ -80,7 +80,8 @@ object Deployment {
     Def.task {
       val universalTarget = (target in (server, Universal)).value
       val universalName = (name in (server, Universal)).value
-      (universalTarget / (universalName + ".zip")).toPath
+      val serverVersion = (version in server).value
+      (universalTarget / (universalName + "-" + serverVersion + ".zip")).toPath
     }
 }
 

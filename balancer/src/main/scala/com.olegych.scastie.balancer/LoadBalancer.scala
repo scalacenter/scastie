@@ -217,6 +217,9 @@ case class LoadBalancer[C: Ordering, S](
 
     val configs =
       (serversConfig ++ historyConfig)
+        .map(x => x.hashCode -> x)
+        .toMap
+        .values
         .map(config => s"""|Config #${config.hashCode}
                            |$config""".stripMargin)
         .mkString(nl)
