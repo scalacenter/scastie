@@ -13,7 +13,7 @@ import server.Directives._
 // import SessionDirectives._
 // import SessionOptions._
 
-class FrontPage(session: GithubUserSession) {
+class FrontPage(session: GithubUserSession, production: Boolean) {
   // import session._
 
   // def index =
@@ -34,12 +34,12 @@ class FrontPage(session: GithubUserSession) {
     get(
       concat(
         pathSingleSlash(
-          complete(html.index())
+          complete(html.index(production))
         ),
         path("embedded-demo")(
-          complete(html.embedded())
+          complete(html.embedded(production))
         ),
-        path(Segment)(_ => complete(html.index()))
+        path(Segment)(_ => complete(html.index(production)))
       )
     )
   )
