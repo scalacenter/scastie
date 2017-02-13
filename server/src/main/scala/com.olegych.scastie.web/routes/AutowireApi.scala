@@ -11,12 +11,14 @@ import de.heikoseeberger.akkasse.EventStreamMarshalling._
 import akka.NotUsed
 import akka.util.Timeout
 import akka.actor.{ActorRef, ActorSystem}
+import akka.pattern.ask
 import akka.stream.scaladsl.Source
 import akka.http.scaladsl.server.Directives._
 
-
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+
+import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration._
 
@@ -27,11 +29,10 @@ object AutowireServer extends autowire.Server[String, Reader, Writer] {
   def write[Result: Writer](r: Result) = uwrite(r)
 }
 
-
-class AutowireApi(pasteActor: ActorRef)(implicit system: ActorSystem) {
+class AutowireApi(pasteActor: ActorRef, progressActor: ActorRef)(implicit system: ActorSystem) {
   import system.dispatcher
 
-  implicit val timeout = Timeout(5.seconds)
+  implicit val timeout = Timeout(1.seconds)
 
   val routes =
     concat(
@@ -47,15 +48,22 @@ class AutowireApi(pasteActor: ActorRef)(implicit system: ActorSystem) {
             })))
       ),
       get(
-        path("progress" / Segments)(
-          id ⇒
-            complete(
-              Source
-                .tick(2.seconds, 2.seconds, NotUsed)
-                .map(_ => LocalTime.now())
-                .map(timeToServerSentEvent)
-                .keepAlive(1.second, () => ServerSentEvent.heartbeat))
-            )
+        path("progress" / Segment)(id ⇒
+            complete{
+              val source = Await.result(
+                (progressActor ? SubscribeProgress(id)).mapTo[Source[PasteProgress, NotUsed]],
+                10.seconds
+              )
+
+              // import akka.stream.ActorMaterializer
+              // implicit val materializer = ActorMaterializer()
+
+              // source.runForeach(e => println("Works: " + e))
+
+              source.map(progress => ServerSentEvent(uwrite(progress)))
+              // .keepAlive(1.second, () => ServerSentEvent.heartbeat)
+            }
+        )
       )
     )
 
