@@ -8,6 +8,8 @@ import balancer._
 import de.heikoseeberger.akkasse.ServerSentEvent
 import de.heikoseeberger.akkasse.EventStreamMarshalling._
 
+import TwirlSupport._
+
 import akka.NotUsed
 import akka.util.Timeout
 import akka.actor.{ActorRef, ActorSystem}
@@ -31,7 +33,7 @@ object AutowireServer extends autowire.Server[String, Reader, Writer] {
   def write[Result: Writer](r: Result) = uwrite(r)
 }
 
-class AutowireApi(pasteActor: ActorRef, progressActor: ActorRef)(implicit system: ActorSystem) {
+class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef)(implicit system: ActorSystem) {
   import system.dispatcher
 
   implicit val timeout = Timeout(1.seconds)
@@ -43,7 +45,7 @@ class AutowireApi(pasteActor: ActorRef, progressActor: ActorRef)(implicit system
           entity(as[String])(e ⇒
             extractClientIP(remoteAddress ⇒
               complete {
-                val api = new ApiImpl(pasteActor, remoteAddress)
+                val api = new ApiImpl(dispatchActor, remoteAddress)
                 AutowireServer.route[Api](api)(
                   autowire.Core.Request(s, uread[Map[String, String]](e))
                 )
@@ -51,6 +53,13 @@ class AutowireApi(pasteActor: ActorRef, progressActor: ActorRef)(implicit system
       ),
       get(
         concat(
+          path("loadbalancer-debug")(
+            onSuccess((dispatchActor ? LoadBalancerStateRequest)
+              .mapTo[LoadBalancerStateResponse])(response =>
+
+              complete(views.html.loadbalancer(response))
+            )
+          ),
           path("progress-sse" / Segment)(id ⇒
             complete{
               progressSource(id)
