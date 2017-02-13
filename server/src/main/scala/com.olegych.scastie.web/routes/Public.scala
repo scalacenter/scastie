@@ -32,10 +32,10 @@ object Public {
         path("time")(
           complete(
             Source
-              .tick(2.seconds, 2.seconds, NotUsed)
+              .tick(0.second, 1.seconds, NotUsed)
+              .take(5)
               .map(_ => LocalTime.now())
               .map(timeToServerSentEvent)
-              .keepAlive(1.second, () => ServerSentEvent.heartbeat)
           )
         )
       ),

@@ -29,6 +29,7 @@ object App {
       view = View.Editor,
       running = false,
       eventSource = None,
+      websocket = None,
       isDarkTheme = false,
       consoleIsOpen = false,
       consoleHasUserOutput = false,
@@ -41,6 +42,7 @@ object App {
       ReadWriter[Option[T]](_ => Js.Null, { case _ => None })
     }
 
+    implicit val dontSerializeWebSocket = dontSerialize[WebSocket]
     implicit val dontSerializeEventSource = dontSerialize[EventSource]
     implicit val pkl: ReadWriter[State] = upickleMacroRW[State]
   }
@@ -49,6 +51,7 @@ object App {
       view: View,
       running: Boolean,
       eventSource: Option[EventSource],
+      websocket: Option[WebSocket],
       isDarkTheme: Boolean,
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
@@ -58,6 +61,7 @@ object App {
     def copyAndSave(view: View = view,
                     running: Boolean = running,
                     eventSource: Option[EventSource] = eventSource,
+                    websocket: Option[WebSocket] = websocket,
                     isDarkTheme: Boolean = isDarkTheme,
                     consoleIsOpen: Boolean = consoleIsOpen,
                     consoleHasUserOutput: Boolean = consoleHasUserOutput,
@@ -68,6 +72,7 @@ object App {
         copy(view,
              running,
              eventSource,
+             websocket,
              isDarkTheme,
              consoleIsOpen,
              consoleHasUserOutput,
@@ -167,10 +172,12 @@ object App {
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
 
-    private def connect(id: Int) = CallbackTo[EventSource] {
+    private def connectEventSource(id: Int) = CallbackTo[EventSource] {
       val direct = scope.accessDirect
 
-      val eventSource = new EventSource(s"/progress/$id")
+      throw new Exception("Boom")
+
+      val eventSource = new EventSource(s"/progress-sse/$id")
 
       def onopen(e: Event): Unit = {
         direct.modState(_.log("Connected.\n"))
@@ -183,14 +190,43 @@ object App {
         }
       }
       def onerror(e: Event): Unit = {
-        direct.modState(_.log(s"Error: ${e.toString}"))
-        eventSource.close()
+        if(e.eventPhase == EventSource.CLOSED) {
+          eventSource.close()
+        } else {
+          direct.modState(_.log(s"Error: ${e.toString}"))
+        }
       }
 
       eventSource.onopen = onopen _
       eventSource.onmessage = onmessage _
       eventSource.onerror = onerror _
       eventSource
+    }
+
+    private def connectWebSocket(id: Int) = CallbackTo[WebSocket] {
+      val direct = scope.accessDirect
+
+      def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
+      def onmessage(e: MessageEvent): Unit = {
+        val progress = uread[PasteProgress](e.data.toString)
+        direct.modState(_.addProgress(progress))
+      }
+      def onerror(e: ErrorEvent): Unit =
+        direct.modState(_.log(s"Error: ${e.message}"))
+      def onclose(e: CloseEvent): Unit =
+        direct.modState(
+          _.copy(websocket = None, running = false)
+            .log(s"Closed: ${e.reason}\n"))
+
+      val protocol = if (window.location.protocol == "https:") "wss" else "ws"
+      val uri = s"$protocol://${window.location.host}/progress-websocket/$id"
+      val socket = new WebSocket(uri)
+
+      socket.onopen = onopen _
+      socket.onclose = onclose _
+      socket.onmessage = onmessage _
+      socket.onerror = onerror _
+      socket
     }
 
     def clear(e: ReactEventI): Callback = clear()
@@ -231,7 +267,24 @@ object App {
       scope.state.flatMap(s =>
         Callback.future(ApiClient[Api].run(s.inputs).call().map {
           case Ressource(id) =>
-            connect(id).attemptTry.flatMap {
+            // connectWebSocket(id).attemptTry.flatMap {
+            //   case Success(websocket) => {
+            //     scope.modState(
+            //       _.resetOutputs
+            //         .setRunning(true)
+            //         .copy(websocket = Some(websocket))
+            //         .log("Connecting...\n")
+            //     )     
+            //   }
+            //   case Failure(errorWebSocket) =>
+            //     scope.modState(
+            //       _.resetOutputs
+            //        .log(errorWebSocket.toString)
+            //        .setRunning(false)
+            //     )
+            // }
+
+            connectEventSource(id).attemptTry.flatMap {
               case Success(eventSource) => {
                 scope.modState(
                   _.resetOutputs
@@ -240,10 +293,26 @@ object App {
                     .log("Connecting...\n")
                 )
               }
-              case Failure(error) =>
-                scope.modState(
-                  _.resetOutputs.log(error.toString).setRunning(false)
-                )
+              case Failure(errorEventSource) =>
+                console.log("Failed to connect to event source: " + errorEventSource.toString)
+
+                connectWebSocket(id).attemptTry.flatMap {
+                  case Success(websocket) => {
+                    scope.modState(
+                      _.resetOutputs
+                        .setRunning(true)
+                        .copy(websocket = Some(websocket))
+                        .log("Connecting...\n")
+                    )     
+                  }
+                  case Failure(errorWebSocket) =>
+                    scope.modState(
+                      _.resetOutputs
+                       .log(errorEventSource.toString)
+                       .log(errorWebSocket.toString)
+                       .setRunning(false)
+                    )
+                }
             }
         }))
     }

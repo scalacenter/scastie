@@ -37,7 +37,6 @@ lazy val baseSettings = Seq(
         "-Xfatal-warnings",
         "-Xlint",
         "-Yno-adapted-args",
-        "-Ywarn-dead-code",
         "-Ywarn-numeric-widen",
         "-Ywarn-value-discard"
       ) ++ extraOptions
