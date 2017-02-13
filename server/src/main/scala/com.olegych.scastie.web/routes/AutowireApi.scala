@@ -12,13 +12,15 @@ import akka.NotUsed
 import akka.util.Timeout
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
-import akka.stream.scaladsl.Source
-import akka.http.scaladsl.server.Directives._
 
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import akka.http.scaladsl._
+import model._
+import ws.TextMessage._
+import server.Directives._
 
-import scala.concurrent.Await
+import akka.stream.scaladsl._
+
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration._
 
@@ -48,18 +50,42 @@ class AutowireApi(pasteActor: ActorRef, progressActor: ActorRef)(implicit system
             })))
       ),
       get(
-        path("progress" / Segment)(id ⇒
+        concat(
+          path("progress-sse" / Segment)(id ⇒
             complete{
-              val source = Await.result(
-                (progressActor ? SubscribeProgress(id)).mapTo[Source[PasteProgress, NotUsed]],
-                1.second
-              )
-              source.map(progress => ServerSentEvent(uwrite(progress)))
+              progressSource(id)
+                .map(progress => ServerSentEvent(uwrite(progress)))
             }
+          ),
+          path("progress-websocket" / Segment)(id =>
+            handleWebSocketMessages(webSocketProgress(id))
+          )
         )
       )
     )
 
-  private def timeToServerSentEvent(time: LocalTime) =
-    ServerSentEvent(DateTimeFormatter.ISO_LOCAL_TIME.format(time))
+  private def progressSource(id: String) = {
+    // TODO find a way to flatten Source[Source[T]]
+    Await.result(
+      (progressActor ? SubscribeProgress(id)).mapTo[Source[PasteProgress, NotUsed]],
+      1.second
+    )
+  }
+
+  private def webSocketProgress(id: String): Flow[ws.Message, ws.Message , _] = {
+    def flow: Flow[KeepAlive, PasteProgress, NotUsed] = {
+      val in = Flow[KeepAlive].to(Sink.ignore)
+      val out = progressSource(id)
+      Flow.fromSinkAndSource(in, out)
+    }
+
+    Flow[ws.Message]
+      .mapAsync(1){
+        case Strict(c) ⇒ Future.successful(c)
+        case e => Future.failed(new Exception(e.toString))
+      }
+      .map(uread[KeepAlive](_))
+      .via(flow)
+      .map(progress ⇒ ws.TextMessage.Strict(uwrite(progress)))
+  }
 }

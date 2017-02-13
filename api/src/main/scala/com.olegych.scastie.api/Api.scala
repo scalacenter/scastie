@@ -255,6 +255,9 @@ case class PasteProgress(
     timeout: Boolean
 )
 
+// Keep websocket connection
+case class KeepAlive(msg: String = "") extends AnyVal
+
 sealed trait Severity
 case object Info extends Severity
 case object Warning extends Severity

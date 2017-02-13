@@ -8,6 +8,11 @@
     var source = new EventSource("/time");
     source.onmessage = function(event) {
         document.getElementById("result").innerHTML += event.data + "<br>";
-    };    
+    };
+    source.onerror = function(event){
+      if (event.eventPhase == EventSource.CLOSED) {
+        source.close();
+      }  
+    } 
   </script>
 </body>
