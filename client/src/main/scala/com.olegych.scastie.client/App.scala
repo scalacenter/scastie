@@ -170,16 +170,22 @@ object App {
     private def connect(id: Int) = CallbackTo[EventSource] {
       val direct = scope.accessDirect
 
-      def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
+      val eventSource = new EventSource(s"/progress/$id")
+
+      def onopen(e: Event): Unit = {
+        direct.modState(_.log("Connected.\n"))
+      }
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[PasteProgress](e.data.toString)
         direct.modState(_.addProgress(progress))
+        if(progress.done){
+          eventSource.close()
+        }
       }
-      def onerror(e: Event): Unit =
+      def onerror(e: Event): Unit = {
         direct.modState(_.log(s"Error: ${e.toString}"))
-
-
-      val eventSource = new EventSource(s"/progress/$id")
+        eventSource.close()
+      }
 
       eventSource.onopen = onopen _
       eventSource.onmessage = onmessage _

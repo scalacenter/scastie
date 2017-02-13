@@ -3,74 +3,72 @@ package balancer
 
 import api._
 
-import akka.actor.{ActorLogging, Actor}
-import akka.stream.scaladsl.{Source, SourceQueueWithComplete}
+import akka.NotUsed
+import akka.actor.{ActorLogging, Actor, ActorRef, Props}
+import akka.stream.actor.ActorPublisher
+import akka.stream.scaladsl.Source
+import akka.stream.actor.ActorPublisherMessage.Request
 
-import  akka.stream.OverflowStrategy.dropHead
-
-import scala.collection.mutable.{Map => MMap}
-
-import scala.concurrent.{Future, Promise}
+import scala.collection.mutable.{Map => MMap, Queue => MQueue}
 
 case class SubscribeProgress(id: String)
+case class ProgressDone(id: String)
 
 class ProgressActor extends Actor with ActorLogging {
-  import context._
+  type ProgressSource = Source[PasteProgress, NotUsed]
 
-  type PasteProgressQueue = SourceQueueWithComplete[PasteProgress]
-  type PasteProgressSource = Source[PasteProgress, PasteProgressQueue]
-
-  private val subscribers = MMap.empty[String, (PasteProgressSource, Future[PasteProgressQueue])]
+  private val subscribers =
+    MMap.empty[String, (ProgressSource, ActorRef)]
 
   def receive = {
     case SubscribeProgress(id) => {
-      println("Subscribe")
-
-      val (source, _) = getOrCreateSource(id)
-
+      val (source, _) = getOrCreatePublisher(id)
       sender ! source
     }
     case pasteProgress: PasteProgress => {
-      println("Progress")
-
       val id = pasteProgress.id.toString
-
-      val (_, queue) = getOrCreateSource(id)
-
-      queue.foreach{q =>
-        q.offer(pasteProgress)
-        println(s"Offer $pasteProgress")
-
-        if(pasteProgress.done) {
-          println("Done")
-          q.complete()
-        }
-      }
-
+      val (_, publisher) = getOrCreatePublisher(id)
+      publisher ! pasteProgress
+    }
+    case ProgressDone(id) => {
+      subscribers.remove(id)
       ()
     }
   }
 
-  private def getOrCreateSource(id: String): (PasteProgressSource, Future[PasteProgressQueue]) = {
-    def createSource(id: String) = {
-      val sourceAndQueue = peekMatValue(Source.queue[PasteProgress](
-        bufferSize = 100,
-        overflowStrategy = dropHead)
-      )
-      subscribers(id) = sourceAndQueue
-      sourceAndQueue
-    }
+  private def getOrCreatePublisher(id: String): (ProgressSource, ActorRef) = {
+    def createPublisher() = {
+      val ref = context.actorOf(Props(new ProgressForwarder(self)))       
+      val source = Source.fromPublisher(ActorPublisher[PasteProgress](ref))
+      val sourceAndPublisher = (source, ref)
 
-    subscribers.get(id).getOrElse(createSource(id))
+      subscribers(id) = sourceAndPublisher
+      sourceAndPublisher
+    }
+    subscribers.get(id).getOrElse(createPublisher())
+  }
+}
+
+class ProgressForwarder(progressActor: ActorRef) extends Actor with ActorPublisher[PasteProgress] {
+  var buffer = MQueue.empty[PasteProgress]
+
+  def receive = {
+    case progress: PasteProgress => {
+      buffer.enqueue(progress)
+      deliver()
+      if(progress.done) {
+        progressActor ! ProgressDone(progress.id.toString)
+      }
+    }
+    case Request(_) => {
+      deliver()
+    }
   }
 
-
-  def peekMatValue[T, M](src: Source[T, M]): (Source[T, M], Future[M]) = {
-    val p = Promise[M]
-    val s = src.mapMaterializedValue { m =>
-      p.trySuccess(m)
-      m
+  private def deliver(): Unit = {
+    if(totalDemand > 0) {
+      buffer.foreach(onNext)
+      buffer.clear()
     }
-    (s, p.future)
   }
 }
