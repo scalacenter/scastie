@@ -52,16 +52,9 @@ class AutowireApi(pasteActor: ActorRef, progressActor: ActorRef)(implicit system
             complete{
               val source = Await.result(
                 (progressActor ? SubscribeProgress(id)).mapTo[Source[PasteProgress, NotUsed]],
-                10.seconds
+                1.second
               )
-
-              // import akka.stream.ActorMaterializer
-              // implicit val materializer = ActorMaterializer()
-
-              // source.runForeach(e => println("Works: " + e))
-
               source.map(progress => ServerSentEvent(uwrite(progress)))
-              // .keepAlive(1.second, () => ServerSentEvent.heartbeat)
             }
         )
       )
