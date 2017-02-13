@@ -51,7 +51,7 @@ sbt
 > ~server/reStart
 ```
 
-open http://localhost:8080
+open http://localhost:9000
 
 ## How to deploy
 

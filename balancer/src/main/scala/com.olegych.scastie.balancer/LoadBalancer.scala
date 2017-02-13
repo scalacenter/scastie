@@ -68,7 +68,7 @@ object Server {
   val averageReloadTime = 10 //s
 
   //([0s, 10s] upper bound Defined in SbtMain)
-  val averageRunTime = 3 // s }
+  val averageRunTime = 3 // s
 
   def apply[C, S](ref: S, config: C): Server[C, S] =
     Server(
@@ -82,7 +82,7 @@ case class History[C](data: Queue[Record[C]], size: Int) {
     // the user has changed configuration, we assume he will not go back to the
     // previous configuration
 
-    val data0 = data //.filterNot(_.ip == record.ip).enqueue(record)
+    val data0 = data.filterNot(_.ip == record.ip).enqueue(record)
 
     val data1 =
       if (data0.size > size) {
