@@ -1,72 +1,76 @@
 package com.olegych.scastie
 package balancer
 
-// import api._
+import api._
 
 import akka.actor.{ActorLogging, Actor}
-// import upickle.default.{write => uwrite}
+import akka.stream.scaladsl.{Source, SourceQueueWithComplete}
+
+import  akka.stream.OverflowStrategy.dropHead
+
+import scala.collection.mutable.{Map => MMap}
+
+import scala.concurrent.{Future, Promise}
+
+case class SubscribeProgress(id: String)
 
 class ProgressActor extends Actor with ActorLogging {
+  import context._
+
+  type PasteProgressQueue = SourceQueueWithComplete[PasteProgress]
+  type PasteProgressSource = Source[PasteProgress, PasteProgressQueue]
+
+  private val subscribers = MMap.empty[String, (PasteProgressSource, Future[PasteProgressQueue])]
+
   def receive = {
-    case x => println("PROGRESS")
+    case SubscribeProgress(id) => {
+      println("Subscribe")
+
+      val (source, _) = getOrCreateSource(id)
+
+      sender ! source
+    }
+    case pasteProgress: PasteProgress => {
+      println("Progress")
+
+      val id = pasteProgress.id.toString
+
+      val (_, queue) = getOrCreateSource(id)
+
+      queue.foreach{q =>
+        q.offer(pasteProgress)
+        println(s"Offer $pasteProgress")
+
+        if(pasteProgress.done) {
+          println("Done")
+          q.complete()
+        }
+      }
+
+      ()
+    }
+  }
+
+  private def getOrCreateSource(id: String): (PasteProgressSource, Future[PasteProgressQueue]) = {
+    def createSource(id: String) = {
+      val sourceAndQueue = peekMatValue(Source.queue[PasteProgress](
+        bufferSize = 100,
+        overflowStrategy = dropHead)
+      )
+      subscribers(id) = sourceAndQueue
+      sourceAndQueue
+    }
+
+    subscribers.get(id).getOrElse(createSource(id))
+  }
+
+
+  def peekMatValue[T, M](src: Source[T, M]): (Source[T, M], Future[M]) = {
+    val p = Promise[M]
+    val s = src.mapMaterializedValue { m =>
+      p.trySuccess(m)
+      m
+    }
+    (s, p.future)
   }
 }
-//   import Progress._
-//   // private val monitors =
-//   //   new mutable.HashMap[Int, mutable.Set[MonitorChannel]]
-//   //   with mutable.MultiMap[Int, MonitorChannel]
-
-//   // private val progressBuffer = mutable.Map[Int, PasteProgress]()
-
-//   def receive = LoggingReceive {
-//     case MonitorProgress(id) => {
-
-//     }
-//     case pasteProgress: PasteProgress => {
-
-//     }
-//   }
-
-//   //   case MonitorProgress(id) => {
-//   //     val (enumerator, channel) = Concurrent.broadcast[String]
-//   //     val monitorChannel = MonitorChannel(id, null, channel)
-//   //     import concurrent.ExecutionContext.Implicits.global
-//   //     val iteratee = Iteratee.ignore[String].map { _ =>
-//   //       self ! StopMonitorProgress(monitorChannel)
-//   //     }
-//   //     monitors.addBinding(id, monitorChannel)
-//   //     sender ! monitorChannel.copy(value = iteratee -> enumerator)
-//   //     progressBuffer.get(id).foreach(sendProgress)
-//   //   }
-
-//   //   case StopMonitorProgress(monitorChannel) => {
-//   //     monitors.removeBinding(monitorChannel.id, monitorChannel)
-//   //     ()
-//   //   }
-
-//   //   case pasteProgress: PasteProgress => {
-//   //     sendProgress(pasteProgress)
-//   //   }
-//   // }
-
-//   // private def sendProgress(pasteProgress: PasteProgress): Unit = {
-//   //   val monitorChannels = monitors.get(pasteProgress.id).toList.flatten
-//   //   if (monitorChannels.isEmpty) {
-//   //     progressBuffer += (pasteProgress.id -> pasteProgress)
-//   //   } else {
-//   //     progressBuffer.remove(pasteProgress.id)
-//   //   }
-
-//   //   monitorChannels.foreach(_.channel.push(uwrite(pasteProgress)))
-//   // }
-// }
-
-// object Progress {
-//   sealed trait ProgressMessage
-//   case class MonitorProgress(id: Int) extends ProgressMessage
-//   case class StopMonitorProgress(monitorChannel: MonitorChannel)
-//       extends ProgressMessage
-//   case class MonitorChannel(id: Int,
-//                             value: (Iteratee[String, _], Enumerator[String]),
-//                             channel: Channel[String])
-// }

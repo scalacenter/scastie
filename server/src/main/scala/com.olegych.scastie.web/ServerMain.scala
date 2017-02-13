@@ -58,7 +58,7 @@ object ServerMain {
       new FrontPage(session).routes // TODO requireLogin
 
     val programmaticRoutes = concat(
-      new AutowireApi(dispatchActor).routes, // TODO requireLogin
+      new AutowireApi(dispatchActor, progressActor).routes, // TODO requireLogin
       Assets.routes,
       new OAuth2(github, session).routes
     )
