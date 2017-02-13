@@ -24,16 +24,25 @@ class OAuth2(github: Github, session: GithubUserSession) {
     get(
       concat( 
         path("login") {
-          optionalHeaderValueByType[Referer]() { referer =>
-            redirect(
-              Uri("https://github.com/login/oauth/authorize").withQuery(
-                Query(
-                  "client_id" -> github.clientId,
-                  "state" -> referer.map(_.value).getOrElse("/")
-                )),
-              TemporaryRedirect
-            )
-          }
+          parameter('home.?)(home =>
+            optionalHeaderValueByType[Referer]() { referer =>
+              redirect(
+                Uri("https://github.com/login/oauth/authorize").withQuery(
+                  Query(
+                    "client_id" -> github.clientId,
+                    "state" -> {
+                      val homeUri = "/"
+
+                      println(home)
+
+                      if(home.isDefined) homeUri
+                      else referer.map(_.value).getOrElse(homeUri)
+                    }
+                  )),
+                TemporaryRedirect
+              )
+            }
+          )
         },
         path("logout") {
           headerValueByType[Referer]() { referer =>
