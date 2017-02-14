@@ -6,7 +6,7 @@ import App._
 
 import japgolly.scalajs.react._, vdom.all._
 
-object Settings {
+object Libraries {
 
   def renderTarget(scalaTarget: ScalaTarget, backend: App.Backend) = {
     val targetTypes = List(
@@ -191,11 +191,11 @@ object Settings {
   }
 
   private val component =
-    ReactComponentB[(State, App.Backend)]("Settings").render_P {
+    ReactComponentB[(State, App.Backend)]("Libraries").render_P {
       case (props, backend) =>
         val theme = if (props.isDarkTheme) "dark" else "light"
 
-        div(`class` := "settings")(
+        div(`class` := "libraries")(
           ScaladexSearch(props, backend),
           renderTarget(props.inputs.target, backend),
           renderVersions(props.inputs.target, backend),
@@ -206,8 +206,9 @@ object Settings {
               CodeMirrorEditor.Settings(value = props.inputs.sbtConfigExtra,
                                         theme = s"solarized $theme",
                                         readOnly = false),
-              CodeMirrorEditor.Handler(updatedSettings =>
-                backend.sbtConfigChange(updatedSettings))
+              CodeMirrorEditor.Handler(
+                updatedSettings => backend.sbtConfigChange(updatedSettings)
+              )
             ),
             hr,
             div("resulting build.sbt"),
@@ -216,7 +217,9 @@ object Settings {
                 CodeMirrorEditor.Settings(value = props.inputs.sbtConfig,
                                           theme = s"solarized $theme",
                                           readOnly = true),
-                CodeMirrorEditor.Handler(_ => Callback(()))
+                CodeMirrorEditor.Handler(
+                  _ => Callback(())
+                )
               )
             )
           )

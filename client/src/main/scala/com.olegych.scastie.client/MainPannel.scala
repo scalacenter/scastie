@@ -37,8 +37,8 @@ object MainPannel {
               state.outputs.console.mkString("")
             )
           ),
-          div(`class` := s"pannel $theme", show(View.Settings))(
-            Settings(state, backend))
+          div(`class` := s"pannel $theme", show(View.Libraries))(
+            Libraries(state, backend))
         )
     }.componentDidUpdate(scope =>
         Callback {

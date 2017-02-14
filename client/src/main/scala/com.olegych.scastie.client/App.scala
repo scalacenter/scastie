@@ -232,9 +232,12 @@ object App {
     def clear(e: ReactEventI): Callback = clear()
     def clear(): Callback = scope.modState(_.resetOutputs)
 
-    def setView(newView: View)(e: ReactEventI): Callback =
+    def setView(newView: View): Callback = 
       scope.modState(_.setView(newView))
 
+    def setView2(newView: View)(e: ReactEventI): Callback = 
+      setView(newView)
+      
     def setTarget2(target: ScalaTarget)(e: ReactEventI): Callback =
       setTarget(target)
 
@@ -267,23 +270,6 @@ object App {
       scope.state.flatMap(s =>
         Callback.future(ApiClient[Api].run(s.inputs).call().map {
           case Ressource(id) =>
-            // connectWebSocket(id).attemptTry.flatMap {
-            //   case Success(websocket) => {
-            //     scope.modState(
-            //       _.resetOutputs
-            //         .setRunning(true)
-            //         .copy(websocket = Some(websocket))
-            //         .log("Connecting...\n")
-            //     )     
-            //   }
-            //   case Failure(errorWebSocket) =>
-            //     scope.modState(
-            //       _.resetOutputs
-            //        .log(errorWebSocket.toString)
-            //        .setRunning(false)
-            //     )
-            // }
-
             connectEventSource(id).attemptTry.flatMap {
               case Success(eventSource) => {
                 scope.modState(
