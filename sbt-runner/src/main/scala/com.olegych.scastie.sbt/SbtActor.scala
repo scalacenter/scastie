@@ -45,7 +45,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private def warmUp(): Unit = {
     if (production) {
       log.info("warming up sbt")
-      sbt.eval("run", instrument(Inputs.default), (line, _) => log.info(line))
+      sbt.eval("run", instrument(Inputs.default), (line, _, _) => log.info(line), reload = false)
     }
   }
 
@@ -67,7 +67,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
       val inputs0 = instrument(inputs)
 
-      def eval(command: String) =
+      def eval(command: String, reload: Boolean) =
         sbt.eval(command,
                  inputs0,
                  processSbtOutput(
@@ -75,7 +75,9 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
                    progressActor,
                    id,
                    sender
-                 ))
+                 ),
+                 reload
+        )
 
       def timeout(duration: FiniteDuration): Unit = {
         log.info(s"restarting sbt: $inputs")
@@ -106,15 +108,15 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
       val sbtReloadTime = 40.seconds
       if (sbt.needsReload(inputs0)) {
-        withTimeout(sbtReloadTime)(eval("compile"))(timeout(sbtReloadTime))
+        withTimeout(sbtReloadTime)(eval("compile", reload = true))(timeout(sbtReloadTime))
       }
 
       log.info(s"== running $id ==")
 
       withTimeout(runTimeout)({
         scalaTargetType match {
-          case JVM | Dotty | Native => eval("run")
-          case JS => eval("fastOptJs")
+          case JVM | Dotty | Native => eval("run", reload = false)
+          case JS => eval("fastOptJs", reload = false)
         }
       })(timeout(runTimeout))
 
@@ -140,7 +142,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       scriptMode: Boolean,
       progressActor: ActorRef,
       id: Int,
-      pasteActor: ActorRef): (String, Boolean) => Unit = { (line, done) =>
+      pasteActor: ActorRef): (String, Boolean, Boolean) => Unit = { (line, done, reload) =>
     {
       val lineOffset =
         if (scriptMode) -2
@@ -176,7 +178,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         compilationInfos = problems.getOrElse(Nil),
         instrumentations = instrumentations.getOrElse(Nil),
         runtimeError = runtimeError,
-        done = done,
+        done = done && !reload,
         timeout = false
       )
 
