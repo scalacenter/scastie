@@ -157,7 +157,7 @@ lazy val server = project
   .settings(packageScalaJS(client))
   .settings(
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
-    reStart := reStart.dependsOn(WebKeys.assets in Assets).evaluated,
+    reStart := reStart.dependsOn(WebKeys.assets in (client, Assets)).evaluated,
     
     unmanagedResourceDirectories in Compile += (WebKeys.public in (client, Assets)).value,
 
@@ -281,15 +281,6 @@ lazy val client = project
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror, api211JS)
-
-/*  instrument a program to add a Map[Position, (Value, Type)]
-
-class A {
-  val a = 1 + 1 // << 2: Int
-  3 + 3         // << 6: Int
-}
-
- */
 
 lazy val instrumentation = project
   .settings(baseSettings)
