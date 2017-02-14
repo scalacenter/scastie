@@ -53,7 +53,7 @@ object SideBar {
 
               img(src := "/assets/public/dotty3.svg",
                   alt := "settings",
-                  `class` := "libraries"),
+                  `class` := "libraries-button"),
               p("Libraries")
             ),
             li(`class` := "button", onClick ==> formatCode)(
