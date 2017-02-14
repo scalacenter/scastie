@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<body>
+  <h1>SSE Demo</h1>
+  <pre id="result"></pre>
+  <script>
+    var source = new EventSource("/demo-sse-progress/xyz");
+
+    source.onmessage = function(event) {
+        append(event.data);
+    };
+    source.onerror = function(event){
+      if (event.eventPhase == EventSource.CLOSED) {
+        source.close();
+      } else {
+        append("Error");
+      }
+    }
+    source.onopen = function(event){
+      append("Open");
+    }
+
+    function append(event){
+      document.getElementById("result").innerHTML += event + "<br>";
+    }
+  </script>
+</body>
