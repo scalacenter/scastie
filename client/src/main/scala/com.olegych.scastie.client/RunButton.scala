@@ -29,7 +29,7 @@ object RunButton {
             )
           } else {
             li( onClick ==> setView2(View.Editor),
-                title := "Open Edit View", 
+                title := "Open Edit View",
                `class` := "button run-button",
                 selected(View.Editor))(
 
@@ -38,13 +38,17 @@ object RunButton {
             )
           }
         } else {
-          li(`class` := "button run-button")(
-            div(`class` := "sk-folding-cube",
-                onClick ==> setView2(View.Editor))(
-              div(`class` := "sk-cube1 sk-cube"),
-              div(`class` := "sk-cube2 sk-cube"),
-              div(`class` := "sk-cube4 sk-cube"),
-              div(`class` := "sk-cube3 sk-cube")
+          li( onClick ==> setView2(View.Editor),
+              title := "Open Edit View",
+             `class` := "button run-button")(
+
+            div(`class` := "sk-folding-cube-wraper")(
+              div(`class` := "sk-folding-cube")(
+                div(`class` := "sk-cube1 sk-cube"),
+                div(`class` := "sk-cube2 sk-cube"),
+                div(`class` := "sk-cube4 sk-cube"),
+                div(`class` := "sk-cube3 sk-cube")
+              )
             ),
             p("Running")
           )

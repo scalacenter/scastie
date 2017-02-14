@@ -1,11 +1,18 @@
 // http://tobiasahlin.com/spinkit/
-.sk-folding-cube {
-  margin: 2px auto;
-  margin-bottom: 10px;
-
-  width: @sidebar-icon-size - 5px;
-  height: @sidebar-icon-size - 5px;
+.sk-folding-cube-wraper {
+  overflow: hidden;
+  height: 35px;
+  margin-bottom: 9px;
   position: relative;
+}
+
+.sk-folding-cube {
+  top: 6px;
+  left: 18px;
+
+  width: @sidebar-icon-size - 12px;
+  height: @sidebar-icon-size - 12px;
+  position: absolute;
   -webkit-transform: rotateZ(45deg);
           transform: rotateZ(45deg);
 }

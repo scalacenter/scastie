@@ -42,12 +42,17 @@ body.pc kbd.mac { display: none }
 .app {
   position: relative;
   
-  @sidebar-width: 75px;
+  @sidebar-width: 80px;
   @sidebar-border: 1px;
   @dt: 0.3s;
 
   .button {
     width: 60px;
+
+    .fa {
+      // make shure font-awesome has the same height of openiconic
+      height: 44px; 
+    }
 
     &.disabled:hover {
       color: inherit;
@@ -103,16 +108,12 @@ body.pc kbd.mac { display: none }
       margin: 0;
     }
 
-    .libraries, .save {
+    .libraries-button {
+      width: @sidebar-icon-size;
       height: @sidebar-icon-size;
       margin: 0 auto;
-      // width: 100%;
+      padding-bottom: 9px; 
     }
-  }
-
-  .libraries {
-    margin: 0;
-    padding: 20px;    
   }
 }
 
