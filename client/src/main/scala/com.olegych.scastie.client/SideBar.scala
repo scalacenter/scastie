@@ -42,13 +42,15 @@ object SideBar {
           ul(
             RunButton(state, backend),
             ClearButton(state, backend),
-            li(`class` := "button", onClick ==> save)(
+            li(onClick ==> save, title := "Save", `class` := "button")(
               i(`class` := "fa fa-floppy-o"),
               p("Save")
             ),
-            li(`class` := "button",
-               selected(View.Settings),
-               onClick ==> setView(View.Settings))(
+            li( onClick ==> setView2(View.Libraries),
+                title := "Open Libraries View",
+               `class` := "button",
+                selected(View.Libraries))(
+
               img(src := "/assets/public/dotty3.svg",
                   alt := "settings",
                   `class` := "libraries"),

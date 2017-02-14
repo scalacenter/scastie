@@ -20,24 +20,27 @@ object RunButton {
 
         if (!state.running) {
           if (View.Editor == state.view) {
-            li(`class` := "button run-button",
-               selected(View.Editor),
-               onClick ==> run)(
+            li( onClick ==> run,
+                title := "Run Code",
+               `class` := "button run-button",
+                selected(View.Editor))(
               mediaPlay(`class` := "runnable"),
               p("Run")
             )
           } else {
-            li(`class` := "button run-button",
-               selected(View.Editor),
-               onClick ==> setView(View.Editor))(
-              pencil(title := "Edit code"),
+            li( onClick ==> setView2(View.Editor),
+                title := "Open Edit View", 
+               `class` := "button run-button",
+                selected(View.Editor))(
+
+              pencil,
               p("Edit")
             )
           }
         } else {
           li(`class` := "button run-button")(
             div(`class` := "sk-folding-cube",
-                onClick ==> setView(View.Editor))(
+                onClick ==> setView2(View.Editor))(
               div(`class` := "sk-cube1 sk-cube"),
               div(`class` := "sk-cube2 sk-cube"),
               div(`class` := "sk-cube4 sk-cube"),

@@ -132,10 +132,9 @@ object Editor {
             backend.toggleInstrumentation().runNow
           }
 
-          CodeMirror.commands.solarizedToggle =
-            (editor: CodeMirrorEditor2) => {
-              backend.toggleTheme().runNow
-            }
+          CodeMirror.commands.solarizedToggle = (editor: CodeMirrorEditor2) => {
+            backend.toggleTheme().runNow
+          }
 
           CodeMirror.commands.formatCode = (editor: CodeMirrorEditor2) => {
             backend.formatCode().runNow
