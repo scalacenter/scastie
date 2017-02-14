@@ -59,7 +59,7 @@ class Sbt() {
     (process, process.getOutputStream, process.getInputStream)
   }
 
-  private def collect(lineCallback: (String, Boolean) => Unit): Unit = {
+  private def collect(lineCallback: (String, Boolean, Boolean) => Unit, reload: Boolean): Unit = {
     val chars = new collection.mutable.Queue[Character]()
     var read = 0
     var prompt = false
@@ -71,7 +71,7 @@ class Sbt() {
 
         log.info(line)
 
-        lineCallback(line, prompt)
+        lineCallback(line, prompt, reload)
         chars.clear()
       } else {
         chars += read.toChar
@@ -79,13 +79,14 @@ class Sbt() {
     }
   }
 
-  collect((_, _) => ())
+  collect((_, _, _) => (), reload = false)
 
   private def process(command: String,
-                      lineCallback: (String, Boolean) => Unit): Unit = {
+                      lineCallback: (String, Boolean, Boolean) => Unit,
+                      reload: Boolean): Unit = {
     fin.write((command + nl).getBytes)
     fin.flush()
-    collect(lineCallback)
+    collect(lineCallback, reload)
   }
 
   def kill(): Unit = {
@@ -102,12 +103,13 @@ class Sbt() {
       inputs.sbtPluginsConfig != currentSbtPluginConfig
 
   def exit(): Unit = {
-    process("exit", (line, _) => ())
+    process("exit", (_, _, _) => (), reload = false)
   }
 
   def eval(command: String,
            inputs: Inputs,
-           lineCallback: (String, Boolean) => Unit): Unit = {
+           lineCallback: (String, Boolean, Boolean) => Unit,
+           reload: Boolean): Unit = {
 
     val configChange = needsReload(inputs)
 
@@ -122,12 +124,12 @@ class Sbt() {
     }
 
     if (configChange) {
-      process("reload", lineCallback)
+      process("reload", lineCallback, reload = true)
     }
 
     write(codeFile, inputs.code, truncate = true)
     try {
-      process(command, lineCallback)
+      process(command, lineCallback, reload)
     } catch {
       case e: IOException => {
         // when the paste is pkilled (timeout) the sbt output stream is closed
