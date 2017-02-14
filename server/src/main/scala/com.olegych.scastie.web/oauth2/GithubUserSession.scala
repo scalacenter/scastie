@@ -92,10 +92,11 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   def addUser(user: User): UUID = {
     val uuid = UUID.randomUUID
     appendSessionsFile(uuid, user)
+    addBetaUser(user.login)
     uuid
   }
 
-  def add(login: String): Unit = {
+  def addBetaUser(login: String): Unit = {
     if (!exists(login)) {
       Files.write(usersFile,
                   login.getBytes,
