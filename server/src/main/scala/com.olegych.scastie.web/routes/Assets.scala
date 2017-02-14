@@ -9,9 +9,17 @@ object Assets {
     get(
       concat(
         path("assets" / "lib" / Remaining)(path ⇒
-          getFromResource("lib/" + path)),
+          getFromResource("lib/" + path)
+        ),
         path("assets" / "public" / Remaining)(path ⇒
-          getFromResource("public/" + path))
+          getFromResource("public/" + path)
+        ),
+        path("assets" / "client-opt.js")(
+          getFromResource("client-opt.js")
+        ),
+        path("assets" / "client-opt.js.map")(
+          getFromResource("client-opt.js.map")
+        )
       )
     )
 }

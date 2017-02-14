@@ -14,6 +14,5 @@ object View {
     macroRW[Editor.type] merge macroRW[Libraries.type]
 
   val isMac = dom.window.navigator.userAgent.contains("Mac")
-  val ctrl = "⌘"
-  //if (isMac) "⌘" else "Ctrl"
+  val ctrl = if (isMac) "⌘" else "Ctrl"
 }
