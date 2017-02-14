@@ -48,6 +48,15 @@ body.pc kbd.mac { display: none }
 
   .button {
     width: 60px;
+
+    &.disabled:hover {
+      color: inherit;
+    }
+
+    &.disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
     
     cursor: pointer;
     display: table;

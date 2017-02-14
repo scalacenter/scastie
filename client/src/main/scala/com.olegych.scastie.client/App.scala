@@ -84,6 +84,8 @@ object App {
       state0
     }
 
+    def isClearable: Boolean = outputs.isClearable
+
     def setRunning(running: Boolean) = {
       val console = !running && !consoleHasUserOutput
       copyAndSave(running = running, consoleIsOpen = !console)
@@ -174,8 +176,6 @@ object App {
 
     private def connectEventSource(id: Int) = CallbackTo[EventSource] {
       val direct = scope.accessDirect
-
-      throw new Exception("Boom")
 
       val eventSource = new EventSource(s"/progress-sse/$id")
 

@@ -41,6 +41,7 @@ object SideBar {
         nav(`class` := s"sidebar $theme")(
           ul(
             RunButton(state, backend),
+            ClearButton(state, backend),
             li(`class` := "button", onClick ==> save)(
               i(`class` := "fa fa-floppy-o"),
               p("Save")

@@ -20,7 +20,6 @@ object RunButton {
 
         if (!state.running) {
           if (View.Editor == state.view) {
-            // RUN
             li(`class` := "button run-button",
                selected(View.Editor),
                onClick ==> run)(
