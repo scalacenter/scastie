@@ -13,14 +13,9 @@ package object runtime {
   }
 
   val help = {
-
-    val Dot = "<kbd>&nbsp;&nbsp;.&nbsp;&nbsp;</kbd>"
-    val Space = s"""<kbd>${"&nbsp;" * 40}</kbd>"""
-
     // A stylesheets select the correct one to display
     val Ctrl = "<kbd class='pc'>Ctrl&nbsp;&nbsp;</kbd>"
-    val Cmd =
-      """<kbd class='mac'><span class="oi" data-glyph="command"></span></kbd>"""
+    val Cmd = """<kbd class='mac'><span class="oi" data-glyph="command"></span></kbd>"""
 
     val CC = Ctrl + Cmd
 
@@ -31,7 +26,8 @@ package object runtime {
     val F2 = kbd("F2")
     val F3 = kbd("F3")
     val F4 = kbd("F4")
-    val F7 = kbd("F7")
+    val F6 = kbd("F6")
+
     val Esc = kbd("Esc")
     val S = kbd("S")
 
@@ -61,15 +57,16 @@ package object runtime {
            |
            |<h2>Keyboard Shortcuts</h2>
            |<pre>
-           |Editor View $CC + $key1
+           |Editor View
            |  Run                                       $CC + $Enter
            |  Save                                      $CC + $S
            |  Clear annotations, Close console output   $Esc
            |  Toggle Theme (Solarized Light/Dark)       $F2
            |  Toogle console                            $F3
            |  Toogle Script Mode                        $F4
+           |  Format Code                               $F6
            |
-           |Settings View $CC + $key2
+           |Settings View
            |
            |$sublime
            |</pre>

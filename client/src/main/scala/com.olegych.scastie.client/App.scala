@@ -93,9 +93,9 @@ object App {
 
     def toggleTheme = copyAndSave(isDarkTheme = !isDarkTheme)
     def toggleConsole = copyAndSave(consoleIsOpen = !consoleIsOpen)
-    def toggleInstrumentation =
+    def toggleScriptMode =
       copyAndSave(
-        inputs = inputs.copy(isInstrumented = !inputs.isInstrumented))
+        inputs = inputs.copy(scriptMode = !inputs.scriptMode))
 
     def openConsole = copyAndSave(consoleIsOpen = true)
     def setUserOutput = copyAndSave(consoleHasUserOutput = true)
@@ -260,10 +260,10 @@ object App {
     def toggleConsole(): Callback = scope.modState(_.toggleConsole)
     def toggleConsole(e: ReactEventI): Callback = toggleConsole()
 
-    def toggleInstrumentation(): Callback =
-      scope.modState(_.toggleInstrumentation)
-    def toggleInstrumentation(e: ReactEventI): Callback =
-      toggleInstrumentation()
+    def toggleScriptMode(): Callback =
+      scope.modState(_.toggleScriptMode)
+    def toggleScriptMode(e: ReactEventI): Callback =
+      toggleScriptMode()
 
     def run(e: ReactEventI): Callback = run()
     def run(): Callback = {
@@ -363,7 +363,7 @@ object App {
           Callback.future(
             ApiClient[Api]
               .format(
-                FormatRequest(state.inputs.code, state.inputs.isInstrumented))
+                FormatRequest(state.inputs.code, state.inputs.scriptMode))
               .call()
               .map {
                 case FormatResponse(Some(formattedCode)) =>

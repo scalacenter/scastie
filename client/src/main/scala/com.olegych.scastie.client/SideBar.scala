@@ -22,9 +22,17 @@ object SideBar {
           if (state.consoleIsOpen) TagMod(`class` := "toggle selected")
           else EmptyTag
 
-        val instrumentationSelected =
-          if (state.inputs.isInstrumented) TagMod(`class` := "toggle selected")
+        val consoleLabel =
+          if(state.consoleIsOpen) "Close"
+          else "Open"
+
+        val scriptModeSelected =
+          if (state.inputs.scriptMode) TagMod(`class` := "toggle selected")
           else EmptyTag
+
+        val scriptModeLabel =
+          if (state.inputs.scriptMode) "ON"
+          else "OFF"
 
         def openInNewTab(link: String): Callback = {
           Callback(
@@ -32,53 +40,66 @@ object SideBar {
           )
         }
 
+
         def feedback(e: ReactEventI): Callback = 
           openInNewTab("https://gitter.im/scalacenter/scastie")
 
         def issue(e: ReactEventI): Callback = 
           openInNewTab("https://github.com/scalacenter/scastie/issues/new")
 
+        import View.ctrl
+
         nav(`class` := s"sidebar $theme")(
           ul(
             RunButton(state, backend),
             ClearButton(state, backend),
-            li(onClick ==> save, title := "Save", `class` := "button")(
+            li(onClick ==> save, title := s"Save ($ctrl + S)", `class` := "button")(
               i(`class` := "fa fa-floppy-o"),
               p("Save")
             ),
             li( onClick ==> setView2(View.Libraries),
                 title := "Open Libraries View",
-               `class` := "button",
-                selected(View.Libraries))(
+                selected(View.Libraries),
+               `class` := "button")(
 
               img(src := "/assets/public/dotty3.svg",
                   alt := "settings",
                   `class` := "libraries-button"),
               p("Libraries")
             ),
-            li(`class` := "button", onClick ==> formatCode)(
+            li( onClick ==> formatCode,
+                title := "Format Code (F6)",
+               `class` := "button")(
               iconic.justifyLeft,
               p("Format")
             ),
-            li(`class` := "button",
-               instrumentationSelected,
-               onClick ==> toggleInstrumentation)(
+            li( onClick ==> toggleScriptMode,
+                title := s"Turn Script Mode $scriptModeLabel (F4)",
+                scriptModeSelected,
+               `class` := "button"
+               )(
               iconic.script,
               p("Script")
             ),
-            li(`class` := "button",
-               consoleSelected,
-               onClick ==> toggleConsole)(
+            li( onClick ==> toggleConsole,
+                title := s"$consoleLabel Console",
+                consoleSelected,
+               `class` := "button"
+               )(
               iconic.terminal,
               p("Console")
             ),
-            li(`class` := "button",
-               onClick ==> feedback)(
+            li( onClick ==> feedback,
+                title := "Open Gitter.im Chat to give us feedback",
+               `class` := "button"
+               )(
               iconic.chat,
               p("Feedback")
             ),
-            li(`class` := "button",
-               onClick ==> issue)(
+            li(onClick ==> issue,
+               title := "Create new issue on GitHub",
+               `class` := "button"
+               )(
               iconic.bug,
               p("Issue")
             )
