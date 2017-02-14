@@ -5,6 +5,8 @@ import App._
 
 import japgolly.scalajs.react._, vdom.all._
 
+import org.scalajs.dom
+
 object SideBar {
   private val component =
     ReactComponentB[(State, Backend)]("SideBar").render_P {
@@ -23,6 +25,18 @@ object SideBar {
         val instrumentationSelected =
           if (state.inputs.isInstrumented) TagMod(`class` := "toggle selected")
           else EmptyTag
+
+        def openInNewTab(link: String): Callback = {
+          Callback(
+            dom.window.open(link, "_blank").focus()
+          )
+        }
+
+        def feedback(e: ReactEventI): Callback = 
+          openInNewTab("https://gitter.im/scalacenter/scastie")
+
+        def issue(e: ReactEventI): Callback = 
+          openInNewTab("https://github.com/scalacenter/scastie/issues/new")
 
         nav(`class` := s"sidebar $theme")(
           ul(
@@ -54,6 +68,16 @@ object SideBar {
                onClick ==> toggleConsole)(
               iconic.terminal,
               p("Console")
+            ),
+            li(`class` := "button",
+               onClick ==> feedback)(
+              iconic.chat,
+              p("Feedback")
+            ),
+            li(`class` := "button",
+               onClick ==> issue)(
+              iconic.bug,
+              p("Issue")
             )
           )
         )
