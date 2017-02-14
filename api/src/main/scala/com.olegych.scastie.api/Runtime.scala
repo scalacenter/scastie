@@ -33,6 +33,7 @@ package object runtime {
     val F4 = kbd("F4")
     val F7 = kbd("F7")
     val Esc = kbd("Esc")
+    val S = kbd("S")
 
     val key1 = kbd("1")
     val key2 = kbd("2")
@@ -62,7 +63,7 @@ package object runtime {
            |<pre>
            |Editor View $CC + $key1
            |  Run                                       $CC + $Enter
-           |  Save                                      $CC + S
+           |  Save                                      $CC + $S
            |  Clear annotations, Close console output   $Esc
            |  Toggle Theme (Solarized Light/Dark)       $F2
            |  Toogle console                            $F3

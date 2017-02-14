@@ -11,17 +11,8 @@ object EmbeddedMenu {
     ReactComponentB[(State, Backend)]("RunButton").render_P {
       case (state, backend) =>
         div(`class` := "embedded-menu")(
-          RunButton(state, backend)
+          RunButton(state, backend),
+          ClearButton(state, backend)
         )
-
-      // nav(`class` := "embedded-menu")(
-      //   ul(
-      //     li(RunButton(state, backend)),
-      //     li(`class` := "button" )(
-      //       iconic.pencil(onClick ==> backend.clear),
-      //       p("Clear")
-      //     )
-      //   )
-      // )
     }.build
 }

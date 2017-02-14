@@ -33,7 +33,13 @@ case class Outputs(
     compilationInfos: Set[api.Problem],
     instrumentations: Set[api.Instrumentation],
     runtimeError: Option[api.RuntimeError]
-)
+) {
+    def isClearable: Boolean =
+      !console.isEmpty ||
+      !compilationInfos.isEmpty ||
+      !instrumentations.isEmpty ||
+      !runtimeError.isEmpty
+}
 
 sealed trait Severity
 final case object Info extends Severity
