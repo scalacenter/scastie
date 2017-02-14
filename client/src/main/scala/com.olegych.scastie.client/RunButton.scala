@@ -14,6 +14,7 @@ object RunButton {
     ReactComponentB[(State, Backend)]("RunButton").render_P {
       case (state, backend) =>
         import backend._
+        import View.ctrl
 
         def selected(view: View) =
           if (view == state.view) TagMod(`class` := "selected") else EmptyTag
@@ -21,7 +22,7 @@ object RunButton {
         if (!state.running) {
           if (View.Editor == state.view) {
             li( onClick ==> run,
-                title := "Run Code",
+                title := s"Run Code ($ctrl + Enter)",
                `class` := "button run-button",
                 selected(View.Editor))(
               mediaPlay(`class` := "runnable"),

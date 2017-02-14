@@ -23,12 +23,12 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private var sbt = new Sbt()
   private val log = LoggerFactory.getLogger(getClass)
 
-  private def format(code: String, isInstrumented: Boolean): Option[String] = {
-    log.info(s"format (isInstrumented: $isInstrumented)")
+  private def format(code: String, scriptMode: Boolean): Option[String] = {
+    log.info(s"format (scriptMode: $scriptMode)")
     log.info(code)
 
     val config =
-      if (isInstrumented)
+      if (scriptMode)
         ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
       else
         ScalafmtConfig.default
@@ -50,15 +50,15 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   private def instrument(inputs: Inputs): Inputs = {
-    if (inputs.isInstrumented)
+    if (inputs.scriptMode)
       inputs.copy(code = instrumentation.Instrument(inputs.code))
     else
       inputs
   }
 
   def receive = {
-    case FormatRequest(code, isInstrumented) => {
-      sender ! FormatResponse(format(code, isInstrumented))
+    case FormatRequest(code, scriptMode) => {
+      sender ! FormatResponse(format(code, scriptMode))
     }
     case SbtTask(id, inputs, ip, progressActor) => {
       log.info(s"$ip run $inputs")
@@ -71,7 +71,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         sbt.eval(command,
                  inputs0,
                  processSbtOutput(
-                   inputs.isInstrumented,
+                   inputs.scriptMode,
                    progressActor,
                    id,
                    sender
@@ -137,13 +137,13 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   private def processSbtOutput(
-      isInstrumented: Boolean,
+      scriptMode: Boolean,
       progressActor: ActorRef,
       id: Int,
       pasteActor: ActorRef): (String, Boolean) => Unit = { (line, done) =>
     {
       val lineOffset =
-        if (isInstrumented) -2
+        if (scriptMode) -2
         else 0
 
       val problems = extractProblems(line, lineOffset)

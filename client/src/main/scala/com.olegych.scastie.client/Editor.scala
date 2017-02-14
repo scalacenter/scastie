@@ -34,9 +34,7 @@ object Editor {
   private def options(dark: Boolean): codemirror.Options = {
 
     val theme = if (dark) "dark" else "light"
-
-    val isMac = dom.window.navigator.userAgent.contains("Mac")
-    val ctrl = if (isMac) "Cmd" else "Ctrl"
+    val ctrl = if (View.isMac) "Cmd" else "Ctrl"
 
     js.Dictionary[Any](
         "mode" -> "text/x-scala",
@@ -66,7 +64,7 @@ object Editor {
           "F1" -> "help",
           "F2" -> "solarizedToggle",
           "F3" -> "consoleToggle",
-          "F4" -> "scriptToggle",
+          "F4" -> "scriptModeToggle",
           "F6" -> "formatCode"
         )
       )
@@ -128,8 +126,8 @@ object Editor {
             backend.toggleConsole().runNow
           }
 
-          CodeMirror.commands.scriptToggle = (editor: CodeMirrorEditor2) => {
-            backend.toggleInstrumentation().runNow
+          CodeMirror.commands.scriptModeToggle = (editor: CodeMirrorEditor2) => {
+            backend.toggleScriptMode().runNow
           }
 
           CodeMirror.commands.solarizedToggle = (editor: CodeMirrorEditor2) => {
