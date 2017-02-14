@@ -15,7 +15,7 @@
     <link href="/assets/lib/codemirror/addon/scroll/simplescrollbars.css" rel="stylesheet">
     <link href="/assets/lib/codemirror/lib/codemirror.css"                rel="stylesheet">
     <link href="/assets/lib/open-iconic/font/css/open-iconic.css"         rel="stylesheet">
-    <link href="/assets/main.css"                                         rel="stylesheet">
+    <link href="/assets/public/main.css"                                  rel="stylesheet">
   </head>
   <body>
     <style>
@@ -164,11 +164,11 @@ object Main {
 
     </section>
 
-    <script src="/assets/client-jsdeps.js"></script>
+    <script src="/assets/public/client-jsdeps.js"></script>
     @if(production) {
-      <script src="/assets/client-opt.js"></script>
+      <script src="/assets/public/client-opt.js"></script>
     } else {
-      <script src="/assets/client-fastopt.js"></script>
+      <script src="/assets/public/client-fastopt.js"></script>
     }
     <script>
       com.olegych.scastie.client.ClientMain().embedded(
