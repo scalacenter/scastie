@@ -18,6 +18,8 @@ import java.util.UUID
 import java.nio.file._
 // import util.Properties
 
+import System.{lineSeparator => nl}
+
 class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   val logger = Logger("GithubUserSession")
 
@@ -65,7 +67,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
       val content = Files
         .readAllLines(usersSessions)
         .toArray
-        .mkString(System.lineSeparator)
+        .mkString(nl)
       uread[Array[(UUID, User)]](content)
     } else Array()
   }
@@ -99,7 +101,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   def addBetaUser(login: String): Unit = {
     if (!exists(login)) {
       Files.write(usersFile,
-                  login.getBytes,
+                  (login + nl).getBytes,
                   StandardOpenOption.APPEND,
                   StandardOpenOption.CREATE)
       ()
