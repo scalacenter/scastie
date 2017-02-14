@@ -11,6 +11,7 @@
     source.onerror = function(event){
       if (event.eventPhase == EventSource.CLOSED) {
         source.close();
+        append("Close");
       } else {
         append("Error");
       }
