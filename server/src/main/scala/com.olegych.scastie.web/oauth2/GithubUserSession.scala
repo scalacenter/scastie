@@ -2,8 +2,9 @@ package com.olegych.scastie
 package web
 package oauth2
 
-import com.softwaremill.session._
+import api.User
 
+import com.softwaremill.session._
 import com.typesafe.config.ConfigFactory
 
 import upickle.default.{ReadWriter, write => uwrite, read => uread}

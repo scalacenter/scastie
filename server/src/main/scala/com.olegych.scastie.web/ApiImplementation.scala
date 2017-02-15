@@ -3,7 +3,6 @@ package web
 
 import api._
 import balancer._
-import oauth2.User
 
 import akka.pattern.ask
 import akka.actor.ActorRef
@@ -34,4 +33,6 @@ class ApiImplementation(dispatchActor: ActorRef, ip: RemoteAddress, user: User)(
   def format(formatRequest: FormatRequest): Future[FormatResponse] = {
     (dispatchActor ? formatRequest).mapTo[FormatResponse]
   }
+
+  def user(): Future[User] = Future.successful(user)
 }
