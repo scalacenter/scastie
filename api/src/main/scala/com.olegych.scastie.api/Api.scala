@@ -15,7 +15,7 @@ trait Api {
   def user(): Future[User]
 }
 
-case class FormatRequest(code: String, scriptMode: Boolean)
+case class FormatRequest(code: String, worksheetMode: Boolean)
 case class FormatResponse(formattedCode: Either[String, String])
 
 case class Ressource(id: Int)
@@ -123,7 +123,7 @@ object Inputs {
        |help""".stripMargin
 
   def default = Inputs(
-    scriptMode = true,
+    worksheetMode = true,
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
@@ -140,7 +140,7 @@ object Inputs {
 }
 
 case class Inputs(
-    scriptMode: Boolean,
+    worksheetMode: Boolean,
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],

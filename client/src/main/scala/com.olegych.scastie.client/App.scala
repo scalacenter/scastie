@@ -102,9 +102,9 @@ object App {
     def toggleConsole = 
       copyAndSave(consoleIsOpen = !consoleIsOpen)
 
-    def toggleScriptMode =
+    def toggleWorksheetMode =
       copyAndSave(
-        inputs = inputs.copy(scriptMode = !inputs.scriptMode))
+        inputs = inputs.copy(worksheetMode = !inputs.worksheetMode))
 
     def openConsole = 
       copyAndSave(consoleIsOpen = true)
@@ -189,7 +189,7 @@ object App {
       else {
         copyAndSave(outputs = outputs.copy(
           compilationInfos = outputs.compilationInfos + 
-            info("You dont need an entry point (`def main(args: Array[String]): Unit` or `extends App`) in Script Mode")
+            info("You don't need a main method (or extends App) in Worksheet Mode")
         ))
       }
     }
@@ -198,24 +198,18 @@ object App {
                    instrumentations: List[api.Instrumentation]) = {
 
       def topDef(problem: api.Problem): Boolean = {
-        console.log("===")
-        console.log(problem.severity.toString)
-        console.log(problem.message)
-        console.log("===")
-
         problem.severity == api.Error &&
         problem.message == "expected class or object definition"
       }
 
-      val useScriptModeTip =
-        if(compilationInfos.exists(ci => topDef(ci))) Set(info("Use The Script Mode"))
+      val useWorksheetModeTip =
+        if(compilationInfos.exists(ci => topDef(ci))) 
+          Set(info("""|It seems you're writing code without an enclosing class/object. 
+                      |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin))
         else Set()
 
-      console.log(compilationInfos.toString())
-      console.log(useScriptModeTip.toString())
-
       copyAndSave(outputs = outputs.copy(
-        compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet ++ useScriptModeTip,
+        compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet ++ useWorksheetModeTip,
         instrumentations = outputs.instrumentations ++ instrumentations.toSet
       ))
     }
@@ -314,10 +308,10 @@ object App {
     def toggleConsole(): Callback = scope.modState(_.toggleConsole)
     def toggleConsole(e: ReactEventI): Callback = toggleConsole()
 
-    def toggleScriptMode(): Callback =
-      scope.modState(_.toggleScriptMode)
-    def toggleScriptMode(e: ReactEventI): Callback =
-      toggleScriptMode()
+    def toggleWorksheetMode(): Callback =
+      scope.modState(_.toggleWorksheetMode)
+    def toggleWorksheetMode(e: ReactEventI): Callback =
+      toggleWorksheetMode()
 
     def run(e: ReactEventI): Callback = run()
     def run(): Callback = {
@@ -417,7 +411,7 @@ object App {
           Callback.future(
             ApiClient[Api]
               .format(
-                FormatRequest(state.inputs.code, state.inputs.scriptMode))
+                FormatRequest(state.inputs.code, state.inputs.worksheetMode))
               .call()
               .map {
                 case FormatResponse(Right(formattedCode)) =>

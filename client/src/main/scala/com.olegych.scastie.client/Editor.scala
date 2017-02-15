@@ -62,9 +62,9 @@ object Editor {
           ctrl + "-S" -> "save",
           "Esc" -> "clear",
           "F1" -> "help",
-          "F2" -> "solarizedToggle",
-          "F3" -> "consoleToggle",
-          "F4" -> "scriptModeToggle",
+          "F2" -> "toggleSolarized",
+          "F3" -> "toggleConsole",
+          "F4" -> "toggleWorksheet",
           "F6" -> "formatCode"
         )
       )
@@ -122,15 +122,15 @@ object Editor {
             backend.clear().runNow
           }
 
-          CodeMirror.commands.consoleToggle = (editor: CodeMirrorEditor2) => {
+          CodeMirror.commands.toggleConsole = (editor: CodeMirrorEditor2) => {
             backend.toggleConsole().runNow
           }
 
-          CodeMirror.commands.scriptModeToggle = (editor: CodeMirrorEditor2) => {
-            backend.toggleScriptMode().runNow
+          CodeMirror.commands.toggleWorksheet = (editor: CodeMirrorEditor2) => {
+            backend.toggleWorksheetMode().runNow
           }
 
-          CodeMirror.commands.solarizedToggle = (editor: CodeMirrorEditor2) => {
+          CodeMirror.commands.toggleSolarized = (editor: CodeMirrorEditor2) => {
             backend.toggleTheme().runNow
           }
 

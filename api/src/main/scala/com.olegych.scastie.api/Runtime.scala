@@ -54,7 +54,7 @@ package object runtime {
            |<h2>Libraries</h2>
            |In Libraries you can change the Scala version and add libaries.
            |
-           |<h2>Script Mode</h2>
+           |<h2>Worksheet Mode</h2>
            |
            |
            |
@@ -71,7 +71,7 @@ package object runtime {
            |  Format Code                               $F6
            |  Toogle Console                            $F3
            |  Toggle Theme (Solarized Light/Dark)       $F2
-           |  Toogle Script Mode                        $F4
+           |  Toogle Worksheet Mode                     $F4
            |</pre>
            |
            |$sublime

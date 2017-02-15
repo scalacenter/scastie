@@ -26,12 +26,12 @@ object SideBar {
           if(state.consoleIsOpen) "Close"
           else "Open"
 
-        val scriptModeSelected =
-          if (state.inputs.scriptMode) TagMod(`class` := "toggle selected")
+        val worksheetModeSelected =
+          if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
           else EmptyTag
 
-        val scriptModeLabel =
-          if (state.inputs.scriptMode) "ON"
+        val worksheetModeLabel =
+          if (state.inputs.worksheetMode) "ON"
           else "OFF"
 
         def openInNewTab(link: String): Callback = {
@@ -95,13 +95,13 @@ object SideBar {
               iconic.bug,
               p("Issue")
             ),
-            li( onClick ==> toggleScriptMode,
-                title := s"Turn Script Mode $scriptModeLabel (F4)",
-                scriptModeSelected,
+            li( onClick ==> toggleWorksheetMode,
+                title := s"Turn Worksheet Mode $worksheetModeLabel (F4)",
+                worksheetModeSelected,
                `class` := "button"
                )(
               iconic.script,
-              p("Script")
+              p("Worksheet")
             )
           )
         )

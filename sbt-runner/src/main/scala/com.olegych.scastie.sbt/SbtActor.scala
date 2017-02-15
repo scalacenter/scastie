@@ -24,12 +24,12 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private var sbt = new Sbt()
   private val log = LoggerFactory.getLogger(getClass)
 
-  private def format(code: String, scriptMode: Boolean): Either[String, String] = {
-    log.info(s"format (scriptMode: $scriptMode)")
+  private def format(code: String, worksheetMode: Boolean): Either[String, String] = {
+    log.info(s"format (worksheetMode: $worksheetMode)")
     log.info(code)
 
     val config =
-      if (scriptMode)
+      if (worksheetMode)
         ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
       else
         ScalafmtConfig.default
@@ -57,17 +57,17 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   private def instrument(inputs: Inputs): (Inputs, Boolean) = {
-    if (inputs.scriptMode)
+    if (inputs.worksheetMode)
       instrumentation.Instrument(inputs.code) match {
         case Right(instrumented) => (inputs.copy(code = instrumented), false)
-        case _ => (inputs.copy(scriptMode = false), true)
+        case _ => (inputs.copy(worksheetMode = false), true)
       }
     else (inputs, false)
   }
 
   def receive = {
-    case FormatRequest(code, scriptMode) => {
-      sender ! FormatResponse(format(code, scriptMode))
+    case FormatRequest(code, worksheetMode) => {
+      sender ! FormatResponse(format(code, worksheetMode))
     }
     case SbtTask(id, inputs, ip, login, progressActor) => {
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
@@ -80,7 +80,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         sbt.eval(command,
                  inputs0,
                  processSbtOutput(
-                   inputs.scriptMode,
+                   inputs.worksheetMode,
                    forcedProgramMode,
                    progressActor,
                    id,
@@ -150,14 +150,14 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   private def processSbtOutput(
-      scriptMode: Boolean,
+      worksheetMode: Boolean,
       forcedProgramMode: Boolean,
       progressActor: ActorRef,
       id: Int,
       pasteActor: ActorRef): (String, Boolean, Boolean) => Unit = { (line, done, reload) =>
     {
       val lineOffset =
-        if (scriptMode) -2
+        if (worksheetMode) -2
         else 0
 
       val problems = extractProblems(line, lineOffset)
