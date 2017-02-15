@@ -78,10 +78,11 @@ class SbtActorTest()
   private var firstRun = true
   private def run(code: String, fish: PasteProgress => Boolean): Unit = {
     val ip = "my-ip"
+    val login = "github-login"
     val progressActor = TestProbe()
 
     val inputs = Inputs.default.copy(code = code)
-    sbtActor ! SbtTask(id, inputs, ip, progressActor.ref)
+    sbtActor ! SbtTask(id, inputs, ip, login, progressActor.ref)
 
     val totalTimeout =
       if (firstRun) timeout + 10.second

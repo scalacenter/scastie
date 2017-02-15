@@ -2,7 +2,7 @@ package com.olegych.scastie
 package web
 
 import routes._
-import oauth2.{GithubUserSession, Github}
+import oauth2._
 import balancer._
 
 import akka.http.scaladsl._
@@ -10,13 +10,6 @@ import server._
 import Directives._
 
 import server.Directives._
-
-import model._
-import StatusCodes.TemporaryRedirect
-
-import com.softwaremill.session._
-import SessionDirectives._
-import SessionOptions._
 
 import com.typesafe.config.ConfigFactory
 
@@ -50,17 +43,9 @@ object ServerMain {
 
     val github = new Github
     val session = new GithubUserSession
+    val userDirectives = new UserDirectives(session)
 
-    import session._
-
-    def requireLogin: Directive0 = {
-      optionalSession(refreshable, usingCookies).flatMap{userId =>
-        if(getUser(userId).nonEmpty) pass
-        else {
-          redirect(Uri("/beta"), TemporaryRedirect)
-        }
-      }
-    }
+    import userDirectives.requireLogin
 
     val progressActor =
       system.actorOf(Props[ProgressActor], name = "ProgressActor")
@@ -73,7 +58,7 @@ object ServerMain {
 
     val programmaticRoutes = 
       concat(
-        new AutowireApi(dispatchActor, progressActor).routes,
+        new AutowireApi(dispatchActor, progressActor, userDirectives).routes,
         Assets.routes
       )
 

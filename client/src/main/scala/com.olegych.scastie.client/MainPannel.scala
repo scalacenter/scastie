@@ -29,8 +29,16 @@ object MainPannel {
           if (embedded) TagMod(EmbeddedMenu(state, backend))
           else EmptyTag
 
+        val helpMenu =
+          if(state.isShowingHelpAtStartup) 
+            TagMod(
+              div(`class` := "help-modal")(api.runtime.help.a)
+            )
+          else EmptyTag
+
         div(`class` := "main-pannel")(
           div(`class` := s"pannel $theme $consoleCss", show(View.Editor))(
+            helpMenu,
             Editor(state, backend),
             embeddedMenu,
             pre(`class` := "output-console", ref := console)(

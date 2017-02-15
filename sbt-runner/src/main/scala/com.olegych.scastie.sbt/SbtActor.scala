@@ -66,8 +66,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     case FormatRequest(code, scriptMode) => {
       sender ! FormatResponse(format(code, scriptMode))
     }
-    case SbtTask(id, inputs, ip, progressActor) => {
-      log.info(s"$ip run $inputs")
+    case SbtTask(id, inputs, ip, login, progressActor) => {
+      log.info("login: {}, ip: {} run {}", login, ip, inputs)
 
       val scalaTargetType = inputs.target.targetType
 

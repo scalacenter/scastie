@@ -4,6 +4,7 @@ package routes
 
 import api._
 import balancer._
+import oauth2._
 
 import de.heikoseeberger.akkasse.ServerSentEvent
 import de.heikoseeberger.akkasse.EventStreamMarshalling._
@@ -31,8 +32,9 @@ object AutowireServer extends autowire.Server[String, Reader, Writer] {
   def write[Result: Writer](r: Result) = uwrite(r)
 }
 
-class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef)(implicit system: ActorSystem) {
+class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectives: UserDirectives)(implicit system: ActorSystem) {
   import system.dispatcher
+  import userDirectives.userLogin
 
   implicit val timeout = Timeout(1.seconds)
 
@@ -42,12 +44,17 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef)(implicit sys
         path("api" / Segments)(s ⇒
           entity(as[String])(e ⇒
             extractClientIP(remoteAddress ⇒
-              complete {
-                val api = new ApiImpl(dispatchActor, remoteAddress)
-                AutowireServer.route[Api](api)(
-                  autowire.Core.Request(s, uread[Map[String, String]](e))
-                )
-            })))
+              userLogin( user ⇒
+                complete {
+                  val api = new ApiImplementation(dispatchActor, remoteAddress, user)
+                  AutowireServer.route[Api](api)(
+                    autowire.Core.Request(s, uread[Map[String, String]](e))
+                  )
+                }
+              )
+            )
+          )
+        )
       ),
       get(
         concat(
