@@ -242,7 +242,8 @@ case class PasteProgress(
     instrumentations: List[Instrumentation],
     runtimeError: Option[RuntimeError],
     done: Boolean,
-    timeout: Boolean
+    timeout: Boolean,
+    forcedProgramMode: Boolean
 )
 
 // Keep websocket connection

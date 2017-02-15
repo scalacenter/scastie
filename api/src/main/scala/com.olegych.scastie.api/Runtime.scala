@@ -51,18 +51,12 @@ package object runtime {
     html"""|<h1>Welcome to Scastie!</h1>
            |Scastie is an interractive playground for Scala.
            |
-           |It's available on Github at $scastieGithub
-           |
-           |<h2>Settings</h2>
-           |In the Settings you can change the Scala version and add libaries.
+           |<h2>Libraries</h2>
+           |In Libraries you can change the Scala version and add libaries.
            |
            |<h2>Script Mode</h2>
-           |The Script Mode will print the value and the type of each line.
-           |By default the script mode is active. It works by wraping your script in a class
-           |and instrumenting it.
            |
-           |Since you cannot add top-level code such as value classes (AnyVal) or 
-           |package/package object it's possible to disable it.
+           |
            |
            |<h2>Formatting Code</h2>
            |The code formatting is done by scalafmt. You can configure the formatting with comments
@@ -78,13 +72,12 @@ package object runtime {
            |  Toogle Console                            $F3
            |  Toggle Theme (Solarized Light/Dark)       $F2
            |  Toogle Script Mode                        $F4
-           |
-           |Settings View
+           |</pre>
            |
            |$sublime
            |
            |<h2>BuildInfo</h2>
-           |(Apache 2 License, Version: $buildVersion, Git: $githash)
-           |</pre>""".stripMargin.fold
+           |It's available on Github at $scastieGithub
+           |(Apache 2 License, Version: $buildVersion, Git: $githash)""".stripMargin.fold
   }
 }

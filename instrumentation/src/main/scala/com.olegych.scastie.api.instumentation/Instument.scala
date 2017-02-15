@@ -42,7 +42,6 @@ object Instrument {
   }
 
   private def instrument(source: Source, offset: Int): String = {
-
     val instrumentedCodePatches =
       source.stats.collect {
         case c: Defn.Class
@@ -81,7 +80,39 @@ object Instrument {
         |""".stripMargin
   }
 
-  def apply(code: String): String = {
+  private def hasMainMethod(source: Source): Boolean = {
+    def hasMain(templ: Template): Boolean = {
+      templ.stats match {
+        case Some(ss) => {
+          ss.exists {
+            case q"def main(args: $_[$_]): $_ = $_" => true
+            case _ => false
+          }
+        }
+        case _ => false
+      }
+    }
+
+    def hasApp(templ: Template): Boolean =
+      templ.parents.exists(_.syntax == "App")
+
+    source.stats.exists {
+      case c: Defn.Class
+        if c.name.value == instrumnedClass &&
+           c.templ.stats.nonEmpty => {
+
+        c.templ.stats.get.exists {
+          case c: Defn.Class => hasMain(c.templ) || hasApp(c.templ)
+          case t: Defn.Trait => hasMain(t.templ) || hasApp(t.templ)
+          case o: Defn.Object => hasMain(o.templ) || hasApp(o.templ)
+          case _ => false
+        }
+      }
+      case _ => false
+    }
+  }
+
+  def apply(code: String): Either[Unit,String] = {
     val prelude =
       s"""|import _root_.com.olegych.scastie.api.runtime._
           |class $instrumnedClass {""".stripMargin
@@ -93,9 +124,10 @@ object Instrument {
 
     code0.parse[Source] match {
       case parsers.Parsed.Success(k) =>
-        instrument(k, offset = prelude.length + 1)
+        if(!hasMainMethod(k)) Right(instrument(k, offset = prelude.length + 1))
+        else Left(())
       case _ =>
-        code0
+        Left(())
     }
   }
 }
