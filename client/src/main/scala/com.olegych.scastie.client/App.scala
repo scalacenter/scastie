@@ -88,36 +88,54 @@ object App {
       state0
     }
 
-    def isClearable: Boolean = outputs.isClearable
+    def isClearable: Boolean = 
+      outputs.isClearable
 
     def setRunning(running: Boolean) = {
       val console = !running && !consoleHasUserOutput
       copyAndSave(running = running, consoleIsOpen = !console)
     }
 
-    def toggleTheme = copyAndSave(isDarkTheme = !isDarkTheme)
-    def toggleConsole = copyAndSave(consoleIsOpen = !consoleIsOpen)
+    def toggleTheme =
+      copyAndSave(isDarkTheme = !isDarkTheme)
+
+    def toggleConsole = 
+      copyAndSave(consoleIsOpen = !consoleIsOpen)
+
     def toggleScriptMode =
       copyAndSave(
         inputs = inputs.copy(scriptMode = !inputs.scriptMode))
 
-    def openConsole = copyAndSave(consoleIsOpen = true)
-    def setUserOutput = copyAndSave(consoleHasUserOutput = true)
+    def openConsole = 
+      copyAndSave(consoleIsOpen = true)
 
-    def log(line: String): State = log(Seq(line))
+    def setUserOutput = 
+      copyAndSave(consoleHasUserOutput = true)
+
     def log(lines: Seq[String]): State =
       copyAndSave(outputs = outputs.copy(console = outputs.console ++ lines))
+
+    def log(line: String): State = 
+      log(Seq(line))
+
     def log(line: Option[String]): State =
       line match {
         case Some(l) => log(l + "\n")
         case None => this
       }
 
-    def setCode(code: String) = copyAndSave(inputs = inputs.copy(code = code))
-    def setInputs(inputs: Inputs) = copyAndSave(inputs = inputs)
+    def setCode(code: String) = 
+      copyAndSave(inputs = inputs.copy(code = code))
+
+    def setInputs(inputs: Inputs) = 
+      copyAndSave(inputs = inputs)
+
     def setSbtConfigExtra(config: String) =
       copyAndSave(inputs = inputs.copy(sbtConfigExtra = config))
-    def setView(newView: View) = copyAndSave(view = newView)
+
+    def setView(newView: View) = 
+      copyAndSave(view = newView)
+
     def setTarget(target: ScalaTarget) =
       copyAndSave(inputs = inputs.copy(target = target))
 
@@ -150,6 +168,7 @@ object App {
         addOutputs(progress.compilationInfos, progress.instrumentations)
           .log(progress.userOutput)
           .log(progress.sbtOutput)
+          .setForcedProgramMode(progress.forcedProgramMode)
           .setRunning(!progress.done)
           .setRuntimeError(progress.runtimeError)
 
@@ -163,12 +182,43 @@ object App {
       }
     }
 
+    private def info(message: String) = Problem(api.Info, None, message)
+
+    def setForcedProgramMode(forcedProgramMode: Boolean) = {
+      if(!forcedProgramMode) this
+      else {
+        copyAndSave(outputs = outputs.copy(
+          compilationInfos = outputs.compilationInfos + 
+            info("You dont need an entry point (`def main(args: Array[String]): Unit` or `extends App`) in Script Mode")
+        ))
+      }
+    }
+
     def addOutputs(compilationInfos: List[api.Problem],
-                   instrumentations: List[api.Instrumentation]) =
+                   instrumentations: List[api.Instrumentation]) = {
+
+      def topDef(problem: api.Problem): Boolean = {
+        console.log("===")
+        console.log(problem.severity.toString)
+        console.log(problem.message)
+        console.log("===")
+
+        problem.severity == api.Error &&
+        problem.message == "expected class or object definition"
+      }
+
+      val useScriptModeTip =
+        if(compilationInfos.exists(ci => topDef(ci))) Set(info("Use The Script Mode"))
+        else Set()
+
+      console.log(compilationInfos.toString())
+      console.log(useScriptModeTip.toString())
+
       copyAndSave(outputs = outputs.copy(
-        compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet,
+        compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet ++ useScriptModeTip,
         instrumentations = outputs.instrumentations ++ instrumentations.toSet
       ))
+    }
   }
 
   class Backend(scope: BackendScope[Props, State]) {

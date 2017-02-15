@@ -51,15 +51,18 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private def warmUp(): Unit = {
     if (production) {
       log.info("warming up sbt")
-      sbt.eval("run", instrument(Inputs.default), (line, _, _) => log.info(line), reload = false)
+      val (in, _) = instrument(Inputs.default)
+      sbt.eval("run", in, (line, _, _) => log.info(line), reload = false)
     }
   }
 
-  private def instrument(inputs: Inputs): Inputs = {
+  private def instrument(inputs: Inputs): (Inputs, Boolean) = {
     if (inputs.scriptMode)
-      inputs.copy(code = instrumentation.Instrument(inputs.code))
-    else
-      inputs
+      instrumentation.Instrument(inputs.code) match {
+        case Right(instrumented) => (inputs.copy(code = instrumented), false)
+        case _ => (inputs.copy(scriptMode = false), true)
+      }
+    else (inputs, false)
   }
 
   def receive = {
@@ -71,13 +74,14 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
       val scalaTargetType = inputs.target.targetType
 
-      val inputs0 = instrument(inputs)
+      val (inputs0, forcedProgramMode) = instrument(inputs)
 
       def eval(command: String, reload: Boolean) =
         sbt.eval(command,
                  inputs0,
                  processSbtOutput(
                    inputs.scriptMode,
+                   forcedProgramMode,
                    progressActor,
                    id,
                    sender
@@ -102,7 +106,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
             instrumentations = Nil,
             runtimeError = None,
             done = true,
-            timeout = true
+            timeout = true,
+            forcedProgramMode = false
           )
 
         sbt.kill()
@@ -146,6 +151,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
   private def processSbtOutput(
       scriptMode: Boolean,
+      forcedProgramMode: Boolean,
       progressActor: ActorRef,
       id: Int,
       pasteActor: ActorRef): (String, Boolean, Boolean) => Unit = { (line, done, reload) =>
@@ -185,7 +191,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         instrumentations = instrumentations.getOrElse(Nil),
         runtimeError = runtimeError,
         done = done && !reload,
-        timeout = false
+        timeout = false,
+        forcedProgramMode = forcedProgramMode
       )
 
       progressActor ! progress

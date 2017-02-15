@@ -23,10 +23,26 @@ class InstrumentSpecs extends FunSuite {
       val original = slurp(path.resolve("original.scala"))
       val expected = slurp(path.resolve("instrumented.scala"))
 
-      val obtained = Instrument(original)
+      val Right(obtained) = Instrument(original)
 
       Diff.assertNoDiff(obtained, expected)
     }
+  }
+
+  test("top level fails"){
+    val Left(()) = Instrument("package foo { }")
+  }
+
+  test("main method fails"){
+    val Left(()) = Instrument("object Main { def main(args: Array[String]): Unit = () }")
+  }
+
+  test("extends App primary fails"){
+    val Left(()) = Instrument("object Main extends App") 
+  }
+
+  test("extends App secondary fails"){
+    val Left(()) = Instrument("object Main extends A with App") 
   }
 
   private def slurp(path: Path): String = {
