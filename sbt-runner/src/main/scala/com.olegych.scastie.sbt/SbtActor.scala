@@ -16,7 +16,7 @@ import scala.concurrent.duration._
 import java.util.concurrent.{TimeoutException, Callable, FutureTask, TimeUnit}
 
 import scala.util.control.NonFatal
-import System.{lineSeparator => nl}
+// import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
 import java.io.{PrintWriter, StringWriter}
 
@@ -180,7 +180,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
             && !initializationMessages.exists(
               message => line.startsWith(message))
             && sbtOutput.isEmpty)
-          Some(line + nl)
+          Some(line)
         else None
 
       val progress = PasteProgress(
