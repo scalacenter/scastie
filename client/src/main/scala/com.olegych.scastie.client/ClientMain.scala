@@ -141,7 +141,7 @@ object ClientMain extends JSApp {
 @ScalaJSDefined
 trait EmbededOptionsJs extends js.Object {
   val snippetId: UndefOr[Int]
-  val scriptMode: UndefOr[Boolean]
+  val worksheetMode: UndefOr[Boolean]
   val code: UndefOr[String]
   val targetType: UndefOr[String]
   val scalaVersion: UndefOr[String]
