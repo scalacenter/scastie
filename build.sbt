@@ -17,7 +17,7 @@ lazy val autowireVersion = "0.2.5"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.3.0-SNAPSHOT"
+  version := "0.4.0"
 )
 
 lazy val baseSettings = Seq(
