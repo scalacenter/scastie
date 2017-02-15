@@ -53,10 +53,6 @@ object SideBar {
           ul(
             RunButton(state, backend),
             ClearButton(state, backend),
-            li(onClick ==> save, title := s"Save ($ctrl + S)", `class` := "button")(
-              i(`class` := "fa fa-floppy-o"),
-              p("Save")
-            ),
             li( onClick ==> setView2(View.Libraries),
                 title := "Open Libraries View",
                 selected(View.Libraries),
@@ -73,13 +69,9 @@ object SideBar {
               iconic.justifyLeft,
               p("Format")
             ),
-            li( onClick ==> toggleScriptMode,
-                title := s"Turn Script Mode $scriptModeLabel (F4)",
-                scriptModeSelected,
-               `class` := "button"
-               )(
-              iconic.script,
-              p("Script")
+            li(onClick ==> save, title := s"Save ($ctrl + S)", `class` := "button")(
+              i(`class` := "fa fa-floppy-o"),
+              p("Save")
             ),
             li( onClick ==> toggleConsole,
                 title := s"$consoleLabel Console",
@@ -102,6 +94,14 @@ object SideBar {
                )(
               iconic.bug,
               p("Issue")
+            ),
+            li( onClick ==> toggleScriptMode,
+                title := s"Turn Script Mode $scriptModeLabel (F4)",
+                scriptModeSelected,
+               `class` := "button"
+               )(
+              iconic.script,
+              p("Script")
             )
           )
         )

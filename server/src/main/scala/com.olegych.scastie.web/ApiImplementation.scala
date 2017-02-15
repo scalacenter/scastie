@@ -1,7 +1,9 @@
 package com.olegych.scastie
-package balancer
+package web
 
 import api._
+import balancer._
+import oauth2.User
 
 import akka.pattern.ask
 import akka.actor.ActorRef
@@ -10,15 +12,17 @@ import akka.http.scaladsl.model.RemoteAddress
 
 import scala.concurrent.{Future, ExecutionContext}
 
-class ApiImpl(dispatchActor: ActorRef, ip: RemoteAddress)(
+class ApiImplementation(dispatchActor: ActorRef, ip: RemoteAddress, user: User)(
     implicit timeout: Timeout,
     executionContext: ExecutionContext)
     extends Api {
 
   def run(inputs: Inputs): Future[Ressource] = {
-    (dispatchActor ? InputsWithIp(
+    (dispatchActor ? InputsWithUser(
       inputs,
-      ip.toIP.map(_.ip.toString).getOrElse("-no-ip-"))).mapTo[Ressource]
+      ip.toString,
+      user.login
+    )).mapTo[Ressource]
   }
 
   def save(inputs: Inputs): Future[Ressource] = run(inputs)

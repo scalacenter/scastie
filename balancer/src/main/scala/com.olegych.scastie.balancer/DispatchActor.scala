@@ -14,7 +14,7 @@ import scala.collection.immutable.Queue
 
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
-case class InputsWithIp(inputs: Inputs, ip: String)
+case class InputsWithUser(inputs: Inputs, ip: String, login: String)
 
 case class GetPaste(id: Int)
 case object LoadBalancerStateRequest
@@ -68,13 +68,15 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
       ()
     }
 
-    case InputsWithIp(inputs, ip) => {
+    case InputsWithUser(inputs, ip, login) => {
+      log.info("login: {}, ip: {} run {}", login, ip, inputs)
+
       val id = container.writePaste(inputs)
 
       val (server, balancer) =
         loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), id))
       loadBalancer = balancer
-      server.ref.tell(SbtTask(id, inputs, ip, progressActor), self)
+      server.ref.tell(SbtTask(id, inputs, ip, login, progressActor), self)
       sender ! Ressource(id)
     }
 
