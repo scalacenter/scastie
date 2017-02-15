@@ -12,8 +12,8 @@ def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 
 lazy val upickleVersion = "0.4.4"
-lazy val scalatagsVersion = "0.6.1"
 lazy val autowireVersion = "0.2.5"
+lazy val scalajsDomVersion = "0.9.1"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
@@ -48,7 +48,7 @@ lazy val baseSettings = Seq(
 
 lazy val loggingAndTest =
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.1.7",
+    "ch.qos.logback" % "logback-classic" % "1.2.1",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
     "org.scalatest" %% "scalatest" % "3.0.1" % "test"
   )
@@ -101,7 +101,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("remote"),
       akka("slf4j"),
-      "com.geirsson" %% "scalafmt" % "0.5.1"
+      "com.geirsson" %% "scalafmt" % "0.5.6"
     ),
     imageNames in docker := Seq(
       ImageName(
@@ -165,7 +165,7 @@ lazy val server = project
       "ch.megard" %% "akka-http-cors" % "0.1.11",
       "com.softwaremill.akka-http-session" %% "core" % "0.4.0",
       "de.heikoseeberger" %% "akka-sse" % "2.0.0",
-      "org.json4s" %% "json4s-native" % "3.4.2",
+      "org.json4s" %% "json4s-native" % "3.5.0",
       akkaHttp,
       akka("remote"),
       akka("slf4j")
@@ -230,7 +230,7 @@ lazy val codemirror = project
     scalacOptions -= "-Ywarn-dead-code",
     jsDependencies ++= {
       def codemirrorD(path: String): JSModuleID =
-        "org.webjars.bower" % "codemirror" % "5.18.2" % "compile" / s"$path.js" minified s"$path.js"
+        "org.webjars.bower" % "codemirror" % "5.23.0" % "compile" / s"$path.js" minified s"$path.js"
 
       List(
         "lib/codemirror",
@@ -251,13 +251,13 @@ lazy val codemirror = project
         "mode/clike/clike"
       ).map(codemirrorD)
     },
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion
   )
   .enablePlugins(ScalaJSPlugin)
 
 /* frontend code */
 def react(artifact: String, name: String): JSModuleID =
-  "org.webjars.bower" % "react" % "15.3.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+  "org.webjars.bower" % "react" % "15.4.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
 def react(artifact: String, name: String, depends: String): JSModuleID =
   react(artifact, name).dependsOn(s"$depends.js")
@@ -274,7 +274,7 @@ lazy val client = project
       react("react-dom-server", "ReactDOMServer", "react-dom")
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.2",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.3",
       "org.webjars.bower" % "open-iconic" % "1.1.1",
       "org.webjars" % "font-awesome" % "4.7.0"
     )
@@ -287,7 +287,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "1.2.0",
+      "org.scalameta" %% "scalameta" % "1.4.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
@@ -324,7 +324,7 @@ def api(scalaV: String) = {
     )
     .jsSettings(
       test := {},
-      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
+      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion
     )
     .enablePlugins(BuildInfoPlugin)
 }
@@ -377,7 +377,7 @@ lazy val runtimeDotty = project
   .settings(orgSettings)
   .settings(
     moduleName := "runtime-dotty",
-    scalaVersion := "0.1-20161203-9ceed92-NIGHTLY",
+    scalaVersion := "0.1.1-20170214-606e36b-NIGHTLY",
     scalaOrganization := "ch.epfl.lamp",
     scalaBinaryVersion := "2.11",
     scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-sbt-bridge" % "0.1.1-20161203-9ceed92-NIGHTLY" % "component")
