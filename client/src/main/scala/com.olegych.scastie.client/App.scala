@@ -366,15 +366,17 @@ object App {
                 FormatRequest(state.inputs.code, state.inputs.scriptMode))
               .call()
               .map {
-                case FormatResponse(Some(formattedCode)) =>
+                case FormatResponse(Right(formattedCode)) =>
                   scope.modState { s =>
                     // avoid overriding user's code if he/she types while it's formatting
                     if (s.inputs.code == state.inputs.code)
-                      s.setCode(formattedCode)
+                      s.resetOutputs.setCode(formattedCode)
                     else s
                   }
-                case _ =>
-                  scope.modState(s => s)
+                case FormatResponse(Left(fullStackTrace)) =>
+                  scope.modState(_.resetOutputs.setRuntimeError(
+                    Some(RuntimeError(message = "Formatting Failed", line = None, fullStack = fullStackTrace))
+                  ))
               }
         ))
   }

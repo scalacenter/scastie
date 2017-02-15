@@ -18,12 +18,13 @@ import java.util.concurrent.{TimeoutException, Callable, FutureTask, TimeUnit}
 import scala.util.control.NonFatal
 import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
+import java.io.{PrintWriter, StringWriter}
 
 class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private var sbt = new Sbt()
   private val log = LoggerFactory.getLogger(getClass)
 
-  private def format(code: String, scriptMode: Boolean): Option[String] = {
+  private def format(code: String, scriptMode: Boolean): Either[String, String] = {
     log.info(s"format (scriptMode: $scriptMode)")
     log.info(code)
 
@@ -34,8 +35,13 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         ScalafmtConfig.default
 
     Scalafmt.format(code, style = config) match {
-      case Formatted.Success(formattedCode) => Some(formattedCode)
-      case Formatted.Failure(e) => e.printStackTrace(); None
+      case Formatted.Success(formattedCode) => Right(formattedCode)
+      case Formatted.Failure(failure) => {
+        val errors = new StringWriter()
+        failure.printStackTrace(new PrintWriter(errors))
+        val fullStack = errors.toString()
+        Left(fullStack)
+      }
     }
   }
 

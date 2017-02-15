@@ -1,7 +1,3 @@
-@import com.olegych.scastie.balancer.LoadBalancerStateResponse
-
-@(state: LoadBalancerStateResponse)
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,9 +5,7 @@
 </head>
 <body>
   <h1>Load Balancer Debug</h1>
-  <pre>
-@state.loadBalancer.debug
-  </pre>
+  <pre>==STATE==</pre>
   <script>
     setTimeout(function(){
      window.location.reload(1);

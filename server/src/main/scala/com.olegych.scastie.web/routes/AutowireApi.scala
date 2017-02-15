@@ -8,8 +8,6 @@ import balancer._
 import de.heikoseeberger.akkasse.ServerSentEvent
 import de.heikoseeberger.akkasse.EventStreamMarshalling._
 
-import TwirlSupport._
-
 import akka.NotUsed
 import akka.util.Timeout
 import akka.actor.{ActorRef, ActorSystem}
@@ -55,9 +53,14 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef)(implicit sys
         concat(
           path("loadbalancer-debug")(
             onSuccess((dispatchActor ? LoadBalancerStateRequest)
-              .mapTo[LoadBalancerStateResponse])(response =>
+              .mapTo[LoadBalancerStateResponse])(state =>
 
-              complete(views.html.loadbalancer(response))
+              complete(
+                serveStatic(getResource("/public/views/loadbalancer.html").map(_.replaceAllLiterally(
+                  "==STATE==",
+                  state.loadBalancer.debug
+                )))
+              )
             )
           ),
           path("progress-sse" / Segment)(id ⇒

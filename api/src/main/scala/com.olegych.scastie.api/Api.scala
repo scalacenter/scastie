@@ -15,7 +15,7 @@ trait Api {
 }
 
 case class FormatRequest(code: String, scriptMode: Boolean)
-case class FormatResponse(formattedCode: Option[String])
+case class FormatResponse(formattedCode: Either[String, String])
 
 case class Ressource(id: Int)
 case class FetchResult(inputs: Inputs, progresses: List[PasteProgress])
@@ -155,7 +155,8 @@ case class Inputs(
         s"""|resolvers += Resolver.sonatypeRepo("snapshots")
             |addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "0.1.0-SNAPSHOT")""".stripMargin
 
-      case ScalaTarget.Dotty => "" //use sbt-dotty
+      case ScalaTarget.Dotty => 
+        """addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.7")"""
 
       case _: ScalaTarget.Jvm => ""
     }
@@ -184,21 +185,10 @@ case class Inputs(
           )
         }
         case ScalaTarget.Dotty => {
-          (
-            // http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
-            s"""|val dottyVersion = "0.1.1-20170111-ba7e129-NIGHTLY"
-                |scalaVersion := dottyVersion
-                |scalaOrganization := "ch.epfl.lamp"
-                |scalaBinaryVersion := "2.11"
-                |scalacOptions += "-color:never"
-                |// bug in sbt 0.13.13: https://github.com/sbt/sbt/issues/2867
-                |// should be fixed in 0.13.14
-                |ivyScala ~= (_ map (_ copy (overrideScalaVersion = false)))
-                |libraryDependencies += "ch.epfl.lamp" % "dotty_2.11" % dottyVersion % "scala-tool"
-                |scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-sbt-bridge" % scalaVersion.value % "component").sources()
-                |
-                |libraryDependencies += "org.scastie" % "runtime-dotty_2.11" % "$buildVersion"
-                |""".stripMargin,
+          ( 
+            // set scalaVersion with http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
+            // when https://github.com/felixmulder/sbt-dotty/pull/9 is merge/released
+            "enablePlugins(DottyPlugin)",
             ScalaDependency("org.scastie",
                             "runtime-dotty_2.11",
                             target,
