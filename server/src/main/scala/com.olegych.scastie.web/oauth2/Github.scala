@@ -2,6 +2,8 @@ package com.olegych.scastie
 package web
 package oauth2
 
+import api.User
+
 import akka.http.scaladsl._
 import akka.http.scaladsl.model._
 import HttpMethods.POST
@@ -17,7 +19,6 @@ import scala.concurrent.Future
 import com.typesafe.config.ConfigFactory
 
 case class AccessToken(access_token: String)
-case class User(login: String, name: Option[String], avatar_url: String)
 
 class Github(implicit system: ActorSystem, materializer: ActorMaterializer)
     extends Json4sSupport {

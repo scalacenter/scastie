@@ -12,6 +12,7 @@ trait Api {
   def save(inputs: Inputs): Future[Ressource]
   def fetch(id: Int): Future[Option[FetchResult]]
   def format(code: FormatRequest): Future[FormatResponse]
+  def user(): Future[User]
 }
 
 case class FormatRequest(code: String, scriptMode: Boolean)
@@ -263,8 +264,9 @@ case class Instrumentation(position: Position, render: Render)
 
 sealed trait Render
 case class Value(v: String, className: String) extends Render
-
 case class Html(a: String, folded: Boolean = false) extends Render {
   def stripMargin = copy(a = a.stripMargin)
   def fold = copy(folded = true)
 }
+
+case class User(login: String, name: Option[String], avatar_url: String)
