@@ -24,17 +24,15 @@ object Public {
   val routes =
     concat(
       get(
-        path("beta")(
-          getFromResource("/public/views/beta.html")
-        )
-      ),
-      get(
         concat(
+          path("beta")(
+            getFromResource("public/views/beta.html")
+          ),
           path("sse-demo")(
-            getFromResource("/public/views/sseDemo.html")
+            getFromResource("public/views/sseDemo.html")
           ),
           path("websocket-demo")(
-            getFromResource("/public/views/websocketDemo.html")
+            getFromResource("public/views/websocketDemo.html")
           ),
           path("demo-sse-progress" / Segment)(progressId =>
             complete(
