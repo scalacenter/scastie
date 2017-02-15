@@ -28,6 +28,8 @@ import scala.scalajs._
 
 object Editor {
 
+  CodeMirror.keyMap.sublime.delete("Ctrl-L")
+
   private val codemirrorTextarea =
     Ref[HTMLTextAreaElement]("codemirror-textarea")
 
@@ -56,8 +58,6 @@ object Editor {
           "showToken" -> js.Dynamic.global.RegExp("\\w")),
         "extraKeys" -> js.Dictionary(
           "Tab" -> "defaultTab",
-          ctrl + "-L" -> null,
-          ctrl + "-l" -> null,
           ctrl + "-Enter" -> "run",
           ctrl + "-S" -> "save",
           "Esc" -> "clear",

@@ -9,11 +9,18 @@ import js.{UndefOr, RegExp, Dictionary, |}
 @JSName("CodeMirror")
 object CodeMirror extends js.Object {
   var commands: js.Dynamic = js.native
+  var keyMap: KeyMaps = js.native
+
   def apply(element: Element, options: UndefOr[Options]): Editor = js.native
   def fromTextArea(textarea: HTMLTextAreaElement,
                    options: Options): TextAreaEditor = js.native
   def runMode(value: String, mode: String, destination: HTMLElement): Editor =
     js.native
+}
+
+@ScalaJSDefined
+trait KeyMaps extends js.Object {
+  val sublime: js.Dictionary[String]
 }
 
 @js.native
