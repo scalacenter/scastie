@@ -49,7 +49,7 @@ class Histogram[T: Ordering](protected val data: Map[T, Double]) {
 
     data.toList.sortBy { case (k, v) => (v, k) }.reverse.map {
       case (k, v) =>
-        val pp = Math.floor(window * v).toInt
+        val pp = Math.ceil(window * v).toInt
         val ppp = padLeft(2, pp.toString)
         s"$k ($ppp%) ${"*" * pp}"
     }.mkString(box, nl, box)
