@@ -217,7 +217,10 @@ object App {
 
   class Backend(scope: BackendScope[Props, State]) {
     def codeChange(newCode: String) =
-      scope.modState(_.setCode(newCode))
+      scope.modState(_.setCode(newCode)) >>
+        scope.props.flatMap(props =>
+          props.router.map(_.set(Home)).getOrElse(Callback(()))
+        )
 
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
@@ -447,7 +450,7 @@ object App {
             if (!props.isEmbedded) "app"
             else "app embedded"
 
-          div(`class` := appClass)(
+          div(`class` := s"$appClass $theme")(
             sideBar,
             MainPannel(state, scope.backend, props.isEmbedded)
           )

@@ -4,9 +4,13 @@ body {
   margin: 0;
 }
 
-body, .root, .app, .main-pannel, .pannel, .sidebar,
+body, .root, .app, .main-pannel, .sidebar,
 .editor, .libraries {
   height: 100%;
+}
+.pannel {
+  overflow: hidden;
+  height: calc(~"100% - "10px);
 }
 
 body.mac kbd.pc { display: none }

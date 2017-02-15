@@ -30,16 +30,15 @@ object SideBar {
           if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
           else EmptyTag
 
-        val worksheetModeLabel =
-          if (state.inputs.worksheetMode) "ON"
-          else "OFF"
+        val worksheetModeToogleLabel =
+          if (state.inputs.worksheetMode) "OFF"
+          else "ON"
 
         def openInNewTab(link: String): Callback = {
           Callback(
             dom.window.open(link, "_blank").focus()
           )
         }
-
 
         def feedback(e: ReactEventI): Callback = 
           openInNewTab("https://gitter.im/scalacenter/scastie")
@@ -96,7 +95,7 @@ object SideBar {
               p("Issue")
             ),
             li( onClick ==> toggleWorksheetMode,
-                title := s"Turn Worksheet Mode $worksheetModeLabel (F4)",
+                title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
                 worksheetModeSelected,
                `class` := "button"
                )(
