@@ -101,7 +101,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   def addBetaUser(login: String): Unit = {
     if (!exists(login)) {
       Files.write(usersFile,
-                  (login + nl).getBytes,
+                  (nl + login + nl).getBytes,
                   StandardOpenOption.APPEND,
                   StandardOpenOption.CREATE)
       ()
