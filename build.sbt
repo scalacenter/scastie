@@ -17,7 +17,7 @@ lazy val scalajsDomVersion = "0.9.1"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.4.0"
+  version := "0.5.0-SNAPSHOT"
 )
 
 lazy val baseSettings = Seq(
@@ -101,7 +101,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("remote"),
       akka("slf4j"),
-      "com.geirsson" %% "scalafmt" % "0.5.6"
+      "com.geirsson" %% "scalafmt-core" % "0.5.6"
     ),
     imageNames in docker := Seq(
       ImageName(
@@ -172,7 +172,7 @@ lazy val server = project
     )
   )
   .enablePlugins(SbtWeb, JavaServerAppPackaging)
-  .dependsOn(api211JVM, utils, template)
+  .dependsOn(api211JVM, utils, balancer)
 
 lazy val balancer = project
   .settings(baseSettings)
@@ -185,18 +185,11 @@ lazy val balancer = project
   )
   .dependsOn(api211JVM, utils)
 
-lazy val template = project
-  .settings(baseSettings)
-  .settings(scalacOptions -= "-Ywarn-unused-import")
-  .enablePlugins(SbtTwirl)
-  .dependsOn(balancer)
-
 lazy val scastie = project
   .in(file("."))
   .aggregate(
     server,
     balancer,
-    template,
     instrumentation,
     sbtRunner,
     codemirror,
@@ -230,7 +223,7 @@ lazy val codemirror = project
     scalacOptions -= "-Ywarn-dead-code",
     jsDependencies ++= {
       def codemirrorD(path: String): JSModuleID =
-        "org.webjars.bower" % "codemirror" % "5.23.0" % "compile" / s"$path.js" minified s"$path.js"
+        "org.webjars.bower" % "codemirror" % "5.18.2" % "compile" / s"$path.js" minified s"$path.js"
 
       List(
         "lib/codemirror",
@@ -257,7 +250,7 @@ lazy val codemirror = project
 
 /* frontend code */
 def react(artifact: String, name: String): JSModuleID =
-  "org.webjars.bower" % "react" % "15.4.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+  "org.webjars.bower" % "react" % "15.3.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
 def react(artifact: String, name: String, depends: String): JSModuleID =
   react(artifact, name).dependsOn(s"$depends.js")
@@ -274,7 +267,7 @@ lazy val client = project
       react("react-dom-server", "ReactDOMServer", "react-dom")
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.3",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.2",
       "org.webjars.bower" % "open-iconic" % "1.1.1",
       "org.webjars" % "font-awesome" % "4.7.0"
     )
@@ -375,18 +368,10 @@ lazy val runtimeScala212JS = runtimeScala212.js
 lazy val runtimeDotty = project
   .in(file("runtime-dotty"))
   .settings(orgSettings)
+  .enablePlugins(DottyPlugin)
   .settings(
-    moduleName := "runtime-dotty",
-    scalaVersion := "0.1.1-20170214-606e36b-NIGHTLY",
-    scalaOrganization := "ch.epfl.lamp",
-    scalaBinaryVersion := "2.11",
-    scalaCompilerBridgeSource := ("ch.epfl.lamp" % "dotty-sbt-bridge" % "0.1.1-20161203-9ceed92-NIGHTLY" % "component")
-      .sources(),
-    autoScalaLibrary := false,
-    libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-library" % "2.11.5",
-      "com.lihaoyi" %% "upickle" % upickleVersion
-    )
+    moduleName := "runtime-dotty"
+    // libraryDependencies += "com.lihaoyi" %% "upickle" % upickleVersion
   )
   .dependsOn(api211JVM)
 

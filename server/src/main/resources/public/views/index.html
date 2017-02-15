@@ -1,5 +1,3 @@
-@(production: Boolean)
-
 <!DOCTYPE html>
 <html>
   <head>
@@ -21,11 +19,7 @@
   </head>
   <body>
     <script src="/assets/public/client-jsdeps.js"></script>
-    @if(production) {
-      <script src="/assets/client-opt.js"></script>
-    } else {
-      <script src="/assets/public/client-fastopt.js"></script>
-    }
+    <script src="/assets/public/client-fastopt.js"></script>
     <script>
       com.olegych.scastie.client.ClientMain().main()
     </script>

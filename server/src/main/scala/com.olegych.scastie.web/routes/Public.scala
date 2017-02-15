@@ -2,7 +2,6 @@ package com.olegych.scastie
 package web
 package routes
 
-import TwirlSupport._
 import akka.http.scaladsl.server.Directives._
 
 import akka.NotUsed
@@ -26,16 +25,16 @@ object Public {
     concat(
       get(
         path("beta")(
-          complete(views.html.beta())
+          getFromResource("/public/views/beta.html")
         )
       ),
       get(
         concat(
           path("sse-demo")(
-            complete(views.html.sseDemo())
+            getFromResource("/public/views/sseDemo.html")
           ),
           path("websocket-demo")(
-            complete(views.html.websocketDemo())
+            getFromResource("/public/views/websocketDemo.html")
           ),
           path("demo-sse-progress" / Segment)(progressId =>
             complete(
