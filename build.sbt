@@ -81,20 +81,12 @@ lazy val runnerRuntimeDependencies = Seq(
   sbtScastie
 ).map(publishLocal in _)
 
-lazy val sbtRunnerRuntimeDependencies = Seq(
-  publishLocal in sbtScastie,
-  publishLocal in runtimeScala211JVM,
-  publishLocal in api211JVM,
-  publishLocal in sbtApi210,
-  publishLocal in sbtApi211
-)
-
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
   .settings(loggingAndTest)
   .settings(
-    scalacOptions -= "-Xfatal-warnings",
+    scalacOptions -= "-Xfatal-warnings", // Thread.stop
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     libraryDependencies ++= Seq(
       akka("actor"),
@@ -103,6 +95,8 @@ lazy val sbtRunner = project
       akka("slf4j"),
       "com.geirsson" %% "scalafmt-core" % "0.5.6"
     ),
+    buildInfoKeys := Seq[BuildInfoKey](version),
+    buildInfoPackage := "com.olegych.scastie.buildinfo",
     imageNames in docker := Seq(
       ImageName(
         namespace = Some("scalacenter"),
@@ -136,16 +130,14 @@ lazy val sbtRunner = project
         entryPoint("java", "-Xmx256M", "-Xms256M", "-jar", artifactTargetPath)
       }
     }.dependsOn(runnerRuntimeDependencies: _*).value,
-    buildInfoKeys := Seq[BuildInfoKey](version),
-    buildInfoPackage := "com.olegych.scastie.buildinfo",
     test in Test := (test in Test)
-      .dependsOn(sbtRunnerRuntimeDependencies: _*)
+      .dependsOn(runnerRuntimeDependencies: _*)
       .value,
     testOnly in Test := (testOnly in Test)
-      .dependsOn(sbtRunnerRuntimeDependencies: _*)
+      .dependsOn(runnerRuntimeDependencies: _*)
       .evaluated,
     testQuick in Test := (testQuick in Test)
-      .dependsOn(sbtRunnerRuntimeDependencies: _*)
+      .dependsOn(runnerRuntimeDependencies: _*)
       .evaluated
   )
   .dependsOn(sbtApi211, api211JVM, instrumentation, utils)

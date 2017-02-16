@@ -17,12 +17,21 @@ class SbtActorTest()
     with FunSuiteLike
     with BeforeAndAfterAll {
 
+  test("Simple Instrumentation") {
+    run("1 + 1")(_.instrumentations.nonEmpty)
+  }
+
+  test("Regression #55: Dotty fails to resolve") {
+    val dotty = Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Dotty)
+    run(dotty)(_.instrumentations.nonEmpty)
+  }
+
   test("timeout") {
-    run("while(true){}", _.timeout)
+    run("while(true){}")(_.timeout)
   }
 
   test("after a timeout the sbt instance is ready to be used") {
-    run("1 + 1", progress => {
+    run("1 + 1")(progress => {
       val gotInstrumentation = progress.instrumentations.nonEmpty
 
       if (gotInstrumentation) {
@@ -38,7 +47,7 @@ class SbtActorTest()
   }
 
   test("capture runtime errors") {
-    run("1/0", progress => {
+    run("1/0")(progress => {
       val gotRuntimeError = progress.runtimeError.nonEmpty
 
       if (gotRuntimeError) {
@@ -54,7 +63,7 @@ class SbtActorTest()
 
   test("capture user output separately from sbt output") {
     val message = "Hello"
-    run(s"""println("$message")""", progress => {
+    run(s"""println("$message")""")(progress => {
       // we should only receive an hello message
       val gotHelloMessage = progress.userOutput == Some(message + nl)
       if (!gotHelloMessage) assert(progress.userOutput == None)
@@ -76,12 +85,11 @@ class SbtActorTest()
     t
   }
   private var firstRun = true
-  private def run(code: String, fish: PasteProgress => Boolean): Unit = {
+  private def run(inputs: Inputs)(fish: PasteProgress => Boolean): Unit = {
     val ip = "my-ip"
     val login = "github-login"
     val progressActor = TestProbe()
 
-    val inputs = Inputs.default.copy(code = code)
     sbtActor ! SbtTask(id, inputs, ip, login, progressActor.ref)
 
     val totalTimeout =
@@ -89,9 +97,16 @@ class SbtActorTest()
       else timeout
 
     progressActor.fishForMessage(totalTimeout) {
-      case progress: PasteProgress => fish(progress)
+      case progress: PasteProgress => {
+        val fishResult = fish(progress)
+        if(progress.done && !fishResult) throw new Exception("Fail to meet expectation")
+        else fishResult
+      }
     }
 
     firstRun = false
+  }
+  private def run(code: String)(fish: PasteProgress => Boolean): Unit = {
+    run(Inputs.default.copy(code = code))(fish)
   }
 }
