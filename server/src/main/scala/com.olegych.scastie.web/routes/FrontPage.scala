@@ -13,7 +13,7 @@ class FrontPage(production: Boolean) {
       concat(
         pathSingleSlash(index),
         path("embedded-demo")(
-          complete(getResource("/public/views/embedded.html").map(substituteScalaJs))
+          complete(serveStatic(getResource("/public/views/embedded.html").map(substituteScalaJs)))
         ),
         path(Segment)(_ => index)
       )
