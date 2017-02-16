@@ -1,7 +1,12 @@
 FROM openjdk:8u111-jdk-alpine
 
+RUN apk update
 RUN apk add --update bash
 RUN apk add --update ncurses
+RUN apk add --update nodejs
+
+ENV COURSIER_CACHE /root/.coursier
+ENV SBT_OPTS -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
 
 RUN wget http://dl.bintray.com/sbt/native-packages/sbt/0.13.13/sbt-0.13.13.tgz -O /tmp/sbt-0.13.13.tgz
 RUN mkdir /tmp/sbt
@@ -23,7 +28,7 @@ RUN mkdir /root/scala-212/src
 RUN mkdir /root/scala-212/src/main
 RUN mkdir /root/scala-212/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /root/scala-212/src/main/scala/Main.scala
-RUN cd /root/scala-212; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal run
+RUN cd /root/scala-212; sbt run
 
 RUN mkdir /root/scala-211
 RUN mkdir /root/scala-211/project
@@ -33,7 +38,7 @@ RUN mkdir /root/scala-211/src
 RUN mkdir /root/scala-211/src/main
 RUN mkdir /root/scala-211/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /root/scala-211/src/main/scala/Main.scala
-RUN cd /root/scala-211; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal run
+RUN cd /root/scala-211; sbt run
 
 RUN mkdir /root/scala-210
 RUN mkdir /root/scala-210/project
@@ -43,15 +48,17 @@ RUN mkdir /root/scala-210/src
 RUN mkdir /root/scala-210/src/main
 RUN mkdir /root/scala-210/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /root/scala-210/src/main/scala/Main.scala
-RUN cd /root/scala-210; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal run
+RUN cd /root/scala-210; sbt run
 
 RUN mkdir /root/dotty
 RUN mkdir /root/dotty/project
 RUN echo 'sbt.version = 0.13.13' > /root/dotty/project/build.properties
-RUN echo 'addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.8")' > /root/dotty/project/plugins.sbt
+RUN echo 'addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.9")' > /root/dotty/project/plugins.sbt
 RUN echo 'enablePlugins(DottyPlugin)' > /root/dotty/build.sbt
 RUN mkdir /root/dotty/src
 RUN mkdir /root/dotty/src/main
 RUN mkdir /root/dotty/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /root/dotty/src/main/scala/Main.scala
-RUN cd /root/dotty; sbt -Dsbt.log.noformat=true -Djline.terminal=jline.UnsupportedTerminal run
+RUN cd /root/dotty; sbt run
+
+RUN apk add --update rsync

@@ -1,5 +1,5 @@
 ```bash
-docker build -t scalacenter/scastie-docker-sbt:0.13.13 .
+docker build -t scalacenter/scastie-docker-sbt:0.0.9 .
 docker login
-docker push scalacenter/scastie-docker-sbt:0.13.13
+docker push scalacenter/scastie-docker-sbt:0.0.9
 ```

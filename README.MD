@@ -1,4 +1,10 @@
-[![Build Status](http://drone.geirsson.com:8001/api/badges/scalacenter/scastie/status.svg)](http://drone.geirsson.com:8001/scalacenter/scastie) [![Join the chat](https://badges.gitter.im/scalacenter/scastie.svg)](https://gitter.im/scalacenter/scastie)
+[![Build Status](http://drone.geirsson.com:8001/api/badges/scalacenter/scastie/status.svg?branch=master)](
+  http://drone.geirsson.com:8001/scalacenter/scastie
+)
+
+[![Join the chat](https://badges.gitter.im/scalacenter/scastie.svg)](
+  https://gitter.im/scalacenter/scastie
+)
 
 # Scala pastebin
 
@@ -33,7 +39,7 @@ The application consists of two modules:
 -  balancer - split the load across multiple sbt instances
 
 For each paste create/read request Application controller in scastie module creates a message 
-and sends it to PastesActor in renderer module. The PastesActor routes messages to a remote 
+and sends it to DispatchActor in renderer module. The DispatchActor routes messages to a remote 
 SbtActor via akka router.
 
 SbtActor(s) interacts with locally running sbt instance via process I\O streams, which is quite 
@@ -41,7 +47,7 @@ hacky, but works good enough. If the sbt instance terminates or otherwise encoun
 while processing a paste, the actor will be restarted.
 
 Currently the pastes are stored directly on file system on master node (the one which is running 
-web application and PastesActor). 
+web application). 
 
 ## How to run
 
@@ -56,8 +62,9 @@ open http://localhost:9000
 ## How to deploy
 
 add your ssh key to
-scastie@scastie.scala-lang.org
-scastie@scastie-sbt.scala-lang.org
+
+* `scastie@scastie.scala-lang.org`
+* `scastie@scastie-sbt.scala-lang.org`
 
 `sbt deploy`
 

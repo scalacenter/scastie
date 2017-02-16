@@ -56,19 +56,20 @@ object ServerMain {
     val userFacingRoutes =
       new FrontPage(production).routes
 
-    val programmaticRoutes = 
+    val programmaticRoutes =
       concat(
         new AutowireApi(dispatchActor, progressActor, userDirectives).routes,
         Assets.routes
       )
 
-    val publicRoutes = 
+    val publicRoutes =
       concat(
         Public.routes,
         new OAuth2(github, session).routes
       )
 
-    val privateRoutes = requireLogin(concat(programmaticRoutes, userFacingRoutes))
+    val privateRoutes = requireLogin(
+      concat(programmaticRoutes, userFacingRoutes))
 
     val routes = concat(publicRoutes, privateRoutes)
 
@@ -76,7 +77,7 @@ object ServerMain {
     logger.info(s"Application started (port: $port)")
 
     Await.result(system.whenTerminated, Duration.Inf)
-    
+
     ()
   }
 }

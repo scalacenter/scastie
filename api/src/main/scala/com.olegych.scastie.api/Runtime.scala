@@ -15,7 +15,8 @@ package object runtime {
   val help = {
     // A stylesheets select the correct one to display
     val Ctrl = "<kbd class='pc'>Ctrl&nbsp;&nbsp;</kbd>"
-    val Cmd = """<kbd class='mac'><span class="oi" data-glyph="command"></span></kbd>"""
+    val Cmd =
+      """<kbd class='mac'><span class="oi" data-glyph="command"></span></kbd>"""
 
     val CC = Ctrl + Cmd
 

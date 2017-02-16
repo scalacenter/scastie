@@ -11,9 +11,10 @@ import akka.http.scaladsl.model.RemoteAddress
 
 import scala.concurrent.{Future, ExecutionContext}
 
-class ApiImplementation(dispatchActor: ActorRef, ip: RemoteAddress, user: User)(
-    implicit timeout: Timeout,
-    executionContext: ExecutionContext)
+class ApiImplementation(
+    dispatchActor: ActorRef,
+    ip: RemoteAddress,
+    user: User)(implicit timeout: Timeout, executionContext: ExecutionContext)
     extends Api {
 
   def run(inputs: Inputs): Future[Ressource] = {

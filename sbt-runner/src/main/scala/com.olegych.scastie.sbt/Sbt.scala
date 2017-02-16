@@ -5,6 +5,8 @@ import buildinfo.BuildInfo.{version => buildVersion}
 
 import api._
 
+import com.typesafe.config.ConfigFactory
+
 import scala.util.Random
 import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
@@ -13,6 +15,10 @@ import java.nio.file._
 import java.io.IOException
 
 class Sbt() {
+  private val config =
+    ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
+  private val production = config.getBoolean("production")
+
   private val log = LoggerFactory.getLogger(getClass)
 
   private val sbtDir = Files.createTempDirectory("scastie")
@@ -41,6 +47,7 @@ class Sbt() {
   Files.createDirectories(codeFile.getParent)
 
   private val (process, fin, fout) = {
+
     val builder = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     builder
       .environment()
@@ -59,7 +66,8 @@ class Sbt() {
     (process, process.getOutputStream, process.getInputStream)
   }
 
-  private def collect(lineCallback: (String, Boolean, Boolean) => Unit, reload: Boolean): Unit = {
+  private def collect(lineCallback: (String, Boolean, Boolean) => Unit,
+                      reload: Boolean): Unit = {
     val chars = new collection.mutable.Queue[Character]()
     var read = 0
     var prompt = false

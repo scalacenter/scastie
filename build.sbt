@@ -3,7 +3,6 @@ import ScalaJSHelper._
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 
-
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.4.16"
 
 lazy val akkaHttpVersion = "10.0.3"
@@ -22,24 +21,24 @@ lazy val orgSettings = Seq(
 lazy val baseSettings = Seq(
     scalaVersion := "2.11.8",
     scalacOptions := {
-      val extraOptions =
-        if (scalaBinaryVersion.value != "2.10") {
-          Seq("-Ywarn-unused-import")
-        } else Seq()
-        
-      Seq(
-        "-deprecation",
-        "-encoding",
-        "UTF-8",
-        "-feature",
-        "-unchecked",
-        "-Xfatal-warnings",
-        "-Xlint",
-        "-Yno-adapted-args",
-        "-Ywarn-numeric-widen",
-        "-Ywarn-value-discard"
-      ) ++ extraOptions
-    },
+    val extraOptions =
+      if (scalaBinaryVersion.value != "2.10") {
+        Seq("-Ywarn-unused-import")
+      } else Seq()
+
+    Seq(
+      "-deprecation",
+      "-encoding",
+      "UTF-8",
+      "-feature",
+      "-unchecked",
+      "-Xfatal-warnings",
+      "-Xlint",
+      "-Yno-adapted-args",
+      "-Ywarn-numeric-widen",
+      "-Ywarn-value-discard"
+    ) ++ extraOptions
+  },
     console := (console in Test).value,
     scalacOptions in (Test, console) -= "-Ywarn-unused-import",
     scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"
@@ -55,7 +54,6 @@ lazy val loggingAndTest =
 lazy val utils = project
   .in(file("utils"))
   .settings(baseSettings)
-
   .settings(
     libraryDependencies += akka("actor")
   )
@@ -119,9 +117,9 @@ lazy val sbtRunner = project
       val artifactTargetPath = s"/app/${artifact.name}"
 
       new Dockerfile {
-        from("scalacenter/scastie-docker-sbt:0.13.13")
+        from("scalacenter/scastie-docker-sbt:0.0.9")
 
-        add(ivy / "local" / org, s"/root/.ivy2/local/$org")
+        add(ivy / "local" / org, s"/drone/.ivy2/local/$org")
 
         add(artifact, artifactTargetPath)
 
@@ -147,15 +145,11 @@ lazy val server = project
   .settings(packageScalaJS(client))
   .settings(
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
-    
-    reStart := reStart
-      .dependsOn(WebKeys.assets in (client, Assets)).evaluated,
-
+    reStart := reStart.dependsOn(WebKeys.assets in (client, Assets)).evaluated,
     (packageBin in Universal) := (packageBin in Universal)
-      .dependsOn(WebKeys.assets in (client, Assets)).value,
-    
+      .dependsOn(WebKeys.assets in (client, Assets))
+      .value,
     unmanagedResourceDirectories in Compile += (WebKeys.public in (client, Assets)).value,
-
     libraryDependencies ++= Seq(
       "ch.megard" %% "akka-http-cors" % "0.1.11",
       "com.softwaremill.akka-http-session" %% "core" % "0.4.0",
@@ -200,7 +194,7 @@ lazy val scastie = project
   )
   .settings(orgSettings)
   .settings(Deployment.settings(server, sbtRunner))
-  .settings(ContinuousDelivery.settings)
+  .settings(addCommandAlias("drone", ";test ;server/universal:packageBin"))
 
 /* codemirror is a facade to the javascript rich editor codemirror*/
 lazy val codemirror = project

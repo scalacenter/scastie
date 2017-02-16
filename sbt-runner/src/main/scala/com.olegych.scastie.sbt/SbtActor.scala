@@ -23,7 +23,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private var sbt = new Sbt()
   private val log = LoggerFactory.getLogger(getClass)
 
-  private def format(code: String, worksheetMode: Boolean): Either[String, String] = {
+  private def format(code: String,
+                     worksheetMode: Boolean): Either[String, String] = {
     log.info(s"format (worksheetMode: $worksheetMode)")
     log.info(code)
 
@@ -60,8 +61,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       instrumentation.Instrument(inputs.code) match {
         case Right(instrumented) => (inputs.copy(code = instrumented), false)
         case _ => (inputs.copy(worksheetMode = false), true)
-      }
-    else (inputs, false)
+      } else (inputs, false)
   }
 
   def receive = {
@@ -85,8 +85,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
                    id,
                    sender
                  ),
-                 reload
-        )
+                 reload)
 
       def timeout(duration: FiniteDuration): Unit = {
         log.info(s"restarting sbt: $inputs")
@@ -118,7 +117,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
       val sbtReloadTime = 40.seconds
       if (sbt.needsReload(inputs0)) {
-        withTimeout(sbtReloadTime)(eval("compile", reload = true))(timeout(sbtReloadTime))
+        withTimeout(sbtReloadTime)(eval("compile", reload = true))(
+          timeout(sbtReloadTime))
       }
 
       log.info(s"== running $id ==")
@@ -153,50 +153,52 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       forcedProgramMode: Boolean,
       progressActor: ActorRef,
       id: Int,
-      pasteActor: ActorRef): (String, Boolean, Boolean) => Unit = { (line, done, reload) =>
-    {
-      val lineOffset =
-        if (worksheetMode) -2
-        else 0
+      pasteActor: ActorRef): (String, Boolean, Boolean) => Unit = {
+    (line, done, reload) =>
+      {
+        val lineOffset =
+          if (worksheetMode) -2
+          else 0
 
-      val problems = extractProblems(line, lineOffset)
-      val instrumentations = extract[List[api.Instrumentation]](line, report = true)
-      val runtimeError = extractRuntimeError(line, lineOffset)
-      val sbtOutput = extract[sbtapi.SbtOutput](line)
+        val problems = extractProblems(line, lineOffset)
+        val instrumentations =
+          extract[List[api.Instrumentation]](line, report = true)
+        val runtimeError = extractRuntimeError(line, lineOffset)
+        val sbtOutput = extract[sbtapi.SbtOutput](line)
 
-      // sbt plugin is not loaded at this stage. we need to drop those messages
-      val initializationMessages = List(
-        "[info] Loading global plugins from",
-        "[info] Loading project definition from",
-        "[info] Set current project to scastie"
-      )
+        // sbt plugin is not loaded at this stage. we need to drop those messages
+        val initializationMessages = List(
+          "[info] Loading global plugins from",
+          "[info] Loading project definition from",
+          "[info] Set current project to scastie"
+        )
 
-      val userOutput =
-        if (problems.isEmpty
-            && instrumentations.isEmpty
-            && runtimeError.isEmpty
-            && !done
-            && !initializationMessages.exists(
-              message => line.startsWith(message))
-            && sbtOutput.isEmpty)
-          Some(line)
-        else None
+        val userOutput =
+          if (problems.isEmpty
+              && instrumentations.isEmpty
+              && runtimeError.isEmpty
+              && !done
+              && !initializationMessages.exists(
+                message => line.startsWith(message))
+              && sbtOutput.isEmpty)
+            Some(line)
+          else None
 
-      val progress = PasteProgress(
-        id = id,
-        userOutput = userOutput,
-        sbtOutput = sbtOutput.map(_.line),
-        compilationInfos = problems.getOrElse(Nil),
-        instrumentations = instrumentations.getOrElse(Nil),
-        runtimeError = runtimeError,
-        done = done && !reload,
-        timeout = false,
-        forcedProgramMode = forcedProgramMode
-      )
+        val progress = PasteProgress(
+          id = id,
+          userOutput = userOutput,
+          sbtOutput = sbtOutput.map(_.line),
+          compilationInfos = problems.getOrElse(Nil),
+          instrumentations = instrumentations.getOrElse(Nil),
+          runtimeError = runtimeError,
+          done = done && !reload,
+          timeout = false,
+          forcedProgramMode = forcedProgramMode
+        )
 
-      progressActor ! progress
-      pasteActor ! progress
-    }
+        progressActor ! progress
+        pasteActor ! progress
+      }
   }
 
   private def extractProblems(line: String,
@@ -224,10 +226,11 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
   }
 
-  private def extract[T: Reader](line: String, report: Boolean = false): Option[T] = {
+  private def extract[T: Reader](line: String,
+                                 report: Boolean = false): Option[T] = {
     try { Some(uread[T](line)) } catch {
       case NonFatal(e: scala.MatchError) => {
-        if(report) {
+        if (report) {
           println("---")
           println(line)
           println("---")

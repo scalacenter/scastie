@@ -29,20 +29,21 @@ class InstrumentSpecs extends FunSuite {
     }
   }
 
-  test("top level fails"){
+  test("top level fails") {
     val Left(()) = Instrument("package foo { }")
   }
 
-  test("main method fails"){
-    val Left(()) = Instrument("object Main { def main(args: Array[String]): Unit = () }")
+  test("main method fails") {
+    val Left(()) =
+      Instrument("object Main { def main(args: Array[String]): Unit = () }")
   }
 
-  test("extends App primary fails"){
-    val Left(()) = Instrument("object Main extends App") 
+  test("extends App primary fails") {
+    val Left(()) = Instrument("object Main extends App")
   }
 
-  test("extends App secondary fails"){
-    val Left(()) = Instrument("object Main extends A with App") 
+  test("extends App secondary fails") {
+    val Left(()) = Instrument("object Main extends A with App")
   }
 
   private def slurp(path: Path): String = {

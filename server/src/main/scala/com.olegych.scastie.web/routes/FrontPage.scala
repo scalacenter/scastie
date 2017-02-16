@@ -13,7 +13,8 @@ class FrontPage(production: Boolean) {
       concat(
         pathSingleSlash(index),
         path("embedded-demo")(
-          complete(serveStatic(getResource("/public/views/embedded.html").map(substituteScalaJs)))
+          complete(serveStatic(
+            getResource("/public/views/embedded.html").map(substituteScalaJs)))
         ),
         path(Segment)(_ => index)
       )
@@ -21,9 +22,9 @@ class FrontPage(production: Boolean) {
   )
 
   private def substituteScalaJs(content: String): String = {
-    if(!production) 
+    if (!production)
       content
-    else 
+    else
       content.replaceAllLiterally(
         """<script src="/assets/public/client-fastopt.js"></script>""",
         """<script src="/assets/client-opt.js"></script>"""
@@ -32,6 +33,7 @@ class FrontPage(production: Boolean) {
 
   private val index =
     complete(
-      serveStatic(getResource("/public/views/index.html").map(substituteScalaJs))
+      serveStatic(
+        getResource("/public/views/index.html").map(substituteScalaJs))
     )
 }

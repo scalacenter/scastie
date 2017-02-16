@@ -131,7 +131,7 @@ class Deployment(rootFolder: File,
           |nohup server/bin/server \\
           |  -Dconfig.file=/home/$userName/$applicationRootConfig \\
           |  -Dlogger.file=/home/$userName/$logbackConfigFileName &>/dev/null &
-          |""".stripMargin 
+          |""".stripMargin
 
     Files.write(serverScript, content.getBytes)
 
@@ -142,7 +142,7 @@ class Deployment(rootFolder: File,
     val scastieSecrets = "scastie-secrets"
     val secretFolder = rootFolder / ".." / scastieSecrets
 
-    if(Files.exists(secretFolder.toPath)) {
+    if (Files.exists(secretFolder.toPath)) {
       Process("git pull origin master", secretFolder)
     } else {
       Process(s"git clone git@github.com:scalacenter/$scastieSecrets.git")
@@ -191,8 +191,8 @@ class Deployment(rootFolder: File,
           |do
           |  echo "Starting Runner: Port $$i"
           |  docker run --network=host -d \\
-          |    -v /home/$userName/.coursier/cache:/root/.coursier/cache \\
-          |    -e RUNNER_PRODUCTION=1 \\
+          |    -v /home/$userName/.coursier/cache:/drone/.coursier \\
+          |    -e RUNNER_PRODUCTION=true \\
           |    -e RUNNER_PORT=$$i \\
           |    -e RUNNER_HOSTNAME=$runnersHostname \\
           |    $dockerImagePath
@@ -215,13 +215,11 @@ class Deployment(rootFolder: File,
   private val productionConfig = (deploymentFolder / "production.conf").toPath
   private val logbackConfig = (deploymentFolder / "logback.xml").toPath
 
-  private val config = 
-    ConfigFactory
-      .parseFile(productionConfig.toFile)
-  
-  
+  private val config =
+    ConfigFactory.parseFile(productionConfig.toFile)
+
   val balancerConfig = config.getConfig("com.olegych.scastie.balancer")
-  
+
   private val serverHostname = config.getString("server-hostname")
 
   private val runnersHostname = balancerConfig.getString("remote-hostname")

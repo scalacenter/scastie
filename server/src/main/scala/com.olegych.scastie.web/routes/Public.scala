@@ -34,16 +34,16 @@ object Public {
           path("websocket-demo")(
             getFromResource("public/views/websocketDemo.html")
           ),
-          path("demo-sse-progress" / Segment)(progressId =>
-            complete(
-              source(progressId).map(time => ServerSentEvent(time))
-            )
-          ),
-          path("demo-websocket-progress" / Segment)(progressId =>
-            handleWebSocketMessages(
-              webSocket(progressId)
-            )
-          )
+          path("demo-sse-progress" / Segment)(
+            progressId =>
+              complete(
+                source(progressId).map(time => ServerSentEvent(time))
+            )),
+          path("demo-websocket-progress" / Segment)(
+            progressId =>
+              handleWebSocketMessages(
+                webSocket(progressId)
+            ))
         )
       ),
       Assets.routes
@@ -53,12 +53,13 @@ object Public {
     Source
       .tick(0.second, 1.seconds, NotUsed)
       .take(5)
-      .map(_ => id + " == " + DateTimeFormatter.ISO_LOCAL_TIME.format(LocalTime.now()))
+      .map(_ =>
+        id + " == " + DateTimeFormatter.ISO_LOCAL_TIME.format(LocalTime.now()))
   }
 
-  private def webSocket(id: String): Flow[ws.Message, ws.Message , _] = {
+  private def webSocket(id: String): Flow[ws.Message, ws.Message, _] = {
     Flow[ws.Message]
-      .mapAsync(1){
+      .mapAsync(1) {
         case Strict(c) ⇒ Future.successful(c)
         case e => Future.failed(new Exception(e.toString))
       }

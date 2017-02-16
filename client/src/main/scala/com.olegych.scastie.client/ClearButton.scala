@@ -12,11 +12,11 @@ object ClearButton {
     ReactComponentB[(State, Backend)]("ClearButton").render_P {
       case (state, backend) =>
         def disabled(isDisabled: Boolean) =
-          if(isDisabled) "disabled"
+          if (isDisabled) "disabled"
           else ""
 
-        li( onClick ==> backend.clear,
-            title := "Clear Instrumentations (Esc)",
+        li(onClick ==> backend.clear,
+           title := "Clear Instrumentations (Esc)",
            `class` := s"button ${disabled(!state.isClearable)}")(
           i(`class` := "fa fa-eraser"),
           p("Clear")

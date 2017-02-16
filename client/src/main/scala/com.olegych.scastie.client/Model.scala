@@ -34,8 +34,8 @@ case class Outputs(
     instrumentations: Set[api.Instrumentation],
     runtimeError: Option[api.RuntimeError]
 ) {
-    def isClearable: Boolean =
-      !console.isEmpty ||
+  def isClearable: Boolean =
+    !console.isEmpty ||
       !compilationInfos.isEmpty ||
       !instrumentations.isEmpty ||
       !runtimeError.isEmpty

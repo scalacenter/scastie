@@ -171,11 +171,11 @@ case class Inputs(
         s"""|resolvers += Resolver.sonatypeRepo("snapshots")
             |addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "0.1.0-SNAPSHOT")""".stripMargin
 
-      case ScalaTarget.Dotty => 
+      case ScalaTarget.Dotty =>
         """addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.9")"""
 
       case _: ScalaTarget.Jvm => ""
-      
+
       case _: ScalaTarget.Typelevel => ""
     }
   }
@@ -215,7 +215,7 @@ case class Inputs(
           )
         }
         case ScalaTarget.Dotty => {
-          ( 
+          (
             // set scalaVersion with http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
             // when https://github.com/felixmulder/sbt-dotty/pull/9 is merge/released
             "enablePlugins(DottyPlugin)",

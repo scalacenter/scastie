@@ -12,17 +12,17 @@ object CodeMirrorEditor {
   private val texteareaRef = Ref[HTMLTextAreaElement]("editor-textearea")
 
   private[CodeMirrorEditor] case class State(
-    editor: Option[TextAreaEditor] = None
+      editor: Option[TextAreaEditor] = None
   )
 
   case class Handler(
-    onChange: String => Callback
+      onChange: String => Callback
   )
 
   case class Settings(
-    value: String,
-    theme: String,
-    readOnly: Boolean
+      value: String,
+      theme: String,
+      readOnly: Boolean
   )
 
   private[CodeMirrorEditor] class Backend(

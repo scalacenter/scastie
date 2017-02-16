@@ -15,7 +15,6 @@ object Libraries {
       ScalaTargetType.Typelevel,
       ScalaTargetType.JS,
       ScalaTargetType.Native
-
     )
 
     def defaultTarget(targetType: ScalaTargetType) = {
@@ -163,12 +162,14 @@ object Libraries {
       if (v1 == v2) TagMod(`class` := "selected")
       else EmptyTag
 
-    def setScalaVersion(targetApply: String => ScalaTarget)(e: ReactEventI): Callback =
+    def setScalaVersion(targetApply: String => ScalaTarget)(
+        e: ReactEventI): Callback =
       backend.setTarget(targetApply(e.target.value))
 
     val notSupported = div("Not supported")
 
-    def versionSelector(scalaVersion: String, targetApply: String => ScalaTarget) =
+    def versionSelector(scalaVersion: String,
+                        targetApply: String => ScalaTarget) =
       TagMod(
         ul(
           suggestedVersions.map(
@@ -185,8 +186,10 @@ object Libraries {
 
     val versionSelectors =
       target match {
-        case ScalaTarget.Jvm(scalaVersion) => versionSelector(scalaVersion, ScalaTarget.Jvm.apply)
-        case ScalaTarget.Typelevel(scalaVersion) => versionSelector(scalaVersion, ScalaTarget.Typelevel.apply)
+        case ScalaTarget.Jvm(scalaVersion) =>
+          versionSelector(scalaVersion, ScalaTarget.Jvm.apply)
+        case ScalaTarget.Typelevel(scalaVersion) =>
+          versionSelector(scalaVersion, ScalaTarget.Typelevel.apply)
         case ScalaTarget.Dotty => notSupported
         case ScalaTarget.Js(scalaVersion, scalaJsVersion) => notSupported
         case ScalaTarget.Native => notSupported

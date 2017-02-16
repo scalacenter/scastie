@@ -88,7 +88,7 @@ object App {
       state0
     }
 
-    def isClearable: Boolean = 
+    def isClearable: Boolean =
       outputs.isClearable
 
     def setRunning(running: Boolean) = {
@@ -99,23 +99,22 @@ object App {
     def toggleTheme =
       copyAndSave(isDarkTheme = !isDarkTheme)
 
-    def toggleConsole = 
+    def toggleConsole =
       copyAndSave(consoleIsOpen = !consoleIsOpen)
 
     def toggleWorksheetMode =
-      copyAndSave(
-        inputs = inputs.copy(worksheetMode = !inputs.worksheetMode))
+      copyAndSave(inputs = inputs.copy(worksheetMode = !inputs.worksheetMode))
 
-    def openConsole = 
+    def openConsole =
       copyAndSave(consoleIsOpen = true)
 
-    def setUserOutput = 
+    def setUserOutput =
       copyAndSave(consoleHasUserOutput = true)
 
     def log(lines: Seq[String]): State =
       copyAndSave(outputs = outputs.copy(console = outputs.console ++ lines))
 
-    def log(line: String): State = 
+    def log(line: String): State =
       log(Seq(line))
 
     def log(line: Option[String]): State =
@@ -124,16 +123,16 @@ object App {
         case None => this
       }
 
-    def setCode(code: String) = 
+    def setCode(code: String) =
       copyAndSave(inputs = inputs.copy(code = code))
 
-    def setInputs(inputs: Inputs) = 
+    def setInputs(inputs: Inputs) =
       copyAndSave(inputs = inputs)
 
     def setSbtConfigExtra(config: String) =
       copyAndSave(inputs = inputs.copy(sbtConfigExtra = config))
 
-    def setView(newView: View) = 
+    def setView(newView: View) =
       copyAndSave(view = newView)
 
     def setTarget(target: ScalaTarget) =
@@ -185,12 +184,13 @@ object App {
     private def info(message: String) = Problem(api.Info, None, message)
 
     def setForcedProgramMode(forcedProgramMode: Boolean) = {
-      if(!forcedProgramMode) this
+      if (!forcedProgramMode) this
       else {
-        copyAndSave(outputs = outputs.copy(
-          compilationInfos = outputs.compilationInfos + 
-            info("You don't need a main method (or extends App) in Worksheet Mode")
-        ))
+        copyAndSave(
+          outputs = outputs.copy(
+            compilationInfos = outputs.compilationInfos +
+                info("You don't need a main method (or extends App) in Worksheet Mode")
+          ))
       }
     }
 
@@ -203,15 +203,17 @@ object App {
       }
 
       val useWorksheetModeTip =
-        if(compilationInfos.exists(ci => topDef(ci))) 
-          Set(info("""|It seems you're writing code without an enclosing class/object. 
-                      |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin))
+        if (compilationInfos.exists(ci => topDef(ci)))
+          Set(
+            info("""|It seems you're writing code without an enclosing class/object. 
+                    |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin))
         else Set()
 
-      copyAndSave(outputs = outputs.copy(
-        compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet ++ useWorksheetModeTip,
-        instrumentations = outputs.instrumentations ++ instrumentations.toSet
-      ))
+      copyAndSave(
+        outputs = outputs.copy(
+          compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet ++ useWorksheetModeTip,
+          instrumentations = outputs.instrumentations ++ instrumentations.toSet
+        ))
     }
   }
 
@@ -219,8 +221,7 @@ object App {
     def codeChange(newCode: String) =
       scope.modState(_.setCode(newCode)) >>
         scope.props.flatMap(props =>
-          props.router.map(_.set(Home)).getOrElse(Callback(()))
-        )
+          props.router.map(_.set(Home)).getOrElse(Callback(())))
 
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
@@ -236,12 +237,12 @@ object App {
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[PasteProgress](e.data.toString)
         direct.modState(_.addProgress(progress))
-        if(progress.done){
+        if (progress.done) {
           eventSource.close()
         }
       }
       def onerror(e: Event): Unit = {
-        if(e.eventPhase == EventSource.CLOSED) {
+        if (e.eventPhase == EventSource.CLOSED) {
           eventSource.close()
         } else {
           direct.modState(_.log(s"Error: ${e.toString}"))
@@ -283,12 +284,12 @@ object App {
     def clear(e: ReactEventI): Callback = clear()
     def clear(): Callback = scope.modState(_.resetOutputs)
 
-    def setView(newView: View): Callback = 
+    def setView(newView: View): Callback =
       scope.modState(_.setView(newView))
 
-    def setView2(newView: View)(e: ReactEventI): Callback = 
+    def setView2(newView: View)(e: ReactEventI): Callback =
       setView(newView)
-      
+
     def setTarget2(target: ScalaTarget)(e: ReactEventI): Callback =
       setTarget(target)
 
@@ -331,7 +332,8 @@ object App {
                 )
               }
               case Failure(errorEventSource) =>
-                console.log("Failed to connect to event source: " + errorEventSource.toString)
+                console.log(
+                  "Failed to connect to event source: " + errorEventSource.toString)
 
                 connectWebSocket(id).attemptTry.flatMap {
                   case Success(websocket) => {
@@ -340,14 +342,14 @@ object App {
                         .setRunning(true)
                         .copy(websocket = Some(websocket))
                         .log("Connecting...\n")
-                    )     
+                    )
                   }
                   case Failure(errorWebSocket) =>
                     scope.modState(
                       _.resetOutputs
-                       .log(errorEventSource.toString)
-                       .log(errorWebSocket.toString)
-                       .setRunning(false)
+                        .log(errorEventSource.toString)
+                        .log(errorWebSocket.toString)
+                        .setRunning(false)
                     )
                 }
             }
@@ -425,9 +427,13 @@ object App {
                     else s
                   }
                 case FormatResponse(Left(fullStackTrace)) =>
-                  scope.modState(_.resetOutputs.setRuntimeError(
-                    Some(RuntimeError(message = "Formatting Failed", line = None, fullStack = fullStackTrace))
-                  ))
+                  scope.modState(
+                    _.resetOutputs.setRuntimeError(
+                      Some(
+                        RuntimeError(message = "Formatting Failed",
+                                     line = None,
+                                     fullStack = fullStackTrace))
+                    ))
               }
         ))
   }

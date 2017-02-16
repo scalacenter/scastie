@@ -6,7 +6,7 @@ import akka.actor.{ActorSystem, Props}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object SbtMain { 
+object SbtMain {
   def main(args: Array[String]): Unit = {
     writeRunningPid()
 

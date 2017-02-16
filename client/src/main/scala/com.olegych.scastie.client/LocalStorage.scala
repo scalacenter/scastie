@@ -13,7 +13,6 @@ object LocalStorage {
     localStorage.setItem(stateKey, uwrite(state))
 
   def load: Option[App.State] =
-    Option(localStorage.getItem(stateKey)).flatMap(raw => 
-      Try(uread[App.State](raw)).toOption
-    )
+    Option(localStorage.getItem(stateKey)).flatMap(raw =>
+      Try(uread[App.State](raw)).toOption)
 }

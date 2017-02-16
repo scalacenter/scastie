@@ -98,8 +98,8 @@ object Instrument {
 
     source.stats.exists {
       case c: Defn.Class
-        if c.name.value == instrumnedClass &&
-           c.templ.stats.nonEmpty => {
+          if c.name.value == instrumnedClass &&
+            c.templ.stats.nonEmpty => {
 
         c.templ.stats.get.exists {
           case c: Defn.Class => hasMain(c.templ) || hasApp(c.templ)
@@ -112,7 +112,7 @@ object Instrument {
     }
   }
 
-  def apply(code: String): Either[Unit,String] = {
+  def apply(code: String): Either[Unit, String] = {
     val prelude =
       s"""|import _root_.com.olegych.scastie.api.runtime._
           |class $instrumnedClass {""".stripMargin
@@ -124,7 +124,8 @@ object Instrument {
 
     code0.parse[Source] match {
       case parsers.Parsed.Success(k) =>
-        if(!hasMainMethod(k)) Right(instrument(k, offset = prelude.length + 1))
+        if (!hasMainMethod(k))
+          Right(instrument(k, offset = prelude.length + 1))
         else Left(())
       case _ =>
         Left(())

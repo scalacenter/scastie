@@ -22,7 +22,7 @@ class OAuth2(github: Github, session: GithubUserSession) {
 
   val routes =
     get(
-      concat( 
+      concat(
         path("login") {
           parameter('home.?)(home =>
             optionalHeaderValueByType[Referer]() { referer =>
@@ -35,14 +35,13 @@ class OAuth2(github: Github, session: GithubUserSession) {
 
                       println(home)
 
-                      if(home.isDefined) homeUri
+                      if (home.isDefined) homeUri
                       else referer.map(_.value).getOrElse(homeUri)
                     }
                   )),
                 TemporaryRedirect
               )
-            }
-          )
+          })
         },
         path("logout") {
           headerValueByType[Referer]() { referer =>

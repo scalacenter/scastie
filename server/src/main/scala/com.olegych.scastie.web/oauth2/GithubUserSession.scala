@@ -65,10 +65,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
 
   private def readSessionsFile(): Array[(UUID, User)] = {
     if (Files.exists(usersSessions)) {
-      val content = Files
-        .readAllLines(usersSessions)
-        .toArray
-        .mkString(nl)
+      val content = Files.readAllLines(usersSessions).toArray.mkString(nl)
       uread[Array[(UUID, User)]](content)
     } else Array()
   }

@@ -51,9 +51,9 @@ private[oauth2] trait Json4sSupport {
         val ret = data.decodeString(charset.nioCharset.name)
         try {
           serialization.read(ret)
-        }
-        catch {
-          case MappingException("unknown error", ite: InvocationTargetException) => {
+        } catch {
+          case MappingException("unknown error",
+                                ite: InvocationTargetException) => {
             logger.error(ret)
             throw ite.getCause
           }

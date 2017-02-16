@@ -23,7 +23,7 @@ object SideBar {
           else EmptyTag
 
         val consoleLabel =
-          if(state.consoleIsOpen) "Close"
+          if (state.consoleIsOpen) "Close"
           else "Open"
 
         val worksheetModeSelected =
@@ -40,10 +40,10 @@ object SideBar {
           )
         }
 
-        def feedback(e: ReactEventI): Callback = 
+        def feedback(e: ReactEventI): Callback =
           openInNewTab("https://gitter.im/scalacenter/scastie")
 
-        def issue(e: ReactEventI): Callback = 
+        def issue(e: ReactEventI): Callback =
           openInNewTab("https://github.com/scalacenter/scastie/issues/new")
 
         import View.ctrl
@@ -52,53 +52,50 @@ object SideBar {
           ul(
             RunButton(state, backend),
             ClearButton(state, backend),
-            li( onClick ==> setView2(View.Libraries),
-                title := "Open Libraries View",
-                selected(View.Libraries),
+            li(onClick ==> setView2(View.Libraries),
+               title := "Open Libraries View",
+               selected(View.Libraries),
                `class` := "button")(
-
               img(src := "/assets/public/dotty3.svg",
                   alt := "settings",
                   `class` := "libraries-button"),
               p("Libraries (Build)")
             ),
-            li( onClick ==> formatCode,
-                title := "Format Code (F6)",
+            li(onClick ==> formatCode,
+               title := "Format Code (F6)",
                `class` := "button")(
               iconic.justifyLeft,
               p("Format")
             ),
-            li(onClick ==> save, title := s"Save ($ctrl + S)", `class` := "button")(
+            li(onClick ==> save,
+               title := s"Save ($ctrl + S)",
+               `class` := "button")(
               i(`class` := "fa fa-floppy-o"),
               p("Save")
             ),
-            li( onClick ==> toggleConsole,
-                title := s"$consoleLabel Console",
-                consoleSelected,
-               `class` := "button"
-               )(
+            li(onClick ==> toggleConsole,
+               title := s"$consoleLabel Console",
+               consoleSelected,
+               `class` := "button")(
               iconic.terminal,
               p("Console")
             ),
-            li( onClick ==> feedback,
-                title := "Open Gitter.im Chat to give us feedback",
-               `class` := "button"
-               )(
+            li(onClick ==> feedback,
+               title := "Open Gitter.im Chat to give us feedback",
+               `class` := "button")(
               iconic.chat,
               p("Feedback")
             ),
             li(onClick ==> issue,
                title := "Create new issue on GitHub",
-               `class` := "button"
-               )(
+               `class` := "button")(
               iconic.bug,
               p("Issue")
             ),
-            li( onClick ==> toggleWorksheetMode,
-                title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
-                worksheetModeSelected,
-               `class` := "button"
-               )(
+            li(onClick ==> toggleWorksheetMode,
+               title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
+               worksheetModeSelected,
+               `class` := "button")(
               iconic.script,
               p("Worksheet")
             )

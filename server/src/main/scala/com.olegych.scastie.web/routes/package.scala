@@ -1,7 +1,6 @@
 package com.olegych.scastie
 package web
 
-
 import scala.io.Source
 import System.{lineSeparator => nl}
 
@@ -10,7 +9,7 @@ import StatusCodes.NotFound
 
 package object routes {
   def getResource(path: String): Option[String] = {
-    Option(getClass.getResourceAsStream(path)).map{stream =>
+    Option(getClass.getResourceAsStream(path)).map { stream =>
       val source = Source.fromInputStream(stream)
       val content = source.getLines.mkString(nl)
       source.close()
@@ -18,8 +17,7 @@ package object routes {
     }
   }
 
-
-  private def html(content: String) = 
+  private def html(content: String) =
     HttpResponse(entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, content))
 
   def serveStatic(content: Option[String]) = {
@@ -29,5 +27,3 @@ package object routes {
     }
   }
 }
-
- 

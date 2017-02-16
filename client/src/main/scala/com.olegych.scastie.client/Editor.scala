@@ -126,13 +126,15 @@ object Editor {
             backend.toggleConsole().runNow
           }
 
-          CodeMirror.commands.toggleWorksheet = (editor: CodeMirrorEditor2) => {
-            backend.toggleWorksheetMode().runNow
-          }
+          CodeMirror.commands.toggleWorksheet =
+            (editor: CodeMirrorEditor2) => {
+              backend.toggleWorksheetMode().runNow
+            }
 
-          CodeMirror.commands.toggleSolarized = (editor: CodeMirrorEditor2) => {
-            backend.toggleTheme().runNow
-          }
+          CodeMirror.commands.toggleSolarized =
+            (editor: CodeMirrorEditor2) => {
+              backend.toggleTheme().runNow
+            }
 
           CodeMirror.commands.formatCode = (editor: CodeMirrorEditor2) => {
             backend.formatCode().runNow

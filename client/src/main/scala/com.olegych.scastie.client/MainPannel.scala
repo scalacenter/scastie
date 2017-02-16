@@ -30,7 +30,7 @@ object MainPannel {
           else EmptyTag
 
         val helpMenu =
-          if(state.isShowingHelpAtStartup) 
+          if (state.isShowingHelpAtStartup)
             TagMod(
               div(`class` := "help-modal")(api.runtime.help.a)
             )

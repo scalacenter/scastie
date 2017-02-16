@@ -38,7 +38,7 @@ class ProgressActor extends Actor with ActorLogging {
 
   private def getOrCreatePublisher(id: String): (ProgressSource, ActorRef) = {
     def createPublisher() = {
-      val ref = context.actorOf(Props(new ProgressForwarder(self)))       
+      val ref = context.actorOf(Props(new ProgressForwarder(self)))
       val source = Source.fromPublisher(ActorPublisher[PasteProgress](ref))
       val sourceAndPublisher = (source, ref)
 
@@ -49,14 +49,16 @@ class ProgressActor extends Actor with ActorLogging {
   }
 }
 
-class ProgressForwarder(progressActor: ActorRef) extends Actor with ActorPublisher[PasteProgress] {
+class ProgressForwarder(progressActor: ActorRef)
+    extends Actor
+    with ActorPublisher[PasteProgress] {
   var buffer = MQueue.empty[PasteProgress]
 
   def receive = {
     case progress: PasteProgress => {
       buffer.enqueue(progress)
       deliver()
-      if(progress.done) {
+      if (progress.done) {
         progressActor ! ProgressDone(progress.id.toString)
       }
     }
@@ -66,7 +68,7 @@ class ProgressForwarder(progressActor: ActorRef) extends Actor with ActorPublish
   }
 
   private def deliver(): Unit = {
-    if(totalDemand > 0) {
+    if (totalDemand > 0) {
       buffer.foreach(onNext)
       buffer.clear()
     }

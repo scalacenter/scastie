@@ -97,7 +97,8 @@ class SbtActorTest()
     progressActor.fishForMessage(totalTimeout) {
       case progress: PasteProgress => {
         val fishResult = fish(progress)
-        if(progress.done && !fishResult) throw new Exception("Fail to meet expectation")
+        if (progress.done && !fishResult)
+          throw new Exception("Fail to meet expectation")
         else fishResult
       }
     }
