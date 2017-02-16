@@ -173,7 +173,7 @@ case class Inputs(
             |addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "0.1.0-SNAPSHOT")""".stripMargin
 
       case ScalaTarget.Dotty => 
-        """addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.7")"""
+        """addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.9")"""
 
       case _: ScalaTarget.Jvm => ""
       
@@ -221,7 +221,7 @@ case class Inputs(
             // when https://github.com/felixmulder/sbt-dotty/pull/9 is merge/released
             "enablePlugins(DottyPlugin)",
             ScalaDependency("org.scastie",
-                            "runtime-dotty_2.11",
+                            "runtime-dotty",
                             target,
                             buildVersion)
           )

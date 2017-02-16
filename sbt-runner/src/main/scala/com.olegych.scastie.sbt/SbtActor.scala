@@ -160,7 +160,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         else 0
 
       val problems = extractProblems(line, lineOffset)
-      val instrumentations = extract[List[api.Instrumentation]](line)
+      val instrumentations = extract[List[api.Instrumentation]](line, report = true)
       val runtimeError = extractRuntimeError(line, lineOffset)
       val sbtOutput = extract[sbtapi.SbtOutput](line)
 
@@ -224,9 +224,20 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
   }
 
-  private def extract[T: Reader](line: String): Option[T] = {
+  private def extract[T: Reader](line: String, report: Boolean = false): Option[T] = {
     try { Some(uread[T](line)) } catch {
-      case NonFatal(e) => None
+      case NonFatal(e: scala.MatchError) => {
+        if(report) {
+          println("---")
+          println(line)
+          println("---")
+          e.printStackTrace()
+          println("---")
+        }
+
+        None
+      }
+      case NonFatal(_) => None
     }
   }
 }

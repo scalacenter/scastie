@@ -15,17 +15,19 @@ object Runtime {
       if (bool) True
       else False
     def write(render: Render): Obj = {
+      val runtimePackage = "com.olegych.scastie.api"
+
       render match {
         case Value(v, className) =>
           Obj(
-            "$type" -> Str("api.Value"),
+            "$type" -> Str(s"$runtimePackage.Value"),
             "v" -> Str(v),
             "className" -> Str(className)
           )
 
         case Html(a, folded) =>
           Obj(
-            "$type" -> Str("api.Html"),
+            "$type" -> Str(s"$runtimePackage.Html"),
             "a" -> Str(a),
             "folded" -> write2(folded)
           )
