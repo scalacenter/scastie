@@ -3,8 +3,6 @@ build:
   environment:
     - COURSIER_CACHE=/drone/.coursier
   commands:
-    - apk update
-    - apk add nodejs
     - export SBT_OPTS="-Xmx24G -XX:MaxPermSize=4G -Xss4M"
     - >
       sbt \
