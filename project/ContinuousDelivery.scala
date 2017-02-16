@@ -54,8 +54,7 @@ object ContinuousDelivery {
         logger.info(s"$key = ${sys.env.get(key)}")
       )
 
-      val newState = Command.process(";update ;deployWhenMaster", state)
-      // val newState = Command.process(";test ;deployWhenMaster", state)
+      val newState = Command.process(";test ;deployWhenMaster", state)
 
       newState
     }

@@ -3,9 +3,9 @@ build:
   environment:
     - COURSIER_CACHE=/drone/.coursier
   commands:
-    - export SBT_OPTS="-Xmx24G -XX:MaxPermSize=4G -Xss4M"
+    - export SBT_OPTS="-Xmx8G"
     - >
-      sbt \
+      time sbt \
         -Dsbt.ivy.home=/drone/.ivy \
         -Djline.terminal=jline.UnsupportedTerminal \
         -Dsbt.log.noformat=true \
