@@ -5,6 +5,8 @@ import buildinfo.BuildInfo.{version => buildVersion}
 
 import api._
 
+import com.typesafe.config.ConfigFactory
+
 import scala.util.Random
 import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
@@ -13,6 +15,9 @@ import java.nio.file._
 import java.io.IOException
 
 class Sbt() {
+  private val config = ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
+  private val production = config.getBoolean("production")
+
   private val log = LoggerFactory.getLogger(getClass)
 
   private val sbtDir = Files.createTempDirectory("scastie")

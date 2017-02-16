@@ -191,8 +191,8 @@ class Deployment(rootFolder: File,
           |do
           |  echo "Starting Runner: Port $$i"
           |  docker run --network=host -d \\
-          |    -v /home/$userName/.coursier/cache:/root/.coursier/cache \\
-          |    -e RUNNER_PRODUCTION=1 \\
+          |    -v /home/$userName/.coursier/cache:/drone/.coursier \\
+          |    -e RUNNER_PRODUCTION=true \\
           |    -e RUNNER_PORT=$$i \\
           |    -e RUNNER_HOSTNAME=$runnersHostname \\
           |    $dockerImagePath

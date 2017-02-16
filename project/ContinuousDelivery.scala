@@ -2,19 +2,23 @@ import sbt._
 import Keys._
 
 object ContinuousDelivery {
-  private lazy val deliver = taskKey[Unit]("Deploy server when merging to master")
+  private lazy val deployWhenMaster = taskKey[Unit]("Deploy when merging to master")
 
-  private def deliverTask: Def.Initialize[Task[Unit]] = Def.task {
-    if(!sys.env.get("DRONE_PULL_REQUEST")) {
-      println("== not a PR ==")
+  private def deployWhenMasterTask: Def.Initialize[Task[Unit]] = Def.task {
+    val logger = streams.value.log
+    println("==TASK==")
+    if(!sys.env.get("DRONE_PULL_REQUEST").isDefined) {
+      logger.info("== not a PR ==")
     } else {
-      println("== not PR ==")
+      logger.info("== not PR ==")
     }
   }
 
   val settings = Seq(
-    deliver := deliverTask,
+    deployWhenMaster := deployWhenMasterTask.value,
     commands += Command.command("continuousDelivery") { state =>
+      val logger = state.log
+
       List(
         "DRONE",
         "DRONE_REPO",
@@ -48,11 +52,12 @@ object ContinuousDelivery {
         "DRONE_PULL_REQUEST",
         "DRONE_TAG"
       ).foreach(key =>
-        println((key, sys.env.get(key)))
+        logger.info(s"$key = ${sys.env.get(key)}")
       )
 
-      val newState = Command.process(";test ;deliver", state)
-      // run task
+      val newState = Command.process(";update ;deployWhenMaster", state)
+      // val newState = Command.process(";test ;deployWhenMaster", state)
+
       newState
     }
   )
