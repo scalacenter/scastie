@@ -36,6 +36,7 @@ object ScalaTargetType {
       case "DOTTY" => Some(Dotty)
       case "JS" => Some(JS)
       case "NATIVE" => Some(Native)
+      case "TYPELEVEL" => Some(Typelevel)
       case _ => None
     }
   }
@@ -44,6 +45,7 @@ object ScalaTargetType {
   case object Dotty extends ScalaTargetType
   case object JS extends ScalaTargetType
   case object Native extends ScalaTargetType
+  case object Typelevel extends ScalaTargetType
 }
 
 case class ScalaDependency(groupId: String,
@@ -72,6 +74,20 @@ object ScalaTarget {
       s""" "$groupId" %% "$artifact" % "$version" """
     }
   }
+
+  object Typelevel {
+    def default = ScalaTarget.Typelevel(scalaVersion = defaultScalaVersion)
+  }
+  case class Typelevel(scalaVersion: String) extends ScalaTarget {
+    def targetType = ScalaTargetType.Typelevel
+    def scaladexRequest =
+      Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
+    def renderSbt(lib: ScalaDependency): String = {
+      import lib._
+      s""" "$groupId" %% "$artifact" % "$version" """
+    }
+  }
+
   object Js {
     def default =
       ScalaTarget.Js(
@@ -160,6 +176,8 @@ case class Inputs(
         """addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.7")"""
 
       case _: ScalaTarget.Jvm => ""
+      
+      case _: ScalaTarget.Typelevel => ""
     }
   }
 
@@ -175,6 +193,18 @@ case class Inputs(
                             buildVersion)
           )
         }
+
+        case ScalaTarget.Typelevel(scalaVersion) => {
+          (
+            s"""|scalaVersion := "$scalaVersion"
+                |scalaOrganization in ThisBuild := "org.typelevel"""".stripMargin,
+            ScalaDependency("org.scastie",
+                            "runtime-scala",
+                            target,
+                            buildVersion)
+          )
+        }
+
         case ScalaTarget.Js(scalaVersion, _) => {
           (
             s"""|scalaVersion := "$scalaVersion"

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="302px" height="348px" version="1.1">
+    <defs>
+        <linearGradient x1="0%" y1="61%" x2="100%" y2="37%" id="background-gradient">
+            <stop stop-color="#FF4C61" offset="0%"/>
+            <stop stop-color="#F51C2B" offset="100%"/>
+        </linearGradient>
+    </defs>
+
+    <g>
+        <g id="logo">
+            <polygon fill="url(#background-gradient)" points="151 348 0 260 0 88 151 0 302 88 302 260"/>
+            <polygon fill="#FF6169" points="99 214 99 254 193 199 193 159"/>
+            <polygon fill="#FF6169" points="134 194 99 174 193 119 228 139"/>
+            <polygon fill="#FF6169" points="99 134 64 114 158 59 193 79"/>
+            <polygon fill="#FFB4B5" points="134 194 134 234 228 179 228 139"/>
+            <polygon fill="#FFB4B5" points="99 134 99 174 193 119 193 79"/>
+            <polygon fill="#FFFFFF" points="64 234 99 254 99 214 134 234 134 194 99 174 99 134 64 114"/>
+        </g>
+    </g>
+</svg>

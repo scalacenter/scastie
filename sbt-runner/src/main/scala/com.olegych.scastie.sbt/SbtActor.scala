@@ -16,7 +16,6 @@ import scala.concurrent.duration._
 import java.util.concurrent.{TimeoutException, Callable, FutureTask, TimeUnit}
 
 import scala.util.control.NonFatal
-// import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
 import java.io.{PrintWriter, StringWriter}
 
@@ -126,7 +125,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
       withTimeout(runTimeout)({
         scalaTargetType match {
-          case JVM | Dotty | Native => eval("run", reload = false)
+          case JVM | Dotty | Native | Typelevel => eval("run", reload = false)
           case JS => eval("fastOptJs", reload = false)
         }
       })(timeout(runTimeout))
