@@ -1,5 +1,4 @@
 import ScalaJSHelper._
-import Deployment._
 
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
@@ -113,7 +112,6 @@ lazy val sbtRunner = project
       case x => MergeStrategy.first
     },
     dockerfile in docker := Def.task {
-      // run crossPublishLocalRuntime
       val ivy = ivyPaths.value.ivyHome.get
 
       val org = organization.value
@@ -149,7 +147,12 @@ lazy val server = project
   .settings(packageScalaJS(client))
   .settings(
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
-    reStart := reStart.dependsOn(WebKeys.assets in (client, Assets)).evaluated,
+    
+    reStart := reStart
+      .dependsOn(WebKeys.assets in (client, Assets)).evaluated,
+
+    (packageBin in Universal) := (packageBin in Universal)
+      .dependsOn(WebKeys.assets in (client, Assets)).value,
     
     unmanagedResourceDirectories in Compile += (WebKeys.public in (client, Assets)).value,
 
@@ -196,16 +199,8 @@ lazy val scastie = project
     api211JS
   )
   .settings(orgSettings)
-  .settings(
-    deploy := deployTask(server, sbtRunner).value,
-    deployServer := deployServerTask(server, sbtRunner).value,
-    deployQuick := deployQuickTask(server, sbtRunner).value,
-    deployServerQuick := deployServerQuickTask(server, sbtRunner).value,
-    run := {
-      (reStart in sbtRunner).toTask("").value
-      (reStart in server).toTask("").value
-    }
-  )
+  .settings(Deployment.settings(server, sbtRunner))
+  .settings(ContinuousDelivery.settings)
 
 /* codemirror is a facade to the javascript rich editor codemirror*/
 lazy val codemirror = project
@@ -363,7 +358,6 @@ lazy val runtimeDotty = project
   .enablePlugins(DottyPlugin)
   .settings(
     moduleName := "runtime-dotty"
-    // libraryDependencies += "com.lihaoyi" %% "upickle" % upickleVersion
   )
   .dependsOn(api211JVM)
 
