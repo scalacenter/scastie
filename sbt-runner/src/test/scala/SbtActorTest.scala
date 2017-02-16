@@ -7,8 +7,6 @@ import akka.actor.ActorSystem
 import akka.testkit.{TestKit, ImplicitSender, TestProbe, TestActorRef}
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 
-import System.{lineSeparator => nl}
-
 import scala.concurrent.duration._
 
 class SbtActorTest()
@@ -65,7 +63,7 @@ class SbtActorTest()
     val message = "Hello"
     run(s"""println("$message")""")(progress => {
       // we should only receive an hello message
-      val gotHelloMessage = progress.userOutput == Some(message + nl)
+      val gotHelloMessage = progress.userOutput == Some(message)
       if (!gotHelloMessage) assert(progress.userOutput == None)
       gotHelloMessage
     })
