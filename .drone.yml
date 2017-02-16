@@ -6,8 +6,13 @@ build:
     - apk update
     - apk add nodejs
     - export SBT_OPTS="-Xmx24G -XX:MaxPermSize=4G -Xss4M"
+    - >
+      sbt \
+        -Dsbt.ivy.home=/drone/.ivy \
+        -Djline.terminal=jline.UnsupportedTerminal \
+        -Dsbt.log.noformat=true \
+        continuousDelivery
 
-    - sbt -Dsbt.ivy.home=/drone/.ivy continuousDelivery
 cache:
   mount:
     - /drone/.ivy2

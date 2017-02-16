@@ -41,17 +41,22 @@ class Sbt() {
   Files.createDirectories(codeFile.getParent)
 
   private val (process, fin, fout) = {
+
+    val ivyHome =
+      if(sys.env.get("DRONE").isDefined) Seq("-Dsbt.ivy.home=/drone/.ivy")
+      else Seq()
+
     val builder = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     builder
       .environment()
       .put(
         "SBT_OPTS",
-        Seq(
+        (Seq(
           "-Xms512m",
           "-Xmx1g",
           "-Djline.terminal=jline.UnsupportedTerminal",
           "-Dsbt.log.noformat=true"
-        ).mkString(" ")
+        ) ++ ivyHome).mkString(" ")
       )
 
     val process = builder.start()
