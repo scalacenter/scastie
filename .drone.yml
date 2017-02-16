@@ -1,24 +1,14 @@
 build:
   image: scalacenter/scastie-docker-sbt:0.13.13
   environment:
-    - COURSIER_CACHE=/drone/cache/coursier
+    - COURSIER_CACHE=/drone/.coursier
   commands:
     - apk update
     - apk add nodejs
     - export SBT_OPTS="-Xmx24G -XX:MaxPermSize=4G -Xss4M"
-    - test -d /drone/.sbt && cp -a /drone/.sbt /root
-    - rm -rf /drone/.sbt
 
-    - test -d /drone/.ivy2 && cp -a /drone/.ivy2 /root
-    - rm -rf /drone/.ivy2
-
-    - sbt compile test
-
-    - cp -a /root/.ivy2 /drone
-    - cp -a /root/.sbt /drone
+    - sbt -Dsbt.ivy.home=/drone/.ivy continuousDelivery
 cache:
   mount:
-    - .git
-    - /drone/.sbt
     - /drone/.ivy2
-    - /drone/cache
+    - /drone/.coursier

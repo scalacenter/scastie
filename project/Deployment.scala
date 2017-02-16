@@ -11,6 +11,14 @@ import sbtdocker.DockerKeys.{docker, dockerBuildAndPush, imageNames}
 import sbtdocker.ImageName
 
 object Deployment {
+
+  def settings(server: Project, sbtRunner: Project) = Seq(
+    deploy := deployTask(server, sbtRunner).value,
+    deployServer := deployServerTask(server, sbtRunner).value,
+    deployQuick := deployQuickTask(server, sbtRunner).value,
+    deployServerQuick := deployServerQuickTask(server, sbtRunner).value
+  )
+
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
 
   lazy val deployServer = taskKey[Unit]("Deploy server")
