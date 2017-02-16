@@ -111,11 +111,10 @@ object ScalaTarget {
   }
   case object Native extends ScalaTarget {
     def targetType = ScalaTargetType.Native
-    // ... not really
     def scaladexRequest = Map(
-      "target" -> "JS",
+      "target" -> "NATIVE",
       "scalaVersion" -> "2.11",
-      "scalaJsVersion" -> "0.6"
+      "scalaNativeVersion" -> "0.1.0"
     )
     def renderSbt(lib: ScalaDependency): String = {
       import lib._
