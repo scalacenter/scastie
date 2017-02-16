@@ -12,8 +12,10 @@ object Libraries {
     val targetTypes = List(
       ScalaTargetType.JVM,
       ScalaTargetType.Dotty,
+      ScalaTargetType.Typelevel,
       ScalaTargetType.JS,
       ScalaTargetType.Native
+
     )
 
     def defaultTarget(targetType: ScalaTargetType) = {
@@ -22,6 +24,7 @@ object Libraries {
         case ScalaTargetType.JS => ScalaTarget.Js.default
         case ScalaTargetType.Dotty => ScalaTarget.Dotty
         case ScalaTargetType.Native => ScalaTarget.Native
+        case ScalaTargetType.Typelevel => ScalaTarget.Typelevel.default
       }
     }
 
@@ -31,6 +34,7 @@ object Libraries {
         case ScalaTargetType.Dotty => "dotty-logo.svg"
         case ScalaTargetType.JS => "scala-js.svg"
         case ScalaTargetType.Native => "native.png"
+        case ScalaTargetType.Typelevel => "typelevel.svg"
       }
     }
 
@@ -40,6 +44,7 @@ object Libraries {
         case ScalaTargetType.JS => "Scala.js"
         case ScalaTargetType.Dotty => "Dotty"
         case ScalaTargetType.Native => "Native"
+        case ScalaTargetType.Typelevel => "Typelevel"
       }
     }
 
@@ -158,29 +163,32 @@ object Libraries {
       if (v1 == v2) TagMod(`class` := "selected")
       else EmptyTag
 
-    def setScalaVersion(e: ReactEventI): Callback =
-      backend.setTarget(ScalaTarget.Jvm(e.target.value))
+    def setScalaVersion(targetApply: String => ScalaTarget)(e: ReactEventI): Callback =
+      backend.setTarget(targetApply(e.target.value))
 
     val notSupported = div("Not supported")
 
+    def versionSelector(scalaVersion: String, targetApply: String => ScalaTarget) =
+      TagMod(
+        ul(
+          suggestedVersions.map(
+            version =>
+              li(onClick ==> backend.setTarget2(targetApply(version)),
+                 selected(version, scalaVersion))(version))
+        ),
+        select(name := "scalaVersion",
+               value := scalaVersion.toString,
+               onChange ==> setScalaVersion(targetApply))(
+          allVersions.map(version => option(version.toString))
+        )
+      )
+
     val versionSelectors =
       target match {
-        case ScalaTarget.Jvm(scalaVersion) =>
-          TagMod(
-            ul(
-              suggestedVersions.map(
-                version =>
-                  li(onClick ==> backend.setTarget2(ScalaTarget.Jvm(version)),
-                     selected(version, scalaVersion))(version))
-            ),
-            select(name := "scalaVersion",
-                   value := scalaVersion.toString,
-                   onChange ==> setScalaVersion)(
-              allVersions.map(version => option(version.toString))
-            )
-          )
-        case ScalaTarget.Js(scalaVersion, scalaJsVersion) => notSupported
+        case ScalaTarget.Jvm(scalaVersion) => versionSelector(scalaVersion, ScalaTarget.Jvm.apply)
+        case ScalaTarget.Typelevel(scalaVersion) => versionSelector(scalaVersion, ScalaTarget.Typelevel.apply)
         case ScalaTarget.Dotty => notSupported
+        case ScalaTarget.Js(scalaVersion, scalaJsVersion) => notSupported
         case ScalaTarget.Native => notSupported
       }
 
