@@ -6,11 +6,10 @@ object ContinuousDelivery {
 
   private def deployWhenMasterTask: Def.Initialize[Task[Unit]] = Def.task {
     val logger = streams.value.log
-    println("==TASK==")
     if(!sys.env.get("DRONE_PULL_REQUEST").isDefined) {
-      logger.info("== not a PR ==")
+      logger.info("** Not a PR **")
     } else {
-      logger.info("== not PR ==")
+      logger.info("** PR **")
     }
   }
 
