@@ -48,7 +48,7 @@ object Editor {
         "theme" -> s"solarized $theme",
         "smartIndent" -> true,
         "keyMap" -> "sublime",
-        "scrollPastEnd" -> true,
+        "scrollPastEnd" -> false,
         "scrollbarStyle" -> "simple",
         "autoCloseBrackets" -> true,
         "matchBrackets" -> true,
