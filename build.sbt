@@ -15,7 +15,7 @@ lazy val scalajsDomVersion = "0.9.1"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.5.0-SNAPSHOT"
+  version := "0.6.0"
 )
 
 lazy val baseSettings = Seq(
@@ -119,7 +119,7 @@ lazy val sbtRunner = project
       new Dockerfile {
         from("scalacenter/scastie-docker-sbt:0.0.9")
 
-        add(ivy / "local" / org, s"/drone/.ivy2/local/$org")
+        add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 
         add(artifact, artifactTargetPath)
 

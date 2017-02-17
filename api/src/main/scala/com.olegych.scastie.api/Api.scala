@@ -216,9 +216,8 @@ case class Inputs(
         }
         case ScalaTarget.Dotty => {
           (
-            // set scalaVersion with http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
-            // when https://github.com/felixmulder/sbt-dotty/pull/9 is merge/released
-            "enablePlugins(DottyPlugin)",
+            """|// you can set scalaVersion with the lastest http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
+               |enablePlugins(DottyPlugin)""".stripMargin,
             ScalaDependency("org.scastie",
                             "runtime-dotty",
                             target,
