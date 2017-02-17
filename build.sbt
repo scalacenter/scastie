@@ -216,7 +216,6 @@ lazy val codemirror = project
         "addon/fold/foldcode",
         "addon/hint/show-hint",
         "addon/runmode/runmode",
-        "addon/scroll/scrollpastend",
         "addon/scroll/simplescrollbars",
         "addon/search/match-highlighter",
         "addon/search/search",

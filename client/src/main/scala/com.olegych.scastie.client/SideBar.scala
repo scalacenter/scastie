@@ -15,6 +15,8 @@ object SideBar {
 
         val theme = if (state.isDarkTheme) "dark" else "light"
 
+        val toggleThemeLabel = if (state.isDarkTheme) "Light" else "Dark"
+
         def selected(view: View) =
           if (view == state.view) TagMod(`class` := "selected") else EmptyTag
 
@@ -47,6 +49,10 @@ object SideBar {
           openInNewTab("https://github.com/scalacenter/scastie/issues/new")
 
         import View.ctrl
+
+        val selectedTheme = 
+          if(state.isDarkTheme) iconic.sun
+          else iconic.moon
 
         nav(`class` := s"sidebar $theme")(
           ul(
@@ -98,6 +104,12 @@ object SideBar {
                `class` := "button")(
               iconic.script,
               p("Worksheet")
+            ),
+            li(onClick ==> toggleTheme,
+               title := s"Select $toggleThemeLabel Theme (F2)",
+               `class` := "button")(
+              selectedTheme,
+              p("Theme")
             )
           )
         )

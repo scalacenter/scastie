@@ -49,6 +49,11 @@ package object runtime {
 
     val sbt = a("http://www.scala-sbt.org/0.13/docs/index.html", "sbt")
 
+    val originalScastie = a(
+      "https://github.com/OlegYch/scastie",
+      "GitHub"
+    )
+
     html"""|<h1>Welcome to Scastie!</h1>
            |Scastie is an interractive playground for Scala.
            |
@@ -56,8 +61,6 @@ package object runtime {
            |In Libraries you can change the Scala version and add libaries.
            |
            |<h2>Worksheet Mode</h2>
-           |
-           |
            |
            |<h2>Formatting Code</h2>
            |The code formatting is done by scalafmt. You can configure the formatting with comments
@@ -79,6 +82,8 @@ package object runtime {
            |
            |<h2>BuildInfo</h2>
            |It's available on Github at $scastieGithub
-           |(Apache 2 License, Version: $buildVersion, Git: $githash)""".stripMargin.fold
+           |(Apache 2 License, Version: $buildVersion, Git: $githash)
+           |
+           |Scastie is an original from Aleh Aleshka (OlegYch) $originalScastie""".stripMargin.fold
   }
 }
