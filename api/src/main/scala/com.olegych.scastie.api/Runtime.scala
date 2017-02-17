@@ -84,6 +84,6 @@ package object runtime {
            |It's available on Github at $scastieGithub
            |(Apache 2 License, Version: $buildVersion, Git: $githash)
            |
-           |Scastie is an original from Aleh Aleshka (OlegYch) $originalScastie""".stripMargin.fold
+           |Scastie is an original idea from Aleh Aleshka (OlegYch) $originalScastie""".stripMargin.fold
   }
 }
