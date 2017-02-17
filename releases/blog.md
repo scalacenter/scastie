@@ -1,8 +1,8 @@
 # Introducing Scastie - An interactive playground for Scala.
 
-The Scala Center team is very proud to announce the Beta of Scastie.
+The Scala Center team is proud to announce the Beta of Scastie.
 
-Aleh Aleshka ([OlegYch](https://github.com/OlegYch/)) is the original author of this project. His objective was to create a collaborative debugging tool where you can share and reproduce bugs. Our idea was to extend this project with a modern user interface.
+Aleh Aleshka ([OlegYch](https://github.com/OlegYch/)) is the original author of this project. His goal was to create a collaborative debugging tool where you can share and reproduce bugs. Our idea was to extend this project with a modern user interface.
 
 # What can I do with Scastie ?
 
@@ -20,7 +20,7 @@ Let's see how it performs. Here we use scrimage, a simple image library. We down
 
 # How does Scastie work?
 
-When a user evaluates his code the browser sends all it's input to our server. Based on the configuration it will forward the evaluation to an sbt instance. The output will be streamed back to the user. A specific protocol will allow the client to interpret different events such as compiler errors, runtime exception, instrumentation, console output, etc. The worksheet mode instruments each top level expression. It wraps the code inside a class and associate a line position to a pair of value and type.
+When a user evaluates his code, the browser sends all it's input to our server. Based on the configuration it will forward the evaluation to an sbt instance. The output will be streamed back to the user. A specific protocol will allow the client to interpret different events such as compiler errors, runtime exception, instrumentation, console output, etc. The worksheet mode instruments each top level expression. It wraps the code inside a class and associate a line position to a pair of value and type.
 
 Using sbt help us supporting a large range of platforms (Scalac, Dotty, Scala.js, Scala-Native and Typeleve's Scala). It allows us to support newer Scala versions and resolves libraries dependencies.
 
