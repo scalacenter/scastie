@@ -19,6 +19,8 @@ import java.util.UUID
 import java.nio.file._
 // import util.Properties
 
+import scala.collection.JavaConverters._
+
 import System.{lineSeparator => nl}
 
 class GithubUserSession()(implicit val executionContext: ExecutionContext) {
@@ -97,19 +99,39 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   }
 
   def addBetaUser(login: String): Unit = {
-    if (!exists(login)) {
+    println("add " + login)
+
+    val lines = Files.readAllLines(usersFile).asScala
+
+    if (!lines.exists(_ == login)) {
       Files.write(usersFile,
-                  (nl + login + nl).getBytes,
+                  (login + nl).getBytes,
                   StandardOpenOption.APPEND,
                   StandardOpenOption.CREATE)
       ()
     }
   }
 
-  def exists(login: String): Boolean = {
+  def rank(login: String): (Option[Int], Int) = {
     if (Files.exists(usersFile)) {
-      Files.readAllLines(usersFile).toArray.contains(login)
-    } else false
+
+      def findIndex(xs: Seq[String]): Option[Int] =
+        xs.zipWithIndex.find(_._1 == login).map(_._2 + 1)
+
+      val lines = Files.readAllLines(usersFile).asScala
+
+      (findIndex(lines), lines.size)
+
+    } else (None, 0)
+  }
+
+  def inBeta(user: User): Boolean = {
+    val betaCutoff = 100
+    val (maybeRank, size) = rank(user.login)
+
+    println("in beta " + maybeRank + " " + size)
+
+    maybeRank.map(_ <= betaCutoff).getOrElse(size <= betaCutoff)
   }
 
   def getUser(id: Option[UUID]): Option[User] =

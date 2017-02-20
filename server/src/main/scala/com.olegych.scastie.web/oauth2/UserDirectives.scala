@@ -8,7 +8,6 @@ import akka.http.scaladsl._
 import server._
 import Directives._
 import model._
-// import Uri.Path
 import StatusCodes.TemporaryRedirect
 
 import com.softwaremill.session._
@@ -20,15 +19,21 @@ class UserDirectives(session: GithubUserSession) {
 
   def requireLogin: Directive0 = {
     optionalSession(refreshable, usingCookies).flatMap { userId =>
-      if (getUser(userId).nonEmpty) pass
-      else redirect(Uri("/beta"), TemporaryRedirect)
+      getUser(userId) match {
+        case Some(user) =>
+          if(inBeta(user)) pass
+          else redirect(Uri("/beta-full"), TemporaryRedirect)
+        case None => redirect(Uri("/beta"), TemporaryRedirect)
+      }
     }
   }
 
   def userLogin: Directive1[User] = {
     optionalSession(refreshable, usingCookies).flatMap { userId =>
       getUser(userId) match {
-        case Some(user) => provide(user)
+        case Some(user) =>
+          if(inBeta(user)) provide(user)
+          else reject
         case None => reject
       }
     }
