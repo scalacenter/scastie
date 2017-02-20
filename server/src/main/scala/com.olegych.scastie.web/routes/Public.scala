@@ -28,6 +28,9 @@ object Public {
           path("beta")(
             getFromResource("public/views/beta.html")
           ),
+          path("beta-full")(
+            getFromResource("public/views/beta-full.html")
+          ),
           path("sse-demo")(
             getFromResource("public/views/sseDemo.html")
           ),
