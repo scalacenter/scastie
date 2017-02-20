@@ -30,7 +30,8 @@ object App {
       running = false,
       eventSource = None,
       websocket = None,
-      isShowingHelpAtStartup = false,
+      isShowingHelpAtStartup = true,
+      helpModal = true,
       isDarkTheme = false,
       consoleIsOpen = false,
       consoleHasUserOutput = false,
@@ -54,6 +55,7 @@ object App {
       eventSource: Option[EventSource],
       websocket: Option[WebSocket],
       isShowingHelpAtStartup: Boolean,
+      helpModal: Boolean,
       isDarkTheme: Boolean,
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
@@ -77,6 +79,7 @@ object App {
              eventSource,
              websocket,
              isShowingHelpAtStartup,
+             helpModal,
              isDarkTheme,
              consoleIsOpen,
              consoleHasUserOutput,
@@ -104,6 +107,11 @@ object App {
 
     def toggleWorksheetMode =
       copyAndSave(inputs = inputs.copy(worksheetMode = !inputs.worksheetMode))
+
+    def toggleHelpAtStartup = 
+      copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
+
+    def closeHelp = copy(helpModal = !helpModal)
 
     def openConsole =
       copyAndSave(consoleIsOpen = true)
@@ -312,8 +320,15 @@ object App {
     def toggleConsole(): Callback = scope.modState(_.toggleConsole)
     def toggleConsole(e: ReactEventI): Callback = toggleConsole()
 
+    def toggleHelpAtStartup(): Callback = 
+      scope.modState(_.toggleHelpAtStartup)
+
+    def closeHelp(): Callback =
+      scope.modState(_.closeHelp)
+
     def toggleWorksheetMode(): Callback =
       scope.modState(_.toggleWorksheetMode)
+
     def toggleWorksheetMode(e: ReactEventI): Callback =
       toggleWorksheetMode()
 
