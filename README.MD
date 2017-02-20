@@ -32,7 +32,7 @@ prior experience to fully unleash its (and scala) power.
 
 ## High-level design and architecture
 
-The application consists of two modules:
+The application consists of three modules:
 
 -  scastie - standard akka-http web application module
 -  sbt-runner - encapsulates pastes processing
@@ -48,25 +48,6 @@ while processing a paste, the actor will be restarted.
 
 Currently the pastes are stored directly on file system on master node (the one which is running 
 web application). 
-
-## How to run
-
-```
-sbt
-> sbtRunner/reStart
-> ~server/reStart
-```
-
-open http://localhost:9000
-
-## How to deploy
-
-add your ssh key to
-
-* `scastie@scastie.scala-lang.org`
-* `scastie@scastie-sbt.scala-lang.org`
-
-`sbt deploy`
 
 ## Embed Scastie into your website
 
