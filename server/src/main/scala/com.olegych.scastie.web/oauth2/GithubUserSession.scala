@@ -99,8 +99,6 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   }
 
   def addBetaUser(login: String): Unit = {
-    println("add " + login)
-
     val lines = Files.readAllLines(usersFile).asScala
 
     if (!lines.exists(_ == login)) {
@@ -128,8 +126,6 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   def inBeta(user: User): Boolean = {
     val betaCutoff = 100
     val (maybeRank, size) = rank(user.login)
-
-    println("in beta " + maybeRank + " " + size)
 
     maybeRank.map(_ <= betaCutoff).getOrElse(size <= betaCutoff)
   }

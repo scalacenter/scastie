@@ -3,11 +3,12 @@ package client
 
 import App._
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
 
 import org.scalajs.dom.raw.HTMLPreElement
 
-object MainPannel {
+object MainPannel { //extends vdom.Extra.Attrs {
 
   private val console = Ref[HTMLPreElement]("console")
 
@@ -29,10 +30,25 @@ object MainPannel {
           if (embedded) TagMod(EmbeddedMenu(state, backend))
           else EmptyTag
 
+        def toogleShowHelpAtStartup(e: ReactEvent): Callback = {
+          backend.toggleHelpAtStartup()
+        }
+
+        def closeHelp(e: ReactEvent): Callback = {
+          backend.closeHelp()
+        }
+
         val helpMenu =
-          if (state.isShowingHelpAtStartup)
+          if (state.isShowingHelpAtStartup && state.helpModal)
             TagMod(
-              div(`class` := "help-modal")(api.runtime.help.a)
+              div(`class` := "help-modal")(
+                button(onClick ==> closeHelp)("Close"),
+                div(`class` := "not-again")(
+                  p("Dont show again"),
+                  input.checkbox(onClick ==> toogleShowHelpAtStartup)
+                ),
+                div(dangerouslySetInnerHtml(api.runtime.help.a))
+              )
             )
           else EmptyTag
 
