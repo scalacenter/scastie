@@ -36,7 +36,8 @@ object App {
       consoleIsOpen = false,
       consoleHasUserOutput = false,
       inputs = Inputs.default,
-      outputs = Outputs.default
+      outputs = Outputs.default,
+      searchState = SearchState.default
     )
 
     def dontSerialize[T]: ReadWriter[Option[T]] = {
@@ -60,7 +61,8 @@ object App {
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
       inputs: Inputs,
-      outputs: Outputs
+      outputs: Outputs,
+      searchState: SearchState
   ) {
     def copyAndSave(view: View = view,
                     running: Boolean = running,
@@ -71,7 +73,8 @@ object App {
                     consoleIsOpen: Boolean = consoleIsOpen,
                     consoleHasUserOutput: Boolean = consoleHasUserOutput,
                     inputs: Inputs = inputs,
-                    outputs: Outputs = outputs): State = {
+                    outputs: Outputs = outputs,
+                    searchState: SearchState = searchState): State = {
 
       val state0 =
         copy(view,
@@ -84,7 +87,8 @@ object App {
              consoleIsOpen,
              consoleHasUserOutput,
              inputs,
-             outputs)
+             outputs,
+             searchState)
 
       LocalStorage.save(state0)
 
@@ -223,6 +227,9 @@ object App {
           instrumentations = outputs.instrumentations ++ instrumentations.toSet
         ))
     }
+
+    def setSearchState(searchState: SearchState) = 
+      copyAndSave(searchState = searchState)
   }
 
   class Backend(scope: BackendScope[Props, State]) {
@@ -233,6 +240,9 @@ object App {
 
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
+
+    def setSearchState(searchState: SearchState) = 
+      scope.modState(_.setSearchState(searchState))
 
     private def connectEventSource(id: Int) = CallbackTo[EventSource] {
       val direct = scope.accessDirect
