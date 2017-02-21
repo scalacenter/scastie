@@ -39,7 +39,7 @@ object MainPannel { //extends vdom.Extra.Attrs {
         }
 
         val helpMenu =
-          if (state.isShowingHelpAtStartup && state.helpModal)
+          if (state.isShowingHelpAtStartup && state.helpModal && !embedded)
             TagMod(
               div(`class` := "help-modal")(
                 button(onClick ==> closeHelp)("Close"),
