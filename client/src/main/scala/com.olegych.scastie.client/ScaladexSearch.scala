@@ -63,8 +63,9 @@ object ScaladexSearch {
       )
 
     def updateVersion(project: Project, scalaDependency: ScalaDependency, version: String): SearchState = {
-      removeDependency(project, scalaDependency).copy(
-        scalaDependencies = (project -> scalaDependency.copy(version = version)) :: scalaDependencies
+      val state0 = removeDependency(project, scalaDependency)
+      state0.copy(
+        scalaDependencies = (project -> scalaDependency.copy(version = version)) :: state0.scalaDependencies
       )
     }
 
@@ -352,7 +353,7 @@ object ScaladexSearch {
             else EmptyTag
 
           ol(`class` := "added", hideAdded)(
-            searchState.scalaDependencies.toList.map {
+            searchState.scalaDependencies.toList.sorted.map {
               case (p, d) =>
                 renderProject(
                   p,
