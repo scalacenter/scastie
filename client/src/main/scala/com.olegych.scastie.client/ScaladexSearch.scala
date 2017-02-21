@@ -18,30 +18,66 @@ import upickle.default.{read => uread}
 
 import scala.language.higherKinds
 
-object SearchState {
-  def default = SearchState(
-    query = "",
-    searchingProjects = List(),
-    projectOptions = Map(),
-    scalaDependencies = List(),
-    selected = 0
-  )
-
-  def fromProps(props: (State, Backend)): SearchState = {
-    val (state, _) = props
-    state.searchState
-  }
-}
-
-case class SearchState(
-    query: String,
-    searchingProjects: List[(Project, String)],
-    projectOptions: Map[(Project, String), ReleaseOptions], // transition state to fetch project details
-    scalaDependencies: List[(Project, ScalaDependency)],
-    selected: Int
-)
-
 object ScaladexSearch {
+  private[ScaladexSearch] object SearchState {
+    def default = SearchState(
+      query = "",
+      searchingProjects = List(),
+      projectOptions = Map(),
+      scalaDependencies = List(),
+      selected = 0
+    )
+
+    def fromProps(props: (State, Backend)): SearchState = {
+      // val (state, _) = props
+      // state.searchState
+      SearchState.default
+    }
+  }
+
+  private[ScaladexSearch] case class SearchState(
+      query: String,
+      searchingProjects: List[(Project, String)],
+      projectOptions: Map[(Project, String), ReleaseOptions], // transition state to fetch project details
+      scalaDependencies: List[(Project, ScalaDependency)],
+      selected: Int
+  ) {
+    def addScalaDependency(project: Project, scalaDependency: ScalaDependency, options: ReleaseOptions): SearchState = {
+      copy(
+        projectOptions = projectOptions + ((project, scalaDependency.artifact) -> options),
+        scalaDependencies = ((project, scalaDependency)) :: scalaDependencies
+      ).removedAddedDependencies
+    }
+
+    private def removedAddedDependencies: SearchState = {
+      val added = scalaDependencies.map { case (p, s) => (p, s.artifact)}.toSet
+      copy(
+        searchingProjects = searchingProjects.filter(s => !added.contains(s))
+      )
+    }              
+
+    def removeDependency(project: Project, scalaDependency: ScalaDependency): SearchState =
+      copy(
+        scalaDependencies = 
+          scalaDependencies.filterNot(_ == (project -> scalaDependency))
+      )
+
+    def updateVersion(project: Project, scalaDependency: ScalaDependency, version: String): SearchState = {
+      removeDependency(project, scalaDependency).copy(
+        scalaDependencies = (project -> scalaDependency.copy(version = version)) :: scalaDependencies
+      )
+    }
+
+    def addProjects(projects: List[Project]): SearchState = {
+      val artifacts = projects.flatMap(project => project.artifacts.map(artifact => (project, artifact)))
+      copy(searchingProjects = artifacts).removedAddedDependencies
+    }
+
+    def clearProjects: SearchState = {
+      copy(searchingProjects = List())
+    }
+  }
+
   // private val scaladexBaseUrl = "http://localhost:8080"
   private val scaladexBaseUrl = "https://index.scala-lang.org"
   private val scaladexApiUrl = scaladexBaseUrl + "/api"
@@ -92,64 +128,76 @@ object ScaladexSearch {
               el.scrollTop =
                 Math.abs(interpolate(el.scrollHeight, total, selected + diff)))
 
-        scope.modState(
-          s =>
-            s.copy(
-              selected = clamp(s.searchingProjects.size, s.selected + diff))
-        ) >>
-          e.preventDefaultCB >>
+        def selectProject =
+          scope.modState(s =>
+            s.copy(selected = clamp(s.searchingProjects.size, s.selected + diff))
+          )
+
+        def scrollToSelectedProject =
           scope.state.flatMap(s =>
             scrollToSelected(s.selected, s.searchingProjects.size))
 
+        selectProject >>
+        e.preventDefaultCB >>
+        scrollToSelectedProject
+
       } else if (e.keyCode == KeyCode.Enter) {
-        scope.state.flatMap(
-          s =>
+
+        def addArtifactIfInRange =
+          scope.state.flatMap(s =>
             if (0 <= s.selected && s.selected < s.searchingProjects.size)
               addArtifact(s.searchingProjects.toList(s.selected))
             else
-              Callback(())) >> searchInputRef(scope).tryFocus
+              Callback(())
+          )
+
+        addArtifactIfInRange >> searchInputRef(scope).tryFocus
       } else {
         Callback(())
       }
     }
 
-    def addArtifact(artifact: (Project, String))(e: ReactEventI): Callback =
-      addArtifact(artifact)
+    def addArtifact(projectAndArtifact: (Project, String))(e: ReactEventI): Callback =
+      addArtifact(projectAndArtifact)
 
-    private def addArtifact(pa: (Project, String)): Callback = {
-      val (p, a) = pa
+    private def addArtifact(projectAndArtifact: (Project, String)): Callback = {
+      val (project, artifact) = projectAndArtifact
       scope.props.flatMap {
         case (appState, _) =>
-          fetchReleaseOptions(p, a, appState.inputs.target)
+          fetchReleaseOptions(project, artifact, appState.inputs.target)
       }
     }
 
     def removeScalaDependency(
         project: Project,
         scalaDependency: ScalaDependency)(e: ReactEventI): Callback = {
-      scope.modState(
-        s =>
-          s.copy(scalaDependencies = s.scalaDependencies.filterNot(
-            _ == (project -> scalaDependency)))) >> scope.props.flatMap {
-        case (_, backend) =>
+
+      def removeDependencyLocal =
+        scope.modState(_.removeDependency(project, scalaDependency))
+
+      def removeDependecyBackend =
+        scope.props.flatMap { case (_, backend) =>
           backend.removeScalaDependency(scalaDependency)
-      }
+        }
+
+      removeDependencyLocal >> removeDependecyBackend
     }
 
-    def changeVersion(project: Project, scalaDependency: ScalaDependency)(
+    def updateVersion(project: Project, scalaDependency: ScalaDependency)(
         e: ReactEventI): Callback = {
+
       e.extract(_.target.value) { version =>
-        scope.modState(
-          s =>
-            s.copy(
-              scalaDependencies =
-                project -> scalaDependency.copy(version = version) ::
-                  s.scalaDependencies.filterNot(
-                    _ == (project -> scalaDependency))
-          )) >> scope.props.flatMap {
-          case (_, backend) =>
-            backend.changeDependencyVersion(scalaDependency, version)
-        }
+
+        def updateDependencyVersionLocal =
+          scope.modState(_.updateVersion(project, scalaDependency, version))
+
+        def updateDependencyVersionBackend =
+          scope.props.flatMap {
+            case (_, backend) =>
+              backend.updateDependencyVersion(scalaDependency, version)
+          }
+
+        updateDependencyVersionLocal >> updateDependencyVersionBackend
       }
     }
 
@@ -161,16 +209,6 @@ object ScaladexSearch {
       e.extract(_.target.value) { value =>
         scope.modState(_.copy(query = value, selected = 0), fetchProjects())
       }
-    }
-
-    def filterAddedDependencies(state: SearchState) = {
-      val added =
-        state.scalaDependencies.map {
-          case (p, s) => (p, s.artifact)
-        }.toSet
-
-      state.copy(searchingProjects = state.searchingProjects.filter(s =>
-        !added.contains(s)))
     }
 
     private def fetchProjects(): Callback = {
@@ -185,16 +223,9 @@ object ScaladexSearch {
             Ajax
               .get(scaladexApiUrl + "/search" + query)
               .map(ret => uread[List[Project]](ret.responseText))
-              .map { projects =>
-                val artifacts = projects.flatMap(project =>
-                  project.artifacts.map(a => (project, a)))
-                scope.modState(
-                  s =>
-                    filterAddedDependencies(
-                      s.copy(searchingProjects = artifacts)))
-              }
+              .map(projects => scope.modState(_.addProjects(projects)))
           )
-        } else scope.modState(_.copy(searchingProjects = List()))
+        } else scope.modState(_.clearProjects)
       }
 
       for {
@@ -224,19 +255,25 @@ object ScaladexSearch {
           .get(scaladexApiUrl + "/project" + query)
           .map(ret => uread[ReleaseOptions](ret.responseText))
           .map { options =>
-            val scalaDependency = ScalaDependency(options.groupId,
-                                                  artifact,
-                                                  target,
-                                                  options.versions.last)
-            scope.modState(
-              s =>
-                filterAddedDependencies(s.copy(
-                  projectOptions = s.projectOptions + ((project, artifact) -> options),
-                  scalaDependencies = ((project, scalaDependency)) :: s.scalaDependencies
-                ))) >> scope.props.flatMap {
-              case (_, backend) =>
-                backend.addScalaDependency(scalaDependency)
-            }
+
+            val scalaDependency = 
+              ScalaDependency(
+                options.groupId,
+                artifact,
+                target,
+                options.versions.last
+              )
+
+            def addScalaDependencyLocal =
+              scope.modState(_.addScalaDependency(project, scalaDependency, options))
+
+            def addScalaDependencyBackend =
+              scope.props.flatMap {
+                case (_, backend) =>
+                  backend.addScalaDependency(scalaDependency)
+              }
+
+            addScalaDependencyLocal >> addScalaDependencyBackend
           }
       )
     }
@@ -302,7 +339,7 @@ object ScaladexSearch {
             case Some(options) =>
               select(value := scalaDependency.version,
                      onChange ==> scope.backend
-                       .changeVersion(project, scalaDependency))(
+                       .updateVersion(project, scalaDependency))(
                 options.versions.reverse.map(v => option(value := v)(v))
               )
             case None => EmptyTag
@@ -324,8 +361,10 @@ object ScaladexSearch {
                     `class` := "remove",
                     onClick ==> scope.backend.removeScalaDependency(p, d)
                   ),
-                  options = renderOptions(p, d))
-            })
+                  options = renderOptions(p, d)
+                )
+            }
+          )
         }
 
         fieldset(`class` := "scaladex")(

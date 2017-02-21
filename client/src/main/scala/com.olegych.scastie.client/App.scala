@@ -36,8 +36,7 @@ object App {
       consoleIsOpen = false,
       consoleHasUserOutput = false,
       inputs = Inputs.default,
-      outputs = Outputs.default,
-      searchState = SearchState.default
+      outputs = Outputs.default
     )
 
     def dontSerialize[T]: ReadWriter[Option[T]] = {
@@ -61,8 +60,7 @@ object App {
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
       inputs: Inputs,
-      outputs: Outputs,
-      searchState: SearchState
+      outputs: Outputs
   ) {
     def copyAndSave(view: View = view,
                     running: Boolean = running,
@@ -73,8 +71,7 @@ object App {
                     consoleIsOpen: Boolean = consoleIsOpen,
                     consoleHasUserOutput: Boolean = consoleHasUserOutput,
                     inputs: Inputs = inputs,
-                    outputs: Outputs = outputs,
-                    searchState: SearchState = searchState): State = {
+                    outputs: Outputs = outputs): State = {
 
       val state0 =
         copy(view,
@@ -87,8 +84,7 @@ object App {
              consoleIsOpen,
              consoleHasUserOutput,
              inputs,
-             outputs,
-             searchState)
+             outputs)
 
       LocalStorage.save(state0)
 
@@ -158,7 +154,7 @@ object App {
       copyAndSave(
         inputs = inputs.copy(libraries = inputs.libraries - scalaDependency))
 
-    def changeDependencyVersion(scalaDependency: ScalaDependency,
+    def updateDependencyVersion(scalaDependency: ScalaDependency,
                                 version: String) = {
       val newScalaDependency = scalaDependency.copy(version = version)
       copyAndSave(inputs = inputs.copy(
@@ -227,9 +223,6 @@ object App {
           instrumentations = outputs.instrumentations ++ instrumentations.toSet
         ))
     }
-
-    def setSearchState(searchState: SearchState) =
-      copyAndSave(searchState = searchState)
   }
 
   class Backend(scope: BackendScope[Props, State]) {
@@ -240,9 +233,6 @@ object App {
 
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
-
-    def setSearchState(searchState: SearchState) =
-      scope.modState(_.setSearchState(searchState))
 
     private def connectEventSource(id: Int) = CallbackTo[EventSource] {
       val direct = scope.accessDirect
@@ -320,9 +310,9 @@ object App {
     def removeScalaDependency(scalaDependency: ScalaDependency): Callback =
       scope.modState(_.removeScalaDependency(scalaDependency))
 
-    def changeDependencyVersion(scalaDependency: ScalaDependency,
+    def updateDependencyVersion(scalaDependency: ScalaDependency,
                                 version: String): Callback =
-      scope.modState(_.changeDependencyVersion(scalaDependency, version))
+      scope.modState(_.updateDependencyVersion(scalaDependency, version))
 
     def toggleTheme(e: ReactEventI): Callback = toggleTheme()
     def toggleTheme(): Callback = scope.modState(_.toggleTheme)
