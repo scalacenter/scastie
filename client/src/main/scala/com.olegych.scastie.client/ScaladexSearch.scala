@@ -18,6 +18,29 @@ import upickle.default.{read => uread}
 
 import scala.language.higherKinds
 
+object SearchState {
+  def default = SearchState(
+    query = "",
+    searchingProjects = List(),
+    projectOptions = Map(),
+    scalaDependencies = List(),
+    selected = 0
+  )
+
+  def fromProps(props: (State, Backend)): SearchState = {
+    val (state, _) = props
+    state.searchState
+  }
+}
+
+case class SearchState(
+  query: String,
+  searchingProjects: List[(Project, String)],
+  projectOptions: Map[(Project, String), ReleaseOptions], // transition state to fetch project details
+  scalaDependencies: List[(Project, ScalaDependency)],
+  selected: Int
+)
+
 object ScaladexSearch {
   // private val scaladexBaseUrl = "http://localhost:8080"
   private val scaladexBaseUrl = "https://index.scala-lang.org"
@@ -33,22 +56,15 @@ object ScaladexSearch {
       scalaDependency.artifact
     }
 
-  private[ScaladexSearch] case class SearchState(
-      query: String = "",
-      searchingProjects: List[(Project, String)] = List(),
-      // transition state to fetch project details
-      projectOptions: Map[(Project, String), ReleaseOptions] = Map(),
-      scalaDependencies: List[(Project, ScalaDependency)] = List(),
-      selected: Int = 0
-  )
-
   private val projectListRef = Ref[HTMLElement]("projectListRef")
   private val searchInputRef = Ref[HTMLInputElement]("searchInputRef")
 
   implicit final class ReactExt_DomNodeO[O[_], N <: dom.raw.Node](o: O[N])(
       implicit O: OptionLike[O]) {
+    
     def tryTo(f: HTMLElement => Unit) =
       Callback(O.toOption(o).flatMap(_.domToHtml).foreach(f))
+
     def tryFocus: Callback = tryTo(_.focus())
   }
 
@@ -80,8 +96,10 @@ object ScaladexSearch {
           s =>
             s.copy(selected = clamp(
               s.searchingProjects.size,
-              s.selected + diff))) >> e.preventDefaultCB >> scope.state
-          .flatMap(s => scrollToSelected(s.selected, s.searchingProjects.size))
+              s.selected + diff))
+        ) >> 
+          e.preventDefaultCB >> 
+          scope.state.flatMap(s => scrollToSelected(s.selected, s.searchingProjects.size))
 
       } else if (e.keyCode == KeyCode.Enter) {
         scope.state.flatMap(
@@ -225,7 +243,7 @@ object ScaladexSearch {
   }
 
   private val component = ReactComponentB[(State, Backend)]("Scaladex Search")
-    .initialState(SearchState())
+    .initialState_P(SearchState.fromProps)
     .backend(new SearchBackend(_))
     .renderPS {
       case (scope, (state, backend), searchState) =>
