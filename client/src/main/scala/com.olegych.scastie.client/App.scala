@@ -112,7 +112,7 @@ object App {
     def toggleWorksheetMode =
       copyAndSave(inputs = inputs.copy(worksheetMode = !inputs.worksheetMode))
 
-    def toggleHelpAtStartup = 
+    def toggleHelpAtStartup =
       copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
 
     def closeHelp = copy(helpModal = !helpModal)
@@ -228,7 +228,7 @@ object App {
         ))
     }
 
-    def setSearchState(searchState: SearchState) = 
+    def setSearchState(searchState: SearchState) =
       copyAndSave(searchState = searchState)
   }
 
@@ -241,7 +241,7 @@ object App {
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
 
-    def setSearchState(searchState: SearchState) = 
+    def setSearchState(searchState: SearchState) =
       scope.modState(_.setSearchState(searchState))
 
     private def connectEventSource(id: Int) = CallbackTo[EventSource] {
@@ -330,7 +330,7 @@ object App {
     def toggleConsole(): Callback = scope.modState(_.toggleConsole)
     def toggleConsole(e: ReactEventI): Callback = toggleConsole()
 
-    def toggleHelpAtStartup(): Callback = 
+    def toggleHelpAtStartup(): Callback =
       scope.modState(_.toggleHelpAtStartup)
 
     def closeHelp(): Callback =

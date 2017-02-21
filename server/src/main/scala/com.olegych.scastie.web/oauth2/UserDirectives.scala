@@ -21,7 +21,7 @@ class UserDirectives(session: GithubUserSession) {
     optionalSession(refreshable, usingCookies).flatMap { userId =>
       getUser(userId) match {
         case Some(user) =>
-          if(inBeta(user)) pass
+          if (inBeta(user)) pass
           else redirect(Uri("/beta-full"), TemporaryRedirect)
         case None => redirect(Uri("/beta"), TemporaryRedirect)
       }
@@ -32,7 +32,7 @@ class UserDirectives(session: GithubUserSession) {
     optionalSession(refreshable, usingCookies).flatMap { userId =>
       getUser(userId) match {
         case Some(user) =>
-          if(inBeta(user)) provide(user)
+          if (inBeta(user)) provide(user)
           else reject
         case None => reject
       }
