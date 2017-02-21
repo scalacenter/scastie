@@ -34,11 +34,11 @@ object SearchState {
 }
 
 case class SearchState(
-  query: String,
-  searchingProjects: List[(Project, String)],
-  projectOptions: Map[(Project, String), ReleaseOptions], // transition state to fetch project details
-  scalaDependencies: List[(Project, ScalaDependency)],
-  selected: Int
+    query: String,
+    searchingProjects: List[(Project, String)],
+    projectOptions: Map[(Project, String), ReleaseOptions], // transition state to fetch project details
+    scalaDependencies: List[(Project, ScalaDependency)],
+    selected: Int
 )
 
 object ScaladexSearch {
@@ -61,7 +61,7 @@ object ScaladexSearch {
 
   implicit final class ReactExt_DomNodeO[O[_], N <: dom.raw.Node](o: O[N])(
       implicit O: OptionLike[O]) {
-    
+
     def tryTo(f: HTMLElement => Unit) =
       Callback(O.toOption(o).flatMap(_.domToHtml).foreach(f))
 
@@ -94,12 +94,12 @@ object ScaladexSearch {
 
         scope.modState(
           s =>
-            s.copy(selected = clamp(
-              s.searchingProjects.size,
-              s.selected + diff))
-        ) >> 
-          e.preventDefaultCB >> 
-          scope.state.flatMap(s => scrollToSelected(s.selected, s.searchingProjects.size))
+            s.copy(
+              selected = clamp(s.searchingProjects.size, s.selected + diff))
+        ) >>
+          e.preventDefaultCB >>
+          scope.state.flatMap(s =>
+            scrollToSelected(s.selected, s.searchingProjects.size))
 
       } else if (e.keyCode == KeyCode.Enter) {
         scope.state.flatMap(

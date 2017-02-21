@@ -50,8 +50,8 @@ object SideBar {
 
         import View.ctrl
 
-        val selectedTheme = 
-          if(state.isDarkTheme) iconic.sun
+        val selectedTheme =
+          if (state.isDarkTheme) iconic.sun
           else iconic.moon
 
         nav(`class` := s"sidebar $theme")(
