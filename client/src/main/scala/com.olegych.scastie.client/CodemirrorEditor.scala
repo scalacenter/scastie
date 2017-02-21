@@ -98,7 +98,7 @@ object CodeMirrorEditor {
       }
     }
 
-    Callback(setCode()) >> Callback(setTheme())
+    Callback(setCode()) >> Callback(setTheme()) >> Callback(editor.refresh())
   }
 
   private val component =
