@@ -7,8 +7,11 @@ import api._
 import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-import org.scalajs.dom.console
-import org.scalajs.dom._
+import org.scalajs.dom.{
+  EventSource, WebSocket, 
+  Event, MessageEvent, ErrorEvent, CloseEvent,
+  window
+}
 
 import scala.util.{Success, Failure}
 
@@ -32,7 +35,7 @@ object App {
       websocket = None,
       isShowingHelpAtStartup = true,
       helpModal = true,
-      isDarkTheme = false,
+      isDarkTheme = true,
       consoleIsOpen = false,
       consoleHasUserOutput = false,
       inputs = Inputs.default,

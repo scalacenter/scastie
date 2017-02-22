@@ -5,8 +5,7 @@
     background-color: @base03;
     color: @base01;
 
-    .embedded-menu,
-    .help-modal {
+    .embedded-menu {
       background-color: @base02;
     }
   }
@@ -14,8 +13,7 @@
     background-color: @base3;
     color: @base1;
 
-    .embedded-menu,
-    .help-modal {
+    .embedded-menu {
       background-color: @base2;
     }
   }
@@ -154,6 +152,44 @@
       .selected, input[type="search"], select {
         background-color: @base2;
       }
+    }
+  }
+}
+
+.cm-s-solarized {
+  .solarized-pallette;
+  
+  &.CodeMirror {
+    box-shadow: none;
+  }
+
+  &.cm-s-dark {
+    .CodeMirror-widget .fold,
+    .CodeMirror-linewidget .compilation-info,
+    .CodeMirror-linewidget .runtime-error,
+    .CodeMirror-linewidget .line,
+    .CodeMirror-linewidget .inline {
+      background-color: @base02;
+    }
+
+    .CodeMirror-dialog {
+      background-color: @base02;
+      color: @base01;
+    }
+  }
+
+  &.cm-s-light {
+    .CodeMirror-widget .fold,
+    .CodeMirror-linewidget .compilation-info,
+    .CodeMirror-linewidget .runtime-error,
+    .CodeMirror-linewidget .line,
+    .CodeMirror-linewidget .inline {
+      background-color: @base2;
+    }
+
+    .CodeMirror-dialog {
+      background-color: @base2;
+      color: @base1;
     }
   }
 }

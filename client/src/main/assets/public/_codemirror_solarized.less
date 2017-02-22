@@ -7,21 +7,12 @@
     box-shadow: none;
   }
 
-  .autocomplete .signature {
-    color: @cyan;
-  }
-
   &.cm-s-dark {
-    .CodeMirror-widget .fold,
-    .CodeMirror-linewidget .compilation-info,
-    .CodeMirror-linewidget .runtime-error,
-    .CodeMirror-linewidget .line,
-    .CodeMirror-linewidget .inline,
     .CodeMirror-hints {
       background-color: @base02;
     }
 
-    .CodeMirror-widget .code,
+    .CodeMirror-widget,
     .CodeMirror-hint-active {
       color: inherit;
       background-color: @base02;
@@ -30,10 +21,6 @@
     .CodeMirror-dialog {
       background-color: @base02;
       color: @base01;
-    }
-
-    & + .output {
-      color: @base0;
     }
 
     .CodeMirror-simplescroll-horizontal,
@@ -50,16 +37,11 @@
   }
 
   &.cm-s-light {
-    .CodeMirror-widget .fold,
-    .CodeMirror-linewidget .compilation-info,
-    .CodeMirror-linewidget .runtime-error,
-    .CodeMirror-linewidget .line,
-    .CodeMirror-linewidget .inline,
     .CodeMirror-hints {
       background-color: @base2;
     }
 
-    .CodeMirror-widget .code,
+    .CodeMirror-widget,
     .CodeMirror-hint-active {
       color: inherit;
       background-color: @base2;
@@ -68,10 +50,6 @@
     .CodeMirror-dialog {
       background-color: @base2;
       color: @base1;
-    }
-
-    & + .output {
-      color: @base00;
     }
 
     .CodeMirror-simplescroll-horizontal,
