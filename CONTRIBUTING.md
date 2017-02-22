@@ -5,7 +5,10 @@ You are more than welcome to contribute any PR regardeless if it's listed or not
 
 ## How to run locally
 
-requirements: nodejs (for less)
+requirements: 
+
+* node (for less)
+* export SBT_OPTS = "-Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"
 
 ```
 sbt
