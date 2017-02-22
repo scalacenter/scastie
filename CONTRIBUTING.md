@@ -45,7 +45,13 @@ To deploy the application to the productions servers (scastie.scala-lang.org) yo
 * `scastie@scastie.scala-lang.org`
 * `scastie@scastie-sbt.scala-lang.org` (inside EPFL's vpn)
 
-@MasseGuillaume and @heathermiller have access.
+Those people have access:
+
+* @MasseGuillaume
+* @heathermiller
+* @julienrf
+* @jvican
+* @olafurpg
 
 `sbt deploy`
 

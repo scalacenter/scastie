@@ -99,7 +99,9 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   }
 
   def addBetaUser(login: String): Unit = {
-    val lines = Files.readAllLines(usersFile).asScala
+    val lines = 
+      if (Files.exists(usersFile)) Files.readAllLines(usersFile).asScala
+      else Seq()
 
     if (!lines.exists(_ == login)) {
       Files.write(usersFile,

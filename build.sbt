@@ -15,7 +15,7 @@ lazy val scalajsDomVersion = "0.9.1"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.8.0"
+  version := "0.9.0"
 )
 
 lazy val baseSettings = Seq(
