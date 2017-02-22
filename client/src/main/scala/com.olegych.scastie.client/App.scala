@@ -383,6 +383,11 @@ object App {
     def start(props: Props): Callback = {
       console.log("== Welcome to Scastie ==")
 
+      def loadStateFromLocalStorage =
+        LocalStorage.load
+          .map(state => scope.modState(_ => state.setRunning(false)))
+          .getOrElse(Callback(()))
+
       def loadSnippet(id: Int): Callback = {
         Callback.future(
           ApiClient[Api]
@@ -391,6 +396,7 @@ object App {
             .map(result =>
               result match {
                 case Some(FetchResult(inputs, progresses)) => {
+                  loadStateFromLocalStorage >>
                   scope.modState(
                     _.setInputs(inputs).setProgresses(progresses)
                   )
@@ -405,11 +411,7 @@ object App {
         case None => {
           props.snippet match {
             case Some(Snippet(id)) => loadSnippet(id)
-            case None => {
-              LocalStorage.load
-                .map(state => scope.modState(_ => state.setRunning(false)))
-                .getOrElse(Callback(()))
-            }
+            case None => loadStateFromLocalStorage
           }
         }
         case Some(embededOptions) => {
@@ -455,7 +457,7 @@ object App {
 
   val component =
     ReactComponentB[Props]("App")
-      .initialState(State.default)
+      .initialState(LocalStorage.load.getOrElse(State.default))
       .backend(new Backend(_))
       .renderPS {
         case (scope, props, state) => {
