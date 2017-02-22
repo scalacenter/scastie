@@ -15,7 +15,7 @@ lazy val scalajsDomVersion = "0.9.1"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.9.0"
+  version := "0.10.0-SNAPSHOT"
 )
 
 lazy val baseSettings = Seq(
@@ -264,6 +264,7 @@ lazy val instrumentation = project
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
+  .dependsOn(api211JVM)
 
 def crossDir(projectId: String) = file(".cross/" + projectId)
 def dash(name: String) = name.replaceAllLiterally(".", "-")

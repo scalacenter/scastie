@@ -1,8 +1,19 @@
-package com.olegych.scastie.instrumentation
+package com.olegych.scastie
+package instrumentation
+
+import api.ScalaTarget
+import api.ScalaTarget._
 
 import scala.meta._
+import parsers.Parsed
 import inputs.Position
+
 import scala.collection.immutable.Seq
+
+sealed trait InstrumentationFailure
+case object HasMainMethod extends InstrumentationFailure
+case object UnsupportedDialect extends InstrumentationFailure
+case class ParsingError(error: Parsed.Error) extends InstrumentationFailure
 
 object Instrument {
   private val instrumnedClass = "Playground"
@@ -112,7 +123,7 @@ object Instrument {
     }
   }
 
-  def apply(code: String): Either[Unit, String] = {
+  def apply(code: String, target: ScalaTarget = Jvm.default): Either[InstrumentationFailure, String] = {
     val prelude =
       s"""|import _root_.com.olegych.scastie.api.runtime._
           |class $instrumnedClass {""".stripMargin
@@ -122,13 +133,52 @@ object Instrument {
           |$code
           |}""".stripMargin
 
-    code0.parse[Source] match {
-      case parsers.Parsed.Success(k) =>
-        if (!hasMainMethod(k))
-          Right(instrument(k, offset = prelude.length + 1))
-        else Left(())
-      case _ =>
-        Left(())
+    // TODO:
+    // dialects.Paradise211
+    // dialects.Paradise212
+    // dialects.ParadiseTypelevel211
+    // dialects.ParadiseTypelevel212
+
+    // scalameta 1.6.0:
+    // Typelevel211
+    // Typelevel212
+
+    def typelevel(scalaVersion: String): Option[Dialect] = {
+      if(scalaVersion.startsWith("2.12")) Some(dialects.Scala212)
+      else if(scalaVersion.startsWith("2.11")) Some(dialects.Scala211)
+      else None
+    }
+
+    def scala(scalaVersion: String): Option[Dialect] = {
+      if(scalaVersion.startsWith("2.12")) Some(dialects.Scala212)
+      else if(scalaVersion.startsWith("2.11")) Some(dialects.Scala211)
+      else if(scalaVersion.startsWith("2.10")) Some(dialects.Scala210)
+      else None
+    }
+
+    val maybeDialect = 
+      target match {
+        case Jvm(scalaVersion) => scala(scalaVersion)
+        case Js(scalaVersion, _) => scala(scalaVersion)
+        case Native => scala("2.11")
+        case Dotty => Some(dialects.Dotty)
+        case Typelevel(scalaVersion) => typelevel(scalaVersion)
+        case _ => None
+      }
+
+    maybeDialect match {
+      case Some(dialect) => {
+        implicit val selectedDialect = dialect
+
+        code0.parse[Source] match {
+          case Parsed.Success(k) =>
+            if (!hasMainMethod(k))
+              Right(instrument(k, offset = prelude.length + 1))
+            else Left(HasMainMethod)
+          case e: Parsed.Error => Left(ParsingError(e))
+        }
+      }
+      case None => Left(UnsupportedDialect)
     }
   }
 }
