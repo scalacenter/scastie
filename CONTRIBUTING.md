@@ -42,6 +42,9 @@ open http://localhost:9000
 └── utils               | read/writte files
 ```
 
+# Let's talk
+
+If you have any questions join us in the [gitter channel](https://gitter.im/scalacenter/scastie)
 
 # How to deploy
 
@@ -60,14 +63,16 @@ Those people have access:
 * @jvican
 * @olafurpg
 
-2. You need sbt, nodejs and docker
+2. You need to be a member of the scalacenter on dockerhub: https://hub.docker.com/u/scalacenter 
 
-3. bump the version in build.sbt
+3. do`docker login`
 
-4. tag and commit the new version
+3. You need sbt, nodejs and docker
 
-5. Run this command locally: `sbt deploy`
+4. bump the version in build.sbt
 
-# Let's talk
+5. tag and commit the new version
 
-If you have any questions join us in the [gitter channel](https://gitter.im/scalacenter/scastie)
+6. Run this command locally: `sbt deploy`
+
+7. Make sure everything went well: https://scastie.scala-lang.org
