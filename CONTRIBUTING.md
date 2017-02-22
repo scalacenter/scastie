@@ -5,6 +5,8 @@ You are more than welcome to contribute any PR regardeless if it's listed or not
 
 ## How to run locally
 
+requirements: nodejs (for less)
+
 ```
 sbt
 > sbtRunner/reStart
@@ -40,7 +42,9 @@ open http://localhost:9000
 
 # How to deploy
 
-To deploy the application to the productions servers (scastie.scala-lang.org) you will need to have ssh access to the following machines:
+## Requirements
+
+1. To deploy the application to the productions servers (scastie.scala-lang.org) you will need to have ssh access to the following machines:
 
 * `scastie@scastie.scala-lang.org`
 * `scastie@scastie-sbt.scala-lang.org` (inside EPFL's vpn)
@@ -53,7 +57,13 @@ Those people have access:
 * @jvican
 * @olafurpg
 
-`sbt deploy`
+2. You need sbt, nodejs and docker
+
+3. bump the version in build.sbt
+
+4. tag and commit the new version
+
+5. Run this command locally: `sbt deploy`
 
 # Let's talk
 
