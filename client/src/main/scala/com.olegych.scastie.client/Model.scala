@@ -1,18 +1,7 @@
 package com.olegych.scastie
 package client
 
-case class Project(
-    organization: String,
-    repository: String,
-    logo: Option[String] = None,
-    artifacts: List[String] = Nil
-)
-
-case class ReleaseOptions(
-    groupId: String,
-    artifacts: List[String],
-    versions: List[String]
-)
+case class ReleaseOptions(groupId: String, versions: List[String])
 
 // case class MavenReference(groupId: String, artifactId: String, version: String)
 

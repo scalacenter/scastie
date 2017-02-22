@@ -146,13 +146,12 @@ object App {
     def setTarget(target: ScalaTarget) =
       copyAndSave(inputs = inputs.copy(target = target))
 
-    def addScalaDependency(scalaDependency: ScalaDependency) =
-      copyAndSave(
-        inputs = inputs.copy(libraries = inputs.libraries + scalaDependency))
+    def addScalaDependency(scalaDependency: ScalaDependency,
+                           project: Project) =
+      copyAndSave(inputs = inputs.addScalaDependency(scalaDependency, project))
 
     def removeScalaDependency(scalaDependency: ScalaDependency) =
-      copyAndSave(
-        inputs = inputs.copy(libraries = inputs.libraries - scalaDependency))
+      copyAndSave(inputs = inputs.removeScalaDependency(scalaDependency))
 
     def updateDependencyVersion(scalaDependency: ScalaDependency,
                                 version: String) = {
@@ -304,8 +303,9 @@ object App {
     def setTarget(target: ScalaTarget): Callback =
       scope.modState(_.setTarget(target))
 
-    def addScalaDependency(scalaDependency: ScalaDependency): Callback =
-      scope.modState(_.addScalaDependency(scalaDependency))
+    def addScalaDependency(scalaDependency: ScalaDependency,
+                           project: Project): Callback =
+      scope.modState(_.addScalaDependency(scalaDependency, project))
 
     def removeScalaDependency(scalaDependency: ScalaDependency): Callback =
       scope.modState(_.removeScalaDependency(scalaDependency))
