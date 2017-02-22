@@ -1,8 +1,12 @@
 package com.olegych.scastie
 package sbt
 
+import instrumentation._
+
 import api._
 import ScalaTargetType._
+
+import scala.meta.parsers.Parsed
 
 import org.scalafmt.{Scalafmt, Formatted}
 import org.scalafmt.config.{ScalafmtConfig, ScalafmtRunner}
@@ -51,17 +55,79 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private def warmUp(): Unit = {
     if (production) {
       log.info("warming up sbt")
-      val (in, _) = instrument(Inputs.default)
+      val Right(in) = instrument(Inputs.default)
       sbt.eval("run", in, (line, _, _) => log.info(line), reload = false)
     }
   }
 
-  private def instrument(inputs: Inputs): (Inputs, Boolean) = {
-    if (inputs.worksheetMode)
-      instrumentation.Instrument(inputs.code) match {
-        case Right(instrumented) => (inputs.copy(code = instrumented), false)
-        case _ => (inputs.copy(worksheetMode = false), true)
-      } else (inputs, false)
+  private def instrument(inputs: Inputs): Either[InstrumentationFailure, Inputs] = {
+    if (inputs.worksheetMode) {
+      instrumentation.Instrument(inputs.code, inputs.target).right.map(instrumented =>
+        inputs.copy(code = instrumented)
+      )
+    } else Right(inputs)
+  }
+
+  private def run(id: Int, inputs: Inputs, ip: String, login: String, 
+                  progressActor: ActorRef, pasteActor: ActorRef, forcedProgramMode: Boolean) = {
+    val scalaTargetType = inputs.target.targetType
+
+    def eval(command: String, reload: Boolean) =
+      sbt.eval(command,
+               inputs,
+               processSbtOutput(
+                 inputs.worksheetMode,
+                 forcedProgramMode,
+                 progressActor,
+                 id,
+                 pasteActor
+               ),
+               reload)
+
+    def timeout(duration: FiniteDuration): Unit = {
+      log.info(s"restarting sbt: $inputs")
+      progressActor !
+        PasteProgress(
+          id = id,
+          userOutput = None,
+          sbtOutput = None,
+          compilationInfos = List(
+            Problem(
+              Error,
+              line = None,
+              message = s"timed out after $duration"
+            )
+          ),
+          instrumentations = Nil,
+          runtimeError = None,
+          done = true,
+          timeout = true,
+          forcedProgramMode = false
+        )
+
+      sbt.kill()
+      sbt = new Sbt()
+      warmUp()
+    }
+
+    log.info(s"== updating $id ==")
+
+    val sbtReloadTime = 40.seconds
+    if (sbt.needsReload(inputs)) {
+      withTimeout(sbtReloadTime)(eval("compile", reload = true))(
+        timeout(sbtReloadTime))
+    }
+
+    log.info(s"== running $id ==")
+
+    withTimeout(runTimeout)({
+      scalaTargetType match {
+        case JVM | Dotty | Native | Typelevel => eval("run", reload = false)
+        case JS => eval("fastOptJs", reload = false)
+      }
+    })(timeout(runTimeout))
+
+    log.info(s"== done  $id ==")
   }
 
   def receive = {
@@ -71,66 +137,42 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     case SbtTask(id, inputs, ip, login, progressActor) => {
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 
-      val scalaTargetType = inputs.target.targetType
+      instrument(inputs) match {
+        case Right(inputs0) => {
+          run(id, inputs0, ip, login, progressActor, sender, forcedProgramMode = false)
+        } 
+        case Left(error) => {
+          def signalError(message: String, line: Option[Int]): Unit = {
+            val progress = PasteProgress(
+              id = id,
+              userOutput = None,
+              sbtOutput = None,
+              compilationInfos = List(Problem(Error, line, message)),
+              instrumentations = Nil,
+              runtimeError = None,
+              done = true,
+              timeout = false,
+              forcedProgramMode = false
+            )  
 
-      val (inputs0, forcedProgramMode) = instrument(inputs)
+            progressActor ! progress
+            sender ! progress
+          }
 
-      def eval(command: String, reload: Boolean) =
-        sbt.eval(command,
-                 inputs0,
-                 processSbtOutput(
-                   inputs.worksheetMode,
-                   forcedProgramMode,
-                   progressActor,
-                   id,
-                   sender
-                 ),
-                 reload)
+          error match { 
+            case HasMainMethod => {
+              run(id, inputs.copy(worksheetMode = false), ip, login, progressActor, sender, forcedProgramMode = true)
+            }
+            case UnsupportedDialect => 
+              signalError("The worksheet mode does not support this Scala target", None)
 
-      def timeout(duration: FiniteDuration): Unit = {
-        log.info(s"restarting sbt: $inputs")
-        progressActor !
-          PasteProgress(
-            id = id,
-            userOutput = None,
-            sbtOutput = None,
-            compilationInfos = List(
-              Problem(
-                Error,
-                line = None,
-                message = s"timed out after $duration"
-              )
-            ),
-            instrumentations = Nil,
-            runtimeError = None,
-            done = true,
-            timeout = true,
-            forcedProgramMode = false
-          )
+            case ParsingError(Parsed.Error(pos, message, _)) => {
+              signalError(message, Some(pos.start.line))
+            }
 
-        sbt.kill()
-        sbt = new Sbt()
-        warmUp()
-      }
-
-      log.info(s"== updating $id ==")
-
-      val sbtReloadTime = 40.seconds
-      if (sbt.needsReload(inputs0)) {
-        withTimeout(sbtReloadTime)(eval("compile", reload = true))(
-          timeout(sbtReloadTime))
-      }
-
-      log.info(s"== running $id ==")
-
-      withTimeout(runTimeout)({
-        scalaTargetType match {
-          case JVM | Dotty | Native | Typelevel => eval("run", reload = false)
-          case JS => eval("fastOptJs", reload = false)
+          }
         }
-      })(timeout(runTimeout))
-
-      log.info(s"== done  $id ==")
+      }
     }
   }
 

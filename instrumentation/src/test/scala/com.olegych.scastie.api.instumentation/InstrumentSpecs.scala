@@ -1,4 +1,7 @@
-package com.olegych.scastie.instrumentation
+package com.olegych.scastie
+package instrumentation
+
+import api.ScalaTarget
 
 import java.nio.file._
 
@@ -30,20 +33,31 @@ class InstrumentSpecs extends FunSuite {
   }
 
   test("top level fails") {
-    val Left(()) = Instrument("package foo { }")
+    val Left(e) = Instrument("package foo { }")
+    assert(e.isInstanceOf[ParsingError])
   }
 
   test("main method fails") {
-    val Left(()) =
+    val Left(HasMainMethod) =
       Instrument("object Main { def main(args: Array[String]): Unit = () }")
   }
 
+  test("unsupported dialect"){
+   val Left(UnsupportedDialect) =
+      Instrument("1", ScalaTarget.Jvm("2.13.0")) 
+  }
+
   test("extends App primary fails") {
-    val Left(()) = Instrument("object Main extends App")
+    val Left(HasMainMethod) = Instrument("object Main extends App")
   }
 
   test("extends App secondary fails") {
-    val Left(()) = Instrument("object Main extends A with App")
+    val Left(HasMainMethod) = Instrument("object Main extends A with App")
+  }
+
+  test("bug #83") {
+    val Left(e) = Instrument("val answer: 42.type = 42", ScalaTarget.Dotty)
+    assert(!e.isInstanceOf[HasMainMethod.type])
   }
 
   private def slurp(path: Path): String = {
