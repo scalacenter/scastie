@@ -124,7 +124,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   }
 
   def inBeta(user: User): Boolean = {
-    val betaCutoff = 500
+    val betaCutoff = 800
     val (maybeRank, size) = rank(user.login)
 
     maybeRank.map(_ <= betaCutoff).getOrElse(size <= betaCutoff)

@@ -131,6 +131,13 @@ object ScalaTarget {
   }
 }
 
+case class Project(
+    organization: String,
+    repository: String,
+    logo: Option[String] = None,
+    artifacts: List[String] = Nil
+)
+
 object Inputs {
   val defaultCode =
     """|List("Hello", "World").mkString("", ", ", "!")
@@ -142,6 +149,7 @@ object Inputs {
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
+    librariesFrom = Map(),
     sbtConfigExtra = """|scalacOptions ++= Seq(
                         |  "-deprecation",
                         |  "-encoding", "UTF-8",
@@ -159,9 +167,25 @@ case class Inputs(
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
+    librariesFrom: Map[ScalaDependency, Project],
     sbtConfigExtra: String,
     sbtPluginsConfigExtra: String
 ) {
+  def addScalaDependency(scalaDependency: ScalaDependency,
+                         project: Project): Inputs = {
+    copy(
+      libraries = libraries + scalaDependency,
+      librariesFrom = librariesFrom + (scalaDependency -> project)
+    )
+  }
+
+  def removeScalaDependency(scalaDependency: ScalaDependency): Inputs = {
+    copy(
+      libraries = libraries - scalaDependency,
+      librariesFrom = librariesFrom - scalaDependency
+    )
+  }
+
   def sbtPluginsConfig: String = {
     target match {
       case ScalaTarget.Js(_, scalaJsVersion) =>
