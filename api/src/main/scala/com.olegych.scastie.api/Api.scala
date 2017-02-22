@@ -140,7 +140,8 @@ case class Project(
 
 object Inputs {
   val defaultCode =
-    """|List("Hello", "World").mkString("", ", ", "!")
+    """|
+       |List("Hello", "World").mkString("", ", ", "!")
        |
        |help""".stripMargin
 
