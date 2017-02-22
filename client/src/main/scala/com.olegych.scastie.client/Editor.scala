@@ -6,7 +6,6 @@ import api.{Instrumentation, Value, Html}
 import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom.raw.{
-  Element,
   HTMLTextAreaElement,
   HTMLElement,
   HTMLPreElement,
@@ -140,7 +139,8 @@ object Editor {
             backend.formatCode().runNow
           }
 
-          scope.modState(_.copy(editor = Some(editor)))
+          scope.modState(_.copy(editor = Some(editor))) >>
+            scope.state.flatMap(state => runDelta(editor, (f => scope.modState(f)), state, None, props))
       }
     }
   }
@@ -152,18 +152,14 @@ object Editor {
     editor.scrollTo(prevScrollPosition.left, prevScrollPosition.top)
   }
 
-  type Scope = CompScope.DuringCallbackM[(App.State, App.Backend),
-                                         EditorState,
-                                         Backend,
-                                         Element]
-
   private def runDelta(editor: TextAreaEditor,
-                       scope: Scope,
+                       modState: (EditorState => EditorState) => Callback,
                        state: EditorState,
-                       current: App.State,
+                       current: Option[App.State],
                        next: App.State): Callback = {
+
     def setTheme() = {
-      if (current.isDarkTheme != next.isDarkTheme) {
+      if (current.map(_.isDarkTheme) != Some(next.isDarkTheme)) {
         val theme =
           if (next.isDarkTheme) "dark"
           else "light"
@@ -173,7 +169,7 @@ object Editor {
     }
 
     def setCode() = {
-      if (current.inputs.code != next.inputs.code) {
+      if (current.map(_.inputs.code) != Some(next.inputs.code)) {
         val doc = editor.getDoc()
         if (doc.getValue() != next.inputs.code) {
           setCode2(editor, next.inputs.code)
@@ -272,6 +268,9 @@ object Editor {
           }
           case instrumentation @ Instrumentation(api.Position(start, end),
                                                  Html(content, folded)) => {
+
+            console.log("html")
+
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)
 
@@ -374,12 +373,12 @@ object Editor {
         updateEditorState: (Map[T, Annotation] => Map[T, Annotation]) => EditorState => EditorState
     ): Callback = {
 
-      val added = fromState(next) -- fromState(current)
+      val added = fromState(next) -- current.map(fromState).getOrElse(Set())
       val toAdd = CallbackTo
         .sequence(added.map(item => CallbackTo((item, annotate(item)))))
         .map(_.toMap)
 
-      val removed = fromState(current) -- fromState(next)
+      val removed = current.map(fromState).getOrElse(Set()) -- fromState(next)
       val toRemove = CallbackTo.sequence(
         fromEditorState(state)
           .filterKeys(removed.contains)
@@ -392,8 +391,7 @@ object Editor {
       for {
         added <- toAdd
         removed <- toRemove
-        _ <- scope.modState(
-          updateEditorState(items => (items ++ added) -- removed))
+        _ <- modState(updateEditorState(items => (items ++ added) -- removed) )
       } yield ()
     }
 
@@ -428,7 +426,7 @@ object Editor {
         val scope = v.$
 
         state.editor
-          .map(editor => runDelta(editor, scope, state, current, next))
+          .map(editor => runDelta(editor, (f => scope.modState(f)), state, Some(current), next))
           .getOrElse(Callback(()))
       }
       .componentDidMount(_.backend.start())

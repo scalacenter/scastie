@@ -3,14 +3,13 @@ package client
 
 import App._
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom.raw.HTMLPreElement
 
-object MainPannel { //extends vdom.Extra.Attrs {
+object MainPannel {
 
-  private val console = Ref[HTMLPreElement]("console")
+  private val consoleElement = Ref[HTMLPreElement]("console")
 
   private val component =
     ReactComponentB[(State, Backend, Boolean)]("MainPannel").render_P {
@@ -38,26 +37,38 @@ object MainPannel { //extends vdom.Extra.Attrs {
           backend.closeHelp()
         }
 
-        val helpMenu =
-          if (state.isShowingHelpAtStartup && state.helpModal && !embedded)
+        val showHelp = state.isShowingHelpAtStartup && state.helpModal && !embedded 
+
+        val helpClosePannel =
+          if(showHelp) {
             TagMod(
-              div(`class` := "help-modal")(
+              div(`class` := "help-close")(
                 button(onClick ==> closeHelp)("Close"),
                 div(`class` := "not-again")(
                   p("Dont show again"),
                   input.checkbox(onClick ==> toogleShowHelpAtStartup)
-                ),
-                div(dangerouslySetInnerHtml(api.runtime.help.a))
+                )
               )
             )
-          else EmptyTag
+          } else EmptyTag
+
+
+        val helpState =
+          if (showHelp) {
+            val helpModal = 
+              api.Instrumentation(api.Position(0, 0), api.runtime.help.copy(folded = false))
+
+            state.copy(
+              outputs = state.outputs.copy(instrumentations = state.outputs.instrumentations + helpModal)
+            )
+          } else state
 
         div(`class` := "main-pannel")(
           div(`class` := s"pannel $theme $consoleCss", show(View.Editor))(
-            helpMenu,
-            Editor(state, backend),
+            helpClosePannel,
+            Editor(helpState, backend),
             embeddedMenu,
-            pre(`class` := "output-console", ref := console)(
+            pre(`class` := "output-console", ref := consoleElement)(
               state.outputs.console.mkString("")
             )
           ),
@@ -66,7 +77,7 @@ object MainPannel { //extends vdom.Extra.Attrs {
         )
     }.componentDidUpdate(scope =>
         Callback {
-          val consoleDom = console(scope.$).get
+          val consoleDom = consoleElement(scope.$).get
           consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
       })
       .build
