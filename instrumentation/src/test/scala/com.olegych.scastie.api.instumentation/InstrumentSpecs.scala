@@ -42,6 +42,16 @@ class InstrumentSpecs extends FunSuite {
       Instrument("object Main { def main(args: Array[String]): Unit = () }")
   }
 
+  test("extends App trait fails") {
+    val Left(HasMainMethod) =
+      Instrument("object Main extends App { }")
+  }
+
+  test("with App trait fails") {
+    val Left(HasMainMethod) =
+      Instrument("trait Foo; object Main extends Foo with App { }")
+  }
+
   test("unsupported dialect"){
    val Left(UnsupportedDialect) =
       Instrument("1", ScalaTarget.Jvm("2.13.0")) 
