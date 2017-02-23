@@ -66,8 +66,9 @@ class InstrumentSpecs extends FunSuite {
   }
 
   test("bug #83") {
-    val Left(e) = Instrument("val answer: 42.type = 42", ScalaTarget.Dotty)
-    assert(!e.isInstanceOf[HasMainMethod.type])
+    // requires scalameta 1.6.0 => requires scalafmt based on 1.6.0
+    // val Right(_) = Instrument("val answer: 42 = 42", ScalaTarget.Dotty)
+    pending
   }
 
   private def slurp(path: Path): String = {
