@@ -58,18 +58,21 @@ class ProgressForwarder(progressActor: ActorRef)
     case progress: PasteProgress => {
       buffer.enqueue(progress)
       deliver()
-      if (progress.done) {
-        progressActor ! ProgressDone(progress.id.toString)
-      }
     }
-    case Request(_) => {
+    case _: Request => {
       deliver()
     }
   }
 
   private def deliver(): Unit = {
     if (totalDemand > 0) {
-      buffer.foreach(onNext)
+      buffer.foreach{progress =>
+        onNext(progress)
+
+        if (progress.done) {
+          progressActor ! ProgressDone(progress.id.toString)
+        }
+      }
       buffer.clear()
     }
   }
