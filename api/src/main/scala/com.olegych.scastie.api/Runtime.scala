@@ -56,12 +56,18 @@ package object runtime {
 
     html"""|<h1>Welcome to Scastie!</h1>
            |Scastie is an interractive playground for Scala. To not see this 
-           |message again, remove the `help` expression on your code snippet.
+           |message again, remove the <code>help</code> expression on your code snippet.
            |
            |<h2>Libraries</h2>
            |In Libraries you can change the Scala version and add libaries.
            |
            |<h2>Worksheet Mode</h2>
+           |Enabled by default, the Worksheet Mode gives the value and the type of each line of
+           |your program. You can also add HTML blocks such as: <code>html"&lt;h1&gt;Hello&lt;/h1&gt;".fold</code> to
+           |break down your program into various sections.
+           |
+           |In Worksheet Mode you cannot use <i>package</i> or <i>value classes</i>. If you want to use
+           |those features, turn off the Mode and add a <i>main</i> method and <i>println</i> statements.
            |
            |<h2>Formatting Code</h2>
            |The code formatting is done by scalafmt. You can configure the formatting with comments
@@ -83,7 +89,9 @@ package object runtime {
            |
            |<h2>BuildInfo</h2>
            |It's available on Github at $scastieGithub
-           |(Apache 2 License, Version: $buildVersion, Git: $githash)
+           |License: Apache 2
+           |Version: $buildVersion
+           |Git: $githash
            |
            |Scastie is an original idea from Aleh Aleshka (OlegYch) $originalScastie""".stripMargin.fold
   }
