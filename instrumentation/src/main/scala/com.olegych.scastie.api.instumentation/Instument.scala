@@ -72,9 +72,6 @@ object Instrument {
           instrumentationMapPatch +:
             c.templ.stats.get.collect {
               case term: Term => instrumentOne(term, None, offset)
-              case vl: Defn.Val => instrumentOne(vl.rhs, vl.decltpe, offset)
-              case vr: Defn.Var if vr.rhs.nonEmpty =>
-                instrumentOne(vr.rhs.get, vr.decltpe, offset)
             }
         }
       }.flatten
