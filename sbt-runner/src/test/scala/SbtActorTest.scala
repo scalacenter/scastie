@@ -19,11 +19,6 @@ class SbtActorTest()
     run("1 + 1")(_.instrumentations.nonEmpty)
   }
 
-  test("Regression #55: Dotty fails to resolve") {
-    val dotty = Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Dotty)
-    run(dotty)(_.instrumentations.nonEmpty)
-  }
-
   test("timeout") {
     run("while(true){}")(_.timeout)
   }
@@ -50,7 +45,6 @@ class SbtActorTest()
 
       if (gotRuntimeError) {
         val error = progress.runtimeError.get
-        println(error)
         assert(error.message == "java.lang.ArithmeticException: / by zero")
         assert(error.line == Some(1))
         assert(error.fullStack.size > 0)
@@ -67,6 +61,48 @@ class SbtActorTest()
       if (!gotHelloMessage) assert(progress.userOutput == None)
       gotHelloMessage
     })
+  }
+
+  test("force program mode when an entry point is present") {
+    val message = "Hello"
+    run(s"""object Main { def main(args: Array[String]): Unit = println("$message") }"""){progress =>
+      assert(progress.forcedProgramMode)
+
+      val gotHelloMessage = progress.userOutput == Some(message)
+      if (!gotHelloMessage) assert(progress.userOutput == None)
+
+      gotHelloMessage
+    }
+  }
+  
+  test("report unsupported dialects") {
+    run("1+1", ScalaTarget.Jvm("10.10.10"))(assertCompilationInfo{ info =>
+      assert(info.message == "The worksheet mode does not support this Scala target")
+    })
+  }
+
+  test("repport parsing error") {
+    run("{")(assertCompilationInfo{ info =>
+      assert(info.message == "} expected but end of file found")
+      assert(info.line == Some(1))
+    })
+  }
+
+  test("Regression #55: Dotty fails to resolve") {
+    val dotty = Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Dotty)
+    run(dotty)(_.instrumentations.nonEmpty)
+  }
+
+  def assertCompilationInfo(infoAssert: Problem => Any)(progress: PasteProgress): Boolean = {
+
+    val gotCompilationError = progress.compilationInfos.nonEmpty
+
+    if(gotCompilationError) {
+      val info = progress.compilationInfos.head
+      infoAssert(info)
+    }
+
+    gotCompilationError
   }
 
   override def afterAll {
@@ -105,7 +141,8 @@ class SbtActorTest()
 
     firstRun = false
   }
-  private def run(code: String)(fish: PasteProgress => Boolean): Unit = {
-    run(Inputs.default.copy(code = code))(fish)
+  private def run(code: String, 
+                  target: ScalaTarget = ScalaTarget.Jvm.default)(fish: PasteProgress => Boolean): Unit = {
+    run(Inputs.default.copy(code = code, target = target))(fish)
   }
 }

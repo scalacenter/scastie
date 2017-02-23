@@ -167,7 +167,9 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
               signalError("The worksheet mode does not support this Scala target", None)
 
             case ParsingError(Parsed.Error(pos, message, _)) => {
-              signalError(message, Some(pos.start.line))
+              val lineOffset = getLineOffset(worksheetMode = true)
+
+              signalError(message, Some(pos.start.line + lineOffset))
             }
 
           }
@@ -190,6 +192,10 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
   }
 
+  private def getLineOffset(worksheetMode: Boolean): Int =
+    if (worksheetMode) -2
+    else 0
+
   private def processSbtOutput(
       worksheetMode: Boolean,
       forcedProgramMode: Boolean,
@@ -198,9 +204,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       pasteActor: ActorRef): (String, Boolean, Boolean) => Unit = {
     (line, done, reload) =>
       {
-        val lineOffset =
-          if (worksheetMode) -2
-          else 0
+        val lineOffset = getLineOffset(worksheetMode)
 
         val problems = extractProblems(line, lineOffset)
         val instrumentations =
