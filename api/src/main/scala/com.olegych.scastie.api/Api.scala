@@ -12,7 +12,7 @@ trait Api {
   def save(inputs: Inputs): Future[Ressource]
   def fetch(id: Int): Future[Option[FetchResult]]
   def format(code: FormatRequest): Future[FormatResponse]
-  def user(): Future[User]
+  def fetchUser(): Future[Option[User]]
 }
 
 case class FormatRequest(code: String, worksheetMode: Boolean)
@@ -164,11 +164,11 @@ object Inputs {
 }
 
 case class Inputs(
-    worksheetMode: Boolean,
+    worksheetMode: Boolean = false,
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
-    librariesFrom: Map[ScalaDependency, Project],
+    librariesFrom: Map[ScalaDependency, Project] = Map(),
     sbtConfigExtra: String,
     sbtPluginsConfigExtra: String
 ) {

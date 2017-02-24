@@ -38,6 +38,7 @@ object App {
       isDarkTheme = true,
       consoleIsOpen = false,
       consoleHasUserOutput = false,
+      user = None,
       inputs = Inputs.default,
       outputs = Outputs.default
     )
@@ -62,6 +63,7 @@ object App {
       isDarkTheme: Boolean,
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
+      user: Option[User],
       inputs: Inputs,
       outputs: Outputs
   ) {
@@ -73,6 +75,7 @@ object App {
                     isDarkTheme: Boolean = isDarkTheme,
                     consoleIsOpen: Boolean = consoleIsOpen,
                     consoleHasUserOutput: Boolean = consoleHasUserOutput,
+                    user: Option[User] = user,
                     inputs: Inputs = inputs,
                     outputs: Outputs = outputs): State = {
 
@@ -86,6 +89,7 @@ object App {
              isDarkTheme,
              consoleIsOpen,
              consoleHasUserOutput,
+             user,
              inputs,
              outputs)
 
@@ -133,6 +137,9 @@ object App {
         case Some(l) => log(l + "\n")
         case None => this
       }
+
+    def setUser(user: Option[User]) =
+      copyAndSave(user = user)
 
     def setCode(code: String) =
       copyAndSave(inputs = inputs.copy(code = code))
@@ -400,6 +407,7 @@ object App {
               result match {
                 case Some(FetchResult(inputs, progresses)) => {
                   loadStateFromLocalStorage >>
+                  clear() >>
                   scope.modState(
                     _.setInputs(inputs).setProgresses(progresses)
                   )
@@ -410,23 +418,36 @@ object App {
         )
       }
 
-      props.embedded match {
-        case None => {
-          props.snippet match {
-            case Some(Snippet(id)) => loadSnippet(id)
-            case None => loadStateFromLocalStorage
-          }
-        }
-        case Some(embededOptions) => {
-          embededOptions match {
-            case EmbededOptions(Some(id), _) => loadSnippet(id)
-            case EmbededOptions(_, Some(inputs)) =>
-              scope.modState(_.setInputs(inputs))
-            case _ => Callback(())
-          }
-        }
+      def loadUser(): Callback = {
+        Callback.future(
+          ApiClient[Api]
+            .fetchUser()
+            .call()
+            .map(result =>
+              scope.modState(_.setUser(result))
+            )
+        )
       }
 
+      val initialState =
+        props.embedded match {
+          case None => {
+            props.snippet match {
+              case Some(Snippet(id)) => loadSnippet(id)
+              case None => loadStateFromLocalStorage
+            }
+          }
+          case Some(embededOptions) => {
+            embededOptions match {
+              case EmbededOptions(Some(id), _) => loadSnippet(id)
+              case EmbededOptions(_, Some(inputs)) =>
+                scope.modState(_.setInputs(inputs))
+              case _ => Callback(())
+            }
+          }
+        }
+
+      initialState >> loadUser()
     }
 
     def formatCode(e: ReactEventI): Callback = formatCode()
