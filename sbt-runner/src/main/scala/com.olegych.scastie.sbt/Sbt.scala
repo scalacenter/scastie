@@ -12,7 +12,8 @@ import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
 
 import java.nio.file._
-import java.io.IOException
+import java.io.{IOException, BufferedReader, InputStreamReader}
+import java.nio.charset.StandardCharsets
 
 class Sbt() {
   private val config =
@@ -63,7 +64,9 @@ class Sbt() {
 
     val process = builder.start()
 
-    (process, process.getOutputStream, process.getInputStream)
+    val in = new BufferedReader(new InputStreamReader(process.getInputStream, StandardCharsets.UTF_8))
+
+    (process, process.getOutputStream, in)
   }
 
   private def collect(lineCallback: (String, Boolean, Boolean) => Unit,

@@ -216,8 +216,15 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         val initializationMessages = List(
           "[info] Loading global plugins from",
           "[info] Loading project definition from",
-          "[info] Set current project to scastie"
+          "[info] Set current project to scastie",
+          "[info] Updating {file:"
         )
+        //   "[info] Resolving",
+        //   "[info] Done updating.",
+        //   "[info] Compiling",
+        //   "[success] Total time",
+        //   "[info] Running Main"
+        // )
 
         val userOutput =
           if (problems.isEmpty

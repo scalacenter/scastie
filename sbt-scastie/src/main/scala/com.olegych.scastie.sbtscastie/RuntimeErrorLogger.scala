@@ -9,7 +9,7 @@ import upickle.default.{write => uwrite}
 object RuntimeErrorLogger {
   private object NoOp {
     def apply(): NoOp = {
-      def out(in: String): Unit = println(uwrite(SbtOutput(in.trim)))
+      def out(in: String): Unit = println(uwrite(SbtOutput(in.trim, None)))
 
       new NoOp(new OutputStream {
         override def close(): Unit = ()
@@ -28,8 +28,18 @@ object RuntimeErrorLogger {
     extraLoggers := {
       val clientLogger = FullLogger {
         new Logger {
-          def log(level: Level.Value, message: => String): Unit = ()
+          def log(level: Level.Value, message: => String): Unit =  {
+            val apiLevel = level match {
+              case Level.Debug => SbtLogLevel.Debug
+              case Level.Info => SbtLogLevel.Info
+              case Level.Warn => SbtLogLevel.Warn
+              case Level.Error => SbtLogLevel.Error
+            }
+            println(uwrite(SbtOutput(message, Some(apiLevel))))
+          }
+
           def success(message: => String): Unit = () // << this is never called
+
           def trace(t: => Throwable): Unit = {
             def search(e: Throwable) = {
               e.getStackTrace
