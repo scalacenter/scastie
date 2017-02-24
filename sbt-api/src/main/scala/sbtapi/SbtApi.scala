@@ -16,12 +16,4 @@ case class Problem(severity: Severity, line: Option[Int], message: String)
 // TODO: range pos ?
 case class RuntimeError(message: String, line: Option[Int], fullStack: String)
 
-sealed trait SbtLogLevel
-object SbtLogLevel {
-  case object Debug extends SbtLogLevel
-  case object Info extends SbtLogLevel
-  case object Warn extends SbtLogLevel
-  case object Error extends SbtLogLevel
-}
-
-case class SbtOutput(line: String, level: Option[SbtLogLevel])
+case class SbtOutput(line: String)

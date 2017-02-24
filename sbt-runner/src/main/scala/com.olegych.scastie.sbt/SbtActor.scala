@@ -212,27 +212,22 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         val runtimeError = extractRuntimeError(line, lineOffset)
         val sbtOutput = extract[sbtapi.SbtOutput](line)
 
-        // sbt plugin is not loaded at this stage. we need to drop those messages
-        val initializationMessages = List(
-          "[info] Loading global plugins from",
-          "[info] Loading project definition from",
-          "[info] Set current project to scastie",
-          "[info] Updating {file:"
+        // look like our sbt logger is not catching all messages
+        val sbtMessages = List(
+          "[info]",
+          "[success]",
+          "[error]",
+          "[warn]"
         )
-        //   "[info] Resolving",
-        //   "[info] Done updating.",
-        //   "[info] Compiling",
-        //   "[success] Total time",
-        //   "[info] Running Main"
-        // )
+
+        val isSbtMessage = sbtMessages.exists(message => line.startsWith(message))
 
         val userOutput =
           if (problems.isEmpty
               && instrumentations.isEmpty
               && runtimeError.isEmpty
               && !done
-              && !initializationMessages.exists(
-                message => line.startsWith(message))
+              && !isSbtMessage
               && sbtOutput.isEmpty)
             Some(line)
           else None
@@ -240,7 +235,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         val progress = PasteProgress(
           id = id,
           userOutput = userOutput,
-          sbtOutput = sbtOutput.map(_.line),
+          sbtOutput = if(isSbtMessage) Some(line) else sbtOutput.map(_.line),
           compilationInfos = problems.getOrElse(Nil),
           instrumentations = instrumentations.getOrElse(Nil),
           runtimeError = runtimeError,
