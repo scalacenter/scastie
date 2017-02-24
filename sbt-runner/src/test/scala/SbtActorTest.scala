@@ -95,7 +95,6 @@ class SbtActorTest()
 
   test("Encoding issues #100"){
     run("""println("€")"""){progress =>
-      println(progress)
       val gotHelloMessage = progress.userOutput == Some("€")
       if (!gotHelloMessage) assert(progress.userOutput == None)
       gotHelloMessage
