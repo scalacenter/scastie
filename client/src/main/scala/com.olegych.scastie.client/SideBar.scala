@@ -15,8 +15,6 @@ object SideBar {
 
         val theme = if (state.isDarkTheme) "dark" else "light"
 
-        val toggleThemeLabel = if (state.isDarkTheme) "Light" else "Dark"
-
         def selected(view: View) =
           if (view == state.view) TagMod(`class` := "selected") else EmptyTag
 
@@ -27,14 +25,6 @@ object SideBar {
         val consoleLabel =
           if (state.consoleIsOpen) "Close"
           else "Open"
-
-        val worksheetModeSelected =
-          if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
-          else EmptyTag
-
-        val worksheetModeToogleLabel =
-          if (state.inputs.worksheetMode) "OFF"
-          else "ON"
 
         def openInNewTab(link: String): Callback = {
           Callback(
@@ -49,10 +39,6 @@ object SideBar {
           openInNewTab("https://github.com/scalacenter/scastie/issues/new")
 
         import View.ctrl
-
-        val selectedTheme =
-          if (state.isDarkTheme) iconic.sun
-          else iconic.moon
 
         val profileButton = 
           state.user match {
@@ -82,17 +68,17 @@ object SideBar {
               p("Libraries (Build)")
             ),
             profileButton,
-            li(onClick ==> formatCode,
-               title := "Format Code (F6)",
-               `class` := "button")(
-              iconic.justifyLeft,
-              p("Format")
-            ),
             li(onClick ==> save,
                title := s"Save ($ctrl + S)",
                `class` := "button")(
               i(`class` := "fa fa-floppy-o"),
               p("Save")
+            ),
+            li(onClick ==> formatCode,
+               title := "Format Code (F6)",
+               `class` := "button")(
+              iconic.justifyLeft,
+              p("Format")
             ),
             li(onClick ==> toggleConsole,
                title := s"$consoleLabel Console",
@@ -112,19 +98,6 @@ object SideBar {
                `class` := "button")(
               iconic.bug,
               p("Issue")
-            ),
-            li(onClick ==> toggleWorksheetMode,
-               title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
-               worksheetModeSelected,
-               `class` := "button")(
-              iconic.script,
-              p("Worksheet")
-            ),
-            li(onClick ==> toggleTheme,
-               title := s"Select $toggleThemeLabel Theme (F2)",
-               `class` := "button")(
-              selectedTheme,
-              p("Theme")
             )
           )
         )

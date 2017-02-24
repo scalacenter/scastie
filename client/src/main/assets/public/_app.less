@@ -70,8 +70,6 @@ body.pc kbd.mac { display: none }
   @dt: 0.3s;
 
   .button {
-    width: 60px;
-
     .fa {
       // make shure font-awesome has the same height of openiconic
       height: 44px; 
@@ -87,18 +85,11 @@ body.pc kbd.mac { display: none }
     }
     
     cursor: pointer;
-    display: table;
-
-    img {
-      display: table-cell;
-      text-align: center;
-    }
-
+    
     font-size: @sidebar-icon-size;
 
     padding: 10px;
-    margin: 0 auto;
-
+    
     i {
       display: block;
     }
@@ -115,6 +106,12 @@ body.pc kbd.mac { display: none }
 
   .main-pannel {
     margin-left: @sidebar-width;
+
+    .pannel {
+      .button {
+        border: none;
+      }
+    }
   }
 
   .sidebar {
@@ -129,6 +126,18 @@ body.pc kbd.mac { display: none }
     ul {
       padding-left: 0;
       margin: 0;
+    }
+
+    .button {
+      width: 60px;
+      display: table;
+
+      img {
+        display: table-cell;
+        text-align: center;
+      }
+
+      margin: 0 auto;
     }
 
     .image-button {
@@ -171,4 +180,9 @@ body.pc kbd.mac { display: none }
 
 ::-webkit-scrollbar:horizontal {
   height: 20px;
+}
+
+
+.profile {
+  margin: 20px;
 }
