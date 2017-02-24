@@ -93,6 +93,15 @@ class SbtActorTest()
     run(dotty)(_.instrumentations.nonEmpty)
   }
 
+  test("Encoding issues #100"){
+    run("""println("€")"""){progress =>
+      println(progress)
+      val gotHelloMessage = progress.userOutput == Some("€")
+      if (!gotHelloMessage) assert(progress.userOutput == None)
+      gotHelloMessage
+    }
+  }
+
   def assertCompilationInfo(infoAssert: Problem => Any)(progress: PasteProgress): Boolean = {
 
     val gotCompilationError = progress.compilationInfos.nonEmpty
