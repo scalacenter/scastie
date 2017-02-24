@@ -19,7 +19,7 @@ object ClearButton {
            title := "Clear Instrumentations (Esc)",
            `class` := s"button ${disabled(!state.isClearable)}")(
           i(`class` := "fa fa-eraser"),
-          p("Clear")
+          p("Clear/Run")
         )
     }.build
 }

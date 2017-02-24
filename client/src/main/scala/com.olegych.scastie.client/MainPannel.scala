@@ -73,7 +73,9 @@ object MainPannel {
             )
           ),
           div(`class` := s"pannel $theme", show(View.Libraries))(
-            Libraries(state, backend))
+            Libraries(state, backend)),
+          div(`class` := s"pannel $theme", show(View.UserProfile))(
+            UserProfile(state, backend))
         )
     }.componentDidUpdate(scope =>
         Callback {

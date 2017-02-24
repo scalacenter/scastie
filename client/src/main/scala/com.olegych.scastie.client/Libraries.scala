@@ -203,18 +203,41 @@ object Libraries {
 
   private val component =
     ReactComponentB[(State, App.Backend)]("Libraries").render_P {
-      case (props, backend) =>
-        val theme = if (props.isDarkTheme) "dark" else "light"
+      case (state, backend) =>
+        
+        val theme = if (state.isDarkTheme) "dark" else "light"
+
+        val worksheetModeSelected =
+          if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
+          else EmptyTag
+
+        val worksheetModeToogleLabel =
+          if (state.inputs.worksheetMode) "OFF"
+          else "ON"
+
+        val worksheetModeClassSelected =
+          if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
+          else EmptyTag
 
         div(`class` := "libraries")(
-          ScaladexSearch(props, backend),
-          renderTarget(props.inputs.target, backend),
-          renderVersions(props.inputs.target, backend),
+          ScaladexSearch(state, backend),
+          renderTarget(state.inputs.target, backend),
+          renderVersions(state.inputs.target, backend),
+          fieldset(
+            legend("Options"),
+            button(onClick ==> backend.toggleWorksheetMode,
+               title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
+               worksheetModeSelected,
+               `class` := "button", worksheetModeClassSelected)(
+              iconic.script,
+              p("Worksheet")
+            )
+          ),
           fieldset(
             legend("Sbt Configuration"),
             div("add more"),
             CodeMirrorEditor(
-              CodeMirrorEditor.Settings(value = props.inputs.sbtConfigExtra,
+              CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
                                         theme = s"solarized $theme",
                                         readOnly = false),
               CodeMirrorEditor.Handler(
@@ -225,7 +248,7 @@ object Libraries {
             div("resulting build.sbt"),
             div(`class` := "result-sbt")(
               CodeMirrorEditor(
-                CodeMirrorEditor.Settings(value = props.inputs.sbtConfig,
+                CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
                                           theme = s"solarized $theme",
                                           readOnly = true),
                 CodeMirrorEditor.Handler(

@@ -92,6 +92,20 @@
 
 
 .dark {
+  .pannel {
+    .button {
+      background-color: @base02;
+      color: @base00;
+
+      &.selected {
+        background-color: @base02;
+      }
+      // &:hover, &.toggle, p {
+      //   color: @base03;
+      // }
+    }
+  }
+
   ::-webkit-scrollbar-corner {
     background-color: transparent;
   }
@@ -143,6 +157,20 @@
 }
 
 .light {
+  .pannel {
+    .button {
+      background-color: @base2;
+      color: @base0;
+
+      &.selected {
+        background-color: @base1;
+      }
+      // &:hover, &.toggle, p {
+      //   color: @base03;
+      // }
+    }
+  }
+
   ::-webkit-scrollbar-thumb{
     background-color: @base2;
   }
