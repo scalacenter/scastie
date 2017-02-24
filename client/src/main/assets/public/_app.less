@@ -9,6 +9,9 @@ body, .root, .app, .main-pannel, .sidebar,
   height: 100%;
 }
 .pannel {
+  padding-right: 10px;
+  padding-bottom: 10px;
+  
   overflow: hidden;
   height: calc(~"100% - "10px);
 }
@@ -128,7 +131,7 @@ body.pc kbd.mac { display: none }
       margin: 0;
     }
 
-    .libraries-button {
+    .image-button {
       width: @sidebar-icon-size;
       height: @sidebar-icon-size;
       margin: 0 auto;
@@ -159,4 +162,13 @@ body.pc kbd.mac { display: none }
 
   display: none;
   margin-top: 0;
+}
+
+
+::-webkit-scrollbar:vertical {
+  width: 20px;
+}
+
+::-webkit-scrollbar:horizontal {
+  height: 20px;
 }

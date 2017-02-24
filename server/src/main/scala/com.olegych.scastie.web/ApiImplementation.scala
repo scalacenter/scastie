@@ -35,5 +35,7 @@ class ApiImplementation(
     (dispatchActor ? formatRequest).mapTo[FormatResponse]
   }
 
-  def user(): Future[User] = Future.successful(user)
+  // eventually no login will be required
+  def fetchUser(): Future[Option[User]] = 
+    Future.successful(Some(user))
 }

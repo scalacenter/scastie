@@ -54,19 +54,34 @@ object SideBar {
           if (state.isDarkTheme) iconic.sun
           else iconic.moon
 
+        val profileButton = 
+          state.user match {
+            case Some(user) =>
+              li(onClick ==> setView2(View.UserProfile),
+                 title := "Open Profile View",
+                 selected(View.UserProfile),
+                 `class` := "button")(
+                img(src := user.avatar_url + "&s=35",
+                    alt := "Your Github Avatar",
+                    `class` := "image-button"),
+                p("Profile")
+              )
+            case None => EmptyTag
+          }
+
         nav(`class` := s"sidebar $theme")(
           ul(
             RunButton(state, backend),
-            ClearButton(state, backend),
             li(onClick ==> setView2(View.Libraries),
                title := "Open Libraries View",
                selected(View.Libraries),
                `class` := "button")(
               img(src := "/assets/public/dotty3.svg",
-                  alt := "settings",
-                  `class` := "libraries-button"),
+                  alt := "Libraries (Build)",
+                  `class` := "image-button"),
               p("Libraries (Build)")
             ),
+            profileButton,
             li(onClick ==> formatCode,
                title := "Format Code (F6)",
                `class` := "button")(

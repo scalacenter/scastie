@@ -7,6 +7,7 @@ sealed trait View
 object View {
   case object Editor extends View
   case object Libraries extends View
+  case object UserProfile extends View
 
   import upickle.default._
 
