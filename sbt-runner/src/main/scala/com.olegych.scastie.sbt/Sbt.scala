@@ -143,7 +143,7 @@ class Sbt() {
       process(command, lineCallback, reload)
     } catch {
       case e: IOException => {
-        // when the paste is pkilled (timeout) the sbt output stream is closed
+        // when the snippet is pkilled (timeout) the sbt output stream is closed
         if (e.getMessage == "Stream closed") ()
         else throw e
       }
