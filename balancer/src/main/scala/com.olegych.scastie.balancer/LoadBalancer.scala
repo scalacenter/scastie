@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package balancer
 
+import api.SnippetId
+
 import utils._
 
 import scala.collection.immutable.Queue
@@ -17,23 +19,26 @@ case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
 
 object Task {
+  implicit def ordSnippetId: Ordering[SnippetId] =
+    Ordering.by(SnippetId.unapply)
+
   implicit def ord[C: Ordering]: Ordering[Task[C]] =
     Ordering.by(Task.unapply[C])
 }
 
-case class Task[C](config: C, ip: Ip, id: Int) {
+case class Task[C](config: C, ip: Ip, snippetId: SnippetId) {
   def toRecord = Record(config, ip)
 }
 
 case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {
 
-  def currentTaskId: Option[Int] = mailbox.headOption.map(_.id)
+  def currentSnippetId: Option[SnippetId] = mailbox.headOption.map(_.snippetId)
   def currentConfig: C = mailbox.headOption.map(_.config).getOrElse(lastConfig)
 
   def done: Server[C, S] = {
     val (task, mailbox0) = mailbox.dequeue
 
-    assert(Some(task.id) == currentTaskId)
+    assert(Some(task.snippetId) == currentSnippetId)
 
     copy(
       lastConfig = task.config,
@@ -101,17 +106,17 @@ case class LoadBalancer[C: Ordering, S](
 
   private lazy val configs = servers.map(_.currentConfig)
 
-  def done(taskId: Int): LoadBalancer[C, S] = {
-    log.info(s"Task done: $taskId")
-    val res = servers.zipWithIndex.find(_._1.currentTaskId == Some(taskId))
+  def done(snippetId: SnippetId): LoadBalancer[C, S] = {
+    log.info(s"Task done: $snippetId")
+    val res = servers.zipWithIndex.find(_._1.currentSnippetId == Some(snippetId))
     if (res.nonEmpty) {
       val (server, i) = res.get
       copy(servers = servers.updated(i, server.done))
     } else {
-      val serversTaskIds =
-        servers.flatMap(_.currentTaskId).mkString("[", ", ", "]")
+      val serversSnippetIds =
+        servers.flatMap(_.currentSnippetId).mkString("[", ", ", "]")
       log.info(
-        s"""cannot find taskId: $taskId from servers task ids $serversTaskIds""")
+        s"""cannot find snippetId: $snippetId from servers task ids $serversSnippetIds""")
       this
     }
   }

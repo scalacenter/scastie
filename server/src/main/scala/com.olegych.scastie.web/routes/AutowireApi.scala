@@ -86,13 +86,13 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectiv
   private def progressSource(id: String) = {
     // TODO find a way to flatten Source[Source[T]]
     Await.result(
-      (progressActor ? SubscribeProgress(id)).mapTo[Source[PasteProgress, NotUsed]],
+      (progressActor ? SubscribeProgress(id)).mapTo[Source[SnippetProgress, NotUsed]],
       1.second
     )
   }
 
   private def webSocketProgress(id: String): Flow[ws.Message, ws.Message , _] = {
-    def flow: Flow[KeepAlive, PasteProgress, NotUsed] = {
+    def flow: Flow[KeepAlive, SnippetProgress, NotUsed] = {
       val in = Flow[KeepAlive].to(Sink.ignore)
       val out = progressSource(id)
       Flow.fromSinkAndSource(in, out)

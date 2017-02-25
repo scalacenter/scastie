@@ -230,7 +230,7 @@ object Libraries {
                worksheetModeSelected,
                `class` := "button", worksheetModeClassSelected)(
               iconic.script,
-              p("Worksheet")
+              p(s"Worksheet $worksheetModeToogleLabel")
             )
           ),
           fieldset(

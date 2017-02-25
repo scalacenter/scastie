@@ -8,24 +8,19 @@ import buildinfo.BuildInfo.{version => buildVersion}
 import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
 
 trait Api {
-  def run(inputs: Inputs): Future[Ressource]
-  def save(inputs: Inputs): Future[Ressource]
-  def fetch(id: Int): Future[Option[FetchResult]]
+  def run(inputs: Inputs): Future[SnippetId]
+  def save(inputs: Inputs): Future[SnippetId]
+  def fetch(snippetId: SnippetId): Future[Option[FetchResult]]
   def format(code: FormatRequest): Future[FormatResponse]
   def fetchUser(): Future[Option[User]]
 }
 
+case class SnippetId(base64UUID: String, user: Option[String])
+
 case class FormatRequest(code: String, worksheetMode: Boolean)
 case class FormatResponse(formattedCode: Either[String, String])
 
-case class Ressource(id: Int)
-case class FetchResult(inputs: Inputs, progresses: List[PasteProgress])
-
-case class Paste(
-    id: Int,
-    code: String,
-    sbt: String
-)
+case class FetchResult(inputs: Inputs, progresses: List[SnippetProgress])
 
 sealed trait ScalaTargetType
 object ScalaTargetType {
@@ -288,8 +283,8 @@ case class Inputs(
   }
 }
 
-case class PasteProgress(
-    id: Int,
+case class SnippetProgress(
+    snippetId: SnippetId,
     userOutput: Option[String],
     sbtOutput: Option[String],
     compilationInfos: List[Problem],
