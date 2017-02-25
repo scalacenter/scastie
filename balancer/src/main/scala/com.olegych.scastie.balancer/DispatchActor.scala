@@ -14,9 +14,9 @@ import scala.collection.immutable.Queue
 
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
-case class InputsWithUser(inputs: Inputs, ip: String, login: String)
+case class InputsWithUser(inputs: Inputs, ip: String, login: Option[String])
 
-case class GetPaste(id: Int)
+case class GetSnippet(snippetId: SnippetId)
 case object LoadBalancerStateRequest
 case class LoadBalancerStateResponse(
     loadBalancer: LoadBalancer[String, ActorSelection])
@@ -54,8 +54,8 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
     ()
   }
 
-  private val container = new PastesContainer(
-    Paths.get(configuration.getString("pastes-dir"))
+  private val container = new SnippetsContainer(
+    Paths.get(configuration.getString("snippets-dir"))
   )
 
   private val portsInfo = ports.mkString("[", ", ", "]")
@@ -71,26 +71,26 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
     case InputsWithUser(inputs, ip, login) => {
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 
-      val id = container.writePaste(inputs)
+      val snippetId = container.writeSnippet(inputs, login)
 
       val (server, balancer) =
-        loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), id))
+        loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), snippetId))
       loadBalancer = balancer
-      server.ref.tell(SbtTask(id, inputs, ip, login, progressActor), self)
-      sender ! Ressource(id)
+      server.ref.tell(SbtTask(snippetId, inputs, ip, login, progressActor), self)
+      sender ! snippetId
     }
 
-    case GetPaste(id) => {
+    case GetSnippet(snippetId) => {
       sender !
-        container.readPaste(id).zip(container.readOutput(id)).headOption.map {
+        container.readSnippet(snippetId).zip(container.readOutput(snippetId)).headOption.map {
           case (inputs, progresses) =>
             FetchResult(inputs, progresses)
         }
     }
 
-    case progress: api.PasteProgress => {
+    case progress: api.SnippetProgress => {
       if (progress.done) {
-        loadBalancer = loadBalancer.done(progress.id)
+        loadBalancer = loadBalancer.done(progress.snippetId)
       }
       container.appendOutput(progress)
     }

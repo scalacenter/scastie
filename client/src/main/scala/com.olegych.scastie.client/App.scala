@@ -179,7 +179,7 @@ object App {
       if (runtimeError.isEmpty) this
       else copyAndSave(outputs = outputs.copy(runtimeError = runtimeError))
 
-    def addProgress(progress: PasteProgress) = {
+    def addProgress(progress: SnippetProgress) = {
       val state =
         addOutputs(progress.compilationInfos, progress.instrumentations)
           .log(progress.userOutput)
@@ -192,7 +192,7 @@ object App {
       else state
     }
 
-    def setProgresses(progresses: List[PasteProgress]) = {
+    def setProgresses(progresses: List[SnippetProgress]) = {
       progresses.foldLeft(this) {
         case (state, progress) => state.addProgress(progress)
       }
@@ -252,7 +252,7 @@ object App {
         direct.modState(_.log("Connected.\n"))
       }
       def onmessage(e: MessageEvent): Unit = {
-        val progress = uread[PasteProgress](e.data.toString)
+        val progress = uread[SnippetProgress](e.data.toString)
         direct.modState(_.addProgress(progress))
         if (progress.done) {
           eventSource.close()
@@ -277,7 +277,7 @@ object App {
 
       def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
       def onmessage(e: MessageEvent): Unit = {
-        val progress = uread[PasteProgress](e.data.toString)
+        val progress = uread[SnippetProgress](e.data.toString)
         direct.modState(_.addProgress(progress))
       }
       def onerror(e: ErrorEvent): Unit =

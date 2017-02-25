@@ -87,7 +87,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     def timeout(duration: FiniteDuration): Unit = {
       log.info(s"restarting sbt: $inputs")
       progressActor !
-        PasteProgress(
+        SnippetProgress(
           id = id,
           userOutput = None,
           sbtOutput = None,
@@ -143,7 +143,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         } 
         case Left(error) => {
           def signalError(message: String, line: Option[Int]): Unit = {
-            val progress = PasteProgress(
+            val progress = SnippetProgress(
               id = id,
               userOutput = None,
               sbtOutput = None,
@@ -232,7 +232,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
             Some(line)
           else None
 
-        val progress = PasteProgress(
+        val progress = SnippetProgress(
           id = id,
           userOutput = userOutput,
           sbtOutput = if(isSbtMessage) Some(line) else sbtOutput.map(_.line),

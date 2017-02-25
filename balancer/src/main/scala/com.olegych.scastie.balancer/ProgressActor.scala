@@ -11,51 +11,50 @@ import akka.stream.actor.ActorPublisherMessage.Request
 
 import scala.collection.mutable.{Map => MMap, Queue => MQueue}
 
-case class SubscribeProgress(id: String)
-case class ProgressDone(id: String)
+case class SubscribeProgress(snippetId: SnippetId)
+case class ProgressDone(snippetId: SnippetId)
 
 class ProgressActor extends Actor with ActorLogging {
-  type ProgressSource = Source[PasteProgress, NotUsed]
+  type ProgressSource = Source[SnippetProgress, NotUsed]
 
   private val subscribers =
-    MMap.empty[String, (ProgressSource, ActorRef)]
+    MMap.empty[SnippetId, (ProgressSource, ActorRef)]
 
   def receive = {
-    case SubscribeProgress(id) => {
-      val (source, _) = getOrCreatePublisher(id)
+    case SubscribeProgress(snippetId) => {
+      val (source, _) = getOrCreatePublisher(snippetId)
       sender ! source
     }
-    case pasteProgress: PasteProgress => {
-      val id = pasteProgress.id.toString
-      val (_, publisher) = getOrCreatePublisher(id)
+    case pasteProgress: SnippetProgress => {
+      val (_, publisher) = getOrCreatePublisher(pasteProgress.snippetId)
       publisher ! pasteProgress
     }
-    case ProgressDone(id) => {
-      subscribers.remove(id)
+    case ProgressDone(snippetId) => {
+      subscribers.remove(snippetId)
       ()
     }
   }
 
-  private def getOrCreatePublisher(id: String): (ProgressSource, ActorRef) = {
+  private def getOrCreatePublisher(snippetId: SnippetId): (ProgressSource, ActorRef) = {
     def createPublisher() = {
       val ref = context.actorOf(Props(new ProgressForwarder(self)))
-      val source = Source.fromPublisher(ActorPublisher[PasteProgress](ref))
+      val source = Source.fromPublisher(ActorPublisher[SnippetProgress](ref))
       val sourceAndPublisher = (source, ref)
 
-      subscribers(id) = sourceAndPublisher
+      subscribers(snippetId) = sourceAndPublisher
       sourceAndPublisher
     }
-    subscribers.get(id).getOrElse(createPublisher())
+    subscribers.get(snippetId).getOrElse(createPublisher())
   }
 }
 
 class ProgressForwarder(progressActor: ActorRef)
     extends Actor
-    with ActorPublisher[PasteProgress] {
-  var buffer = MQueue.empty[PasteProgress]
+    with ActorPublisher[SnippetProgress] {
+  var buffer = MQueue.empty[SnippetProgress]
 
   def receive = {
-    case progress: PasteProgress => {
+    case progress: SnippetProgress => {
       buffer.enqueue(progress)
       deliver()
     }
@@ -70,7 +69,7 @@ class ProgressForwarder(progressActor: ActorRef)
         onNext(progress)
 
         if (progress.done) {
-          progressActor ! ProgressDone(progress.id.toString)
+          progressActor ! ProgressDone(progress.snippetId)
         }
       }
       buffer.clear()

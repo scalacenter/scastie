@@ -101,7 +101,7 @@ class SbtActorTest()
     }
   }
 
-  def assertCompilationInfo(infoAssert: Problem => Any)(progress: PasteProgress): Boolean = {
+  def assertCompilationInfo(infoAssert: Problem => Any)(progress: SnippetProgress): Boolean = {
 
     val gotCompilationError = progress.compilationInfos.nonEmpty
 
@@ -127,7 +127,7 @@ class SbtActorTest()
     t
   }
   private var firstRun = true
-  private def run(inputs: Inputs)(fish: PasteProgress => Boolean): Unit = {
+  private def run(inputs: Inputs)(fish: SnippetProgress => Boolean): Unit = {
     val ip = "my-ip"
     val login = "github-login"
     val progressActor = TestProbe()
@@ -139,7 +139,7 @@ class SbtActorTest()
       else timeout
 
     progressActor.fishForMessage(totalTimeout) {
-      case progress: PasteProgress => {
+      case progress: SnippetProgress => {
         val fishResult = fish(progress)
         if (progress.done && !fishResult)
           throw new Exception("Fail to meet expectation")
@@ -150,7 +150,7 @@ class SbtActorTest()
     firstRun = false
   }
   private def run(code: String, 
-                  target: ScalaTarget = ScalaTarget.Jvm.default)(fish: PasteProgress => Boolean): Unit = {
+                  target: ScalaTarget = ScalaTarget.Jvm.default)(fish: SnippetProgress => Boolean): Unit = {
     run(Inputs.default.copy(code = code, target = target))(fish)
   }
 }
