@@ -25,9 +25,9 @@ class ProgressActor extends Actor with ActorLogging {
       val (source, _) = getOrCreatePublisher(snippetId)
       sender ! source
     }
-    case pasteProgress: SnippetProgress => {
-      val (_, publisher) = getOrCreatePublisher(pasteProgress.snippetId)
-      publisher ! pasteProgress
+    case snippetProgress: SnippetProgress => {
+      val (_, publisher) = getOrCreatePublisher(snippetProgress.snippetId)
+      publisher ! snippetProgress
     }
     case ProgressDone(snippetId) => {
       subscribers.remove(snippetId)

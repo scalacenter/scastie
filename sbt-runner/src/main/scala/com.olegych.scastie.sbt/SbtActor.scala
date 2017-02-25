@@ -69,7 +69,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   private def run(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String], 
-                  progressActor: ActorRef, pasteActor: ActorRef, forcedProgramMode: Boolean) = {
+                  progressActor: ActorRef, snippetActor: ActorRef, forcedProgramMode: Boolean) = {
     val scalaTargetType = inputs.target.targetType
 
     def eval(command: String, reload: Boolean) =
@@ -80,7 +80,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
                  forcedProgramMode,
                  progressActor,
                  snippetId,
-                 pasteActor
+                 snippetActor
                ),
                reload)
 
@@ -201,7 +201,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       forcedProgramMode: Boolean,
       progressActor: ActorRef,
       snippetId: SnippetId,
-      pasteActor: ActorRef): (String, Boolean, Boolean) => Unit = {
+      snippetActor: ActorRef): (String, Boolean, Boolean) => Unit = {
     (line, done, reload) =>
       {
         val lineOffset = getLineOffset(worksheetMode)
@@ -245,7 +245,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         )
 
         progressActor ! progress
-        pasteActor ! progress
+        snippetActor ! progress
       }
   }
 
