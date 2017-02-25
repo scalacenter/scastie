@@ -16,9 +16,9 @@ import japgolly.scalajs.react._, extra.router._
 sealed trait Page
 case object Home extends Page
 case object Embeded extends Page
-case class Snippet(id: Int) extends Page
-case class EmbeddedSnippet(id: Int) extends Page {
-  def toSnippet = Snippet(id)
+case class Snippet(snippedId: SnippetId) extends Page
+case class EmbeddedSnippet(snippedId: SnippetId) extends Page {
+  def toSnippet = Snippet(snippedId)
 }
 
 object ClientMain extends JSApp {
@@ -27,14 +27,17 @@ object ClientMain extends JSApp {
 
     val embedded = "embedded"
 
+    val alpha = string("[a-zA-Z0-9]*")
+
+    val snippetId = (alpha.option / alpha).xmap{ case (user, uuid) =>
+      SnippetId(uuid, user)
+    }(snippetId => (snippetId.user, snippetId.base64UUID))
+
     (
       trimSlashes
         | staticRoute(root, Home) ~> renderR(renderAppDefault)
-        | dynamicRouteCT(int.caseClass[Snippet]) ~> dynRenderR(
-          renderAppSnippet)
-        | staticRoute(embedded, Embeded) ~> renderR(renderAppDefaultEmbedded)
-        | dynamicRouteCT((embedded / int).caseClass[EmbeddedSnippet]) ~> dynRenderR(
-          renderAppSnippetEmbedded)
+        | dynamicRouteCT(snippetId.caseClass[Snippet]) ~> dynRenderR(renderAppSnippet)
+        | dynamicRouteCT(embedded / snippetId.caseClass[EmbeddedSnippet]) ~> dynRenderR(renderAppSnippetEmbedded)
     ).notFound(redirectToPage(Home)(Redirect.Replace)).renderWith(layout)
   }
 
@@ -140,7 +143,8 @@ object ClientMain extends JSApp {
 
 @ScalaJSDefined
 trait EmbededOptionsJs extends js.Object {
-  val snippetId: UndefOr[Int]
+  val base64UUID: UndefOr[String]
+  val user: UndefOr[String]
   val worksheetMode: UndefOr[Boolean]
   val code: UndefOr[String]
   val targetType: UndefOr[String]
@@ -155,12 +159,12 @@ object EmbededOptions {
 
     EmbededOptions(
       inputs = code.toOption.map(c => Inputs.default.copy(code = c)),
-      snippetId = snippetId.toOption
+      snippetId = base64UUID.toOption.map(uuid => SnippetId(uuid, user.toOption))
     )
   }
 }
 
-case class EmbededOptions(snippetId: Option[Int], inputs: Option[Inputs]) {
+case class EmbededOptions(snippetId: Option[SnippetId], inputs: Option[Inputs]) {
   def hasCode: Boolean = inputs.map(!_.code.isEmpty).getOrElse(false)
   def setCode(code: String): EmbededOptions = {
     val inputs0 = inputs.getOrElse(Inputs.default)

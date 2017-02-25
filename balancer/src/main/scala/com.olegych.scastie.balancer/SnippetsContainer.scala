@@ -13,6 +13,8 @@ import System.{lineSeparator => nl}
 
 class SnippetsContainer(root: Path) {
 
+  if(!Files.exists(root)) Files.createDirectory(root)
+
   def writeSnippet(inputs: Inputs, user: Option[String]): SnippetId = {
     val uuid = randomUrlFirendlyBase64UUID
     val snippetId = SnippetId(uuid, user)

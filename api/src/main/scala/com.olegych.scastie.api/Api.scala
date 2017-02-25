@@ -15,7 +15,14 @@ trait Api {
   def fetchUser(): Future[Option[User]]
 }
 
-case class SnippetId(base64UUID: String, user: Option[String])
+case class SnippetId(base64UUID: String, user: Option[String]) {
+  def toUri = {
+    user match {
+      case Some(u) => s"/$u/$base64UUID"
+      case None =>  s"/$base64UUID"
+    }
+  }
+}
 
 case class FormatRequest(code: String, worksheetMode: Boolean)
 case class FormatResponse(formattedCode: Either[String, String])

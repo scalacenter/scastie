@@ -243,10 +243,10 @@ object App {
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
 
-    private def connectEventSource(id: Int) = CallbackTo[EventSource] {
+    private def connectEventSource(snippetId: SnippetId) = CallbackTo[EventSource] {
       val direct = scope.accessDirect
 
-      val eventSource = new EventSource(s"/progress-sse/$id")
+      val eventSource = new EventSource(s"/progress-sse${snippetId.toUri}")
 
       def onopen(e: Event): Unit = {
         direct.modState(_.log("Connected.\n"))
@@ -272,7 +272,7 @@ object App {
       eventSource
     }
 
-    private def connectWebSocket(id: Int) = CallbackTo[WebSocket] {
+    private def connectWebSocket(snippetId: SnippetId) = CallbackTo[WebSocket] {
       val direct = scope.accessDirect
 
       def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
@@ -288,7 +288,7 @@ object App {
             .log(s"Closed: ${e.reason}\n"))
 
       val protocol = if (window.location.protocol == "https:") "wss" else "ws"
-      val uri = s"$protocol://${window.location.host}/progress-websocket/$id"
+      val uri = s"$protocol://${window.location.host}/progress-websocket${snippetId.toUri}"
       val socket = new WebSocket(uri)
 
       socket.onopen = onopen _
@@ -346,8 +346,8 @@ object App {
     def run(): Callback = {
       scope.state.flatMap(s =>
         Callback.future(ApiClient[Api].run(s.inputs).call().map {
-          case Ressource(id) =>
-            connectEventSource(id).attemptTry.flatMap {
+          case snippetId: SnippetId =>
+            connectEventSource(snippetId).attemptTry.flatMap {
               case Success(eventSource) => {
                 scope.modState(
                   _.resetOutputs
@@ -360,7 +360,7 @@ object App {
                 console.log(
                   "Failed to connect to event source: " + errorEventSource.toString)
 
-                connectWebSocket(id).attemptTry.flatMap {
+                connectWebSocket(snippetId).attemptTry.flatMap {
                   case Success(websocket) => {
                     scope.modState(
                       _.resetOutputs
@@ -383,11 +383,11 @@ object App {
     def save(e: ReactEventI): Callback = save()
     def save(): Callback = {
       scope.state.flatMap(s =>
-        Callback.future(ApiClient[Api].save(s.inputs).call().map {
-          case Ressource(id) =>
-            scope.props.flatMap(props =>
-              props.router.map(_.set(Snippet(id))).getOrElse(Callback(())))
-        }))
+        Callback.future(ApiClient[Api].save(s.inputs).call().map(snippetId =>
+          scope.props.flatMap(props =>
+            props.router.map(_.set(Snippet(snippetId))).getOrElse(Callback(())))
+        ))
+      )
     }
 
     def start(props: Props): Callback = {
@@ -398,10 +398,10 @@ object App {
           .map(state => scope.modState(_ => state.setRunning(false)))
           .getOrElse(Callback(()))
 
-      def loadSnippet(id: Int): Callback = {
+      def loadSnippet(snippedId: SnippetId): Callback = {
         Callback.future(
           ApiClient[Api]
-            .fetch(id)
+            .fetch(snippedId)
             .call()
             .map(result =>
               result match {
@@ -413,7 +413,7 @@ object App {
                   )
                 }
                 case _ =>
-                  scope.modState(_.setCode(s"//paste $id not found"))
+                  scope.modState(_.setCode(s"//snippet $snippedId not found"))
             })
         )
       }
@@ -433,13 +433,13 @@ object App {
         props.embedded match {
           case None => {
             props.snippet match {
-              case Some(Snippet(id)) => loadSnippet(id)
+              case Some(Snippet(snippedId)) => loadSnippet(snippedId)
               case None => loadStateFromLocalStorage
             }
           }
           case Some(embededOptions) => {
             embededOptions match {
-              case EmbededOptions(Some(id), _) => loadSnippet(id)
+              case EmbededOptions(Some(snippedId), _) => loadSnippet(snippedId)
               case EmbededOptions(_, Some(inputs)) =>
                 scope.modState(_.setInputs(inputs))
               case _ => Callback(())
