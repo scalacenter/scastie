@@ -11,7 +11,8 @@ object EmbeddedMenu {
     ReactComponentB[(State, Backend)]("RunButton").render_P {
       case (state, backend) =>
         div(`class` := "embedded-menu")(
-          RunButton(state, backend)
+          RunButton(state, backend),
+          ClearButton(state, backend)
         )
     }.build
 }

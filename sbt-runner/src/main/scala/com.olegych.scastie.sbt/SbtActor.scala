@@ -68,7 +68,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     } else Right(inputs)
   }
 
-  private def run(id: Int, inputs: Inputs, ip: String, login: String, 
+  private def run(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String], 
                   progressActor: ActorRef, pasteActor: ActorRef, forcedProgramMode: Boolean) = {
     val scalaTargetType = inputs.target.targetType
 
@@ -79,7 +79,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
                  inputs.worksheetMode,
                  forcedProgramMode,
                  progressActor,
-                 id,
+                 snippetId,
                  pasteActor
                ),
                reload)
@@ -88,7 +88,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       log.info(s"restarting sbt: $inputs")
       progressActor !
         SnippetProgress(
-          id = id,
+          snippetId = snippetId,
           userOutput = None,
           sbtOutput = None,
           compilationInfos = List(
@@ -110,7 +110,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       warmUp()
     }
 
-    log.info(s"== updating $id ==")
+    log.info(s"== updating $snippetId ==")
 
     val sbtReloadTime = 40.seconds
     if (sbt.needsReload(inputs)) {
@@ -118,7 +118,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         timeout(sbtReloadTime))
     }
 
-    log.info(s"== running $id ==")
+    log.info(s"== running $snippetId ==")
 
     withTimeout(runTimeout)({
       scalaTargetType match {
@@ -127,24 +127,24 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       }
     })(timeout(runTimeout))
 
-    log.info(s"== done  $id ==")
+    log.info(s"== done  $snippetId ==")
   }
 
   def receive = {
     case FormatRequest(code, worksheetMode) => {
       sender ! FormatResponse(format(code, worksheetMode))
     }
-    case SbtTask(id, inputs, ip, login, progressActor) => {
+    case SbtTask(snippetId, inputs, ip, login, progressActor) => {
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 
       instrument(inputs) match {
         case Right(inputs0) => {
-          run(id, inputs0, ip, login, progressActor, sender, forcedProgramMode = false)
+          run(snippetId, inputs0, ip, login, progressActor, sender, forcedProgramMode = false)
         } 
         case Left(error) => {
           def signalError(message: String, line: Option[Int]): Unit = {
             val progress = SnippetProgress(
-              id = id,
+              snippetId = snippetId,
               userOutput = None,
               sbtOutput = None,
               compilationInfos = List(Problem(Error, line, message)),
@@ -161,7 +161,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
           error match { 
             case HasMainMethod => {
-              run(id, inputs.copy(worksheetMode = false), ip, login, progressActor, sender, forcedProgramMode = true)
+              run(snippetId, inputs.copy(worksheetMode = false), ip, login, progressActor, sender, forcedProgramMode = true)
             }
             case UnsupportedDialect => 
               signalError("The worksheet mode does not support this Scala target", None)
@@ -200,7 +200,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       worksheetMode: Boolean,
       forcedProgramMode: Boolean,
       progressActor: ActorRef,
-      id: Int,
+      snippetId: SnippetId,
       pasteActor: ActorRef): (String, Boolean, Boolean) => Unit = {
     (line, done, reload) =>
       {
@@ -233,7 +233,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           else None
 
         val progress = SnippetProgress(
-          id = id,
+          snippetId = snippetId,
           userOutput = userOutput,
           sbtOutput = if(isSbtMessage) Some(line) else sbtOutput.map(_.line),
           compilationInfos = problems.getOrElse(Nil),

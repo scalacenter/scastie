@@ -16,7 +16,8 @@ class FrontPage(production: Boolean) {
           complete(serveStatic(
             getResource("/public/views/embedded.html").map(substituteScalaJs)))
         ),
-        path(Segment)(_ => index)
+        path(Segment)(_ => index),
+        path(Segment / Segment)((_, _) => index)
       )
     )
   )

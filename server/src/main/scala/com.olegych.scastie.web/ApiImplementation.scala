@@ -17,18 +17,18 @@ class ApiImplementation(
     user: User)(implicit timeout: Timeout, executionContext: ExecutionContext)
     extends Api {
 
-  def run(inputs: Inputs): Future[Ressource] = {
+  def run(inputs: Inputs): Future[SnippetId] = {
     (dispatchActor ? InputsWithUser(
       inputs,
       ip.toString,
-      user.login
-    )).mapTo[Ressource]
+      Some(user.login)
+    )).mapTo[SnippetId]
   }
 
-  def save(inputs: Inputs): Future[Ressource] = run(inputs)
+  def save(inputs: Inputs): Future[SnippetId] = run(inputs)
 
-  def fetch(id: Int): Future[Option[FetchResult]] = {
-    (dispatchActor ? GetPaste(id)).mapTo[Option[FetchResult]]
+  def fetch(snippetId: SnippetId): Future[Option[FetchResult]] = {
+    (dispatchActor ? GetSnippet(snippetId)).mapTo[Option[FetchResult]]
   }
 
   def format(formatRequest: FormatRequest): Future[FormatResponse] = {

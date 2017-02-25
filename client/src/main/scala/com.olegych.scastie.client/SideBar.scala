@@ -58,6 +58,7 @@ object SideBar {
         nav(`class` := s"sidebar $theme")(
           ul(
             RunButton(state, backend),
+            ClearButton(state, backend),
             li(onClick ==> setView2(View.Libraries),
                title := "Open Libraries View",
                selected(View.Libraries),

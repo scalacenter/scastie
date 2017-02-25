@@ -21,17 +21,13 @@ object RunButton {
 
         if (!state.running) {
           if (View.Editor == state.view) {
-            if(!state.isClearable) {
-              li(onClick ==> run,
-                 title := s"Run Code ($ctrl + Enter)",
-                 `class` := "button run-button",
-                 selected(View.Editor))(
-                mediaPlay(`class` := "runnable"),
-                p("Run")
-              )
-            } else {
-              ClearButton(state, backend)
-            }
+            li(onClick ==> run,
+               title := s"Run Code ($ctrl + Enter)",
+               `class` := "button run-button",
+               selected(View.Editor))(
+              mediaPlay(`class` := "runnable"),
+              p("Run")
+            )
           } else {
             li(onClick ==> setView2(View.Editor),
                title := "Open Edit View",

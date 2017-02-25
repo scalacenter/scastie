@@ -70,31 +70,41 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectiv
               )
             )
           ),
-          path("progress-sse" / Segment)(id ⇒
+          path("progress-sse" / Segment)(uuid ⇒
             complete{
-              progressSource(id)
+              progressSource(SnippetId(uuid, None))
                 .map(progress => ServerSentEvent(uwrite(progress)))
             }
           ),
-          path("progress-websocket" / Segment)(id =>
-            handleWebSocketMessages(webSocketProgress(id))
+          path("progress-sse" / Segment / Segment)((user, uuid) ⇒
+            complete{
+              progressSource(SnippetId(uuid, Some(user)))
+                .map(progress => ServerSentEvent(uwrite(progress)))
+            }
+          ),
+          path("progress-websocket" / Segment )(uuid =>
+            handleWebSocketMessages(webSocketProgress(SnippetId(uuid, None)))
+          )
+          ,
+          path("progress-websocket" / Segment / Segment)((user, uuid) =>
+            handleWebSocketMessages(webSocketProgress(SnippetId(uuid, Some(user))))
           )
         )
       )
     )
 
-  private def progressSource(id: String) = {
+  private def progressSource(snippetId: SnippetId) = {
     // TODO find a way to flatten Source[Source[T]]
     Await.result(
-      (progressActor ? SubscribeProgress(id)).mapTo[Source[SnippetProgress, NotUsed]],
+      (progressActor ? SubscribeProgress(snippetId)).mapTo[Source[SnippetProgress, NotUsed]],
       1.second
     )
   }
 
-  private def webSocketProgress(id: String): Flow[ws.Message, ws.Message , _] = {
+  private def webSocketProgress(snippetId: SnippetId): Flow[ws.Message, ws.Message , _] = {
     def flow: Flow[KeepAlive, SnippetProgress, NotUsed] = {
       val in = Flow[KeepAlive].to(Sink.ignore)
-      val out = progressSource(id)
+      val out = progressSource(snippetId)
       Flow.fromSinkAndSource(in, out)
     }
 
