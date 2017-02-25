@@ -121,18 +121,17 @@ class SbtActorTest()
   private val sbtActor = TestActorRef(
     new SbtActor(timeout, production = false))
   private var currentId = 0
-  private def id = {
+  private def snippetId = {
     val t = currentId
     currentId += 1
-    t
+    SnippetId(t.toString, None)
   }
   private var firstRun = true
   private def run(inputs: Inputs)(fish: SnippetProgress => Boolean): Unit = {
     val ip = "my-ip"
-    val login = "github-login"
     val progressActor = TestProbe()
 
-    sbtActor ! SbtTask(id, inputs, ip, login, progressActor.ref)
+    sbtActor ! SbtTask(snippetId, inputs, ip, None, progressActor.ref)
 
     val totalTimeout =
       if (firstRun) timeout + 10.second
