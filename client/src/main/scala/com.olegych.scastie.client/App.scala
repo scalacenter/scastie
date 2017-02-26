@@ -34,7 +34,7 @@ object App {
       eventSource = None,
       websocket = None,
       isShowingHelpAtStartup = true,
-      helpModal = true,
+      isHelpModalClosed = false,
       isDarkTheme = true,
       consoleIsOpen = false,
       consoleHasUserOutput = false,
@@ -59,7 +59,7 @@ object App {
       eventSource: Option[EventSource],
       websocket: Option[WebSocket],
       isShowingHelpAtStartup: Boolean,
-      helpModal: Boolean,
+      isHelpModalClosed: Boolean,
       isDarkTheme: Boolean,
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
@@ -85,7 +85,7 @@ object App {
              eventSource,
              websocket,
              isShowingHelpAtStartup,
-             helpModal,
+             isHelpModalClosed,
              isDarkTheme,
              consoleIsOpen,
              consoleHasUserOutput,
@@ -118,8 +118,10 @@ object App {
     def toggleHelpAtStartup =
       copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
 
-    def closeHelp = copy(helpModal = !helpModal)
-
+    def closeHelp = copy(isHelpModalClosed = true)
+    
+    def showHelp = copy(isHelpModalClosed = false)
+    
     def openConsole =
       copyAndSave(consoleIsOpen = true)
 
@@ -358,6 +360,9 @@ object App {
 
     def closeHelp(): Callback =
       scope.modState(_.closeHelp)
+
+    def showHelp(e: ReactEventI): Callback =
+      scope.modState(_.showHelp)
 
     def toggleWorksheetMode(): Callback =
       scope.modState(_.toggleWorksheetMode)

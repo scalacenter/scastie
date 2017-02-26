@@ -73,6 +73,12 @@ object TopBar {
                `class` := "button")(
               iconic.bug,
               p("Issue")
+            ),
+            li(onClick ==> showHelp,
+               title := "Show help Menu",
+               `class` := "button")(
+              iconic.questionMark,
+              p("Help")
             )
           )
         )
