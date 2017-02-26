@@ -87,6 +87,49 @@
   }
 }
 
+.pannel {
+  &.dark {
+    .profile {
+      // a {
+      //   color: @base01;
+      // }
+
+      li:nth-child(odd){
+        background-color: @base03;
+        a {
+          color: @base01;
+        }
+      }
+      li:nth-child(even){
+        background-color: @base02;
+        a {
+          color: @base00;
+        }
+      }
+    }
+  }
+
+  &.light {
+    .profile {
+      // a {
+      //   color: @base1;
+      // }
+
+      li:nth-child(odd){
+        background-color: @base3;
+        a {
+          color: @base1;
+        }
+      }
+      li:nth-child(even){
+        background-color: @base2;
+        a {
+          color: @base0;
+        }
+      }
+    }
+  }
+}
 
 .dark {
   .pannel {
