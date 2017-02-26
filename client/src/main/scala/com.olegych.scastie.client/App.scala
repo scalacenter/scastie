@@ -235,10 +235,19 @@ object App {
   }
 
   class Backend(scope: BackendScope[Props, State]) {
+
+    def resetAll(e: ReactEventI): Callback = {
+      CallbackTo(window.confirm("Are you use you want to reset ?")).flatMap(ok =>
+        if(ok) {
+          scope.modState(_ => State.default) >>
+          scope.props.flatMap(props =>
+            props.router.map(_.set(Home)).getOrElse(Callback(())))
+        } else Callback(())
+      )
+    }
+
     def codeChange(newCode: String) =
-      scope.modState(_.setCode(newCode)) >>
-        scope.props.flatMap(props =>
-          props.router.map(_.set(Home)).getOrElse(Callback(())))
+      scope.modState(_.setCode(newCode))
 
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))

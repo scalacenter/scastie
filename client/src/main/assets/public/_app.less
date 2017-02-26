@@ -114,7 +114,36 @@ body.pc kbd.mac { display: none }
     }
   }
 
-  .sidebar {
+  .topbar {
+    background-color: #073642;
+    position: relative;
+    height: @sidebar-width;
+
+    ul {
+      padding: 0;
+      margin: 0;
+      position: absolute;
+      right: 0;
+      z-index: 10;
+
+      li {
+        display: inline-block;
+        width: @sidebar-width;
+      }
+
+      .profile {
+        @w: 35px;
+        width: @w;
+        position: relative;
+        left: 50%;
+        margin-left: -@w/2;
+      }
+    }
+  }
+
+  .sidebar {   
+    border-right-color: transparent;
+
     width: @sidebar-width - @sidebar-border;
     position: absolute;
     top: 0;
@@ -139,6 +168,19 @@ body.pc kbd.mac { display: none }
 
       margin: 0 auto;
     }
+
+    .logo {
+      height: @sidebar-width;
+      img {
+        height: 60px;
+        padding: 10px;
+        position: relative;
+        left: 50%;
+        margin-left: -27px;
+      }
+    }
+
+   
 
     .image-button {
       width: @sidebar-icon-size;
@@ -180,9 +222,4 @@ body.pc kbd.mac { display: none }
 
 ::-webkit-scrollbar:horizontal {
   height: 20px;
-}
-
-
-.profile {
-  margin: 20px;
 }
