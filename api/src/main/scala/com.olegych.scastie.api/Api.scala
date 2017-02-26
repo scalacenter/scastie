@@ -13,16 +13,13 @@ trait Api {
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]]
   def format(code: FormatRequest): Future[FormatResponse]
   def fetchUser(): Future[Option[User]]
+  def fetchUserSnippets(): Future[List[SnippetSummary]]
 }
 
-case class SnippetId(base64UUID: String, user: Option[String]) {
-  def toUri = {
-    user match {
-      case Some(u) => s"/$u/$base64UUID"
-      case None =>  s"/$base64UUID"
-    }
-  }
-}
+case class SnippetUserPart(login: String, update: Option[Int])
+case class SnippetId(base64UUID: String, user: Option[SnippetUserPart])
+
+case class SnippetSummary(id: SnippetId, summary: String)
 
 case class FormatRequest(code: String, worksheetMode: Boolean)
 case class FormatResponse(formattedCode: Either[String, String])

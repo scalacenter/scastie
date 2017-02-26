@@ -76,18 +76,17 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectiv
                 .map(progress => ServerSentEvent(uwrite(progress)))
             }
           ),
-          path("progress-sse" / Segment / Segment)((user, uuid) ⇒
+          path("progress-sse" / Segment / Segment / IntNumber.?)((user, uuid, update) ⇒
             complete{
-              progressSource(SnippetId(uuid, Some(user)))
+              progressSource(SnippetId(uuid, Some(SnippetUserPart(user, update))))
                 .map(progress => ServerSentEvent(uwrite(progress)))
             }
           ),
           path("progress-websocket" / Segment )(uuid =>
             handleWebSocketMessages(webSocketProgress(SnippetId(uuid, None)))
-          )
-          ,
-          path("progress-websocket" / Segment / Segment)((user, uuid) =>
-            handleWebSocketMessages(webSocketProgress(SnippetId(uuid, Some(user))))
+          ),
+          path("progress-websocket" / Segment / Segment / IntNumber.?)((user, uuid, update) =>
+            handleWebSocketMessages(webSocketProgress(SnippetId(uuid, Some(SnippetUserPart(user, update)))))
           )
         )
       )

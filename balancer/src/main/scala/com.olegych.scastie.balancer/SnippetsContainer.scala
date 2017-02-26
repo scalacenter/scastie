@@ -15,26 +15,88 @@ class SnippetsContainer(root: Path) {
 
   if(!Files.exists(root)) Files.createDirectory(root)
 
-  def writeSnippet(inputs: Inputs, user: Option[String]): SnippetId = {
+  def create(inputs: Inputs, login: Option[String]): SnippetId = {
     val uuid = randomUrlFirendlyBase64UUID
-    val snippetId = SnippetId(uuid, user)
-    write(inputsFile(snippetId), uwrite(inputs))    
+    val snippetId = SnippetId(uuid, login.map(l => SnippetUserPart(l, None)))
+    write(inputsFile(snippetId), uwrite(inputs))
+    snippetId
+  }
+
+  def update(snippetId: SnippetId, inputs: Inputs): SnippetId = {
+    snippetId.user match {
+      case Some(SnippetUserPart(login, _)) => {
+        val nextSnippetId = 
+          SnippetId(
+            snippetId.base64UUID,
+            Some(SnippetUserPart(login, Some(lastUpdateId(login, snippetId.base64UUID) + 1)))
+          )
+        write(inputsFile(nextSnippetId), uwrite(inputs))
+        nextSnippetId
+      }
+      case None => {
+        println("cannot update anonymous snippet")
+        snippetId
+      } 
+    }
+  }
+
+  def amend(snippetId: SnippetId, inputs: Inputs): SnippetId = {
+    Files.delete(inputsFile(snippetId))
+    Files.delete(outputsFile(snippetId))
+    write(inputsFile(snippetId), uwrite(inputs))
     snippetId
   }
 
   def appendOutput(progress: SnippetProgress): Unit = {
-    write(outputFile(progress.snippetId), uwrite(progress) + nl, append = true)
+    write(outputsFile(progress.snippetId), uwrite(progress) + nl, append = true)
   }
 
-  def readSnippet(snippetId: SnippetId): Option[Inputs] = {
+  def readSnippet(snippetId: SnippetId): Option[FetchResult] = {
+    readInputs(snippetId).zip(readOutputs(snippetId)).headOption.map {
+      case (inputs, progresses) =>
+        FetchResult(inputs, progresses)
+    }
+  }
+
+  def listSnippets(login: String): List[SnippetSummary] = {
+    import scala.collection.JavaConverters._
+    val dir = root.resolve(login)
+    if(Files.exists(dir)) {
+
+      val ds = Files.newDirectoryStream(dir)
+
+      val uuids =
+        try {
+          ds.asScala.map(_.getFileName.toString)
+        } catch {
+          case util.control.NonFatal(e) => Nil
+        } finally {
+          ds.close()
+        }
+
+      uuids.map{uuid =>
+        val last = lastUpdateId(login, uuid)
+        val last0 = if(last == 0) None else Some(last)
+
+        val snippetId = SnippetId(uuid, Some(SnippetUserPart(login, last0)))
+
+        SnippetSummary(
+          snippetId,
+          readInputs(snippetId).map(_.code.split(nl).take(3).mkString(nl)).getOrElse("")
+        )
+      }.toList
+    } else Nil
+  }
+
+  private def readInputs(snippetId: SnippetId): Option[Inputs] = {
     if (Files.exists(inputsFile(snippetId))) {
       read(inputsFile(snippetId)).map(content => uread[Inputs](content))
     } else None
   }
 
-  def readOutput(snippetId: SnippetId): Option[List[SnippetProgress]] = {
-    if (Files.exists(outputFile(snippetId)))
-      read(outputFile(snippetId)).map(
+  private def readOutputs(snippetId: SnippetId): Option[List[SnippetProgress]] = {
+    if (Files.exists(outputsFile(snippetId)))
+      read(outputsFile(snippetId)).map(
         _.lines
           .filter(_.nonEmpty)
           .map(line => uread[SnippetProgress](line))
@@ -50,22 +112,53 @@ class SnippetsContainer(root: Path) {
     snippetFile(snippetId, input)
   }
 
-  private def outputFile(snippetId: SnippetId): Path = {
+  private def outputsFile(snippetId: SnippetId): Path = {
     snippetFile(snippetId, output)
+  }
+
+  private def lastUpdateId(login: String, base64UUID: String): Int = {
+    val dir = root.resolve(Paths.get(login, base64UUID))
+    if(Files.exists(dir)) {
+      import scala.collection.JavaConverters._
+      val ds = Files.newDirectoryStream(dir)
+      try {
+        ds.asScala.map(_.getFileName.toString.toInt).max
+      } catch {
+        case util.control.NonFatal(e) => 0
+      } finally {
+        ds.close()
+      }
+    } else {
+      0
+    }
   }
 
   private def snippetFile(snippetId: SnippetId, name: String): Path = {
     val baseDirectory =
       snippetId.user match {
-        case Some(user) => {
-          val userFolder = root.resolve(user)
+        case Some(SnippetUserPart(login, update)) => {
+          val userFolder = root.resolve(login)
           if(!Files.exists(userFolder)) Files.createDirectory(userFolder)
-          userFolder
+
+          val base = userFolder.resolve(snippetId.base64UUID)
+          if(!Files.exists(base)) Files.createDirectory(base)
+          
+          val baseVersion = base.resolve(update.getOrElse(0).toString)
+          if(!Files.exists(baseVersion)) Files.createDirectory(baseVersion)
+          
+          baseVersion
         }
-        case None => root
+        case None => {
+          val anon = root.resolve("-anonymous-")
+          if(!Files.exists(anon)) Files.createDirectory(anon)
+
+          val base = anon.resolve(snippetId.base64UUID)
+          if(!Files.exists(base)) Files.createDirectory(base)
+          base
+        }
       }
 
-    baseDirectory.resolve(Paths.get(name + "_" + snippetId.base64UUID + json))
+    baseDirectory.resolve(Paths.get(name + json))
   }
 
   // example output: GGdknrcEQVu3elXyboKcYQ
@@ -79,7 +172,6 @@ class SnippetsContainer(root: Path) {
       encoded.take(encoded.length - 2)
     }
 
-    
     var res: String = null
     val allowed = ('a' to 'z').toSet ++ ('A' to 'Z').toSet ++ ('0' to '9').toSet
     
