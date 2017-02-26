@@ -36,13 +36,15 @@ object UserProfile {
           div(`class` := "profile")(
             h1("Saved Code Snippets"),
             ul(
-              summaries.map(s =>
-                li(
-                  router.link(Page.fromSnippetId(s.snippetId))(
+              summaries.map{s =>
+                val page = Page.fromSnippetId(s.snippetId)
+
+                li(router.setOnClick(page))(
+                  router.link(page)(
                     pre(s.summary)
                   )
                 )
-              )
+              }
             )
           )
         }
