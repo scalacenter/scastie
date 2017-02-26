@@ -138,11 +138,7 @@ case class Project(
 )
 
 object Inputs {
-  val defaultCode =
-    """|
-       |List("Hello", "World").mkString("", ", ", "!")
-       |
-       |help""".stripMargin
+  val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
 
   def default = Inputs(
     worksheetMode = true,

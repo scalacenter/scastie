@@ -37,8 +37,8 @@ object MainPannel {
           backend.closeHelp()
         }
 
-        val showHelp = state.isShowingHelpAtStartup && state.helpModal && !embedded 
-
+        val showHelp = !(state.isHelpModalClosed || embedded) || state.isShowingHelpAtStartup
+          
         val helpClosePannel =
           if(showHelp) {
             TagMod(
@@ -46,7 +46,7 @@ object MainPannel {
                 button(onClick ==> closeHelp)("Close"),
                 div(`class` := "not-again")(
                   p("Dont show again"),
-                  input.checkbox(onClick ==> toogleShowHelpAtStartup)
+                  input.checkbox(onClick ==> toogleShowHelpAtStartup, defaultValue := !state.isShowingHelpAtStartup)
                 )
               )
             )
