@@ -64,6 +64,7 @@ object MainPannel {
           } else state
 
         div(`class` := "main-pannel")(
+          TopBar(state, backend),
           div(`class` := s"pannel $theme $consoleCss", show(View.Editor))(
             helpClosePannel,
             Editor(helpState, backend),
