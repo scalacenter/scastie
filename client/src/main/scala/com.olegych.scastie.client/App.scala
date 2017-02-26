@@ -417,34 +417,34 @@ object App {
         ))
       )
     }
+    
+    def loadSnippet(snippedId: SnippetId): Callback = {
+      Callback.future(
+        ApiClient[Api]
+          .fetch(snippedId)
+          .call()
+          .map(result =>
+            result match {
+              case Some(FetchResult(inputs, progresses)) => {
+                loadStateFromLocalStorage >>
+                clear() >>
+                scope.modState(
+                  _.setInputs(inputs).setProgresses(progresses)
+                )
+              }
+              case _ =>
+                scope.modState(_.setCode(s"//snippet $snippedId not found"))
+          })
+      )
+    }
+
+    def loadStateFromLocalStorage =
+      LocalStorage.load
+        .map(state => scope.modState(_ => state.setRunning(false)))
+        .getOrElse(Callback(()))
 
     def start(props: Props): Callback = {
       console.log("== Welcome to Scastie ==")
-
-      def loadStateFromLocalStorage =
-        LocalStorage.load
-          .map(state => scope.modState(_ => state.setRunning(false)))
-          .getOrElse(Callback(()))
-
-      def loadSnippet(snippedId: SnippetId): Callback = {
-        Callback.future(
-          ApiClient[Api]
-            .fetch(snippedId)
-            .call()
-            .map(result =>
-              result match {
-                case Some(FetchResult(inputs, progresses)) => {
-                  loadStateFromLocalStorage >>
-                  clear() >>
-                  scope.modState(
-                    _.setInputs(inputs).setProgresses(progresses)
-                  )
-                }
-                case _ =>
-                  scope.modState(_.setCode(s"//snippet $snippedId not found"))
-            })
-        )
-      }
 
       def loadUser(): Callback = {
         Callback.future(
@@ -532,6 +532,19 @@ object App {
         }
       }
       .componentWillMount(s => s.backend.start(s.props))
+      .componentWillReceiveProps{ v =>
+        val next = v.nextProps.snippetId
+        val current = v.currentProps.snippetId
+        if(next != current) {
+          next match {
+            case Some(snippetId) => 
+              v.$.backend.loadSnippet(snippetId) >>
+              v.$.backend.setView(View.Editor)
+            case _ => Callback(())
+          }
+          
+        } else Callback(())
+      }
       .build
 
   def apply(props: Props) = component(props)
