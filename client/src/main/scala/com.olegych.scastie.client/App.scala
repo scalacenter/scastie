@@ -21,7 +21,7 @@ object App {
 
   case class Props(
       router: Option[RouterCtl[Page]],
-      snippet: Option[Snippet],
+      snippetId: Option[SnippetId],
       embedded: Option[EmbededOptions]
   ) {
     def isEmbedded: Boolean = embedded.isDefined
@@ -243,10 +243,23 @@ object App {
     def sbtConfigChange(newConfig: String) =
       scope.modState(_.setSbtConfigExtra(newConfig))
 
+    private def snippetUri(snippetId: SnippetId, connectionMethod: String): String = {
+      val snippetPart =
+        snippetId.user match {
+          case Some(SnippetUserPart(login, update)) => {
+            val updatePart = update.map(_.toString).getOrElse("")
+            s"$login/${snippetId.base64UUID}/$updatePart"
+          }
+          case None =>  s"${snippetId.base64UUID}"
+        }
+
+      s"/$connectionMethod/$snippetPart"
+    }
+
     private def connectEventSource(snippetId: SnippetId) = CallbackTo[EventSource] {
       val direct = scope.accessDirect
 
-      val eventSource = new EventSource(s"/progress-sse${snippetId.toUri}")
+      val eventSource = new EventSource(snippetUri(snippetId, "progress-sse"))
 
       def onopen(e: Event): Unit = {
         direct.modState(_.log("Connected.\n"))
@@ -288,7 +301,8 @@ object App {
             .log(s"Closed: ${e.reason}\n"))
 
       val protocol = if (window.location.protocol == "https:") "wss" else "ws"
-      val uri = s"$protocol://${window.location.host}/progress-websocket${snippetId.toUri}"
+      val connectionPart = snippetUri(snippetId, "progress-websocket")
+      val uri = s"$protocol://${window.location.host}${connectionPart}"
       val socket = new WebSocket(uri)
 
       socket.onopen = onopen _
@@ -385,7 +399,7 @@ object App {
       scope.state.flatMap(s =>
         Callback.future(ApiClient[Api].save(s.inputs).call().map(snippetId =>
           scope.props.flatMap(props =>
-            props.router.map(_.set(Snippet(snippetId))).getOrElse(Callback(())))
+            props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(())))
         ))
       )
     }
@@ -432,8 +446,8 @@ object App {
       val initialState =
         props.embedded match {
           case None => {
-            props.snippet match {
-              case Some(Snippet(snippedId)) => loadSnippet(snippedId)
+            props.snippetId match {
+              case Some(snippedId) => loadSnippet(snippedId)
               case None => loadStateFromLocalStorage
             }
           }

@@ -13,13 +13,29 @@ import js.annotation.{JSExport, ScalaJSDefined}
 
 import japgolly.scalajs.react._, extra.router._
 
+object Page {
+  def fromSnippetId(snippetId: SnippetId): ResourcePage = {
+    snippetId match {
+      case SnippetId(uuid, None) => AnonymousResource(uuid)
+      case SnippetId(uuid, Some(SnippetUserPart(login, None))) => UserResource(login, uuid)
+      case SnippetId(uuid, Some(SnippetUserPart(login, Some(update)))) => UserResourceUpdated(login, uuid, update)
+    }
+  }
+}
+
 sealed trait Page
 case object Home extends Page
 case object Embeded extends Page
-case class Snippet(snippedId: SnippetId) extends Page
-case class EmbeddedSnippet(snippedId: SnippetId) extends Page {
-  def toSnippet = Snippet(snippedId)
-}
+
+sealed trait ResourcePage extends Page
+
+case class AnonymousResource(uuid: String) extends ResourcePage
+case class UserResource(login: String, uuid: String) extends ResourcePage
+case class UserResourceUpdated(login: String, uuid: String, update: Int) extends ResourcePage
+
+case class EmbeddedAnonymousResource(uuid: String) extends ResourcePage
+case class EmbeddedUserResource(login: String, uuid: String) extends ResourcePage
+case class EmbeddedUserResourceUpdated(login: String, uuid: String, update: Int) extends ResourcePage
 
 object ClientMain extends JSApp {
   val routerConfig = RouterConfigDsl[Page].buildConfig { dsl =>
@@ -29,15 +45,22 @@ object ClientMain extends JSApp {
 
     val alpha = string("[a-zA-Z0-9]*")
 
-    val snippetId = (alpha.option / alpha).xmap{ case (user, uuid) =>
-      SnippetId(uuid, user)
-    }(snippetId => (snippetId.user, snippetId.base64UUID))
+    val anon = alpha
+    val user = (alpha / alpha)
+    val userUpdate = (alpha / alpha / int)
 
     (
       trimSlashes
         | staticRoute(root, Home) ~> renderR(renderAppDefault)
-        | dynamicRouteCT(snippetId.caseClass[Snippet]) ~> dynRenderR(renderAppSnippet)
-        | dynamicRouteCT(embedded / snippetId.caseClass[EmbeddedSnippet]) ~> dynRenderR(renderAppSnippetEmbedded)
+        | dynamicRouteCT(anon.caseClass[AnonymousResource]) ~> dynRenderR(renderPage)
+        | dynamicRouteCT(user.caseClass[UserResource]) ~> dynRenderR(renderPage)
+        | dynamicRouteCT(userUpdate.caseClass[UserResourceUpdated]) ~> dynRenderR(renderPage)
+
+        | staticRoute(embedded, Embeded) ~> renderR(renderAppDefaultEmbedded)
+        | dynamicRouteCT(embedded / anon.caseClass[EmbeddedAnonymousResource]) ~> dynRenderR(renderPage)
+        | dynamicRouteCT(embedded / user.caseClass[EmbeddedUserResource]) ~> dynRenderR(renderPage)
+        | dynamicRouteCT(embedded / userUpdate.caseClass[EmbeddedUserResourceUpdated]) ~> dynRenderR(renderPage)
+        
     ).notFound(redirectToPage(Home)(Redirect.Replace)).renderWith(layout)
   }
 
@@ -45,15 +68,7 @@ object ClientMain extends JSApp {
     App(
       App.Props(
         router = Some(router),
-        snippet = None,
-        embedded = None
-      ))
-
-  def renderAppSnippet(snippet: Snippet, router: RouterCtl[Page]) =
-    App(
-      App.Props(
-        router = Some(router),
-        snippet = Some(snippet),
+        snippetId = None,
         embedded = None
       ))
 
@@ -61,19 +76,30 @@ object ClientMain extends JSApp {
     App(
       App.Props(
         router = Some(router),
-        snippet = None,
+        snippetId = None,
         embedded = Some(EmbededOptions.empty)
       ))
 
-  def renderAppSnippetEmbedded(embeddedSnippet: EmbeddedSnippet,
-                               router: RouterCtl[Page]) = {
-    val snippet = Some(embeddedSnippet.toSnippet)
+  def renderPage(page: ResourcePage, router: RouterCtl[Page]) = {
+    val defaultEmbedded = Some(EmbededOptions.empty)
+
+    val (embedded, snippetId) =
+      page match {
+        case AnonymousResource(uuid)                          => (None,            SnippetId(uuid, None))
+        case UserResource(login, uuid)                        => (None,            SnippetId(uuid, Some(SnippetUserPart(login, None))))
+        case UserResourceUpdated(login, uuid, update)         => (None,            SnippetId(uuid, Some(SnippetUserPart(login, Some(update)))))
+        case EmbeddedAnonymousResource(uuid)                  => (defaultEmbedded, SnippetId(uuid, None))
+        case EmbeddedUserResource(login, uuid)                => (defaultEmbedded, SnippetId(uuid, Some(SnippetUserPart(login, None))))
+        case EmbeddedUserResourceUpdated(login, uuid, update) => (defaultEmbedded, SnippetId(uuid, Some(SnippetUserPart(login, Some(update)))))
+      }
+
     App(
       App.Props(
         router = Some(router),
-        snippet = snippet,
-        embedded = Some(EmbededOptions.empty)
-      ))
+        snippetId = Some(snippetId),
+        embedded = embedded
+      )
+    )
   }
 
   def layout(c: RouterCtl[Page], r: Resolution[Page]) = r.render()
@@ -129,7 +155,7 @@ object ClientMain extends JSApp {
           App(
             App.Props(
               router = None,
-              snippet = None,
+              snippetId = None,
               embedded = Some(embeddedOptions0)
             )),
           container
@@ -145,6 +171,7 @@ object ClientMain extends JSApp {
 trait EmbededOptionsJs extends js.Object {
   val base64UUID: UndefOr[String]
   val user: UndefOr[String]
+  val update: UndefOr[Int]
   val worksheetMode: UndefOr[Boolean]
   val code: UndefOr[String]
   val targetType: UndefOr[String]
@@ -159,7 +186,10 @@ object EmbededOptions {
 
     EmbededOptions(
       inputs = code.toOption.map(c => Inputs.default.copy(code = c)),
-      snippetId = base64UUID.toOption.map(uuid => SnippetId(uuid, user.toOption))
+      snippetId = 
+        base64UUID.toOption.map(uuid => 
+          SnippetId(uuid, user.toOption.map(u => SnippetUserPart(u, update.toOption)))
+        )
     )
   }
 }

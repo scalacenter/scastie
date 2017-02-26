@@ -38,4 +38,6 @@ class ApiImplementation(
   // eventually no login will be required
   def fetchUser(): Future[Option[User]] = 
     Future.successful(Some(user))
+
+  def fetchUserSnippets(): Future[List[SnippetSummary]] = ???
 }

@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package balancer
 
-import api.SnippetId
+import api.{SnippetId, SnippetUserPart}
 
 import utils._
 
@@ -19,6 +19,9 @@ case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
 
 object Task {
+  implicit def ordSnippetUserPart: Ordering[SnippetUserPart] =
+    Ordering.by(SnippetUserPart.unapply)
+
   implicit def ordSnippetId: Ordering[SnippetId] =
     Ordering.by(SnippetId.unapply)
 

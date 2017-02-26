@@ -17,6 +17,8 @@ case class SbtConfig(config: String)
 case class InputsWithUser(inputs: Inputs, ip: String, login: Option[String])
 
 case class GetSnippet(snippetId: SnippetId)
+case class GetUserSnippets(user: User)
+
 case object LoadBalancerStateRequest
 case class LoadBalancerStateResponse(
     loadBalancer: LoadBalancer[String, ActorSelection])
@@ -71,7 +73,7 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
     case InputsWithUser(inputs, ip, login) => {
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 
-      val snippetId = container.writeSnippet(inputs, login)
+      val snippetId = container.create(inputs, login)
 
       val (server, balancer) =
         loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), snippetId))
@@ -81,11 +83,11 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
     }
 
     case GetSnippet(snippetId) => {
-      sender !
-        container.readSnippet(snippetId).zip(container.readOutput(snippetId)).headOption.map {
-          case (inputs, progresses) =>
-            FetchResult(inputs, progresses)
-        }
+      sender ! container.readSnippet(snippetId)
+    }
+
+    case GetUserSnippets(user) => {
+      sender ! container.listSnippets(user.login)
     }
 
     case progress: api.SnippetProgress => {
