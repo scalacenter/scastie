@@ -1,20 +1,52 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
 
-import App._
+import api._
+import autowire._
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-import japgolly.scalajs.react._, vdom.all._
+// import App._
+
+import japgolly.scalajs.react._, extra.router._, vdom.all._
 
 object UserProfile {
 
-  def apply(state: State, backend: Backend) = component((state, backend))
+  def apply(router: Option[RouterCtl[Page]]) = component(router)
+
+  class Backend(scope: BackendScope[Option[RouterCtl[Page]], List[SnippetSummary]]){
+    def start(): Callback = {
+      Callback.future(
+        ApiClient[Api]
+          .fetchUserSnippets()
+          .call()
+          .map(summaries => scope.modState(_ => summaries))
+      )
+    }
+  }
 
   private val component =
-    ReactComponentB[(State, Backend)]("UserProfile").render_P {
-      case (state, backend) =>
+    ReactComponentB[Option[RouterCtl[Page]]]("UserProfile")
+      .initialState(List.empty[SnippetSummary])
+      .backend(new Backend(_))
+      .renderPS{
+        case (scope, maybeRouter, summaries) => {
+          assert(maybeRouter.isDefined, "should not be able to access profile view from embedded")
+          val router = maybeRouter.get
 
-
-        div(`class` := "profile")(
-          
-        )
-    }.build
+          div(`class` := "profile")(
+            h1("Saved Code Snippets"),
+            ul(
+              summaries.map(s =>
+                li(
+                  router.link(Page.fromSnippetId(s.snippetId))(
+                    pre(s.summary)
+                  )
+                )
+              )
+            )
+          )
+        }
+      }
+      .componentWillMount(_.backend.start())
+      .build
 }

@@ -39,5 +39,7 @@ class ApiImplementation(
   def fetchUser(): Future[Option[User]] = 
     Future.successful(Some(user))
 
-  def fetchUserSnippets(): Future[List[SnippetSummary]] = ???
+  def fetchUserSnippets(): Future[List[SnippetSummary]] = {
+    (dispatchActor ? GetUserSnippets(user)).mapTo[List[SnippetSummary]]
+  }
 }

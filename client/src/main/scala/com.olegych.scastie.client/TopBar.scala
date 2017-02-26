@@ -47,7 +47,7 @@ object TopBar {
                  `class` := "button")(
                 img(src := user.avatar_url + "&s=35",
                     alt := "Your Github Avatar",
-                    `class` := "image-button profile"),
+                    `class` := "image-button avatar"),
                 p("Profile")
               )
             case None => EmptyTag
