@@ -527,7 +527,7 @@ object App {
 
           div(`class` := s"$appClass $theme")(
             sideBar,
-            MainPannel(state, scope.backend, props.isEmbedded)
+            MainPannel(state, scope.backend, props)
           )
         }
       }

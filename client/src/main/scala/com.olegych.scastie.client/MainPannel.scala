@@ -12,8 +12,8 @@ object MainPannel {
   private val consoleElement = Ref[HTMLPreElement]("console")
 
   private val component =
-    ReactComponentB[(State, Backend, Boolean)]("MainPannel").render_P {
-      case (state, backend, embedded) =>
+    ReactComponentB[(State, Backend, Props)]("MainPannel").render_P {
+      case (state, backend, props) =>
         def show(view: View) = {
           if (view == state.view) TagMod(display.block)
           else TagMod(display.none)
@@ -24,6 +24,8 @@ object MainPannel {
         val consoleCss =
           if (state.consoleIsOpen) "with-console"
           else ""
+
+        val embedded = props.embedded.isDefined
 
         val embeddedMenu =
           if (embedded) TagMod(EmbeddedMenu(state, backend))
@@ -76,7 +78,7 @@ object MainPannel {
           div(`class` := s"pannel $theme", show(View.Libraries))(
             Libraries(state, backend)),
           div(`class` := s"pannel $theme", show(View.UserProfile))(
-            UserProfile(state, backend))
+            UserProfile(props.router))
         )
     }.componentDidUpdate(scope =>
         Callback {
@@ -85,6 +87,6 @@ object MainPannel {
       })
       .build
 
-  def apply(state: State, backend: Backend, embedded: Boolean) =
-    component((state, backend, embedded))
+  def apply(state: State, backend: Backend, props: Props) =
+    component((state, backend, props))
 }

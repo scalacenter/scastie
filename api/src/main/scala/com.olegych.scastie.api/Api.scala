@@ -19,7 +19,7 @@ trait Api {
 case class SnippetUserPart(login: String, update: Option[Int])
 case class SnippetId(base64UUID: String, user: Option[SnippetUserPart])
 
-case class SnippetSummary(id: SnippetId, summary: String)
+case class SnippetSummary(snippetId: SnippetId, summary: String)
 
 case class FormatRequest(code: String, worksheetMode: Boolean)
 case class FormatResponse(formattedCode: Either[String, String])

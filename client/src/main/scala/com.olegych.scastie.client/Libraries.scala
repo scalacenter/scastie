@@ -212,7 +212,7 @@ object Libraries {
           else EmptyTag
 
         val worksheetModeToogleLabel =
-          if (state.inputs.worksheetMode) "OFF"
+          if (!state.inputs.worksheetMode) "OFF"
           else "ON"
 
         val worksheetModeClassSelected =
