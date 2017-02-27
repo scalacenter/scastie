@@ -5,8 +5,12 @@ import api._
 
 import upickle.default.{write => uwrite, read => uread}
 
-import java.nio.file._
+import java.io.IOException
 import java.nio.ByteBuffer
+import java.nio.file._
+import attribute.BasicFileAttributes
+import FileVisitResult.CONTINUE
+
 import java.util.{Base64, UUID}
 
 import System.{lineSeparator => nl}
@@ -40,9 +44,14 @@ class SnippetsContainer(root: Path) {
     }
   }
 
-  def amend(snippetId: SnippetId, inputs: Inputs): SnippetId = {
+  def delete(snippetId: SnippetId): Unit = {
     Files.delete(inputsFile(snippetId))
     Files.delete(outputsFile(snippetId))
+    deleteEmptyDirectories(rootDir(snippetId))
+  }
+
+  def amend(snippetId: SnippetId, inputs: Inputs): SnippetId = {
+    delete(snippetId)
     write(inputsFile(snippetId), uwrite(inputs))
     snippetId
   }
@@ -133,6 +142,17 @@ class SnippetsContainer(root: Path) {
     }
   }
 
+  private val anonFolder = "-anonymous-"
+
+  private def rootDir(snippetId: SnippetId): Path = {
+    snippetId.user match {
+      case Some(SnippetUserPart(login, update)) => {
+        root.resolve(login)
+      }
+      case _ => root.resolve(anonFolder)
+    }
+  }
+
   private def snippetFile(snippetId: SnippetId, name: String): Path = {
     val baseDirectory =
       snippetId.user match {
@@ -149,7 +169,7 @@ class SnippetsContainer(root: Path) {
           baseVersion
         }
         case None => {
-          val anon = root.resolve("-anonymous-")
+          val anon = root.resolve(anonFolder)
           if(!Files.exists(anon)) Files.createDirectory(anon)
 
           val base = anon.resolve(snippetId.base64UUID)
@@ -181,5 +201,28 @@ class SnippetsContainer(root: Path) {
     }
 
     res
+  }
+
+  def deleteEmptyDirectories(base: Path): Unit = {
+    def dirIsEmpty(dir: Path): Boolean = {
+      val ds = Files.newDirectoryStream(dir)
+      val ret = ds.iterator().hasNext()
+      ds.close()
+      !ret
+    }
+
+    Files.walkFileTree(base, new FileVisitor[Path]{ 
+      def postVisitDirectory(path: Path, ex: IOException): FileVisitResult = {
+        if(dirIsEmpty(path)) {
+          Files.delete(path)
+        }
+        CONTINUE
+      }
+      def preVisitDirectory(path: Path,x$2: BasicFileAttributes): FileVisitResult = CONTINUE
+      def visitFile(path: Path,x$2: BasicFileAttributes): FileVisitResult = CONTINUE
+      def visitFileFailed(path: Path, ex: IOException): FileVisitResult = CONTINUE
+    })
+
+    ()
   }
 }

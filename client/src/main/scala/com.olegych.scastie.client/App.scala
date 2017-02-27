@@ -7,6 +7,7 @@ import api._
 import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
+import org.scalajs.dom
 import org.scalajs.dom.{
   EventSource, WebSocket, 
   Event, MessageEvent, ErrorEvent, CloseEvent,
@@ -38,6 +39,8 @@ object App {
       isDarkTheme = true,
       consoleIsOpen = false,
       consoleHasUserOutput = false,
+      inputsHasChanged = false,
+      isSaving = false,
       user = None,
       inputs = Inputs.default,
       outputs = Outputs.default
@@ -63,6 +66,8 @@ object App {
       isDarkTheme: Boolean,
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
+      inputsHasChanged: Boolean,
+      isSaving: Boolean,
       user: Option[User],
       inputs: Inputs,
       outputs: Outputs
@@ -75,6 +80,8 @@ object App {
                     isDarkTheme: Boolean = isDarkTheme,
                     consoleIsOpen: Boolean = consoleIsOpen,
                     consoleHasUserOutput: Boolean = consoleHasUserOutput,
+                    inputsHasChanged: Boolean = inputsHasChanged,
+                    isSaving: Boolean = isSaving,
                     user: Option[User] = user,
                     inputs: Inputs = inputs,
                     outputs: Outputs = outputs): State = {
@@ -89,6 +96,8 @@ object App {
              isDarkTheme,
              consoleIsOpen,
              consoleHasUserOutput,
+             inputsHasChanged,
+             isSaving,
              user,
              inputs,
              outputs)
@@ -113,7 +122,10 @@ object App {
       copyAndSave(consoleIsOpen = !consoleIsOpen)
 
     def toggleWorksheetMode =
-      copyAndSave(inputs = inputs.copy(worksheetMode = !inputs.worksheetMode))
+      copyAndSave(
+        inputs = inputs.copy(worksheetMode = !inputs.worksheetMode),
+        inputsHasChanged = true
+      )
 
     def toggleHelpAtStartup =
       copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
@@ -140,6 +152,9 @@ object App {
         case None => this
       }
 
+    def setSaving = copy(isSaving = true)
+    // def setSaving = copy(isSaving = true)
+
     def setUser(user: Option[User]) =
       copyAndSave(user = user)
 
@@ -147,29 +162,48 @@ object App {
       copyAndSave(inputs = inputs.copy(code = code))
 
     def setInputs(inputs: Inputs) =
-      copyAndSave(inputs = inputs)
+      copyAndSave(
+        inputs = inputs,
+        inputsHasChanged = false
+      )
 
     def setSbtConfigExtra(config: String) =
-      copyAndSave(inputs = inputs.copy(sbtConfigExtra = config))
+      copyAndSave(
+        inputs = inputs.copy(sbtConfigExtra = config),
+        inputsHasChanged = true
+      )
 
     def setView(newView: View) =
       copyAndSave(view = newView)
 
     def setTarget(target: ScalaTarget) =
-      copyAndSave(inputs = inputs.copy(target = target))
+      copyAndSave(
+        inputs = inputs.copy(target = target),
+        inputsHasChanged = true
+      )
 
     def addScalaDependency(scalaDependency: ScalaDependency,
                            project: Project) =
-      copyAndSave(inputs = inputs.addScalaDependency(scalaDependency, project))
+      copyAndSave(
+        inputs = inputs.addScalaDependency(scalaDependency, project),
+        inputsHasChanged = true
+      )
 
     def removeScalaDependency(scalaDependency: ScalaDependency) =
-      copyAndSave(inputs = inputs.removeScalaDependency(scalaDependency))
+      copyAndSave(
+        inputs = inputs.removeScalaDependency(scalaDependency),
+        inputsHasChanged = true
+      )
 
     def updateDependencyVersion(scalaDependency: ScalaDependency,
                                 version: String) = {
       val newScalaDependency = scalaDependency.copy(version = version)
-      copyAndSave(inputs = inputs.copy(
-        libraries = (inputs.libraries - scalaDependency) + newScalaDependency))
+      copyAndSave(
+        inputs = inputs.copy(
+          libraries = (inputs.libraries - scalaDependency) + newScalaDependency
+        ),
+        inputsHasChanged = true
+      )
     }
 
     def resetOutputs =
@@ -412,29 +446,35 @@ object App {
     def save(): Callback = {
       scope.state.flatMap(s =>
         Callback.future(ApiClient[Api].save(s.inputs).call().map(snippetId =>
+          scope.modState(_.setSaving) >>
           scope.props.flatMap(props =>
-            props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(())))
+            props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(()))
+          )
         ))
       )
     }
     
     def loadSnippet(snippedId: SnippetId): Callback = {
-      Callback.future(
-        ApiClient[Api]
-          .fetch(snippedId)
-          .call()
-          .map(result =>
-            result match {
-              case Some(FetchResult(inputs, progresses)) => {
-                loadStateFromLocalStorage >>
-                clear() >>
-                scope.modState(
-                  _.setInputs(inputs).setProgresses(progresses)
-                )
-              }
-              case _ =>
-                scope.modState(_.setCode(s"//snippet $snippedId not found"))
-          })
+      scope.state.flatMap(state =>
+        if(!state.isSaving) {
+          Callback.future(
+            ApiClient[Api]
+              .fetch(snippedId)
+              .call()
+              .map(result =>
+                result match {
+                  case Some(FetchResult(inputs, progresses)) => {
+                    loadStateFromLocalStorage >>
+                    clear() >>
+                    scope.modState(
+                      _.setInputs(inputs).setProgresses(progresses)
+                    )
+                  }
+                  case _ =>
+                    scope.modState(_.setCode(s"//snippet $snippedId not found"))
+              })
+          )
+        } else Callback(())
       )
     }
 
@@ -535,15 +575,26 @@ object App {
       .componentWillReceiveProps{ v =>
         val next = v.nextProps.snippetId
         val current = v.currentProps.snippetId
-        if(next != current) {
-          next match {
-            case Some(snippetId) => 
-              v.$.backend.loadSnippet(snippetId) >>
-              v.$.backend.setView(View.Editor)
-            case _ => Callback(())
+
+        val setTitle =
+          if(v.$.state.inputsHasChanged) {
+            Callback(dom.document.title = "Scastie (*)") 
+          } else {
+            Callback(dom.document.title = "Scastie") 
           }
-          
-        } else Callback(())
+
+        val loadNewSnippet =
+          if(next != current) {
+            next match {
+              case Some(snippetId) => 
+                v.$.backend.loadSnippet(snippetId) >>
+                v.$.backend.setView(View.Editor)
+              case _ => Callback(())
+            }
+            
+          } else Callback(())
+
+        loadNewSnippet >> setTitle
       }
       .build
 
