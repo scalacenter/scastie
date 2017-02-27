@@ -17,8 +17,6 @@ import System.{lineSeparator => nl}
 
 class SnippetsContainer(root: Path) {
 
-  if(!Files.exists(root)) Files.createDirectory(root)
-
   def create(inputs: Inputs, login: Option[String]): SnippetId = {
     val uuid = randomUrlFirendlyBase64UUID
     val snippetId = SnippetId(uuid, login.map(l => SnippetUserPart(l, None)))
@@ -83,16 +81,22 @@ class SnippetsContainer(root: Path) {
           ds.close()
         }
 
-      uuids.map{uuid =>
+      uuids.flatMap{uuid =>
         val last = lastUpdateId(login, uuid)
         val last0 = if(last == 0) None else Some(last)
 
         val snippetId = SnippetId(uuid, Some(SnippetUserPart(login, last0)))
 
-        SnippetSummary(
-          snippetId,
-          readInputs(snippetId).map(_.code.split(nl).take(3).mkString(nl)).getOrElse("")
-        )
+        val inputs = readInputs(snippetId)
+
+        if(inputs.map(_.isSaved).getOrElse(false)) {
+          List(
+            SnippetSummary(
+              snippetId,
+              inputs.map(_.code.split(nl).take(3).mkString(nl)).getOrElse("")  
+            )
+          )
+        } else Nil
       }.toList
     } else Nil
   }
@@ -154,6 +158,8 @@ class SnippetsContainer(root: Path) {
   }
 
   private def snippetFile(snippetId: SnippetId, name: String): Path = {
+    if(!Files.exists(root)) Files.createDirectory(root)
+    
     val baseDirectory =
       snippetId.user match {
         case Some(SnippetUserPart(login, update)) => {

@@ -166,7 +166,8 @@ case class Inputs(
     libraries: Set[ScalaDependency],
     librariesFrom: Map[ScalaDependency, Project] = Map(),
     sbtConfigExtra: String,
-    sbtPluginsConfigExtra: String
+    sbtPluginsConfigExtra: String,
+    isSaved: Boolean = false
 ) {
   def addScalaDependency(scalaDependency: ScalaDependency,
                          project: Project): Inputs = {

@@ -152,19 +152,20 @@ object App {
         case None => this
       }
 
-    def setSaving = copy(isSaving = true)
-    // def setSaving = copy(isSaving = true)
+    def setSaving(value: Boolean) = copy(isSaving = value)
 
     def setUser(user: Option[User]) =
       copyAndSave(user = user)
 
     def setCode(code: String) =
-      copyAndSave(inputs = inputs.copy(code = code))
+      copyAndSave(
+        inputs = inputs.copy(code = code),
+        inputsHasChanged = true
+      )
 
     def setInputs(inputs: Inputs) =
       copyAndSave(
-        inputs = inputs,
-        inputsHasChanged = false
+        inputs = inputs
       )
 
     def setSbtConfigExtra(config: String) =
@@ -172,6 +173,9 @@ object App {
         inputs = inputs.copy(sbtConfigExtra = config),
         inputsHasChanged = true
       )
+
+    def setCleanInputs =
+      copyAndSave(inputsHasChanged = false)
 
     def setView(newView: View) =
       copyAndSave(view = newView)
@@ -445,12 +449,14 @@ object App {
     def save(e: ReactEventI): Callback = save()
     def save(): Callback = {
       scope.state.flatMap(s =>
-        Callback.future(ApiClient[Api].save(s.inputs).call().map(snippetId =>
-          scope.modState(_.setSaving) >>
-          scope.props.flatMap(props =>
-            props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(()))
-          )
-        ))
+        if(s.inputsHasChanged) {
+          scope.modState(_.setSaving(true).setCleanInputs) >>
+          Callback.future(ApiClient[Api].save(s.inputs.copy(isSaved = true)).call().map(snippetId =>
+            scope.props.flatMap(props =>
+              props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(()))
+            )
+          ))
+        } else Callback(())
       )
     }
     
@@ -467,14 +473,16 @@ object App {
                     loadStateFromLocalStorage >>
                     clear() >>
                     scope.modState(
-                      _.setInputs(inputs).setProgresses(progresses)
+                      _.setInputs(inputs).setProgresses(progresses).setCleanInputs
                     )
                   }
                   case _ =>
                     scope.modState(_.setCode(s"//snippet $snippedId not found"))
               })
           )
-        } else Callback(())
+        } else {
+          scope.modState(_.setSaving(false))
+        }
       )
     }
 
