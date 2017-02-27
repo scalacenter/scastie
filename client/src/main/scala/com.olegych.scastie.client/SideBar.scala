@@ -25,7 +25,7 @@ object SideBar {
           else "Open"
 
         val saveDisabled =
-          if(state.inputsHasChanged) "disabled"
+          if(!state.inputsHasChanged) "disabled"
           else ""
 
         import View.ctrl
