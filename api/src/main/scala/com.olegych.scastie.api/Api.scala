@@ -11,6 +11,7 @@ trait Api {
   def run(inputs: Inputs): Future[SnippetId]
   def save(inputs: Inputs): Future[SnippetId]
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]]
+  def delete(snippetId: SnippetId): Future[Unit]
   def format(code: FormatRequest): Future[FormatResponse]
   def fetchUser(): Future[Option[User]]
   def fetchUserSnippets(): Future[List[SnippetSummary]]

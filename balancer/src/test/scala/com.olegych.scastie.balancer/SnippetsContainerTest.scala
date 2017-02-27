@@ -101,4 +101,35 @@ class SnippetsContainerTest extends FunSuite {
     assert(snippets.size == 3)
     assert(snippets.map(_.summary) == List("inputs1", "inputs2", "inputs3"))
   }
+
+  test("delete"){
+    val container = testContainer
+    val user = "github-user"
+
+    val inputs1 = Inputs.default.copy(code = "inputs1")
+    val snippetId1 = container.create(inputs1, Some(user))
+    container.appendOutput(emptyProgress(snippetId1))
+    
+    val inputs1U = Inputs.default.copy(code = "inputs1 updated")
+    val snippetId1U = container.update(snippetId1, inputs1U)
+    container.appendOutput(emptyProgress(snippetId1U))
+
+    val inputs2 = Inputs.default.copy(code = "inputs2")
+    val snippetId2 = container.create(inputs2, Some(user))
+    container.appendOutput(emptyProgress(snippetId2))
+    
+    val inputs2U = Inputs.default.copy(code = "inputs2 updated")
+    val snippetId2U = container.update(snippetId2, inputs2U)
+    container.appendOutput(emptyProgress(snippetId2U))
+
+    assert(container.listSnippets(user).size == 2)
+    
+    container.delete(snippetId2U)
+
+    assert(container.listSnippets(user).size == 2)
+
+    container.delete(snippetId2)
+
+    assert(container.listSnippets(user).size == 1)
+  }
 }

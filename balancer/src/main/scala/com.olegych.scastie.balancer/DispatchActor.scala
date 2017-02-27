@@ -17,6 +17,7 @@ case class SbtConfig(config: String)
 case class InputsWithUser(inputs: Inputs, ip: String, login: Option[String])
 
 case class GetSnippet(snippetId: SnippetId)
+case class DeleteSnippet(snippetId: SnippetId)
 case class GetUserSnippets(user: User)
 
 case object LoadBalancerStateRequest
@@ -84,6 +85,11 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
 
     case GetSnippet(snippetId) => {
       sender ! container.readSnippet(snippetId)
+    }
+
+    case DeleteSnippet(snippetId) => {
+      container.delete(snippetId)
+      sender ! (())
     }
 
     case GetUserSnippets(user) => {

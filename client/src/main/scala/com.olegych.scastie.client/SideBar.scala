@@ -24,6 +24,10 @@ object SideBar {
           if (state.consoleIsOpen) "Close"
           else "Open"
 
+        val saveDisabled =
+          if(state.inputsHasChanged) "disabled"
+          else ""
+
         import View.ctrl
 
         nav(`class` := s"sidebar $theme")(
@@ -47,7 +51,7 @@ object SideBar {
             ),
             li(onClick ==> save,
                title := s"Save ($ctrl + S)",
-               `class` := "button")(
+               `class` := s"button $saveDisabled")(
               i(`class` := "fa fa-floppy-o"),
               p("Save")
             ),

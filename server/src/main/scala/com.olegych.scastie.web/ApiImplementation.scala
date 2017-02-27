@@ -42,4 +42,8 @@ class ApiImplementation(
   def fetchUserSnippets(): Future[List[SnippetSummary]] = {
     (dispatchActor ? GetUserSnippets(user)).mapTo[List[SnippetSummary]]
   }
+
+  def delete(snippetId: SnippetId): Future[Unit] = {
+    (dispatchActor ? DeleteSnippet(snippetId)).mapTo[Unit]
+  }
 }

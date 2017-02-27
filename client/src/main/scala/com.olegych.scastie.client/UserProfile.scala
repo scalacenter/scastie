@@ -22,6 +22,18 @@ object UserProfile {
           .map(summaries => scope.modState(_ => summaries))
       )
     }
+
+    def delete(summary: SnippetSummary)(e: ReactEventI): Callback = {
+      e.preventDefaultCB >>
+      scope.modState(_.filterNot(_ == summary)) >>
+      Callback.future(
+        ApiClient[Api]
+          .delete(summary.snippetId)
+          .call()
+          .map(_ => Callback(()))
+
+      ) 
+    }
   }
 
   private val component =
@@ -42,7 +54,8 @@ object UserProfile {
                 li(router.setOnClick(page))(
                   router.link(page)(
                     pre(s.summary)
-                  )
+                  ),
+                  iconic.delete(onClick ==> scope.backend.delete(s))
                 )
               }
             )
