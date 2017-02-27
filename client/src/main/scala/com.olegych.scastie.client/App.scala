@@ -41,6 +41,7 @@ object App {
       consoleHasUserOutput = false,
       inputsHasChanged = false,
       isSaving = false,
+      isStartup = true,
       user = None,
       inputs = Inputs.default,
       outputs = Outputs.default
@@ -68,6 +69,7 @@ object App {
       consoleHasUserOutput: Boolean,
       inputsHasChanged: Boolean,
       isSaving: Boolean,
+      isStartup: Boolean,
       user: Option[User],
       inputs: Inputs,
       outputs: Outputs
@@ -98,6 +100,7 @@ object App {
              consoleHasUserOutput,
              inputsHasChanged,
              isSaving,
+             isStartup,
              user,
              inputs,
              outputs)
@@ -130,7 +133,10 @@ object App {
     def toggleHelpAtStartup =
       copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
 
-    def closeHelp = copy(isHelpModalClosed = true)
+    def closeHelp = copy(
+      isHelpModalClosed = true,
+      isStartup = false
+    )
     
     def showHelp = copy(isHelpModalClosed = false)
     
@@ -446,19 +452,20 @@ object App {
             }
         }))
     }
-    def save(e: ReactEventI): Callback = save()
-    def save(): Callback = {
-      scope.state.flatMap(s =>
-        if(s.inputsHasChanged) {
-          scope.modState(_.setSaving(true).setCleanInputs) >>
-          Callback.future(ApiClient[Api].save(s.inputs.copy(isSaved = true)).call().map(snippetId =>
-            scope.props.flatMap(props =>
-              props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(()))
-            )
-          ))
-        } else Callback(())
-      )
-    }
+    
+    // def save(e: ReactEventI): Callback = save()
+    // def save(): Callback = {
+    //   scope.state.flatMap(s =>
+    //     if(s.inputsHasChanged) {
+    //       scope.modState(_.setSaving(true).setCleanInputs) >>
+    //       Callback.future(ApiClient[Api].save(s.inputs.copy(isSaved = true)).call().map(snippetId =>
+    //         scope.props.flatMap(props =>
+    //           props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(()))
+    //         )
+    //       ))
+    //     } else Callback(())
+    //   )
+    // }
     
     def loadSnippet(snippedId: SnippetId): Callback = {
       scope.state.flatMap(state =>
@@ -528,12 +535,11 @@ object App {
 
     def formatCode(e: ReactEventI): Callback = formatCode()
     def formatCode(): Callback =
-      scope.state.flatMap(
-        state =>
+      scope.state.flatMap(state =>
+        if(state.inputsHasChanged) {
           Callback.future(
             ApiClient[Api]
-              .format(
-                FormatRequest(state.inputs.code, state.inputs.worksheetMode))
+              .format(FormatRequest(state.inputs.code, state.inputs.worksheetMode))
               .call()
               .map {
                 case FormatResponse(Right(formattedCode)) =>
@@ -552,7 +558,9 @@ object App {
                                      fullStack = fullStackTrace))
                     ))
               }
-        ))
+          )
+        } else Callback(())
+      )
   }
 
   val component =

@@ -9,10 +9,16 @@ import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
 
 trait Api {
   def run(inputs: Inputs): Future[SnippetId]
-  def save(inputs: Inputs): Future[SnippetId]
-  def fetch(snippetId: SnippetId): Future[Option[FetchResult]]
-  def delete(snippetId: SnippetId): Future[Unit]
   def format(code: FormatRequest): Future[FormatResponse]
+
+  def create(inputs: Inputs): Future[SnippetId]
+  def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean]
+  def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]]
+  def delete(snippetId: SnippetId): Future[Boolean]
+
+  def fork(snippetId: SnippetId): Future[Option[ForkResult]]
+
+  def fetch(snippetId: SnippetId): Future[Option[FetchResult]]
   def fetchUser(): Future[Option[User]]
   def fetchUserSnippets(): Future[List[SnippetSummary]]
 }
@@ -26,6 +32,8 @@ case class FormatRequest(code: String, worksheetMode: Boolean)
 case class FormatResponse(formattedCode: Either[String, String])
 
 case class FetchResult(inputs: Inputs, progresses: List[SnippetProgress])
+
+case class ForkResult(snippetId: SnippetId, inputs: Inputs)
 
 sealed trait ScalaTargetType
 object ScalaTargetType {

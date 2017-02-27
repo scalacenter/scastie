@@ -17,11 +17,17 @@ import System.{lineSeparator => nl}
 
 class SnippetsContainer(root: Path) {
 
-  def create(inputs: Inputs, login: Option[String]): SnippetId = {
+  def create(inputs: Inputs, maybeUser: Option[User]): SnippetId = {
     val uuid = randomUrlFirendlyBase64UUID
-    val snippetId = SnippetId(uuid, login.map(l => SnippetUserPart(l, None)))
+    val snippetId = SnippetId(uuid, maybeUser.map(user => SnippetUserPart(user.login, None)))
     write(inputsFile(snippetId), uwrite(inputs))
     snippetId
+  }
+
+  def fork(snippetId: SnippetId, maybeUser: Option[User]): Option[ForkResult] = {
+    readInputs(snippetId).map(inputs => 
+      ForkResult(create(inputs, maybeUser), inputs)
+    )
   }
 
   def update(snippetId: SnippetId, inputs: Inputs): SnippetId = {

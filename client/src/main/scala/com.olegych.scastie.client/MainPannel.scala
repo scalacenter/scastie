@@ -39,7 +39,9 @@ object MainPannel {
           backend.closeHelp()
         }
 
-        val showHelp = !(state.isHelpModalClosed || embedded) || state.isShowingHelpAtStartup
+        val showHelp = 
+          !(state.isHelpModalClosed || embedded) || 
+            (state.isShowingHelpAtStartup && state.isStartup)
           
         val helpClosePannel =
           if(showHelp) {
@@ -48,12 +50,11 @@ object MainPannel {
                 button(onClick ==> closeHelp)("Close"),
                 div(`class` := "not-again")(
                   p("Dont show again"),
-                  input.checkbox(onClick ==> toogleShowHelpAtStartup, defaultValue := !state.isShowingHelpAtStartup)
+                  input.checkbox(onClick ==> toogleShowHelpAtStartup, value := !state.isShowingHelpAtStartup)
                 )
               )
             )
           } else EmptyTag
-
 
         val helpState =
           if (showHelp) {

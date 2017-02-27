@@ -14,11 +14,19 @@ import scala.collection.immutable.Queue
 
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
-case class InputsWithUser(inputs: Inputs, ip: String, login: Option[String])
 
-case class GetSnippet(snippetId: SnippetId)
+case class RunSnippet(inputs: Inputs, ip: String, user: Option[User])
+
+case class CreateSnippet(inputs: Inputs, user: Option[User])
+
+case class AmendSnippet(snippetId: SnippetId, inputs: Inputs)
+case class UpdateSnippet(snippetId: SnippetId, inputs: Inputs)
 case class DeleteSnippet(snippetId: SnippetId)
-case class GetUserSnippets(user: User)
+
+case class ForkSnippet(snippetId: SnippetId, user: Option[User])
+
+case class FetchSnippet(snippetId: SnippetId)
+case class FetchUserSnippets(user: User)
 
 case object LoadBalancerStateRequest
 case class LoadBalancerStateResponse(
@@ -65,16 +73,11 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
   log.info(s"connecting to: $host $portsInfo")
 
   def receive = {
-    case format: FormatRequest => {
-      val server = loadBalancer.getRandomServer
-      server.ref.tell(format, sender)
-      ()
-    }
-
-    case InputsWithUser(inputs, ip, login) => {
+    case RunSnippet(inputs, ip, user) => {
+      val login = user.map(_.login)
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 
-      val snippetId = container.create(inputs, login)
+      val snippetId = container.create(inputs, user)
 
       val (server, balancer) =
         loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), snippetId))
@@ -83,8 +86,22 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
       sender ! snippetId
     }
 
-    case GetSnippet(snippetId) => {
-      sender ! container.readSnippet(snippetId)
+    case format: FormatRequest => {
+      val server = loadBalancer.getRandomServer
+      server.ref.tell(format, sender)
+      ()
+    }
+
+    case CreateSnippet(inputs, user) => {
+      sender ! container.create(inputs, user)
+    }
+
+    case AmendSnippet(snippetId, inputs) => {
+      sender ! container.amend(snippetId, inputs)
+    }
+
+    case UpdateSnippet(snippetId, inputs) => {
+      sender ! container.update(snippetId, inputs)
     }
 
     case DeleteSnippet(snippetId) => {
@@ -92,7 +109,15 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
       sender ! (())
     }
 
-    case GetUserSnippets(user) => {
+    case ForkSnippet(snippetId, maybeUser) => {
+      sender ! container.fork(snippetId, maybeUser)
+    }
+
+    case FetchSnippet(snippetId) => {
+      sender ! container.readSnippet(snippetId)
+    }
+
+    case FetchUserSnippets(user) => {
       sender ! container.listSnippets(user.login)
     }
 
