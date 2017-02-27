@@ -45,7 +45,7 @@ object ServerMain {
     val session = new GithubUserSession
     val userDirectives = new UserDirectives(session)
 
-    import userDirectives.requireLogin
+    // import userDirectives.requireLogin
 
     val progressActor =
       system.actorOf(Props[ProgressActor], name = "ProgressActor")
@@ -68,8 +68,10 @@ object ServerMain {
         new OAuth2(github, session).routes
       )
 
-    val privateRoutes = requireLogin(
-      concat(programmaticRoutes, userFacingRoutes))
+    val privateRoutes = 
+      // requireLogin(
+        concat(programmaticRoutes, userFacingRoutes)
+      // )
 
     val routes = concat(publicRoutes, privateRoutes)
 

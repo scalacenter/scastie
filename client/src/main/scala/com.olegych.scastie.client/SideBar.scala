@@ -24,11 +24,11 @@ object SideBar {
           if (state.consoleIsOpen) "Close"
           else "Open"
 
-        val saveDisabled =
+        val disabledIfSameInputs =
           if(!state.inputsHasChanged) "disabled"
           else ""
 
-        import View.ctrl
+        // import View.ctrl
 
         nav(`class` := s"sidebar $theme")(
           ul(
@@ -49,15 +49,15 @@ object SideBar {
                   `class` := "image-button"),
               p("Libraries (Build)")
             ),
-            li(onClick ==> save,
-               title := s"Save ($ctrl + S)",
-               `class` := s"button $saveDisabled")(
-              i(`class` := "fa fa-floppy-o"),
-              p("Save")
-            ),
+            // li(onClick ==> save,
+            //    title := s"Save ($ctrl + S)",
+            //    `class` := s"button $disabledIfSameInputs")(
+            //   i(`class` := "fa fa-floppy-o"),
+            //   p("Save")
+            // ),
             li(onClick ==> formatCode,
                title := "Format Code (F6)",
-               `class` := "button")(
+               `class` := s"button $disabledIfSameInputs")(
               iconic.justifyLeft,
               p("Format")
             ),

@@ -38,19 +38,39 @@ object TopBar {
         def selected(view: View) =
           if (view == state.view) TagMod(`class` := "selected") else EmptyTag
 
+        val logoutUrl = "/logout"
+
+        def logout(e: ReactEventI): Callback =
+          Callback(dom.window.location.pathname = logoutUrl)
+
+        def login(e: ReactEventI): Callback =
+          Callback(dom.window.location.pathname = "/login")
+
         val profileButton = 
           state.user match {
             case Some(user) =>
-              li(onClick ==> setView2(View.UserProfile),
-                 title := "Open Profile View",
-                 selected(View.UserProfile),
-                 `class` := "button")(
-                img(src := user.avatar_url + "&s=35",
-                    alt := "Your Github Avatar",
-                    `class` := "image-button avatar"),
-                p("Profile")
+              TagMod(
+                li(onClick ==> logout, `class` := "button")(
+                  iconic.accountLogout,
+                  p("Logout")
+                ),
+                li(onClick ==> setView2(View.UserProfile),
+                   title := "Open Profile View",
+                   selected(View.UserProfile),
+                   `class` := "button")(
+                  img(src := user.avatar_url + "&s=35",
+                      alt := "Your Github Avatar",
+                      `class` := "image-button avatar"),
+                  p("Profile")
+                )
               )
-            case None => EmptyTag
+            case None => 
+              TagMod(
+                li(onClick ==> login, `class` := "button")(
+                  iconic.accountLogin,
+                  p("Login")
+                )
+              )
           }
 
         nav(`class` := s"topbar $theme")(

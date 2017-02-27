@@ -113,9 +113,9 @@ object Editor {
             backend.run().runNow
           }
 
-          CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
-            backend.save().runNow
-          }
+          // CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
+          //   backend.save().runNow
+          // }
 
           CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
             backend.clear().runNow
@@ -268,8 +268,6 @@ object Editor {
           }
           case instrumentation @ Instrumentation(api.Position(start, end),
                                                  Html(content, folded)) => {
-
-            console.log("html")
 
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)

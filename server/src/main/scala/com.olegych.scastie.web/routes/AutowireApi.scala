@@ -34,7 +34,7 @@ object AutowireServer extends autowire.Server[String, Reader, Writer] {
 
 class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectives: UserDirectives)(implicit system: ActorSystem) {
   import system.dispatcher
-  import userDirectives.userLogin
+  import userDirectives.optionnalLogin
 
   implicit val timeout = Timeout(1.seconds)
 
@@ -44,9 +44,9 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectiv
         path("api" / Segments)(s ⇒
           entity(as[String])(e ⇒
             extractClientIP(remoteAddress ⇒
-              userLogin( user ⇒
+              optionnalLogin( maybeUser ⇒
                 complete {
-                  val api = new ApiImplementation(dispatchActor, remoteAddress, user)
+                  val api = new ApiImplementation(dispatchActor, remoteAddress, maybeUser)
                   AutowireServer.route[Api](api)(
                     autowire.Core.Request(s, uread[Map[String, String]](e))
                   )

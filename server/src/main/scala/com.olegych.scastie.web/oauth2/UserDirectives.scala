@@ -38,4 +38,7 @@ class UserDirectives(session: GithubUserSession) {
       }
     }
   }
+
+  def optionnalLogin: Directive1[Option[User]] =
+    optionalSession(refreshable, usingCookies).map(getUser)
 }
