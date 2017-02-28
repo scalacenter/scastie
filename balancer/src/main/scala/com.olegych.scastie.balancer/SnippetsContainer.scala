@@ -30,11 +30,10 @@ class SnippetsContainer(root: Path) {
     create(inputs.copy(showInUserProfile = true), user)
   }
 
-  def fork(snippetId: SnippetId, user: Option[UserLogin]): Option[ForkResult] = {
-    readInputs(snippetId).map{inputs => 
-      val inputs0 = inputs.copy(showInUserProfile = true)
-      ForkResult(create(inputs0, user), inputs0)
-    }
+  def fork(snippetId: SnippetId, inputs: Inputs, user: Option[UserLogin]): Option[SnippetId] = {
+    if(readInputs(snippetId).isDefined) {
+      Some(create(inputs.copy(forked = Some(snippetId), showInUserProfile = true), user))
+    } else None
   }
 
   def update(snippetId: SnippetId, inputs: Inputs): Option[SnippetId] = {
@@ -102,21 +101,23 @@ class SnippetsContainer(root: Path) {
         }
 
       uuids.flatMap{uuid =>
-        val last = lastUpdateId(user.login, uuid)
-        val last0 = if(last == 0) None else Some(last)
+        val updates = updateIdS(user.login, uuid)
 
-        val snippetId = SnippetId(uuid, Some(SnippetUserPart(user.login, last0)))
-
-        val inputs = readInputs(snippetId)
-
-        if(inputs.map(_.showInUserProfile).getOrElse(false)) {
-          List(
-            SnippetSummary(
-              snippetId,
-              inputs.map(_.code.split(nl).take(3).mkString(nl)).getOrElse("")  
-            )
-          )
-        } else Nil
+        updates.flatMap{update =>
+          val snippetId = SnippetId(uuid, Some(SnippetUserPart(user.login, Some(update))))
+          readInputs(snippetId) match {
+            case Some(inputs) =>
+              if(inputs.showInUserProfile) {
+                List(
+                  SnippetSummary(
+                    snippetId,
+                    inputs.code.split(nl).take(3).mkString(nl)
+                  )
+                )
+              } else Nil
+            case None => Nil
+          }
+        }
       }.toList
     } else Nil
   }
@@ -150,19 +151,25 @@ class SnippetsContainer(root: Path) {
   }
 
   private def lastUpdateId(login: String, base64UUID: String): Int = {
+    val res = updateIdS(login, base64UUID)
+    if(res.isEmpty) 0
+    else res.max
+  }
+
+  private def updateIdS(login: String, base64UUID: String): List[Int] = {
     val dir = root.resolve(Paths.get(login, base64UUID))
     if(Files.exists(dir)) {
       import scala.collection.JavaConverters._
       val ds = Files.newDirectoryStream(dir)
       try {
-        ds.asScala.map(_.getFileName.toString.toInt).max
+        ds.asScala.map(_.getFileName.toString.toInt).toList
       } catch {
-        case util.control.NonFatal(e) => 0
+        case util.control.NonFatal(e) => Nil
       } finally {
         ds.close()
       }
     } else {
-      0
+      Nil
     }
   }
 

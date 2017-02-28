@@ -57,8 +57,8 @@ class ApiImplementation(
     }
   }
 
-  def fork(snippetId: SnippetId): Future[Option[SnippetId]] = {
-    (dispatchActor ? ForkSnippet(snippetId, ip.toString, maybeUser)).mapTo[Option[SnippetId]]
+  def fork(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
+    (dispatchActor ? ForkSnippet(snippetId, wrap(inputs))).mapTo[Option[SnippetId]]
   }
 
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]] = {

@@ -51,10 +51,6 @@ object TopBar {
           state.user match {
             case Some(user) =>
               TagMod(
-                li(onClick ==> logout, `class` := "button")(
-                  iconic.accountLogout,
-                  p("Logout")
-                ),
                 li(onClick ==> setView2(View.UserProfile),
                    title := "Open Profile View",
                    selected(View.UserProfile),
@@ -63,6 +59,10 @@ object TopBar {
                       alt := "Your Github Avatar",
                       `class` := "image-button avatar"),
                   p("Profile")
+                ),
+                li(onClick ==> logout, `class` := "button")(
+                  iconic.accountLogout,
+                  p("Logout")
                 )
               )
             case None => 
