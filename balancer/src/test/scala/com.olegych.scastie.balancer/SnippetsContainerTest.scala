@@ -102,7 +102,7 @@ class SnippetsContainerTest extends FunSuite {
     val snippets = container.listSnippets(user)
 
     assert(snippets.size == 3)
-    assert(snippets.map(_.summary) == List("inputs1", "inputs2", "inputs3"))
+    assert(snippets.map(_.summary).toSet == Set("inputs1", "inputs2", "inputs3"))
   }
 
   test("delete"){
