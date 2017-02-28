@@ -90,20 +90,20 @@
 .pannel {
   &.dark {
     .profile {
-      // a {
-      //   color: @base01;
-      // }
-
       li:nth-child(odd){
-        background-color: @base03;
+        background-color: @base02;
+        border: 5px solid @base03;
+
         a {
-          color: @base01;
+          color: @base00;
         }
       }
       li:nth-child(even){
-        background-color: @base02;
+        background-color: @base03;
+        border: 5px solid @base02;
+
         a {
-          color: @base00;
+          color: @base01;
         }
       }
     }
@@ -111,20 +111,20 @@
 
   &.light {
     .profile {
-      // a {
-      //   color: @base1;
-      // }
-
       li:nth-child(odd){
-        background-color: @base3;
+        background-color: @base2;
+        border: 5px solid @base3;
+
         a {
-          color: @base1;
+          color: @base0;
         }
       }
       li:nth-child(even){
-        background-color: @base2;
+        background-color: @base3;
+        border: 5px solid @base2;
+
         a {
-          color: @base0;
+          color: @base1;
         }
       }
     }
@@ -229,7 +229,7 @@
 
   ::-webkit-scrollbar-thumb{
     background-color: @base2;
-    box-shadow: inset -1px -1px 5px 1px rgba(0, 0, 0, 0.75);
+    box-shadow: inset -1px -1px 5px 1px rgba(195, 195, 195, 0.75);
   }
 
   .libraries {

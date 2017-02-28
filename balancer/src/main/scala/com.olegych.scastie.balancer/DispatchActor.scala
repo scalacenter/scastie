@@ -23,7 +23,7 @@ case class AmendSnippet(snippetId: SnippetId, inputs: InputsWithIpAndUser)
 case class UpdateSnippet(snippetId: SnippetId, inputs: InputsWithIpAndUser)
 case class DeleteSnippet(snippetId: SnippetId)
 
-case class ForkSnippet(snippetId: SnippetId, ip: String, maybeUser: Option[User])
+case class ForkSnippet(snippetId: SnippetId, inputs: InputsWithIpAndUser)
 
 case class FetchSnippet(snippetId: SnippetId)
 case class FetchUserSnippets(user: User)
@@ -123,11 +123,13 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
       sender ! updatedSnippetId
     }
 
-    case ForkSnippet(snippetId, ip, user) => {
-      container.fork(snippetId, user.map(u => UserLogin(u.login))) match {
-        case Some(ForkResult(forkedSnippetId, inputs)) => {
+    case ForkSnippet(snippetId, inputsWithIpAndUser) => {
+      val InputsWithIpAndUser(inputs, _, user) = inputsWithIpAndUser
+
+      container.fork(snippetId, inputs, user.map(u => UserLogin(u.login))) match {
+        case Some(forkedSnippetId) => {
           sender ! Some(forkedSnippetId)
-          run(InputsWithIpAndUser(inputs, ip, user), forkedSnippetId)
+          run(inputsWithIpAndUser, forkedSnippetId)
         }
         case None => sender ! None
       }

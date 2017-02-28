@@ -5,16 +5,14 @@ import api._
 import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-// import App._
-
 import japgolly.scalajs.react._, extra.router._, vdom.all._
 
 object UserProfile {
 
-  def apply(router: Option[RouterCtl[Page]]) = component(router)
+  def apply(router: Option[RouterCtl[Page]], view: View) = component((router, view))
 
-  class Backend(scope: BackendScope[Option[RouterCtl[Page]], List[SnippetSummary]]){
-    def start(): Callback = {
+  class Backend(scope: BackendScope[(Option[RouterCtl[Page]], View), List[SnippetSummary]]){
+    def loadProfile(): Callback = {
       Callback.future(
         ApiClient[Api]
           .fetchUserSnippets()
@@ -37,31 +35,53 @@ object UserProfile {
   }
 
   private val component =
-    ReactComponentB[Option[RouterCtl[Page]]]("UserProfile")
+    ReactComponentB[(Option[RouterCtl[Page]], View)]("UserProfile")
       .initialState(List.empty[SnippetSummary])
       .backend(new Backend(_))
       .renderPS{
-        case (scope, maybeRouter, summaries) => {
+        case (scope, (maybeRouter, _), summaries) => {
           assert(maybeRouter.isDefined, "should not be able to access profile view from embedded")
           val router = maybeRouter.get
 
           div(`class` := "profile")(
             h1("Saved Code Snippets"),
             ul(
-              summaries.map{s =>
-                val page = Page.fromSnippetId(s.snippetId)
+              summaries.groupBy(_.snippetId.base64UUID).map{ case (base64UUID, groupedSummaries) =>
+                li(
+                  p("/" + base64UUID),
+                  ul(
+                    groupedSummaries.sortBy(_.snippetId.user.flatMap(_.update)).map{summary =>
+                      val page = Page.fromSnippetId(summary.snippetId)
+                      val update = summary.snippetId.user.flatMap(_.update).getOrElse("")
 
-                li(router.setOnClick(page))(
-                  router.link(page)(
-                    pre(s.summary)
-                  ),
-                  iconic.delete(onClick ==> scope.backend.delete(s))
+                      li(router.setOnClick(page))(
+                        p("Update: " + update),
+                        router.link(page)(
+                          pre(summary.summary)
+                        ),
+                        iconic.delete(
+                          title := "Delete",
+                          onClick ==> scope.backend.delete(summary)
+                        )
+                      )
+                    }
+                  )
                 )
               }
             )
           )
         }
       }
-      .componentWillMount(_.backend.start())
+      .componentWillReceiveProps{ delta =>
+        val (_, currentView) = delta.currentProps
+        val (_, nextView) = delta.nextProps
+
+        if(currentView != View.UserProfile && nextView == View.UserProfile) {
+          delta.$.backend.loadProfile()
+        } else {
+          Callback(())
+        }
+      }
+      .componentWillMount(_.backend.loadProfile())
       .build
 }

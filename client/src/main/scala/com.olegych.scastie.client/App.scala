@@ -280,15 +280,11 @@ object App {
   }
 
   class Backend(scope: BackendScope[Props, State]) {
-
-    def resetAll(e: ReactEventI): Callback = {
-      CallbackTo(window.confirm("Are you use you want to reset ?")).flatMap(ok =>
-        if(ok) {
-          scope.modState(_ => State.default) >>
-          scope.props.flatMap(props =>
-            props.router.map(_.set(Home)).getOrElse(Callback(())))
-        } else Callback(())
-      )
+    def goHome(e: ReactEventI): Callback = {
+      scope.props.flatMap(props =>
+        props.router.map(_.set(Home)).getOrElse(Callback(()))
+      ) >>
+      scope.modState(_.setView(View.Editor))
     }
 
     def codeChange(newCode: String) =
@@ -454,10 +450,10 @@ object App {
     
     def save(e: ReactEventI): Callback = save()
     def save(): Callback = {
-      scope.state.flatMap(s =>
-        if(s.inputsHasChanged) {
+      scope.state.flatMap(state =>
+        if(state.inputsHasChanged) {
           scope.modState(_.setLoadSnippet(false).setCleanInputs) >>
-          Callback.future(ApiClient[Api].save(s.inputs).call().map(snippetId =>
+          Callback.future(ApiClient[Api].save(state.inputs).call().map(snippetId =>
             scope.props.flatMap(props =>
               props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(()))
             )
@@ -490,22 +486,24 @@ object App {
     }
 
     def fork(snippetId: SnippetId)(e: ReactEventI): Callback = {
-      Callback.future(
-        ApiClient[Api]
-          .fork(snippetId)
-          .call()
-          .map(result =>
-            result match {
-              case Some(snippetId) => {
-                val page = Page.fromSnippetId(snippetId)
+      scope.state.flatMap(state =>
+        Callback.future(
+          ApiClient[Api]
+            .fork(snippetId, state.inputs)
+            .call()
+            .map(result =>
+              result match {
+                case Some(snippetId) => {
+                  val page = Page.fromSnippetId(snippetId)
 
-                scope.modState(_.setLoadSnippet(false).resetOutputs) >>
-                scope.props.flatMap(_.router.map(_.set(page)).getOrElse(Callback(())))
+                  scope.modState(_.setLoadSnippet(false).resetOutputs) >>
+                  scope.props.flatMap(_.router.map(_.set(page)).getOrElse(Callback(())))
+                }
+
+                case None => Callback(window.alert("Failed to fork"))
               }
-
-              case None => Callback(window.alert("Failed to fork"))
-            }
-          )
+            )
+        )
       )
     }
 

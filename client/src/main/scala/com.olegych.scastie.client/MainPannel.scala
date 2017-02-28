@@ -79,7 +79,7 @@ object MainPannel {
           div(`class` := s"pannel $theme", show(View.Libraries))(
             Libraries(state, backend)),
           div(`class` := s"pannel $theme", show(View.UserProfile))(
-            UserProfile(props.router))
+            UserProfile(props.router, state.view))
         )
     }.componentDidUpdate(scope =>
         Callback {

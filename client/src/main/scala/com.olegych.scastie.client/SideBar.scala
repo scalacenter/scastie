@@ -45,7 +45,7 @@ object SideBar {
             case Some(sid) =>
               TagMod(
                 li(onClick ==> update(sid),
-                   title := s"Update ($ctrl + S)",
+                   title := s"Save ($ctrl + S)",
                    `class` := "button")(
 
                   i(`class` := "fa fa-floppy-o"),
@@ -70,7 +70,7 @@ object SideBar {
 
         nav(`class` := s"sidebar $theme")(
           ul(
-            li(onClick ==> resetAll,
+            li(onClick ==> goHome,
                title := "Scastie Logo",
                `class` := "logo")(
               img(src := "/assets/public/dotty3.svg",

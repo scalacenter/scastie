@@ -36,15 +36,17 @@ class SnippetsContainerTest extends FunSuite {
 
   test("fork"){
     val container = testContainer
-    val inputs = Inputs.default.copy(showInUserProfile = true)
+    val inputs = Inputs.default.copy(code = "source", showInUserProfile = true)
     val snippetId = container.save(inputs, user = None)
     val result = container.readSnippet(snippetId)
 
-    val forkedSnippetId = container.fork(snippetId, user = None)
+    val forkedInputs = Inputs.default.copy(code = "forked", showInUserProfile = true)
+    val forkedSnippetId = container.fork(snippetId, forkedInputs, user = None).get
 
-    assert(forkedSnippetId.isDefined)
-    assert(forkedSnippetId.get.snippetId != snippetId)
-    assert(forkedSnippetId.get.inputs == inputs)
+    val forkedBis = container.readSnippet(forkedSnippetId).get
+
+    assert(forkedSnippetId != snippetId)
+    assert(forkedBis.inputs.forked.get == snippetId)
   }
 
   test("update"){
@@ -65,7 +67,7 @@ class SnippetsContainerTest extends FunSuite {
     assert(readInputs2 == inputs2)
 
     val snippets = container.listSnippets(user)
-    assert(snippets.size == 1, "we only show the last update in the snippet list")
+    assert(snippets.size == 2)
   }
 
   test("amend") {
@@ -119,14 +121,14 @@ class SnippetsContainerTest extends FunSuite {
     val inputs2U = Inputs.default.copy(code = "inputs2 updated")
     val snippetId2U = container.update(snippetId2, inputs2U).get
 
-    assert(container.listSnippets(user).size == 2)
+    assert(container.listSnippets(user).size == 4)
     
     container.delete(snippetId2U)
 
-    assert(container.listSnippets(user).size == 2)
+    assert(container.listSnippets(user).size == 3)
 
     container.delete(snippetId2)
 
-    assert(container.listSnippets(user).size == 1)
+    assert(container.listSnippets(user).size == 2)
   }
 }
