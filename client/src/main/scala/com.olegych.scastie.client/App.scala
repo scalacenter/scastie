@@ -40,7 +40,7 @@ object App {
       consoleIsOpen = false,
       consoleHasUserOutput = false,
       inputsHasChanged = false,
-      isSaving = false,
+      loadSnippet = true,
       isStartup = true,
       user = None,
       inputs = Inputs.default,
@@ -68,7 +68,7 @@ object App {
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
       inputsHasChanged: Boolean,
-      isSaving: Boolean,
+      loadSnippet: Boolean,
       isStartup: Boolean,
       user: Option[User],
       inputs: Inputs,
@@ -83,7 +83,6 @@ object App {
                     consoleIsOpen: Boolean = consoleIsOpen,
                     consoleHasUserOutput: Boolean = consoleHasUserOutput,
                     inputsHasChanged: Boolean = inputsHasChanged,
-                    isSaving: Boolean = isSaving,
                     user: Option[User] = user,
                     inputs: Inputs = inputs,
                     outputs: Outputs = outputs): State = {
@@ -99,7 +98,7 @@ object App {
              consoleIsOpen,
              consoleHasUserOutput,
              inputsHasChanged,
-             isSaving,
+             loadSnippet,
              isStartup,
              user,
              inputs,
@@ -158,7 +157,7 @@ object App {
         case None => this
       }
 
-    def setSaving(value: Boolean) = copy(isSaving = value)
+    def setLoadSnippet(value: Boolean) = copy(loadSnippet = value)
 
     def setUser(user: Option[User]) =
       copyAndSave(user = user)
@@ -453,26 +452,91 @@ object App {
         }))
     }
     
-    // def save(e: ReactEventI): Callback = save()
-    // def save(): Callback = {
-    //   scope.state.flatMap(s =>
-    //     if(s.inputsHasChanged) {
-    //       scope.modState(_.setSaving(true).setCleanInputs) >>
-    //       Callback.future(ApiClient[Api].save(s.inputs.copy(isSaved = true)).call().map(snippetId =>
-    //         scope.props.flatMap(props =>
-    //           props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(()))
-    //         )
-    //       ))
-    //     } else Callback(())
-    //   )
-    // }
-    
-    def loadSnippet(snippedId: SnippetId): Callback = {
+    def save(e: ReactEventI): Callback = save()
+    def save(): Callback = {
+      scope.state.flatMap(s =>
+        if(s.inputsHasChanged) {
+          scope.modState(_.setLoadSnippet(false).setCleanInputs) >>
+          Callback.future(ApiClient[Api].save(s.inputs).call().map(snippetId =>
+            scope.props.flatMap(props =>
+              props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(()))
+            )
+          ))
+        } else Callback(())
+      )
+    }
+
+    def saveOrUpdate(): Callback = {
+      scope.props.flatMap(props =>
+        props.snippetId match {
+          case Some(snippetId) => update2(snippetId)
+          case None => save()
+        }
+      )
+    }
+
+    def amend(snippetId: SnippetId)(e: ReactEventI): Callback = {
       scope.state.flatMap(state =>
-        if(!state.isSaving) {
+        Callback.future(
+          ApiClient[Api]
+            .amend(snippetId, state.inputs)
+            .call()
+            .map(success =>
+              if(success) Callback(())
+              else Callback(window.alert("Failed to amend"))              
+            )
+        )
+      )
+    }
+
+    def fork(snippetId: SnippetId)(e: ReactEventI): Callback = {
+      Callback.future(
+        ApiClient[Api]
+          .fork(snippetId)
+          .call()
+          .map(result =>
+            result match {
+              case Some(snippetId) => {
+                val page = Page.fromSnippetId(snippetId)
+
+                scope.modState(_.setLoadSnippet(false).resetOutputs) >>
+                scope.props.flatMap(_.router.map(_.set(page)).getOrElse(Callback(())))
+              }
+
+              case None => Callback(window.alert("Failed to fork"))
+            }
+          )
+      )
+    }
+
+    def update(snippetId: SnippetId)(e: ReactEventI): Callback = update2(snippetId)
+    def update2(snippetId: SnippetId): Callback = {
+      scope.state.flatMap(state =>
+        Callback.future(
+          ApiClient[Api]
+            .update(snippetId, state.inputs)
+            .call()
+            .map(result =>
+              result match {
+                case Some(snippetId) => {
+                  val page = Page.fromSnippetId(snippetId)
+                  scope.modState(_.setLoadSnippet(false).resetOutputs) >>
+                  scope.props.flatMap(_.router.map(_.set(page)).getOrElse(Callback(())))
+                }
+
+                case None => Callback(window.alert("Failed to update"))
+              }
+            )
+        )
+      )
+    }
+    
+    def loadSnippet(snippetId: SnippetId): Callback = {
+      scope.state.flatMap(state =>
+        if(state.loadSnippet) {
           Callback.future(
             ApiClient[Api]
-              .fetch(snippedId)
+              .fetch(snippetId)
               .call()
               .map(result =>
                 result match {
@@ -483,12 +547,13 @@ object App {
                       _.setInputs(inputs).setProgresses(progresses).setCleanInputs
                     )
                   }
-                  case _ =>
-                    scope.modState(_.setCode(s"//snippet $snippedId not found"))
+                  case _ => {
+                    scope.modState(_.setCode(s"//snippet not found"))
+                  }
               })
           )
         } else {
-          scope.modState(_.setSaving(false))
+          scope.modState(_.setLoadSnippet(true))
         }
       )
     }
@@ -516,13 +581,13 @@ object App {
         props.embedded match {
           case None => {
             props.snippetId match {
-              case Some(snippedId) => loadSnippet(snippedId)
+              case Some(snippetId) => loadSnippet(snippetId)
               case None => loadStateFromLocalStorage
             }
           }
           case Some(embededOptions) => {
             embededOptions match {
-              case EmbededOptions(Some(snippedId), _) => loadSnippet(snippedId)
+              case EmbededOptions(Some(snippetId), _) => loadSnippet(snippetId)
               case EmbededOptions(_, Some(inputs)) =>
                 scope.modState(_.setInputs(inputs))
               case _ => Callback(())
@@ -574,7 +639,7 @@ object App {
             else "light"
 
           val sideBar =
-            if (!props.isEmbedded) TagMod(SideBar(state, scope.backend))
+            if (!props.isEmbedded) TagMod(SideBar(state, scope.backend, props.snippetId))
             else EmptyTag
 
           val appClass =

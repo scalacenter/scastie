@@ -9,71 +9,75 @@ import org.scalatest.FunSuite
 
 class SnippetsContainerTest extends FunSuite {
 
-  private def emptyProgress(snippetId: SnippetId): SnippetProgress = {
-    SnippetProgress(
-        snippetId,
-        None,
-        None,
-        Nil,
-        Nil,
-        None,
-        false,
-        false,
-        false
-      )
+  private def testContainer = new SnippetsContainer(Files.createTempDirectory("test"))
+
+  test("create snippet with logged in user") {
+    val container = testContainer
+    val bob = "bob"
+    val snippetId = container.create(Inputs.default, user = Some(UserLogin(bob)))
+    assert(snippetId.user.get.login == bob)
   }
 
-  private def testContainer = new SnippetsContainer(Files.createTempDirectory("test"))
+  test("create snippet with annonymous user") {
+    val container = testContainer
+    val snippetId = container.create(Inputs.default, user = None)
+    assert(snippetId.user.isEmpty)
+  }
 
   test("create then read") {
     val container = testContainer
-
     val inputs = Inputs.default
-    val snippetId = container.create(inputs, None)
-    
-    container.appendOutput(emptyProgress(snippetId))
+    val snippetId = container.create(inputs, user = None)
+    val result = container.readSnippet(snippetId)
 
-    val obtained = container.readSnippet(snippetId).get.inputs
-
-    assert(obtained == inputs)
+    assert(result.isDefined)
+    assert(result.get.inputs == inputs)
   }
 
-  test("update") {
+  test("fork"){
     val container = testContainer
+    val inputs = Inputs.default.copy(showInUserProfile = true)
+    val snippetId = container.save(inputs, user = None)
+    val result = container.readSnippet(snippetId)
 
-    val inputs1 = Inputs.default.copy(code = "inputs1")
-    val snippetId1 = container.create(inputs1, Some("github-user"))
+    val forkedSnippetId = container.fork(snippetId, user = None)
+
+    assert(forkedSnippetId.isDefined)
+    assert(forkedSnippetId.get.snippetId != snippetId)
+    assert(forkedSnippetId.get.inputs == inputs)
+  }
+
+  test("update"){
+    val container = testContainer
+    val user = UserLogin("github-user")
+    val inputs1 = Inputs.default.copy(code = "inputs1").copy(showInUserProfile = true)
+    val snippetId1 = container.save(inputs1, Some(user))
     assert(snippetId1.user.get.update == None)
     
-    val inputs2 = Inputs.default.copy(code = "inputs2")
-    val snippetId2 = container.update(snippetId1, inputs2)
+    val inputs2 = Inputs.default.copy(code = "inputs2").copy(showInUserProfile = true)
+    val snippetId2 = container.update(snippetId1, inputs2).get
     assert(snippetId2.user.get.update == Some(1), "we get a new update id")
-
-    container.appendOutput(emptyProgress(snippetId1))
-    container.appendOutput(emptyProgress(snippetId2))
 
     val readInputs1 = container.readSnippet(snippetId1).get.inputs
     val readInputs2 = container.readSnippet(snippetId2).get.inputs
 
     assert(readInputs1 == inputs1, "we don't mutate previous input")
     assert(readInputs2 == inputs2)
+
+    val snippets = container.listSnippets(user)
+    assert(snippets.size == 1, "we only show the last update in the snippet list")
   }
 
   test("amend") {
     val container = testContainer
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
-    val snippetId1 = container.create(inputs1, Some("github-user"))
-    assert(snippetId1.user.get.update == None)
-    container.appendOutput(emptyProgress(snippetId1))
-    val readInputs1 = container.readSnippet(snippetId1).get.inputs
-
-    assert(inputs1 == readInputs1)
+    val snippetId1 = container.save(inputs1, Some(UserLogin("github-user")))
     
     val inputs2 = inputs1.copy(code = "inputs2")
-    val snippetId2 = container.amend(snippetId1, inputs2)
-    assert(snippetId1 == snippetId2)
-    container.appendOutput(emptyProgress(snippetId2))
+    val amendSuccess = container.amend(snippetId1, inputs2)
+    assert(amendSuccess)
+    
     val readInputs1bis = container.readSnippet(snippetId1).get.inputs
 
     assert(readInputs1bis != inputs1, "we mutate previous input")
@@ -82,19 +86,16 @@ class SnippetsContainerTest extends FunSuite {
 
   test("listSnippets"){
     val container = testContainer
-    val user = "github-user"
+    val user = UserLogin("github-user")
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
-    val snippetId1 = container.create(inputs1, Some(user))
-    container.appendOutput(emptyProgress(snippetId1))
+    val snippetId1 = container.save(inputs1, Some(user))
 
     val inputs2 = Inputs.default.copy(code = "inputs2")
-    val snippetId2 = container.create(inputs2, Some(user))
-    container.appendOutput(emptyProgress(snippetId2))
+    val snippetId2 = container.save(inputs2, Some(user))
 
     val inputs3 = Inputs.default.copy(code = "inputs3")
-    val snippetId3 = container.create(inputs3, Some(user))
-    container.appendOutput(emptyProgress(snippetId3))
+    val snippetId3 = container.save(inputs3, Some(user))
 
     val snippets = container.listSnippets(user)
 
@@ -104,23 +105,19 @@ class SnippetsContainerTest extends FunSuite {
 
   test("delete"){
     val container = testContainer
-    val user = "github-user"
+    val user = UserLogin("github-user")
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
-    val snippetId1 = container.create(inputs1, Some(user))
-    container.appendOutput(emptyProgress(snippetId1))
+    val snippetId1 = container.save(inputs1, Some(user))
     
     val inputs1U = Inputs.default.copy(code = "inputs1 updated")
-    val snippetId1U = container.update(snippetId1, inputs1U)
-    container.appendOutput(emptyProgress(snippetId1U))
+    val snippetId1U = container.update(snippetId1, inputs1U).get
 
     val inputs2 = Inputs.default.copy(code = "inputs2")
-    val snippetId2 = container.create(inputs2, Some(user))
-    container.appendOutput(emptyProgress(snippetId2))
+    val snippetId2 = container.save(inputs2, Some(user))
     
     val inputs2U = Inputs.default.copy(code = "inputs2 updated")
-    val snippetId2U = container.update(snippetId2, inputs2U)
-    container.appendOutput(emptyProgress(snippetId2U))
+    val snippetId2U = container.update(snippetId2, inputs2U).get
 
     assert(container.listSnippets(user).size == 2)
     

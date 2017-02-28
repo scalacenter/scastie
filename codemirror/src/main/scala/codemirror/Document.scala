@@ -17,7 +17,7 @@ class Document protected () extends js.Object {
                    from: Position,
                    to: Position,
                    origin: UndefOr[String]): Unit = js.native
-  def getLine(n: Int): String = js.native
+  def getLine(n: Int): UndefOr[String] = js.native
   def lineCount(): Int = js.native
   def firstLine(): Int = js.native
   def lastLine(): Int = js.native

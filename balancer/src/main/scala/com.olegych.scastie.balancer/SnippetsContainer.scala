@@ -15,22 +15,29 @@ import java.util.{Base64, UUID}
 
 import System.{lineSeparator => nl}
 
+case class UserLogin(login: String)
+
 class SnippetsContainer(root: Path) {
 
-  def create(inputs: Inputs, maybeUser: Option[User]): SnippetId = {
+  def create(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
     val uuid = randomUrlFirendlyBase64UUID
-    val snippetId = SnippetId(uuid, maybeUser.map(user => SnippetUserPart(user.login, None)))
+    val snippetId = SnippetId(uuid, user.map(u => SnippetUserPart(u.login, None)))
     write(inputsFile(snippetId), uwrite(inputs))
     snippetId
   }
 
-  def fork(snippetId: SnippetId, maybeUser: Option[User]): Option[ForkResult] = {
-    readInputs(snippetId).map(inputs => 
-      ForkResult(create(inputs, maybeUser), inputs)
-    )
+  def save(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
+    create(inputs.copy(showInUserProfile = true), user)
   }
 
-  def update(snippetId: SnippetId, inputs: Inputs): SnippetId = {
+  def fork(snippetId: SnippetId, user: Option[UserLogin]): Option[ForkResult] = {
+    readInputs(snippetId).map{inputs => 
+      val inputs0 = inputs.copy(showInUserProfile = true)
+      ForkResult(create(inputs0, user), inputs0)
+    }
+  }
+
+  def update(snippetId: SnippetId, inputs: Inputs): Option[SnippetId] = {
     snippetId.user match {
       case Some(SnippetUserPart(login, _)) => {
         val nextSnippetId = 
@@ -38,26 +45,34 @@ class SnippetsContainer(root: Path) {
             snippetId.base64UUID,
             Some(SnippetUserPart(login, Some(lastUpdateId(login, snippetId.base64UUID) + 1)))
           )
-        write(inputsFile(nextSnippetId), uwrite(inputs))
-        nextSnippetId
+        write(inputsFile(nextSnippetId), uwrite(inputs.copy(showInUserProfile = true)))
+        Some(nextSnippetId)
       }
-      case None => {
-        println("cannot update anonymous snippet")
-        snippetId
-      } 
+      case None => None
     }
   }
 
-  def delete(snippetId: SnippetId): Unit = {
-    Files.delete(inputsFile(snippetId))
-    Files.delete(outputsFile(snippetId))
-    deleteEmptyDirectories(rootDir(snippetId))
+  def delete(snippetId: SnippetId): Boolean = {
+    val in = inputsFile(snippetId)
+    if(Files.exists(in)) {
+      Files.delete(in)
+
+      val out = outputsFile(snippetId)
+      if(Files.exists(out)) {
+        Files.delete(out)
+      }
+
+      deleteEmptyDirectories(rootDir(snippetId))
+
+      true
+    } else false
   }
 
-  def amend(snippetId: SnippetId, inputs: Inputs): SnippetId = {
-    delete(snippetId)
-    write(inputsFile(snippetId), uwrite(inputs))
-    snippetId
+  def amend(snippetId: SnippetId, inputs: Inputs): Boolean = {
+    if(delete(snippetId)) {
+      write(inputsFile(snippetId), uwrite(inputs))
+      true
+    } else false
   }
 
   def appendOutput(progress: SnippetProgress): Unit = {
@@ -65,15 +80,14 @@ class SnippetsContainer(root: Path) {
   }
 
   def readSnippet(snippetId: SnippetId): Option[FetchResult] = {
-    readInputs(snippetId).zip(readOutputs(snippetId)).headOption.map {
-      case (inputs, progresses) =>
-        FetchResult(inputs, progresses)
-    }
+    readInputs(snippetId).map(inputs =>
+      FetchResult(inputs, readOutputs(snippetId).getOrElse(Nil))
+    )
   }
 
-  def listSnippets(login: String): List[SnippetSummary] = {
+  def listSnippets(user: UserLogin): List[SnippetSummary] = {
     import scala.collection.JavaConverters._
-    val dir = root.resolve(login)
+    val dir = root.resolve(user.login)
     if(Files.exists(dir)) {
 
       val ds = Files.newDirectoryStream(dir)
@@ -88,14 +102,14 @@ class SnippetsContainer(root: Path) {
         }
 
       uuids.flatMap{uuid =>
-        val last = lastUpdateId(login, uuid)
+        val last = lastUpdateId(user.login, uuid)
         val last0 = if(last == 0) None else Some(last)
 
-        val snippetId = SnippetId(uuid, Some(SnippetUserPart(login, last0)))
+        val snippetId = SnippetId(uuid, Some(SnippetUserPart(user.login, last0)))
 
         val inputs = readInputs(snippetId)
 
-        if(inputs.map(_.isSaved).getOrElse(false)) {
+        if(inputs.map(_.showInUserProfile).getOrElse(false)) {
           List(
             SnippetSummary(
               snippetId,
@@ -152,7 +166,7 @@ class SnippetsContainer(root: Path) {
     }
   }
 
-  private val anonFolder = "-anonymous-"
+  private val anonFolder = "_anonymous_"
 
   private def rootDir(snippetId: SnippetId): Path = {
     snippetId.user match {
@@ -215,7 +229,7 @@ class SnippetsContainer(root: Path) {
     res
   }
 
-  def deleteEmptyDirectories(base: Path): Unit = {
+  private def deleteEmptyDirectories(base: Path): Unit = {
     def dirIsEmpty(dir: Path): Boolean = {
       val ds = Files.newDirectoryStream(dir)
       val ret = ds.iterator().hasNext()

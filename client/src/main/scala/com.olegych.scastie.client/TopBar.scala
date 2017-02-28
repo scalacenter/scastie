@@ -41,6 +41,7 @@ object TopBar {
         val logoutUrl = "/logout"
 
         def logout(e: ReactEventI): Callback =
+          backend.setView(View.Editor) >>
           Callback(dom.window.location.pathname = logoutUrl)
 
         def login(e: ReactEventI): Callback =
