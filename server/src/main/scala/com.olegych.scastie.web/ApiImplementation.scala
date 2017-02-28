@@ -17,25 +17,24 @@ class ApiImplementation(
     maybeUser: Option[User])(implicit timeout: Timeout, executionContext: ExecutionContext)
     extends Api {
 
+  private def wrap(inputs: Inputs): InputsWithIpAndUser =
+    InputsWithIpAndUser(inputs, ip.toString, maybeUser)
+  
   def run(inputs: Inputs): Future[SnippetId] = {
-    (dispatchActor ? RunSnippet(
-      inputs,
-      ip.toString,
-      maybeUser
-    )).mapTo[SnippetId]
+    (dispatchActor ? RunSnippet(wrap(inputs))).mapTo[SnippetId]
   }
 
   def format(formatRequest: FormatRequest): Future[FormatResponse] = {
     (dispatchActor ? formatRequest).mapTo[FormatResponse]
   }
 
-  def create(inputs: Inputs): Future[SnippetId] = {
-    (dispatchActor ? CreateSnippet(inputs, maybeUser)).mapTo[SnippetId]
+  def save(inputs: Inputs): Future[SnippetId] = {
+    (dispatchActor ? SaveSnippet(wrap(inputs))).mapTo[SnippetId]
   }
 
   def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean] = {
     if(userOwnsSnippet(snippetId)) {
-      (dispatchActor ? AmendSnippet(snippetId, inputs)).mapTo[Boolean]
+      (dispatchActor ? AmendSnippet(snippetId, wrap(inputs))).mapTo[Boolean]
     } else {
       Future.successful(false)
     }
@@ -43,7 +42,7 @@ class ApiImplementation(
 
   def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
     if(userOwnsSnippet(snippetId)) {
-      (dispatchActor ? UpdateSnippet(snippetId, inputs)).mapTo[SnippetId].map(Some.apply)
+      (dispatchActor ? UpdateSnippet(snippetId, wrap(inputs))).mapTo[Option[SnippetId]]
     }
     else {
       Future.successful(None)
@@ -58,8 +57,8 @@ class ApiImplementation(
     }
   }
 
-  def fork(snippetId: SnippetId): Future[Option[ForkResult]] = {
-    (dispatchActor ? ForkSnippet(snippetId, maybeUser)).mapTo[Option[ForkResult]]
+  def fork(snippetId: SnippetId): Future[Option[SnippetId]] = {
+    (dispatchActor ? ForkSnippet(snippetId, ip.toString, maybeUser)).mapTo[Option[SnippetId]]
   }
 
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]] = {

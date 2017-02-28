@@ -11,12 +11,12 @@ trait Api {
   def run(inputs: Inputs): Future[SnippetId]
   def format(code: FormatRequest): Future[FormatResponse]
 
-  def create(inputs: Inputs): Future[SnippetId]
+  def save(inputs: Inputs): Future[SnippetId]
   def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean]
   def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]]
   def delete(snippetId: SnippetId): Future[Boolean]
 
-  def fork(snippetId: SnippetId): Future[Option[ForkResult]]
+  def fork(snippetId: SnippetId): Future[Option[SnippetId]]
 
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]]
   def fetchUser(): Future[Option[User]]
@@ -175,7 +175,8 @@ case class Inputs(
     librariesFrom: Map[ScalaDependency, Project] = Map(),
     sbtConfigExtra: String,
     sbtPluginsConfigExtra: String,
-    isSaved: Boolean = false
+    showInUserProfile: Boolean = false,
+    forked: Option[SnippetId] = None
 ) {
   def addScalaDependency(scalaDependency: ScalaDependency,
                          project: Project): Inputs = {

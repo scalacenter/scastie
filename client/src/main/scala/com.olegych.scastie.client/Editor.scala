@@ -113,9 +113,9 @@ object Editor {
             backend.run().runNow
           }
 
-          // CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
-          //   backend.save().runNow
-          // }
+          CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
+            backend.saveOrUpdate().runNow
+          }
 
           CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
             backend.clear().runNow
@@ -232,15 +232,24 @@ object Editor {
         def updateLeft(editor2: codemirror.Editor): Unit = {
           val doc2 = editor2.getDoc()
           val lineNumber = startPos.line
+          doc2.getLine(lineNumber).toOption match {
+            case Some(line) => {
 
-          val basePos = new CMPosition { line = lineNumber; ch = 0 }
-          val offsetPos = new CMPosition {
-            line = lineNumber; ch = doc2.getLine(lineNumber).length
+              val basePos = new CMPosition { line = lineNumber; ch = 0 }
+              val offsetPos = new CMPosition {
+                line = lineNumber; ch = doc2.getLine(lineNumber).map(_.length).getOrElse(0)
+              }
+              val mode = "local"
+              val base = editor2.cursorCoords(basePos, mode)
+              val offset = editor2.cursorCoords(offsetPos, mode)
+              node.style.left = (offset.left - base.left) + "px"
+              
+            }
+            case _ => {
+              // the line was deleted
+              node.innerHTML = null
+            }
           }
-          val mode = "local"
-          val base = editor2.cursorCoords(basePos, mode)
-          val offset = editor2.cursorCoords(offsetPos, mode)
-          node.style.left = (offset.left - base.left) + "px"
         }
         updateLeft(editor)
         editor.onChange((editor, _) => updateLeft(editor))

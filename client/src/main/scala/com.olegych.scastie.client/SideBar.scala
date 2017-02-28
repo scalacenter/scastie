@@ -2,13 +2,14 @@ package com.olegych.scastie
 package client
 
 import App._
+import api.SnippetId
 
 import japgolly.scalajs.react._, vdom.all._
 
 object SideBar {
   private val component =
-    ReactComponentB[(State, Backend)]("SideBar").render_P {
-      case (state, backend) =>
+    ReactComponentB[(State, Backend, Option[SnippetId])]("SideBar").render_P {
+      case (state, backend, snippetId) =>
         import backend._
 
         val theme = if (state.isDarkTheme) "dark" else "light"
@@ -28,7 +29,44 @@ object SideBar {
           if(!state.inputsHasChanged) "disabled"
           else ""
 
-        // import View.ctrl
+        import View.ctrl
+
+        val sharing =
+          snippetId match {
+            case None =>
+              TagMod(
+                li(onClick ==> save,
+                   title := s"Save ($ctrl + S)",
+                   `class` := s"button $disabledIfSameInputs")(
+                  i(`class` := "fa fa-floppy-o"),
+                  p("Save")
+                )
+              )
+            case Some(sid) =>
+              TagMod(
+                li(onClick ==> update(sid),
+                   title := s"Update ($ctrl + S)",
+                   `class` := "button")(
+
+                  i(`class` := "fa fa-floppy-o"),
+                  p("Update")
+                ),
+                li(onClick ==> fork(sid),
+                   title := s"Fork",
+                   `class` := "button")(
+
+                  i(`class` := "fa fa-code-fork"),
+                  p("Fork")
+                ),
+                li(onClick ==> amend(sid),
+                   title := s"Amend",
+                   `class` := "button")(
+
+                  i(`class` := "fa fa-pencil-square-o"),
+                  p("Amend")
+                )
+              )
+          }
 
         nav(`class` := s"sidebar $theme")(
           ul(
@@ -49,12 +87,6 @@ object SideBar {
                   `class` := "image-button"),
               p("Libraries (Build)")
             ),
-            // li(onClick ==> save,
-            //    title := s"Save ($ctrl + S)",
-            //    `class` := s"button $disabledIfSameInputs")(
-            //   i(`class` := "fa fa-floppy-o"),
-            //   p("Save")
-            // ),
             li(onClick ==> formatCode,
                title := "Format Code (F6)",
                `class` := s"button $disabledIfSameInputs")(
@@ -67,11 +99,12 @@ object SideBar {
                `class` := "button")(
               iconic.terminal,
               p("Console")
-            )
+            ),
+            sharing
           )
         )
     }.build
 
-  def apply(state: State, backend: Backend) =
-    component((state, backend))
+  def apply(state: State, backend: Backend, snippetId: Option[SnippetId]) =
+    component((state, backend, snippetId))
 }
