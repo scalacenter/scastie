@@ -52,7 +52,6 @@ object Libraries {
       else EmptyTag
 
     val disabledTargets: Set[ScalaTargetType] = Set(
-      ScalaTargetType.JS,
       ScalaTargetType.Native
     )
 
@@ -62,7 +61,6 @@ object Libraries {
 
     def vote(targetType: ScalaTargetType) = {
       val voteIssueId: Map[ScalaTargetType, Int] = Map(
-        ScalaTargetType.JS -> 38,
         ScalaTargetType.Native -> 50
       )
       voteIssueId.get(targetType) match {

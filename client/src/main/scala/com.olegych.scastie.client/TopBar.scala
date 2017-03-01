@@ -58,7 +58,7 @@ object TopBar {
                   img(src := user.avatar_url + "&s=35",
                       alt := "Your Github Avatar",
                       `class` := "image-button avatar"),
-                  p("Profile")
+                  p("Snippets")
                 ),
                 li(onClick ==> logout, `class` := "button")(
                   iconic.accountLogout,

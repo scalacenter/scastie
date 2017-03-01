@@ -238,7 +238,9 @@ case class Inputs(
         case ScalaTarget.Js(scalaVersion, _) => {
           (
             s"""|scalaVersion := "$scalaVersion"
-                |enablePlugins(ScalaJSPlugin)""".stripMargin,
+                |enablePlugins(ScalaJSPlugin)
+                |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "fastopt.js"
+                |""".stripMargin,
             ScalaDependency("org.scastie",
                             "runtime-scala",
                             target,
@@ -301,6 +303,7 @@ case class SnippetProgress(
     compilationInfos: List[Problem],
     instrumentations: List[Instrumentation],
     runtimeError: Option[RuntimeError],
+    scalaJsContent: Option[String],
     done: Boolean,
     timeout: Boolean,
     forcedProgramMode: Boolean

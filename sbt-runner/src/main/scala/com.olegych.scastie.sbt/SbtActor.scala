@@ -71,6 +71,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private def run(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String], 
                   progressActor: ActorRef, snippetActor: ActorRef, forcedProgramMode: Boolean) = {
     val scalaTargetType = inputs.target.targetType
+    val isScalaJs = inputs.target.targetType == ScalaTargetType.JS
 
     def eval(command: String, reload: Boolean) =
       sbt.eval(command,
@@ -80,7 +81,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
                  forcedProgramMode,
                  progressActor,
                  snippetId,
-                 snippetActor
+                 snippetActor,
+                 isScalaJs
                ),
                reload)
 
@@ -123,7 +125,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     withTimeout(runTimeout)({
       scalaTargetType match {
         case JVM | Dotty | Native | Typelevel => eval("run", reload = false)
-        case JS => eval("fastOptJs", reload = false)
+        case JS => eval("fastOptJS", reload = false)
       }
     })(timeout(runTimeout))
 
@@ -201,7 +203,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       forcedProgramMode: Boolean,
       progressActor: ActorRef,
       snippetId: SnippetId,
-      snippetActor: ActorRef): (String, Boolean, Boolean) => Unit = {
+      snippetActor: ActorRef,
+      isScalaJs: ): (String, Boolean, Boolean) => Unit = {
     (line, done, reload) =>
       {
         val lineOffset = getLineOffset(worksheetMode)
@@ -231,6 +234,10 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
               && sbtOutput.isEmpty)
             Some(line)
           else None
+
+        if(done) {
+
+        }
 
         val progress = SnippetProgress(
           snippetId = snippetId,
