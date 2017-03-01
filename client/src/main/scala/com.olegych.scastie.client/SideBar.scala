@@ -81,7 +81,7 @@ object SideBar {
             li(onClick ==> setView2(View.Libraries),
                title := "Open Libraries View",
                selected(View.Libraries),
-               `class` := "button")(
+               `class` := "button library-button")(
               img(src := "/assets/public/dotty3.svg",
                   alt := "Libraries (Build)",
                   `class` := "image-button"),
