@@ -101,6 +101,11 @@ class SbtActorTest()
     }
   }
 
+  test("Scala.js support"){
+    val scalaJs = Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Js.default)
+    run(scalaJs)(_.scalaJsContent.nonEmpty)
+  }
+
   def assertCompilationInfo(infoAssert: Problem => Any)(progress: SnippetProgress): Boolean = {
 
     val gotCompilationError = progress.compilationInfos.nonEmpty
@@ -134,7 +139,7 @@ class SbtActorTest()
     sbtActor ! SbtTask(snippetId, inputs, ip, None, progressActor.ref)
 
     val totalTimeout =
-      if (firstRun) timeout + 10.second
+      if (firstRun) timeout + 20.second
       else timeout
 
     progressActor.fishForMessage(totalTimeout) {

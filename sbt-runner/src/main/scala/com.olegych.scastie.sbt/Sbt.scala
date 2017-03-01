@@ -47,6 +47,10 @@ class Sbt() {
 
   Files.createDirectories(codeFile.getParent)
 
+  def scalaJsContent(): Option[String] = {
+    slurp(sbtDir.resolve(ScalaTarget.Js.target))
+  }
+
   private val (process, fin, fout) = {
 
     val builder = new ProcessBuilder("sbt").directory(sbtDir.toFile)

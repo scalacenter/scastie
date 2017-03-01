@@ -89,22 +89,14 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     def timeout(duration: FiniteDuration): Unit = {
       log.info(s"restarting sbt: $inputs")
       progressActor !
-        SnippetProgress(
-          snippetId = snippetId,
-          userOutput = None,
-          sbtOutput = None,
+        SnippetProgress.default(snippetId).copy(
           compilationInfos = List(
             Problem(
               Error,
               line = None,
               message = s"timed out after $duration"
             )
-          ),
-          instrumentations = Nil,
-          runtimeError = None,
-          done = true,
-          timeout = true,
-          forcedProgramMode = false
+          )
         )
 
       sbt.kill()
@@ -145,17 +137,10 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         } 
         case Left(error) => {
           def signalError(message: String, line: Option[Int]): Unit = {
-            val progress = SnippetProgress(
-              snippetId = snippetId,
-              userOutput = None,
-              sbtOutput = None,
-              compilationInfos = List(Problem(Error, line, message)),
-              instrumentations = Nil,
-              runtimeError = None,
-              done = true,
-              timeout = false,
-              forcedProgramMode = false
-            )  
+            val progress = 
+              SnippetProgress.default(snippetId).copy(
+                compilationInfos = List(Problem(Error, line, message))
+              )
 
             progressActor ! progress
             sender ! progress
@@ -204,7 +189,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       progressActor: ActorRef,
       snippetId: SnippetId,
       snippetActor: ActorRef,
-      isScalaJs: ): (String, Boolean, Boolean) => Unit = {
+      isScalaJs: Boolean): (String, Boolean, Boolean) => Unit = {
     (line, done, reload) =>
       {
         val lineOffset = getLineOffset(worksheetMode)
@@ -235,9 +220,11 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
             Some(line)
           else None
 
-        if(done) {
-
-        }
+        val scalaJsContent =
+          if(done && isScalaJs) {
+            sbt.scalaJsContent()
+          }
+          else None
 
         val progress = SnippetProgress(
           snippetId = snippetId,
@@ -246,6 +233,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           compilationInfos = problems.getOrElse(Nil),
           instrumentations = instrumentations.getOrElse(Nil),
           runtimeError = runtimeError,
+          scalaJsContent = scalaJsContent,
           done = done && !reload,
           timeout = false,
           forcedProgramMode = forcedProgramMode

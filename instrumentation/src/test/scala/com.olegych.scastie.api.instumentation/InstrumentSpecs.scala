@@ -71,7 +71,5 @@ class InstrumentSpecs extends FunSuite {
     pending
   }
 
-  private def slurp(path: Path): String = {
-    Files.readAllLines(path).toArray.mkString(nl)
-  }
+  private def slurp(path: Path): String = read(path).get
 }

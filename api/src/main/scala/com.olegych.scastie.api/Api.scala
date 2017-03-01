@@ -95,6 +95,7 @@ object ScalaTarget {
   }
 
   object Js {
+    val target = "fastopt.js"
     def default =
       ScalaTarget.Js(
         scalaVersion = ScalaTarget.defaultScalaVersion,
@@ -239,7 +240,7 @@ case class Inputs(
           (
             s"""|scalaVersion := "$scalaVersion"
                 |enablePlugins(ScalaJSPlugin)
-                |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "fastopt.js"
+                |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "${ScalaTarget.Js.target}"
                 |""".stripMargin,
             ScalaDependency("org.scastie",
                             "runtime-scala",
@@ -294,6 +295,22 @@ case class Inputs(
         |
         |$sbtConfigExtra""".stripMargin
   }
+}
+
+object SnippetProgress {
+  def default(snippetId: SnippetId) = 
+    SnippetProgress(
+      snippetId = snippetId,
+      userOutput = None,
+      sbtOutput = None,
+      compilationInfos = Nil,
+      instrumentations = Nil,
+      runtimeError = None,
+      scalaJsContent = None,
+      done = true,
+      timeout = false,
+      forcedProgramMode = false
+    )  
 }
 
 case class SnippetProgress(
