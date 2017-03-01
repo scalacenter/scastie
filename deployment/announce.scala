@@ -11,7 +11,7 @@ users.drop(from).sliding(slice, slice).toList.zipWithIndex.foreach{ case (group,
   val end = start + group.size
 
   val message = 
-    s"""|Scastie Beta Opens ($start - $end) 
+    s"""|Scastie Beta Opens ($start - $end)
         |
         |Hello,
         |

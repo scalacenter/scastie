@@ -79,6 +79,7 @@ object App {
                     eventSource: Option[EventSource] = eventSource,
                     websocket: Option[WebSocket] = websocket,
                     isShowingHelpAtStartup: Boolean = isShowingHelpAtStartup,
+                    isHelpModalClosed: Boolean = isHelpModalClosed,
                     isDarkTheme: Boolean = isDarkTheme,
                     consoleIsOpen: Boolean = consoleIsOpen,
                     consoleHasUserOutput: Boolean = consoleHasUserOutput,
@@ -132,10 +133,10 @@ object App {
     def toggleHelpAtStartup =
       copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
 
-    def closeHelp = copy(
-      isHelpModalClosed = true,
-      isStartup = false
-    )
+    def closeHelp = 
+      resetOutputs
+        .copyAndSave(isHelpModalClosed = true)
+        .copy(isStartup = false)
     
     def showHelp = copy(isHelpModalClosed = false)
     

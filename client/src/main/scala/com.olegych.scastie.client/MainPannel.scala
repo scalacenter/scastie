@@ -40,9 +40,9 @@ object MainPannel {
         }
 
         val showHelp = 
-          !(state.isHelpModalClosed || embedded) || 
-            (state.isShowingHelpAtStartup && state.isStartup)
-          
+          if(state.isShowingHelpAtStartup && state.isStartup && !embedded) true
+          else !state.isHelpModalClosed
+
         val helpClosePannel =
           if(showHelp) {
             TagMod(
@@ -50,7 +50,7 @@ object MainPannel {
                 button(onClick ==> closeHelp)("Close"),
                 div(`class` := "not-again")(
                   p("Dont show again"),
-                  input.checkbox(onClick ==> toogleShowHelpAtStartup, value := !state.isShowingHelpAtStartup)
+                  input.checkbox(onChange ==> toogleShowHelpAtStartup, checked := !state.isShowingHelpAtStartup)
                 )
               )
             )
