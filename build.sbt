@@ -249,7 +249,8 @@ lazy val client = project
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.2",
       "org.webjars.bower" % "open-iconic" % "1.1.1",
-      "org.webjars" % "font-awesome" % "4.7.0"
+      "org.webjars" % "font-awesome" % "4.7.0",
+      "org.webjars.npm" % "firacode" % "1.205.0"
     )
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
