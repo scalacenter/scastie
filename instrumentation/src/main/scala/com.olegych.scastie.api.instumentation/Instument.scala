@@ -136,13 +136,9 @@ object Instrument {
     // dialects.ParadiseTypelevel211
     // dialects.ParadiseTypelevel212
 
-    // scalameta 1.6.0:
-    // Typelevel211
-    // Typelevel212
-
     def typelevel(scalaVersion: String): Option[Dialect] = {
-      if(scalaVersion.startsWith("2.12")) Some(dialects.Scala212)
-      else if(scalaVersion.startsWith("2.11")) Some(dialects.Scala211)
+      if(scalaVersion.startsWith("2.12")) Some(dialects.Typelevel212)
+      else if(scalaVersion.startsWith("2.11")) Some(dialects.Typelevel211)
       else None
     }
 
