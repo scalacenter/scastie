@@ -10,3 +10,5 @@ sbt-api-*
 TODO
 *.log
 .idea
+deployment/beta
+deployment/users.txt
