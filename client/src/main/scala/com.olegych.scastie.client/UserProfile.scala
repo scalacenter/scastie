@@ -47,7 +47,7 @@ object UserProfile {
             h1("Saved Code Snippets"),
             ul(
               summaries.groupBy(_.snippetId.base64UUID).map{ case (base64UUID, groupedSummaries) =>
-                li(
+                li(key := base64UUID)(
                   p("/" + base64UUID),
                   ul(
                     groupedSummaries.sortBy(_.snippetId.user.flatMap(_.update)).map{summary =>

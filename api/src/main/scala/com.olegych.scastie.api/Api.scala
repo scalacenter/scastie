@@ -159,7 +159,9 @@ object Inputs {
                         |  "-feature",
                         |  "-unchecked"
                         |)""".stripMargin,
-    sbtPluginsConfigExtra = ""
+    sbtPluginsConfigExtra = "",
+    showInUserProfile = false,
+    forked = None
   )
 
   implicit val pkl: ReadWriter[Inputs] = upickleMacroRW[Inputs]

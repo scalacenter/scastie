@@ -102,7 +102,10 @@ object App {
              loadSnippet,
              isStartup,
              user,
-             inputs,
+             inputs.copy(
+               showInUserProfile = false,
+               forked = None
+             ),
              outputs)
 
       LocalStorage.save(state0)
