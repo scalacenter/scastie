@@ -55,7 +55,7 @@ package object runtime {
     )
 
     html"""|<h1>Welcome to Scastie!</h1>
-           |Scastie is an interractive playground for Scala. To not see this 
+           |Scastie is an interactive playground for Scala. To not see this 
            |message again, remove the <code>help</code> expression on your code snippet.
            |
            |<h2>Libraries</h2>
