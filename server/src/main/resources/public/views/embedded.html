@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <title>Scastie</title>
 
+    <link href="https://cdn.rawgit.com/tonsky/FiraCode/master/distr/fira_code.css" rel="stylesheet">
     <link rel="shortcut icon" href="/assets/public/favicon.ico">
 
     <link href="/assets/lib/codemirror/addon/dialog/dialog.css"           rel="stylesheet">
@@ -163,11 +164,7 @@ object Main {
     </section>
 
     <script src="/assets/public/client-jsdeps.js"></script>
-    @if(production) {
-      <script src="/assets/client-opt.js"></script>
-    } else {
-      <script src="/assets/public/client-fastopt.js"></script>
-    }
+    <script src="/assets/public/client-fastopt.js"></script>
     <script>
       com.olegych.scastie.client.ClientMain().embedded(
         "pre.scastie",
