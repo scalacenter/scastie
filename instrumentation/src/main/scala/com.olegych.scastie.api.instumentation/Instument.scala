@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package instrumentation
 
-import api.ScalaTarget
+import api.{ScalaTarget, ScalaTargetType}
 import api.ScalaTarget._
 
 import scala.meta._
@@ -52,7 +52,7 @@ object Instrument {
     Patch(term.tokens.head, term.tokens.last, replacement)
   }
 
-  private def instrument(source: Source, offset: Int): String = {
+  private def instrument(source: Source, offset: Int, isScalaJs: Boolean): String = {
     val instrumentedCodePatches =
       source.stats.collect {
         case c: Defn.Class
@@ -78,14 +78,27 @@ object Instrument {
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
 
+    val writeInstrumentation = 
+      s"_root_.com.olegych.scastie.api.runtime.Runtime.write(playground.${instrumentationMethod})"
+
+    val entryPoint = 
+      if(!isScalaJs) {
+        s"""|object Main {
+            |  val playground = new $instrumnedClass
+            |  def main(args: Array[String]): Unit = {
+            |    println($writeInstrumentation)
+            |  }
+            |}
+            |""".stripMargin
+      } else {
+        s"""|@_root_.scala.scalajs.js.annotation.JSExport object Main {
+            |  val playground = new $instrumnedClass
+            |  @_root_.scala.scalajs.js.annotation.JSExport def result() = $writeInstrumentation
+            |}""".stripMargin
+      }
+
     s"""|$instrumentedCode
-        |object Main {
-        |  val playground = new $instrumnedClass
-        |  def main(args: Array[String]): Unit = {
-        |    println(_root_.com.olegych.scastie.api.runtime.Runtime.write(playground.${instrumentationMethod}))
-        |  }
-        |}
-        |""".stripMargin
+        |$entryPoint""".stripMargin
   }
 
   private def hasMainMethod(source: Source): Boolean = {
@@ -93,7 +106,7 @@ object Instrument {
       templ.stats match {
         case Some(ss) => {
           ss.exists {
-            case q"def main(args: $_[$_]): $_ = $_" => true
+            case q"def main(args: Array[String]): $_ = $_" => true
             case _ => false
           }
         }
@@ -164,9 +177,15 @@ object Instrument {
         implicit val selectedDialect = dialect
 
         code0.parse[Source] match {
-          case Parsed.Success(k) =>
-            if (!hasMainMethod(k))
-              Right(instrument(k, offset = prelude.length + 1))
+          case Parsed.Success(souce) =>
+            if (!hasMainMethod(souce))
+              Right(
+                instrument(
+                  souce,
+                  offset = prelude.length + 1,
+                  isScalaJs = target.targetType == ScalaTargetType.JS
+                )
+              )
             else Left(HasMainMethod)
           case e: Parsed.Error => Left(ParsingError(e))
         }

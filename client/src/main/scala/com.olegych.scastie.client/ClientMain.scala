@@ -13,6 +13,8 @@ import js.annotation.{JSExport, ScalaJSDefined}
 
 import japgolly.scalajs.react._, extra.router._
 
+import upickle.default.{read => uread}
+
 object Page {
   def fromSnippetId(snippetId: SnippetId): ResourcePage = {
     snippetId match {
@@ -123,6 +125,11 @@ object ClientMain extends JSApp {
     )
 
     ()
+  }
+
+  @JSExport
+  def signal(instrumentations: String): Unit = {
+    Global.signal(uread[List[Instrumentation]](instrumentations))
   }
 
   @JSExport

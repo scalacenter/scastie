@@ -1,5 +1,5 @@
 package com.olegych.scastie
-package client
+package api
 
 case class ReleaseOptions(groupId: String, versions: List[String])
 
@@ -18,10 +18,10 @@ object Outputs {
   implicit val pkl: ReadWriter[Outputs] = macroRW[Outputs]
 }
 case class Outputs(
-    console: Vector[String],
-    compilationInfos: Set[api.Problem],
-    instrumentations: Set[api.Instrumentation],
-    runtimeError: Option[api.RuntimeError]
+  console: Vector[String],
+  compilationInfos: Set[Problem],
+  instrumentations: Set[Instrumentation],
+  runtimeError: Option[RuntimeError]
 ) {
   def isClearable: Boolean =
     !console.isEmpty ||
@@ -30,15 +30,12 @@ case class Outputs(
       !runtimeError.isEmpty
 }
 
-sealed trait Severity
-final case object Info extends Severity
-final case object Warning extends Severity
-final case object Error extends Severity
-
 case class Position(start: Int, end: Int)
 
 case class CompilationInfo(
-    severity: Severity,
-    position: Position,
-    message: String
+  severity: Severity,
+  position: Position,
+  message: String
 )
+
+case class SbtOutput(line: String)

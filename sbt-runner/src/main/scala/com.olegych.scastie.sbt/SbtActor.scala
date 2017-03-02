@@ -198,7 +198,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         val instrumentations =
           extract[List[api.Instrumentation]](line, report = true)
         val runtimeError = extractRuntimeError(line, lineOffset)
-        val sbtOutput = extract[sbtapi.SbtOutput](line)
+        val sbtOutput = extract[SbtOutput](line)
 
         // look like our sbt logger is not catching all messages
         val sbtMessages = List(
@@ -245,28 +245,21 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   private def extractProblems(line: String,
-                              lineOffset: Int): Option[List[api.Problem]] = {
-    val sbtProblems = extract[List[sbtapi.Problem]](line)
+                              lineOffset: Int): Option[List[Problem]] = {
+    val problems = extract[List[Problem]](line)
 
-    def toApi(p: sbtapi.Problem): api.Problem = {
-      val severity = p.severity match {
-        case sbtapi.Info => api.Info
-        case sbtapi.Warning => api.Warning
-        case sbtapi.Error => api.Error
-      }
-
-      api.Problem(severity, p.line.map(_ + lineOffset), p.message)
-    }
-
-    sbtProblems.map(_.map(toApi))
+    problems.map(
+      _.map(problem =>
+        problem.copy(line = problem.line.map(_ + lineOffset))
+      )
+    )
   }
 
   def extractRuntimeError(line: String,
-                          lineOffset: Int): Option[api.RuntimeError] = {
-    extract[sbtapi.RuntimeError](line).map {
-      case sbtapi.RuntimeError(message, line, fullStack) =>
-        api.RuntimeError(message, line.map(_ + lineOffset), fullStack)
-    }
+                          lineOffset: Int): Option[RuntimeError] = {
+    extract[RuntimeError](line).map(error =>
+      error.copy(line = error.line.map(_ + lineOffset))
+    )
   }
 
   private def extract[T: Reader](line: String,

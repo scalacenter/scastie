@@ -284,6 +284,10 @@ object App {
   }
 
   class Backend(scope: BackendScope[Props, State]) {
+
+    Global.subsribe(scope)
+
+
     def goHome(e: ReactEventI): Callback = {
       scope.props.flatMap(props =>
         props.router.map(_.set(Home)).getOrElse(Callback(()))
@@ -310,6 +314,28 @@ object App {
       s"/$connectionMethod/$snippetPart"
     }
 
+    private def evalJavascript(progress: SnippetProgress): Unit = {
+      progress.scalaJsContent.foreach{c =>
+        try {
+          scala.scalajs.js.eval(
+            c + "\n" +
+            "com.olegych.scastie.client.ClientMain().signal(Main().result())"
+          )
+        } catch {
+          case ex: Exception => {
+            val direct = scope.accessDirect
+            direct.modState(state =>
+              state.copyAndSave(
+                outputs = state.outputs.copy(
+                  runtimeError = RuntimeError.fromTrowable(ex)
+                )
+              )
+            )
+          }
+        }
+      }
+    }
+
     private def connectEventSource(snippetId: SnippetId) = CallbackTo[EventSource] {
       val direct = scope.accessDirect
 
@@ -321,7 +347,12 @@ object App {
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[SnippetProgress](e.data.toString)
         direct.modState(_.addProgress(progress))
+        evalJavascript(progress)
+
         if (progress.done) {
+          direct.modState(
+            _.copy(eventSource = None, running = false)
+          )
           eventSource.close()
         }
       }
@@ -345,6 +376,7 @@ object App {
       def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[SnippetProgress](e.data.toString)
+        evalJavascript(progress)
         direct.modState(_.addProgress(progress))
       }
       def onerror(e: ErrorEvent): Unit =

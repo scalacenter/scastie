@@ -7,8 +7,6 @@ import java.nio.file._
 
 import scala.collection.JavaConverters._
 
-import System.{lineSeparator => nl}
-
 import org.scalatest.FunSuite
 
 class InstrumentSpecs extends FunSuite {
@@ -23,8 +21,8 @@ class InstrumentSpecs extends FunSuite {
 
   testFiles.foreach { path =>
     test(path.toString) {
-      val original = slurp(path.resolve("original.scala"))
-      val expected = slurp(path.resolve("instrumented.scala"))
+      val original = slurp(path.resolve("original.scala")).get
+      val expected = slurp(path.resolve("instrumented.scala")).get
 
       val Right(obtained) = Instrument(original)
 
@@ -66,10 +64,6 @@ class InstrumentSpecs extends FunSuite {
   }
 
   test("bug #83") {
-    // requires scalameta 1.6.0 => requires scalafmt based on 1.6.0
-    // val Right(_) = Instrument("val answer: 42 = 42", ScalaTarget.Dotty)
-    pending
+    val Right(_) = Instrument("val answer: 42 = 42", ScalaTarget.Dotty)
   }
-
-  private def slurp(path: Path): String = read(path).get
 }

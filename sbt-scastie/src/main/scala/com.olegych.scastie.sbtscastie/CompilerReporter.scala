@@ -1,3 +1,6 @@
+package com.olegych.scastie
+package sbtscastie
+
 import sbt._
 import Keys._
 import KeyRanks.DTask
@@ -27,18 +30,18 @@ object CompilerReporter {
       }
 
       def printSummary(): Unit = {
-        def toApi(p: Problem): sbtapi.Problem = {
+        def toApi(p: Problem): api.Problem = {
           def toOption[T](m: Maybe[T]): Option[T] = {
             if (m.isEmpty) None
             else Some(m.get)
           }
           val severity =
             p.severity match {
-              case xsbti.Severity.Info => sbtapi.Info
-              case xsbti.Severity.Warn => sbtapi.Warning
-              case xsbti.Severity.Error => sbtapi.Error
+              case xsbti.Severity.Info => api.Info
+              case xsbti.Severity.Warn => api.Warning
+              case xsbti.Severity.Error => api.Error
             }
-          sbtapi.Problem(severity,
+          api.Problem(severity,
                          toOption(p.position.line).map(_.toInt),
                          p.message)
         }

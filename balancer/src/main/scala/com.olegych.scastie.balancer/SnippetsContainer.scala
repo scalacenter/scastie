@@ -124,13 +124,13 @@ class SnippetsContainer(root: Path) {
 
   private def readInputs(snippetId: SnippetId): Option[Inputs] = {
     if (Files.exists(inputsFile(snippetId))) {
-      read(inputsFile(snippetId)).map(content => uread[Inputs](content))
+      slurp(inputsFile(snippetId)).map(content => uread[Inputs](content))
     } else None
   }
 
   private def readOutputs(snippetId: SnippetId): Option[List[SnippetProgress]] = {
     if (Files.exists(outputsFile(snippetId)))
-      read(outputsFile(snippetId)).map(
+      slurp(outputsFile(snippetId)).map(
         _.lines
           .filter(_.nonEmpty)
           .map(line => uread[SnippetProgress](line))

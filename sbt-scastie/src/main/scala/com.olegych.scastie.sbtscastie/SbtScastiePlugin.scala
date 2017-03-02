@@ -1,3 +1,6 @@
+package com.olegych.scastie
+package sbtscastie
+
 import sbt._
 
 object ScastiePlugin extends AutoPlugin {

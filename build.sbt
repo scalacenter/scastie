@@ -73,8 +73,6 @@ lazy val runnerRuntimeDependencies = Seq(
   api212JVM,
   api212JS,
   runtimeDotty,
-  sbtApi210,
-  sbtApi211,
   sbtScastie
 ).map(publishLocal in _)
 
@@ -136,7 +134,7 @@ lazy val sbtRunner = project
       .dependsOn(runnerRuntimeDependencies: _*)
       .evaluated
   )
-  .dependsOn(sbtApi211, api211JVM, instrumentation, utils)
+  .dependsOn(api211JVM, instrumentation, utils)
   .enablePlugins(sbtdocker.DockerPlugin, BuildInfoPlugin)
 
 lazy val server = project
@@ -184,8 +182,6 @@ lazy val scastie = project
     codemirror,
     client,
     runtimeDotty,
-    sbtApi210,
-    sbtApi211,
     sbtScastie,
     runtimeScala211JVM,
     runtimeScala211JS,
@@ -265,7 +261,7 @@ lazy val instrumentation = project
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
-  .dependsOn(api211JVM)
+  .dependsOn(api211JVM, utils)
 
 def crossDir(projectId: String) = file(".cross/" + projectId)
 def dash(name: String) = name.replaceAllLiterally(".", "-")
@@ -356,21 +352,6 @@ lazy val runtimeDotty = project
   )
   .dependsOn(api211JVM)
 
-/* sbtApi is for the communication between sbt and the sbt-runner */
-def sbtApi(scalaV: String) = {
-  val projectId = s"sbt-api-${dash(scalaV)}"
-  Project(id = projectId, base = crossDir(projectId))
-    .settings(orgSettings)
-    .settings(
-      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / "sbt-api" / "src" / "main",
-      scalaVersion := scalaV,
-      libraryDependencies += "com.lihaoyi" %% "upickle" % upickleVersion
-    )
-}
-
-lazy val sbtApi210 = sbtApi("2.10.6")
-lazy val sbtApi211 = sbtApi("2.11.8")
-
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))
   .settings(orgSettings)
@@ -379,4 +360,4 @@ lazy val sbtScastie = project
     scalaVersion := "2.10.6",
     sbtPlugin := true
   )
-  .dependsOn(sbtApi210)
+  .dependsOn(api210JVM)
