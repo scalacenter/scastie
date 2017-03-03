@@ -3,7 +3,8 @@ package client
 
 import org.scalajs.dom
 
-sealed trait View
+sealed trait View extends Product with Serializable
+
 object View {
   case object Editor extends View
   case object Libraries extends View

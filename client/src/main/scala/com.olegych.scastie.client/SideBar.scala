@@ -15,7 +15,11 @@ object SideBar {
         val theme = if (state.isDarkTheme) "dark" else "light"
 
         def selected(view: View) =
-          if (view == state.view) TagMod(`class` := "selected") else EmptyTag
+          if (view == currentView) TagMod(`class` := "selected") else EmptyTag
+
+        def currentView = state.view
+
+
 
         val consoleSelected =
           if (state.consoleIsOpen) TagMod(`class` := "toggle selected")
@@ -68,6 +72,44 @@ object SideBar {
               )
           }
 
+        val formatCodeButton = li(onClick ==> formatCode,
+          title := "Format Code (F6)",
+          `class` := s"button $disabledIfSameInputs")(
+          iconic.justifyLeft,
+          p("Format")
+        )
+
+        val console = li(onClick ==> toggleConsole,
+          title := s"$consoleLabel Console",
+          consoleSelected,
+          `class` := "button")(
+          iconic.terminal,
+          p("Console")
+        )
+
+        val viewButtons: Map[View, Seq[TagMod]] = Map(
+          View.Editor -> Seq(
+            LibraryButton(state, backend),
+            RunButton(state, backend),
+            ClearButton(state, backend),
+            formatCodeButton,
+            console,
+            sharing
+          ),
+          View.Libraries -> Seq(
+            LibraryButton(state, backend),
+            RunButton(state, backend)
+          ),
+          View.UserProfile -> Seq(
+            LibraryButton(state, backend),
+            RunButton(state, backend),
+            li("User Profile (NY)")
+          )
+
+        )
+
+        val currentButtonsForSelectedView = viewButtons.get(currentView)
+
         nav(`class` := s"sidebar $theme")(
           ul(
             li(onClick ==> goHome,
@@ -76,31 +118,7 @@ object SideBar {
               img(src := "/assets/public/dotty3.svg",
                   alt := "Logo")
             ),
-            RunButton(state, backend),
-            ClearButton(state, backend),
-            li(onClick ==> setView2(View.Libraries),
-               title := "Open Libraries View",
-               selected(View.Libraries),
-               `class` := "button library-button")(
-              img(src := "/assets/public/dotty3.svg",
-                  alt := "Libraries (Build)",
-                  `class` := "image-button"),
-              p("Libraries (Build)")
-            ),
-            li(onClick ==> formatCode,
-               title := "Format Code (F6)",
-               `class` := s"button $disabledIfSameInputs")(
-              iconic.justifyLeft,
-              p("Format")
-            ),
-            li(onClick ==> toggleConsole,
-               title := s"$consoleLabel Console",
-               consoleSelected,
-               `class` := "button")(
-              iconic.terminal,
-              p("Console")
-            ),
-            sharing
+            currentButtonsForSelectedView
           )
         )
     }.build
