@@ -87,7 +87,7 @@ object SideBar {
           p("Console")
         )
 
-        val viewButtons: Map[View, Seq[TagMod]] = Map(
+        val buttonsRibbon: Map[View, Seq[TagMod]] = Map(
           View.Editor -> Seq(
             LibraryButton(state, backend),
             RunButton(state, backend),
@@ -108,7 +108,7 @@ object SideBar {
 
         )
 
-        val currentButtonsForSelectedView = viewButtons.get(currentView)
+        val currentButtonsForSelectedView = buttonsRibbon.get(currentView)
 
         nav(`class` := s"sidebar $theme")(
           ul(
