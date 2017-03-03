@@ -1,8 +1,12 @@
 package com.olegych.scastie
 package client
 
+import scala.scalajs.js
+
 import api._
 import japgolly.scalajs.react._
+
+import upickle.default.{read => uread}
 
 object Global {
 
@@ -14,16 +18,32 @@ object Global {
     scope0 = Some(scope)
   }
 
-  def signal(instrumentations: List[Instrumentation]): Unit = {
+  def signal(instrumentationsF: js.Function0[String]): Unit = {
     scope0.foreach{ scope =>
       val direct = scope.accessDirect
-      direct.modState(state =>
-        state.copyAndSave(
-          outputs = state.outputs.copy(
-            instrumentations = state.outputs.instrumentations ++ instrumentations.toSet
+      try {
+        val instrumentations = uread[List[Instrumentation]](instrumentationsF())
+
+        direct.modState(state =>
+          state.copyAndSave(
+            outputs = state.outputs.copy(
+              instrumentations = state.outputs.instrumentations ++ instrumentations.toSet
+            )
           )
-        )
-      )
+        )         
+      } catch {
+        case ex: Exception => {
+          // TODO: some issue getting exception here 
+          // https://github.com/scala-js/scala-js/issues/2788
+          direct.modState(state =>
+            state.copyAndSave(
+              outputs = state.outputs.copy(
+                runtimeError = Some(RuntimeError(ex.toString, None, ""))
+              )
+            )
+          )
+        }
+      }
     }
   }
 }

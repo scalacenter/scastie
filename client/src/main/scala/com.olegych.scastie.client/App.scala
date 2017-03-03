@@ -316,23 +316,10 @@ object App {
 
     private def evalJavascript(progress: SnippetProgress): Unit = {
       progress.scalaJsContent.foreach{c =>
-        try {
-          scala.scalajs.js.eval(
-            c + "\n" +
-            "com.olegych.scastie.client.ClientMain().signal(Main().result())"
-          )
-        } catch {
-          case ex: Exception => {
-            val direct = scope.accessDirect
-            direct.modState(state =>
-              state.copyAndSave(
-                outputs = state.outputs.copy(
-                  runtimeError = RuntimeError.fromTrowable(ex)
-                )
-              )
-            )
-          }
-        }
+        scala.scalajs.js.eval(
+          c + "\n" +
+          "com.olegych.scastie.client.ClientMain().signal(function(){ return Main().result()})"
+        )
       }
     }
 
