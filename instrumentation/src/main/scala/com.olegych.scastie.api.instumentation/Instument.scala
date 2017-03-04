@@ -20,6 +20,16 @@ object Instrument {
   private val instrumentationMethod = "instrumentations$"
   private val instrumentationMap = "instrumentationMap$"
 
+  private val emptyMapT = "_root_.scala.collection.mutable.Map.empty"
+  private val jsExportT = "_root_.scala.scalajs.js.annotation.JSExport"
+
+  private val apiPackage = "_root_.com.olegych.scastie.api"
+  private val positionT = s"$apiPackage.Position"
+  private val renderT = s"$apiPackage.Render"
+  private val instrumentationT = s"$apiPackage.Instrumentation"
+  private val runtimeT = s"$apiPackage.runtime.Runtime"
+  private val domhookT = s"$apiPackage.runtime.DomHook"
+
   private def posToApi(position: Position, offset: Int) = {
     def tuple2(v1: Int, v2: Int) = Seq(Lit(v1), Lit(v2))
 
@@ -30,7 +40,7 @@ object Instrument {
           tuple2(start.offset - offset, end.offset - offset)
       }
 
-    Term.Apply(Term.Name("_root_.com.olegych.scastie.api.Position"), lits)
+    Term.Apply(Term.Name(positionT), lits)
   }
 
   def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int): Patch = {
@@ -41,11 +51,15 @@ object Instrument {
         case Some(tpe) => s"val t: $tpe = $term"
       }
 
+    val renderCall =
+      if (!isScalaJs) s"$runtimeT.render(t);"
+      else s"$runtimeT.render(t, attach _);"
+
     val replacement =
       Seq(
         "locally {",
         treeQuote + "; ",
-        s"$instrumentationMap(${posToApi(term.pos, offset)}) = _root_.com.olegych.scastie.api.runtime.Runtime.render(t);",
+        s"$instrumentationMap(${posToApi(term.pos, offset)}) = ",
         "t}"
       ).mkString("")
 
@@ -61,9 +75,10 @@ object Instrument {
 
           val openCurlyBrace = c.templ.tokens.head
 
+
           val instrumentationMapCode = Seq(
-            s"{ private val $instrumentationMap = _root_.scala.collection.mutable.Map.empty[_root_.com.olegych.scastie.api.Position, _root_.com.olegych.scastie.api.Render]",
-            s"def $instrumentationMethod = ${instrumentationMap}.toList.map{ case (pos, r) => _root_.com.olegych.scastie.api.Instrumentation(pos, r) }"
+            s"{ private val $instrumentationMap = $emptyMapT[$positionT, $renderT]",
+            s"def $instrumentationMethod = ${instrumentationMap}.toList.map{ case (pos, r) => $instrumentationT(pos, r) }"
           ).mkString("", ";", ";")
 
           val instrumentationMapPatch =
@@ -79,7 +94,7 @@ object Instrument {
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
 
     val writeInstrumentation = 
-      s"_root_.com.olegych.scastie.api.runtime.Runtime.write(playground.${instrumentationMethod})"
+      s"$runtimeT.write(playground.${instrumentationMethod})"
 
     val entryPoint = 
       if(!isScalaJs) {
@@ -91,9 +106,9 @@ object Instrument {
             |}
             |""".stripMargin
       } else {
-        s"""|@_root_.scala.scalajs.js.annotation.JSExport object Main {
+        s"""|@$jsExportT object Main with $domhookT {
             |  val playground = new $instrumnedClass
-            |  @_root_.scala.scalajs.js.annotation.JSExport def result() = $writeInstrumentation
+            |  @$jsExportT def result() = $writeInstrumentation
             |}""".stripMargin
       }
 

@@ -272,7 +272,7 @@ def api(scalaV: String) = {
   val projectId = s"$projectName-${dash(scalaV)}"
   CrossProject(id = projectId,
                base = crossDir(projectId),
-               crossType = CrossType.Full)
+               crossType = CrossType.Pure)
     .settings(baseSettings)
     .settings(
       buildInfoKeys := Seq[BuildInfoKey](
@@ -317,18 +317,24 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
   val projectId = s"$projectName-${dash(scalaV)}"
   CrossProject(id = projectId,
                base = crossDir(projectId),
-               crossType = CrossType.Pure)
+               crossType = CrossType.Full)
     .settings(baseSettings)
     .settings(
       scalaVersion := scalaV,
       moduleName := projectName,
-      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "src" / "main" / "scala",
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "upickle" % upickleVersion,
         "com.lihaoyi" %%% "pprint" % upickleVersion
-      )
+      ),
+      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "shared" / "src" / "main" / "scala"
     )
-    .jsSettings(test := {})
+    .jsSettings(
+      test := {},
+      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "js" / "src" / "main" / "scala"
+    )
+    .jvmSettings(
+      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "jvm" / "src" / "main" / "scala"
+    )
     .dependsOn(apiProject)
 }
 

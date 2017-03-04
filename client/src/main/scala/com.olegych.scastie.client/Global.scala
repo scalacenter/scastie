@@ -3,6 +3,8 @@ package client
 
 import scala.scalajs.js
 
+import org.scalajs.dom.raw.HTMLDivElement 
+
 import api._
 import japgolly.scalajs.react._
 
@@ -13,9 +15,14 @@ object Global {
   type Scope = BackendScope[App.Props, App.State]
 
   private var scope0: Option[Scope] = _
+  private var scalajsPlayground: Option[HTMLDivElement] = _
 
   def subsribe(scope: Scope): Unit = {
     scope0 = Some(scope)
+  }
+
+  def setScalaJsPlayground(element: HTMLDivElement): Unit = {
+    scalajsPlayground = Some(element)    
   }
 
   def signal(instrumentationsF: js.Function0[String]): Unit = {

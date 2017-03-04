@@ -318,7 +318,9 @@ object App {
       progress.scalaJsContent.foreach{c =>
         scala.scalajs.js.eval(
           c + "\n" +
-          "com.olegych.scastie.client.ClientMain().signal(function(){ return Main().result()})"
+          """|com.olegych.scastie.client.ClientMain().signal(function(){
+             |  return Main().result()
+             |}, Main.attachedElement)""".stripMargin
         )
       }
     }
