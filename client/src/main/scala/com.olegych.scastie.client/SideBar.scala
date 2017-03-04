@@ -87,28 +87,27 @@ object SideBar {
           p("Console")
         )
 
-        val buttonsRibbon: Map[View, Seq[TagMod]] = Map(
-          View.Editor -> Seq(
+        def buttonsRibbon: View => Seq[TagMod] = {
+          case View.Editor => Seq(
             LibraryButton(state, backend),
             RunButton(state, backend),
             ClearButton(state, backend),
             formatCodeButton,
             console,
             sharing
-          ),
-          View.Libraries -> Seq(
+          )
+          case View.Libraries => Seq(
             LibraryButton(state, backend),
             RunButton(state, backend)
-          ),
-          View.UserProfile -> Seq(
+          )
+          case View.UserProfile => Seq(
             LibraryButton(state, backend),
             RunButton(state, backend),
             li("User Profile (NY)")
           )
+        }
 
-        )
-
-        val currentButtonsForSelectedView = buttonsRibbon.get(currentView)
+        val currentButtonsForSelectedView = buttonsRibbon(currentView)
 
         nav(`class` := s"sidebar $theme")(
           ul(
