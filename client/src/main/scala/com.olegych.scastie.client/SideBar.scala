@@ -103,7 +103,7 @@ object SideBar {
           case View.UserProfile => Seq(
             LibraryButton(state, backend),
             RunButton(state, backend),
-            li("User Profile (NY)")
+            li("User Profile (NYI)")
           )
         }
 
