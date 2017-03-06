@@ -2,6 +2,9 @@ import ScalaJSHelper._
 
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
+import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
+import sbt.Keys._
+import sbt.Project.projectToRef
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.4.16"
 
@@ -229,11 +232,31 @@ lazy val codemirror = project
   .enablePlugins(ScalaJSPlugin)
 
 /* frontend code */
-def react(artifact: String, name: String): JSModuleID =
-  "org.webjars.bower" % "react" % "15.3.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+def react(artifact: String, name: String, configuration: String = "compile"): JSModuleID =
+  "org.webjars.bower" % "react" % "15.4.2" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
-def react(artifact: String, name: String, depends: String): JSModuleID =
-  react(artifact, name).dependsOn(s"$depends.js")
+def reactWithDepends(artifact: String, name: String, depends: String, configuration: String = "compile"): JSModuleID =
+  react(artifact, name, configuration).dependsOn(s"$depends.js")
+
+
+//"org.webjars.bower" % "react" % "15.4.2" % "test"
+///        "react-with-addons.js"
+//minified "react-with-addons.min.js"
+//commonJSName "React",
+
+//"org.webjars.bower" % "react" % "15.4.2" % "test"
+///         "react-dom.js"
+//minified  "react-dom.min.js"
+//dependsOn "react-with-addons.js"
+//commonJSName "ReactDOM",
+//
+//"org.webjars.bower" % "react" % "15.4.2" % "test"
+///         "react-dom-server.js"
+//minified  "react-dom-server.min.js"
+//dependsOn "react-dom.js"
+//commonJSName "ReactDOMServer"),
+
+
 
 lazy val client = project
   .settings(baseSettings)
@@ -242,16 +265,28 @@ lazy val client = project
     skip in packageJSDependencies := false,
     test := {},
     jsDependencies ++= Seq(
+      "org.webjars" % "jquery" % "2.1.3" / "2.1.3/jquery.js",
       react("react-with-addons", "React"),
-      react("react-dom", "ReactDOM", "react-with-addons"),
-      react("react-dom-server", "ReactDOMServer", "react-dom")
-    ),
+      reactWithDepends("react-dom", "ReactDOM", "react-with-addons"),
+      reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom"),
+      react("react-with-addons", "React", "test"),
+      reactWithDepends("react-dom", "ReactDOM", "react-with-addons", "test"),
+      reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom", "test")
+),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.2",
       "org.webjars.bower" % "open-iconic" % "1.1.1",
       "org.webjars" % "font-awesome" % "4.7.0",
-      "org.webjars.npm" % "firacode" % "1.205.0"
-    )
+      "org.webjars.npm" % "firacode" % "1.205.0",
+      "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
+      "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
+      "com.github.japgolly.scalajs-react" %%% "test" % "0.11.3" % "test"
+    ),
+    requiresDOM := true,
+
+    // Compile tests to JS using fast-optimisation
+    scalaJSStage in Test := FastOptStage,
+    jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror, api211JS)
