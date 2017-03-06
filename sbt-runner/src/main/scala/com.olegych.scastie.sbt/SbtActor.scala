@@ -221,7 +221,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           else None
 
         val scalaJsContent =
-          if(done && isScalaJs) {
+          if(done && isScalaJs && problems.isEmpty) {
             sbt.scalaJsContent()
           }
           else None

@@ -290,15 +290,11 @@ object Editor {
 
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)
- 
-            console.log(uuid)
-            console.log(next.attachedDoms.toString)
 
-            val dom = next.attachedDoms.link.get(uuid)
-            console.log(dom.toString)
+            val dom = next.attachedDoms(uuid)
 
             val process: (HTMLElement => Unit) = element => {
-              element.appendChild(dom.get)
+              element.appendChild(dom)
               ()
             }
 

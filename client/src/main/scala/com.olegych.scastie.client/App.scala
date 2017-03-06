@@ -19,12 +19,9 @@ import scala.util.{Success, Failure}
 
 import upickle.default.{read => uread, ReadWriter, macroRW => upickleMacroRW}
 
-case class AttachedDoms(link: Map[String, HTMLElement])
-object AttachedDoms {
-  def default = AttachedDoms(Map())
-}
-
 object App {
+  type AttachedDoms = Map[String, HTMLElement]
+
   case class Props(
       router: Option[RouterCtl[Page]],
       snippetId: Option[SnippetId],
@@ -48,12 +45,12 @@ object App {
       loadSnippet = true,
       isStartup = true,
       user = None,
-      attachedDoms = AttachedDoms.default,
+      attachedDoms = Map(),
       inputs = Inputs.default,
       outputs = Outputs.default
     )
 
-    implicit val dontSerializeAttachedDoms: ReadWriter[Map[String, HTMLElement]] = dontSerializeMap[String, HTMLElement]
+    implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] = dontSerializeMap[String, HTMLElement]
     implicit val dontSerializeWebSocket: ReadWriter[Option[WebSocket]] = dontSerializeOption[WebSocket]
     implicit val dontSerializeEventSource: ReadWriter[Option[EventSource]] = dontSerializeOption[EventSource]
     implicit val pkl: ReadWriter[State] = upickleMacroRW[State]
@@ -227,7 +224,8 @@ object App {
     def resetOutputs =
       copyAndSave(outputs = Outputs.default,
                   consoleIsOpen = false,
-                  consoleHasUserOutput = false)
+                  consoleHasUserOutput = false,
+                  attachedDoms = Map())
 
     def setRuntimeError(runtimeError: Option[RuntimeError]) =
       if (runtimeError.isEmpty) this
@@ -456,9 +454,6 @@ object App {
                 )
               }
               case Failure(errorEventSource) =>
-                console.log(
-                  "Failed to connect to event source: " + errorEventSource.toString)
-
                 connectWebSocket(snippetId).attemptTry.flatMap {
                   case Success(websocket) => {
                     scope.modState(

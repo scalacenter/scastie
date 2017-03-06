@@ -23,20 +23,12 @@ object Global {
     scope0.foreach{ scope =>
       val direct = scope.accessDirect
       try {
-        val out = instrumentationsF()
-        println(out)
-        val instrumentations = uread[List[Instrumentation]](out)
-        println(instrumentations)
-
+        val instrumentations = uread[List[Instrumentation]](instrumentationsF())
         val attachedDoms = attachedF()
 
         direct.modState(state =>
           state.copyAndSave(
-            attachedDoms = AttachedDoms(attachedDoms.map{dom =>
-              console.log("from getAttribute: " + dom.getAttribute("uuid"))
-
-              (dom.getAttribute("uuid"), dom)
-            }.toMap),
+            attachedDoms = attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap,
             outputs = state.outputs.copy(
               instrumentations = state.outputs.instrumentations ++ instrumentations.toSet
             )

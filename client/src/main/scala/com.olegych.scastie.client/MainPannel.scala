@@ -82,9 +82,8 @@ object MainPannel {
         )
     }.componentDidUpdate(scope =>
       Callback {
-        // val consoleDom = consoleElement(scope.$).get
-        // consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
-        ()
+        val consoleDom = consoleElement(scope.$).get
+        consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
       }
     )
     .build

@@ -10,7 +10,6 @@ object Runtime extends SharedRuntime {
     a match {
       case element: HTMLElement => {
         val uuid = attach(element)
-        println(println("render uuid: " + uuid.toString))
         AttachedDom(uuid.toString)
       }
       case _ => super.render(a) 

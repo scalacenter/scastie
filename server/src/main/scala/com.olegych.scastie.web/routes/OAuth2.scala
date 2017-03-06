@@ -32,9 +32,6 @@ class OAuth2(github: Github, session: GithubUserSession) {
                     "client_id" -> github.clientId,
                     "state" -> {
                       val homeUri = "/"
-
-                      println(home)
-
                       if (home.isDefined) homeUri
                       else referer.map(_.value).getOrElse(homeUri)
                     }
