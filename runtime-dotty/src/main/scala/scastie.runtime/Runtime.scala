@@ -31,6 +31,13 @@ object Runtime {
             "a" -> Str(a),
             "folded" -> write2(folded)
           )
+
+        case AttachedDom(uuid, folded) =>
+          Obj(
+            "$type" -> Str(s"$runtimePackage.AttachedDom"),
+            "uuid" -> Str(uuid),
+            "folded" -> write2(folded)
+          )
       }
     }
 

@@ -22,7 +22,7 @@ object Instrument {
 
   private val emptyMapT = "_root_.scala.collection.mutable.Map.empty"
   private val jsExportT = "_root_.scala.scalajs.js.annotation.JSExport"
-
+  
   private val apiPackage = "_root_.com.olegych.scastie.api"
   private val positionT = s"$apiPackage.Position"
   private val renderT = s"$apiPackage.Render"
@@ -43,7 +43,7 @@ object Instrument {
     Term.Apply(Term.Name(positionT), lits)
   }
 
-  def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int): Patch = {
+  def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int, isScalaJs: Boolean): Patch = {
 
     val treeQuote =
       tpeTree match {
@@ -59,7 +59,7 @@ object Instrument {
       Seq(
         "locally {",
         treeQuote + "; ",
-        s"$instrumentationMap(${posToApi(term.pos, offset)}) = ",
+        s"$instrumentationMap(${posToApi(term.pos, offset)}) = $renderCall",
         "t}"
       ).mkString("")
 
@@ -73,8 +73,9 @@ object Instrument {
             if c.name.value == instrumnedClass &&
               c.templ.stats.nonEmpty => {
 
-          val openCurlyBrace = c.templ.tokens.head
-
+          val openCurlyBrace = 
+            if (!isScalaJs) c.templ.tokens.head
+            else c.templ.tokens.find(_.toString == "{").get
 
           val instrumentationMapCode = Seq(
             s"{ private val $instrumentationMap = $emptyMapT[$positionT, $renderT]",
@@ -86,7 +87,7 @@ object Instrument {
 
           instrumentationMapPatch +:
             c.templ.stats.get.collect {
-              case term: Term => instrumentOne(term, None, offset)
+              case term: Term => instrumentOne(term, None, offset, isScalaJs)
             }
         }
       }.flatten
@@ -106,9 +107,10 @@ object Instrument {
             |}
             |""".stripMargin
       } else {
-        s"""|@$jsExportT object Main with $domhookT {
+        s"""|@$jsExportT object Main {
             |  val playground = new $instrumnedClass
-            |  @$jsExportT def result() = $writeInstrumentation
+            |  @$jsExportT def result = $writeInstrumentation
+            |  @$jsExportT def attachedElements = playground.attachedElements
             |}""".stripMargin
       }
 
@@ -149,13 +151,21 @@ object Instrument {
   }
 
   def apply(code: String, target: ScalaTarget = Jvm.default): Either[InstrumentationFailure, String] = {
+    val runtimeImport = "import _root_.com.olegych.scastie.api.runtime._"
+    
+    val isScalaJs = target.targetType == ScalaTargetType.JS
+    
+    val classBegin =
+      if (!isScalaJs) s"class $instrumnedClass {"
+      else s"class $instrumnedClass extends $domhookT {"
+
     val prelude =
-      s"""|import _root_.com.olegych.scastie.api.runtime._
-          |class $instrumnedClass {""".stripMargin
+      s"""|$runtimeImport
+          |$classBegin""".stripMargin
 
     val code0 =
       s"""|$prelude
-          |$code
+          |$code 
           |}""".stripMargin
 
     // TODO:
@@ -193,14 +203,7 @@ object Instrument {
 
         code0.parse[Source] match {
           case Parsed.Success(souce) =>
-            if (!hasMainMethod(souce))
-              Right(
-                instrument(
-                  souce,
-                  offset = prelude.length + 1,
-                  isScalaJs = target.targetType == ScalaTargetType.JS
-                )
-              )
+            if (!hasMainMethod(souce)) Right(instrument(souce,  prelude.length + 1, isScalaJs))
             else Left(HasMainMethod)
           case e: Parsed.Error => Left(ParsingError(e))
         }

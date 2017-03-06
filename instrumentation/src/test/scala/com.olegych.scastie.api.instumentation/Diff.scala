@@ -11,12 +11,19 @@ case class DiffFailure(title: String,
 object Diff {
   def error2message(obtained: String, expected: String): String = {
     val sb = new StringBuilder
-    if (obtained.length < 1000) {
-      sb.append(s"""
-         ## Obtained
-         #${trailingSpace(obtained)}
-         """.stripMargin('#'))
-    }
+
+    sb.append(nl)
+
+    sb.append(s"""
+       ## Obtained
+       #${trailingSpace(obtained)}
+       """.stripMargin('#'))
+
+    sb.append(s"""
+       ## Expected
+       #${trailingSpace(expected)}
+       """.stripMargin('#'))
+
     sb.append(s"""
        ## Diff
        #${trailingSpace(compareContents(obtained, expected))}

@@ -1,4 +1,5 @@
 package com.olegych.scastie
+
 package sbt
 
 import api._
@@ -122,7 +123,7 @@ class SbtActorTest()
     TestKit.shutdownActorSystem(system)
   }
 
-  private val timeout = 3.seconds
+  private val timeout = 60.seconds
   private val sbtActor = TestActorRef(
     new SbtActor(timeout, production = false))
   private var currentId = 0

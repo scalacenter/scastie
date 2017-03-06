@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package client
 
-import api.{Instrumentation, Value, Html}
+import api.{Instrumentation, Value, Html, AttachedDom}
 
 import japgolly.scalajs.react._, vdom.all._
 
@@ -284,6 +284,26 @@ object Editor {
             val process: (HTMLElement => Unit) = _.innerHTML = content
             if (!folded) nextline(endPos, content, process)
             else fold(startPos, endPos, content, process)
+          }
+          case instrumentation @ Instrumentation(api.Position(start, end),
+                                                 AttachedDom(uuid, folded)) => {
+
+            val startPos = doc.posFromIndex(start)
+            val endPos = doc.posFromIndex(end)
+ 
+            console.log(uuid)
+            console.log(next.attachedDoms.toString)
+
+            val dom = next.attachedDoms.link.get(uuid)
+            console.log(dom.toString)
+
+            val process: (HTMLElement => Unit) = element => {
+              element.appendChild(dom.get)
+              ()
+            }
+
+            if (!folded) nextline(endPos, "", process)
+            else fold(startPos, endPos, "", process)
           }
         },
         _.renderAnnotations,

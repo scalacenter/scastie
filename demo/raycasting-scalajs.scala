@@ -1,88 +1,27 @@
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
+demo
+
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import math._
 import scala.scalajs.js
 import org.scalajs.dom.html.{Canvas => JsCanvas}
 import org.scalajs.dom
 import scala.language.{postfixOps, implicitConversions}
 
-/**
- * A simple ray tracer, taken from the PyPy benchmarks
- *
- * https://bitbucket.org/pypy/benchmarks/src/846fa56a282b/own/raytrace-simple.py?at=default
- *
- * Half the lines of code
- *
- * Author: https://github.com/lihaoyi
- */
-
-val Epsilon = 0.00001
-
-type Color = Vec
-val Color = Vec
-
-val canvas = dom.document.createElement("canvas").asInstanceOf[JsCanvas]
-val renderer = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-
-val r = new util.Random(16314302)
-val spiral = for (i <- 0 until 11) yield {
-  val theta = i * (i + 5) * Pi / 100 + 0.3
-  val center = (0 - 4 * sin(theta), 1.5 - i / 2.0, 0 - 4 * cos(theta))
-  val form = Sphere(center, 0.3 + i * 0.1)
-  val surface = Flat((i / 6.0, 1 - i / 6.0, 0.5))
-  (form, surface)
-}
-
-def rand(d: Double) = (r.nextDouble() - 0.5) * d * 2
-
-val drops = Array(
-  Sphere((2.5, 2.5, -8), 0.3),
-  Sphere((1.5, 2.2, -7), 0.25),
-  Sphere((-1.3, 0.8, -8.5), 0.15),
-  Sphere((0.5, -2.5, -7.5), 0.2),
-  Sphere((-1.8, 2.3, -7.5), 0.3),
-  Sphere((-1.8, -2.3, -7.5), 0.3),
-  Sphere((1.3, 0.0, -8), 0.25)
-).map(_ -> Refractor())
-
-val s = new Scene(
-  objects = Array(
-    Sphere((0, 0, 0), 2) -> Flat((1, 1, 1), specularC = 0.6, lambertC = 0.4),
-    Plane((0, 4, 0), (0, 1, 0)) -> Checked(),
-    Plane((0, -4, 0), (0, 1, 0)) -> Flat((0.9, 1, 1)),
-    Plane((6, 0, 0), (1, 0, 0)) -> Flat((1, 0.9, 1)),
-    Plane((-6, 0, 0), (1, 0, 0)) -> Flat((1, 1, 0.9)),
-    Plane((0, 0, 6), (0, 0, 1)) -> Flat((0.9, 0.9, 1))
-  ) ++ spiral ++ drops,
-  lightPoints = Array(
-    Light((0, -3, 0), (3, 3, 0)),
-    Light((3, 3, 0), (0, 3, 3)),
-    Light((-3, 3, 0), (3, 0, 3))
-  ),
-  position = (0, 0, -15),
-  lookingAt = (0, 0, 0),
-  fieldOfView = 45.0
-)
-
-
-val c = new Canvas{
-  val width = math.min(canvas.width.toInt, canvas.height.toInt)
-  val height = math.min(canvas.width.toInt, canvas.height.toInt)
-  val data = renderer.getImageData(0, 0, canvas.width, canvas.height)
-  def save(y: Int): Unit = {
-    renderer.putImageData(data, 0, 0, 0, y-1, width, 1)
+object Vec{
+  case class Unit(x: Double, y: Double, z: Double)
+  implicit def normalizer(v: Vec) = {
+    val l = v.magnitude
+    new Unit(v.x / l, v.y / l, v.z / l)
   }
-
-  def plot(x: Int, y: Int, rgb: Color): Unit = {
-    val index = (y * data.width + x) * 4
-    data.data(index+0) = (rgb.x * 255).toInt
-    data.data(index+1) = (rgb.y * 255).toInt
-    data.data(index+2) = (rgb.z * 255).toInt
-    data.data(index+3) = 255
-  }
+  implicit def denormalizer(v: Vec.Unit) = new Vec(v.x, v.y, v.z)
+  implicit def pointify[X: Numeric, Y: Numeric, Z: Numeric](x: (X, Y, Z)): Vec = Vec(
+    implicitly[Numeric[X]].toDouble(x._1),
+    implicitly[Numeric[Y]].toDouble(x._2),
+    implicitly[Numeric[Z]].toDouble(x._3)
+  )
+  implicit def pointify2[X: Numeric, Y: Numeric, Z: Numeric](x: (X, Y, Z)): Vec.Unit = Vec.normalizer(x)
 }
-
-s.render(c)
 
 case class Vec(x: Double, y: Double, z: Double){
   def magnitude = sqrt(this dot this)
@@ -102,19 +41,87 @@ case class Vec(x: Double, y: Double, z: Double){
   def reflectThrough(normal: Vec) = this - normal * (this dot normal) * 2
 }
 
-object Vec{
-  case class Unit(x: Double, y: Double, z: Double)
-  implicit def normalizer(v: Vec) = {
-    val l = v.magnitude
-    new Unit(v.x / l, v.y / l, v.z / l)
+val Epsilon = 0.00001
+type Color = Vec
+val Color = Vec
+
+def demo = {
+  /**
+   * A simple ray tracer, taken from the PyPy benchmarks
+   *
+   * https://bitbucket.org/pypy/benchmarks/src/846fa56a282b/own/raytrace-simple.py?at=default
+   *
+   * Half the lines of code
+   *
+   * Author: https://github.com/lihaoyi
+   */
+  val canvas = dom.document.createElement("canvas").asInstanceOf[JsCanvas]
+
+  canvas.width = dom.document.body.clientWidth * 80
+  canvas.height = dom.document.body.clientHeight * 80
+
+  val renderer = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+
+  val r = new util.Random(16314302)
+  val spiral = for (i <- 0 until 11) yield {
+    val theta = i * (i + 5) * Pi / 100 + 0.3
+    val center = (0 - 4 * sin(theta), 1.5 - i / 2.0, 0 - 4 * cos(theta))
+    val form = Sphere(center, 0.3 + i * 0.1)
+    val surface = Flat((i / 6.0, 1 - i / 6.0, 0.5))
+    (form, surface)
   }
-  implicit def denormalizer(v: Vec.Unit) = new Vec(v.x, v.y, v.z)
-  implicit def pointify[X: Numeric, Y: Numeric, Z: Numeric](x: (X, Y, Z)): Vec = Vec(
-    implicitly[Numeric[X]].toDouble(x._1),
-    implicitly[Numeric[Y]].toDouble(x._2),
-    implicitly[Numeric[Z]].toDouble(x._3)
+
+  def rand(d: Double) = (r.nextDouble() - 0.5) * d * 2
+
+  val drops = Array(
+    Sphere((2.5, 2.5, -8), 0.3),
+    Sphere((1.5, 2.2, -7), 0.25),
+    Sphere((-1.3, 0.8, -8.5), 0.15),
+    Sphere((0.5, -2.5, -7.5), 0.2),
+    Sphere((-1.8, 2.3, -7.5), 0.3),
+    Sphere((-1.8, -2.3, -7.5), 0.3),
+    Sphere((1.3, 0.0, -8), 0.25)
+  ).map(_ -> Refractor())
+
+  val s = new Scene(
+    objects = Array(
+      Sphere((0, 0, 0), 2) -> Flat((1, 1, 1), specularC = 0.6, lambertC = 0.4),
+      Plane((0, 4, 0), (0, 1, 0)) -> Checked(),
+      Plane((0, -4, 0), (0, 1, 0)) -> Flat((0.9, 1, 1)),
+      Plane((6, 0, 0), (1, 0, 0)) -> Flat((1, 0.9, 1)),
+      Plane((-6, 0, 0), (1, 0, 0)) -> Flat((1, 1, 0.9)),
+      Plane((0, 0, 6), (0, 0, 1)) -> Flat((0.9, 0.9, 1))
+    ) ++ spiral ++ drops,
+    lightPoints = Array(
+      Light((0, -3, 0), (3, 3, 0)),
+      Light((3, 3, 0), (0, 3, 3)),
+      Light((-3, 3, 0), (3, 0, 3))
+    ),
+    position = (0, 0, -15),
+    lookingAt = (0, 0, 0),
+    fieldOfView = 45.0
   )
-  implicit def pointify2[X: Numeric, Y: Numeric, Z: Numeric](x: (X, Y, Z)): Vec.Unit = Vec.normalizer(x)
+
+  val c = new Canvas{
+    val width = math.min(canvas.width.toInt, canvas.height.toInt)
+    val height = math.min(canvas.width.toInt, canvas.height.toInt)
+    val data = renderer.getImageData(0, 0, canvas.width, canvas.height)
+    def save(y: Int): Unit = {
+      renderer.putImageData(data, 0, 0, 0, y-1, width, 1)
+    }
+
+    def plot(x: Int, y: Int, rgb: Color): Unit = {
+      val index = (y * data.width + x) * 4
+      data.data(index+0) = (rgb.x * 255).toInt
+      data.data(index+1) = (rgb.y * 255).toInt
+      data.data(index+2) = (rgb.z * 255).toInt
+      data.data(index+3) = 255
+    }
+  }
+
+  s.render(c)
+
+  canvas
 }
 
 abstract class Form{

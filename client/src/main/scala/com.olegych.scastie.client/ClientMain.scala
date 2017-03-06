@@ -4,7 +4,7 @@ package client
 import api._
 
 import org.scalajs.dom
-import org.scalajs.dom.raw.Node
+import org.scalajs.dom.raw.{HTMLElement, Node}
 import org.scalajs.dom.ext._
 
 import scala.scalajs.js
@@ -126,8 +126,8 @@ object ClientMain extends JSApp {
   }
 
   @JSExport
-  def signal(instrumentationsF: js.Function0[String]): Unit = {
-    Global.signal(instrumentationsF)
+  def signal(instrumentationsF: js.Function0[String], attachedF: js.Function0[js.Array[HTMLElement]]): Unit = {
+    Global.signal(instrumentationsF, attachedF)
   }
 
   @JSExport

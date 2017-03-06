@@ -3,18 +3,20 @@ package runtime
 
 import org.scalajs.dom.raw.HTMLElement
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSExport
 
 import scala.collection.mutable.Buffer
+
+import java.util.UUID
 
 trait DomHook {
   private val elements = Buffer.empty[HTMLElement]
   
-  def attach(element: HTMLElement): Unit = {
+  def attach(element: HTMLElement): UUID = {
+    val uuid = UUID.randomUUID()
+    element.setAttribute("uuid", uuid.toString)
     elements += element
-    ()
+    uuid
   }
 
-  @JSExport
-  def attachedElements: js.Array[HTMLElement] = elements.to[js.Array] 
+  def attachedElements(): js.Array[HTMLElement] = elements.to[js.Array]
 }

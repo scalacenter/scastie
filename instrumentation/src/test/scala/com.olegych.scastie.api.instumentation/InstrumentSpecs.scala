@@ -20,11 +20,18 @@ class InstrumentSpecs extends FunSuite {
   }
 
   testFiles.foreach { path =>
-    test(path.toString) {
+
+    val dirName = path.getFileName.toString
+
+    test(dirName) {
       val original = slurp(path.resolve("original.scala")).get
       val expected = slurp(path.resolve("instrumented.scala")).get
 
-      val Right(obtained) = Instrument(original)
+      val target =
+        if (dirName == "scalajs") ScalaTarget.Js.default
+        else ScalaTarget.Jvm.default
+
+      val Right(obtained) = Instrument(original, target)
 
       Diff.assertNoDiff(obtained, expected)
     }

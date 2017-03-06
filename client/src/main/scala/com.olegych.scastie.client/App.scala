@@ -13,13 +13,18 @@ import org.scalajs.dom.{
   Event, MessageEvent, ErrorEvent, CloseEvent,
   window
 }
+import org.scalajs.dom.raw.HTMLElement
 
 import scala.util.{Success, Failure}
 
 import upickle.default.{read => uread, ReadWriter, macroRW => upickleMacroRW}
 
-object App {
+case class AttachedDoms(link: Map[String, HTMLElement])
+object AttachedDoms {
+  def default = AttachedDoms(Map())
+}
 
+object App {
   case class Props(
       router: Option[RouterCtl[Page]],
       snippetId: Option[SnippetId],
@@ -43,17 +48,14 @@ object App {
       loadSnippet = true,
       isStartup = true,
       user = None,
+      attachedDoms = AttachedDoms.default,
       inputs = Inputs.default,
       outputs = Outputs.default
     )
 
-    def dontSerialize[T]: ReadWriter[Option[T]] = {
-      import upickle.Js
-      ReadWriter[Option[T]](_ => Js.Null, { case _ => None })
-    }
-
-    implicit val dontSerializeWebSocket = dontSerialize[WebSocket]
-    implicit val dontSerializeEventSource = dontSerialize[EventSource]
+    implicit val dontSerializeAttachedDoms: ReadWriter[Map[String, HTMLElement]] = dontSerializeMap[String, HTMLElement]
+    implicit val dontSerializeWebSocket: ReadWriter[Option[WebSocket]] = dontSerializeOption[WebSocket]
+    implicit val dontSerializeEventSource: ReadWriter[Option[EventSource]] = dontSerializeOption[EventSource]
     implicit val pkl: ReadWriter[State] = upickleMacroRW[State]
   }
 
@@ -71,6 +73,7 @@ object App {
       loadSnippet: Boolean,
       isStartup: Boolean,
       user: Option[User],
+      attachedDoms: AttachedDoms,
       inputs: Inputs,
       outputs: Outputs
   ) {
@@ -85,6 +88,7 @@ object App {
                     consoleHasUserOutput: Boolean = consoleHasUserOutput,
                     inputsHasChanged: Boolean = inputsHasChanged,
                     user: Option[User] = user,
+                    attachedDoms: AttachedDoms = attachedDoms,
                     inputs: Inputs = inputs,
                     outputs: Outputs = outputs): State = {
 
@@ -102,6 +106,7 @@ object App {
              loadSnippet,
              isStartup,
              user,
+             attachedDoms,
              inputs.copy(
                showInUserProfile = false,
                forked = None
@@ -318,9 +323,10 @@ object App {
       progress.scalaJsContent.foreach{c =>
         scala.scalajs.js.eval(
           c + "\n" +
-          """|com.olegych.scastie.client.ClientMain().signal(function(){
-             |  return Main().result()
-             |}, Main.attachedElement)""".stripMargin
+          """|com.olegych.scastie.client.ClientMain().signal(
+             |  function(){ return Main().result; },
+             |  function(){ return Main().attachedElements; }
+             |)""".stripMargin
         )
       }
     }
@@ -335,6 +341,7 @@ object App {
       }
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[SnippetProgress](e.data.toString)
+
         direct.modState(_.addProgress(progress))
         evalJavascript(progress)
 

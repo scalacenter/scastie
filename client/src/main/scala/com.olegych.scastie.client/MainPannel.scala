@@ -5,13 +5,11 @@ import App._
 
 import japgolly.scalajs.react._, vdom.all._
 
-import org.scalajs.dom.raw.{HTMLPreElement, HTMLDivElement}
+import org.scalajs.dom.raw.HTMLPreElement
 
 object MainPannel {
 
   private val consoleElement = Ref[HTMLPreElement]("console")
-  private val scalaJsPlayground = Ref[HTMLDivElement]("scalaJsPlayground")
-
   private val component =
     ReactComponentB[(State, Backend,Props)]("MainPannel").render_P {
       case (state, backend, props) =>
@@ -72,7 +70,6 @@ object MainPannel {
           div(`class` := s"pannel $theme $consoleCss", show(View.Editor))(
             helpClosePannel,
             Editor(helpState, backend),
-            div(ref := scalaJsPlayground, `class` := "scalajs-playground"),
             embeddedMenu,
             pre(`class` := "output-console", ref := consoleElement)(
               state.outputs.console.mkString("")
@@ -85,12 +82,10 @@ object MainPannel {
         )
     }.componentDidUpdate(scope =>
       Callback {
-        val consoleDom = consoleElement(scope.$).get
-        consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
+        // val consoleDom = consoleElement(scope.$).get
+        // consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
+        ()
       }
-    )
-    .componentDidMount(scope =>
-      Callback(Global.setScalaJsPlayground(scalaJsPlayground(scope).get))
     )
     .build
 
