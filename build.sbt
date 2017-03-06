@@ -274,7 +274,7 @@ lazy val client = project
       reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom", "test")
 ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.2",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.3",
       "org.webjars.bower" % "open-iconic" % "1.1.1",
       "org.webjars" % "font-awesome" % "4.7.0",
       "org.webjars.npm" % "firacode" % "1.205.0",

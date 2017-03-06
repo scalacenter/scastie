@@ -7,18 +7,17 @@ import japgolly.scalajs.react.vdom.prefix_<^._
 import org.scalajs.jquery
 
 
-class TopBarSpec extends FunSpec {
+class HelloWorldSpec extends FunSpec {
 
-  describe("hello") {
-    it("should do it") {
-      val message = HelloMessage("Armin")
+  describe("world") {
+    it("should be greeted") {
+      val message = HelloMessage("World")
       val comp = ReactTestUtils.renderIntoDocument(message)
       val div = ReactTestUtils.findRenderedDOMComponentWithClass(comp, "abc")
 
       println(s"thing: $div ")
       val text = jquery.jQuery(div).text()
-      //      println(s"thing: ${DebugJs inspectObject text}")
-      assert(text == "Hello Armin")
+      assert(text == "Hello World")
     }
   }
 
