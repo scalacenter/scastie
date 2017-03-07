@@ -253,6 +253,18 @@ object Libraries {
                   _ => Callback(())
                 )
               )
+            ),
+            hr,
+            div("resulting plugins.sbt"),
+            div(`class` := "result-sbt")(
+              CodeMirrorEditor(
+                CodeMirrorEditor.Settings(value = state.inputs.sbtPluginsConfig,
+                                          theme = s"solarized $theme",
+                                          readOnly = true),
+                CodeMirrorEditor.Handler(
+                  _ => Callback(())
+                )
+              )
             )
           )
         )

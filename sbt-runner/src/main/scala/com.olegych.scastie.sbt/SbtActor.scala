@@ -24,7 +24,9 @@ import org.slf4j.LoggerFactory
 import java.io.{PrintWriter, StringWriter}
 
 class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
-  private var sbt = new Sbt()
+  private val defaultConfig = Inputs.default
+
+  private var sbt = new Sbt(defaultConfig)
   private val log = LoggerFactory.getLogger(getClass)
 
   private def format(code: String,
@@ -55,7 +57,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private def warmUp(): Unit = {
     if (production) {
       log.info("warming up sbt")
-      val Right(in) = instrument(Inputs.default)
+      val Right(in) = instrument(defaultConfig)
       sbt.eval("run", in, (line, _, _) => log.info(line), reload = false)
     }
   }
@@ -100,7 +102,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         )
 
       sbt.kill()
-      sbt = new Sbt()
+      sbt = new Sbt(defaultConfig)
       warmUp()
     }
 

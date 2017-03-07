@@ -54,20 +54,26 @@ case class Inputs(
   }
 
   def sbtPluginsConfig: String = {
-    target match {
-      case ScalaTarget.Js(_, scalaJsVersion) =>
-        s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
+    val targetConfig =
+      target match {
+        case ScalaTarget.Js(_, scalaJsVersion) =>
+          s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
 
-      case ScalaTarget.Native =>
-        """addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "0.1.0")"""
+        case ScalaTarget.Native =>
+          """addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "0.1.0")"""
 
-      case ScalaTarget.Dotty =>
-        """addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.9")"""
+        case ScalaTarget.Dotty =>
+          """addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.9")"""
 
-      case _: ScalaTarget.Jvm => ""
+        case _: ScalaTarget.Jvm => ""
 
-      case _: ScalaTarget.Typelevel => ""
-    }
+        case _: ScalaTarget.Typelevel => ""
+      }
+
+    s"""|$targetConfig
+        |addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
+        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")""".stripMargin
+
   }
 
   def sbtConfig: String = { 

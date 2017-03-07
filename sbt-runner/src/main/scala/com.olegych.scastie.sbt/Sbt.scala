@@ -1,8 +1,6 @@
 package com.olegych.scastie
 package sbt
 
-import buildinfo.BuildInfo.{version => buildVersion}
-
 import api._
 
 import com.typesafe.config.ConfigFactory
@@ -15,7 +13,7 @@ import java.nio.file._
 import java.io.{IOException, BufferedReader, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
-class Sbt() {
+class Sbt(defaultConfig: Inputs) {
   private val config =
     ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
   private val production = config.getBoolean("production")
@@ -29,9 +27,8 @@ class Sbt() {
   private var currentSbtConfig = ""
   private var currentSbtPluginConfig = ""
 
-  private val sbtConfigFile = sbtDir.resolve("config.sbt")
+  private val buildFile = sbtDir.resolve("build.sbt")
   private val prompt = s"""shellPrompt := (_ => "$uniqueId\\n")"""
-  write(sbtConfigFile, prompt)
 
   private val projectDir = sbtDir.resolve("project")
   Files.createDirectories(projectDir)
@@ -39,9 +36,9 @@ class Sbt() {
   write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.13")
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
-  write(pluginFile,
-        s"""|addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
-            |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")""".stripMargin)
+
+  setConfig(defaultConfig)
+  setPlugins(defaultConfig)
 
   private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
 
@@ -121,21 +118,40 @@ class Sbt() {
     process("exit", (_, _, _) => (), reload = false)
   }
 
+  private def writeFile(path: Path, content: String): Unit = {
+    if (Files.exists(path)) {
+      Files.delete(path)
+    }
+
+    Files.write(path, content.getBytes, StandardOpenOption.CREATE_NEW)
+
+    ()
+  }
+
+  private def setPlugins(inputs: Inputs): Unit = {
+    writeFile(pluginFile, inputs.sbtPluginsConfig)
+    currentSbtPluginConfig = inputs.sbtPluginsConfig
+  }
+
+  private def setConfig(inputs: Inputs): Unit = {
+    writeFile(buildFile, prompt + nl + inputs.sbtConfig)
+    currentSbtConfig = inputs.sbtConfig
+  }
+
   def eval(command: String,
            inputs: Inputs,
            lineCallback: (String, Boolean, Boolean) => Unit,
            reload: Boolean): Unit = {
 
     val configChange = needsReload(inputs)
-
+    println("configChange: " + configChange)
+    
     if (inputs.sbtConfig != currentSbtConfig) {
-      write(sbtConfigFile, prompt + nl + inputs.sbtConfig, truncate = true)
-      currentSbtConfig = inputs.sbtConfig
+      setConfig(inputs)
     }
 
     if (inputs.sbtPluginsConfig != currentSbtPluginConfig) {
-      write(pluginFile, inputs.sbtPluginsConfig, truncate = true)
-      currentSbtPluginConfig = inputs.sbtPluginsConfig
+      setPlugins(inputs)
     }
 
     if (configChange) {
