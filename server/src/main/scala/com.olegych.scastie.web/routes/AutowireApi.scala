@@ -18,6 +18,7 @@ import akka.http.scaladsl._
 import model._
 import ws.TextMessage._
 import server.Directives._
+import server.Route
 
 import akka.stream.scaladsl._
 
@@ -37,6 +38,17 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectiv
   import userDirectives.userLogin //optionnalLogin
 
   implicit val timeout = Timeout(1.seconds)
+
+  def snippetId(pathStart: String)(f: SnippetId => Route): Route = {
+    concat(
+      path(pathStart / Segment)(uuid ⇒
+        f(SnippetId(uuid, None))
+      ),
+      path(pathStart / Segment / Segment / IntNumber.?)((user, uuid, update) ⇒
+        f(SnippetId(uuid, Some(SnippetUserPart(user, update))))
+      )
+    )
+  }
 
   val routes =
     concat(
@@ -59,9 +71,7 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectiv
       get(
         concat(
           path("loadbalancer-debug")(
-            onSuccess((dispatchActor ? LoadBalancerStateRequest)
-              .mapTo[LoadBalancerStateResponse])(state =>
-
+            onSuccess((dispatchActor ? LoadBalancerStateRequest).mapTo[LoadBalancerStateResponse])(state =>
               complete(
                 serveStatic(getResource("/public/views/loadbalancer.html").map(_.replaceAllLiterally(
                   "==STATE==",
@@ -70,23 +80,13 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectiv
               )
             )
           ),
-          path("progress-sse" / Segment)(uuid ⇒
-            complete{
-              progressSource(SnippetId(uuid, None))
-                .map(progress => ServerSentEvent(uwrite(progress)))
-            }
+          snippetId("progress-sse")(sid ⇒
+            complete(
+              progressSource(sid).map(progress => ServerSentEvent(uwrite(progress)))
+            )
           ),
-          path("progress-sse" / Segment / Segment / IntNumber.?)((user, uuid, update) ⇒
-            complete{
-              progressSource(SnippetId(uuid, Some(SnippetUserPart(user, update))))
-                .map(progress => ServerSentEvent(uwrite(progress)))
-            }
-          ),
-          path("progress-websocket" / Segment )(uuid =>
-            handleWebSocketMessages(webSocketProgress(SnippetId(uuid, None)))
-          ),
-          path("progress-websocket" / Segment / Segment / IntNumber.?)((user, uuid, update) =>
-            handleWebSocketMessages(webSocketProgress(SnippetId(uuid, Some(SnippetUserPart(user, update)))))
+          snippetId("progress-websocket")(sid =>
+            handleWebSocketMessages(webSocketProgress(sid))
           )
         )
       )
