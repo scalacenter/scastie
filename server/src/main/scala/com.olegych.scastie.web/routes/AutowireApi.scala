@@ -18,7 +18,7 @@ import akka.http.scaladsl._
 import model._
 import ws.TextMessage._
 import server.Directives._
-import server.Route
+import server.{Route, PathMatcher}
 
 import akka.stream.scaladsl._
 
@@ -39,12 +39,20 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectiv
 
   implicit val timeout = Timeout(1.seconds)
 
-  def snippetId(pathStart: String)(f: SnippetId => Route): Route = {
+  private def snippetId(pathStart: String)(f: SnippetId => Route): Route =
+    snippetIdBase(pathStart, p => p, p => p)(f)
+
+  private def snippetIdEnd(pathStart: String, pathEnd: String)(f: SnippetId => Route): Route =
+    snippetIdBase(pathStart, _ / pathEnd, _ / pathEnd)(f)
+
+  private def snippetIdBase(pathStart: String, 
+      fp1: PathMatcher[Tuple1[String]] => PathMatcher[Tuple1[String]],
+      fp2: PathMatcher[(String, String, Option[Int])] => PathMatcher[(String, String, Option[Int])])(f: SnippetId => Route): Route = {
     concat(
-      path(pathStart / Segment)(uuid ⇒
+      path(fp1(pathStart / Segment))(uuid ⇒
         f(SnippetId(uuid, None))
       ),
-      path(pathStart / Segment / Segment / IntNumber.?)((user, uuid, update) ⇒
+      path(fp2(pathStart / Segment / Segment / IntNumber.?))((user, uuid, update) ⇒
         f(SnippetId(uuid, Some(SnippetUserPart(user, update))))
       )
     )
@@ -87,6 +95,20 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectiv
           ),
           snippetId("progress-websocket")(sid =>
             handleWebSocketMessages(webSocketProgress(sid))
+          ),
+          snippetIdEnd(Shared.scalaJsHttpPathPrefix, ScalaTarget.Js.targetFilename)(sid =>
+            complete(
+              (dispatchActor ? FetchScalaJs(sid))
+                .mapTo[Option[FetchResultScalaJs]]
+                .map(_.map(_.content))
+            )
+          ),
+          snippetIdEnd(Shared.scalaJsHttpPathPrefix, ScalaTarget.Js.targetFilename)(sid =>
+            complete(
+              (dispatchActor ? FetchScalaJsSourceMap(sid))
+                .mapTo[Option[FetchResultScalaJsSourceMap]]
+                .map(_.map(_.content))
+            )
           )
         )
       )

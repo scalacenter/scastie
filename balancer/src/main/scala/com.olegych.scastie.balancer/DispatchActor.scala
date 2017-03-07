@@ -148,6 +148,14 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
       sender ! container.listSnippets(UserLogin(user.login))
     }
 
+    case FetchScalaJs(snippetId) => {
+      sender ! container.readScalaJs(snippetId)
+    }
+
+    case FetchScalaJsSourceMap(snippetId) => {
+      sender ! container.readScalaJsSourceMap(snippetId)
+    }
+
     case progress: api.SnippetProgress => {
       if (progress.done) {
         loadBalancer = loadBalancer.done(progress.snippetId)

@@ -222,11 +222,11 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
             Some(line)
           else None
 
-        val scalaJsContent =
+        val (scalaJsContent, scalaJsSourceMapContent) =
           if(done && isScalaJs && problems.isEmpty) {
-            sbt.scalaJsContent()
+            (sbt.scalaJsContent(), sbt.scalaJsSourceMapContent()) 
           }
-          else None
+          else (None, None)
 
         val progress = SnippetProgress(
           snippetId = snippetId,
@@ -236,12 +236,13 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           instrumentations = instrumentations.getOrElse(Nil),
           runtimeError = runtimeError,
           scalaJsContent = scalaJsContent,
+          scalaJsSourceMapContent = scalaJsSourceMapContent,
           done = done && !reload,
           timeout = false,
           forcedProgramMode = forcedProgramMode
         )
 
-        progressActor ! progress
+        progressActor ! progress.copy(scalaJsContent = None, scalaJsSourceMapContent = None)
         snippetActor ! progress
       }
   }

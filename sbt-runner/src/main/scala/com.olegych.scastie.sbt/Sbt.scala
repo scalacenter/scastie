@@ -45,7 +45,11 @@ class Sbt(defaultConfig: Inputs) {
   Files.createDirectories(codeFile.getParent)
 
   def scalaJsContent(): Option[String] = {
-    slurp(sbtDir.resolve(ScalaTarget.Js.target))
+    slurp(sbtDir.resolve(ScalaTarget.Js.targetFilename))
+  }
+
+  def scalaJsSourceMapContent(): Option[String] = {
+    slurp(sbtDir.resolve(ScalaTarget.Js.sourceMapFilename))
   }
 
   private val (process, fin, fout) = {

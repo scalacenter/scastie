@@ -40,7 +40,9 @@ object ScalaTarget {
   }
 
   object Js {
-    val target = "fastopt.js"
+    val targetFilename = "fastopt.js"
+    val sourceMapFilename = targetFilename + ".map"
+     
     def default =
       ScalaTarget.Js(
         scalaVersion = ScalaTarget.defaultScalaVersion,

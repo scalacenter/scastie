@@ -25,7 +25,6 @@ object Global {
       try {
         val instrumentations = uread[List[Instrumentation]](instrumentationsF())
         val attachedDoms = attachedF()
-
         direct.modState(state =>
           state.copyAndSave(
             attachedDoms = attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap,
@@ -41,7 +40,7 @@ object Global {
           direct.modState(state =>
             state.copyAndSave(
               outputs = state.outputs.copy(
-                runtimeError = Some(RuntimeError(ex.toString, None, ""))
+                runtimeError = RuntimeError.fromTrowable(ex, fromScala = true)
               )
             )
           )

@@ -75,6 +75,14 @@ class SnippetsContainer(root: Path) {
   }
 
   def appendOutput(progress: SnippetProgress): Unit = {
+    (progress.scalaJsContent, progress.scalaJsSourceMapContent) match {
+      case (Some(scalaJsContent), Some(scalaJsSourceMapContent)) => {
+        write(scalaJsFile(progress.snippetId), scalaJsContent)
+        write(scalaJsSourceMapFile(progress.snippetId), scalaJsSourceMapContent)       
+      }
+      case _ => () 
+    }
+
     write(outputsFile(progress.snippetId), uwrite(progress) + nl, append = true)
   }
 
@@ -84,13 +92,19 @@ class SnippetsContainer(root: Path) {
     )
   }
 
+  def readScalaJs(snippetId: SnippetId): Option[FetchResultScalaJs] = {
+    slurp(scalaJsFile(snippetId)).map(content => FetchResultScalaJs(content))
+  }
+
+  def readScalaJsSourceMap(snippetId: SnippetId): Option[FetchResultScalaJsSourceMap] = {
+    slurp(scalaJsSourceMapFile(snippetId)).map(content => FetchResultScalaJsSourceMap(content))
+  }
+
   def listSnippets(user: UserLogin): List[SnippetSummary] = {
     import scala.collection.JavaConverters._
     val dir = root.resolve(user.login)
     if(Files.exists(dir)) {
-
       val ds = Files.newDirectoryStream(dir)
-
       val uuids =
         try {
           ds.asScala.map(_.getFileName.toString)
@@ -123,31 +137,36 @@ class SnippetsContainer(root: Path) {
   }
 
   private def readInputs(snippetId: SnippetId): Option[Inputs] = {
-    if (Files.exists(inputsFile(snippetId))) {
-      slurp(inputsFile(snippetId)).map(content => uread[Inputs](content))
-    } else None
+    slurp(inputsFile(snippetId)).map(content => uread[Inputs](content))
   }
 
   private def readOutputs(snippetId: SnippetId): Option[List[SnippetProgress]] = {
-    if (Files.exists(outputsFile(snippetId)))
-      slurp(outputsFile(snippetId)).map(
-        _.lines
-          .filter(_.nonEmpty)
-          .map(line => uread[SnippetProgress](line))
-          .toList)
-    else None
+    slurp(outputsFile(snippetId)).map(
+      _.lines
+        .filter(_.nonEmpty)
+        .map(line => uread[SnippetProgress](line))
+        .toList)
   }
 
-  private val json = ".json"
-  private val input = "input"
-  private val output = "output"
-
+  private val inputFileName = "input.json"
+  private val outputFileName = "output.json"
+  private val scalaJsFileName = ScalaTarget.Js.targetFilename
+  private val scalaJsSourceMapFileName = ScalaTarget.Js.targetFilename
+   
   private def inputsFile(snippetId: SnippetId): Path = {
-    snippetFile(snippetId, input)
+    snippetFile(snippetId, inputFileName)
   }
 
   private def outputsFile(snippetId: SnippetId): Path = {
-    snippetFile(snippetId, output)
+    snippetFile(snippetId, outputFileName)
+  }
+
+  private def scalaJsFile(snippetId: SnippetId): Path = {
+    snippetFile(snippetId, scalaJsFileName)
+  }
+
+  private def scalaJsSourceMapFile(snippetId: SnippetId): Path = {
+    snippetFile(snippetId, scalaJsSourceMapFileName)
   }
 
   private def lastUpdateId(login: String, base64UUID: String): Int = {
@@ -184,7 +203,7 @@ class SnippetsContainer(root: Path) {
     }
   }
 
-  private def snippetFile(snippetId: SnippetId, name: String): Path = {
+  private def snippetFile(snippetId: SnippetId, fileName: String): Path = {
     if(!Files.exists(root)) Files.createDirectory(root)
     
     val baseDirectory =
@@ -211,7 +230,7 @@ class SnippetsContainer(root: Path) {
         }
       }
 
-    baseDirectory.resolve(Paths.get(name + json))
+    baseDirectory.resolve(Paths.get(fileName))
   }
 
   // example output: GGdknrcEQVu3elXyboKcYQ

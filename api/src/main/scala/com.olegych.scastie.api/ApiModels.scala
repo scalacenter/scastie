@@ -13,6 +13,12 @@ case class FormatResponse(formattedCode: Either[String, String])
 
 case class FetchResult(inputs: Inputs, progresses: List[SnippetProgress])
 
+case class FetchScalaJs(snippetId: SnippetId)
+case class FetchResultScalaJs(content: String)
+
+case class FetchScalaJsSourceMap(snippetId: SnippetId)
+case class FetchResultScalaJsSourceMap(content: String)
+
 case class ScalaDependency(
   groupId: String,
   artifact: String,

@@ -108,8 +108,8 @@ case class Inputs(
           (
             s"""|scalaVersion := "$scalaVersion"
                 |enablePlugins(ScalaJSPlugin)
-                |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "${ScalaTarget.Js.target}"
-                |emitSourceMaps := false""".stripMargin,
+                |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "${ScalaTarget.Js.targetFilename}"
+                |""".stripMargin,
             ScalaDependency(
               "org.scastie",
               "runtime-scala",

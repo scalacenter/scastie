@@ -12,6 +12,7 @@ object SnippetProgress {
       instrumentations = Nil,
       runtimeError = None,
       scalaJsContent = None,
+      scalaJsSourceMapContent = None,
       done = true,
       timeout = false,
       forcedProgramMode = false
@@ -26,6 +27,7 @@ case class SnippetProgress(
     instrumentations: List[Instrumentation],
     runtimeError: Option[RuntimeError],
     scalaJsContent: Option[String],
+    scalaJsSourceMapContent:Option[String],
     done: Boolean,
     timeout: Boolean,
     forcedProgramMode: Boolean

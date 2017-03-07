@@ -13,7 +13,7 @@ import org.scalajs.dom.{
   Event, MessageEvent, ErrorEvent, CloseEvent,
   window
 }
-import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.raw.{HTMLElement, HTMLScriptElement}
 
 import scala.util.{Success, Failure}
 
@@ -42,8 +42,10 @@ object App {
       consoleIsOpen = false,
       consoleHasUserOutput = false,
       inputsHasChanged = false,
+      snippetId = None,
       loadSnippet = true,
       isStartup = true,
+      loadScalaJsScript = false,
       user = None,
       attachedDoms = Map(),
       inputs = Inputs.default,
@@ -67,8 +69,10 @@ object App {
       consoleIsOpen: Boolean,
       consoleHasUserOutput: Boolean,
       inputsHasChanged: Boolean,
+      snippetId: Option[SnippetId],
       loadSnippet: Boolean,
       isStartup: Boolean,
+      loadScalaJsScript: Boolean,
       user: Option[User],
       attachedDoms: AttachedDoms,
       inputs: Inputs,
@@ -84,6 +88,7 @@ object App {
                     consoleIsOpen: Boolean = consoleIsOpen,
                     consoleHasUserOutput: Boolean = consoleHasUserOutput,
                     inputsHasChanged: Boolean = inputsHasChanged,
+                    snippetId: Option[SnippetId] = snippetId,
                     user: Option[User] = user,
                     attachedDoms: AttachedDoms = attachedDoms,
                     inputs: Inputs = inputs,
@@ -100,8 +105,10 @@ object App {
              consoleIsOpen,
              consoleHasUserOutput,
              inputsHasChanged,
+             snippetId,
              loadSnippet,
              isStartup,
+             loadScalaJsScript,
              user,
              attachedDoms,
              inputs.copy(
@@ -238,6 +245,7 @@ object App {
           .log(progress.sbtOutput)
           .setForcedProgramMode(progress.forcedProgramMode)
           .setRunning(!progress.done)
+          .setLoadScalaJsScript(loadScalaJsScript | progress.done)
           .setRuntimeError(progress.runtimeError)
 
       if (!progress.userOutput.isEmpty) state.setUserOutput
@@ -248,6 +256,10 @@ object App {
       progresses.foldLeft(this) {
         case (state, progress) => state.addProgress(progress)
       }
+    }
+
+    def setSnippetId(snippetId: SnippetId) = {
+      copyAndSave(snippetId = Some(snippetId))
     }
 
     private def info(message: String) = Problem(api.Info, None, message)
@@ -261,6 +273,10 @@ object App {
                 info("You don't need a main method (or extends App) in Worksheet Mode")
           ))
       }
+    }
+
+    def setLoadScalaJsScript(value: Boolean) = {s
+      copy(loadScalaJsScript = value)
     }
 
     def addOutputs(compilationInfos: List[api.Problem],
@@ -317,18 +333,6 @@ object App {
       s"/$connectionMethod/$snippetPart"
     }
 
-    private def evalJavascript(progress: SnippetProgress): Unit = {
-      progress.scalaJsContent.foreach{c =>
-        scala.scalajs.js.eval(
-          c + "\n" +
-          """|com.olegych.scastie.client.ClientMain().signal(
-             |  function(){ return Main().result; },
-             |  function(){ return Main().attachedElements; }
-             |)""".stripMargin
-        )
-      }
-    }
-
     private def connectEventSource(snippetId: SnippetId) = CallbackTo[EventSource] {
       val direct = scope.accessDirect
 
@@ -341,7 +345,6 @@ object App {
         val progress = uread[SnippetProgress](e.data.toString)
 
         direct.modState(_.addProgress(progress))
-        evalJavascript(progress)
 
         if (progress.done) {
           direct.modState(
@@ -370,7 +373,6 @@ object App {
       def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[SnippetProgress](e.data.toString)
-        evalJavascript(progress)
         direct.modState(_.addProgress(progress))
       }
       def onerror(e: ErrorEvent): Unit =
@@ -442,37 +444,39 @@ object App {
     def run(e: ReactEventI): Callback = run()
     def run(): Callback = {
       scope.state.flatMap(s =>
-        Callback.future(ApiClient[Api].run(s.inputs).call().map {
-          case snippetId: SnippetId =>
-            connectEventSource(snippetId).attemptTry.flatMap {
-              case Success(eventSource) => {
-                scope.modState(
-                  _.resetOutputs
-                    .setRunning(true)
-                    .copy(eventSource = Some(eventSource))
-                    .log("Connecting...\n")
-                )
-              }
-              case Failure(errorEventSource) =>
-                connectWebSocket(snippetId).attemptTry.flatMap {
-                  case Success(websocket) => {
-                    scope.modState(
-                      _.resetOutputs
-                        .setRunning(true)
-                        .copy(websocket = Some(websocket))
-                        .log("Connecting...\n")
-                    )
-                  }
-                  case Failure(errorWebSocket) =>
-                    scope.modState(
-                      _.resetOutputs
-                        .log(errorEventSource.toString)
-                        .log(errorWebSocket.toString)
-                        .setRunning(false)
-                    )
-                }
+        Callback.future(ApiClient[Api].run(s.inputs).call().map(snippetId =>
+          connectEventSource(snippetId).attemptTry.flatMap {
+            case Success(eventSource) => {
+              scope.modState(
+                _.resetOutputs
+                  .setSnippetId(snippetId)
+                  .setRunning(true)
+                  .copy(eventSource = Some(eventSource))
+                  .log("Connecting...\n")
+              )
             }
-        }))
+            case Failure(errorEventSource) =>
+              connectWebSocket(snippetId).attemptTry.flatMap {
+                case Success(websocket) => {
+                  scope.modState(
+                    _.resetOutputs
+                      .setSnippetId(snippetId)
+                      .setRunning(true)
+                      .copy(websocket = Some(websocket))
+                      .log("Connecting...\n")
+                  )
+                }
+                case Failure(errorWebSocket) =>
+                  scope.modState(
+                    _.resetOutputs
+                      .log(errorEventSource.toString)
+                      .log(errorWebSocket.toString)
+                      .setRunning(false)
+                  )
+              }
+          }
+        ))
+      )
     }
     
     def save(e: ReactEventI): Callback = save()
@@ -580,12 +584,12 @@ object App {
         } else {
           scope.modState(_.setLoadSnippet(true))
         }
-      )
+      ) >> scope.modState(_.setSnippetId(snippetId))
     }
 
     def loadStateFromLocalStorage =
       LocalStorage.load
-        .map(state => scope.modState(_ => state.setRunning(false)))
+        .map(state => scope.modState(_ => state.setRunning(false).setLoadScalaJsScript(true)))
         .getOrElse(Callback(()))
 
     def start(props: Props): Callback = {
@@ -678,12 +682,69 @@ object App {
         }
       }
       .componentWillMount(s => s.backend.start(s.props))
+      .componentDidUpdate{ v =>
+        val state = v.prevState
+        val scope = v.$
+
+        // because we use scope.direct in those we dont have time to unset loadScalaJsScript.
+        // we use this check to ensure we load only once
+        val progressJustClosed = state.eventSource.isEmpty && state.websocket.isEmpty
+
+        if(scope.accessDirect.state.loadScalaJsScript && 
+           state.inputs.target.targetType == ScalaTargetType.JS &&
+           state.snippetId.isDefined &&
+           progressJustClosed) {
+          
+          scope.accessDirect.modState(_.setLoadScalaJsScript(false))
+
+          Callback {
+            val scalaJsId = "scastie-scalajs-playground-target"
+            val scalaJsRunId = "scastie-scalajs-playground-run"
+
+            def scalaJsUrl(snippetId: SnippetId): String = {
+              val middle =
+                snippetId match {
+                  case SnippetId(uuid, None) => uuid
+                  case SnippetId(uuid, Some(SnippetUserPart(login, update))) => 
+                    s"$login/$uuid/${update.getOrElse(0)}"
+                }
+
+              s"/${Shared.scalaJsHttpPathPrefix}/$middle/${ScalaTarget.Js.targetFilename}"
+            }
+
+            def getOrCreateScript(id: String) = {
+              Option(dom.document.getElementById(id).asInstanceOf[HTMLScriptElement]).getOrElse{
+                val newScript = dom.document.createElement("script").asInstanceOf[HTMLScriptElement]
+                newScript.id = id
+                dom.document.body.appendChild(newScript)
+                newScript
+              }
+            }
+
+            val scalaJsScriptElement = getOrCreateScript(scalaJsId)
+            scalaJsScriptElement.onload = { (e: dom.Event) =>
+              val scalaJsRunScriptElement = getOrCreateScript(scalaJsRunId)
+              scalaJsRunScriptElement.defer = true
+              scalaJsRunScriptElement.innerHTML =
+                """|com.olegych.scastie.client.ClientMain().signal(
+                   |  function(){ return Main().result; },
+                   |  function(){ return Main().attachedElements; }
+                   |)""".stripMargin
+            }
+            scalaJsScriptElement.src = scalaJsUrl(state.snippetId.get)
+
+          }
+        } else Callback(()) 
+      }
       .componentWillReceiveProps{ v =>
         val next = v.nextProps.snippetId
         val current = v.currentProps.snippetId
+        val state = v.$.state
+        val backend = v.$.backend
+        
 
         val setTitle =
-          if(v.$.state.inputsHasChanged) {
+          if(state.inputsHasChanged) {
             Callback(dom.document.title = "Scastie (*)") 
           } else {
             Callback(dom.document.title = "Scastie") 
@@ -693,8 +754,8 @@ object App {
           if(next != current) {
             next match {
               case Some(snippetId) => 
-                v.$.backend.loadSnippet(snippetId) >>
-                v.$.backend.setView(View.Editor)
+                backend.loadSnippet(snippetId) >>
+                backend.setView(View.Editor)
               case _ => Callback(())
             }
             
