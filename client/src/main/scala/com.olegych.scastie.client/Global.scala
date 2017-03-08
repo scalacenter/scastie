@@ -24,7 +24,11 @@ object Global {
       val direct = scope.accessDirect
       try {
         val instrumentations = uread[List[Instrumentation]](instrumentationsF())
+        println(instrumentations)
+
         val attachedDoms = attachedF()
+        println(attachedDoms.map(_.getAttribute("uuid")))
+
         direct.modState(state =>
           state.copyAndSave(
             attachedDoms = attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap,

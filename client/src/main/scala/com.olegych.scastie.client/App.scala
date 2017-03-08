@@ -686,14 +686,14 @@ object App {
         val state = v.prevState
         val scope = v.$
 
-        // because we use scope.direct in those we dont have time to unset loadScalaJsScript.
-        // we use this check to ensure we load only once
-        val progressJustClosed = state.eventSource.isEmpty && state.websocket.isEmpty
+        console.log("=====")
+        console.log("loadScalaJsScript: " + scope.accessDirect.state.loadScalaJsScript.toString)
+        console.log("targetType: " + state.inputs.target.targetType.toString)
+        console.log("snippetId: " + state.snippetId.isDefined.toString)
 
         if(scope.accessDirect.state.loadScalaJsScript && 
            state.inputs.target.targetType == ScalaTargetType.JS &&
-           state.snippetId.isDefined &&
-           progressJustClosed) {
+           state.snippetId.isDefined) {
           
           scope.accessDirect.modState(_.setLoadScalaJsScript(false))
 
@@ -712,19 +712,25 @@ object App {
               s"/${Shared.scalaJsHttpPathPrefix}/$middle/${ScalaTarget.Js.targetFilename}"
             }
 
-            def getOrCreateScript(id: String) = {
-              Option(dom.document.getElementById(id).asInstanceOf[HTMLScriptElement]).getOrElse{
-                val newScript = dom.document.createElement("script").asInstanceOf[HTMLScriptElement]
-                newScript.id = id
-                dom.document.body.appendChild(newScript)
-                newScript
-              }
+            def createScript(id: String): HTMLScriptElement = {
+              val newScript = dom.document.createElement("script").asInstanceOf[HTMLScriptElement]
+              newScript.id = id
+              dom.document.body.appendChild(newScript)
+              newScript
             }
 
-            val scalaJsScriptElement = getOrCreateScript(scalaJsId)
+            def removeIfExist(id: String): Unit = {
+              Option(dom.document.getElementById(id)).foreach(element =>
+                element.parentNode.removeChild(element)
+              )
+            }
+            
+            removeIfExist(scalaJsId)
+            val scalaJsScriptElement = createScript(scalaJsId)
             scalaJsScriptElement.onload = { (e: dom.Event) =>
-              val scalaJsRunScriptElement = getOrCreateScript(scalaJsRunId)
-              scalaJsRunScriptElement.defer = true
+              removeIfExist(scalaJsRunId)
+              val scalaJsRunScriptElement = createScript(scalaJsRunId)
+              // scalaJsRunScriptElement.defer = true
               scalaJsRunScriptElement.innerHTML =
                 """|com.olegych.scastie.client.ClientMain().signal(
                    |  function(){ return Main().result; },
