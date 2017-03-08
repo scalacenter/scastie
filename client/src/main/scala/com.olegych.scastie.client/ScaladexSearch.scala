@@ -185,7 +185,7 @@ object ScaladexSearch {
         e: ReactEventI): Callback =
       addArtifact(projectAndArtifact)
 
-    private def withBackend(f: Backend => Callback): Callback = {
+    private def withBackend(f: AppBackend => Callback): Callback = {
       scope.props.flatMap {
         case (_, backend) =>
           f(backend)

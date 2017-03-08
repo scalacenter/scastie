@@ -11,7 +11,7 @@ import japgolly.scalajs.react._
 import upickle.default.{read => uread}
 
 object Global {
-  type Scope = BackendScope[App.Props, App.State]
+  type Scope = BackendScope[AppProps, AppState]
 
   private var scope0: Option[Scope] = _
 

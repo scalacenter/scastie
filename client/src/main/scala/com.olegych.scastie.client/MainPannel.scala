@@ -1,8 +1,6 @@
 package com.olegych.scastie
 package client
 
-import App._
-
 import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom.raw.HTMLPreElement
@@ -11,7 +9,7 @@ object MainPannel {
 
   private val consoleElement = Ref[HTMLPreElement]("console")
   private val component =
-    ReactComponentB[(State, Backend,Props)]("MainPannel").render_P {
+    ReactComponentB[(AppState, AppBackend, AppProps)]("MainPannel").render_P {
       case (state, backend, props) =>
         def show(view: View) = {
           if (view == state.view) TagMod(display.block)
@@ -72,7 +70,7 @@ object MainPannel {
             Editor(helpState, backend),
             embeddedMenu,
             pre(`class` := "output-console", ref := consoleElement)(
-              state.outputs.console.mkString("")
+              state.outputs.console
             )
           ),
           div(`class` := s"pannel $theme", show(View.Libraries))(
@@ -88,6 +86,6 @@ object MainPannel {
     )
     .build
 
-  def apply(state: State, backend: Backend, props: Props) =
+  def apply(state: AppState, backend: AppBackend, props: AppProps) =
     component((state, backend, props))
 }

@@ -90,7 +90,7 @@ object Editor {
   )
 
   private[Editor] class Backend(
-      scope: BackendScope[(App.State, App.Backend), EditorState]) {
+      scope: BackendScope[(AppState, AppBackend), EditorState]) {
     def stop() = {
       scope.modState { s =>
         s.editor.map(_.toTextArea())
@@ -155,8 +155,8 @@ object Editor {
   private def runDelta(editor: TextAreaEditor,
                        modState: (EditorState => EditorState) => Callback,
                        state: EditorState,
-                       current: Option[App.State],
-                       next: App.State): Callback = {
+                       current: Option[AppState],
+                       next: AppState): Callback = {
 
     def setTheme() = {
       if (current.map(_.isDarkTheme) != Some(next.isDarkTheme)) {
@@ -390,7 +390,7 @@ object Editor {
     }
 
     def setAnnotations[T](
-        fromState: App.State => Set[T],
+        fromState: AppState => Set[T],
         annotate: T => Annotation,
         fromEditorState: EditorState => Map[T, Annotation],
         updateEditorState: (Map[T, Annotation] => Map[T, Annotation]) => EditorState => EditorState
@@ -431,7 +431,7 @@ object Editor {
   }
 
   private val component =
-    ReactComponentB[(App.State, App.Backend)]("CodemirrorEditor")
+    ReactComponentB[(AppState, AppBackend)]("CodemirrorEditor")
       .initialState(EditorState())
       .backend(new Backend(_))
       .renderPS {
@@ -456,6 +456,6 @@ object Editor {
       .componentWillUnmount(_.backend.stop())
       .build
 
-  def apply(state: App.State, backend: App.Backend) =
+  def apply(state: AppState, backend: AppBackend) =
     component((state, backend))
 }

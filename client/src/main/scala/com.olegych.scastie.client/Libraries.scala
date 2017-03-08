@@ -8,7 +8,7 @@ import japgolly.scalajs.react._, vdom.all._
 
 object Libraries {
 
-  def renderTarget(scalaTarget: ScalaTarget, backend: App.Backend) = {
+  def renderTarget(scalaTarget: ScalaTarget, backend: AppBackend) = {
     val targetTypes = List(
       ScalaTargetType.JVM,
       ScalaTargetType.Dotty,
@@ -86,7 +86,7 @@ object Libraries {
     )
   }
 
-  def renderVersions(target: ScalaTarget, backend: App.Backend) = {
+  def renderVersions(target: ScalaTarget, backend: AppBackend) = {
     val suggestedVersions = List(
       "2.10.6",
       "2.11.8",
@@ -200,7 +200,7 @@ object Libraries {
   }
 
   private val component =
-    ReactComponentB[(State, App.Backend)]("Libraries").render_P {
+    ReactComponentB[(State, AppBackend)]("Libraries").render_P {
       case (state, backend) =>
         
         val theme = if (state.isDarkTheme) "dark" else "light"
@@ -269,5 +269,5 @@ object Libraries {
           )
         )
     }.build
-  def apply(state: State, backend: App.Backend) = component((state, backend))
+  def apply(state: State, backend: AppBackend) = component((state, backend))
 }

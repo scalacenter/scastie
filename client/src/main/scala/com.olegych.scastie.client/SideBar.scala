@@ -8,7 +8,7 @@ import japgolly.scalajs.react._, vdom.all._
 
 object SideBar {
   private val component =
-    ReactComponentB[(State, Backend, Option[SnippetId])]("SideBar").render_P {
+    ReactComponentB[(AppState, AppBackend, Option[SnippetId])]("SideBar").render_P {
       case (state, backend, snippetId) =>
         import backend._
 
