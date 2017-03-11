@@ -54,7 +54,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     val eventSource = new EventSource(snippetUri(snippetId, "progress-sse"))
 
     def onopen(e: Event): Unit = {
-      direct.modState(_.log("Connected.\n"))
+      direct.modState(_.logSystem("Connected.\n"))
     }
     def onmessage(e: MessageEvent): Unit = {
       val progress = uread[SnippetProgress](e.data.toString)
@@ -72,7 +72,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       if (e.eventPhase == EventSource.CLOSED) {
         eventSource.close()
       } else {
-        direct.modState(_.log(s"Error: ${e.toString}"))
+        direct.modState(_.logSystem(s"Error: ${e.toString}"))
       }
     }
 
@@ -85,17 +85,17 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   private def connectWebSocket(snippetId: SnippetId) = CallbackTo[WebSocket] {
     val direct = scope.accessDirect
 
-    def onopen(e: Event): Unit = direct.modState(_.log("Connected.\n"))
+    def onopen(e: Event): Unit = direct.modState(_.logSystem("Connected.\n"))
     def onmessage(e: MessageEvent): Unit = {
       val progress = uread[SnippetProgress](e.data.toString)
       direct.modState(_.addProgress(progress))
     }
     def onerror(e: ErrorEvent): Unit =
-      direct.modState(_.log(s"Error: ${e.message}"))
+      direct.modState(_.logSystem(s"Error: ${e.message}"))
     def onclose(e: CloseEvent): Unit =
       direct.modState(
         _.copy(websocket = None, running = false)
-          .log(s"Closed: ${e.reason}\n"))
+          .logSystem(s"Closed: ${e.reason}\n"))
 
     val protocol = if (window.location.protocol == "https:") "wss" else "ws"
     val connectionPart = snippetUri(snippetId, "progress-websocket")
@@ -167,7 +167,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 .setSnippetId(snippetId)
                 .setRunning(true)
                 .copy(eventSource = Some(eventSource))
-                .log("Connecting...\n")
+                .logSystem("Connecting...\n")
             )
           }
           case Failure(errorEventSource) =>
@@ -178,14 +178,14 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                     .setSnippetId(snippetId)
                     .setRunning(true)
                     .copy(websocket = Some(websocket))
-                    .log("Connecting...\n")
+                    .logSystem("Connecting...\n")
                 )
               }
               case Failure(errorWebSocket) =>
                 scope.modState(
                   _.resetOutputs
-                    .log(errorEventSource.toString)
-                    .log(errorWebSocket.toString)
+                    .logSystem(errorEventSource.toString)
+                    .logSystem(errorWebSocket.toString)
                     .setRunning(false)
                 )
             }

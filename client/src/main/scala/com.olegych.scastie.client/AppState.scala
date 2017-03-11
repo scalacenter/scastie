@@ -145,18 +145,6 @@ case class AppState(
   def setUserOutput: AppState =
     copyAndSave(consoleHasUserOutput = true)
 
-  def log(lines: Seq[String]): AppState = ???
-    // copyAndSave(outputs = outputs.copy(console = outputs.console ++ lines))
-
-  def log(line: String): AppState = ???
-    // log(Seq(line))
-
-  def log(line: Option[String]): AppState = ???
-    // line match {
-    //   case Some(l) => log(l + "\n")
-    //   case None => this
-    // }
-
   def setLoadSnippet(value: Boolean): AppState = 
     copy(loadSnippet = value)
 
@@ -206,7 +194,7 @@ case class AppState(
     )
 
   def updateDependencyVersion(scalaDependency: ScalaDependency,
-                              version: String) = {
+                              version: String): AppState  = {
     val newScalaDependency = scalaDependency.copy(version = version)
     copyAndSave(
       inputs = inputs.copy(
@@ -216,21 +204,38 @@ case class AppState(
     )
   }
 
-  def resetOutputs =
+  def resetOutputs: AppState  =
     copyAndSave(outputs = Outputs.default,
                 consoleIsOpen = false,
                 consoleHasUserOutput = false,
                 attachedDoms = Map())
 
-  def setRuntimeError(runtimeError: Option[RuntimeError]) =
+  def setRuntimeError(runtimeError: Option[RuntimeError]): AppState  =
     if (runtimeError.isEmpty) this
     else copyAndSave(outputs = outputs.copy(runtimeError = runtimeError))
 
-  def addProgress(progress: SnippetProgress) = {
+
+  def logOutput(line: Option[String], wrap: String => ConsoleOutput): AppState  = {
+    line match {
+      case Some(l) => 
+        copyAndSave(outputs = outputs.copy(
+          consoleOutputs = outputs.consoleOutputs ++ Vector(wrap(l))
+        ))
+      case _ => this
+    }
+  }
+
+  def logSystem(line: String): AppState = {
+    copyAndSave(outputs = outputs.copy(
+      consoleOutputs = outputs.consoleOutputs ++ Vector(ConsoleOutput.ScastieOutput(line))
+    ))
+  }
+
+  def addProgress(progress: SnippetProgress): AppState  = {
     val state =
       addOutputs(progress.compilationInfos, progress.instrumentations)
-        .log(progress.userOutput)
-        .log(progress.sbtOutput)
+        .logOutput(progress.userOutput, ConsoleOutput.UserOutput(_))
+        .logOutput(progress.sbtOutput, ConsoleOutput.SbtOutput(_))
         .setForcedProgramMode(progress.forcedProgramMode)
         .setRunning(!progress.done)
         .setLoadScalaJsScript(loadScalaJsScript | progress.done)
@@ -240,19 +245,19 @@ case class AppState(
     else state
   }
 
-  def setProgresses(progresses: List[SnippetProgress]) = {
+  def setProgresses(progresses: List[SnippetProgress]): AppState = {
     progresses.foldLeft(this) {
       case (state, progress) => state.addProgress(progress)
     }
   }
 
-  def setSnippetId(snippetId: SnippetId) = {
+  def setSnippetId(snippetId: SnippetId): AppState = {
     copyAndSave(snippetId = Some(snippetId))
   }
 
   private def info(message: String) = Problem(api.Info, None, message)
 
-  def setForcedProgramMode(forcedProgramMode: Boolean) = {
+  def setForcedProgramMode(forcedProgramMode: Boolean): AppState = {
     if (!forcedProgramMode) this
     else {
       copyAndSave(
@@ -263,12 +268,12 @@ case class AppState(
     }
   }
 
-  def setLoadScalaJsScript(value: Boolean) = {
+  def setLoadScalaJsScript(value: Boolean): AppState  = {
     copy(loadScalaJsScript = value)
   }
 
   def addOutputs(compilationInfos: List[api.Problem],
-                 instrumentations: List[api.Instrumentation]) = {
+                 instrumentations: List[api.Instrumentation]): AppState = {
 
     def topDef(problem: api.Problem): Boolean = {
       problem.severity == api.Error &&
