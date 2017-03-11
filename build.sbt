@@ -361,7 +361,7 @@ lazy val runtimeDotty = project
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))
   .settings(orgSettings)
-  .settings(
+  .settings(  
     moduleName := "sbt-scastie",
     scalaVersion := "2.10.6",
     sbtPlugin := true

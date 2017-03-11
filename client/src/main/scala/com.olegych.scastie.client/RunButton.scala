@@ -1,17 +1,15 @@
 package com.olegych.scastie.client
 
-import App._
-
 import japgolly.scalajs.react._, vdom.all._
 
 import iconic._
 
 object RunButton {
 
-  def apply(state: State, backend: Backend) = component((state, backend))
+  def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(State, Backend)]("RunButton").render_P {
+    ReactComponentB[(AppState, AppBackend)]("RunButton").render_P {
       case (state, backend) =>
         import backend._
         import View.ctrl

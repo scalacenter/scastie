@@ -1,6 +1,12 @@
 package com.olegych.scastie
 package client
 
+import scala.scalajs.js
+import js.annotation.ScalaJSDefined
+import js.UndefOr
+
+import api.{Inputs, SnippetId, SnippetUserPart}
+
 @ScalaJSDefined
 trait EmbededOptionsJs extends js.Object {
   val base64UUID: UndefOr[String]

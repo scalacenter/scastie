@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package client
 
+import api.{SnippetId, SnippetUserPart}
+
 object Page {
   def fromSnippetId(snippetId: SnippetId): ResourcePage = {
     snippetId match {

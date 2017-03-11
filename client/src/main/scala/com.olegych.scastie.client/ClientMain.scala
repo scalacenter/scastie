@@ -1,15 +1,13 @@
 package com.olegych.scastie
 package client
 
-import api._
-
 import org.scalajs.dom
 import org.scalajs.dom.raw.{HTMLElement, Node}
 import org.scalajs.dom.ext._
 
 import scala.scalajs.js
 import js.{|, UndefOr, JSApp}
-import js.annotation.{JSExport, ScalaJSDefined}
+import js.annotation.JSExport
 
 import japgolly.scalajs.react._, extra.router._
 
@@ -69,7 +67,7 @@ object ClientMain extends JSApp {
 
         ReactDOM.render(
           App(
-            App.Props(
+            AppProps(
               router = None,
               snippetId = None,
               embedded = Some(embeddedOptions0)

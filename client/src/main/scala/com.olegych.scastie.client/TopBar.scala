@@ -1,17 +1,15 @@
 package com.olegych.scastie.client
 
-import App._
-
 import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom
 
 object TopBar {
 
-  def apply(state: State, backend: Backend) = component((state, backend))
+  def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(State, Backend)]("TopBar").render_P {
+    ReactComponentB[(AppState, AppBackend)]("TopBar").render_P {
       case (state, backend) =>
       import backend._
 

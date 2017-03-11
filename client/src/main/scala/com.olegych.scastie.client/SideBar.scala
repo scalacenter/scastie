@@ -1,7 +1,6 @@
 package com.olegych.scastie
 package client
 
-import App._
 import api.SnippetId
 
 import japgolly.scalajs.react._, vdom.all._
@@ -105,6 +104,6 @@ object SideBar {
         )
     }.build
 
-  def apply(state: State, backend: Backend, snippetId: Option[SnippetId]) =
+  def apply(state: AppState, backend: AppBackend, snippetId: Option[SnippetId]) =
     component((state, backend, snippetId))
 }

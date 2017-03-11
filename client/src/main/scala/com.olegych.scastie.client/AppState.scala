@@ -3,7 +3,10 @@ package client
 
 import api._
 
-import upickle.default.{read => uread, ReadWriter, macroRW => upickleMacroRW}
+import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
+
+import org.scalajs.dom.{EventSource, WebSocket}
+import org.scalajs.dom.raw.HTMLElement
 
 object AppState {
   def default = AppState(
@@ -30,7 +33,7 @@ object AppState {
   implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] = dontSerializeMap[String, HTMLElement]
   implicit val dontSerializeWebSocket: ReadWriter[Option[WebSocket]] = dontSerializeOption[WebSocket]
   implicit val dontSerializeEventSource: ReadWriter[Option[EventSource]] = dontSerializeOption[EventSource]
-  implicit val pkl: ReadWriter[AppState] = upickleMacroRW[State]
+  implicit val pkl: ReadWriter[AppState] = upickleMacroRW[AppState]
 }
 
 case class AppState(
@@ -260,7 +263,7 @@ case class AppState(
     }
   }
 
-  def setLoadScalaJsScript(value: Boolean) = {s
+  def setLoadScalaJsScript(value: Boolean) = {
     copy(loadScalaJsScript = value)
   }
 

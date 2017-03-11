@@ -3,7 +3,7 @@ package client
 
 import api._
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
 
 import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -13,6 +13,8 @@ import org.scalajs.dom.{
   Event, MessageEvent, ErrorEvent, CloseEvent,
   window
 }
+
+import upickle.default.{read => uread}
 
 import scala.util.{Success, Failure}
 
@@ -305,9 +307,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       .map(state => scope.modState(_ => state.setRunning(false).setLoadScalaJsScript(true)))
       .getOrElse(Callback(()))
 
-  def start(props: Props): Callback = {
-    console.log("== Welcome to Scastie ==")
-
+  def start(props: AppProps): Callback = {
     def loadUser(): Callback = {
       Callback.future(
         ApiClient[Api]

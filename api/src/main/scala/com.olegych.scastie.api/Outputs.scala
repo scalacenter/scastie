@@ -15,15 +15,13 @@ object Outputs {
   )
 }
 case class Outputs(
-  consoleOutputs: Vector[(String, ConsoleOutputType)],
+  consoleOutputs: Vector[ConsoleOutput],
   compilationInfos: Set[Problem],
   instrumentations: Set[Instrumentation],
   runtimeError: Option[RuntimeError]
 ) {
 
-  def console: String = consoleOutputs.map{ case (line, outputType) =>
-    outputType.prompt + line
-  }.mkString("")
+  def console: String = consoleOutputs.map(_.show).mkString("")
 
   def isClearable: Boolean =
     !consoleOutputs.isEmpty ||
@@ -41,27 +39,20 @@ case class CompilationInfo(
 )
 
 
-sealed trait ConsoleOutputType { 
-  def prompt: String
+sealed trait ConsoleOutput { 
+  def show: String
 }
-object ConsoleOutputType {
-  case object SbtOutput extends ConsoleOutputType { 
-    def prompt: String = "sbt: "
+object ConsoleOutput {
+  case class SbtOutput(line: String) extends ConsoleOutput { 
+    def show: String = s"sbt: $line"
   }
 
-  case object UserOutput extends ConsoleOutputType { 
-    def prompt: String = "user: "
+  case class UserOutput(line: String) extends ConsoleOutput { 
+    def show: String = s"user: $line"
   }
 
-  case object ScastieOutput extends ConsoleOutputType {
-    def prompt: String = "scastie: "
+  case class ScastieOutput(line: String) extends ConsoleOutput {
+    def show: String = s"scastie: $line"
   }
-
-  import upickle.default._
-
-  implicit val pkl: ReadWriter[ConsoleOutputType] =
-    macroRW[SbtOutput.type] merge 
-    macroRW[UserOutput.type] merge 
-    macroRW[ScastieOutput.type]
 }
 

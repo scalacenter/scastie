@@ -2,8 +2,10 @@ package com.olegych.scastie
 
 import upickle.default.ReadWriter
 
+import org.scalajs.dom.raw.HTMLElement
+
 package object client {
-  val console = org.scalajs.dom.console
+  type AttachedDoms = Map[String, HTMLElement]
 
   def dontSerialize[T](v: T): ReadWriter[T] = {
     import upickle.Js

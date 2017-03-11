@@ -1,6 +1,10 @@
 package com.olegych.scastie
 package client
 
+import api.{SnippetId, SnippetUserPart}
+
+import japgolly.scalajs.react._, extra.router._
+
 object Routing {
   val config = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
@@ -30,7 +34,7 @@ object Routing {
 
   def renderAppDefault(router: RouterCtl[Page]) =
     App(
-      App.Props(
+      AppProps(
         router = Some(router),
         snippetId = None,
         embedded = None
@@ -38,7 +42,7 @@ object Routing {
 
   def renderAppDefaultEmbedded(router: RouterCtl[Page]) =
     App(
-      App.Props(
+      AppProps(
         router = Some(router),
         snippetId = None,
         embedded = Some(EmbededOptions.empty)
@@ -58,7 +62,7 @@ object Routing {
       }
 
     App(
-      App.Props(
+      AppProps(
         router = Some(router),
         snippetId = Some(snippetId),
         embedded = embedded

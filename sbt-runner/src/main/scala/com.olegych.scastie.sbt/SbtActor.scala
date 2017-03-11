@@ -200,7 +200,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         val instrumentations =
           extract[List[api.Instrumentation]](line, report = true)
         val runtimeError = extractRuntimeError(line, lineOffset)
-        val sbtOutput = extract[SbtOutput](line)
+        val sbtOutput = extract[ConsoleOutput.SbtOutput](line)
 
         // look like our sbt logger is not catching all messages
         val sbtMessages = List(

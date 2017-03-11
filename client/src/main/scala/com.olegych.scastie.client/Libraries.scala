@@ -2,7 +2,6 @@ package com.olegych.scastie
 package client
 
 import api._
-import App._
 
 import japgolly.scalajs.react._, vdom.all._
 
@@ -200,7 +199,7 @@ object Libraries {
   }
 
   private val component =
-    ReactComponentB[(State, AppBackend)]("Libraries").render_P {
+    ReactComponentB[(AppState, AppBackend)]("Libraries").render_P {
       case (state, backend) =>
         
         val theme = if (state.isDarkTheme) "dark" else "light"
@@ -269,5 +268,5 @@ object Libraries {
           )
         )
     }.build
-  def apply(state: State, backend: AppBackend) = component((state, backend))
+  def apply(state: AppState, backend: AppBackend) = component((state, backend))
 }

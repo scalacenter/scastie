@@ -3,8 +3,6 @@ package client
 
 import api._
 
-import App._
-
 import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom
@@ -27,7 +25,7 @@ object ScaladexSearch {
       selecteds = List()
     )
 
-    def fromProps(props: (State, Backend)): SearchState = {
+    def fromProps(props: (AppState, AppBackend)): SearchState = {
       val (state, _) = props
 
       SearchState.default.copy(
@@ -128,7 +126,7 @@ object ScaladexSearch {
   }
 
   private[ScaladexSearch] class SearchBackend(
-      scope: BackendScope[(State, Backend), SearchState]) {
+      scope: BackendScope[(AppState, AppBackend), SearchState]) {
     def keyDown(e: ReactKeyboardEventI): Callback = {
 
       if (e.keyCode == KeyCode.Down || e.keyCode == KeyCode.Up) {
@@ -235,7 +233,7 @@ object ScaladexSearch {
     }
 
     private def fetchProjects(): Callback = {
-      def fetch(appState: State, searchState: SearchState): Callback = {
+      def fetch(appState: AppState, searchState: SearchState): Callback = {
         if (!searchState.query.isEmpty) {
           val query = toQuery(
             Map("q" -> searchState.query) ++
@@ -299,7 +297,7 @@ object ScaladexSearch {
     }
   }
 
-  private val component = ReactComponentB[(State, Backend)]("Scaladex Search")
+  private val component = ReactComponentB[(AppState, AppBackend)]("Scaladex Search")
     .initialState_P(SearchState.fromProps)
     .backend(new SearchBackend(_))
     .renderPS {
@@ -411,5 +409,5 @@ object ScaladexSearch {
     .componentDidMount(s => searchInputRef(s).tryFocus)
     .build
 
-  def apply(state: State, backend: Backend) = component((state, backend))
+  def apply(state: AppState, backend: AppBackend) = component((state, backend))
 }

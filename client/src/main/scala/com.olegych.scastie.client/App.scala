@@ -1,20 +1,17 @@
 package com.olegych.scastie
 package client
 
-import japgolly.scalajs.react._, vdom.all._
-
 import api._
 
-import org.scalajs.dom
+import japgolly.scalajs.react._, vdom.all._
 
-import org.scalajs.dom.raw.{HTMLElement, HTMLScriptElement}
+import org.scalajs.dom
+import org.scalajs.dom.raw.HTMLScriptElement
 
 object App {
-  type AttachedDoms = Map[String, HTMLElement]
-
   val component =
-    ReactComponentB[Props]("App")
-      .initialState(LocalStorage.load.getOrElse(State.default))
+    ReactComponentB[AppProps]("App")
+      .initialState(LocalStorage.load.getOrElse(AppState.default))
       .backend(new AppBackend(_))
       .renderPS {
         case (scope, props, state) => {
@@ -40,11 +37,6 @@ object App {
       .componentDidUpdate{ v =>
         val state = v.prevState
         val scope = v.$
-
-        console.log("=====")
-        console.log("loadScalaJsScript: " + scope.accessDirect.state.loadScalaJsScript.toString)
-        console.log("targetType: " + state.inputs.target.targetType.toString)
-        console.log("snippetId: " + state.snippetId.isDefined.toString)
 
         if(scope.accessDirect.state.loadScalaJsScript && 
            state.inputs.target.targetType == ScalaTargetType.JS &&

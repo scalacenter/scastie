@@ -1,10 +1,10 @@
 package com.olegych.scastie
 package sbtscastie
 
+import api.{ConsoleOutput, RuntimeError}
+
 import sbt._
 import Keys._
-
-import api._
 
 import java.io.{PrintWriter, OutputStream, StringWriter}
 import upickle.default.{write => uwrite}
@@ -12,7 +12,7 @@ import upickle.default.{write => uwrite}
 object RuntimeErrorLogger {
   private object NoOp {
     def apply(): NoOp = {
-      def out(in: String): Unit = println(uwrite(SbtOutput(in.trim)))
+      def out(in: String): Unit = println(uwrite(ConsoleOutput.SbtOutput(in.trim)))
 
       new NoOp(new OutputStream {
         override def close(): Unit = ()
