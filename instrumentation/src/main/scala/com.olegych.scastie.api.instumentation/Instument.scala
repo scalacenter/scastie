@@ -26,9 +26,12 @@ object Instrument {
   private val apiPackage = "_root_.com.olegych.scastie.api"
   private val positionT = s"$apiPackage.Position"
   private val renderT = s"$apiPackage.Render"
+  private val runtimeErrorT = s"$apiPackage.RuntimeError"
   private val instrumentationT = s"$apiPackage.Instrumentation"
   private val runtimeT = s"$apiPackage.runtime.Runtime"
   private val domhookT = s"$apiPackage.runtime.DomHook"
+
+  private val elemArrayT = "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
 
   private def posToApi(position: Position, offset: Int) = {
     def tuple2(v1: Int, v2: Int) = Seq(Lit(v1), Lit(v2))
@@ -94,23 +97,24 @@ object Instrument {
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
 
-    val writeInstrumentation = 
-      s"$runtimeT.write(playground.${instrumentationMethod})"
-
     val entryPoint = 
       if(!isScalaJs) {
         s"""|object Main {
             |  val playground = new $instrumnedClass
             |  def main(args: Array[String]): Unit = {
-            |    println($writeInstrumentation)
+            |    println($runtimeT.write(playground.${instrumentationMethod}))
             |  }
             |}
             |""".stripMargin
       } else {
         s"""|@$jsExportT object Main {
-            |  val playground = new $instrumnedClass
-            |  @$jsExportT def result = $writeInstrumentation
-            |  @$jsExportT def attachedElements = playground.attachedElements
+            |  val playground = $runtimeErrorT.wrap(new $instrumnedClass)
+            |  @$jsExportT def result = $runtimeT.write(playground.right.map(_.${instrumentationMethod}))
+            |  @$jsExportT def attachedElements: $elemArrayT =
+            |    playground match {
+            |      case Right(p) => p.attachedElements
+            |      case Left(_) => $elemArrayT()
+            |    }
             |}""".stripMargin
       }
 

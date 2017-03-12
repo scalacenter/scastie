@@ -35,8 +35,8 @@ object ClientMain extends JSApp {
   }
 
   @JSExport
-  def signal(instrumentationsF: js.Function0[String], attachedF: js.Function0[js.Array[HTMLElement]]): Unit = {
-    Global.signal(instrumentationsF, attachedF)
+  def signal(instrumentations: String, attachedDoms: js.Array[HTMLElement]): Unit = {
+    Global.signal(instrumentations, attachedDoms)
   }
 
   @JSExport

@@ -48,7 +48,8 @@ object App {
         val executeScalaJs =
           if(scope.accessDirect.state.loadScalaJsScript && 
              state.inputs.target.targetType == ScalaTargetType.JS &&
-             state.snippetId.nonEmpty) {
+             state.snippetId.nonEmpty // FIXME
+             ) {
             
             scope.accessDirect.modState(_.setLoadScalaJsScript(false))
 
@@ -80,20 +81,31 @@ object App {
                 )
               }
               
+              println("== Loading Scala.js ==")
+
               removeIfExist(scalaJsId)
               val scalaJsScriptElement = createScript(scalaJsId)
               scalaJsScriptElement.onload = { (e: dom.Event) =>
                 removeIfExist(scalaJsRunId)
                 val scalaJsRunScriptElement = createScript(scalaJsRunId)
-                // scalaJsRunScriptElement.defer = true
+                println("== Running Scala.js ==")
                 scalaJsRunScriptElement.innerHTML =
-                  """|com.olegych.scastie.client.ClientMain().signal(
-                     |  function(){ return Main().result; },
-                     |  function(){ return Main().attachedElements; }
-                     |)""".stripMargin
+                  """|try {
+                     |  var main = Main()
+                     |  com.olegych.scastie.client.ClientMain().signal(
+                     |    main.result,
+                     |    main.attachedElements
+                     |  )
+                     |} catch (e) {
+                     | console.log("== Caught Error ==")
+                     | console.log(e)
+                     |}""".stripMargin
               }
-              scalaJsScriptElement.src = scalaJsUrl(state.snippetId.get)
-
+              if(state.snippetId.nonEmpty) {
+                scalaJsScriptElement.src = scalaJsUrl(state.snippetId.get)
+              } else {
+                println("empty snippetId")
+              }
             }
           } else Callback(())
 

@@ -19,37 +19,30 @@ object Global {
     scope0 = Some(scope)
   }
 
-  def signal(instrumentationsF: js.Function0[String], attachedF: js.Function0[js.Array[HTMLElement]]): Unit = {
+  def signal(instrumentationsRaw: String, attachedDoms: js.Array[HTMLElement]): Unit = {
     scope0.foreach{ scope =>
+      println("== signal ==")
+      println(instrumentationsRaw)
+      println(attachedDoms)
+
       val direct = scope.accessDirect
-      try {
-        val instrumentations = uread[List[Instrumentation]](instrumentationsF())
-        println(instrumentations)
 
-        val attachedDoms = attachedF()
-        println(attachedDoms.map(_.getAttribute("uuid")))
+      val result = uread[Either[Option[RuntimeError], List[Instrumentation]]](instrumentationsRaw)
 
-        direct.modState(state =>
-          state.copyAndSave(
-            attachedDoms = attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap,
-            outputs = state.outputs.copy(
-              instrumentations = state.outputs.instrumentations ++ instrumentations.toSet
-            )
-          )
-        )         
-      } catch {
-        case ex: Exception => {
-          // TODO: some issue getting exception here 
-          // https://github.com/scala-js/scala-js/issues/2788
-          direct.modState(state =>
-            state.copyAndSave(
-              outputs = state.outputs.copy(
-                runtimeError = RuntimeError.fromTrowable(ex, fromScala = true)
-              )
-            )
-          )
-        }
+      val (instr, runtimeError) = result match {
+        case Left(maybeRuntimeError) => (Nil, maybeRuntimeError) 
+        case Right(instrumentations) => (instrumentations, None)
       }
+
+      direct.modState(state =>
+        state.copyAndSave(
+          attachedDoms = attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap,
+          outputs = state.outputs.copy(
+            instrumentations = state.outputs.instrumentations ++ instr.toSet,
+            runtimeError = runtimeError
+          )
+        )
+      )
     }
   }
 }

@@ -103,7 +103,7 @@ class AutowireApi(dispatchActor: ActorRef, progressActor: ActorRef, userDirectiv
                 .map(_.map(_.content))
             )
           ),
-          snippetIdEnd(Shared.scalaJsHttpPathPrefix, ScalaTarget.Js.targetFilename)(sid =>
+          snippetIdEnd(Shared.scalaJsHttpPathPrefix, ScalaTarget.Js.sourceMapFilename)(sid =>
             complete(
               (dispatchActor ? FetchScalaJsSourceMap(sid))
                 .mapTo[Option[FetchResultScalaJsSourceMap]]

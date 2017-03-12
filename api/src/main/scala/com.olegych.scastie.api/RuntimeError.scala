@@ -10,6 +10,16 @@ case class RuntimeError(
 )
 
 object RuntimeError {
+  def wrap[T](in: => T): Either[Option[RuntimeError], T] = {
+    try{
+      Right(in)
+    } catch {
+      case ex: Exception => {
+        Left(RuntimeError.fromTrowable(ex, fromScala = false))
+      }
+    }
+  }
+
   def fromTrowable(t: Throwable, fromScala: Boolean = true): Option[RuntimeError] = {
     def search(e: Throwable) = {
       e.getStackTrace()

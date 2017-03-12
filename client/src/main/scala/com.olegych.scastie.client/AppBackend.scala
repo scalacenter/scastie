@@ -158,6 +158,10 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def run(e: ReactEventI): Callback = run()
   def run(): Callback = {
+    println("******************")
+    println("***** RUN ********")
+    println("******************")
+
     scope.state.flatMap(s =>
       Callback.future(ApiClient[Api].run(s.inputs).call().map(snippetId =>
         connectEventSource(snippetId).attemptTry.flatMap {
