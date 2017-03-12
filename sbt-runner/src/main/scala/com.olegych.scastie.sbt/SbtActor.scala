@@ -202,15 +202,17 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         val runtimeError = extractRuntimeError(line, lineOffset)
         val sbtOutput = extract[ConsoleOutput.SbtOutput](line)
 
-        // look like our sbt logger is not catching all messages
-        val sbtMessages = List(
-          "[info]",
-          "[success]",
-          "[error]",
-          "[warn]"
+        // sbt plugin is not loaded at this stage. we need to drop those messages
+        val initializationMessages = List(
+          "[info] Loading global plugins from",
+          "[info] Loading project definition from",
+          "[info] Set current project to scastie",
+          "[info] Updating {file:",
+          "[info] Done updating.",
+          "[info] Resolving"
         )
 
-        val isSbtMessage = sbtMessages.exists(message => line.startsWith(message))
+        val isSbtMessage = initializationMessages.exists(message => line.startsWith(message))
 
         val userOutput =
           if (problems.isEmpty

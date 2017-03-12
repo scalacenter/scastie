@@ -147,9 +147,8 @@ class Sbt(defaultConfig: Inputs) {
            lineCallback: (String, Boolean, Boolean) => Unit,
            reload: Boolean): Unit = {
 
-    val configChange = needsReload(inputs)
-    println("configChange: " + configChange)
-    
+    val isReloading = needsReload(inputs)
+
     if (inputs.sbtConfig != currentSbtConfig) {
       setConfig(inputs)
     }
@@ -158,7 +157,7 @@ class Sbt(defaultConfig: Inputs) {
       setPlugins(inputs)
     }
 
-    if (configChange) {
+    if (isReloading) {
       process("reload", lineCallback, reload = true)
     }
 

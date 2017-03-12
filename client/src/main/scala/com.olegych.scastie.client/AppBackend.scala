@@ -54,7 +54,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     val eventSource = new EventSource(snippetUri(snippetId, "progress-sse"))
 
     def onopen(e: Event): Unit = {
-      direct.modState(_.logSystem("Connected.\n"))
+      direct.modState(_.logSystem("Connected."))
     }
     def onmessage(e: MessageEvent): Unit = {
       val progress = uread[SnippetProgress](e.data.toString)
@@ -85,7 +85,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   private def connectWebSocket(snippetId: SnippetId) = CallbackTo[WebSocket] {
     val direct = scope.accessDirect
 
-    def onopen(e: Event): Unit = direct.modState(_.logSystem("Connected.\n"))
+    def onopen(e: Event): Unit = direct.modState(_.logSystem("Connected."))
     def onmessage(e: MessageEvent): Unit = {
       val progress = uread[SnippetProgress](e.data.toString)
       direct.modState(_.addProgress(progress))
@@ -95,7 +95,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     def onclose(e: CloseEvent): Unit =
       direct.modState(
         _.copy(websocket = None, running = false)
-          .logSystem(s"Closed: ${e.reason}\n"))
+          .logSystem(s"Closed: ${e.reason}"))
 
     val protocol = if (window.location.protocol == "https:") "wss" else "ws"
     val connectionPart = snippetUri(snippetId, "progress-websocket")
@@ -163,22 +163,14 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
         connectEventSource(snippetId).attemptTry.flatMap {
           case Success(eventSource) => {
             scope.modState(
-              _.resetOutputs
-                .setSnippetId(snippetId)
-                .setRunning(true)
-                .copy(eventSource = Some(eventSource))
-                .logSystem("Connecting...\n")
+              _.run(snippetId).copy(eventSource = Some(eventSource))
             )
           }
           case Failure(errorEventSource) =>
             connectWebSocket(snippetId).attemptTry.flatMap {
               case Success(websocket) => {
                 scope.modState(
-                  _.resetOutputs
-                    .setSnippetId(snippetId)
-                    .setRunning(true)
-                    .copy(websocket = Some(websocket))
-                    .logSystem("Connecting...\n")
+                  _.run(snippetId).copy(websocket = Some(websocket))
                 )
               }
               case Failure(errorWebSocket) =>

@@ -38,64 +38,6 @@ object App {
         val state = v.prevState
         val scope = v.$
 
-        if(scope.accessDirect.state.loadScalaJsScript && 
-           state.inputs.target.targetType == ScalaTargetType.JS &&
-           state.snippetId.isDefined) {
-          
-          scope.accessDirect.modState(_.setLoadScalaJsScript(false))
-
-          Callback {
-            val scalaJsId = "scastie-scalajs-playground-target"
-            val scalaJsRunId = "scastie-scalajs-playground-run"
-
-            def scalaJsUrl(snippetId: SnippetId): String = {
-              val middle =
-                snippetId match {
-                  case SnippetId(uuid, None) => uuid
-                  case SnippetId(uuid, Some(SnippetUserPart(login, update))) => 
-                    s"$login/$uuid/${update.getOrElse(0)}"
-                }
-
-              s"/${Shared.scalaJsHttpPathPrefix}/$middle/${ScalaTarget.Js.targetFilename}"
-            }
-
-            def createScript(id: String): HTMLScriptElement = {
-              val newScript = dom.document.createElement("script").asInstanceOf[HTMLScriptElement]
-              newScript.id = id
-              dom.document.body.appendChild(newScript)
-              newScript
-            }
-
-            def removeIfExist(id: String): Unit = {
-              Option(dom.document.getElementById(id)).foreach(element =>
-                element.parentNode.removeChild(element)
-              )
-            }
-            
-            removeIfExist(scalaJsId)
-            val scalaJsScriptElement = createScript(scalaJsId)
-            scalaJsScriptElement.onload = { (e: dom.Event) =>
-              removeIfExist(scalaJsRunId)
-              val scalaJsRunScriptElement = createScript(scalaJsRunId)
-              // scalaJsRunScriptElement.defer = true
-              scalaJsRunScriptElement.innerHTML =
-                """|com.olegych.scastie.client.ClientMain().signal(
-                   |  function(){ return Main().result; },
-                   |  function(){ return Main().attachedElements; }
-                   |)""".stripMargin
-            }
-            scalaJsScriptElement.src = scalaJsUrl(state.snippetId.get)
-
-          }
-        } else Callback(()) 
-      }
-      .componentWillReceiveProps{ v =>
-        val next = v.nextProps.snippetId
-        val current = v.currentProps.snippetId
-        val state = v.$.state
-        val backend = v.$.backend
-        
-
         val setTitle =
           if(state.inputsHasChanged) {
             Callback(dom.document.title = "Scastie (*)") 
@@ -103,18 +45,75 @@ object App {
             Callback(dom.document.title = "Scastie") 
           }
 
-        val loadNewSnippet =
-          if(next != current) {
-            next match {
-              case Some(snippetId) => 
-                backend.loadSnippet(snippetId) >>
-                backend.setView(View.Editor)
-              case _ => Callback(())
-            }
+        val executeScalaJs =
+          if(scope.accessDirect.state.loadScalaJsScript && 
+             state.inputs.target.targetType == ScalaTargetType.JS &&
+             state.snippetId.nonEmpty) {
             
+            scope.accessDirect.modState(_.setLoadScalaJsScript(false))
+
+            Callback {
+              val scalaJsId = "scastie-scalajs-playground-target"
+              val scalaJsRunId = "scastie-scalajs-playground-run"
+
+              def scalaJsUrl(snippetId: SnippetId): String = {
+                val middle =
+                  snippetId match {
+                    case SnippetId(uuid, None) => uuid
+                    case SnippetId(uuid, Some(SnippetUserPart(login, update))) => 
+                      s"$login/$uuid/${update.getOrElse(0)}"
+                  }
+
+                s"/${Shared.scalaJsHttpPathPrefix}/$middle/${ScalaTarget.Js.targetFilename}"
+              }
+
+              def createScript(id: String): HTMLScriptElement = {
+                val newScript = dom.document.createElement("script").asInstanceOf[HTMLScriptElement]
+                newScript.id = id
+                dom.document.body.appendChild(newScript)
+                newScript
+              }
+
+              def removeIfExist(id: String): Unit = {
+                Option(dom.document.getElementById(id)).foreach(element =>
+                  element.parentNode.removeChild(element)
+                )
+              }
+              
+              removeIfExist(scalaJsId)
+              val scalaJsScriptElement = createScript(scalaJsId)
+              scalaJsScriptElement.onload = { (e: dom.Event) =>
+                removeIfExist(scalaJsRunId)
+                val scalaJsRunScriptElement = createScript(scalaJsRunId)
+                // scalaJsRunScriptElement.defer = true
+                scalaJsRunScriptElement.innerHTML =
+                  """|com.olegych.scastie.client.ClientMain().signal(
+                     |  function(){ return Main().result; },
+                     |  function(){ return Main().attachedElements; }
+                     |)""".stripMargin
+              }
+              scalaJsScriptElement.src = scalaJsUrl(state.snippetId.get)
+
+            }
           } else Callback(())
 
-        loadNewSnippet >> setTitle
+        setTitle >> executeScalaJs
+      }
+      .componentWillReceiveProps{ v =>
+        val next = v.nextProps.snippetId
+        val current = v.currentProps.snippetId
+        val state = v.$.state
+        val backend = v.$.backend
+        
+        if(next != current) {
+          next match {
+            case Some(snippetId) => 
+              backend.loadSnippet(snippetId) >>
+              backend.setView(View.Editor)
+            case _ => Callback(())
+          }
+          
+        } else Callback(())
       }
       .build
 

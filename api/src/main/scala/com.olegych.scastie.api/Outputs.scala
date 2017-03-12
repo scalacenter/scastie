@@ -21,7 +21,7 @@ case class Outputs(
   runtimeError: Option[RuntimeError]
 ) {
 
-  def console: String = consoleOutputs.map(_.show).mkString("")
+  def console: String = consoleOutputs.map(_.show).mkString("\n")
 
   def isClearable: Boolean =
     !consoleOutputs.isEmpty ||

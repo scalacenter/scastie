@@ -73,6 +73,10 @@ case class AppState(
     inputs: Inputs = inputs,
     outputs: Outputs = outputs): AppState = {
 
+    val snippetId0 =
+      if(inputsHasChanged) None
+      else snippetId
+
     val state0 =
       copy(
         view,
@@ -85,7 +89,7 @@ case class AppState(
         consoleIsOpen,
         consoleHasUserOutput,
         inputsHasChanged,
-        snippetId,
+        snippetId0,
         loadSnippet,
         isStartup,
         loadScalaJsScript,
@@ -111,6 +115,14 @@ case class AppState(
 
   def isClearable: Boolean =
     outputs.isClearable
+
+  def run(snippetId: SnippetId): AppState = {
+    resetOutputs
+      .setSnippetId(snippetId)
+      .setRunning(true)
+      .logSystem("Connecting.")
+      .copyAndSave(inputsHasChanged = false)
+  }
 
   def setRunning(running: Boolean): AppState = {
     val console = !running && !consoleHasUserOutput
