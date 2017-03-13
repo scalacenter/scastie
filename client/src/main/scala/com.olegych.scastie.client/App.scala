@@ -47,9 +47,9 @@ object App {
 
         val executeScalaJs =
           if(scope.accessDirect.state.loadScalaJsScript && 
-             state.inputs.target.targetType == ScalaTargetType.JS &&
-             state.snippetId.nonEmpty // FIXME
-             ) {
+             state.snippetIdIsScalaJS &&
+             state.snippetId.nonEmpty &&
+             !state.running) {
             
             scope.accessDirect.modState(_.setLoadScalaJsScript(false))
 
@@ -97,7 +97,7 @@ object App {
                      |    main.attachedElements
                      |  )
                      |} catch (e) {
-                     | console.log("== Caught Error ==")
+                     | console.log("== Caught JS Error ==")
                      | console.log(e)
                      |}""".stripMargin
               }

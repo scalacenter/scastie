@@ -24,6 +24,7 @@ object AppState {
     loadSnippet = true,
     isStartup = true,
     loadScalaJsScript = false,
+    snippetIdIsScalaJS = false,
     user = None,
     attachedDoms = Map(),
     inputs = Inputs.default,
@@ -51,6 +52,7 @@ case class AppState(
     loadSnippet: Boolean,
     isStartup: Boolean,
     loadScalaJsScript: Boolean,
+    snippetIdIsScalaJS: Boolean,
     user: Option[User],
     attachedDoms: AttachedDoms,
     inputs: Inputs,
@@ -68,6 +70,7 @@ case class AppState(
     consoleHasUserOutput: Boolean = consoleHasUserOutput,
     inputsHasChanged: Boolean = inputsHasChanged,
     snippetId: Option[SnippetId] = snippetId,
+    snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
     user: Option[User] = user,
     attachedDoms: AttachedDoms = attachedDoms,
     inputs: Inputs = inputs,
@@ -93,6 +96,7 @@ case class AppState(
         loadSnippet,
         isStartup,
         loadScalaJsScript,
+        snippetIdIsScalaJS,
         user,
         attachedDoms,
         inputs.copy(
@@ -101,12 +105,6 @@ case class AppState(
         ),
         outputs
       )
-
-    val state1 = 
-      if(inputs.target.targetType == ScalaTargetType.JS) {
-        // we need to re-evaluate the javascript
-      }
-      else state0
 
     LocalStorage.save(state0)
 
@@ -118,10 +116,10 @@ case class AppState(
 
   def run(snippetId: SnippetId): AppState = {
     resetOutputs
-      .setSnippetId(snippetId)
       .setRunning(true)
       .logSystem("Connecting.")
       .copyAndSave(inputsHasChanged = false)
+      .setSnippetId(snippetId)
   }
 
   def setRunning(running: Boolean): AppState = {
@@ -264,7 +262,10 @@ case class AppState(
   }
 
   def setSnippetId(snippetId: SnippetId): AppState = {
-    copyAndSave(snippetId = Some(snippetId))
+    copyAndSave(
+      snippetId = Some(snippetId),
+      snippetIdIsScalaJS = inputs.target.targetType == ScalaTargetType.JS
+    )
   }
 
   private def info(message: String) = Problem(api.Info, None, message)
