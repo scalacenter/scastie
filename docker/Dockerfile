@@ -11,9 +11,9 @@ ENV SBT_OPTS -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
 RUN wget http://dl.bintray.com/sbt/native-packages/sbt/0.13.13/sbt-0.13.13.tgz -O /tmp/sbt-0.13.13.tgz
 RUN mkdir /tmp/sbt
 RUN tar -xzvf /tmp/sbt-0.13.13.tgz -C /tmp
-RUN mv /tmp/sbt-launcher-packaging-0.13.13/bin/sbt /usr/local/bin
-RUN mv /tmp/sbt-launcher-packaging-0.13.13/bin/sbt-launch-lib.bash /usr/local/bin
-RUN mv /tmp/sbt-launcher-packaging-0.13.13/bin/sbt-launch.jar /usr/local/bin
+RUN cp /tmp/sbt-launcher-packaging-0.13.13/bin/sbt /usr/local/bin/sbt
+RUN cp /tmp/sbt-launcher-packaging-0.13.13/bin/sbt-launch-lib.bash /usr/local/bin/sbt-launch-lib.bash
+RUN cp /tmp/sbt-launcher-packaging-0.13.13/bin/sbt-launch.jar /usr/local/bin/sbt-launch.jar
 
 RUN mkdir /root/.sbt
 RUN mkdir /root/.sbt/0.13
@@ -61,4 +61,10 @@ RUN mkdir /root/dotty/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /root/dotty/src/main/scala/Main.scala
 RUN cd /root/dotty; sbt run
 
-RUN apk add --update rsync
+# phantomjs
+RUN apk add --update curl
+RUN apk update && apk add --no-cache fontconfig && \
+  mkdir -p /usr/share && \
+  cd /usr/share \
+  && curl -L https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/2.11/phantomjs-alpine-x86_64.tar.bz2 | tar xj \
+  && ln -s /usr/share/phantomjs/phantomjs /usr/bin/phantomjs
