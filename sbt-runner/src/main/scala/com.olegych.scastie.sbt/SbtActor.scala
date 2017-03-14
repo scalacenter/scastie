@@ -101,6 +101,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         SnippetProgress
           .default(snippetId)
           .copy(
+            timeout = true,
+            done = true,
             compilationInfos = List(
               Problem(
                 Error,
@@ -286,8 +288,9 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
   def extractRuntimeError(line: String,
                           lineOffset: Int): Option[RuntimeError] = {
-    extract[RuntimeError](line).map(error =>
-      error.copy(line = error.line.map(_ + lineOffset)))
+    extract[Option[RuntimeError]](line).flatMap(
+      _.map(error => error.copy(line = error.line.map(_ + lineOffset)))
+    )
   }
 
   private def extract[T: Reader](line: String,
