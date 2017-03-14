@@ -2,6 +2,9 @@ import ScalaJSHelper._
 
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
+import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
+import sbt.Keys._
+// import sbt.Project.projectToRef
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.4.16"
 
@@ -12,6 +15,7 @@ def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 lazy val upickleVersion = "0.4.4"
 lazy val autowireVersion = "0.2.5"
 lazy val scalajsDomVersion = "0.9.1"
+lazy val scalaTestVersion = "3.0.1"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
@@ -48,7 +52,7 @@ lazy val loggingAndTest =
   libraryDependencies ++= Seq(
     "ch.qos.logback" % "logback-classic" % "1.2.1",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-    "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   )
 
 lazy val utils = project
@@ -220,34 +224,44 @@ lazy val codemirror = project
         "mode/clike/clike"
       ).map(codemirrorD)
     },
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion,
+    jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
   )
   .enablePlugins(ScalaJSPlugin)
 
-/* frontend code */
-def react(artifact: String, name: String): JSModuleID =
-  "org.webjars.bower" % "react" % "15.3.2" % "compile" / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+def react(artifact: String, name: String, configuration: Configuration = Compile): JSModuleID =
+  "org.webjars.bower" % "react" % "15.4.2" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
-def react(artifact: String, name: String, depends: String): JSModuleID =
-  react(artifact, name).dependsOn(s"$depends.js")
+def reactWithDepends(artifact: String, name: String, depends: String, configuration: Configuration = Compile): JSModuleID =
+  react(artifact, name, configuration).dependsOn(s"$depends.js")
+
 
 lazy val client = project
   .settings(baseSettings)
   .settings(
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     skip in packageJSDependencies := false,
-    test := {},
     jsDependencies ++= Seq(
-      react("react-with-addons", "React"),
-      react("react-dom", "ReactDOM", "react-with-addons"),
-      react("react-dom-server", "ReactDOMServer", "react-dom")
+      reactWithDepends("react-dom", "ReactDOM", "react-with-addons"),
+      reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom"),
+      react("react-with-addons", "React", Test),
+      reactWithDepends("react-dom", "ReactDOM", "react-with-addons", Test),
+      reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom", Test),
+      RuntimeDOM % Test
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.2",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.3",
       "org.webjars.bower" % "open-iconic" % "1.1.1",
       "org.webjars" % "font-awesome" % "4.7.0",
-      "org.webjars.npm" % "firacode" % "1.205.0"
-    )
+      "org.webjars.npm" % "firacode" % "1.205.0",
+      "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
+      "com.github.japgolly.scalajs-react" %%% "test" % "0.11.3" % Test
+    ),
+    requiresDOM := true,
+    persistLauncher := true,
+    persistLauncher in Test := false,
+    scalaJSStage in Test := FastOptStage,
+    jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror, api211JS)

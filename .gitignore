@@ -12,3 +12,4 @@ TODO
 .idea
 deployment/beta
 deployment/users.txt
+node_modules

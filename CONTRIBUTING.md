@@ -8,6 +8,7 @@ You are more than welcome to contribute any PR regardeless if it's listed or not
 requirements: 
 
 * node (for less)
+* phantomjs (for running client tests) ```npm install -g phantomjs```
 * `export SBT_OPTS = "-Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"`
 
 ```
