@@ -1,10 +1,8 @@
 import ScalaJSHelper._
-
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
 import sbt.Keys._
-// import sbt.Project.projectToRef
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.4.16"
 
@@ -19,7 +17,7 @@ lazy val scalaTestVersion = "3.0.1"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.12.0-SNAPSHOT"
+  version := "0.12.0"
 )
 
 lazy val baseSettings = Seq(
