@@ -1,5 +1,5 @@
 build:
-  image: scalacenter/scastie-docker-sbt:0.0.9
+  image: scalacenter/scastie-docker-sbt:0.0.10
   environment:
     - COURSIER_CACHE=/drone/cache/coursier
   commands:
