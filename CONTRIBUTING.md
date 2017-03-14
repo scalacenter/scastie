@@ -8,7 +8,7 @@ You are more than welcome to contribute any PR regardeless if it's listed or not
 requirements: 
 
 * node (for less)
-* export SBT_OPTS = "-Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"
+* `export SBT_OPTS = "-Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"`
 
 ```
 sbt
