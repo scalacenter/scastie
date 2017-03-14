@@ -101,7 +101,7 @@ class Deployment(rootFolder: File,
                  val logger: Logger) {
   def deploy(serverZip: Path): Unit = {
     deployRunners()
-    deployServer(serverZip)
+    // deployServer(serverZip)
   }
 
   def deployServer(serverZip: Path): Unit = {
@@ -136,8 +136,6 @@ class Deployment(rootFolder: File,
     Files.write(serverScript, content.getBytes)
 
     logger.info("Deploy servers")
-
-    def rsyncServer(file: Path) = rsync(file, userName, serverHostname, logger)
 
     val scastieSecrets = "scastie-secrets"
     val secretFolder = rootFolder / ".." / scastieSecrets
@@ -174,7 +172,7 @@ class Deployment(rootFolder: File,
 
     val dockerImagePath = s"$dockerNamespace/$dockerRepository:$version"
 
-    val content =
+    val sbtScriptContent = 
       s"""|#!/usr/bin/env bash
           |
           |whoami
@@ -199,13 +197,26 @@ class Deployment(rootFolder: File,
           |done
           |""".stripMargin
 
-    Files.write(sbtScript, content.getBytes)
-
+    Files.write(sbtScript, sbtScriptContent.getBytes)
     val scriptFileName = sbtScript.getFileName
-    val uri = userName + "@" + runnersHostname
-    Process("rm -rf sbt*.sh") ! logger
-    Process(s"rsync $sbtScript $uri:$scriptFileName") ! logger
-    Process(s"ssh $uri ./$scriptFileName") ! logger
+
+    val runnerUri = userName + "@" + runnersHostname
+    val serverUri = userName + "@" + serverHostname
+
+    val proxyScript = Files.createTempFile("proxy", ".sh")
+    val proxyScriptFileName = proxyScript.getFileName
+    Files.setPosixFilePermissions(proxyScript, executablePermissions)
+
+    val proxyScriptContent =
+      s"""|rm proxy*.sh
+          |rsync $scriptFileName $runnerUri:$scriptFileName
+          |ssh $runnerUri ./$scriptFileName""".stripMargin
+
+    Files.write(proxyScript, proxyScriptContent.getBytes)
+
+    rsyncServer(sbtScript)
+    rsyncServer(proxyScript)
+    Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
   }
 
   private val userName = "scastie"
@@ -237,4 +248,7 @@ class Deployment(rootFolder: File,
     val fileName = file.getFileName
     Process(s"rsync $file $uri:$fileName") ! logger
   }
+
+  private def rsyncServer(file: Path) =
+    rsync(file, userName, serverHostname, logger)
 }
