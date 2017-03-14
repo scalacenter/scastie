@@ -29,7 +29,6 @@ object SideBar {
         val disabledIfSameInputs =
           if(!state.inputsHasChanged) "disabled"
           else ""
-
         import View.ctrl
 
         val sharing =
@@ -99,8 +98,7 @@ object SideBar {
           )
           case View.UserProfile => Seq(
             LibraryButton(state, backend),
-            RunButton(state, backend),
-            li("User Profile (NY)")
+            RunButton(state, backend)
           )
         }
 

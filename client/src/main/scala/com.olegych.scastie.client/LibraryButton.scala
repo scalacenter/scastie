@@ -10,20 +10,15 @@ object LibraryButton {
       case (state, backend) =>
         import backend._
 
-        def selected(view: View) =
-          if (view == state.view) TagMod(`class` := "selected") else EmptyTag
+        def selected =
+          if (state.view == View.Libraries) TagMod(`class` := "selected") else EmptyTag
+       
 
-        def isSelected = View.Libraries == state.view
-
-        def getButtonImage = if (isSelected) "library.svg" else "library-gray.svg"
-
-        li(onClick ==> setView2(View.Libraries),
-          title := "Open Libraries View",
-          selected(View.Libraries),
-          `class` := "button library-button")(
-          img(src := s"""/assets/public/$getButtonImage""",
-            alt := "Libraries (Build)",
-            `class` := "image-button"),
+        li( onClick ==> setView2(View.Libraries),
+            title := "Open Libraries View",
+            selected,
+            `class` := "button library-button")(
+          i(`class` := "fa fa-book"),
           p("Libraries (Build)")
         )
     }
