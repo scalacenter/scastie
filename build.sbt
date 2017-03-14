@@ -232,7 +232,7 @@ lazy val codemirror = project
 def react(artifact: String,
           name: String,
           configuration: Configuration = Compile): JSModuleID =
-  "org.webjars.bower" % "react" % "15.4.2" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+  "org.webjars.bower" % "react" % "15.3.2" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
 def reactWithDepends(artifact: String,
                      name: String,
@@ -246,9 +246,10 @@ lazy val client = project
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     skip in packageJSDependencies := false,
     jsDependencies ++= Seq(
+      react("react-with-addons", "React"),
       reactWithDepends("react-dom", "ReactDOM", "react-with-addons"),
       reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom"),
-      react("react-with-addons", "React", Test),
+
       reactWithDepends("react-dom", "ReactDOM", "react-with-addons", Test),
       reactWithDepends("react-dom-server",
                        "ReactDOMServer",
