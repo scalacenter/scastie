@@ -247,7 +247,6 @@ lazy val client = project
       react("react-with-addons", "React"),
       reactWithDepends("react-dom", "ReactDOM", "react-with-addons"),
       reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom"),
-
       reactWithDepends("react-dom", "ReactDOM", "react-with-addons", Test),
       reactWithDepends("react-dom-server",
                        "ReactDOMServer",
