@@ -201,7 +201,6 @@ object Libraries {
   private val component =
     ReactComponentB[(AppState, AppBackend)]("Libraries").render_P {
       case (state, backend) =>
-        
         val theme = if (state.isDarkTheme) "dark" else "light"
 
         val worksheetModeSelected =
@@ -222,10 +221,12 @@ object Libraries {
           renderVersions(state.inputs.target, backend),
           fieldset(
             legend("Options"),
-            button(onClick ==> backend.toggleWorksheetMode,
-               title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
-               worksheetModeSelected,
-               `class` := "button", worksheetModeClassSelected)(
+            button(
+              onClick ==> backend.toggleWorksheetMode,
+              title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
+              worksheetModeSelected,
+              `class` := "button",
+              worksheetModeClassSelected)(
               iconic.script,
               p(s"Worksheet $worksheetModeToogleLabel")
             )
@@ -257,9 +258,10 @@ object Libraries {
             div("resulting plugins.sbt"),
             div(`class` := "result-sbt")(
               CodeMirrorEditor(
-                CodeMirrorEditor.Settings(value = state.inputs.sbtPluginsConfig,
-                                          theme = s"solarized $theme",
-                                          readOnly = true),
+                CodeMirrorEditor.Settings(
+                  value = state.inputs.sbtPluginsConfig,
+                  theme = s"solarized $theme",
+                  readOnly = true),
                 CodeMirrorEditor.Handler(
                   _ => Callback(())
                 )

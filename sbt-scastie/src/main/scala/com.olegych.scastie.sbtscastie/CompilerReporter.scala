@@ -42,8 +42,8 @@ object CompilerReporter {
               case xsbti.Severity.Error => api.Error
             }
           api.Problem(severity,
-                         toOption(p.position.line).map(_.toInt),
-                         p.message)
+                      toOption(p.position.line).map(_.toInt),
+                      p.message)
         }
         if (problems.nonEmpty) {
           println(uwrite(problems.filterNot(annoying).map(toApi)))

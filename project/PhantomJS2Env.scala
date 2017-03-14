@@ -7,7 +7,11 @@ class PhantomJS2Env(jettyClassLoader: ClassLoader,
                     addArgs: Seq[String] = Seq.empty,
                     addEnv: Map[String, String] = Map.empty,
                     override val autoExit: Boolean = true)
-  extends PhantomJSEnv(phantomjsPath, addArgs, addEnv, autoExit, jettyClassLoader) {
+    extends PhantomJSEnv(phantomjsPath,
+                         addArgs,
+                         addEnv,
+                         autoExit,
+                         jettyClassLoader) {
 
   override protected def vmName: String = "PhantomJS2"
 

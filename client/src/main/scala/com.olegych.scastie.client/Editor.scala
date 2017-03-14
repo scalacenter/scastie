@@ -140,7 +140,8 @@ object Editor {
           }
 
           scope.modState(_.copy(editor = Some(editor))) >>
-            scope.state.flatMap(state => runDelta(editor, (f => scope.modState(f)), state, None, props))
+            scope.state.flatMap(state =>
+              runDelta(editor, (f => scope.modState(f)), state, None, props))
       }
     }
   }
@@ -237,13 +238,14 @@ object Editor {
 
               val basePos = new CMPosition { line = lineNumber; ch = 0 }
               val offsetPos = new CMPosition {
-                line = lineNumber; ch = doc2.getLine(lineNumber).map(_.length).getOrElse(0)
+                line = lineNumber;
+                ch = doc2.getLine(lineNumber).map(_.length).getOrElse(0)
               }
               val mode = "local"
               val base = editor2.cursorCoords(basePos, mode)
               val offset = editor2.cursorCoords(offsetPos, mode)
               node.style.left = (offset.left - base.left) + "px"
-              
+
             }
             case _ => {
               // the line was deleted
@@ -285,8 +287,9 @@ object Editor {
             if (!folded) nextline(endPos, content, process)
             else fold(startPos, endPos, content, process)
           }
-          case instrumentation @ Instrumentation(api.Position(start, end),
-                                                 AttachedDom(uuid, folded)) => {
+          case instrumentation @ Instrumentation(
+                api.Position(start, end),
+                AttachedDom(uuid, folded)) => {
 
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)
@@ -414,7 +417,7 @@ object Editor {
       for {
         added <- toAdd
         removed <- toRemove
-        _ <- modState(updateEditorState(items => (items ++ added) -- removed) )
+        _ <- modState(updateEditorState(items => (items ++ added) -- removed))
       } yield ()
     }
 
@@ -449,7 +452,13 @@ object Editor {
         val scope = v.$
 
         state.editor
-          .map(editor => runDelta(editor, (f => scope.modState(f)), state, Some(current), next))
+          .map(
+            editor =>
+              runDelta(editor,
+                       (f => scope.modState(f)),
+                       state,
+                       Some(current),
+                       next))
           .getOrElse(Callback(()))
       }
       .componentDidMount(_.backend.start())

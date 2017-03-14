@@ -3,7 +3,7 @@ package client
 
 import scala.scalajs.js
 
-import org.scalajs.dom.raw.HTMLElement 
+import org.scalajs.dom.raw.HTMLElement
 
 import api._
 import japgolly.scalajs.react._
@@ -19,30 +19,33 @@ object Global {
     scope0 = Some(scope)
   }
 
-  def signal(instrumentationsRaw: String, attachedDoms: js.Array[HTMLElement]): Unit = {
-    scope0.foreach{ scope =>
+  def signal(instrumentationsRaw: String,
+             attachedDoms: js.Array[HTMLElement]): Unit = {
+    scope0.foreach { scope =>
       println("== signal ==")
       println(instrumentationsRaw)
       println(attachedDoms)
 
       val direct = scope.accessDirect
 
-      val result = uread[Either[Option[RuntimeError], List[Instrumentation]]](instrumentationsRaw)
+      val result = uread[Either[Option[RuntimeError], List[Instrumentation]]](
+        instrumentationsRaw)
 
       val (instr, runtimeError) = result match {
-        case Left(maybeRuntimeError) => (Nil, maybeRuntimeError) 
+        case Left(maybeRuntimeError) => (Nil, maybeRuntimeError)
         case Right(instrumentations) => (instrumentations, None)
       }
 
-      direct.modState(state =>
-        state.copyAndSave(
-          attachedDoms = attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap,
-          outputs = state.outputs.copy(
-            instrumentations = state.outputs.instrumentations ++ instr.toSet,
-            runtimeError = runtimeError
-          )
-        )
-      )
+      direct.modState(
+        state =>
+          state.copyAndSave(
+            attachedDoms =
+              attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap,
+            outputs = state.outputs.copy(
+              instrumentations = state.outputs.instrumentations ++ instr.toSet,
+              runtimeError = runtimeError
+            )
+        ))
     }
   }
 }

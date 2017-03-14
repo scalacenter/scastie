@@ -20,10 +20,10 @@ case class FetchScalaJsSourceMap(snippetId: SnippetId)
 case class FetchResultScalaJsSourceMap(content: String)
 
 case class ScalaDependency(
-  groupId: String,
-  artifact: String,
-  target: ScalaTarget,
-  version: String
+    groupId: String,
+    artifact: String,
+    target: ScalaTarget,
+    version: String
 )
 
 case class Project(
@@ -35,6 +35,3 @@ case class Project(
 
 // Keep websocket connection
 case class KeepAlive(msg: String = "") extends AnyVal
-
-
-

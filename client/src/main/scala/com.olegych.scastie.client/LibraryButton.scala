@@ -11,18 +11,17 @@ object LibraryButton {
         import backend._
 
         def selected =
-          if (state.view == View.Libraries) TagMod(`class` := "selected") else EmptyTag
-       
+          if (state.view == View.Libraries) TagMod(`class` := "selected")
+          else EmptyTag
 
-        li( onClick ==> setView2(View.Libraries),
-            title := "Open Libraries View",
-            selected,
-            `class` := "button library-button")(
+        li(onClick ==> setView2(View.Libraries),
+           title := "Open Libraries View",
+           selected,
+           `class` := "button library-button")(
           i(`class` := "fa fa-book"),
           p("Libraries (Build)")
         )
-    }
-    .build
+    }.build
 
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 }

@@ -35,7 +35,8 @@ class ProgressActor extends Actor with ActorLogging {
     }
   }
 
-  private def getOrCreatePublisher(snippetId: SnippetId): (ProgressSource, ActorRef) = {
+  private def getOrCreatePublisher(
+      snippetId: SnippetId): (ProgressSource, ActorRef) = {
     def createPublisher() = {
       val ref = context.actorOf(Props(new ProgressForwarder(self)))
       val source = Source.fromPublisher(ActorPublisher[SnippetProgress](ref))
@@ -65,7 +66,7 @@ class ProgressForwarder(progressActor: ActorRef)
 
   private def deliver(): Unit = {
     if (totalDemand > 0) {
-      buffer.foreach{progress =>
+      buffer.foreach { progress =>
         onNext(progress)
 
         if (progress.done) {

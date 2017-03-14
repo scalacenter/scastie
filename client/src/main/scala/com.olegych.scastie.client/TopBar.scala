@@ -11,7 +11,7 @@ object TopBar {
   private val component =
     ReactComponentB[(AppState, AppBackend)]("TopBar").render_P {
       case (state, backend) =>
-      import backend._
+        import backend._
 
         val theme = if (state.isDarkTheme) "dark" else "light"
 
@@ -40,12 +40,12 @@ object TopBar {
 
         def logout(e: ReactEventI): Callback =
           backend.setView(View.Editor) >>
-          Callback(dom.window.location.pathname = logoutUrl)
+            Callback(dom.window.location.pathname = logoutUrl)
 
         def login(e: ReactEventI): Callback =
           Callback(dom.window.location.pathname = "/login")
 
-        val profileButton = 
+        val profileButton =
           state.user match {
             case Some(user) =>
               TagMod(
@@ -63,7 +63,7 @@ object TopBar {
                   p("Logout")
                 )
               )
-            case None => 
+            case None =>
               TagMod(
                 li(onClick ==> login, `class` := "button")(
                   iconic.accountLogin,
@@ -82,8 +82,8 @@ object TopBar {
               p("Theme")
             ),
             li(onClick ==> feedback,
-                 title := "Open Gitter.im Chat to give us feedback",
-                 `class` := "button")(
+               title := "Open Gitter.im Chat to give us feedback",
+               `class` := "button")(
               iconic.chat,
               p("Feedback")
             ),

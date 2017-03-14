@@ -15,10 +15,10 @@ object Outputs {
   )
 }
 case class Outputs(
-  consoleOutputs: Vector[ConsoleOutput],
-  compilationInfos: Set[Problem],
-  instrumentations: Set[Instrumentation],
-  runtimeError: Option[RuntimeError]
+    consoleOutputs: Vector[ConsoleOutput],
+    compilationInfos: Set[Problem],
+    instrumentations: Set[Instrumentation],
+    runtimeError: Option[RuntimeError]
 ) {
 
   def console: String = consoleOutputs.map(_.show).mkString("\n")
@@ -33,21 +33,20 @@ case class Outputs(
 case class Position(start: Int, end: Int)
 
 case class CompilationInfo(
-  severity: Severity,
-  position: Position,
-  message: String
+    severity: Severity,
+    position: Position,
+    message: String
 )
 
-
-sealed trait ConsoleOutput { 
+sealed trait ConsoleOutput {
   def show: String
 }
 object ConsoleOutput {
-  case class SbtOutput(line: String) extends ConsoleOutput { 
+  case class SbtOutput(line: String) extends ConsoleOutput {
     def show: String = s"sbt: $line"
   }
 
-  case class UserOutput(line: String) extends ConsoleOutput { 
+  case class UserOutput(line: String) extends ConsoleOutput {
     def show: String = s"user: $line"
   }
 
@@ -55,4 +54,3 @@ object ConsoleOutput {
     def show: String = s"scastie: $line"
   }
 }
-

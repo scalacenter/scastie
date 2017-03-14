@@ -48,17 +48,26 @@ object ServerMain {
     import userDirectives.requireLogin
 
     val progressActor =
-      system.actorOf(Props[ProgressActor], name = "ProgressActor")
+      system.actorOf(
+        Props[ProgressActor],
+        name = "ProgressActor"
+      )
 
-    val dispatchActor = system
-      .actorOf(Props(new DispatchActor(progressActor)), name = "DispatchActor")
+    val dispatchActor =
+      system.actorOf(
+        Props(new DispatchActor(progressActor)),
+        name = "DispatchActor"
+      )
 
     val userFacingRoutes =
       new FrontPage(production).routes
 
     val programmaticRoutes =
       concat(
-        new AutowireApi(dispatchActor, progressActor, userDirectives).routes,
+        new DebugRoutes(dispatchActor).routes,
+        new ProgressRoutes(progressActor).routes,
+        new ScalaJsRoutes(progressActor).routes,
+        new AutowireApi(dispatchActor, userDirectives).routes,
         Assets.routes
       )
 
@@ -68,7 +77,7 @@ object ServerMain {
         new OAuth2(github, session).routes
       )
 
-    val privateRoutes = 
+    val privateRoutes =
       requireLogin(
         concat(programmaticRoutes, userFacingRoutes)
       )

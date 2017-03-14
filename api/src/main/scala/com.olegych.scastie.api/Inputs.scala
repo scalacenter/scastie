@@ -76,7 +76,7 @@ case class Inputs(
 
   }
 
-  def sbtConfig: String = { 
+  def sbtConfig: String = {
     val (targetConfig, targetDependecy) =
       target match {
         case ScalaTarget.Jvm(scalaVersion) => {
@@ -144,10 +144,11 @@ case class Inputs(
       }
 
     val optionnalTargetDependecy =
-      if(worksheetMode) Some(targetDependecy)
+      if (worksheetMode) Some(targetDependecy)
       else None
 
-    val allLibraries = optionnalTargetDependecy.map(libraries + _).getOrElse(libraries)
+    val allLibraries =
+      optionnalTargetDependecy.map(libraries + _).getOrElse(libraries)
 
     val librariesConfig =
       if (allLibraries.isEmpty) ""

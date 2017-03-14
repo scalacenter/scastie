@@ -20,7 +20,8 @@ object App {
             else "light"
 
           val sideBar =
-            if (!props.isEmbedded) TagMod(SideBar(state, scope.backend, props.snippetId))
+            if (!props.isEmbedded)
+              TagMod(SideBar(state, scope.backend, props.snippetId))
             else EmptyTag
 
           val appClass =
@@ -34,23 +35,23 @@ object App {
         }
       }
       .componentWillMount(s => s.backend.start(s.props))
-      .componentDidUpdate{ v =>
+      .componentDidUpdate { v =>
         val state = v.prevState
         val scope = v.$
 
         val setTitle =
-          if(state.inputsHasChanged) {
-            Callback(dom.document.title = "Scastie (*)") 
+          if (state.inputsHasChanged) {
+            Callback(dom.document.title = "Scastie (*)")
           } else {
-            Callback(dom.document.title = "Scastie") 
+            Callback(dom.document.title = "Scastie")
           }
 
         val executeScalaJs =
-          if(scope.accessDirect.state.loadScalaJsScript && 
-             state.snippetIdIsScalaJS &&
-             state.snippetId.nonEmpty &&
-             !state.running) {
-            
+          if (scope.accessDirect.state.loadScalaJsScript &&
+              state.snippetIdIsScalaJS &&
+              state.snippetId.nonEmpty &&
+              !state.running) {
+
             scope.accessDirect.modState(_.setLoadScalaJsScript(false))
 
             Callback {
@@ -61,7 +62,8 @@ object App {
                 val middle =
                   snippetId match {
                     case SnippetId(uuid, None) => uuid
-                    case SnippetId(uuid, Some(SnippetUserPart(login, update))) => 
+                    case SnippetId(uuid,
+                                   Some(SnippetUserPart(login, update))) =>
                       s"$login/$uuid/${update.getOrElse(0)}"
                   }
 
@@ -69,7 +71,9 @@ object App {
               }
 
               def createScript(id: String): HTMLScriptElement = {
-                val newScript = dom.document.createElement("script").asInstanceOf[HTMLScriptElement]
+                val newScript = dom.document
+                  .createElement("script")
+                  .asInstanceOf[HTMLScriptElement]
                 newScript.id = id
                 dom.document.body.appendChild(newScript)
                 newScript
@@ -77,10 +81,9 @@ object App {
 
               def removeIfExist(id: String): Unit = {
                 Option(dom.document.getElementById(id)).foreach(element =>
-                  element.parentNode.removeChild(element)
-                )
+                  element.parentNode.removeChild(element))
               }
-              
+
               println("== Loading Scala.js ==")
 
               removeIfExist(scalaJsId)
@@ -101,7 +104,7 @@ object App {
                      | console.log(e)
                      |}""".stripMargin
               }
-              if(state.snippetId.nonEmpty) {
+              if (state.snippetId.nonEmpty) {
                 scalaJsScriptElement.src = scalaJsUrl(state.snippetId.get)
               } else {
                 println("empty snippetId")
@@ -111,20 +114,20 @@ object App {
 
         setTitle >> executeScalaJs
       }
-      .componentWillReceiveProps{ v =>
+      .componentWillReceiveProps { v =>
         val next = v.nextProps.snippetId
         val current = v.currentProps.snippetId
         val state = v.$.state
         val backend = v.$.backend
-        
-        if(next != current) {
+
+        if (next != current) {
           next match {
-            case Some(snippetId) => 
+            case Some(snippetId) =>
               backend.loadSnippet(snippetId) >>
-              backend.setView(View.Editor)
+                backend.setView(View.Editor)
             case _ => Callback(())
           }
-          
+
         } else Callback(())
       }
       .build

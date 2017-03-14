@@ -20,7 +20,6 @@ class InstrumentSpecs extends FunSuite {
   }
 
   testFiles.foreach { path =>
-
     val dirName = path.getFileName.toString
 
     test(dirName) {
@@ -57,9 +56,9 @@ class InstrumentSpecs extends FunSuite {
       Instrument("trait Foo; object Main extends Foo with App { }")
   }
 
-  test("unsupported dialect"){
-   val Left(UnsupportedDialect) =
-      Instrument("1", ScalaTarget.Jvm("2.13.0")) 
+  test("unsupported dialect") {
+    val Left(UnsupportedDialect) =
+      Instrument("1", ScalaTarget.Jvm("2.13.0"))
   }
 
   test("extends App primary fails") {

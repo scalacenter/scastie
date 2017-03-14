@@ -2,7 +2,7 @@ package com.olegych.scastie
 package api
 
 import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
-  
+
 sealed trait ScalaTarget {
   def targetType: ScalaTargetType
   def scaladexRequest: Map[String, String]
@@ -42,7 +42,7 @@ object ScalaTarget {
   object Js {
     val targetFilename = "fastopt.js"
     val sourceMapFilename = targetFilename + ".map"
-     
+
     def default =
       ScalaTarget.Js(
         scalaVersion = ScalaTarget.defaultScalaVersion,
