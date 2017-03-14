@@ -172,7 +172,7 @@ class Deployment(rootFolder: File,
 
     val dockerImagePath = s"$dockerNamespace/$dockerRepository:$version"
 
-    val sbtScriptContent = 
+    val sbtScriptContent =
       s"""|#!/usr/bin/env bash
           |
           |whoami
