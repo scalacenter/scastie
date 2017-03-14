@@ -2,8 +2,8 @@ package com.olegych.scastie
 package api
 
 case class Instrumentation(
-  position: Position,
-  render: Render
+    position: Position,
+    render: Render
 )
 
 sealed trait Render

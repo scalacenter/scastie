@@ -111,7 +111,8 @@ case class LoadBalancer[C: Ordering, S](
 
   def done(snippetId: SnippetId): LoadBalancer[C, S] = {
     log.info(s"Task done: $snippetId")
-    val res = servers.zipWithIndex.find(_._1.currentSnippetId == Some(snippetId))
+    val res =
+      servers.zipWithIndex.find(_._1.currentSnippetId == Some(snippetId))
     if (res.nonEmpty) {
       val (server, i) = res.get
       copy(servers = servers.updated(i, server.done))

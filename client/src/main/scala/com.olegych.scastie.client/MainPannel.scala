@@ -36,18 +36,20 @@ object MainPannel {
           backend.closeHelp()
         }
 
-        val showHelp = 
-          if(state.isShowingHelpAtStartup && state.isStartup && !embedded) true
+        val showHelp =
+          if (state.isShowingHelpAtStartup && state.isStartup && !embedded)
+            true
           else !state.isHelpModalClosed
 
         val helpClosePannel =
-          if(showHelp) {
+          if (showHelp) {
             TagMod(
               div(`class` := "help-close")(
                 button(onClick ==> closeHelp)("Close"),
                 div(`class` := "not-again")(
                   p("Dont show again"),
-                  input.checkbox(onChange ==> toogleShowHelpAtStartup, checked := !state.isShowingHelpAtStartup)
+                  input.checkbox(onChange ==> toogleShowHelpAtStartup,
+                                 checked := !state.isShowingHelpAtStartup)
                 )
               )
             )
@@ -55,11 +57,13 @@ object MainPannel {
 
         val helpState =
           if (showHelp) {
-            val helpModal = 
-              api.Instrumentation(api.Position(0, 0), api.runtime.help.copy(folded = false))
+            val helpModal =
+              api.Instrumentation(api.Position(0, 0),
+                                  api.runtime.help.copy(folded = false))
 
             state.copy(
-              outputs = state.outputs.copy(instrumentations = state.outputs.instrumentations + helpModal)
+              outputs = state.outputs.copy(
+                instrumentations = state.outputs.instrumentations + helpModal)
             )
           } else state
 
@@ -79,12 +83,11 @@ object MainPannel {
             UserProfile(props.router, state.view))
         )
     }.componentDidUpdate(scope =>
-      Callback {
-        val consoleDom = consoleElement(scope.$).get
-        consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
-      }
-    )
-    .build
+        Callback {
+          val consoleDom = consoleElement(scope.$).get
+          consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
+      })
+      .build
 
   def apply(state: AppState, backend: AppBackend, props: AppProps) =
     component((state, backend, props))

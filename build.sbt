@@ -229,12 +229,16 @@ lazy val codemirror = project
   )
   .enablePlugins(ScalaJSPlugin)
 
-def react(artifact: String, name: String, configuration: Configuration = Compile): JSModuleID =
+def react(artifact: String,
+          name: String,
+          configuration: Configuration = Compile): JSModuleID =
   "org.webjars.bower" % "react" % "15.4.2" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
-def reactWithDepends(artifact: String, name: String, depends: String, configuration: Configuration = Compile): JSModuleID =
+def reactWithDepends(artifact: String,
+                     name: String,
+                     depends: String,
+                     configuration: Configuration = Compile): JSModuleID =
   react(artifact, name, configuration).dependsOn(s"$depends.js")
-
 
 lazy val client = project
   .settings(baseSettings)
@@ -246,7 +250,10 @@ lazy val client = project
       reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom"),
       react("react-with-addons", "React", Test),
       reactWithDepends("react-dom", "ReactDOM", "react-with-addons", Test),
-      reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom", Test),
+      reactWithDepends("react-dom-server",
+                       "ReactDOMServer",
+                       "react-dom",
+                       Test),
       RuntimeDOM % Test
     ),
     libraryDependencies ++= Seq(
@@ -375,7 +382,7 @@ lazy val runtimeDotty = project
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))
   .settings(orgSettings)
-  .settings(  
+  .settings(
     moduleName := "sbt-scastie",
     scalaVersion := "2.10.6",
     sbtPlugin := true

@@ -62,16 +62,23 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
   }
 
-  private def instrument(inputs: Inputs): Either[InstrumentationFailure, Inputs] = {
+  private def instrument(
+      inputs: Inputs): Either[InstrumentationFailure, Inputs] = {
     if (inputs.worksheetMode) {
-      instrumentation.Instrument(inputs.code, inputs.target).right.map(instrumented =>
-        inputs.copy(code = instrumented)
-      )
+      instrumentation
+        .Instrument(inputs.code, inputs.target)
+        .right
+        .map(instrumented => inputs.copy(code = instrumented))
     } else Right(inputs)
   }
 
-  private def run(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String], 
-                  progressActor: ActorRef, snippetActor: ActorRef, forcedProgramMode: Boolean) = {
+  private def run(snippetId: SnippetId,
+                  inputs: Inputs,
+                  ip: String,
+                  login: Option[String],
+                  progressActor: ActorRef,
+                  snippetActor: ActorRef,
+                  forcedProgramMode: Boolean) = {
     val scalaTargetType = inputs.target.targetType
     val isScalaJs = inputs.target.targetType == ScalaTargetType.JS
 
@@ -91,15 +98,17 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     def timeout(duration: FiniteDuration): Unit = {
       log.info(s"restarting sbt: $inputs")
       progressActor !
-        SnippetProgress.default(snippetId).copy(
-          compilationInfos = List(
-            Problem(
-              Error,
-              line = None,
-              message = s"timed out after $duration"
+        SnippetProgress
+          .default(snippetId)
+          .copy(
+            compilationInfos = List(
+              Problem(
+                Error,
+                line = None,
+                message = s"timed out after $duration"
+              )
             )
           )
-        )
 
       sbt.kill()
       sbt = new Sbt(defaultConfig)
@@ -135,25 +144,41 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
       instrument(inputs) match {
         case Right(inputs0) => {
-          run(snippetId, inputs0, ip, login, progressActor, sender, forcedProgramMode = false)
-        } 
+          run(snippetId,
+              inputs0,
+              ip,
+              login,
+              progressActor,
+              sender,
+              forcedProgramMode = false)
+        }
         case Left(error) => {
           def signalError(message: String, line: Option[Int]): Unit = {
-            val progress = 
-              SnippetProgress.default(snippetId).copy(
-                compilationInfos = List(Problem(Error, line, message))
-              )
+            val progress =
+              SnippetProgress
+                .default(snippetId)
+                .copy(
+                  compilationInfos = List(Problem(Error, line, message))
+                )
 
             progressActor ! progress
             sender ! progress
           }
 
-          error match { 
+          error match {
             case HasMainMethod => {
-              run(snippetId, inputs.copy(worksheetMode = false), ip, login, progressActor, sender, forcedProgramMode = true)
+              run(snippetId,
+                  inputs.copy(worksheetMode = false),
+                  ip,
+                  login,
+                  progressActor,
+                  sender,
+                  forcedProgramMode = true)
             }
-            case UnsupportedDialect => 
-              signalError("The worksheet mode does not support this Scala target", None)
+            case UnsupportedDialect =>
+              signalError(
+                "The worksheet mode does not support this Scala target",
+                None)
 
             case ParsingError(Parsed.Error(pos, message, _)) => {
               val lineOffset = getLineOffset(worksheetMode = true)
@@ -212,7 +237,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           "[info] Resolving"
         )
 
-        val isSbtMessage = initializationMessages.exists(message => line.startsWith(message))
+        val isSbtMessage =
+          initializationMessages.exists(message => line.startsWith(message))
 
         val userOutput =
           if (problems.isEmpty
@@ -225,15 +251,14 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           else None
 
         val (scalaJsContent, scalaJsSourceMapContent) =
-          if(done && isScalaJs && problems.isEmpty) {
-            (sbt.scalaJsContent(), sbt.scalaJsSourceMapContent()) 
-          }
-          else (None, None)
+          if (done && isScalaJs && problems.isEmpty) {
+            (sbt.scalaJsContent(), sbt.scalaJsSourceMapContent())
+          } else (None, None)
 
         val progress = SnippetProgress(
           snippetId = snippetId,
           userOutput = userOutput,
-          sbtOutput = if(isSbtMessage) Some(line) else sbtOutput.map(_.line),
+          sbtOutput = if (isSbtMessage) Some(line) else sbtOutput.map(_.line),
           compilationInfos = problems.getOrElse(Nil),
           instrumentations = instrumentations.getOrElse(Nil),
           runtimeError = runtimeError,
@@ -244,7 +269,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           forcedProgramMode = forcedProgramMode
         )
 
-        progressActor ! progress.copy(scalaJsContent = None, scalaJsSourceMapContent = None)
+        progressActor ! progress.copy(scalaJsContent = None,
+                                      scalaJsSourceMapContent = None)
         snippetActor ! progress
       }
   }
@@ -254,17 +280,14 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     val problems = extract[List[Problem]](line)
 
     problems.map(
-      _.map(problem =>
-        problem.copy(line = problem.line.map(_ + lineOffset))
-      )
+      _.map(problem => problem.copy(line = problem.line.map(_ + lineOffset)))
     )
   }
 
   def extractRuntimeError(line: String,
                           lineOffset: Int): Option[RuntimeError] = {
     extract[RuntimeError](line).map(error =>
-      error.copy(line = error.line.map(_ + lineOffset))
-    )
+      error.copy(line = error.line.map(_ + lineOffset)))
   }
 
   private def extract[T: Reader](line: String,

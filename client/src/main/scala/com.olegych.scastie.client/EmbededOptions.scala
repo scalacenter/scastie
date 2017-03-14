@@ -26,10 +26,9 @@ object EmbededOptions {
 
     EmbededOptions(
       inputs = code.toOption.map(c => Inputs.default.copy(code = c)),
-      snippetId = 
-        base64UUID.toOption.map(uuid => 
-          SnippetId(uuid, user.toOption.map(u => SnippetUserPart(u, update.toOption)))
-        )
+      snippetId = base64UUID.toOption.map(uuid =>
+        SnippetId(uuid,
+                  user.toOption.map(u => SnippetUserPart(u, update.toOption))))
     )
   }
 }

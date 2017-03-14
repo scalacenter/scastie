@@ -9,8 +9,12 @@ import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import org.scalajs.dom.{
-  EventSource, WebSocket, 
-  Event, MessageEvent, ErrorEvent, CloseEvent,
+  EventSource,
+  WebSocket,
+  Event,
+  MessageEvent,
+  ErrorEvent,
+  CloseEvent,
   window
 }
 
@@ -18,15 +22,13 @@ import upickle.default.{read => uread}
 
 import scala.util.{Success, Failure}
 
-
 class AppBackend(scope: BackendScope[AppProps, AppState]) {
   Global.subsribe(scope)
 
   def goHome(e: ReactEventI): Callback = {
     scope.props.flatMap(props =>
-      props.router.map(_.set(Home)).getOrElse(Callback(()))
-    ) >>
-    scope.modState(_.setView(View.Editor))
+      props.router.map(_.set(Home)).getOrElse(Callback(()))) >>
+      scope.modState(_.setView(View.Editor))
   }
 
   def codeChange(newCode: String) =
@@ -35,52 +37,54 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def sbtConfigChange(newConfig: String) =
     scope.modState(_.setSbtConfigExtra(newConfig))
 
-  private def snippetUri(snippetId: SnippetId, connectionMethod: String): String = {
+  private def snippetUri(snippetId: SnippetId,
+                         connectionMethod: String): String = {
     val snippetPart =
       snippetId.user match {
         case Some(SnippetUserPart(login, update)) => {
           val updatePart = update.map(_.toString).getOrElse("")
           s"$login/${snippetId.base64UUID}/$updatePart"
         }
-        case None =>  s"${snippetId.base64UUID}"
+        case None => s"${snippetId.base64UUID}"
       }
 
     s"/$connectionMethod/$snippetPart"
   }
 
-  private def connectEventSource(snippetId: SnippetId) = CallbackTo[EventSource] {
-    val direct = scope.accessDirect
+  private def connectEventSource(snippetId: SnippetId) =
+    CallbackTo[EventSource] {
+      val direct = scope.accessDirect
 
-    val eventSource = new EventSource(snippetUri(snippetId, "progress-sse"))
+      val eventSource = new EventSource(snippetUri(snippetId, "progress-sse"))
 
-    def onopen(e: Event): Unit = {
-      direct.modState(_.logSystem("Connected."))
-    }
-    def onmessage(e: MessageEvent): Unit = {
-      val progress = uread[SnippetProgress](e.data.toString)
-
-      direct.modState(_.addProgress(progress))
-
-      if (progress.done) {
-        direct.modState(
-          _.copy(eventSource = None, running = false)
-        )
-        eventSource.close()
+      def onopen(e: Event): Unit = {
+        direct.modState(_.logSystem("Connected."))
       }
-    }
-    def onerror(e: Event): Unit = {
-      if (e.eventPhase == EventSource.CLOSED) {
-        eventSource.close()
-      } else {
-        direct.modState(_.logSystem(s"Error: ${e.toString}"))
-      }
-    }
+      def onmessage(e: MessageEvent): Unit = {
+        val progress = uread[SnippetProgress](e.data.toString)
 
-    eventSource.onopen = onopen _
-    eventSource.onmessage = onmessage _
-    eventSource.onerror = onerror _
-    eventSource
-  }
+        direct.modState(_.addProgress(progress))
+
+        if (progress.done) {
+          direct.modState(
+            _.copy(eventSource = None, running = false)
+          )
+          eventSource.close()
+        }
+      }
+      def onerror(e: Event): Unit = {
+        if (e.eventPhase == EventSource.CLOSED) {
+          eventSource.close()
+        } else {
+          direct.modState(_.logSystem(s"Error: ${e.toString}"))
+        }
+      }
+
+      eventSource.onopen = onopen _
+      eventSource.onmessage = onmessage _
+      eventSource.onerror = onerror _
+      eventSource
+    }
 
   private def connectWebSocket(snippetId: SnippetId) = CallbackTo[WebSocket] {
     val direct = scope.accessDirect
@@ -162,46 +166,52 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     println("***** RUN ********")
     println("******************")
 
-    scope.state.flatMap(s =>
-      Callback.future(ApiClient[Api].run(s.inputs).call().map(snippetId =>
-        connectEventSource(snippetId).attemptTry.flatMap {
-          case Success(eventSource) => {
-            scope.modState(
-              _.run(snippetId).copy(eventSource = Some(eventSource))
-            )
-          }
-          case Failure(errorEventSource) =>
-            connectWebSocket(snippetId).attemptTry.flatMap {
-              case Success(websocket) => {
-                scope.modState(
-                  _.run(snippetId).copy(websocket = Some(websocket))
-                )
-              }
-              case Failure(errorWebSocket) =>
-                scope.modState(
-                  _.resetOutputs
-                    .logSystem(errorEventSource.toString)
-                    .logSystem(errorWebSocket.toString)
-                    .setRunning(false)
-                )
-            }
-        }
-      ))
-    )
+    scope.state.flatMap(
+      s =>
+        Callback.future(
+          ApiClient[Api]
+            .run(s.inputs)
+            .call()
+            .map(snippetId =>
+              connectEventSource(snippetId).attemptTry.flatMap {
+                case Success(eventSource) => {
+                  scope.modState(
+                    _.run(snippetId).copy(eventSource = Some(eventSource))
+                  )
+                }
+                case Failure(errorEventSource) =>
+                  connectWebSocket(snippetId).attemptTry.flatMap {
+                    case Success(websocket) => {
+                      scope.modState(
+                        _.run(snippetId).copy(websocket = Some(websocket))
+                      )
+                    }
+                    case Failure(errorWebSocket) =>
+                      scope.modState(
+                        _.resetOutputs
+                          .logSystem(errorEventSource.toString)
+                          .logSystem(errorWebSocket.toString)
+                          .setRunning(false)
+                      )
+                  }
+            })))
   }
-  
+
   def save(e: ReactEventI): Callback = save()
   def save(): Callback = {
     scope.state.flatMap(state =>
-      if(state.inputsHasChanged) {
+      if (state.inputsHasChanged) {
         scope.modState(_.setLoadSnippet(false).setCleanInputs) >>
-        Callback.future(ApiClient[Api].save(state.inputs).call().map(snippetId =>
-          scope.props.flatMap(props =>
-            props.router.map(_.set(Page.fromSnippetId(snippetId))).getOrElse(Callback(()))
-          )
-        ))
-      } else Callback(())
-    )
+          Callback.future(
+            ApiClient[Api]
+              .save(state.inputs)
+              .call()
+              .map(snippetId =>
+                scope.props.flatMap(props =>
+                  props.router
+                    .map(_.set(Page.fromSnippetId(snippetId)))
+                    .getOrElse(Callback(())))))
+      } else Callback(()))
   }
 
   def saveOrUpdate(): Callback = {
@@ -209,71 +219,70 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       props.snippetId match {
         case Some(snippetId) => update2(snippetId)
         case None => save()
-      }
-    )
+    })
   }
 
   def amend(snippetId: SnippetId)(e: ReactEventI): Callback = {
-    scope.state.flatMap(state =>
-      Callback.future(
-        ApiClient[Api]
-          .amend(snippetId, state.inputs)
-          .call()
-          .map(success =>
-            if(success) Callback(())
-            else Callback(window.alert("Failed to amend"))              
-          )
-      )
-    )
+    scope.state.flatMap(
+      state =>
+        Callback.future(
+          ApiClient[Api]
+            .amend(snippetId, state.inputs)
+            .call()
+            .map(success =>
+              if (success) Callback(())
+              else Callback(window.alert("Failed to amend")))
+      ))
   }
 
   def fork(snippetId: SnippetId)(e: ReactEventI): Callback = {
-    scope.state.flatMap(state =>
-      Callback.future(
-        ApiClient[Api]
-          .fork(snippetId, state.inputs)
-          .call()
-          .map(result =>
-            result match {
-              case Some(snippetId) => {
-                val page = Page.fromSnippetId(snippetId)
+    scope.state.flatMap(
+      state =>
+        Callback.future(
+          ApiClient[Api]
+            .fork(snippetId, state.inputs)
+            .call()
+            .map(result =>
+              result match {
+                case Some(snippetId) => {
+                  val page = Page.fromSnippetId(snippetId)
 
-                scope.modState(_.setLoadSnippet(false).resetOutputs) >>
-                scope.props.flatMap(_.router.map(_.set(page)).getOrElse(Callback(())))
-              }
+                  scope.modState(_.setLoadSnippet(false).resetOutputs) >>
+                    scope.props.flatMap(
+                      _.router.map(_.set(page)).getOrElse(Callback(())))
+                }
 
-              case None => Callback(window.alert("Failed to fork"))
-            }
-          )
-      )
-    )
+                case None => Callback(window.alert("Failed to fork"))
+            })
+      ))
   }
 
-  def update(snippetId: SnippetId)(e: ReactEventI): Callback = update2(snippetId)
+  def update(snippetId: SnippetId)(e: ReactEventI): Callback =
+    update2(snippetId)
   def update2(snippetId: SnippetId): Callback = {
-    scope.state.flatMap(state =>
-      Callback.future(
-        ApiClient[Api]
-          .update(snippetId, state.inputs)
-          .call()
-          .map(result =>
-            result match {
-              case Some(snippetId) => {
-                val page = Page.fromSnippetId(snippetId)
-                scope.modState(_.setLoadSnippet(false).resetOutputs) >>
-                scope.props.flatMap(_.router.map(_.set(page)).getOrElse(Callback(())))
-              }
+    scope.state.flatMap(
+      state =>
+        Callback.future(
+          ApiClient[Api]
+            .update(snippetId, state.inputs)
+            .call()
+            .map(result =>
+              result match {
+                case Some(snippetId) => {
+                  val page = Page.fromSnippetId(snippetId)
+                  scope.modState(_.setLoadSnippet(false).resetOutputs) >>
+                    scope.props.flatMap(
+                      _.router.map(_.set(page)).getOrElse(Callback(())))
+                }
 
-              case None => Callback(window.alert("Failed to update"))
-            }
-          )
-      )
-    )
+                case None => Callback(window.alert("Failed to update"))
+            })
+      ))
   }
-  
+
   def loadSnippet(snippetId: SnippetId): Callback = {
     scope.state.flatMap(state =>
-      if(state.loadSnippet) {
+      if (state.loadSnippet) {
         Callback.future(
           ApiClient[Api]
             .fetch(snippetId)
@@ -282,10 +291,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
               result match {
                 case Some(FetchResult(inputs, progresses)) => {
                   loadStateFromLocalStorage >>
-                  clear() >>
-                  scope.modState(
-                    _.setInputs(inputs).setProgresses(progresses).setCleanInputs
-                  )
+                    clear() >>
+                    scope.modState(
+                      _.setInputs(inputs)
+                        .setProgresses(progresses)
+                        .setCleanInputs
+                    )
                 }
                 case _ => {
                   scope.modState(_.setCode(s"//snippet not found"))
@@ -294,13 +305,14 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
         )
       } else {
         scope.modState(_.setLoadSnippet(true))
-      }
-    ) >> scope.modState(_.setSnippetId(snippetId))
+    }) >> scope.modState(_.setSnippetId(snippetId))
   }
 
   def loadStateFromLocalStorage =
     LocalStorage.load
-      .map(state => scope.modState(_ => state.setRunning(false).setLoadScalaJsScript(true)))
+      .map(state =>
+        scope.modState(_ =>
+          state.setRunning(false).setLoadScalaJsScript(true)))
       .getOrElse(Callback(()))
 
   def start(props: AppProps): Callback = {
@@ -309,9 +321,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
         ApiClient[Api]
           .fetchUser()
           .call()
-          .map(result =>
-            scope.modState(_.setUser(result))
-          )
+          .map(result => scope.modState(_.setUser(result)))
       )
     }
 
@@ -339,10 +349,11 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def formatCode(e: ReactEventI): Callback = formatCode()
   def formatCode(): Callback =
     scope.state.flatMap(state =>
-      if(state.inputsHasChanged) {
+      if (state.inputsHasChanged) {
         Callback.future(
           ApiClient[Api]
-            .format(FormatRequest(state.inputs.code, state.inputs.worksheetMode))
+            .format(
+              FormatRequest(state.inputs.code, state.inputs.worksheetMode))
             .call()
             .map {
               case FormatResponse(Right(formattedCode)) =>
@@ -362,6 +373,5 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                   ))
             }
         )
-      } else Callback(())
-    )
+      } else Callback(()))
 }

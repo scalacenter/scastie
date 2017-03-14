@@ -12,7 +12,8 @@ import upickle.default.{write => uwrite}
 object RuntimeErrorLogger {
   private object NoOp {
     def apply(): NoOp = {
-      def out(in: String): Unit = println(uwrite(ConsoleOutput.SbtOutput(in.trim)))
+      def out(in: String): Unit =
+        println(uwrite(ConsoleOutput.SbtOutput(in.trim)))
 
       new NoOp(new OutputStream {
         override def close(): Unit = ()

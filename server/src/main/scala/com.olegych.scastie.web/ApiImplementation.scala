@@ -11,15 +11,16 @@ import akka.http.scaladsl.model.RemoteAddress
 
 import scala.concurrent.{Future, ExecutionContext}
 
-class ApiImplementation(
-    dispatchActor: ActorRef,
-    ip: RemoteAddress,
-    maybeUser: Option[User])(implicit timeout: Timeout, executionContext: ExecutionContext)
+class ApiImplementation(dispatchActor: ActorRef,
+                        ip: RemoteAddress,
+                        maybeUser: Option[User])(
+    implicit timeout: Timeout,
+    executionContext: ExecutionContext)
     extends Api {
 
   private def wrap(inputs: Inputs): InputsWithIpAndUser =
     InputsWithIpAndUser(inputs, ip.toString, maybeUser)
-  
+
   def run(inputs: Inputs): Future[SnippetId] = {
     (dispatchActor ? RunSnippet(wrap(inputs))).mapTo[SnippetId]
   }
@@ -33,7 +34,7 @@ class ApiImplementation(
   }
 
   def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean] = {
-    if(userOwnsSnippet(snippetId)) {
+    if (userOwnsSnippet(snippetId)) {
       (dispatchActor ? AmendSnippet(snippetId, wrap(inputs))).mapTo[Boolean]
     } else {
       Future.successful(false)
@@ -41,16 +42,16 @@ class ApiImplementation(
   }
 
   def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
-    if(userOwnsSnippet(snippetId)) {
-      (dispatchActor ? UpdateSnippet(snippetId, wrap(inputs))).mapTo[Option[SnippetId]]
-    }
-    else {
+    if (userOwnsSnippet(snippetId)) {
+      (dispatchActor ? UpdateSnippet(snippetId, wrap(inputs)))
+        .mapTo[Option[SnippetId]]
+    } else {
       Future.successful(None)
     }
   }
 
   def delete(snippetId: SnippetId): Future[Boolean] = {
-    if(userOwnsSnippet(snippetId)) {
+    if (userOwnsSnippet(snippetId)) {
       (dispatchActor ? DeleteSnippet(snippetId)).mapTo[Unit].map(_ => true)
     } else {
       Future.successful(false)
@@ -58,26 +59,29 @@ class ApiImplementation(
   }
 
   def fork(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
-    (dispatchActor ? ForkSnippet(snippetId, wrap(inputs))).mapTo[Option[SnippetId]]
+    (dispatchActor ? ForkSnippet(snippetId, wrap(inputs)))
+      .mapTo[Option[SnippetId]]
   }
 
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]] = {
     (dispatchActor ? FetchSnippet(snippetId)).mapTo[Option[FetchResult]]
   }
 
-  def fetchUser(): Future[Option[User]] = 
+  def fetchUser(): Future[Option[User]] =
     Future.successful(maybeUser)
 
   def fetchUserSnippets(): Future[List[SnippetSummary]] = {
     maybeUser match {
-      case Some(user) => (dispatchActor ? FetchUserSnippets(user)).mapTo[List[SnippetSummary]]
+      case Some(user) =>
+        (dispatchActor ? FetchUserSnippets(user)).mapTo[List[SnippetSummary]]
       case _ => Future.successful(Nil)
     }
   }
 
   private def userOwnsSnippet(snippetId: SnippetId): Boolean = {
     (snippetId.user, maybeUser) match {
-      case (Some(SnippetUserPart(snippetLogin, _)), Some(User(userLogin, _, _))) => 
+      case (Some(SnippetUserPart(snippetLogin, _)),
+            Some(User(userLogin, _, _))) =>
         snippetLogin == userLogin
       case _ => false
     }

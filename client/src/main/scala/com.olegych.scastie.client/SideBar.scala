@@ -27,7 +27,7 @@ object SideBar {
           else "Open"
 
         val disabledIfSameInputs =
-          if(!state.inputsHasChanged) "disabled"
+          if (!state.inputsHasChanged) "disabled"
           else ""
         import View.ctrl
 
@@ -47,21 +47,18 @@ object SideBar {
                 li(onClick ==> update(sid),
                    title := s"Save ($ctrl + S)",
                    `class` := "button")(
-
                   i(`class` := "fa fa-floppy-o"),
                   p("Update")
                 ),
                 li(onClick ==> fork(sid),
                    title := s"Fork",
                    `class` := "button")(
-
                   i(`class` := "fa fa-code-fork"),
                   p("Fork")
                 ),
                 li(onClick ==> amend(sid),
                    title := s"Amend",
                    `class` := "button")(
-
                   i(`class` := "fa fa-pencil-square-o"),
                   p("Amend")
                 )
@@ -69,48 +66,48 @@ object SideBar {
           }
 
         val formatCodeButton = li(onClick ==> formatCode,
-          title := "Format Code (F6)",
-          `class` := s"button $disabledIfSameInputs")(
+                                  title := "Format Code (F6)",
+                                  `class` := s"button $disabledIfSameInputs")(
           iconic.justifyLeft,
           p("Format")
         )
 
         val console = li(onClick ==> toggleConsole,
-          title := s"$consoleLabel Console",
-          consoleSelected,
-          `class` := "button")(
+                         title := s"$consoleLabel Console",
+                         consoleSelected,
+                         `class` := "button")(
           iconic.terminal,
           p("Console")
         )
 
         def buttonsRibbon: View => Seq[TagMod] = {
-          case View.Editor => Seq(
-            LibraryButton(state, backend),
-            RunButton(state, backend),
-            ClearButton(state, backend),
-            formatCodeButton,
-            console,
-            sharing
-          )
-          case View.Libraries => Seq(
-            LibraryButton(state, backend),
-            RunButton(state, backend)
-          )
-          case View.UserProfile => Seq(
-            LibraryButton(state, backend),
-            RunButton(state, backend)
-          )
+          case View.Editor =>
+            Seq(
+              LibraryButton(state, backend),
+              RunButton(state, backend),
+              ClearButton(state, backend),
+              formatCodeButton,
+              console,
+              sharing
+            )
+          case View.Libraries =>
+            Seq(
+              LibraryButton(state, backend),
+              RunButton(state, backend)
+            )
+          case View.UserProfile =>
+            Seq(
+              LibraryButton(state, backend),
+              RunButton(state, backend)
+            )
         }
 
         val currentButtonsForSelectedView = buttonsRibbon(currentView)
 
         nav(`class` := s"sidebar $theme")(
           ul(
-            li(onClick ==> goHome,
-               title := "Scastie Logo",
-               `class` := "logo")(
-              img(src := "/assets/public/dotty3.svg",
-                  alt := "Logo")
+            li(onClick ==> goHome, title := "Scastie Logo", `class` := "logo")(
+              img(src := "/assets/public/dotty3.svg", alt := "Logo")
             ),
             currentButtonsForSelectedView
           )
@@ -118,6 +115,8 @@ object SideBar {
 
     }.build
 
-  def apply(state: AppState, backend: AppBackend, snippetId: Option[SnippetId]) =
+  def apply(state: AppState,
+            backend: AppBackend,
+            snippetId: Option[SnippetId]) =
     component((state, backend, snippetId))
 }

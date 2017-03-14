@@ -12,7 +12,7 @@ import js.annotation.JSExport
 import japgolly.scalajs.react._, extra.router._
 
 object ClientMain extends JSApp {
-  
+
   @JSExport
   override def main(): Unit = {
     val isMac = dom.window.navigator.userAgent.contains("Mac")
@@ -35,7 +35,8 @@ object ClientMain extends JSApp {
   }
 
   @JSExport
-  def signal(instrumentations: String, attachedDoms: js.Array[HTMLElement]): Unit = {
+  def signal(instrumentations: String,
+             attachedDoms: js.Array[HTMLElement]): Unit = {
     Global.signal(instrumentations, attachedDoms)
   }
 

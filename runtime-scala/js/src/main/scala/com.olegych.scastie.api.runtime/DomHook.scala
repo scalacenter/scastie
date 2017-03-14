@@ -10,7 +10,7 @@ import java.util.UUID
 
 trait DomHook {
   private val elements = Buffer.empty[HTMLElement]
-  
+
   def attach(element: HTMLElement): UUID = {
     val uuid = UUID.randomUUID()
     element.setAttribute("uuid", uuid.toString)

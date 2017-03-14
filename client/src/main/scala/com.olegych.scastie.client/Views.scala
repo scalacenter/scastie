@@ -12,9 +12,9 @@ object View {
   import upickle.default._
 
   implicit val pkl: ReadWriter[View] =
-    macroRW[Editor.type] merge 
-    macroRW[UserProfile.type] merge 
-    macroRW[Libraries.type]
+    macroRW[Editor.type] merge
+      macroRW[UserProfile.type] merge
+      macroRW[Libraries.type]
 
   val isMac = dom.window.navigator.userAgent.contains("Mac")
   val ctrl = if (isMac) "⌘" else "Ctrl"

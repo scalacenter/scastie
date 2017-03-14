@@ -31,9 +31,12 @@ object AppState {
     outputs = Outputs.default
   )
 
-  implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] = dontSerializeMap[String, HTMLElement]
-  implicit val dontSerializeWebSocket: ReadWriter[Option[WebSocket]] = dontSerializeOption[WebSocket]
-  implicit val dontSerializeEventSource: ReadWriter[Option[EventSource]] = dontSerializeOption[EventSource]
+  implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
+    dontSerializeMap[String, HTMLElement]
+  implicit val dontSerializeWebSocket: ReadWriter[Option[WebSocket]] =
+    dontSerializeOption[WebSocket]
+  implicit val dontSerializeEventSource: ReadWriter[Option[EventSource]] =
+    dontSerializeOption[EventSource]
   implicit val pkl: ReadWriter[AppState] = upickleMacroRW[AppState]
 }
 
@@ -57,27 +60,26 @@ case class AppState(
     attachedDoms: AttachedDoms,
     inputs: Inputs,
     outputs: Outputs
-  ) {
-  def copyAndSave(
-    view: View = view,
-    running: Boolean = running,
-    eventSource: Option[EventSource] = eventSource,
-    websocket: Option[WebSocket] = websocket,
-    isShowingHelpAtStartup: Boolean = isShowingHelpAtStartup,
-    isHelpModalClosed: Boolean = isHelpModalClosed,
-    isDarkTheme: Boolean = isDarkTheme,
-    consoleIsOpen: Boolean = consoleIsOpen,
-    consoleHasUserOutput: Boolean = consoleHasUserOutput,
-    inputsHasChanged: Boolean = inputsHasChanged,
-    snippetId: Option[SnippetId] = snippetId,
-    snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
-    user: Option[User] = user,
-    attachedDoms: AttachedDoms = attachedDoms,
-    inputs: Inputs = inputs,
-    outputs: Outputs = outputs): AppState = {
+) {
+  def copyAndSave(view: View = view,
+                  running: Boolean = running,
+                  eventSource: Option[EventSource] = eventSource,
+                  websocket: Option[WebSocket] = websocket,
+                  isShowingHelpAtStartup: Boolean = isShowingHelpAtStartup,
+                  isHelpModalClosed: Boolean = isHelpModalClosed,
+                  isDarkTheme: Boolean = isDarkTheme,
+                  consoleIsOpen: Boolean = consoleIsOpen,
+                  consoleHasUserOutput: Boolean = consoleHasUserOutput,
+                  inputsHasChanged: Boolean = inputsHasChanged,
+                  snippetId: Option[SnippetId] = snippetId,
+                  snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
+                  user: Option[User] = user,
+                  attachedDoms: AttachedDoms = attachedDoms,
+                  inputs: Inputs = inputs,
+                  outputs: Outputs = outputs): AppState = {
 
     val snippetId0 =
-      if(inputsHasChanged) None
+      if (inputsHasChanged) None
       else snippetId
 
     val state0 =
@@ -142,20 +144,18 @@ case class AppState(
   def toggleHelpAtStartup: AppState =
     copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
 
-  def closeHelp: AppState = 
-    resetOutputs
-      .copyAndSave(isHelpModalClosed = true)
-      .copy(isStartup = false)
-  
+  def closeHelp: AppState =
+    resetOutputs.copyAndSave(isHelpModalClosed = true).copy(isStartup = false)
+
   def showHelp: AppState = copy(isHelpModalClosed = false)
-  
+
   def openConsole: AppState =
     copyAndSave(consoleIsOpen = true)
 
   def setUserOutput: AppState =
     copyAndSave(consoleHasUserOutput = true)
 
-  def setLoadSnippet(value: Boolean): AppState = 
+  def setLoadSnippet(value: Boolean): AppState =
     copy(loadSnippet = value)
 
   def setUser(user: Option[User]): AppState =
@@ -204,7 +204,7 @@ case class AppState(
     )
 
   def updateDependencyVersion(scalaDependency: ScalaDependency,
-                              version: String): AppState  = {
+                              version: String): AppState = {
     val newScalaDependency = scalaDependency.copy(version = version)
     copyAndSave(
       inputs = inputs.copy(
@@ -214,34 +214,37 @@ case class AppState(
     )
   }
 
-  def resetOutputs: AppState  =
+  def resetOutputs: AppState =
     copyAndSave(outputs = Outputs.default,
                 consoleIsOpen = false,
                 consoleHasUserOutput = false,
                 attachedDoms = Map())
 
-  def setRuntimeError(runtimeError: Option[RuntimeError]): AppState  =
+  def setRuntimeError(runtimeError: Option[RuntimeError]): AppState =
     if (runtimeError.isEmpty) this
     else copyAndSave(outputs = outputs.copy(runtimeError = runtimeError))
 
-
-  def logOutput(line: Option[String], wrap: String => ConsoleOutput): AppState  = {
+  def logOutput(line: Option[String],
+                wrap: String => ConsoleOutput): AppState = {
     line match {
-      case Some(l) => 
-        copyAndSave(outputs = outputs.copy(
-          consoleOutputs = outputs.consoleOutputs ++ Vector(wrap(l))
-        ))
+      case Some(l) =>
+        copyAndSave(
+          outputs = outputs.copy(
+            consoleOutputs = outputs.consoleOutputs ++ Vector(wrap(l))
+          ))
       case _ => this
     }
   }
 
   def logSystem(line: String): AppState = {
-    copyAndSave(outputs = outputs.copy(
-      consoleOutputs = outputs.consoleOutputs ++ Vector(ConsoleOutput.ScastieOutput(line))
-    ))
+    copyAndSave(
+      outputs = outputs.copy(
+        consoleOutputs = outputs.consoleOutputs ++ Vector(
+            ConsoleOutput.ScastieOutput(line))
+      ))
   }
 
-  def addProgress(progress: SnippetProgress): AppState  = {
+  def addProgress(progress: SnippetProgress): AppState = {
     val state =
       addOutputs(progress.compilationInfos, progress.instrumentations)
         .logOutput(progress.userOutput, ConsoleOutput.UserOutput(_))
@@ -273,15 +276,15 @@ case class AppState(
   def setForcedProgramMode(forcedProgramMode: Boolean): AppState = {
     if (!forcedProgramMode) this
     else {
-      copyAndSave(
-        outputs = outputs.copy(
-          compilationInfos = outputs.compilationInfos +
-              info("You don't need a main method (or extends App) in Worksheet Mode")
-        ))
+      copyAndSave(outputs = outputs.copy(
+        compilationInfos = outputs.compilationInfos +
+            info(
+              "You don't need a main method (or extends App) in Worksheet Mode")
+      ))
     }
   }
 
-  def setLoadScalaJsScript(value: Boolean): AppState  = {
+  def setLoadScalaJsScript(value: Boolean): AppState = {
     copy(loadScalaJsScript = value)
   }
 
@@ -300,10 +303,9 @@ case class AppState(
                   |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin))
       else Set()
 
-    copyAndSave(
-      outputs = outputs.copy(
-        compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet ++ useWorksheetModeTip,
-        instrumentations = outputs.instrumentations ++ instrumentations.toSet
-      ))
+    copyAndSave(outputs = outputs.copy(
+      compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet ++ useWorksheetModeTip,
+      instrumentations = outputs.instrumentations ++ instrumentations.toSet
+    ))
   }
 }

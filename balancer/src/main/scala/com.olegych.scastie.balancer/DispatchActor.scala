@@ -72,15 +72,18 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
   private val portsInfo = ports.mkString("[", ", ", "]")
   log.info(s"connecting to: $host $portsInfo")
 
-  private def run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId): Unit = {
+  private def run(inputsWithIpAndUser: InputsWithIpAndUser,
+                  snippetId: SnippetId): Unit = {
     val InputsWithIpAndUser(inputs, ip, user) = inputsWithIpAndUser
 
     log.info("id: {}, ip: {} run {}", snippetId, ip, inputs)
 
-
-    val (server, balancer) = loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), snippetId))
+    val (server, balancer) =
+      loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), snippetId))
     loadBalancer = balancer
-    server.ref.tell(SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor), self)
+    server.ref.tell(
+      SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
+      self)
 
   }
 
@@ -93,7 +96,8 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
 
     case RunSnippet(inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, _, user) = inputsWithIpAndUser
-      val snippetId = container.create(inputs, user.map(u => UserLogin(u.login)))
+      val snippetId =
+        container.create(inputs, user.map(u => UserLogin(u.login)))
       run(inputsWithIpAndUser, snippetId)
       sender ! snippetId
     }
@@ -102,23 +106,23 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
       val InputsWithIpAndUser(inputs, _, user) = inputsWithIpAndUser
       val snippetId = container.save(inputs, user.map(u => UserLogin(u.login)))
       run(inputsWithIpAndUser, snippetId)
-      sender ! snippetId 
+      sender ! snippetId
     }
 
     case AmendSnippet(snippetId, inputsWithIpAndUser) => {
       val amendSuccess = container.amend(snippetId, inputsWithIpAndUser.inputs)
-      if(amendSuccess) {
+      if (amendSuccess) {
         run(inputsWithIpAndUser, snippetId)
       }
       sender ! amendSuccess
     }
 
     case UpdateSnippet(snippetId, inputsWithIpAndUser) => {
-      val updatedSnippetId = container.update(snippetId, inputsWithIpAndUser.inputs)
+      val updatedSnippetId =
+        container.update(snippetId, inputsWithIpAndUser.inputs)
 
       updatedSnippetId.foreach(snippetIdU =>
-        run(inputsWithIpAndUser, snippetIdU)
-      )
+        run(inputsWithIpAndUser, snippetIdU))
 
       sender ! updatedSnippetId
     }
@@ -126,7 +130,8 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
     case ForkSnippet(snippetId, inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, _, user) = inputsWithIpAndUser
 
-      container.fork(snippetId, inputs, user.map(u => UserLogin(u.login))) match {
+      container
+        .fork(snippetId, inputs, user.map(u => UserLogin(u.login))) match {
         case Some(forkedSnippetId) => {
           sender ! Some(forkedSnippetId)
           run(inputsWithIpAndUser, forkedSnippetId)

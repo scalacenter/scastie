@@ -99,7 +99,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   }
 
   def addBetaUser(login: String): Unit = {
-    val lines = 
+    val lines =
       if (Files.exists(usersFile)) Files.readAllLines(usersFile).asScala
       else Seq()
 
