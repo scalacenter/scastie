@@ -32,8 +32,10 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       scope.modState(_.setView(View.Editor))
   }
 
-  def resetInputs: Callback =
-    scope.modState(_.setInputs(Inputs.default))
+  def resetBuild: Callback =
+    scope.modState(state => 
+      state.setInputs(Inputs.default.copy(code = state.inputs.code))
+    )
 
   def codeChange(newCode: String) =
     scope.modState(_.setCode(newCode))
@@ -71,7 +73,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
         if (progress.done) {
           direct.modState(
-            _.copy(eventSource = None, running = false)
+            _.copy(eventSource = None, isRunning = false)
           )
           eventSource.close()
         }
@@ -102,7 +104,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       direct.modState(_.logSystem(s"Error: ${e.message}"))
     def onclose(e: CloseEvent): Unit =
       direct.modState(
-        _.copy(websocket = None, running = false)
+        _.copy(websocket = None, isRunning = false)
           .logSystem(s"Closed: ${e.reason}")
       )
 
@@ -167,10 +169,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def run(e: ReactEventI): Callback = run()
   def run(): Callback = {
-    println("******************")
-    println("***** RUN ********")
-    println("******************")
-
     scope.state.flatMap(
       s =>
         Callback.future(
@@ -182,14 +180,16 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 connectEventSource(snippetId).attemptTry.flatMap {
                   case Success(eventSource) => {
                     scope.modState(
-                      _.run(snippetId).copy(eventSource = Some(eventSource))
+                      _.run(snippetId)
+                       .copy(eventSource = Some(eventSource))
                     )
                   }
                   case Failure(errorEventSource) =>
                     connectWebSocket(snippetId).attemptTry.flatMap {
                       case Success(websocket) => {
                         scope.modState(
-                          _.run(snippetId).copy(websocket = Some(websocket))
+                          _.run(snippetId)
+                           .copy(websocket = Some(websocket))
                         )
                       }
                       case Failure(errorWebSocket) =>
@@ -212,7 +212,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       state =>
         if (!state.isSnippetSaved) {
           scope.modState(
-            _.setLoadSnippet(false).setCleanInputs.setSnippetSaved
+            _.setLoadSnippet(false)
+             .setCleanInputs
+             .setSnippetSaved
           ) >>
             Callback.future(
               ApiClient[AutowireApi]
@@ -273,7 +275,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                   result match {
                     case Some(snippetId) => {
                       val page = Page.fromSnippetId(snippetId)
-
                       scope.modState(
                         _.setLoadSnippet(false).resetOutputs.setSnippetSaved
                       ) >>
@@ -304,7 +305,11 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                   result match {
                     case Some(snippetId) => {
                       val page = Page.fromSnippetId(snippetId)
-                      scope.modState(_.setLoadSnippet(false).resetOutputs) >>
+                      scope.modState(
+                        _.setLoadSnippet(false)
+                         .resetOutputs
+                         .setSnippetSaved
+                      ) >>
                         scope.props.flatMap(
                           _.router.map(_.set(page)).getOrElse(Callback(()))
                         )
@@ -351,10 +356,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def loadStateFromLocalStorage =
     LocalStorage.load
-      .map(
-        state =>
-          scope
-            .modState(_ => state.setRunning(false).setLoadScalaJsScript(true))
+      .map(state =>
+        scope.modState(_ => 
+          state
+            .setRunning(false)
+            .resetScalajs
+        )
       )
       .getOrElse(Callback(()))
 
@@ -391,35 +398,39 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def formatCode(e: ReactEventI): Callback = formatCode()
   def formatCode(): Callback =
-    scope.state.flatMap(
-      state =>
-        if (state.inputsHasChanged) {
-          Callback.future(
-            ApiClient[AutowireApi]
-              .format(
-                FormatRequest(state.inputs.code, state.inputs.worksheetMode)
-              )
-              .call()
-              .map {
-                case FormatResponse(Right(formattedCode)) =>
-                  scope.modState { s =>
-                    // avoid overriding user's code if he/she types while it's formatting
-                    if (s.inputs.code == state.inputs.code)
-                      s.resetOutputs.setCode(formattedCode)
-                    else s
-                  }
-                case FormatResponse(Left(fullStackTrace)) =>
-                  scope.modState(
-                    _.resetOutputs.setRuntimeError(
+    scope.state.flatMap(state =>
+      if (state.inputsHasChanged) {
+        Callback.future(
+          ApiClient[AutowireApi]
+            .format(
+              FormatRequest(state.inputs.code, state.inputs.worksheetMode)
+            )
+            .call()
+            .map {
+              case FormatResponse(Right(formattedCode)) =>
+                scope.modState { s =>
+                  // avoid overriding user's code if he/she types while it's formatting
+                  if (s.inputs.code == state.inputs.code)
+                    s.resetOutputs.setCode(formattedCode)
+                  else s
+                }
+              case FormatResponse(Left(fullStackTrace)) =>
+                scope.modState(
+                  _.resetOutputs
+                   .setRuntimeError(
                       Some(
-                        RuntimeError(message = "Formatting Failed",
-                                     line = None,
-                                     fullStack = fullStackTrace)
+                        RuntimeError(
+                          message = "Formatting Failed",
+                          line = None,
+                          fullStack = fullStackTrace
+                        )
                       )
-                    )
                   )
-              }
-          )
-        } else Callback(())
+                )
+            }
+        )
+      }
+      else Callback(())
     )
 }
+

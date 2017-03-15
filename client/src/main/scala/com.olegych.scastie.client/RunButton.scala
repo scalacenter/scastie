@@ -17,7 +17,7 @@ object RunButton {
         def selected(view: View) =
           if (view == state.view) TagMod(`class` := "selected") else EmptyTag
 
-        if (!state.running) {
+        if (!state.isRunning) {
           if (View.Editor == state.view) {
             li(onClick ==> run,
                title := s"Run Code ($ctrl + Enter)",
