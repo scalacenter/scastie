@@ -42,20 +42,22 @@ class SbtActorTest()
   }
 
   test("capture runtime errors") {
-    run("1/0")(progress => {
-      println()
-      println(progress.runtimeError)
-      println()
-      val gotRuntimeError = progress.runtimeError.nonEmpty
+    run("1/0")(
+      progress => {
+        println()
+        println(progress.runtimeError)
+        println()
+        val gotRuntimeError = progress.runtimeError.nonEmpty
 
-      if (gotRuntimeError) {
-        val error = progress.runtimeError.get
-        assert(error.message == "java.lang.ArithmeticException: / by zero")
-        assert(error.line == Some(1))
-        assert(error.fullStack.size > 0)
+        if (gotRuntimeError) {
+          val error = progress.runtimeError.get
+          assert(error.message == "java.lang.ArithmeticException: / by zero")
+          assert(error.line == Some(1))
+          assert(error.fullStack.size > 0)
+        }
+        gotRuntimeError
       }
-      gotRuntimeError
-    })
+    )
   }
 
   test("capture user output separately from sbt output") {
