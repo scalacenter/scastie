@@ -251,7 +251,8 @@ case class AppState(
         copyAndSave(
           outputs = outputs.copy(
             consoleOutputs = outputs.consoleOutputs ++ Vector(wrap(l))
-          ))
+          )
+        )
       case _ => this
     }
   }
@@ -260,8 +261,10 @@ case class AppState(
     copyAndSave(
       outputs = outputs.copy(
         consoleOutputs = outputs.consoleOutputs ++ Vector(
-            ConsoleOutput.ScastieOutput(line))
-      ))
+          ConsoleOutput.ScastieOutput(line)
+        )
+      )
+    )
   }
 
   def addProgress(progress: SnippetProgress): AppState = {
@@ -296,11 +299,14 @@ case class AppState(
   def setForcedProgramMode(forcedProgramMode: Boolean): AppState = {
     if (!forcedProgramMode) this
     else {
-      copyAndSave(outputs = outputs.copy(
-        compilationInfos = outputs.compilationInfos +
+      copyAndSave(
+        outputs = outputs.copy(
+          compilationInfos = outputs.compilationInfos +
             info(
-              "You don't need a main method (or extends App) in Worksheet Mode")
-      ))
+              "You don't need a main method (or extends App) in Worksheet Mode"
+            )
+        )
+      )
     }
   }
 
@@ -319,13 +325,18 @@ case class AppState(
     val useWorksheetModeTip =
       if (compilationInfos.exists(ci => topDef(ci)))
         Set(
-          info("""|It seems you're writing code without an enclosing class/object. 
-                  |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin))
+          info(
+            """|It seems you're writing code without an enclosing class/object. 
+               |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin
+          )
+        )
       else Set()
 
-    copyAndSave(outputs = outputs.copy(
-      compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet ++ useWorksheetModeTip,
-      instrumentations = outputs.instrumentations ++ instrumentations.toSet
-    ))
+    copyAndSave(
+      outputs = outputs.copy(
+        compilationInfos = outputs.compilationInfos ++ compilationInfos.toSet ++ useWorksheetModeTip,
+        instrumentations = outputs.instrumentations ++ instrumentations.toSet
+      )
+    )
   }
 }

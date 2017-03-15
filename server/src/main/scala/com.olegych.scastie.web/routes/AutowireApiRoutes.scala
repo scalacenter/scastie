@@ -18,7 +18,8 @@ import scala.concurrent.duration._
 
 class AutowireApiRoutes(
     dispatchActor: ActorRef,
-    userDirectives: UserDirectives)(implicit system: ActorSystem) {
+    userDirectives: UserDirectives
+)(implicit system: ActorSystem) {
   import system.dispatcher
   import userDirectives.optionnalLogin
 
@@ -26,20 +27,29 @@ class AutowireApiRoutes(
 
   val routes =
     post(
-      path("api" / Segments)(s ⇒
-        entity(as[String])(e ⇒
-          extractClientIP(remoteAddress ⇒
-            optionnalLogin(user ⇒
-              complete {
-                val api = new AutowireApiImplementation(
-                  dispatchActor,
-                  remoteAddress,
-                  user
-                )
+      path("api" / Segments)(
+        s ⇒
+          entity(as[String])(
+            e ⇒
+              extractClientIP(
+                remoteAddress ⇒
+                  optionnalLogin(
+                    user ⇒
+                      complete {
+                        val api = new AutowireApiImplementation(
+                          dispatchActor,
+                          remoteAddress,
+                          user
+                        )
 
-                AutowireServer.route[AutowireApi](api)(
-                  autowire.Core.Request(s, uread[Map[String, String]](e))
+                        AutowireServer.route[AutowireApi](api)(
+                          autowire.Core.Request(s,
+                                                uread[Map[String, String]](e))
+                        )
+                    }
                 )
-            }))))
+            )
+        )
+      )
     )
 }

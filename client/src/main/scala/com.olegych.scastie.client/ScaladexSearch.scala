@@ -61,10 +61,13 @@ object ScaladexSearch {
 
     val search =
       projects
-        .flatMap(project =>
-          project.artifacts.map(artifact => (project, artifact)))
-        .filter(projectAndArtifact =>
-          !selectedProjectsArtifacts.contains(projectAndArtifact))
+        .flatMap(
+          project => project.artifacts.map(artifact => (project, artifact))
+        )
+        .filter(
+          projectAndArtifact =>
+            !selectedProjectsArtifacts.contains(projectAndArtifact)
+        )
 
     def removeSelected(selected: Selected): SearchState = {
       copy(selecteds = selecteds.filterNot(_ == selected))
@@ -74,15 +77,19 @@ object ScaladexSearch {
                       scalaDependency: ScalaDependency,
                       options: ReleaseOptions): SearchState = {
       copy(
-        selecteds = Selected(project, scalaDependency, options) :: selecteds)
+        selecteds = Selected(project, scalaDependency, options) :: selecteds
+      )
     }
 
     def updateVersion(selected: Selected, version: String): SearchState = {
       val updatedRelease = selected.release.copy(version = version)
       copy(
-        selecteds = selecteds.map(s =>
-          if (s == selected) s.copy(release = updatedRelease)
-          else s))
+        selecteds = selecteds.map(
+          s =>
+            if (s == selected) s.copy(release = updatedRelease)
+            else s
+        )
+      )
     }
 
     def setProjects(projects: List[Project]): SearchState = {
@@ -116,8 +123,9 @@ object ScaladexSearch {
   private val projectListRef = Ref[HTMLElement]("projectListRef")
   private val searchInputRef = Ref[HTMLInputElement]("searchInputRef")
 
-  implicit final class ReactExt_DomNodeO[O[_], N <: dom.raw.Node](o: O[N])(
-      implicit O: OptionLike[O]) {
+  implicit final class ReactExt_DomNodeO[O[_], N <: dom.raw.Node](
+      o: O[N]
+  )(implicit O: OptionLike[O]) {
 
     def tryTo(f: HTMLElement => Unit) =
       Callback(O.toOption(o).flatMap(_.domToHtml).foreach(f))
@@ -126,7 +134,8 @@ object ScaladexSearch {
   }
 
   private[ScaladexSearch] class SearchBackend(
-      scope: BackendScope[(AppState, AppBackend), SearchState]) {
+      scope: BackendScope[(AppState, AppBackend), SearchState]
+  ) {
     def keyDown(e: ReactKeyboardEventI): Callback = {
 
       if (e.keyCode == KeyCode.Down || e.keyCode == KeyCode.Up) {
@@ -147,17 +156,21 @@ object ScaladexSearch {
           projectListRef(scope).tryTo(
             el =>
               el.scrollTop =
-                Math.abs(interpolate(el.scrollHeight, total, selected + diff)))
+                Math.abs(interpolate(el.scrollHeight, total, selected + diff))
+          )
 
         def selectProject =
           scope.modState(
             s =>
               s.copy(
-                selectedIndex = clamp(s.search.size, s.selectedIndex + diff)))
+                selectedIndex = clamp(s.search.size, s.selectedIndex + diff)
+            )
+          )
 
         def scrollToSelectedProject =
-          scope.state.flatMap(s =>
-            scrollToSelected(s.selectedIndex, s.search.size))
+          scope.state.flatMap(
+            s => scrollToSelected(s.selectedIndex, s.search.size)
+          )
 
         selectProject >>
           e.preventDefaultCB >>
@@ -171,7 +184,8 @@ object ScaladexSearch {
               if (0 <= s.selectedIndex && s.selectedIndex < s.search.size)
                 addArtifact(s.search.toList(s.selectedIndex))
               else
-                Callback(()))
+                Callback(())
+          )
 
         addArtifactIfInRange >> searchInputRef(scope).tryFocus
       } else {
@@ -179,8 +193,9 @@ object ScaladexSearch {
       }
     }
 
-    def addArtifact(projectAndArtifact: (Project, String))(
-        e: ReactEventI): Callback =
+    def addArtifact(
+        projectAndArtifact: (Project, String)
+    )(e: ReactEventI): Callback =
       addArtifact(projectAndArtifact)
 
     private def withBackend(f: AppBackend => Callback): Callback = {
@@ -285,8 +300,8 @@ object ScaladexSearch {
               )
 
             def addScalaDependencyLocal =
-              scope.modState(
-                _.addDependency(project, scalaDependency, options))
+              scope
+                .modState(_.addDependency(project, scalaDependency, options))
 
             def addScalaDependencyBackend =
               withBackend(_.addScalaDependency(scalaDependency, project))
@@ -343,7 +358,8 @@ object ScaladexSearch {
                     url =>
                       img(src := url + "&s=40",
                           common,
-                          alt := s"$organization logo or avatar"))
+                          alt := s"$organization logo or avatar")
+                  )
                   .getOrElse(
                     img(src := "/assets/public/placeholder.svg",
                         common,
@@ -378,7 +394,8 @@ object ScaladexSearch {
                       `class` := "remove"
                     ),
                     options = renderOptions(selected)
-                ))
+                )
+              )
             )
           }
 
@@ -402,11 +419,13 @@ object ScaladexSearch {
                       selected =
                         selectedIndex(index, searchState.selectedIndex),
                       handlers = TagMod(
-                        onClick ==> scope.backend.addArtifact(
-                          (project, artifact)),
+                        onClick ==> scope.backend
+                          .addArtifact((project, artifact)),
                         onMouseOver ==> scope.backend.selectIndex(index)
-                      ))
-                })
+                      )
+                    )
+                }
+              )
             )
           )
       }

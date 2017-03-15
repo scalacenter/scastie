@@ -21,8 +21,8 @@ lazy val orgSettings = Seq(
 )
 
 lazy val baseSettings = Seq(
-    scalaVersion := "2.11.8",
-    scalacOptions := {
+  scalaVersion := "2.11.8",
+  scalacOptions := {
     val extraOptions =
       if (scalaBinaryVersion.value != "2.10") {
         Seq("-Ywarn-unused-import")
@@ -41,10 +41,10 @@ lazy val baseSettings = Seq(
       "-Ywarn-value-discard"
     ) ++ extraOptions
   },
-    console := (console in Test).value,
-    scalacOptions in (Test, console) -= "-Ywarn-unused-import",
-    scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"
-  ) ++ orgSettings
+  console := (console in Test).value,
+  scalacOptions in (Test, console) -= "-Ywarn-unused-import",
+  scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"
+) ++ orgSettings
 
 lazy val loggingAndTest =
   libraryDependencies ++= Seq(
@@ -109,23 +109,30 @@ lazy val sbtRunner = project
       }
       case x => MergeStrategy.first
     },
-    dockerfile in docker := Def.task {
-      val ivy = ivyPaths.value.ivyHome.get
+    dockerfile in docker := Def
+      .task {
+        val ivy = ivyPaths.value.ivyHome.get
 
-      val org = organization.value
-      val artifact = assembly.value
-      val artifactTargetPath = s"/app/${artifact.name}"
+        val org = organization.value
+        val artifact = assembly.value
+        val artifactTargetPath = s"/app/${artifact.name}"
 
-      new Dockerfile {
-        from("scalacenter/scastie-docker-sbt:0.0.9")
+        new Dockerfile {
+          from("scalacenter/scastie-docker-sbt:0.0.9")
 
-        add(ivy / "local" / org, s"/root/.ivy2/local/$org")
+          add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 
-        add(artifact, artifactTargetPath)
+          add(artifact, artifactTargetPath)
 
-        entryPoint("java", "-Xmx256M", "-Xms256M", "-jar", artifactTargetPath)
+          entryPoint("java",
+                     "-Xmx256M",
+                     "-Xms256M",
+                     "-jar",
+                     artifactTargetPath)
+        }
       }
-    }.dependsOn(runnerRuntimeDependencies: _*).value,
+      .dependsOn(runnerRuntimeDependencies: _*)
+      .value,
     test in Test := (test in Test)
       .dependsOn(runnerRuntimeDependencies: _*)
       .value,

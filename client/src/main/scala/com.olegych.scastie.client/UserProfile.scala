@@ -13,8 +13,10 @@ object UserProfile {
     component((router, view))
 
   class Backend(
-      scope: BackendScope[(Option[RouterCtl[Page]], View),
-                          List[SnippetSummary]]) {
+      scope: BackendScope[(Option[RouterCtl[Page]], View), List[
+        SnippetSummary
+      ]]
+  ) {
     def loadProfile(): Callback = {
       Callback.future(
         ApiClient[AutowireApi]

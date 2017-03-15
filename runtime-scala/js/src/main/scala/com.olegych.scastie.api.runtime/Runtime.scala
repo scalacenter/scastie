@@ -12,7 +12,8 @@ object Runtime extends SharedRuntime {
     uwrite(in)
   }
   def render[T: pprint.PPrint](a: T, attach: HTMLElement => UUID)(
-      implicit tp: pprint.TPrint[T]): Render = {
+      implicit tp: pprint.TPrint[T]
+  ): Render = {
     a match {
       case element: HTMLElement => {
         val uuid = attach(element)

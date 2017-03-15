@@ -33,7 +33,8 @@ class SbtActorTest()
         assert(
           progress.instrumentations == List(
             Instrumentation(Position(0, 5), Value("2", "Int"))
-          ))
+          )
+        )
       }
 
       gotInstrumentation
@@ -70,21 +71,22 @@ class SbtActorTest()
   test("force program mode when an entry point is present") {
     val message = "Hello"
     run(
-      s"""object Main { def main(args: Array[String]): Unit = println("$message") }""") {
-      progress =>
-        assert(progress.forcedProgramMode)
+      s"""object Main { def main(args: Array[String]): Unit = println("$message") }"""
+    ) { progress =>
+      assert(progress.forcedProgramMode)
 
-        val gotHelloMessage = progress.userOutput == Some(message)
-        if (!gotHelloMessage) assert(progress.userOutput == None)
+      val gotHelloMessage = progress.userOutput == Some(message)
+      if (!gotHelloMessage) assert(progress.userOutput == None)
 
-        gotHelloMessage
+      gotHelloMessage
     }
   }
 
   test("report unsupported dialects") {
     run("1+1", ScalaTarget.Jvm("10.10.10"))(assertCompilationInfo { info =>
       assert(
-        info.message == "The worksheet mode does not support this Scala target")
+        info.message == "The worksheet mode does not support this Scala target"
+      )
     })
   }
 
@@ -114,8 +116,9 @@ class SbtActorTest()
     run(scalaJs)(_.done)
   }
 
-  def assertCompilationInfo(infoAssert: Problem => Any)(
-      progress: SnippetProgress): Boolean = {
+  def assertCompilationInfo(
+      infoAssert: Problem => Any
+  )(progress: SnippetProgress): Boolean = {
 
     val gotCompilationError = progress.compilationInfos.nonEmpty
 
@@ -133,7 +136,8 @@ class SbtActorTest()
 
   private val timeout = 20.seconds
   private val sbtActor = TestActorRef(
-    new SbtActor(timeout, production = false))
+    new SbtActor(timeout, production = false)
+  )
   private var currentId = 0
   private def snippetId = {
     val t = currentId
@@ -163,7 +167,8 @@ class SbtActorTest()
     firstRun = false
   }
   private def run(code: String, target: ScalaTarget = ScalaTarget.Jvm.default)(
-      fish: SnippetProgress => Boolean): Unit = {
+      fish: SnippetProgress => Boolean
+  ): Unit = {
     run(Inputs.default.copy(code = code, target = target))(fish)
   }
 }

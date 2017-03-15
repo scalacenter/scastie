@@ -28,7 +28,8 @@ class ScalaJsRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
             (dispatchActor ? FetchScalaJs(sid))
               .mapTo[Option[FetchResultScalaJs]]
               .map(_.map(_.content))
-        )),
+        )
+      ),
       snippetIdEnd(Shared.scalaJsHttpPathPrefix,
                    ScalaTarget.Js.sourceMapFilename)(
         sid =>
@@ -36,6 +37,7 @@ class ScalaJsRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
             (dispatchActor ? FetchScalaJsSourceMap(sid))
               .mapTo[Option[FetchResultScalaJsSourceMap]]
               .map(_.map(_.content))
-        ))
+        )
+      )
     )
 }

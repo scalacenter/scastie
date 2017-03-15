@@ -83,7 +83,9 @@ object Libraries {
                   alt := s"logo for ${labelFor(targetType)}"),
               span(labelFor(targetType)),
               vote(targetType)
-          )))
+          )
+        )
+      )
     )
   }
 
@@ -161,8 +163,9 @@ object Libraries {
       if (v1 == v2) TagMod(`class` := "selected")
       else EmptyTag
 
-    def setScalaVersion(targetApply: String => ScalaTarget)(
-        e: ReactEventI): Callback =
+    def setScalaVersion(
+        targetApply: String => ScalaTarget
+    )(e: ReactEventI): Callback =
       backend.setTarget(targetApply(e.target.value))
 
     val notSupported = div("Not supported")
@@ -174,7 +177,8 @@ object Libraries {
           suggestedVersions.map(
             version =>
               li(onClick ==> backend.setTarget2(targetApply(version)),
-                 selected(version, scalaVersion))(version))
+                 selected(version, scalaVersion))(version)
+          )
         ),
         select(name := "scalaVersion",
                value := scalaVersion.toString,
@@ -222,13 +226,19 @@ object Libraries {
             .flatMap(
               reset =>
                 if (reset) backend.resetInputs
-                else Callback(()))
+                else Callback(())
+            )
         }
 
+        val resetButton =
+          if (state.inputs != Inputs.default) {
+            button(onClick ==> resetInputs, `class` := "button")(
+              p("Reset Default")
+            )
+          } else EmptyTag
+
         div(`class` := "libraries")(
-          button(onClick ==> resetInputs, `class` := "button")(
-            p("Reset Default")
-          ),
+          resetButton,
           ScaladexSearch(state, backend),
           renderTarget(state.inputs.target, backend),
           renderVersions(state.inputs.target, backend),
@@ -239,7 +249,8 @@ object Libraries {
               title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
               worksheetModeSelected,
               `class` := "button",
-              worksheetModeClassSelected)(
+              worksheetModeClassSelected
+            )(
               iconic.script,
               p(s"Worksheet $worksheetModeToogleLabel")
             )
@@ -274,7 +285,8 @@ object Libraries {
                 CodeMirrorEditor.Settings(
                   value = state.inputs.sbtPluginsConfig,
                   theme = s"solarized $theme",
-                  readOnly = true),
+                  readOnly = true
+                ),
                 CodeMirrorEditor.Handler(
                   _ => Callback(())
                 )
