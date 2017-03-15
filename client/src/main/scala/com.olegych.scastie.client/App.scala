@@ -8,8 +8,15 @@ import japgolly.scalajs.react._, vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
 
-
 object App {
+
+  private def setTitle(state: AppState) =
+    if (state.inputsHasChanged) {
+      Callback(dom.document.title = "Scastie (*)")
+    } else {
+      Callback(dom.document.title = "Scastie")
+    }
+
   val component =
     ReactComponentB[AppProps]("App")
       .initialState(LocalStorage.load.getOrElse(AppState.default))
@@ -35,19 +42,14 @@ object App {
           )
         }
       }
-      .componentWillMount(s => s.backend.start(s.props))
+      .componentWillMount { current =>
+        current.backend.start(current.props) >> setTitle(current.state)
+      }
       .componentDidUpdate { v =>
         val state = v.prevState
         val scope = v.$
 
         val direct = scope.accessDirect
-
-        val setTitle =
-          if (state.inputsHasChanged) {
-            Callback(dom.document.title = "Scastie (*)")
-          } else {
-            Callback(dom.document.title = "Scastie")
-          }
 
         val executeScalaJs =
           if (direct.state.loadScalaJsScript &&
@@ -57,8 +59,7 @@ object App {
               !state.running) {
 
             direct.modState(
-              _.setLoadScalaJsScript(false) 
-               .scalaJsScriptLoaded
+              _.setLoadScalaJsScript(false).scalaJsScriptLoaded
             )
 
             Callback {
@@ -119,7 +120,7 @@ object App {
             }
           } else Callback(())
 
-        setTitle >> executeScalaJs
+        setTitle(state) >> executeScalaJs
       }
       .componentWillReceiveProps { v =>
         val next = v.nextProps.snippetId
@@ -127,15 +128,18 @@ object App {
         val state = v.$.state
         val backend = v.$.backend
 
-        if (next != current) {
-          next match {
-            case Some(snippetId) =>
-              backend.loadSnippet(snippetId) >>
-                backend.setView(View.Editor)
-            case _ => Callback(())
-          }
+        val loadSnippet =
+          if (next != current) {
+            next match {
+              case Some(snippetId) =>
+                backend.loadSnippet(snippetId) >>
+                  backend.setView(View.Editor)
+              case _ => Callback(())
+            }
 
-        } else Callback(())
+          } else Callback(())
+
+        setTitle(state) >> loadSnippet
       }
       .build
 

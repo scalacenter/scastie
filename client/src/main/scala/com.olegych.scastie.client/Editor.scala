@@ -294,9 +294,11 @@ object Editor {
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)
 
-            val domNode = 
-              next.attachedDoms.get(uuid).getOrElse{
-                val node = dom.document.createElement("pre").asInstanceOf[HTMLPreElement]
+            val domNode =
+              next.attachedDoms.get(uuid).getOrElse {
+                val node = dom.document
+                  .createElement("pre")
+                  .asInstanceOf[HTMLPreElement]
                 node.innerHTML = "cannot find dom element uuid: " + uuid
                 node
               }

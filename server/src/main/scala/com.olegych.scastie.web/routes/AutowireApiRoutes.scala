@@ -16,8 +16,9 @@ import upickle.default.{read => uread}
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration._
 
-class AutowireApiRoutes(dispatchActor: ActorRef, userDirectives: UserDirectives)(
-    implicit system: ActorSystem) {
+class AutowireApiRoutes(
+    dispatchActor: ActorRef,
+    userDirectives: UserDirectives)(implicit system: ActorSystem) {
   import system.dispatcher
   import userDirectives.optionnalLogin
 

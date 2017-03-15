@@ -5,6 +5,8 @@ import api._
 
 import japgolly.scalajs.react._, vdom.all._
 
+import org.scalajs.dom.window
+
 object Libraries {
 
   def renderTarget(scalaTarget: ScalaTarget, backend: AppBackend) = {
@@ -215,7 +217,18 @@ object Libraries {
           if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
           else EmptyTag
 
+        def resetInputs(e: ReactEventI): Callback = {
+          CallbackTo(window.confirm("Are you sure you want to reset?"))
+            .flatMap(
+              reset =>
+                if (reset) backend.resetInputs
+                else Callback(()))
+        }
+
         div(`class` := "libraries")(
+          button(onClick ==> resetInputs, `class` := "button")(
+            p("Reset Default")
+          ),
           ScaladexSearch(state, backend),
           renderTarget(state.inputs.target, backend),
           renderVersions(state.inputs.target, backend),

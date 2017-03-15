@@ -21,6 +21,7 @@ object AppState {
     consoleHasUserOutput = false,
     inputsHasChanged = false,
     snippetId = None,
+    isSnippetSaved = false,
     loadSnippet = true,
     isStartup = true,
     loadScalaJsScript = false,
@@ -53,6 +54,7 @@ case class AppState(
     consoleHasUserOutput: Boolean,
     inputsHasChanged: Boolean,
     snippetId: Option[SnippetId],
+    isSnippetSaved: Boolean,
     loadSnippet: Boolean,
     isStartup: Boolean,
     loadScalaJsScript: Boolean,
@@ -84,9 +86,13 @@ case class AppState(
       if (inputsHasChanged) None
       else snippetId
 
-    val isScalaJsScriptLoaded0 = 
+    val isScalaJsScriptLoaded0 =
       if (inputsHasChanged) false
       else isScalaJsScriptLoaded
+
+    val isSnippetSaved0 =
+      if (inputsHasChanged) false
+      else isSnippetSaved
 
     val state0 =
       copy(
@@ -101,6 +107,7 @@ case class AppState(
         consoleHasUserOutput,
         inputsHasChanged,
         snippetId0,
+        isSnippetSaved0,
         loadSnippet,
         isStartup,
         loadScalaJsScript,
@@ -135,6 +142,9 @@ case class AppState(
     val console = !running && !consoleHasUserOutput
     copyAndSave(running = running, consoleIsOpen = !console)
   }
+
+  def setSnippetSaved: AppState =
+    copy(isSnippetSaved = true)
 
   def toggleTheme: AppState =
     copyAndSave(isDarkTheme = !isDarkTheme)
