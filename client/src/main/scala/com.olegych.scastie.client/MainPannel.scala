@@ -83,11 +83,12 @@ object MainPannel {
             UserProfile(props.router, state.view))
         )
     }.componentDidUpdate(scope =>
-        Callback {
-          val consoleDom = consoleElement(scope.$).get
+      Callback {
+        consoleElement(scope.$).foreach{consoleDom =>
           consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
-      })
-      .build
+        }
+      }
+    ).build
 
   def apply(state: AppState, backend: AppBackend, props: AppProps) =
     component((state, backend, props))

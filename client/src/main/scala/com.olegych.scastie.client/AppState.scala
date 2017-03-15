@@ -24,6 +24,7 @@ object AppState {
     loadSnippet = true,
     isStartup = true,
     loadScalaJsScript = false,
+    isScalaJsScriptLoaded = false,
     snippetIdIsScalaJS = false,
     user = None,
     attachedDoms = Map(),
@@ -55,6 +56,7 @@ case class AppState(
     loadSnippet: Boolean,
     isStartup: Boolean,
     loadScalaJsScript: Boolean,
+    isScalaJsScriptLoaded: Boolean,
     snippetIdIsScalaJS: Boolean,
     user: Option[User],
     attachedDoms: AttachedDoms,
@@ -98,6 +100,7 @@ case class AppState(
         loadSnippet,
         isStartup,
         loadScalaJsScript,
+        isScalaJsScriptLoaded,
         snippetIdIsScalaJS,
         user,
         attachedDoms,
@@ -214,11 +217,14 @@ case class AppState(
     )
   }
 
+  def scalaJsScriptLoaded: AppState =
+    copy(isScalaJsScriptLoaded = true)
+
   def resetOutputs: AppState =
     copyAndSave(outputs = Outputs.default,
                 consoleIsOpen = false,
                 consoleHasUserOutput = false,
-                attachedDoms = Map())
+                attachedDoms = Map()).copy(isScalaJsScriptLoaded = false)
 
   def setRuntimeError(runtimeError: Option[RuntimeError]): AppState =
     if (runtimeError.isEmpty) this
