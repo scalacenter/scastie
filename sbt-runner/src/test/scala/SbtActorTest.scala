@@ -68,16 +68,15 @@ class SbtActorTest()
   }
 
   test("force program mode when an entry point is present") {
-    // val message = "Hello"
-    // run(s"""object Main { def main(args: Array[String]): Unit = println("$message") }"""){progress =>
-    //   assert(progress.forcedProgramMode)
+    val message = "Hello"
+    run(s"""object Main { def main(args: Array[String]): Unit = println("$message") }"""){progress =>
+      assert(progress.forcedProgramMode)
 
-    //   val gotHelloMessage = progress.userOutput == Some(message)
-    //   if (!gotHelloMessage) assert(progress.userOutput == None)
+      val gotHelloMessage = progress.userOutput == Some(message)
+      if (!gotHelloMessage) assert(progress.userOutput == None)
 
-    //   gotHelloMessage
-    // }
-    pending
+      gotHelloMessage
+    }
   }
 
   test("report unsupported dialects") {
@@ -99,12 +98,11 @@ class SbtActorTest()
   }
 
   test("Encoding issues #100"){
-    // run("""println("€")"""){progress =>
-    //   val gotHelloMessage = progress.userOutput == Some("€")
-    //   if (!gotHelloMessage) assert(progress.userOutput == None)
-    //   gotHelloMessage
-    // }
-    pending
+    run("""println("€")"""){progress =>
+      val gotHelloMessage = progress.userOutput == Some("€")
+      if (!gotHelloMessage) assert(progress.userOutput == None)
+      gotHelloMessage
+    }
   }
 
   test("Scala.js support"){
