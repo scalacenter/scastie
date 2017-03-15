@@ -1,6 +1,5 @@
 package com.olegych.scastie
 package web
-package routes
 
 import upickle.default.{Reader, Writer, read => uread, write => uwrite}
 

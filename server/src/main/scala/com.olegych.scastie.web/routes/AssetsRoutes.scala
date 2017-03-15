@@ -4,7 +4,7 @@ package routes
 
 import akka.http.scaladsl.server.Directives._
 
-object Assets {
+object AssetsRoutes {
   val routes =
     get(
       concat(

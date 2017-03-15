@@ -69,24 +69,27 @@ class SbtActorTest()
 
   test("force program mode when an entry point is present") {
     val message = "Hello"
-    run(s"""object Main { def main(args: Array[String]): Unit = println("$message") }"""){progress =>
-      assert(progress.forcedProgramMode)
+    run(
+      s"""object Main { def main(args: Array[String]): Unit = println("$message") }""") {
+      progress =>
+        assert(progress.forcedProgramMode)
 
-      val gotHelloMessage = progress.userOutput == Some(message)
-      if (!gotHelloMessage) assert(progress.userOutput == None)
+        val gotHelloMessage = progress.userOutput == Some(message)
+        if (!gotHelloMessage) assert(progress.userOutput == None)
 
-      gotHelloMessage
+        gotHelloMessage
     }
   }
 
   test("report unsupported dialects") {
-    run("1+1", ScalaTarget.Jvm("10.10.10"))(assertCompilationInfo{ info =>
-      assert(info.message == "The worksheet mode does not support this Scala target")
+    run("1+1", ScalaTarget.Jvm("10.10.10"))(assertCompilationInfo { info =>
+      assert(
+        info.message == "The worksheet mode does not support this Scala target")
     })
   }
 
   test("repport parsing error") {
-    run("{")(assertCompilationInfo{ info =>
+    run("{")(assertCompilationInfo { info =>
       assert(info.message == "} expected but end of file found")
       assert(info.line == Some(1))
     })
@@ -97,16 +100,17 @@ class SbtActorTest()
     run(dotty)(_.instrumentations.nonEmpty)
   }
 
-  test("Encoding issues #100"){
-    run("""println("€")"""){progress =>
+  test("Encoding issues #100") {
+    run("""println("€")""") { progress =>
       val gotHelloMessage = progress.userOutput == Some("€")
       if (!gotHelloMessage) assert(progress.userOutput == None)
       gotHelloMessage
     }
   }
 
-  test("Scala.js support"){
-    val scalaJs = Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Js.default)
+  test("Scala.js support") {
+    val scalaJs =
+      Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Js.default)
     run(scalaJs)(_.done)
   }
 

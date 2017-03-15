@@ -169,7 +169,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.state.flatMap(
       s =>
         Callback.future(
-          ApiClient[Api]
+          ApiClient[AutowireApi]
             .run(s.inputs)
             .call()
             .map(snippetId =>
@@ -203,7 +203,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       if (state.inputsHasChanged) {
         scope.modState(_.setLoadSnippet(false).setCleanInputs) >>
           Callback.future(
-            ApiClient[Api]
+            ApiClient[AutowireApi]
               .save(state.inputs)
               .call()
               .map(snippetId =>
@@ -226,7 +226,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.state.flatMap(
       state =>
         Callback.future(
-          ApiClient[Api]
+          ApiClient[AutowireApi]
             .amend(snippetId, state.inputs)
             .call()
             .map(success =>
@@ -239,7 +239,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.state.flatMap(
       state =>
         Callback.future(
-          ApiClient[Api]
+          ApiClient[AutowireApi]
             .fork(snippetId, state.inputs)
             .call()
             .map(result =>
@@ -263,7 +263,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.state.flatMap(
       state =>
         Callback.future(
-          ApiClient[Api]
+          ApiClient[AutowireApi]
             .update(snippetId, state.inputs)
             .call()
             .map(result =>
@@ -284,7 +284,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.state.flatMap(state =>
       if (state.loadSnippet) {
         Callback.future(
-          ApiClient[Api]
+          ApiClient[AutowireApi]
             .fetch(snippetId)
             .call()
             .map(result =>
@@ -318,7 +318,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def start(props: AppProps): Callback = {
     def loadUser(): Callback = {
       Callback.future(
-        ApiClient[Api]
+        ApiClient[AutowireApi]
           .fetchUser()
           .call()
           .map(result => scope.modState(_.setUser(result)))
@@ -351,7 +351,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.state.flatMap(state =>
       if (state.inputsHasChanged) {
         Callback.future(
-          ApiClient[Api]
+          ApiClient[AutowireApi]
             .format(
               FormatRequest(state.inputs.code, state.inputs.worksheetMode))
             .call()

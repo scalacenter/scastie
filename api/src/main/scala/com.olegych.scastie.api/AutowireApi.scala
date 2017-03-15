@@ -3,7 +3,7 @@ package api
 
 import scala.concurrent.Future
 
-trait Api {
+trait AutowireApi {
   def run(inputs: Inputs): Future[SnippetId]
   def format(code: FormatRequest): Future[FormatResponse]
 
