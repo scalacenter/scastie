@@ -84,6 +84,10 @@ case class AppState(
       if (inputsHasChanged) None
       else snippetId
 
+    val isScalaJsScriptLoaded0 = 
+      if (inputsHasChanged) false
+      else isScalaJsScriptLoaded
+
     val state0 =
       copy(
         view,
@@ -100,7 +104,7 @@ case class AppState(
         loadSnippet,
         isStartup,
         loadScalaJsScript,
-        isScalaJsScriptLoaded,
+        isScalaJsScriptLoaded0
         snippetIdIsScalaJS,
         user,
         attachedDoms,
