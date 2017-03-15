@@ -22,7 +22,8 @@ class DebugRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
     path("loadbalancer-debug")(
       onSuccess(
         (dispatchActor ? LoadBalancerStateRequest)
-          .mapTo[LoadBalancerStateResponse])(
+          .mapTo[LoadBalancerStateResponse]
+      )(
         state =>
           complete(
             serveStatic(
@@ -30,7 +31,10 @@ class DebugRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
                 _.replaceAllLiterally(
                   "==STATE==",
                   state.loadBalancer.debug
-                )))
-        ))
+                )
+              )
+            )
+        )
+      )
     )
 }

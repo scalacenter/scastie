@@ -24,21 +24,24 @@ class OAuth2Routes(github: Github, session: GithubUserSession) {
     get(
       concat(
         path("login") {
-          parameter('home.?)(home =>
-            optionalHeaderValueByType[Referer]() { referer =>
-              redirect(
-                Uri("https://github.com/login/oauth/authorize").withQuery(
-                  Query(
-                    "client_id" -> github.clientId,
-                    "state" -> {
-                      val homeUri = "/"
-                      if (home.isDefined) homeUri
-                      else referer.map(_.value).getOrElse(homeUri)
-                    }
-                  )),
-                TemporaryRedirect
-              )
-          })
+          parameter('home.?)(
+            home =>
+              optionalHeaderValueByType[Referer]() { referer =>
+                redirect(
+                  Uri("https://github.com/login/oauth/authorize").withQuery(
+                    Query(
+                      "client_id" -> github.clientId,
+                      "state" -> {
+                        val homeUri = "/"
+                        if (home.isDefined) homeUri
+                        else referer.map(_.value).getOrElse(homeUri)
+                      }
+                    )
+                  ),
+                  TemporaryRedirect
+                )
+            }
+          )
         },
         path("logout") {
           headerValueByType[Referer]() { referer =>
@@ -66,7 +69,7 @@ class OAuth2Routes(github: Github, session: GithubUserSession) {
                         HttpResponse(
                           status = TemporaryRedirect,
                           headers = headers
-                              .Location(Uri(state.getOrElse("/"))) :: Nil,
+                            .Location(Uri(state.getOrElse("/"))) :: Nil,
                           entity = HttpEntity.Empty
                         )
                       )

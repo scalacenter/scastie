@@ -37,7 +37,8 @@ class SnippetsContainer(root: Path) {
     if (readInputs(snippetId).isDefined) {
       Some(
         create(inputs.copy(forked = Some(snippetId), showInUserProfile = true),
-               user))
+               user)
+      )
     } else None
   }
 
@@ -50,7 +51,9 @@ class SnippetsContainer(root: Path) {
             Some(
               SnippetUserPart(
                 login,
-                Some(lastUpdateId(login, snippetId.base64UUID) + 1)))
+                Some(lastUpdateId(login, snippetId.base64UUID) + 1)
+              )
+            )
           )
         write(inputsFile(nextSnippetId),
               uwrite(inputs.copy(showInUserProfile = true)))
@@ -99,8 +102,9 @@ class SnippetsContainer(root: Path) {
   }
 
   def readSnippet(snippetId: SnippetId): Option[FetchResult] = {
-    readInputs(snippetId).map(inputs =>
-      FetchResult(inputs, readOutputs(snippetId).getOrElse(Nil)))
+    readInputs(snippetId).map(
+      inputs => FetchResult(inputs, readOutputs(snippetId).getOrElse(Nil))
+    )
   }
 
   def readScalaJs(snippetId: SnippetId): Option[FetchResultScalaJs] = {
@@ -108,9 +112,10 @@ class SnippetsContainer(root: Path) {
   }
 
   def readScalaJsSourceMap(
-      snippetId: SnippetId): Option[FetchResultScalaJsSourceMap] = {
-    slurp(scalaJsSourceMapFile(snippetId)).map(content =>
-      FetchResultScalaJsSourceMap(content))
+      snippetId: SnippetId
+  ): Option[FetchResultScalaJsSourceMap] = {
+    slurp(scalaJsSourceMapFile(snippetId))
+      .map(content => FetchResultScalaJsSourceMap(content))
   }
 
   def listSnippets(user: UserLogin): List[SnippetSummary] = {
@@ -155,12 +160,14 @@ class SnippetsContainer(root: Path) {
   }
 
   private def readOutputs(
-      snippetId: SnippetId): Option[List[SnippetProgress]] = {
+      snippetId: SnippetId
+  ): Option[List[SnippetProgress]] = {
     slurp(outputsFile(snippetId)).map(
       _.lines
         .filter(_.nonEmpty)
         .map(line => uread[SnippetProgress](line))
-        .toList)
+        .toList
+    )
   }
 
   private val inputFileName = "input.json"
@@ -279,21 +286,24 @@ class SnippetsContainer(root: Path) {
       !ret
     }
 
-    Files.walkFileTree(base, new FileVisitor[Path] {
-      def postVisitDirectory(path: Path, ex: IOException): FileVisitResult = {
-        if (dirIsEmpty(path)) {
-          Files.delete(path)
+    Files.walkFileTree(
+      base,
+      new FileVisitor[Path] {
+        def postVisitDirectory(path: Path, ex: IOException): FileVisitResult = {
+          if (dirIsEmpty(path)) {
+            Files.delete(path)
+          }
+          CONTINUE
         }
-        CONTINUE
+        def preVisitDirectory(path: Path,
+                              x$2: BasicFileAttributes): FileVisitResult =
+          CONTINUE
+        def visitFile(path: Path, x$2: BasicFileAttributes): FileVisitResult =
+          CONTINUE
+        def visitFileFailed(path: Path, ex: IOException): FileVisitResult =
+          CONTINUE
       }
-      def preVisitDirectory(path: Path,
-                            x$2: BasicFileAttributes): FileVisitResult =
-        CONTINUE
-      def visitFile(path: Path, x$2: BasicFileAttributes): FileVisitResult =
-        CONTINUE
-      def visitFileFailed(path: Path, ex: IOException): FileVisitResult =
-        CONTINUE
-    })
+    )
 
     ()
   }

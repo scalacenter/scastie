@@ -29,7 +29,8 @@ object Global {
       val direct = scope.accessDirect
 
       val result = uread[Either[Option[RuntimeError], List[Instrumentation]]](
-        instrumentationsRaw)
+        instrumentationsRaw
+      )
 
       val (instr, runtimeError) = result match {
         case Left(maybeRuntimeError) => (Nil, maybeRuntimeError)
@@ -45,7 +46,8 @@ object Global {
               instrumentations = state.outputs.instrumentations ++ instr.toSet,
               runtimeError = runtimeError
             )
-        ))
+        )
+      )
     }
   }
 }

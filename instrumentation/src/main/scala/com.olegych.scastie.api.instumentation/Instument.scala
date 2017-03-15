@@ -96,8 +96,8 @@ object Instrument {
 
           instrumentationMapPatch +:
             c.templ.stats.get.collect {
-              case term: Term => instrumentOne(term, None, offset, isScalaJs)
-            }
+            case term: Term => instrumentOne(term, None, offset, isScalaJs)
+          }
         }
       }.flatten
 
@@ -160,8 +160,10 @@ object Instrument {
     }
   }
 
-  def apply(code: String, target: ScalaTarget = Jvm.default)
-    : Either[InstrumentationFailure, String] = {
+  def apply(
+      code: String,
+      target: ScalaTarget = Jvm.default
+  ): Either[InstrumentationFailure, String] = {
     val runtimeImport = "import _root_.com.olegych.scastie.api.runtime._"
 
     val isScalaJs = target.targetType == ScalaTargetType.JS

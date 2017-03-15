@@ -109,7 +109,8 @@ class SnippetsContainerTest extends FunSuite {
 
     assert(snippets.size == 3)
     assert(
-      snippets.map(_.summary).toSet == Set("inputs1", "inputs2", "inputs3"))
+      snippets.map(_.summary).toSet == Set("inputs1", "inputs2", "inputs3")
+    )
   }
 
   test("delete") {

@@ -63,7 +63,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   private def instrument(
-      inputs: Inputs): Either[InstrumentationFailure, Inputs] = {
+      inputs: Inputs
+  ): Either[InstrumentationFailure, Inputs] = {
     if (inputs.worksheetMode) {
       instrumentation
         .Instrument(inputs.code, inputs.target)
@@ -122,7 +123,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     val sbtReloadTime = 40.seconds
     if (sbt.needsReload(inputs)) {
       withTimeout(sbtReloadTime)(eval("compile", reload = true))(
-        timeout(sbtReloadTime))
+        timeout(sbtReloadTime)
+      )
     }
 
     log.info(s"== running $snippetId ==")
@@ -180,7 +182,8 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
             case UnsupportedDialect =>
               signalError(
                 "The worksheet mode does not support this Scala target",
-                None)
+                None
+              )
 
             case ParsingError(Parsed.Error(pos, message, _)) => {
               val lineOffset = getLineOffset(worksheetMode = true)
@@ -194,8 +197,9 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
   }
 
-  private def withTimeout(timeout: Duration)(block: ⇒ Unit)(
-      onTimeout: => Unit): Unit = {
+  private def withTimeout(
+      timeout: Duration
+  )(block: ⇒ Unit)(onTimeout: => Unit): Unit = {
     val task = new FutureTask(new Callable[Unit]() { def call = block })
     val thread = new Thread(task)
     try {
@@ -218,63 +222,63 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       progressActor: ActorRef,
       snippetId: SnippetId,
       snippetActor: ActorRef,
-      isScalaJs: Boolean): (String, Boolean, Boolean) => Unit = {
-    (line, done, reload) =>
-      {
-        val lineOffset = getLineOffset(worksheetMode)
+      isScalaJs: Boolean
+  ): (String, Boolean, Boolean) => Unit = { (line, done, reload) =>
+    {
+      val lineOffset = getLineOffset(worksheetMode)
 
-        val problems = extractProblems(line, lineOffset)
-        val instrumentations =
-          extract[List[api.Instrumentation]](line, report = true)
-        val runtimeError = extractRuntimeError(line, lineOffset)
-        val sbtOutput = extract[ConsoleOutput.SbtOutput](line)
+      val problems = extractProblems(line, lineOffset)
+      val instrumentations =
+        extract[List[api.Instrumentation]](line, report = true)
+      val runtimeError = extractRuntimeError(line, lineOffset)
+      val sbtOutput = extract[ConsoleOutput.SbtOutput](line)
 
-        // sbt plugin is not loaded at this stage. we need to drop those messages
-        val initializationMessages = List(
-          "[info] Loading global plugins from",
-          "[info] Loading project definition from",
-          "[info] Set current project to scastie",
-          "[info] Updating {file:",
-          "[info] Done updating.",
-          "[info] Resolving"
-        )
+      // sbt plugin is not loaded at this stage. we need to drop those messages
+      val initializationMessages = List(
+        "[info] Loading global plugins from",
+        "[info] Loading project definition from",
+        "[info] Set current project to scastie",
+        "[info] Updating {file:",
+        "[info] Done updating.",
+        "[info] Resolving"
+      )
 
-        val isSbtMessage =
-          initializationMessages.exists(message => line.startsWith(message))
+      val isSbtMessage =
+        initializationMessages.exists(message => line.startsWith(message))
 
-        val userOutput =
-          if (problems.isEmpty
-              && instrumentations.isEmpty
-              && runtimeError.isEmpty
-              && !done
-              && !isSbtMessage
-              && sbtOutput.isEmpty)
-            Some(line)
-          else None
+      val userOutput =
+        if (problems.isEmpty
+            && instrumentations.isEmpty
+            && runtimeError.isEmpty
+            && !done
+            && !isSbtMessage
+            && sbtOutput.isEmpty)
+          Some(line)
+        else None
 
-        val (scalaJsContent, scalaJsSourceMapContent) =
-          if (done && isScalaJs && problems.isEmpty) {
-            (sbt.scalaJsContent(), sbt.scalaJsSourceMapContent())
-          } else (None, None)
+      val (scalaJsContent, scalaJsSourceMapContent) =
+        if (done && isScalaJs && problems.isEmpty) {
+          (sbt.scalaJsContent(), sbt.scalaJsSourceMapContent())
+        } else (None, None)
 
-        val progress = SnippetProgress(
-          snippetId = snippetId,
-          userOutput = userOutput,
-          sbtOutput = if (isSbtMessage) Some(line) else sbtOutput.map(_.line),
-          compilationInfos = problems.getOrElse(Nil),
-          instrumentations = instrumentations.getOrElse(Nil),
-          runtimeError = runtimeError,
-          scalaJsContent = scalaJsContent,
-          scalaJsSourceMapContent = scalaJsSourceMapContent,
-          done = done && !reload,
-          timeout = false,
-          forcedProgramMode = forcedProgramMode
-        )
+      val progress = SnippetProgress(
+        snippetId = snippetId,
+        userOutput = userOutput,
+        sbtOutput = if (isSbtMessage) Some(line) else sbtOutput.map(_.line),
+        compilationInfos = problems.getOrElse(Nil),
+        instrumentations = instrumentations.getOrElse(Nil),
+        runtimeError = runtimeError,
+        scalaJsContent = scalaJsContent,
+        scalaJsSourceMapContent = scalaJsSourceMapContent,
+        done = done && !reload,
+        timeout = false,
+        forcedProgramMode = forcedProgramMode
+      )
 
-        progressActor ! progress.copy(scalaJsContent = None,
-                                      scalaJsSourceMapContent = None)
-        snippetActor ! progress
-      }
+      progressActor ! progress.copy(scalaJsContent = None,
+                                    scalaJsSourceMapContent = None)
+      snippetActor ! progress
+    }
   }
 
   private def extractProblems(line: String,

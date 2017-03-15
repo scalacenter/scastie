@@ -15,7 +15,8 @@ object CompilerReporter {
   private lazy val compilerReporter = TaskKey[Option[xsbti.Reporter]](
     "compilerReporter",
     "Experimental hook to listen (or send) compilation failure messages.",
-    DTask)
+    DTask
+  )
 
   val setting: sbt.Def.Setting[_] =
     compilerReporter in (Compile, compile) := Some(new xsbti.Reporter {

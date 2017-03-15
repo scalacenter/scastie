@@ -26,8 +26,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   Global.subsribe(scope)
 
   def goHome(e: ReactEventI): Callback = {
-    scope.props.flatMap(props =>
-      props.router.map(_.set(Home)).getOrElse(Callback(()))) >>
+    scope.props.flatMap(
+      props => props.router.map(_.set(Home)).getOrElse(Callback(()))
+    ) >>
       scope.modState(_.setView(View.Editor))
   }
 
@@ -102,7 +103,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     def onclose(e: CloseEvent): Unit =
       direct.modState(
         _.copy(websocket = None, running = false)
-          .logSystem(s"Closed: ${e.reason}"))
+          .logSystem(s"Closed: ${e.reason}")
+      )
 
     val protocol = if (window.location.protocol == "https:") "wss" else "ws"
     val connectionPart = snippetUri(snippetId, "progress-websocket")
@@ -175,155 +177,185 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
           ApiClient[AutowireApi]
             .run(s.inputs)
             .call()
-            .map(snippetId =>
-              connectEventSource(snippetId).attemptTry.flatMap {
-                case Success(eventSource) => {
-                  scope.modState(
-                    _.run(snippetId).copy(eventSource = Some(eventSource))
-                  )
-                }
-                case Failure(errorEventSource) =>
-                  connectWebSocket(snippetId).attemptTry.flatMap {
-                    case Success(websocket) => {
-                      scope.modState(
-                        _.run(snippetId).copy(websocket = Some(websocket))
-                      )
-                    }
-                    case Failure(errorWebSocket) =>
-                      scope.modState(
-                        _.resetOutputs
-                          .logSystem(errorEventSource.toString)
-                          .logSystem(errorWebSocket.toString)
-                          .setRunning(false)
-                      )
+            .map(
+              snippetId =>
+                connectEventSource(snippetId).attemptTry.flatMap {
+                  case Success(eventSource) => {
+                    scope.modState(
+                      _.run(snippetId).copy(eventSource = Some(eventSource))
+                    )
                   }
-            })))
+                  case Failure(errorEventSource) =>
+                    connectWebSocket(snippetId).attemptTry.flatMap {
+                      case Success(websocket) => {
+                        scope.modState(
+                          _.run(snippetId).copy(websocket = Some(websocket))
+                        )
+                      }
+                      case Failure(errorWebSocket) =>
+                        scope.modState(
+                          _.resetOutputs
+                            .logSystem(errorEventSource.toString)
+                            .logSystem(errorWebSocket.toString)
+                            .setRunning(false)
+                        )
+                    }
+              }
+            )
+      )
+    )
   }
 
   def save(e: ReactEventI): Callback = save()
   def save(): Callback = {
-    scope.state.flatMap(state =>
-      if (!state.isSnippetSaved) {
-        scope.modState(
-          _.setLoadSnippet(false).setCleanInputs.setSnippetSaved
-        ) >>
-          Callback.future(
-            ApiClient[AutowireApi]
-              .save(state.inputs)
-              .call()
-              .map(
-                snippetId =>
-                  scope.props.flatMap(props =>
-                    props.router
-                      .map(_.set(Page.fromSnippetId(snippetId)))
-                      .getOrElse(Callback(()))))
-          )
-      } else Callback(()))
+    scope.state.flatMap(
+      state =>
+        if (!state.isSnippetSaved) {
+          scope.modState(
+            _.setLoadSnippet(false).setCleanInputs.setSnippetSaved
+          ) >>
+            Callback.future(
+              ApiClient[AutowireApi]
+                .save(state.inputs)
+                .call()
+                .map(
+                  snippetId =>
+                    scope.props.flatMap(
+                      props =>
+                        props.router
+                          .map(_.set(Page.fromSnippetId(snippetId)))
+                          .getOrElse(Callback(()))
+                  )
+                )
+            )
+        } else Callback(())
+    )
   }
 
   def saveOrUpdate(): Callback = {
-    scope.props.flatMap(props =>
-      props.snippetId match {
-        case Some(snippetId) => update2(snippetId)
-        case None => save()
-    })
+    scope.props.flatMap(
+      props =>
+        props.snippetId match {
+          case Some(snippetId) => update2(snippetId)
+          case None => save()
+      }
+    )
   }
 
   def amend(snippetId: SnippetId)(e: ReactEventI): Callback = {
-    scope.state.flatMap(state =>
-      if (!state.isSnippetSaved) {
-        Callback.future(
-          ApiClient[AutowireApi]
-            .amend(snippetId, state.inputs)
-            .call()
-            .map(success =>
-              if (success) scope.modState(_.setSnippetSaved)
-              else Callback(window.alert("Failed to amend")))
-        )
-      } else Callback(()))
+    scope.state.flatMap(
+      state =>
+        if (!state.isSnippetSaved) {
+          Callback.future(
+            ApiClient[AutowireApi]
+              .amend(snippetId, state.inputs)
+              .call()
+              .map(
+                success =>
+                  if (success) scope.modState(_.setSnippetSaved)
+                  else Callback(window.alert("Failed to amend"))
+              )
+          )
+        } else Callback(())
+    )
   }
 
   def fork(snippetId: SnippetId)(e: ReactEventI): Callback = {
-    scope.state.flatMap(state =>
-      if (!state.isSnippetSaved) {
-        Callback.future(
-          ApiClient[AutowireApi]
-            .fork(snippetId, state.inputs)
-            .call()
-            .map(result =>
-              result match {
-                case Some(snippetId) => {
-                  val page = Page.fromSnippetId(snippetId)
+    scope.state.flatMap(
+      state =>
+        if (!state.isSnippetSaved) {
+          Callback.future(
+            ApiClient[AutowireApi]
+              .fork(snippetId, state.inputs)
+              .call()
+              .map(
+                result =>
+                  result match {
+                    case Some(snippetId) => {
+                      val page = Page.fromSnippetId(snippetId)
 
-                  scope.modState(
-                    _.setLoadSnippet(false).resetOutputs.setSnippetSaved) >>
-                    scope.props.flatMap(
-                      _.router.map(_.set(page)).getOrElse(Callback(()))
-                    )
+                      scope.modState(
+                        _.setLoadSnippet(false).resetOutputs.setSnippetSaved
+                      ) >>
+                        scope.props.flatMap(
+                          _.router.map(_.set(page)).getOrElse(Callback(()))
+                        )
+                    }
+                    case None => Callback(window.alert("Failed to fork"))
                 }
-                case None => Callback(window.alert("Failed to fork"))
-            })
-        )
-      } else Callback(()))
+              )
+          )
+        } else Callback(())
+    )
   }
 
   def update(snippetId: SnippetId)(e: ReactEventI): Callback =
     update2(snippetId)
   def update2(snippetId: SnippetId): Callback = {
-    scope.state.flatMap(state =>
-      if (!state.isSnippetSaved) {
-        Callback.future(
-          ApiClient[AutowireApi]
-            .update(snippetId, state.inputs)
-            .call()
-            .map(result =>
-              result match {
-                case Some(snippetId) => {
-                  val page = Page.fromSnippetId(snippetId)
-                  scope.modState(_.setLoadSnippet(false).resetOutputs) >>
-                    scope.props.flatMap(
-                      _.router.map(_.set(page)).getOrElse(Callback(()))
-                    )
+    scope.state.flatMap(
+      state =>
+        if (!state.isSnippetSaved) {
+          Callback.future(
+            ApiClient[AutowireApi]
+              .update(snippetId, state.inputs)
+              .call()
+              .map(
+                result =>
+                  result match {
+                    case Some(snippetId) => {
+                      val page = Page.fromSnippetId(snippetId)
+                      scope.modState(_.setLoadSnippet(false).resetOutputs) >>
+                        scope.props.flatMap(
+                          _.router.map(_.set(page)).getOrElse(Callback(()))
+                        )
+                    }
+                    case None => Callback(window.alert("Failed to update"))
                 }
-                case None => Callback(window.alert("Failed to update"))
-            })
-        )
-      } else Callback(()))
+              )
+          )
+        } else Callback(())
+    )
   }
 
   def loadSnippet(snippetId: SnippetId): Callback = {
-    scope.state.flatMap(state =>
-      if (state.loadSnippet) {
-        Callback.future(
-          ApiClient[AutowireApi]
-            .fetch(snippetId)
-            .call()
-            .map(result =>
-              result match {
-                case Some(FetchResult(inputs, progresses)) => {
-                  loadStateFromLocalStorage >>
-                    clear() >>
-                    scope.modState(
-                      _.setInputs(inputs)
-                        .setProgresses(progresses)
-                        .setCleanInputs
-                    )
+    scope.state.flatMap(
+      state =>
+        if (state.loadSnippet) {
+          Callback.future(
+            ApiClient[AutowireApi]
+              .fetch(snippetId)
+              .call()
+              .map(
+                result =>
+                  result match {
+                    case Some(FetchResult(inputs, progresses)) => {
+                      loadStateFromLocalStorage >>
+                        clear() >>
+                        scope.modState(
+                          _.setInputs(inputs)
+                            .setProgresses(progresses)
+                            .setCleanInputs
+                        )
+                    }
+                    case _ => {
+                      scope.modState(_.setCode(s"//snippet not found"))
+                    }
                 }
-                case _ => {
-                  scope.modState(_.setCode(s"//snippet not found"))
-                }
-            })
-        )
-      } else {
-        scope.modState(_.setLoadSnippet(true))
-    }) >> scope.modState(_.setSnippetId(snippetId))
+              )
+          )
+        } else {
+          scope.modState(_.setLoadSnippet(true))
+      }
+    ) >> scope.modState(_.setSnippetId(snippetId))
   }
 
   def loadStateFromLocalStorage =
     LocalStorage.load
-      .map(state =>
-        scope.modState(_ =>
-          state.setRunning(false).setLoadScalaJsScript(true)))
+      .map(
+        state =>
+          scope
+            .modState(_ => state.setRunning(false).setLoadScalaJsScript(true))
+      )
       .getOrElse(Callback(()))
 
   def start(props: AppProps): Callback = {
@@ -359,30 +391,35 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def formatCode(e: ReactEventI): Callback = formatCode()
   def formatCode(): Callback =
-    scope.state.flatMap(state =>
-      if (state.inputsHasChanged) {
-        Callback.future(
-          ApiClient[AutowireApi]
-            .format(
-              FormatRequest(state.inputs.code, state.inputs.worksheetMode))
-            .call()
-            .map {
-              case FormatResponse(Right(formattedCode)) =>
-                scope.modState { s =>
-                  // avoid overriding user's code if he/she types while it's formatting
-                  if (s.inputs.code == state.inputs.code)
-                    s.resetOutputs.setCode(formattedCode)
-                  else s
-                }
-              case FormatResponse(Left(fullStackTrace)) =>
-                scope.modState(
-                  _.resetOutputs.setRuntimeError(
-                    Some(
-                      RuntimeError(message = "Formatting Failed",
-                                   line = None,
-                                   fullStack = fullStackTrace))
-                  ))
-            }
-        )
-      } else Callback(()))
+    scope.state.flatMap(
+      state =>
+        if (state.inputsHasChanged) {
+          Callback.future(
+            ApiClient[AutowireApi]
+              .format(
+                FormatRequest(state.inputs.code, state.inputs.worksheetMode)
+              )
+              .call()
+              .map {
+                case FormatResponse(Right(formattedCode)) =>
+                  scope.modState { s =>
+                    // avoid overriding user's code if he/she types while it's formatting
+                    if (s.inputs.code == state.inputs.code)
+                      s.resetOutputs.setCode(formattedCode)
+                    else s
+                  }
+                case FormatResponse(Left(fullStackTrace)) =>
+                  scope.modState(
+                    _.resetOutputs.setRuntimeError(
+                      Some(
+                        RuntimeError(message = "Formatting Failed",
+                                     line = None,
+                                     fullStack = fullStackTrace)
+                      )
+                    )
+                  )
+              }
+          )
+        } else Callback(())
+    )
 }

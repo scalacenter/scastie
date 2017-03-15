@@ -88,8 +88,8 @@ object App {
               }
 
               def removeIfExist(id: String): Unit = {
-                Option(dom.document.getElementById(id)).foreach(element =>
-                  element.parentNode.removeChild(element))
+                Option(dom.document.getElementById(id))
+                  .foreach(element => element.parentNode.removeChild(element))
               }
 
               println("== Loading Scala.js ==")

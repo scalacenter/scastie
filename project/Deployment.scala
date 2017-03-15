@@ -25,7 +25,8 @@ object Deployment {
 
   lazy val deployQuick = taskKey[Unit](
     "Deploy server and sbt instances without building server " +
-      "zip and pushing docker images")
+      "zip and pushing docker images"
+  )
 
   lazy val deployServerQuick =
     taskKey[Unit]("Deploy server without building server zip")
@@ -76,7 +77,8 @@ object Deployment {
     }
 
   private def deploymentTask(
-      sbtRunner: Project): Def.Initialize[Task[Deployment]] =
+      sbtRunner: Project
+  ): Def.Initialize[Task[Deployment]] =
     Def.task {
       new Deployment(
         rootFolder = (baseDirectory in ThisBuild).value,
