@@ -38,11 +38,13 @@ class ProgressRoutes(progressActor: ActorRef)(implicit system: ActorSystem) {
       snippetId("progress-sse")(
         sid ⇒
           complete(
-            progressSource(sid).map(progress =>
-              ServerSentEvent(uwrite(progress)))
-        )),
-      snippetId("progress-websocket")(sid =>
-        handleWebSocketMessages(webSocketProgress(sid)))
+            progressSource(sid)
+              .map(progress => ServerSentEvent(uwrite(progress)))
+        )
+      ),
+      snippetId("progress-websocket")(
+        sid => handleWebSocketMessages(webSocketProgress(sid))
+      )
     )
 
   private def progressSource(snippetId: SnippetId) = {
@@ -55,7 +57,8 @@ class ProgressRoutes(progressActor: ActorRef)(implicit system: ActorSystem) {
   }
 
   private def webSocketProgress(
-      snippetId: SnippetId): Flow[ws.Message, ws.Message, _] = {
+      snippetId: SnippetId
+  ): Flow[ws.Message, ws.Message, _] = {
     def flow: Flow[KeepAlive, SnippetProgress, NotUsed] = {
       val in = Flow[KeepAlive].to(Sink.ignore)
       val out = progressSource(snippetId)

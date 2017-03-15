@@ -11,11 +11,11 @@ import akka.http.scaladsl.model.RemoteAddress
 
 import scala.concurrent.{Future, ExecutionContext}
 
-class AutowireApiImplementation(dispatchActor: ActorRef,
-                        ip: RemoteAddress,
-                        maybeUser: Option[User])(
-    implicit timeout: Timeout,
-    executionContext: ExecutionContext)
+class AutowireApiImplementation(
+    dispatchActor: ActorRef,
+    ip: RemoteAddress,
+    maybeUser: Option[User]
+)(implicit timeout: Timeout, executionContext: ExecutionContext)
     extends AutowireApi {
 
   private def wrap(inputs: Inputs): InputsWithIpAndUser =

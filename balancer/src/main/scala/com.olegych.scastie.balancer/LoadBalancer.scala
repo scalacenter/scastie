@@ -120,7 +120,8 @@ case class LoadBalancer[C: Ordering, S](
       val serversSnippetIds =
         servers.flatMap(_.currentSnippetId).mkString("[", ", ", "]")
       log.info(
-        s"""cannot find snippetId: $snippetId from servers task ids $serversSnippetIds""")
+        s"""cannot find snippetId: $snippetId from servers task ids $serversSnippetIds"""
+      )
       this
     }
   }
@@ -236,8 +237,10 @@ case class LoadBalancer[C: Ordering, S](
     // ref: S, lastConfig: C, mailbox: Queue[Task[C]]
     val serversDebug =
       servers
-        .map(server =>
-          s"ref: ${server.ref}, lastConfig: ${server.lastConfig.hashCode}, tasks: ${Multiset(server.mailbox)}")
+        .map(
+          server =>
+            s"ref: ${server.ref}, lastConfig: ${server.lastConfig.hashCode}, tasks: ${Multiset(server.mailbox)}"
+        )
         .mkString(nl)
 
     s"""|== Servers ==

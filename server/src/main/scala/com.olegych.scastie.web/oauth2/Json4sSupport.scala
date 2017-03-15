@@ -44,7 +44,8 @@ private[oauth2] trait Json4sSupport {
    */
   implicit def json4sUnmarshaller[A: Manifest](
       implicit serialization: Serialization,
-      formats: Formats): FromEntityUnmarshaller[A] =
+      formats: Formats
+  ): FromEntityUnmarshaller[A] =
     Unmarshaller.byteStringUnmarshaller
       .forContentTypes(`application/json`)
       .mapWithCharset { (data, charset) =>
@@ -68,7 +69,9 @@ private[oauth2] trait Json4sSupport {
    */
   implicit def json4sMarshaller[A <: AnyRef](
       implicit serialization: Serialization,
-      formats: Formats): ToEntityMarshaller[A] =
+      formats: Formats
+  ): ToEntityMarshaller[A] =
     Marshaller.StringMarshaller.wrap(`application/json`)(
-      serialization.writePretty[A])
+      serialization.writePretty[A]
+    )
 }

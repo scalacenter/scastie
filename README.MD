@@ -1,5 +1,5 @@
-[![Build Status](http://drone.geirsson.com:8001/api/badges/scalacenter/scastie/status.svg?branch=master)](
-  http://drone.geirsson.com:8001/scalacenter/scastie
+[![Build Status](https://platform-ci.scala-lang.org/api/badges/scalacenter/scastie/status.svg)](
+  https://platform-ci.scala-lang.org/scalacenter/scastie
 )
 
 [![Join the chat](https://badges.gitter.im/scalacenter/scastie.svg)](
