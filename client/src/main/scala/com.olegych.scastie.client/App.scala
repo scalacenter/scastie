@@ -8,6 +8,7 @@ import japgolly.scalajs.react._, vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
 
+
 object App {
   val component =
     ReactComponentB[AppProps]("App")
@@ -39,6 +40,8 @@ object App {
         val state = v.prevState
         val scope = v.$
 
+        val direct = scope.accessDirect
+
         val setTitle =
           if (state.inputsHasChanged) {
             Callback(dom.document.title = "Scastie (*)")
@@ -47,12 +50,16 @@ object App {
           }
 
         val executeScalaJs =
-          if (scope.accessDirect.state.loadScalaJsScript &&
+          if (direct.state.loadScalaJsScript &&
+              !direct.state.isScalaJsScriptLoaded &&
               state.snippetIdIsScalaJS &&
               state.snippetId.nonEmpty &&
               !state.running) {
 
-            scope.accessDirect.modState(_.setLoadScalaJsScript(false))
+            direct.modState(
+              _.setLoadScalaJsScript(false) 
+               .scalaJsScriptLoaded
+            )
 
             Callback {
               val scalaJsId = "scastie-scalajs-playground-target"

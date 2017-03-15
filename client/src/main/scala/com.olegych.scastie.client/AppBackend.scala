@@ -312,7 +312,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     LocalStorage.load
       .map(state =>
         scope.modState(_ =>
-          state.setRunning(false).setLoadScalaJsScript(true)))
+          state.setRunning(false)
+               .setLoadScalaJsScript(true)))
       .getOrElse(Callback(()))
 
   def start(props: AppProps): Callback = {
