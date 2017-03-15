@@ -17,7 +17,7 @@ import StatusCodes.TemporaryRedirect
 import headers.Referer
 import server.Directives._
 
-class OAuth2(github: Github, session: GithubUserSession) {
+class OAuth2Routes(github: Github, session: GithubUserSession) {
   import session._
 
   val routes =

@@ -16,7 +16,7 @@ import upickle.default.{read => uread}
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration._
 
-class AutowireApi(dispatchActor: ActorRef, userDirectives: UserDirectives)(
+class AutowireApiRoutes(dispatchActor: ActorRef, userDirectives: UserDirectives)(
     implicit system: ActorSystem) {
   import system.dispatcher
   import userDirectives.optionnalLogin
@@ -30,13 +30,13 @@ class AutowireApi(dispatchActor: ActorRef, userDirectives: UserDirectives)(
           extractClientIP(remoteAddress ⇒
             optionnalLogin(user ⇒
               complete {
-                val api = new ApiImplementation(
+                val api = new AutowireApiImplementation(
                   dispatchActor,
                   remoteAddress,
                   user
                 )
 
-                AutowireServer.route[Api](api)(
+                AutowireServer.route[AutowireApi](api)(
                   autowire.Core.Request(s, uread[Map[String, String]](e))
                 )
             }))))

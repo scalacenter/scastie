@@ -60,21 +60,20 @@ object ServerMain {
       )
 
     val userFacingRoutes =
-      new FrontPage(production).routes
+      new FrontPageRoutes(production).routes
 
     val programmaticRoutes =
       concat(
         new DebugRoutes(dispatchActor).routes,
         new ProgressRoutes(progressActor).routes,
         new ScalaJsRoutes(dispatchActor).routes,
-        new AutowireApi(dispatchActor, userDirectives).routes,
-        Assets.routes
+        new AutowireApiRoutes(dispatchActor, userDirectives).routes
       )
 
     val publicRoutes =
       concat(
-        Public.routes,
-        new OAuth2(github, session).routes
+        PublicRoutes.routes,
+        new OAuth2Routes(github, session).routes
       )
 
     val privateRoutes =

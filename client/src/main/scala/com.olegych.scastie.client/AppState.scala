@@ -16,7 +16,7 @@ object AppState {
     websocket = None,
     isShowingHelpAtStartup = true,
     isHelpModalClosed = false,
-    isDarkTheme = true,
+    isDarkTheme = false,
     consoleIsOpen = false,
     consoleHasUserOutput = false,
     inputsHasChanged = false,

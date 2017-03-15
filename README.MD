@@ -22,7 +22,7 @@ https://scastie.scala-lang.org
 *  distributes workload amongst multiple sbt instances (including remote)
 *  realtime update of snippet compilation/running progress
 *  timeout long-running snippets
-*  allow specifying scala version
+*  allow specifying scala version, target and external libraries
 
 ## Why it does it this way, benefits and drawbacks
 
@@ -47,8 +47,4 @@ hacky, but works good enough. If the sbt instance terminates or otherwise encoun
 while processing a snippet, the actor will be restarted.
 
 Currently the snippet are stored directly on file system on master node (the one which is running 
-web application). 
-
-## Embed Scastie into your website
-
-see https://scastie.scala-lang.org/embedded-demo
+web application).

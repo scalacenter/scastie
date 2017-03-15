@@ -6,8 +6,7 @@ import akka.http.scaladsl._
 
 import server.Directives._
 
-class FrontPage(production: Boolean) {
-
+class FrontPageRoutes(production: Boolean) {
   val routes = (
     get(
       concat(

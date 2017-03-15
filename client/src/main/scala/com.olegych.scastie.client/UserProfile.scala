@@ -17,7 +17,7 @@ object UserProfile {
                           List[SnippetSummary]]) {
     def loadProfile(): Callback = {
       Callback.future(
-        ApiClient[Api]
+        ApiClient[AutowireApi]
           .fetchUserSnippets()
           .call()
           .map(summaries => scope.modState(_ => summaries))
@@ -28,7 +28,7 @@ object UserProfile {
       e.preventDefaultCB >>
         scope.modState(_.filterNot(_ == summary)) >>
         Callback.future(
-          ApiClient[Api]
+          ApiClient[AutowireApi]
             .delete(summary.snippetId)
             .call()
             .map(_ => Callback(()))
