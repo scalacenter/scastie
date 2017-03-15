@@ -31,6 +31,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       scope.modState(_.setView(View.Editor))
   }
 
+  def resetInputs: Callback =
+    scope.modState(_.setInputs(Inputs.default))
+
   def codeChange(newCode: String) =
     scope.modState(_.setCode(newCode))
 
@@ -200,17 +203,21 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def save(e: ReactEventI): Callback = save()
   def save(): Callback = {
     scope.state.flatMap(state =>
-      if (state.inputsHasChanged) {
-        scope.modState(_.setLoadSnippet(false).setCleanInputs) >>
+      if (!state.isSnippetSaved) {
+        scope.modState(
+          _.setLoadSnippet(false).setCleanInputs.setSnippetSaved
+        ) >>
           Callback.future(
             ApiClient[AutowireApi]
               .save(state.inputs)
               .call()
-              .map(snippetId =>
-                scope.props.flatMap(props =>
-                  props.router
-                    .map(_.set(Page.fromSnippetId(snippetId)))
-                    .getOrElse(Callback(())))))
+              .map(
+                snippetId =>
+                  scope.props.flatMap(props =>
+                    props.router
+                      .map(_.set(Page.fromSnippetId(snippetId)))
+                      .getOrElse(Callback(()))))
+          )
       } else Callback(()))
   }
 
@@ -223,21 +230,22 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   }
 
   def amend(snippetId: SnippetId)(e: ReactEventI): Callback = {
-    scope.state.flatMap(
-      state =>
+    scope.state.flatMap(state =>
+      if (!state.isSnippetSaved) {
         Callback.future(
           ApiClient[AutowireApi]
             .amend(snippetId, state.inputs)
             .call()
             .map(success =>
-              if (success) Callback(())
+              if (success) scope.modState(_.setSnippetSaved)
               else Callback(window.alert("Failed to amend")))
-      ))
+        )
+      } else Callback(()))
   }
 
   def fork(snippetId: SnippetId)(e: ReactEventI): Callback = {
-    scope.state.flatMap(
-      state =>
+    scope.state.flatMap(state =>
+      if (!state.isSnippetSaved) {
         Callback.future(
           ApiClient[AutowireApi]
             .fork(snippetId, state.inputs)
@@ -247,21 +255,23 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 case Some(snippetId) => {
                   val page = Page.fromSnippetId(snippetId)
 
-                  scope.modState(_.setLoadSnippet(false).resetOutputs) >>
+                  scope.modState(
+                    _.setLoadSnippet(false).resetOutputs.setSnippetSaved) >>
                     scope.props.flatMap(
-                      _.router.map(_.set(page)).getOrElse(Callback(())))
+                      _.router.map(_.set(page)).getOrElse(Callback(()))
+                    )
                 }
-
                 case None => Callback(window.alert("Failed to fork"))
             })
-      ))
+        )
+      } else Callback(()))
   }
 
   def update(snippetId: SnippetId)(e: ReactEventI): Callback =
     update2(snippetId)
   def update2(snippetId: SnippetId): Callback = {
-    scope.state.flatMap(
-      state =>
+    scope.state.flatMap(state =>
+      if (!state.isSnippetSaved) {
         Callback.future(
           ApiClient[AutowireApi]
             .update(snippetId, state.inputs)
@@ -272,12 +282,13 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                   val page = Page.fromSnippetId(snippetId)
                   scope.modState(_.setLoadSnippet(false).resetOutputs) >>
                     scope.props.flatMap(
-                      _.router.map(_.set(page)).getOrElse(Callback(())))
+                      _.router.map(_.set(page)).getOrElse(Callback(()))
+                    )
                 }
-
                 case None => Callback(window.alert("Failed to update"))
             })
-      ))
+        )
+      } else Callback(()))
   }
 
   def loadSnippet(snippetId: SnippetId): Callback = {
@@ -312,8 +323,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     LocalStorage.load
       .map(state =>
         scope.modState(_ =>
-          state.setRunning(false)
-               .setLoadScalaJsScript(true)))
+          state.setRunning(false).setLoadScalaJsScript(true)))
       .getOrElse(Callback(()))
 
   def start(props: AppProps): Callback = {

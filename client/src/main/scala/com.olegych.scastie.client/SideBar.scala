@@ -29,6 +29,11 @@ object SideBar {
         val disabledIfSameInputs =
           if (!state.inputsHasChanged) "disabled"
           else ""
+
+        val disabledIfSaved =
+          if (state.isSnippetSaved) "disabled"
+          else ""
+
         import View.ctrl
 
         val sharing =
@@ -37,7 +42,7 @@ object SideBar {
               TagMod(
                 li(onClick ==> save,
                    title := s"Save ($ctrl + S)",
-                   `class` := s"button $disabledIfSameInputs")(
+                   `class` := s"button $disabledIfSaved")(
                   i(`class` := "fa fa-floppy-o"),
                   p("Save")
                 )
@@ -46,39 +51,41 @@ object SideBar {
               TagMod(
                 li(onClick ==> update(sid),
                    title := s"Save ($ctrl + S)",
-                   `class` := "button")(
+                   `class` := s"button $disabledIfSaved")(
                   i(`class` := "fa fa-floppy-o"),
                   p("Update")
                 ),
                 li(onClick ==> fork(sid),
-                   title := s"Fork",
-                   `class` := "button")(
+                   title := "Fork",
+                   `class` := s"button $disabledIfSaved")(
                   i(`class` := "fa fa-code-fork"),
                   p("Fork")
                 ),
                 li(onClick ==> amend(sid),
-                   title := s"Amend",
-                   `class` := "button")(
+                   title := "Amend",
+                   `class` := s"button $disabledIfSaved")(
                   i(`class` := "fa fa-pencil-square-o"),
                   p("Amend")
                 )
               )
           }
 
-        val formatCodeButton = li(onClick ==> formatCode,
-                                  title := "Format Code (F6)",
-                                  `class` := s"button $disabledIfSameInputs")(
-          iconic.justifyLeft,
-          p("Format")
-        )
+        val formatCodeButton =
+          li(onClick ==> formatCode,
+             title := "Format Code (F6)",
+             `class` := s"button $disabledIfSameInputs")(
+            iconic.justifyLeft,
+            p("Format")
+          )
 
-        val console = li(onClick ==> toggleConsole,
-                         title := s"$consoleLabel Console",
-                         consoleSelected,
-                         `class` := "button")(
-          iconic.terminal,
-          p("Console")
-        )
+        val console =
+          li(onClick ==> toggleConsole,
+             title := s"$consoleLabel Console",
+             consoleSelected,
+             `class` := "button")(
+            iconic.terminal,
+            p("Console")
+          )
 
         def buttonsRibbon: View => Seq[TagMod] = {
           case View.Editor =>

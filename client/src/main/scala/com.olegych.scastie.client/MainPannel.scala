@@ -67,7 +67,34 @@ object MainPannel {
             )
           } else state
 
+        import state._
+
+        val debugOutput =
+          pre(`class` := "debug")(
+            s"""|inputsHasChanged:       $inputsHasChanged
+                |
+                |snippetId:              $snippetId
+                |
+                |isSnippetSaved:         $isSnippetSaved
+                |
+                |loadSnippet:            $loadSnippet
+                |
+                |loadScalaJsScript:      $loadScalaJsScript
+                |
+                |isScalaJsScriptLoaded:  $isScalaJsScriptLoaded
+                |
+                |snippetIdIsScalaJS:     $snippetIdIsScalaJS
+                |
+                |attachedDoms:           $attachedDoms
+                |
+                |outputs
+                |  instrumentations:
+                |    ${outputs.instrumentations.mkString("    \n")}
+                |""".stripMargin
+          )
+
         div(`class` := "main-pannel")(
+          // debugOutput,
           TopBar(state, backend),
           div(`class` := s"pannel $theme $consoleCss", show(View.Editor))(
             helpClosePannel,
@@ -83,12 +110,12 @@ object MainPannel {
             UserProfile(props.router, state.view))
         )
     }.componentDidUpdate(scope =>
-      Callback {
-        consoleElement(scope.$).foreach{consoleDom =>
-          consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
-        }
-      }
-    ).build
+        Callback {
+          consoleElement(scope.$).foreach { consoleDom =>
+            consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
+          }
+      })
+      .build
 
   def apply(state: AppState, backend: AppBackend, props: AppProps) =
     component((state, backend, props))
