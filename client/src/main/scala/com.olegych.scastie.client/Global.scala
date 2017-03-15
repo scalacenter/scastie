@@ -22,12 +22,7 @@ object Global {
   def signal(instrumentationsRaw: String,
              attachedDoms: js.Array[HTMLElement]): Unit = {
     scope0.foreach { scope =>
-      println("== signal ==")
-      println(instrumentationsRaw)
-      println(attachedDoms)
-
       val direct = scope.accessDirect
-
       val result = uread[Either[Option[RuntimeError], List[Instrumentation]]](
         instrumentationsRaw
       )
@@ -37,15 +32,16 @@ object Global {
         case Right(instrumentations) => (instrumentations, None)
       }
 
-      direct.modState(
-        state =>
-          state.copyAndSave(
-            attachedDoms =
-              attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap,
-            outputs = state.outputs.copy(
-              instrumentations = state.outputs.instrumentations ++ instr.toSet,
-              runtimeError = runtimeError
-            )
+      direct.modState(state =>
+        state.copyAndSave(
+          isRunning = false,
+          outputs = state.outputs.copy(
+            instrumentations = state.outputs.instrumentations ++ instr.toSet,
+            runtimeError = runtimeError
+          )
+        ).copy(
+          attachedDoms =
+            attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap
         )
       )
     }

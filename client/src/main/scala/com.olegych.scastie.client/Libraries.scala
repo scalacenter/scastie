@@ -221,18 +221,18 @@ object Libraries {
           if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
           else EmptyTag
 
-        def resetInputs(e: ReactEventI): Callback = {
+        def resetBuild(e: ReactEventI): Callback = {
           CallbackTo(window.confirm("Are you sure you want to reset?"))
             .flatMap(
               reset =>
-                if (reset) backend.resetInputs
+                if (reset) backend.resetBuild
                 else Callback(())
             )
         }
 
         val resetButton =
-          if (state.inputs != Inputs.default) {
-            button(onClick ==> resetInputs, `class` := "button")(
+          if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
+            button(onClick ==> resetBuild, `class` := "button")(
               p("Reset Default")
             )
           } else EmptyTag

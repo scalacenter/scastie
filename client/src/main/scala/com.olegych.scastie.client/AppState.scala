@@ -11,7 +11,7 @@ import org.scalajs.dom.raw.HTMLElement
 object AppState {
   def default = AppState(
     view = View.Editor,
-    running = false,
+    isRunning = false,
     eventSource = None,
     websocket = None,
     isShowingHelpAtStartup = true,
@@ -44,7 +44,7 @@ object AppState {
 
 case class AppState(
     view: View,
-    running: Boolean,
+    isRunning: Boolean,
     eventSource: Option[EventSource],
     websocket: Option[WebSocket],
     isShowingHelpAtStartup: Boolean,
@@ -66,7 +66,7 @@ case class AppState(
     outputs: Outputs
 ) {
   def copyAndSave(view: View = view,
-                  running: Boolean = running,
+                  isRunning: Boolean = isRunning,
                   eventSource: Option[EventSource] = eventSource,
                   websocket: Option[WebSocket] = websocket,
                   isShowingHelpAtStartup: Boolean = isShowingHelpAtStartup,
@@ -78,7 +78,6 @@ case class AppState(
                   snippetId: Option[SnippetId] = snippetId,
                   snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
                   user: Option[User] = user,
-                  attachedDoms: AttachedDoms = attachedDoms,
                   inputs: Inputs = inputs,
                   outputs: Outputs = outputs): AppState = {
 
@@ -97,7 +96,7 @@ case class AppState(
     val state0 =
       copy(
         view,
-        running,
+        isRunning,
         eventSource,
         websocket,
         isShowingHelpAtStartup,
@@ -138,9 +137,9 @@ case class AppState(
       .setSnippetId(snippetId)
   }
 
-  def setRunning(running: Boolean): AppState = {
-    val console = !running && !consoleHasUserOutput
-    copyAndSave(running = running, consoleIsOpen = !console)
+  def setRunning(isRunning: Boolean): AppState = {
+    val console = !isRunning && !consoleHasUserOutput
+    copyAndSave(isRunning = isRunning, consoleIsOpen = !console)
   }
 
   def setSnippetSaved: AppState =
@@ -234,11 +233,19 @@ case class AppState(
   def scalaJsScriptLoaded: AppState =
     copy(isScalaJsScriptLoaded = true)
 
+  def resetScalajs: AppState =
+    copy(
+      attachedDoms = Map(),
+      isScalaJsScriptLoaded = false,
+      loadScalaJsScript = true
+    )
+
   def resetOutputs: AppState =
-    copyAndSave(outputs = Outputs.default,
-                consoleIsOpen = false,
-                consoleHasUserOutput = false,
-                attachedDoms = Map()).copy(isScalaJsScriptLoaded = false)
+    copyAndSave(
+      outputs = Outputs.default,
+      consoleIsOpen = false,
+      consoleHasUserOutput = false
+    )
 
   def setRuntimeError(runtimeError: Option[RuntimeError]): AppState =
     if (runtimeError.isEmpty) this

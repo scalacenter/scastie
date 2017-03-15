@@ -48,7 +48,6 @@ object App {
       .componentDidUpdate { v =>
         val state = v.prevState
         val scope = v.$
-
         val direct = scope.accessDirect
 
         val executeScalaJs =
@@ -56,10 +55,12 @@ object App {
               !direct.state.isScalaJsScriptLoaded &&
               state.snippetIdIsScalaJS &&
               state.snippetId.nonEmpty &&
-              !state.running) {
+              !state.isRunning) {
 
             direct.modState(
-              _.setLoadScalaJsScript(false).scalaJsScriptLoaded
+              _.setLoadScalaJsScript(false)
+               .scalaJsScriptLoaded
+               .setRunning(true)
             )
 
             Callback {
@@ -120,7 +121,7 @@ object App {
             }
           } else Callback(())
 
-        setTitle(state) >> executeScalaJs
+          setTitle(state) >> executeScalaJs
       }
       .componentWillReceiveProps { v =>
         val next = v.nextProps.snippetId
