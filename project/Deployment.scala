@@ -103,7 +103,8 @@ class Deployment(rootFolder: File,
                  val logger: Logger) {
   def deploy(serverZip: Path): Unit = {
     deployRunners()
-    // deployServer(serverZip)
+    
+    deployServer(serverZip)
   }
 
   def deployServer(serverZip: Path): Unit = {
