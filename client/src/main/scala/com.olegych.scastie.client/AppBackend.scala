@@ -2,25 +2,15 @@ package com.olegych.scastie
 package client
 
 import api._
-
 import japgolly.scalajs.react._
-
 import autowire._
+import org.scalajs.dom
+
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-import org.scalajs.dom.{
-  EventSource,
-  WebSocket,
-  Event,
-  MessageEvent,
-  ErrorEvent,
-  CloseEvent,
-  window
-}
-
+import org.scalajs.dom._
 import upickle.default.{read => uread}
 
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 
 class AppBackend(scope: BackendScope[AppProps, AppState]) {
   Global.subsribe(scope)
@@ -32,9 +22,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       scope.modState(_.setView(View.Editor))
   }
 
+  def resetBuildAndClose(e: ReactEventI): Callback =
+    resetBuild >> toggleReset()
+
   def resetBuild: Callback =
-    scope.modState(state => 
-      state.setInputs(Inputs.default.copy(code = state.inputs.code))
+    scope.modState(
+      state => state.setInputs(Inputs.default.copy(code = state.inputs.code))
     )
 
   def codeChange(newCode: String) =
@@ -123,6 +116,14 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def clear(e: ReactEventI): Callback = clear()
   def clear(): Callback = scope.modState(_.clearOutputs)
 
+  def toggleForcedDesktop(value: Boolean)(e: ReactEventI): Callback =
+    scope.modState(_.toggleForcedDesktop(value))
+
+  def toggleMobile(): Callback =
+    scope.modState(_.toggleForcedDesktop(value = false))
+  def toggleMobile(e: ReactEventI): Callback =
+    toggleMobile() >> setView(View.Editor)
+
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
 
@@ -150,61 +151,112 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleTheme(): Callback = scope.modState(_.toggleTheme)
 
   def toggleConsole(): Callback = scope.modState(_.toggleConsole)
-  def toggleConsole(e: ReactEventI): Callback = toggleConsole()
+  def toggleConsole(e: ReactEventI): Callback =
+    toggleConsole() >> setDimensionsHaveChanged(true)
 
-  def toggleHelpAtStartup(): Callback =
-    scope.modState(_.toggleHelpAtStartup)
+  def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
 
-  def closeHelp(): Callback =
-    scope.modState(_.closeHelp)
+  def toggleWelcome(e: ReactEventI): Callback = scope.modState(_.toggleWelcome)
 
-  def showHelp(e: ReactEventI): Callback =
-    scope.modState(_.showHelp)
+  def toggleHelp(e: ReactEventI): Callback = scope.modState(_.toggleHelp)
 
-  def toggleWorksheetMode(): Callback =
-    scope.modState(_.toggleWorksheetMode)
+  def toggleReset(e: ReactEventI): Callback = toggleReset()
+  def toggleReset(): Callback = scope.modState(_.toggleReset)
 
-  def toggleWorksheetMode(e: ReactEventI): Callback =
-    toggleWorksheetMode()
+  def toggleWelcomeHelp(e: ReactEventI): Callback =
+    scope.modState(_.toggleWelcomeHelp)
+
+  def toggleShare(snippetId: Option[SnippetId])(e: ReactEventI): Callback =
+    scope.modState(_.toggleShare(snippetId))
+
+  def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
+  def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
+
+  def setDimensionsHaveChanged(value: Boolean): Callback =
+    scope.modState(_.setDimensionsHaveChanged(value))
+
+  def setTopBarHeight(): Callback =
+    scope.modState(_.setTopBarHeight(getElementHeight("topbar")))
+
+  def setEditorTopBarHeight(): Callback =
+    scope.modState(_.setEditorTopBarHeight(getElementHeight("editor-topbar")))
+
+  def setSideBarWidth(): Callback =
+    scope.modState(_.setSideBarWidth(getElementWidth("sidebar")))
+
+  def setSideBarMinHeight(): Callback =
+    scope.modState(
+      _.setSideBarMinHeight(
+        getElementHeight("topbar") + getElementHeight("actions-top") + getElementHeight(
+          "actions-bottom"
+        )
+      )
+    )
+
+  def setConsoleBarHeight(): Callback =
+    scope.modState(_.setConsoleBarHeight(getElementHeight("switcher-show")))
+
+  def setConsoleHeight(): Callback =
+    scope.modState(
+      _.setConsoleHeight(
+        getElementHeight("console") + getElementHeight("handler")
+      )
+    )
+
+  def setDimensions(): Callback =
+    setTopBarHeight() >>
+      setEditorTopBarHeight() >>
+      setSideBarWidth() >>
+      setSideBarMinHeight >>
+      setConsoleBarHeight() >>
+      setConsoleHeight() >>
+      setDimensionsHaveChanged(false)
+
+  def getElementWidth(id: String): Int =
+    Option(dom.document.getElementById(id)).map(_.clientWidth).getOrElse(0)
+
+  def getElementHeight(id: String): Int =
+    Option(dom.document.getElementById(id)).map(_.clientHeight).getOrElse(0)
 
   def run(e: ReactEventI): Callback = run()
   def run(): Callback = {
-    scope.state.flatMap(state =>
-      if(!state.isScalaJsScriptLoaded || state.inputsHasChanged) {
-        Callback.future(
-          ApiClient[AutowireApi]
-            .run(state.inputs)
-            .call()
-            .map(
-              snippetId =>
-                connectEventSource(snippetId).attemptTry.flatMap {
-                  case Success(eventSource) => {
-                    scope.modState(
-                      _.run(snippetId)
-                       .copy(eventSource = Some(eventSource))
-                    )
-                  }
-                  case Failure(errorEventSource) =>
-                    connectWebSocket(snippetId).attemptTry.flatMap {
-                      case Success(websocket) => {
-                        scope.modState(
-                          _.run(snippetId)
-                           .copy(websocket = Some(websocket))
-                        )
-                      }
-                      case Failure(errorWebSocket) =>
-                        scope.modState(
-                          _.clearOutputs
-                            .logSystem(errorEventSource.toString)
-                            .logSystem(errorWebSocket.toString)
-                            .setRunning(false)
-                        )
+    scope.state.flatMap(
+      state =>
+        if (!state.isScalaJsScriptLoaded || state.inputsHasChanged) {
+          Callback.future(
+            ApiClient[AutowireApi]
+              .run(state.inputs)
+              .call()
+              .map(
+                snippetId =>
+                  connectEventSource(snippetId).attemptTry.flatMap {
+                    case Success(eventSource) => {
+                      scope.modState(
+                        _.run(snippetId)
+                          .copy(eventSource = Some(eventSource))
+                      )
                     }
-              }
-            )
-        )
-      } else {
-        scope.modState(_.setIsReRunningScalaJs(true))
+                    case Failure(errorEventSource) =>
+                      connectWebSocket(snippetId).attemptTry.flatMap {
+                        case Success(websocket) => {
+                          scope.modState(
+                            _.run(snippetId)
+                              .copy(websocket = Some(websocket))
+                          )
+                        }
+                        case Failure(errorWebSocket) =>
+                          scope.modState(
+                            _.clearOutputs
+                              .logSystem(errorEventSource.toString)
+                              .logSystem(errorWebSocket.toString)
+                              .setRunning(false)
+                          )
+                      }
+                }
+              )
+          )
+        } else {
+          scope.modState(_.setIsReRunningScalaJs(true))
       }
     )
   }
@@ -215,9 +267,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       state =>
         if (!state.isSnippetSaved) {
           scope.modState(
-            _.setLoadSnippet(false)
-             .setCleanInputs
-             .setSnippetSaved
+            _.setLoadSnippet(false).setCleanInputs.setSnippetSaved
           ) >>
             Callback.future(
               ApiClient[AutowireApi]
@@ -309,9 +359,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                     case Some(snippetId) => {
                       val page = Page.fromSnippetId(snippetId)
                       scope.modState(
-                        _.setLoadSnippet(false)
-                         .clearOutputs
-                         .setSnippetSaved
+                        _.setLoadSnippet(false).clearOutputs.setSnippetSaved
                       ) >>
                         scope.props.flatMap(
                           _.router.map(_.set(page)).getOrElse(Callback(()))
@@ -359,16 +407,24 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def loadStateFromLocalStorage =
     LocalStorage.load
-      .map(state =>
-        scope.modState(_ => 
-          state
-            .setRunning(false)
-            .resetScalajs
+      .map(
+        state =>
+          scope.modState(
+            _ =>
+              state
+                .setRunning(false)
+                .resetScalajs
         )
       )
       .getOrElse(Callback(()))
 
   def start(props: AppProps): Callback = {
+
+    def onresize(e: UIEvent): Unit =
+      (setWindowHasResized() >> setDimensionsHaveChanged(true)).runNow
+
+    dom.window.onresize = onresize _
+
     def loadUser(): Callback = {
       Callback.future(
         ApiClient[AutowireApi]
@@ -401,39 +457,38 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def formatCode(e: ReactEventI): Callback = formatCode()
   def formatCode(): Callback =
-    scope.state.flatMap(state =>
-      if (state.inputsHasChanged) {
-        Callback.future(
-          ApiClient[AutowireApi]
-            .format(
-              FormatRequest(state.inputs.code, state.inputs.worksheetMode)
-            )
-            .call()
-            .map {
-              case FormatResponse(Right(formattedCode)) =>
-                scope.modState { s =>
-                  // avoid overriding user's code if he/she types while it's formatting
-                  if (s.inputs.code == state.inputs.code)
-                    s.clearOutputs.setCode(formattedCode)
-                  else s
-                }
-              case FormatResponse(Left(fullStackTrace)) =>
-                scope.modState(
-                  _.clearOutputs
-                   .setRuntimeError(
-                      Some(
-                        RuntimeError(
-                          message = "Formatting Failed",
-                          line = None,
-                          fullStack = fullStackTrace
+    scope.state.flatMap(
+      state =>
+        if (state.inputsHasChanged) {
+          Callback.future(
+            ApiClient[AutowireApi]
+              .format(
+                FormatRequest(state.inputs.code, state.inputs.worksheetMode)
+              )
+              .call()
+              .map {
+                case FormatResponse(Right(formattedCode)) =>
+                  scope.modState { s =>
+                    // avoid overriding user's code if he/she types while it's formatting
+                    if (s.inputs.code == state.inputs.code)
+                      s.clearOutputs.setCode(formattedCode)
+                    else s
+                  }
+                case FormatResponse(Left(fullStackTrace)) =>
+                  scope.modState(
+                    _.clearOutputs
+                      .setRuntimeError(
+                        Some(
+                          RuntimeError(
+                            message = "Formatting Failed",
+                            line = None,
+                            fullStack = fullStackTrace
+                          )
                         )
                       )
                   )
-                )
-            }
-        )
-      }
-      else Callback(())
+              }
+          )
+        } else Callback(())
     )
 }
-

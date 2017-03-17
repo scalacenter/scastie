@@ -1,129 +1,81 @@
 package com.olegych.scastie
 package client
 
-import api.SnippetId
-
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
+import org.scalajs.dom
 
 object SideBar {
+
   private val component =
-    ReactComponentB[(AppState, AppBackend, Option[SnippetId])]("SideBar").render_P {
-      case (state, backend, snippetId) =>
+    ReactComponentB[(AppState, AppBackend)]("SideBar").render_P {
+      case (state, backend) =>
         import backend._
+        import dom.window._
+        import state.dimensions._
 
-        val theme = if (state.isDarkTheme) "dark" else "light"
+        val toggleThemeLabel = if (state.isDarkTheme) "Light" else "Dark"
 
-        def selected(view: View) =
-          if (view == currentView) TagMod(`class` := "selected") else EmptyTag
+        val selectedIcon =
+          if (state.isDarkTheme) "fa fa-sun-o"
+          else "fa fa-moon-o"
 
-        def currentView = state.view
+        val displayMobile =
+          if (state.dimensions.forcedDesktop) display.block
+          else display.none
 
-        val consoleSelected =
-          if (state.consoleIsOpen) TagMod(`class` := "toggle selected")
-          else EmptyTag
-
-        val consoleLabel =
-          if (state.consoleIsOpen) "Close"
-          else "Open"
-
-        val disabledIfSameInputs =
-          if (!state.inputsHasChanged) "disabled"
-          else ""
-
-        val disabledIfSaved =
-          if (state.isSnippetSaved) "disabled"
-          else ""
-
-        import View.ctrl
-
-        val sharing =
-          snippetId match {
-            case None =>
-              TagMod(
-                li(onClick ==> save,
-                   title := s"Save ($ctrl + S)",
-                   `class` := s"button $disabledIfSaved")(
-                  i(`class` := "fa fa-floppy-o"),
-                  p("Save")
-                )
-              )
-            case Some(sid) =>
-              TagMod(
-                li(onClick ==> update(sid),
-                   title := s"Save ($ctrl + S)",
-                   `class` := s"button $disabledIfSaved")(
-                  i(`class` := "fa fa-floppy-o"),
-                  p("Update")
-                ),
-                li(onClick ==> fork(sid),
-                   title := "Fork",
-                   `class` := s"button $disabledIfSaved")(
-                  i(`class` := "fa fa-code-fork"),
-                  p("Fork")
-                ),
-                li(onClick ==> amend(sid),
-                   title := "Amend",
-                   `class` := s"button $disabledIfSaved")(
-                  i(`class` := "fa fa-pencil-square-o"),
-                  p("Amend")
-                )
-              )
-          }
-
-        val formatCodeButton =
-          li(onClick ==> formatCode,
-             title := "Format Code (F6)",
-             `class` := s"button $disabledIfSameInputs")(
-            iconic.justifyLeft,
-            p("Format")
+        val mobileButton =
+          li(onClick ==> backend.toggleMobile,
+             title := "Go back to Mobile Version",
+             `class` := "btn",
+             displayMobile)(
+            i(`class` := s"fa fa-mobile"),
+            span("Mobile")
           )
 
-        val console =
-          li(onClick ==> toggleConsole,
-             title := s"$consoleLabel Console",
-             consoleSelected,
-             `class` := "button")(
-            iconic.terminal,
-            p("Console")
+        val themeButton =
+          li(onClick ==> toggleTheme,
+             title := s"Select $toggleThemeLabel Theme (F2)",
+             `class` := "btn")(
+            i(`class` := s"fa $selectedIcon"),
+            span(toggleThemeLabel)
           )
 
-        def buttonsRibbon: View => Seq[TagMod] = {
-          case View.Editor =>
-            Seq(
-              LibraryButton(state, backend),
-              RunButton(state, backend),
-              ClearButton(state, backend),
-              formatCodeButton,
-              console,
-              sharing
-            )
-          case View.Libraries =>
-            Seq(
-              LibraryButton(state, backend),
-              RunButton(state, backend)
-            )
-          case View.UserProfile =>
-            Seq(
-              LibraryButton(state, backend),
-              RunButton(state, backend)
-            )
-        }
+        val helpButton =
+          li(onClick ==> toggleHelp,
+             title := "Show help Menu",
+             `class` := "btn")(
+            i(`class` := "fa fa-question-circle"),
+            span("Help")
+          )
 
-        val currentButtonsForSelectedView = buttonsRibbon(currentView)
+        val buttonsTop: Seq[TagMod] = Seq(EditorButton(state, backend),
+                                          BuildSettingsButton(state, backend))
 
-        nav(`class` := s"sidebar $theme")(
-          ul(
-            li(onClick ==> goHome, title := "Scastie Logo", `class` := "logo")(
-              img(src := "/assets/public/dotty3.svg", alt := "Logo")
+        val buttonsBottom: Seq[TagMod] =
+          Seq(mobileButton, themeButton, helpButton)
+
+        def actionsContainerStyle: TagMod =
+          TagMod(
+            height := s"${if (innerHeight < sideBarMinHeight) sideBarMinHeight
+            else innerHeight}px"
+          )
+
+        nav(`id` := "sidebar")(
+          div(`class` := "actions-container", actionsContainerStyle)(
+            a(`class` := "logo", href := "#")(
+              img(src := "/assets/public/img/icon-scastie.png"),
+              h1("Scastie")
             ),
-            currentButtonsForSelectedView
+            ul(`id` := "actions-top", `class` := "actions")(
+              buttonsTop
+            ),
+            ul(`id` := "actions-bottom", `class` := "actions bottom")(
+              buttonsBottom
+            )
           )
         )
-
     }.build
 
-  def apply(state: AppState,
-            backend: AppBackend,
-            snippetId: Option[SnippetId]) =
-    component((state, backend, snippetId))
+  def apply(state: AppState, backend: AppBackend) = component((state, backend))
 }

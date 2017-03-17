@@ -2,8 +2,6 @@ package com.olegych.scastie.client
 
 import japgolly.scalajs.react._, vdom.all._
 
-import iconic._
-
 object RunButton {
 
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
@@ -18,36 +16,18 @@ object RunButton {
           if (view == state.view) TagMod(`class` := "selected") else EmptyTag
 
         if (!state.isRunning) {
-          if (View.Editor == state.view) {
-            li(onClick ==> run,
-               title := s"Run Code ($ctrl + Enter)",
-               `class` := "button run-button",
-               selected(View.Editor))(
-              mediaPlay(`class` := "runnable"),
-              p("Run")
-            )
-          } else {
-            li(onClick ==> setView2(View.Editor),
-               title := "Open Edit View",
-               `class` := "button run-button",
-               selected(View.Editor))(
-              pencil,
-              p("Edit")
-            )
-          }
+          li(onClick ==> run,
+             title := s"Run Code ($ctrl + Enter)",
+             `class` := "btn run-button")(
+            i(`class` := "fa fa-play"),
+            span("Run")
+          )
         } else {
           li(onClick ==> setView2(View.Editor),
-             title := "Open Edit View",
-             `class` := "button run-button")(
-            div(`class` := "sk-folding-cube-wraper")(
-              div(`class` := "sk-folding-cube")(
-                div(`class` := "sk-cube1 sk-cube"),
-                div(`class` := "sk-cube2 sk-cube"),
-                div(`class` := "sk-cube4 sk-cube"),
-                div(`class` := "sk-cube3 sk-cube")
-              )
-            ),
-            p("Running")
+             title := "Running your Code...",
+             `class` := "btn run-button")(
+            i(`class` := "fa fa-spinner fa-spin"),
+            span("Running")
           )
         }
     }.build

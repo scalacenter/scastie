@@ -34,16 +34,20 @@ object Global {
 
       println(instr)
 
-      direct.modState(state =>
-        state.copyAndSave(
-          outputs = state.outputs.copy(
-            instrumentations = state.outputs.instrumentations ++ instr.toSet,
-            runtimeError = runtimeError
+      direct.modState(
+        state =>
+          state
+            .copyAndSave(
+              outputs = state.outputs.copy(
+                instrumentations = state.outputs.instrumentations ++ instr.toSet,
+                runtimeError = runtimeError
+              )
+            )
+            .setRunning(false)
+            .copy(
+              attachedDoms =
+                attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap
           )
-        ).setRunning(false).copy(
-          attachedDoms =
-            attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap
-        )
       )
     }
   }

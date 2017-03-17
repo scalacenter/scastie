@@ -3,6 +3,7 @@
   <head>
     <base href="/">
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scastie</title>
 
     <link rel="shortcut icon" href="/assets/public/favicon.ico">
@@ -17,11 +18,13 @@
     <link href="/assets/lib/open-iconic/font/css/open-iconic.css"         rel="stylesheet">
     <link href="/assets/lib/font-awesome/css/font-awesome.min.css"        rel="stylesheet">
 
-    <link href="/assets/public/main.css"                                  rel="stylesheet">
+    <link href="/assets/public/css/light-style.css"                       rel="stylesheet">
+    <link href="/assets/public/css/dark-style.css"                        rel="stylesheet">
+    <link href="/assets/public/css/codemirror-style.css"                  rel="stylesheet">
   </head>
   <body>
-    <script src="/assets/public/client-jsdeps.js"></script>
-    <script src="/assets/public/client-fastopt.js"></script>
+    <script type="text/javascript" src="/assets/public/client-jsdeps.js"></script>
+    <script type="text/javascript" src="/assets/public/client-fastopt.js"></script>
     <script>
       com.olegych.scastie.client.ClientMain().main()
     </script>

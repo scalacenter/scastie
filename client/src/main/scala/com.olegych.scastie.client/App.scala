@@ -2,10 +2,10 @@ package com.olegych.scastie
 package client
 
 import api._
-
-import japgolly.scalajs.react._, vdom.all._
-
+import japgolly.scalajs.react._
+import vdom.all._
 import org.scalajs.dom
+import org.scalajs.dom.window._
 import org.scalajs.dom.raw.HTMLScriptElement
 
 object App {
@@ -29,36 +29,48 @@ object App {
 
           val sideBar =
             if (!props.isEmbedded)
-              TagMod(SideBar(state, scope.backend, props.snippetId))
+              TagMod(SideBar(state, scope.backend))
             else EmptyTag
 
           val appClass =
             if (!props.isEmbedded) "app"
             else "app embedded"
 
-          div(`class` := s"$appClass $theme")(
+          val desktop =
+            if (state.dimensions.forcedDesktop) "force-desktop"
+            else ""
+
+          def appStyle: TagMod =
+            Seq(height := s"${innerHeight}px", width := s"${innerWidth}px")
+
+          div(`class` := s"$appClass $theme $desktop", appStyle)(
             sideBar,
-            MainPannel(state, scope.backend, props)
+            MainPanel(state, scope.backend, props),
+            Welcome(state, scope.backend),
+            Help(state, scope.backend),
+            Share(props.router, state, scope.backend),
+            Reset(state, scope.backend)
           )
         }
       }
       .componentWillMount { current =>
         current.backend.start(current.props) >> setTitle(current.state)
       }
+      .componentDidMount(_.backend.setDimensions())
       .componentDidUpdate { v =>
         val state = v.prevState
+        val backend = v.$.backend
         val scope = v.$
         val direct = scope.accessDirect
 
-        // println("---")
-        // println(direct.state.loadScalaJsScript)
-        // println(!direct.state.isScalaJsScriptLoaded)
-        // println(direct.state.snippetIdIsScalaJS)
-        // println(direct.state.snippetId.nonEmpty)
-        // println(!direct.state.isRunning)
+        val setDimensions =
+          if (direct.state.dimensions.dimensionsHaveChanged) {
+            backend.setDimensions()
+
+          } else Callback(())
 
         val scalaJsRunId = "scastie-scalajs-playground-run"
-        
+
         def createScript(id: String): HTMLScriptElement = {
           val newScript = dom.document
             .createElement("script")
@@ -98,9 +110,8 @@ object App {
               !direct.state.isRunning) {
 
             direct.modState(
-              _.setLoadScalaJsScript(false)
-               .scalaJsScriptLoaded
-               .setRunning(true)
+              _.setLoadScalaJsScript(false).scalaJsScriptLoaded
+                .setRunning(true)
             )
 
             Callback {
@@ -133,13 +144,13 @@ object App {
             }
           } else Callback(())
 
-          val reRunScalaJs = 
-            if (direct.state.isReRunningScalaJs) {
-              Callback(runScalaJs()) >> 
-                scope.modState(_.setIsReRunningScalaJs(false))
-            } else Callback(())
+        val reRunScalaJs =
+          if (direct.state.isReRunningScalaJs) {
+            Callback(runScalaJs()) >>
+              scope.modState(_.setIsReRunningScalaJs(false))
+          } else Callback(())
 
-          setTitle(state) >> executeScalaJs >> reRunScalaJs
+        setTitle(state) >> setDimensions >> executeScalaJs >> reRunScalaJs
       }
       .componentWillReceiveProps { v =>
         val next = v.nextProps.snippetId
