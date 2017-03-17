@@ -21,24 +21,24 @@ object RunButton {
           if (View.Editor == state.view) {
             li(onClick ==> run,
                title := s"Run Code ($ctrl + Enter)",
-               `class` := "button run-button",
+               `class` := "btn selected run-button",
                selected(View.Editor))(
               mediaPlay(`class` := "runnable"),
-              p("Run")
+              "Run"
             )
           } else {
             li(onClick ==> setView2(View.Editor),
                title := "Open Edit View",
-               `class` := "button run-button",
+               `class` := "btn selected run-button",
                selected(View.Editor))(
               pencil,
-              p("Edit")
+              "Edit"
             )
           }
         } else {
           li(onClick ==> setView2(View.Editor),
              title := "Open Edit View",
-             `class` := "button run-button")(
+             `class` := "btn selected run-button")(
             div(`class` := "sk-folding-cube-wraper")(
               div(`class` := "sk-folding-cube")(
                 div(`class` := "sk-cube1 sk-cube"),
@@ -47,7 +47,7 @@ object RunButton {
                 div(`class` := "sk-cube3 sk-cube")
               )
             ),
-            p("Running")
+            "Running"
           )
         }
     }.build

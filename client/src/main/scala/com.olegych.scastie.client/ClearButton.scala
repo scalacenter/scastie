@@ -15,9 +15,9 @@ object ClearButton {
 
         li(onClick ==> backend.clear,
            title := "Clear Instrumentations (Esc)",
-           `class` := s"button ${disabled(!state.isClearable)}")(
+           `class` := "btn")(
           i(`class` := "fa fa-eraser"),
-          p("Clear")
+          "Clear"
         )
     }.build
 }

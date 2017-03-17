@@ -1,0 +1,269 @@
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline; }
+
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+  display: block; }
+
+body {
+  line-height: 1; }
+
+ol, ul {
+  list-style: none; }
+
+blockquote, q {
+  quotes: none; }
+
+blockquote:before, blockquote:after {
+  content: '';
+  content: none; }
+
+q:before, q:after {
+  content: '';
+  content: none; }
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0; }
+
+body {
+  font-family: "Lato", sans-serif;
+  color: #002b36;
+  background: #f5f5f5;
+  font-size: 13px;
+  line-height: 18px;
+  overflow: hidden;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease; }
+  body .app.light {
+    /* GENERAL ELEMENTS STYLES */
+    /* CODE SNIPPETS PAGE STYLES */ }
+    body .app.light a {
+      color: #fff;
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+      -o-transition: all 0.3s ease;
+      transition: all 0.3s ease; }
+      body .app.light a.hover {
+        text-decoration: none; }
+    body .app.light h1, body .app.light h2, body .app.light h3, body .app.light h4, body .app.light h5, body .app.light h6 {
+      font-weight: bold; }
+    body .app.light h1 {
+      font-size: 150%; }
+    body .app.light .hide {
+      display: none; }
+    body .app.light #topbar {
+      flex-direction: row;
+      text-align: right;
+      width: 100%;
+      height: 70px;
+      line-height: 70px;
+      background: #002b36;
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+      -o-transition: all 0.3s ease;
+      transition: all 0.3s ease; }
+      body .app.light #topbar ul.actions {
+        position: absolute;
+        display: inline-block;
+        right: 34px;
+        top: 0; }
+        body .app.light #topbar ul.actions li.dropdown {
+          height: 70px;
+          position: relative;
+          display: inline-block;
+          cursor: pointer;
+          line-height: 70px;
+          padding: 0px 20px;
+          color: #ffffff;
+          -webkit-transition: all 0.3s ease;
+          -moz-transition: all 0.3s ease;
+          -o-transition: all 0.3s ease;
+          transition: all 0.3s ease; }
+          body .app.light #topbar ul.actions li.dropdown i {
+            margin-right: 5px; }
+          body .app.light #topbar ul.actions li.dropdown.selected, body .app.light #topbar ul.actions li.dropdown:hover {
+            background-color: #002029;
+            color: #ffffff; }
+            body .app.light #topbar ul.actions li.dropdown.selected .subactions, body .app.light #topbar ul.actions li.dropdown:hover .subactions {
+              display: block; }
+          body .app.light #topbar ul.actions li.dropdown ul.subactions {
+            list-style-type: none;
+            border-radius: 2px;
+            border-collapse: separate;
+            text-align: left;
+            display: none;
+            position: absolute;
+            line-height: 35px;
+            top: 50px;
+            width: 134px;
+            left: 10px;
+            margin: 10px; }
+            body .app.light #topbar ul.actions li.dropdown ul.subactions .btn {
+              display: block;
+              width: 134px;
+              background: #7dc8e5;
+              padding: 10px;
+              border-bottom: 1px solid #7dc8e5; }
+              body .app.light #topbar ul.actions li.dropdown ul.subactions .btn:first-of-type {
+                border-top-left-radius: 2px;
+                border-top-right-radius: 2px; }
+              body .app.light #topbar ul.actions li.dropdown ul.subactions .btn:last-of-type {
+                border-bottom: none;
+                border-bottom-left-radius: 2px;
+                border-bottom-right-radius: 2px; }
+              body .app.light #topbar ul.actions li.dropdown ul.subactions .btn:hover {
+                background-color: #002029;
+                color: #ffffff; }
+    body .app.light #sidebar {
+      float: left;
+      height: 5000px;
+      background: #7dc8e5;
+      width: 149px;
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+      -o-transition: all 0.3s ease;
+      transition: all 0.3s ease; }
+      body .app.light #sidebar .logo {
+        color: #fff;
+        display: block;
+        height: 70px;
+        line-height: 70px;
+        background: #002b36;
+        text-align: left;
+        width: 149px;
+        -webkit-transition: all 0.3s ease;
+        -moz-transition: all 0.3s ease;
+        -o-transition: all 0.3s ease;
+        transition: all 0.3s ease; }
+        body .app.light #sidebar .logo img {
+          float: left;
+          margin: 21px 10px 21px 18px;
+          width: 24px;
+          height: 28px;
+          line-height: 70px; }
+        body .app.light #sidebar .logo h1 {
+          display: inline-block; }
+      body .app.light #sidebar .actions-container {
+        position: relative;
+        overflow-y: auto;
+        overflow-x: hidden; }
+        body .app.light #sidebar .actions-container .actions .btn {
+          cursor: pointer;
+          padding: 20px 20px;
+          -webkit-transition: all 0.3s ease;
+          -moz-transition: all 0.3s ease;
+          -o-transition: all 0.3s ease;
+          transition: all 0.3s ease;
+          color: #0f262f; }
+          body .app.light #sidebar .actions-container .actions .btn i {
+            margin-right: 5px; }
+          body .app.light #sidebar .actions-container .actions .btn.selected {
+            background-color: #00acdb;
+            color: #ffffff !important; }
+          body .app.light #sidebar .actions-container .actions .btn:hover {
+            color: #ffffff; }
+        body .app.light #sidebar .actions-container .actions.bottom {
+          position: absolute;
+          bottom: 33px; }
+          body .app.light #sidebar .actions-container .actions.bottom .btn {
+            padding: 10px 20px; }
+    body .app.light #content {
+      display: block;
+      margin-left: 149px;
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+      -o-transition: all 0.3s ease;
+      transition: all 0.3s ease; }
+      body .app.light #content #code {
+        height: 25%;
+        display: block; }
+        body .app.light #content #code textarea#code-input {
+          width: 100%;
+          padding: 28px;
+          font-family: monospace;
+          font-size: 16px;
+          color: #ffffff;
+          background-color: #f5f5f5;
+          border: none;
+          -webkit-transition: all 0.3s ease;
+          -moz-transition: all 0.3s ease;
+          -o-transition: all 0.3s ease;
+          transition: all 0.3s ease; }
+          body .app.light #content #code textarea#code-input:focus {
+            outline: none; }
+      body .app.light #content #switcher-show {
+        right: 0;
+        left: 149px;
+        bottom: 0;
+        background: #002b36;
+        height: 33px;
+        line-height: 33px;
+        display: none;
+        position: absolute;
+        text-align: right;
+        color: #002b36;
+        cursor: pointer;
+        padding-right: 20px;
+        -webkit-transition: all 0.3s ease;
+        -moz-transition: all 0.3s ease;
+        -o-transition: all 0.3s ease;
+        transition: all 0.3s ease; }
+      body .app.light #content #console {
+        box-sizing: border-box;
+        position: absolute;
+        padding: 28px;
+        color: #002b36;
+        background: #f5f5f5;
+        display: block;
+        bottom: 0;
+        width: 100%;
+        overflow: hidden;
+        height: 25%;
+        -webkit-transition: all 0.3s ease;
+        -moz-transition: all 0.3s ease;
+        -o-transition: all 0.3s ease;
+        transition: all 0.3s ease; }
+        body .app.light #content #console #handler {
+          width: 100%;
+          height: 6px;
+          background: #073642;
+          position: absolute;
+          top: 0;
+          left: 0;
+          cursor: ns-resize;
+          -webkit-transition: all 0.3s ease;
+          -moz-transition: all 0.3s ease;
+          -o-transition: all 0.3s ease;
+          transition: all 0.3s ease; }
+        body .app.light #content #console #switcher-hide {
+          top: -14px;
+          float: right;
+          background: #f5f5f5;
+          position: relative;
+          cursor: pointer;
+          -webkit-transition: all 0.3s ease;
+          -moz-transition: all 0.3s ease;
+          -o-transition: all 0.3s ease;
+          transition: all 0.3s ease; }
+    body .app.light #snippets-container h2 {
+      font-size: 24px;
+      font-weight: bold;
+      color: #ffffff;
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+      -o-transition: all 0.3s ease;
+      transition: all 0.3s ease; }
+    body .app.light #snippets-container #snippets .group .snippet .header {
+      font-size: 14px; }
+      body .app.light #snippets-container #snippets .group .snippet .header .update {
+        color: #859900; }
+      body .app.light #snippets-container #snippets .group .snippet .header .actions {
+        float: right; }

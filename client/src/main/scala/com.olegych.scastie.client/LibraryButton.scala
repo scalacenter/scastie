@@ -6,7 +6,7 @@ import japgolly.scalajs.react._, vdom.all._
 object LibraryButton {
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("LibraryButton").render_P {
+    ReactComponentB[(AppState, AppBackend)]("BuildSettingsButton").render_P {
       case (state, backend) =>
         import backend._
 
@@ -15,11 +15,11 @@ object LibraryButton {
           else EmptyTag
 
         li(onClick ==> setView2(View.Libraries),
-           title := "Open Libraries View",
+           title := "Open Build Settings",
            selected,
-           `class` := "button library-button")(
-          i(`class` := "fa fa-book"),
-          p("Libraries (Build)")
+           `class` := "btn")(
+          i(`class` := "fa fa-gear"),
+          "Build Settings"
         )
     }.build
 

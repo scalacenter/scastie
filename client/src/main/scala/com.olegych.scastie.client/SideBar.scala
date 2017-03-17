@@ -18,14 +18,6 @@ object SideBar {
 
         def currentView = state.view
 
-        val consoleSelected =
-          if (state.consoleIsOpen) TagMod(`class` := "toggle selected")
-          else EmptyTag
-
-        val consoleLabel =
-          if (state.consoleIsOpen) "Close"
-          else "Open"
-
         val disabledIfSameInputs =
           if (!state.inputsHasChanged) "disabled"
           else ""
@@ -37,79 +29,74 @@ object SideBar {
               TagMod(
                 li(onClick ==> save,
                    title := s"Save ($ctrl + S)",
-                   `class` := s"button $disabledIfSameInputs")(
-                  i(`class` := "fa fa-floppy-o"),
-                  p("Save")
+                   `class` := "btn")(
+                  i(`class` := "fa fa-download"),
+                  "Save"
                 )
               )
             case Some(sid) =>
               TagMod(
                 li(onClick ==> update(sid),
                    title := s"Save ($ctrl + S)",
-                   `class` := "button")(
-                  i(`class` := "fa fa-floppy-o"),
-                  p("Update")
+                   `class` := "btn")(
+                  i(`class` := "fa fa-pencil-square-o"),
+                  "Update"
                 ),
                 li(onClick ==> fork(sid),
                    title := s"Fork",
-                   `class` := "button")(
+                   `class` := "btn")(
                   i(`class` := "fa fa-code-fork"),
-                  p("Fork")
+                  "Fork"
                 ),
                 li(onClick ==> amend(sid),
-                   title := s"Amend",
-                   `class` := "button")(
-                  i(`class` := "fa fa-pencil-square-o"),
-                  p("Amend")
+                   title := s"Share",
+                   `class` := "btn")(
+                  i(`class` := "fa fa-share-alt"),
+                  "Share"
                 )
               )
           }
 
         val formatCodeButton = li(onClick ==> formatCode,
                                   title := "Format Code (F6)",
-                                  `class` := s"button $disabledIfSameInputs")(
-          iconic.justifyLeft,
-          p("Format")
-        )
-
-        val console = li(onClick ==> toggleConsole,
-                         title := s"$consoleLabel Console",
-                         consoleSelected,
-                         `class` := "button")(
-          iconic.terminal,
-          p("Console")
+                                  `class` := "btn")(
+          i(`class` := "fa fa-align-left"),
+          "Format"
         )
 
         def buttonsRibbon: View => Seq[TagMod] = {
           case View.Editor =>
             Seq(
-              LibraryButton(state, backend),
               RunButton(state, backend),
-              ClearButton(state, backend),
               formatCodeButton,
-              console,
-              sharing
+              ClearButton(state, backend),
+              WorksheetButton(state, backend),
+              sharing,
+              LibraryButton(state, backend)
             )
           case View.Libraries =>
             Seq(
-              LibraryButton(state, backend),
-              RunButton(state, backend)
+              RunButton(state, backend),
+              LibraryButton(state, backend)
             )
           case View.UserProfile =>
             Seq(
-              LibraryButton(state, backend),
-              RunButton(state, backend)
+              RunButton(state, backend),
+              LibraryButton(state, backend)
             )
         }
 
         val currentButtonsForSelectedView = buttonsRibbon(currentView)
 
-        nav(`class` := s"sidebar $theme")(
-          ul(
-            li(onClick ==> goHome, title := "Scastie Logo", `class` := "logo")(
-              img(src := "/assets/public/dotty3.svg", alt := "Logo")
-            ),
-            currentButtonsForSelectedView
+        nav(`id` := s"sidebar")(
+          a(`class` := "logo", href := "#",
+            img(src := "/assets/public/img/icon-scastie.png"),
+            h1("Scastie")
+          ),
+          div(`class` := "actions-container")(
+            ul(`class` := "actions")(
+              currentButtonsForSelectedView
+            )
           )
         )
 

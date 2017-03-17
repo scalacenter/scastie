@@ -203,34 +203,11 @@ object Libraries {
       case (state, backend) =>
         val theme = if (state.isDarkTheme) "dark" else "light"
 
-        val worksheetModeSelected =
-          if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
-          else EmptyTag
-
-        val worksheetModeToogleLabel =
-          if (!state.inputs.worksheetMode) "OFF"
-          else "ON"
-
-        val worksheetModeClassSelected =
-          if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
-          else EmptyTag
 
         div(`class` := "libraries")(
           ScaladexSearch(state, backend),
           renderTarget(state.inputs.target, backend),
           renderVersions(state.inputs.target, backend),
-          fieldset(
-            legend("Options"),
-            button(
-              onClick ==> backend.toggleWorksheetMode,
-              title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
-              worksheetModeSelected,
-              `class` := "button",
-              worksheetModeClassSelected)(
-              iconic.script,
-              p(s"Worksheet $worksheetModeToogleLabel")
-            )
-          ),
           fieldset(
             legend("Sbt Configuration"),
             div("add more"),

@@ -52,50 +52,50 @@ object TopBar {
                 li(onClick ==> setView2(View.UserProfile),
                    title := "Open Profile View",
                    selected(View.UserProfile),
-                   `class` := "button")(
+                   `class` := "btn")(
                   img(src := user.avatar_url + "&s=35",
                       alt := "Your Github Avatar",
                       `class` := "image-button avatar"),
                   p("Snippets")
                 ),
-                li(onClick ==> logout, `class` := "button")(
+                li(onClick ==> logout, `class` := "btn")(
                   iconic.accountLogout,
                   p("Logout")
                 )
               )
             case None =>
               TagMod(
-                li(onClick ==> login, `class` := "button")(
+                li(onClick ==> login, `class` := "btn")(
                   iconic.accountLogin,
                   p("Login")
                 )
               )
           }
 
-        nav(`class` := s"topbar $theme")(
+        nav(`id` := s"topbar")(
           ul(
             profileButton,
             li(onClick ==> backend.toggleTheme,
                title := s"Select $toggleThemeLabel Theme (F2)",
-               `class` := "button")(
+               `class` := "btn")(
               selectedTheme,
               p("Theme")
             ),
             li(onClick ==> feedback,
                title := "Open Gitter.im Chat to give us feedback",
-               `class` := "button")(
+               `class` := "btn")(
               iconic.chat,
               p("Feedback")
             ),
             li(onClick ==> issue,
                title := "Create new issue on GitHub",
-               `class` := "button")(
+               `class` := "btn")(
               iconic.bug,
               p("Issue")
             ),
             li(onClick ==> showHelp,
                title := "Show help Menu",
-               `class` := "button")(
+               `class` := "btn")(
               iconic.questionMark,
               p("Help")
             )
