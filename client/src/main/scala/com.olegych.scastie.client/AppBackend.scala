@@ -121,7 +121,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   }
 
   def clear(e: ReactEventI): Callback = clear()
-  def clear(): Callback = scope.modState(_.resetOutputs)
+  def clear(): Callback = scope.modState(_.clearOutputs)
 
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
@@ -169,11 +169,11 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def run(e: ReactEventI): Callback = run()
   def run(): Callback = {
-    scope.state.flatMap(
-      s =>
+    scope.state.flatMap(state =>
+      if(!state.isScalaJsScriptLoaded || state.inputsHasChanged) {
         Callback.future(
           ApiClient[AutowireApi]
-            .run(s.inputs)
+            .run(state.inputs)
             .call()
             .map(
               snippetId =>
@@ -194,7 +194,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                       }
                       case Failure(errorWebSocket) =>
                         scope.modState(
-                          _.resetOutputs
+                          _.clearOutputs
                             .logSystem(errorEventSource.toString)
                             .logSystem(errorWebSocket.toString)
                             .setRunning(false)
@@ -202,7 +202,10 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                     }
               }
             )
-      )
+        )
+      } else {
+        scope.modState(_.setIsReRunningScalaJs(true))
+      }
     )
   }
 
@@ -276,7 +279,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                     case Some(snippetId) => {
                       val page = Page.fromSnippetId(snippetId)
                       scope.modState(
-                        _.setLoadSnippet(false).resetOutputs.setSnippetSaved
+                        _.setLoadSnippet(false).clearOutputs.setSnippetSaved
                       ) >>
                         scope.props.flatMap(
                           _.router.map(_.set(page)).getOrElse(Callback(()))
@@ -307,7 +310,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                       val page = Page.fromSnippetId(snippetId)
                       scope.modState(
                         _.setLoadSnippet(false)
-                         .resetOutputs
+                         .clearOutputs
                          .setSnippetSaved
                       ) >>
                         scope.props.flatMap(
@@ -411,12 +414,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 scope.modState { s =>
                   // avoid overriding user's code if he/she types while it's formatting
                   if (s.inputs.code == state.inputs.code)
-                    s.resetOutputs.setCode(formattedCode)
+                    s.clearOutputs.setCode(formattedCode)
                   else s
                 }
               case FormatResponse(Left(fullStackTrace)) =>
                 scope.modState(
-                  _.resetOutputs
+                  _.clearOutputs
                    .setRuntimeError(
                       Some(
                         RuntimeError(

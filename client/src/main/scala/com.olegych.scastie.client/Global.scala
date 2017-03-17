@@ -32,14 +32,15 @@ object Global {
         case Right(instrumentations) => (instrumentations, None)
       }
 
+      println(instr)
+
       direct.modState(state =>
         state.copyAndSave(
-          isRunning = false,
           outputs = state.outputs.copy(
             instrumentations = state.outputs.instrumentations ++ instr.toSet,
             runtimeError = runtimeError
           )
-        ).copy(
+        ).setRunning(false).copy(
           attachedDoms =
             attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap
         )
