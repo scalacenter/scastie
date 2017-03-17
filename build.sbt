@@ -144,7 +144,6 @@ lazy val server = project
   .settings(loggingAndTest)
   .settings(packageScalaJS(client))
   .settings(
-    JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     reStart := reStart.dependsOn(WebKeys.assets in (client, Assets)).evaluated,
     (packageBin in Universal) := (packageBin in Universal)
       .dependsOn(WebKeys.assets in (client, Assets))
@@ -241,7 +240,6 @@ def reactWithDepends(artifact: String,
 lazy val client = project
   .settings(baseSettings)
   .settings(
-    JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     skip in packageJSDependencies := false,
     jsDependencies ++= Seq(
       react("react-with-addons", "React"),
