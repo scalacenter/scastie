@@ -18,6 +18,12 @@ object SideBar {
 
         def currentView = state.view
 
+        val toggleThemeLabel = if (state.isDarkTheme) "Light" else "Dark"
+
+        val selectedIcon =
+          if (state.isDarkTheme) "fa fa-sun-o"
+          else "fa fa-moon-o"
+
         val disabledIfSameInputs =
           if (!state.inputsHasChanged) "disabled"
           else ""
@@ -57,12 +63,29 @@ object SideBar {
               )
           }
 
-        val formatCodeButton = li(onClick ==> formatCode,
-                                  title := "Format Code (F6)",
-                                  `class` := "btn")(
-          i(`class` := "fa fa-align-left"),
-          "Format"
-        )
+        val formatCodeButton =
+          li(onClick ==> formatCode,
+            title := "Format Code (F6)",
+            `class` := "btn")(
+            i(`class` := "fa fa-align-left"),
+            "Format"
+          )
+
+        val themeButton =
+          li(onClick ==> backend.toggleTheme,
+            title := s"Select $toggleThemeLabel Theme (F2)",
+            `class` := "btn")(
+            i(`class` := s"fa $selectedIcon"),
+            toggleThemeLabel
+          )
+
+        val helpButton =
+          li(onClick ==> showHelp,
+            title := "Show help Menu",
+            `class` := "btn")(
+            i(`class` := "fa fa-question-circle"),
+            "Help"
+          )
 
         def buttonsRibbon: View => Seq[TagMod] = {
           case View.Editor =>
@@ -88,14 +111,23 @@ object SideBar {
 
         val currentButtonsForSelectedView = buttonsRibbon(currentView)
 
+        val buttonsBottom: Seq[TagMod] =
+            Seq(
+              themeButton,
+              helpButton
+            )
+
         nav(`id` := s"sidebar")(
           a(`class` := "logo", href := "#",
             img(src := "/assets/public/img/icon-scastie.png"),
             h1("Scastie")
           ),
-          div(`class` := "actions-container")(
+          div(`class` := "actions-container", height := "1000px")(
             ul(`class` := "actions")(
               currentButtonsForSelectedView
+            ),
+            ul(`class` := "actions bottom")(
+              buttonsBottom
             )
           )
         )

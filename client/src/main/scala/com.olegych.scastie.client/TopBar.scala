@@ -15,12 +15,6 @@ object TopBar {
 
         val theme = if (state.isDarkTheme) "dark" else "light"
 
-        val toggleThemeLabel = if (state.isDarkTheme) "Light" else "Dark"
-
-        val selectedTheme =
-          if (state.isDarkTheme) iconic.sun
-          else iconic.moon
-
         def openInNewTab(link: String): Callback = {
           Callback(
             dom.window.open(link, "_blank").focus()
@@ -75,12 +69,6 @@ object TopBar {
         nav(`id` := s"topbar")(
           ul(
             profileButton,
-            li(onClick ==> backend.toggleTheme,
-               title := s"Select $toggleThemeLabel Theme (F2)",
-               `class` := "btn")(
-              selectedTheme,
-              p("Theme")
-            ),
             li(onClick ==> feedback,
                title := "Open Gitter.im Chat to give us feedback",
                `class` := "btn")(
@@ -92,12 +80,6 @@ object TopBar {
                `class` := "btn")(
               iconic.bug,
               p("Issue")
-            ),
-            li(onClick ==> showHelp,
-               title := "Show help Menu",
-               `class` := "btn")(
-              iconic.questionMark,
-              p("Help")
             )
           )
         )
