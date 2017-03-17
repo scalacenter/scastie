@@ -113,7 +113,7 @@ object Instrument {
             |}
             |""".stripMargin
       } else {
-        s"""|@$jsExportT object Main {
+        s"""|@$jsExportT class Main {
             |  val playground = $runtimeErrorT.wrap(new $instrumnedClass)
             |  @$jsExportT def result = $runtimeT.write(playground.right.map(_.${instrumentationMethod}))
             |  @$jsExportT def attachedElements: $elemArrayT =

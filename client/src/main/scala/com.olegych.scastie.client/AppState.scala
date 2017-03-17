@@ -27,6 +27,7 @@ object AppState {
     loadScalaJsScript = false,
     isScalaJsScriptLoaded = false,
     snippetIdIsScalaJS = false,
+    isReRunningScalaJs = false,
     user = None,
     attachedDoms = Map(),
     inputs = Inputs.default,
@@ -35,11 +36,15 @@ object AppState {
 
   implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
     dontSerializeMap[String, HTMLElement]
+
   implicit val dontSerializeWebSocket: ReadWriter[Option[WebSocket]] =
     dontSerializeOption[WebSocket]
+
   implicit val dontSerializeEventSource: ReadWriter[Option[EventSource]] =
     dontSerializeOption[EventSource]
-  implicit val pkl: ReadWriter[AppState] = upickleMacroRW[AppState]
+
+  implicit val pkl: ReadWriter[AppState] =
+    upickleMacroRW[AppState]
 }
 
 case class AppState(
@@ -60,6 +65,7 @@ case class AppState(
     loadScalaJsScript: Boolean,
     isScalaJsScriptLoaded: Boolean,
     snippetIdIsScalaJS: Boolean,
+    isReRunningScalaJs: Boolean,
     user: Option[User],
     attachedDoms: AttachedDoms,
     inputs: Inputs,
@@ -112,6 +118,7 @@ case class AppState(
         loadScalaJsScript,
         isScalaJsScriptLoaded0
         snippetIdIsScalaJS,
+        isReRunningScalaJs,
         user,
         attachedDoms,
         inputs.copy(
@@ -130,7 +137,8 @@ case class AppState(
     outputs.isClearable
 
   def run(snippetId: SnippetId): AppState = {
-    resetOutputs
+    clearOutputs
+      .resetScalajs
       .setRunning(true)
       .logSystem("Connecting.")
       .copyAndSave(inputsHasChanged = false)
@@ -141,6 +149,9 @@ case class AppState(
     val console = !isRunning && !consoleHasUserOutput
     copyAndSave(isRunning = isRunning, consoleIsOpen = !console)
   }
+
+  def setIsReRunningScalaJs(value: Boolean): AppState =
+    copy(isReRunningScalaJs = value)
 
   def setSnippetSaved: AppState =
     copy(isSnippetSaved = true)
@@ -161,7 +172,7 @@ case class AppState(
     copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
 
   def closeHelp: AppState =
-    resetOutputs.copyAndSave(isHelpModalClosed = true).copy(isStartup = false)
+    clearOutputs.copyAndSave(isHelpModalClosed = true).copy(isStartup = false)
 
   def showHelp: AppState = copy(isHelpModalClosed = false)
 
@@ -240,7 +251,7 @@ case class AppState(
       loadScalaJsScript = true
     )
 
-  def resetOutputs: AppState =
+  def clearOutputs: AppState =
     copyAndSave(
       outputs = Outputs.default,
       consoleIsOpen = false,
