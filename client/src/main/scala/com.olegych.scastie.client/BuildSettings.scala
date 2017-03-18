@@ -5,7 +5,7 @@ import api._
 
 import japgolly.scalajs.react._, vdom.all._
 
-object Libraries {
+object BuildSettings {
 
   def renderTarget(scalaTarget: ScalaTarget, backend: AppBackend) = {
     val targetTypes = List(
@@ -199,7 +199,7 @@ object Libraries {
   }
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("Libraries").render_P {
+    ReactComponentB[(AppState, AppBackend)]("BuildSettings").render_P {
       case (state, backend) =>
         val theme = if (state.isDarkTheme) "dark" else "light"
 

@@ -73,31 +73,34 @@ object MainPanel {
         div(`class` := "main-panel")(
           topbar,
           div(`id` := "content")(
-            div(`id`:= "code", show(View.Editor))(
-              helpClosepanel,
-              Editor(helpState, backend),
-              embeddedMenu
-            ),
-            div(`id`:= "switcher-show")(
-              i(`class` := "fa fa-code"),
-              "Console",
-              i(`class` := "fa fa-caret-up")
-            ),
-            div(`id` := "console")(
-              div(`id` := "handler"),
-              div(`id` := "switcher-hide")(
+            div(`id`:= "editor-container", `class` := "inner-container", show(View.Editor))(
+              div(`id`:= "code")(
+                helpClosepanel,
+                Editor(helpState, backend),
+                embeddedMenu
+              ),
+              div(`id`:= "switcher-show")(
                 i(`class` := "fa fa-code"),
                 "Console",
-                i(`class` := "fa fa-caret-down")
-              )
-            )
-          ),
-          div(`class` := s"panel $theme", show(View.Libraries))(
-            Libraries(state, backend)),
-          div(`class` := s"panel $theme", show(View.UserProfile))(
-            UserProfile(props.router, state.view))
+                i(`class` := "fa fa-caret-up")
+              ),
+              div(`id` := "console")(
+                div(`id` := "handler"),
+                div(`id` := "switcher-hide")(
+                  i(`class` := "fa fa-code"),
+                  "Console",
+                  i(`class` := "fa fa-caret-down")
+                ),
+                pre(`class` := "output-console", ref := consoleElement)(
+                  state.outputs.console
+                )
+              )),
+            div(`id`:= "settings-container", `class` := "inner-container", show(View.BuildSettings))(
+              BuildSettings(state, backend)),
+            div(`id`:= "snippets-container", `class` := "inner-container", show(View.CodeSnippets))(
+              CodeSnippets(props.router, state.view))
+          )
         )
-
 
     }.componentDidUpdate(scope =>
       Callback {

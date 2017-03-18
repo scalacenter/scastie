@@ -7,7 +7,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import japgolly.scalajs.react._, extra.router._, vdom.all._
 
-object UserProfile {
+object CodeSnippets {
 
   def apply(router: Option[RouterCtl[Page]], view: View) =
     component((router, view))
@@ -37,7 +37,7 @@ object UserProfile {
   }
 
   private val component =
-    ReactComponentB[(Option[RouterCtl[Page]], View)]("UserProfile")
+    ReactComponentB[(Option[RouterCtl[Page]], View)]("CodeSnippets")
       .initialState(List.empty[SnippetSummary])
       .backend(new Backend(_))
       .renderPS {
@@ -85,7 +85,7 @@ object UserProfile {
         val (_, currentView) = delta.currentProps
         val (_, nextView) = delta.nextProps
 
-        if (currentView != View.UserProfile && nextView == View.UserProfile) {
+        if (currentView != View.CodeSnippets && nextView == View.CodeSnippets) {
           delta.$.backend.loadProfile()
         } else {
           Callback(())

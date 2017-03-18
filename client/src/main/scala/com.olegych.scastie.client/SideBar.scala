@@ -96,17 +96,17 @@ object SideBar {
               ClearButton(state, backend),
               WorksheetButton(state, backend),
               sharing,
-              LibraryButton(state, backend)
+              BuildSettingsButton(state, backend)
             )
-          case View.Libraries =>
+          case View.BuildSettings =>
             Seq(
               RunButton(state, backend),
-              LibraryButton(state, backend)
+              BuildSettingsButton(state, backend)
             )
-          case View.UserProfile =>
+          case View.CodeSnippets =>
             Seq(
               RunButton(state, backend),
-              LibraryButton(state, backend)
+              BuildSettingsButton(state, backend)
             )
         }
 

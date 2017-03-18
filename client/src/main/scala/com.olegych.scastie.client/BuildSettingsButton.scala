@@ -3,7 +3,7 @@ package client
 
 import japgolly.scalajs.react._, vdom.all._
 
-object LibraryButton {
+object BuildSettingsButton {
 
   private val component =
     ReactComponentB[(AppState, AppBackend)]("BuildSettingsButton").render_P {
@@ -11,10 +11,10 @@ object LibraryButton {
         import backend._
 
         def selected =
-          if (state.view == View.Libraries) TagMod(`class` := "selected")
+          if (state.view == View.BuildSettings) TagMod(`class` := "selected")
           else EmptyTag
 
-        li(onClick ==> setView2(View.Libraries),
+        li(onClick ==> setView2(View.BuildSettings),
            title := "Open Build Settings",
            selected,
            `class` := "btn")(

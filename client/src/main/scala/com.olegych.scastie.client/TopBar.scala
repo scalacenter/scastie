@@ -43,10 +43,10 @@ object TopBar {
           state.user match {
             case Some(user) =>
               TagMod(
-                li(onClick ==> setView2(View.UserProfile),
+                li(onClick ==> setView2(View.CodeSnippets),
                    title := "Go to your code snippets",
                   `class` := "btn",
-                   selected(View.UserProfile),
+                   selected(View.CodeSnippets),
                   i(`class` := "fa fa-code"),
                   "Snippets"
                 ),
