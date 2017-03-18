@@ -33,24 +33,25 @@ table {
 
 body {
   font-family: "Lato", sans-serif;
-  color: #002b36;
-  background: #f5f5f5;
   font-size: 13px;
   line-height: 18px;
   overflow: hidden;
-  -webkit-transition: all 0.3s ease;
-  -moz-transition: all 0.3s ease;
-  -o-transition: all 0.3s ease;
-  transition: all 0.3s ease; }
+  -webkit-transition: color, background-color 0.3s ease;
+  -moz-transition: color, background-color 0.3s ease;
+  -o-transition: color, background-color 0.3s ease;
+  transition: color, background-color 0.3s ease; }
   body .app.light {
+    color: #002b36;
+    background: #f5f5f5;
     /* GENERAL ELEMENTS STYLES */
-    /* CODE SNIPPETS PAGE STYLES */ }
+    /* CODE SNIPPETS PAGE STYLES */
+    /* SETTINGS PAGE STYLES */ }
     body .app.light a {
       color: #fff;
-      -webkit-transition: all 0.3s ease;
-      -moz-transition: all 0.3s ease;
-      -o-transition: all 0.3s ease;
-      transition: all 0.3s ease; }
+      -webkit-transition: color, background-color 0.3s ease;
+      -moz-transition: color, background-color 0.3s ease;
+      -o-transition: color, background-color 0.3s ease;
+      transition: color, background-color 0.3s ease; }
       body .app.light a.hover {
         text-decoration: none; }
     body .app.light h1, body .app.light h2, body .app.light h3, body .app.light h4, body .app.light h5, body .app.light h6 {
@@ -66,10 +67,10 @@ body {
       height: 70px;
       line-height: 70px;
       background: #002b36;
-      -webkit-transition: all 0.3s ease;
-      -moz-transition: all 0.3s ease;
-      -o-transition: all 0.3s ease;
-      transition: all 0.3s ease; }
+      -webkit-transition: color, background-color 0.3s ease;
+      -moz-transition: color, background-color 0.3s ease;
+      -o-transition: color, background-color 0.3s ease;
+      transition: color, background-color 0.3s ease; }
       body .app.light #topbar ul.actions {
         position: absolute;
         display: inline-block;
@@ -83,17 +84,17 @@ body {
           line-height: 70px;
           padding: 0px 20px;
           color: #ffffff;
-          -webkit-transition: all 0.3s ease;
-          -moz-transition: all 0.3s ease;
-          -o-transition: all 0.3s ease;
-          transition: all 0.3s ease; }
+          -webkit-transition: color, background-color 0.3s ease;
+          -moz-transition: color, background-color 0.3s ease;
+          -o-transition: color, background-color 0.3s ease;
+          transition: color, background-color 0.3s ease; }
           body .app.light #topbar ul.actions li.dropdown i {
             margin-right: 5px; }
           body .app.light #topbar ul.actions li.dropdown.selected, body .app.light #topbar ul.actions li.dropdown:hover {
-            background-color: #002029;
+            background-color: #00acdb;
             color: #ffffff; }
-            body .app.light #topbar ul.actions li.dropdown.selected .subactions, body .app.light #topbar ul.actions li.dropdown:hover .subactions {
-              display: block; }
+          body .app.light #topbar ul.actions li.dropdown:hover .subactions {
+            display: block; }
           body .app.light #topbar ul.actions li.dropdown ul.subactions {
             list-style-type: none;
             border-radius: 2px;
@@ -101,17 +102,18 @@ body {
             text-align: left;
             display: none;
             position: absolute;
-            line-height: 35px;
+            line-height: 25px;
             top: 50px;
             width: 134px;
             left: 10px;
             margin: 10px; }
             body .app.light #topbar ul.actions li.dropdown ul.subactions .btn {
+              color: #0f262f;
               display: block;
               width: 134px;
               background: #7dc8e5;
               padding: 10px;
-              border-bottom: 1px solid #7dc8e5; }
+              border-bottom: 1px solid rgba(15, 38, 47, 0.15); }
               body .app.light #topbar ul.actions li.dropdown ul.subactions .btn:first-of-type {
                 border-top-left-radius: 2px;
                 border-top-right-radius: 2px; }
@@ -120,17 +122,17 @@ body {
                 border-bottom-left-radius: 2px;
                 border-bottom-right-radius: 2px; }
               body .app.light #topbar ul.actions li.dropdown ul.subactions .btn:hover {
-                background-color: #002029;
+                background-color: #00acdb;
                 color: #ffffff; }
     body .app.light #sidebar {
       float: left;
       height: 5000px;
       background: #7dc8e5;
       width: 149px;
-      -webkit-transition: all 0.3s ease;
-      -moz-transition: all 0.3s ease;
-      -o-transition: all 0.3s ease;
-      transition: all 0.3s ease; }
+      -webkit-transition: color, background-color 0.3s ease;
+      -moz-transition: color, background-color 0.3s ease;
+      -o-transition: color, background-color 0.3s ease;
+      transition: color, background-color 0.3s ease; }
       body .app.light #sidebar .logo {
         color: #fff;
         display: block;
@@ -139,10 +141,10 @@ body {
         background: #002b36;
         text-align: left;
         width: 149px;
-        -webkit-transition: all 0.3s ease;
-        -moz-transition: all 0.3s ease;
-        -o-transition: all 0.3s ease;
-        transition: all 0.3s ease; }
+        -webkit-transition: color, background-color 0.3s ease;
+        -moz-transition: color, background-color 0.3s ease;
+        -o-transition: color, background-color 0.3s ease;
+        transition: color, background-color 0.3s ease; }
         body .app.light #sidebar .logo img {
           float: left;
           margin: 21px 10px 21px 18px;
@@ -155,13 +157,24 @@ body {
         position: relative;
         overflow-y: auto;
         overflow-x: hidden; }
+        body .app.light #sidebar .actions-container i.fa {
+          font-size: 16px;
+          width: 20px; }
+        body .app.light #sidebar .actions-container ul.submenu {
+          display: none; }
+          body .app.light #sidebar .actions-container ul.submenu li.btn {
+            padding: 0px; }
+        body .app.light #sidebar .actions-container .is-expanded {
+          display: block;
+          padding-bottom: 0; }
         body .app.light #sidebar .actions-container .actions .btn {
           cursor: pointer;
-          padding: 20px 20px;
-          -webkit-transition: all 0.3s ease;
-          -moz-transition: all 0.3s ease;
-          -o-transition: all 0.3s ease;
-          transition: all 0.3s ease;
+          padding-left: 20px;
+          line-height: 58px;
+          -webkit-transition: color, background-color 0.3s ease;
+          -moz-transition: color, background-color 0.3s ease;
+          -o-transition: color, background-color 0.3s ease;
+          transition: color, background-color 0.3s ease;
           color: #0f262f; }
           body .app.light #sidebar .actions-container .actions .btn i {
             margin-right: 5px; }
@@ -174,14 +187,15 @@ body {
           position: absolute;
           bottom: 33px; }
           body .app.light #sidebar .actions-container .actions.bottom .btn {
-            padding: 10px 20px; }
+            line-height: 58px;
+            padding-left: 20px; }
     body .app.light #content {
       display: block;
       margin-left: 149px;
-      -webkit-transition: all 0.3s ease;
-      -moz-transition: all 0.3s ease;
-      -o-transition: all 0.3s ease;
-      transition: all 0.3s ease; }
+      -webkit-transition: color, background-color 0.3s ease;
+      -moz-transition: color, background-color 0.3s ease;
+      -o-transition: color, background-color 0.3s ease;
+      transition: color, background-color 0.3s ease; }
       body .app.light #content #code {
         height: 25%;
         display: block; }
@@ -193,10 +207,10 @@ body {
           color: #ffffff;
           background-color: #f5f5f5;
           border: none;
-          -webkit-transition: all 0.3s ease;
-          -moz-transition: all 0.3s ease;
-          -o-transition: all 0.3s ease;
-          transition: all 0.3s ease; }
+          -webkit-transition: color, background-color 0.3s ease;
+          -moz-transition: color, background-color 0.3s ease;
+          -o-transition: color, background-color 0.3s ease;
+          transition: color, background-color 0.3s ease; }
           body .app.light #content #code textarea#code-input:focus {
             outline: none; }
       body .app.light #content #switcher-show {
@@ -209,13 +223,13 @@ body {
         display: none;
         position: absolute;
         text-align: right;
-        color: #002b36;
+        color: #ffffff;
         cursor: pointer;
         padding-right: 20px;
-        -webkit-transition: all 0.3s ease;
-        -moz-transition: all 0.3s ease;
-        -o-transition: all 0.3s ease;
-        transition: all 0.3s ease; }
+        -webkit-transition: color, background-color 0.3s ease;
+        -moz-transition: color, background-color 0.3s ease;
+        -o-transition: color, background-color 0.3s ease;
+        transition: color, background-color 0.3s ease; }
       body .app.light #content #console {
         box-sizing: border-box;
         position: absolute;
@@ -227,10 +241,10 @@ body {
         width: 100%;
         overflow: hidden;
         height: 25%;
-        -webkit-transition: all 0.3s ease;
-        -moz-transition: all 0.3s ease;
-        -o-transition: all 0.3s ease;
-        transition: all 0.3s ease; }
+        -webkit-transition: color, background-color 0.3s ease;
+        -moz-transition: color, background-color 0.3s ease;
+        -o-transition: color, background-color 0.3s ease;
+        transition: color, background-color 0.3s ease; }
         body .app.light #content #console #handler {
           width: 100%;
           height: 6px;
@@ -239,31 +253,221 @@ body {
           top: 0;
           left: 0;
           cursor: ns-resize;
-          -webkit-transition: all 0.3s ease;
-          -moz-transition: all 0.3s ease;
-          -o-transition: all 0.3s ease;
-          transition: all 0.3s ease; }
+          -webkit-transition: color, background-color 0.3s ease;
+          -moz-transition: color, background-color 0.3s ease;
+          -o-transition: color, background-color 0.3s ease;
+          transition: color, background-color 0.3s ease; }
         body .app.light #content #console #switcher-hide {
           top: -14px;
           float: right;
           background: #f5f5f5;
           position: relative;
           cursor: pointer;
-          -webkit-transition: all 0.3s ease;
-          -moz-transition: all 0.3s ease;
-          -o-transition: all 0.3s ease;
-          transition: all 0.3s ease; }
-    body .app.light #snippets-container h2 {
-      font-size: 24px;
-      font-weight: bold;
-      color: #ffffff;
-      -webkit-transition: all 0.3s ease;
-      -moz-transition: all 0.3s ease;
-      -o-transition: all 0.3s ease;
-      transition: all 0.3s ease; }
-    body .app.light #snippets-container #snippets .group .snippet .header {
-      font-size: 14px; }
-      body .app.light #snippets-container #snippets .group .snippet .header .update {
-        color: #859900; }
-      body .app.light #snippets-container #snippets .group .snippet .header .actions {
-        float: right; }
+          -webkit-transition: color, background-color 0.3s ease;
+          -moz-transition: color, background-color 0.3s ease;
+          -o-transition: color, background-color 0.3s ease;
+          transition: color, background-color 0.3s ease; }
+    body .app.light .inner-container {
+      overflow-y: auto; }
+    body .app.light #snippets-container {
+      color: #0f262f;
+      background-color: #dfdfdf;
+      padding: 45px 55px;
+      -webkit-transition: color, background-color 0.3s ease;
+      -moz-transition: color, background-color 0.3s ease;
+      -o-transition: color, background-color 0.3s ease;
+      transition: color, background-color 0.3s ease; }
+      body .app.light #snippets-container .avatar {
+        margin-bottom: 15px; }
+      body .app.light #snippets-container h2 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #0f262f;
+        margin-bottom: 5px;
+        -webkit-transition: color, background-color 0.3s ease;
+        -moz-transition: color, background-color 0.3s ease;
+        -o-transition: color, background-color 0.3s ease;
+        transition: color, background-color 0.3s ease; }
+      body .app.light #snippets-container .nickname {
+        font-size: 17px;
+        margin-bottom: 30px;
+        margin-top: 10px;
+        font-weight: 300; }
+        body .app.light #snippets-container .nickname i {
+          margin-right: 3px; }
+      body .app.light #snippets-container #snippets {
+        margin-top: 30px; }
+        body .app.light #snippets-container #snippets .group {
+          position: relative; }
+          body .app.light #snippets-container #snippets .group:before {
+            border-left: 3px solid #5390bf;
+            content: " ";
+            position: absolute;
+            top: 10px;
+            left: 0;
+            height: 100%; }
+          body .app.light #snippets-container #snippets .group .snippet .header {
+            position: relative;
+            padding-left: 20px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 14px; }
+            body .app.light #snippets-container #snippets .group .snippet .header:before {
+              border-top: 3px solid #5390bf;
+              content: " ";
+              position: absolute;
+              top: 78px;
+              left: 0;
+              width: 20px; }
+            body .app.light #snippets-container #snippets .group .snippet .header .update {
+              color: #4e99c9;
+              font-weight: bold;
+              font-style: italic; }
+            body .app.light #snippets-container #snippets .group .snippet .header .actions {
+              float: right; }
+              body .app.light #snippets-container #snippets .group .snippet .header .actions a {
+                font-size: 18px;
+                margin-left: 18px;
+                text-decoration: none;
+                color: #0f262f; }
+          body .app.light #snippets-container #snippets .group .snippet pre.code {
+            background-color: #f0efef;
+            margin: 40px 0 40px 26px;
+            padding: 15px 15px;
+            font-family: monospace; }
+          body .app.light #snippets-container #snippets .group .snippet:last-child {
+            position: relative; }
+            body .app.light #snippets-container #snippets .group .snippet:last-child:before {
+              border-left: 3px solid #dfdfdf;
+              content: " ";
+              position: absolute;
+              top: 78px;
+              left: 0;
+              height: 100%; }
+    body .app.light #settings-container {
+      -webkit-transition: color, background-color 0.3s ease;
+      -moz-transition: color, background-color 0.3s ease;
+      -o-transition: color, background-color 0.3s ease;
+      transition: color, background-color 0.3s ease;
+      color: #0f262f;
+      background-color: #dfdfdf;
+      padding: 45px 45px;
+      font-size: 15px; }
+      body .app.light #settings-container h2 {
+        -webkit-transition: color, background-color 0.3s ease;
+        -moz-transition: color, background-color 0.3s ease;
+        -o-transition: color, background-color 0.3s ease;
+        transition: color, background-color 0.3s ease;
+        font-size: 24px;
+        font-weight: bold;
+        color: #0f262f;
+        margin-bottom: 20px;
+        display: block;
+        position: relative;
+        z-index: 1; }
+        body .app.light #settings-container h2:not(:first-child) {
+          margin-top: 35px; }
+        body .app.light #settings-container h2:before {
+          border-top: 2px solid rgba(0, 43, 54, 0.12);
+          content: "";
+          margin: 0 auto;
+          /* this centers the line to the full width specified */
+          position: absolute;
+          /* positioning must be absolute here, and relative positioning must be applied to the parent */
+          top: 50%;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100%;
+          z-index: -1; }
+        body .app.light #settings-container h2 span {
+          background-color: #dfdfdf;
+          padding: 0 15px 0 0; }
+      body .app.light #settings-container input[type="radio"] {
+        display: none; }
+        body .app.light #settings-container input[type="radio"] + label.radio {
+          font-size: 15px;
+          line-height: 18px;
+          display: inline-block;
+          margin-right: 30px; }
+          body .app.light #settings-container input[type="radio"] + label.radio:before {
+            line-height: 18px;
+            content: " ";
+            width: 0px;
+            height: 0px;
+            border-radius: 50%;
+            margin-right: 5px;
+            border: 9px solid #f4f3f3;
+            background-color: #f4f3f3;
+            display: inline-block;
+            margin-bottom: -4px;
+            -webkit-transition: color, background-color 0.3s ease;
+            -moz-transition: color, background-color 0.3s ease;
+            -o-transition: color, background-color 0.3s ease;
+            transition: color, background-color 0.3s ease; }
+        body .app.light #settings-container input[type="radio"]:checked + label.radio:before {
+          content: " ";
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          border: 5px solid #f4f3f3;
+          background-color: #4e99c9;
+          -webkit-transition: color, background-color 0.3s ease;
+          -moz-transition: color, background-color 0.3s ease;
+          -o-transition: color, background-color 0.3s ease;
+          transition: color, background-color 0.3s ease; }
+      body .app.light #settings-container .select-wrapper {
+        position: relative; }
+        body .app.light #settings-container .select-wrapper:after {
+          content: "\f0d7";
+          font-family: FontAwesome;
+          color: #0f262f;
+          position: absolute;
+          top: 10px;
+          right: 16px;
+          font-size: 13px; }
+      body .app.light #settings-container select, body .app.light #settings-container input {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        height: 36px;
+        line-height: 36px;
+        padding-left: 14px;
+        background-color: #f4f3f3;
+        color: #0f262f;
+        border-radius: 2px;
+        border: none;
+        width: 100%;
+        display: block;
+        font-size: 15px;
+        box-sizing: border-box; }
+        body .app.light #settings-container select::-moz-placeholder, body .app.light #settings-container input::-moz-placeholder {
+          color: #0f262f;
+          opacity: 1; }
+        body .app.light #settings-container select:-moz-placeholder, body .app.light #settings-container input:-moz-placeholder {
+          color: #0f262f;
+          opacity: 1; }
+        body .app.light #settings-container select::-webkit-input-placeholder, body .app.light #settings-container input::-webkit-input-placeholder {
+          color: #0f262f;
+          opacity: 1; }
+        body .app.light #settings-container select:-ms-input-placeholder, body .app.light #settings-container input:-ms-input-placeholder {
+          color: #0f262f;
+          opacity: 1; }
+      body .app.light #settings-container textarea, body .app.light #settings-container pre#output {
+        padding: 20px;
+        background-color: #f4f3f3;
+        color: #0f262f;
+        border-radius: 2px;
+        border: none;
+        width: 100%;
+        display: block;
+        font-size: 15px;
+        box-sizing: border-box;
+        margin-top: 10px;
+        margin-bottom: 30px;
+        min-height: 150px;
+        height: 175px;
+        overflow-y: auto;
+        font-family: monospace; }
+      body .app.light #settings-container pre#output {
+        height: 250px; }

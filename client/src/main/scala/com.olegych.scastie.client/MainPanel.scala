@@ -5,11 +5,11 @@ import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom.raw.HTMLPreElement
 
-object MainPannel {
+object MainPanel {
 
   private val consoleElement = Ref[HTMLPreElement]("console")
   private val component =
-    ReactComponentB[(AppState, AppBackend, AppProps)]("MainPannel").render_P {
+    ReactComponentB[(AppState, AppBackend, AppProps)]("MainPanel").render_P {
       case (state, backend, props) =>
         def show(view: View) = {
           if (view == state.view) TagMod(display.block)
@@ -41,7 +41,7 @@ object MainPannel {
             true
           else !state.isHelpModalClosed
 
-        val helpClosePannel =
+        val helpClosepanel =
           if (showHelp) {
             TagMod(
               div(`class` := "help-close")(
@@ -67,21 +67,38 @@ object MainPannel {
             )
           } else state
 
-        div(`class` := "main-pannel")(
-          TopBar(state, backend),
-          div(`class` := s"pannel $theme $consoleCss", show(View.Editor))(
-            helpClosePannel,
-            Editor(helpState, backend),
-            embeddedMenu,
-            pre(`class` := "output-console", ref := consoleElement)(
-              state.outputs.console
+
+        val topbar = TopBar(state, backend)
+
+        div(`class` := "main-panel")(
+          topbar,
+          div(`id` := "content")(
+            div(`id`:= "code", show(View.Editor))(
+              helpClosepanel,
+              Editor(helpState, backend),
+              embeddedMenu
+            ),
+            div(`id`:= "switcher-show")(
+              i(`class` := "fa fa-code"),
+              "Console",
+              i(`class` := "fa fa-caret-up")
+            ),
+            div(`id` := "console")(
+              div(`id` := "handler"),
+              div(`id` := "switcher-hide")(
+                i(`class` := "fa fa-code"),
+                "Console",
+                i(`class` := "fa fa-caret-down")
+              )
             )
           ),
-          div(`class` := s"pannel $theme", show(View.Libraries))(
+          div(`class` := s"panel $theme", show(View.Libraries))(
             Libraries(state, backend)),
-          div(`class` := s"pannel $theme", show(View.UserProfile))(
+          div(`class` := s"panel $theme", show(View.UserProfile))(
             UserProfile(props.router, state.view))
         )
+
+
     }.componentDidUpdate(scope =>
       Callback {
         consoleElement(scope.$).foreach{consoleDom =>

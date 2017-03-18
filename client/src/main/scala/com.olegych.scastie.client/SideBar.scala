@@ -1,11 +1,12 @@
 package com.olegych.scastie
 package client
 
-import api.SnippetId
-
-import japgolly.scalajs.react._, vdom.all._
+import com.olegych.scastie.api.SnippetId
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
 
 object SideBar {
+
   private val component =
     ReactComponentB[(AppState, AppBackend, Option[SnippetId])]("SideBar").render_P {
       case (state, backend, snippetId) =>
@@ -117,12 +118,12 @@ object SideBar {
               helpButton
             )
 
-        nav(`id` := s"sidebar")(
-          a(`class` := "logo", href := "#",
+        nav(`id` := "sidebar")(
+          a(`class` := "logo", href := "#")(
             img(src := "/assets/public/img/icon-scastie.png"),
             h1("Scastie")
           ),
-          div(`class` := "actions-container", height := "1000px")(
+          div(`class` := "actions-container")(
             ul(`class` := "actions")(
               currentButtonsForSelectedView
             ),
@@ -131,7 +132,6 @@ object SideBar {
             )
           )
         )
-
     }.build
 
   def apply(state: AppState,

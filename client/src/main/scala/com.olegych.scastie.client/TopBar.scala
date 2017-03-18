@@ -44,44 +44,57 @@ object TopBar {
             case Some(user) =>
               TagMod(
                 li(onClick ==> setView2(View.UserProfile),
-                   title := "Open Profile View",
+                   title := "Go to your code snippets",
+                  `class` := "btn",
                    selected(View.UserProfile),
-                   `class` := "btn")(
-                  img(src := user.avatar_url + "&s=35",
-                      alt := "Your Github Avatar",
-                      `class` := "image-button avatar"),
-                  p("Snippets")
+                  i(`class` := "fa fa-code"),
+                  "Snippets"
                 ),
                 li(onClick ==> logout, `class` := "btn")(
-                  iconic.accountLogout,
-                  p("Logout")
+                  i(`class` := "fa fa-sign-out"),
+                  "Logout"
                 )
               )
             case None =>
               TagMod(
                 li(onClick ==> login, `class` := "btn")(
-                  iconic.accountLogin,
-                  p("Login")
+                  i(`class` := "fa fa-sign-in"),
+                  "Login"
                 )
               )
           }
 
-        nav(`id` := s"topbar")(
-          ul(
-            profileButton,
-            li(onClick ==> feedback,
-               title := "Open Gitter.im Chat to give us feedback",
-               `class` := "btn")(
-              iconic.chat,
-              p("Feedback")
+        nav(`id` := "topbar")(
+          ul(`class` := "actions")(
+            li(`class` := "btn dropdown")(
+              i(`class` := "fa fa-comments"),
+              "Feedback",
+              i(`class` := "fa fa-caret-down"),
+              ul(`class` := "subactions")(
+                li(onClick ==> feedback,
+                  title := "Open Gitter.im Chat to give us feedback",
+                  `class` := "btn")(
+                  i(`class` := "fa fa-github"),
+                  "Scastie's gitter"
+                ),
+                li(onClick ==> issue,
+                  title := "Create new issue on GitHub",
+                  `class` := "btn")(
+                  i(`class` := "fa fa-github"),
+                  "Github issues"
+                )
+              )
             ),
-            li(onClick ==> issue,
-               title := "Create new issue on GitHub",
-               `class` := "btn")(
-              iconic.bug,
-              p("Issue")
+            li(`class` := "btn dropdown")(
+              i(`class` := "fa fa-user-circle"),
+              "Login",
+              i(`class` := "fa fa-caret-down"),
+              ul(`class` := "subactions")(
+                profileButton
+              )
             )
           )
         )
+
     }.build
 }

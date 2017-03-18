@@ -31,7 +31,7 @@ object App {
 
           div(`class` := s"$appClass $theme")(
             sideBar,
-            MainPannel(state, scope.backend, props)
+            MainPanel(state, scope.backend, props)
           )
         }
       }
