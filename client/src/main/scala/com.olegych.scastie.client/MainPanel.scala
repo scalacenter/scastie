@@ -67,15 +67,11 @@ object MainPanel {
             )
           } else state
 
-
-        val topbar = TopBar(state, backend)
-
         div(`class` := "main-panel")(
-          topbar,
+          TopBar(state, backend),
           div(`id` := "content")(
             div(`id`:= "editor-container", `class` := "inner-container", show(View.Editor))(
               div(`id`:= "code")(
-                helpClosepanel,
                 Editor(helpState, backend),
                 embeddedMenu
               ),

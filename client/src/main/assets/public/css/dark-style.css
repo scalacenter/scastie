@@ -183,12 +183,25 @@ body {
             color: #ffffff !important; }
           body .app.dark #sidebar .actions-container .actions .btn:hover {
             color: #859900; }
-        body .app.dark #sidebar .actions-container .actions.bottom {
-          position: absolute;
-          bottom: 33px; }
-          body .app.dark #sidebar .actions-container .actions.bottom .btn {
-            line-height: 58px;
-            padding-left: 20px; }
+      body .app.dark #sidebar .actions.bottom {
+        position: absolute;
+        bottom: 33px; }
+        body .app.dark #sidebar .actions.bottom .btn {
+          cursor: pointer;
+          padding-left: 20px;
+          line-height: 58px;
+          -webkit-transition: color, background-color 0.3s ease;
+          -moz-transition: color, background-color 0.3s ease;
+          -o-transition: color, background-color 0.3s ease;
+          transition: color, background-color 0.3s ease;
+          color: #ffffff; }
+          body .app.dark #sidebar .actions.bottom .btn i {
+            margin-right: 5px; }
+          body .app.dark #sidebar .actions.bottom .btn.selected {
+            background-color: #859900;
+            color: #ffffff !important; }
+          body .app.dark #sidebar .actions.bottom .btn:hover {
+            color: #859900; }
     body .app.dark #content {
       display: block;
       margin-left: 149px;
@@ -196,10 +209,15 @@ body {
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease; }
-      body .app.dark #content #code {
+    body .app.dark #editor-container {
+      -webkit-transition: color, background-color 0.3s ease;
+      -moz-transition: color, background-color 0.3s ease;
+      -o-transition: color, background-color 0.3s ease;
+      transition: color, background-color 0.3s ease; }
+      body .app.dark #editor-container #code {
         height: 25%;
         display: block; }
-        body .app.dark #content #code textarea#code-input {
+        body .app.dark #editor-container #code #code-input {
           width: 100%;
           padding: 28px;
           font-family: monospace;
@@ -211,9 +229,9 @@ body {
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
           transition: color, background-color 0.3s ease; }
-          body .app.dark #content #code textarea#code-input:focus {
+          body .app.dark #editor-container #code #code-input:focus {
             outline: none; }
-      body .app.dark #content #switcher-show {
+      body .app.dark #editor-container #switcher-show {
         right: 0;
         left: 149px;
         bottom: 0;
@@ -230,7 +248,7 @@ body {
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
         transition: color, background-color 0.3s ease; }
-      body .app.dark #content #console {
+      body .app.dark #editor-container #console {
         box-sizing: border-box;
         position: absolute;
         padding: 28px;
@@ -245,7 +263,7 @@ body {
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
         transition: color, background-color 0.3s ease; }
-        body .app.dark #content #console #handler {
+        body .app.dark #editor-container #console #handler {
           width: 100%;
           height: 6px;
           background: #073642;
@@ -257,7 +275,7 @@ body {
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
           transition: color, background-color 0.3s ease; }
-        body .app.dark #content #console #switcher-hide {
+        body .app.dark #editor-container #console #switcher-hide {
           top: -14px;
           float: right;
           background: #002b36;

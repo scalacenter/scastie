@@ -126,10 +126,10 @@ object SideBar {
           div(`class` := "actions-container")(
             ul(`class` := "actions")(
               currentButtonsForSelectedView
-            ),
-            ul(`class` := "actions bottom")(
-              buttonsBottom
             )
+          ),
+          div(`class` := "actions bottom")(
+            buttonsBottom
           )
         )
     }.build
