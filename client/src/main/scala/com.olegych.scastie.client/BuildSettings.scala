@@ -47,7 +47,7 @@ object BuildSettings {
     }
 
     def selected(targetType: ScalaTargetType) =
-      if (targetType == scalaTarget.targetType) TagMod(`class` := "selected")
+      if (targetType == scalaTarget.targetType) TagMod(`checked` := "checked")
       else EmptyTag
 
     val disabledTargets: Set[ScalaTargetType] = Set(
@@ -71,17 +71,17 @@ object BuildSettings {
       }
     }
 
-    fieldset(`class` := "targets")(
-      legend("Target"),
-      ul(
-        targetTypes.map(
-          targetType =>
-            li(handler(targetType), selected(targetType))(
-              img(src := s"/assets/public/${logo(targetType)}",
-                  alt := s"logo for ${labelFor(targetType)}"),
-              span(labelFor(targetType)),
+    div(
+      ul(`id` := "target")(
+          targetTypes.map { targetType =>
+            val targetLabel = labelFor(targetType)
+            li(handler(targetType))(
+              input(`type` := "radio", `id` := targetLabel, value := targetLabel, name := "target", selected(targetType)),
+              label(`for` := targetLabel, `class` := "radio", targetLabel),
               vote(targetType)
-          )))
+            )
+          }
+      )
     )
   }
 
@@ -192,10 +192,10 @@ object BuildSettings {
         case ScalaTarget.Native => notSupported
       }
 
-    fieldset(`class` := "versions")(
-      legend("Scala Version"),
+    div(`class` := "select-wrapper")(
       versionSelectors
     )
+
   }
 
   private val component =
@@ -203,14 +203,24 @@ object BuildSettings {
       case (state, backend) =>
         val theme = if (state.isDarkTheme) "dark" else "light"
 
-
-        div(`class` := "libraries")(
-          ScaladexSearch(state, backend),
+        div(`id` := "build-settings-container")(
+          h2(
+            span("Target")
+          ),
           renderTarget(state.inputs.target, backend),
+          h2(
+            span("Scala Version")
+          ),
           renderVersions(state.inputs.target, backend),
-          fieldset(
-            legend("Sbt Configuration"),
-            div("add more"),
+          h2(
+            span("Libraries")
+          ),
+          ScaladexSearch(state, backend),
+          h2(
+            span("Sbt Configuration")
+          ),
+          label(`for` := "configuration","Add more"),
+          pre(`id` := "configuration")(
             CodeMirrorEditor(
               CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
                                         theme = s"solarized $theme",
@@ -218,30 +228,28 @@ object BuildSettings {
               CodeMirrorEditor.Handler(
                 updatedSettings => backend.sbtConfigChange(updatedSettings)
               )
-            ),
-            hr,
-            div("resulting build.sbt"),
-            div(`class` := "result-sbt")(
-              CodeMirrorEditor(
-                CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
-                                          theme = s"solarized $theme",
-                                          readOnly = true),
-                CodeMirrorEditor.Handler(
-                  _ => Callback(())
-                )
+            )
+          ),
+          div(`class` := "label","Resulting build.sbt"),
+          pre(`id` := "output")(
+            CodeMirrorEditor(
+              CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
+                                        theme = s"solarized $theme",
+                                        readOnly = true),
+              CodeMirrorEditor.Handler(
+                _ => Callback(())
               )
-            ),
-            hr,
-            div("resulting plugins.sbt"),
-            div(`class` := "result-sbt")(
-              CodeMirrorEditor(
-                CodeMirrorEditor.Settings(
-                  value = state.inputs.sbtPluginsConfig,
-                  theme = s"solarized $theme",
-                  readOnly = true),
-                CodeMirrorEditor.Handler(
-                  _ => Callback(())
-                )
+            )
+          ),
+          div(`class` := "label","Resulting plugins.sbt"),
+          pre(`id` := "plugins-output")(
+            CodeMirrorEditor(
+              CodeMirrorEditor.Settings(
+                value = state.inputs.sbtPluginsConfig,
+                theme = s"solarized $theme",
+                readOnly = true),
+              CodeMirrorEditor.Handler(
+                _ => Callback(())
               )
             )
           )

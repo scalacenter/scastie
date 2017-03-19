@@ -383,8 +383,7 @@ object ScaladexSearch {
           }
 
           fieldset(`class` := "scaladex")(
-            legend("Scala Libraries"),
-            div(`class` := "search")(
+            div(`class` := "search", `id` := "library")(
               added,
               input.search(
                 ref := searchInputRef,

@@ -401,6 +401,10 @@ body {
         body .app.light #settings-container h2 span {
           background-color: #dfdfdf;
           padding: 0 15px 0 0; }
+      body .app.light #settings-container #target li {
+        display: inline;
+        list-style-type: none;
+        padding-right: 20px; }
       body .app.light #settings-container input[type="radio"] {
         display: none; }
         body .app.light #settings-container input[type="radio"] + label.radio {
