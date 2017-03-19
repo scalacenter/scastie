@@ -53,17 +53,6 @@ $(document).ready(function() {
 //    });
     /* SPLITTER END */
 
-    // Switcher console window
-    $(document).on('click', '#switcher-show', function() {
-        consoleWindow.css('display', 'block');
-        $(this).css('display', 'none');
-    });
-
-    $(document).on('click', '#switcher-hide', function() {
-        consoleWindow.css('display', 'none');
-        $('#switcher-show').css('display', 'block');
-    });
-
     $(window).trigger('resize');
 
     /* Style Switcher */

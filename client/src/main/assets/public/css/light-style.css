@@ -277,7 +277,7 @@ body {
           transition: color, background-color 0.3s ease; }
         body .app.light #editor-container #console #switcher-hide {
           top: -14px;
-          float: right;
+          float: left;
           background: #f5f5f5;
           position: relative;
           cursor: pointer;

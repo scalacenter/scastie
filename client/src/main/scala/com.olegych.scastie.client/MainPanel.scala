@@ -18,10 +18,6 @@ object MainPanel {
 
         val theme = if (state.isDarkTheme) "dark" else "light"
 
-        val consoleCss =
-          if (state.consoleIsOpen) "with-console"
-          else ""
-
         val embedded = props.embedded.isDefined
 
         val embeddedMenu =
@@ -75,22 +71,7 @@ object MainPanel {
                 Editor(helpState, backend),
                 embeddedMenu
               ),
-              div(`id`:= "switcher-show")(
-                i(`class` := "fa fa-code"),
-                "Console",
-                i(`class` := "fa fa-caret-up")
-              ),
-              div(`id` := "console")(
-                div(`id` := "handler"),
-                div(`id` := "switcher-hide")(
-                  i(`class` := "fa fa-code"),
-                  "Console",
-                  i(`class` := "fa fa-caret-down")
-                ),
-                pre(`class` := "output-console", ref := consoleElement)(
-                  state.outputs.console
-                )
-              )),
+              Console(state, backend)),
             div(`id`:= "settings-container", `class` := "inner-container", show(View.BuildSettings))(
               BuildSettings(state, backend)),
             div(`id`:= "snippets-container", `class` := "inner-container", show(View.CodeSnippets))(
