@@ -291,11 +291,16 @@ body {
       color: #fff;
       background-color: #15414c;
       padding: 45px 55px;
+      height: 800px;
       -webkit-transition: color, background-color 0.3s ease;
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
-      transition: color, background-color 0.3s ease; }
+      transition: color, background-color 0.3s ease;
+      overflow-y: auto; }
       body .app.dark #snippets-container .avatar {
+        height: 70px;
+        width: 70px;
+        border-radius: 50%;
         margin-bottom: 15px; }
       body .app.dark #snippets-container h2 {
         font-size: 24px;
@@ -348,11 +353,15 @@ body {
                 margin-left: 18px;
                 text-decoration: none;
                 color: #fff; }
-          body .app.dark #snippets-container #snippets .group .snippet pre.code {
-            background-color: #073642;
-            margin: 40px 0 40px 26px;
-            padding: 15px 15px;
-            font-family: monospace; }
+          body .app.dark #snippets-container #snippets .group .snippet a {
+            text-decoration: none; }
+            body .app.dark #snippets-container #snippets .group .snippet a pre.code {
+              background-color: #073642;
+              margin: 40px 0 40px 26px;
+              padding: 15px 15px;
+              font-family: monospace;
+              text-decoration: none;
+              color: #fff; }
           body .app.dark #snippets-container #snippets .group .snippet:last-child {
             position: relative; }
             body .app.dark #snippets-container #snippets .group .snippet:last-child:before {

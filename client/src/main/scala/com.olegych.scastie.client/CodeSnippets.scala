@@ -3,17 +3,19 @@ package client
 
 import api._
 import autowire._
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-import japgolly.scalajs.react._, extra.router._, vdom.all._
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import japgolly.scalajs.react._
+import extra.router._
+import vdom.all._
 
 object CodeSnippets {
 
-  def apply(router: Option[RouterCtl[Page]], view: View) =
-    component((router, view))
+  def apply(router: Option[RouterCtl[Page]], state: AppState) =
+    component((router, state))
 
   class Backend(
-      scope: BackendScope[(Option[RouterCtl[Page]], View),
+      scope: BackendScope[(Option[RouterCtl[Page]], AppState),
                           List[SnippetSummary]]) {
     def loadProfile(): Callback = {
       Callback.future(
@@ -37,44 +39,63 @@ object CodeSnippets {
   }
 
   private val component =
-    ReactComponentB[(Option[RouterCtl[Page]], View)]("CodeSnippets")
+    ReactComponentB[(Option[RouterCtl[Page]], AppState)]("CodeSnippets")
       .initialState(List.empty[SnippetSummary])
       .backend(new Backend(_))
       .renderPS {
-        case (scope, (maybeRouter, _), summaries) => {
+        case (scope, (maybeRouter, state), summaries) => {
           assert(maybeRouter.isDefined,
                  "should not be able to access profile view from embedded")
           val router = maybeRouter.get
+          val user = state.user.get
 
-          div(`class` := "profile")(
-            h1("Saved Code Snippets"),
-            ul(
+          div(`id` := "code-snippets-container")(
+            div(`class` := "avatar")(
+              img(src := user.avatar_url + "&s=70",
+                alt := "Your Github Avatar",
+                `class` := "image-button avatar")
+            ),
+            h2(user.name),
+            div(`class` := "nickname")(
+              i(`class` := "fa fa-github"),
+              user.login
+            ),
+
+            h2("Saved Code Snippets"),
+            div(`id` := "snippets")(
               summaries.groupBy(_.snippetId.base64UUID).map {
                 case (base64UUID, groupedSummaries) =>
-                  li(key := base64UUID)(
-                    p("/" + base64UUID),
-                    ul(
-                      groupedSummaries
-                        .sortBy(_.snippetId.user.flatMap(_.update))
-                        .map {
-                          summary =>
-                            val page = Page.fromSnippetId(summary.snippetId)
-                            val update = summary.snippetId.user
-                              .flatMap(_.update)
-                              .getOrElse("")
-
-                            li(router.setOnClick(page))(
-                              p("Update: " + update),
+                  div(`class` := "group")(
+                    groupedSummaries
+                      .sortBy(_.snippetId.user.flatMap(_.update))
+                      .map {
+                        summary =>
+                          val page = Page.fromSnippetId(summary.snippetId)
+                          val update = summary.snippetId.user
+                            .flatMap(_.update)
+                            .getOrElse("")
+                          div(`class` := "snippet")(
+                            div(`class` := "header", "/" + base64UUID + " - ")(
+                              span(`class` := "update", "Update: " + update),
+                              div(`class` := "actions")(
+                                a(href := "#",
+                                  title := "Share")(
+                                  i(`class` := "fa fa-share-alt")
+                                ),
+                                a(href := "#",
+                                  title := "Delete",
+                                  onClick ==> scope.backend.delete(summary))(
+                                  i(`class` := "fa fa-trash")
+                                )
+                              )
+                            ),
+                            div(`class` := "codesnippet", router.setOnClick(page))(
                               router.link(page)(
-                                pre(summary.summary)
-                              ),
-                              iconic.delete(
-                                title := "Delete",
-                                onClick ==> scope.backend.delete(summary)
+                                pre(`class` := "code")(summary.summary)
                               )
                             )
-                        }
-                    )
+                          )
+                      }
                   )
               }
             )
@@ -82,10 +103,10 @@ object CodeSnippets {
         }
       }
       .componentWillReceiveProps { delta =>
-        val (_, currentView) = delta.currentProps
-        val (_, nextView) = delta.nextProps
+        val (_, currentAppState) = delta.currentProps
+        val (_, nextAppState) = delta.nextProps
 
-        if (currentView != View.CodeSnippets && nextView == View.CodeSnippets) {
+        if (currentAppState.view != View.CodeSnippets && nextAppState.view == View.CodeSnippets) {
           delta.$.backend.loadProfile()
         } else {
           Callback(())

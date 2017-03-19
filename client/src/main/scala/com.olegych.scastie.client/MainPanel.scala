@@ -75,7 +75,7 @@ object MainPanel {
             div(`id`:= "settings-container", `class` := "inner-container", show(View.BuildSettings))(
               BuildSettings(state, backend)),
             div(`id`:= "snippets-container", `class` := "inner-container", show(View.CodeSnippets))(
-              CodeSnippets(props.router, state.view))
+              CodeSnippets(props.router, state))
           )
         )
 
