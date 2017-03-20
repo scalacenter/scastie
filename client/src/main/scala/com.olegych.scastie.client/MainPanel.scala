@@ -16,8 +16,6 @@ object MainPanel {
           else TagMod(display.none)
         }
 
-        val theme = if (state.isDarkTheme) "dark" else "light"
-
         val embedded = props.embedded.isDefined
 
         val embeddedMenu =

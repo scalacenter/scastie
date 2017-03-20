@@ -12,8 +12,6 @@ object SideBar {
       case (state, backend, snippetId) =>
         import backend._
 
-        val theme = if (state.isDarkTheme) "dark" else "light"
-
         def selected(view: View) =
           if (view == currentView) TagMod(`class` := "selected") else EmptyTag
 
