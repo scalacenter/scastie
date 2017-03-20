@@ -40,9 +40,12 @@ body {
   -moz-transition: color, background-color 0.3s ease;
   -o-transition: color, background-color 0.3s ease;
   transition: color, background-color 0.3s ease; }
+  body .root {
+    height: 100%; }
   body .app.dark {
     color: #5d7c83;
     background: #15414c;
+    height: 100%;
     /* GENERAL ELEMENTS STYLES */
     /* CODE SNIPPETS PAGE STYLES */
     /* SETTINGS PAGE STYLES */ }
@@ -60,6 +63,10 @@ body {
       font-size: 150%; }
     body .app.dark .hide {
       display: none; }
+    body .app.dark i.fa {
+      font-size: 16px;
+      width: 20px;
+      text-align: left; }
     body .app.dark #topbar {
       flex-direction: row;
       text-align: right;
@@ -88,8 +95,9 @@ body {
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
           transition: color, background-color 0.3s ease; }
-          body .app.dark #topbar ul.actions li.dropdown i {
-            margin-right: 5px; }
+          body .app.dark #topbar ul.actions li.dropdown i.fa {
+            width: 30px;
+            text-align: center; }
           body .app.dark #topbar ul.actions li.dropdown.selected, body .app.dark #topbar ul.actions li.dropdown:hover {
             background-color: #073642;
             color: #ffffff; }
@@ -158,9 +166,6 @@ body {
         position: relative;
         overflow-y: auto;
         overflow-x: hidden; }
-        body .app.dark #sidebar .actions-container i.fa {
-          font-size: 16px;
-          width: 20px; }
         body .app.dark #sidebar .actions-container ul.submenu {
           display: none; }
           body .app.dark #sidebar .actions-container ul.submenu li.btn {
@@ -215,23 +220,9 @@ body {
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease; }
-      body .app.dark #editor-container #code {
-        height: 25%;
-        display: block; }
-        body .app.dark #editor-container #code #code-input {
-          width: 100%;
-          padding: 28px;
-          font-family: monospace;
-          font-size: 16px;
-          color: #ffffff;
-          background-color: #15414c;
-          border: none;
-          -webkit-transition: color, background-color 0.3s ease;
-          -moz-transition: color, background-color 0.3s ease;
-          -o-transition: color, background-color 0.3s ease;
-          transition: color, background-color 0.3s ease; }
-          body .app.dark #editor-container #code #code-input:focus {
-            outline: none; }
+      body .app.dark #editor-container i.fa {
+        width: 30px;
+        text-align: center; }
       body .app.dark #editor-container #switcher-show {
         right: 0;
         left: 149px;
@@ -248,7 +239,8 @@ body {
         -webkit-transition: color, background-color 0.3s ease;
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
-        transition: color, background-color 0.3s ease; }
+        transition: color, background-color 0.3s ease;
+        z-index: 9; }
       body .app.dark #editor-container #console {
         box-sizing: border-box;
         position: absolute;
@@ -263,7 +255,8 @@ body {
         -webkit-transition: color, background-color 0.3s ease;
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
-        transition: color, background-color 0.3s ease; }
+        transition: color, background-color 0.3s ease;
+        z-index: 9; }
         body .app.dark #editor-container #console #handler {
           width: 100%;
           height: 6px;
@@ -275,17 +268,20 @@ body {
           -webkit-transition: color, background-color 0.3s ease;
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
-          transition: color, background-color 0.3s ease; }
+          transition: color, background-color 0.3s ease;
+          z-index: 9; }
         body .app.dark #editor-container #console #switcher-hide {
+          margin-right: 149px;
           top: -14px;
-          float: left;
+          float: right;
           background: #002b36;
           position: relative;
           cursor: pointer;
           -webkit-transition: color, background-color 0.3s ease;
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
-          transition: color, background-color 0.3s ease; }
+          transition: color, background-color 0.3s ease;
+          z-index: 9; }
     body .app.dark .inner-container {
       overflow-y: auto; }
     body .app.dark #snippets-container {
