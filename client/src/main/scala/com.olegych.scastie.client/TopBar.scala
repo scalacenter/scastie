@@ -13,8 +13,6 @@ object TopBar {
       case (state, backend) =>
         import backend._
 
-        val theme = if (state.isDarkTheme) "dark" else "light"
-
         def openInNewTab(link: String): Callback = {
           Callback(
             dom.window.open(link, "_blank").focus()

@@ -40,9 +40,12 @@ body {
   -moz-transition: color, background-color 0.3s ease;
   -o-transition: color, background-color 0.3s ease;
   transition: color, background-color 0.3s ease; }
+  body .root {
+    height: 100%; }
   body .app.light {
     color: #002b36;
     background: #f5f5f5;
+    height: 100%;
     /* GENERAL ELEMENTS STYLES */
     /* CODE SNIPPETS PAGE STYLES */
     /* SETTINGS PAGE STYLES */ }
@@ -60,6 +63,10 @@ body {
       font-size: 150%; }
     body .app.light .hide {
       display: none; }
+    body .app.light i.fa {
+      font-size: 16px;
+      width: 20px;
+      text-align: left; }
     body .app.light #topbar {
       flex-direction: row;
       text-align: right;
@@ -88,8 +95,9 @@ body {
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
           transition: color, background-color 0.3s ease; }
-          body .app.light #topbar ul.actions li.dropdown i {
-            margin-right: 5px; }
+          body .app.light #topbar ul.actions li.dropdown i.fa {
+            width: 30px;
+            text-align: center; }
           body .app.light #topbar ul.actions li.dropdown.selected, body .app.light #topbar ul.actions li.dropdown:hover {
             background-color: #00acdb;
             color: #ffffff; }
@@ -106,7 +114,8 @@ body {
             top: 50px;
             width: 134px;
             left: 10px;
-            margin: 10px; }
+            margin: 10px;
+            z-index: 11; }
             body .app.light #topbar ul.actions li.dropdown ul.subactions .btn {
               color: #0f262f;
               display: block;
@@ -157,9 +166,6 @@ body {
         position: relative;
         overflow-y: auto;
         overflow-x: hidden; }
-        body .app.light #sidebar .actions-container i.fa {
-          font-size: 16px;
-          width: 20px; }
         body .app.light #sidebar .actions-container ul.submenu {
           display: none; }
           body .app.light #sidebar .actions-container ul.submenu li.btn {
@@ -214,23 +220,9 @@ body {
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease; }
-      body .app.light #editor-container #code {
-        height: 25%;
-        display: block; }
-        body .app.light #editor-container #code #code-input {
-          width: 100%;
-          padding: 28px;
-          font-family: monospace;
-          font-size: 16px;
-          color: #ffffff;
-          background-color: #f5f5f5;
-          border: none;
-          -webkit-transition: color, background-color 0.3s ease;
-          -moz-transition: color, background-color 0.3s ease;
-          -o-transition: color, background-color 0.3s ease;
-          transition: color, background-color 0.3s ease; }
-          body .app.light #editor-container #code #code-input:focus {
-            outline: none; }
+      body .app.light #editor-container i.fa {
+        width: 30px;
+        text-align: center; }
       body .app.light #editor-container #switcher-show {
         right: 0;
         left: 149px;
@@ -247,7 +239,8 @@ body {
         -webkit-transition: color, background-color 0.3s ease;
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
-        transition: color, background-color 0.3s ease; }
+        transition: color, background-color 0.3s ease;
+        z-index: 9; }
       body .app.light #editor-container #console {
         box-sizing: border-box;
         position: absolute;
@@ -262,7 +255,8 @@ body {
         -webkit-transition: color, background-color 0.3s ease;
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
-        transition: color, background-color 0.3s ease; }
+        transition: color, background-color 0.3s ease;
+        z-index: 9; }
         body .app.light #editor-container #console #handler {
           width: 100%;
           height: 6px;
@@ -274,28 +268,35 @@ body {
           -webkit-transition: color, background-color 0.3s ease;
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
-          transition: color, background-color 0.3s ease; }
+          transition: color, background-color 0.3s ease;
+          z-index: 9; }
         body .app.light #editor-container #console #switcher-hide {
           top: -14px;
-          float: left;
+          float: right;
           background: #f5f5f5;
           position: relative;
           cursor: pointer;
           -webkit-transition: color, background-color 0.3s ease;
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
-          transition: color, background-color 0.3s ease; }
+          transition: color, background-color 0.3s ease;
+          z-index: 9; }
     body .app.light .inner-container {
       overflow-y: auto; }
     body .app.light #snippets-container {
       color: #0f262f;
       background-color: #dfdfdf;
       padding: 45px 55px;
+      height: 800px;
       -webkit-transition: color, background-color 0.3s ease;
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
-      transition: color, background-color 0.3s ease; }
+      transition: color, background-color 0.3s ease;
+      overflow-y: auto; }
       body .app.light #snippets-container .avatar {
+        height: 70px;
+        width: 70px;
+        border-radius: 50%;
         margin-bottom: 15px; }
       body .app.light #snippets-container h2 {
         font-size: 24px;
@@ -348,11 +349,15 @@ body {
                 margin-left: 18px;
                 text-decoration: none;
                 color: #0f262f; }
-          body .app.light #snippets-container #snippets .group .snippet pre.code {
-            background-color: #f0efef;
-            margin: 40px 0 40px 26px;
-            padding: 15px 15px;
-            font-family: monospace; }
+          body .app.light #snippets-container #snippets .group .snippet a {
+            text-decoration: none; }
+            body .app.light #snippets-container #snippets .group .snippet a pre.code {
+              background-color: #f0efef;
+              margin: 40px 0 40px 26px;
+              padding: 15px 15px;
+              font-family: monospace;
+              text-decoration: none;
+              color: #0f262f; }
           body .app.light #snippets-container #snippets .group .snippet:last-child {
             position: relative; }
             body .app.light #snippets-container #snippets .group .snippet:last-child:before {
@@ -363,10 +368,12 @@ body {
               left: 0;
               height: 100%; }
     body .app.light #settings-container {
+      height: 800px;
       -webkit-transition: color, background-color 0.3s ease;
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease;
+      overflow-y: auto;
       color: #0f262f;
       background-color: #dfdfdf;
       padding: 45px 45px;
@@ -381,8 +388,7 @@ body {
         color: #0f262f;
         margin-bottom: 20px;
         display: block;
-        position: relative;
-        z-index: 1; }
+        position: relative; }
         body .app.light #settings-container h2:not(:first-child) {
           margin-top: 35px; }
         body .app.light #settings-container h2:before {
@@ -396,8 +402,7 @@ body {
           left: 0;
           right: 0;
           bottom: 0;
-          width: 100%;
-          z-index: -1; }
+          width: 100%; }
         body .app.light #settings-container h2 span {
           background-color: #dfdfdf;
           padding: 0 15px 0 0; }

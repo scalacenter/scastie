@@ -2,8 +2,6 @@ package com.olegych.scastie.client
 
 import japgolly.scalajs.react._, vdom.all._
 
-import iconic._
-
 object RunButton {
 
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
@@ -23,7 +21,7 @@ object RunButton {
                title := s"Run Code ($ctrl + Enter)",
                `class` := "btn selected run-button",
                selected(View.Editor))(
-              mediaPlay(`class` := "runnable"),
+              i(`class` := "fa fa-play"),
               "Run"
             )
           } else {
