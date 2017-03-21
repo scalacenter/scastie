@@ -99,11 +99,19 @@ object SideBar {
           case View.BuildSettings =>
             Seq(
               RunButton(state, backend),
+              formatCodeButton,
+              ClearButton(state, backend),
+              WorksheetButton(state, backend),
+              sharing,
               BuildSettingsButton(state, backend)
             )
           case View.CodeSnippets =>
             Seq(
               RunButton(state, backend),
+              formatCodeButton,
+              ClearButton(state, backend),
+              WorksheetButton(state, backend),
+              sharing,
               BuildSettingsButton(state, backend)
             )
         }
