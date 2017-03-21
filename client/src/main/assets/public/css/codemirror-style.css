@@ -124,8 +124,7 @@ Solarized color pallette: http://ethanschoonover.com/solarized/img/solarized-pal
   .cm-s-solarized.cm-s-dark .CodeMirror-simplescroll-vertical, .cm-s-solarized.cm-s-dark .CodeMirror-hints {
     background: #002b36; }
   .cm-s-solarized.cm-s-dark .CodeMirror-simplescroll-vertical div, .cm-s-solarized.cm-s-dark .CodeMirror-hints div {
-    background: #073642;
-    box-shadow: inset -1px -1px 5px 1px rgba(0, 0, 0, 0.75); }
+    background: #859900; }
   .cm-s-solarized.cm-s-light .CodeMirror-hints {
     background-color: #eee8d5; }
   .cm-s-solarized.cm-s-light .CodeMirror-widget, .cm-s-solarized.cm-s-light .CodeMirror-hint-active {
@@ -137,11 +136,7 @@ Solarized color pallette: http://ethanschoonover.com/solarized/img/solarized-pal
   .cm-s-solarized.cm-s-light .CodeMirror-simplescroll-vertical, .cm-s-solarized.cm-s-light .CodeMirror-hints {
     background: #fdf6e3; }
   .cm-s-solarized.cm-s-light .CodeMirror-simplescroll-vertical div, .cm-s-solarized.cm-s-light .CodeMirror-hints div {
-    background: #eee8d5;
-    box-shadow: inset -1px -1px 5px 1px grey; }
-
-.CodeMirror {
-  height: 100%; }
+    background: #00acdb; }
 
 .CodeMirror-scroll {
   height: 100%;
@@ -347,13 +342,6 @@ body.mac kbd.pc, body.pc kbd.mac {
     padding: 0;
     width: calc(100% -  150px) !important; }
 
-body {
-  margin: 0;
-  overflow: hidden; }
-
-html, body, #code {
-  height: 100%; }
-
 kbd {
   padding: .1em .6em;
   border: 1px solid #ccc;
@@ -371,8 +359,11 @@ kbd {
   line-height: 1.4;
   white-space: nowrap; }
 
+.CodeMirror-simplescroll-vertical {
+  width: 0px; }
+
 .CodeMirror-simplescroll-vertical div {
-  width: 20px; }
+  width: 10px; }
 
 .CodeMirror-simplescroll-vertical div, iframe {
   border: none; }

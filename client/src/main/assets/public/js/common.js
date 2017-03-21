@@ -4,6 +4,7 @@ $(document).ready(function() {
     if(handler.length) {
         codeHeight = $('#handler').offset().top;
     }
+    var height = $(window).height();
     var topBarHeight = $('#topbar').height();
     var resizing = false;
     var content = $('#content');
@@ -11,7 +12,8 @@ $(document).ready(function() {
     var consoleWindow = $('#console');
     var sideBarWidth = $('#sidebar').width();
 
-    codeWindow.css('width', content.width() - sideBarWidth/3);
+    codeWindow.css('height', height - topBarHeight - 33);
+    codeWindow.css('width', content.width());
     consoleWindow.css('width', codeWindow.width());
     $('#code-input').css('height', codeWindow.height());
     $('.actions-container').css('height', $(window).height());
@@ -22,9 +24,12 @@ $(document).ready(function() {
         consoleWindow.width(windowWidth - (sideBarWidth + padding));
 
         var height = $(window).height();
-        codeWindow.css('height', height - topBarHeight - consoleWindow.height() - padding - 28);
-        $('.inner-container').css('height', height - topBarHeight - 55);
-        $('#code-input').css('height', codeWindow.height());
+
+        codeWindow.css('height', height - topBarHeight - 33);
+        $('#editor-container').css('height', codeWindow.height());
+        $('.inner-container').css('height', height - topBarHeight - 33);
+        $('.CodeMirror').css('height', codeWindow.height());
+        $('.CodeMirror-scroll').css('height', codeWindow.height());
         $('#sidebar').css('height', height);
         height = height < 475 ? 475 : height - padding;
         $('.actions-container').css('height', height);
@@ -44,8 +49,10 @@ $(document).ready(function() {
     $(document).mousemove(function(e) {
         if(resizing && e.pageY >= topBarHeight + 50) {
             codeHeight = e.pageY - topBarHeight;
-            codeWindow.css('height', codeHeight + 'px');
-            $('#code-input').css('height', codeWindow.height());
+            codeWindow.css('height', codeHeight + 38);
+            $('#editor-container').css('height', codeWindow.height());
+            $('.CodeMirror').css('height', codeWindow.height());
+            $('.CodeMirror-scroll').css('height', codeWindow.height());
 
             var consoleHeight = window.innerHeight - topBarHeight * 1.5 - codeHeight;
             consoleWindow.css('height', consoleHeight + 'px');

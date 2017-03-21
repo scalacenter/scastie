@@ -271,7 +271,6 @@ body {
           transition: color, background-color 0.3s ease;
           z-index: 9; }
         body .app.dark #editor-container #console #switcher-hide {
-          margin-right: 149px;
           top: -14px;
           float: right;
           background: #002b36;
