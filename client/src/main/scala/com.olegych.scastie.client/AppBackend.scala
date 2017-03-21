@@ -145,6 +145,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleConsole(): Callback = scope.modState(_.toggleConsole)
   def toggleConsole(e: ReactEventI): Callback = toggleConsole()
 
+  def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
+
   def toggleHelpAtStartup(): Callback =
     scope.modState(_.toggleHelpAtStartup)
 

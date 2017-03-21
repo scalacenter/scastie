@@ -4,6 +4,9 @@ package client
 import com.olegych.scastie.api.SnippetId
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
+import org.scalajs.dom
+
+import scala.scalajs.js
 
 object SideBar {
 
@@ -125,11 +128,14 @@ object SideBar {
             )
 
         nav(`id` := "sidebar")(
-          a(`class` := "logo", href := "#")(
-            img(src := "/assets/public/img/icon-scastie.png"),
-            h1("Scastie")
-          ),
-          div(`class` := "actions-container")(
+          div(`class` := "actions-container",
+            `style` :=
+              js.Dictionary(
+                "height" -> s"${dom.window.innerHeight}px"))(
+            a(`class` := "logo", href := "#")(
+              img(src := "/assets/public/img/icon-scastie.png"),
+              h1("Scastie")
+            ),
             ul(`class` := "actions")(
               currentButtonsForSelectedView
             ),

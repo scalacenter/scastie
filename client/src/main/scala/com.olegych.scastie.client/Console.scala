@@ -1,8 +1,11 @@
 package com.olegych.scastie.client
 
 import japgolly.scalajs.react._
+import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLPreElement
 import vdom.all._
+
+import scala.scalajs.js
 
 object Console {
 
@@ -18,7 +21,11 @@ object Console {
         else (TagMod(display.none), TagMod(display.block))
 
       div(`id` := "console-container")(
-        div(`id` := "console")(
+        div(`id` := "console",
+          `style` :=
+            js.Dictionary(
+              "height" -> s"${dom.window.innerHeight}px",
+              "width" -> s"${dom.window.innerWidth}px"))(
           displayConsole,
           div(`id` := "handler"),
           div(`id` := "switcher-hide", onClick ==> backend.toggleConsole)(

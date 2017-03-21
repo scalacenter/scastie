@@ -159,6 +159,15 @@ object Editor {
                        current: Option[AppState],
                        next: AppState): Callback = {
 
+    def setSize() = {
+      if (current.map(_.windowHasResized) != Some(next.windowHasResized)) {
+        val height = dom.window.innerHeight - 103
+        val width = dom.window.innerWidth - 149
+
+        editor.setSize(width.toString, height.toString)
+      }
+    }
+
     def setTheme() = {
       if (current.map(_.isDarkTheme) != Some(next.isDarkTheme)) {
         val theme =
@@ -429,6 +438,7 @@ object Editor {
 
     Callback(setTheme()) >>
       Callback(setCode()) >>
+      Callback(setSize()) >>
       setProblemAnnotations() >>
       setRenderAnnotations() >>
       setRuntimeError >>

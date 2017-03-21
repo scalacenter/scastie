@@ -1,13 +1,17 @@
 package com.olegych.scastie
 package client
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import org.scalajs.dom
+import vdom.all._
+import org.scalajs.dom.raw.{HTMLElement, HTMLPreElement}
 
-import org.scalajs.dom.raw.HTMLPreElement
+import scala.scalajs.js
 
 object MainPanel {
 
   private val consoleElement = Ref[HTMLPreElement]("console")
+  private val topbarElement = Ref[HTMLElement]("topbar")
   private val component =
     ReactComponentB[(AppState, AppBackend, AppProps)]("MainPanel").render_P {
       case (state, backend, props) =>
@@ -64,8 +68,18 @@ object MainPanel {
         div(`class` := "main-panel")(
           TopBar(state, backend),
           div(`id` := "content")(
-            div(`id`:= "editor-container", `class` := "inner-container", show(View.Editor))(
-              div(`id`:= "code")(
+            div(`id`:= "editor-container",
+              `class` := "inner-container",
+              `style` :=
+                js.Dictionary(
+                  "height" -> s"${dom.window.innerHeight - 103}px",
+                  "width" -> s"${dom.window.innerWidth - 149}px"),
+              show(View.Editor))(
+              div(`id`:= "code",
+                `style` :=
+                  js.Dictionary(
+                    "height" -> s"${dom.window.innerHeight - 103}px",
+                    "width" -> s"${dom.window.innerWidth - 149}px"))()(
                 Editor(helpState, backend),
                 embeddedMenu
               ),
