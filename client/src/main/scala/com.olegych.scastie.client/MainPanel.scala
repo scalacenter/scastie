@@ -2,9 +2,9 @@ package com.olegych.scastie
 package client
 
 import japgolly.scalajs.react._
-import org.scalajs.dom
 import vdom.all._
 import org.scalajs.dom.raw.{HTMLElement, HTMLPreElement}
+import org.scalajs.dom.window._
 
 object MainPanel {
 
@@ -63,9 +63,14 @@ object MainPanel {
             )
           } else state
 
+        val topBarHeight = 70
+        val sideBarWidth = 149
+        val consoleBarHeight: Double = 33
+        lazy val consoleHeight = innerHeight*0.25
+
         def editorStyle: TagMod = Seq(
-          height := dom.window.innerHeight - 103,
-          width := dom.window.innerWidth - 149)
+          height := innerHeight - topBarHeight - (if(state.consoleIsOpen) consoleHeight else consoleBarHeight),
+          width := innerWidth - sideBarWidth)
 
         div(`class` := "main-panel")(
           TopBar(state, backend),

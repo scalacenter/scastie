@@ -5,6 +5,7 @@ import api._
 import japgolly.scalajs.react._
 import vdom.all._
 import org.scalajs.dom
+import org.scalajs.dom.window._
 import org.scalajs.dom.raw.HTMLScriptElement
 
 object App {
@@ -28,8 +29,8 @@ object App {
             else "app embedded"
 
           def appStyle: TagMod = Seq(
-            height := dom.window.innerHeight,
-            width := dom.window.innerWidth)
+            height := innerHeight,
+            width := innerWidth)
 
           div(`class` := s"$appClass $theme", appStyle)(
             sideBar,

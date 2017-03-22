@@ -81,13 +81,13 @@ Solarized color pallette: http://ethanschoonover.com/solarized/img/solarized-pal
     .cm-s-solarized.cm-s-dark .CodeMirror-gutters {
       background-color: #073642; }
     .cm-s-solarized.cm-s-dark .CodeMirror-gutter-filler {
-      background-color: #002b36; }
+      background-color: #15414c; }
     .cm-s-solarized.cm-s-dark .CodeMirror-selected, .cm-s-solarized.cm-s-dark .cm-searching {
       background: rgba(255, 255, 255, 0.1); }
     .cm-s-solarized.cm-s-dark .CodeMirror-activeline-background {
       background-color: #073642; }
     .cm-s-solarized.cm-s-dark .CodeMirror-scrollbar-filler {
-      background-color: #002b36; }
+      background-color: #15414c; }
   .cm-s-solarized.cm-s-light {
     background-color: #f5f5f5f;
     color: #657b83; }
@@ -96,13 +96,13 @@ Solarized color pallette: http://ethanschoonover.com/solarized/img/solarized-pal
     .cm-s-solarized.cm-s-light .CodeMirror-gutters {
       background-color: #eee8d5; }
     .cm-s-solarized.cm-s-light .CodeMirror-gutter-filler {
-      background-color: #fdf6e3; }
+      background-color: #f5f5f5; }
     .cm-s-solarized.cm-s-light .CodeMirror-selected, .cm-s-solarized.cm-s-light .cm-searching {
       background: rgba(0, 0, 0, 0.1); }
     .cm-s-solarized.cm-s-light .CodeMirror-activeline-background {
       background-color: #eee8d5; }
     .cm-s-solarized.cm-s-light .CodeMirror-scrollbar-filler {
-      background-color: #fdf6e3; }
+      background-color: #f5f5f5; }
   .cm-s-solarized .CodeMirror-gutters {
     padding: 0 15px 0 10px; }
   .cm-s-solarized .CodeMirror-linenumber {
@@ -121,9 +121,9 @@ Solarized color pallette: http://ethanschoonover.com/solarized/img/solarized-pal
   .cm-s-solarized.cm-s-dark .CodeMirror-dialog {
     background-color: #073642;
     color: #586e75; }
-  .cm-s-solarized.cm-s-dark .CodeMirror-simplescroll-vertical, .cm-s-solarized.cm-s-dark .CodeMirror-hints {
-    background: #002b36; }
-  .cm-s-solarized.cm-s-dark .CodeMirror-simplescroll-vertical div, .cm-s-solarized.cm-s-dark .CodeMirror-hints div {
+  .cm-s-solarized.cm-s-dark .CodeMirror-simplescroll-vertical, .cm-s-solarized.cm-s-dark .CodeMirror-simplescroll-horizontal, .cm-s-solarized.cm-s-dark .CodeMirror-hints {
+    background: #15414c; }
+  .cm-s-solarized.cm-s-dark .CodeMirror-simplescroll-vertical div, .cm-s-solarized.cm-s-dark .CodeMirror-simplescroll-horizontal div, .cm-s-solarized.cm-s-dark .CodeMirror-hints div {
     background: #859900; }
   .cm-s-solarized.cm-s-light .CodeMirror-hints {
     background-color: #eee8d5; }
@@ -133,9 +133,9 @@ Solarized color pallette: http://ethanschoonover.com/solarized/img/solarized-pal
   .cm-s-solarized.cm-s-light .CodeMirror-dialog {
     background-color: #eee8d5;
     color: #93a1a1; }
-  .cm-s-solarized.cm-s-light .CodeMirror-simplescroll-vertical, .cm-s-solarized.cm-s-light .CodeMirror-hints {
-    background: #fdf6e3; }
-  .cm-s-solarized.cm-s-light .CodeMirror-simplescroll-vertical div, .cm-s-solarized.cm-s-light .CodeMirror-hints div {
+  .cm-s-solarized.cm-s-light .CodeMirror-simplescroll-vertical, .cm-s-solarized.cm-s-light .CodeMirror-simplescroll-horizontal, .cm-s-solarized.cm-s-light .CodeMirror-hints {
+    background: #f5f5f5; }
+  .cm-s-solarized.cm-s-light .CodeMirror-simplescroll-vertical div, .cm-s-solarized.cm-s-light .CodeMirror-simplescroll-horizontal div, .cm-s-solarized.cm-s-light .CodeMirror-hints div {
     background: #00acdb; }
 
 .CodeMirror-scroll {
@@ -362,10 +362,16 @@ kbd {
 .CodeMirror-simplescroll-vertical {
   width: 0px; }
 
+.CodeMirror-simplescroll-horizontal {
+  height: 0px; }
+
 .CodeMirror-simplescroll-vertical div {
   width: 10px; }
 
-.CodeMirror-simplescroll-vertical div, iframe {
+.CodeMirror-simplescroll-horizontal {
+  height: 10px; }
+
+.CodeMirror-simplescroll-vertical div, .CodeMirror-simplescroll-horizontal div, iframe {
   border: none; }
 
 noscript {

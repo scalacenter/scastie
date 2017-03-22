@@ -222,6 +222,8 @@ body {
       body .app.light #editor-container i.fa {
         width: 30px;
         text-align: center; }
+      body .app.light #editor-container #code {
+        overflow: hidden; }
       body .app.light #editor-container #switcher-show {
         right: 0;
         left: 149px;
@@ -280,6 +282,8 @@ body {
           -o-transition: color, background-color 0.3s ease;
           transition: color, background-color 0.3s ease;
           z-index: 9; }
+        body .app.light #editor-container #console .output-console {
+          padding-top: 10px; }
     body .app.light .inner-container {
       overflow-y: auto; }
     body .app.light #snippets-container {
