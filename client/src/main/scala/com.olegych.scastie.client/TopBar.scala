@@ -79,7 +79,7 @@ object TopBar {
                 li(onClick ==> feedback,
                   title := "Open Gitter.im Chat to give us feedback",
                   `class` := "btn")(
-                  i(`class` := "fa fa-github"),
+                  i(`class` := "fa fa-gitter"),
                   "Scastie's gitter"
                 ),
                 li(onClick ==> issue,
