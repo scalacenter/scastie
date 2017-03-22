@@ -69,6 +69,14 @@ object TopBar {
         def actionsTopBarStyle: TagMod =
           if (innerWidth < topBarMinWidth) TagMod(left := sideBarWidth) else EmptyTag
 
+        val userAvatar = state.user match {
+          case Some(user) =>
+              img(src := user.avatar_url + "&s=30",
+                alt := "Your Github Avatar",
+                `class` := "avatar")
+          case None => i(`class` := "fa fa-user-circle")
+        }
+
         nav(`id` := "topbar")(
           ul(`class` := "actions", actionsTopBarStyle)(
             li(`class` := "btn dropdown")(
@@ -91,7 +99,7 @@ object TopBar {
               )
             ),
             li(`class` := "btn dropdown")(
-              i(`class` := "fa fa-user-circle"),
+              userAvatar,
               "Login",
               i(`class` := "fa fa-caret-down"),
               ul(`class` := "subactions")(

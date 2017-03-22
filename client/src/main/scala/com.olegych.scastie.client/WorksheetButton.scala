@@ -12,7 +12,8 @@ object WorksheetButton {
       case (state, backend) =>
 
         val worksheetModeSelected =
-          if (state.inputs.worksheetMode) TagMod(`class` := "enabled")
+          if (state.inputs.worksheetMode && state.view != View.Editor) TagMod(`class` := "enabled alpha")
+          else if (state.inputs.worksheetMode) TagMod(`class` := "enabled")
           else EmptyTag
 
         val worksheetModeToogleLabel =

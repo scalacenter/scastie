@@ -47,18 +47,23 @@ object CodeSnippets {
           assert(maybeRouter.isDefined,
                  "should not be able to access profile view from embedded")
           val router = maybeRouter.get
-          val user = state.user.get
+
+          val (userAvatar, userName, userLogin) = state.user match {
+            case Some(user) =>
+              (div(`class` := "avatar")(
+                img(src := user.avatar_url + "&s=70",
+                  alt := "Your Github Avatar",
+                  `class` := "image-button avatar")
+              ), user.name, user.login)
+            case None => (i(`class` := "fa fa-user-circle"), Some("User name"), "Github user")
+          }
 
           div(`id` := "code-snippets-container")(
-            div(`class` := "avatar")(
-              img(src := user.avatar_url + "&s=70",
-                alt := "Your Github Avatar",
-                `class` := "image-button avatar")
-            ),
-            h2(user.name),
+            userAvatar,
+            h2(userName),
             div(`class` := "nickname")(
               i(`class` := "fa fa-github"),
-              user.login
+              userLogin
             ),
 
             h2("Saved Code Snippets"),

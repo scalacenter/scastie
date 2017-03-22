@@ -82,6 +82,14 @@ body {
         display: inline-block;
         right: 34px;
         top: 0; }
+        body .app.light #topbar ul.actions .avatar {
+          height: 30px;
+          width: 30px;
+          border-radius: 50%;
+          display: inline-block;
+          margin-left: 10px;
+          margin-right: 10px;
+          vertical-align: middle; }
         body .app.light #topbar ul.actions li.dropdown {
           height: 70px;
           position: relative;
@@ -191,6 +199,8 @@ body {
           color: #002b36; }
           body .app.light #sidebar .actions-container #workSheetIndicator.enabled {
             color: #859900; }
+            body .app.light #sidebar .actions-container #workSheetIndicator.enabled.alpha {
+              opacity: 0.3; }
         body .app.light #sidebar .actions-container .actions .btn {
           cursor: pointer;
           padding-left: 20px;
