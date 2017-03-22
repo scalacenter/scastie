@@ -40,6 +40,8 @@ body {
   -moz-transition: color, background-color 0.3s ease;
   -o-transition: color, background-color 0.3s ease;
   transition: color, background-color 0.3s ease; }
+  body .root {
+    height: 100%; }
   body .app.dark {
     color: #5d7c83;
     background: #15414c;
@@ -60,6 +62,10 @@ body {
       font-size: 150%; }
     body .app.dark .hide {
       display: none; }
+    body .app.dark i.fa {
+      font-size: 16px;
+      width: 20px;
+      text-align: left; }
     body .app.dark #topbar {
       flex-direction: row;
       text-align: right;
@@ -88,8 +94,9 @@ body {
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
           transition: color, background-color 0.3s ease; }
-          body .app.dark #topbar ul.actions li.dropdown i {
-            margin-right: 5px; }
+          body .app.dark #topbar ul.actions li.dropdown i.fa {
+            width: 30px;
+            text-align: center; }
           body .app.dark #topbar ul.actions li.dropdown.selected, body .app.dark #topbar ul.actions li.dropdown:hover {
             background-color: #073642;
             color: #ffffff; }
@@ -106,14 +113,16 @@ body {
             top: 50px;
             width: 134px;
             left: 10px;
-            margin: 10px; }
+            margin: 10px;
+            z-index: 11; }
             body .app.dark #topbar ul.actions li.dropdown ul.subactions .btn {
               color: #fffffff;
               display: block;
               width: 134px;
               background: #073642;
               padding: 10px;
-              border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+              border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+              /* EXTENDING FONT AWESOME */ }
               body .app.dark #topbar ul.actions li.dropdown ul.subactions .btn:first-of-type {
                 border-top-left-radius: 2px;
                 border-top-right-radius: 2px; }
@@ -124,6 +133,17 @@ body {
               body .app.dark #topbar ul.actions li.dropdown ul.subactions .btn:hover {
                 background-color: #073642;
                 color: #859900; }
+                body .app.dark #topbar ul.actions li.dropdown ul.subactions .btn:hover .fa-gitter:before {
+                  background-position: 0px -15px; }
+              body .app.dark #topbar ul.actions li.dropdown ul.subactions .btn .fa-gitter:before {
+                position: relative;
+                top: 2px;
+                content: "  ";
+                display: inline-block;
+                background: url(../img/gitter-icon-dark.png);
+                background-repeat: no-repeat;
+                width: 10px;
+                height: 15px; }
     body .app.dark #sidebar {
       float: left;
       height: 5000px;
@@ -155,11 +175,7 @@ body {
           display: inline-block; }
       body .app.dark #sidebar .actions-container {
         position: relative;
-        overflow-y: auto;
-        overflow-x: hidden; }
-        body .app.dark #sidebar .actions-container i.fa {
-          font-size: 16px;
-          width: 20px; }
+        overflow: hidden; }
         body .app.dark #sidebar .actions-container ul.submenu {
           display: none; }
           body .app.dark #sidebar .actions-container ul.submenu li.btn {
@@ -214,23 +230,11 @@ body {
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease; }
+      body .app.dark #editor-container i.fa {
+        width: 30px;
+        text-align: center; }
       body .app.dark #editor-container #code {
-        height: 25%;
-        display: block; }
-        body .app.dark #editor-container #code #code-input {
-          width: 100%;
-          padding: 28px;
-          font-family: monospace;
-          font-size: 16px;
-          color: #ffffff;
-          background-color: #15414c;
-          border: none;
-          -webkit-transition: color, background-color 0.3s ease;
-          -moz-transition: color, background-color 0.3s ease;
-          -o-transition: color, background-color 0.3s ease;
-          transition: color, background-color 0.3s ease; }
-          body .app.dark #editor-container #code #code-input:focus {
-            outline: none; }
+        overflow: hidden; }
       body .app.dark #editor-container #switcher-show {
         right: 0;
         left: 149px;
@@ -247,7 +251,8 @@ body {
         -webkit-transition: color, background-color 0.3s ease;
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
-        transition: color, background-color 0.3s ease; }
+        transition: color, background-color 0.3s ease;
+        z-index: 9; }
       body .app.dark #editor-container #console {
         box-sizing: border-box;
         position: absolute;
@@ -262,7 +267,8 @@ body {
         -webkit-transition: color, background-color 0.3s ease;
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
-        transition: color, background-color 0.3s ease; }
+        transition: color, background-color 0.3s ease;
+        z-index: 9; }
         body .app.dark #editor-container #console #handler {
           width: 100%;
           height: 6px;
@@ -274,17 +280,21 @@ body {
           -webkit-transition: color, background-color 0.3s ease;
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
-          transition: color, background-color 0.3s ease; }
+          transition: color, background-color 0.3s ease;
+          z-index: 9; }
         body .app.dark #editor-container #console #switcher-hide {
           top: -14px;
-          float: left;
+          float: right;
           background: #002b36;
           position: relative;
           cursor: pointer;
           -webkit-transition: color, background-color 0.3s ease;
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
-          transition: color, background-color 0.3s ease; }
+          transition: color, background-color 0.3s ease;
+          z-index: 9; }
+        body .app.dark #editor-container #console .output-console {
+          padding-top: 10px; }
     body .app.dark .inner-container {
       overflow-y: auto; }
     body .app.dark #snippets-container {
@@ -376,129 +386,206 @@ body {
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease;
+      overflow-y: auto;
       color: #fff;
       background-color: #15414c;
-      padding: 45px 45px;
       font-size: 15px; }
-      body .app.dark #settings-container h2 {
-        -webkit-transition: color, background-color 0.3s ease;
-        -moz-transition: color, background-color 0.3s ease;
-        -o-transition: color, background-color 0.3s ease;
-        transition: color, background-color 0.3s ease;
-        font-size: 24px;
-        font-weight: bold;
-        color: #fff;
-        margin-bottom: 20px;
-        display: block;
-        position: relative;
-        z-index: 1; }
-        body .app.dark #settings-container h2:not(:first-child) {
-          margin-top: 35px; }
-        body .app.dark #settings-container h2:before {
-          border-top: 2px solid rgba(255, 255, 255, 0.12);
-          content: "";
-          margin: 0 auto;
-          /* this centers the line to the full width specified */
-          position: absolute;
-          /* positioning must be absolute here, and relative positioning must be applied to the parent */
-          top: 50%;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          width: 100%;
-          z-index: -1; }
-        body .app.dark #settings-container h2 span {
-          background-color: #15414c;
-          padding: 0 15px 0 0; }
-      body .app.dark #settings-container #target li {
-        display: inline;
-        list-style-type: none;
-        padding-right: 20px; }
-      body .app.dark #settings-container input[type="radio"] {
-        display: none; }
-        body .app.dark #settings-container input[type="radio"] + label.radio {
-          font-size: 15px;
-          line-height: 18px;
-          display: inline-block;
-          margin-right: 30px; }
-          body .app.dark #settings-container input[type="radio"] + label.radio:before {
+      body .app.dark #settings-container #build-settings-container {
+        padding: 45px 45px; }
+        body .app.dark #settings-container #build-settings-container h2 {
+          -webkit-transition: color, background-color 0.3s ease;
+          -moz-transition: color, background-color 0.3s ease;
+          -o-transition: color, background-color 0.3s ease;
+          transition: color, background-color 0.3s ease;
+          font-size: 24px;
+          font-weight: bold;
+          color: #fff;
+          margin-bottom: 20px;
+          display: block;
+          position: relative;
+          z-index: 1; }
+          body .app.dark #settings-container #build-settings-container h2:not(:first-child) {
+            margin-top: 35px; }
+          body .app.dark #settings-container #build-settings-container h2:before {
+            border-top: 2px solid rgba(255, 255, 255, 0.12);
+            content: "";
+            margin: 0 auto;
+            /* this centers the line to the full width specified */
+            position: absolute;
+            /* positioning must be absolute here, and relative positioning must be applied to the parent */
+            top: 50%;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            z-index: -1; }
+          body .app.dark #settings-container #build-settings-container h2 span {
+            background-color: #15414c;
+            padding: 0 15px 0 0; }
+        body .app.dark #settings-container #build-settings-container #target li {
+          display: inline;
+          list-style-type: none;
+          padding-right: 20px; }
+        body .app.dark #settings-container #build-settings-container #suggestedVersions li {
+          display: inline;
+          list-style-type: none;
+          padding-right: 20px; }
+        body .app.dark #settings-container #build-settings-container input[type="radio"] {
+          display: none; }
+          body .app.dark #settings-container #build-settings-container input[type="radio"] + label.radio {
+            font-size: 15px;
             line-height: 18px;
-            content: " ";
-            width: 0px;
-            height: 0px;
-            border-radius: 50%;
-            margin-right: 5px;
-            border: 9px solid #073642;
-            background-color: #073642;
             display: inline-block;
-            margin-bottom: -4px;
+            margin-right: 30px; }
+            body .app.dark #settings-container #build-settings-container input[type="radio"] + label.radio:before {
+              line-height: 18px;
+              content: " ";
+              width: 8px;
+              height: 8px;
+              min-width: 8px;
+              min-height: 8px;
+              border-radius: 50%;
+              margin-right: 5px;
+              border: 5px solid #073642;
+              background-color: #073642;
+              display: inline-block;
+              margin-bottom: -4px;
+              box-sizing: content-box;
+              -webkit-transition: color, background-color 0.3s ease;
+              -moz-transition: color, background-color 0.3s ease;
+              -o-transition: color, background-color 0.3s ease;
+              transition: color, background-color 0.3s ease; }
+          body .app.dark #settings-container #build-settings-container input[type="radio"]:checked + label.radio:before {
+            content: " ";
+            width: 8px !important;
+            height: 8px !important;
+            border-radius: 50%;
+            border: 5px solid #073642 !important;
+            background-color: #859900 !important;
             -webkit-transition: color, background-color 0.3s ease;
             -moz-transition: color, background-color 0.3s ease;
             -o-transition: color, background-color 0.3s ease;
             transition: color, background-color 0.3s ease; }
-        body .app.dark #settings-container input[type="radio"]:checked + label.radio:before {
-          content: " ";
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          border: 5px solid #073642;
-          background-color: #859900;
-          -webkit-transition: color, background-color 0.3s ease;
-          -moz-transition: color, background-color 0.3s ease;
-          -o-transition: color, background-color 0.3s ease;
-          transition: color, background-color 0.3s ease; }
-      body .app.dark #settings-container .select-wrapper {
-        position: relative; }
-        body .app.dark #settings-container .select-wrapper:after {
-          content: "\f0d7";
-          font-family: FontAwesome;
+        body .app.dark #settings-container #build-settings-container .select-wrapper {
+          position: relative;
+          display: inline-block; }
+          body .app.dark #settings-container #build-settings-container .select-wrapper:after {
+            content: "\f0d7";
+            font-family: FontAwesome;
+            color: #fff;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 13px; }
+        body .app.dark #settings-container #build-settings-container select#version {
+          display: inline-block;
+          width: 150px; }
+        body .app.dark #settings-container #build-settings-container select, body .app.dark #settings-container #build-settings-container input {
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+          width: 100%;
+          height: 36px;
+          line-height: 36px;
+          padding-left: 14px;
+          background-color: #073642;
           color: #fff;
-          position: absolute;
-          top: 10px;
-          right: 16px;
-          font-size: 13px; }
-      body .app.dark #settings-container select, body .app.dark #settings-container input {
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        height: 36px;
-        line-height: 36px;
-        padding-left: 14px;
-        background-color: #073642;
-        color: #fff;
-        border-radius: 2px;
-        border: none;
-        width: 100%;
-        display: block;
-        font-size: 15px;
-        box-sizing: border-box; }
-        body .app.dark #settings-container select::-moz-placeholder, body .app.dark #settings-container input::-moz-placeholder {
-          color: #fff;
-          opacity: 1; }
-        body .app.dark #settings-container select:-moz-placeholder, body .app.dark #settings-container input:-moz-placeholder {
-          color: #fff;
-          opacity: 1; }
-        body .app.dark #settings-container select::-webkit-input-placeholder, body .app.dark #settings-container input::-webkit-input-placeholder {
-          color: #fff;
-          opacity: 1; }
-        body .app.dark #settings-container select:-ms-input-placeholder, body .app.dark #settings-container input:-ms-input-placeholder {
-          color: #fff;
-          opacity: 1; }
-      body .app.dark #settings-container textarea, body .app.dark #settings-container pre#output {
-        padding: 20px;
-        background-color: #073642;
-        color: #fff;
-        border-radius: 2px;
-        border: none;
-        width: 100%;
-        display: block;
-        font-size: 15px;
-        box-sizing: border-box;
-        margin-top: 10px;
-        margin-bottom: 30px;
-        min-height: 150px;
-        height: 175px;
-        overflow-y: auto;
-        font-family: monospace; }
-      body .app.dark #settings-container pre#output {
-        height: 250px; }
+          border-radius: 2px;
+          border: none;
+          display: block;
+          font-size: 15px;
+          box-sizing: border-box; }
+          body .app.dark #settings-container #build-settings-container select::-moz-placeholder, body .app.dark #settings-container #build-settings-container input::-moz-placeholder {
+            color: #fff;
+            opacity: 1; }
+          body .app.dark #settings-container #build-settings-container select:-moz-placeholder, body .app.dark #settings-container #build-settings-container input:-moz-placeholder {
+            color: #fff;
+            opacity: 1; }
+          body .app.dark #settings-container #build-settings-container select::-webkit-input-placeholder, body .app.dark #settings-container #build-settings-container input::-webkit-input-placeholder {
+            color: #fff;
+            opacity: 1; }
+          body .app.dark #settings-container #build-settings-container select:-ms-input-placeholder, body .app.dark #settings-container #build-settings-container input:-ms-input-placeholder {
+            color: #fff;
+            opacity: 1; }
+        body .app.dark #settings-container #build-settings-container .search {
+          position: relative; }
+          body .app.dark #settings-container #build-settings-container .search .close {
+            position: absolute;
+            right: 10px;
+            top: 8px;
+            display: none;
+            cursor: pointer; }
+          body .app.dark #settings-container #build-settings-container .search .results {
+            background-color: #073642;
+            color: #fff;
+            border-radius: 2px;
+            max-height: 300px;
+            z-index: 20;
+            margin-top: 10px;
+            overflow: auto; }
+            body .app.dark #settings-container #build-settings-container .search .results i.fa {
+              font-size: 20px;
+              width: 40px;
+              text-align: center;
+              vertical-align: middle; }
+            body .app.dark #settings-container #build-settings-container .search .results .result {
+              padding: 10px;
+              display: block;
+              cursor: pointer;
+              font-size: 15px; }
+              body .app.dark #settings-container #build-settings-container .search .results .result:not(:last-child) {
+                padding-bottom: 10px; }
+              body .app.dark #settings-container #build-settings-container .search .results .result a {
+                color: #fff;
+                margin-right: 10px; }
+              body .app.dark #settings-container #build-settings-container .search .results .result .logo {
+                width: 30px;
+                height: 30px;
+                vertical-align: middle; }
+              body .app.dark #settings-container #build-settings-container .search .results .result .artifact {
+                margin-left: 20px;
+                vertical-align: middle; }
+            body .app.dark #settings-container #build-settings-container .search .results .selected {
+              background-color: #859900; }
+          body .app.dark #settings-container #build-settings-container .search .added .result {
+            padding: 10px;
+            display: block;
+            cursor: pointer;
+            font-size: 15px; }
+            body .app.dark #settings-container #build-settings-container .search .added .result:not(:last-child) {
+              padding-bottom: 10px; }
+            body .app.dark #settings-container #build-settings-container .search .added .result i.fa {
+              font-size: 20px;
+              width: 30px;
+              text-align: left;
+              vertical-align: middle; }
+            body .app.dark #settings-container #build-settings-container .search .added .result a {
+              color: #fff;
+              margin-right: 10px;
+              margin-left: 10px; }
+            body .app.dark #settings-container #build-settings-container .search .added .result .logo {
+              width: 30px;
+              height: 30px;
+              vertical-align: middle; }
+            body .app.dark #settings-container #build-settings-container .search .added .result .artifact {
+              margin-left: 20px;
+              vertical-align: middle; }
+            body .app.dark #settings-container #build-settings-container .search .added .result select {
+              -webkit-appearance: none;
+              -moz-appearance: none;
+              appearance: none;
+              display: inline-block;
+              width: 100px;
+              margin-left: 20px; }
+              body .app.dark #settings-container #build-settings-container .search .added .result select::-moz-placeholder {
+                color: #fff;
+                opacity: 1; }
+              body .app.dark #settings-container #build-settings-container .search .added .result select:-moz-placeholder {
+                color: #fff;
+                opacity: 1; }
+              body .app.dark #settings-container #build-settings-container .search .added .result select::-webkit-input-placeholder {
+                color: #fff;
+                opacity: 1; }
+              body .app.dark #settings-container #build-settings-container .search .added .result select:-ms-input-placeholder {
+                color: #fff;
+                opacity: 1; }

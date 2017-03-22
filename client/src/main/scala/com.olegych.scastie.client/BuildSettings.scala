@@ -155,8 +155,8 @@ object BuildSettings {
       "2.9.0"
     )
 
-    def selected(v1: String, v2: String) =
-      if (v1 == v2) TagMod(`class` := "selected")
+    def selected(version: String) =
+      if (!suggestedVersions.contains(version)) TagMod(`checked` := "checked")
       else EmptyTag
 
     def setScalaVersion(targetApply: String => ScalaTarget)(
@@ -165,21 +165,34 @@ object BuildSettings {
 
     val notSupported = div("Not supported")
 
-    def versionSelector(scalaVersion: String,
-                        targetApply: String => ScalaTarget) =
+    def versionSelector(scalaVersion: String, targetApply: String => ScalaTarget) ={
+
+      def handler(scalaVersion: String) =
+        TagMod(onClick ==> backend.setTarget2(targetApply(scalaVersion)))
+
       TagMod(
-        ul(
-          suggestedVersions.map(
-            version =>
-              li(onClick ==> backend.setTarget2(targetApply(version)),
-                 selected(version, scalaVersion))(version))
-        ),
-        select(name := "scalaVersion",
-               value := scalaVersion.toString,
-               onChange ==> setScalaVersion(targetApply))(
-          allVersions.map(version => option(version.toString))
+        ul(`id` := "suggestedVersions")(
+          suggestedVersions.map { version =>
+            li(handler(version))(
+              input(`type` := "radio", `id` := version, value := version, name := "scalaV"),
+              label(`for` := version, `class` := "radio", version)
+            )
+          },
+          li(handler(scalaVersion))(
+            input(`type` := "radio", `id` := scalaVersion, value := scalaVersion, name := "scalaV"),
+            label(`class` := "radio")(
+              div(`class` := "select-wrapper")(
+                select(name := "scalaVersion",
+                  value := scalaVersion.toString,
+                  onChange ==> setScalaVersion(targetApply), selected(scalaVersion))(
+                  allVersions.map(version => option(version))
+                )
+              )
+            )
+          )
         )
       )
+    }
 
     val versionSelectors =
       target match {
@@ -192,7 +205,7 @@ object BuildSettings {
         case ScalaTarget.Native => notSupported
       }
 
-    div(`class` := "select-wrapper")(
+    div(
       versionSelectors
     )
 

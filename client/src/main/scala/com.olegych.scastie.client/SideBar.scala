@@ -4,6 +4,7 @@ package client
 import com.olegych.scastie.api.SnippetId
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
+import org.scalajs.dom.window._
 
 object SideBar {
 
@@ -11,8 +12,6 @@ object SideBar {
     ReactComponentB[(AppState, AppBackend, Option[SnippetId])]("SideBar").render_P {
       case (state, backend, snippetId) =>
         import backend._
-
-        val theme = if (state.isDarkTheme) "dark" else "light"
 
         def selected(view: View) =
           if (view == currentView) TagMod(`class` := "selected") else EmptyTag
@@ -101,35 +100,44 @@ object SideBar {
           case View.BuildSettings =>
             Seq(
               RunButton(state, backend),
+              formatCodeButton,
+              ClearButton(state, backend),
+              WorksheetButton(state, backend),
+              sharing,
               BuildSettingsButton(state, backend)
             )
           case View.CodeSnippets =>
             Seq(
               RunButton(state, backend),
+              formatCodeButton,
+              ClearButton(state, backend),
+              WorksheetButton(state, backend),
+              sharing,
               BuildSettingsButton(state, backend)
             )
         }
 
         val currentButtonsForSelectedView = buttonsRibbon(currentView)
 
-        val buttonsBottom: Seq[TagMod] =
-            Seq(
-              themeButton,
-              helpButton
-            )
+        val buttonsBottom: Seq[TagMod] = Seq(themeButton, helpButton)
+
+        val sideBarMinHeight: Double = 683
+
+        def actionsContainerStyle: TagMod = TagMod(
+          height := (if (innerHeight < sideBarMinHeight) sideBarMinHeight else innerHeight))
 
         nav(`id` := "sidebar")(
-          a(`class` := "logo", href := "#")(
-            img(src := "/assets/public/img/icon-scastie.png"),
-            h1("Scastie")
-          ),
-          div(`class` := "actions-container")(
+          div(`class` := "actions-container", actionsContainerStyle)(
+            a(`class` := "logo", href := "#")(
+              img(src := "/assets/public/img/icon-scastie.png"),
+              h1("Scastie")
+            ),
             ul(`class` := "actions")(
               currentButtonsForSelectedView
+            ),
+            ul(`class` := "actions bottom")(
+              buttonsBottom
             )
-          ),
-          div(`class` := "actions bottom")(
-            buttonsBottom
           )
         )
     }.build

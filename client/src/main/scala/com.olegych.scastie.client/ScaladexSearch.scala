@@ -330,11 +330,11 @@ object ScaladexSearch {
             val scaladexLink =
               s"https://scaladex.scala-lang.org/$organization/$repository/$artifact"
 
-            li(selected)(
-              a(`class` := "scaladex",
+            div(`class` := "result", selected)(
+              a(`class` := "scaladexresult",
                 href := scaladexLink,
                 target := "_blank")(
-                iconic.externalLink
+                i(`class` := "fa fa-external-link")
               ),
               remove,
               span(handlers)(
@@ -367,13 +367,13 @@ object ScaladexSearch {
               if (searchState.selecteds.isEmpty) TagMod(display.none)
               else EmptyTag
 
-            ol(`class` := "added", hideAdded)(
+            div(`class` := "added", hideAdded)(
               searchState.selecteds.toList.sorted.map(
                 selected =>
                   renderProject(
                     selected.project,
                     selected.release.artifact,
-                    remove = iconic.x(
+                    i(`class` := "fa fa-close")(
                       onClick ==> scope.backend.removeSelected(selected),
                       `class` := "remove"
                     ),
@@ -382,32 +382,31 @@ object ScaladexSearch {
             )
           }
 
-          fieldset(`class` := "scaladex")(
-            div(`class` := "search", `id` := "library")(
-              added,
-              input.search(
-                ref := searchInputRef,
-                placeholder := "Search for 'cats'",
-                value := searchState.query,
-                onChange ==> scope.backend.setQuery,
-                onKeyDown ==> scope.backend.keyDown
-              ),
-              ol(`class` := "results", ref := projectListRef)(
-                searchState.search.zipWithIndex.toList.map {
-                  case ((project, artifact), index) =>
-                    renderProject(
-                      project,
-                      artifact,
-                      selected =
-                        selectedIndex(index, searchState.selectedIndex),
-                      handlers = TagMod(
-                        onClick ==> scope.backend.addArtifact(
-                          (project, artifact)),
-                        onMouseOver ==> scope.backend.selectIndex(index)
-                      ))
-                })
-            )
+          div(`class` := "search", `id` := "library")(
+            added,
+            input.search(
+              ref := searchInputRef,
+              placeholder := "Search for 'cats'",
+              value := searchState.query,
+              onChange ==> scope.backend.setQuery,
+              onKeyDown ==> scope.backend.keyDown
+            ),
+            div(`class` := "results", ref := projectListRef)(
+              searchState.search.zipWithIndex.toList.map {
+                case ((project, artifact), index) =>
+                  renderProject(
+                    project,
+                    artifact,
+                    selected =
+                      selectedIndex(index, searchState.selectedIndex),
+                    handlers = TagMod(
+                      onClick ==> scope.backend.addArtifact(
+                        (project, artifact)),
+                      onMouseOver ==> scope.backend.selectIndex(index)
+                    ))
+              })
           )
+
       }
       .componentDidMount(s => searchInputRef(s).tryFocus)
       .build

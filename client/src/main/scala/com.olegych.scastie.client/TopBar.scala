@@ -3,6 +3,7 @@ package com.olegych.scastie.client
 import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom
+import org.scalajs.dom.window._
 
 object TopBar {
 
@@ -12,8 +13,6 @@ object TopBar {
     ReactComponentB[(AppState, AppBackend)]("TopBar").render_P {
       case (state, backend) =>
         import backend._
-
-        val theme = if (state.isDarkTheme) "dark" else "light"
 
         def openInNewTab(link: String): Callback = {
           Callback(
@@ -64,8 +63,14 @@ object TopBar {
               )
           }
 
+        val topBarMinWidth = 500
+        val sideBarWidth = 149
+
+        def actionsTopBarStyle: TagMod =
+          if (innerWidth < topBarMinWidth) TagMod(left := sideBarWidth) else EmptyTag
+
         nav(`id` := "topbar")(
-          ul(`class` := "actions")(
+          ul(`class` := "actions", actionsTopBarStyle)(
             li(`class` := "btn dropdown")(
               i(`class` := "fa fa-comments"),
               "Feedback",
