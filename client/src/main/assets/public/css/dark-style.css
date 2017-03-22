@@ -300,87 +300,87 @@ body {
     body .app.dark #snippets-container {
       color: #fff;
       background-color: #15414c;
-      padding: 45px 55px;
-      height: 800px;
       -webkit-transition: color, background-color 0.3s ease;
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease;
       overflow-y: auto; }
-      body .app.dark #snippets-container .avatar {
-        height: 70px;
-        width: 70px;
-        border-radius: 50%;
-        margin-bottom: 15px; }
-      body .app.dark #snippets-container h2 {
-        font-size: 24px;
-        font-weight: bold;
-        color: #fff;
-        margin-bottom: 5px;
-        -webkit-transition: color, background-color 0.3s ease;
-        -moz-transition: color, background-color 0.3s ease;
-        -o-transition: color, background-color 0.3s ease;
-        transition: color, background-color 0.3s ease; }
-      body .app.dark #snippets-container .nickname {
-        font-size: 17px;
-        margin-bottom: 30px;
-        margin-top: 10px;
-        font-weight: 300; }
-        body .app.dark #snippets-container .nickname i {
-          margin-right: 3px; }
-      body .app.dark #snippets-container #snippets {
-        margin-top: 30px; }
-        body .app.dark #snippets-container #snippets .group {
-          position: relative; }
-          body .app.dark #snippets-container #snippets .group:before {
-            border-left: 3px solid #859900;
-            content: " ";
-            position: absolute;
-            top: 10px;
-            left: 0;
-            height: 100%; }
-          body .app.dark #snippets-container #snippets .group .snippet .header {
-            position: relative;
-            padding-left: 20px;
-            font-family: monospace;
-            font-weight: bold;
-            font-size: 14px; }
-            body .app.dark #snippets-container #snippets .group .snippet .header:before {
-              border-top: 3px solid #859900;
-              content: " ";
-              position: absolute;
-              top: 78px;
-              left: 0;
-              width: 20px; }
-            body .app.dark #snippets-container #snippets .group .snippet .header .update {
-              color: #859900;
-              font-weight: bold;
-              font-style: italic; }
-            body .app.dark #snippets-container #snippets .group .snippet .header .actions {
-              float: right; }
-              body .app.dark #snippets-container #snippets .group .snippet .header .actions a {
-                font-size: 18px;
-                margin-left: 18px;
-                text-decoration: none;
-                color: #fff; }
-          body .app.dark #snippets-container #snippets .group .snippet a {
-            text-decoration: none; }
-            body .app.dark #snippets-container #snippets .group .snippet a pre.code {
-              background-color: #073642;
-              margin: 40px 0 40px 26px;
-              padding: 15px 15px;
-              font-family: monospace;
-              text-decoration: none;
-              color: #fff; }
-          body .app.dark #snippets-container #snippets .group .snippet:last-child {
+      body .app.dark #snippets-container #code-snippets-container {
+        padding: 45px 45px; }
+        body .app.dark #snippets-container #code-snippets-container .avatar {
+          height: 70px;
+          width: 70px;
+          border-radius: 50%;
+          margin-bottom: 15px; }
+        body .app.dark #snippets-container #code-snippets-container h2 {
+          font-size: 24px;
+          font-weight: bold;
+          color: #fff;
+          margin-bottom: 5px;
+          -webkit-transition: color, background-color 0.3s ease;
+          -moz-transition: color, background-color 0.3s ease;
+          -o-transition: color, background-color 0.3s ease;
+          transition: color, background-color 0.3s ease; }
+        body .app.dark #snippets-container #code-snippets-container .nickname {
+          font-size: 17px;
+          margin-bottom: 30px;
+          margin-top: 10px;
+          font-weight: 300; }
+          body .app.dark #snippets-container #code-snippets-container .nickname i {
+            margin-right: 3px; }
+        body .app.dark #snippets-container #code-snippets-container #snippets {
+          margin-top: 30px; }
+          body .app.dark #snippets-container #code-snippets-container #snippets .group {
             position: relative; }
-            body .app.dark #snippets-container #snippets .group .snippet:last-child:before {
-              border-left: 3px solid #15414c;
+            body .app.dark #snippets-container #code-snippets-container #snippets .group:before {
+              border-left: 3px solid #859900;
               content: " ";
               position: absolute;
-              top: 78px;
+              top: 10px;
               left: 0;
               height: 100%; }
+            body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet .header {
+              position: relative;
+              padding-left: 20px;
+              font-family: monospace;
+              font-weight: bold;
+              font-size: 14px; }
+              body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet .header:before {
+                border-top: 3px solid #859900;
+                content: " ";
+                position: absolute;
+                top: 78px;
+                left: 0;
+                width: 20px; }
+              body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet .header .update {
+                color: #859900;
+                font-weight: bold;
+                font-style: italic; }
+              body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet .header .actions {
+                float: right; }
+                body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet .header .actions a {
+                  font-size: 18px;
+                  margin-left: 18px;
+                  text-decoration: none;
+                  color: #fff; }
+            body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet a {
+              text-decoration: none; }
+              body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet a pre.code {
+                background-color: #073642;
+                margin: 40px 0 40px 26px;
+                padding: 15px 15px;
+                font-family: monospace;
+                text-decoration: none;
+                color: #fff; }
+            body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet:last-child {
+              position: relative; }
+              body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet:last-child:before {
+                border-left: 3px solid #15414c;
+                content: " ";
+                position: absolute;
+                top: 78px;
+                left: 0;
+                height: 100%; }
     body .app.dark #settings-container {
       -webkit-transition: color, background-color 0.3s ease;
       -moz-transition: color, background-color 0.3s ease;
@@ -571,21 +571,6 @@ body {
               margin-left: 20px;
               vertical-align: middle; }
             body .app.dark #settings-container #build-settings-container .search .added .result select {
-              -webkit-appearance: none;
-              -moz-appearance: none;
-              appearance: none;
               display: inline-block;
               width: 100px;
               margin-left: 20px; }
-              body .app.dark #settings-container #build-settings-container .search .added .result select::-moz-placeholder {
-                color: #fff;
-                opacity: 1; }
-              body .app.dark #settings-container #build-settings-container .search .added .result select:-moz-placeholder {
-                color: #fff;
-                opacity: 1; }
-              body .app.dark #settings-container #build-settings-container .search .added .result select::-webkit-input-placeholder {
-                color: #fff;
-                opacity: 1; }
-              body .app.dark #settings-container #build-settings-container .search .added .result select:-ms-input-placeholder {
-                color: #fff;
-                opacity: 1; }
