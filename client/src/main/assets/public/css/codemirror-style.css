@@ -380,3 +380,15 @@ noscript {
   top: 50%;
   left: 50%;
   transform: translateX(-50%) translateY(-50%); }
+
+pre .cm-s-solarized.CodeMirror {
+  margin-top: 10px;
+  margin-bottom: 30px; }
+  pre .cm-s-solarized.CodeMirror.cm-s-light {
+    background-color: #f4f3f3; }
+    pre .cm-s-solarized.CodeMirror.cm-s-light .CodeMirror-simplescroll-horizontal, pre .cm-s-solarized.CodeMirror.cm-s-light .CodeMirror-scrollbar-filler {
+      background-color: #f4f3f3; }
+  pre .cm-s-solarized.CodeMirror.cm-s-dark {
+    background-color: #073642; }
+    pre .cm-s-solarized.CodeMirror.cm-s-dark .CodeMirror-simplescroll-horizontal, pre .cm-s-solarized.CodeMirror.cm-s-dark .CodeMirror-scrollbar-filler {
+      background-color: #073642; }

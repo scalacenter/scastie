@@ -506,24 +506,6 @@ body {
           body .app.light #settings-container #build-settings-container select:-ms-input-placeholder, body .app.light #settings-container #build-settings-container input:-ms-input-placeholder {
             color: #0f262f;
             opacity: 1; }
-        body .app.light #settings-container #build-settings-container textarea, body .app.light #settings-container #build-settings-container pre#output {
-          padding: 20px;
-          background-color: #f4f3f3;
-          color: #0f262f;
-          border-radius: 2px;
-          border: none;
-          width: 100%;
-          display: block;
-          font-size: 15px;
-          box-sizing: border-box;
-          margin-top: 10px;
-          margin-bottom: 30px;
-          min-height: 150px;
-          height: 175px;
-          overflow-y: auto;
-          font-family: monospace; }
-        body .app.light #settings-container #build-settings-container pre#output {
-          height: 250px; }
         body .app.light #settings-container #build-settings-container .scaladex .search {
           position: relative; }
           body .app.light #settings-container #build-settings-container .scaladex .search .close {
