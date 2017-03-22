@@ -19,7 +19,7 @@ object RunButton {
           if (View.Editor == state.view) {
             li(onClick ==> run,
                title := s"Run Code ($ctrl + Enter)",
-               `class` := "btn selected run-button",
+               `class` := "btn run-button",
                selected(View.Editor))(
               i(`class` := "fa fa-play"),
               "Run"
@@ -27,7 +27,7 @@ object RunButton {
           } else {
             li(onClick ==> setView2(View.Editor),
                title := "Open Edit View",
-               `class` := "btn selected run-button",
+               `class` := "btn run-button",
                selected(View.Editor))(
               i(`class` := "fa fa-edit"),
               "Edit"
@@ -36,7 +36,7 @@ object RunButton {
         } else {
           li(onClick ==> setView2(View.Editor),
              title := "Open Edit View",
-             `class` := "btn selected run-button")(
+             `class` := "btn run-button")(
             i(`class` := "fa fa-spinner"),
             "Running"
           )

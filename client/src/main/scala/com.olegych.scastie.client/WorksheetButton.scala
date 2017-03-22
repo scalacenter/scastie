@@ -26,23 +26,26 @@ object WorksheetButton {
           if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
           else EmptyTag
 
-        fieldset(
-          legend("Options"),
-          button(
-            onClick ==> backend.toggleWorksheetMode,
-            title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
-            worksheetModeSelected,
-            `class` := "btn",
-            worksheetModeClassSelected)(
-            iconic.script,
-            p(s"Worksheet $worksheetModeToogleLabel")
-          )
-        )
+        val isDisabled =
+          if (state.view != View.Editor) TagMod(`class` := "disabled") else TagMod(onClick ==> backend.toggleWorksheetMode)
 
-        li(onClick ==> backend.toggleWorksheetMode,
+//        fieldset(
+//          legend("Options"),
+//          button(
+//            onClick ==> backend.toggleWorksheetMode,
+//            title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
+//            worksheetModeSelected,
+//            `class` := "btn",
+//            worksheetModeClassSelected)(
+//            iconic.script,
+//            p(s"Worksheet $worksheetModeToogleLabel")
+//          )
+//        )
+
+        li(
           title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
           worksheetModeSelected,
-           `class` := "btn")(
+           `class` := "btn", isDisabled)(
           i(`class` := "fa fa-calendar"),
           "Worksheet"
         )

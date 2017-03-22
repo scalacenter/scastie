@@ -13,10 +13,10 @@ object SideBar {
       case (state, backend, snippetId) =>
         import backend._
 
-        def selected(view: View) =
-          if (view == currentView) TagMod(`class` := "selected") else EmptyTag
-
         def currentView = state.view
+
+        def isDisabled(tagMod: TagMod) =
+          if (currentView != View.Editor) TagMod(`class` := "disabled") else tagMod
 
         val toggleThemeLabel = if (state.isDarkTheme) "Light" else "Dark"
 
@@ -33,30 +33,30 @@ object SideBar {
           snippetId match {
             case None =>
               TagMod(
-                li(onClick ==> save,
+                li(
                    title := s"Save ($ctrl + S)",
-                   `class` := "btn")(
+                   `class` := "btn", isDisabled(onClick ==> save))(
                   i(`class` := "fa fa-download"),
                   "Save"
                 )
               )
             case Some(sid) =>
               TagMod(
-                li(onClick ==> update(sid),
+                li(
                    title := s"Save ($ctrl + S)",
-                   `class` := "btn")(
+                   `class` := "btn", isDisabled(onClick ==> update(sid)))(
                   i(`class` := "fa fa-pencil-square-o"),
                   "Update"
                 ),
-                li(onClick ==> fork(sid),
+                li(
                    title := s"Fork",
-                   `class` := "btn")(
+                   `class` := "btn", isDisabled(onClick ==> fork(sid)))(
                   i(`class` := "fa fa-code-fork"),
                   "Fork"
                 ),
-                li(onClick ==> amend(sid),
+                li(
                    title := s"Share",
-                   `class` := "btn")(
+                   `class` := "btn", isDisabled(onClick ==> amend(sid)))(
                   i(`class` := "fa fa-share-alt"),
                   "Share"
                 )
@@ -64,9 +64,9 @@ object SideBar {
           }
 
         val formatCodeButton =
-          li(onClick ==> formatCode,
+          li(
             title := "Format Code (F6)",
-            `class` := "btn")(
+            `class` := "btn", isDisabled(onClick ==> formatCode))(
             i(`class` := "fa fa-align-left"),
             "Format"
           )

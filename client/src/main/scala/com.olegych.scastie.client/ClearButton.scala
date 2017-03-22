@@ -13,9 +13,12 @@ object ClearButton {
           if (isDisabled) "disabled"
           else ""
 
-        li(onClick ==> backend.clear,
+        val isDisabled =
+          if (state.view != View.Editor) TagMod(`class` := "disabled") else TagMod(onClick ==> backend.clear)
+
+        li(
            title := "Clear Instrumentations (Esc)",
-           `class` := "btn")(
+           `class` := "btn", isDisabled)(
           i(`class` := "fa fa-eraser"),
           "Clear"
         )

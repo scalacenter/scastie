@@ -199,6 +199,10 @@ body {
             color: #ffffff !important; }
           body .app.light #sidebar .actions-container .actions .btn:hover {
             color: #ffffff; }
+        body .app.light #sidebar .actions-container .actions .btn.disabled {
+          text-decoration: none;
+          cursor: default;
+          color: #586e75; }
       body .app.light #sidebar .actions.bottom {
         position: absolute;
         bottom: 33px; }
