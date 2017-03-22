@@ -183,6 +183,14 @@ body {
         body .app.dark #sidebar .actions-container .is-expanded {
           display: block;
           padding-bottom: 0; }
+        body .app.dark #sidebar .actions-container #workSheetIndicator {
+          line-height: 58px;
+          margin-left: 8px;
+          font-size: 14px;
+          width: 18px;
+          color: #002b36; }
+          body .app.dark #sidebar .actions-container #workSheetIndicator.enabled {
+            color: #859900; }
         body .app.dark #sidebar .actions-container .actions .btn {
           cursor: pointer;
           padding-left: 20px;
