@@ -330,8 +330,8 @@ object ScaladexSearch {
             val scaladexLink =
               s"https://scaladex.scala-lang.org/$organization/$repository/$artifact"
 
-            li(selected)(
-              a(`class` := "scaladex",
+            div(`class` := "result", selected)(
+              a(`class` := "scaladexresult",
                 href := scaladexLink,
                 target := "_blank")(
                 iconic.externalLink
@@ -392,7 +392,7 @@ object ScaladexSearch {
                 onChange ==> scope.backend.setQuery,
                 onKeyDown ==> scope.backend.keyDown
               ),
-              ol(`class` := "results", ref := projectListRef)(
+              div(`class` := "results", ref := projectListRef)(
                 searchState.search.zipWithIndex.toList.map {
                   case ((project, artifact), index) =>
                     renderProject(
