@@ -4,6 +4,7 @@ package client
 import com.olegych.scastie.api.SnippetId
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
+import org.scalajs.dom.window._
 
 object SideBar {
 
@@ -118,18 +119,19 @@ object SideBar {
 
         val currentButtonsForSelectedView = buttonsRibbon(currentView)
 
-        val buttonsBottom: Seq[TagMod] =
-            Seq(
-              themeButton,
-              helpButton
-            )
+        val buttonsBottom: Seq[TagMod] = Seq(themeButton, helpButton)
+
+        val sideBarMinHeight: Double = 683
+
+        def actionsContainerStyle: TagMod = TagMod(
+          height := (if (innerHeight < sideBarMinHeight) sideBarMinHeight else innerHeight))
 
         nav(`id` := "sidebar")(
-          a(`class` := "logo", href := "#")(
-            img(src := "/assets/public/img/icon-scastie.png"),
-            h1("Scastie")
-          ),
-          div(`class` := "actions-container")(
+          div(`class` := "actions-container", actionsContainerStyle)(
+            a(`class` := "logo", href := "#")(
+              img(src := "/assets/public/img/icon-scastie.png"),
+              h1("Scastie")
+            ),
             ul(`class` := "actions")(
               currentButtonsForSelectedView
             ),

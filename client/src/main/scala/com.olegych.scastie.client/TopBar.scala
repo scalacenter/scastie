@@ -3,6 +3,7 @@ package com.olegych.scastie.client
 import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom
+import org.scalajs.dom.window._
 
 object TopBar {
 
@@ -62,8 +63,14 @@ object TopBar {
               )
           }
 
+        val topBarMinWidth = 500
+        val sideBarWidth = 149
+
+        def actionsTopBarStyle: TagMod =
+          if (innerWidth < topBarMinWidth) TagMod(left := sideBarWidth) else EmptyTag
+
         nav(`id` := "topbar")(
-          ul(`class` := "actions")(
+          ul(`class` := "actions", actionsTopBarStyle)(
             li(`class` := "btn dropdown")(
               i(`class` := "fa fa-comments"),
               "Feedback",

@@ -5,6 +5,7 @@ import api.{Instrumentation, Value, Html, AttachedDom}
 
 import japgolly.scalajs.react._, vdom.all._
 
+
 import org.scalajs.dom.raw.{
   HTMLTextAreaElement,
   HTMLElement,
@@ -158,6 +159,21 @@ object Editor {
                        state: EditorState,
                        current: Option[AppState],
                        next: AppState): Callback = {
+
+    val topBarHeight = 70
+    val sideBarWidth = 149
+    val consoleBarHeight: Double = 33
+    lazy val consoleHeight = dom.window.innerHeight*0.25
+
+    def setSize() = {
+      if (current.map(_.windowHasResized) != Some(next.windowHasResized)) {
+        val height = dom.window.innerHeight - topBarHeight -
+          (if(current.exists(_.consoleIsOpen)) consoleHeight else consoleBarHeight)
+        val width = dom.window.innerWidth - sideBarWidth
+
+        editor.setSize(width.toString, height.toString)
+      }
+    }
 
     def setTheme() = {
       if (current.map(_.isDarkTheme) != Some(next.isDarkTheme)) {
@@ -429,6 +445,7 @@ object Editor {
 
     Callback(setTheme()) >>
       Callback(setCode()) >>
+      Callback(setSize()) >>
       setProblemAnnotations() >>
       setRenderAnnotations() >>
       setRuntimeError >>

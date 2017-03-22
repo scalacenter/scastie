@@ -1,6 +1,7 @@
 package com.olegych.scastie.client
 
 import japgolly.scalajs.react._
+import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLPreElement
 import vdom.all._
 
@@ -14,12 +15,16 @@ object Console {
       case (state, backend) =>
 
       val (displayConsole, displaySwitcher) =
-        if (state.consoleIsOpen) (TagMod(display.block), TagMod(display.none))
-        else (TagMod(display.none), TagMod(display.block))
+        if (state.consoleIsOpen) (display.block, display.none)
+        else (display.none, display.block)
+
+      def consoleStyle: TagMod = Seq(
+        height := "25%",
+        width := dom.window.innerWidth - 149,
+        displayConsole)
 
       div(`id` := "console-container")(
-        div(`id` := "console")(
-          displayConsole,
+        div(`id` := "console", consoleStyle)(
           div(`id` := "handler"),
           div(`id` := "switcher-hide", onClick ==> backend.toggleConsole)(
             i(`class` := "fa fa-code"),

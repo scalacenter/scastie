@@ -2,12 +2,11 @@ package com.olegych.scastie
 package client
 
 import api._
-
-import japgolly.scalajs.react._, vdom.all._
-
+import japgolly.scalajs.react._
+import vdom.all._
 import org.scalajs.dom
+import org.scalajs.dom.window._
 import org.scalajs.dom.raw.HTMLScriptElement
-
 
 object App {
   val component =
@@ -29,7 +28,11 @@ object App {
             if (!props.isEmbedded) "app"
             else "app embedded"
 
-          div(`class` := s"$appClass $theme")(
+          def appStyle: TagMod = Seq(
+            height := innerHeight,
+            width := innerWidth)
+
+          div(`class` := s"$appClass $theme", appStyle)(
             sideBar,
             MainPanel(state, scope.backend, props)
           )
