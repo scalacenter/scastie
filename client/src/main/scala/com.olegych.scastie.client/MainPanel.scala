@@ -6,8 +6,6 @@ import org.scalajs.dom
 import vdom.all._
 import org.scalajs.dom.raw.{HTMLElement, HTMLPreElement}
 
-import scala.scalajs.js
-
 object MainPanel {
 
   private val consoleElement = Ref[HTMLPreElement]("console")
@@ -65,24 +63,15 @@ object MainPanel {
             )
           } else state
 
+        def editorStyle: TagMod = Seq(
+          height := dom.window.innerHeight - 103,
+          width := dom.window.innerWidth - 149)
+
         div(`class` := "main-panel")(
           TopBar(state, backend),
           div(`id` := "content")(
-            div(`id`:= "editor-container",
-              `class` := "inner-container",
-              `style` :=
-                js.Dictionary(
-                  "height" -> s"${dom.window.innerHeight - 103}px",
-                  "width" -> s"${dom.window.innerWidth - 149}px"),
-              show(View.Editor))(
-              div(`id`:= "code",
-                `style` :=
-                  js.Dictionary(
-                    "height" -> s"${dom.window.innerHeight - 103}px",
-                    "width" -> s"${dom.window.innerWidth - 149}px"))()(
-                Editor(helpState, backend),
-                embeddedMenu
-              ),
+            div(`id`:= "editor-container", `class` := "inner-container", editorStyle, show(View.Editor))(
+              div(`id`:= "code", editorStyle)(Editor(helpState, backend), embeddedMenu),
               Console(state, backend)),
             div(`id`:= "settings-container", `class` := "inner-container", show(View.BuildSettings))(
               BuildSettings(state, backend)),

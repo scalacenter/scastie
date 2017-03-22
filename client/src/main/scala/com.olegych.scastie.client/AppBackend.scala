@@ -2,25 +2,15 @@ package com.olegych.scastie
 package client
 
 import api._
-
 import japgolly.scalajs.react._
-
 import autowire._
+import org.scalajs.dom
+
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-import org.scalajs.dom.{
-  EventSource,
-  WebSocket,
-  Event,
-  MessageEvent,
-  ErrorEvent,
-  CloseEvent,
-  window
-}
-
+import org.scalajs.dom._
 import upickle.default.{read => uread}
 
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 
 class AppBackend(scope: BackendScope[AppProps, AppState]) {
   Global.subsribe(scope)
@@ -319,6 +309,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       .getOrElse(Callback(()))
 
   def start(props: AppProps): Callback = {
+
+    def onresize(e: UIEvent): Unit =
+      setWindowHasResized().runNow
+
+    dom.window.onresize = onresize _
+
     def loadUser(): Callback = {
       Callback.future(
         ApiClient[AutowireApi]

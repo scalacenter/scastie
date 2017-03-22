@@ -5,11 +5,7 @@ import api._
 import japgolly.scalajs.react._
 import vdom.all._
 import org.scalajs.dom
-import org.scalajs.dom.UIEvent
 import org.scalajs.dom.raw.HTMLScriptElement
-
-import scala.scalajs.js
-
 
 object App {
   val component =
@@ -31,16 +27,11 @@ object App {
             if (!props.isEmbedded) "app"
             else "app embedded"
 
-          def onresize(e: UIEvent): Unit =
-              scope.backend.setWindowHasResized().runNow
+          def appStyle: TagMod = Seq(
+            height := dom.window.innerHeight,
+            width := dom.window.innerWidth)
 
-          dom.window.onresize = onresize _
-
-          div(`class` := s"$appClass $theme",
-            `style` :=
-              js.Dictionary(
-                "height" -> s"${dom.window.innerHeight}px",
-                "width" -> s"${dom.window.innerWidth}px"))(
+          div(`class` := s"$appClass $theme", appStyle)(
             sideBar,
             MainPanel(state, scope.backend, props)
           )
