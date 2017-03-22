@@ -164,8 +164,7 @@ body {
           display: inline-block; }
       body .app.dark #sidebar .actions-container {
         position: relative;
-        overflow-y: auto;
-        overflow-x: hidden; }
+        overflow: hidden; }
         body .app.dark #sidebar .actions-container ul.submenu {
           display: none; }
           body .app.dark #sidebar .actions-container ul.submenu li.btn {

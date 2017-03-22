@@ -6,8 +6,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
 
-import scala.scalajs.js
-
 object SideBar {
 
   private val component =
@@ -121,17 +119,15 @@ object SideBar {
 
         val currentButtonsForSelectedView = buttonsRibbon(currentView)
 
-        val buttonsBottom: Seq[TagMod] =
-            Seq(
-              themeButton,
-              helpButton
-            )
+        val buttonsBottom: Seq[TagMod] = Seq(themeButton, helpButton)
+
+        val windowHeight = dom.window.innerHeight
+
+        def actionsContainerStyle: TagMod = Seq(
+          height := (if (windowHeight < 683) 683 else windowHeight))
 
         nav(`id` := "sidebar")(
-          div(`class` := "actions-container",
-            `style` :=
-              js.Dictionary(
-                "height" -> s"${dom.window.innerHeight}px"))(
+          div(`class` := "actions-container", actionsContainerStyle)(
             a(`class` := "logo", href := "#")(
               img(src := "/assets/public/img/icon-scastie.png"),
               h1("Scastie")

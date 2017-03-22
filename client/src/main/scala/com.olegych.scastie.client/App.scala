@@ -8,9 +8,6 @@ import org.scalajs.dom
 import org.scalajs.dom.UIEvent
 import org.scalajs.dom.raw.HTMLScriptElement
 
-import scala.scalajs.js
-
-
 object App {
   val component =
     ReactComponentB[AppProps]("App")
@@ -36,11 +33,11 @@ object App {
 
           dom.window.onresize = onresize _
 
-          div(`class` := s"$appClass $theme",
-            `style` :=
-              js.Dictionary(
-                "height" -> s"${dom.window.innerHeight}px",
-                "width" -> s"${dom.window.innerWidth}px"))(
+          def appStyle: TagMod = Seq(
+            height := dom.window.innerHeight,
+            width := dom.window.innerWidth)
+
+          div(`class` := s"$appClass $theme", appStyle)(
             sideBar,
             MainPanel(state, scope.backend, props)
           )
