@@ -506,34 +506,85 @@ body {
           body .app.light #settings-container #build-settings-container select:-ms-input-placeholder, body .app.light #settings-container #build-settings-container input:-ms-input-placeholder {
             color: #0f262f;
             opacity: 1; }
-        body .app.light #settings-container #build-settings-container .scaladex .search {
+        body .app.light #settings-container #build-settings-container .search {
           position: relative; }
-          body .app.light #settings-container #build-settings-container .scaladex .search .close {
+          body .app.light #settings-container #build-settings-container .search .close {
             position: absolute;
             right: 10px;
             top: 8px;
             display: none;
             cursor: pointer; }
-          body .app.light #settings-container #build-settings-container .scaladex .search .results {
-            padding: 20px;
+          body .app.light #settings-container #build-settings-container .search .results {
             background-color: #f4f3f3;
             color: #0f262f;
             border-radius: 2px;
-            display: none;
-            width: 100%;
-            height: 300px;
-            position: absolute;
-            bottom: -310px;
-            left: 0;
-            z-index: 2;
+            max-height: 300px;
+            z-index: 20;
+            margin-top: 10px;
             overflow: auto; }
-            body .app.light #settings-container #build-settings-container .scaladex .search .results .result {
+            body .app.light #settings-container #build-settings-container .search .results i.fa {
+              font-size: 20px;
+              width: 40px;
+              text-align: center;
+              vertical-align: middle; }
+            body .app.light #settings-container #build-settings-container .search .results .result {
+              padding: 10px;
+              display: block;
               cursor: pointer;
               font-size: 15px; }
-              body .app.light #settings-container #build-settings-container .scaladex .search .results .result:not(:last-child) {
-                padding-bottom: 20px; }
-              body .app.light #settings-container #build-settings-container .scaladex .search .results .result a {
-                color: #4e99c9;
+              body .app.light #settings-container #build-settings-container .search .results .result:not(:last-child) {
+                padding-bottom: 10px; }
+              body .app.light #settings-container #build-settings-container .search .results .result a {
+                color: #0f262f;
                 margin-right: 10px; }
-              body .app.light #settings-container #build-settings-container .scaladex .search .results .result:hover {
-                background-color: #00acdb; }
+              body .app.light #settings-container #build-settings-container .search .results .result .logo {
+                width: 30px;
+                height: 30px;
+                vertical-align: middle; }
+              body .app.light #settings-container #build-settings-container .search .results .result .artifact {
+                margin-left: 20px;
+                vertical-align: middle; }
+            body .app.light #settings-container #build-settings-container .search .results .selected {
+              background-color: #00acdb; }
+          body .app.light #settings-container #build-settings-container .search .added .result {
+            padding: 10px;
+            display: block;
+            cursor: pointer;
+            font-size: 15px; }
+            body .app.light #settings-container #build-settings-container .search .added .result:not(:last-child) {
+              padding-bottom: 10px; }
+            body .app.light #settings-container #build-settings-container .search .added .result i.fa {
+              font-size: 20px;
+              width: 30px;
+              text-align: left;
+              vertical-align: middle; }
+            body .app.light #settings-container #build-settings-container .search .added .result a {
+              color: #0f262f;
+              margin-right: 10px;
+              margin-left: 10px; }
+            body .app.light #settings-container #build-settings-container .search .added .result .logo {
+              width: 30px;
+              height: 30px;
+              vertical-align: middle; }
+            body .app.light #settings-container #build-settings-container .search .added .result .artifact {
+              margin-left: 20px;
+              vertical-align: middle; }
+            body .app.light #settings-container #build-settings-container .search .added .result select {
+              -webkit-appearance: none;
+              -moz-appearance: none;
+              appearance: none;
+              display: inline-block;
+              width: 100px;
+              margin-left: 20px; }
+              body .app.light #settings-container #build-settings-container .search .added .result select::-moz-placeholder {
+                color: #0f262f;
+                opacity: 1; }
+              body .app.light #settings-container #build-settings-container .search .added .result select:-moz-placeholder {
+                color: #0f262f;
+                opacity: 1; }
+              body .app.light #settings-container #build-settings-container .search .added .result select::-webkit-input-placeholder {
+                color: #0f262f;
+                opacity: 1; }
+              body .app.light #settings-container #build-settings-container .search .added .result select:-ms-input-placeholder {
+                color: #0f262f;
+                opacity: 1; }

@@ -155,8 +155,8 @@ object BuildSettings {
       "2.9.0"
     )
 
-    def selected(v1: String, v2: String) =
-      if (v1 == v2) TagMod(`class` := "selected")
+    def selected(version: String) =
+      if (!suggestedVersions.contains(version)) TagMod(`checked` := "checked")
       else EmptyTag
 
     def setScalaVersion(targetApply: String => ScalaTarget)(
@@ -165,18 +165,17 @@ object BuildSettings {
 
     val notSupported = div("Not supported")
 
-    def versionSelector(scalaVersion: String,
-                        targetApply: String => ScalaTarget) ={
+    def versionSelector(scalaVersion: String, targetApply: String => ScalaTarget) ={
 
       def handler(scalaVersion: String) =
         TagMod(onClick ==> backend.setTarget2(targetApply(scalaVersion)))
 
       TagMod(
         ul(`id` := "suggestedVersions")(
-          suggestedVersions.map { scalaVersion =>
-            li(handler(scalaVersion))(
-              input(`type` := "radio", `id` := scalaVersion, value := scalaVersion, name := "scalaV"),
-              label(`for` := scalaVersion, `class` := "radio", scalaVersion)
+          suggestedVersions.map { version =>
+            li(handler(version))(
+              input(`type` := "radio", `id` := version, value := version, name := "scalaV"),
+              label(`for` := version, `class` := "radio", version)
             )
           },
           li(handler(scalaVersion))(
@@ -185,8 +184,8 @@ object BuildSettings {
               div(`class` := "select-wrapper")(
                 select(name := "scalaVersion",
                   value := scalaVersion.toString,
-                  onChange ==> setScalaVersion(targetApply))(
-                  allVersions.map(version => option(version.toString))
+                  onChange ==> setScalaVersion(targetApply), selected(scalaVersion))(
+                  allVersions.map(version => option(version))
                 )
               )
             )
