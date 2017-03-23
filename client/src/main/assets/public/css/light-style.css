@@ -105,12 +105,12 @@ body {
         right: 0;
         bottom: 0;
         left: 0;
-        background-color: rgba(0, 0, 0, 0.85);
-        opacity: 0;
+        background-color: rgba(0, 0, 0, 0.55);
+        opacity: 1;
         padding-top: 0.6em;
         text-align: left;
         transition: opacity 0.25s ease;
-        visibility: hidden;
+        visibility: visible;
         z-index: 99999999999; }
         @media screen and (min-width: 53.75em) {
           body .app.light .modal .modal-fade-screen {

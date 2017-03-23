@@ -56,7 +56,7 @@ object SideBar {
                 ),
                 li(
                    title := s"Share",
-                   `class` := "btn", isDisabled(onClick ==> amend(sid)))(
+                   `class` := "btn", isDisabled(onClick ==> toggleWelcome))(
                   i(`class` := "fa fa-share-alt"),
                   "Share"
                 )
@@ -72,7 +72,7 @@ object SideBar {
           )
 
         val themeButton =
-          li(onClick ==> backend.toggleTheme,
+          li(onClick ==> toggleTheme,
             title := s"Select $toggleThemeLabel Theme (F2)",
             `class` := "btn")(
             i(`class` := s"fa $selectedIcon"),
@@ -80,7 +80,7 @@ object SideBar {
           )
 
         val helpButton =
-          li(onClick ==> toogleHelp,
+          li(onClick ==> toggleHelp,
             title := "Show help Menu",
             `class` := "btn")(
             i(`class` := "fa fa-question-circle"),

@@ -24,45 +24,6 @@ object MainPanel {
           if (embedded) TagMod(EmbeddedMenu(state, backend))
           else EmptyTag
 
-        def toogleShowWelcomeAtStartup(e: ReactEvent): Callback = {
-          backend.toggleWelcomeAtStartup()
-        }
-
-        def closeHelp(e: ReactEvent): Callback = {
-          backend.closeHelp()
-        }
-
-        val showWelcome =
-          if (state.isShowingWelcomeAtStartup && state.isStartup && !embedded)
-            true
-          else !state.isWelcomeModalClosed
-
-//        val helpClosepanel =
-//          if (showHelp) {
-//            TagMod(
-//              div(`class` := "help-close")(
-//                button(onClick ==> closeHelp)("Close"),
-//                div(`class` := "not-again")(
-//                  p("Dont show again"),
-//                  input.checkbox(onChange ==> toogleShowHelpAtStartup,
-//                                 checked := !state.isShowingHelpAtStartup)
-//                )
-//              )
-//            )
-//          } else EmptyTag
-
-//        val helpState =
-//          if (showHelp) {
-//            val helpModal =
-//              api.Instrumentation(api.Position(0, 0),
-//                                  api.runtime.help.copy(folded = false))
-//
-//            state.copy(
-//              outputs = state.outputs.copy(
-//                instrumentations = state.outputs.instrumentations + helpModal)
-//            )
-//          } else state
-
         val topBarHeight = 70
         val sideBarWidth = 149
         val consoleBarHeight: Double = 33

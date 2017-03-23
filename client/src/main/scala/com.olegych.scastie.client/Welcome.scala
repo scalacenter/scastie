@@ -19,7 +19,7 @@ object Welcome {
           input(`type` := "checkbox", `id` := "modal-welcome", `class` := "modal-state"),
           div(`class` := "modal-fade-screen")(
             div(`class` := "modal-inner")(
-              div(`for` := "modal-welcome", `class` := "modal-close", onClick ==> backend.closeWelcome),
+              div(`for` := "modal-welcome", `class` := "modal-close", onClick ==> backend.toggleWelcome))(
               h1("Welcome to Scastie!"),
               p(`class` := "modal-intro","Scastie is an interactive playground for Scala."),
               h2("Run / Edit"),
@@ -35,7 +35,7 @@ object Welcome {
               p(`class` := "modal-intro","You can join our Gitter channel and send issues."),
               p(`class` := "modal-intro")(
                 i(`class` := "fa fa-question-circle"),
-                "If you want to learn more about how Scastie works, you can go to our",
+                "If you want to learn more about how Scastie works, you can go to our ",
                 a(href := "#","Help"),
                 "."
               )

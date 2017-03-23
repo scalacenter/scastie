@@ -15,7 +15,7 @@ object AppState {
     eventSource = None,
     websocket = None,
     isShowingWelcomeAtStartup = true,
-    isHelpModalClosed = false,
+    isHelpModalClosed = true,
     isWelcomeModalClosed = false,
     isDarkTheme = false,
     consoleIsOpen = false,
@@ -155,18 +155,10 @@ case class AppState(
       inputsHasChanged = true
     )
 
-  def toggleWelcomeAtStartup: AppState =
-    copyAndSave(isShowingWelcomeAtStartup = !isShowingWelcomeAtStartup)
+  def toggleWelcome: AppState =
+    copyAndSave(isWelcomeModalClosed = !isWelcomeModalClosed)
 
-  def closeWelcome: AppState =
-    resetOutputs.copyAndSave(isWelcomeModalClosed = true).copy(isStartup = false)
-
-  def showWelcome: AppState = copy(isWelcomeModalClosed = false)
-
-  def closeHelp: AppState =
-    resetOutputs.copyAndSave(isHelpModalClosed = true).copy(isStartup = false)
-
-  def toogleHelp: AppState =
+  def toggleHelp: AppState =
     copyAndSave(isHelpModalClosed = !isHelpModalClosed)
 
   def openConsole: AppState =
