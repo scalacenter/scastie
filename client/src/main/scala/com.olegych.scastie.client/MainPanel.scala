@@ -72,15 +72,19 @@ object MainPanel {
           height := innerHeight - topBarHeight - (if(state.consoleIsOpen) consoleHeight else consoleBarHeight),
           width := innerWidth - sideBarWidth)
 
+        def containerStyle: TagMod = Seq(
+          height := innerHeight - topBarHeight,
+          width := innerWidth - sideBarWidth)
+
         div(`class` := "main-panel")(
           TopBar(state, backend),
           div(`id` := "content")(
             div(`id`:= "editor-container", `class` := "inner-container", editorStyle, show(View.Editor))(
               div(`id`:= "code", editorStyle)(Editor(helpState, backend), embeddedMenu),
               Console(state, backend)),
-            div(`id`:= "settings-container", `class` := "inner-container", show(View.BuildSettings))(
+            div(`id`:= "settings-container", `class` := "inner-container", containerStyle, show(View.BuildSettings))(
               BuildSettings(state, backend)),
-            div(`id`:= "snippets-container", `class` := "inner-container", show(View.CodeSnippets))(
+            div(`id`:= "snippets-container", `class` := "inner-container", containerStyle, show(View.CodeSnippets))(
               CodeSnippets(props.router, state.view))
           )
         )

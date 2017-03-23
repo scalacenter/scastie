@@ -47,7 +47,7 @@ object BuildSettings {
     }
 
     def selected(targetType: ScalaTargetType) =
-      if (targetType == scalaTarget.targetType) TagMod(`class` := "selected")
+      if (targetType == scalaTarget.targetType) TagMod(`checked` := "checked")
       else EmptyTag
 
     val disabledTargets: Set[ScalaTargetType] = Set(
@@ -71,17 +71,17 @@ object BuildSettings {
       }
     }
 
-    fieldset(`class` := "targets")(
-      legend("Target"),
-      ul(
-        targetTypes.map(
-          targetType =>
-            li(handler(targetType), selected(targetType))(
-              img(src := s"/assets/public/${logo(targetType)}",
-                  alt := s"logo for ${labelFor(targetType)}"),
-              span(labelFor(targetType)),
+    div(
+      ul(`id` := "target")(
+          targetTypes.map { targetType =>
+            val targetLabel = labelFor(targetType)
+            li(handler(targetType))(
+              input(`type` := "radio", `id` := targetLabel, value := targetLabel, name := "target", selected(targetType)),
+              label(`for` := targetLabel, `class` := "radio", targetLabel),
               vote(targetType)
-          )))
+            )
+          }
+      )
     )
   }
 
@@ -155,8 +155,8 @@ object BuildSettings {
       "2.9.0"
     )
 
-    def selected(v1: String, v2: String) =
-      if (v1 == v2) TagMod(`class` := "selected")
+    def selected(version: String) =
+      if (!suggestedVersions.contains(version)) TagMod(`checked` := "checked")
       else EmptyTag
 
     def setScalaVersion(targetApply: String => ScalaTarget)(
@@ -165,21 +165,34 @@ object BuildSettings {
 
     val notSupported = div("Not supported")
 
-    def versionSelector(scalaVersion: String,
-                        targetApply: String => ScalaTarget) =
+    def versionSelector(scalaVersion: String, targetApply: String => ScalaTarget) ={
+
+      def handler(scalaVersion: String) =
+        TagMod(onClick ==> backend.setTarget2(targetApply(scalaVersion)))
+
       TagMod(
-        ul(
-          suggestedVersions.map(
-            version =>
-              li(onClick ==> backend.setTarget2(targetApply(version)),
-                 selected(version, scalaVersion))(version))
-        ),
-        select(name := "scalaVersion",
-               value := scalaVersion.toString,
-               onChange ==> setScalaVersion(targetApply))(
-          allVersions.map(version => option(version.toString))
+        ul(`id` := "suggestedVersions")(
+          suggestedVersions.map { version =>
+            li(handler(version))(
+              input(`type` := "radio", `id` := version, value := version, name := "scalaV"),
+              label(`for` := version, `class` := "radio", version)
+            )
+          },
+          li(handler(scalaVersion))(
+            input(`type` := "radio", `id` := scalaVersion, value := scalaVersion, name := "scalaV"),
+            label(`class` := "radio")(
+              div(`class` := "select-wrapper")(
+                select(name := "scalaVersion",
+                  value := scalaVersion.toString,
+                  onChange ==> setScalaVersion(targetApply), selected(scalaVersion))(
+                  allVersions.map(version => option(version))
+                )
+              )
+            )
+          )
         )
       )
+    }
 
     val versionSelectors =
       target match {
@@ -192,10 +205,10 @@ object BuildSettings {
         case ScalaTarget.Native => notSupported
       }
 
-    fieldset(`class` := "versions")(
-      legend("Scala Version"),
+    div(
       versionSelectors
     )
+
   }
 
   private val component =
@@ -203,14 +216,24 @@ object BuildSettings {
       case (state, backend) =>
         val theme = if (state.isDarkTheme) "dark" else "light"
 
-
-        div(`class` := "libraries")(
-          ScaladexSearch(state, backend),
+        div(`id` := "build-settings-container")(
+          h2(
+            span("Target")
+          ),
           renderTarget(state.inputs.target, backend),
+          h2(
+            span("Scala Version")
+          ),
           renderVersions(state.inputs.target, backend),
-          fieldset(
-            legend("Sbt Configuration"),
-            div("add more"),
+          h2(
+            span("Libraries")
+          ),
+          ScaladexSearch(state, backend),
+          h2(
+            span("Sbt Configuration")
+          ),
+          label(`for` := "configuration","Add more"),
+          pre(`id` := "configuration")(
             CodeMirrorEditor(
               CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
                                         theme = s"solarized $theme",
@@ -218,30 +241,28 @@ object BuildSettings {
               CodeMirrorEditor.Handler(
                 updatedSettings => backend.sbtConfigChange(updatedSettings)
               )
-            ),
-            hr,
-            div("resulting build.sbt"),
-            div(`class` := "result-sbt")(
-              CodeMirrorEditor(
-                CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
-                                          theme = s"solarized $theme",
-                                          readOnly = true),
-                CodeMirrorEditor.Handler(
-                  _ => Callback(())
-                )
+            )
+          ),
+          div(`class` := "label","Resulting build.sbt"),
+          pre(`id` := "output")(
+            CodeMirrorEditor(
+              CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
+                                        theme = s"solarized $theme",
+                                        readOnly = true),
+              CodeMirrorEditor.Handler(
+                _ => Callback(())
               )
-            ),
-            hr,
-            div("resulting plugins.sbt"),
-            div(`class` := "result-sbt")(
-              CodeMirrorEditor(
-                CodeMirrorEditor.Settings(
-                  value = state.inputs.sbtPluginsConfig,
-                  theme = s"solarized $theme",
-                  readOnly = true),
-                CodeMirrorEditor.Handler(
-                  _ => Callback(())
-                )
+            )
+          ),
+          div(`class` := "label","Resulting plugins.sbt"),
+          pre(`id` := "plugins-output")(
+            CodeMirrorEditor(
+              CodeMirrorEditor.Settings(
+                value = state.inputs.sbtPluginsConfig,
+                theme = s"solarized $theme",
+                readOnly = true),
+              CodeMirrorEditor.Handler(
+                _ => Callback(())
               )
             )
           )
