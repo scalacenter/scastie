@@ -14,8 +14,9 @@ object AppState {
     running = false,
     eventSource = None,
     websocket = None,
-    isShowingHelpAtStartup = true,
+    isShowingWelcomeAtStartup = true,
     isHelpModalClosed = false,
+    isWelcomeModalClosed = false,
     isDarkTheme = false,
     consoleIsOpen = false,
     consoleHasUserOutput = false,
@@ -47,7 +48,8 @@ case class AppState(
     running: Boolean,
     eventSource: Option[EventSource],
     websocket: Option[WebSocket],
-    isShowingHelpAtStartup: Boolean,
+    isShowingWelcomeAtStartup: Boolean,
+    isWelcomeModalClosed: Boolean,
     isHelpModalClosed: Boolean,
     isDarkTheme: Boolean,
     consoleIsOpen: Boolean,
@@ -69,7 +71,8 @@ case class AppState(
                   running: Boolean = running,
                   eventSource: Option[EventSource] = eventSource,
                   websocket: Option[WebSocket] = websocket,
-                  isShowingHelpAtStartup: Boolean = isShowingHelpAtStartup,
+                  isShowingWelcomeAtStartup: Boolean = isShowingWelcomeAtStartup,
+                  isWelcomeModalClosed: Boolean = isWelcomeModalClosed,
                   isHelpModalClosed: Boolean = isHelpModalClosed,
                   isDarkTheme: Boolean = isDarkTheme,
                   consoleIsOpen: Boolean = consoleIsOpen,
@@ -93,7 +96,8 @@ case class AppState(
         running,
         eventSource,
         websocket,
-        isShowingHelpAtStartup,
+        isShowingWelcomeAtStartup,
+        isWelcomeModalClosed,
         isHelpModalClosed,
         isDarkTheme,
         consoleIsOpen,
@@ -151,13 +155,19 @@ case class AppState(
       inputsHasChanged = true
     )
 
-  def toggleHelpAtStartup: AppState =
-    copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
+  def toggleWelcomeAtStartup: AppState =
+    copyAndSave(isShowingWelcomeAtStartup = !isShowingWelcomeAtStartup)
+
+  def closeWelcome: AppState =
+    resetOutputs.copyAndSave(isWelcomeModalClosed = true).copy(isStartup = false)
+
+  def showWelcome: AppState = copy(isWelcomeModalClosed = false)
 
   def closeHelp: AppState =
     resetOutputs.copyAndSave(isHelpModalClosed = true).copy(isStartup = false)
 
-  def showHelp: AppState = copy(isHelpModalClosed = false)
+  def toogleHelp: AppState =
+    copyAndSave(isHelpModalClosed = !isHelpModalClosed)
 
   def openConsole: AppState =
     copyAndSave(consoleIsOpen = true)

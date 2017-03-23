@@ -31,6 +31,12 @@ table {
   border-collapse: collapse;
   border-spacing: 0; }
 
+html {
+  box-sizing: border-box; }
+
+*, *::after, *::before {
+  box-sizing: inherit; }
+
 body {
   font-family: "Lato", sans-serif;
   font-size: 13px;
@@ -45,6 +51,7 @@ body {
   body .app.dark {
     color: #5d7c83;
     background: #15414c;
+    /* MODAL STYLES */
     /* GENERAL ELEMENTS STYLES */
     /* CODE SNIPPETS PAGE STYLES */
     /* SETTINGS PAGE STYLES */ }
@@ -60,6 +67,161 @@ body {
       font-weight: bold; }
     body .app.dark h1 {
       font-size: 150%; }
+    body .app.dark .modal {
+      display: block; }
+      body .app.dark .modal label {
+        cursor: pointer;
+        margin-bottom: 0; }
+      body .app.dark .modal h1 {
+        color: #073642;
+        font-family: 'Roboto Slab', serif;
+        font-weight: normal;
+        font-size: 32px;
+        line-height: 32px;
+        display: inline-block; }
+      body .app.dark .modal h2 {
+        font-family: 'Roboto Slab', serif;
+        font-size: 24px;
+        line-height: 32px;
+        color: #073642;
+        font-weight: normal; }
+      body .app.dark .modal h3 {
+        font-family: 'Roboto Slab', serif;
+        font-size: 20px;
+        line-height: 32px;
+        color: #073642;
+        font-weight: normal; }
+      body .app.dark .modal label img {
+        border-radius: 150px;
+        display: block;
+        max-width: 300px; }
+      body .app.dark .modal .modal-state {
+        display: none; }
+      body .app.dark .modal .modal-trigger {
+        padding: 0.8em 1em; }
+      body .app.dark .modal .modal-fade-screen {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.85);
+        opacity: 0;
+        padding-top: 0.6em;
+        text-align: left;
+        transition: opacity 0.25s ease;
+        visibility: hidden;
+        z-index: 99999999999; }
+        @media screen and (min-width: 53.75em) {
+          body .app.dark .modal .modal-fade-screen {
+            padding-top: 10em; } }
+        body .app.dark .modal .modal-fade-screen .modal-bg {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          cursor: pointer; }
+      body .app.dark .modal .modal-close {
+        position: absolute;
+        top: 3em;
+        right: 1.5em;
+        height: 1.5em;
+        width: 1.5em;
+        background: #fff;
+        cursor: pointer; }
+        body .app.dark .modal .modal-close::after, body .app.dark .modal .modal-close::before {
+          position: absolute;
+          top: 3px;
+          right: 3px;
+          bottom: 0;
+          left: 50%;
+          height: 1.5em;
+          width: 0.15em;
+          background: #ddd;
+          content: "";
+          display: block;
+          margin: -3px 0 0 -1px;
+          transform: rotate(45deg); }
+        body .app.dark .modal .modal-close:hover::after, body .app.dark .modal .modal-close:hover::before {
+          background: #c4c4c4; }
+        body .app.dark .modal .modal-close::before {
+          transform: rotate(-45deg); }
+      body .app.dark .modal .modal-inner {
+        background: #fff;
+        border-radius: 3px;
+        margin: auto;
+        margin-top: 0;
+        max-height: 95%;
+        overflow: auto;
+        padding: 1.5em;
+        position: relative;
+        transition: opacity 0.25s ease;
+        width: 95%; }
+        @media screen and (min-width: 40em) {
+          body .app.dark .modal .modal-inner {
+            max-height: 70%;
+            padding: 3em;
+            width: 60%; } }
+        @media screen and (min-width: 53.75em) {
+          body .app.dark .modal .modal-inner {
+            width: 50%; } }
+        body .app.dark .modal .modal-inner p {
+          color: #333;
+          line-height: 25px;
+          margin: 10px 0 20px 0; }
+          body .app.dark .modal .modal-inner p.normal {
+            font-family: Lato;
+            font-size: 15px; }
+        body .app.dark .modal .modal-inner .modal-content {
+          color: #333; }
+          @media screen and (min-width: 40em) {
+            body .app.dark .modal .modal-inner .modal-content {
+              columns: 2 8em; } }
+        body .app.dark .modal .modal-inner a {
+          color: #27b3d9; }
+        body .app.dark .modal .modal-inner a.cta {
+          color: #fff;
+          display: inline-block;
+          margin-right: 0.5em;
+          margin-top: 1em; }
+          body .app.dark .modal .modal-inner a.cta:last-child {
+            padding: 0 2em; }
+        body .app.dark .modal .modal-inner .indent {
+          padding-left: 40px; }
+        body .app.dark .modal .modal-inner .shortcuts {
+          margin-bottom: 25px; }
+          body .app.dark .modal .modal-inner .shortcuts table {
+            border: none; }
+            body .app.dark .modal .modal-inner .shortcuts table th {
+              width: 285px;
+              font-family: monospace;
+              font-size: 13px;
+              line-height: 30px;
+              font-weight: normal;
+              font-style: normal;
+              font-stretch: normal;
+              letter-spacing: normal;
+              color: #27b3d9; }
+            body .app.dark .modal .modal-inner .shortcuts table td:first-of-type {
+              vertical-align: bottom; }
+            body .app.dark .modal .modal-inner .shortcuts table td span {
+              text-align: center;
+              width: 33px;
+              height: 20px;
+              line-height: 20px;
+              border-radius: 1px;
+              background-color: #859900;
+              color: #fff;
+              display: inline-block;
+              margin: 0 5px; }
+      body .app.dark .modal .modal-state:checked + .modal-fade-screen {
+        opacity: 1;
+        visibility: visible; }
+      body .app.dark .modal .modal-state:checked + .modal-fade-screen .modal-inner {
+        top: 0.5em; }
+    body .app.dark .modal-open {
+      overflow: hidden; }
     body .app.dark .hide {
       display: none; }
     body .app.dark i.fa {

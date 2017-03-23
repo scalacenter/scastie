@@ -137,14 +137,20 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
 
-  def toggleHelpAtStartup(): Callback =
-    scope.modState(_.toggleHelpAtStartup)
+  def toggleWelcomeAtStartup(): Callback =
+    scope.modState(_.toggleWelcomeAtStartup)
+
+  def closeWelcome(): Callback = scope.modState(_.closeWelcome)
+  def closeWelcome(e: ReactEventI): Callback = closeWelcome()
+
+  def showWelcome(e: ReactEventI): Callback =
+    scope.modState(_.showWelcome)
 
   def closeHelp(): Callback =
     scope.modState(_.closeHelp)
 
-  def showHelp(e: ReactEventI): Callback =
-    scope.modState(_.showHelp)
+  def toogleHelp(e: ReactEventI): Callback =
+    scope.modState(_.toogleHelp)
 
   def toggleWorksheetMode(): Callback =
     scope.modState(_.toggleWorksheetMode)

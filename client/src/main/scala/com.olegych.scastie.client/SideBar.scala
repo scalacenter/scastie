@@ -80,7 +80,7 @@ object SideBar {
           )
 
         val helpButton =
-          li(onClick ==> showHelp,
+          li(onClick ==> toogleHelp,
             title := "Show help Menu",
             `class` := "btn")(
             i(`class` := "fa fa-question-circle"),
