@@ -3,6 +3,7 @@ package com.olegych.scastie.client
 import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom
+import org.scalajs.dom.window._
 
 object TopBar {
 
@@ -12,14 +13,6 @@ object TopBar {
     ReactComponentB[(AppState, AppBackend)]("TopBar").render_P {
       case (state, backend) =>
         import backend._
-
-        val theme = if (state.isDarkTheme) "dark" else "light"
-
-        val toggleThemeLabel = if (state.isDarkTheme) "Light" else "Dark"
-
-        val selectedTheme =
-          if (state.isDarkTheme) iconic.sun
-          else iconic.moon
 
         def openInNewTab(link: String): Callback = {
           Callback(
@@ -49,57 +42,64 @@ object TopBar {
           state.user match {
             case Some(user) =>
               TagMod(
-                li(onClick ==> setView2(View.UserProfile),
-                   title := "Open Profile View",
-                   selected(View.UserProfile),
-                   `class` := "button")(
-                  img(src := user.avatar_url + "&s=35",
-                      alt := "Your Github Avatar",
-                      `class` := "image-button avatar"),
-                  p("Snippets")
+                li(onClick ==> setView2(View.CodeSnippets),
+                   title := "Go to your code snippets",
+                  `class` := "btn",
+                   selected(View.CodeSnippets),
+                  i(`class` := "fa fa-code"),
+                  "Snippets"
                 ),
-                li(onClick ==> logout, `class` := "button")(
-                  iconic.accountLogout,
-                  p("Logout")
+                li(onClick ==> logout, `class` := "btn")(
+                  i(`class` := "fa fa-sign-out"),
+                  "Logout"
                 )
               )
             case None =>
               TagMod(
-                li(onClick ==> login, `class` := "button")(
-                  iconic.accountLogin,
-                  p("Login")
+                li(onClick ==> login, `class` := "btn")(
+                  i(`class` := "fa fa-sign-in"),
+                  "Login"
                 )
               )
           }
 
-        nav(`class` := s"topbar $theme")(
-          ul(
-            profileButton,
-            li(onClick ==> backend.toggleTheme,
-               title := s"Select $toggleThemeLabel Theme (F2)",
-               `class` := "button")(
-              selectedTheme,
-              p("Theme")
+        val topBarMinWidth = 500
+        val sideBarWidth = 149
+
+        def actionsTopBarStyle: TagMod =
+          if (innerWidth < topBarMinWidth) TagMod(left := sideBarWidth) else EmptyTag
+
+        nav(`id` := "topbar")(
+          ul(`class` := "actions", actionsTopBarStyle)(
+            li(`class` := "btn dropdown")(
+              i(`class` := "fa fa-comments"),
+              "Feedback",
+              i(`class` := "fa fa-caret-down"),
+              ul(`class` := "subactions")(
+                li(onClick ==> feedback,
+                  title := "Open Gitter.im Chat to give us feedback",
+                  `class` := "btn")(
+                  i(`class` := "fa fa-github"),
+                  "Scastie's gitter"
+                ),
+                li(onClick ==> issue,
+                  title := "Create new issue on GitHub",
+                  `class` := "btn")(
+                  i(`class` := "fa fa-github"),
+                  "Github issues"
+                )
+              )
             ),
-            li(onClick ==> feedback,
-               title := "Open Gitter.im Chat to give us feedback",
-               `class` := "button")(
-              iconic.chat,
-              p("Feedback")
-            ),
-            li(onClick ==> issue,
-               title := "Create new issue on GitHub",
-               `class` := "button")(
-              iconic.bug,
-              p("Issue")
-            ),
-            li(onClick ==> showHelp,
-               title := "Show help Menu",
-               `class` := "button")(
-              iconic.questionMark,
-              p("Help")
+            li(`class` := "btn dropdown")(
+              i(`class` := "fa fa-user-circle"),
+              "Login",
+              i(`class` := "fa fa-caret-down"),
+              ul(`class` := "subactions")(
+                profileButton
+              )
             )
           )
         )
+
     }.build
 }

@@ -1,30 +1,28 @@
 package com.olegych.scastie
 package client
 
-import api.SnippetId
-
-import japgolly.scalajs.react._, vdom.all._
+import com.olegych.scastie.api.SnippetId
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
+import org.scalajs.dom.window._
 
 object SideBar {
+
   private val component =
     ReactComponentB[(AppState, AppBackend, Option[SnippetId])]("SideBar").render_P {
       case (state, backend, snippetId) =>
         import backend._
-
-        val theme = if (state.isDarkTheme) "dark" else "light"
 
         def selected(view: View) =
           if (view == currentView) TagMod(`class` := "selected") else EmptyTag
 
         def currentView = state.view
 
-        val consoleSelected =
-          if (state.consoleIsOpen) TagMod(`class` := "toggle selected")
-          else EmptyTag
+        val toggleThemeLabel = if (state.isDarkTheme) "Light" else "Dark"
 
-        val consoleLabel =
-          if (state.consoleIsOpen) "Close"
-          else "Open"
+        val selectedIcon =
+          if (state.isDarkTheme) "fa fa-sun-o"
+          else "fa fa-moon-o"
 
         val disabledIfSameInputs =
           if (!state.inputsHasChanged) "disabled"
@@ -37,82 +35,111 @@ object SideBar {
               TagMod(
                 li(onClick ==> save,
                    title := s"Save ($ctrl + S)",
-                   `class` := s"button $disabledIfSameInputs")(
-                  i(`class` := "fa fa-floppy-o"),
-                  p("Save")
+                   `class` := "btn")(
+                  i(`class` := "fa fa-download"),
+                  "Save"
                 )
               )
             case Some(sid) =>
               TagMod(
                 li(onClick ==> update(sid),
                    title := s"Save ($ctrl + S)",
-                   `class` := "button")(
-                  i(`class` := "fa fa-floppy-o"),
-                  p("Update")
+                   `class` := "btn")(
+                  i(`class` := "fa fa-pencil-square-o"),
+                  "Update"
                 ),
                 li(onClick ==> fork(sid),
                    title := s"Fork",
-                   `class` := "button")(
+                   `class` := "btn")(
                   i(`class` := "fa fa-code-fork"),
-                  p("Fork")
+                  "Fork"
                 ),
                 li(onClick ==> amend(sid),
-                   title := s"Amend",
-                   `class` := "button")(
-                  i(`class` := "fa fa-pencil-square-o"),
-                  p("Amend")
+                   title := s"Share",
+                   `class` := "btn")(
+                  i(`class` := "fa fa-share-alt"),
+                  "Share"
                 )
               )
           }
 
-        val formatCodeButton = li(onClick ==> formatCode,
-                                  title := "Format Code (F6)",
-                                  `class` := s"button $disabledIfSameInputs")(
-          iconic.justifyLeft,
-          p("Format")
-        )
+        val formatCodeButton =
+          li(onClick ==> formatCode,
+            title := "Format Code (F6)",
+            `class` := "btn")(
+            i(`class` := "fa fa-align-left"),
+            "Format"
+          )
 
-        val console = li(onClick ==> toggleConsole,
-                         title := s"$consoleLabel Console",
-                         consoleSelected,
-                         `class` := "button")(
-          iconic.terminal,
-          p("Console")
-        )
+        val themeButton =
+          li(onClick ==> backend.toggleTheme,
+            title := s"Select $toggleThemeLabel Theme (F2)",
+            `class` := "btn")(
+            i(`class` := s"fa $selectedIcon"),
+            toggleThemeLabel
+          )
+
+        val helpButton =
+          li(onClick ==> showHelp,
+            title := "Show help Menu",
+            `class` := "btn")(
+            i(`class` := "fa fa-question-circle"),
+            "Help"
+          )
 
         def buttonsRibbon: View => Seq[TagMod] = {
           case View.Editor =>
             Seq(
-              LibraryButton(state, backend),
               RunButton(state, backend),
-              ClearButton(state, backend),
               formatCodeButton,
-              console,
-              sharing
+              ClearButton(state, backend),
+              WorksheetButton(state, backend),
+              sharing,
+              BuildSettingsButton(state, backend)
             )
-          case View.Libraries =>
+          case View.BuildSettings =>
             Seq(
-              LibraryButton(state, backend),
-              RunButton(state, backend)
+              RunButton(state, backend),
+              formatCodeButton,
+              ClearButton(state, backend),
+              WorksheetButton(state, backend),
+              sharing,
+              BuildSettingsButton(state, backend)
             )
-          case View.UserProfile =>
+          case View.CodeSnippets =>
             Seq(
-              LibraryButton(state, backend),
-              RunButton(state, backend)
+              RunButton(state, backend),
+              formatCodeButton,
+              ClearButton(state, backend),
+              WorksheetButton(state, backend),
+              sharing,
+              BuildSettingsButton(state, backend)
             )
         }
 
         val currentButtonsForSelectedView = buttonsRibbon(currentView)
 
-        nav(`class` := s"sidebar $theme")(
-          ul(
-            li(onClick ==> goHome, title := "Scastie Logo", `class` := "logo")(
-              img(src := "/assets/public/dotty3.svg", alt := "Logo")
+        val buttonsBottom: Seq[TagMod] = Seq(themeButton, helpButton)
+
+        val sideBarMinHeight: Double = 683
+
+        def actionsContainerStyle: TagMod = TagMod(
+          height := (if (innerHeight < sideBarMinHeight) sideBarMinHeight else innerHeight))
+
+        nav(`id` := "sidebar")(
+          div(`class` := "actions-container", actionsContainerStyle)(
+            a(`class` := "logo", href := "#")(
+              img(src := "/assets/public/img/icon-scastie.png"),
+              h1("Scastie")
             ),
-            currentButtonsForSelectedView
+            ul(`class` := "actions")(
+              currentButtonsForSelectedView
+            ),
+            ul(`class` := "actions bottom")(
+              buttonsBottom
+            )
           )
         )
-
     }.build
 
   def apply(state: AppState,

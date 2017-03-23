@@ -29,7 +29,8 @@ object AppState {
     user = None,
     attachedDoms = Map(),
     inputs = Inputs.default,
-    outputs = Outputs.default
+    outputs = Outputs.default,
+    windowHasResized = false
   )
 
   implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
@@ -61,7 +62,8 @@ case class AppState(
     user: Option[User],
     attachedDoms: AttachedDoms,
     inputs: Inputs,
-    outputs: Outputs
+    outputs: Outputs,
+    windowHasResized: Boolean
 ) {
   def copyAndSave(view: View = view,
                   running: Boolean = running,
@@ -78,7 +80,8 @@ case class AppState(
                   user: Option[User] = user,
                   attachedDoms: AttachedDoms = attachedDoms,
                   inputs: Inputs = inputs,
-                  outputs: Outputs = outputs): AppState = {
+                  outputs: Outputs = outputs,
+                  windowHasResized: Boolean = windowHasResized): AppState = {
 
     val snippetId0 =
       if (inputsHasChanged) None
@@ -108,7 +111,8 @@ case class AppState(
           showInUserProfile = false,
           forked = None
         ),
-        outputs
+        outputs,
+        windowHasResized
       )
 
     LocalStorage.save(state0)
@@ -137,6 +141,9 @@ case class AppState(
 
   def toggleConsole: AppState =
     copyAndSave(consoleIsOpen = !consoleIsOpen)
+
+  def setWindowHasResized: AppState =
+    copyAndSave(windowHasResized = !windowHasResized)
 
   def toggleWorksheetMode: AppState =
     copyAndSave(
