@@ -45,7 +45,7 @@ object SideBar {
                 li(
                    title := s"Save ($ctrl + S)",
                    `class` := "btn", isDisabled(onClick ==> update(sid)))(
-                  i(`class` := "fa fa-pencil-square-o"),
+                  i(`class` := "fa fa-download"),
                   "Update"
                 ),
                 li(
@@ -55,10 +55,10 @@ object SideBar {
                   "Fork"
                 ),
                 li(
-                   title := s"Share",
-                   `class` := "btn", isDisabled(onClick ==> toggleWelcome))(
-                  i(`class` := "fa fa-share-alt"),
-                  "Share"
+                   title := s"Amend",
+                   `class` := "btn", isDisabled(onClick ==> amend(sid)))(
+                  i(`class` := "fa fa-pencil-square-o"),
+                  "Amend"
                 )
               )
           }

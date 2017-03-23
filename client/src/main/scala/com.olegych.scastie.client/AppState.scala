@@ -161,6 +161,11 @@ case class AppState(
   def toggleHelp: AppState =
     copyAndSave(isHelpModalClosed = !isHelpModalClosed)
 
+  def toggleWelcomeHelp: AppState =
+    copyAndSave(
+      isWelcomeModalClosed = !isWelcomeModalClosed,
+      isHelpModalClosed = !isHelpModalClosed)
+
   def openConsole: AppState =
     copyAndSave(consoleIsOpen = true)
 

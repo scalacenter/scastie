@@ -36,7 +36,7 @@ object Welcome {
               p(`class` := "modal-intro")(
                 i(`class` := "fa fa-question-circle"),
                 "If you want to learn more about how Scastie works, you can go to our ",
-                a(href := "#","Help"),
+                a(href := "","Help", onClick ==> backend.toggleWelcomeHelp),
                 "."
               )
             )
