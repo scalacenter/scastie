@@ -124,7 +124,7 @@ body {
           cursor: pointer; }
       body .app.light .modal .modal-close {
         position: absolute;
-        top: 3em;
+        top: 1.5em;
         right: 1.5em;
         height: 1.5em;
         width: 1.5em;
@@ -147,79 +147,83 @@ body {
           background: #c4c4c4; }
         body .app.light .modal .modal-close::before {
           transform: rotate(-45deg); }
-      body .app.light .modal .modal-inner {
+      body .app.light .modal .modal-window {
         background: #fff;
         border-radius: 3px;
         margin: auto;
         margin-top: 0;
-        max-height: 95%;
-        overflow: auto;
-        padding: 1.5em;
+        max-height: 70%;
         position: relative;
         transition: opacity 0.25s ease;
-        width: 95%; }
-        @media screen and (min-width: 40em) {
-          body .app.light .modal .modal-inner {
-            max-height: 70%;
-            padding: 3em;
-            width: 60%; } }
-        @media screen and (min-width: 53.75em) {
-          body .app.light .modal .modal-inner {
-            width: 50%; } }
-        body .app.light .modal .modal-inner p {
-          color: #333;
-          line-height: 25px;
-          margin: 10px 0 20px 0; }
-          body .app.light .modal .modal-inner p.normal {
-            font-family: Lato;
-            font-size: 15px; }
-        body .app.light .modal .modal-inner .modal-content {
-          color: #333; }
+        width: 50%;
+        overflow: hidden; }
+        body .app.light .modal .modal-window .modal-header {
+          background: #fff;
+          padding: 2em;
+          position: relative;
+          width: 100%;
+          border-radius: 3px; }
+        body .app.light .modal .modal-window .modal-inner {
+          width: 100%;
+          overflow-y: scroll; }
           @media screen and (min-width: 40em) {
-            body .app.light .modal .modal-inner .modal-content {
-              columns: 2 8em; } }
-        body .app.light .modal .modal-inner a {
-          color: #27b3d9; }
-        body .app.light .modal .modal-inner a.cta {
-          color: #fff;
-          display: inline-block;
-          margin-right: 0.5em;
-          margin-top: 1em; }
-          body .app.light .modal .modal-inner a.cta:last-child {
-            padding: 0 2em; }
-        body .app.light .modal .modal-inner .indent {
-          padding-left: 40px; }
-        body .app.light .modal .modal-inner .shortcuts {
-          margin-bottom: 25px; }
-          body .app.light .modal .modal-inner .shortcuts table {
-            border: none; }
-            body .app.light .modal .modal-inner .shortcuts table th {
-              width: 285px;
-              font-family: monospace;
-              font-size: 13px;
-              line-height: 30px;
-              font-weight: normal;
-              font-style: normal;
-              font-stretch: normal;
-              letter-spacing: normal;
-              color: #27b3d9; }
-            body .app.light .modal .modal-inner .shortcuts table td:first-of-type {
-              vertical-align: bottom; }
-            body .app.light .modal .modal-inner .shortcuts table td span {
-              text-align: center;
-              width: 33px;
-              height: 20px;
-              line-height: 20px;
-              border-radius: 1px;
-              background-color: #859900;
-              color: #fff;
-              display: inline-block;
-              margin: 0 5px; }
-      body .app.light .modal .modal-state:checked + .modal-fade-screen {
-        opacity: 1;
-        visibility: visible; }
-      body .app.light .modal .modal-state:checked + .modal-fade-screen .modal-inner {
-        top: 0.5em; }
+            body .app.light .modal .modal-window .modal-inner {
+              max-height: 70%;
+              padding: 0 3em 3em; } }
+          body .app.light .modal .modal-window .modal-inner p {
+            color: #333;
+            line-height: 25px;
+            margin: 10px 0 20px 0; }
+            body .app.light .modal .modal-window .modal-inner p.normal {
+              font-family: Lato;
+              font-size: 15px; }
+          body .app.light .modal .modal-window .modal-inner .modal-content {
+            color: #333; }
+            @media screen and (min-width: 40em) {
+              body .app.light .modal .modal-window .modal-inner .modal-content {
+                columns: 2 8em; } }
+          body .app.light .modal .modal-window .modal-inner a {
+            color: #27b3d9; }
+          body .app.light .modal .modal-window .modal-inner a.cta {
+            color: #fff;
+            display: inline-block;
+            margin-right: 0.5em;
+            margin-top: 1em; }
+            body .app.light .modal .modal-window .modal-inner a.cta:last-child {
+              padding: 0 2em; }
+          body .app.light .modal .modal-window .modal-inner .indent {
+            padding-left: 40px; }
+          body .app.light .modal .modal-window .modal-inner .shortcuts {
+            margin-bottom: 25px; }
+            body .app.light .modal .modal-window .modal-inner .shortcuts table {
+              border: none; }
+              body .app.light .modal .modal-window .modal-inner .shortcuts table th {
+                width: 285px;
+                font-family: monospace;
+                font-size: 13px;
+                line-height: 30px;
+                font-weight: normal;
+                font-style: normal;
+                font-stretch: normal;
+                letter-spacing: normal;
+                color: #27b3d9; }
+              body .app.light .modal .modal-window .modal-inner .shortcuts table td:first-of-type {
+                vertical-align: bottom; }
+              body .app.light .modal .modal-window .modal-inner .shortcuts table td span {
+                text-align: center;
+                width: 33px;
+                height: 20px;
+                line-height: 20px;
+                border-radius: 1px;
+                background-color: #859900;
+                color: #fff;
+                display: inline-block;
+                margin: 0 5px; }
+        body .app.light .modal .modal-window .modal-state:checked + .modal-fade-screen {
+          opacity: 1;
+          visibility: visible; }
+        body .app.light .modal .modal-window .modal-state:checked + .modal-fade-screen .modal-inner {
+          top: 0.5em; }
     body .app.light .modal-open {
       overflow: hidden; }
     body .app.light .hide {
