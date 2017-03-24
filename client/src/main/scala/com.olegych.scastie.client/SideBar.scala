@@ -1,6 +1,7 @@
 package com.olegych.scastie
 package client
 
+import com.olegych.scastie.client.DefaultSizes._
 import com.olegych.scastie.api.SnippetId
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
@@ -121,10 +122,8 @@ object SideBar {
 
         val buttonsBottom: Seq[TagMod] = Seq(themeButton, helpButton)
 
-        val sideBarMinHeight: Double = 683
-
         def actionsContainerStyle: TagMod = TagMod(
-          height := (if (innerHeight < sideBarMinHeight) sideBarMinHeight else innerHeight))
+          height := s"${if (innerHeight < sideBarMinHeight) sideBarMinHeight else innerHeight}px")
 
         nav(`id` := "sidebar")(
           div(`class` := "actions-container", actionsContainerStyle)(

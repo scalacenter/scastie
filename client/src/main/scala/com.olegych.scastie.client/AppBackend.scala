@@ -146,6 +146,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleWelcomeHelp(): Callback = scope.modState(_.toggleWelcomeHelp)
   def toggleWelcomeHelp(e: ReactEventI): Callback = toggleWelcomeHelp()
 
+  def toggleShare(): Callback = scope.modState(_.toggleShare)
+  def toggleShare(e: ReactEventI): Callback = toggleShare()
+
   def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
   def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
 

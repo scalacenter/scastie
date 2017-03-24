@@ -7,15 +7,15 @@ import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import japgolly.scalajs.react._
 import extra.router._
-import vdom.all._
+import vdom.all.{onClick, _}
 
 object CodeSnippets {
 
-  def apply(router: Option[RouterCtl[Page]], state: AppState) =
-    component((router, state))
+  def apply(router: Option[RouterCtl[Page]], state: AppState, backend: AppBackend) =
+    component((router, state, backend))
 
   class Backend(
-      scope: BackendScope[(Option[RouterCtl[Page]], AppState),
+      scope: BackendScope[(Option[RouterCtl[Page]], AppState, AppBackend),
                           List[SnippetSummary]]) {
     def loadProfile(): Callback = {
       Callback.future(
@@ -39,11 +39,11 @@ object CodeSnippets {
   }
 
   private val component =
-    ReactComponentB[(Option[RouterCtl[Page]], AppState)]("CodeSnippets")
+    ReactComponentB[(Option[RouterCtl[Page]], AppState, AppBackend)]("CodeSnippets")
       .initialState(List.empty[SnippetSummary])
       .backend(new Backend(_))
       .renderPS {
-        case (scope, (maybeRouter, state), summaries) => {
+        case (scope, (maybeRouter, state, backend), summaries) => {
           assert(maybeRouter.isDefined,
                  "should not be able to access profile view from embedded")
           val router = maybeRouter.get
@@ -83,11 +83,12 @@ object CodeSnippets {
                             div(`class` := "header", "/" + base64UUID + " - ")(
                               span(`class` := "update", "Update: " + update),
                               div(`class` := "actions")(
-                                a(href := "#",
-                                  title := "Share")(
+                                a(href := "",
+                                  title := "Share",
+                                  onClick ==> backend.toggleShare)(
                                   i(`class` := "fa fa-share-alt")
                                 ),
-                                a(href := "#",
+                                a(href := "",
                                   title := "Delete",
                                   onClick ==> scope.backend.delete(summary))(
                                   i(`class` := "fa fa-trash")
@@ -108,8 +109,8 @@ object CodeSnippets {
         }
       }
       .componentWillReceiveProps { delta =>
-        val (_, currentAppState) = delta.currentProps
-        val (_, nextAppState) = delta.nextProps
+        val (_, currentAppState, _) = delta.currentProps
+        val (_, nextAppState, _) = delta.nextProps
 
         if (currentAppState.view != View.CodeSnippets && nextAppState.view == View.CodeSnippets) {
           delta.$.backend.loadProfile()

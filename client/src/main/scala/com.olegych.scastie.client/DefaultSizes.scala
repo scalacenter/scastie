@@ -6,6 +6,7 @@ object DefaultSizes {
   val topBarMinWidth = 500
   val sideBarWidth = 149
   val consoleBarHeight: Double = 33
-  val consoleHeight = 0.25
+  val consoleHeight: Double  = 0.25
+  val sideBarMinHeight: Double = 683
 
 }

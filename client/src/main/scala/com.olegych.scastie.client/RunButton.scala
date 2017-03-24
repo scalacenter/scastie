@@ -35,9 +35,9 @@ object RunButton {
           }
         } else {
           li(onClick ==> setView2(View.Editor),
-             title := "Open Edit View",
+             title := "Running your Code...",
              `class` := "btn run-button")(
-            i(`class` := "fa fa-spinner"),
+            i(`class` := "fa fa-spinner fa-spin"),
             "Running"
           )
         }

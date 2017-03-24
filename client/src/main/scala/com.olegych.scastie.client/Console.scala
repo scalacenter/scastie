@@ -1,5 +1,6 @@
 package com.olegych.scastie.client
 
+import com.olegych.scastie.client.DefaultSizes._
 import japgolly.scalajs.react._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLPreElement
@@ -19,8 +20,8 @@ object Console {
         else (display.none, display.block)
 
       def consoleStyle: TagMod = Seq(
-        height := "25%",
-        width := dom.window.innerWidth - 149,
+        height := s"${dom.window.innerHeight*consoleHeight}px",
+        width := s"${dom.window.innerWidth - sideBarWidth}px",
         displayConsole)
 
       div(`id` := "console-container")(

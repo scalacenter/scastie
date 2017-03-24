@@ -17,13 +17,13 @@ object AppState {
     isShowingWelcomeAtStartup = true,
     isHelpModalClosed = true,
     isWelcomeModalClosed = false,
+    isShareModalClosed = true,
     isDarkTheme = false,
     consoleIsOpen = false,
     consoleHasUserOutput = false,
     inputsHasChanged = false,
     snippetId = None,
     loadSnippet = true,
-    isStartup = true,
     loadScalaJsScript = false,
     isScalaJsScriptLoaded = false,
     snippetIdIsScalaJS = false,
@@ -51,13 +51,13 @@ case class AppState(
     isShowingWelcomeAtStartup: Boolean,
     isWelcomeModalClosed: Boolean,
     isHelpModalClosed: Boolean,
+    isShareModalClosed: Boolean,
     isDarkTheme: Boolean,
     consoleIsOpen: Boolean,
     consoleHasUserOutput: Boolean,
     inputsHasChanged: Boolean,
     snippetId: Option[SnippetId],
     loadSnippet: Boolean,
-    isStartup: Boolean,
     loadScalaJsScript: Boolean,
     isScalaJsScriptLoaded: Boolean,
     snippetIdIsScalaJS: Boolean,
@@ -74,6 +74,7 @@ case class AppState(
                   isShowingWelcomeAtStartup: Boolean = isShowingWelcomeAtStartup,
                   isWelcomeModalClosed: Boolean = isWelcomeModalClosed,
                   isHelpModalClosed: Boolean = isHelpModalClosed,
+                  isShareModalClosed: Boolean = isShareModalClosed,
                   isDarkTheme: Boolean = isDarkTheme,
                   consoleIsOpen: Boolean = consoleIsOpen,
                   consoleHasUserOutput: Boolean = consoleHasUserOutput,
@@ -99,13 +100,13 @@ case class AppState(
         isShowingWelcomeAtStartup,
         isWelcomeModalClosed,
         isHelpModalClosed,
+        isShareModalClosed,
         isDarkTheme,
         consoleIsOpen,
         consoleHasUserOutput,
         inputsHasChanged,
         snippetId0,
         loadSnippet,
-        isStartup,
         loadScalaJsScript,
         isScalaJsScriptLoaded,
         snippetIdIsScalaJS,
@@ -165,6 +166,9 @@ case class AppState(
     copyAndSave(
       isWelcomeModalClosed = !isWelcomeModalClosed,
       isHelpModalClosed = !isHelpModalClosed)
+
+  def toggleShare: AppState =
+    copyAndSave(isShareModalClosed = !isShareModalClosed)
 
   def openConsole: AppState =
     copyAndSave(consoleIsOpen = true)

@@ -141,6 +141,11 @@
               width: 50%;
               overflow: hidden;
 
+            .modal-share{
+                overflow:hidden;
+                padding-top: 20em;
+            }
+
             .modal-header {
               background: $modal-background;
               padding: 2em;
@@ -255,6 +260,11 @@
       font-size: 16px;
       width: 20px;
       text-align: left;
+    }
+
+    i.fa-spin {
+       font-size: 16px;
+       width: 16px;
     }
 
       #topbar {
