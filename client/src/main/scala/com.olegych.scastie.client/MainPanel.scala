@@ -1,15 +1,15 @@
 package com.olegych.scastie
 package client
 
+import com.olegych.scastie.client.DefaultSizes._
 import japgolly.scalajs.react._
-import vdom.all._
-import org.scalajs.dom.raw.{HTMLElement, HTMLPreElement}
+import japgolly.scalajs.react.vdom.all._
+import org.scalajs.dom.raw.HTMLPreElement
 import org.scalajs.dom.window._
 
 object MainPanel {
 
   private val consoleElement = Ref[HTMLPreElement]("console")
-  private val topbarElement = Ref[HTMLElement]("topbar")
   private val component =
     ReactComponentB[(AppState, AppBackend, AppProps)]("MainPanel").render_P {
       case (state, backend, props) =>
@@ -24,13 +24,8 @@ object MainPanel {
           if (embedded) TagMod(EmbeddedMenu(state, backend))
           else EmptyTag
 
-        val topBarHeight = 70
-        val sideBarWidth = 149
-        val consoleBarHeight: Double = 33
-        lazy val consoleHeight = innerHeight*0.25
-
         def editorStyle: TagMod = Seq(
-          height := innerHeight - topBarHeight - (if(state.consoleIsOpen) consoleHeight else consoleBarHeight),
+          height := innerHeight - topBarHeight - (if(state.consoleIsOpen) innerHeight*consoleHeight else consoleBarHeight),
           width := innerWidth - sideBarWidth)
 
         def containerStyle: TagMod = Seq(

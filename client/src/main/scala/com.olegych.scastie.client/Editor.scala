@@ -2,7 +2,7 @@ package com.olegych.scastie
 package client
 
 import api.{Instrumentation, Value, Html, AttachedDom}
-
+import com.olegych.scastie.client.DefaultSizes._
 import japgolly.scalajs.react._, vdom.all._
 
 
@@ -160,15 +160,10 @@ object Editor {
                        current: Option[AppState],
                        next: AppState): Callback = {
 
-    val topBarHeight = 70
-    val sideBarWidth = 149
-    val consoleBarHeight: Double = 33
-    lazy val consoleHeight = dom.window.innerHeight*0.25
-
     def setSize() = {
       if (current.map(_.windowHasResized) != Some(next.windowHasResized)) {
         val height = dom.window.innerHeight - topBarHeight -
-          (if(current.exists(_.consoleIsOpen)) consoleHeight else consoleBarHeight)
+          (if(current.exists(_.consoleIsOpen)) dom.window.innerHeight*consoleHeight else consoleBarHeight)
         val width = dom.window.innerWidth - sideBarWidth
 
         editor.setSize(width.toString, height.toString)

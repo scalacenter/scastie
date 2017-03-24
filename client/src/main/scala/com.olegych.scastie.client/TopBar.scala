@@ -1,7 +1,8 @@
 package com.olegych.scastie.client
 
-import japgolly.scalajs.react._, vdom.all._
-
+import com.olegych.scastie.client.DefaultSizes._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.window._
 
@@ -62,9 +63,6 @@ object TopBar {
                 )
               )
           }
-
-        val topBarMinWidth = 500
-        val sideBarWidth = 149
 
         def actionsTopBarStyle: TagMod =
           if (innerWidth < topBarMinWidth) TagMod(left := sideBarWidth) else EmptyTag
