@@ -26,7 +26,7 @@ object WorksheetButton {
         li(
           title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
           worksheetModeSelected,
-           `class` := "btn", isDisabled)(
+           `class` := "btn editor", isDisabled)(
           i(`class` := "fa fa-calendar"),
           "Worksheet",
           i(`id` := "workSheetIndicator", `class` := "fa fa-circle", worksheetModeSelected)

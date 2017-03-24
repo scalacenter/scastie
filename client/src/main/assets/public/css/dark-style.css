@@ -122,6 +122,26 @@ body {
           bottom: 0;
           left: 0;
           cursor: pointer; }
+        body .app.dark .modal .modal-fade-screen .modal-share {
+          margin-top: 10em;
+          height: 300px; }
+          body .app.dark .modal .modal-fade-screen .modal-share .modal-inner {
+            overflow: hidden; }
+          body .app.dark .modal .modal-fade-screen .modal-share .snippet-link {
+            height: 40px;
+            border: 1px solid #5d7c83;
+            margin-top: 60px; }
+            body .app.dark .modal .modal-fade-screen .modal-share .snippet-link input {
+              border: 0px;
+              width: calc(100% - 40px);
+              height: 100%;
+              padding: 10px; }
+            body .app.dark .modal .modal-fade-screen .modal-share .snippet-link .snippet-clip {
+              display: inline-block;
+              width: 40px;
+              height: 100%;
+              padding: 10px;
+              cursor: pointer; }
       body .app.dark .modal .modal-close {
         position: absolute;
         top: 1.5em;
@@ -152,27 +172,23 @@ body {
         border-radius: 3px;
         margin: auto;
         margin-top: 0;
-        max-height: 70%;
+        height: 70%;
         position: relative;
         transition: opacity 0.25s ease;
         width: 50%;
         overflow: hidden; }
-        body .app.dark .modal .modal-window .modal-share {
-          overflow: hidden;
-          padding-top: 20em; }
         body .app.dark .modal .modal-window .modal-header {
           background: #fff;
-          padding: 2em;
+          padding: 30px;
           position: relative;
+          height: 90px;
           width: 100%;
           border-radius: 3px; }
         body .app.dark .modal .modal-window .modal-inner {
           width: 100%;
-          overflow-y: scroll; }
-          @media screen and (min-width: 40em) {
-            body .app.dark .modal .modal-window .modal-inner {
-              max-height: 70%;
-              padding: 0 3em 3em; } }
+          overflow-y: scroll;
+          height: calc(100% - 90px);
+          padding: 0 30px 10px 30px; }
           body .app.dark .modal .modal-window .modal-inner p {
             color: #333;
             line-height: 25px;
@@ -366,7 +382,7 @@ body {
         body .app.dark #sidebar .actions-container #workSheetIndicator {
           line-height: 58px;
           margin-left: 8px;
-          font-size: 14px;
+          font-size: 10px;
           width: 18px;
           color: #002b36; }
           body .app.dark #sidebar .actions-container #workSheetIndicator.enabled {
@@ -557,7 +573,9 @@ body {
                 font-style: italic; }
               body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet .header .actions {
                 float: right; }
-                body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet .header .actions a {
+                body .app.dark #snippets-container #code-snippets-container #snippets .group .snippet .header .actions .btn {
+                  cursor: pointer;
+                  display: inline-block;
                   font-size: 18px;
                   margin-left: 18px;
                   text-decoration: none;

@@ -24,7 +24,17 @@ object Share {
                 h1("Share your Code Snippet")
               ),
               div(`class` := "modal-inner")(
-                p(`class` := "modal-intro","Share your code snippet:")
+                p(`class` := "modal-intro","Share your code snippet:"),
+                div(`class` := "snippet-link")(
+                  input.text(
+                    placeholder := "your snippet link"
+                  ),
+                  li(
+                    title := "Copy to Clipboard",
+                    `class` := "btn snippet-clip", onClick ==> backend.formatCode)(
+                    i(`class` := "fa fa-clipboard")
+                  )
+                )
               )
             )
           )

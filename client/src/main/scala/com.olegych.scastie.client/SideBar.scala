@@ -44,6 +44,12 @@ object SideBar {
             case Some(sid) =>
               TagMod(
                 li(
+                  title := s"Amend",
+                  `class` := "btn", isDisabled(onClick ==> amend(sid)))(
+                  i(`class` := "fa fa-pencil-square-o"),
+                  "Amend"
+                ),
+                li(
                    title := s"Save ($ctrl + S)",
                    `class` := "btn", isDisabled(onClick ==> update(sid)))(
                   i(`class` := "fa fa-download"),
@@ -54,12 +60,6 @@ object SideBar {
                    `class` := "btn", isDisabled(onClick ==> fork(sid)))(
                   i(`class` := "fa fa-code-fork"),
                   "Fork"
-                ),
-                li(
-                   title := s"Amend",
-                   `class` := "btn", isDisabled(onClick ==> amend(sid)))(
-                  i(`class` := "fa fa-pencil-square-o"),
-                  "Amend"
                 )
               )
           }

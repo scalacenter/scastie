@@ -83,12 +83,12 @@ object CodeSnippets {
                             div(`class` := "header", "/" + base64UUID + " - ")(
                               span(`class` := "update", "Update: " + update),
                               div(`class` := "actions")(
-                                a(href := "",
+                                li(`class` := "btn",
                                   title := "Share",
                                   onClick ==> backend.toggleShare)(
                                   i(`class` := "fa fa-share-alt")
                                 ),
-                                a(href := "",
+                                li(`class` := "btn",
                                   title := "Delete",
                                   onClick ==> scope.backend.delete(summary))(
                                   i(`class` := "fa fa-trash")

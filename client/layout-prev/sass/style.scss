@@ -101,6 +101,39 @@
             @include position(absolute, 0);
             cursor: pointer;
           }
+
+              .modal-share{
+                  margin-top: 10em;
+                  height: 300px;
+
+                  .modal-inner {
+                        overflow: hidden;
+                  }
+
+                  .snippet-link {
+                      height: 40px;
+                      border: 1px solid #5d7c83;
+                      margin-top: 60px;
+
+                      input{
+                        border: 0px;
+                        width: calc(100% - 40px);
+                        height: 100%;
+                        padding: 10px;
+                      }
+
+                      .snippet-clip {
+                            display: inline-block;
+                            width: 40px;
+                            height: 100%;
+                            padding: 10px;
+                            cursor: pointer;
+
+                      }
+
+                  }
+              }
+
         }
 
         .modal-close {
@@ -135,21 +168,17 @@
               border-radius: $base-border-radius;
               margin: auto;
               margin-top: 0;
-              max-height: 70%;
+              height: 70%;
               position: relative;
               transition: opacity 0.25s ease;
               width: 50%;
               overflow: hidden;
 
-            .modal-share{
-                overflow:hidden;
-                padding-top: 20em;
-            }
-
             .modal-header {
               background: $modal-background;
-              padding: 2em;
+              padding: 30px;
               position: relative;
+              height: 90px;
               width: 100%;
               border-radius: $base-border-radius;
              }
@@ -157,11 +186,8 @@
             .modal-inner {
               width: 100%;
               overflow-y: scroll;
-
-              @include media($medium-screen) {
-                max-height: 70%;
-                padding: 0 $modal-padding $modal-padding;
-              }
+              height: calc(100% - 90px);
+              padding: 0 30px 10px 30px;
 
               p {
                 color: $base-font-color;
@@ -422,7 +448,7 @@
           #workSheetIndicator {
             line-height: 58px;
             margin-left: 8px;
-            font-size: 14px;
+            font-size: 10px;
             width: 18px;
             color: $topbar-background;
 
@@ -646,7 +672,9 @@
 
                 .actions {
                   float: right;
-                  a {
+                  .btn {
+                    cursor: pointer;
+                    display: inline-block;
                     font-size: 18px;
                     margin-left: 18px;
                     text-decoration: none;
