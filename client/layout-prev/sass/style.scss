@@ -773,9 +773,9 @@
               }
             }
 
-            select#version {
+            #scala-version {
               display: inline-block;
-              width: 150px;
+              width: 140px;
             }
 
             select, input {
@@ -893,7 +893,7 @@
                   }
                   select {
                     display: inline-block;
-                    width: 100px;
+                    width: 140px;
                     margin-left: 20px;
                   }
 

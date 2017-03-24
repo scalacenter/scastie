@@ -356,9 +356,11 @@ object ScaladexSearch {
           }
 
           def renderOptions(selected: Selected) = {
-            select(value := selected.release.version,
-                   onChange ==> scope.backend.updateVersion(selected))(
-              selected.options.versions.reverse.map(v => option(value := v)(v))
+            div(`class` := "select-wrapper")(
+              select(value := selected.release.version,
+                     onChange ==> scope.backend.updateVersion(selected))(
+                selected.options.versions.reverse.map(v => option(value := v)(v))
+              )
             )
           }
 

@@ -666,9 +666,9 @@ body {
             top: 10px;
             right: 10px;
             font-size: 13px; }
-        body .app.light #settings-container #build-settings-container select#version {
+        body .app.light #settings-container #build-settings-container #scala-version {
           display: inline-block;
-          width: 150px; }
+          width: 140px; }
         body .app.light #settings-container #build-settings-container select, body .app.light #settings-container #build-settings-container input {
           -webkit-appearance: none;
           -moz-appearance: none;
@@ -761,5 +761,5 @@ body {
               vertical-align: middle; }
             body .app.light #settings-container #build-settings-container .search .added .result select {
               display: inline-block;
-              width: 100px;
+              width: 140px;
               margin-left: 20px; }

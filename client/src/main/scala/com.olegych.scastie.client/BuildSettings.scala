@@ -155,10 +155,6 @@ object BuildSettings {
       "2.9.0"
     )
 
-    def selected(version: String) =
-      if (!suggestedVersions.contains(version)) TagMod(`checked` := "checked")
-      else EmptyTag
-
     def setScalaVersion(targetApply: String => ScalaTarget)(
         e: ReactEventI): Callback =
       backend.setTarget(targetApply(e.target.value))
@@ -169,6 +165,10 @@ object BuildSettings {
 
       def handler(scalaVersion: String) =
         TagMod(onClick ==> backend.setTarget2(targetApply(scalaVersion)))
+
+      def selected(version: String) =
+        if (!suggestedVersions.contains(version)) TagMod(`checked` := "checked")
+        else EmptyTag
 
       TagMod(
         ul(`id` := "suggestedVersions")(
@@ -184,7 +184,7 @@ object BuildSettings {
               div(`class` := "select-wrapper")(
                 select(name := "scalaVersion",
                   value := scalaVersion.toString,
-                  onChange ==> setScalaVersion(targetApply), selected(scalaVersion))(
+                  onChange ==> setScalaVersion(targetApply))(
                   allVersions.map(version => option(version))
                 )
               )
