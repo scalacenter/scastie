@@ -32,11 +32,10 @@ object Help {
           else display.block
 
         div(`class` := "modal", displayHelp)(
-          input(`type` := "checkbox", `id` := "modal-help", `class` := "modal-state"),
           div(`class` := "modal-fade-screen")(
             div(`class` := "modal-window")(
               div(`class` := "modal-header")(
-                div(`for` := "modal-help", `class` := "modal-close", onClick ==> backend.toggleHelp))(
+                div(`class` := "modal-close", onClick ==> backend.toggleHelp))(
                 h1("Help about Scastie")
               ),
               div(`class` := "modal-inner")(

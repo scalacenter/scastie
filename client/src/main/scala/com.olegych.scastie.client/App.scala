@@ -37,7 +37,7 @@ object App {
             MainPanel(state, scope.backend, props),
             Welcome(state, scope.backend),
             Help(state, scope.backend),
-            Share(state, scope.backend)
+            Share(props.router, state, scope.backend)
           )
         }
       }

@@ -55,6 +55,15 @@ body {
     /* GENERAL ELEMENTS STYLES */
     /* CODE SNIPPETS PAGE STYLES */
     /* SETTINGS PAGE STYLES */ }
+    body .app.light ::-webkit-scrollbar {
+      width: 10px; }
+    body .app.light ::-webkit-scrollbar-thumb {
+      background: #5390bf; }
+    body .app.light ::-webkit-scrollbar-track {
+      background: #f5f5f5; }
+    body .app.light body {
+      scrollbar-face-color: #5390bf;
+      scrollbar-track-color: #f5f5f5; }
     body .app.light a {
       color: #fff;
       -webkit-transition: color, background-color 0.3s ease;
@@ -127,21 +136,39 @@ body {
           height: 300px; }
           body .app.light .modal .modal-fade-screen .modal-share .modal-inner {
             overflow: hidden; }
+            body .app.light .modal .modal-fade-screen .modal-share .modal-inner p {
+              margin: 30px 0 10px 0; }
+          body .app.light .modal .modal-fade-screen .modal-share .modal-copied {
+            font: inherit;
+            font-size: 18px;
+            margin-top: 20px !important;
+            position: absolute;
+            right: 30px; }
           body .app.light .modal .modal-fade-screen .modal-share .snippet-link {
-            height: 40px;
+            height: 48px;
             border: 1px solid #5d7c83;
-            margin-top: 60px; }
+            margin-top: 34px; }
             body .app.light .modal .modal-fade-screen .modal-share .snippet-link input {
               border: 0px;
-              width: calc(100% - 40px);
-              height: 100%;
-              padding: 10px; }
-            body .app.light .modal .modal-fade-screen .modal-share .snippet-link .snippet-clip {
-              display: inline-block;
-              width: 40px;
+              width: calc(100% - 46px);
               height: 100%;
               padding: 10px;
-              cursor: pointer; }
+              font: inherit;
+              font-size: 18px; }
+            body .app.light .modal .modal-fade-screen .modal-share .snippet-link .snippet-clip {
+              display: inline-block;
+              width: 46px;
+              height: 100%;
+              padding: 9px;
+              cursor: pointer;
+              font-size: 22px;
+              vertical-align: middle; }
+              body .app.light .modal .modal-fade-screen .modal-share .snippet-link .snippet-clip i.fa {
+                width: 22px;
+                text-align: center;
+                font-size: 22px; }
+              body .app.light .modal .modal-fade-screen .modal-share .snippet-link .snippet-clip:hover {
+                color: #334447; }
       body .app.light .modal .modal-close {
         position: absolute;
         top: 1.5em;
@@ -158,13 +185,13 @@ body {
           left: 50%;
           height: 1.5em;
           width: 0.15em;
-          background: #ddd;
+          background: #5d7c83;
           content: "";
           display: block;
           margin: -3px 0 0 -1px;
           transform: rotate(45deg); }
         body .app.light .modal .modal-close:hover::after, body .app.light .modal .modal-close:hover::before {
-          background: #c4c4c4; }
+          background: #334447; }
         body .app.light .modal .modal-close::before {
           transform: rotate(-45deg); }
       body .app.light .modal .modal-window {
@@ -176,7 +203,8 @@ body {
         position: relative;
         transition: opacity 0.25s ease;
         width: 50%;
-        overflow: hidden; }
+        overflow: hidden;
+        padding-bottom: 10px; }
         body .app.light .modal .modal-window .modal-header {
           background: #fff;
           padding: 30px;
@@ -697,7 +725,8 @@ body {
         body .app.light #settings-container #build-settings-container #scala-version {
           display: inline-block;
           width: 140px; }
-        body .app.light #settings-container #build-settings-container select, body .app.light #settings-container #build-settings-container input {
+        body .app.light #settings-container #build-settings-container select,
+        body .app.light #settings-container #build-settings-container input {
           -webkit-appearance: none;
           -moz-appearance: none;
           appearance: none;
@@ -712,16 +741,20 @@ body {
           display: block;
           font-size: 15px;
           box-sizing: border-box; }
-          body .app.light #settings-container #build-settings-container select::-moz-placeholder, body .app.light #settings-container #build-settings-container input::-moz-placeholder {
+          body .app.light #settings-container #build-settings-container select::-moz-placeholder,
+          body .app.light #settings-container #build-settings-container input::-moz-placeholder {
             color: #0f262f;
             opacity: 1; }
-          body .app.light #settings-container #build-settings-container select:-moz-placeholder, body .app.light #settings-container #build-settings-container input:-moz-placeholder {
+          body .app.light #settings-container #build-settings-container select:-moz-placeholder,
+          body .app.light #settings-container #build-settings-container input:-moz-placeholder {
             color: #0f262f;
             opacity: 1; }
-          body .app.light #settings-container #build-settings-container select::-webkit-input-placeholder, body .app.light #settings-container #build-settings-container input::-webkit-input-placeholder {
+          body .app.light #settings-container #build-settings-container select::-webkit-input-placeholder,
+          body .app.light #settings-container #build-settings-container input::-webkit-input-placeholder {
             color: #0f262f;
             opacity: 1; }
-          body .app.light #settings-container #build-settings-container select:-ms-input-placeholder, body .app.light #settings-container #build-settings-container input:-ms-input-placeholder {
+          body .app.light #settings-container #build-settings-container select:-ms-input-placeholder,
+          body .app.light #settings-container #build-settings-container input:-ms-input-placeholder {
             color: #0f262f;
             opacity: 1; }
         body .app.light #settings-container #build-settings-container .search {

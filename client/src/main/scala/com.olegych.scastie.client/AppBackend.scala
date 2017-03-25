@@ -146,8 +146,11 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleWelcomeHelp(): Callback = scope.modState(_.toggleWelcomeHelp)
   def toggleWelcomeHelp(e: ReactEventI): Callback = toggleWelcomeHelp()
 
-  def toggleShare(): Callback = scope.modState(_.toggleShare)
-  def toggleShare(e: ReactEventI): Callback = toggleShare()
+  def toggleShare(snippetId: Option[SnippetId]): Callback = scope.modState(_.toggleShare(snippetId))
+  def toggleShare2(snippetId: Option[SnippetId])(e: ReactEventI): Callback = toggleShare(snippetId)
+
+  def toggleSnippetCopied(): Callback = scope.modState(_.toggleSnippetCopied())
+  def toggleSnippetCopied(e: ReactEventI): Callback = toggleSnippetCopied()
 
   def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
   def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
@@ -373,4 +376,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
             }
         )
       } else Callback(()))
+
+  def copySnippetToClipboard(e: ReactEventI): Callback = copySnippetToClipboard()
+  def copySnippetToClipboard(): Callback =
+    scope.state.flatMap( state =>
+      Callback(document.querySelector(state.snippetId.toString)) >>
+      Callback(document.execCommand("copy"))
+    )
+
 }

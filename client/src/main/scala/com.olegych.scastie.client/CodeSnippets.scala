@@ -85,7 +85,7 @@ object CodeSnippets {
                               div(`class` := "actions")(
                                 li(`class` := "btn",
                                   title := "Share",
-                                  onClick ==> backend.toggleShare)(
+                                  onClick ==> backend.toggleShare2(Some(summary.snippetId)))(
                                   i(`class` := "fa fa-share-alt")
                                 ),
                                 li(`class` := "btn",

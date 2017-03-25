@@ -16,11 +16,10 @@ object Welcome {
         else display.block
 
         div(`class` := "modal", displayWelcome)(
-          input(`type` := "checkbox", `id` := "modal-welcome", `class` := "modal-state"),
           div(`class` := "modal-fade-screen")(
             div(`class` := "modal-window")(
               div(`class` := "modal-header")(
-                div(`for` := "modal-welcome", `class` := "modal-close", onClick ==> backend.toggleWelcome))(
+                div(`class` := "modal-close", onClick ==> backend.toggleWelcome))(
                 h1("Welcome to Scastie!")
               ),
               div(`class` := "modal-inner")(
