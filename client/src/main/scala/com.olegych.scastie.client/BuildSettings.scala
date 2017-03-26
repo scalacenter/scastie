@@ -8,6 +8,7 @@ import japgolly.scalajs.react._, vdom.all._
 object BuildSettings {
 
   def renderTarget(scalaTarget: ScalaTarget, backend: AppBackend) = {
+
     val targetTypes = List(
       ScalaTargetType.JVM,
       ScalaTargetType.Dotty,
@@ -26,16 +27,6 @@ object BuildSettings {
       }
     }
 
-    def logo(targetType: ScalaTargetType) = {
-      targetType match {
-        case ScalaTargetType.JVM => "smooth-spiral.png"
-        case ScalaTargetType.Dotty => "dotty-logo.svg"
-        case ScalaTargetType.JS => "scala-js.svg"
-        case ScalaTargetType.Native => "native.png"
-        case ScalaTargetType.Typelevel => "typelevel.svg"
-      }
-    }
-
     def labelFor(targetType: ScalaTargetType) = {
       targetType match {
         case ScalaTargetType.JVM => "Scalac"
@@ -47,8 +38,8 @@ object BuildSettings {
     }
 
     def selected(targetType: ScalaTargetType) =
-      if (targetType == scalaTarget.targetType) TagMod(`checked` := "checked")
-      else EmptyTag
+      if (targetType == scalaTarget.targetType) TagMod(`checked` := true)
+      else TagMod(`checked` := false)
 
     val disabledTargets: Set[ScalaTargetType] = Set(
       ScalaTargetType.Native
@@ -56,16 +47,18 @@ object BuildSettings {
 
     def handler(targetType: ScalaTargetType) =
       if (disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
-      else TagMod(onClick ==> backend.setTarget2(defaultTarget(targetType)))
+      else TagMod(onChange ==> backend.setTarget2(defaultTarget(targetType)))
 
     def vote(targetType: ScalaTargetType) = {
       val voteIssueId: Map[ScalaTargetType, Int] = Map(
         ScalaTargetType.Native -> 50
       )
       voteIssueId.get(targetType) match {
-        case Some(id) => {
-          val link = s"https://github.com/scalacenter/scastie/issues/$id"
-          a(href := link, target := "_blank")("Vote")
+        case Some(issueId) => {
+          val link = s"https://github.com/scalacenter/scastie/issues/$issueId"
+          a(href := link, target := "_blank")(
+            i(`class` := "fa fa-long-arrow-left"),
+            " Vote!")
         }
         case None => EmptyTag
       }
@@ -75,8 +68,13 @@ object BuildSettings {
       ul(`id` := "target")(
           targetTypes.map { targetType =>
             val targetLabel = labelFor(targetType)
-            li(handler(targetType))(
-              input(`type` := "radio", `id` := targetLabel, value := targetLabel, name := "target", selected(targetType)),
+            li(
+              input(`type` := "radio",
+                `id` := targetLabel,
+                value := targetLabel,
+                name := "target",
+                handler(targetType),
+                selected(targetType)),
               label(`for` := targetLabel, `class` := "radio", targetLabel),
               vote(targetType)
             )
@@ -155,8 +153,7 @@ object BuildSettings {
       "2.9.0"
     )
 
-    def setScalaVersion(targetApply: String => ScalaTarget)(
-        e: ReactEventI): Callback =
+    def setScalaVersion(targetApply: String => ScalaTarget)(e: ReactEventI): Callback =
       backend.setTarget(targetApply(e.target.value))
 
     val notSupported = div("Not supported")
@@ -164,23 +161,32 @@ object BuildSettings {
     def versionSelector(scalaVersion: String, targetApply: String => ScalaTarget) ={
 
       def handler(scalaVersion: String) =
-        TagMod(onClick ==> backend.setTarget2(targetApply(scalaVersion)))
+        TagMod(onChange ==> backend.setTarget2(targetApply(scalaVersion)))
 
       def selected(version: String) =
-        if (!suggestedVersions.contains(version)) TagMod(`checked` := "checked")
-        else EmptyTag
+        if (targetApply(version) == target) TagMod(`checked` := true)
+        else TagMod(`checked` := false)
 
       TagMod(
         ul(`id` := "suggestedVersions")(
-          suggestedVersions.map { version =>
-            li(handler(version))(
-              input(`type` := "radio", `id` := version, value := version, name := "scalaV"),
-              label(`for` := version, `class` := "radio", version)
+          suggestedVersions.map { suggestedVersion =>
+            li(
+              input(`type` := "radio",
+                `id` := suggestedVersion,
+                value := suggestedVersion,
+                name := "scalaV",
+                handler(suggestedVersion),
+                selected(suggestedVersion)),
+              label(`for` := suggestedVersion, `class` := "radio", suggestedVersion)
             )
           },
-          li(handler(scalaVersion))(
-            input(`type` := "radio", `id` := scalaVersion, value := scalaVersion, name := "scalaV"),
-            label(`class` := "radio")(
+          li(
+            input(`type` := "radio",
+              `id` := scalaVersion,
+              value := scalaVersion,
+              name := "scalaV",
+              handler(scalaVersion)),
+            label(
               div(`class` := "select-wrapper")(
                 select(name := "scalaVersion",
                   value := scalaVersion.toString,

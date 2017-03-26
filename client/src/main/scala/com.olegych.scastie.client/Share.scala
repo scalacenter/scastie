@@ -22,11 +22,10 @@ object Share {
         else display.none
 
       def getSnippetUrl =
-      for {
-        router <- maybeRouter
-        snippetId <- state.snippetId
-        url <- Option(router.urlFor(Page.fromSnippetId(snippetId)).value)
-      } yield url
+        for {
+          router <- maybeRouter
+          snippetId <- state.snippetId
+        } yield router.urlFor(Page.fromSnippetId(snippetId)).value
 
       div(`class` := "modal", displayShare)(
         div(`class` := "modal-fade-screen")(

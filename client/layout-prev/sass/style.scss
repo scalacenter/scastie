@@ -711,6 +711,17 @@
                         display: inline;
                         list-style-type: none;
                         padding-right: 20px;
+
+                        .disabled{
+                            cursor: default;
+                        }
+
+                        a {
+                            color: $input-color;
+                            text-decoration: none;
+                            position: relative;
+                            margin-left: -20px;
+                        }
                     }
                     #suggestedVersions li {
                         display: inline;
@@ -754,6 +765,7 @@
                     .select-wrapper {
                         position: relative;
                         display: inline-block;
+                        width: 130px;
                         &:after {
                             content: "\f0d7";
                             font-family: FontAwesome;
