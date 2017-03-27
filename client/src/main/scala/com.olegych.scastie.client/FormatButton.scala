@@ -11,12 +11,9 @@ object FormatButton {
     ReactComponentB[(AppState, AppBackend)]("FormatButton").render_P {
       case (state, backend) =>
 
-        val isDisabled =
-          if (state.view != View.Editor) TagMod(`class` := "disabled") else TagMod(onClick ==> backend.formatCode)
-
       li(
         title := "Format Code (F6)",
-        `class` := "btn", isDisabled)(
+        `class` := "btn", onClick ==> backend.formatCode)(
         i(`class` := "fa fa-align-left"),
         "Format"
       )

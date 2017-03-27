@@ -368,6 +368,40 @@ body {
                 background-repeat: no-repeat;
                 width: 10px;
                 height: 15px; }
+    body .app.light #editor-topbar {
+      border-bottom: 2px solid #073642;
+      display: block; }
+      body .app.light #editor-topbar.disabled {
+        display: none; }
+      body .app.light #editor-topbar #workSheetIndicator {
+        margin-right: 0px;
+        text-align: center;
+        width: 14px;
+        margin-left: 8px;
+        font-size: 14px;
+        color: #002b36; }
+        body .app.light #editor-topbar #workSheetIndicator.enabled {
+          color: #859900; }
+          body .app.light #editor-topbar #workSheetIndicator.enabled.alpha {
+            opacity: 0.3; }
+      body .app.light #editor-topbar .editor-buttons .btn {
+        display: inline-block;
+        cursor: pointer;
+        padding: 0 20px;
+        line-height: 58px;
+        -webkit-transition: color, background-color 0.3s ease;
+        -moz-transition: color, background-color 0.3s ease;
+        -o-transition: color, background-color 0.3s ease;
+        transition: color, background-color 0.3s ease;
+        color: #0f262f; }
+        body .app.light #editor-topbar .editor-buttons .btn i {
+          margin-right: 5px; }
+        body .app.light #editor-topbar .editor-buttons .btn:hover {
+          color: #00acdb; }
+      body .app.light #editor-topbar #save-buttons {
+        display: inline-block; }
+        body .app.light #editor-topbar #save-buttons .btn {
+          padding: 0 20px; }
     body .app.light #sidebar {
       float: left;
       height: 5000px;
@@ -444,6 +478,7 @@ body {
           cursor: pointer;
           padding-left: 20px;
           line-height: 58px;
+          width: 149px;
           -webkit-transition: color, background-color 0.3s ease;
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;

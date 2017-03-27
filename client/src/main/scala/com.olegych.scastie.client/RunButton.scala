@@ -18,8 +18,7 @@ object RunButton {
         if (!state.running) {
           li(onClick ==> run,
              title := s"Run Code ($ctrl + Enter)",
-             `class` := "btn run-button",
-             selected(View.Editor))(
+             `class` := "btn run-button")(
             i(`class` := "fa fa-play"),
             "Run"
           )

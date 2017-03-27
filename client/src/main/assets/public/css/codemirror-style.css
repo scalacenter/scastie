@@ -359,6 +359,10 @@ kbd {
   line-height: 1.4;
   white-space: nowrap; }
 
+.CodeMirror-simplescroll {
+  height: 100%;
+  width: 100%; }
+
 .CodeMirror-simplescroll-vertical {
   width: 0px; }
 

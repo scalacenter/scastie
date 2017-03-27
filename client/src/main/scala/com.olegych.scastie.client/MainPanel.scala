@@ -25,7 +25,7 @@ object MainPanel {
           else EmptyTag
 
         def editorStyle: TagMod = Seq(
-          height := s"${innerHeight - topBarHeight - (if(state.consoleIsOpen) innerHeight*consoleHeight else consoleBarHeight)}px",
+          height := s"${innerHeight - topBarHeight - editorTopBarHeight - (if(state.consoleIsOpen) innerHeight*consoleHeight else consoleBarHeight)}px",
           width := s"${innerWidth - sideBarWidth}px")
 
         def containerStyle: TagMod = Seq(
@@ -34,6 +34,7 @@ object MainPanel {
 
         div(`class` := "main-panel")(
           TopBar(state, backend),
+          EditorTopBar(state, backend, props.snippetId),
           div(`id` := "content")(
             div(`id`:= "editor-container", `class` := "inner-container", editorStyle, show(View.Editor))(
               div(`id`:= "code", editorStyle)(Editor(state, backend), embeddedMenu),

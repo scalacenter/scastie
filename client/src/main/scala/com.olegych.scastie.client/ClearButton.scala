@@ -10,12 +10,9 @@ object ClearButton {
     ReactComponentB[(AppState, AppBackend)]("ClearButton").render_P {
       case (state, backend) =>
 
-        val isDisabled =
-          if (state.view != View.Editor) TagMod(`class` := "disabled") else TagMod(onClick ==> backend.clear)
-
         li(
            title := "Clear Instrumentations (Esc)",
-           `class` := "btn", isDisabled)(
+           `class` := "btn", onClick ==> backend.clear)(
           i(`class` := "fa fa-eraser"),
           "Clear"
         )

@@ -17,9 +17,6 @@ object SaveButton {
         val disabledIfSameInputs =
           if (!state.inputsHasChanged) "disabled"
           else ""
-        
-        def isDisabled(tagMod: TagMod) =
-          if (state.view  != View.Editor) TagMod(`class` := "disabled") else tagMod
 
         import View.ctrl
 
@@ -27,27 +24,27 @@ object SaveButton {
           case None =>
             li(
               title := s"Save ($ctrl + S)",
-              `class` := "btn", isDisabled(onClick ==> backend.save))(
+              `class` := "btn", onClick ==> backend.save)(
               i(`class` := "fa fa-download"),
               "Save"
             )
           case Some(sid) =>
-            ul(
+            ul(`id` := "save-buttons")(
               li(
                 title := s"Amend",
-                `class` := "btn", isDisabled(onClick ==> backend.amend(sid)))(
+                `class` := "btn", onClick ==> backend.amend(sid))(
                 i(`class` := "fa fa-pencil-square-o"),
                 "Amend"
               ),
               li(
                 title := s"Save ($ctrl + S)",
-                `class` := "btn", isDisabled(onClick ==> backend.update(sid)))(
+                `class` := "btn", onClick ==> backend.update(sid))(
                 i(`class` := "fa fa-download"),
                 "Update"
               ),
               li(
                 title := s"Fork",
-                `class` := "btn", isDisabled(onClick ==> backend.fork(sid)))(
+                `class` := "btn", onClick ==> backend.fork(sid))(
                 i(`class` := "fa fa-code-fork"),
                 "Fork"
               )

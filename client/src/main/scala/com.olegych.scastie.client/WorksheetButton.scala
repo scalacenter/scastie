@@ -20,13 +20,10 @@ object WorksheetButton {
           if (state.inputs.worksheetMode) "OFF"
           else "ON"
 
-        val isDisabled =
-          if (state.view != View.Editor) TagMod(`class` := "disabled") else TagMod(onClick ==> backend.toggleWorksheetMode)
-
         li(
           title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
           worksheetModeSelected,
-           `class` := "btn editor", isDisabled)(
+           `class` := "btn editor", onClick ==> backend.toggleWorksheetMode)(
           i(`class` := "fa fa-calendar"),
           "Worksheet",
           i(`id` := "workSheetIndicator", `class` := "fa fa-circle", worksheetModeSelected)
