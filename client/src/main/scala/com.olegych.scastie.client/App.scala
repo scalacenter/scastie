@@ -21,7 +21,7 @@ object App {
 
           val sideBar =
             if (!props.isEmbedded)
-              TagMod(SideBar(state, scope.backend, props.snippetId))
+              TagMod(SideBar(state, scope.backend))
             else EmptyTag
 
           val appClass =

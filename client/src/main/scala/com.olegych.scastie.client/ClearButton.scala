@@ -9,9 +9,6 @@ object ClearButton {
   private val component =
     ReactComponentB[(AppState, AppBackend)]("ClearButton").render_P {
       case (state, backend) =>
-        def disabled(isDisabled: Boolean) =
-          if (isDisabled) "disabled"
-          else ""
 
         val isDisabled =
           if (state.view != View.Editor) TagMod(`class` := "disabled") else TagMod(onClick ==> backend.clear)
