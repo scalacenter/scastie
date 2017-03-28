@@ -404,7 +404,7 @@ body {
           padding: 0 20px; }
     body .app.dark #sidebar {
       float: left;
-      height: 5000px;
+      height: 100%;
       background: #073642;
       width: 149px;
       -webkit-transition: color, background-color 0.3s ease;
@@ -433,7 +433,8 @@ body {
           display: inline-block; }
       body .app.dark #sidebar .actions-container {
         position: relative;
-        overflow: hidden; }
+        overflow: hidden;
+        height: 100%; }
         body .app.dark #sidebar .actions-container ul.submenu {
           display: none; }
           body .app.dark #sidebar .actions-container ul.submenu li.btn {
@@ -473,7 +474,7 @@ body {
           color: #586e75; }
       body .app.dark #sidebar .actions.bottom {
         position: absolute;
-        bottom: 33px; }
+        bottom: 0px; }
         body .app.dark #sidebar .actions.bottom .btn {
           cursor: pointer;
           padding-left: 20px;

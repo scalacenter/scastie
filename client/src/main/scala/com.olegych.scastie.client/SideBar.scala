@@ -1,10 +1,9 @@
 package com.olegych.scastie
 package client
 
-import com.olegych.scastie.client.DefaultSizes._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
-import org.scalajs.dom.window._
+import org.scalajs.dom
 
 object SideBar {
 
@@ -12,8 +11,8 @@ object SideBar {
     ReactComponentB[(AppState, AppBackend)]("SideBar").render_P {
       case (state, backend) =>
         import backend._
-
-        def currentView = state.view
+        import dom.window._
+        import state.dimensions._
 
         val toggleThemeLabel = if (state.isDarkTheme) "Light" else "Dark"
 
@@ -50,10 +49,10 @@ object SideBar {
               img(src := "/assets/public/img/icon-scastie.png"),
               h1("Scastie")
             ),
-            ul(`class` := "actions")(
+            ul(`id` := "actions-top", `class` := "actions")(
               buttonsTop
             ),
-            ul(`class` := "actions bottom")(
+            ul(`id` := "actions-bottom", `class` := "actions bottom")(
               buttonsBottom
             )
           )

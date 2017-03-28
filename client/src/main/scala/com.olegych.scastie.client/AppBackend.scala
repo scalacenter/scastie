@@ -155,6 +155,44 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
   def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
 
+  def setDimensionsHaveChanged(): Callback =
+    scope.modState(_.setDimensionsHaveChanged)
+
+  def setTopBarHeight(): Callback =
+    scope.modState(
+      _.setTopBarHeight(dom.document.getElementById("topbar").clientHeight.toDouble))
+
+  def setEditorTopBarHeight(): Callback =
+    scope.modState(
+      _.setEditorTopBarHeight(dom.document.getElementById("editor-topbar").clientHeight.toDouble))
+
+  def setSideBarWidth(): Callback =
+    scope.modState(
+      _.setSideBarWidth(dom.document.getElementById("sidebar").clientWidth.toDouble))
+
+  def setSideBarMinHeight(): Callback =
+    scope.modState(
+      _.setSideBarMinHeight(
+        dom.document.getElementById("topbar").clientHeight.toDouble +
+          dom.document.getElementById("actions-top").clientHeight.toDouble +
+          dom.document.getElementById("actions-bottom").clientHeight.toDouble))
+
+  def setConsoleBarHeight(): Callback =
+    scope.modState(
+      _.setConsoleBarHeight(dom.document.getElementById("switcher-show").clientHeight.toDouble))
+
+  def setConsoleHeight(): Callback =
+    scope.modState(
+      _.setConsoleHeight(
+        dom.document.getElementById("console").clientHeight.toDouble +
+          dom.document.getElementById("handler").clientHeight.toDouble))
+
+  def setDimensions(): Callback =
+    setTopBarHeight() >>
+      setEditorTopBarHeight() >>
+      setSideBarWidth() >>
+      setSideBarMinHeight
+
   def run(e: ReactEventI): Callback = run()
   def run(): Callback = {
     println("******************")
@@ -314,7 +352,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def start(props: AppProps): Callback = {
 
     def onresize(e: UIEvent): Unit =
-      setWindowHasResized().runNow
+      (setWindowHasResized() >> setDimensionsHaveChanged()).runNow
 
     dom.window.onresize = onresize _
 

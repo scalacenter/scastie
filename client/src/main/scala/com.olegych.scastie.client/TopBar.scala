@@ -1,10 +1,8 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.client.DefaultSizes._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
-import org.scalajs.dom.window._
 
 object TopBar {
 
@@ -64,9 +62,6 @@ object TopBar {
               )
           }
 
-        def actionsTopBarStyle: TagMod =
-          if (innerWidth < topBarMinWidth) TagMod(left := sideBarWidth) else EmptyTag
-
         val userAvatar = state.user match {
           case Some(user) =>
               img(src := user.avatar_url + "&s=30",
@@ -76,7 +71,7 @@ object TopBar {
         }
 
         nav(`id` := "topbar")(
-          ul(`class` := "actions", actionsTopBarStyle)(
+          ul(`class` := "actions")(
             li(`class` := "btn dropdown")(
               i(`class` := "fa fa-comments"),
               "Feedback",

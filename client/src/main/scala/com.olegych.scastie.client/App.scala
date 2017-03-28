@@ -42,6 +42,7 @@ object App {
         }
       }
       .componentWillMount(s => s.backend.start(s.props))
+      .componentDidMount(_.backend.setDimensions())
       .componentDidUpdate { v =>
         val state = v.prevState
         val scope = v.$
