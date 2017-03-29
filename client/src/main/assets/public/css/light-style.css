@@ -652,6 +652,8 @@ body {
                 top: 78px;
                 left: 0;
                 width: 20px; }
+              body .app.light #snippets-container #code-snippets-container #snippets .group .snippet .header .clear-mobile {
+                display: none; }
               body .app.light #snippets-container #code-snippets-container #snippets .group .snippet .header .update {
                 color: #4e99c9;
                 font-weight: bold;
@@ -673,7 +675,8 @@ body {
                 padding: 15px 15px;
                 font-family: monospace;
                 text-decoration: none;
-                color: #0f262f; }
+                color: #0f262f;
+                white-space: pre-line; }
             body .app.light #snippets-container #code-snippets-container #snippets .group .snippet:last-child {
               position: relative; }
               body .app.light #snippets-container #code-snippets-container #snippets .group .snippet:last-child:before {
@@ -919,7 +922,20 @@ body {
       body .app.light:not(.force-desktop) #editor-mobile {
         display: none; }
       body .app.light:not(.force-desktop) #switcher-show {
-        left: 66px !important; } }
+        left: 66px !important; }
+      body .app.light:not(.force-desktop) #snippets .header span {
+        display: none; }
+      body .app.light:not(.force-desktop) #snippets .header .clear-mobile {
+        display: block !important;
+        clear: both; }
+      body .app.light:not(.force-desktop) #snippets .header .update {
+        display: block;
+        float: left;
+        line-height: 32px; }
+      body .app.light:not(.force-desktop) #snippets .header .actions {
+        display: block;
+        float: right;
+        line-height: 32px; } }
     @media only screen and (max-width: 480px) {
       body .app.light:not(.force-desktop) #sidebar, body .app.light:not(.force-desktop) #editor-topbar {
         display: none !important; }
@@ -960,4 +976,17 @@ body {
             display: none; }
           body .app.light:not(.force-desktop) #editor-mobile li.btn i.fa {
             line-height: 40px;
-            font-size: 20px; } }
+            font-size: 20px; }
+      body .app.light:not(.force-desktop) #snippets .header span {
+        display: none; }
+      body .app.light:not(.force-desktop) #snippets .header .clear-mobile {
+        display: block !important;
+        clear: both; }
+      body .app.light:not(.force-desktop) #snippets .header .update {
+        display: block;
+        float: left;
+        line-height: 32px; }
+      body .app.light:not(.force-desktop) #snippets .header .actions {
+        display: block;
+        float: right;
+        line-height: 32px; } }
