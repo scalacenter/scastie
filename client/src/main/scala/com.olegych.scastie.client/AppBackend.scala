@@ -147,7 +147,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def toggleWelcomeHelp(e: ReactEventI): Callback = scope.modState(_.toggleWelcomeHelp)
 
-  def toggleShare2(snippetId: Option[SnippetId])(e: ReactEventI): Callback =
+  def toggleShare(snippetId: Option[SnippetId])(e: ReactEventI): Callback =
     scope.modState(_.toggleShare(snippetId))
 
   def toggleSnippetCopied(e: ReactEventI): Callback = scope.modState(_.toggleSnippetCopied())

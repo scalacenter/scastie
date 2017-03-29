@@ -22,16 +22,16 @@ object Share {
         else display.none
 
       def getSnippetUrl =
-        for {
-          router <- maybeRouter
-          snippetId <- state.snippetId
-        } yield router.urlFor(Page.fromSnippetId(snippetId)).value
+        (maybeRouter, state.snippetId) match {
+          case (Some(router), Some(snippetId)) => router.urlFor(Page.fromSnippetId(snippetId)).value
+          case _ => ""
+        }
 
       div(`class` := "modal", displayShare)(
         div(`class` := "modal-fade-screen")(
           div(`class` := "modal-window  modal-share")(
             div(`class` := "modal-header")(
-              div(`class` := "modal-close", onClick ==> backend.toggleShare2(state.snippetId)))(
+              div(`class` := "modal-close", onClick ==> backend.toggleShare(state.snippetId)))(
               h1("Share your Code Snippet")
             ),
             div(`class` := "modal-inner")(
@@ -39,7 +39,8 @@ object Share {
               div(`class` := "snippet-link")(
                 input.text(
                   placeholder := "Snippet URl not found",
-                  value := getSnippetUrl
+                  value := getSnippetUrl,
+                  readOnly := true
                 ),
                 li(
                   title := "Copy to Clipboard",
