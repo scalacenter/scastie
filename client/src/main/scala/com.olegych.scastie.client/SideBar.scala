@@ -20,6 +20,18 @@ object SideBar {
           if (state.isDarkTheme) "fa fa-sun-o"
           else "fa fa-moon-o"
 
+        val displayMobile =
+          if(state.dimensions.forcedDesktop) display.block
+          else display.none
+
+        val mobileButton =
+          li(onClick ==> backend.toggleMobile,
+            title := "Go back to Mobile Version",
+            `class` := "btn", displayMobile)(
+            i(`class` := s"fa fa-mobile"),
+            span("Mobile")
+          )
+
         val themeButton =
           li(onClick ==> toggleTheme,
             title := s"Select $toggleThemeLabel Theme (F2)",
@@ -38,7 +50,7 @@ object SideBar {
 
         val buttonsTop: Seq[TagMod] = Seq(EditorButton(state, backend), BuildSettingsButton(state, backend))
 
-        val buttonsBottom: Seq[TagMod] = Seq(themeButton, helpButton)
+        val buttonsBottom: Seq[TagMod] = Seq(mobileButton, themeButton, helpButton)
 
         def actionsContainerStyle: TagMod = TagMod(
           height := s"${if (innerHeight < sideBarMinHeight) sideBarMinHeight else innerHeight}px")

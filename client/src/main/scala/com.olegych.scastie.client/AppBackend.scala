@@ -109,6 +109,10 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleForcedDesktop(value: Boolean)(e: ReactEventI): Callback =
     scope.modState(_.toggleForcedDesktop(value))
 
+  def toggleMobile(): Callback = scope.modState(_.toggleForcedDesktop(value = false))
+  def toggleMobile(e: ReactEventI): Callback =
+    toggleMobile() >> setView(View.Editor)
+
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
 
