@@ -29,7 +29,7 @@ object MainPanel {
 
         def editorStyle: TagMod = Seq(
           height := s"${innerHeight - topBarHeight - editorTopBarHeight -
-            (if(state.consoleState.consoleIsOpen) innerHeight * consoleHeight else consoleBarHeight)}px",
+            (if(state.consoleState.consoleIsOpen) consoleHeight else consoleBarHeight)}px",
           width := s"${innerWidth - sideBarWidth}px")
 
         def containerStyle: TagMod = Seq(

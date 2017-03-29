@@ -511,7 +511,6 @@ body {
         overflow: hidden; }
       body .app.light #editor-container #switcher-show {
         right: 0;
-        left: 149px;
         bottom: 0;
         background: #002b36;
         height: 33px;
@@ -869,7 +868,8 @@ body {
               width: 140px;
               margin-left: 20px; }
     body .app.light #editor-mobile {
-      display: none !important; }
+      display: none !important;
+      z-index: 20; }
     @media only screen and (max-width: 720px) and (min-width: 480px) {
       body .app.light h1 {
         display: none !important; }

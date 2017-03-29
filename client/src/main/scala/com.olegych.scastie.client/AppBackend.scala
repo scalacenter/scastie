@@ -133,7 +133,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleTheme(): Callback = scope.modState(_.toggleTheme)
 
   def toggleConsole(): Callback = scope.modState(_.toggleConsole)
-  def toggleConsole(e: ReactEventI): Callback = toggleConsole() >> setConsoleHeight()
+  def toggleConsole(e: ReactEventI): Callback =
+    toggleConsole() >> setDimensionsHaveChanged(true)
 
   def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
 
@@ -155,8 +156,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
   def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
 
-  def setDimensionsHaveChanged(): Callback =
-    scope.modState(_.setDimensionsHaveChanged)
+  def setDimensionsHaveChanged(value: Boolean): Callback =
+    scope.modState(_.setDimensionsHaveChanged(value))
 
   def setTopBarHeight(): Callback =
     scope.modState(
@@ -193,7 +194,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       setSideBarWidth() >>
       setSideBarMinHeight >>
       setConsoleBarHeight() >>
-      setConsoleHeight()
+      setConsoleHeight() >>
+      setDimensionsHaveChanged(false)
 
   def run(e: ReactEventI): Callback = run()
   def run(): Callback = {
@@ -354,7 +356,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def start(props: AppProps): Callback = {
 
     def onresize(e: UIEvent): Unit =
-      (setWindowHasResized() >> setDimensionsHaveChanged()).runNow
+      (setWindowHasResized() >> setDimensionsHaveChanged(true)).runNow
 
     dom.window.onresize = onresize _
 

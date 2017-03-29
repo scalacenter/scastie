@@ -45,9 +45,16 @@ object App {
       .componentDidMount(_.backend.setDimensions())
       .componentDidUpdate { v =>
         val state = v.prevState
+        val backend = v.$.backend
         val scope = v.$
 
         val direct = scope.accessDirect
+
+        val setDimensions =
+          if (direct.state.dimensions.dimensionsHaveChanged) {
+            backend.setDimensions()
+
+          } else Callback(())
 
         val setTitle =
           if (state.inputsHasChanged) {
@@ -126,7 +133,7 @@ object App {
             }
           } else Callback(())
 
-        setTitle >> executeScalaJs
+        setTitle >> executeScalaJs >> setDimensions
       }
       .componentWillReceiveProps { v =>
         val next = v.nextProps.snippetId

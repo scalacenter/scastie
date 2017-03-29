@@ -186,9 +186,9 @@ case class AppState(
   def setUser(user: Option[User]): AppState =
     copyAndSave(user = user)
 
-  def setDimensionsHaveChanged: AppState =
+  def setDimensionsHaveChanged(value: Boolean): AppState =
     copyAndSave(
-      dimensions = dimensions.copy(dimensionsHaveChanged = !dimensions.dimensionsHaveChanged))
+      dimensions = dimensions.copy(dimensionsHaveChanged = value))
 
   def setTopBarHeight(height: Double): AppState =
     copyAndSave(

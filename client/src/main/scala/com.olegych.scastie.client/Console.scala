@@ -23,9 +23,11 @@ object Console {
             if (state.consoleState.consoleIsOpen) (display.block, display.none)
             else (display.none, display.block)
 
-          def consoleStyle: TagMod = Seq(
-            width := s"${dom.window.innerWidth - sideBarWidth}px",
-            displayConsole)
+          val currentWidth = s"${dom.window.innerWidth - sideBarWidth}px"
+
+          def consoleStyle: TagMod = Seq(width := currentWidth, displayConsole)
+
+          def switcherStyle: TagMod = Seq(width := currentWidth, displaySwitcher)
 
           div(`id` := "console-container")(
             div(`id` := "console", consoleStyle)(
@@ -40,7 +42,7 @@ object Console {
               )
             ),
             div(`id`:= "switcher-show", onClick ==> backend.toggleConsole)(
-              displaySwitcher,
+              switcherStyle,
               i(`class` := "fa fa-code"),
               "Console",
               i(`class` := "fa fa-caret-up")
