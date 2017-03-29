@@ -137,20 +137,16 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
 
-  def toggleWelcome(): Callback = scope.modState(_.toggleWelcome)
-  def toggleWelcome(e: ReactEventI): Callback = toggleWelcome()
+  def toggleWelcome(e: ReactEventI): Callback = scope.modState(_.toggleWelcome)
 
-  def toggleHelp(): Callback = scope.modState(_.toggleHelp)
-  def toggleHelp(e: ReactEventI): Callback = toggleHelp()
+  def toggleHelp(e: ReactEventI): Callback = scope.modState(_.toggleHelp)
 
-  def toggleWelcomeHelp(): Callback = scope.modState(_.toggleWelcomeHelp)
-  def toggleWelcomeHelp(e: ReactEventI): Callback = toggleWelcomeHelp()
+  def toggleWelcomeHelp(e: ReactEventI): Callback = scope.modState(_.toggleWelcomeHelp)
 
-  def toggleShare(snippetId: Option[SnippetId]): Callback = scope.modState(_.toggleShare(snippetId))
-  def toggleShare2(snippetId: Option[SnippetId])(e: ReactEventI): Callback = toggleShare(snippetId)
+  def toggleShare2(snippetId: Option[SnippetId])(e: ReactEventI): Callback =
+    scope.modState(_.toggleShare(snippetId))
 
-  def toggleSnippetCopied(): Callback = scope.modState(_.toggleSnippetCopied())
-  def toggleSnippetCopied(e: ReactEventI): Callback = toggleSnippetCopied()
+  def toggleSnippetCopied(e: ReactEventI): Callback = scope.modState(_.toggleSnippetCopied())
 
   def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
   def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
@@ -377,8 +373,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
         )
       } else Callback(()))
 
-  def copySnippetToClipboard(e: ReactEventI): Callback = copySnippetToClipboard()
-  def copySnippetToClipboard(): Callback =
+  def copySnippetToClipboard(e: ReactEventI): Callback =
     scope.state.flatMap( state =>
       Callback(document.querySelector(state.snippetId.toString)) >>
       Callback(document.execCommand("copy"))
