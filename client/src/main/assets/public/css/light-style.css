@@ -404,7 +404,7 @@ body {
           padding: 0 20px; }
     body .app.light #sidebar {
       float: left;
-      height: 100%;
+      height: 5000px;
       background: #7dc8e5;
       width: 149px;
       -webkit-transition: color, background-color 0.3s ease;
@@ -433,8 +433,7 @@ body {
           display: inline-block; }
       body .app.light #sidebar .actions-container {
         position: relative;
-        overflow: hidden;
-        height: 100%; }
+        overflow: hidden; }
         body .app.light #sidebar .actions-container ul.submenu {
           display: none; }
           body .app.light #sidebar .actions-container ul.submenu li.btn {
@@ -474,7 +473,7 @@ body {
           color: #586e75; }
       body .app.light #sidebar .actions.bottom {
         position: absolute;
-        bottom: 0px; }
+        bottom: 33px; }
         body .app.light #sidebar .actions.bottom .btn {
           cursor: pointer;
           padding-left: 20px;
@@ -511,6 +510,7 @@ body {
         overflow: hidden; }
       body .app.light #editor-container #switcher-show {
         right: 0;
+        left: 149px;
         bottom: 0;
         background: #002b36;
         height: 33px;
@@ -672,6 +672,8 @@ body {
       font-size: 15px; }
       body .app.light #settings-container #build-settings-container {
         padding: 45px 45px; }
+        body .app.light #settings-container #build-settings-container ul, body .app.light #settings-container #build-settings-container li {
+          line-height: 38px; }
         body .app.light #settings-container #build-settings-container h2 {
           -webkit-transition: color, background-color 0.3s ease;
           -moz-transition: color, background-color 0.3s ease;
@@ -685,7 +687,7 @@ body {
           position: relative;
           z-index: 1; }
           body .app.light #settings-container #build-settings-container h2:not(:first-child) {
-            margin-top: 35px; }
+            margin-top: 25px; }
           body .app.light #settings-container #build-settings-container h2:before {
             border-top: 2px solid rgba(0, 43, 54, 0.12);
             content: "";
@@ -868,14 +870,14 @@ body {
               width: 140px;
               margin-left: 20px; }
     body .app.light #editor-mobile {
-      display: none !important;
-      z-index: 20; }
+      display: none !important; }
     @media only screen and (max-width: 720px) and (min-width: 480px) {
       body .app.light h1 {
         display: none !important; }
       body .app.light #sidebar, body .app.light #sidebar ul {
-        width: 66px !important;
-        font-size: 20px; }
+        width: 66px !important; }
+        body .app.light #sidebar li, body .app.light #sidebar ul li {
+          padding-left: 24px !important; }
       body .app.light #content {
         margin-left: 66px !important; }
       body .app.light #topbar ul.actions > li span, body .app.light #sidebar ul.actions > li span {
@@ -885,7 +887,9 @@ body {
         body .app.light #editor-topbar li span {
           display: none !important; }
       body .app.light #editor-mobile {
-        display: none; } }
+        display: none; }
+      body .app.light #switcher-show {
+        left: 66px !important; } }
     @media only screen and (max-width: 480px) {
       body .app.light #topbar, body .app.light #sidebar, body .app.light #editor-topbar {
         display: none !important; }
@@ -897,8 +901,10 @@ body {
         bottom: 20px !important;
         left: 20px !important; }
       body .app.light #switcher-show, body .app.light #console {
-        bottom: 48px !important; }
+        bottom: 48px !important;
+        left: 0px !important; }
       body .app.light #editor-mobile {
+        z-index: 99999;
         display: block !important;
         position: absolute;
         bottom: 0px;

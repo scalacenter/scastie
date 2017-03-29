@@ -3,6 +3,7 @@ package com.olegych.scastie.client
 object Dimensions {
   def default = Dimensions(
     dimensionsHaveChanged = false,
+    forcedDesktop = false,
     topBarHeight = 0,
     editorTopBarHeight = 0,
     sideBarWidth = 0,
@@ -13,6 +14,7 @@ object Dimensions {
 
 case class Dimensions(
   dimensionsHaveChanged: Boolean,
+  forcedDesktop: Boolean,
   topBarHeight: Double,
   editorTopBarHeight: Double,
   sideBarWidth: Double,

@@ -12,7 +12,7 @@ object DesktopButton {
 
         li(
            title := "Go to desktop",
-           `class` := "btn", onClick ==> backend.clear)(
+           `class` := "btn", onClick ==> backend.toggleForcedDesktop2(value = true))(
           i(`class` := "fa fa-desktop"),
           span("Desktop")
         )

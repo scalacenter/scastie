@@ -28,11 +28,15 @@ object App {
             if (!props.isEmbedded) "app"
             else "app embedded"
 
+          val desktop =
+            if (state.dimensions.forcedDesktop) ".force-desktop"
+            else ""
+
           def appStyle: TagMod = Seq(
             height := s"${innerHeight}px",
             width := s"${innerWidth}px")
 
-          div(`class` := s"$appClass $theme", appStyle)(
+          div(`class` := s"$appClass $theme $desktop", appStyle)(
             sideBar,
             MainPanel(state, scope.backend, props),
             Welcome(state, scope.backend),

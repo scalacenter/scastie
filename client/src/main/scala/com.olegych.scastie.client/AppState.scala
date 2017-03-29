@@ -141,6 +141,9 @@ case class AppState(
     copyAndSave(running = running, consoleState = consoleState.copy(consoleIsOpen = !console))
   }
 
+  def toggleForcedDesktop(value: Boolean): AppState =
+    copyAndSave(dimensions = dimensions.copy(forcedDesktop = value))
+
   def toggleTheme: AppState =
     copyAndSave(isDarkTheme = !isDarkTheme)
 
