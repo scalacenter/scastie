@@ -330,14 +330,14 @@ object ScaladexSearch {
             val scaladexLink =
               s"https://scaladex.scala-lang.org/$organization/$repository/$artifact"
 
-            div(`class` := "result", selected)(
+            div(`class` := "result", selected, handlers)(
               a(`class` := "scaladexresult",
                 href := scaladexLink,
                 target := "_blank")(
                 i(`class` := "fa fa-external-link")
               ),
               remove,
-              span(handlers)(
+              span(
                 logo
                   .map(
                     url =>
@@ -356,9 +356,11 @@ object ScaladexSearch {
           }
 
           def renderOptions(selected: Selected) = {
-            select(value := selected.release.version,
-                   onChange ==> scope.backend.updateVersion(selected))(
-              selected.options.versions.reverse.map(v => option(value := v)(v))
+            div(`class` := "select-wrapper")(
+              select(value := selected.release.version,
+                     onChange ==> scope.backend.updateVersion(selected))(
+                selected.options.versions.reverse.map(v => option(value := v)(v))
+              )
             )
           }
 
@@ -397,8 +399,7 @@ object ScaladexSearch {
                   renderProject(
                     project,
                     artifact,
-                    selected =
-                      selectedIndex(index, searchState.selectedIndex),
+                    selected = selectedIndex(index, searchState.selectedIndex),
                     handlers = TagMod(
                       onClick ==> scope.backend.addArtifact(
                         (project, artifact)),

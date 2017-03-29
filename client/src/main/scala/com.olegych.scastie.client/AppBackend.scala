@@ -137,20 +137,19 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
 
-  def toggleHelpAtStartup(): Callback =
-    scope.modState(_.toggleHelpAtStartup)
+  def toggleWelcome(e: ReactEventI): Callback = scope.modState(_.toggleWelcome)
 
-  def closeHelp(): Callback =
-    scope.modState(_.closeHelp)
+  def toggleHelp(e: ReactEventI): Callback = scope.modState(_.toggleHelp)
 
-  def showHelp(e: ReactEventI): Callback =
-    scope.modState(_.showHelp)
+  def toggleWelcomeHelp(e: ReactEventI): Callback = scope.modState(_.toggleWelcomeHelp)
 
-  def toggleWorksheetMode(): Callback =
-    scope.modState(_.toggleWorksheetMode)
+  def toggleShare2(snippetId: Option[SnippetId])(e: ReactEventI): Callback =
+    scope.modState(_.toggleShare(snippetId))
 
-  def toggleWorksheetMode(e: ReactEventI): Callback =
-    toggleWorksheetMode()
+  def toggleSnippetCopied(e: ReactEventI): Callback = scope.modState(_.toggleSnippetCopied())
+
+  def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
+  def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
 
   def run(e: ReactEventI): Callback = run()
   def run(): Callback = {
@@ -373,4 +372,11 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
             }
         )
       } else Callback(()))
+
+  def copySnippetToClipboard(e: ReactEventI): Callback =
+    scope.state.flatMap( state =>
+      Callback(document.querySelector(state.snippetId.toString)) >>
+      Callback(document.execCommand("copy"))
+    )
+
 }

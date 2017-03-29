@@ -16,28 +16,17 @@ object RunButton {
           if (view == state.view) TagMod(`class` := "selected") else EmptyTag
 
         if (!state.running) {
-          if (View.Editor == state.view) {
-            li(onClick ==> run,
-               title := s"Run Code ($ctrl + Enter)",
-               `class` := "btn selected run-button",
-               selected(View.Editor))(
-              i(`class` := "fa fa-play"),
-              "Run"
-            )
-          } else {
-            li(onClick ==> setView2(View.Editor),
-               title := "Open Edit View",
-               `class` := "btn selected run-button",
-               selected(View.Editor))(
-              i(`class` := "fa fa-edit"),
-              "Edit"
-            )
-          }
+          li(onClick ==> run,
+             title := s"Run Code ($ctrl + Enter)",
+             `class` := "btn run-button")(
+            i(`class` := "fa fa-play"),
+            "Run"
+          )
         } else {
           li(onClick ==> setView2(View.Editor),
-             title := "Open Edit View",
-             `class` := "btn selected run-button")(
-            i(`class` := "fa fa-spinner"),
+             title := "Running your Code...",
+             `class` := "btn run-button")(
+            i(`class` := "fa fa-spinner fa-spin"),
             "Running"
           )
         }

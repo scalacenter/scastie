@@ -3,17 +3,19 @@ package client
 
 import api._
 import autowire._
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-import japgolly.scalajs.react._, extra.router._, vdom.all._
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import japgolly.scalajs.react._
+import extra.router._
+import vdom.all.{onClick, _}
 
 object CodeSnippets {
 
-  def apply(router: Option[RouterCtl[Page]], view: View) =
-    component((router, view))
+  def apply(router: Option[RouterCtl[Page]], state: AppState, backend: AppBackend) =
+    component((router, state, backend))
 
   class Backend(
-      scope: BackendScope[(Option[RouterCtl[Page]], View),
+      scope: BackendScope[(Option[RouterCtl[Page]], AppState, AppBackend),
                           List[SnippetSummary]]) {
     def loadProfile(): Callback = {
       Callback.future(
@@ -37,44 +39,69 @@ object CodeSnippets {
   }
 
   private val component =
-    ReactComponentB[(Option[RouterCtl[Page]], View)]("CodeSnippets")
+    ReactComponentB[(Option[RouterCtl[Page]], AppState, AppBackend)]("CodeSnippets")
       .initialState(List.empty[SnippetSummary])
       .backend(new Backend(_))
       .renderPS {
-        case (scope, (maybeRouter, _), summaries) => {
+        case (scope, (maybeRouter, state, backend), summaries) => {
           assert(maybeRouter.isDefined,
                  "should not be able to access profile view from embedded")
           val router = maybeRouter.get
 
-          div(`class` := "profile")(
-            h1("Saved Code Snippets"),
-            ul(
+          val (userAvatar, userName, userLogin) = state.user match {
+            case Some(user) =>
+              (div(`class` := "avatar")(
+                img(src := user.avatar_url + "&s=70",
+                  alt := "Your Github Avatar",
+                  `class` := "image-button avatar")
+              ), user.name, user.login)
+            case None => (i(`class` := "fa fa-user-circle"), Some("User name"), "Github user")
+          }
+
+          div(`id` := "code-snippets-container")(
+            userAvatar,
+            h2(userName),
+            div(`class` := "nickname")(
+              i(`class` := "fa fa-github"),
+              userLogin
+            ),
+
+            h2("Saved Code Snippets"),
+            div(`id` := "snippets")(
               summaries.groupBy(_.snippetId.base64UUID).map {
                 case (base64UUID, groupedSummaries) =>
-                  li(key := base64UUID)(
-                    p("/" + base64UUID),
-                    ul(
-                      groupedSummaries
-                        .sortBy(_.snippetId.user.flatMap(_.update))
-                        .map {
-                          summary =>
-                            val page = Page.fromSnippetId(summary.snippetId)
-                            val update = summary.snippetId.user
-                              .flatMap(_.update)
-                              .getOrElse("")
-
-                            li(router.setOnClick(page))(
-                              p("Update: " + update),
+                  div(`class` := "group")(
+                    groupedSummaries
+                      .sortBy(_.snippetId.user.flatMap(_.update))
+                      .map {
+                        summary =>
+                          val page = Page.fromSnippetId(summary.snippetId)
+                          val update = summary.snippetId.user
+                            .flatMap(_.update)
+                            .getOrElse("")
+                          div(`class` := "snippet")(
+                            div(`class` := "header", "/" + base64UUID + " - ")(
+                              span(`class` := "update", "Update: " + update),
+                              div(`class` := "actions")(
+                                li(`class` := "btn",
+                                  title := "Share",
+                                  onClick ==> backend.toggleShare2(Some(summary.snippetId)))(
+                                  i(`class` := "fa fa-share-alt")
+                                ),
+                                li(`class` := "btn",
+                                  title := "Delete",
+                                  onClick ==> scope.backend.delete(summary))(
+                                  i(`class` := "fa fa-trash")
+                                )
+                              )
+                            ),
+                            div(`class` := "codesnippet", router.setOnClick(page))(
                               router.link(page)(
-                                pre(summary.summary)
-                              ),
-                              iconic.delete(
-                                title := "Delete",
-                                onClick ==> scope.backend.delete(summary)
+                                pre(`class` := "code")(summary.summary)
                               )
                             )
-                        }
-                    )
+                          )
+                      }
                   )
               }
             )
@@ -82,10 +109,10 @@ object CodeSnippets {
         }
       }
       .componentWillReceiveProps { delta =>
-        val (_, currentView) = delta.currentProps
-        val (_, nextView) = delta.nextProps
+        val (_, currentAppState, _) = delta.currentProps
+        val (_, nextAppState, _) = delta.nextProps
 
-        if (currentView != View.CodeSnippets && nextView == View.CodeSnippets) {
+        if (currentAppState.view != View.CodeSnippets && nextAppState.view == View.CodeSnippets) {
           delta.$.backend.loadProfile()
         } else {
           Callback(())

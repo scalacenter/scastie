@@ -1,7 +1,8 @@
 package com.olegych.scastie.client
 
-import japgolly.scalajs.react._, vdom.all._
-
+import com.olegych.scastie.client.DefaultSizes._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.window._
 
@@ -63,11 +64,16 @@ object TopBar {
               )
           }
 
-        val topBarMinWidth = 500
-        val sideBarWidth = 149
-
         def actionsTopBarStyle: TagMod =
           if (innerWidth < topBarMinWidth) TagMod(left := sideBarWidth) else EmptyTag
+
+        val userAvatar = state.user match {
+          case Some(user) =>
+              img(src := user.avatar_url + "&s=30",
+                alt := "Your Github Avatar",
+                `class` := "avatar")
+          case None => i(`class` := "fa fa-user-circle")
+        }
 
         nav(`id` := "topbar")(
           ul(`class` := "actions", actionsTopBarStyle)(
@@ -79,7 +85,7 @@ object TopBar {
                 li(onClick ==> feedback,
                   title := "Open Gitter.im Chat to give us feedback",
                   `class` := "btn")(
-                  i(`class` := "fa fa-github"),
+                  i(`class` := "fa fa-gitter"),
                   "Scastie's gitter"
                 ),
                 li(onClick ==> issue,
@@ -91,7 +97,7 @@ object TopBar {
               )
             ),
             li(`class` := "btn dropdown")(
-              i(`class` := "fa fa-user-circle"),
+              userAvatar,
               "Login",
               i(`class` := "fa fa-caret-down"),
               ul(`class` := "subactions")(

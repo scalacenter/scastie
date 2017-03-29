@@ -21,7 +21,7 @@ object App {
 
           val sideBar =
             if (!props.isEmbedded)
-              TagMod(SideBar(state, scope.backend, props.snippetId))
+              TagMod(SideBar(state, scope.backend))
             else EmptyTag
 
           val appClass =
@@ -29,12 +29,15 @@ object App {
             else "app embedded"
 
           def appStyle: TagMod = Seq(
-            height := innerHeight,
-            width := innerWidth)
+            height := s"${innerHeight}px",
+            width := s"${innerWidth}px")
 
           div(`class` := s"$appClass $theme", appStyle)(
             sideBar,
-            MainPanel(state, scope.backend, props)
+            MainPanel(state, scope.backend, props),
+            Welcome(state, scope.backend),
+            Help(state, scope.backend),
+            Share(props.router, state, scope.backend)
           )
         }
       }

@@ -14,18 +14,19 @@ object AppState {
     running = false,
     eventSource = None,
     websocket = None,
-    isShowingHelpAtStartup = true,
-    isHelpModalClosed = false,
+    isHelpModalClosed = true,
+    isWelcomeModalClosed = false,
+    isShareModalClosed = true,
     isDarkTheme = false,
     consoleIsOpen = false,
     consoleHasUserOutput = false,
     inputsHasChanged = false,
     snippetId = None,
     loadSnippet = true,
-    isStartup = true,
     loadScalaJsScript = false,
     isScalaJsScriptLoaded = false,
     snippetIdIsScalaJS = false,
+    codeSnippetCopied = false,
     user = None,
     attachedDoms = Map(),
     inputs = Inputs.default,
@@ -47,18 +48,19 @@ case class AppState(
     running: Boolean,
     eventSource: Option[EventSource],
     websocket: Option[WebSocket],
-    isShowingHelpAtStartup: Boolean,
+    isWelcomeModalClosed: Boolean,
     isHelpModalClosed: Boolean,
+    isShareModalClosed: Boolean,
     isDarkTheme: Boolean,
     consoleIsOpen: Boolean,
     consoleHasUserOutput: Boolean,
     inputsHasChanged: Boolean,
     snippetId: Option[SnippetId],
     loadSnippet: Boolean,
-    isStartup: Boolean,
     loadScalaJsScript: Boolean,
     isScalaJsScriptLoaded: Boolean,
     snippetIdIsScalaJS: Boolean,
+    codeSnippetCopied: Boolean,
     user: Option[User],
     attachedDoms: AttachedDoms,
     inputs: Inputs,
@@ -69,14 +71,16 @@ case class AppState(
                   running: Boolean = running,
                   eventSource: Option[EventSource] = eventSource,
                   websocket: Option[WebSocket] = websocket,
-                  isShowingHelpAtStartup: Boolean = isShowingHelpAtStartup,
+                  isWelcomeModalClosed: Boolean = isWelcomeModalClosed,
                   isHelpModalClosed: Boolean = isHelpModalClosed,
+                  isShareModalClosed: Boolean = isShareModalClosed,
                   isDarkTheme: Boolean = isDarkTheme,
                   consoleIsOpen: Boolean = consoleIsOpen,
                   consoleHasUserOutput: Boolean = consoleHasUserOutput,
                   inputsHasChanged: Boolean = inputsHasChanged,
                   snippetId: Option[SnippetId] = snippetId,
                   snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
+                  codeSnippetCopied: Boolean = codeSnippetCopied,
                   user: Option[User] = user,
                   attachedDoms: AttachedDoms = attachedDoms,
                   inputs: Inputs = inputs,
@@ -93,18 +97,19 @@ case class AppState(
         running,
         eventSource,
         websocket,
-        isShowingHelpAtStartup,
+        isWelcomeModalClosed,
         isHelpModalClosed,
+        isShareModalClosed,
         isDarkTheme,
         consoleIsOpen,
         consoleHasUserOutput,
         inputsHasChanged,
         snippetId0,
         loadSnippet,
-        isStartup,
         loadScalaJsScript,
         isScalaJsScriptLoaded,
         snippetIdIsScalaJS,
+        codeSnippetCopied,
         user,
         attachedDoms,
         inputs.copy(
@@ -151,13 +156,23 @@ case class AppState(
       inputsHasChanged = true
     )
 
-  def toggleHelpAtStartup: AppState =
-    copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
+  def toggleWelcome: AppState =
+    copyAndSave(isWelcomeModalClosed = !isWelcomeModalClosed)
 
-  def closeHelp: AppState =
-    resetOutputs.copyAndSave(isHelpModalClosed = true).copy(isStartup = false)
+  def toggleHelp: AppState =
+    copyAndSave(isHelpModalClosed = !isHelpModalClosed)
 
-  def showHelp: AppState = copy(isHelpModalClosed = false)
+  def toggleWelcomeHelp: AppState =
+    copyAndSave(
+      isWelcomeModalClosed = !isWelcomeModalClosed,
+      isHelpModalClosed = !isHelpModalClosed)
+
+  def toggleShare(snippetId: Option[SnippetId]): AppState =
+    copyAndSave(isShareModalClosed = !isShareModalClosed,
+      snippetId = snippetId)
+
+  def toggleSnippetCopied(): AppState =
+    copyAndSave(codeSnippetCopied = !codeSnippetCopied)
 
   def openConsole: AppState =
     copyAndSave(consoleIsOpen = true)
