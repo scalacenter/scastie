@@ -28,11 +28,15 @@ object App {
             if (!props.isEmbedded) "app"
             else "app embedded"
 
+          val desktop =
+            if (state.dimensions.forcedDesktop) "force-desktop"
+            else ""
+
           def appStyle: TagMod = Seq(
             height := s"${innerHeight}px",
             width := s"${innerWidth}px")
 
-          div(`class` := s"$appClass $theme", appStyle)(
+          div(`class` := s"$appClass $theme $desktop", appStyle)(
             sideBar,
             MainPanel(state, scope.backend, props),
             Welcome(state, scope.backend),
@@ -42,11 +46,19 @@ object App {
         }
       }
       .componentWillMount(s => s.backend.start(s.props))
+      .componentDidMount(_.backend.setDimensions())
       .componentDidUpdate { v =>
         val state = v.prevState
+        val backend = v.$.backend
         val scope = v.$
 
         val direct = scope.accessDirect
+
+        val setDimensions =
+          if (direct.state.dimensions.dimensionsHaveChanged) {
+            backend.setDimensions()
+
+          } else Callback(())
 
         val setTitle =
           if (state.inputsHasChanged) {
@@ -125,7 +137,7 @@ object App {
             }
           } else Callback(())
 
-        setTitle >> executeScalaJs
+        setTitle >> executeScalaJs >> setDimensions
       }
       .componentWillReceiveProps { v =>
         val next = v.nextProps.snippetId

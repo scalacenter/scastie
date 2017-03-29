@@ -19,7 +19,7 @@ object BuildSettingsButton {
            selected,
            `class` := "btn")(
           i(`class` := "fa fa-gear"),
-          "Build Settings"
+          span("Build Settings")
         )
     }.build
 

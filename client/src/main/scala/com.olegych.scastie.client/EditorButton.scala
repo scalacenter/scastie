@@ -19,7 +19,7 @@ object EditorButton {
            `class` := "btn run-button",
            selected(View.Editor))(
           i(`class` := "fa fa-edit"),
-          "Editor"
+          span("Editor")
         )
 
     }.build

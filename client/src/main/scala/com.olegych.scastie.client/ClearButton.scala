@@ -14,7 +14,7 @@ object ClearButton {
            title := "Clear Instrumentations (Esc)",
            `class` := "btn", onClick ==> backend.clear)(
           i(`class` := "fa fa-eraser"),
-          "Clear"
+          span("Clear")
         )
     }.build
 }

@@ -18,8 +18,7 @@ object AppState {
     isWelcomeModalClosed = false,
     isShareModalClosed = true,
     isDarkTheme = false,
-    consoleIsOpen = false,
-    consoleHasUserOutput = false,
+    consoleState = ConsoleState.default,
     inputsHasChanged = false,
     snippetId = None,
     loadSnippet = true,
@@ -31,7 +30,8 @@ object AppState {
     attachedDoms = Map(),
     inputs = Inputs.default,
     outputs = Outputs.default,
-    windowHasResized = false
+    windowHasResized = false,
+    dimensions = Dimensions.default
   )
 
   implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
@@ -52,8 +52,7 @@ case class AppState(
     isHelpModalClosed: Boolean,
     isShareModalClosed: Boolean,
     isDarkTheme: Boolean,
-    consoleIsOpen: Boolean,
-    consoleHasUserOutput: Boolean,
+    consoleState: ConsoleState,
     inputsHasChanged: Boolean,
     snippetId: Option[SnippetId],
     loadSnippet: Boolean,
@@ -65,7 +64,8 @@ case class AppState(
     attachedDoms: AttachedDoms,
     inputs: Inputs,
     outputs: Outputs,
-    windowHasResized: Boolean
+    windowHasResized: Boolean,
+    dimensions: Dimensions
 ) {
   def copyAndSave(view: View = view,
                   running: Boolean = running,
@@ -75,8 +75,7 @@ case class AppState(
                   isHelpModalClosed: Boolean = isHelpModalClosed,
                   isShareModalClosed: Boolean = isShareModalClosed,
                   isDarkTheme: Boolean = isDarkTheme,
-                  consoleIsOpen: Boolean = consoleIsOpen,
-                  consoleHasUserOutput: Boolean = consoleHasUserOutput,
+                  consoleState: ConsoleState = consoleState,
                   inputsHasChanged: Boolean = inputsHasChanged,
                   snippetId: Option[SnippetId] = snippetId,
                   snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
@@ -85,7 +84,8 @@ case class AppState(
                   attachedDoms: AttachedDoms = attachedDoms,
                   inputs: Inputs = inputs,
                   outputs: Outputs = outputs,
-                  windowHasResized: Boolean = windowHasResized): AppState = {
+                  windowHasResized: Boolean = windowHasResized,
+                  dimensions: Dimensions = dimensions): AppState = {
 
     val snippetId0 =
       if (inputsHasChanged) None
@@ -101,8 +101,7 @@ case class AppState(
         isHelpModalClosed,
         isShareModalClosed,
         isDarkTheme,
-        consoleIsOpen,
-        consoleHasUserOutput,
+        consoleState,
         inputsHasChanged,
         snippetId0,
         loadSnippet,
@@ -117,7 +116,8 @@ case class AppState(
           forked = None
         ),
         outputs,
-        windowHasResized
+        windowHasResized,
+        dimensions
       )
 
     LocalStorage.save(state0)
@@ -137,15 +137,18 @@ case class AppState(
   }
 
   def setRunning(running: Boolean): AppState = {
-    val console = !running && !consoleHasUserOutput
-    copyAndSave(running = running, consoleIsOpen = !console)
+    val console = !running && !consoleState.consoleHasUserOutput
+    copyAndSave(running = running, consoleState = consoleState.copy(consoleIsOpen = !console))
   }
+
+  def toggleForcedDesktop(value: Boolean): AppState =
+    copyAndSave(dimensions = dimensions.copy(forcedDesktop = value))
 
   def toggleTheme: AppState =
     copyAndSave(isDarkTheme = !isDarkTheme)
 
   def toggleConsole: AppState =
-    copyAndSave(consoleIsOpen = !consoleIsOpen)
+    copyAndSave(consoleState = consoleState.copy(consoleIsOpen = !consoleState.consoleIsOpen))
 
   def setWindowHasResized: AppState =
     copyAndSave(windowHasResized = !windowHasResized)
@@ -175,16 +178,44 @@ case class AppState(
     copyAndSave(codeSnippetCopied = !codeSnippetCopied)
 
   def openConsole: AppState =
-    copyAndSave(consoleIsOpen = true)
+    copyAndSave(consoleState = consoleState.copy(consoleIsOpen = true))
 
   def setUserOutput: AppState =
-    copyAndSave(consoleHasUserOutput = true)
+    copyAndSave(consoleState = consoleState.copy(consoleHasUserOutput = true))
 
   def setLoadSnippet(value: Boolean): AppState =
     copy(loadSnippet = value)
 
   def setUser(user: Option[User]): AppState =
     copyAndSave(user = user)
+
+  def setDimensionsHaveChanged(value: Boolean): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(dimensionsHaveChanged = value))
+
+  def setTopBarHeight(height: Double): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(topBarHeight = height))
+
+  def setEditorTopBarHeight(height: Double): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(editorTopBarHeight = height))
+
+  def setSideBarWidth(width: Double): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(sideBarWidth = width))
+
+  def setSideBarMinHeight(height: Double): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(sideBarMinHeight = height))
+
+  def setConsoleBarHeight(height: Double): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(consoleBarHeight = height))
+
+  def setConsoleHeight(height: Double): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(consoleHeight = height))
 
   def setCode(code: String): AppState =
     copyAndSave(
@@ -244,9 +275,8 @@ case class AppState(
 
   def resetOutputs: AppState =
     copyAndSave(outputs = Outputs.default,
-                consoleIsOpen = false,
-                consoleHasUserOutput = false,
-                attachedDoms = Map()).copy(isScalaJsScriptLoaded = false)
+      consoleState = consoleState.copy(consoleIsOpen = false, consoleHasUserOutput = false),
+      attachedDoms = Map()).copy(isScalaJsScriptLoaded = false)
 
   def setRuntimeError(runtimeError: Option[RuntimeError]): AppState =
     if (runtimeError.isEmpty) this

@@ -106,6 +106,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def clear(e: ReactEventI): Callback = clear()
   def clear(): Callback = scope.modState(_.resetOutputs)
 
+  def toggleForcedDesktop(value: Boolean)(e: ReactEventI): Callback =
+    scope.modState(_.toggleForcedDesktop(value))
+
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
 
@@ -133,7 +136,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleTheme(): Callback = scope.modState(_.toggleTheme)
 
   def toggleConsole(): Callback = scope.modState(_.toggleConsole)
-  def toggleConsole(e: ReactEventI): Callback = toggleConsole()
+  def toggleConsole(e: ReactEventI): Callback =
+    toggleConsole() >> setDimensionsHaveChanged(true)
 
   def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
 
@@ -143,13 +147,54 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def toggleWelcomeHelp(e: ReactEventI): Callback = scope.modState(_.toggleWelcomeHelp)
 
-  def toggleShare2(snippetId: Option[SnippetId])(e: ReactEventI): Callback =
+  def toggleShare(snippetId: Option[SnippetId])(e: ReactEventI): Callback =
     scope.modState(_.toggleShare(snippetId))
 
   def toggleSnippetCopied(e: ReactEventI): Callback = scope.modState(_.toggleSnippetCopied())
 
   def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
   def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
+
+  def setDimensionsHaveChanged(value: Boolean): Callback =
+    scope.modState(_.setDimensionsHaveChanged(value))
+
+  def setTopBarHeight(): Callback =
+    scope.modState(
+      _.setTopBarHeight(dom.document.getElementById("topbar").clientHeight.toDouble))
+
+  def setEditorTopBarHeight(): Callback =
+    scope.modState(
+      _.setEditorTopBarHeight(dom.document.getElementById("editor-topbar").clientHeight.toDouble))
+
+  def setSideBarWidth(): Callback =
+    scope.modState(
+      _.setSideBarWidth(dom.document.getElementById("sidebar").clientWidth.toDouble))
+
+  def setSideBarMinHeight(): Callback =
+    scope.modState(
+      _.setSideBarMinHeight(
+        dom.document.getElementById("topbar").clientHeight.toDouble +
+          dom.document.getElementById("actions-top").clientHeight.toDouble +
+          dom.document.getElementById("actions-bottom").clientHeight.toDouble))
+
+  def setConsoleBarHeight(): Callback =
+    scope.modState(
+      _.setConsoleBarHeight(dom.document.getElementById("switcher-show").clientHeight.toDouble))
+
+  def setConsoleHeight(): Callback =
+    scope.modState(
+      _.setConsoleHeight(
+        dom.document.getElementById("console").clientHeight.toDouble +
+          dom.document.getElementById("handler").clientHeight.toDouble))
+
+  def setDimensions(): Callback =
+    setTopBarHeight() >>
+      setEditorTopBarHeight() >>
+      setSideBarWidth() >>
+      setSideBarMinHeight >>
+      setConsoleBarHeight() >>
+      setConsoleHeight() >>
+      setDimensionsHaveChanged(false)
 
   def run(e: ReactEventI): Callback = run()
   def run(): Callback = {
@@ -310,7 +355,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def start(props: AppProps): Callback = {
 
     def onresize(e: UIEvent): Unit =
-      setWindowHasResized().runNow
+      (setWindowHasResized() >> setDimensionsHaveChanged(true)).runNow
 
     dom.window.onresize = onresize _
 

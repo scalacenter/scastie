@@ -80,12 +80,14 @@ object CodeSnippets {
                             .flatMap(_.update)
                             .getOrElse("")
                           div(`class` := "snippet")(
-                            div(`class` := "header", "/" + base64UUID + " - ")(
+                            div(`class` := "header", "/" + base64UUID)(
+                              span(" - "),
+                              div(`class` := "clear-mobile"),
                               span(`class` := "update", "Update: " + update),
                               div(`class` := "actions")(
                                 li(`class` := "btn",
                                   title := "Share",
-                                  onClick ==> backend.toggleShare2(Some(summary.snippetId)))(
+                                  onClick ==> backend.toggleShare(Some(summary.snippetId)))(
                                   i(`class` := "fa fa-share-alt")
                                 ),
                                 li(`class` := "btn",

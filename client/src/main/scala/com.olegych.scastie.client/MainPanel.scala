@@ -1,11 +1,11 @@
 package com.olegych.scastie
 package client
 
-import com.olegych.scastie.client.DefaultSizes._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom.raw.HTMLPreElement
 import org.scalajs.dom.window._
+
 
 object MainPanel {
 
@@ -13,6 +13,9 @@ object MainPanel {
   private val component =
     ReactComponentB[(AppState, AppBackend, AppProps)]("MainPanel").render_P {
       case (state, backend, props) =>
+
+        import state.dimensions._
+
         def show(view: View) = {
           if (view == state.view) TagMod(display.block)
           else TagMod(display.none)
@@ -25,7 +28,8 @@ object MainPanel {
           else EmptyTag
 
         def editorStyle: TagMod = Seq(
-          height := s"${innerHeight - topBarHeight - editorTopBarHeight - (if(state.consoleIsOpen) innerHeight*consoleHeight else consoleBarHeight)}px",
+          height := s"${innerHeight - topBarHeight - editorTopBarHeight -
+            (if(state.consoleState.consoleIsOpen) consoleHeight else consoleBarHeight)}px",
           width := s"${innerWidth - sideBarWidth}px")
 
         def containerStyle: TagMod = Seq(
@@ -42,7 +46,8 @@ object MainPanel {
             div(`id`:= "settings-container", `class` := "inner-container", containerStyle, show(View.BuildSettings))(
               BuildSettings(state, backend)),
             div(`id`:= "snippets-container", `class` := "inner-container", containerStyle, show(View.CodeSnippets))(
-              CodeSnippets(props.router, state, backend))
+              CodeSnippets(props.router, state, backend)),
+            MobileBar(state, backend)
           )
         )
 

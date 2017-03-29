@@ -25,7 +25,7 @@ object WorksheetButton {
           worksheetModeSelected,
            `class` := "btn editor", onClick ==> backend.toggleWorksheetMode)(
           i(`class` := "fa fa-calendar"),
-          "Worksheet",
+          span("Worksheet"),
           i(`id` := "workSheetIndicator", `class` := "fa fa-circle", worksheetModeSelected)
         )
     }.build
