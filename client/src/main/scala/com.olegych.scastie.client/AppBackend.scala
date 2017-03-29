@@ -106,8 +106,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def clear(e: ReactEventI): Callback = clear()
   def clear(): Callback = scope.modState(_.resetOutputs)
 
-  def toggleForcedDesktop2(value: Boolean)(e: ReactEventI): Callback = toggleForcedDesktop(value)
-  def toggleForcedDesktop(value: Boolean): Callback = scope.modState(_.toggleForcedDesktop(value))
+  def toggleForcedDesktop(value: Boolean)(e: ReactEventI): Callback =
+    scope.modState(_.toggleForcedDesktop(value))
 
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))

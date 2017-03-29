@@ -293,6 +293,27 @@ body {
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease; }
+      body .app.light #topbar .logo {
+        text-decoration: none;
+        color: #fff;
+        display: block;
+        height: 70px;
+        line-height: 70px;
+        background: #002b36;
+        text-align: left;
+        width: 149px;
+        -webkit-transition: color, background-color 0.3s ease;
+        -moz-transition: color, background-color 0.3s ease;
+        -o-transition: color, background-color 0.3s ease;
+        transition: color, background-color 0.3s ease; }
+        body .app.light #topbar .logo img {
+          float: left;
+          margin: 21px 10px 21px 18px;
+          width: 24px;
+          height: 28px;
+          line-height: 70px; }
+        body .app.light #topbar .logo h1 {
+          display: inline-block; }
       body .app.light #topbar ul.actions {
         position: absolute;
         display: inline-block;
@@ -404,7 +425,7 @@ body {
           padding: 0 20px; }
     body .app.light #sidebar {
       float: left;
-      height: 5000px;
+      height: 100%;
       background: #7dc8e5;
       width: 149px;
       -webkit-transition: color, background-color 0.3s ease;
@@ -412,6 +433,7 @@ body {
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease; }
       body .app.light #sidebar .logo {
+        text-decoration: none;
         color: #fff;
         display: block;
         height: 70px;
@@ -433,7 +455,8 @@ body {
           display: inline-block; }
       body .app.light #sidebar .actions-container {
         position: relative;
-        overflow: hidden; }
+        overflow: hidden;
+        height: 100%; }
         body .app.light #sidebar .actions-container ul.submenu {
           display: none; }
           body .app.light #sidebar .actions-container ul.submenu li.btn {
@@ -473,7 +496,7 @@ body {
           color: #586e75; }
       body .app.light #sidebar .actions.bottom {
         position: absolute;
-        bottom: 33px; }
+        bottom: 0px; }
         body .app.light #sidebar .actions.bottom .btn {
           cursor: pointer;
           padding-left: 20px;
@@ -510,7 +533,6 @@ body {
         overflow: hidden; }
       body .app.light #editor-container #switcher-show {
         right: 0;
-        left: 149px;
         bottom: 0;
         background: #002b36;
         height: 33px;
@@ -872,38 +894,50 @@ body {
     body .app.light #editor-mobile {
       display: none !important; }
     @media only screen and (max-width: 720px) and (min-width: 480px) {
-      body .app.light h1 {
+      body .app.light:not(.force-desktop) #sidebar h1 {
         display: none !important; }
-      body .app.light #sidebar, body .app.light #sidebar ul {
+      body .app.light:not(.force-desktop) #topbar .logo img {
+        display: none !important; }
+      body .app.light:not(.force-desktop) #topbar h1 {
+        display: block !important;
+        position: relative;
+        left: -14px; }
+      body .app.light:not(.force-desktop) #sidebar, body .app.light:not(.force-desktop) #sidebar ul {
         width: 66px !important; }
-        body .app.light #sidebar li, body .app.light #sidebar ul li {
+        body .app.light:not(.force-desktop) #sidebar li, body .app.light:not(.force-desktop) #sidebar ul li {
           padding-left: 24px !important; }
-      body .app.light #content {
+      body .app.light:not(.force-desktop) #content {
         margin-left: 66px !important; }
-      body .app.light #topbar ul.actions > li span, body .app.light #sidebar ul.actions > li span {
+      body .app.light:not(.force-desktop) #topbar ul.actions {
+        right: 0px !important; }
+      body .app.light:not(.force-desktop) #topbar ul.actions > li span, body .app.light:not(.force-desktop) #sidebar ul.actions > li span {
         display: none !important; }
-      body .app.light #editor-topbar {
+      body .app.light:not(.force-desktop) #editor-topbar {
         font-size: 20px; }
-        body .app.light #editor-topbar li span {
+        body .app.light:not(.force-desktop) #editor-topbar li span {
           display: none !important; }
-      body .app.light #editor-mobile {
+      body .app.light:not(.force-desktop) #editor-mobile {
         display: none; }
-      body .app.light #switcher-show {
+      body .app.light:not(.force-desktop) #switcher-show {
         left: 66px !important; } }
     @media only screen and (max-width: 480px) {
-      body .app.light #topbar, body .app.light #sidebar, body .app.light #editor-topbar {
+      body .app.light:not(.force-desktop) #sidebar, body .app.light:not(.force-desktop) #editor-topbar {
         display: none !important; }
-      body .app.light #content {
+      body .app.light:not(.force-desktop) #content {
         margin-left: 0px !important; }
-      body .app.light .btn.run-button.mobile {
+      body .app.light:not(.force-desktop) .btn.run-button.mobile {
         display: block !important;
         position: absolute !important;
         bottom: 20px !important;
         left: 20px !important; }
-      body .app.light #switcher-show, body .app.light #console {
+      body .app.light:not(.force-desktop) #switcher-show, body .app.light:not(.force-desktop) #console {
         bottom: 48px !important;
         left: 0px !important; }
-      body .app.light #editor-mobile {
+      body .app.light:not(.force-desktop) #topbar ul.actions {
+        display: none !important; }
+      body .app.light:not(.force-desktop) #topbar ul.actions > li span, body .app.light:not(.force-desktop) #sidebar ul.actions > li span {
+        display: none !important; }
+      body .app.light:not(.force-desktop) #editor-mobile {
         z-index: 99999;
         display: block !important;
         position: absolute;
@@ -912,9 +946,9 @@ body {
         height: 48px !important;
         width: 100%;
         background-color: #7dc8e5; }
-        body .app.light #editor-mobile ul {
+        body .app.light:not(.force-desktop) #editor-mobile ul {
           padding: 0px 24px !important; }
-        body .app.light #editor-mobile li.btn {
+        body .app.light:not(.force-desktop) #editor-mobile li.btn {
           text-align: center;
           width: 50%;
           line-height: 48px !important;
@@ -922,8 +956,8 @@ body {
           display: inline-block !important;
           float: left;
           padding: 0px !important; }
-          body .app.light #editor-mobile li.btn span {
+          body .app.light:not(.force-desktop) #editor-mobile li.btn span {
             display: none; }
-          body .app.light #editor-mobile li.btn i.fa {
+          body .app.light:not(.force-desktop) #editor-mobile li.btn i.fa {
             line-height: 40px;
             font-size: 20px; } }

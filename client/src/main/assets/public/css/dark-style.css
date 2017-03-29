@@ -293,6 +293,27 @@ body {
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease; }
+      body .app.dark #topbar .logo {
+        text-decoration: none;
+        color: #fff;
+        display: block;
+        height: 70px;
+        line-height: 70px;
+        background: #002b36;
+        text-align: left;
+        width: 149px;
+        -webkit-transition: color, background-color 0.3s ease;
+        -moz-transition: color, background-color 0.3s ease;
+        -o-transition: color, background-color 0.3s ease;
+        transition: color, background-color 0.3s ease; }
+        body .app.dark #topbar .logo img {
+          float: left;
+          margin: 21px 10px 21px 18px;
+          width: 24px;
+          height: 28px;
+          line-height: 70px; }
+        body .app.dark #topbar .logo h1 {
+          display: inline-block; }
       body .app.dark #topbar ul.actions {
         position: absolute;
         display: inline-block;
@@ -404,7 +425,7 @@ body {
           padding: 0 20px; }
     body .app.dark #sidebar {
       float: left;
-      height: 5000px;
+      height: 100%;
       background: #073642;
       width: 149px;
       -webkit-transition: color, background-color 0.3s ease;
@@ -412,6 +433,7 @@ body {
       -o-transition: color, background-color 0.3s ease;
       transition: color, background-color 0.3s ease; }
       body .app.dark #sidebar .logo {
+        text-decoration: none;
         color: #fff;
         display: block;
         height: 70px;
@@ -433,7 +455,8 @@ body {
           display: inline-block; }
       body .app.dark #sidebar .actions-container {
         position: relative;
-        overflow: hidden; }
+        overflow: hidden;
+        height: 100%; }
         body .app.dark #sidebar .actions-container ul.submenu {
           display: none; }
           body .app.dark #sidebar .actions-container ul.submenu li.btn {
@@ -473,7 +496,7 @@ body {
           color: #586e75; }
       body .app.dark #sidebar .actions.bottom {
         position: absolute;
-        bottom: 33px; }
+        bottom: 0px; }
         body .app.dark #sidebar .actions.bottom .btn {
           cursor: pointer;
           padding-left: 20px;
@@ -510,7 +533,6 @@ body {
         overflow: hidden; }
       body .app.dark #editor-container #switcher-show {
         right: 0;
-        left: 149px;
         bottom: 0;
         background: #002b36;
         height: 33px;
@@ -872,38 +894,50 @@ body {
     body .app.dark #editor-mobile {
       display: none !important; }
     @media only screen and (max-width: 720px) and (min-width: 480px) {
-      body .app.dark h1 {
+      body .app.dark:not(.force-desktop) #sidebar h1 {
         display: none !important; }
-      body .app.dark #sidebar, body .app.dark #sidebar ul {
+      body .app.dark:not(.force-desktop) #topbar .logo img {
+        display: none !important; }
+      body .app.dark:not(.force-desktop) #topbar h1 {
+        display: block !important;
+        position: relative;
+        left: -14px; }
+      body .app.dark:not(.force-desktop) #sidebar, body .app.dark:not(.force-desktop) #sidebar ul {
         width: 66px !important; }
-        body .app.dark #sidebar li, body .app.dark #sidebar ul li {
+        body .app.dark:not(.force-desktop) #sidebar li, body .app.dark:not(.force-desktop) #sidebar ul li {
           padding-left: 24px !important; }
-      body .app.dark #content {
+      body .app.dark:not(.force-desktop) #content {
         margin-left: 66px !important; }
-      body .app.dark #topbar ul.actions > li span, body .app.dark #sidebar ul.actions > li span {
+      body .app.dark:not(.force-desktop) #topbar ul.actions {
+        right: 0px !important; }
+      body .app.dark:not(.force-desktop) #topbar ul.actions > li span, body .app.dark:not(.force-desktop) #sidebar ul.actions > li span {
         display: none !important; }
-      body .app.dark #editor-topbar {
+      body .app.dark:not(.force-desktop) #editor-topbar {
         font-size: 20px; }
-        body .app.dark #editor-topbar li span {
+        body .app.dark:not(.force-desktop) #editor-topbar li span {
           display: none !important; }
-      body .app.dark #editor-mobile {
+      body .app.dark:not(.force-desktop) #editor-mobile {
         display: none; }
-      body .app.dark #switcher-show {
+      body .app.dark:not(.force-desktop) #switcher-show {
         left: 66px !important; } }
     @media only screen and (max-width: 480px) {
-      body .app.dark #topbar, body .app.dark #sidebar, body .app.dark #editor-topbar {
+      body .app.dark:not(.force-desktop) #sidebar, body .app.dark:not(.force-desktop) #editor-topbar {
         display: none !important; }
-      body .app.dark #content {
+      body .app.dark:not(.force-desktop) #content {
         margin-left: 0px !important; }
-      body .app.dark .btn.run-button.mobile {
+      body .app.dark:not(.force-desktop) .btn.run-button.mobile {
         display: block !important;
         position: absolute !important;
         bottom: 20px !important;
         left: 20px !important; }
-      body .app.dark #switcher-show, body .app.dark #console {
+      body .app.dark:not(.force-desktop) #switcher-show, body .app.dark:not(.force-desktop) #console {
         bottom: 48px !important;
         left: 0px !important; }
-      body .app.dark #editor-mobile {
+      body .app.dark:not(.force-desktop) #topbar ul.actions {
+        display: none !important; }
+      body .app.dark:not(.force-desktop) #topbar ul.actions > li span, body .app.dark:not(.force-desktop) #sidebar ul.actions > li span {
+        display: none !important; }
+      body .app.dark:not(.force-desktop) #editor-mobile {
         z-index: 99999;
         display: block !important;
         position: absolute;
@@ -912,9 +946,9 @@ body {
         height: 48px !important;
         width: 100%;
         background-color: #073642; }
-        body .app.dark #editor-mobile ul {
+        body .app.dark:not(.force-desktop) #editor-mobile ul {
           padding: 0px 24px !important; }
-        body .app.dark #editor-mobile li.btn {
+        body .app.dark:not(.force-desktop) #editor-mobile li.btn {
           text-align: center;
           width: 50%;
           line-height: 48px !important;
@@ -922,8 +956,8 @@ body {
           display: inline-block !important;
           float: left;
           padding: 0px !important; }
-          body .app.dark #editor-mobile li.btn span {
+          body .app.dark:not(.force-desktop) #editor-mobile li.btn span {
             display: none; }
-          body .app.dark #editor-mobile li.btn i.fa {
+          body .app.dark:not(.force-desktop) #editor-mobile li.btn i.fa {
             line-height: 40px;
             font-size: 20px; } }

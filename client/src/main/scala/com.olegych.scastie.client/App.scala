@@ -29,7 +29,7 @@ object App {
             else "app embedded"
 
           val desktop =
-            if (state.dimensions.forcedDesktop) ".force-desktop"
+            if (state.dimensions.forcedDesktop) "force-desktop"
             else ""
 
           def appStyle: TagMod = Seq(
