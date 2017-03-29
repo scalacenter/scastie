@@ -133,7 +133,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleTheme(): Callback = scope.modState(_.toggleTheme)
 
   def toggleConsole(): Callback = scope.modState(_.toggleConsole)
-  def toggleConsole(e: ReactEventI): Callback = toggleConsole()
+  def toggleConsole(e: ReactEventI): Callback = toggleConsole() >> setConsoleHeight()
 
   def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
 
@@ -191,7 +191,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     setTopBarHeight() >>
       setEditorTopBarHeight() >>
       setSideBarWidth() >>
-      setSideBarMinHeight
+      setSideBarMinHeight >>
+      setConsoleBarHeight() >>
+      setConsoleHeight()
 
   def run(e: ReactEventI): Callback = run()
   def run(): Callback = {

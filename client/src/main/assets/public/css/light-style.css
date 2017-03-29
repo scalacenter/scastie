@@ -368,23 +368,23 @@ body {
                 background-repeat: no-repeat;
                 width: 10px;
                 height: 15px; }
-    body .app.light #editor-topbar {
+    body .app.light #editor-topbar, body .app.light #editor-mobile {
       border-bottom: 2px solid #073642;
       display: block; }
-      body .app.light #editor-topbar.disabled {
+      body .app.light #editor-topbar.disabled, body .app.light #editor-mobile.disabled {
         display: none; }
-      body .app.light #editor-topbar #workSheetIndicator {
+      body .app.light #editor-topbar #workSheetIndicator, body .app.light #editor-mobile #workSheetIndicator {
         margin-right: 0px;
         text-align: center;
         width: 14px;
         margin-left: 8px;
         font-size: 14px;
         color: #002b36; }
-        body .app.light #editor-topbar #workSheetIndicator.enabled {
+        body .app.light #editor-topbar #workSheetIndicator.enabled, body .app.light #editor-mobile #workSheetIndicator.enabled {
           color: #859900; }
-          body .app.light #editor-topbar #workSheetIndicator.enabled.alpha {
+          body .app.light #editor-topbar #workSheetIndicator.enabled.alpha, body .app.light #editor-mobile #workSheetIndicator.enabled.alpha {
             opacity: 0.3; }
-      body .app.light #editor-topbar .editor-buttons .btn {
+      body .app.light #editor-topbar .editor-buttons .btn, body .app.light #editor-mobile .editor-buttons .btn {
         display: inline-block;
         cursor: pointer;
         padding: 0 20px;
@@ -394,13 +394,13 @@ body {
         -o-transition: color, background-color 0.3s ease;
         transition: color, background-color 0.3s ease;
         color: #0f262f; }
-        body .app.light #editor-topbar .editor-buttons .btn i {
+        body .app.light #editor-topbar .editor-buttons .btn i, body .app.light #editor-mobile .editor-buttons .btn i {
           margin-right: 5px; }
-        body .app.light #editor-topbar .editor-buttons .btn:hover {
+        body .app.light #editor-topbar .editor-buttons .btn:hover, body .app.light #editor-mobile .editor-buttons .btn:hover {
           color: #00acdb; }
-      body .app.light #editor-topbar #save-buttons {
+      body .app.light #editor-topbar #save-buttons, body .app.light #editor-mobile #save-buttons {
         display: inline-block; }
-        body .app.light #editor-topbar #save-buttons .btn {
+        body .app.light #editor-topbar #save-buttons .btn, body .app.light #editor-mobile #save-buttons .btn {
           padding: 0 20px; }
     body .app.light #sidebar {
       float: left;
@@ -868,3 +868,56 @@ body {
               display: inline-block;
               width: 140px;
               margin-left: 20px; }
+    body .app.light #editor-mobile {
+      display: none !important; }
+    @media only screen and (max-width: 720px) and (min-width: 480px) {
+      body .app.light h1 {
+        display: none !important; }
+      body .app.light #sidebar, body .app.light #sidebar ul {
+        width: 66px !important;
+        font-size: 20px; }
+      body .app.light #content {
+        margin-left: 66px !important; }
+      body .app.light #topbar ul.actions > li span, body .app.light #sidebar ul.actions > li span {
+        display: none !important; }
+      body .app.light #editor-topbar {
+        font-size: 20px; }
+        body .app.light #editor-topbar li span {
+          display: none !important; }
+      body .app.light #editor-mobile {
+        display: none; } }
+    @media only screen and (max-width: 480px) {
+      body .app.light #topbar, body .app.light #sidebar, body .app.light #editor-topbar {
+        display: none !important; }
+      body .app.light #content {
+        margin-left: 0px !important; }
+      body .app.light .btn.run-button.mobile {
+        display: block !important;
+        position: absolute !important;
+        bottom: 20px !important;
+        left: 20px !important; }
+      body .app.light #switcher-show, body .app.light #console {
+        bottom: 48px !important; }
+      body .app.light #editor-mobile {
+        display: block !important;
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
+        height: 48px !important;
+        width: 100%;
+        background-color: #7dc8e5; }
+        body .app.light #editor-mobile ul {
+          padding: 0px 24px !important; }
+        body .app.light #editor-mobile li.btn {
+          text-align: center;
+          width: 50%;
+          line-height: 48px !important;
+          font-size: 20px;
+          display: inline-block !important;
+          float: left;
+          padding: 0px !important; }
+          body .app.light #editor-mobile li.btn span {
+            display: none; }
+          body .app.light #editor-mobile li.btn i.fa {
+            line-height: 40px;
+            font-size: 20px; } }

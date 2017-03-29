@@ -20,14 +20,14 @@ object RunButton {
              title := s"Run Code ($ctrl + Enter)",
              `class` := "btn run-button")(
             i(`class` := "fa fa-play"),
-            "Run"
+            span("Run")
           )
         } else {
           li(onClick ==> setView2(View.Editor),
              title := "Running your Code...",
              `class` := "btn run-button")(
             i(`class` := "fa fa-spinner fa-spin"),
-            "Running"
+            span("Running")
           )
         }
     }.build

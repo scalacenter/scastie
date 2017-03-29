@@ -25,7 +25,7 @@ object SideBar {
             title := s"Select $toggleThemeLabel Theme (F2)",
             `class` := "btn")(
             i(`class` := s"fa $selectedIcon"),
-            toggleThemeLabel
+            span(toggleThemeLabel)
           )
 
         val helpButton =
@@ -33,7 +33,7 @@ object SideBar {
             title := "Show help Menu",
             `class` := "btn")(
             i(`class` := "fa fa-question-circle"),
-            "Help"
+            span("Help")
           )
 
         val buttonsTop: Seq[TagMod] = Seq(EditorButton(state, backend), BuildSettingsButton(state, backend))

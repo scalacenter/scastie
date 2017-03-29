@@ -8,7 +8,7 @@ object Dimensions {
     sideBarWidth = 0,
     sideBarMinHeight = 0,
     consoleBarHeight = 0,
-    consoleHeight = 0.25)
+    consoleHeight = 0)
 }
 
 case class Dimensions(

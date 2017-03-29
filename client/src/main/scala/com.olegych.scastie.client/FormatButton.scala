@@ -15,7 +15,7 @@ object FormatButton {
         title := "Format Code (F6)",
         `class` := "btn", onClick ==> backend.formatCode)(
         i(`class` := "fa fa-align-left"),
-        "Format"
+        span("Format")
       )
     }.build
 }

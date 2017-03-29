@@ -24,7 +24,6 @@ object Console {
             else (display.none, display.block)
 
           def consoleStyle: TagMod = Seq(
-            height := s"${dom.window.innerHeight * consoleHeight}px",
             width := s"${dom.window.innerWidth - sideBarWidth}px",
             displayConsole)
 

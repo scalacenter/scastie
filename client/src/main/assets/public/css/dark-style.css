@@ -368,23 +368,23 @@ body {
                 background-repeat: no-repeat;
                 width: 10px;
                 height: 15px; }
-    body .app.dark #editor-topbar {
+    body .app.dark #editor-topbar, body .app.dark #editor-mobile {
       border-bottom: 2px solid #073642;
       display: block; }
-      body .app.dark #editor-topbar.disabled {
+      body .app.dark #editor-topbar.disabled, body .app.dark #editor-mobile.disabled {
         display: none; }
-      body .app.dark #editor-topbar #workSheetIndicator {
+      body .app.dark #editor-topbar #workSheetIndicator, body .app.dark #editor-mobile #workSheetIndicator {
         margin-right: 0px;
         text-align: center;
         width: 14px;
         margin-left: 8px;
         font-size: 14px;
         color: #002b36; }
-        body .app.dark #editor-topbar #workSheetIndicator.enabled {
+        body .app.dark #editor-topbar #workSheetIndicator.enabled, body .app.dark #editor-mobile #workSheetIndicator.enabled {
           color: #859900; }
-          body .app.dark #editor-topbar #workSheetIndicator.enabled.alpha {
+          body .app.dark #editor-topbar #workSheetIndicator.enabled.alpha, body .app.dark #editor-mobile #workSheetIndicator.enabled.alpha {
             opacity: 0.3; }
-      body .app.dark #editor-topbar .editor-buttons .btn {
+      body .app.dark #editor-topbar .editor-buttons .btn, body .app.dark #editor-mobile .editor-buttons .btn {
         display: inline-block;
         cursor: pointer;
         padding: 0 20px;
@@ -394,13 +394,13 @@ body {
         -o-transition: color, background-color 0.3s ease;
         transition: color, background-color 0.3s ease;
         color: #ffffff; }
-        body .app.dark #editor-topbar .editor-buttons .btn i {
+        body .app.dark #editor-topbar .editor-buttons .btn i, body .app.dark #editor-mobile .editor-buttons .btn i {
           margin-right: 5px; }
-        body .app.dark #editor-topbar .editor-buttons .btn:hover {
+        body .app.dark #editor-topbar .editor-buttons .btn:hover, body .app.dark #editor-mobile .editor-buttons .btn:hover {
           color: #859900; }
-      body .app.dark #editor-topbar #save-buttons {
+      body .app.dark #editor-topbar #save-buttons, body .app.dark #editor-mobile #save-buttons {
         display: inline-block; }
-        body .app.dark #editor-topbar #save-buttons .btn {
+        body .app.dark #editor-topbar #save-buttons .btn, body .app.dark #editor-mobile #save-buttons .btn {
           padding: 0 20px; }
     body .app.dark #sidebar {
       float: left;
@@ -868,3 +868,56 @@ body {
               display: inline-block;
               width: 140px;
               margin-left: 20px; }
+    body .app.dark #editor-mobile {
+      display: none !important; }
+    @media only screen and (max-width: 720px) and (min-width: 480px) {
+      body .app.dark h1 {
+        display: none !important; }
+      body .app.dark #sidebar, body .app.dark #sidebar ul {
+        width: 66px !important;
+        font-size: 20px; }
+      body .app.dark #content {
+        margin-left: 66px !important; }
+      body .app.dark #topbar ul.actions > li span, body .app.dark #sidebar ul.actions > li span {
+        display: none !important; }
+      body .app.dark #editor-topbar {
+        font-size: 20px; }
+        body .app.dark #editor-topbar li span {
+          display: none !important; }
+      body .app.dark #editor-mobile {
+        display: none; } }
+    @media only screen and (max-width: 480px) {
+      body .app.dark #topbar, body .app.dark #sidebar, body .app.dark #editor-topbar {
+        display: none !important; }
+      body .app.dark #content {
+        margin-left: 0px !important; }
+      body .app.dark .btn.run-button.mobile {
+        display: block !important;
+        position: absolute !important;
+        bottom: 20px !important;
+        left: 20px !important; }
+      body .app.dark #switcher-show, body .app.dark #console {
+        bottom: 48px !important; }
+      body .app.dark #editor-mobile {
+        display: block !important;
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
+        height: 48px !important;
+        width: 100%;
+        background-color: #073642; }
+        body .app.dark #editor-mobile ul {
+          padding: 0px 24px !important; }
+        body .app.dark #editor-mobile li.btn {
+          text-align: center;
+          width: 50%;
+          line-height: 48px !important;
+          font-size: 20px;
+          display: inline-block !important;
+          float: left;
+          padding: 0px !important; }
+          body .app.dark #editor-mobile li.btn span {
+            display: none; }
+          body .app.dark #editor-mobile li.btn i.fa {
+            line-height: 40px;
+            font-size: 20px; } }

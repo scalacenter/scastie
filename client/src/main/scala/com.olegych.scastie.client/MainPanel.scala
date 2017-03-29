@@ -46,7 +46,8 @@ object MainPanel {
             div(`id`:= "settings-container", `class` := "inner-container", containerStyle, show(View.BuildSettings))(
               BuildSettings(state, backend)),
             div(`id`:= "snippets-container", `class` := "inner-container", containerStyle, show(View.CodeSnippets))(
-              CodeSnippets(props.router, state, backend))
+              CodeSnippets(props.router, state, backend)),
+            MobileBar(state, backend)
           )
         )
 

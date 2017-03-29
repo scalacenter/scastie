@@ -74,7 +74,7 @@ object TopBar {
           ul(`class` := "actions")(
             li(`class` := "btn dropdown")(
               i(`class` := "fa fa-comments"),
-              "Feedback",
+              span("Feedback"),
               i(`class` := "fa fa-caret-down"),
               ul(`class` := "subactions")(
                 li(onClick ==> feedback,
@@ -93,7 +93,7 @@ object TopBar {
             ),
             li(`class` := "btn dropdown")(
               userAvatar,
-              "Login",
+              span("Login"),
               i(`class` := "fa fa-caret-down"),
               ul(`class` := "subactions")(
                 profileButton
