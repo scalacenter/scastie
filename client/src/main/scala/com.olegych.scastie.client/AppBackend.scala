@@ -422,10 +422,4 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
         )
       } else Callback(()))
 
-  def copySnippetToClipboard(e: ReactEventI): Callback =
-    scope.state.flatMap( state =>
-      Callback(document.querySelector(state.snippetId.toString)) >>
-      Callback(document.execCommand("copy"))
-    )
-
 }
