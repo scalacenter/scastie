@@ -154,8 +154,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleShare(snippetId: Option[SnippetId])(e: ReactEventI): Callback =
     scope.modState(_.toggleShare(snippetId))
 
-  def toggleSnippetCopied(e: ReactEventI): Callback = scope.modState(_.toggleSnippetCopied())
-
   def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
   def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
 
@@ -164,32 +162,28 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def setTopBarHeight(): Callback =
     scope.modState(
-      _.setTopBarHeight(dom.document.getElementById("topbar").clientHeight.toDouble))
+      _.setTopBarHeight(getElementHeight("topbar")))
 
   def setEditorTopBarHeight(): Callback =
     scope.modState(
-      _.setEditorTopBarHeight(dom.document.getElementById("editor-topbar").clientHeight.toDouble))
+      _.setEditorTopBarHeight(getElementHeight("editor-topbar")))
 
   def setSideBarWidth(): Callback =
     scope.modState(
-      _.setSideBarWidth(dom.document.getElementById("sidebar").clientWidth.toDouble))
+      _.setSideBarWidth(getElementWidth("sidebar")))
 
   def setSideBarMinHeight(): Callback =
     scope.modState(
       _.setSideBarMinHeight(
-        dom.document.getElementById("topbar").clientHeight.toDouble +
-          dom.document.getElementById("actions-top").clientHeight.toDouble +
-          dom.document.getElementById("actions-bottom").clientHeight.toDouble))
+        getElementHeight("topbar") + getElementHeight("actions-top") + getElementHeight("actions-bottom")))
 
   def setConsoleBarHeight(): Callback =
     scope.modState(
-      _.setConsoleBarHeight(dom.document.getElementById("switcher-show").clientHeight.toDouble))
+      _.setConsoleBarHeight(getElementHeight("switcher-show")))
 
   def setConsoleHeight(): Callback =
     scope.modState(
-      _.setConsoleHeight(
-        dom.document.getElementById("console").clientHeight.toDouble +
-          dom.document.getElementById("handler").clientHeight.toDouble))
+      _.setConsoleHeight(getElementHeight("console") + getElementHeight("handler")))
 
   def setDimensions(): Callback =
     setTopBarHeight() >>
@@ -199,6 +193,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       setConsoleBarHeight() >>
       setConsoleHeight() >>
       setDimensionsHaveChanged(false)
+
+  def getElementWidth(id: String): Int =
+    Option(dom.document.getElementById(id)).map(_.clientWidth).getOrElse(0)
+
+  def getElementHeight(id: String): Int =
+    Option(dom.document.getElementById(id)).map(_.clientHeight).getOrElse(0)
 
   def run(e: ReactEventI): Callback = run()
   def run(): Callback = {
@@ -421,11 +421,5 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
             }
         )
       } else Callback(()))
-
-  def copySnippetToClipboard(e: ReactEventI): Callback =
-    scope.state.flatMap( state =>
-      Callback(document.querySelector(state.snippetId.toString)) >>
-      Callback(document.execCommand("copy"))
-    )
 
 }

@@ -3,6 +3,7 @@ package com.olegych.scastie.client
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.all._
+import org.scalajs.dom
 
 object Share {
 
@@ -17,14 +18,10 @@ object Share {
         if (state.isShareModalClosed) display.none
         else display.block
 
-      val displayCopied =
-        if (state.codeSnippetCopied) display.none
-        else display.none
-
       def getSnippetUrl =
         (maybeRouter, state.snippetId) match {
           case (Some(router), Some(snippetId)) => router.urlFor(Page.fromSnippetId(snippetId)).value
-          case _ => ""
+          case _ => "Snippet URl not found"
         }
 
       div(`class` := "modal", displayShare)(
@@ -37,22 +34,40 @@ object Share {
             div(`class` := "modal-inner")(
               p(`class` := "modal-intro", "Copy and share your code snippet's URL:"),
               div(`class` := "snippet-link")(
-                input.text(
-                  placeholder := "Snippet URl not found",
-                  value := getSnippetUrl,
-                  readOnly := true
+                div(
+                  `id` := "link-to-copy",
+                  getSnippetUrl
                 ),
                 li(
+                  `id` := "clipboard-copy",
                   title := "Copy to Clipboard",
-                  `class` := "btn snippet-clip", onClick ==> backend.toggleSnippetCopied, display.none)(
+                  `class` := "btn snippet-clip")(
                   i(`class` := "fa fa-clipboard")
-                ),
-                p(`class` := "modal-copied", "Copied!", displayCopied)
+                )
               )
             )
           )
         )
       )
+    }.componentDidMount { c =>
+
+      def copyLink(e0: dom.Event) = {
+
+        val contentHolder = dom.document.getElementById("link-to-copy")
+
+        val range = dom.document.createRange()
+
+        val selection = dom.window.getSelection()
+
+        range.selectNodeContents(contentHolder)
+
+        selection.addRange(range)
+
+        dom.document.execCommand("copy")
+
+      }
+
+      Callback(dom.document.getElementById("clipboard-copy").addEventListener("click", copyLink _))
 
     }.build
 }

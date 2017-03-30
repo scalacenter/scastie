@@ -138,28 +138,24 @@ body {
             overflow: hidden; }
             body .app.dark .modal .modal-fade-screen .modal-share .modal-inner p {
               margin: 30px 0 10px 0; }
-          body .app.dark .modal .modal-fade-screen .modal-share .modal-copied {
-            font: inherit;
-            font-size: 18px;
-            margin-top: 20px !important;
-            position: absolute;
-            right: 30px; }
           body .app.dark .modal .modal-fade-screen .modal-share .snippet-link {
             height: 48px;
             border: 1px solid #5d7c83;
             margin-top: 34px; }
-            body .app.dark .modal .modal-fade-screen .modal-share .snippet-link input {
+            body .app.dark .modal .modal-fade-screen .modal-share .snippet-link #link-to-copy {
               border: 0px;
               width: calc(100% - 46px);
               height: 100%;
-              padding: 10px;
+              padding: 15px;
               font: inherit;
-              font-size: 18px; }
+              font-size: 18px;
+              display: inline-block;
+              vertical-align: middle; }
             body .app.dark .modal .modal-fade-screen .modal-share .snippet-link .snippet-clip {
               display: inline-block;
               width: 46px;
               height: 100%;
-              padding: 9px;
+              padding: 12px;
               cursor: pointer;
               font-size: 22px;
               vertical-align: middle; }
