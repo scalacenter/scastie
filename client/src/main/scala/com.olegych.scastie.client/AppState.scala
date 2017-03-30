@@ -193,27 +193,27 @@ case class AppState(
     copyAndSave(
       dimensions = dimensions.copy(dimensionsHaveChanged = value))
 
-  def setTopBarHeight(height: Double): AppState =
+  def setTopBarHeight(height: Int): AppState =
     copyAndSave(
       dimensions = dimensions.copy(topBarHeight = height))
 
-  def setEditorTopBarHeight(height: Double): AppState =
+  def setEditorTopBarHeight(height: Int): AppState =
     copyAndSave(
       dimensions = dimensions.copy(editorTopBarHeight = height))
 
-  def setSideBarWidth(width: Double): AppState =
+  def setSideBarWidth(width: Int): AppState =
     copyAndSave(
       dimensions = dimensions.copy(sideBarWidth = width))
 
-  def setSideBarMinHeight(height: Double): AppState =
+  def setSideBarMinHeight(height: Int): AppState =
     copyAndSave(
       dimensions = dimensions.copy(sideBarMinHeight = height))
 
-  def setConsoleBarHeight(height: Double): AppState =
+  def setConsoleBarHeight(height: Int): AppState =
     copyAndSave(
       dimensions = dimensions.copy(consoleBarHeight = height))
 
-  def setConsoleHeight(height: Double): AppState =
+  def setConsoleHeight(height: Int): AppState =
     copyAndSave(
       dimensions = dimensions.copy(consoleHeight = height))
 

@@ -15,11 +15,11 @@ object Dimensions {
 case class Dimensions(
   dimensionsHaveChanged: Boolean,
   forcedDesktop: Boolean,
-  topBarHeight: Double,
-  editorTopBarHeight: Double,
-  sideBarWidth: Double,
-  sideBarMinHeight: Double,
-  consoleBarHeight: Double,
-  consoleHeight: Double)
+  topBarHeight: Int,
+  editorTopBarHeight: Int,
+  sideBarWidth: Int,
+  sideBarMinHeight: Int,
+  consoleBarHeight: Int,
+  consoleHeight: Int)
 
 
