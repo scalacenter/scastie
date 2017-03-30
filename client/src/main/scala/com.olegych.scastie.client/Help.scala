@@ -28,7 +28,7 @@ object Help {
         val originalScastie = generateATag("https://github.com/OlegYch/scastie", "GitHub")
 
         val displayHelp =
-          if (state.isHelpModalClosed) display.none
+          if (state.modalState.isHelpModalClosed) display.none
           else display.block
 
         div(`class` := "modal", displayHelp)(

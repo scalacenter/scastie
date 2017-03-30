@@ -2,8 +2,9 @@ package com.olegych.scastie
 package client
 
 import api._
-
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import org.scalajs.dom
+import vdom.all._
 
 object BuildSettings {
 
@@ -66,19 +67,19 @@ object BuildSettings {
 
     div(
       ul(`id` := "target")(
-          targetTypes.map { targetType =>
-            val targetLabel = labelFor(targetType)
-            li(
-              input(`type` := "radio",
-                `id` := targetLabel,
-                value := targetLabel,
-                name := "target",
-                handler(targetType),
-                selected(targetType)),
-              label(`for` := targetLabel, `class` := "radio", targetLabel),
-              vote(targetType)
-            )
-          }
+        targetTypes.map { targetType =>
+          val targetLabel = labelFor(targetType)
+          li(
+            input(`type` := "radio",
+              `id` := targetLabel,
+              value := targetLabel,
+              name := "target",
+              handler(targetType),
+              selected(targetType)),
+            label(`for` := targetLabel, `class` := "radio", targetLabel),
+            vote(targetType)
+          )
+        }
       )
     )
   }
@@ -222,6 +223,22 @@ object BuildSettings {
       case (state, backend) =>
         val theme = if (state.isDarkTheme) "dark" else "light"
 
+        def resetBuild(e: ReactEventI): Callback = {
+          CallbackTo(dom.window.confirm("Are you sure you want to reset?"))
+            .flatMap(
+              reset =>
+                if (reset) backend.resetBuild
+                else Callback(())
+            )
+        }
+
+        val resetButton =
+          if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
+            button(onClick ==> resetBuild, `class` := "btn")(
+              p("Reset")
+            )
+          } else EmptyTag
+
         div(`id` := "build-settings-container")(
           h2(
             span("Target")
@@ -271,7 +288,8 @@ object BuildSettings {
                 _ => Callback(())
               )
             )
-          )
+          ),
+          resetButton
         )
     }.build
   def apply(state: AppState, backend: AppBackend) = component((state, backend))

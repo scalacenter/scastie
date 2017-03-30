@@ -21,20 +21,26 @@ object Routing {
       trimSlashes
         | staticRoute(root, Home) ~> renderR(renderAppDefault)
         | dynamicRouteCT(anon.caseClass[AnonymousResource]) ~> dynRenderR(
-          renderPage)
+          renderPage
+        )
         | dynamicRouteCT(user.caseClass[UserResource]) ~> dynRenderR(
-          renderPage)
+          renderPage
+        )
         | dynamicRouteCT(userUpdate.caseClass[UserResourceUpdated]) ~> dynRenderR(
-          renderPage)
+          renderPage
+        )
 
         | staticRoute(embedded, Embeded) ~> renderR(renderAppDefaultEmbedded)
         | dynamicRouteCT(embedded / anon.caseClass[EmbeddedAnonymousResource]) ~> dynRenderR(
-          renderPage)
+          renderPage
+        )
         | dynamicRouteCT(embedded / user.caseClass[EmbeddedUserResource]) ~> dynRenderR(
-          renderPage)
+          renderPage
+        )
         | dynamicRouteCT(
           embedded / userUpdate
-            .caseClass[EmbeddedUserResourceUpdated]) ~> dynRenderR(renderPage)
+            .caseClass[EmbeddedUserResourceUpdated]
+        ) ~> dynRenderR(renderPage)
     ).notFound(redirectToPage(Home)(Redirect.Replace)).renderWith(layout)
   }
 
@@ -44,7 +50,8 @@ object Routing {
         router = Some(router),
         snippetId = None,
         embedded = None
-      ))
+      )
+    )
 
   def renderAppDefaultEmbedded(router: RouterCtl[Page]) =
     App(
@@ -52,7 +59,8 @@ object Routing {
         router = Some(router),
         snippetId = None,
         embedded = Some(EmbededOptions.empty)
-      ))
+      )
+    )
 
   def renderPage(page: ResourcePage, router: RouterCtl[Page]) = {
     val defaultEmbedded = Some(EmbededOptions.empty)

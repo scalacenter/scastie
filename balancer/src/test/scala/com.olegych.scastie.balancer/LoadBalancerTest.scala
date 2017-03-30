@@ -69,8 +69,9 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
   }
 
   test("reconfigure busy configuration") {
-    val tasks = (1 to 5).map(i =>
-      Task("c1", Ip(i.toString), SnippetId(i.toString, None)))
+    val tasks = (1 to 5).map(
+      i => Task("c1", Ip(i.toString), SnippetId(i.toString, None))
+    )
     val balancer =
       LoadBalancer(
         Vector(
@@ -101,8 +102,9 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
   }
 
   test("dont reconfigure if some configuration if not busy") {
-    val tasks = (1 to 5).map(i =>
-      Task("c1", Ip(i.toString), SnippetId(i.toString, None)))
+    val tasks = (1 to 5).map(
+      i => Task("c1", Ip(i.toString), SnippetId(i.toString, None))
+    )
     val balancer =
       LoadBalancer(
         Vector(

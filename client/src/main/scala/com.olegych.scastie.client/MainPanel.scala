@@ -6,7 +6,6 @@ import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom.raw.HTMLPreElement
 import org.scalajs.dom.window._
 
-
 object MainPanel {
 
   private val consoleElement = Ref[HTMLPreElement]("console")
@@ -15,6 +14,7 @@ object MainPanel {
       case (state, backend, props) =>
 
         import state.dimensions._
+        import state._
 
         def show(view: View) = {
           if (view == state.view) TagMod(display.block)
@@ -26,6 +26,30 @@ object MainPanel {
         val embeddedMenu =
           if (embedded) TagMod(EmbeddedMenu(state, backend))
           else EmptyTag
+
+        val debugOutput =
+          pre(`class` := "debug")(
+            s"""|inputsHasChanged:       $inputsHasChanged
+                |
+                |snippetId:              $snippetId
+                |
+                |isSnippetSaved:         $isSnippetSaved
+                |
+                |loadSnippet:            $loadSnippet
+                |
+                |loadScalaJsScript:      $loadScalaJsScript
+                |
+                |isScalaJsScriptLoaded:  $isScalaJsScriptLoaded
+                |
+                |snippetIdIsScalaJS:     $snippetIdIsScalaJS
+                |
+                |attachedDoms:           $attachedDoms
+                |
+                |outputs
+                |  instrumentations:
+                |    ${outputs.instrumentations.mkString("    \n")}
+                |""".stripMargin
+          )
 
         def editorStyle: TagMod = Seq(
           height := s"${innerHeight - topBarHeight - editorTopBarHeight -

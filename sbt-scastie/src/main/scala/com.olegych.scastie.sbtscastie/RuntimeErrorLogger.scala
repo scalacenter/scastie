@@ -42,8 +42,9 @@ object RuntimeErrorLogger {
             val sbtTrap =
               t.isInstanceOf[RuntimeException] &&
                 t.getMessage == "Nonzero exit code: 1" &&
-                !t.getStackTrace.exists(e =>
-                  e.getClassName == "sbt.Run" && e.getMethodName == "invokeMain")
+                !t.getStackTrace.exists(
+                  e => e.getClassName == "sbt.Run" && e.getMethodName == "invokeMain"
+                )
 
             if (!sbtTrap) {
               println(uwrite(RuntimeError.fromTrowable(t)))

@@ -13,7 +13,8 @@ class ExampleSpec extends FunSpec with BeforeAndAfterAll {
 
         def assertHtml(p: String, s: Int): Unit = {
           assert(
-            component.outerHtmlWithoutReactDataAttr() == s"<div> $p:$s </div>")
+            component.outerHtmlWithoutReactDataAttr() == s"<div> $p:$s </div>"
+          )
           ()
         }
 

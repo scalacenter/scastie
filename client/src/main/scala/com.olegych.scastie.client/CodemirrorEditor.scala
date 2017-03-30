@@ -26,7 +26,8 @@ object CodeMirrorEditor {
   )
 
   private[CodeMirrorEditor] class Backend(
-      scope: BackendScope[(Settings, Handler), State]) {
+      scope: BackendScope[(Settings, Handler), State]
+  ) {
     def start(): Callback = {
       scope.props.flatMap {
         case (settings, handler) =>
@@ -59,8 +60,9 @@ object CodeMirrorEditor {
 
             editor0.getDoc.setValue(settings.value)
 
-            editor0.onChange((_, _) =>
-              handler.onChange(editor0.getDoc().getValue()).runNow)
+            editor0.onChange(
+              (_, _) => handler.onChange(editor0.getDoc().getValue()).runNow
+            )
 
             editor0
           }.toOption
