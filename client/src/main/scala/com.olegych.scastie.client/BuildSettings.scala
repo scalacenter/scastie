@@ -4,7 +4,7 @@ package client
 import api._
 import japgolly.scalajs.react._
 import org.scalajs.dom
-import vdom.all._
+import vdom.all.{title, _}
 
 object BuildSettings {
 
@@ -234,8 +234,10 @@ object BuildSettings {
 
         val resetButton =
           if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
-            button(onClick ==> resetBuild, `class` := "btn")(
-              p("Reset")
+            div(onClick ==> resetBuild,
+              `class` := "btn",
+              title := "Reset your configuration")(
+              "Reset"
             )
           } else EmptyTag
 

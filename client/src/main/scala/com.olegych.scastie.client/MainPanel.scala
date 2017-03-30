@@ -61,6 +61,7 @@ object MainPanel {
           width := s"${innerWidth - sideBarWidth}px")
 
         div(`class` := "main-panel")(
+          //debugOutput,
           TopBar(state, backend),
           EditorTopBar(state, backend, props.snippetId),
           div(`id` := "content")(

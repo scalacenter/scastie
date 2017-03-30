@@ -278,6 +278,20 @@ body {
     body .app.light i.fa-spin {
       font-size: 16px;
       width: 16px; }
+    body .app.light pre.debug {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      height: 600px;
+      width: 1000px;
+      z-index: 10;
+      background-color: red;
+      color: blue;
+      opacity: 0.8;
+      padding: 10px;
+      margin: 0;
+      font-size: 14px;
+      overflow: scroll; }
     body .app.light #topbar {
       flex-direction: row;
       text-align: right;
@@ -415,6 +429,10 @@ body {
           margin-right: 5px; }
         body .app.light #editor-topbar .editor-buttons .btn:hover, body .app.light #editor-mobile .editor-buttons .btn:hover {
           color: #00acdb; }
+      body .app.light #editor-topbar .editor-buttons .btn.disabled, body .app.light #editor-mobile .editor-buttons .btn.disabled {
+        text-decoration: none;
+        cursor: default;
+        color: #586e75; }
       body .app.light #editor-topbar #save-buttons, body .app.light #editor-mobile #save-buttons {
         display: inline-block; }
         body .app.light #editor-topbar #save-buttons .btn, body .app.light #editor-mobile #save-buttons .btn {
@@ -486,10 +504,6 @@ body {
             color: #ffffff !important; }
           body .app.light #sidebar .actions-container .actions .btn:hover {
             color: #ffffff; }
-        body .app.light #sidebar .actions-container .actions .btn.disabled {
-          text-decoration: none;
-          cursor: default;
-          color: #586e75; }
       body .app.light #sidebar .actions.bottom {
         position: absolute;
         bottom: 0px; }
@@ -693,6 +707,15 @@ body {
       font-size: 15px; }
       body .app.light #settings-container #build-settings-container {
         padding: 45px 45px; }
+        body .app.light #settings-container #build-settings-container .btn {
+          cursor: pointer;
+          background-color: #f4f3f3;
+          width: 90px;
+          padding: 10px;
+          align-content: center;
+          text-align: center; }
+          body .app.light #settings-container #build-settings-container .btn:hover {
+            color: #00acdb; }
         body .app.light #settings-container #build-settings-container ul, body .app.light #settings-container #build-settings-container li {
           line-height: 38px; }
         body .app.light #settings-container #build-settings-container h2 {
@@ -779,13 +802,14 @@ body {
         body .app.light #settings-container #build-settings-container .select-wrapper {
           position: relative;
           display: inline-block;
-          width: 130px; }
+          width: 130px;
+          margin-left: 20px; }
           body .app.light #settings-container #build-settings-container .select-wrapper:after {
             content: "\f0d7";
             font-family: FontAwesome;
             color: #0f262f;
             position: absolute;
-            top: 10px;
+            top: 0px;
             right: 10px;
             font-size: 13px; }
         body .app.light #settings-container #build-settings-container #scala-version {
@@ -886,10 +910,10 @@ body {
             body .app.light #settings-container #build-settings-container .search .added .result .artifact {
               margin-left: 20px;
               vertical-align: middle; }
+            body .app.light #settings-container #build-settings-container .search .added .result .select-wrapper:after {
+              top: 10px; }
             body .app.light #settings-container #build-settings-container .search .added .result select {
-              display: inline-block;
-              width: 140px;
-              margin-left: 20px; }
+              display: inline-block; }
     body .app.light #editor-mobile {
       display: none !important; }
     @media only screen and (max-width: 720px) and (min-width: 480px) {

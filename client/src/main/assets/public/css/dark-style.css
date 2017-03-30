@@ -278,6 +278,20 @@ body {
     body .app.dark i.fa-spin {
       font-size: 16px;
       width: 16px; }
+    body .app.dark pre.debug {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      height: 600px;
+      width: 1000px;
+      z-index: 10;
+      background-color: red;
+      color: blue;
+      opacity: 0.8;
+      padding: 10px;
+      margin: 0;
+      font-size: 14px;
+      overflow: scroll; }
     body .app.dark #topbar {
       flex-direction: row;
       text-align: right;
@@ -415,6 +429,10 @@ body {
           margin-right: 5px; }
         body .app.dark #editor-topbar .editor-buttons .btn:hover, body .app.dark #editor-mobile .editor-buttons .btn:hover {
           color: #859900; }
+      body .app.dark #editor-topbar .editor-buttons .btn.disabled, body .app.dark #editor-mobile .editor-buttons .btn.disabled {
+        text-decoration: none;
+        cursor: default;
+        color: #586e75; }
       body .app.dark #editor-topbar #save-buttons, body .app.dark #editor-mobile #save-buttons {
         display: inline-block; }
         body .app.dark #editor-topbar #save-buttons .btn, body .app.dark #editor-mobile #save-buttons .btn {
@@ -486,10 +504,6 @@ body {
             color: #ffffff !important; }
           body .app.dark #sidebar .actions-container .actions .btn:hover {
             color: #859900; }
-        body .app.dark #sidebar .actions-container .actions .btn.disabled {
-          text-decoration: none;
-          cursor: default;
-          color: #586e75; }
       body .app.dark #sidebar .actions.bottom {
         position: absolute;
         bottom: 0px; }
@@ -693,6 +707,15 @@ body {
       font-size: 15px; }
       body .app.dark #settings-container #build-settings-container {
         padding: 45px 45px; }
+        body .app.dark #settings-container #build-settings-container .btn {
+          cursor: pointer;
+          background-color: #073642;
+          width: 90px;
+          padding: 10px;
+          align-content: center;
+          text-align: center; }
+          body .app.dark #settings-container #build-settings-container .btn:hover {
+            color: #859900; }
         body .app.dark #settings-container #build-settings-container ul, body .app.dark #settings-container #build-settings-container li {
           line-height: 38px; }
         body .app.dark #settings-container #build-settings-container h2 {
@@ -779,13 +802,14 @@ body {
         body .app.dark #settings-container #build-settings-container .select-wrapper {
           position: relative;
           display: inline-block;
-          width: 130px; }
+          width: 130px;
+          margin-left: 20px; }
           body .app.dark #settings-container #build-settings-container .select-wrapper:after {
             content: "\f0d7";
             font-family: FontAwesome;
             color: #fff;
             position: absolute;
-            top: 10px;
+            top: 0px;
             right: 10px;
             font-size: 13px; }
         body .app.dark #settings-container #build-settings-container #scala-version {
@@ -886,10 +910,10 @@ body {
             body .app.dark #settings-container #build-settings-container .search .added .result .artifact {
               margin-left: 20px;
               vertical-align: middle; }
+            body .app.dark #settings-container #build-settings-container .search .added .result .select-wrapper:after {
+              top: 10px; }
             body .app.dark #settings-container #build-settings-container .search .added .result select {
-              display: inline-block;
-              width: 140px;
-              margin-left: 20px; }
+              display: inline-block; }
     body .app.dark #editor-mobile {
       display: none !important; }
     @media only screen and (max-width: 720px) and (min-width: 480px) {

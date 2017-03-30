@@ -31,19 +31,19 @@ object SaveButton {
           case Some(sid) =>
             ul(`id` := "save-buttons")(
               li(
-                title := s"Amend",
+                title := "Amend",
                 `class` := s"btn $disabledIfSaved", onClick ==> backend.amend(sid))(
                 i(`class` := "fa fa-pencil-square-o"),
                 span("Amend")
               ),
               li(
-                title := s"Save ($ctrl + S)",
+                title := s"Update ($ctrl + S)",
                 `class` := s"btn $disabledIfSaved", onClick ==> backend.update(sid))(
                 i(`class` := "fa fa-download"),
                 span("Update")
               ),
               li(
-                title := s"Fork",
+                title := "Fork",
                 `class` := s"btn $disabledIfSaved", onClick ==> backend.fork(sid))(
                 i(`class` := "fa fa-code-fork"),
                 span("Fork")
