@@ -154,8 +154,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleShare(snippetId: Option[SnippetId])(e: ReactEventI): Callback =
     scope.modState(_.toggleShare(snippetId))
 
-  def toggleSnippetCopied(e: ReactEventI): Callback = scope.modState(_.toggleSnippetCopied())
-
   def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
   def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
 

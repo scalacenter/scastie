@@ -18,10 +18,6 @@ object Share {
         if (state.isShareModalClosed) display.none
         else display.block
 
-      val displayCopied =
-        if (state.codeSnippetCopied) display.none
-        else display.none
-
       def getSnippetUrl =
         (maybeRouter, state.snippetId) match {
           case (Some(router), Some(snippetId)) => router.urlFor(Page.fromSnippetId(snippetId)).value
@@ -47,8 +43,7 @@ object Share {
                   title := "Copy to Clipboard",
                   `class` := "btn snippet-clip")(
                   i(`class` := "fa fa-clipboard")
-                ),
-                p(`class` := "modal-copied", "Copied!", displayCopied)
+                )
               )
             )
           )

@@ -25,7 +25,6 @@ object AppState {
     loadScalaJsScript = false,
     isScalaJsScriptLoaded = false,
     snippetIdIsScalaJS = false,
-    codeSnippetCopied = false,
     user = None,
     attachedDoms = Map(),
     inputs = Inputs.default,
@@ -59,7 +58,6 @@ case class AppState(
     loadScalaJsScript: Boolean,
     isScalaJsScriptLoaded: Boolean,
     snippetIdIsScalaJS: Boolean,
-    codeSnippetCopied: Boolean,
     user: Option[User],
     attachedDoms: AttachedDoms,
     inputs: Inputs,
@@ -79,7 +77,6 @@ case class AppState(
                   inputsHasChanged: Boolean = inputsHasChanged,
                   snippetId: Option[SnippetId] = snippetId,
                   snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
-                  codeSnippetCopied: Boolean = codeSnippetCopied,
                   user: Option[User] = user,
                   attachedDoms: AttachedDoms = attachedDoms,
                   inputs: Inputs = inputs,
@@ -108,7 +105,6 @@ case class AppState(
         loadScalaJsScript,
         isScalaJsScriptLoaded,
         snippetIdIsScalaJS,
-        codeSnippetCopied,
         user,
         attachedDoms,
         inputs.copy(
@@ -173,9 +169,6 @@ case class AppState(
   def toggleShare(snippetId: Option[SnippetId]): AppState =
     copyAndSave(isShareModalClosed = !isShareModalClosed,
       snippetId = snippetId)
-
-  def toggleSnippetCopied(): AppState =
-    copyAndSave(codeSnippetCopied = !codeSnippetCopied)
 
   def openConsole: AppState =
     copyAndSave(consoleState = consoleState.copy(consoleIsOpen = true))
