@@ -4,13 +4,15 @@ object ModalState {
   def default = ModalState(
     isHelpModalClosed = true,
     isWelcomeModalClosed = false,
-    isShareModalClosed = true
+    isShareModalClosed = true,
+    isResetModalClosed = true
   )
 }
 
 case class ModalState(
    isWelcomeModalClosed: Boolean,
    isHelpModalClosed: Boolean,
-   isShareModalClosed: Boolean)
+   isShareModalClosed: Boolean,
+   isResetModalClosed: Boolean)
 
 

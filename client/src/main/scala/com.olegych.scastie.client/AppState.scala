@@ -177,6 +177,9 @@ case class AppState(
   def toggleHelp: AppState =
     copyAndSave(modalState = modalState.copy(isHelpModalClosed = !modalState.isHelpModalClosed))
 
+  def toggleReset: AppState =
+    copyAndSave(modalState = modalState.copy(isResetModalClosed = !modalState.isResetModalClosed))
+
   def toggleWelcomeHelp: AppState =
     copyAndSave(modalState = modalState.copy(
       isWelcomeModalClosed = !modalState.isWelcomeModalClosed,

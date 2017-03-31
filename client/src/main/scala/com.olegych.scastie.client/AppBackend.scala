@@ -22,6 +22,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       scope.modState(_.setView(View.Editor))
   }
 
+  def resetBuildAndClose(e: ReactEventI): Callback =
+    resetBuild >> toggleReset()
+
   def resetBuild: Callback =
     scope.modState(state =>
       state.setInputs(Inputs.default.copy(code = state.inputs.code))
@@ -155,6 +158,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleWelcome(e: ReactEventI): Callback = scope.modState(_.toggleWelcome)
 
   def toggleHelp(e: ReactEventI): Callback = scope.modState(_.toggleHelp)
+
+  def toggleReset(e: ReactEventI): Callback = toggleReset()
+  def toggleReset(): Callback = scope.modState(_.toggleReset)
 
   def toggleWelcomeHelp(e: ReactEventI): Callback = scope.modState(_.toggleWelcomeHelp)
 

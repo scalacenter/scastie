@@ -3,7 +3,6 @@ package client
 
 import api._
 import japgolly.scalajs.react._
-import org.scalajs.dom
 import vdom.all.{title, _}
 
 object BuildSettings {
@@ -223,18 +222,9 @@ object BuildSettings {
       case (state, backend) =>
         val theme = if (state.isDarkTheme) "dark" else "light"
 
-        def resetBuild(e: ReactEventI): Callback = {
-          CallbackTo(dom.window.confirm("Are you sure you want to reset?"))
-            .flatMap(
-              reset =>
-                if (reset) backend.resetBuild
-                else Callback(())
-            )
-        }
-
         val resetButton =
           if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
-            div(onClick ==> resetBuild,
+            div(onClick ==> backend.toggleReset,
               `class` := "btn",
               title := "Reset your configuration")(
               "Reset"
