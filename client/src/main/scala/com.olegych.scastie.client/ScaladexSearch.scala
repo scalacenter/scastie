@@ -224,6 +224,22 @@ object ScaladexSearch {
       removeDependencyLocal >> removeDependecyBackend
     }
 
+    def reloadSelecteds(librariesFrom: Map[ScalaDependency, Project]): Callback = {
+      scope.modState(
+        s => s.copy(
+          selecteds = librariesFrom.toList.map {
+            case (scalaDependency, project) =>
+              Selected(
+                project,
+                scalaDependency,
+                ReleaseOptions(scalaDependency.groupId,
+                  List(scalaDependency.version))
+              )
+          }
+        )
+      )
+    }
+
     def updateVersion(selected: Selected)(e: ReactEventI): Callback = {
       e.extract(_.target.value) { version =>
         def updateDependencyVersionLocal =
@@ -239,6 +255,10 @@ object ScaladexSearch {
     def selectIndex(index: Int)(e: ReactEventI): Callback = {
       scope.modState(s => s.copy(selectedIndex = index))
     }
+
+    def resetQuery(e: ReactEventI): Callback = resetQuery()
+    def resetQuery(): Callback =
+      scope.modState(s => s.copy(query = "", projects = Nil))
 
     def setQuery(e: ReactEventI): Callback = {
       e.extract(_.target.value) { value =>
@@ -382,7 +402,7 @@ object ScaladexSearch {
 
           val added = {
             val hideAdded =
-              if (searchState.selecteds.isEmpty) TagMod(display.none)
+              if (searchState.selecteds.isEmpty) display.none
               else EmptyTag
 
             div(`class` := "added", hideAdded)(
@@ -401,16 +421,32 @@ object ScaladexSearch {
             )
           }
 
+          val displayResults =
+            if (searchState.search.isEmpty) display.none
+            else display.block
+
+          val displayClose =
+            if (searchState.search.isEmpty) display.none
+            else display.`inline-block`
+
           div(`class` := "search", `id` := "library")(
             added,
-            input.search(
-              ref := searchInputRef,
-              placeholder := "Search for 'cats'",
-              value := searchState.query,
-              onChange ==> scope.backend.setQuery,
-              onKeyDown ==> scope.backend.keyDown
+            div(`class` := "search-input")(
+              input.search(
+                `class` := "search-query",
+                ref := searchInputRef,
+                placeholder := "Search for 'cats'",
+                value := searchState.query,
+                onChange ==> scope.backend.setQuery,
+                onKeyDown ==> scope.backend.keyDown
+              ),
+              div(`class` := "close", displayClose)(
+                i(`class` := "fa fa-close")(
+                  onClick ==> scope.backend.resetQuery
+                )
+              )
             ),
-            div(`class` := "results", ref := projectListRef)(
+            div(`class` := "results", ref := projectListRef, displayResults)(
               searchState.search.zipWithIndex.toList.map {
                 case ((project, artifact), index) =>
                   renderProject(
@@ -425,6 +461,22 @@ object ScaladexSearch {
               })
           )
 
+      }
+      .componentWillReceiveProps { v =>
+        val (current, _) = v.currentProps
+        val (next, _) = v.nextProps
+
+        val reloadLibraries =
+          if (next != current)
+            v.$.backend.reloadSelecteds(next.inputs.librariesFrom)
+          else Callback(())
+
+        val resetQuery =
+          if (next.inputs.copy(code = "") == Inputs.default.copy(code = ""))
+            v.$.backend.resetQuery()
+          else Callback(())
+
+        reloadLibraries >> resetQuery
       }
       .componentDidMount(s => searchInputRef(s).tryFocus)
       .build

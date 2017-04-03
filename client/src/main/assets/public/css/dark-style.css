@@ -55,15 +55,6 @@ body {
     /* GENERAL ELEMENTS STYLES */
     /* CODE SNIPPETS PAGE STYLES */
     /* SETTINGS PAGE STYLES */ }
-    body .app.dark ::-webkit-scrollbar {
-      width: 10px; }
-    body .app.dark ::-webkit-scrollbar-thumb {
-      background: #859900; }
-    body .app.dark ::-webkit-scrollbar-track {
-      background: #15414c; }
-    body .app.dark body {
-      scrollbar-face-color: #859900;
-      scrollbar-track-color: #15414c; }
     body .app.dark a {
       color: #fff;
       -webkit-transition: color, background-color 0.3s ease;
@@ -176,6 +167,7 @@ body {
             body .app.dark .modal .modal-fade-screen .modal-reset .modal-inner ul {
               width: 100%; }
             body .app.dark .modal .modal-fade-screen .modal-reset .modal-inner .btn {
+              color: #333;
               display: inline-block;
               cursor: pointer;
               background-color: #f4f3f3;
@@ -825,8 +817,7 @@ body {
         body .app.dark #settings-container #build-settings-container .select-wrapper {
           position: relative;
           display: inline-block;
-          width: 130px;
-          margin-left: 20px; }
+          width: 130px; }
           body .app.dark #settings-container #build-settings-container .select-wrapper:after {
             content: "\f0d7";
             font-family: FontAwesome;
@@ -872,12 +863,23 @@ body {
             opacity: 1; }
         body .app.dark #settings-container #build-settings-container .search {
           position: relative; }
-          body .app.dark #settings-container #build-settings-container .search .close {
-            position: absolute;
-            right: 10px;
-            top: 8px;
-            display: none;
-            cursor: pointer; }
+          body .app.dark #settings-container #build-settings-container .search .search-input {
+            height: 36px;
+            width: 100%;
+            background-color: #073642; }
+            body .app.dark #settings-container #build-settings-container .search .search-input .search-query {
+              display: inline-block;
+              width: calc(100% - 36px); }
+            body .app.dark #settings-container #build-settings-container .search .search-input .close {
+              width: 36px;
+              height: 100%;
+              text-align: center;
+              padding: 10px;
+              display: none;
+              cursor: pointer;
+              color: #fff; }
+              body .app.dark #settings-container #build-settings-container .search .search-input .close:hover {
+                color: #859900; }
           body .app.dark #settings-container #build-settings-container .search .results {
             background-color: #073642;
             color: #fff;
@@ -885,7 +887,8 @@ body {
             max-height: 300px;
             z-index: 20;
             margin-top: 10px;
-            overflow: auto; }
+            overflow: auto;
+            display: none; }
             body .app.dark #settings-container #build-settings-container .search .results i.fa {
               font-size: 20px;
               width: 40px;
@@ -932,9 +935,13 @@ body {
               vertical-align: middle; }
             body .app.dark #settings-container #build-settings-container .search .added .result .artifact {
               margin-left: 20px;
-              vertical-align: middle; }
-            body .app.dark #settings-container #build-settings-container .search .added .result .select-wrapper:after {
-              top: 10px; }
+              vertical-align: middle;
+              width: 250px;
+              display: inline-block; }
+            body .app.dark #settings-container #build-settings-container .search .added .result .select-wrapper {
+              margin-left: 20px; }
+              body .app.dark #settings-container #build-settings-container .search .added .result .select-wrapper:after {
+                top: 10px; }
             body .app.dark #settings-container #build-settings-container .search .added .result select {
               display: inline-block; }
     body .app.dark #editor-mobile {

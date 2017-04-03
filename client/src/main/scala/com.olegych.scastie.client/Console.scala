@@ -33,7 +33,7 @@ object Console {
             div(`id` := "console", consoleStyle)(
               div(`id` := "handler"),
               div(`id` := "switcher-hide", onClick ==> backend.toggleConsole)(
-                i(`class` := "fa fa-code"),
+                i(`class` := "fa fa-terminal"),
                 "Console",
                 i(`class` := "fa fa-caret-down")
               ),
@@ -43,7 +43,7 @@ object Console {
             ),
             div(`id`:= "switcher-show", onClick ==> backend.toggleConsole)(
               switcherStyle,
-              i(`class` := "fa fa-code"),
+              i(`class` := "fa fa-terminal"),
               "Console",
               i(`class` := "fa fa-caret-up")
             )
