@@ -15,7 +15,7 @@ object Share {
       case (maybeRouter, state, backend) =>
 
       val displayShare =
-        if (state.isShareModalClosed) display.none
+        if (state.modalState.isShareModalClosed) display.none
         else display.block
 
       def getSnippetUrl =

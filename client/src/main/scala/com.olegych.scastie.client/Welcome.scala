@@ -12,7 +12,7 @@ object Welcome {
       case (state, backend) =>
 
       val displayWelcome =
-        if (state.isWelcomeModalClosed) display.none
+        if (state.modalState.isWelcomeModalClosed) display.none
         else display.block
 
         div(`class` := "modal", displayWelcome)(

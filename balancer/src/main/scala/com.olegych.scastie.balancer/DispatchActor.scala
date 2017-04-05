@@ -30,7 +30,8 @@ case class FetchUserSnippets(user: User)
 
 case object LoadBalancerStateRequest
 case class LoadBalancerStateResponse(
-    loadBalancer: LoadBalancer[String, ActorSelection])
+    loadBalancer: LoadBalancer[String, ActorSelection]
+)
 
 class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
 
@@ -83,7 +84,8 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
     loadBalancer = balancer
     server.ref.tell(
       SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
-      self)
+      self
+    )
 
   }
 
@@ -121,8 +123,9 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
       val updatedSnippetId =
         container.update(snippetId, inputsWithIpAndUser.inputs)
 
-      updatedSnippetId.foreach(snippetIdU =>
-        run(inputsWithIpAndUser, snippetIdU))
+      updatedSnippetId.foreach(
+        snippetIdU => run(inputsWithIpAndUser, snippetIdU)
+      )
 
       sender ! updatedSnippetId
     }

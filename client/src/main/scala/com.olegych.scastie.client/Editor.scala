@@ -52,8 +52,8 @@ object Editor {
         "matchBrackets" -> true,
         "showCursorWhenSelecting" -> true,
         "autofocus" -> true,
-        "highlightSelectionMatches" -> js.Dictionary(
-          "showToken" -> js.Dynamic.global.RegExp("\\w")),
+        "highlightSelectionMatches" -> js
+          .Dictionary("showToken" -> js.Dynamic.global.RegExp("\\w")),
         "extraKeys" -> js.Dictionary(
           "Tab" -> "defaultTab",
           ctrl + "-Enter" -> "run",
@@ -89,7 +89,8 @@ object Editor {
   )
 
   private[Editor] class Backend(
-      scope: BackendScope[(AppState, AppBackend), EditorState]) {
+      scope: BackendScope[(AppState, AppBackend), EditorState]
+  ) {
     def stop() = {
       scope.modState { s =>
         s.editor.map(_.toTextArea())
@@ -105,8 +106,9 @@ object Editor {
 
           editor.onFocus(_.refresh())
 
-          editor.onChange((_, _) =>
-            backend.codeChange(editor.getDoc().getValue()).runNow)
+          editor.onChange(
+            (_, _) => backend.codeChange(editor.getDoc().getValue()).runNow
+          )
 
           CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
             backend.run().runNow
@@ -139,8 +141,10 @@ object Editor {
           }
 
           scope.modState(_.copy(editor = Some(editor))) >>
-            scope.state.flatMap(state =>
-              runDelta(editor, (f => scope.modState(f)), state, None, props))
+            scope.state.flatMap(
+              state =>
+                runDelta(editor, (f => scope.modState(f)), state, None, props)
+            )
       }
     }
   }
@@ -217,7 +221,8 @@ object Editor {
           doc.markText(startPos,
                        endPos,
                        js.Dictionary[Any]("replacedWith" -> node)
-                         .asInstanceOf[TextMarkerOptions]))
+                         .asInstanceOf[TextMarkerOptions])
+        )
       }
       def inline(startPos: CMPosition,
                  content: String,
@@ -288,14 +293,17 @@ object Editor {
           }
           case instrumentation @ Instrumentation(
                 api.Position(start, end),
-                AttachedDom(uuid, folded)) => {
+                AttachedDom(uuid, folded)
+              ) => {
 
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)
 
-            val domNode = 
-              next.attachedDoms.get(uuid).getOrElse{
-                val node = dom.document.createElement("pre").asInstanceOf[HTMLPreElement]
+            val domNode =
+              next.attachedDoms.get(uuid).getOrElse {
+                val node = dom.document
+                  .createElement("pre")
+                  .asInstanceOf[HTMLPreElement]
                 node.innerHTML = "cannot find dom element uuid: " + uuid
                 node
               }
@@ -390,14 +398,18 @@ object Editor {
         f =>
           state =>
             state.copy(
-              runtimeErrorAnnotations = f(state.runtimeErrorAnnotations)))
+              runtimeErrorAnnotations = f(state.runtimeErrorAnnotations)
+        )
+      )
     }
 
     def setAnnotations[T](
         fromState: AppState => Set[T],
         annotate: T => Annotation,
         fromEditorState: EditorState => Map[T, Annotation],
-        updateEditorState: (Map[T, Annotation] => Map[T, Annotation]) => EditorState => EditorState
+        updateEditorState: (
+            Map[T, Annotation] => Map[T, Annotation]
+        ) => EditorState => EditorState
     ): Callback = {
 
       val added = fromState(next) -- current.map(fromState).getOrElse(Set())
@@ -459,7 +471,8 @@ object Editor {
                        (f => scope.modState(f)),
                        state,
                        Some(current),
-                       next))
+                       next)
+          )
           .getOrElse(Callback(()))
       }
       .componentDidMount(_.backend.start())

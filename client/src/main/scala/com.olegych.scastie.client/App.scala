@@ -9,6 +9,14 @@ import org.scalajs.dom.window._
 import org.scalajs.dom.raw.HTMLScriptElement
 
 object App {
+
+  private def setTitle(state: AppState) =
+    if (state.inputsHasChanged) {
+      Callback(dom.document.title = "Scastie (*)")
+    } else {
+      Callback(dom.document.title = "Scastie")
+    }
+
   val component =
     ReactComponentB[AppProps]("App")
       .initialState(LocalStorage.load.getOrElse(AppState.default))
@@ -41,47 +49,81 @@ object App {
             MainPanel(state, scope.backend, props),
             Welcome(state, scope.backend),
             Help(state, scope.backend),
-            Share(props.router, state, scope.backend)
+            Share(props.router, state, scope.backend),
+            Reset(state, scope.backend)
           )
         }
       }
-      .componentWillMount(s => s.backend.start(s.props))
+      .componentWillMount { current =>
+        current.backend.start(current.props) >> setTitle(current.state)
+      }
       .componentDidMount(_.backend.setDimensions())
       .componentDidUpdate { v =>
         val state = v.prevState
         val backend = v.$.backend
         val scope = v.$
-
         val direct = scope.accessDirect
 
+        // println("---")
+        // println(direct.state.loadScalaJsScript)
+        // println(!direct.state.isScalaJsScriptLoaded)
+        // println(direct.state.snippetIdIsScalaJS)
+        // println(direct.state.snippetId.nonEmpty)
+        // println(!direct.state.isRunning)
         val setDimensions =
           if (direct.state.dimensions.dimensionsHaveChanged) {
             backend.setDimensions()
 
           } else Callback(())
 
-        val setTitle =
-          if (state.inputsHasChanged) {
-            Callback(dom.document.title = "Scastie (*)")
-          } else {
-            Callback(dom.document.title = "Scastie")
-          }
+        val scalaJsRunId = "scastie-scalajs-playground-run"
+
+        def createScript(id: String): HTMLScriptElement = {
+          val newScript = dom.document
+            .createElement("script")
+            .asInstanceOf[HTMLScriptElement]
+          newScript.id = id
+          dom.document.body.appendChild(newScript)
+          newScript
+        }
+
+        def removeIfExist(id: String): Unit = {
+          Option(dom.document.getElementById(id))
+            .foreach(element => element.parentNode.removeChild(element))
+        }
+
+        def runScalaJs(): Unit = {
+          removeIfExist(scalaJsRunId)
+          val scalaJsRunScriptElement = createScript(scalaJsRunId)
+          println("== Running Scala.js ==")
+          scalaJsRunScriptElement.innerHTML =
+            """|try {
+               |  var main = new Main()
+               |  com.olegych.scastie.client.ClientMain().signal(
+               |    main.result,
+               |    main.attachedElements
+               |  )
+               |} catch (e) {
+               | console.log("== Caught JS Error ==")
+               | console.log(e)
+               |}""".stripMargin
+        }
 
         val executeScalaJs =
           if (direct.state.loadScalaJsScript &&
               !direct.state.isScalaJsScriptLoaded &&
-              state.snippetIdIsScalaJS &&
-              state.snippetId.nonEmpty &&
-              !state.running) {
+              direct.state.snippetIdIsScalaJS &&
+              direct.state.snippetId.nonEmpty &&
+              !direct.state.isRunning) {
 
             direct.modState(
-              _.setLoadScalaJsScript(false) 
+              _.setLoadScalaJsScript(false)
                .scalaJsScriptLoaded
+               .setRunning(true)
             )
 
             Callback {
               val scalaJsId = "scastie-scalajs-playground-target"
-              val scalaJsRunId = "scastie-scalajs-playground-run"
 
               def scalaJsUrl(snippetId: SnippetId): String = {
                 val middle =
@@ -95,39 +137,12 @@ object App {
                 s"/${Shared.scalaJsHttpPathPrefix}/$middle/${ScalaTarget.Js.targetFilename}"
               }
 
-              def createScript(id: String): HTMLScriptElement = {
-                val newScript = dom.document
-                  .createElement("script")
-                  .asInstanceOf[HTMLScriptElement]
-                newScript.id = id
-                dom.document.body.appendChild(newScript)
-                newScript
-              }
-
-              def removeIfExist(id: String): Unit = {
-                Option(dom.document.getElementById(id)).foreach(element =>
-                  element.parentNode.removeChild(element))
-              }
-
               println("== Loading Scala.js ==")
 
               removeIfExist(scalaJsId)
               val scalaJsScriptElement = createScript(scalaJsId)
               scalaJsScriptElement.onload = { (e: dom.Event) =>
-                removeIfExist(scalaJsRunId)
-                val scalaJsRunScriptElement = createScript(scalaJsRunId)
-                println("== Running Scala.js ==")
-                scalaJsRunScriptElement.innerHTML =
-                  """|try {
-                     |  var main = Main()
-                     |  com.olegych.scastie.client.ClientMain().signal(
-                     |    main.result,
-                     |    main.attachedElements
-                     |  )
-                     |} catch (e) {
-                     | console.log("== Caught JS Error ==")
-                     | console.log(e)
-                     |}""".stripMargin
+                runScalaJs()
               }
               if (state.snippetId.nonEmpty) {
                 scalaJsScriptElement.src = scalaJsUrl(state.snippetId.get)
@@ -137,7 +152,13 @@ object App {
             }
           } else Callback(())
 
-        setTitle >> executeScalaJs >> setDimensions
+          val reRunScalaJs =
+            if (direct.state.isReRunningScalaJs) {
+              Callback(runScalaJs()) >>
+                scope.modState(_.setIsReRunningScalaJs(false))
+            } else Callback(())
+
+          setTitle(state)  >> setDimensions >> executeScalaJs >> reRunScalaJs
       }
       .componentWillReceiveProps { v =>
         val next = v.nextProps.snippetId
@@ -145,15 +166,18 @@ object App {
         val state = v.$.state
         val backend = v.$.backend
 
-        if (next != current) {
-          next match {
-            case Some(snippetId) =>
-              backend.loadSnippet(snippetId) >>
-                backend.setView(View.Editor)
-            case _ => Callback(())
-          }
+        val loadSnippet =
+          if (next != current) {
+            next match {
+              case Some(snippetId) =>
+                backend.loadSnippet(snippetId) >>
+                  backend.setView(View.Editor)
+              case _ => Callback(())
+            }
 
-        } else Callback(())
+          } else Callback(())
+
+        setTitle(state) >> loadSnippet
       }
       .build
 

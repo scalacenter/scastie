@@ -14,8 +14,8 @@ object SaveButton {
     ReactComponentB[(AppState, AppBackend, Option[SnippetId])]("SaveButton").render_P {
       case (state, backend, snippetId) =>
 
-        val disabledIfSameInputs =
-          if (!state.inputsHasChanged) "disabled"
+        val disabledIfSaved =
+          if (state.isSnippetSaved) "disabled"
           else ""
 
         import View.ctrl
@@ -24,27 +24,27 @@ object SaveButton {
           case None =>
             li(
               title := s"Save ($ctrl + S)",
-              `class` := "btn", onClick ==> backend.save)(
+              `class` := s"btn $disabledIfSaved", onClick ==> backend.save)(
               i(`class` := "fa fa-download"),
               span("Save")
             )
           case Some(sid) =>
             ul(`id` := "save-buttons")(
               li(
-                title := s"Amend",
-                `class` := "btn", onClick ==> backend.amend(sid))(
+                title := "Amend",
+                `class` := s"btn $disabledIfSaved", onClick ==> backend.amend(sid))(
                 i(`class` := "fa fa-pencil-square-o"),
                 span("Amend")
               ),
               li(
-                title := s"Save ($ctrl + S)",
-                `class` := "btn", onClick ==> backend.update(sid))(
+                title := s"Update ($ctrl + S)",
+                `class` := s"btn $disabledIfSaved", onClick ==> backend.update(sid))(
                 i(`class` := "fa fa-download"),
                 span("Update")
               ),
               li(
-                title := s"Fork",
-                `class` := "btn", onClick ==> backend.fork(sid))(
+                title := "Fork",
+                `class` := s"btn $disabledIfSaved", onClick ==> backend.fork(sid))(
                 i(`class` := "fa fa-code-fork"),
                 span("Fork")
               )

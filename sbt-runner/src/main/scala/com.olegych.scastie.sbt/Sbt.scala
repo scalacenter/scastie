@@ -70,7 +70,8 @@ class Sbt(defaultConfig: Inputs) {
     val process = builder.start()
 
     val in = new BufferedReader(
-      new InputStreamReader(process.getInputStream, StandardCharsets.UTF_8))
+      new InputStreamReader(process.getInputStream, StandardCharsets.UTF_8)
+    )
 
     (process, process.getOutputStream, in)
   }

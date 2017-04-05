@@ -12,8 +12,11 @@ class FrontPageRoutes(production: Boolean) {
       concat(
         pathSingleSlash(index),
         path("embedded-demo")(
-          complete(serveStatic(
-            getResource("/public/views/embedded.html").map(substituteScalaJs)))
+          complete(
+            serveStatic(
+              getResource("/public/views/embedded.html").map(substituteScalaJs)
+            )
+          )
         ),
         path(Segment ~ Slash.?)(_ => index),
         path(Segment / Segment ~ Slash.?)((_, _) => index),
@@ -35,6 +38,7 @@ class FrontPageRoutes(production: Boolean) {
   private val index =
     complete(
       serveStatic(
-        getResource("/public/views/index.html").map(substituteScalaJs))
+        getResource("/public/views/index.html").map(substituteScalaJs)
+      )
     )
 }

@@ -36,7 +36,8 @@ class ProgressActor extends Actor with ActorLogging {
   }
 
   private def getOrCreatePublisher(
-      snippetId: SnippetId): (ProgressSource, ActorRef) = {
+      snippetId: SnippetId
+  ): (ProgressSource, ActorRef) = {
     def createPublisher() = {
       val ref = context.actorOf(Props(new ProgressForwarder(self)))
       val source = Source.fromPublisher(ActorPublisher[SnippetProgress](ref))

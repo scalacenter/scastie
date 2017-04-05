@@ -55,15 +55,6 @@ body {
     /* GENERAL ELEMENTS STYLES */
     /* CODE SNIPPETS PAGE STYLES */
     /* SETTINGS PAGE STYLES */ }
-    body .app.light ::-webkit-scrollbar {
-      width: 10px; }
-    body .app.light ::-webkit-scrollbar-thumb {
-      background: #5390bf; }
-    body .app.light ::-webkit-scrollbar-track {
-      background: #f5f5f5; }
-    body .app.light body {
-      scrollbar-face-color: #5390bf;
-      scrollbar-track-color: #f5f5f5; }
     body .app.light a {
       color: #fff;
       -webkit-transition: color, background-color 0.3s ease;
@@ -165,6 +156,30 @@ body {
                 font-size: 22px; }
               body .app.light .modal .modal-fade-screen .modal-share .snippet-link .snippet-clip:hover {
                 color: #334447; }
+        body .app.light .modal .modal-fade-screen .modal-reset {
+          margin-top: 10em;
+          height: 250px;
+          width: 500px; }
+          body .app.light .modal .modal-fade-screen .modal-reset .modal-inner {
+            overflow: hidden; }
+            body .app.light .modal .modal-fade-screen .modal-reset .modal-inner p {
+              margin: 30px 0 10px 0; }
+            body .app.light .modal .modal-fade-screen .modal-reset .modal-inner ul {
+              width: 100%; }
+            body .app.light .modal .modal-fade-screen .modal-reset .modal-inner .btn {
+              color: #333;
+              display: inline-block;
+              cursor: pointer;
+              background-color: #f4f3f3;
+              width: 120px;
+              padding: 10px;
+              align-content: center;
+              text-align: center;
+              margin-left: 50px;
+              margin-right: 50px;
+              margin-top: 30px; }
+              body .app.light .modal .modal-fade-screen .modal-reset .modal-inner .btn:hover {
+                color: #00acdb; }
       body .app.light .modal .modal-close {
         position: absolute;
         top: 1.5em;
@@ -278,6 +293,20 @@ body {
     body .app.light i.fa-spin {
       font-size: 16px;
       width: 16px; }
+    body .app.light pre.debug {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      height: 600px;
+      width: 1000px;
+      z-index: 10;
+      background-color: red;
+      color: blue;
+      opacity: 0.8;
+      padding: 10px;
+      margin: 0;
+      font-size: 14px;
+      overflow: scroll; }
     body .app.light #topbar {
       flex-direction: row;
       text-align: right;
@@ -415,6 +444,10 @@ body {
           margin-right: 5px; }
         body .app.light #editor-topbar .editor-buttons .btn:hover, body .app.light #editor-mobile .editor-buttons .btn:hover {
           color: #00acdb; }
+      body .app.light #editor-topbar .editor-buttons .btn.disabled, body .app.light #editor-mobile .editor-buttons .btn.disabled {
+        text-decoration: none;
+        cursor: default;
+        color: #586e75; }
       body .app.light #editor-topbar #save-buttons, body .app.light #editor-mobile #save-buttons {
         display: inline-block; }
         body .app.light #editor-topbar #save-buttons .btn, body .app.light #editor-mobile #save-buttons .btn {
@@ -486,10 +519,6 @@ body {
             color: #ffffff !important; }
           body .app.light #sidebar .actions-container .actions .btn:hover {
             color: #ffffff; }
-        body .app.light #sidebar .actions-container .actions .btn.disabled {
-          text-decoration: none;
-          cursor: default;
-          color: #586e75; }
       body .app.light #sidebar .actions.bottom {
         position: absolute;
         bottom: 0px; }
@@ -693,6 +722,15 @@ body {
       font-size: 15px; }
       body .app.light #settings-container #build-settings-container {
         padding: 45px 45px; }
+        body .app.light #settings-container #build-settings-container .btn {
+          cursor: pointer;
+          background-color: #f4f3f3;
+          width: 90px;
+          padding: 10px;
+          align-content: center;
+          text-align: center; }
+          body .app.light #settings-container #build-settings-container .btn:hover {
+            color: #00acdb; }
         body .app.light #settings-container #build-settings-container ul, body .app.light #settings-container #build-settings-container li {
           line-height: 38px; }
         body .app.light #settings-container #build-settings-container h2 {
@@ -785,7 +823,7 @@ body {
             font-family: FontAwesome;
             color: #0f262f;
             position: absolute;
-            top: 10px;
+            top: 0px;
             right: 10px;
             font-size: 13px; }
         body .app.light #settings-container #build-settings-container #scala-version {
@@ -825,12 +863,23 @@ body {
             opacity: 1; }
         body .app.light #settings-container #build-settings-container .search {
           position: relative; }
-          body .app.light #settings-container #build-settings-container .search .close {
-            position: absolute;
-            right: 10px;
-            top: 8px;
-            display: none;
-            cursor: pointer; }
+          body .app.light #settings-container #build-settings-container .search .search-input {
+            height: 36px;
+            width: 100%;
+            background-color: #f4f3f3; }
+            body .app.light #settings-container #build-settings-container .search .search-input .search-query {
+              display: inline-block;
+              width: calc(100% - 36px); }
+            body .app.light #settings-container #build-settings-container .search .search-input .close {
+              width: 36px;
+              height: 100%;
+              text-align: center;
+              padding: 10px;
+              display: none;
+              cursor: pointer;
+              color: #0f262f; }
+              body .app.light #settings-container #build-settings-container .search .search-input .close:hover {
+                color: #00acdb; }
           body .app.light #settings-container #build-settings-container .search .results {
             background-color: #f4f3f3;
             color: #0f262f;
@@ -838,7 +887,8 @@ body {
             max-height: 300px;
             z-index: 20;
             margin-top: 10px;
-            overflow: auto; }
+            overflow: auto;
+            display: none; }
             body .app.light #settings-container #build-settings-container .search .results i.fa {
               font-size: 20px;
               width: 40px;
@@ -885,11 +935,15 @@ body {
               vertical-align: middle; }
             body .app.light #settings-container #build-settings-container .search .added .result .artifact {
               margin-left: 20px;
-              vertical-align: middle; }
-            body .app.light #settings-container #build-settings-container .search .added .result select {
-              display: inline-block;
-              width: 140px;
+              vertical-align: middle;
+              width: 250px;
+              display: inline-block; }
+            body .app.light #settings-container #build-settings-container .search .added .result .select-wrapper {
               margin-left: 20px; }
+              body .app.light #settings-container #build-settings-container .search .added .result .select-wrapper:after {
+                top: 10px; }
+            body .app.light #settings-container #build-settings-container .search .added .result select {
+              display: inline-block; }
     body .app.light #editor-mobile {
       display: none !important; }
     @media only screen and (max-width: 720px) and (min-width: 480px) {

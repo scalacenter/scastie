@@ -24,10 +24,13 @@ object RuntimeError {
                    fromScala: Boolean = true): Option[RuntimeError] = {
     def search(e: Throwable) = {
       e.getStackTrace()
-        .find(trace =>
-          if (fromScala)
-            trace.getFileName() == "main.scala" && trace.getLineNumber() != -1
-          else true)
+        .find(
+          trace =>
+            if (fromScala)
+              trace.getFileName() == "main.scala" && trace
+                .getLineNumber() != -1
+            else true
+        )
         .map(v ⇒ (e, Some(v.getLineNumber())))
     }
     def loop(e: Throwable): Option[(Throwable, Option[Int])] = {

@@ -47,11 +47,15 @@ class Histogram[T: Ordering](protected val data: Map[T, Double]) {
     val window = 50
     val box = nl + "-" * (window + 10) + nl
 
-    data.toList.sortBy { case (k, v) => (v, k) }.reverse.map {
-      case (k, v) =>
-        val pp = Math.ceil(window * v).toInt
-        val ppp = padLeft(2, pp.toString)
-        s"$k ($ppp%) ${"*" * pp}"
-    }.mkString(box, nl, box)
+    data.toList
+      .sortBy { case (k, v) => (v, k) }
+      .reverse
+      .map {
+        case (k, v) =>
+          val pp = Math.ceil(window * v).toInt
+          val ppp = padLeft(2, pp.toString)
+          s"$k ($ppp%) ${"*" * pp}"
+      }
+      .mkString(box, nl, box)
   }
 }
