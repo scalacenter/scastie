@@ -596,7 +596,6 @@ body {
           position: absolute;
           top: 0;
           left: 0;
-          cursor: ns-resize;
           -webkit-transition: color, background-color 0.3s ease;
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
