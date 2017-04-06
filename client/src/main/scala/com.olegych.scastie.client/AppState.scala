@@ -14,16 +14,13 @@ object AppState {
     isRunning = false,
     eventSource = None,
     websocket = None,
-    isShowingHelpAtStartup = true,
-    isHelpModalClosed = false,
+    modalState = ModalState.default,
     isDarkTheme = false,
-    consoleIsOpen = false,
-    consoleHasUserOutput = false,
+    consoleState = ConsoleState.default,
     inputsHasChanged = false,
     snippetId = None,
     isSnippetSaved = false,
     loadSnippet = true,
-    isStartup = true,
     loadScalaJsScript = false,
     isScalaJsScriptLoaded = false,
     snippetIdIsScalaJS = false,
@@ -31,7 +28,9 @@ object AppState {
     user = None,
     attachedDoms = Map(),
     inputs = Inputs.default,
-    outputs = Outputs.default
+    outputs = Outputs.default,
+    windowHasResized = false,
+    dimensions = Dimensions.default
   )
 
   implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
@@ -52,16 +51,13 @@ case class AppState(
     isRunning: Boolean,
     eventSource: Option[EventSource],
     websocket: Option[WebSocket],
-    isShowingHelpAtStartup: Boolean,
-    isHelpModalClosed: Boolean,
+    modalState: ModalState,
     isDarkTheme: Boolean,
-    consoleIsOpen: Boolean,
-    consoleHasUserOutput: Boolean,
+    consoleState: ConsoleState,
     inputsHasChanged: Boolean,
     snippetId: Option[SnippetId],
     isSnippetSaved: Boolean,
     loadSnippet: Boolean,
-    isStartup: Boolean,
     loadScalaJsScript: Boolean,
     isScalaJsScriptLoaded: Boolean,
     snippetIdIsScalaJS: Boolean,
@@ -69,23 +65,25 @@ case class AppState(
     user: Option[User],
     attachedDoms: AttachedDoms,
     inputs: Inputs,
-    outputs: Outputs
+    outputs: Outputs,
+    windowHasResized: Boolean,
+    dimensions: Dimensions
 ) {
   def copyAndSave(view: View = view,
                   isRunning: Boolean = isRunning,
                   eventSource: Option[EventSource] = eventSource,
                   websocket: Option[WebSocket] = websocket,
-                  isShowingHelpAtStartup: Boolean = isShowingHelpAtStartup,
-                  isHelpModalClosed: Boolean = isHelpModalClosed,
+                  modalState: ModalState = modalState,
                   isDarkTheme: Boolean = isDarkTheme,
-                  consoleIsOpen: Boolean = consoleIsOpen,
-                  consoleHasUserOutput: Boolean = consoleHasUserOutput,
+                  consoleState: ConsoleState = consoleState,
                   inputsHasChanged: Boolean = inputsHasChanged,
                   snippetId: Option[SnippetId] = snippetId,
                   snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
                   user: Option[User] = user,
                   inputs: Inputs = inputs,
-                  outputs: Outputs = outputs): AppState = {
+                  outputs: Outputs = outputs,
+                  windowHasResized: Boolean = windowHasResized,
+                  dimensions: Dimensions = dimensions): AppState = {
 
     val snippetId0 =
       if (inputsHasChanged) None
@@ -105,18 +103,15 @@ case class AppState(
         isRunning,
         eventSource,
         websocket,
-        isShowingHelpAtStartup,
-        isHelpModalClosed,
+        modalState,
         isDarkTheme,
-        consoleIsOpen,
-        consoleHasUserOutput,
+        consoleState,
         inputsHasChanged,
         snippetId0,
         isSnippetSaved0,
         loadSnippet,
-        isStartup,
         loadScalaJsScript,
-        isScalaJsScriptLoaded0
+        isScalaJsScriptLoaded0,
         snippetIdIsScalaJS,
         isReRunningScalaJs,
         user,
@@ -125,7 +120,9 @@ case class AppState(
           showInUserProfile = false,
           forked = None
         ),
-        outputs
+        outputs,
+        windowHasResized,
+        dimensions
       )
 
     LocalStorage.save(state0)
@@ -146,8 +143,8 @@ case class AppState(
   }
 
   def setRunning(isRunning: Boolean): AppState = {
-    val console = !isRunning && !consoleHasUserOutput
-    copyAndSave(isRunning = isRunning, consoleIsOpen = !console)
+    val console = !isRunning && !consoleState.consoleHasUserOutput
+    copyAndSave(isRunning = isRunning, consoleState = consoleState.copy(consoleIsOpen = !console))
   }
 
   def setIsReRunningScalaJs(value: Boolean): AppState =
@@ -156,11 +153,17 @@ case class AppState(
   def setSnippetSaved: AppState =
     copy(isSnippetSaved = true)
 
+  def toggleForcedDesktop(value: Boolean): AppState =
+    copyAndSave(dimensions = dimensions.copy(forcedDesktop = value))
+
   def toggleTheme: AppState =
     copyAndSave(isDarkTheme = !isDarkTheme)
 
   def toggleConsole: AppState =
-    copyAndSave(consoleIsOpen = !consoleIsOpen)
+    copyAndSave(consoleState = consoleState.copy(consoleIsOpen = !consoleState.consoleIsOpen))
+
+  def setWindowHasResized: AppState =
+    copyAndSave(windowHasResized = !windowHasResized)
 
   def toggleWorksheetMode: AppState =
     copyAndSave(
@@ -168,25 +171,63 @@ case class AppState(
       inputsHasChanged = true
     )
 
-  def toggleHelpAtStartup: AppState =
-    copyAndSave(isShowingHelpAtStartup = !isShowingHelpAtStartup)
+  def toggleWelcome: AppState =
+    copyAndSave(modalState = modalState.copy(isWelcomeModalClosed = !modalState.isWelcomeModalClosed))
 
-  def closeHelp: AppState =
-    clearOutputs.copyAndSave(isHelpModalClosed = true).copy(isStartup = false)
+  def toggleHelp: AppState =
+    copyAndSave(modalState = modalState.copy(isHelpModalClosed = !modalState.isHelpModalClosed))
 
-  def showHelp: AppState = copy(isHelpModalClosed = false)
+  def toggleReset: AppState =
+    copyAndSave(modalState = modalState.copy(isResetModalClosed = !modalState.isResetModalClosed))
+
+  def toggleWelcomeHelp: AppState =
+    copyAndSave(modalState = modalState.copy(
+      isWelcomeModalClosed = !modalState.isWelcomeModalClosed,
+      isHelpModalClosed = !modalState.isHelpModalClosed))
+
+  def toggleShare(snippetId: Option[SnippetId]): AppState =
+    copyAndSave(modalState = modalState.copy(isShareModalClosed = !modalState.isShareModalClosed),
+      snippetId = snippetId)
 
   def openConsole: AppState =
-    copyAndSave(consoleIsOpen = true)
+    copyAndSave(consoleState = consoleState.copy(consoleIsOpen = true))
 
   def setUserOutput: AppState =
-    copyAndSave(consoleHasUserOutput = true)
+    copyAndSave(consoleState = consoleState.copy(consoleHasUserOutput = true))
 
   def setLoadSnippet(value: Boolean): AppState =
     copy(loadSnippet = value)
 
   def setUser(user: Option[User]): AppState =
     copyAndSave(user = user)
+
+  def setDimensionsHaveChanged(value: Boolean): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(dimensionsHaveChanged = value))
+
+  def setTopBarHeight(height: Int): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(topBarHeight = height))
+
+  def setEditorTopBarHeight(height: Int): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(editorTopBarHeight = height))
+
+  def setSideBarWidth(width: Int): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(sideBarWidth = width))
+
+  def setSideBarMinHeight(height: Int): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(sideBarMinHeight = height))
+
+  def setConsoleBarHeight(height: Int): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(consoleBarHeight = height))
+
+  def setConsoleHeight(height: Int): AppState =
+    copyAndSave(
+      dimensions = dimensions.copy(consoleHeight = height))
 
   def setCode(code: String): AppState =
     copyAndSave(
@@ -254,8 +295,7 @@ case class AppState(
   def clearOutputs: AppState =
     copyAndSave(
       outputs = Outputs.default,
-      consoleIsOpen = false,
-      consoleHasUserOutput = false
+      consoleState = consoleState.copy(consoleIsOpen = false, consoleHasUserOutput = false)
     )
 
   def setRuntimeError(runtimeError: Option[RuntimeError]): AppState =
@@ -295,7 +335,7 @@ case class AppState(
         .setLoadScalaJsScript(loadScalaJsScript | progress.done)
         .setRuntimeError(progress.runtimeError)
 
-    if (!progress.userOutput.isEmpty) state.setUserOutput
+    if (progress.userOutput.isDefined) state.setUserOutput
     else state
   }
 
@@ -344,7 +384,7 @@ case class AppState(
       if (compilationInfos.exists(ci => topDef(ci)))
         Set(
           info(
-            """|It seems you're writing code without an enclosing class/object. 
+            """|It seems you're writing code without an enclosing class/object.
                |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin
           )
         )

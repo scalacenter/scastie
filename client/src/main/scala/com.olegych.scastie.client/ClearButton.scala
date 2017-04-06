@@ -9,15 +9,12 @@ object ClearButton {
   private val component =
     ReactComponentB[(AppState, AppBackend)]("ClearButton").render_P {
       case (state, backend) =>
-        def disabled(isDisabled: Boolean) =
-          if (isDisabled) "disabled"
-          else ""
 
-        li(onClick ==> backend.clear,
+        li(
            title := "Clear Instrumentations (Esc)",
-           `class` := s"button ${disabled(!state.isClearable)}")(
+           `class` := "btn", onClick ==> backend.clear)(
           i(`class` := "fa fa-eraser"),
-          p("Clear")
+          span("Clear")
         )
     }.build
 }

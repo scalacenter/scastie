@@ -2,7 +2,6 @@ package com.olegych.scastie
 package client
 
 import api.{Instrumentation, Value, Html, AttachedDom}
-
 import japgolly.scalajs.react._, vdom.all._
 
 import org.scalajs.dom.raw.{
@@ -337,9 +336,9 @@ object Editor {
 
           val iconSeverity =
             info.severity match {
-              case api.Info => "info"
-              case api.Warning => "warning"
-              case api.Error => "circle-x"
+              case api.Info => "fa fa-info"
+              case api.Warning => "fa fa-exclamation-triangle"
+              case api.Error => "fa fa-times-circle"
             }
 
           val classSeverity =
@@ -349,8 +348,7 @@ object Editor {
               case api.Error => "error"
             }
 
-          icon.setAttribute("data-glyph", iconSeverity)
-          icon.className = "oi"
+          icon.className = iconSeverity
 
           val el =
             dom.document.createElement("div").asInstanceOf[HTMLDivElement]
@@ -380,9 +378,7 @@ object Editor {
           val icon =
             dom.document.createElement("i").asInstanceOf[HTMLDivElement]
 
-          val iconSeverity = "circle-x"
-          icon.setAttribute("data-glyph", iconSeverity)
-          icon.className = "oi"
+          icon.className = "fa fa-times-circle"
 
           val el =
             dom.document.createElement("div").asInstanceOf[HTMLDivElement]
