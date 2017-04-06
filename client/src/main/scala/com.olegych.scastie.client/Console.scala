@@ -50,5 +50,13 @@ object Console {
           )
 
       }
+      .componentDidUpdate(
+        scope =>
+          Callback {
+            consoleElement(scope.$).foreach { consoleDom =>
+              consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
+            }
+        }
+      )
       .build
 }

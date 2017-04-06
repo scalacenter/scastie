@@ -47,7 +47,7 @@ object ConsoleOutput {
   }
 
   case class UserOutput(line: String) extends ConsoleOutput {
-    def show: String = s"user: $line"
+    def show: String = line
   }
 
   case class ScastieOutput(line: String) extends ConsoleOutput {
