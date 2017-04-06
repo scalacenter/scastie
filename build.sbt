@@ -17,7 +17,7 @@ lazy val scalaTestVersion = "3.0.1"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.13.0"
+  version := "0.14.0"
 )
 
 lazy val baseSettings = Seq(
@@ -261,7 +261,6 @@ lazy val client = project
     ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.3",
-      "org.webjars.bower" % "open-iconic" % "1.1.1",
       "org.webjars" % "font-awesome" % "4.7.0",
       "org.webjars.npm" % "firacode" % "1.205.0",
       "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
