@@ -17,7 +17,7 @@ lazy val scalaTestVersion = "3.0.1"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.14.0"
+  version := "0.15.0"
 )
 
 lazy val baseSettings = Seq(
