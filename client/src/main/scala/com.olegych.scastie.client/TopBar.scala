@@ -69,7 +69,15 @@ object TopBar {
           case None => i(`class` := "fa fa-user-circle")
         }
 
-        nav(`id` := "topbar")(
+        def topBarStyle: TagMod = Seq(
+          minWidth := s"${
+            if(state.dimensions.forcedDesktop) Dimensions.default.minWindowWidth
+            else dom.window.innerWidth.toInt}px"
+        )
+
+        val userName = state.user.map(_.login).getOrElse("Login")
+
+        nav(`id` := "topbar", topBarStyle)(
           a(`class` := "logo", href := "#")(
             img(src := "/assets/public/img/icon-scastie.png"),
             h1("Scastie")
@@ -96,7 +104,7 @@ object TopBar {
             ),
             li(`class` := "btn dropdown")(
               userAvatar,
-              span("Login"),
+              span(userName),
               i(`class` := "fa fa-caret-down"),
               ul(`class` := "subactions")(
                 profileButton

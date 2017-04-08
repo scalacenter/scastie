@@ -39,7 +39,7 @@ html {
 
 body {
   font-family: "Lato", sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 18px;
   overflow: hidden;
   -webkit-transition: color, background-color 0.3s ease;
@@ -326,7 +326,7 @@ body {
         line-height: 70px;
         background: #002b36;
         text-align: left;
-        width: 149px;
+        width: 160px;
         -webkit-transition: color, background-color 0.3s ease;
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
@@ -340,10 +340,10 @@ body {
         body .app.dark #topbar .logo h1 {
           display: inline-block; }
       body .app.dark #topbar ul.actions {
-        position: absolute;
+        position: relative;
         display: inline-block;
         right: 34px;
-        top: 0; }
+        top: -70px; }
         body .app.dark #topbar ul.actions .avatar {
           height: 30px;
           width: 30px;
@@ -381,14 +381,14 @@ body {
             position: absolute;
             line-height: 25px;
             top: 50px;
-            width: 134px;
+            width: 160px;
             left: 10px;
             margin: 10px;
             z-index: 11; }
             body .app.dark #topbar ul.actions li.dropdown ul.subactions .btn {
               color: #fffffff;
               display: block;
-              width: 134px;
+              width: 160px;
               background: #073642;
               padding: 10px;
               border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -456,7 +456,7 @@ body {
       float: left;
       height: 100%;
       background: #073642;
-      width: 149px;
+      width: 160px;
       -webkit-transition: color, background-color 0.3s ease;
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
@@ -469,7 +469,7 @@ body {
         line-height: 70px;
         background: #002b36;
         text-align: left;
-        width: 149px;
+        width: 160px;
         -webkit-transition: color, background-color 0.3s ease;
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
@@ -541,7 +541,7 @@ body {
             color: #859900; }
     body .app.dark #content {
       display: block;
-      margin-left: 149px;
+      margin-left: 160px;
       -webkit-transition: color, background-color 0.3s ease;
       -moz-transition: color, background-color 0.3s ease;
       -o-transition: color, background-color 0.3s ease;
