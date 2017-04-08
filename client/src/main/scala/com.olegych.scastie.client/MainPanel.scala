@@ -71,8 +71,12 @@ object MainPanel {
           }
 
           def containerStyle: TagMod = Seq(
-            height := s"${innerHeight - topBarHeight}px",
-            width := s"${innerWidth - sideBarWidth}px"
+            height := s"${
+              if(forcedDesktop) Dimensions.default.minWindowHeight
+              else innerHeight - topBarHeight}px",
+            width := s"${
+              if(forcedDesktop) Dimensions.default.minWindowWidth
+              else innerWidth - sideBarWidth}px"
           )
 
           div(`class` := "main-panel")(

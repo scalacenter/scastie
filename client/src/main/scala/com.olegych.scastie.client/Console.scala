@@ -24,10 +24,20 @@ object Console {
 
           val currentWidth = s"${dom.window.innerWidth - sideBarWidth}px"
 
-          def consoleStyle: TagMod = Seq(width := currentWidth, displayConsole)
+          val minConsoleWidth = s"${
+            (if(state.dimensions.forcedDesktop) Dimensions.default.minWindowWidth
+            else dom.window.innerWidth.toInt) - state.dimensions.sideBarWidth
+          }px"
 
-          def switcherStyle: TagMod =
-            Seq(width := currentWidth, displaySwitcher)
+          def consoleStyle: TagMod = Seq(
+            displayConsole,
+            width := currentWidth,
+            minWidth := minConsoleWidth)
+
+          def switcherStyle: TagMod = Seq(
+            displaySwitcher,
+            width := currentWidth,
+            minWidth := minConsoleWidth)
 
           div(`id` := "console-container")(
             div(`id` := "console", consoleStyle)(

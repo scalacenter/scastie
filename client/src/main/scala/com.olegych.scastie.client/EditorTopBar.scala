@@ -3,6 +3,7 @@ package com.olegych.scastie.client
 import com.olegych.scastie.api.SnippetId
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
+import org.scalajs.dom
 
 object EditorTopBar {
 
@@ -13,7 +14,13 @@ object EditorTopBar {
           if (state.view != View.Editor) TagMod(`class` := "disabled")
           else EmptyTag
 
-        nav(`id` := "editor-topbar", isDisabled)(
+        def topBarStyle: TagMod = Seq(
+          minWidth := s"${
+            if(state.dimensions.forcedDesktop) Dimensions.default.minWindowWidth
+            else dom.window.innerWidth - state.dimensions.sideBarWidth}px"
+        )
+
+        nav(`id` := "editor-topbar", isDisabled, topBarStyle)(
           ul(`class` := "editor-buttons")(
             RunButton(state, backend),
             FormatButton(state, backend),

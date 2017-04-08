@@ -113,8 +113,10 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     socket
   }
 
-  def clear(e: ReactEventI): Callback = clear()
+  def clear(e: ReactEventI): Callback = clear() >> clearCode()
   def clear(): Callback = scope.modState(_.clearOutputs)
+
+  def clearCode(): Callback = scope.modState(_.setCode(""))
 
   def toggleForcedDesktop(value: Boolean)(e: ReactEventI): Callback =
     scope.modState(_.toggleForcedDesktop(value))
@@ -398,7 +400,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                     }
                 }
               )
-          )
+          ) >> setView(View.Editor) >> scope.modState(_.clearOutputs)
         } else {
           scope.modState(_.setLoadSnippet(true))
       }
