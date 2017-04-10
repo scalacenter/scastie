@@ -2,14 +2,12 @@ package com.olegych.scastie
 package client
 
 import api._
-
 import japgolly.scalajs.react._, vdom.all._
 
-import org.scalajs.dom.window
-
-object Libraries {
+object BuildSettings {
 
   def renderTarget(scalaTarget: ScalaTarget, backend: AppBackend) = {
+
     val targetTypes = List(
       ScalaTargetType.JVM,
       ScalaTargetType.Dotty,
@@ -28,16 +26,6 @@ object Libraries {
       }
     }
 
-    def logo(targetType: ScalaTargetType) = {
-      targetType match {
-        case ScalaTargetType.JVM => "smooth-spiral.png"
-        case ScalaTargetType.Dotty => "dotty-logo.svg"
-        case ScalaTargetType.JS => "scala-js.svg"
-        case ScalaTargetType.Native => "native.png"
-        case ScalaTargetType.Typelevel => "typelevel.svg"
-      }
-    }
-
     def labelFor(targetType: ScalaTargetType) = {
       targetType match {
         case ScalaTargetType.JVM => "Scalac"
@@ -49,8 +37,8 @@ object Libraries {
     }
 
     def selected(targetType: ScalaTargetType) =
-      if (targetType == scalaTarget.targetType) TagMod(`class` := "selected")
-      else EmptyTag
+      if (targetType == scalaTarget.targetType) TagMod(`checked` := true)
+      else TagMod(`checked` := false)
 
     val disabledTargets: Set[ScalaTargetType] = Set(
       ScalaTargetType.Native
@@ -58,33 +46,39 @@ object Libraries {
 
     def handler(targetType: ScalaTargetType) =
       if (disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
-      else TagMod(onClick ==> backend.setTarget2(defaultTarget(targetType)))
+      else TagMod(onChange ==> backend.setTarget2(defaultTarget(targetType)))
 
     def vote(targetType: ScalaTargetType) = {
       val voteIssueId: Map[ScalaTargetType, Int] = Map(
         ScalaTargetType.Native -> 50
       )
       voteIssueId.get(targetType) match {
-        case Some(id) => {
-          val link = s"https://github.com/scalacenter/scastie/issues/$id"
-          a(href := link, target := "_blank")("Vote")
+        case Some(issueId) => {
+          val link = s"https://github.com/scalacenter/scastie/issues/$issueId"
+          a(href := link, target := "_blank")(
+            i(`class` := "fa fa-long-arrow-left"),
+            " Vote!"
+          )
         }
         case None => EmptyTag
       }
     }
 
-    fieldset(`class` := "targets")(
-      legend("Target"),
-      ul(
-        targetTypes.map(
-          targetType =>
-            li(handler(targetType), selected(targetType))(
-              img(src := s"/assets/public/${logo(targetType)}",
-                  alt := s"logo for ${labelFor(targetType)}"),
-              span(labelFor(targetType)),
-              vote(targetType)
+    div(
+      ul(`id` := "target")(
+        targetTypes.map { targetType =>
+          val targetLabel = labelFor(targetType)
+          li(
+            input(`type` := "radio",
+                  `id` := targetLabel,
+                  value := targetLabel,
+                  name := "target",
+                  handler(targetType),
+                  selected(targetType)),
+            label(`for` := targetLabel, `class` := "radio", targetLabel),
+            vote(targetType)
           )
-        )
+        }
       )
     )
   }
@@ -159,10 +153,6 @@ object Libraries {
       "2.9.0"
     )
 
-    def selected(v1: String, v2: String) =
-      if (v1 == v2) TagMod(`class` := "selected")
-      else EmptyTag
-
     def setScalaVersion(
         targetApply: String => ScalaTarget
     )(e: ReactEventI): Callback =
@@ -171,21 +161,48 @@ object Libraries {
     val notSupported = div("Not supported")
 
     def versionSelector(scalaVersion: String,
-                        targetApply: String => ScalaTarget) =
+                        targetApply: String => ScalaTarget) = {
+      def handler(scalaVersion: String) =
+        TagMod(onChange ==> backend.setTarget2(targetApply(scalaVersion)))
+
+      def selected(version: String) =
+        if (targetApply(version) == target) TagMod(`checked` := true)
+        else TagMod(`checked` := false)
+
       TagMod(
-        ul(
-          suggestedVersions.map(
-            version =>
-              li(onClick ==> backend.setTarget2(targetApply(version)),
-                 selected(version, scalaVersion))(version)
+        ul(`id` := "suggestedVersions")(
+          suggestedVersions.map { suggestedVersion =>
+            li(
+              input(`type` := "radio",
+                    `id` := suggestedVersion,
+                    value := suggestedVersion,
+                    name := "scalaV",
+                    handler(suggestedVersion),
+                    selected(suggestedVersion)),
+              label(`for` := suggestedVersion,
+                    `class` := "radio",
+                    suggestedVersion)
+            )
+          },
+          li(
+            input(`type` := "radio",
+                  `id` := scalaVersion,
+                  value := scalaVersion,
+                  name := "scalaV",
+                  handler(scalaVersion)),
+            label(
+              div(`class` := "select-wrapper")(
+                select(name := "scalaVersion",
+                       value := scalaVersion.toString,
+                       onChange ==> setScalaVersion(targetApply))(
+                  allVersions.map(version => option(version))
+                )
+              )
+            )
           )
-        ),
-        select(name := "scalaVersion",
-               value := scalaVersion.toString,
-               onChange ==> setScalaVersion(targetApply))(
-          allVersions.map(version => option(version.toString))
         )
       )
+    }
 
     val versionSelectors =
       target match {
@@ -198,66 +215,44 @@ object Libraries {
         case ScalaTarget.Native => notSupported
       }
 
-    fieldset(`class` := "versions")(
-      legend("Scala Version"),
+    div(
       versionSelectors
     )
+
   }
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("Libraries").render_P {
+    ReactComponentB[(AppState, AppBackend)]("BuildSettings").render_P {
       case (state, backend) =>
         val theme = if (state.isDarkTheme) "dark" else "light"
 
-        val worksheetModeSelected =
-          if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
-          else EmptyTag
-
-        val worksheetModeToogleLabel =
-          if (!state.inputs.worksheetMode) "OFF"
-          else "ON"
-
-        val worksheetModeClassSelected =
-          if (state.inputs.worksheetMode) TagMod(`class` := "toggle selected")
-          else EmptyTag
-
-        def resetBuild(e: ReactEventI): Callback = {
-          CallbackTo(window.confirm("Are you sure you want to reset?"))
-            .flatMap(
-              reset =>
-                if (reset) backend.resetBuild
-                else Callback(())
-            )
-        }
-
         val resetButton =
           if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
-            button(onClick ==> resetBuild, `class` := "button")(
-              p("Reset Default")
+            div(onClick ==> backend.toggleReset,
+                `class` := "btn",
+                title := "Reset your configuration")(
+              "Reset"
             )
           } else EmptyTag
 
-        div(`class` := "libraries")(
-          resetButton,
-          ScaladexSearch(state, backend),
-          renderTarget(state.inputs.target, backend),
-          renderVersions(state.inputs.target, backend),
-          fieldset(
-            legend("Options"),
-            button(
-              onClick ==> backend.toggleWorksheetMode,
-              title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
-              worksheetModeSelected,
-              `class` := "button",
-              worksheetModeClassSelected
-            )(
-              iconic.script,
-              p(s"Worksheet $worksheetModeToogleLabel")
-            )
+        div(`id` := "build-settings-container")(
+          h2(
+            span("Target")
           ),
-          fieldset(
-            legend("Sbt Configuration"),
-            div("add more"),
+          renderTarget(state.inputs.target, backend),
+          h2(
+            span("Scala Version")
+          ),
+          renderVersions(state.inputs.target, backend),
+          h2(
+            span("Libraries")
+          ),
+          ScaladexSearch(state, backend),
+          h2(
+            span("Sbt Configuration")
+          ),
+          label(`for` := "configuration", "Add more"),
+          pre(`id` := "configuration")(
             CodeMirrorEditor(
               CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
                                         theme = s"solarized $theme",
@@ -265,22 +260,21 @@ object Libraries {
               CodeMirrorEditor.Handler(
                 updatedSettings => backend.sbtConfigChange(updatedSettings)
               )
-            ),
-            hr,
-            div("resulting build.sbt"),
-            div(`class` := "result-sbt")(
-              CodeMirrorEditor(
-                CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
-                                          theme = s"solarized $theme",
-                                          readOnly = true),
-                CodeMirrorEditor.Handler(
-                  _ => Callback(())
-                )
+            )
+          ),
+          div(`class` := "label", "Resulting build.sbt"),
+          pre(`id` := "output")(
+            CodeMirrorEditor(
+              CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
+                                        theme = s"solarized $theme",
+                                        readOnly = true),
+              CodeMirrorEditor.Handler(
+                _ => Callback(())
               )
             ),
             hr,
-            div("resulting plugins.sbt"),
-            div(`class` := "result-sbt")(
+            div(`class` := "label", "Resulting plugins.sbt"),
+            pre(`id` := "plugins-output")(
               CodeMirrorEditor(
                 CodeMirrorEditor.Settings(
                   value = state.inputs.sbtPluginsConfig,
@@ -291,7 +285,8 @@ object Libraries {
                   _ => Callback(())
                 )
               )
-            )
+            ),
+            resetButton
           )
         )
     }.build
