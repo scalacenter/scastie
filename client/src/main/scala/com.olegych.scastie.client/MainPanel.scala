@@ -60,13 +60,11 @@ object MainPanel {
                 (
                   if (state.consoleState.consoleIsOpen) consoleHeight
                   else consoleBarHeight
-                )
-
-            val w = innerWidth - sideBarWidth
+                ) -
+                mobileBarHeight
 
             Seq(
-              height := s"${h}px",
-              width := s"${w}px"
+              height := s"${h}px"
             )
           }
 
@@ -86,7 +84,6 @@ object MainPanel {
             div(`id` := "content")(
               div(`id` := "editor-container",
                   `class` := "inner-container",
-                  editorStyle,
                   show(View.Editor))(
                 div(`id` := "code", editorStyle)(Editor(state, backend),
                                                  embeddedMenu),

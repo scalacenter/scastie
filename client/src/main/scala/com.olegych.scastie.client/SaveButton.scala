@@ -30,19 +30,19 @@ object SaveButton {
             )
           case Some(sid) =>
             ul(`id` := "save-buttons")(
-              li(title := "Amend",
+              li(title := "Amend this code snippet",
                  `class` := s"btn $disabledIfSaved",
                  onClick ==> backend.amend(sid))(
                 i(`class` := "fa fa-pencil-square-o"),
                 span("Amend")
               ),
-              li(title := s"Update ($ctrl + S)",
+              li(title := s"Save as a new updated version ($ctrl + S)",
                  `class` := s"btn $disabledIfSaved",
                  onClick ==> backend.update(sid))(
                 i(`class` := "fa fa-download"),
                 span("Update")
               ),
-              li(title := "Fork",
+              li(title := "Save as a new forked code snippet",
                  `class` := s"btn $disabledIfSaved",
                  onClick ==> backend.fork(sid))(
                 i(`class` := "fa fa-code-fork"),

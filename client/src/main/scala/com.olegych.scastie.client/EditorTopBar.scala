@@ -23,6 +23,7 @@ object EditorTopBar {
         nav(`id` := "editor-topbar", isDisabled, topBarStyle)(
           ul(`class` := "editor-buttons")(
             RunButton(state, backend),
+            NewButton(state, backend),
             FormatButton(state, backend),
             ClearButton(state, backend),
             WorksheetButton(state, backend),

@@ -415,7 +415,7 @@ body {
                 width: 10px;
                 height: 15px; }
     body .app.light #editor-topbar, body .app.light #editor-mobile {
-      border-bottom: 2px solid #073642;
+      box-shadow: inset 0 -2px 0 0 #073642;
       display: block; }
       body .app.light #editor-topbar.disabled, body .app.light #editor-mobile.disabled {
         display: none; }
@@ -470,6 +470,7 @@ body {
         background: #002b36;
         text-align: left;
         width: 160px;
+        cursor: default;
         -webkit-transition: color, background-color 0.3s ease;
         -moz-transition: color, background-color 0.3s ease;
         -o-transition: color, background-color 0.3s ease;
@@ -557,7 +558,6 @@ body {
       body .app.light #editor-container #code {
         overflow: hidden; }
       body .app.light #editor-container #switcher-show {
-        right: 0;
         bottom: 0;
         background: #002b36;
         height: 33px;
@@ -582,7 +582,6 @@ body {
         display: block;
         bottom: 0;
         width: 100%;
-        overflow: hidden;
         height: 25%;
         -webkit-transition: color, background-color 0.3s ease;
         -moz-transition: color, background-color 0.3s ease;
@@ -612,7 +611,8 @@ body {
           -moz-transition: color, background-color 0.3s ease;
           -o-transition: color, background-color 0.3s ease;
           transition: color, background-color 0.3s ease;
-          z-index: 9; }
+          z-index: 9;
+          text-align: right; }
         body .app.light #editor-container #console .output-console {
           padding-top: 10px;
           padding-left: 28px;

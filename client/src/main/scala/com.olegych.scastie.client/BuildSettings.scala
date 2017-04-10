@@ -272,7 +272,6 @@ object BuildSettings {
                 _ => Callback(())
               )
             ),
-            hr,
             div(`class` := "label", "Resulting plugins.sbt"),
             pre(`id` := "plugins-output")(
               CodeMirrorEditor(

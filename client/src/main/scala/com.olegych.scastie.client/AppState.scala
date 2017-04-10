@@ -150,8 +150,8 @@ case class AppState(
   def setIsReRunningScalaJs(value: Boolean): AppState =
     copy(isReRunningScalaJs = value)
 
-  def setSnippetSaved: AppState =
-    copy(isSnippetSaved = true)
+  def setSnippetSaved(value: Boolean): AppState =
+    copy(isSnippetSaved = value)
 
   def toggleForcedDesktop(value: Boolean): AppState =
     copyAndSave(dimensions = dimensions.copy(forcedDesktop = value))
@@ -239,6 +239,9 @@ case class AppState(
   def setConsoleHeight(height: Int): AppState =
     copyAndSave(dimensions = dimensions.copy(consoleHeight = height))
 
+  def setMobileBarHeight(height: Int): AppState =
+    copyAndSave(dimensions = dimensions.copy(mobileBarHeight = height))
+
   def setCode(code: String): AppState =
     copyAndSave(
       inputs = inputs.copy(code = code),
@@ -255,6 +258,9 @@ case class AppState(
       inputs = inputs.copy(sbtConfigExtra = config),
       inputsHasChanged = true
     )
+
+  def setChangedInputs: AppState =
+    copyAndSave(inputsHasChanged = true)
 
   def setCleanInputs: AppState =
     copyAndSave(inputsHasChanged = false)
@@ -308,6 +314,16 @@ case class AppState(
       consoleState = consoleState.copy(
         consoleIsOpen = false,
         consoleHasUserOutput = false
+      )
+    )
+
+  def closeModals: AppState =
+    copyAndSave(
+      modalState = modalState.copy(
+        isHelpModalClosed = true,
+        isWelcomeModalClosed = true,
+        isShareModalClosed = true,
+        isResetModalClosed = true
       )
     )
 

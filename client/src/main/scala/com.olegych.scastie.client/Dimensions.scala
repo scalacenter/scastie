@@ -11,7 +11,8 @@ object Dimensions {
                sideBarWidth = 0,
                sideBarMinHeight = 0,
                consoleBarHeight = 0,
-               consoleHeight = 0)
+               consoleHeight = 0,
+               mobileBarHeight = 0)
 }
 
 case class Dimensions(dimensionsHaveChanged: Boolean,
@@ -23,4 +24,5 @@ case class Dimensions(dimensionsHaveChanged: Boolean,
                       sideBarWidth: Int,
                       sideBarMinHeight: Int,
                       consoleBarHeight: Int,
-                      consoleHeight: Int)
+                      consoleHeight: Int,
+                      mobileBarHeight: Int)
