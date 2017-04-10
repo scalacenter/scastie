@@ -521,7 +521,7 @@ body {
           body .app.light #sidebar .actions-container .actions .btn:hover {
             color: #ffffff; }
       body .app.light #sidebar .actions.bottom {
-        position: absolute;
+        position: fixed;
         bottom: 0px; }
         body .app.light #sidebar .actions.bottom .btn {
           cursor: pointer;
@@ -563,7 +563,7 @@ body {
         height: 33px;
         line-height: 33px;
         display: none;
-        position: absolute;
+        position: fixed;
         text-align: right;
         color: #ffffff;
         cursor: pointer;
@@ -575,7 +575,7 @@ body {
         z-index: 9; }
       body .app.light #editor-container #console {
         box-sizing: border-box;
-        position: absolute;
+        position: fixed;
         padding-top: 28px;
         color: #002b36;
         background: #f5f5f5;
@@ -965,6 +965,7 @@ body {
       body .app.light:not(.force-desktop) #topbar ul.actions > li span, body .app.light:not(.force-desktop) #sidebar ul.actions > li span {
         display: none !important; }
       body .app.light:not(.force-desktop) #editor-topbar {
+        position: fixed;
         font-size: 20px; }
         body .app.light:not(.force-desktop) #editor-topbar li span {
           display: none !important; }
@@ -1005,7 +1006,7 @@ body {
       body .app.light:not(.force-desktop) #editor-mobile {
         z-index: 99999;
         display: block !important;
-        position: absolute;
+        position: fixed;
         bottom: 0px;
         left: 0px;
         height: 48px !important;
