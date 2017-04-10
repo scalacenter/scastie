@@ -64,15 +64,15 @@ object MainPanel {
                 mobileBarHeight
 
             Seq(
-              height := s"${h}px"
+              minHeight := s"${h}px"
             )
           }
 
           def containerStyle: TagMod = Seq(
-            height := s"${
+            minHeight := s"${
               if(forcedDesktop) Dimensions.default.minWindowHeight
               else innerHeight - topBarHeight}px",
-            width := s"${
+            minWidth := s"${
               if(forcedDesktop) Dimensions.default.minWindowWidth
               else innerWidth - sideBarWidth}px"
           )

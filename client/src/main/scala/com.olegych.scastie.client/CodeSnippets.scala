@@ -7,7 +7,7 @@ import autowire._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import japgolly.scalajs.react._
 import extra.router._
-import vdom.all.{onClick, _}
+import vdom.all._
 
 object CodeSnippets {
 
@@ -78,7 +78,7 @@ object CodeSnippets {
             div(`id` := "snippets")(
               summaries.groupBy(_.snippetId.base64UUID).map {
                 case (base64UUID, groupedSummaries) =>
-                  div(`class` := "group")(
+                  div(`class` := "group", `key` := base64UUID)(
                     groupedSummaries
                       .sortBy(_.snippetId.user.flatMap(_.update))
                       .map {
