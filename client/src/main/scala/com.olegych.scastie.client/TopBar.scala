@@ -78,7 +78,7 @@ object TopBar {
         val userName = state.user.map(_.login).getOrElse("Login")
 
         nav(`id` := "topbar", topBarStyle)(
-          a(`class` := "logo", href := "#")(
+          div(`class` := "logo")(
             img(src := "/assets/public/img/icon-scastie.png"),
             h1("Scastie")
           ),

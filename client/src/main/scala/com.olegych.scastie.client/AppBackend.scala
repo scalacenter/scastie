@@ -113,18 +113,39 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     socket
   }
 
-  def clear(e: ReactEventI): Callback = clear() >> clearCode()
+  def newSnippet(e: ReactEventI): Callback = {
+
+    val snippetId = SnippetId("", None)
+
+    val setData = scope.modState(_.clearOutputs
+      .setInputs(Inputs.default.copy(code = ""))
+      .setSnippetSaved(false)
+      .setSnippetId(snippetId)
+      .setChangedInputs)
+
+    val setPage = scope.props.flatMap(
+      props =>
+        props.router
+          .map(_.set(Page.fromSnippetId(snippetId)))
+          .getOrElse(Callback(()))
+    )
+
+    setData >> setPage
+
+  }
+
+  def clear(e: ReactEventI): Callback = clear()
   def clear(): Callback = scope.modState(_.clearOutputs)
 
   def clearCode(): Callback = scope.modState(_.setCode(""))
 
   def toggleForcedDesktop(value: Boolean)(e: ReactEventI): Callback =
-    scope.modState(_.toggleForcedDesktop(value))
+    scope.modState(_.toggleForcedDesktop(value).setDimensionsHaveChanged(true))
 
   def toggleMobile(): Callback =
     scope.modState(_.toggleForcedDesktop(value = false))
   def toggleMobile(e: ReactEventI): Callback =
-    toggleMobile() >> setView(View.Editor)
+    toggleMobile() >> setView(View.Editor) >> setDimensionsHaveChanged(true)
 
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
@@ -201,7 +222,14 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def setConsoleHeight(): Callback =
     scope.modState(
       _.setConsoleHeight(
-        getElementHeight("console") + getElementHeight("handler")
+        getElementHeight("console")
+      )
+    )
+
+  def setMobileBarHeight(): Callback =
+    scope.modState(
+      _.setMobileBarHeight(
+        getElementHeight("editor-mobile")
       )
     )
 
@@ -212,6 +240,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       setSideBarMinHeight >>
       setConsoleBarHeight() >>
       setConsoleHeight() >>
+      setMobileBarHeight() >>
       setDimensionsHaveChanged(false)
 
   def getElementWidth(id: String): Int =
@@ -269,7 +298,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       state =>
         if (!state.isSnippetSaved) {
           scope.modState(
-            _.setLoadSnippet(false).setCleanInputs.setSnippetSaved
+            _.setLoadSnippet(false).setCleanInputs.setSnippetSaved(true)
           ) >>
             Callback.future(
               ApiClient[AutowireApi]
@@ -309,7 +338,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
               .call()
               .map(
                 success =>
-                  if (success) scope.modState(_.setSnippetSaved)
+                  if (success) scope.modState(_.setSnippetSaved(true))
                   else Callback(window.alert("Failed to amend"))
               )
           )
@@ -331,7 +360,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                     case Some(snippetId) => {
                       val page = Page.fromSnippetId(snippetId)
                       scope.modState(
-                        _.setLoadSnippet(false).clearOutputs.setSnippetSaved
+                        _.setLoadSnippet(false).clearOutputs.setSnippetSaved(true)
                       ) >>
                         scope.props.flatMap(
                           _.router.map(_.set(page)).getOrElse(Callback(()))
@@ -361,7 +390,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                     case Some(snippetId) => {
                       val page = Page.fromSnippetId(snippetId)
                       scope.modState(
-                        _.setLoadSnippet(false).clearOutputs.setSnippetSaved
+                        _.setLoadSnippet(false).clearOutputs.setSnippetSaved(true)
                       ) >>
                         scope.props.flatMap(
                           _.router.map(_.set(page)).getOrElse(Callback(()))
@@ -400,7 +429,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                     }
                 }
               )
-          ) >> setView(View.Editor) >> scope.modState(_.clearOutputs)
+          ) >> setView(View.Editor) >> scope.modState(_.clearOutputs.closeModals)
         } else {
           scope.modState(_.setLoadSnippet(true))
       }

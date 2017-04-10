@@ -63,7 +63,7 @@ object SideBar {
 
         nav(`id` := "sidebar")(
           div(`class` := "actions-container", actionsContainerStyle)(
-            a(`class` := "logo", href := "#")(
+            div(`class` := "logo")(
               img(src := "/assets/public/img/icon-scastie.png"),
               h1("Scastie")
             ),

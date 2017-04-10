@@ -25,8 +25,8 @@ object Console {
           val currentWidth = s"${dom.window.innerWidth - sideBarWidth}px"
 
           val minConsoleWidth = s"${
-            (if(state.dimensions.forcedDesktop) Dimensions.default.minWindowWidth
-            else dom.window.innerWidth.toInt) - state.dimensions.sideBarWidth
+            (if(forcedDesktop) Dimensions.default.minWindowWidth
+            else dom.window.innerWidth.toInt) - sideBarWidth
           }px"
 
           def consoleStyle: TagMod = Seq(
@@ -42,7 +42,7 @@ object Console {
           div(`id` := "console-container")(
             div(`id` := "console", consoleStyle)(
               div(`id` := "handler"),
-              div(`id` := "switcher-hide", onClick ==> backend.toggleConsole)(
+              div(`id` := "switcher-hide", consoleStyle, onClick ==> backend.toggleConsole)(
                 i(`class` := "fa fa-terminal"),
                 "Console",
                 i(`class` := "fa fa-caret-down")
