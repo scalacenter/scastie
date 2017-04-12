@@ -73,8 +73,8 @@ object MainPanel {
               if(forcedDesktop) Dimensions.default.minWindowHeight
               else innerHeight - topBarHeight}px",
             minWidth := s"${
-              if(forcedDesktop) Dimensions.default.minWindowWidth
-              else innerWidth - sideBarWidth}px"
+              (if(forcedDesktop) Dimensions.default.minWindowWidth
+              else innerWidth.toInt) - sideBarWidth}px"
           )
 
           div(`class` := "main-panel")(
