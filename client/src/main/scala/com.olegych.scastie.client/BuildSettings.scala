@@ -2,7 +2,9 @@ package com.olegych.scastie
 package client
 
 import api._
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import org.scalajs.dom
+import vdom.all._
 
 object BuildSettings {
 
@@ -224,6 +226,9 @@ object BuildSettings {
   private val component =
     ReactComponentB[(AppState, AppBackend)]("BuildSettings").render_P {
       case (state, backend) =>
+
+        import state.dimensions._
+
         val theme = if (state.isDarkTheme) "dark" else "light"
 
         val resetButton =
@@ -235,7 +240,11 @@ object BuildSettings {
             )
           } else EmptyTag
 
-        div(`id` := "build-settings-container")(
+        def containerStyle: TagMod = Seq(
+          height := s"${dom.window.innerHeight - topBarHeight}px"
+        )
+
+        div(`id` := "build-settings-container", containerStyle)(
           h2(
             span("Target")
           ),

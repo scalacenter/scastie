@@ -8,6 +8,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import japgolly.scalajs.react._
 import extra.router._
 import vdom.all._
+import org.scalajs.dom.window._
 
 object CodeSnippets {
 
@@ -48,6 +49,9 @@ object CodeSnippets {
       .backend(new Backend(_))
       .renderPS {
         case (scope, (maybeRouter, state, backend), summaries) => {
+
+          import state.dimensions._
+
           assert(maybeRouter.isDefined,
                  "should not be able to access profile view from embedded")
           val router = maybeRouter.get
@@ -67,7 +71,11 @@ object CodeSnippets {
                "Github user")
           }
 
-          div(`id` := "code-snippets-container")(
+          def containerStyle: TagMod = Seq(
+            height := s"${innerHeight - topBarHeight}px"
+          )
+
+          div(`id` := "code-snippets-container", containerStyle)(
             userAvatar,
             h2(userName),
             div(`class` := "nickname")(

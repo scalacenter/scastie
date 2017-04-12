@@ -698,6 +698,7 @@ body {
                 margin: 40px 0 40px 26px;
                 padding: 15px 15px;
                 font-family: monospace;
+                font-size: 14px;
                 text-decoration: none;
                 color: #0f262f;
                 white-space: pre-line; }
@@ -965,7 +966,6 @@ body {
       body .app.light:not(.force-desktop) #topbar ul.actions > li span, body .app.light:not(.force-desktop) #sidebar ul.actions > li span {
         display: none !important; }
       body .app.light:not(.force-desktop) #editor-topbar {
-        position: fixed;
         font-size: 20px; }
         body .app.light:not(.force-desktop) #editor-topbar li span {
           display: none !important; }

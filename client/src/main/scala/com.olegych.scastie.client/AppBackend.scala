@@ -297,15 +297,15 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.state.flatMap(
       state =>
         if (!state.isSnippetSaved) {
-          scope.modState(
-            _.setLoadSnippet(false).setCleanInputs.setSnippetSaved(true)
-          ) >>
             Callback.future(
               ApiClient[AutowireApi]
                 .save(state.inputs)
                 .call()
                 .map(
                   snippetId =>
+                    scope.modState(
+                      _.setLoadSnippet(false).setCleanInputs.setSnippetSaved(true)
+                    ) >>
                     scope.props.flatMap(
                       props =>
                         props.router
@@ -354,21 +354,18 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
             ApiClient[AutowireApi]
               .fork(snippetId, state.inputs)
               .call()
-              .map(
-                result =>
-                  result match {
-                    case Some(snippetId) => {
-                      val page = Page.fromSnippetId(snippetId)
-                      scope.modState(
-                        _.setLoadSnippet(false).clearOutputs.setSnippetSaved(true)
-                      ) >>
-                        scope.props.flatMap(
-                          _.router.map(_.set(page)).getOrElse(Callback(()))
-                        )
-                    }
-                    case None => Callback(window.alert("Failed to fork"))
-                }
-              )
+              .map {
+                case Some(sId) =>
+                  val page = Page.fromSnippetId(sId)
+                  scope.modState(_.setSnippetSaved(true)) >>
+                  scope.modState(
+                    _.setLoadSnippet(false).clearOutputs
+                  ) >>
+                  scope.props.flatMap(
+                    _.router.map(_.set(page)).getOrElse(Callback(()))
+                  )
+                case None => Callback(window.alert("Failed to fork"))
+              }
           )
         } else Callback(())
     )
@@ -384,21 +381,18 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
             ApiClient[AutowireApi]
               .update(snippetId, state.inputs)
               .call()
-              .map(
-                result =>
-                  result match {
-                    case Some(snippetId) => {
-                      val page = Page.fromSnippetId(snippetId)
-                      scope.modState(
-                        _.setLoadSnippet(false).clearOutputs.setSnippetSaved(true)
-                      ) >>
-                        scope.props.flatMap(
-                          _.router.map(_.set(page)).getOrElse(Callback(()))
-                        )
-                    }
-                    case None => Callback(window.alert("Failed to update"))
-                }
-              )
+              .map {
+                case Some(sId) =>
+                  val page = Page.fromSnippetId(sId)
+                  scope.modState(_.setSnippetSaved(true)) >>
+                  scope.modState(
+                    _.setLoadSnippet(false).clearOutputs
+                  ) >>
+                  scope.props.flatMap(
+                    _.router.map(_.set(page)).getOrElse(Callback(()))
+                  )
+                case None => Callback(window.alert("Failed to update"))
+              }
           )
         } else Callback(())
     )
@@ -412,23 +406,18 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
             ApiClient[AutowireApi]
               .fetch(snippetId)
               .call()
-              .map(
-                result =>
-                  result match {
-                    case Some(FetchResult(inputs, progresses)) => {
-                      loadStateFromLocalStorage >>
-                        clear() >>
-                        scope.modState(
-                          _.setInputs(inputs)
-                            .setProgresses(progresses)
-                            .setCleanInputs
-                        )
-                    }
-                    case _ => {
-                      scope.modState(_.setCode(s"//snippet not found"))
-                    }
-                }
-              )
+              .map {
+                case Some(FetchResult(inputs, progresses)) =>
+                  loadStateFromLocalStorage >>
+                    clear() >>
+                    scope.modState(
+                      _.setInputs(inputs)
+                        .setProgresses(progresses)
+                        .setCleanInputs
+                    )
+                case _ =>
+                  scope.modState(_.setCode(s"//snippet not found"))
+              }
           ) >> setView(View.Editor) >> scope.modState(_.clearOutputs.closeModals)
         } else {
           scope.modState(_.setLoadSnippet(true))
