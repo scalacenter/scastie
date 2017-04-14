@@ -8,7 +8,8 @@ import org.scalajs.dom
 object SideBar {
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("SideBar").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("SideBar").render_P {
+//    ScalaComponent.builder[(AppState, AppBackend)]("SideBar").render_P {
       case (state, backend) =>
         import backend._
         import dom.window._

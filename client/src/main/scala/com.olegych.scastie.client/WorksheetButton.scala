@@ -8,7 +8,7 @@ object WorksheetButton {
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("WorksheetButton").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("WorksheetButton").render_P {
       case (state, backend) =>
         val worksheetModeSelected =
           if (state.inputs.worksheetMode && state.view != View.Editor)

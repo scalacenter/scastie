@@ -15,14 +15,14 @@ import scala.util.{Failure, Success}
 class AppBackend(scope: BackendScope[AppProps, AppState]) {
   Global.subsribe(scope)
 
-  def goHome(e: ReactEventI): Callback = {
+  def goHome(e: ReactEventFromInput): Callback = {
     scope.props.flatMap(
       props => props.router.map(_.set(Home)).getOrElse(Callback(()))
     ) >>
       scope.modState(_.setView(View.Editor))
   }
 
-  def resetBuildAndClose(e: ReactEventI): Callback =
+  def resetBuildAndClose(e: ReactEventFromInput): Callback =
     resetBuild >> toggleReset()
 
   def resetBuild: Callback =
@@ -113,24 +113,24 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     socket
   }
 
-  def clear(e: ReactEventI): Callback = clear()
+  def clear(e: ReactEventFromInput): Callback = clear()
   def clear(): Callback = scope.modState(_.clearOutputs)
 
-  def toggleForcedDesktop(value: Boolean)(e: ReactEventI): Callback =
+  def toggleForcedDesktop(value: Boolean)(e: ReactEventFromInput): Callback =
     scope.modState(_.toggleForcedDesktop(value))
 
   def toggleMobile(): Callback =
     scope.modState(_.toggleForcedDesktop(value = false))
-  def toggleMobile(e: ReactEventI): Callback =
+  def toggleMobile(e: ReactEventFromInput): Callback =
     toggleMobile() >> setView(View.Editor)
 
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
 
-  def setView2(newView: View)(e: ReactEventI): Callback =
+  def setView2(newView: View)(e: ReactEventFromInput): Callback =
     setView(newView)
 
-  def setTarget2(target: ScalaTarget)(e: ReactEventI): Callback =
+  def setTarget2(target: ScalaTarget)(e: ReactEventFromInput): Callback =
     setTarget(target)
 
   def setTarget(target: ScalaTarget): Callback =
@@ -147,30 +147,30 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                               version: String): Callback =
     scope.modState(_.updateDependencyVersion(scalaDependency, version))
 
-  def toggleTheme(e: ReactEventI): Callback = toggleTheme()
+  def toggleTheme(e: ReactEventFromInput): Callback = toggleTheme()
   def toggleTheme(): Callback = scope.modState(_.toggleTheme)
 
   def toggleConsole(): Callback = scope.modState(_.toggleConsole)
-  def toggleConsole(e: ReactEventI): Callback =
+  def toggleConsole(e: ReactEventFromInput): Callback =
     toggleConsole() >> setDimensionsHaveChanged(true)
 
   def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
 
-  def toggleWelcome(e: ReactEventI): Callback = scope.modState(_.toggleWelcome)
+  def toggleWelcome(e: ReactEventFromInput): Callback = scope.modState(_.toggleWelcome)
 
-  def toggleHelp(e: ReactEventI): Callback = scope.modState(_.toggleHelp)
+  def toggleHelp(e: ReactEventFromInput): Callback = scope.modState(_.toggleHelp)
 
-  def toggleReset(e: ReactEventI): Callback = toggleReset()
+  def toggleReset(e: ReactEventFromInput): Callback = toggleReset()
   def toggleReset(): Callback = scope.modState(_.toggleReset)
 
-  def toggleWelcomeHelp(e: ReactEventI): Callback =
+  def toggleWelcomeHelp(e: ReactEventFromInput): Callback =
     scope.modState(_.toggleWelcomeHelp)
 
-  def toggleShare(snippetId: Option[SnippetId])(e: ReactEventI): Callback =
+  def toggleShare(snippetId: Option[SnippetId])(e: ReactEventFromInput): Callback =
     scope.modState(_.toggleShare(snippetId))
 
   def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
-  def toggleWorksheetMode(e: ReactEventI): Callback = toggleWorksheetMode()
+  def toggleWorksheetMode(e: ReactEventFromInput): Callback = toggleWorksheetMode()
 
   def setDimensionsHaveChanged(value: Boolean): Callback =
     scope.modState(_.setDimensionsHaveChanged(value))
@@ -218,7 +218,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def getElementHeight(id: String): Int =
     Option(dom.document.getElementById(id)).map(_.clientHeight).getOrElse(0)
 
-  def run(e: ReactEventI): Callback = run()
+  def run(e: ReactEventFromInput): Callback = run()
   def run(): Callback = {
     scope.state.flatMap(
       state =>
@@ -261,7 +261,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     )
   }
 
-  def save(e: ReactEventI): Callback = save()
+  def save(e: ReactEventFromInput): Callback = save()
   def save(): Callback = {
     scope.state.flatMap(
       state =>
@@ -297,7 +297,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     )
   }
 
-  def amend(snippetId: SnippetId)(e: ReactEventI): Callback = {
+  def amend(snippetId: SnippetId)(e: ReactEventFromInput): Callback = {
     scope.state.flatMap(
       state =>
         if (!state.isSnippetSaved) {
@@ -315,7 +315,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     )
   }
 
-  def fork(snippetId: SnippetId)(e: ReactEventI): Callback = {
+  def fork(snippetId: SnippetId)(e: ReactEventFromInput): Callback = {
     scope.state.flatMap(
       state =>
         if (!state.isSnippetSaved) {
@@ -343,7 +343,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     )
   }
 
-  def update(snippetId: SnippetId)(e: ReactEventI): Callback =
+  def update(snippetId: SnippetId)(e: ReactEventFromInput): Callback =
     update2(snippetId)
   def update2(snippetId: SnippetId): Callback = {
     scope.state.flatMap(
@@ -455,7 +455,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     initialState >> loadUser()
   }
 
-  def formatCode(e: ReactEventI): Callback = formatCode()
+  def formatCode(e: ReactEventFromInput): Callback = formatCode()
   def formatCode(): Callback =
     scope.state.flatMap(
       state =>

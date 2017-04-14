@@ -7,7 +7,7 @@ object RunButton {
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("RunButton").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("RunButton").render_P {
       case (state, backend) =>
         import backend._
         import View.ctrl

@@ -12,7 +12,7 @@ object SaveButton {
     component((state, backend, snippetId))
 
   private val component =
-    ReactComponentB[(AppState, AppBackend, Option[SnippetId])]("SaveButton").render_P {
+    ScalaComponent.builder[(AppState, AppBackend, Option[SnippetId])]("SaveButton").render_P {
       case (state, backend, snippetId) =>
         val disabledIfSaved =
           if (state.isSnippetSaved) "disabled"

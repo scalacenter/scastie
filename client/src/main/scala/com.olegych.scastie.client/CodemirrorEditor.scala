@@ -104,7 +104,7 @@ object CodeMirrorEditor {
   }
 
   private val component =
-    ReactComponentB[(Settings, Handler)]("CodeMirrorEditor")
+    ScalaComponent.builder[(Settings, Handler)]("CodeMirrorEditor")
       .initialState(State())
       .backend(new Backend(_))
       .renderPS {

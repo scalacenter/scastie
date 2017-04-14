@@ -9,7 +9,7 @@ object TopBar {
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("TopBar").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("TopBar").render_P {
       case (state, backend) =>
         import backend._
 

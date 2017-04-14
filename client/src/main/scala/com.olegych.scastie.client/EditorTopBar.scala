@@ -7,7 +7,7 @@ import japgolly.scalajs.react.vdom.all._
 object EditorTopBar {
 
   private val component =
-    ReactComponentB[(AppState, AppBackend, Option[SnippetId])]("EditorTopBar").render_P {
+    ScalaComponent.builder[(AppState, AppBackend, Option[SnippetId])]("EditorTopBar").render_P {
       case (state, backend, snippetId) =>
         def isDisabled =
           if (state.view != View.Editor) TagMod(`class` := "disabled")

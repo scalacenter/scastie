@@ -10,7 +10,7 @@ object MainPanel {
 
   private val consoleElement = Ref[HTMLPreElement]("console")
   private val component =
-    ReactComponentB[(AppState, AppBackend, AppProps)]("MainPanel")
+    ScalaComponent.builder[(AppState, AppBackend, AppProps)]("MainPanel")
       .render_P {
         case (state, backend, props) => {
 

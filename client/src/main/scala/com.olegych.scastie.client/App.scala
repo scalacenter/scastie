@@ -19,7 +19,7 @@ object App {
 
   val component =
     ScalaComponent.builder[AppProps]("App")
-//    ReactComponentB[AppProps]("App")
+//    ScalaComponent.builder[AppProps]("App")
       .initialState[AppState](LocalStorage.load.getOrElse(AppState.default))
       .backend(new AppBackend(_))
       .renderPS {

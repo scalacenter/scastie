@@ -336,7 +336,7 @@ object ScaladexSearch {
   }
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("Scaladex Search")
+    ScalaComponent.builder[(AppState, AppBackend)]("Scaladex Search")
       .initialState_P(SearchState.fromProps)
       .backend(new SearchBackend(_))
       .renderPS {

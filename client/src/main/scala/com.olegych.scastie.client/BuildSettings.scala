@@ -222,7 +222,7 @@ object BuildSettings {
   }
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("BuildSettings").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("BuildSettings").render_P {
       case (state, backend) =>
         val theme = if (state.isDarkTheme) "dark" else "light"
 

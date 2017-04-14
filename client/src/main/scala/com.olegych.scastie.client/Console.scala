@@ -12,7 +12,7 @@ object Console {
 
   private val consoleElement = Ref[HTMLPreElement]("console")
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("Console")
+    ScalaComponent.builder[(AppState, AppBackend)]("Console")
       .initialState(ConsoleState.default)
       .render_P {
         case (state, backend) =>

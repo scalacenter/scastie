@@ -29,7 +29,7 @@ class ExampleSpec extends FunSpec with BeforeAndAfterAll {
     }
   }
 
-  val Example = ReactComponentB[String]("Example")
+  val Example = ScalaComponent.builder[String]("Example")
     .initialState(0)
     .renderPS((_, p, s) => div(s" $p:$s "))
     .build

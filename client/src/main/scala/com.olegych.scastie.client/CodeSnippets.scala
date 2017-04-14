@@ -42,7 +42,7 @@ object CodeSnippets {
   }
 
   private val component =
-    ReactComponentB[(Option[RouterCtl[Page]], AppState, AppBackend)](
+    ScalaComponent.builder[(Option[RouterCtl[Page]], AppState, AppBackend)](
       "CodeSnippets"
     ).initialState(List.empty[SnippetSummary])
       .backend(new Backend(_))
