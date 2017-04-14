@@ -343,15 +343,15 @@ object ScaladexSearch {
         case (scope, (state, backend), searchState) => {
           def selectedIndex(index: Int, selected: Int) = {
             if (index == selected) TagMod(`class` := "selected")
-            else EmptyTag
+            else EmptyVdom
           }
 
           def renderProject(project: Project,
                             artifact: String,
-                            selected: TagMod = EmptyTag,
-                            handlers: TagMod = EmptyTag,
-                            remove: TagMod = EmptyTag,
-                            options: TagMod = EmptyTag) = {
+                            selected: TagMod = EmptyVdom,
+                            handlers: TagMod = EmptyVdom,
+                            remove: TagMod = EmptyVdom,
+                            options: TagMod = EmptyVdom) = {
             import project._
 
             val common = TagMod(title := organization, `class` := "logo")
@@ -399,7 +399,7 @@ object ScaladexSearch {
               select(value := selected.release.version,
                      onChange ==> scope.backend.updateVersion(selected))(
                 selected.options.versions.reverse
-                  .map(v => option(value := v)(v))
+                  .map(v => option(value := v)(v)).toTagMod
               )
             )
           }
@@ -407,7 +407,7 @@ object ScaladexSearch {
           val added = {
             val hideAdded =
               if (searchState.selecteds.isEmpty) display.none
-              else EmptyTag
+              else EmptyVdom
 
             div(`class` := "added", hideAdded)(
               searchState.selecteds.toList.sorted.map(
@@ -421,7 +421,7 @@ object ScaladexSearch {
                     ),
                     options = renderOptions(selected)
                 )
-              )
+              ).toTagMod
             )
           }
 

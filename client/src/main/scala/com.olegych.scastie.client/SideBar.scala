@@ -69,10 +69,10 @@ object SideBar {
               h1("Scastie")
             ),
             ul(`id` := "actions-top", `class` := "actions")(
-              buttonsTop
+              buttonsTop.toTagMod
             ),
             ul(`id` := "actions-bottom", `class` := "actions bottom")(
-              buttonsBottom
+              buttonsBottom.toTagMod
             )
           )
         )

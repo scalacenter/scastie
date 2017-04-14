@@ -13,7 +13,7 @@ object RunButton {
         import View.ctrl
 
         def selected(view: View) =
-          if (view == state.view) TagMod(`class` := "selected") else EmptyTag
+          if (view == state.view) TagMod(`class` := "selected") else EmptyVdom
 
         if (!state.isRunning) {
           li(onClick ==> run,

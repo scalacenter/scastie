@@ -113,9 +113,9 @@ object CodeSnippets {
                               )
                             )
                           )
-                      }
+                      }.toTagMod
                   )
-              }
+              }.toTagMod
             )
           )
         }

@@ -26,7 +26,7 @@ object MainPanel {
 
           val embeddedMenu =
             if (embedded) TagMod(EmbeddedMenu(state, backend))
-            else EmptyTag
+            else EmptyVdom
 
           val debugOutput =
             pre(`class` := "debug")(
@@ -68,12 +68,12 @@ object MainPanel {
               height := s"${h}px",
               width := s"${w}px"
             )
-          }
+          }.toTagMod
 
           def containerStyle: TagMod = Seq(
             height := s"${innerHeight - topBarHeight}px",
             width := s"${innerWidth - sideBarWidth}px"
-          )
+          ).toTagMod
 
           div(`class` := "main-panel")(
             //debugOutput,

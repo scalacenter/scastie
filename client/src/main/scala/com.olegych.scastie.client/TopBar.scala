@@ -19,22 +19,22 @@ object TopBar {
           )
         }
 
-        def feedback(e: ReactEventI): Callback =
+        def feedback(e: ReactEventFromInput): Callback =
           openInNewTab("https://gitter.im/scalacenter/scastie")
 
-        def issue(e: ReactEventI): Callback =
+        def issue(e: ReactEventFromInput): Callback =
           openInNewTab("https://github.com/scalacenter/scastie/issues/new")
 
         def selected(view: View) =
-          if (view == state.view) TagMod(`class` := "selected") else EmptyTag
+          if (view == state.view) TagMod(`class` := "selected") else EmptyVdom
 
         val logoutUrl = "/logout"
 
-        def logout(e: ReactEventI): Callback =
+        def logout(e: ReactEventFromInput): Callback =
           backend.setView(View.Editor) >>
             Callback(dom.window.location.pathname = logoutUrl)
 
-        def login(e: ReactEventI): Callback =
+        def login(e: ReactEventFromInput): Callback =
           Callback(dom.window.location.pathname = "/login")
 
         val profileButton =

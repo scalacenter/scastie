@@ -14,7 +14,7 @@ object WorksheetButton {
           if (state.inputs.worksheetMode && state.view != View.Editor)
             TagMod(`class` := "enabled alpha")
           else if (state.inputs.worksheetMode) TagMod(`class` := "enabled")
-          else EmptyTag
+          else EmptyVdom
 
         val worksheetModeToogleLabel =
           if (state.inputs.worksheetMode) "OFF"
