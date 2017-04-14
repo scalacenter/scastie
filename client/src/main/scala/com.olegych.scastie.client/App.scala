@@ -18,8 +18,9 @@ object App {
     }
 
   val component =
-    ReactComponentB[AppProps]("App")
-      .initialState(LocalStorage.load.getOrElse(AppState.default))
+    ScalaComponent.builder[AppProps]("App")
+//    ReactComponentB[AppProps]("App")
+      .initialState[AppState](LocalStorage.load.getOrElse(AppState.default))
       .backend(new AppBackend(_))
       .renderPS {
         case (scope, props, state) => {
@@ -30,7 +31,7 @@ object App {
           val sideBar =
             if (!props.isEmbedded)
               TagMod(SideBar(state, scope.backend))
-            else EmptyTag
+            else EmptyVdom
 
           val appClass =
             if (!props.isEmbedded) "app"
@@ -41,7 +42,7 @@ object App {
             else ""
 
           def appStyle: TagMod =
-            Seq(height := s"${innerHeight}px", width := s"${innerWidth}px")
+            Seq(height := s"${innerHeight}px", width := s"${innerWidth}px").toTagMod
 
           div(`class` := s"$appClass $theme $desktop", appStyle)(
             sideBar,

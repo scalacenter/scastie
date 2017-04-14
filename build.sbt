@@ -236,7 +236,7 @@ lazy val codemirror = project
 def react(artifact: String,
           name: String,
           configuration: Configuration = Compile): JSModuleID =
-  "org.webjars.bower" % "react" % "15.3.2" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+  "org.webjars.bower" % "react" % "15.4.2" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
 def reactWithDepends(artifact: String,
                      name: String,
@@ -260,7 +260,8 @@ lazy val client = project
       RuntimeDOM % Test
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.3",
+//      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.3",
+      "com.github.japgolly.scalajs-react" %%% "core" % "1.0.0-RC2",
       "org.webjars" % "font-awesome" % "4.7.0",
       "org.webjars.npm" % "firacode" % "1.205.0",
       "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
