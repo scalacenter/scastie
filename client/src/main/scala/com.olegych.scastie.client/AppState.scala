@@ -151,7 +151,7 @@ case class AppState(
     copy(isReRunningScalaJs = value)
 
   def setSnippetSaved(value: Boolean): AppState =
-    copy(isSnippetSaved = value)
+    copy(isSnippetSaved = value, inputsHasChanged = false)
 
   def toggleForcedDesktop(value: Boolean): AppState =
     copyAndSave(dimensions = dimensions.copy(forcedDesktop = value))
