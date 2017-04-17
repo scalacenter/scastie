@@ -233,6 +233,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       )
     )
 
+  def setDimensions2(e: ReactEventI): Callback = setDimensions()
   def setDimensions(): Callback =
     setTopBarHeight() >>
       setEditorTopBarHeight() >>

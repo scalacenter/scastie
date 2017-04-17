@@ -55,13 +55,18 @@ object SideBar {
         val buttonsBottom: Seq[TagMod] =
           Seq(mobileButton, themeButton, helpButton)
 
-        def actionsContainerStyle: TagMod =
+        def sidebarStyle: TagMod =
           TagMod(
-            height := s"${if (innerHeight < sideBarMinHeight) sideBarMinHeight
-            else innerHeight}px"
+            height := "5000px"
           )
 
-        nav(`id` := "sidebar")(
+        def actionsContainerStyle: TagMod =
+          TagMod(
+            if(forcedDesktop) minHeight := Dimensions.default.minWindowHeight.px
+            else height := innerHeight.toInt.px
+          )
+
+        nav(`id` := "sidebar", sidebarStyle)(
           div(`class` := "actions-container", actionsContainerStyle)(
             div(`class` := "logo")(
               img(src := "/assets/public/img/icon-scastie.png"),

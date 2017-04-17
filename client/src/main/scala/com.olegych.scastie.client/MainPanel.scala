@@ -52,29 +52,37 @@ object MainPanel {
                   |""".stripMargin
             )
 
-          def editorStyle: TagMod = {
-            val h =
-              innerHeight -
-                topBarHeight -
-                editorTopBarHeight -
+          val editorHeight =
+            innerHeight -
+              topBarHeight -
+              editorTopBarHeight -
                 (
-                  if (state.consoleState.consoleIsOpen) consoleHeight
-                  else consoleBarHeight
+                if (state.consoleState.consoleIsOpen) consoleHeight
+                else consoleBarHeight
                 ) -
-                mobileBarHeight
+              mobileBarHeight
 
-            Seq(
-              minHeight := s"${h}px"
-            )
-          }
+          def editorStyle: TagMod = Seq(
+            minHeight :=
+              (if(forcedDesktop) Dimensions.default.minWindowHeight
+              else editorHeight.toInt).px,
+            minWidth :=
+              ((if(forcedDesktop) Dimensions.default.minWindowWidth
+              else innerWidth.toInt) - sideBarWidth).px
+          )
+
+          def codeStyle: TagMod = Seq(
+            height := editorHeight.px
+          )
 
           def containerStyle: TagMod = Seq(
-            minHeight := s"${
-              if(forcedDesktop) Dimensions.default.minWindowHeight
-              else innerHeight - topBarHeight}px",
-            minWidth := s"${
-              (if(forcedDesktop) Dimensions.default.minWindowWidth
-              else innerWidth.toInt) - sideBarWidth}px"
+            if(forcedDesktop)
+              minHeight := Dimensions.default.minWindowHeight.px
+            else
+              height := (innerHeight - topBarHeight).px,
+            minWidth :=
+              ((if(forcedDesktop) Dimensions.default.minWindowWidth
+              else innerWidth.toInt) - sideBarWidth).px
           )
 
           div(`class` := "main-panel")(
@@ -84,9 +92,11 @@ object MainPanel {
             div(`id` := "content")(
               div(`id` := "editor-container",
                   `class` := "inner-container",
-                  show(View.Editor))(
-                div(`id` := "code", editorStyle)(Editor(state, backend),
-                                                 embeddedMenu),
+                  show(View.Editor),
+                  containerStyle)(
+                div(`id` := "code", codeStyle)(
+                  Editor(state, backend), embeddedMenu
+                ),
                 Console(state, backend)
               ),
               div(`id` := "settings-container",

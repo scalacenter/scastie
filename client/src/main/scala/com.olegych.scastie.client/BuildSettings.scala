@@ -241,7 +241,9 @@ object BuildSettings {
           } else EmptyTag
 
         def containerStyle: TagMod = Seq(
-          height := s"${dom.window.innerHeight - topBarHeight}px"
+          if(forcedDesktop)
+            height := (dom.window.innerHeight - topBarHeight).px
+          else EmptyTag
         )
 
         div(`id` := "build-settings-container", containerStyle)(

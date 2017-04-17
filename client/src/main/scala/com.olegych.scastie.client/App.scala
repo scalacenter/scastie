@@ -41,9 +41,12 @@ object App {
             else ""
 
           def appStyle: TagMod =
-            Seq(height := s"${innerHeight}px", width := s"${innerWidth}px")
+            if(state.dimensions.forcedDesktop)
+              Seq(minHeight := "5000px",
+              minWidth := Dimensions.default.minWindowWidth.px)
+            else Seq(height := innerHeight.px, width := innerWidth.px)
 
-          div(`class` := s"$appClass $theme $desktop", appStyle)(
+          div(`id` := "app", `class` := s"$appClass $theme $desktop", appStyle)(
             sideBar,
             MainPanel(state, scope.backend, props),
             Welcome(state, scope.backend),
@@ -56,7 +59,16 @@ object App {
       .componentWillMount { current =>
         current.backend.start(current.props) >> setTitle(current.state)
       }
-      .componentDidMount(_.backend.setDimensions())
+      .componentDidMount{ s =>
+
+        val detectGesture = Callback(
+          dom.document
+            .getElementById("app")
+            .addEventListener("gesturechange gestureend touchstart touchmove touchend",  s.backend.setDimensions2 _)
+        )
+
+        s.backend.setDimensions() >> detectGesture
+      }
       .componentDidUpdate { v =>
         val state = v.prevState
         val backend = v.$.backend
