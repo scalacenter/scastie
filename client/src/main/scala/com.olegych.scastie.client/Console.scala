@@ -22,12 +22,11 @@ object Console {
             if (state.consoleState.consoleIsOpen) (display.block, display.none)
             else (display.none, display.block)
 
-          val currentWidth = s"${dom.window.innerWidth - sideBarWidth}px"
+          val currentWidth = (dom.window.innerWidth - sideBarWidth).px
 
-          val minConsoleWidth = s"${
-            (if(forcedDesktop) Dimensions.default.minWindowWidth
-            else dom.window.innerWidth.toInt) - sideBarWidth
-          }px"
+          val minConsoleWidth =
+            ((if(forcedDesktop) Dimensions.default.minWindowWidth
+            else dom.window.innerWidth.toInt) - sideBarWidth).px
 
           def consoleStyle: TagMod = Seq(
             displayConsole,

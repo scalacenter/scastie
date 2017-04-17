@@ -70,9 +70,9 @@ object TopBar {
         }
 
         def topBarStyle: TagMod = Seq(
-          minWidth := s"${
-            if(state.dimensions.forcedDesktop) Dimensions.default.minWindowWidth
-            else dom.window.innerWidth.toInt}px"
+          minWidth :=
+            (if(state.dimensions.forcedDesktop) Dimensions.default.minWindowWidth
+            else dom.window.innerWidth.toInt).px
         )
 
         val userName = state.user.map(_.login).getOrElse("Login")
