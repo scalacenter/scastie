@@ -136,8 +136,7 @@ body {
             body .app.light .modal .modal-fade-screen .modal-share .snippet-link #link-to-copy {
               border: 0px;
               width: calc(100% - 46px);
-              height: 100%;
-              padding: 15px;
+              padding-left: 15px;
               font: inherit;
               font-size: 18px;
               display: inline-block;
@@ -950,13 +949,7 @@ body {
     @media only screen and (max-width: 720px) {
       body .app.light .modal .modal-window {
         width: 90%;
-        height: 90%; }
-      body .app.light .modal .modal-inner .snippet-link {
-        height: 58px; }
-        body .app.light .modal .modal-inner .snippet-link #link-to-copy {
-          padding: 10px; }
-        body .app.light .modal .modal-inner .snippet-link .snippet-clip {
-          padding: 16px; } }
+        height: 90%; } }
     @media only screen and (max-width: 720px) and (min-width: 480px) {
       body .app.light:not(.force-desktop) #sidebar h1 {
         display: none !important; }
