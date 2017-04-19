@@ -117,11 +117,13 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
     val snippetId = SnippetId("", None)
 
-    val setData = scope.modState(_.clearOutputs
-      .setInputs(Inputs.default.copy(code = ""))
-      .setSnippetSaved(false)
-      .setSnippetId(snippetId)
-      .setChangedInputs)
+    val setData = scope.modState(
+      _.clearOutputs
+        .setInputs(Inputs.default.copy(code = ""))
+        .setSnippetSaved(false)
+        .setSnippetId(snippetId)
+        .setChangedInputs
+    )
 
     val setPage = scope.props.flatMap(
       props =>
@@ -298,23 +300,24 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.state.flatMap(
       state =>
         if (!state.isSnippetSaved) {
-            Callback.future(
-              ApiClient[AutowireApi]
-                .save(state.inputs)
-                .call()
-                .map(
-                  snippetId =>
-                    scope.modState(
-                      _.setLoadSnippet(false).setCleanInputs.setSnippetSaved(true)
-                    ) >>
+          Callback.future(
+            ApiClient[AutowireApi]
+              .save(state.inputs)
+              .call()
+              .map(
+                snippetId =>
+                  scope.modState(
+                    _.setLoadSnippet(false).setCleanInputs
+                      .setSnippetSaved(true)
+                  ) >>
                     scope.props.flatMap(
                       props =>
                         props.router
                           .map(_.set(Page.fromSnippetId(snippetId)))
                           .getOrElse(Callback(()))
                   )
-                )
-            )
+              )
+          )
         } else Callback(())
     )
   }
@@ -359,12 +362,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 case Some(sId) =>
                   val page = Page.fromSnippetId(sId)
                   scope.modState(_.setSnippetSaved(true)) >>
-                  scope.modState(
-                    _.setLoadSnippet(false).clearOutputs
-                  ) >>
-                  scope.props.flatMap(
-                    _.router.map(_.set(page)).getOrElse(Callback(()))
-                  )
+                    scope.modState(
+                      _.setLoadSnippet(false).clearOutputs
+                    ) >>
+                    scope.props.flatMap(
+                      _.router.map(_.set(page)).getOrElse(Callback(()))
+                    )
                 case None => Callback(window.alert("Failed to fork"))
               }
           )
@@ -386,12 +389,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 case Some(sId) =>
                   val page = Page.fromSnippetId(sId)
                   scope.modState(_.setSnippetSaved(true)) >>
-                  scope.modState(
-                    _.setLoadSnippet(false).clearOutputs
-                  ) >>
-                  scope.props.flatMap(
-                    _.router.map(_.set(page)).getOrElse(Callback(()))
-                  )
+                    scope.modState(
+                      _.setLoadSnippet(false).clearOutputs
+                    ) >>
+                    scope.props.flatMap(
+                      _.router.map(_.set(page)).getOrElse(Callback(()))
+                    )
                 case None => Callback(window.alert("Failed to update"))
               }
           )
@@ -419,7 +422,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 case _ =>
                   scope.modState(_.setCode(s"//snippet not found"))
               }
-          ) >> setView(View.Editor) >> scope.modState(_.clearOutputs.closeModals)
+          ) >> setView(View.Editor) >> scope.modState(
+            _.clearOutputs.closeModals
+          )
         } else {
           scope.modState(_.setLoadSnippet(true))
       }

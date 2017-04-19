@@ -6,9 +6,12 @@ import japgolly.scalajs.react._
 import vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.window._
-import org.scalajs.dom.raw.HTMLScriptElement
+import org.scalajs.dom.raw.{HTMLScriptElement, HTMLDivElement}
 
 object App {
+
+  private val appElement =
+    Ref[HTMLDivElement]("app-element")
 
   private def setTitle(state: AppState) =
     if (state.inputsHasChanged) {
@@ -41,12 +44,14 @@ object App {
             else ""
 
           def appStyle: TagMod =
-            if(state.dimensions.forcedDesktop)
+            if (state.dimensions.forcedDesktop)
               Seq(minHeight := "5000px",
-              minWidth := Dimensions.default.minWindowWidth.px)
+                  minWidth := Dimensions.default.minWindowWidth.px)
             else Seq(height := innerHeight.px, width := innerWidth.px)
 
-          div(`id` := "app", `class` := s"$appClass $theme $desktop", appStyle)(
+          div(ref := appElement,
+              `class` := s"$appClass $theme $desktop",
+              appStyle)(
             sideBar,
             MainPanel(state, scope.backend, props),
             Welcome(state, scope.backend),
@@ -59,15 +64,16 @@ object App {
       .componentWillMount { current =>
         current.backend.start(current.props) >> setTitle(current.state)
       }
-      .componentDidMount{ s =>
-
+      .componentDidMount { scope =>
         val detectGesture = Callback(
-          dom.document
-            .getElementById("app")
-            .addEventListener("gesturechange gestureend touchstart touchmove touchend",  s.backend.setDimensions2 _)
+          appElement(scope).get
+            .addEventListener(
+              "gesturechange gestureend touchstart touchmove touchend",
+              scope.backend.setDimensions2 _
+            )
         )
 
-        s.backend.setDimensions() >> detectGesture
+        scope.backend.setDimensions() >> detectGesture
       }
       .componentDidUpdate { v =>
         val state = v.prevState

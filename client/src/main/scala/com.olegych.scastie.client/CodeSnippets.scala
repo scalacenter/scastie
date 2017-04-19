@@ -71,9 +71,8 @@ object CodeSnippets {
                "Github user")
           }
 
-
           def containerStyle: TagMod = Seq(
-            if(forcedDesktop)
+            if (forcedDesktop)
               height := (innerHeight - topBarHeight).px
             else EmptyTag
           )

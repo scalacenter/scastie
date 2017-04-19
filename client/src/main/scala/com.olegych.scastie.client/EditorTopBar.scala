@@ -16,8 +16,10 @@ object EditorTopBar {
 
         def topBarStyle: TagMod = Seq(
           minWidth :=
-            (if(state.dimensions.forcedDesktop) Dimensions.default.minWindowWidth
-            else dom.window.innerWidth.toInt - state.dimensions.sideBarWidth).px
+            (if (state.dimensions.forcedDesktop)
+               Dimensions.default.minWindowWidth
+             else
+               dom.window.innerWidth.toInt - state.dimensions.sideBarWidth).px
         )
 
         nav(`id` := "editor-topbar", isDisabled, topBarStyle)(

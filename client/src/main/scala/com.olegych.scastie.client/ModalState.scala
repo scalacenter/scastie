@@ -9,8 +9,7 @@ object ModalState {
   )
 }
 
-case class ModalState(
-  isWelcomeModalClosed: Boolean,
-  isHelpModalClosed: Boolean,
-  isShareModalClosed: Boolean,
-  isResetModalClosed: Boolean)
+case class ModalState(isWelcomeModalClosed: Boolean,
+                      isHelpModalClosed: Boolean,
+                      isShareModalClosed: Boolean,
+                      isResetModalClosed: Boolean)

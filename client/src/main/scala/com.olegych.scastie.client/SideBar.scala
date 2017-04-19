@@ -62,7 +62,8 @@ object SideBar {
 
         def actionsContainerStyle: TagMod =
           TagMod(
-            if(forcedDesktop) minHeight := Dimensions.default.minWindowHeight.px
+            if (forcedDesktop)
+              minHeight := Dimensions.default.minWindowHeight.px
             else height := innerHeight.toInt.px
           )
 

@@ -56,19 +56,19 @@ object MainPanel {
             innerHeight -
               topBarHeight -
               editorTopBarHeight -
-                (
+              (
                 if (state.consoleState.consoleIsOpen) consoleHeight
                 else consoleBarHeight
-                ) -
+              ) -
               mobileBarHeight
 
           def editorStyle: TagMod = Seq(
             minHeight :=
-              (if(forcedDesktop) Dimensions.default.minWindowHeight
-              else editorHeight.toInt).px,
+              (if (forcedDesktop) Dimensions.default.minWindowHeight
+               else editorHeight.toInt).px,
             minWidth :=
-              ((if(forcedDesktop) Dimensions.default.minWindowWidth
-              else innerWidth.toInt) - sideBarWidth).px
+              ((if (forcedDesktop) Dimensions.default.minWindowWidth
+                else innerWidth.toInt) - sideBarWidth).px
           )
 
           def codeStyle: TagMod = Seq(
@@ -76,13 +76,13 @@ object MainPanel {
           )
 
           def containerStyle: TagMod = Seq(
-            if(forcedDesktop)
+            if (forcedDesktop)
               minHeight := Dimensions.default.minWindowHeight.px
             else
               height := (innerHeight - topBarHeight).px,
             minWidth :=
-              ((if(forcedDesktop) Dimensions.default.minWindowWidth
-              else innerWidth.toInt) - sideBarWidth).px
+              ((if (forcedDesktop) Dimensions.default.minWindowWidth
+                else innerWidth.toInt) - sideBarWidth).px
           )
 
           div(`class` := "main-panel")(
@@ -95,7 +95,8 @@ object MainPanel {
                   show(View.Editor),
                   containerStyle)(
                 div(`id` := "code", codeStyle)(
-                  Editor(state, backend), embeddedMenu
+                  Editor(state, backend),
+                  embeddedMenu
                 ),
                 Console(state, backend)
               ),

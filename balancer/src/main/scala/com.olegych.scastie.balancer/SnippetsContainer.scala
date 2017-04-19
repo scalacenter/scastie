@@ -81,7 +81,8 @@ class SnippetsContainer(root: Path) {
 
   def amend(snippetId: SnippetId, inputs: Inputs): Boolean = {
     if (delete(snippetId)) {
-      write(inputsFile(snippetId), uwrite(inputs.copy(showInUserProfile = true)))
+      write(inputsFile(snippetId),
+            uwrite(inputs.copy(showInUserProfile = true)))
       true
     } else false
   }

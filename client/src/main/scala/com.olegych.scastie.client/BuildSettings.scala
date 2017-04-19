@@ -226,7 +226,6 @@ object BuildSettings {
   private val component =
     ReactComponentB[(AppState, AppBackend)]("BuildSettings").render_P {
       case (state, backend) =>
-
         import state.dimensions._
 
         val theme = if (state.isDarkTheme) "dark" else "light"
@@ -241,7 +240,7 @@ object BuildSettings {
           } else EmptyTag
 
         def containerStyle: TagMod = Seq(
-          if(forcedDesktop)
+          if (forcedDesktop)
             height := (dom.window.innerHeight - topBarHeight).px
           else EmptyTag
         )
