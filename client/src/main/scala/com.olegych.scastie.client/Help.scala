@@ -74,10 +74,9 @@ object Help {
                   )
                 ),
                 h2("Build Settings"),
-                p(`class` := "normal", "In")(
-                  b("Build Settings"),
-                  """you can change the Scala version and add libraries,
-                              choose your desired target and even add your own custom sbt configuration."""
+                p(
+                  `class` := "normal",
+                  "In Build Settings you can change the Scala version and add libraries, choose your desired target and even add your own custom sbt configuration."
                 ),
                 h2("User's Code Snippets"),
                 p(
