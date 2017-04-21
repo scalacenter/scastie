@@ -264,7 +264,9 @@ lazy val client = project
       "org.webjars" % "font-awesome" % "4.7.0",
       "org.webjars.npm" % "firacode" % "1.205.0",
       "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
-      "com.github.japgolly.scalajs-react" %%% "test" % "0.11.3" % Test
+      "com.github.japgolly.scalajs-react" %%% "test" % "0.11.3" % Test,
+      "org.webjars.bower" % "bourbon" % "3.1.8",
+      "org.webjars.bower" % "neat" % "1.8.0"
     ),
     requiresDOM := true,
     persistLauncher := true,
