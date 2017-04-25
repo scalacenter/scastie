@@ -70,3 +70,7 @@ RUN apk update && apk add --no-cache fontconfig && \
   && ln -s /usr/share/phantomjs/phantomjs /usr/bin/phantomjs
 
 RUN apk add --update graphviz
+
+ENV LANG en_US.UTF-8
+
+RUN apk add --update font-adobe-100dpi 

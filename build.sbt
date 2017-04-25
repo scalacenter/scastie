@@ -17,7 +17,7 @@ lazy val scalaTestVersion = "3.0.1"
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.16.0"
+  version := "0.17.0"
 )
 
 lazy val baseSettings = Seq(
@@ -109,6 +109,7 @@ lazy val sbtRunner = project
       }
       case x => MergeStrategy.first
     },
+    test in assembly := {},
     dockerfile in docker := Def
       .task {
         val ivy = ivyPaths.value.ivyHome.get
@@ -118,7 +119,7 @@ lazy val sbtRunner = project
         val artifactTargetPath = s"/app/${artifact.name}"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.11")
+          from("scalacenter/scastie-docker-sbt:0.0.13")
 
           add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 

@@ -7,6 +7,8 @@ import java.util.UUID
 
 import upickle.default.{write => uwrite}
 
+import java.awt.image.BufferedImage
+
 object Runtime extends SharedRuntime {
   def write(in: Either[Option[RuntimeError], List[Instrumentation]]): String = {
     uwrite(in)
@@ -22,4 +24,10 @@ object Runtime extends SharedRuntime {
       case _ => super.render(a)
     }
   }
+
+  def image(path: String): Html = 
+    throw new Exception("image(path: String): Html works only on the jvm")
+
+  def toBase64(in: BufferedImage): Html =
+    throw new Exception("toBase64(in: BufferedImage): Html works only on the jvm")
 }

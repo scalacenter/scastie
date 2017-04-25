@@ -98,3 +98,8 @@ Those people have access:
 6. Run this command locally: `sbt deploy`
 
 7. Make sure everything went well: https://scastie.scala-lang.org
+
+
+## Running with docker locally
+
+`docker run --network=host scalacenter/scastie-sbt-runner:0.16.0`
