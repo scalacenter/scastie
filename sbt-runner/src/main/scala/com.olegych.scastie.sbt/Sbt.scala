@@ -3,8 +3,6 @@ package sbt
 
 import api._
 
-import com.typesafe.config.ConfigFactory
-
 import scala.util.Random
 import System.{lineSeparator => nl}
 import org.slf4j.LoggerFactory
@@ -14,9 +12,6 @@ import java.io.{IOException, BufferedReader, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
 class Sbt(defaultConfig: Inputs) {
-  private val config =
-    ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
-  private val production = config.getBoolean("production")
 
   private val log = LoggerFactory.getLogger(getClass)
 

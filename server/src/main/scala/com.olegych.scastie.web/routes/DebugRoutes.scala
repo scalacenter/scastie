@@ -9,12 +9,11 @@ import server.Directives._
 
 import akka.util.Timeout
 import akka.pattern.ask
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
 
 import scala.concurrent.duration.DurationInt
 
-class DebugRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
-  // import system.dispatcher
+class DebugRoutes(dispatchActor: ActorRef) {
 
   implicit val timeout = Timeout(1.seconds)
 

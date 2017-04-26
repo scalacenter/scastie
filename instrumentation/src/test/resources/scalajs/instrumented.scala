@@ -5,7 +5,7 @@ import org.scalajs.dom.html.Canvas
 
 locally {val t = dom.document.createElement("canvas").asInstanceOf[Canvas]; instrumentationMap$(_root_.com.olegych.scastie.api.Position(59, 116)) = _root_.com.olegych.scastie.api.runtime.Runtime.render(t, attach _);t} 
 }
-@_root_.scala.scalajs.js.annotation.JSExport object Main {
+@_root_.scala.scalajs.js.annotation.JSExport class Main {
   val playground = _root_.com.olegych.scastie.api.RuntimeError.wrap(new Playground)
   @_root_.scala.scalajs.js.annotation.JSExport def result = _root_.com.olegych.scastie.api.runtime.Runtime.write(playground.right.map(_.instrumentations$))
   @_root_.scala.scalajs.js.annotation.JSExport def attachedElements: _root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement] =

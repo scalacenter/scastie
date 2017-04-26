@@ -6,7 +6,7 @@ import js.annotation._
 import org.scalajs.dom.raw.Element
 
 @js.native
-@JSName("Doc")
+@JSGlobal("Doc")
 class Document protected () extends js.Object {
   def getValue(separator: UndefOr[String] = undefined): String = js.native
   def setValue(content: String): Unit = js.native

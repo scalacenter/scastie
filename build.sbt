@@ -15,13 +15,41 @@ lazy val autowireVersion = "0.2.5"
 lazy val scalajsDomVersion = "0.9.1"
 lazy val scalaTestVersion = "3.0.1"
 
+lazy val scastie = project
+  .in(file("."))
+  .aggregate(
+    server,
+    balancer,
+    instrumentation,
+    sbtRunner,
+    codemirror,
+    client,
+    runtimeDotty,
+    sbtScastie,
+    runtimeScala210JVM,
+    runtimeScala210JS,
+    runtimeScala211JVM,
+    runtimeScala211JS,
+    runtimeScala212JVM,
+    runtimeScala212JS,
+    api210JVM,
+    api210JS,
+    api211JVM,
+    api211JS,
+    api212JVM,
+    api212JS
+  )
+  .settings(orgSettings)
+  .settings(Deployment.settings(server, sbtRunner))
+  .settings(addCommandAlias("drone", ";test ;server/universal:packageBin"))
+
 lazy val orgSettings = Seq(
   organization := "org.scastie",
   version := "0.17.0"
 )
 
 lazy val baseSettings = Seq(
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.12.2",
   scalacOptions := {
     val extraOptions =
       if (scalaBinaryVersion.value != "2.10") {
@@ -59,7 +87,7 @@ lazy val utils = project
   .settings(
     libraryDependencies += akka("actor")
   )
-  .dependsOn(api211JVM)
+  .dependsOn(api212JVM)
 
 lazy val runnerRuntimeDependencies = Seq(
   runtimeScala210JVM,
@@ -90,7 +118,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("remote"),
       akka("slf4j"),
-      "com.geirsson" %% "scalafmt-core" % "0.5.7"
+      "com.geirsson" %% "scalafmt-core" % "0.7.0-RC1"
     ),
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "com.olegych.scastie.buildinfo",
@@ -144,7 +172,7 @@ lazy val sbtRunner = project
       .dependsOn(runnerRuntimeDependencies: _*)
       .evaluated
   )
-  .dependsOn(api211JVM, instrumentation, utils)
+  .dependsOn(api212JVM, instrumentation, utils)
   .enablePlugins(sbtdocker.DockerPlugin, BuildInfoPlugin)
 
 lazy val server = project
@@ -168,7 +196,7 @@ lazy val server = project
     )
   )
   .enablePlugins(SbtWeb, JavaServerAppPackaging)
-  .dependsOn(api211JVM, utils, balancer)
+  .dependsOn(api212JVM, utils, balancer)
 
 lazy val balancer = project
   .settings(baseSettings)
@@ -179,27 +207,7 @@ lazy val balancer = project
       akkaHttpCore
     )
   )
-  .dependsOn(api211JVM, utils)
-
-lazy val scastie = project
-  .in(file("."))
-  .aggregate(
-    server,
-    balancer,
-    instrumentation,
-    sbtRunner,
-    codemirror,
-    client,
-    runtimeDotty,
-    sbtScastie,
-    runtimeScala211JVM,
-    runtimeScala211JS,
-    api211JVM,
-    api211JS
-  )
-  .settings(orgSettings)
-  .settings(Deployment.settings(server, sbtRunner))
-  .settings(addCommandAlias("drone", ";test ;server/universal:packageBin"))
+  .dependsOn(api212JVM, utils)
 
 /* codemirror is a facade to the javascript rich editor codemirror*/
 lazy val codemirror = project
@@ -270,24 +278,24 @@ lazy val client = project
       "org.webjars.bower" % "neat" % "1.8.0"
     ),
     requiresDOM := true,
-    persistLauncher := true,
-    persistLauncher in Test := false,
+    // persistLauncher := true,
+    // persistLauncher in Test := false,
     scalaJSStage in Test := FastOptStage,
     jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
-  .dependsOn(codemirror, api211JS)
+  .dependsOn(codemirror, api212JS)
 
 lazy val instrumentation = project
   .settings(baseSettings)
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "1.6.0",
+      "org.scalameta" %% "scalameta" % "1.7.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
-  .dependsOn(api211JVM, utils)
+  .dependsOn(api212JVM, utils)
 
 def crossDir(projectId: String) = file(".cross/" + projectId)
 def dash(name: String) = name.replaceAllLiterally(".", "-")
