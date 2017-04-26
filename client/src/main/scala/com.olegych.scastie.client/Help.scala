@@ -9,7 +9,7 @@ object Help {
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("Help").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("Help").render_P {
       case (state, backend) =>
         def generateATag(url: String, text: String) =
           a(href := url, target := "_blank", rel := "nofollow", text)

@@ -9,7 +9,7 @@ object TopBar {
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("TopBar").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("TopBar").render_P {
       case (state, backend) =>
         import backend._
 
@@ -19,22 +19,22 @@ object TopBar {
           )
         }
 
-        def feedback(e: ReactEventI): Callback =
+        def feedback(e: ReactEventFromInput): Callback =
           openInNewTab("https://gitter.im/scalacenter/scastie")
 
-        def issue(e: ReactEventI): Callback =
+        def issue(e: ReactEventFromInput): Callback =
           openInNewTab("https://github.com/scalacenter/scastie/issues/new")
 
         def selected(view: View) =
-          if (view == state.view) TagMod(`class` := "selected") else EmptyTag
+          if (view == state.view) TagMod(`class` := "selected") else EmptyVdom
 
         val logoutUrl = "/logout"
 
-        def logout(e: ReactEventI): Callback =
+        def logout(e: ReactEventFromInput): Callback =
           backend.setView(View.Editor) >>
             Callback(dom.window.location.pathname = logoutUrl)
 
-        def login(e: ReactEventI): Callback =
+        def login(e: ReactEventFromInput): Callback =
           Callback(dom.window.location.pathname = "/login")
 
         val profileButton =
@@ -69,7 +69,7 @@ object TopBar {
           case None => i(`class` := "fa fa-user-circle")
         }
 
-        def topBarStyle: TagMod = Seq(
+        def topBarStyle = Seq(
           minWidth :=
             (if (state.dimensions.forcedDesktop)
                Dimensions.default.minWindowWidth
@@ -78,7 +78,7 @@ object TopBar {
 
         val userName = state.user.map(_.login).getOrElse("Login")
 
-        nav(`id` := "topbar", topBarStyle)(
+        nav(`id` := "topbar", topBarStyle.toTagMod)(
           div(`class` := "logo")(
             img(src := "/assets/public/img/icon-scastie.png"),
             h1("Scastie")

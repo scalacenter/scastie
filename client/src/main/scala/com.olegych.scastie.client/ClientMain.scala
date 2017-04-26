@@ -26,8 +26,8 @@ object ClientMain extends JSApp {
     container.className = "root"
     dom.document.body.appendChild(container)
 
-    ReactDOM.render(
-      Router(BaseUrl.fromWindowOrigin_/, Routing.config)(),
+    
+    Router(BaseUrl.fromWindowOrigin_/, Routing.config)().renderIntoDOM(
       container
     )
 
@@ -52,6 +52,7 @@ object ClientMain extends JSApp {
           List(node)
         }
       }
+
     val embeddedOptions =
       options.toOption
         .map(EmbededOptions.fromJs)
@@ -66,14 +67,14 @@ object ClientMain extends JSApp {
             embeddedOptions
           else embeddedOptions.setCode(node.textContent)
 
-        ReactDOM.render(
+        
           App(
             AppProps(
               router = None,
               snippetId = None,
               embedded = Some(embeddedOptions0)
             )
-          ),
+          ).renderIntoDOM(
           container
         )
 

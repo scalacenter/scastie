@@ -8,13 +8,13 @@ import org.scalajs.dom
 object EditorTopBar {
 
   private val component =
-    ReactComponentB[(AppState, AppBackend, Option[SnippetId])]("EditorTopBar").render_P {
+    ScalaComponent.builder[(AppState, AppBackend, Option[SnippetId])]("EditorTopBar").render_P {
       case (state, backend, snippetId) =>
         def isDisabled =
           if (state.view != View.Editor) TagMod(`class` := "disabled")
-          else EmptyTag
+          else EmptyVdom
 
-        def topBarStyle: TagMod = Seq(
+        def topBarStyle = Seq(
           minWidth :=
             (if (state.dimensions.forcedDesktop)
                Dimensions.default.minWindowWidth
@@ -22,7 +22,7 @@ object EditorTopBar {
                dom.window.innerWidth.toInt - state.dimensions.sideBarWidth).px
         )
 
-        nav(`id` := "editor-topbar", isDisabled, topBarStyle)(
+        nav(`id` := "editor-topbar", isDisabled, topBarStyle.toTagMod)(
           ul(`class` := "editor-buttons")(
             RunButton(state, backend),
             NewButton(state, backend),

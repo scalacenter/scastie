@@ -9,7 +9,7 @@ object Reset {
     component((state, backend))
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("Reset").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("Reset").render_P {
       case (state, backend) =>
         val displayReset =
           if (state.modalState.isResetModalClosed) display.none

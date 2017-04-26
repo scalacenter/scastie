@@ -10,8 +10,7 @@ import org.scalajs.dom.raw.{HTMLScriptElement, HTMLDivElement}
 
 object App {
 
-  private val appElement =
-    Ref[HTMLDivElement]("app-element")
+  private var appElement: HTMLDivElement = _
 
   private def setTitle(state: AppState) =
     if (state.inputsHasChanged) {
@@ -20,8 +19,8 @@ object App {
       Callback(dom.document.title = "Scastie")
     }
 
-  val component =
-    ReactComponentB[AppProps]("App")
+  private val component =
+    ScalaComponent.builder[AppProps]("App")
       .initialState(LocalStorage.load.getOrElse(AppState.default))
       .backend(new AppBackend(_))
       .renderPS {
@@ -33,7 +32,7 @@ object App {
           val sideBar =
             if (!props.isEmbedded)
               TagMod(SideBar(state, scope.backend))
-            else EmptyTag
+            else EmptyVdom
 
           val appClass =
             if (!props.isEmbedded) "app"
@@ -43,15 +42,15 @@ object App {
             if (state.dimensions.forcedDesktop) "force-desktop"
             else ""
 
-          def appStyle: TagMod =
+          def appStyle =
             if (state.dimensions.forcedDesktop)
               Seq(minHeight := "5000px",
                   minWidth := Dimensions.default.minWindowWidth.px)
             else Seq(height := innerHeight.px, width := innerWidth.px)
 
-          div(ref := appElement,
+          div.ref(appElement = _)(
               `class` := s"$appClass $theme $desktop",
-              appStyle)(
+              appStyle.toTagMod)(
             sideBar,
             MainPanel(state, scope.backend, props),
             Welcome(state, scope.backend),
@@ -66,23 +65,20 @@ object App {
       }
       .componentDidMount { scope =>
         val detectGesture = Callback(
-          appElement(scope).get
-            .addEventListener(
-              "gesturechange gestureend touchstart touchmove touchend",
-              scope.backend.setDimensions2 _
-            )
+          appElement.addEventListener(
+            "gesturechange gestureend touchstart touchmove touchend",
+            scope.backend.setDimensions2 _
+          )
         )
 
         scope.backend.setDimensions() >> detectGesture
       }
-      .componentDidUpdate { v =>
-        val state = v.prevState
-        val backend = v.$.backend
-        val scope = v.$
-        val direct = scope.accessDirect
+      .componentDidUpdate { scope =>
+        val state = scope.prevState
+        val backend = scope.backend
 
         val setDimensions =
-          if (direct.state.dimensions.dimensionsHaveChanged) {
+          if (state.dimensions.dimensionsHaveChanged) {
             backend.setDimensions()
 
           } else Callback(())
@@ -109,72 +105,79 @@ object App {
           println("== Running Scala.js ==")
           scalaJsRunScriptElement.innerHTML =
             """|try {
-               |  var main = new Main()
+               |  var main = new Main();
                |  com.olegych.scastie.client.ClientMain().signal(
                |    main.result,
                |    main.attachedElements
-               |  )
+               |  );
                |} catch (e) {
-               | console.log("== Caught JS Error ==")
-               | console.log(e)
+               | console.log(window);
+               | console.log("== Caught JS Error ==");
+               | console.log(e);
                |}""".stripMargin
         }
 
         val executeScalaJs =
-          if (direct.state.loadScalaJsScript &&
-              !direct.state.isScalaJsScriptLoaded &&
-              direct.state.snippetIdIsScalaJS &&
-              direct.state.snippetId.nonEmpty &&
-              !direct.state.isRunning) {
+          if (state.loadScalaJsScript &&
+              !state.isScalaJsScriptLoaded &&
+              state.snippetIdIsScalaJS &&
+              state.snippetId.nonEmpty &&
+              !state.isRunning) {
 
-            direct.modState(
-              _.setLoadScalaJsScript(false).scalaJsScriptLoaded
-                .setRunning(true)
-            )
+            val setLoaded = 
+              scope.modState(
+                _.setLoadScalaJsScript(false)
+                 .scalaJsScriptLoaded
+                 .setRunning(true)
+              )
 
-            Callback {
-              val scalaJsId = "scastie-scalajs-playground-target"
+            val loadJs =
+              Callback {
+                val scalaJsId = "scastie-scalajs-playground-target"
 
-              def scalaJsUrl(snippetId: SnippetId): String = {
-                val middle =
-                  snippetId match {
-                    case SnippetId(uuid, None) => uuid
-                    case SnippetId(uuid,
-                                   Some(SnippetUserPart(login, update))) =>
-                      s"$login/$uuid/${update.getOrElse(0)}"
-                  }
+                def scalaJsUrl(snippetId: SnippetId): String = {
+                  val middle =
+                    snippetId match {
+                      case SnippetId(uuid, None) => uuid
+                      case SnippetId(uuid,
+                                     Some(SnippetUserPart(login, update))) =>
+                        s"$login/$uuid/${update.getOrElse(0)}"
+                    }
 
-                s"/${Shared.scalaJsHttpPathPrefix}/$middle/${ScalaTarget.Js.targetFilename}"
+                  s"/${Shared.scalaJsHttpPathPrefix}/$middle/${ScalaTarget.Js.targetFilename}"
+                }
+
+                println("== Loading Scala.js ==")
+
+                removeIfExist(scalaJsId)
+                val scalaJsScriptElement = createScript(scalaJsId)
+                scalaJsScriptElement.onload = { (e: dom.Event) =>
+                  runScalaJs()
+                }
+                if (state.snippetId.nonEmpty) {
+                  scalaJsScriptElement.src = scalaJsUrl(state.snippetId.get)
+                } else {
+                  println("empty snippetId")
+                }
               }
 
-              println("== Loading Scala.js ==")
+            setLoaded >> loadJs
 
-              removeIfExist(scalaJsId)
-              val scalaJsScriptElement = createScript(scalaJsId)
-              scalaJsScriptElement.onload = { (e: dom.Event) =>
-                runScalaJs()
-              }
-              if (state.snippetId.nonEmpty) {
-                scalaJsScriptElement.src = scalaJsUrl(state.snippetId.get)
-              } else {
-                println("empty snippetId")
-              }
-            }
           } else Callback(())
 
         val reRunScalaJs =
-          if (direct.state.isReRunningScalaJs) {
+          if (state.isReRunningScalaJs) {
             Callback(runScalaJs()) >>
               scope.modState(_.setIsReRunningScalaJs(false))
           } else Callback(())
 
         setTitle(state) >> setDimensions >> executeScalaJs >> reRunScalaJs
       }
-      .componentWillReceiveProps { v =>
-        val next = v.nextProps.snippetId
-        val current = v.currentProps.snippetId
-        val state = v.$.state
-        val backend = v.$.backend
+      .componentWillReceiveProps { scope =>
+        val next = scope.nextProps.snippetId
+        val current = scope.currentProps.snippetId
+        val state = scope.state
+        val backend = scope.backend
 
         val loadSnippet =
           if (next != current) {

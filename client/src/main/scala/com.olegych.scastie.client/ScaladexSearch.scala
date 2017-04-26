@@ -14,8 +14,6 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import upickle.default.{read => uread}
 
-import scala.language.higherKinds
-
 object ScaladexSearch {
   private[ScaladexSearch] object SearchState {
     def default = SearchState(
@@ -120,23 +118,13 @@ object ScaladexSearch {
       (selected.project, selected.release)
     }
 
-  private val projectListRef = Ref[HTMLElement]("projectListRef")
-  private val searchInputRef = Ref[HTMLInputElement]("searchInputRef")
-
-  implicit final class ReactExt_DomNodeO[O[_], N <: dom.raw.Node](
-      o: O[N]
-  )(implicit O: OptionLike[O]) {
-
-    def tryTo(f: HTMLElement => Unit) =
-      Callback(O.toOption(o).flatMap(_.domToHtml).foreach(f))
-
-    def tryFocus: Callback = tryTo(_.focus())
-  }
+  private var projectListRef: HTMLElement = _
+  private var searchInputRef: HTMLInputElement = _
 
   private[ScaladexSearch] class SearchBackend(
       scope: BackendScope[(AppState, AppBackend), SearchState]
   ) {
-    def keyDown(e: ReactKeyboardEventI): Callback = {
+    def keyDown(e: ReactKeyboardEventFromInput): Callback = {
 
       if (e.keyCode == KeyCode.Down || e.keyCode == KeyCode.Up) {
         val diff =
@@ -152,12 +140,10 @@ object ScaladexSearch {
           b.toDouble / d.toDouble * x.toDouble
         }
 
-        def scrollToSelected(selected: Int, total: Int) =
-          projectListRef(scope).tryTo(
-            el =>
-              el.scrollTop =
-                Math.abs(interpolate(el.scrollHeight, total, selected + diff))
-          )
+        def scrollToSelected(selected: Int, total: Int) = {
+          projectListRef.scrollTop = 
+            Math.abs(interpolate(projectListRef.scrollHeight, total, selected + diff))
+        }
 
         def selectProject =
           scope.modState(
@@ -168,7 +154,7 @@ object ScaladexSearch {
           )
 
         def scrollToSelectedProject =
-          scope.state.flatMap(
+          scope.state.map(
             s => scrollToSelected(s.selectedIndex, s.search.size)
           )
 
@@ -187,7 +173,7 @@ object ScaladexSearch {
                 Callback(())
           )
 
-        addArtifactIfInRange >> searchInputRef(scope).tryFocus
+        addArtifactIfInRange >> Callback(searchInputRef.focus)
       } else {
         Callback(())
       }
@@ -195,7 +181,7 @@ object ScaladexSearch {
 
     def addArtifact(
         projectAndArtifact: (Project, String)
-    )(e: ReactEventI): Callback =
+    )(e: ReactEventFromInput): Callback =
       addArtifact(projectAndArtifact)
 
     private def withBackend(f: AppBackend => Callback): Callback = {
@@ -213,7 +199,7 @@ object ScaladexSearch {
       }
     }
 
-    def removeSelected(selected: Selected)(e: ReactEventI): Callback = {
+    def removeSelected(selected: Selected)(e: ReactEventFromInput): Callback = {
 
       def removeDependencyLocal =
         scope.modState(_.removeSelected(selected))
@@ -243,7 +229,7 @@ object ScaladexSearch {
       )
     }
 
-    def updateVersion(selected: Selected)(e: ReactEventI): Callback = {
+    def updateVersion(selected: Selected)(e: ReactEventFromInput): Callback = {
       e.extract(_.target.value) { version =>
         def updateDependencyVersionLocal =
           scope.modState(_.updateVersion(selected, version))
@@ -255,15 +241,15 @@ object ScaladexSearch {
       }
     }
 
-    def selectIndex(index: Int)(e: ReactEventI): Callback = {
+    def selectIndex(index: Int)(e: ReactEventFromInput): Callback = {
       scope.modState(s => s.copy(selectedIndex = index))
     }
 
-    def resetQuery(e: ReactEventI): Callback = resetQuery()
+    def resetQuery(e: ReactEventFromInput): Callback = resetQuery()
     def resetQuery(): Callback =
       scope.modState(s => s.copy(query = "", projects = Nil))
 
-    def setQuery(e: ReactEventI): Callback = {
+    def setQuery(e: ReactEventFromInput): Callback = {
       e.extract(_.target.value) { value =>
         scope.modState(_.copy(query = value, selectedIndex = 0),
                        fetchProjects())
@@ -336,22 +322,22 @@ object ScaladexSearch {
   }
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("Scaladex Search")
-      .initialState_P(SearchState.fromProps)
+    ScalaComponent.builder[(AppState, AppBackend)]("Scaladex Search")
+      .initialStateFromProps(SearchState.fromProps)
       .backend(new SearchBackend(_))
       .renderPS {
         case (scope, (state, backend), searchState) => {
           def selectedIndex(index: Int, selected: Int) = {
             if (index == selected) TagMod(`class` := "selected")
-            else EmptyTag
+            else EmptyVdom
           }
 
           def renderProject(project: Project,
                             artifact: String,
                             selected: TagMod,
-                            handlers: TagMod = EmptyTag,
-                            remove: TagMod = EmptyTag,
-                            options: TagMod = EmptyTag) = {
+                            handlers: TagMod = EmptyVdom,
+                            remove: TagMod = EmptyVdom,
+                            options: TagMod = EmptyVdom) = {
             import project._
 
             val common = TagMod(title := organization, `class` := "logo")
@@ -399,7 +385,7 @@ object ScaladexSearch {
               select(value := selected.release.version,
                      onChange ==> scope.backend.updateVersion(selected))(
                 selected.options.versions.reverse
-                  .map(v => option(value := v)(v))
+                  .map(v => option(value := v)(v)).toTagMod
               )
             )
           }
@@ -407,7 +393,7 @@ object ScaladexSearch {
           val added = {
             val hideAdded =
               if (searchState.selecteds.isEmpty) display.none
-              else EmptyTag
+              else EmptyVdom
 
             div(`class` := "added", hideAdded)(
               searchState.selecteds.toList.sorted.map(
@@ -421,7 +407,7 @@ object ScaladexSearch {
                     ),
                     options = renderOptions(selected)
                 )
-              )
+              ).toTagMod
             )
           }
 
@@ -436,9 +422,8 @@ object ScaladexSearch {
           div(`class` := "search", `id` := "library")(
             added,
             div(`class` := "search-input")(
-              input.search(
+              input.search.ref(searchInputRef = _)(
                 `class` := "search-query",
-                ref := searchInputRef,
                 placeholder := "Search for 'cats'",
                 value := searchState.query,
                 onChange ==> scope.backend.setQuery,
@@ -450,7 +435,7 @@ object ScaladexSearch {
                 )
               )
             ),
-            div(`class` := "results", ref := projectListRef, displayResults)(
+            div.ref(projectListRef = _)(`class` := "results", displayResults)(
               searchState.search.zipWithIndex.toList.map {
                 case ((project, artifact), index) => {
                   renderProject(
@@ -464,7 +449,7 @@ object ScaladexSearch {
                     )
                   )
                 }
-              }
+              }.toTagMod
             )
           )
         }
@@ -475,17 +460,17 @@ object ScaladexSearch {
 
         val reloadLibraries =
           if (next != current)
-            v.$.backend.reloadSelecteds(next.inputs.librariesFrom)
+            v.backend.reloadSelecteds(next.inputs.librariesFrom)
           else Callback(())
 
         val resetQuery =
           if (next.inputs.copy(code = "") == Inputs.default.copy(code = ""))
-            v.$.backend.resetQuery()
+            v.backend.resetQuery()
           else Callback(())
 
         reloadLibraries >> resetQuery
       }
-      .componentDidMount(s => searchInputRef(s).tryFocus)
+      .componentDidMount(_ => Callback(searchInputRef.focus))
       .build
 
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
