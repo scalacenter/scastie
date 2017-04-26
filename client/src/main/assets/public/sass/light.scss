@@ -1,0 +1,59 @@
+$background-color: #f5f5f5;
+$text-color: #002b36;
+$link-color: #fff;
+
+// Top Bar
+$topbar-background: #002b36;
+$selected-dropdown-background: #00acdb;
+$hover-dropdown-color: #ffffff;
+
+// Editor Top Bar
+$editor-button-color: #0f262f;
+$editor-background: #f5f5f5;
+$hover-editor-button-color: #00acdb;
+
+// Drop Down
+$submenu-border-color: rgba(15, 38, 47, 0.15);
+$submenu-text-color: #0f262f;
+$hover-submenu-dropdown-color: $hover-dropdown-color;
+$submenu-background-color: #7dc8e5;
+
+// Sidebar
+$sidebar-background: #7dc8e5;
+$selected-option-background: #00acdb;
+$selected-option-color: #ffffff;
+$hover-option-color: #ffffff;
+$option-color: #0f262f;
+$worksheet-enabled: #859900;
+
+// Console
+$console-text-color: #ffffff;
+$console-border-color: #7dc8e5;
+$console-background: #002b36;
+$hidden-console-background: #002b36;
+$switcher-show-color: $console-text-color;
+
+// Snippets
+$snippets-background: #dfdfdf;
+$snippets-text-color: #0f262f;
+$snippets-update-color: #4e99c9;
+$snippets-line-color: #5390bf;
+$snippet-background-color: #f0efef;
+$title-line-color: rgba(0, 43, 54, 0.12);
+
+// Settings
+$input-background-color: #f4f3f3;
+$selected-radio-color: #4e99c9;
+$input-color: #0f262f;
+$search-link-color: #4e99c9;
+
+// Codemirror
+$cm-color: #657b83;
+$cm-background-color: #f5f5f5;
+$cm-border-bottom-color: #eee8d5;
+$cm-gutters-filler-background-color: #eee8d5;
+$cm-selected-background: rgba(0, 0, 0, 0.1);
+$cm-dialog-color: #93a1a1;
+$cm-simplescroll-background: #00acdb;
+$cm-s-background-color: #f4f3f3;
+
