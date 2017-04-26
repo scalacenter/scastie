@@ -6,7 +6,7 @@ import js.annotation._
 import js.{UndefOr, RegExp, Dictionary, |}
 
 @js.native
-@JSName("CodeMirror")
+@JSGlobal("CodeMirror")
 object CodeMirror extends js.Object {
   var commands: js.Dynamic = js.native
   var keyMap: KeyMaps = js.native
@@ -24,7 +24,7 @@ trait KeyMaps extends js.Object {
 }
 
 @js.native
-@JSName("CodeMirror.Pos")
+@JSGlobal("CodeMirror.Pos")
 class Position extends js.Object {
   var line: Int = js.native
   var ch: Int = js.native

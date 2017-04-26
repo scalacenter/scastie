@@ -35,7 +35,7 @@ object Instrument {
     "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
 
   private def posToApi(position: Position, offset: Int) = {
-    def tuple2(v1: Int, v2: Int) = Seq(Lit(v1), Lit(v2))
+    def tuple2(v1: Int, v2: Int) = Seq(Lit.Int(v1), Lit.Int(v2))
 
     val lits =
       position match {

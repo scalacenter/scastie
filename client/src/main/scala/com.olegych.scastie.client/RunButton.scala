@@ -12,9 +12,6 @@ object RunButton {
         import backend._
         import View.ctrl
 
-        def selected(view: View) =
-          if (view == state.view) TagMod(`class` := "selected") else EmptyTag
-
         if (!state.isRunning) {
           li(onClick ==> run,
              title := s"Run Code ($ctrl + Enter)",

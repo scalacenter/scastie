@@ -348,7 +348,7 @@ object ScaladexSearch {
 
           def renderProject(project: Project,
                             artifact: String,
-                            selected: TagMod = EmptyTag,
+                            selected: TagMod,
                             handlers: TagMod = EmptyTag,
                             remove: TagMod = EmptyTag,
                             options: TagMod = EmptyTag) = {

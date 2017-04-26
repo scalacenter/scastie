@@ -12,7 +12,7 @@ import de.heikoseeberger.akkasse.EventStreamMarshalling._
 
 import akka.util.Timeout
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
 import akka.pattern.ask
 
 import akka.http.scaladsl._
@@ -28,8 +28,7 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration._
 
-class ProgressRoutes(progressActor: ActorRef)(implicit system: ActorSystem) {
-  // import system.dispatcher
+class ProgressRoutes(progressActor: ActorRef) {
 
   implicit val timeout = Timeout(1.seconds)
 

@@ -87,12 +87,14 @@ object BuildSettings {
 
   def renderVersions(target: ScalaTarget, backend: AppBackend) = {
     val suggestedVersions = List(
-      "2.10.6",
-      "2.11.8",
-      "2.12.1"
+      "2.13.0-M1",
+      "2.11.11",
+      "2.12.2"
     )
 
     val allVersions = List(
+      "2.13.0-M1",
+      "2.12.2",
       "2.12.1",
       "2.12.0",
       "2.12.0-RC2",
@@ -102,6 +104,7 @@ object BuildSettings {
       "2.12.0-M3",
       "2.12.0-M2",
       "2.12.0-M1",
+      "2.11.11",
       "2.11.8",
       "2.11.6",
       "2.11.5",

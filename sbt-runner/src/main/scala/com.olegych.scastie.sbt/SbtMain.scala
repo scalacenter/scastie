@@ -12,9 +12,9 @@ object SbtMain {
 
     val system = ActorSystem("SbtRemote")
 
-    val remoteActor =
-      system.actorOf(Props(new SbtActor(30.seconds, production = true)),
+    system.actorOf(Props(new SbtActor(30.seconds, production = true)),
                      name = "SbtActor")
+
     Await.result(system.whenTerminated, Duration.Inf)
 
     ()

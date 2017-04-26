@@ -184,21 +184,19 @@ object Editor {
     val nl = '\n'
     val modeScala = "text/x-scala"
 
-    def noop[T](v: T): Unit = ()
-
     def setRenderAnnotations() = {
       val doc = editor.getDoc()
       def nextline2(endPos: CMPosition,
                     node: HTMLElement,
-                    process: (HTMLElement => Unit) = noop,
-                    options: js.Any = null): Annotation = {
+                    process: (HTMLElement => Unit),
+                    options: js.Any): Annotation = {
         process(node)
         Line(editor.addLineWidget(endPos.line, node, options))
       }
 
       def nextline(endPos: CMPosition,
                    content: String,
-                   process: (HTMLElement => Unit) = noop,
+                   process: (HTMLElement => Unit),
                    options: js.Any = null): Annotation = {
         val node =
           dom.document.createElement("pre").asInstanceOf[HTMLPreElement]
@@ -211,7 +209,7 @@ object Editor {
       def fold(startPos: CMPosition,
                endPos: CMPosition,
                content: String,
-               process: (HTMLElement => Unit) = noop): Annotation = {
+               process: (HTMLElement => Unit)): Annotation = {
         val node =
           dom.document.createElement("div").asInstanceOf[HTMLDivElement]
         node.className = "fold"
@@ -226,7 +224,7 @@ object Editor {
       }
       def inline(startPos: CMPosition,
                  content: String,
-                 process: (HTMLElement => Unit) = noop): Annotation = {
+                 process: (HTMLElement => Unit)): Annotation = {
         // inspired by blink/devtools WebInspector.JavaScriptSourceFrame::_renderDecorations
 
         val node =

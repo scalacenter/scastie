@@ -15,7 +15,6 @@ object MainPanel {
         case (state, backend, props) => {
 
           import state.dimensions._
-          import state._
 
           def show(view: View) = {
             if (view == state.view) TagMod(display.block)
@@ -28,30 +27,6 @@ object MainPanel {
             if (embedded) TagMod(EmbeddedMenu(state, backend))
             else EmptyTag
 
-          val debugOutput =
-            pre(`class` := "debug")(
-              s"""|inputsHasChanged:       $inputsHasChanged
-                  |
-                  |snippetId:              $snippetId
-                  |
-                  |isSnippetSaved:         $isSnippetSaved
-                  |
-                  |loadSnippet:            $loadSnippet
-                  |
-                  |loadScalaJsScript:      $loadScalaJsScript
-                  |
-                  |isScalaJsScriptLoaded:  $isScalaJsScriptLoaded
-                  |
-                  |snippetIdIsScalaJS:     $snippetIdIsScalaJS
-                  |
-                  |attachedDoms:           $attachedDoms
-                  |
-                  |outputs
-                  |  instrumentations:
-                  |    ${outputs.instrumentations.mkString("    \n")}
-                  |""".stripMargin
-            )
-
           val editorHeight =
             innerHeight -
               topBarHeight -
@@ -61,15 +36,6 @@ object MainPanel {
                 else consoleBarHeight
               ) -
               mobileBarHeight
-
-          def editorStyle: TagMod = Seq(
-            minHeight :=
-              (if (forcedDesktop) Dimensions.default.minWindowHeight
-               else editorHeight.toInt).px,
-            minWidth :=
-              ((if (forcedDesktop) Dimensions.default.minWindowWidth
-                else innerWidth.toInt) - sideBarWidth).px
-          )
 
           def codeStyle: TagMod = Seq(
             height := editorHeight.px
@@ -86,7 +52,6 @@ object MainPanel {
           )
 
           div(`class` := "main-panel")(
-            //debugOutput,
             TopBar(state, backend),
             EditorTopBar(state, backend, props.snippetId),
             div(`id` := "content")(
