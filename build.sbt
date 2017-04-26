@@ -261,7 +261,7 @@ lazy val client = project
     ),
     libraryDependencies ++= Seq(
 //      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.3",
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.0.0-RC2",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.0.0",
 //      "com.github.japgolly.scalajs-react" %%% "core" % "1.0.0-RC2",
       "org.webjars" % "font-awesome" % "4.7.0",
       "org.webjars.npm" % "firacode" % "1.205.0",

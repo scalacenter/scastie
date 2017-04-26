@@ -1,26 +1,13 @@
 package com.olegych.scastie
 package client
 
-import api.{Instrumentation, Value, Html, AttachedDom}
-import japgolly.scalajs.react._, vdom.all._
-
-import org.scalajs.dom.raw.{
-  HTMLTextAreaElement,
-  HTMLElement,
-  HTMLPreElement,
-  HTMLDivElement
-}
+import api.{AttachedDom, Html, Instrumentation, Value}
+import japgolly.scalajs.react._
+import vdom.all._
+import org.scalajs.dom.raw.{HTMLDivElement, HTMLElement, HTMLPreElement, HTMLTextAreaElement}
 import org.scalajs.dom
+import codemirror.{CodeMirror, LineWidget, TextAreaEditor, TextMarker, TextMarkerOptions, Editor => CodeMirrorEditor2, Position => CMPosition}
 
-import codemirror.{
-  Position => CMPosition,
-  TextAreaEditor,
-  LineWidget,
-  CodeMirror,
-  Editor => CodeMirrorEditor2,
-  TextMarker,
-  TextMarkerOptions
-}
 
 import scala.scalajs._
 
@@ -28,8 +15,8 @@ object Editor {
 
   CodeMirror.keyMap.sublime.delete("Ctrl-L")
 
-  private val codemirrorTextarea =
-    Ref[HTMLTextAreaElement]("codemirror-textarea")
+//  private val codemirrorTextarea =
+//    Ref[HTMLTextAreaElement]("codemirror-textarea")
 
   private def options(dark: Boolean): codemirror.Options = {
 
@@ -89,8 +76,13 @@ object Editor {
   )
 
   private[Editor] class Backend(
-      scope: BackendScope[(AppState, AppBackend), EditorState]
-  ) {
+      scope: BackendScope[(AppState, AppBackend), EditorState]) {
+
+//    var codemirrorTextarea = Ref[HTMLTextAreaElement]("codemirror-textarea")
+
+    var codemirrorTextarea : HTMLTextAreaElement = _
+
+
     def stop() = {
       scope.modState { s =>
         s.editor.map(_.toTextArea())
@@ -101,8 +93,10 @@ object Editor {
       scope.props.flatMap {
         case (props, backend) =>
           val editor =
-            codemirror.CodeMirror.fromTextArea(codemirrorTextarea(scope).get,
+            codemirror.CodeMirror.fromTextArea(codemirrorTextarea,
                                                options(props.isDarkTheme))
+//            codemirror.CodeMirror.fromTextArea(codemirrorTextarea(scope).get,
+//                                                           options(props.isDarkTheme))
 
           editor.onFocus(_.refresh())
 
@@ -451,10 +445,10 @@ object Editor {
       .initialState(EditorState())
       .backend(new Backend(_))
       .renderPS {
-        case (scope, (props, backend), state) =>
-          textarea(onChange ==> backend.codeChange,
+        case (scope, (props, appBackend), state) =>
+          textarea(onChange ==> appBackend.codeChange,
                    value := props.inputs.code,
-                   ref := codemirrorTextarea,
+                   ref := scope.backend.codemirrorTextarea,
                    name := "CodeArea",
                    autoComplete := "off")
       }
