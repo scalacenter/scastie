@@ -8,7 +8,7 @@ object Welcome {
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("Welcome").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("Welcome").render_P {
       case (state, backend) =>
         val displayWelcome =
           if (state.modalState.isWelcomeModalClosed) display.none

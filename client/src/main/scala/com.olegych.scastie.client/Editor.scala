@@ -28,8 +28,7 @@ object Editor {
 
   CodeMirror.keyMap.sublime.delete("Ctrl-L")
 
-  private val codemirrorTextarea =
-    Ref[HTMLTextAreaElement]("codemirror-textarea")
+  private var codemirrorTextarea: HTMLTextAreaElement = _
 
   private def options(dark: Boolean): codemirror.Options = {
 
@@ -91,6 +90,13 @@ object Editor {
   private[Editor] class Backend(
       scope: BackendScope[(AppState, AppBackend), EditorState]
   ) {
+
+    def codeChangeF(event: ReactEventFromInput): Callback = {
+      scope.props.flatMap {
+        case (_, backend) => backend.codeChange(event.target.value)
+      }
+    }
+
     def stop() = {
       scope.modState { s =>
         s.editor.map(_.toTextArea())
@@ -101,7 +107,7 @@ object Editor {
       scope.props.flatMap {
         case (props, backend) =>
           val editor =
-            codemirror.CodeMirror.fromTextArea(codemirrorTextarea(scope).get,
+            codemirror.CodeMirror.fromTextArea(codemirrorTextarea,
                                                options(props.isDarkTheme))
 
           editor.onFocus(_.refresh())
@@ -445,22 +451,21 @@ object Editor {
   }
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("CodemirrorEditor")
+    ScalaComponent.builder[(AppState, AppBackend)]("Editor")
       .initialState(EditorState())
       .backend(new Backend(_))
       .renderPS {
         case (scope, (props, backend), state) =>
-          textarea(onChange ==> backend.codeChange,
+          textarea.ref(codemirrorTextarea = _)(
+                   onChange ==> scope.backend.codeChangeF,
                    value := props.inputs.code,
-                   ref := codemirrorTextarea,
                    name := "CodeArea",
                    autoComplete := "off")
       }
-      .componentWillReceiveProps { v =>
-        val (current, _) = v.currentProps
-        val (next, _) = v.nextProps
-        val state = v.currentState
-        val scope = v.$
+      .componentWillReceiveProps { scope =>
+        val (current, _) = scope.currentProps
+        val (next, _) = scope.nextProps
+        val state = scope.state
 
         state.editor
           .map(

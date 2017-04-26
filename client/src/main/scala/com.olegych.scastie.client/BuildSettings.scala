@@ -62,7 +62,7 @@ object BuildSettings {
             " Vote!"
           )
         }
-        case None => EmptyTag
+        case None => EmptyVdom
       }
     }
 
@@ -80,7 +80,7 @@ object BuildSettings {
             label(`for` := targetLabel, `class` := "radio", targetLabel),
             vote(targetType)
           )
-        }
+        }.toTagMod
       )
     )
   }
@@ -160,7 +160,7 @@ object BuildSettings {
 
     def setScalaVersion(
         targetApply: String => ScalaTarget
-    )(e: ReactEventI): Callback =
+    )(e: ReactEventFromInput): Callback =
       backend.setTarget(targetApply(e.target.value))
 
     val notSupported = div("Not supported")
@@ -188,7 +188,7 @@ object BuildSettings {
                     `class` := "radio",
                     suggestedVersion)
             )
-          },
+          }.toTagMod,
           li(
             input(`type` := "radio",
                   `id` := scalaVersion,
@@ -200,7 +200,7 @@ object BuildSettings {
                 select(name := "scalaVersion",
                        value := scalaVersion.toString,
                        onChange ==> setScalaVersion(targetApply))(
-                  allVersions.map(version => option(version))
+                  allVersions.map(version => option(version)).toTagMod
                 )
               )
             )
@@ -227,7 +227,7 @@ object BuildSettings {
   }
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("BuildSettings").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("BuildSettings").render_P {
       case (state, backend) =>
         import state.dimensions._
 
@@ -240,13 +240,11 @@ object BuildSettings {
                 title := "Reset your configuration")(
               "Reset"
             )
-          } else EmptyTag
+          } else EmptyVdom
 
-        def containerStyle: TagMod = Seq(
-          if (forcedDesktop)
-            height := (dom.window.innerHeight - topBarHeight).px
-          else EmptyTag
-        )
+        def containerStyle =
+          if (forcedDesktop) height := (dom.window.innerHeight - topBarHeight).px
+          else EmptyVdom
 
         div(`id` := "build-settings-container", containerStyle)(
           h2(

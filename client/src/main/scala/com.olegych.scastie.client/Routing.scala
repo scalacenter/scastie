@@ -3,7 +3,13 @@ package client
 
 import api.{SnippetId, SnippetUserPart}
 
-import japgolly.scalajs.react._, extra.router._
+import japgolly.scalajs.react.vdom.Implicits._
+import japgolly.scalajs.react.extra.router.{
+  RouterConfigDsl,
+  RouterCtl,
+  Resolution,
+  Redirect
+}
 
 object Routing {
   val config = RouterConfigDsl[Page].buildConfig { dsl =>
@@ -19,32 +25,35 @@ object Routing {
 
     (
       trimSlashes
-        | staticRoute(root, Home) ~> renderR(renderAppDefault)
-        | dynamicRouteCT(anon.caseClass[AnonymousResource]) ~> dynRenderR(
-          renderPage
-        )
-        | dynamicRouteCT(user.caseClass[UserResource]) ~> dynRenderR(
-          renderPage
-        )
-        | dynamicRouteCT(userUpdate.caseClass[UserResourceUpdated]) ~> dynRenderR(
-          renderPage
-        )
+        | staticRoute(root, Home) ~> 
+            renderR(renderAppDefault)
 
-        | staticRoute(embedded, Embeded) ~> renderR(renderAppDefaultEmbedded)
-        | dynamicRouteCT(embedded / anon.caseClass[EmbeddedAnonymousResource]) ~> dynRenderR(
-          renderPage
-        )
-        | dynamicRouteCT(embedded / user.caseClass[EmbeddedUserResource]) ~> dynRenderR(
-          renderPage
-        )
-        | dynamicRouteCT(
-          embedded / userUpdate
-            .caseClass[EmbeddedUserResourceUpdated]
-        ) ~> dynRenderR(renderPage)
-    ).notFound(redirectToPage(Home)(Redirect.Replace)).renderWith(layout)
+        | dynamicRouteCT(anon.caseClass[AnonymousResource]) ~> 
+            dynRenderR((router, page) => renderPage(router, page))
+
+        | dynamicRouteCT(user.caseClass[UserResource]) ~> 
+            dynRenderR((router, page) => renderPage(router, page))
+
+        | dynamicRouteCT(userUpdate.caseClass[UserResourceUpdated]) ~> 
+            dynRenderR((router, page) => renderPage(router, page))
+
+        | staticRoute(embedded, Embeded) ~> 
+            renderR(renderAppDefaultEmbedded)
+
+        | dynamicRouteCT(embedded / anon.caseClass[EmbeddedAnonymousResource]) ~>
+            dynRenderR((router, page) => renderPage(router, page))
+
+        | dynamicRouteCT(embedded / user.caseClass[EmbeddedUserResource]) ~>
+            dynRenderR((router, page) => renderPage(router, page))
+
+        | dynamicRouteCT(embedded / userUpdate.caseClass[EmbeddedUserResourceUpdated]) ~> 
+            dynRenderR((router, page) => renderPage(router, page))
+    )
+      .notFound(redirectToPage(Home)(Redirect.Replace))
+      .renderWith((router, page) => layout(router, page))
   }
 
-  def renderAppDefault(router: RouterCtl[Page]) =
+  private def renderAppDefault(router: RouterCtl[Page]) =
     App(
       AppProps(
         router = Some(router),
@@ -53,7 +62,7 @@ object Routing {
       )
     )
 
-  def renderAppDefaultEmbedded(router: RouterCtl[Page]) =
+  private def renderAppDefaultEmbedded(router: RouterCtl[Page]) =
     App(
       AppProps(
         router = Some(router),
@@ -62,7 +71,7 @@ object Routing {
       )
     )
 
-  def renderPage(page: ResourcePage, router: RouterCtl[Page]) = {
+  private def renderPage(page: ResourcePage, router: RouterCtl[Page]) = {
     val defaultEmbedded = Some(EmbededOptions.empty)
 
     val (embedded, snippetId) =
@@ -91,5 +100,5 @@ object Routing {
     )
   }
 
-  def layout(c: RouterCtl[Page], r: Resolution[Page]) = r.render()
+  private def layout(c: RouterCtl[Page], r: Resolution[Page]) = r.render()
 }

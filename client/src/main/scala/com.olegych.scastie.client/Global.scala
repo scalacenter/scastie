@@ -22,7 +22,7 @@ object Global {
   def signal(instrumentationsRaw: String,
              attachedDoms: js.Array[HTMLElement]): Unit = {
     scope0.foreach { scope =>
-      val direct = scope.accessDirect
+      val direct = scope.withEffectsImpure
       val result = uread[Either[Option[RuntimeError], List[Instrumentation]]](
         instrumentationsRaw
       )

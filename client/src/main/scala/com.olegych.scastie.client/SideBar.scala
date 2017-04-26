@@ -8,7 +8,7 @@ import org.scalajs.dom
 object SideBar {
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("SideBar").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("SideBar").render_P {
       case (state, backend) =>
         import backend._
         import dom.window._
@@ -74,10 +74,10 @@ object SideBar {
               h1("Scastie")
             ),
             ul(`id` := "actions-top", `class` := "actions")(
-              buttonsTop
+              buttonsTop.toTagMod
             ),
             ul(`id` := "actions-bottom", `class` := "actions bottom")(
-              buttonsBottom
+              buttonsBottom.toTagMod
             )
           )
         )

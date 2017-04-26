@@ -30,7 +30,7 @@ object CodeSnippets {
       )
     }
 
-    def delete(summary: SnippetSummary)(e: ReactEventI): Callback = {
+    def delete(summary: SnippetSummary)(e: ReactEventFromInput): Callback = {
       e.preventDefaultCB >>
         scope.modState(_.filterNot(_ == summary)) >>
         Callback.future(
@@ -43,7 +43,7 @@ object CodeSnippets {
   }
 
   private val component =
-    ReactComponentB[(Option[RouterCtl[Page]], AppState, AppBackend)](
+    ScalaComponent.builder[(Option[RouterCtl[Page]], AppState, AppBackend)](
       "CodeSnippets"
     ).initialState(List.empty[SnippetSummary])
       .backend(new Backend(_))
@@ -71,15 +71,13 @@ object CodeSnippets {
                "Github user")
           }
 
-          def containerStyle: TagMod = Seq(
-            if (forcedDesktop)
-              height := (innerHeight - topBarHeight).px
-            else EmptyTag
-          )
+          def containerStyle: TagMod =
+            if (forcedDesktop) height := (innerHeight - topBarHeight).px
+            else EmptyVdom
 
           div(`id` := "code-snippets-container", containerStyle)(
             userAvatar,
-            h2(userName),
+            userName.map(u => h2(u)).getOrElse(EmptyVdom),
             div(`class` := "nickname")(
               i(`class` := "fa fa-github"),
               userLogin
@@ -123,9 +121,9 @@ object CodeSnippets {
                               )
                             )
                           )
-                      }
+                      }.toTagMod
                   )
-              }
+              }.toTagMod
             )
           )
         }
@@ -135,7 +133,7 @@ object CodeSnippets {
         val (_, nextAppState, _) = delta.nextProps
 
         if (currentAppState.view != View.CodeSnippets && nextAppState.view == View.CodeSnippets) {
-          delta.$.backend.loadProfile()
+          delta.backend.loadProfile()
         } else {
           Callback(())
         }

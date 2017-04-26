@@ -22,6 +22,7 @@ object Instrument {
 
   private val emptyMapT = "_root_.scala.collection.mutable.Map.empty"
   private val jsExportT = "_root_.scala.scalajs.js.annotation.JSExport"
+  private val jsExportTopLevelT = "_root_.scala.scalajs.js.annotation.JSExportTopLevel"
 
   private val apiPackage = "_root_.com.olegych.scastie.api"
   private val positionT = s"$apiPackage.Position"
@@ -113,7 +114,7 @@ object Instrument {
             |}
             |""".stripMargin
       } else {
-        s"""|@$jsExportT class Main {
+        s"""|@${jsExportTopLevelT}("Main") class Main {
             |  val playground = $runtimeErrorT.wrap(new $instrumnedClass)
             |  @$jsExportT def result = $runtimeT.write(playground.right.map(_.${instrumentationMethod}))
             |  @$jsExportT def attachedElements: $elemArrayT =

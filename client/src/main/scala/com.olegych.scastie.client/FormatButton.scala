@@ -8,7 +8,7 @@ object FormatButton {
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("FormatButton").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("FormatButton").render_P {
       case (state, backend) =>
         val disabledIfSameInputs =
           if (!state.inputsHasChanged) "disabled"

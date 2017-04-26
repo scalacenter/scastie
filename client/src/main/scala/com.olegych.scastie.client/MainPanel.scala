@@ -3,14 +3,12 @@ package client
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
-import org.scalajs.dom.raw.HTMLPreElement
 import org.scalajs.dom.window._
 
 object MainPanel {
 
-  private val consoleElement = Ref[HTMLPreElement]("console")
   private val component =
-    ReactComponentB[(AppState, AppBackend, AppProps)]("MainPanel")
+    ScalaComponent.builder[(AppState, AppBackend, AppProps)]("MainPanel")
       .render_P {
         case (state, backend, props) => {
 
@@ -25,7 +23,7 @@ object MainPanel {
 
           val embeddedMenu =
             if (embedded) TagMod(EmbeddedMenu(state, backend))
-            else EmptyTag
+            else EmptyVdom
 
           val editorHeight =
             innerHeight -
@@ -37,19 +35,22 @@ object MainPanel {
               ) -
               mobileBarHeight
 
-          def codeStyle: TagMod = Seq(
-            height := editorHeight.px
-          )
+          def codeStyle = height := editorHeight.px
 
-          def containerStyle: TagMod = Seq(
-            if (forcedDesktop)
-              minHeight := Dimensions.default.minWindowHeight.px
-            else
-              height := (innerHeight - topBarHeight).px,
-            minWidth :=
-              ((if (forcedDesktop) Dimensions.default.minWindowWidth
-                else innerWidth.toInt) - sideBarWidth).px
-          )
+          def containerStyle = {
+            val heightStyle =
+              if (forcedDesktop) minHeight := Dimensions.default.minWindowHeight.px
+              else height := (innerHeight - topBarHeight).px
+            
+            val minWidthPx =
+              if (forcedDesktop) Dimensions.default.minWindowWidth
+              else innerWidth.toInt
+
+            Seq(
+              heightStyle,
+              minWidth := (minWidthPx - sideBarWidth).px
+            )
+          }
 
           div(`class` := "main-panel")(
             TopBar(state, backend),
@@ -58,7 +59,7 @@ object MainPanel {
               div(`id` := "editor-container",
                   `class` := "inner-container",
                   show(View.Editor),
-                  containerStyle)(
+                  containerStyle.toTagMod)(
                 div(`id` := "code", codeStyle)(
                   Editor(state, backend),
                   embeddedMenu
@@ -67,13 +68,13 @@ object MainPanel {
               ),
               div(`id` := "settings-container",
                   `class` := "inner-container",
-                  containerStyle,
+                  containerStyle.toTagMod,
                   show(View.BuildSettings))(
                 BuildSettings(state, backend)
               ),
               div(`id` := "snippets-container",
                   `class` := "inner-container",
-                  containerStyle,
+                  containerStyle.toTagMod,
                   show(View.CodeSnippets))(
                 CodeSnippets(props.router, state, backend)
               ),
@@ -82,22 +83,6 @@ object MainPanel {
           )
         }
       }
-      .componentDidUpdate(
-        scope =>
-          Callback {
-            consoleElement(scope.$).foreach { consoleDom =>
-              consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
-            }
-        }
-      )
-      .componentDidUpdate(
-        scope =>
-          Callback {
-            consoleElement(scope.$).foreach { consoleDom =>
-              consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
-            }
-        }
-      )
       .build
 
   def apply(state: AppState, backend: AppBackend, props: AppProps) =

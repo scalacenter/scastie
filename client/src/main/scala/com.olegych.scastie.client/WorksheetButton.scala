@@ -8,13 +8,13 @@ object WorksheetButton {
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("WorksheetButton").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("WorksheetButton").render_P {
       case (state, backend) =>
         val worksheetModeSelected =
           if (state.inputs.worksheetMode && state.view != View.Editor)
             TagMod(`class` := "enabled alpha")
           else if (state.inputs.worksheetMode) TagMod(`class` := "enabled")
-          else EmptyTag
+          else EmptyVdom
 
         val worksheetModeToogleLabel =
           if (state.inputs.worksheetMode) "OFF"

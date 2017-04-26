@@ -13,7 +13,7 @@ class ExampleSpec extends FunSpec with BeforeAndAfterAll {
 
         def assertHtml(p: String, s: Int): Unit = {
           assert(
-            component.outerHtmlWithoutReactDataAttr() == s"<div> $p:$s </div>"
+            component.outerHtmlWithoutReactInternals() == s"<div> $p:$s </div>"
           )
           ()
         }
@@ -29,7 +29,7 @@ class ExampleSpec extends FunSpec with BeforeAndAfterAll {
     }
   }
 
-  val Example = ReactComponentB[String]("Example")
+  val Example = ScalaComponent.builder[String]("Example")
     .initialState(0)
     .renderPS((_, p, s) => div(s" $p:$s "))
     .build

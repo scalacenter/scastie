@@ -6,13 +6,13 @@ import japgolly.scalajs.react._, vdom.all._
 object BuildSettingsButton {
 
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("BuildSettingsButton").render_P {
+    ScalaComponent.builder[(AppState, AppBackend)]("BuildSettingsButton").render_P {
       case (state, backend) =>
         import backend._
 
         def selected =
           if (state.view == View.BuildSettings) TagMod(`class` := "selected")
-          else EmptyTag
+          else EmptyVdom
 
         li(onClick ==> setView2(View.BuildSettings),
            title := "Open Build Settings",

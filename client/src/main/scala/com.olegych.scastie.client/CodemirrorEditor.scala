@@ -9,7 +9,7 @@ import org.scalajs.dom.raw.HTMLTextAreaElement
 import scala.scalajs._
 
 object CodeMirrorEditor {
-  private val texteareaRef = Ref[HTMLTextAreaElement]("editor-textearea")
+  private var texteareaRef: HTMLTextAreaElement = _
 
   private[CodeMirrorEditor] case class State(
       editor: Option[TextAreaEditor] = None
@@ -31,49 +31,51 @@ object CodeMirrorEditor {
     def start(): Callback = {
       scope.props.flatMap {
         case (settings, handler) =>
-          val editor = texteareaRef(scope).map { textArea =>
-            val options = js
-              .Dictionary[Any](
-                "mode" -> "text/x-scala",
-                "readOnly" -> settings.readOnly,
-                "lineNumbers" -> false,
-                "lineWrapping" -> false,
-                "tabSize" -> 2,
-                "indentWithTabs" -> false,
-                "theme" -> settings.theme,
-                "smartIndent" -> true,
-                "keyMap" -> "sublime",
-                "scrollPastEnd" -> false,
-                "scrollbarStyle" -> "simple",
-                "autoCloseBrackets" -> true,
-                "matchBrackets" -> true,
-                "showCursorWhenSelecting" -> true,
-                "autofocus" -> false,
-                "highlightSelectionMatches" -> js.Dictionary(
-                  "showToken" -> js.Dynamic.global.RegExp("\\w")
-                ),
-                "extraKeys" -> js.Dictionary("Tab" -> "defaultTab")
-              )
-              .asInstanceOf[codemirror.Options]
-
-            val editor0 = codemirror.CodeMirror.fromTextArea(textArea, options)
-
-            editor0.getDoc.setValue(settings.value)
-
-            editor0.onChange(
-              (_, _) => handler.onChange(editor0.getDoc().getValue()).runNow
+          val options = js
+            .Dictionary[Any](
+              "mode" -> "text/x-scala",
+              "readOnly" -> settings.readOnly,
+              "lineNumbers" -> false,
+              "lineWrapping" -> false,
+              "tabSize" -> 2,
+              "indentWithTabs" -> false,
+              "theme" -> settings.theme,
+              "smartIndent" -> true,
+              "keyMap" -> "sublime",
+              "scrollPastEnd" -> false,
+              "scrollbarStyle" -> "simple",
+              "autoCloseBrackets" -> true,
+              "matchBrackets" -> true,
+              "showCursorWhenSelecting" -> true,
+              "autofocus" -> false,
+              "highlightSelectionMatches" -> js.Dictionary(
+                "showToken" -> js.Dynamic.global.RegExp("\\w")
+              ),
+              "extraKeys" -> js.Dictionary("Tab" -> "defaultTab")
             )
+            .asInstanceOf[codemirror.Options]
 
-            editor0
-          }.toOption
+          val editor = codemirror.CodeMirror.fromTextArea(texteareaRef, options)
 
-          scope.modState(_.copy(editor = editor))
+          editor.getDoc.setValue(settings.value)
+
+          editor.onChange(
+            (_, _) => handler.onChange(editor.getDoc().getValue()).runNow
+          )
+
+          scope.modState(_.copy(editor = Some(editor)))
       }
     }
     def stop() = {
       scope.modState { s =>
         s.editor.map(_.toTextArea())
         s.copy(editor = None)
+      }
+    }
+
+    def onChangeF(event: ReactEventFromInput): Callback = {
+      scope.props.flatMap {
+        case (_, handler) => handler.onChange(event.target.value)
       }
     }
   }
@@ -104,22 +106,21 @@ object CodeMirrorEditor {
   }
 
   private val component =
-    ReactComponentB[(Settings, Handler)]("CodeMirrorEditor")
+    ScalaComponent.builder[(Settings, Handler)]("CodemirrorEditor")
       .initialState(State())
       .backend(new Backend(_))
       .renderPS {
         case (scope, (props, handler), _) =>
-          textarea(
-            defaultValue := props.value,
-            onChange ==> handler.onChange,
-            ref := texteareaRef,
+          textarea.ref(texteareaRef = _)(
+            value := props.value,
+            onChange ==> scope.backend.onChangeF,
             autoComplete := "off"
           )
       }
-      .componentWillReceiveProps { v =>
-        val (current, _) = v.currentProps
-        val (next, _) = v.nextProps
-        val state = v.currentState
+      .componentWillReceiveProps { scope =>
+        val (current, _) = scope.currentProps
+        val (next, _) = scope.nextProps
+        val state = scope.state
 
         state.editor
           .map(editor => runDelta(editor, state, current, next))

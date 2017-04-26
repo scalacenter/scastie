@@ -10,9 +10,10 @@ object Console {
 
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
-  private val consoleElement = Ref[HTMLPreElement]("console")
+  private var consoleElement: HTMLPreElement = _
+
   private val component =
-    ReactComponentB[(AppState, AppBackend)]("Console")
+    ScalaComponent.builder[(AppState, AppBackend)]("Console")
       .initialState(ConsoleState.default)
       .render_P {
         case (state, backend) =>
@@ -28,32 +29,32 @@ object Console {
             ((if (forcedDesktop) Dimensions.default.minWindowWidth
               else dom.window.innerWidth.toInt) - sideBarWidth).px
 
-          def consoleStyle: TagMod =
+          def consoleStyle =
             Seq(displayConsole,
                 width := currentWidth,
                 minWidth := minConsoleWidth)
 
-          def switcherStyle: TagMod =
+          def switcherStyle =
             Seq(displaySwitcher,
                 width := currentWidth,
                 minWidth := minConsoleWidth)
 
           div(`id` := "console-container")(
-            div(`id` := "console", consoleStyle)(
+            div(`id` := "console", consoleStyle.toTagMod)(
               div(`id` := "handler"),
               div(`id` := "switcher-hide",
-                  consoleStyle,
+                  consoleStyle.toTagMod,
                   onClick ==> backend.toggleConsole)(
                 i(`class` := "fa fa-terminal"),
                 "Console",
                 i(`class` := "fa fa-caret-down")
               ),
-              pre(`class` := "output-console", ref := consoleElement)(
+              pre.ref(consoleElement = _)(`class` := "output-console")(
                 state.outputs.console
               )
             ),
             div(`id` := "switcher-show", onClick ==> backend.toggleConsole)(
-              switcherStyle,
+              switcherStyle.toTagMod,
               i(`class` := "fa fa-terminal"),
               "Console",
               i(`class` := "fa fa-caret-up")
@@ -61,12 +62,9 @@ object Console {
           )
 
       }
-      .componentDidUpdate(
-        scope =>
-          Callback {
-            consoleElement(scope.$).foreach { consoleDom =>
-              consoleDom.scrollTop = consoleDom.scrollHeight.toDouble
-            }
+      .componentDidUpdate(scope =>
+        Callback {
+          consoleElement.scrollTop = consoleElement.scrollHeight.toDouble
         }
       )
       .build
