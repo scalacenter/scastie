@@ -26,6 +26,7 @@ object SideBar {
 
         val mobileButton =
           li(onClick ==> backend.toggleMobile,
+             role := "button",
              title := "Go back to Mobile Version",
              `class` := "btn",
              displayMobile)(
@@ -35,6 +36,7 @@ object SideBar {
 
         val themeButton =
           li(onClick ==> toggleTheme,
+             role := "button",
              title := s"Select $toggleThemeLabel Theme (F2)",
              `class` := "btn")(
             i(`class` := s"fa $selectedIcon"),
@@ -43,6 +45,7 @@ object SideBar {
 
         val helpButton =
           li(onClick ==> toggleHelp,
+             role := "button",
              title := "Show help Menu",
              `class` := "btn")(
             i(`class` := "fa fa-question-circle"),

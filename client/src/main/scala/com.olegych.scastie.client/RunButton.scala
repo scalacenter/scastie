@@ -14,6 +14,7 @@ object RunButton {
 
         if (!state.isRunning) {
           li(onClick ==> run,
+             role := "button",
              title := s"Run Code ($ctrl + Enter)",
              `class` := "btn run-button")(
             i(`class` := "fa fa-play"),

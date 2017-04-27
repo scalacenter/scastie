@@ -15,6 +15,7 @@ object BuildSettingsButton {
           else EmptyVdom
 
         li(onClick ==> setView2(View.BuildSettings),
+           role := "button",
            title := "Open Build Settings",
            selected,
            `class` := "btn")(

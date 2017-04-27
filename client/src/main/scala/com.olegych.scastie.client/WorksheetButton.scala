@@ -22,6 +22,7 @@ object WorksheetButton {
 
         li(title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
            worksheetModeSelected,
+           role := "button",
            `class` := "btn editor",
            onClick ==> backend.toggleWorksheetMode)(
           i(`class` := "fa fa-calendar"),

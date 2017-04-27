@@ -40,34 +40,34 @@ object TopBar {
         val profileButton =
           state.user match {
             case Some(user) =>
-              TagMod(
+              Seq(
                 li(onClick ==> setView2(View.CodeSnippets),
+                   role := "link",
                    title := "Go to your code snippets",
                    `class` := "btn",
-                   selected(View.CodeSnippets),
-                   i(`class` := "fa fa-code"),
-                   "Snippets"),
-                li(onClick ==> logout, `class` := "btn")(
+                   selected(View.CodeSnippets)
+                )(
+                  img(src := user.avatar_url + "&s=30",
+                      alt := "Your Github Avatar",
+                      `class` := "avatar"),
+                  "Snippets"
+                ),
+                li(
+                  role := "link",
+                  onClick ==> logout,
+                  `class` := "btn")(
                   i(`class` := "fa fa-sign-out"),
                   "Logout"
                 )
               )
             case None =>
-              TagMod(
-                li(onClick ==> login, `class` := "btn")(
+              Seq(
+                li(role := "link", onClick ==> login, `class` := "btn")(
                   i(`class` := "fa fa-sign-in"),
                   "Login"
                 )
               )
           }
-
-        val userAvatar = state.user match {
-          case Some(user) =>
-            img(src := user.avatar_url + "&s=30",
-                alt := "Your Github Avatar",
-                `class` := "avatar")
-          case None => i(`class` := "fa fa-user-circle")
-        }
 
         def topBarStyle = Seq(
           minWidth :=
@@ -76,41 +76,27 @@ object TopBar {
              else dom.window.innerWidth.toInt).px
         )
 
-        val userName = state.user.map(_.login).getOrElse("Login")
-
         nav(`id` := "topbar", topBarStyle.toTagMod)(
           div(`class` := "logo")(
             img(src := "/assets/public/img/icon-scastie.png"),
             h1("Scastie")
           ),
           ul(`class` := "actions")(
-            li(`class` := "btn dropdown")(
-              i(`class` := "fa fa-comments"),
-              span("Feedback"),
-              i(`class` := "fa fa-caret-down"),
-              ul(`class` := "subactions")(
-                li(onClick ==> feedback,
-                   title := "Open Gitter.im Chat to give us feedback",
-                   `class` := "btn")(
-                  i(`class` := "fa fa-gitter"),
-                  "Scastie's gitter"
-                ),
-                li(onClick ==> issue,
-                   title := "Create new issue on GitHub",
-                   `class` := "btn")(
-                  i(`class` := "fa fa-github"),
-                  "Github issues"
-                )
-              )
+            li(onClick ==> feedback,
+               role := "link",
+               title := "Open Gitter.im Chat to give us feedback",
+               `class` := "btn")(
+              i(`class` := "fa fa-gitter"),
+              "Scastie's gitter"
             ),
-            li(`class` := "btn dropdown")(
-              userAvatar,
-              span(userName),
-              i(`class` := "fa fa-caret-down"),
-              ul(`class` := "subactions")(
-                profileButton
-              )
-            )
+            li(onClick ==> issue,
+               role := "link",
+               title := "Create new issue on GitHub",
+               `class` := "btn")(
+              i(`class` := "fa fa-github"),
+              "Github issues"
+            ),
+            profileButton.toTagMod
           )
         )
 
