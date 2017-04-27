@@ -175,7 +175,8 @@ Solarized color pallette: http://ethanschoonover.com/solarized/img/solarized-pal
   .CodeMirror {
     background: transparent;
     font-size: 13px;
-    font-family: monospace;
+    font-family: $code-font-family;
+
     pre {
       -webkit-font-variant-ligatures: contextual;
       font-variant-ligatures: contextual;
@@ -184,7 +185,7 @@ Solarized color pallette: http://ethanschoonover.com/solarized/img/solarized-pal
 
   .CodeMirror-code > pre {
     font-size: 0;
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .CodeMirror-lines {
