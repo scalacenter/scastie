@@ -23,6 +23,7 @@ object SaveButton {
         snippetId match {
           case None =>
             li(title := s"Save ($ctrl + S)",
+               role := "button",
                `class` := s"btn $disabledIfSaved",
                onClick ==> backend.save)(
               i(`class` := "fa fa-download"),

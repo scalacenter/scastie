@@ -44,6 +44,7 @@ object Console {
               div(`id` := "handler"),
               div(`id` := "switcher-hide",
                   consoleStyle.toTagMod,
+                  role := "button",
                   onClick ==> backend.toggleConsole)(
                 i(`class` := "fa fa-terminal"),
                 "Console",
@@ -53,7 +54,7 @@ object Console {
                 state.outputs.console
               )
             ),
-            div(`id` := "switcher-show", onClick ==> backend.toggleConsole)(
+            div(`id` := "switcher-show", role := "button", onClick ==> backend.toggleConsole)(
               switcherStyle.toTagMod,
               i(`class` := "fa fa-terminal"),
               "Console",

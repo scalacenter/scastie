@@ -15,6 +15,7 @@ object EditorButton {
 
         li(onClick ==> backend.setView2(View.Editor),
            title := "Open Editor View",
+           role := "button",
            `class` := "btn run-button",
            selected(View.Editor))(
           i(`class` := "fa fa-edit"),

@@ -38,7 +38,11 @@ object Help {
           div(`class` := "modal-fade-screen")(
             div(`class` := "modal-window")(
               div(`class` := "modal-header")(
-                div(`class` := "modal-close", onClick ==> backend.toggleHelp)
+                div(`class` := "modal-close", 
+                  onClick ==> backend.toggleHelp,
+                  role := "button",
+                  title := "close help modal"
+                )
               )(
                 h1("Help about Scastie")
               ),

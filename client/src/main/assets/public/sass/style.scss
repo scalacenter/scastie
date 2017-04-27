@@ -343,95 +343,57 @@
                     }
                 }
                 ul.actions {
+                  position: absolute;
+                  top: 0;
+                  right: 0;
+
+                  height: $header-height;
+                  display: inline-block;
+                  cursor: pointer;
+                  line-height: $header-height;
+                  padding: 0px 20px;
+                  color: $hover-dropdown-color;
+                  @include transition();
+
+                  .avatar {
+                      height: 30px;
+                      width: 30px;
+                      border-radius: 50%;
+                      display: inline-block;
+                      margin-left: 10px;
+                      margin-right: 10px;
+                      vertical-align: middle;
+                  }
+
+                  /* EXTENDING FONT AWESOME */
+                  .fa-gitter {
+                      &:before {
+                          position: relative;
+                          top: 2px;
+                          content: "  ";
+                          display: inline-block;
+                          background: url(unquote('../img/gitter-icon-dark.png'));
+                          background-repeat: no-repeat;
+                          width: 10px;
+                          height: 15px;
+                      }
+                  }
+                  
+                  li {
+                    &:hover {
+                      background-color: $selected-dropdown-background;
+                      color: $hover-dropdown-color;
+                    }
+
+                    height: $header-height;
                     position: relative;
                     display: inline-block;
-                    right: 34px;
-                    top: -70px;
-                    .avatar {
-                        height: 30px;
-                        width: 30px;
-                        border-radius: 50%;
-                        display: inline-block;
-                        margin-left: 10px;
-                        margin-right: 10px;
-                        vertical-align: middle;
-                    }
-                    li.dropdown {
-                        height: $header-height;
-                        position: relative;
-                        display: inline-block;
-                        cursor: pointer;
-                        line-height: $header-height;
-                        padding: 0px 20px;
-                        color: $hover-dropdown-color;
-                        @include transition();
-                        i.fa {
-                            width: 30px;
-                            text-align: center;
-                        }
-                        &.selected,
-                        &:hover {
-                            background-color: $selected-dropdown-background;
-                            color: $hover-dropdown-color;
-                        }
-                        &:hover {
-                            .subactions {
-                                display: block;
-                            }
-                        }
-                        ul.subactions {
-                            list-style-type: none;
-                            border-radius: 2px;
-                            border-collapse: separate;
-                            text-align: left;
-                            display: none;
-                            position: absolute;
-                            line-height: 25px;
-                            top: $header-height - 20px;
-                            width: 160px;
-                            left: 10px;
-                            margin: 10px;
-                            z-index: 11;
-                            .btn {
-                                color: $submenu-text-color;
-                                display: block;
-                                width: 160px;
-                                background: $sidebar-background;
-                                padding: 10px;
-                                border-bottom: 1px solid $submenu-border-color;
-                                &:first-of-type {
-                                    border-top-left-radius: 2px;
-                                    border-top-right-radius: 2px;
-                                }
-                                &:last-of-type {
-                                    border-bottom: none;
-                                    border-bottom-left-radius: 2px;
-                                    border-bottom-right-radius: 2px;
-                                }
-                                &:hover {
-                                    background-color: $selected-dropdown-background;
-                                    color: $hover-submenu-dropdown-color;
-                                    .fa-gitter:before {
-                                        background-position: 0px -15px;
-                                    }
-                                }
-                                /* EXTENDING FONT AWESOME */
-
-                                .fa-gitter {
-                                    &:before {
-                                        position: relative;
-                                        top: 2px;
-                                        content: "  ";
-                                        display: inline-block;
-                                        background: url(unquote('../img/gitter-icon-' + $class + '.png'));
-                                        background-repeat: no-repeat;
-                                        width: 10px;
-                                        height: 15px;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    cursor: pointer;
+                    line-height: $header-height;
+                    padding: 0px 20px;
+                    color: $hover-dropdown-color;
+                    @include transition();
+                  }
                 }
             }
             #editor-topbar, #editor-mobile {
@@ -1083,14 +1045,6 @@
                         margin-left: 66px !important;
                     }
 
-                    #topbar ul.actions {
-                        right: 0px !important;
-                    }
-
-                    #topbar ul.actions > li span, #sidebar ul.actions > li span {
-                        display: none !important;
-                    }
-
                     #editor-topbar {
                         font-size: 20px;
                         li span {
@@ -1150,14 +1104,6 @@
                     #switcher-show, #console {
                         bottom: 48px !important;
                         left: 0px !important;
-                    }
-
-                    #topbar ul.actions {
-                         display: none !important;
-                    }
-
-                    #topbar ul.actions > li span, #sidebar ul.actions > li span {
-                        display: none !important;
                     }
 
                     #editor-mobile {

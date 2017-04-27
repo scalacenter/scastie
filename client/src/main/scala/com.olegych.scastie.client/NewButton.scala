@@ -11,6 +11,7 @@ object NewButton {
     ScalaComponent.builder[(AppState, AppBackend)]("NewButton").render_P {
       case (state, backend) =>
         li(title := "New code snippet",
+           role := "button",
            `class` := "btn",
            onClick ==> backend.newSnippet)(
           i(`class` := "fa fa-file-o"),

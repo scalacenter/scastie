@@ -77,7 +77,7 @@ object BuildSettings {
                   name := "target",
                   handler(targetType),
                   selected(targetType)),
-            label(`for` := targetLabel, `class` := "radio", targetLabel),
+            label(`for` := targetLabel, role := "button", `class` := "radio", targetLabel),
             vote(targetType)
           )
         }.toTagMod
@@ -186,6 +186,7 @@ object BuildSettings {
                     selected(suggestedVersion)),
               label(`for` := suggestedVersion,
                     `class` := "radio",
+                    role := "button",
                     suggestedVersion)
             )
           }.toTagMod,
@@ -236,6 +237,7 @@ object BuildSettings {
         val resetButton =
           if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
             div(onClick ==> backend.toggleReset,
+                role := "button",
                 `class` := "btn",
                 title := "Reset your configuration")(
               "Reset"

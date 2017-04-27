@@ -18,8 +18,12 @@ object Welcome {
           div(`class` := "modal-fade-screen")(
             div(`class` := "modal-window")(
               div(`class` := "modal-header")(
-                div(`class` := "modal-close",
-                    onClick ==> backend.toggleWelcome)
+                div(
+                  role := "button",
+                  title := "close help modal",
+                  `class` := "modal-close",
+                  onClick ==> backend.toggleWelcome
+                )
               )(
                 h1("Welcome to Scastie!")
               ),

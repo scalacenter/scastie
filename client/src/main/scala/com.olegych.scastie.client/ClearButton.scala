@@ -10,6 +10,7 @@ object ClearButton {
     ScalaComponent.builder[(AppState, AppBackend)]("ClearButton").render_P {
       case (state, backend) =>
         li(title := "Clear Instrumentations (Esc)",
+           role := "button",
            `class` := "btn",
            onClick ==> backend.clear)(
           i(`class` := "fa fa-eraser"),
