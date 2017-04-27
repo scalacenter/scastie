@@ -17,7 +17,7 @@ object Routing {
 
     val embedded = "embedded"
 
-    val alpha = string("[a-zA-Z0-9]*")
+    val alpha = string("[a-zA-Z0-9-]*")
 
     val anon = alpha
     val user = (alpha / alpha)
