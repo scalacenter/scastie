@@ -4,6 +4,7 @@ RUN apk update
 RUN apk add --update bash
 RUN apk add --update ncurses
 RUN apk add --update nodejs
+RUN apk add --update git
 
 ENV COURSIER_CACHE /root/.coursier
 ENV SBT_OPTS -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
@@ -73,4 +74,12 @@ RUN apk add --update graphviz
 
 ENV LANG en_US.UTF-8
 
-RUN apk add --update font-adobe-100dpi 
+# JRE fails to load fonts if there are no standard fonts in the image; DejaVu is a good choice,
+# see https://github.com/docker-library/openjdk/issues/73#issuecomment-207816707
+RUN apk add --update ttf-dejavu
+RUN apk add --update font-adobe-100dpi
+
+# These fonts are somewhat prettier
+RUN git clone --depth 1 --branch release https://github.com/adobe-fonts/source-code-pro.git /usr/share/fonts/source-code-pro && \
+  rm -rf /usr/share/fonts/source-code-pro/.git && \
+  fc-cache -f -v /usr/share/fonts/source-code-pro
