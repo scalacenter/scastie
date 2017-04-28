@@ -11,17 +11,18 @@ object Console {
   private var consoleElement: HTMLPreElement = _
 
   private val component =
-    ScalaComponent.builder[(AppState, AppBackend)]("Console")
+    ScalaComponent
+      .builder[(AppState, AppBackend)]("Console")
       .initialState(ConsoleState.default)
       .render_P {
         case (state, backend) =>
-
           val (displayConsole, displaySwitcher) =
             if (state.consoleState.consoleIsOpen) (display.block, display.none)
             else (display.none, display.block)
 
           val consoleCss =
-            if(state.consoleState.consoleIsOpen) TagMod(`class` := "console-open")
+            if (state.consoleState.consoleIsOpen)
+              TagMod(`class` := "console-open")
             else EmptyVdom
 
           div(`class` := "console-container", consoleCss)(
@@ -39,7 +40,9 @@ object Console {
                 state.outputs.console
               )
             ),
-            div(`class` := "switcher-show", role := "button", onClick ==> backend.toggleConsole)(
+            div(`class` := "switcher-show",
+                role := "button",
+                onClick ==> backend.toggleConsole)(
               displaySwitcher,
               i(`class` := "fa fa-terminal"),
               "Console",
@@ -48,9 +51,10 @@ object Console {
           )
 
       }
-      .componentDidUpdate(scope =>
-        Callback {
-          consoleElement.scrollTop = consoleElement.scrollHeight.toDouble
+      .componentDidUpdate(
+        scope =>
+          Callback {
+            consoleElement.scrollTop = consoleElement.scrollHeight.toDouble
         }
       )
       .build

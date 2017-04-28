@@ -55,7 +55,8 @@ object CodeMirrorEditor {
             )
             .asInstanceOf[codemirror.Options]
 
-          val editor = codemirror.CodeMirror.fromTextArea(texteareaRef, options)
+          val editor =
+            codemirror.CodeMirror.fromTextArea(texteareaRef, options)
 
           editor.getDoc.setValue(settings.value)
 
@@ -106,7 +107,8 @@ object CodeMirrorEditor {
   }
 
   private val component =
-    ScalaComponent.builder[(Settings, Handler)]("CodemirrorEditor")
+    ScalaComponent
+      .builder[(Settings, Handler)]("CodemirrorEditor")
       .initialState(State())
       .backend(new Backend(_))
       .renderPS {

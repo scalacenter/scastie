@@ -28,15 +28,15 @@ object Inputs {
 }
 
 case class Inputs(
-    worksheetMode: Boolean,
+    worksheetMode: Boolean = false,
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
-    librariesFrom: Map[ScalaDependency, Project],
+    librariesFrom: Map[ScalaDependency, Project] = Map(),
     sbtConfigExtra: String,
     sbtPluginsConfigExtra: String,
     showInUserProfile: Boolean,
-    forked: Option[SnippetId]
+    forked: Option[SnippetId] = None
 ) {
   def addScalaDependency(scalaDependency: ScalaDependency,
                          project: Project): Inputs = {
@@ -109,7 +109,12 @@ case class Inputs(
             s"""|scalaVersion := "$scalaVersion"
                 |enablePlugins(ScalaJSPlugin)
                 |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "${ScalaTarget.Js.targetFilename}"
-                |""".stripMargin,
+                |scalacOptions += {
+                |  val from = (baseDirectory in LocalRootProject).value.toURI.toString
+                |  val to = "${ScalaTarget.Js.sourceUUID}/"
+                |  "-P:scalajs:mapSourceURI:" + from + "->" + to
+                |}
+                """.stripMargin,
             ScalaDependency(
               "org.scastie",
               "runtime-scala",

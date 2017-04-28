@@ -25,9 +25,11 @@ object Runtime extends SharedRuntime {
     }
   }
 
-  def image(path: String): Html = 
+  def image(path: String): Html =
     throw new Exception("image(path: String): Html works only on the jvm")
 
   def toBase64(in: BufferedImage): Html =
-    throw new Exception("toBase64(in: BufferedImage): Html works only on the jvm")
+    throw new Exception(
+      "toBase64(in: BufferedImage): Html works only on the jvm"
+    )
 }

@@ -42,6 +42,8 @@ object ScalaTarget {
   object Js {
     val targetFilename = "fastopt.js"
     val sourceMapFilename = targetFilename + ".map"
+    val sourceFilename = "main.scala"
+    val sourceUUID = "file:///tmp/LxvjvKARSa2U5ctNis9LIA"
 
     def default =
       ScalaTarget.Js(

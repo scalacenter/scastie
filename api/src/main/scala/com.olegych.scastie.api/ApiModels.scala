@@ -2,7 +2,18 @@ package com.olegych.scastie
 package api
 
 case class SnippetUserPart(login: String, update: Option[Int])
-case class SnippetId(base64UUID: String, user: Option[SnippetUserPart])
+case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
+  def url(end: String) = {
+    val middle =
+      this match {
+        case SnippetId(uuid, None) => uuid
+        case SnippetId(uuid, Some(SnippetUserPart(login, update))) =>
+          s"$login/$uuid/${update.getOrElse(0)}"
+      }
+
+    s"/${Shared.scalaJsHttpPathPrefix}/$middle/$end"
+  }
+}
 
 case class User(login: String, name: Option[String], avatar_url: String)
 
@@ -18,6 +29,9 @@ case class FetchResultScalaJs(content: String)
 
 case class FetchScalaJsSourceMap(snippetId: SnippetId)
 case class FetchResultScalaJsSourceMap(content: String)
+
+case class FetchScalaSource(snippetId: SnippetId)
+case class FetchResultScalaSource(content: String)
 
 case class ScalaDependency(
     groupId: String,

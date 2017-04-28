@@ -4,16 +4,21 @@ import org.scalajs.sbtplugin.cross.CrossProject
 import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
 import sbt.Keys._
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.4.16"
-
-lazy val akkaHttpVersion = "10.0.3"
-def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
-def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+lazy val orgSettings = Seq(
+  organization := "org.scastie",
+  version := "0.19.0-SNAPSHOT"
+)
 
 lazy val upickleVersion = "0.4.4"
 lazy val autowireVersion = "0.2.5"
 lazy val scalajsDomVersion = "0.9.1"
 lazy val scalaTestVersion = "3.0.1"
+lazy val akkaHttpVersion = "10.0.3"
+
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.4.16"
+
+def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
+def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 
 lazy val scastie = project
   .in(file("."))
@@ -47,11 +52,6 @@ lazy val scastie = project
   .settings(Deployment.settings(server, sbtRunner))
   .settings(addCommandAlias("drone", ";test ;server/universal:packageBin"))
 
-lazy val orgSettings = Seq(
-  organization := "org.scastie",
-  version := "0.18.0"
-)
-
 lazy val baseSettings = Seq(
   scalaVersion := "2.12.2",
   scalacOptions := {
@@ -84,6 +84,31 @@ lazy val loggingAndTest =
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   )
+
+lazy val remapSourcMap =
+  scalacOptions ++= {
+    // val ver = version.value
+    val ver = "0.18.0"
+    val fromScastie = (baseDirectory in LocalRootProject).value.toURI.toString
+    val toScastie =
+      s"https://raw.githubusercontent.com/scalacenter/scastie/v$ver/"
+
+    Map(
+      fromScastie ->
+        toScastie,
+      // v0.4.4
+      "file:///Users/lihaoyi/upickle-pprint/" ->
+        "https://raw.githubusercontent.com/lihaoyi/upickle-pprint/b20c79ad571842eae32a442c6a14627898e262b4/",
+      // v0.2.3
+      "file:///Users/lihaoyi/fansi" ->
+        "https://raw.githubusercontent.com/lihaoyi/fansi/8b2bc6797be1f2d3e63d9553588534b9b34e97dc/"
+
+      // file:///home/lars/proj/lihaoyi/sourcecode/sourcecode/shared/src/main/scala/sourcecode/SourceContext.scala
+    ).map {
+      case (from, to) =>
+        s"-P:scalajs:mapSourceURI:$from->$to"
+    }.toList
+  }
 
 lazy val utils = project
   .in(file("utils"))
@@ -215,7 +240,7 @@ lazy val balancer = project
       akkaHttpCore
     )
   )
-  .dependsOn(api212JVM, utils)
+  .dependsOn(api212JVM, utils, instrumentation)
 
 /* codemirror is a facade to the javascript rich editor codemirror*/
 lazy val codemirror = project
@@ -278,7 +303,7 @@ lazy val client = project
     ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.0.0",
-      "com.github.japgolly.scalajs-react" %%% "test"  % "1.0.0" % Test,
+      "com.github.japgolly.scalajs-react" %%% "test" % "1.0.0" % Test,
       "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
       "org.webjars" % "font-awesome" % "4.7.0",
       "org.webjars.npm" % "firacode" % "1.205.0",
@@ -337,12 +362,13 @@ def api(scalaV: String) = {
       test := {},
       libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion
     )
+    .jsSettings(remapSourcMap)
     .enablePlugins(BuildInfoPlugin)
 }
 
 val api210 = api("2.10.6")
-val api211 = api("2.11.8")
-val api212 = api("2.12.1")
+val api211 = api("2.11.11")
+val api212 = api("2.12.2")
 // val api213 = api("2.13.0-M1")
 
 lazy val api210JVM = api210.jvm
@@ -371,6 +397,7 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
       ),
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "shared" / "src" / "main" / "scala"
     )
+    .jsSettings(remapSourcMap)
     .jsSettings(
       test := {},
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "js" / "src" / "main" / "scala"
@@ -382,8 +409,8 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
 }
 
 val runtimeScala210 = runtimeScala("2.10.6", api210)
-val runtimeScala211 = runtimeScala("2.11.8", api211)
-val runtimeScala212 = runtimeScala("2.12.1", api212)
+val runtimeScala211 = runtimeScala("2.11.11", api211)
+val runtimeScala212 = runtimeScala("2.12.2", api212)
 // val runtimeScala213 = runtimeScala("2.13.0-M1", api213)
 
 lazy val runtimeScala210JVM = runtimeScala210.jvm

@@ -451,16 +451,18 @@ object Editor {
   }
 
   private val component =
-    ScalaComponent.builder[(AppState, AppBackend)]("Editor")
+    ScalaComponent
+      .builder[(AppState, AppBackend)]("Editor")
       .initialState(EditorState())
       .backend(new Backend(_))
       .renderPS {
         case (scope, (props, backend), state) =>
           textarea.ref(codemirrorTextarea = _)(
-                   onChange ==> scope.backend.codeChangeF,
-                   value := props.inputs.code,
-                   name := "CodeArea",
-                   autoComplete := "off")
+            onChange ==> scope.backend.codeChangeF,
+            value := props.inputs.code,
+            name := "CodeArea",
+            autoComplete := "off"
+          )
       }
       .componentWillReceiveProps { scope =>
         val (current, _) = scope.currentProps

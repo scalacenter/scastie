@@ -141,8 +141,9 @@ object ScaladexSearch {
         }
 
         def scrollToSelected(selected: Int, total: Int) = {
-          projectListRef.scrollTop = 
-            Math.abs(interpolate(projectListRef.scrollHeight, total, selected + diff))
+          projectListRef.scrollTop = Math.abs(
+            interpolate(projectListRef.scrollHeight, total, selected + diff)
+          )
         }
 
         def selectProject =
@@ -322,7 +323,8 @@ object ScaladexSearch {
   }
 
   private val component =
-    ScalaComponent.builder[(AppState, AppBackend)]("Scaladex Search")
+    ScalaComponent
+      .builder[(AppState, AppBackend)]("Scaladex Search")
       .initialStateFromProps(SearchState.fromProps)
       .backend(new SearchBackend(_))
       .renderPS {
@@ -385,7 +387,8 @@ object ScaladexSearch {
               select(value := selected.release.version,
                      onChange ==> scope.backend.updateVersion(selected))(
                 selected.options.versions.reverse
-                  .map(v => option(value := v)(v)).toTagMod
+                  .map(v => option(value := v)(v))
+                  .toTagMod
               )
             )
           }
@@ -396,18 +399,20 @@ object ScaladexSearch {
               else EmptyVdom
 
             div(`class` := "added", hideAdded)(
-              searchState.selecteds.toList.sorted.map(
-                selected =>
-                  renderProject(
-                    selected.project,
-                    selected.release.artifact,
-                    i(`class` := "fa fa-close")(
-                      onClick ==> scope.backend.removeSelected(selected),
-                      `class` := "remove"
-                    ),
-                    options = renderOptions(selected)
+              searchState.selecteds.toList.sorted
+                .map(
+                  selected =>
+                    renderProject(
+                      selected.project,
+                      selected.release.artifact,
+                      i(`class` := "fa fa-close")(
+                        onClick ==> scope.backend.removeSelected(selected),
+                        `class` := "remove"
+                      ),
+                      options = renderOptions(selected)
+                  )
                 )
-              ).toTagMod
+                .toTagMod
             )
           }
 

@@ -13,7 +13,7 @@ object BuildSettings {
       ScalaTargetType.JVM,
       ScalaTargetType.Dotty,
       ScalaTargetType.Typelevel,
-      ScalaTargetType.JS//,
+      ScalaTargetType.JS //,
       // ScalaTargetType.Native
     )
 
@@ -52,7 +52,10 @@ object BuildSettings {
                   name := "target",
                   onChange ==> backend.setTarget2(defaultTarget(targetType)),
                   selected(targetType)),
-            label(`for` := targetLabel, role := "button", `class` := "radio", targetLabel)
+            label(`for` := targetLabel,
+                  role := "button",
+                  `class` := "radio",
+                  targetLabel)
           )
         }.toTagMod
       )
@@ -154,7 +157,7 @@ object BuildSettings {
           suggestedVersions.map { suggestedVersion =>
             li(
               input(`type` := "radio",
-                    `class` := suggestedVersion,
+                    id := suggestedVersion,
                     value := s"scala-$suggestedVersion",
                     name := "scalaV",
                     handler(suggestedVersion),
@@ -167,7 +170,7 @@ object BuildSettings {
           }.toTagMod,
           li(
             input(`type` := "radio",
-                  `class` := scalaVersion,
+                  id := scalaVersion,
                   value := scalaVersion,
                   name := "scalaV",
                   handler(scalaVersion)),
@@ -203,73 +206,76 @@ object BuildSettings {
   }
 
   private val component =
-    ScalaComponent.builder[(AppState, AppBackend)]("BuildSettings").render_P {
-      case (state, backend) =>
-        val theme = if (state.isDarkTheme) "dark" else "light"
+    ScalaComponent
+      .builder[(AppState, AppBackend)]("BuildSettings")
+      .render_P {
+        case (state, backend) =>
+          val theme = if (state.isDarkTheme) "dark" else "light"
 
-        val resetButton =
-          if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
-            div(onClick ==> backend.toggleReset,
-                role := "button",
-                `class` := "btn",
-                title := "Reset your configuration")(
-              "Reset"
-            )
-          } else EmptyVdom
+          val resetButton =
+            if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
+              div(onClick ==> backend.toggleReset,
+                  role := "button",
+                  `class` := "btn",
+                  title := "Reset your configuration")(
+                "Reset"
+              )
+            } else EmptyVdom
 
-        div(`class` := "build-settings-container")(
-          h2(
-            span("Target")
-          ),
-          renderTarget(state.inputs.target, backend),
-          h2(
-            span("Scala Version")
-          ),
-          renderVersions(state.inputs.target, backend),
-          h2(
-            span("Libraries")
-          ),
-          ScaladexSearch(state, backend),
-          h2(
-            span("Sbt Configuration")
-          ),
-          label(`for` := "configuration", "Add more"),
-          pre(`class` := "configuration")(
-            CodeMirrorEditor(
-              CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
-                                        theme = s"solarized $theme",
-                                        readOnly = false),
-              CodeMirrorEditor.Handler(
-                updatedSettings => backend.sbtConfigChange(updatedSettings)
-              )
-            )
-          ),
-          div(`class` := "label", "Resulting build.sbt"),
-          pre(`class` := "output")(
-            CodeMirrorEditor(
-              CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
-                                        theme = s"solarized $theme",
-                                        readOnly = true),
-              CodeMirrorEditor.Handler(
-                _ => Callback(())
-              )
+          div(`class` := "build-settings-container")(
+            h2(
+              span("Target")
             ),
-            div(`class` := "label", "Resulting plugins.sbt"),
-            pre(`class` := "plugins-output")(
+            renderTarget(state.inputs.target, backend),
+            h2(
+              span("Scala Version")
+            ),
+            renderVersions(state.inputs.target, backend),
+            h2(
+              span("Libraries")
+            ),
+            ScaladexSearch(state, backend),
+            h2(
+              span("Sbt Configuration")
+            ),
+            label(`for` := "configuration", "Add more"),
+            pre(`class` := "configuration")(
               CodeMirrorEditor(
-                CodeMirrorEditor.Settings(
-                  value = state.inputs.sbtPluginsConfig,
-                  theme = s"solarized $theme",
-                  readOnly = true
-                ),
+                CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
+                                          theme = s"solarized $theme",
+                                          readOnly = false),
                 CodeMirrorEditor.Handler(
-                  _ => Callback(())
+                  updatedSettings => backend.sbtConfigChange(updatedSettings)
                 )
               )
             ),
-            resetButton
+            div(`class` := "label", "Resulting build.sbt"),
+            pre(`class` := "output")(
+              CodeMirrorEditor(
+                CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
+                                          theme = s"solarized $theme",
+                                          readOnly = true),
+                CodeMirrorEditor.Handler(
+                  _ => Callback(())
+                )
+              ),
+              div(`class` := "label", "Resulting plugins.sbt"),
+              pre(`class` := "plugins-output")(
+                CodeMirrorEditor(
+                  CodeMirrorEditor.Settings(
+                    value = state.inputs.sbtPluginsConfig,
+                    theme = s"solarized $theme",
+                    readOnly = true
+                  ),
+                  CodeMirrorEditor.Handler(
+                    _ => Callback(())
+                  )
+                )
+              ),
+              resetButton
+            )
           )
-        )
-    }.build
+      }
+      .build
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 }

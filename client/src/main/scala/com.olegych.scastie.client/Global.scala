@@ -19,6 +19,28 @@ object Global {
     scope0 = Some(scope)
   }
 
+  def error(er: js.Error): Unit = {
+    scope0.foreach { scope =>
+      val direct = scope.withEffectsImpure
+      direct.modState(
+        state =>
+          state
+            .copyAndSave(
+              outputs = state.outputs.copy(
+                runtimeError = Some(
+                  RuntimeError(
+                    message = er.toString,
+                    line = None,
+                    fullStack = ""
+                  )
+                )
+              )
+            )
+            .setRunning(false)
+      )
+    }
+  }
+
   def signal(instrumentationsRaw: String,
              attachedDoms: js.Array[HTMLElement]): Unit = {
     scope0.foreach { scope =>
