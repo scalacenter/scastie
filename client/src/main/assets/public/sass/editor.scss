@@ -80,32 +80,35 @@
     }
 
     .console-container {
-      height: $console-handle-height;
+      $handler-height: 6px;
 
       &.console-open {
-        height: $console-height;
+        .output-console {
+          height: $console-height - $console-handle-height - $handler-height;
+        }
+      }
+
+      .switcher-show, .switcher-hide {
+        text-align: right;
+        line-height: $console-handle-height;
+        padding-right: 20px;
+        cursor: pointer;
+      }
+
+      .console {
+        font-family: $code-font-family;
+        height: 100%;
+        .handler {
+          height: $handler-height;
+        }
+      }
+
+      .output-console {
+        overflow: auto;
+        padding: 20px;
       }
     }
 
-    .switcher-show, .switcher-hide {
-      text-align: right;
-      line-height: $console-handle-height;
-      padding-right: 20px;
-      cursor: pointer;
-    }
-
-    .console {
-      height: 100%;
-      .handler {
-        height: 6px;
-      }
-    }
-
-    .output-console {
-      height: 100%;
-      overflow: auto;
-      padding: 20px;
-    }
   }
 
   .main-panel {

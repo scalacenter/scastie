@@ -168,9 +168,11 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def toggleConsole: Callback = scope.modState(_.toggleConsole)
   def toggleConsole(e: ReactEventFromInput): Callback = toggleConsole
-  def toggleWelcome(e: ReactEventFromInput): Callback = scope.modState(_.toggleWelcome)
+  def toggleWelcome(e: ReactEventFromInput): Callback =
+    scope.modState(_.toggleWelcome)
 
-  def toggleHelp(e: ReactEventFromInput): Callback = scope.modState(_.toggleHelp)
+  def toggleHelp(e: ReactEventFromInput): Callback =
+    scope.modState(_.toggleHelp)
 
   def toggleReset(e: ReactEventFromInput): Callback = toggleReset
   def toggleReset: Callback = scope.modState(_.toggleReset)
@@ -178,11 +180,14 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleWelcomeHelp(e: ReactEventFromInput): Callback =
     scope.modState(_.toggleWelcomeHelp)
 
-  def toggleShare(snippetId: Option[SnippetId])(e: ReactEventFromInput): Callback =
+  def toggleShare(
+      snippetId: Option[SnippetId]
+  )(e: ReactEventFromInput): Callback =
     scope.modState(_.toggleShare(snippetId))
 
   def toggleWorksheetMode: Callback = scope.modState(_.toggleWorksheetMode)
-  def toggleWorksheetMode(e: ReactEventFromInput): Callback = toggleWorksheetMode
+  def toggleWorksheetMode(e: ReactEventFromInput): Callback =
+    toggleWorksheetMode
 
   def run(e: ReactEventFromInput): Callback = run
   def run: Callback = {
@@ -250,7 +255,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                   )
               )
           )
-        )
+      )
     )
   }
 
@@ -277,7 +282,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                   else Callback(window.alert("Failed to amend"))
               )
           )
-        )
+      )
     )
 
   def fork(snippetId: SnippetId)(e: ReactEventFromInput): Callback =
@@ -301,7 +306,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 case None => Callback(window.alert("Failed to fork"))
               }
           )
-        )
+      )
     )
 
   def update(snippetId: SnippetId)(e: ReactEventFromInput): Callback =
@@ -327,7 +332,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 case None => Callback(window.alert("Failed to update"))
               }
           )
-        )
+      )
     )
 
   def loadSnippet(snippetId: SnippetId): Callback =
@@ -435,6 +440,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                   )
               }
           )
-        )
+      )
     )
 }

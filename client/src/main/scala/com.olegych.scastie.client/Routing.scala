@@ -25,31 +25,32 @@ object Routing {
 
     (
       trimSlashes
-        | staticRoute(root, Home) ~> 
-            renderR(renderAppDefault)
+        | staticRoute(root, Home) ~>
+          renderR(renderAppDefault)
 
-        | dynamicRouteCT(anon.caseClass[AnonymousResource]) ~> 
-            dynRenderR((router, page) => renderPage(router, page))
+        | dynamicRouteCT(anon.caseClass[AnonymousResource]) ~>
+          dynRenderR((router, page) => renderPage(router, page))
 
-        | dynamicRouteCT(user.caseClass[UserResource]) ~> 
-            dynRenderR((router, page) => renderPage(router, page))
+        | dynamicRouteCT(user.caseClass[UserResource]) ~>
+          dynRenderR((router, page) => renderPage(router, page))
 
-        | dynamicRouteCT(userUpdate.caseClass[UserResourceUpdated]) ~> 
-            dynRenderR((router, page) => renderPage(router, page))
+        | dynamicRouteCT(userUpdate.caseClass[UserResourceUpdated]) ~>
+          dynRenderR((router, page) => renderPage(router, page))
 
-        | staticRoute(embedded, Embeded) ~> 
-            renderR(renderAppDefaultEmbedded)
+        | staticRoute(embedded, Embeded) ~>
+          renderR(renderAppDefaultEmbedded)
 
         | dynamicRouteCT(embedded / anon.caseClass[EmbeddedAnonymousResource]) ~>
-            dynRenderR((router, page) => renderPage(router, page))
+          dynRenderR((router, page) => renderPage(router, page))
 
         | dynamicRouteCT(embedded / user.caseClass[EmbeddedUserResource]) ~>
-            dynRenderR((router, page) => renderPage(router, page))
+          dynRenderR((router, page) => renderPage(router, page))
 
-        | dynamicRouteCT(embedded / userUpdate.caseClass[EmbeddedUserResourceUpdated]) ~> 
-            dynRenderR((router, page) => renderPage(router, page))
-    )
-      .notFound(redirectToPage(Home)(Redirect.Replace))
+        | dynamicRouteCT(
+          embedded / userUpdate.caseClass[EmbeddedUserResourceUpdated]
+        ) ~>
+          dynRenderR((router, page) => renderPage(router, page))
+    ).notFound(redirectToPage(Home)(Redirect.Replace))
       .renderWith((router, page) => layout(router, page))
   }
 

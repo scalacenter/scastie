@@ -86,7 +86,6 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
       SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
       self
     )
-
   }
 
   def receive = {
@@ -158,6 +157,10 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
 
     case FetchScalaJs(snippetId) => {
       sender ! container.readScalaJs(snippetId)
+    }
+
+    case FetchScalaSource(snippetId) => {
+      sender ! container.readScalaSource(snippetId)
     }
 
     case FetchScalaJsSourceMap(snippetId) => {

@@ -4,8 +4,11 @@ package client
 import api._
 import japgolly.scalajs.react._
 import vdom.all._
+
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
+
+import scalajs.js.timers
 
 object App {
 
@@ -17,7 +20,8 @@ object App {
     }
 
   private val component =
-    ScalaComponent.builder[AppProps]("App")
+    ScalaComponent
+      .builder[AppProps]("App")
       .initialState(LocalStorage.load.getOrElse(AppState.default))
       .backend(new AppBackend(_))
       .renderPS {
@@ -73,43 +77,28 @@ object App {
                |    main.attachedElements
                |  );
                |} catch (e) {
-               | console.log(window);
-               | console.log("== Caught JS Error ==");
-               | console.log(e);
+               |  com.olegych.scastie.client.ClientMain().error(e);
                |}""".stripMargin
         }
 
         val executeScalaJs =
           Callback.when(
-              state.loadScalaJsScript &&
+            state.loadScalaJsScript &&
               !state.isScalaJsScriptLoaded &&
               state.snippetIdIsScalaJS &&
               state.snippetId.nonEmpty &&
-              !state.isRunning) {
+              !state.isRunning
+          ) {
 
-            val setLoaded = 
+            val setLoaded =
               scope.modState(
-                _.setLoadScalaJsScript(false)
-                 .scalaJsScriptLoaded
-                 .setRunning(true)
+                _.setLoadScalaJsScript(false).scalaJsScriptLoaded
+                  .setRunning(true)
               )
 
             val loadJs =
               Callback {
                 val scalaJsId = "scastie-scalajs-playground-target"
-
-                def scalaJsUrl(snippetId: SnippetId): String = {
-                  val middle =
-                    snippetId match {
-                      case SnippetId(uuid, None) => uuid
-                      case SnippetId(uuid,
-                                     Some(SnippetUserPart(login, update))) =>
-                        s"$login/$uuid/${update.getOrElse(0)}"
-                    }
-
-                  s"/${Shared.scalaJsHttpPathPrefix}/$middle/${ScalaTarget.Js.targetFilename}"
-                }
-
                 println("== Loading Scala.js ==")
 
                 removeIfExist(scalaJsId)
@@ -118,7 +107,10 @@ object App {
                   runScalaJs()
                 }
                 if (state.snippetId.nonEmpty) {
-                  scalaJsScriptElement.src = scalaJsUrl(state.snippetId.get)
+                  timers.setTimeout(500) {
+                    scalaJsScriptElement.src =
+                      state.snippetId.get.url(ScalaTarget.Js.targetFilename)
+                  }
                 } else {
                   println("empty snippetId")
                 }
@@ -129,7 +121,9 @@ object App {
 
         val reRunScalaJs =
           Callback.when(state.isReRunningScalaJs)(
-            Callback(runScalaJs()) >> scope.modState(_.setIsReRunningScalaJs(false)))
+            Callback(runScalaJs()) >> scope
+              .modState(_.setIsReRunningScalaJs(false))
+          )
 
         setTitle(state) >> executeScalaJs >> reRunScalaJs
       }
@@ -144,7 +138,8 @@ object App {
             snippetId <- CallbackOption.liftOption(next)
             _ <- CallbackOption.require(next != current)
             _ <- CallbackOption.liftCallback(
-              backend.loadSnippet(snippetId) >> backend.setView(View.Editor))
+              backend.loadSnippet(snippetId) >> backend.setView(View.Editor)
+            )
           } yield ()
 
         setTitle(state) >> loadSnippet.get.void

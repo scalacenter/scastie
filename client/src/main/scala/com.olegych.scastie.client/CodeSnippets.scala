@@ -41,9 +41,11 @@ object CodeSnippets {
   }
 
   private val component =
-    ScalaComponent.builder[(Option[RouterCtl[Page]], AppState, AppBackend)](
-      "CodeSnippets"
-    ).initialState(List.empty[SnippetSummary])
+    ScalaComponent
+      .builder[(Option[RouterCtl[Page]], AppState, AppBackend)](
+        "CodeSnippets"
+      )
+      .initialState(List.empty[SnippetSummary])
       .backend(new Backend(_))
       .renderPS {
         case (scope, (maybeRouter, state, backend), summaries) => {
@@ -52,58 +54,62 @@ object CodeSnippets {
 
           val router = maybeRouter.get
 
-
           val noSummaries =
-            if(summaries.isEmpty) p("No saved snippets, yet!")
+            if (summaries.isEmpty) p("No saved snippets, yet!")
             else EmptyVdom
 
           div(`class` := "code-snippets-container")(
-
             div(`class` := "snippets")(
               noSummaries,
-              summaries.groupBy(_.snippetId.base64UUID).map {
-                case (base64UUID, groupedSummaries) =>
-                  div(`class` := "group", `key` := base64UUID)(
-                    groupedSummaries
-                      .sortBy(_.snippetId.user.flatMap(_.update))
-                      .map {
-                        summary =>
-                          val page = Page.fromSnippetId(summary.snippetId)
-                          val update = summary.snippetId.user
-                            .flatMap(_.update)
-                            .getOrElse("")
-                          div(`class` := "snippet")(
-                            div(`class` := "header", "/" + base64UUID)(
-                              span(" - "),
-                              div(`class` := "clear-mobile"),
-                              span(`class` := "update", "Update: " + update),
-                              div(`class` := "actions")(
-                                li(`class` := "btn",
-                                   title := "Share",
-                                   role := "button",
-                                   onClick ==> backend
-                                     .toggleShare(Some(summary.snippetId)))(
-                                  i(`class` := "fa fa-share-alt")
-                                ),
-                                li(`class` := "btn",
-                                   role := "button",
-                                   title := "Delete",
-                                   onClick ==> scope.backend.delete(summary))(
-                                  i(`class` := "fa fa-trash")
+              summaries
+                .groupBy(_.snippetId.base64UUID)
+                .map {
+                  case (base64UUID, groupedSummaries) =>
+                    div(`class` := "group", `key` := base64UUID)(
+                      groupedSummaries
+                        .sortBy(_.snippetId.user.flatMap(_.update))
+                        .map {
+                          summary =>
+                            val page = Page.fromSnippetId(summary.snippetId)
+                            val update = summary.snippetId.user
+                              .flatMap(_.update)
+                              .getOrElse("")
+                            div(`class` := "snippet")(
+                              div(`class` := "header", "/" + base64UUID)(
+                                span(" - "),
+                                div(`class` := "clear-mobile"),
+                                span(`class` := "update", "Update: " + update),
+                                div(`class` := "actions")(
+                                  li(`class` := "btn",
+                                     title := "Share",
+                                     role := "button",
+                                     onClick ==> backend
+                                       .toggleShare(Some(summary.snippetId)))(
+                                    i(`class` := "fa fa-share-alt")
+                                  ),
+                                  li(
+                                    `class` := "btn",
+                                    role := "button",
+                                    title := "Delete",
+                                    onClick ==> scope.backend.delete(summary)
+                                  )(
+                                    i(`class` := "fa fa-trash")
+                                  )
+                                )
+                              ),
+                              div(`class` := "codesnippet",
+                                  role := "button",
+                                  router.setOnClick(page))(
+                                router.link(page)(
+                                  pre(`class` := "code")(summary.summary)
                                 )
                               )
-                            ),
-                            div(`class` := "codesnippet",
-                                role := "button",
-                                router.setOnClick(page))(
-                              router.link(page)(
-                                pre(`class` := "code")(summary.summary)
-                              )
                             )
-                          )
-                      }.toTagMod
-                  )
-              }.toTagMod
+                        }
+                        .toTagMod
+                    )
+                }
+                .toTagMod
             )
           )
         }

@@ -6,7 +6,8 @@ import japgolly.scalajs.react.vdom.all._
 
 object MainPanel {
   private val component =
-    ScalaComponent.builder[(AppState, AppBackend, AppProps)]("MainPanel")
+    ScalaComponent
+      .builder[(AppState, AppBackend, AppProps)]("MainPanel")
       .render_P {
         case (state, backend, props) => {
           def show(view: View) = {
@@ -21,7 +22,8 @@ object MainPanel {
             else EmptyVdom
 
           val consoleCssForEditor =
-            if(state.consoleState.consoleIsOpen) TagMod(`class` := "console-open")
+            if (state.consoleState.consoleIsOpen)
+              TagMod(`class` := "console-open")
             else EmptyVdom
 
           div(`class` := "main-panel")(
@@ -30,8 +32,7 @@ object MainPanel {
             div(`class` := "content")(
               div(`class` := "editor-container",
                   `class` := "inner-container",
-                  show(View.Editor)
-              )(
+                  show(View.Editor))(
                 div(`class` := "code", consoleCssForEditor)(
                   Editor(state, backend),
                   embeddedMenu
@@ -40,8 +41,7 @@ object MainPanel {
               ),
               div(`class` := "settings-container",
                   `class` := "inner-container",
-                  show(View.BuildSettings)
-              )(
+                  show(View.BuildSettings))(
                 BuildSettings(state, backend)
               ),
               div(`class` := "snippets-container",

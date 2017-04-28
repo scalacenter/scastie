@@ -5,20 +5,17 @@ import japgolly.scalajs.react.vdom.all._
 
 object MobileBar {
   private val component =
-    ScalaComponent.builder[(AppState, AppBackend)]("MobileBar").render_P {
-      case (state, backend) =>
-
-        // val viewButton = 
-        //   if (state.view == View.BuildSettings)
-        //   else
-
-        nav(`class` := "editor-mobile")(
-          ul(`class` := "editor-buttons")(
-            RunButton(state, backend)//,
-            // viewButton
+    ScalaComponent
+      .builder[(AppState, AppBackend)]("MobileBar")
+      .render_P {
+        case (state, backend) =>
+          nav(`class` := "editor-mobile")(
+            ul(`class` := "editor-buttons")(
+              RunButton(state, backend)
+            )
           )
-        )
-    }.build
+      }
+      .build
 
   def apply(state: AppState, backend: AppBackend) =
     component((state, backend))

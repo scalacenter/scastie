@@ -119,6 +119,18 @@ class SnippetsContainer(root: Path) {
       .map(content => FetchResultScalaJsSourceMap(content))
   }
 
+  def readScalaSource(snippetId: SnippetId): Option[FetchResultScalaSource] = {
+    readSnippet(snippetId).flatMap(
+      snippet =>
+        instrumentation
+          .Instrument(snippet.inputs.code, snippet.inputs.target) match {
+          case Right(instrumented) =>
+            Some(FetchResultScalaSource(instrumented))
+          case _ => None
+      }
+    )
+  }
+
   def listSnippets(user: UserLogin): List[SnippetSummary] = {
     import scala.collection.JavaConverters._
     val dir = root.resolve(user.login)

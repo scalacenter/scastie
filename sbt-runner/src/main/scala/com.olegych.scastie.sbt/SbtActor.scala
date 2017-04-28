@@ -11,7 +11,7 @@ import scala.meta.parsers.Parsed
 import org.scalafmt.{Scalafmt, Formatted}
 import org.scalafmt.config.{ScalafmtConfig, ScalafmtRunner}
 
-import upickle.default.{read => uread, Reader}
+import upickle.default.{read => uread, write => uwrite, Reader}
 
 import akka.actor.{Actor, ActorRef}
 
@@ -68,7 +68,6 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     if (inputs.worksheetMode) {
       instrumentation
         .Instrument(inputs.code, inputs.target)
-        .right
         .map(instrumented => inputs.copy(code = instrumented))
     } else Right(inputs)
   }
@@ -269,7 +268,9 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         instrumentations = instrumentations.getOrElse(Nil),
         runtimeError = runtimeError,
         scalaJsContent = scalaJsContent,
-        scalaJsSourceMapContent = scalaJsSourceMapContent,
+        scalaJsSourceMapContent = scalaJsSourceMapContent.map(
+          remapSourceMap(snippetId)
+        ),
         done = done && !reload,
         timeout = false,
         forcedProgramMode = forcedProgramMode
@@ -278,6 +279,36 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       progressActor ! progress.copy(scalaJsContent = None,
                                     scalaJsSourceMapContent = None)
       snippetActor ! progress
+    }
+  }
+
+  private def remapSourceMap(
+      snippetId: SnippetId
+  )(sourceMapRaw: String): String = {
+    try {
+      val sourceMap = uread[SourceMap](sourceMapRaw)
+      sourceMap.sources.foreach(println)
+
+      val sourceMap0 =
+        sourceMap.copy(
+          sources = sourceMap.sources.map(
+            source =>
+              if (source.startsWith(ScalaTarget.Js.sourceUUID)) {
+                val host =
+                  if (production) "https://scastie.scala-lang.org"
+                  else "http://localhost:9000"
+
+                host + snippetId.url(ScalaTarget.Js.sourceFilename)
+              } else source
+          )
+        )
+
+      uwrite(sourceMap0)
+    } catch {
+      case e: Exception => {
+        e.printStackTrace()
+        sourceMapRaw
+      }
     }
   }
 
@@ -314,4 +345,13 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       case NonFatal(_) => None
     }
   }
+
+  private[SbtActor] case class SourceMap(
+      version: Int,
+      file: String,
+      mappings: String,
+      sources: List[String],
+      names: List[String],
+      lineCount: Int
+  )
 }

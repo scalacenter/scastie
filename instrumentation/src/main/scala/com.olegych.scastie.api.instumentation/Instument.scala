@@ -22,7 +22,8 @@ object Instrument {
 
   private val emptyMapT = "_root_.scala.collection.mutable.Map.empty"
   private val jsExportT = "_root_.scala.scalajs.js.annotation.JSExport"
-  private val jsExportTopLevelT = "_root_.scala.scalajs.js.annotation.JSExportTopLevel"
+  private val jsExportTopLevelT =
+    "_root_.scala.scalajs.js.annotation.JSExportTopLevel"
 
   private val apiPackage = "_root_.com.olegych.scastie.api"
   private val positionT = s"$apiPackage.Position"

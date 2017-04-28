@@ -8,28 +8,31 @@ object WorksheetButton {
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ScalaComponent.builder[(AppState, AppBackend)]("WorksheetButton").render_P {
-      case (state, backend) =>
-        val worksheetModeSelected =
-          if (state.inputs.worksheetMode && state.view != View.Editor)
-            TagMod(`class` := "enabled alpha")
-          else if (state.inputs.worksheetMode) TagMod(`class` := "enabled")
-          else EmptyVdom
+    ScalaComponent
+      .builder[(AppState, AppBackend)]("WorksheetButton")
+      .render_P {
+        case (state, backend) =>
+          val worksheetModeSelected =
+            if (state.inputs.worksheetMode && state.view != View.Editor)
+              TagMod(`class` := "enabled alpha")
+            else if (state.inputs.worksheetMode) TagMod(`class` := "enabled")
+            else EmptyVdom
 
-        val worksheetModeToogleLabel =
-          if (state.inputs.worksheetMode) "OFF"
-          else "ON"
+          val worksheetModeToogleLabel =
+            if (state.inputs.worksheetMode) "OFF"
+            else "ON"
 
-        li(title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
-           worksheetModeSelected,
-           role := "button",
-           `class` := "btn editor",
-           onClick ==> backend.toggleWorksheetMode)(
-          i(`class` := "fa fa-calendar"),
-          span("Worksheet"),
-          i(`class` := "workSheetIndicator",
-            `class` := "fa fa-circle",
-            worksheetModeSelected)
-        )
-    }.build
+          li(title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
+             worksheetModeSelected,
+             role := "button",
+             `class` := "btn editor",
+             onClick ==> backend.toggleWorksheetMode)(
+            i(`class` := "fa fa-calendar"),
+            span("Worksheet"),
+            i(`class` := "workSheetIndicator",
+              `class` := "fa fa-circle",
+              worksheetModeSelected)
+          )
+      }
+      .build
 }

@@ -26,7 +26,6 @@ object ClientMain extends JSApp {
     container.className = "root"
     dom.document.body.appendChild(container)
 
-    
     Router(BaseUrl.fromWindowOrigin_/, Routing.config)().renderIntoDOM(
       container
     )
@@ -38,6 +37,11 @@ object ClientMain extends JSApp {
   def signal(instrumentations: String,
              attachedDoms: js.Array[HTMLElement]): Unit = {
     Global.signal(instrumentations, attachedDoms)
+  }
+
+  @JSExport
+  def error(er: js.Error): Unit = {
+    Global.error(er)
   }
 
   @JSExport
@@ -67,14 +71,13 @@ object ClientMain extends JSApp {
             embeddedOptions
           else embeddedOptions.setCode(node.textContent)
 
-        
-          App(
-            AppProps(
-              router = None,
-              snippetId = None,
-              embedded = Some(embeddedOptions0)
-            )
-          ).renderIntoDOM(
+        App(
+          AppProps(
+            router = None,
+            snippetId = None,
+            embedded = Some(embeddedOptions0)
+          )
+        ).renderIntoDOM(
           container
         )
 

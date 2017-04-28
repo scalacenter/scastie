@@ -11,7 +11,8 @@ object Share {
     component((router, state, backend))
 
   private val component =
-    ScalaComponent.builder[(Option[RouterCtl[Page]], AppState, AppBackend)]("Share")
+    ScalaComponent
+      .builder[(Option[RouterCtl[Page]], AppState, AppBackend)]("Share")
       .render_P {
         case (maybeRouter, state, backend) =>
           val displayShare =
