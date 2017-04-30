@@ -69,14 +69,14 @@ object App {
           )
         )
 
-        scope.backend.setDimensions() >> detectGesture
+        scope.backend.setDimensions >> detectGesture
       }
       .componentDidUpdate { scope =>
         val state = scope.prevState
         val backend = scope.backend
 
         val setDimensions: Callback =
-          backend.setDimensions().when_(state.dimensions.dimensionsHaveChanged)
+          backend.setDimensions.when_(state.dimensions.dimensionsHaveChanged)
 
         val scalaJsRunId = "scastie-scalajs-playground-run"
 

@@ -117,33 +117,33 @@ object Editor {
           )
 
           CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
-            backend.run().runNow
+            backend.run.runNow()
           }
 
           CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
-            backend.saveOrUpdate().runNow
+            backend.saveOrUpdate.runNow()
           }
 
           CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
-            backend.clear().runNow
+            backend.clear.runNow()
           }
 
           CodeMirror.commands.toggleConsole = (editor: CodeMirrorEditor2) => {
-            backend.toggleConsole().runNow
+            backend.toggleConsole.runNow()
           }
 
           CodeMirror.commands.toggleWorksheet =
             (editor: CodeMirrorEditor2) => {
-              backend.toggleWorksheetMode().runNow
+              backend.toggleWorksheetMode.runNow()
             }
 
           CodeMirror.commands.toggleSolarized =
             (editor: CodeMirrorEditor2) => {
-              backend.toggleTheme().runNow
+              backend.toggleTheme.runNow()
             }
 
           CodeMirror.commands.formatCode = (editor: CodeMirrorEditor2) => {
-            backend.formatCode().runNow
+            backend.formatCode.runNow()
           }
 
           scope.modState(_.copy(editor = Some(editor))) >>
