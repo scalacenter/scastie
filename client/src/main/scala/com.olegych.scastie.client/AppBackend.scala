@@ -23,7 +23,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   }
 
   def resetBuildAndClose(e: ReactEventFromInput): Callback =
-    resetBuild >> toggleReset()
+    resetBuild >> toggleReset
 
   def resetBuild: Callback =
     scope.modState(
@@ -136,18 +136,18 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   }
 
-  def clear(e: ReactEventFromInput): Callback = clear()
-  def clear(): Callback = scope.modState(_.clearOutputs)
+  def clear(e: ReactEventFromInput): Callback = clear
+  def clear: Callback = scope.modState(_.clearOutputs)
 
-  def clearCode(): Callback = scope.modState(_.setCode(""))
+  def clearCode: Callback = scope.modState(_.setCode(""))
 
   def toggleForcedDesktop(value: Boolean)(e: ReactEventFromInput): Callback =
     scope.modState(_.toggleForcedDesktop(value).setDimensionsHaveChanged(true))
 
-  def toggleMobile(): Callback =
+  def toggleMobile: Callback =
     scope.modState(_.toggleForcedDesktop(value = false))
   def toggleMobile(e: ReactEventFromInput): Callback =
-    toggleMobile() >> setView(View.Editor) >> setDimensionsHaveChanged(true)
+    toggleMobile >> setView(View.Editor) >> setDimensionsHaveChanged(true)
 
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
@@ -172,12 +172,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                               version: String): Callback =
     scope.modState(_.updateDependencyVersion(scalaDependency, version))
 
-  def toggleTheme(e: ReactEventFromInput): Callback = toggleTheme()
-  def toggleTheme(): Callback = scope.modState(_.toggleTheme)
+  def toggleTheme(e: ReactEventFromInput): Callback = toggleTheme
+  def toggleTheme: Callback = scope.modState(_.toggleTheme)
 
-  def toggleConsole(): Callback = scope.modState(_.toggleConsole)
+  def toggleConsole: Callback = scope.modState(_.toggleConsole)
   def toggleConsole(e: ReactEventFromInput): Callback =
-    toggleConsole() >> setDimensionsHaveChanged(true)
+    toggleConsole >> setDimensionsHaveChanged(true)
 
   def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
 
@@ -185,8 +185,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def toggleHelp(e: ReactEventFromInput): Callback = scope.modState(_.toggleHelp)
 
-  def toggleReset(e: ReactEventFromInput): Callback = toggleReset()
-  def toggleReset(): Callback = scope.modState(_.toggleReset)
+  def toggleReset(e: ReactEventFromInput): Callback = toggleReset
+  def toggleReset: Callback = scope.modState(_.toggleReset)
 
   def toggleWelcomeHelp(e: ReactEventFromInput): Callback =
     scope.modState(_.toggleWelcomeHelp)
@@ -194,22 +194,22 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleShare(snippetId: Option[SnippetId])(e: ReactEventFromInput): Callback =
     scope.modState(_.toggleShare(snippetId))
 
-  def toggleWorksheetMode(): Callback = scope.modState(_.toggleWorksheetMode)
-  def toggleWorksheetMode(e: ReactEventFromInput): Callback = toggleWorksheetMode()
+  def toggleWorksheetMode: Callback = scope.modState(_.toggleWorksheetMode)
+  def toggleWorksheetMode(e: ReactEventFromInput): Callback = toggleWorksheetMode
 
   def setDimensionsHaveChanged(value: Boolean): Callback =
     scope.modState(_.setDimensionsHaveChanged(value))
 
-  def setTopBarHeight(): Callback =
+  def setTopBarHeight: Callback =
     scope.modState(_.setTopBarHeight(getElementHeight("topbar")))
 
-  def setEditorTopBarHeight(): Callback =
+  def setEditorTopBarHeight: Callback =
     scope.modState(_.setEditorTopBarHeight(getElementHeight("editor-topbar")))
 
-  def setSideBarWidth(): Callback =
+  def setSideBarWidth: Callback =
     scope.modState(_.setSideBarWidth(getElementWidth("sidebar")))
 
-  def setSideBarMinHeight(): Callback =
+  def setSideBarMinHeight: Callback =
     scope.modState(
       _.setSideBarMinHeight(
         getElementHeight("topbar") + getElementHeight("actions-top") + getElementHeight(
@@ -218,32 +218,32 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       )
     )
 
-  def setConsoleBarHeight(): Callback =
+  def setConsoleBarHeight: Callback =
     scope.modState(_.setConsoleBarHeight(getElementHeight("switcher-show")))
 
-  def setConsoleHeight(): Callback =
+  def setConsoleHeight: Callback =
     scope.modState(
       _.setConsoleHeight(
         getElementHeight("console")
       )
     )
 
-  def setMobileBarHeight(): Callback =
+  def setMobileBarHeight: Callback =
     scope.modState(
       _.setMobileBarHeight(
         getElementHeight("editor-mobile")
       )
     )
 
-  def setDimensions2(e: ReactEventFromInput): Callback = setDimensions()
-  def setDimensions(): Callback =
-    setTopBarHeight() >>
-      setEditorTopBarHeight() >>
-      setSideBarWidth() >>
-      setSideBarMinHeight >>
-      setConsoleBarHeight() >>
-      setConsoleHeight() >>
-      setMobileBarHeight() >>
+  def setDimensions2(e: ReactEventFromInput): Callback = setDimensions
+  val setDimensions: Callback =
+    setTopBarHeight >>
+      setEditorTopBarHeight >>
+      setSideBarWidth >>
+      setSideBarMinHeight
+      setConsoleBarHeight >>
+      setConsoleHeight >>
+      setMobileBarHeight >>
       setDimensionsHaveChanged(false)
 
   def getElementWidth(id: String): Int =
@@ -252,8 +252,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def getElementHeight(id: String): Int =
     Option(dom.document.getElementById(id)).map(_.clientHeight).getOrElse(0)
 
-  def run(e: ReactEventFromInput): Callback = run()
-  def run(): Callback = {
+  def run(e: ReactEventFromInput): Callback = run
+  def run: Callback = {
     scope.state.flatMap(
       state =>
         if (!state.isScalaJsScriptLoaded || state.inputsHasChanged) {
@@ -295,8 +295,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     )
   }
 
-  def save(e: ReactEventFromInput): Callback = save()
-  def save(): Callback = {
+  def save(e: ReactEventFromInput): Callback = save
+  def save: Callback = {
     scope.state.flatMap(
       state =>
         Callback.unless(state.isSnippetSaved)(
@@ -322,17 +322,16 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     )
   }
 
-  def saveOrUpdate(): Callback = {
+  def saveOrUpdate: Callback =
     scope.props.flatMap(
       props =>
         props.snippetId match {
           case Some(snippetId) => update2(snippetId)
-          case None => save()
+          case None => save
       }
     )
-  }
 
-  def amend(snippetId: SnippetId)(e: ReactEventFromInput): Callback = {
+  def amend(snippetId: SnippetId)(e: ReactEventFromInput): Callback =
     scope.state.flatMap(
       state =>
         Callback.unless(state.isSnippetSaved)(
@@ -348,9 +347,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
           )
         )
     )
-  }
 
-  def fork(snippetId: SnippetId)(e: ReactEventFromInput): Callback = {
+  def fork(snippetId: SnippetId)(e: ReactEventFromInput): Callback =
     scope.state.flatMap(
       state =>
         Callback.unless(state.isSnippetSaved)(
@@ -373,11 +371,10 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
           )
         )
     )
-  }
 
   def update(snippetId: SnippetId)(e: ReactEventFromInput): Callback =
     update2(snippetId)
-  def update2(snippetId: SnippetId): Callback = {
+  def update2(snippetId: SnippetId): Callback =
     scope.state.flatMap(
       state =>
         Callback.unless(state.isSnippetSaved)(
@@ -400,9 +397,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
           )
         )
     )
-  }
 
-  def loadSnippet(snippetId: SnippetId): Callback = {
+  def loadSnippet(snippetId: SnippetId): Callback =
     scope.state.flatMap(
       state =>
         if (state.loadSnippet) {
@@ -413,7 +409,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
               .map {
                 case Some(FetchResult(inputs, progresses)) =>
                   loadStateFromLocalStorage >>
-                    clear() >>
+                    clear >>
                     scope.modState(
                       _.setInputs(inputs)
                         .setProgresses(progresses)
@@ -429,7 +425,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
           scope.modState(_.setLoadSnippet(true))
       }
     ) >> scope.modState(_.setSnippetId(snippetId))
-  }
 
   def loadStateFromLocalStorage =
     LocalStorage.load
@@ -451,14 +446,13 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
     dom.window.onresize = onresize _
 
-    def loadUser(): Callback = {
+    def loadUser: Callback =
       Callback.future(
         ApiClient[AutowireApi]
           .fetchUser()
           .call()
           .map(result => scope.modState(_.setUser(result)))
       )
-    }
 
     val initialState =
       props.embedded match {
@@ -478,11 +472,11 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
         }
       }
 
-    initialState >> loadUser()
+    initialState >> loadUser
   }
 
-  def formatCode(e: ReactEventFromInput): Callback = formatCode()
-  def formatCode(): Callback =
+  def formatCode(e: ReactEventFromInput): Callback = formatCode
+  def formatCode: Callback =
     scope.state.flatMap(
       state =>
         Callback.when(state.inputsHasChanged)(
