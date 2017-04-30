@@ -30,9 +30,7 @@ object App {
             else "light"
 
           val sideBar =
-            if (!props.isEmbedded)
-              TagMod(SideBar(state, scope.backend))
-            else EmptyVdom
+            SideBar(state, scope.backend).unless(props.isEmbedded)
 
           val appClass =
             if (!props.isEmbedded) "app"
@@ -77,11 +75,8 @@ object App {
         val state = scope.prevState
         val backend = scope.backend
 
-        val setDimensions =
-          if (state.dimensions.dimensionsHaveChanged) {
-            backend.setDimensions()
-
-          } else Callback(())
+        val setDimensions: Callback =
+          backend.setDimensions().when_(state.dimensions.dimensionsHaveChanged)
 
         val scalaJsRunId = "scastie-scalajs-playground-run"
 
@@ -118,7 +113,8 @@ object App {
         }
 
         val executeScalaJs =
-          if (state.loadScalaJsScript &&
+          Callback.when(
+              state.loadScalaJsScript &&
               !state.isScalaJsScriptLoaded &&
               state.snippetIdIsScalaJS &&
               state.snippetId.nonEmpty &&
@@ -162,14 +158,11 @@ object App {
               }
 
             setLoaded >> loadJs
-
-          } else Callback(())
+          }
 
         val reRunScalaJs =
-          if (state.isReRunningScalaJs) {
-            Callback(runScalaJs()) >>
-              scope.modState(_.setIsReRunningScalaJs(false))
-          } else Callback(())
+          Callback.when(state.isReRunningScalaJs)(
+            Callback(runScalaJs()) >> scope.modState(_.setIsReRunningScalaJs(false)))
 
         setTitle(state) >> setDimensions >> executeScalaJs >> reRunScalaJs
       }
@@ -179,18 +172,15 @@ object App {
         val state = scope.state
         val backend = scope.backend
 
-        val loadSnippet =
-          if (next != current) {
-            next match {
-              case Some(snippetId) =>
-                backend.loadSnippet(snippetId) >>
-                  backend.setView(View.Editor)
-              case _ => Callback(())
-            }
+        val loadSnippet: CallbackOption[Unit] =
+          for {
+            snippetId <- CallbackOption.liftOption(next)
+            _ <- CallbackOption.require(next != current)
+            _ <- CallbackOption.liftCallback(
+              backend.loadSnippet(snippetId) >> backend.setView(View.Editor))
+          } yield ()
 
-          } else Callback(())
-
-        setTitle(state) >> loadSnippet
+        setTitle(state) >> loadSnippet.get.void
       }
       .build
 
