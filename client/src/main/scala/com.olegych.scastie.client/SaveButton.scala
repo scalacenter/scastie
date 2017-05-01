@@ -30,7 +30,7 @@ object SaveButton {
               span("Save")
             )
           case Some(sid) =>
-            ul(`id` := "save-buttons")(
+            ul(`class` := "save-buttons")(
               li(title := "Amend this code snippet",
                  `class` := s"btn $disabledIfSaved",
                  onClick ==> backend.amend(sid))(

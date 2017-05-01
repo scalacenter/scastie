@@ -32,12 +32,16 @@ lazy val scastie = project
     runtimeScala211JS,
     runtimeScala212JVM,
     runtimeScala212JS,
+    // runtimeScala213JVM,
+    // runtimeScala213JS,
     api210JVM,
     api210JS,
     api211JVM,
     api211JS,
     api212JVM,
     api212JS
+    // api213JVM,
+    // api213JS
   )
   .settings(orgSettings)
   .settings(Deployment.settings(server, sbtRunner))
@@ -45,7 +49,7 @@ lazy val scastie = project
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.17.0"
+  version := "0.18.0"
 )
 
 lazy val baseSettings = Seq(
@@ -96,12 +100,16 @@ lazy val runnerRuntimeDependencies = Seq(
   runtimeScala211JS,
   runtimeScala212JVM,
   runtimeScala212JS,
+  // runtimeScala213JVM,
+  // runtimeScala213JS,
   api210JVM,
   api210JS,
   api211JVM,
   api211JS,
   api212JVM,
   api212JS,
+  // api213JVM,
+  // api213JS,
   runtimeDotty,
   sbtScastie
 ).map(publishLocal in _)
@@ -245,7 +253,7 @@ lazy val codemirror = project
 def react(artifact: String,
           name: String,
           configuration: Configuration = Compile): JSModuleID =
-  "org.webjars.bower" % "react" % "15.3.2" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+  "org.webjars.bower" % "react" % "15.5.4" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
 def reactWithDepends(artifact: String,
                      name: String,
@@ -270,16 +278,14 @@ lazy val client = project
     ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.0.0",
+      "com.github.japgolly.scalajs-react" %%% "test"  % "1.0.0" % Test,
+      "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
       "org.webjars" % "font-awesome" % "4.7.0",
       "org.webjars.npm" % "firacode" % "1.205.0",
-      "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
-      "com.github.japgolly.scalajs-react" %%% "test" % "1.0.0" % Test,
       "org.webjars.bower" % "bourbon" % "3.1.8",
       "org.webjars.bower" % "neat" % "1.8.0"
     ),
     requiresDOM := true,
-    // persistLauncher := true,
-    // persistLauncher in Test := false,
     scalaJSStage in Test := FastOptStage,
     jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
   )
@@ -337,6 +343,7 @@ def api(scalaV: String) = {
 val api210 = api("2.10.6")
 val api211 = api("2.11.8")
 val api212 = api("2.12.1")
+// val api213 = api("2.13.0-M1")
 
 lazy val api210JVM = api210.jvm
 lazy val api210JS = api210.js
@@ -344,6 +351,8 @@ lazy val api211JVM = api211.jvm
 lazy val api211JS = api211.js
 lazy val api212JVM = api212.jvm
 lazy val api212JS = api212.js
+// lazy val api213JVM = api213.jvm
+// lazy val api213JS = api213.js
 
 /* runtime* pretty print values and type */
 def runtimeScala(scalaV: String, apiProject: CrossProject) = {
@@ -375,6 +384,7 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
 val runtimeScala210 = runtimeScala("2.10.6", api210)
 val runtimeScala211 = runtimeScala("2.11.8", api211)
 val runtimeScala212 = runtimeScala("2.12.1", api212)
+// val runtimeScala213 = runtimeScala("2.13.0-M1", api213)
 
 lazy val runtimeScala210JVM = runtimeScala210.jvm
 lazy val runtimeScala210JS = runtimeScala210.js
@@ -382,6 +392,8 @@ lazy val runtimeScala211JVM = runtimeScala211.jvm
 lazy val runtimeScala211JS = runtimeScala211.js
 lazy val runtimeScala212JVM = runtimeScala212.jvm
 lazy val runtimeScala212JS = runtimeScala212.js
+// lazy val runtimeScala213JVM = runtimeScala213.jvm
+// lazy val runtimeScala213JS = runtimeScala213.js
 
 lazy val runtimeDotty = project
   .in(file("runtime-dotty"))

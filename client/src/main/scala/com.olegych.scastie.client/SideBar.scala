@@ -1,9 +1,7 @@
 package com.olegych.scastie
 package client
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
-import org.scalajs.dom
+import japgolly.scalajs.react._, vdom.all._
 
 object SideBar {
 
@@ -11,8 +9,6 @@ object SideBar {
     ScalaComponent.builder[(AppState, AppBackend)]("SideBar").render_P {
       case (state, backend) =>
         import backend._
-        import dom.window._
-        import state.dimensions._
 
         val toggleThemeLabel = if (state.isDarkTheme) "Light" else "Dark"
 
@@ -20,19 +16,6 @@ object SideBar {
           if (state.isDarkTheme) "fa fa-sun-o"
           else "fa fa-moon-o"
 
-        val displayMobile =
-          if (state.dimensions.forcedDesktop) display.block
-          else display.none
-
-        val mobileButton =
-          li(onClick ==> backend.toggleMobile,
-             role := "button",
-             title := "Go back to Mobile Version",
-             `class` := "btn",
-             displayMobile)(
-            i(`class` := s"fa fa-mobile"),
-            span("Mobile")
-          )
 
         val themeButton =
           li(onClick ==> toggleTheme,
@@ -52,35 +35,41 @@ object SideBar {
             span("Help")
           )
 
-        val buttonsTop: Seq[TagMod] = Seq(EditorButton(state, backend),
-                                          BuildSettingsButton(state, backend))
+        def selected(view: View) =
+          if (view == state.view) TagMod(`class` := "selected") else EmptyVdom
 
-        val buttonsBottom: Seq[TagMod] =
-          Seq(mobileButton, themeButton, helpButton)
+        val profileButton =
+          state.user match {
+            case Some(user) =>
+              li(onClick ==> setView2(View.CodeSnippets),
+                 role := "link",
+                 title := "Go to your code snippets",
+                 `class` := "btn",
+                 selected(View.CodeSnippets)
+              )(
+                img(src := user.avatar_url + "&s=32",
+                    alt := "Your Github Avatar",
+                    `class` := "avatar"),
+                span("Snippets")
+              )
+            case None => EmptyVdom
+          }
 
-        def sidebarStyle: TagMod =
-          TagMod(
-            height := "5000px"
-          )
 
-        def actionsContainerStyle: TagMod =
-          TagMod(
-            if (forcedDesktop)
-              minHeight := Dimensions.default.minWindowHeight.px
-            else height := innerHeight.toInt.px
-          )
-
-        nav(`id` := "sidebar", sidebarStyle)(
-          div(`class` := "actions-container", actionsContainerStyle)(
+        nav(`class` := "sidebar")(
+          div(`class` := "actions-container")(
             div(`class` := "logo")(
               img(src := "/assets/public/img/icon-scastie.png"),
               h1("Scastie")
             ),
-            ul(`id` := "actions-top", `class` := "actions")(
-              buttonsTop.toTagMod
+            ul(`class` := "actions-top")(
+              EditorButton(state, backend),
+              BuildSettingsButton(state, backend),
+              profileButton
             ),
-            ul(`id` := "actions-bottom", `class` := "actions bottom")(
-              buttonsBottom.toTagMod
+            ul(`class` := "actions-bottom")(
+              themeButton,
+              helpButton
             )
           )
         )

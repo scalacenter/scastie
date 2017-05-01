@@ -419,7 +419,7 @@ object ScaladexSearch {
             if (searchState.search.isEmpty) display.none
             else display.`inline-block`
 
-          div(`class` := "search", `id` := "library")(
+          div(`class` := "search", `class` := "library")(
             added,
             div(`class` := "search-input")(
               input.search.ref(searchInputRef = _)(

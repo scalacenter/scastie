@@ -11,7 +11,7 @@ sealed trait ScalaTarget {
 
 object ScalaTarget {
   private val defaultScalaVersion = "2.12.2"
-  private val defaultScalaJsVersion = "0.6.15"
+  private val defaultScalaJsVersion = "0.6.16"
 
   object Jvm {
     def default = ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)

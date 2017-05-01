@@ -28,15 +28,15 @@ object Inputs {
 }
 
 case class Inputs(
-    worksheetMode: Boolean = false,
+    worksheetMode: Boolean,
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
-    librariesFrom: Map[ScalaDependency, Project] = Map(),
+    librariesFrom: Map[ScalaDependency, Project],
     sbtConfigExtra: String,
     sbtPluginsConfigExtra: String,
-    showInUserProfile: Boolean = false,
-    forked: Option[SnippetId] = None
+    showInUserProfile: Boolean,
+    forked: Option[SnippetId]
 ) {
   def addScalaDependency(scalaDependency: ScalaDependency,
                          project: Project): Inputs = {
