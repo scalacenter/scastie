@@ -4,7 +4,6 @@ package client
 import api._
 import japgolly.scalajs.react._
 import autowire._
-import org.scalajs.dom
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scalajs.dom._
@@ -141,14 +140,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def clearCode: Callback = scope.modState(_.setCode(""))
 
-  def toggleForcedDesktop(value: Boolean)(e: ReactEventFromInput): Callback =
-    scope.modState(_.toggleForcedDesktop(value).setDimensionsHaveChanged(true))
-
-  def toggleMobile: Callback =
-    scope.modState(_.toggleForcedDesktop(value = false))
-  def toggleMobile(e: ReactEventFromInput): Callback =
-    toggleMobile >> setView(View.Editor) >> setDimensionsHaveChanged(true)
-
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
 
@@ -176,11 +167,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def toggleTheme: Callback = scope.modState(_.toggleTheme)
 
   def toggleConsole: Callback = scope.modState(_.toggleConsole)
-  def toggleConsole(e: ReactEventFromInput): Callback =
-    toggleConsole >> setDimensionsHaveChanged(true)
-
-  def setWindowHasResized(): Callback = scope.modState(_.setWindowHasResized)
-
+  def toggleConsole(e: ReactEventFromInput): Callback = toggleConsole
   def toggleWelcome(e: ReactEventFromInput): Callback = scope.modState(_.toggleWelcome)
 
   def toggleHelp(e: ReactEventFromInput): Callback = scope.modState(_.toggleHelp)
@@ -196,61 +183,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def toggleWorksheetMode: Callback = scope.modState(_.toggleWorksheetMode)
   def toggleWorksheetMode(e: ReactEventFromInput): Callback = toggleWorksheetMode
-
-  def setDimensionsHaveChanged(value: Boolean): Callback =
-    scope.modState(_.setDimensionsHaveChanged(value))
-
-  def setTopBarHeight: Callback =
-    scope.modState(_.setTopBarHeight(getElementHeight("topbar")))
-
-  def setEditorTopBarHeight: Callback =
-    scope.modState(_.setEditorTopBarHeight(getElementHeight("editor-topbar")))
-
-  def setSideBarWidth: Callback =
-    scope.modState(_.setSideBarWidth(getElementWidth("sidebar")))
-
-  def setSideBarMinHeight: Callback =
-    scope.modState(
-      _.setSideBarMinHeight(
-        getElementHeight("topbar") + getElementHeight("actions-top") + getElementHeight(
-          "actions-bottom"
-        )
-      )
-    )
-
-  def setConsoleBarHeight: Callback =
-    scope.modState(_.setConsoleBarHeight(getElementHeight("switcher-show")))
-
-  def setConsoleHeight: Callback =
-    scope.modState(
-      _.setConsoleHeight(
-        getElementHeight("console")
-      )
-    )
-
-  def setMobileBarHeight: Callback =
-    scope.modState(
-      _.setMobileBarHeight(
-        getElementHeight("editor-mobile")
-      )
-    )
-
-  def setDimensions2(e: ReactEventFromInput): Callback = setDimensions
-  val setDimensions: Callback =
-    setTopBarHeight >>
-      setEditorTopBarHeight >>
-      setSideBarWidth >>
-      setSideBarMinHeight
-      setConsoleBarHeight >>
-      setConsoleHeight >>
-      setMobileBarHeight >>
-      setDimensionsHaveChanged(false)
-
-  def getElementWidth(id: String): Int =
-    Option(dom.document.getElementById(id)).map(_.clientWidth).getOrElse(0)
-
-  def getElementHeight(id: String): Int =
-    Option(dom.document.getElementById(id)).map(_.clientHeight).getOrElse(0)
 
   def run(e: ReactEventFromInput): Callback = run
   def run: Callback = {
@@ -440,12 +372,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       .getOrElse(Callback.empty)
 
   def start(props: AppProps): Callback = {
-
-    def onresize(e: UIEvent): Unit =
-      (setWindowHasResized() >> setDimensionsHaveChanged(true)).runNow
-
-    dom.window.onresize = onresize _
-
     def loadUser: Callback =
       Callback.future(
         ApiClient[AutowireApi]

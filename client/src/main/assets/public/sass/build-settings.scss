@@ -1,0 +1,259 @@
+@import "commonvars";
+
+@mixin buildSettings() {
+  .settings-container {
+    overflow-y: auto;
+    height: calc(100% - #{$header-height});
+
+    font-size: 15px;
+
+    ul, li {
+      line-height: 38px;
+    }
+
+    .build-settings-container {
+      padding: 45px 45px;
+      .btn {
+        width: 90px;
+        padding: 10px;
+        align-content: center;
+        text-align: center;
+      }
+
+      h2 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+
+        &:not(:first-child) {
+          margin-top: 25px;
+        }
+
+        display: block;
+        position: relative;
+        z-index: 1;
+        &:before {
+          border-top-width: 2px;
+          border-top-style: solid;
+
+          content: "";
+          margin: 0 auto;
+          /* this centers the line to the full width specified */
+
+          position: absolute;
+          /* positioning must be absolute here, and relative positioning
+             must be applied to the parent */
+
+          top: 50%;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100%;
+          z-index: -1;
+        }
+        span {
+          padding: 0 15px 0 0;
+        }
+      }
+
+      .target li {
+        display: inline;
+        list-style-type: none;
+        padding-right: 20px;
+
+        .disabled {
+          cursor: default;
+        }
+
+        a {
+          text-decoration: none;
+          position: relative;
+          margin-left: -20px;
+        }
+      }
+
+      .suggestedVersions li {
+        display: inline;
+        list-style-type: none;
+        padding-right: 20px;
+      }
+
+      .CodeMirror {
+        margin-top: 10px;
+        margin-bottom: 30px;
+      }
+
+      input[type="radio"] {
+        display: none;
+        & + label.radio {
+          font-size: 15px;
+          line-height: 18px;
+          display: inline-block;
+          margin-right: 30px;
+          &:before {
+            line-height: 18px;
+            content: " ";
+            width: 8px;
+            height: 8px;
+            min-width: 8px;
+            min-height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+            border-width: 5px;
+            border-style: solid;
+
+            display: inline-block;
+            margin-bottom: -4px;
+            box-sizing: content-box;
+          }
+        }
+        &:checked + label.radio:before {
+          content: " ";
+          width: 8px !important;
+          height: 8px !important;
+          border-radius: 50%;
+          border-width: 5px;
+          border-style: solid;
+        }
+      }
+
+      .select-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 130px;
+        &:after {
+          content: "\f0d7";
+          font-family: FontAwesome;
+          position: absolute;
+          top: 0px;
+          right: 10px;
+          font-size: 13px;
+        }
+      }
+      .scala-version {
+        display: inline-block;
+        width: 140px;
+      }
+
+      select, input {
+        width: 100%;
+        height: 36px;
+        line-height: 36px;
+        padding-left: 14px;
+
+        border-radius: 2px;
+        border: none;
+        display: block;
+        font-size: 15px;
+        box-sizing: border-box;
+
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+
+        &::-moz-placeholder,
+        &:-moz-placeholder,
+        &::-webkit-input-placeholder,
+        &:-ms-input-placeholder {
+          opacity: 1;
+        }
+      }
+
+      .search {
+        position: relative;
+        .search-input {
+          height: 36px;
+          width: 100%;
+          .search-query {
+            display: inline-block;
+            width: 100%;
+          }
+          .close {
+            width: 36px;
+            height: 100%;
+            text-align: center;
+            padding: 10px;
+            display: none;
+            cursor: pointer;
+          }
+        }
+
+        .results {
+          border-radius: 2px;
+          max-height: 300px;
+          z-index: 20;
+          margin-top: 10px;
+          overflow: auto;
+          display: none;
+          i.fa {
+            font-size: 20px;
+            width: 40px;
+            text-align: center;
+            vertical-align: middle;
+          }
+          .result {
+            padding: 10px;
+            display: block;
+            cursor: pointer;
+            font-size: 15px;
+            &:not(:last-child) {
+              padding-bottom: 10px;
+            }
+            a {
+              margin-right: 10px;
+            }
+            .logo {
+              width: 30px;
+              height: 30px;
+              vertical-align: middle;
+            }
+            .artifact {
+              margin-left: 20px;
+              vertical-align: middle;
+            }
+          }
+        }
+
+        .added .result {
+          padding: 10px;
+          display: block;
+          cursor: pointer;
+          font-size: 15px;
+          &:not(:last-child) {
+            padding-bottom: 10px;
+          }
+          i.fa {
+            font-size: 20px;
+            width: 30px;
+            text-align: left;
+            vertical-align: middle;
+          }
+          a {
+            margin-right: 10px;
+            margin-left: 10px;
+          }
+          .logo {
+            width: 30px;
+            height: 30px;
+            vertical-align: middle;
+          }
+          .artifact {
+            margin-left: 20px;
+            vertical-align: middle;
+            width: 250px;
+            display: inline-block;
+          }
+          .select-wrapper {
+            margin-left: 20px;
+            &:after {
+                top: 10px;
+            }
+           }
+          select {
+            display: inline-block
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+@import "commonvars";
+
+@mixin editorTheme($class) {
+  .editor-topbar, .editor-mobile {
+    background: $editor-background;
+    box-shadow: inset 0 -2px 0 0 $console-border-color;
+  }
+
+  .workSheetIndicator {
+    color: $topbar-background;
+    &.enabled {
+      color: $worksheet-enabled;
+    }
+  }
+
+  .editor-buttons {
+    .btn {
+      color: $editor-button-color;
+
+      &:hover {
+        color: $hover-editor-button-color;
+      }
+
+      &.disabled {
+        color: #586e75;
+      }
+    }
+  }
+
+  .editor-container {
+    .switcher-show {
+      color: $switcher-show-color;
+      background: $hidden-console-background;
+    }
+
+    .switcher-hide {
+      background: $console-background;
+    }
+
+    .console {
+      color: $console-text-color;
+      background: $console-background;
+    }
+
+    .handler {
+      background: $console-border-color;
+    }
+  }
+
+  .editor-mobile {
+    background-color: $sidebar-background;
+  }
+}

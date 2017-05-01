@@ -11,7 +11,6 @@ object TopBar {
   private val component =
     ScalaComponent.builder[(AppState, AppBackend)]("TopBar").render_P {
       case (state, backend) =>
-        import backend._
 
         def openInNewTab(link: String): Callback = {
           Callback(
@@ -25,9 +24,6 @@ object TopBar {
         def issue(e: ReactEventFromInput): Callback =
           openInNewTab("https://github.com/scalacenter/scastie/issues/new")
 
-        def selected(view: View) =
-          if (view == state.view) TagMod(`class` := "selected") else EmptyVdom
-
         val logoutUrl = "/logout"
 
         def logout(e: ReactEventFromInput): Callback =
@@ -37,66 +33,43 @@ object TopBar {
         def login(e: ReactEventFromInput): Callback =
           Callback(dom.window.location.pathname = "/login")
 
+
         val profileButton =
           state.user match {
             case Some(user) =>
-              Seq(
-                li(onClick ==> setView2(View.CodeSnippets),
-                   role := "link",
-                   title := "Go to your code snippets",
-                   `class` := "btn",
-                   selected(View.CodeSnippets)
-                )(
-                  img(src := user.avatar_url + "&s=30",
-                      alt := "Your Github Avatar",
-                      `class` := "avatar"),
-                  "Snippets"
-                ),
-                li(
-                  role := "link",
-                  onClick ==> logout,
-                  `class` := "btn")(
-                  i(`class` := "fa fa-sign-out"),
-                  "Logout"
-                )
+              li(
+                role := "link",
+                onClick ==> logout,
+                `class` := "btn")(
+                i(`class` := "fa fa-sign-out"),
+                "Logout"
               )
+
             case None =>
-              Seq(
-                li(role := "link", onClick ==> login, `class` := "btn")(
-                  i(`class` := "fa fa-sign-in"),
-                  "Login"
-                )
+              li(role := "link", onClick ==> login, `class` := "btn")(
+                i(`class` := "fa fa-sign-in"),
+                "Login"
               )
           }
 
-        def topBarStyle = Seq(
-          minWidth :=
-            (if (state.dimensions.forcedDesktop)
-               Dimensions.default.minWindowWidth
-             else dom.window.innerWidth.toInt).px
-        )
 
-        nav(`id` := "topbar", topBarStyle.toTagMod)(
-          div(`class` := "logo")(
-            img(src := "/assets/public/img/icon-scastie.png"),
-            h1("Scastie")
-          ),
+        nav(`class` := "topbar")(
           ul(`class` := "actions")(
             li(onClick ==> feedback,
                role := "link",
                title := "Open Gitter.im Chat to give us feedback",
                `class` := "btn")(
               i(`class` := "fa fa-gitter"),
-              "Scastie's gitter"
+              span("Scastie's gitter")
             ),
             li(onClick ==> issue,
                role := "link",
                title := "Create new issue on GitHub",
                `class` := "btn")(
               i(`class` := "fa fa-github"),
-              "Github issues"
+              span("Github issues")
             ),
-            profileButton.toTagMod
+            profileButton
           )
         )
 

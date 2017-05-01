@@ -1,0 +1,53 @@
+@import "commonvars";
+
+@mixin snippetTheme($class) {
+  .snippets-container {
+    color: $snippets-text-color;
+    background-color: $snippets-background;
+
+    .code-snippets-container {
+      h2 {
+        color: $snippets-text-color;
+      }
+
+      .snippets {
+        .group {
+          &:before {
+            border-left-color: $snippets-line-color;
+          }
+
+          .snippet {
+            .header {
+
+              &:before {
+                border-top-color: $snippets-line-color;     
+              }
+
+              .update {
+                color: $snippets-update-color;
+              }
+
+              .actions {
+                .btn {
+                  color: $snippets-text-color;
+                }
+              }
+            }
+            a {
+              .code {
+                background-color: $snippet-background-color;
+                color: $snippets-text-color;
+              }
+            }
+
+            &:last-child {
+              &:before {
+                border-left-color: $snippets-background;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

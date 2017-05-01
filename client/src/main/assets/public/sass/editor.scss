@@ -1,0 +1,208 @@
+@import "commonvars";
+
+@mixin editor() {
+  .editor-mobile {
+    display: none;
+  }
+
+  .editor-topbar {
+    width: 100%;
+    height: $editor-topbar-height;
+  }
+
+  .editor-topbar, .editor-mobile {
+    display: inline-block;
+
+    &.disabled {
+      display: none;
+    }
+
+    .workSheetIndicator {
+      margin-right: 0px;
+      text-align: center;
+      width: 14px;
+      margin-left: 8px;
+      font-size: 14px;
+      
+      &.enabled.alpha {
+        opacity: 0.3;
+      }
+    }
+    .editor-buttons {
+      .btn {
+        display: inline-block;
+        cursor: pointer;
+        padding: 0 20px;
+        line-height: 58px;
+        
+        i {
+          margin-right: 5px;
+        }
+
+        &.disabled {
+          text-decoration: none;
+          cursor: default;
+        }
+      }
+    }
+
+    .save-buttons {
+      display: inline-block;
+      .btn {
+        padding: 0 20px;
+      }
+    }
+  }
+
+  $console-handle-height: 33px;
+
+  .content {
+    height: 100%;
+  }
+
+  .editor-container {
+    height: 100%;
+    overflow: hidden;
+
+    .fa {
+        width: 30px;
+        text-align: center;
+    }
+
+    .code {
+      width: 100%;
+      height: calc(100% - #{$header-height + $editor-topbar-height + $console-handle-height});
+      overflow: hidden;
+
+      &.console-open{
+        height: calc(100% - #{$header-height + $editor-topbar-height + $console-height});
+      }
+    }
+
+    .console-container {
+      height: $console-handle-height;
+
+      &.console-open {
+        height: $console-height;
+      }
+    }
+
+    .switcher-show, .switcher-hide {
+      text-align: right;
+      line-height: $console-handle-height;
+      padding-right: 20px;
+      cursor: pointer;
+    }
+
+    .console {
+      height: 100%;
+      .handler {
+        height: 6px;
+      }
+    }
+
+    .output-console {
+      height: 100%;
+      overflow: auto;
+      padding: 20px;
+    }
+  }
+
+  .main-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: $sidebar-width;
+    display: inline-block;
+    width: calc(100% - #{$sidebar-width});
+  }
+
+  @include phone {
+    .main-panel {
+      left: 0;
+      width: 100%;
+    }
+
+    .content {
+      height: 100%;
+    }
+
+    .editor-container {
+      .code {
+        height: calc(100% - #{$editor-mobile-height + $console-handle-height});
+        &.console-open{
+          height: calc(100% - #{$editor-mobile-height + $console-height});
+        }
+      }
+    }
+
+    .editor-topbar {
+      display: none !important;
+    }
+
+    .content {
+      margin-left: 0px !important;
+    }
+
+    .btn.run-button.mobile {
+      display: block;
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+    }
+
+    .switcher-show, .console {
+      bottom: 48px !important;
+      left: 0px !important;
+    }
+
+    .editor-mobile {
+      display: block;
+      position: fixed;
+      bottom: 0px;
+      left: 0px;
+      height: $editor-mobile-height;
+      width: 100%;
+      
+      & > * {
+        padding: 0px 24px !important;
+      }
+
+      .btn {
+        text-align: center;
+        width: 50%;
+        line-height: 48px !important;
+        font-size: 20px;
+        display: inline-block !important;
+        float: left;
+        padding: 0px !important;
+        span {
+            display: none;
+        }
+        i.fa {
+            line-height: 40px;
+            font-size: 20px;
+        }
+      }
+    }
+  }
+
+  @include tablet {
+    .main-panel {
+      left: $sidebar-tablet-width;
+      width: calc(100% - #{$sidebar-tablet-width});
+    }
+
+    .editor-topbar {
+      font-size: 20px;
+      li span {
+        display: none;
+      }
+    }
+
+    .editor-mobile {
+      display: none;
+    }
+  }
+}
