@@ -69,18 +69,7 @@ object TopBar {
               )
           }
 
-        def topBarStyle = Seq(
-          minWidth :=
-            (if (state.dimensions.forcedDesktop)
-               Dimensions.default.minWindowWidth
-             else dom.window.innerWidth.toInt).px
-        )
-
-        nav(`id` := "topbar", topBarStyle.toTagMod)(
-          div(`class` := "logo")(
-            img(src := "/assets/public/img/icon-scastie.png"),
-            h1("Scastie")
-          ),
+        nav(`class` := "topbar")(
           ul(`class` := "actions")(
             li(onClick ==> feedback,
                role := "link",

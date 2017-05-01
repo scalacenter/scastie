@@ -6,11 +6,11 @@ import japgolly.scalajs.react._
 import vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.window._
-import org.scalajs.dom.raw.{HTMLScriptElement, HTMLDivElement}
+// import scala.scalajs.js
+import org.scalajs.dom.raw.HTMLScriptElement
 
 object App {
-
-  private var appElement: HTMLDivElement = _
+  // js.debugger()
 
   private def setTitle(state: AppState) =
     if (state.inputsHasChanged) {
@@ -29,27 +29,12 @@ object App {
             if (state.isDarkTheme) "dark"
             else "light"
 
-          val sideBar =
-            SideBar(state, scope.backend).unless(props.isEmbedded)
-
           val appClass =
             if (!props.isEmbedded) "app"
             else "app embedded"
 
-          val desktop =
-            if (state.dimensions.forcedDesktop) "force-desktop"
-            else ""
-
-          def appStyle =
-            if (state.dimensions.forcedDesktop)
-              Seq(minHeight := "5000px",
-                  minWidth := Dimensions.default.minWindowWidth.px)
-            else Seq(height := innerHeight.px, width := innerWidth.px)
-
-          div.ref(appElement = _)(
-              `class` := s"$appClass $theme $desktop",
-              appStyle.toTagMod)(
-            sideBar,
+          div(`class` := s"$appClass $theme")(
+            SideBar(state, scope.backend).unless(props.isEmbedded),
             MainPanel(state, scope.backend, props),
             Welcome(state, scope.backend),
             Help(state, scope.backend),
@@ -61,23 +46,12 @@ object App {
       .componentWillMount { current =>
         current.backend.start(current.props) >> setTitle(current.state)
       }
-      .componentDidMount { scope =>
-        val detectGesture = Callback(
-          appElement.addEventListener(
-            "gesturechange gestureend touchstart touchmove touchend",
-            scope.backend.setDimensions2 _
-          )
-        )
-
-        scope.backend.setDimensions >> detectGesture
-      }
       .componentDidUpdate { scope =>
+        // js.debugger()
+
+        console.log("update")
+
         val state = scope.prevState
-        val backend = scope.backend
-
-        val setDimensions: Callback =
-          backend.setDimensions.when_(state.dimensions.dimensionsHaveChanged)
-
         val scalaJsRunId = "scastie-scalajs-playground-run"
 
         def createScript(id: String): HTMLScriptElement = {
@@ -164,7 +138,7 @@ object App {
           Callback.when(state.isReRunningScalaJs)(
             Callback(runScalaJs()) >> scope.modState(_.setIsReRunningScalaJs(false)))
 
-        setTitle(state) >> setDimensions >> executeScalaJs >> reRunScalaJs
+        setTitle(state) >> executeScalaJs >> reRunScalaJs
       }
       .componentWillReceiveProps { scope =>
         val next = scope.nextProps.snippetId

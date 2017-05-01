@@ -1,10 +1,8 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.ConsoleState
-import japgolly.scalajs.react._
-import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLPreElement
-import vdom.all._
+
+import japgolly.scalajs.react._, vdom.all._
 
 object Console {
 
@@ -17,33 +15,15 @@ object Console {
       .initialState(ConsoleState.default)
       .render_P {
         case (state, backend) =>
-          import state.dimensions._
 
           val (displayConsole, displaySwitcher) =
             if (state.consoleState.consoleIsOpen) (display.block, display.none)
             else (display.none, display.block)
 
-          val currentWidth = (dom.window.innerWidth - sideBarWidth).px
-
-          val minConsoleWidth =
-            ((if (forcedDesktop) Dimensions.default.minWindowWidth
-              else dom.window.innerWidth.toInt) - sideBarWidth).px
-
-          def consoleStyle =
-            Seq(displayConsole,
-                width := currentWidth,
-                minWidth := minConsoleWidth)
-
-          def switcherStyle =
-            Seq(displaySwitcher,
-                width := currentWidth,
-                minWidth := minConsoleWidth)
-
           div(`id` := "console-container")(
-            div(`id` := "console", consoleStyle.toTagMod)(
+            div(`id` := "console", displayConsole)(
               div(`id` := "handler"),
               div(`id` := "switcher-hide",
-                  consoleStyle.toTagMod,
                   role := "button",
                   onClick ==> backend.toggleConsole)(
                 i(`class` := "fa fa-terminal"),
@@ -55,7 +35,7 @@ object Console {
               )
             ),
             div(`id` := "switcher-show", role := "button", onClick ==> backend.toggleConsole)(
-              switcherStyle.toTagMod,
+              displaySwitcher,
               i(`class` := "fa fa-terminal"),
               "Console",
               i(`class` := "fa fa-caret-up")

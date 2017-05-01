@@ -28,9 +28,7 @@ object AppState {
     user = None,
     attachedDoms = Map(),
     inputs = Inputs.default,
-    outputs = Outputs.default,
-    windowHasResized = false,
-    dimensions = Dimensions.default
+    outputs = Outputs.default
   )
 
   implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
@@ -65,9 +63,7 @@ case class AppState(
     user: Option[User],
     attachedDoms: AttachedDoms,
     inputs: Inputs,
-    outputs: Outputs,
-    windowHasResized: Boolean,
-    dimensions: Dimensions
+    outputs: Outputs
 ) {
   def copyAndSave(view: View = view,
                   isRunning: Boolean = isRunning,
@@ -81,9 +77,7 @@ case class AppState(
                   snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
                   user: Option[User] = user,
                   inputs: Inputs = inputs,
-                  outputs: Outputs = outputs,
-                  windowHasResized: Boolean = windowHasResized,
-                  dimensions: Dimensions = dimensions): AppState = {
+                  outputs: Outputs = outputs): AppState = {
 
     val snippetId0 =
       if (inputsHasChanged) None
@@ -120,9 +114,7 @@ case class AppState(
           showInUserProfile = false,
           forked = None
         ),
-        outputs,
-        windowHasResized,
-        dimensions
+        outputs
       )
 
     LocalStorage.save(state0)
@@ -153,9 +145,6 @@ case class AppState(
   def setSnippetSaved(value: Boolean): AppState =
     copy(isSnippetSaved = value, inputsHasChanged = false)
 
-  def toggleForcedDesktop(value: Boolean): AppState =
-    copyAndSave(dimensions = dimensions.copy(forcedDesktop = value))
-
   def toggleTheme: AppState =
     copyAndSave(isDarkTheme = !isDarkTheme)
 
@@ -164,9 +153,6 @@ case class AppState(
       consoleState =
         consoleState.copy(consoleIsOpen = !consoleState.consoleIsOpen)
     )
-
-  def setWindowHasResized: AppState =
-    copyAndSave(windowHasResized = !windowHasResized)
 
   def toggleWorksheetMode: AppState =
     copyAndSave(
@@ -217,30 +203,6 @@ case class AppState(
 
   def setUser(user: Option[User]): AppState =
     copyAndSave(user = user)
-
-  def setDimensionsHaveChanged(value: Boolean): AppState =
-    copyAndSave(dimensions = dimensions.copy(dimensionsHaveChanged = value))
-
-  def setTopBarHeight(height: Int): AppState =
-    copyAndSave(dimensions = dimensions.copy(topBarHeight = height))
-
-  def setEditorTopBarHeight(height: Int): AppState =
-    copyAndSave(dimensions = dimensions.copy(editorTopBarHeight = height))
-
-  def setSideBarWidth(width: Int): AppState =
-    copyAndSave(dimensions = dimensions.copy(sideBarWidth = width))
-
-  def setSideBarMinHeight(height: Int): AppState =
-    copyAndSave(dimensions = dimensions.copy(sideBarMinHeight = height))
-
-  def setConsoleBarHeight(height: Int): AppState =
-    copyAndSave(dimensions = dimensions.copy(consoleBarHeight = height))
-
-  def setConsoleHeight(height: Int): AppState =
-    copyAndSave(dimensions = dimensions.copy(consoleHeight = height))
-
-  def setMobileBarHeight(height: Int): AppState =
-    copyAndSave(dimensions = dimensions.copy(mobileBarHeight = height))
 
   def setCode(code: String): AppState =
     copyAndSave(

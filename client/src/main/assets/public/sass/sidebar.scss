@@ -1,0 +1,83 @@
+@import "commonvars";
+
+@mixin sidebar($class) {
+.sidebar {
+  @include transition();
+
+  position: absolute;
+  width: $sidebar-width;
+  height: 100%;
+
+  background: $sidebar-background;
+
+  .logo {
+    text-decoration: none;
+    color: $link-color;
+    display: block;
+    height: $header-height;
+    line-height: $header-height;
+    background: $topbar-background;
+    text-align: left;
+    width: $sidebar-width;
+    cursor: default;
+    @include transition();
+    img {
+      float: left;
+      margin: 21px 10px 21px 18px;
+      width: 24px;
+      height: 28px;
+      line-height: 70px;
+    }
+    h1 {
+        display: inline-block;
+    }
+  }
+  .actions-container {
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+  }
+  
+  .btn {
+    cursor: pointer;
+    padding-left: 20px;
+    line-height: 58px;
+    &.selected {
+      background-color: $selected-option-background;
+      color: $selected-option-color !important;
+    }
+    &:hover {
+      color: $hover-option-color;
+    }
+  }
+
+  .actions-top, .actions-bottom {
+    i {
+      margin-right: 5px;
+    }
+  }
+
+  .actions-top {
+    @include transition();
+    color: $option-color;
+  }
+
+  .actions-bottom {
+    position: fixed;
+    bottom: 0px;
+    .btn {
+      width: 149px;
+      color: $option-color;
+    }
+  }          
+}
+
+@media only screen and (max-width: $mobile-width) {
+  .sidebar {
+    display: none !important;
+  }
+}
+
+
+
+}

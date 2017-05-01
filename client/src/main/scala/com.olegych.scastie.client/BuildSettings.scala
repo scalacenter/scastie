@@ -3,7 +3,6 @@ package client
 
 import api._
 import japgolly.scalajs.react._
-import org.scalajs.dom
 import vdom.all._
 
 object BuildSettings {
@@ -50,22 +49,6 @@ object BuildSettings {
       if (disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
       else TagMod(onChange ==> backend.setTarget2(defaultTarget(targetType)))
 
-    def vote(targetType: ScalaTargetType) = {
-      val voteIssueId: Map[ScalaTargetType, Int] = Map(
-        ScalaTargetType.Native -> 50
-      )
-      voteIssueId.get(targetType) match {
-        case Some(issueId) => {
-          val link = s"https://github.com/scalacenter/scastie/issues/$issueId"
-          a(href := link, target := "_blank")(
-            i(`class` := "fa fa-long-arrow-left"),
-            " Vote!"
-          )
-        }
-        case None => EmptyVdom
-      }
-    }
-
     div(
       ul(`id` := "target")(
         targetTypes.map { targetType =>
@@ -77,8 +60,7 @@ object BuildSettings {
                   name := "target",
                   handler(targetType),
                   selected(targetType)),
-            label(`for` := targetLabel, role := "button", `class` := "radio", targetLabel),
-            vote(targetType)
+            label(`for` := targetLabel, role := "button", `class` := "radio", targetLabel)
           )
         }.toTagMod
       )
@@ -230,8 +212,6 @@ object BuildSettings {
   private val component =
     ScalaComponent.builder[(AppState, AppBackend)]("BuildSettings").render_P {
       case (state, backend) =>
-        import state.dimensions._
-
         val theme = if (state.isDarkTheme) "dark" else "light"
 
         val resetButton =
@@ -244,11 +224,7 @@ object BuildSettings {
             )
           } else EmptyVdom
 
-        def containerStyle =
-          if (forcedDesktop) height := (dom.window.innerHeight - topBarHeight).px
-          else EmptyVdom
-
-        div(`id` := "build-settings-container", containerStyle)(
+        div(`id` := "build-settings-container")(
           h2(
             span("Target")
           ),

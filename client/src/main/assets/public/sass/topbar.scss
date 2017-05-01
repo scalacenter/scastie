@@ -1,0 +1,89 @@
+@import "commonvars";
+
+@mixin topbar($class) {
+
+.topbar {
+  flex-direction: row;
+  text-align: right;
+  width: 100%;
+  height: $header-height;
+  line-height: $header-height;
+  background: $topbar-background;
+  @include transition();
+  .logo {
+      text-decoration: none;
+      color: $link-color;
+      display: block;
+      height: $header-height;
+      line-height: $header-height;
+      background: $topbar-background;
+      text-align: left;
+      width: $sidebar-width;
+      @include transition();
+      img {
+          float: left;
+          margin: 21px 10px 21px 18px;
+          width: 24px;
+          height: 28px;
+          line-height: $header-height;
+      }
+      h1 {
+          display: inline-block;
+      }
+  }
+  ul.actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    height: $header-height;
+    display: inline-block;
+    cursor: pointer;
+    line-height: $header-height;
+    padding: 0px 20px;
+    color: $hover-dropdown-color;
+    @include transition();
+
+    .avatar {
+        height: 30px;
+        width: 30px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-left: 10px;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+
+    /* EXTENDING FONT AWESOME */
+    .fa-gitter {
+        &:before {
+            position: relative;
+            top: 2px;
+            content: "  ";
+            display: inline-block;
+            background: url(unquote('../img/gitter-icon-dark.png'));
+            background-repeat: no-repeat;
+            width: 10px;
+            height: 15px;
+        }
+    }
+    
+    li {
+      &:hover {
+        background-color: $selected-dropdown-background;
+        color: $hover-dropdown-color;
+      }
+
+      height: $header-height;
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      line-height: $header-height;
+      padding: 0px 20px;
+      color: $hover-dropdown-color;
+      @include transition();
+    }
+  }
+}
+
+}

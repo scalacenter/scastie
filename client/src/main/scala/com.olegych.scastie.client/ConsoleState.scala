@@ -1,4 +1,4 @@
-package com.olegych.scastie
+package com.olegych.scastie.client
 
 object ConsoleState {
   def default = ConsoleState(

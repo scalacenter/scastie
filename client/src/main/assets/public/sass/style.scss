@@ -1,7 +1,12 @@
 @import "reset";
+@import "sidebar";
+@import "topbar";
+@import "editor";
+@import "modal";
 @import "commonvars";
 @import "../../../../../target/web/web-modules/main/webjars/lib/bourbon/app/assets/stylesheets/_bourbon";
 @import "../../../../../target/web/web-modules/main/webjars/lib/neat/app/assets/stylesheets/_neat";
+
 @mixin generic-styles($class) {
     body {
         font-family: $font-family;
@@ -9,9 +14,6 @@
         line-height: $text-line-height;
         overflow: hidden;
         @include transition();
-        .root {
-            height: 100%;
-        }
         .app.#{$class}
         {
             color: $text-color;
@@ -28,259 +30,6 @@
             }
             h1 {
                 font-size: 150%;
-            }
-            /* MODAL STYLES */
-
-            .modal {
-                display: block;
-                label {
-                    cursor: pointer;
-                    margin-bottom: 0;
-                }
-                h1 {
-                    color: #073642;
-                    font-family: 'Roboto Slab', serif;
-                    font-weight: normal;
-                    font-size: 32px;
-                    line-height: 32px;
-                    display: inline-block;
-                }
-                h2 {
-                    font-family: 'Roboto Slab', serif;
-                    font-size: 24px;
-                    line-height: 32px;
-                    color: #073642;
-                    font-weight: normal;
-                }
-                h3 {
-                    font-family: 'Roboto Slab', serif;
-                    font-size: 20px;
-                    line-height: 32px;
-                    color: #073642;
-                    font-weight: normal;
-                }
-                label img {
-                    border-radius: $modal-trigger-image-width / 2;
-                    display: block;
-                    max-width: $modal-trigger-image-width;
-                }
-                .modal-state {
-                    display: none;
-                }
-                .modal-trigger {
-                    padding: 0.8em 1em;
-                }
-                .modal-fade-screen {
-                    // overlay
-                    @include position(fixed, 0px 0px 0px 0px);
-                    background-color: rgba(#000, 0.55);
-                    opacity: 1;
-                    padding-top: 0.6em;
-                    text-align: left;
-                    transition: opacity 0.25s ease;
-                    visibility: visible;
-                    z-index: 99999999999;
-                    @include media($large-screen) {
-                        padding-top: 10em;
-                    }
-                    .modal-bg {
-                        @include position(absolute, 0px 0px 0px 0px);
-                        cursor: pointer;
-                    }
-                    .modal-share {
-                        margin-top: 10em;
-                        height: 300px;
-                        .modal-inner {
-                            overflow: hidden;
-                            p {
-                                margin: 30px 0 10px 0;
-                            }
-                        }
-                        .snippet-link {
-                            height: 48px;
-                            border: 1px solid #5d7c83;
-                            margin-top: 34px;
-                            #link-to-copy {
-                                border: 0px;
-                                width: calc(100% - 46px);
-                                padding-left: 15px;
-                                font: inherit;
-                                font-size: 18px;
-                                display: inline-block;
-                                vertical-align: middle;
-                            }
-                            .snippet-clip {
-                                display: inline-block;
-                                width: 46px;
-                                height: 100%;
-                                padding: 12px;
-                                cursor: pointer;
-                                font-size: 22px;
-                                vertical-align: middle;
-                                i.fa {
-                                    width: 22px;
-                                    text-align: center;
-                                    font-size: 22px;
-                                }
-                                &:hover {
-                                    color: darken($modal-close-color, 20%);
-                                }
-                            }
-                        }
-                    }
-                    .modal-reset {
-                        margin-top: 10em;
-                        height: 250px;
-                        width: 500px;
-                        .modal-inner {
-                            overflow: hidden;
-                            p {
-                                margin: 30px 0 10px 0;
-                            }
-                            ul {
-                                width: 100%;
-                            }
-                            .btn{
-                                color: $base-font-color;
-                                display:inline-block;
-                                cursor: pointer;
-                                background-color: #f4f3f3;
-                                width: 120px;
-                                padding: 10px;
-                                align-content: center;
-                                text-align: center;
-                                margin-left: 50px;
-                                margin-right: 50px;
-                                margin-top: 30px;
-                                &:hover {
-                                    color: $hover-editor-button-color;
-                                }
-                            }
-                        }
-
-                    }
-                }
-                .modal-close {
-                    @include position(absolute, ($modal-padding/2) ($modal-padding /2) 0 0);
-                    @include size(1.5em);
-                    background: $modal-background;
-                    cursor: pointer;
-                    &::after, &::before {
-                        @include position(absolute, 3px 3px 0 50%);
-                        @include size(0.15em 1.5em);
-                        background: $modal-close-color;
-                        content: "";
-                        display: block;
-                        margin: -3px 0 0 -1px;
-                        transform: rotate(45deg);
-                    }
-                    &:hover::after,
-                    &:hover::before {
-                        background: darken($modal-close-color, 20%);
-                    }
-                    &::before {
-                        transform: rotate(-45deg);
-                    }
-                }
-                .modal-window {
-                    background: $modal-background;
-                    border-radius: $base-border-radius;
-                    margin: auto;
-                    margin-top: 0;
-                    height: 70%;
-                    position: relative;
-                    transition: opacity 0.25s ease;
-                    width: 50%;
-                    overflow: hidden;
-                    padding-bottom: 10px;
-                    .modal-header {
-                        background: $modal-background;
-                        padding: 30px;
-                        position: relative;
-                        height: 90px;
-                        width: 100%;
-                        border-radius: $base-border-radius;
-                    }
-                    .modal-inner {
-                        width: 100%;
-                        overflow-y: scroll;
-                        height: calc(100% - 90px);
-                        padding: 0 30px 10px 30px;
-                        p {
-                            color: $base-font-color;
-                            line-height: $base-line-height;
-                            margin: 10px 0 20px 0;
-                            &.normal {
-                                font-family: Lato;
-                                font-size: 16px;
-                            }
-                        }
-                        .modal-content {
-                            color: $base-font-color;
-                            @include media($medium-screen) {
-                                columns: 2 8em;
-                            }
-                        }
-                        a {
-                            color: $modal-link-color;
-                        }
-                        a.cta {
-                            color: $base-background-color;
-                            display: inline-block;
-                            margin-right: 0.5em;
-                            margin-top: 1em;
-                            &:last-child {
-                                padding: 0 2em;
-                            }
-                        }
-                        .indent {
-                            padding-left: 40px;
-                        }
-                        .shortcuts {
-                            margin-bottom: 25px;
-                            table {
-                                border: none;
-                                th {
-                                    width: 285px;
-                                    font-family: monospace;
-                                    font-size: 13px;
-                                    line-height: 30px;
-                                    font-weight: normal;
-                                    font-style: normal;
-                                    font-stretch: normal;
-                                    letter-spacing: normal;
-                                    color: #27b3d9;
-                                }
-                                td {
-                                    &:first-of-type {
-                                        vertical-align: bottom;
-                                    }
-                                    span {
-                                        text-align: center;
-                                        width: 33px;
-                                        height: 20px;
-                                        line-height: 20px;
-                                        border-radius: 1px;
-                                        background-color: #859900;
-                                        color: #fff;
-                                        display: inline-block;
-                                        margin: 0 5px;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .modal-state:checked + .modal-fade-screen {
-                        opacity: 1;
-                        visibility: visible;
-                    }
-                    .modal-state:checked + .modal-fade-screen .modal-inner {
-                        top: 0.5em;
-                    }
-                }
-            }
-            .modal-open {
-                overflow: hidden;
             }
             /* GENERAL ELEMENTS STYLES */
 
@@ -313,313 +62,16 @@
               overflow: scroll;
             }
 
-            #topbar {
-                flex-direction: row;
-                text-align: right;
-                width: 100%;
-                height: $header-height;
-                line-height: $header-height;
-                background: $topbar-background;
-                @include transition();
-                .logo {
-                    text-decoration: none;
-                    color: $link-color;
-                    display: block;
-                    height: $header-height;
-                    line-height: $header-height;
-                    background: $topbar-background;
-                    text-align: left;
-                    width: $sidebar-width;
-                    @include transition();
-                    img {
-                        float: left;
-                        margin: 21px 10px 21px 18px;
-                        width: 24px;
-                        height: 28px;
-                        line-height: 70px;
-                    }
-                    h1 {
-                        display: inline-block;
-                    }
-                }
-                ul.actions {
-                  position: absolute;
-                  top: 0;
-                  right: 0;
-
-                  height: $header-height;
-                  display: inline-block;
-                  cursor: pointer;
-                  line-height: $header-height;
-                  padding: 0px 20px;
-                  color: $hover-dropdown-color;
-                  @include transition();
-
-                  .avatar {
-                      height: 30px;
-                      width: 30px;
-                      border-radius: 50%;
-                      display: inline-block;
-                      margin-left: 10px;
-                      margin-right: 10px;
-                      vertical-align: middle;
-                  }
-
-                  /* EXTENDING FONT AWESOME */
-                  .fa-gitter {
-                      &:before {
-                          position: relative;
-                          top: 2px;
-                          content: "  ";
-                          display: inline-block;
-                          background: url(unquote('../img/gitter-icon-dark.png'));
-                          background-repeat: no-repeat;
-                          width: 10px;
-                          height: 15px;
-                      }
-                  }
-                  
-                  li {
-                    &:hover {
-                      background-color: $selected-dropdown-background;
-                      color: $hover-dropdown-color;
-                    }
-
-                    height: $header-height;
-                    position: relative;
-                    display: inline-block;
-                    cursor: pointer;
-                    line-height: $header-height;
-                    padding: 0px 20px;
-                    color: $hover-dropdown-color;
-                    @include transition();
-                  }
-                }
-            }
-            #editor-topbar, #editor-mobile {
-                box-shadow: inset 0 -2px 0 0 $console-border-color;
-                display: block;
-                background: $editor-background;
-
-                &.disabled {
-                    display: none;
-                }
-
-                #workSheetIndicator {
-                    margin-right: 0px;
-                    text-align: center;
-                    width: 14px;
-                    margin-left: 8px;
-                    font-size: 14px;
-                    color: $topbar-background;
-                    &.enabled {
-                        color: $worksheet-enabled;
-                        &.alpha {
-                            opacity: 0.3;
-                        }
-                    }
-                }
-                .editor-buttons {
-                    .btn {
-                        display: inline-block;
-                        cursor: pointer;
-                        padding: 0 20px;
-                        line-height: 58px;
-                        @include transition();
-                        i {
-                            margin-right: 5px;
-                        }
-                        color: $editor-button-color;
-
-                        &:hover {
-                            color: $hover-editor-button-color;
-                        }
-                    }
-                    .btn.disabled {
-                        text-decoration: none;
-                        cursor: default;
-                        color: #586e75;
-                    }
-
-                }
-
-                #save-buttons {
-                    display: inline-block;
-                    .btn {
-                        padding: 0 20px;
-                    }
-                }
+            .main-panel {
+              display: inline-block;
+              width: calc(100% - #{$sidebar-width});
             }
 
-            #sidebar {
-                float: left;
-                height: 100%;
-                background: $sidebar-background;
-                width: $sidebar-width;
-                @include transition();
-                .logo {
-                    text-decoration: none;
-                    color: $link-color;
-                    display: block;
-                    height: $header-height;
-                    line-height: $header-height;
-                    background: $topbar-background;
-                    text-align: left;
-                    width: $sidebar-width;
-                    cursor: default;
-                    @include transition();
-                    img {
-                        float: left;
-                        margin: 21px 10px 21px 18px;
-                        width: 24px;
-                        height: 28px;
-                        line-height: 70px;
-                    }
-                    h1 {
-                        display: inline-block;
-                    }
-                }
-                .actions-container {
-                    position: relative;
-                    overflow: hidden;
-                    height: 100%;
-                    ul.submenu {
-                        display: none;
-                        li.btn {
-                            padding: 0px;
-                        }
-                    }
-                    .is-expanded {
-                        display: block;
-                        padding-bottom: 0;
-                    }
-                    #workSheetIndicator {
-                        line-height: 58px;
-                        margin-left: 8px;
-                        font-size: 10px;
-                        width: 18px;
-                        color: $topbar-background;
-                        &.enabled {
-                            color: $worksheet-enabled;
-                            &.alpha {
-                                opacity: 0.3;
-                            }
-                        }
-                    }
-                    .actions {
-                        .btn {
-                            cursor: pointer;
-                            padding-left: 20px;
-                            line-height: 58px;
-                            @include transition();
-                            i {
-                                margin-right: 5px;
-                            }
-                            color: $option-color;
-                            &.selected {
-                                background-color: $selected-option-background;
-                                color: $selected-option-color !important;
-                            }
-                            &:hover {
-                                color: $hover-option-color;
-                            }
-                        }
-                    }
-                }
-                .actions.bottom {
-                    position: fixed;
-                    bottom: 0px;
-                    .btn {
-                        cursor: pointer;
-                        padding-left: 20px;
-                        line-height: 58px;
-                        width: 149px;
-                        @include transition();
-                        i {
-                            margin-right: 5px;
-                        }
-                        color: $option-color;
-                        &.selected {
-                            background-color: $selected-option-background;
-                            color: $selected-option-color !important;
-                        }
-                        &:hover {
-                            color: $hover-option-color;
-                        }
-                    }
-                }
-            }
-            #content {
-                display: block;
-                margin-left: $sidebar-width;
-                @include transition();
-            }
-            #editor-container {
-                @include transition();
-                i.fa {
-                    width: 30px;
-                    text-align: center;
-                }
-                #code {
-                    overflow: hidden;
-                }
-                #switcher-show {
-                    bottom: 0;
-                    background: $hidden-console-background;
-                    height: 33px;
-                    line-height: 33px;
-                    display: none;
-                    position: fixed;
-                    text-align: right;
-                    color: $switcher-show-color;
-                    cursor: pointer;
-                    padding-right: 20px;
-                    @include transition();
-                    z-index: 9;
-                }
-                #console {
-                    box-sizing: border-box;
-                    position: fixed;
-                    padding-top: 28px;
-                    color: $console-text-color;
-                    background: $console-background;
-                    display: block;
-                    bottom: 0;
-                    width: 100%;
-                    height: $console-height;
-                    @include transition();
-                    z-index: 9;
-                    #handler {
-                        width: 100%;
-                        height: 6px;
-                        background: $console-border-color;
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        @include transition();
-                        z-index: 9;
-                    }
-                    #switcher-hide {
-                        padding-right: 20px;
-                        top: -14px;
-                        float: right;
-                        background: $console-background;
-                        position: relative;
-                        cursor: pointer;
-                        @include transition();
-                        z-index: 9;
-                        text-align: right;
-                    }
-                    .output-console {
-                        padding-top: 10px;
-                        padding-left: 28px;
-                        overflow-y: auto;
-                        width: 100%;
-                        height: 100%;
-                        font-size: 14px;
-                    }
-                }
-            }
+            @include sidebar($class);
+            @include modal($class);
+            @include topbar($class);
+            @include editor($class);
+
             /* CODE SNIPPETS PAGE STYLES */
 
             .inner-container {
@@ -633,8 +85,8 @@
                 #code-snippets-container {
                     padding: 45px 45px;
                     .avatar {
-                        height: 70px;
-                        width: 70px;
+                        height: $header-height;
+                        width: $header-height;
                         border-radius: 50%;
                         margin-bottom: 15px;
                     }
@@ -1016,148 +468,145 @@
                 }
             }
 
-            &:not(.force-desktop){
+            // Responsive Table Styles
+            @media only screen and (max-width: $tablet-width) and (min-width: $mobile-width) {
+                #sidebar h1 {
+                    display: none !important;
+                }
 
-                // Responsive Table Styles
-                @media only screen and (max-width: $tablet-width) and (min-width: $mobile-width) {
-                    #sidebar h1 {
-                        display: none !important;
-                    }
+                #topbar .logo img {
+                    display: none !important;
+                }
 
-                    #topbar .logo img {
-                        display: none !important;
-                    }
+                #topbar h1 {
+                    display: block !important;
+                    position: relative;
+                    left: -14px;
+                }
 
-                    #topbar h1 {
-                        display: block !important;
-                        position: relative;
-                        left: -14px;
-                    }
-
-                    #sidebar, #sidebar ul {
-                        width: 66px !important;
-                        li {
-                            padding-left: 24px !important;
-                        }
-                    }
-
-                    #content {
-                        margin-left: 66px !important;
-                    }
-
-                    #editor-topbar {
-                        font-size: 20px;
-                        li span {
-                            display: none !important;
-                        }
-                    }
-
-                    #editor-mobile {
-                        display: none;
-                    }
-
-                    #switcher-show {
-                        left: 66px !important;
-                    }
-
-                    //Code Snippets
-                    #snippets .header {
-                        span {
-                            display: none;
-                        }
-
-                        .clear-mobile {
-                            display: block !important;
-                            clear: both;
-                        }
-
-                        .update {
-                            display: block;
-                            float: left;
-                            line-height: 32px;
-                        }
-                        .actions {
-                            display: block;
-                            float: right;
-                            line-height: 32px;
-                        }
+                #sidebar, #sidebar ul {
+                    width: 66px !important;
+                    li {
+                        padding-left: 24px !important;
                     }
                 }
 
-                // Responsive Mobile Styles
-                @media only screen and (max-width: $mobile-width) {
-                    #sidebar, #editor-topbar {
+                #content {
+                    margin-left: 66px !important;
+                }
+
+                #editor-topbar {
+                    font-size: 20px;
+                    li span {
                         display: none !important;
                     }
+                }
 
-                    #content {
-                        margin-left: 0px !important;
+                #editor-mobile {
+                    display: none;
+                }
+
+                #switcher-show {
+                    left: 66px !important;
+                }
+
+                //Code Snippets
+                #snippets .header {
+                    span {
+                        display: none;
                     }
 
-                    .btn.run-button.mobile {
+                    .clear-mobile {
                         display: block !important;
-                        position: absolute !important;
-                        bottom: 20px !important;
-                        left: 20px !important;
+                        clear: both;
                     }
 
-                    #switcher-show, #console {
-                        bottom: 48px !important;
-                        left: 0px !important;
+                    .update {
+                        display: block;
+                        float: left;
+                        line-height: 32px;
                     }
-
-                    #editor-mobile {
-                        z-index: 99999;
-                        display: block !important;
-                        position: fixed;
-                        bottom: 0px;
-                        left: 0px;
-                        height: 48px !important;
-                        width: 100%;
-                        background-color: $sidebar-background;
-                        ul {
-                            padding: 0px 24px !important;
-                        }
-                        li.btn {
-                            text-align: center;
-                            width: 50%;
-                            line-height: 48px !important;
-                            font-size: 20px;
-                            display: inline-block !important;
-                            float: left;
-                            padding: 0px !important;
-                            span {
-                                display: none;
-                            }
-                            i.fa {
-                                line-height: 40px;
-                                font-size: 20px;
-                            }
-                        }
-
+                    .actions {
+                        display: block;
+                        float: right;
+                        line-height: 32px;
                     }
+                }
+            }
 
-                    //Code Snippets
-                    #snippets .header {
+            // Responsive Mobile Styles
+            @media only screen and (max-width: $mobile-width) {
+                .sidebar, #editor-topbar {
+                    display: none !important;
+                }
+
+                #content {
+                    margin-left: 0px !important;
+                }
+
+                .btn.run-button.mobile {
+                    display: block !important;
+                    position: absolute !important;
+                    bottom: 20px !important;
+                    left: 20px !important;
+                }
+
+                #switcher-show, #console {
+                    bottom: 48px !important;
+                    left: 0px !important;
+                }
+
+                #editor-mobile {
+                    z-index: 99999;
+                    display: block !important;
+                    position: fixed;
+                    bottom: 0px;
+                    left: 0px;
+                    height: $editor-mobile-height;
+                    width: 100%;
+                    background-color: $sidebar-background;
+                    ul {
+                        padding: 0px 24px !important;
+                    }
+                    li.btn {
+                        text-align: center;
+                        width: 50%;
+                        line-height: 48px !important;
+                        font-size: 20px;
+                        display: inline-block !important;
+                        float: left;
+                        padding: 0px !important;
                         span {
                             display: none;
                         }
+                        i.fa {
+                            line-height: 40px;
+                            font-size: 20px;
+                        }
+                    }
 
-                        .clear-mobile {
-                            display: block !important;
-                            clear: both;
-                        }
+                }
 
-                        .update {
-                            display: block;
-                            float: left;
-                            line-height: 32px;
-                        }
-                        .actions {
-                            display: block;
-                            float: right;
-                            line-height: 32px;
-                        }
+                //Code Snippets
+                #snippets .header {
+                    span {
+                        display: none;
+                    }
+
+                    .clear-mobile {
+                        display: block !important;
+                        clear: both;
+                    }
+
+                    .update {
+                        display: block;
+                        float: left;
+                        line-height: 32px;
+                    }
+                    .actions {
+                        display: block;
+                        float: right;
+                        line-height: 32px;
                     }
                 }
             }
