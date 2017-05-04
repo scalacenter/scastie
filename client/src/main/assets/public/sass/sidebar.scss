@@ -30,8 +30,8 @@
     }
 
     .avatar {
-      height: 30px;
-      width: 30px;
+      height: 32px;
+      width: 32px;
       border-radius: 50%;
       display: inline-block;
       vertical-align: middle;
@@ -74,15 +74,18 @@
 
   @include tablet {
     .sidebar {
-      width: 66px;
-      ul {
-        width: 100%;
-      }
-      li {
-        padding-left: 24px;
+      width: $sidebar-tablet-width;
+
+      li span {
+        display: none;
       }
 
-      h1 {
+      .btn {
+        padding-right: 0;
+        text-align: center;
+      }
+
+      .logo h1 {
         display: none;
       }
     }

@@ -27,11 +27,16 @@
         color: $input-color;
       }
 
-      input[type="radio"] label.radio {
-        border-color: $input-background-color;
-
+      input[type="radio"] {
+        & + label.radio {
+          &:before {
+            border: 5px solid $input-background-color;
+            background-color: $input-background-color;
+          }
+        }
         &:checked + label.radio:before {
-          background-color: $selected-radio-color;
+          border: 5px solid $input-background-color !important;
+          background-color: $selected-radio-color !important;
         }
       }
 

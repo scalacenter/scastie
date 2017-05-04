@@ -41,24 +41,16 @@ object BuildSettings {
       if (targetType == scalaTarget.targetType) TagMod(`checked` := true)
       else TagMod(`checked` := false)
 
-    val disabledTargets: Set[ScalaTargetType] = Set(
-      ScalaTargetType.Native
-    )
-
-    def handler(targetType: ScalaTargetType) =
-      if (disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
-      else TagMod(onChange ==> backend.setTarget2(defaultTarget(targetType)))
-
     div(
       ul(`class` := "target")(
         targetTypes.map { targetType =>
           val targetLabel = labelFor(targetType)
           li(
             input(`type` := "radio",
-                  `class` := targetLabel,
+                  id := targetLabel,
                   value := targetLabel,
                   name := "target",
-                  handler(targetType),
+                  onChange ==> backend.setTarget2(defaultTarget(targetType)),
                   selected(targetType)),
             label(`for` := targetLabel, role := "button", `class` := "radio", targetLabel)
           )

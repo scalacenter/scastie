@@ -76,6 +76,11 @@
         padding-right: 20px;
       }
 
+      .CodeMirror {
+        margin-top: 10px;
+        margin-bottom: 30px;
+      }
+
       input[type="radio"] {
         display: none;
         & + label.radio {
@@ -159,7 +164,7 @@
           width: 100%;
           .search-query {
             display: inline-block;
-            width: calc(100% - 36px);
+            width: 100%;
           }
           .close {
             width: 36px;

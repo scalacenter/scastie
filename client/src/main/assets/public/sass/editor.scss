@@ -56,15 +56,6 @@
 
   $console-handle-height: 33px;
 
-  .main-panel {
-    position: absolute;
-    top: 0;
-    // top: 
-    bottom: 0;
-    right: 0;
-    left: $sidebar-width;
-  }
-
   .content {
     height: 100%;
     overflow-y: auto;
@@ -139,6 +130,16 @@
     }
   }
 
+  .main-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: $sidebar-width;
+    display: inline-block;
+    width: calc(100% - #{$sidebar-width});
+  }
+
   @include phone {
     .main-panel {
       left: 0;
@@ -202,24 +203,20 @@
   }
 
   @include tablet {
-    .content {  
-      margin-left: 66px !important;
+    .main-panel {
+      left: $sidebar-tablet-width;
+      width: calc(100% - #{$sidebar-tablet-width});
     }
 
     .editor-topbar {
       font-size: 20px;
       li span {
-        display: none !important;
+        display: none;
       }
     }
 
     .editor-mobile {
       display: none;
     }
-
-    .switcher-show {
-      left: 66px !important;
-    }
-
   }
 }

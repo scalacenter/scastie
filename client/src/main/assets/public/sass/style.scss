@@ -53,11 +53,6 @@ h1 {
   width: 16px;
 }
 
-.main-panel {
-  display: inline-block;
-  width: calc(100% - #{$sidebar-width});
-}
-
 .inner-container {
   overflow-y: auto;
 }

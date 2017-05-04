@@ -47,10 +47,10 @@ object SideBar {
                  `class` := "btn",
                  selected(View.CodeSnippets)
               )(
-                img(src := user.avatar_url + "&s=30",
+                img(src := user.avatar_url + "&s=32",
                     alt := "Your Github Avatar",
                     `class` := "avatar"),
-                "Snippets"
+                span("Snippets")
               )
             case None => EmptyVdom
           }
