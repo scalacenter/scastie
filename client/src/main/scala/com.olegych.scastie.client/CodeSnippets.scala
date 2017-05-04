@@ -47,36 +47,20 @@ object CodeSnippets {
       .backend(new Backend(_))
       .renderPS {
         case (scope, (maybeRouter, state, backend), summaries) => {
-
           assert(maybeRouter.isDefined,
                  "should not be able to access profile view from embedded")
+
           val router = maybeRouter.get
 
-          val (userAvatar, userName, userLogin) = state.user match {
-            case Some(user) =>
-              (div(`class` := "avatar")(
-                 img(src := user.avatar_url + "&s=70",
-                     alt := "Your Github Avatar",
-                     `class` := "image-button avatar")
-               ),
-               user.name,
-               user.login)
-            case None =>
-              (i(`class` := "fa fa-user-circle"),
-               Some("User name"),
-               "Github user")
-          }
 
+          val noSummaries =
+            if(summaries.isEmpty) p("No saved snippets, yet!")
+            else EmptyVdom
 
           div(`class` := "code-snippets-container")(
-            userAvatar,
-            userName.map(u => h2(u)).getOrElse(EmptyVdom),
-            div(`class` := "username")(
-              i(`class` := "fa fa-github"),
-              userLogin
-            ),
-            h2("Saved Code Snippets"),
+
             div(`class` := "snippets")(
+              noSummaries,
               summaries.groupBy(_.snippetId.base64UUID).map {
                 case (base64UUID, groupedSummaries) =>
                   div(`class` := "group", `key` := base64UUID)(

@@ -1,6 +1,6 @@
 @import "commonvars";
 
-@mixin modal($class) {
+@mixin modal() {
 
 .modal {
   display: block;
@@ -93,9 +93,6 @@
                       text-align: center;
                       font-size: 22px;
                   }
-                  &:hover {
-                      color: darken($modal-close-color, 20%);
-                  }
               }
           }
       }
@@ -123,9 +120,6 @@
                   margin-left: 50px;
                   margin-right: 50px;
                   margin-top: 30px;
-                  &:hover {
-                      color: $hover-editor-button-color;
-                  }
               }
           }
 
@@ -144,10 +138,6 @@
           display: block;
           margin: -3px 0 0 -1px;
           transform: rotate(45deg);
-      }
-      &:hover::after,
-      &:hover::before {
-          background: darken($modal-close-color, 20%);
       }
       &::before {
           transform: rotate(-45deg);

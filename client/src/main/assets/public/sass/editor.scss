@@ -1,242 +1,225 @@
 @import "commonvars";
 
-@mixin editor($class) {
+@mixin editor() {
+  .editor-mobile {
+    display: none !important;
+  }
 
-.editor-mobile {
-  display: none !important;
-}
+  .editor-topbar {
+    width: 100%;
+    height: $editor-topbar-height;
+  }
 
-.editor-topbar {
-  width: 100%;
-  height: $editor-topbar-height;
-}
-
-.editor-topbar, .editor-mobile {
-    box-shadow: inset 0 -2px 0 0 $console-border-color;
+  .editor-topbar, .editor-mobile {
     display: inline-block;
-    background: $editor-background;
 
     &.disabled {
-        display: none;
+      display: none;
     }
 
     .workSheetIndicator {
-        margin-right: 0px;
-        text-align: center;
-        width: 14px;
-        margin-left: 8px;
-        font-size: 14px;
-        color: $topbar-background;
-        &.enabled {
-            color: $worksheet-enabled;
-            &.alpha {
-                opacity: 0.3;
-            }
-        }
+      margin-right: 0px;
+      text-align: center;
+      width: 14px;
+      margin-left: 8px;
+      font-size: 14px;
+      
+      &.enabled.alpha {
+        opacity: 0.3;
+      }
     }
     .editor-buttons {
-        .btn {
-            display: inline-block;
-            cursor: pointer;
-            padding: 0 20px;
-            line-height: 58px;
-            
-            i {
-                margin-right: 5px;
-            }
-            color: $editor-button-color;
-
-            &:hover {
-                color: $hover-editor-button-color;
-            }
-        }
-        .btn.disabled {
-            text-decoration: none;
-            cursor: default;
-            color: #586e75;
+      .btn {
+        display: inline-block;
+        cursor: pointer;
+        padding: 0 20px;
+        line-height: 58px;
+        
+        i {
+          margin-right: 5px;
         }
 
+        &.disabled {
+          text-decoration: none;
+          cursor: default;
+        }
+      }
     }
 
     .save-buttons {
-        display: inline-block;
-        .btn {
-            padding: 0 20px;
-        }
+      display: inline-block;
+      .btn {
+        padding: 0 20px;
+      }
     }
-}
+  }
 
-$console-handle-height: 33px;
+  $console-handle-height: 33px;
 
-.main-panel {
-  position: absolute;
-  top: 0;
-  // top: 
-  bottom: 0;
-  right: 0;
-  left: $sidebar-width;
-}
-
-.content {
-  height: 100%;
-  overflow-y: auto;
-  display: block;
-}
-
-.code {
-  width: 100%;
-  height: calc(100% - #{$console-handle-height});
-}
-
-.editor-container {
-  height: 100%;
-    i.fa {
-        width: 30px;
-        text-align: center;
-    }
-    .code {
-        overflow: hidden;
-    }
-    .switcher-show {
-        width: 100%;
-        background: $hidden-console-background;
-        height: $console-handle-height;
-        line-height: $console-handle-height;
-        display: none;
-        text-align: right;
-        color: $switcher-show-color;
-        cursor: pointer;
-        padding-right: 20px;
-        
-        z-index: 9;
-    }
-    .console {
-        box-sizing: border-box;
-        position: fixed;
-        padding-top: 28px;
-        color: $console-text-color;
-        background: $console-background;
-        display: block;
-        bottom: 0;
-        width: 100%;
-        height: $console-height;
-        
-        z-index: 9;
-        .handler {
-            width: 100%;
-            height: 6px;
-            background: $console-border-color;
-            position: absolute;
-            top: 0;
-            left: 0;
-            
-            z-index: 9;
-        }
-        .switcher-hide {
-            padding-right: 20px;
-            top: -14px;
-            float: right;
-            background: $console-background;
-            position: relative;
-            cursor: pointer;
-            
-            z-index: 9;
-            text-align: right;
-        }
-        .output-console {
-            padding-top: 10px;
-            padding-left: 28px;
-            overflow-y: auto;
-            width: 100%;
-            height: 100%;
-            font-size: 14px;
-        }
-    }
-}
-
-@include phone {
   .main-panel {
-    left: 0;
-    width: 100%;
+    position: absolute;
+    top: 0;
+    // top: 
+    bottom: 0;
+    right: 0;
+    left: $sidebar-width;
   }
 
   .content {
     height: 100%;
+    overflow-y: auto;
+    display: block;
   }
 
-  .editor-topbar {
-    display: none !important;
-  }
-
-  .content {
-    margin-left: 0px !important;
-  }
-
-  .btn.run-button.mobile {
-    display: block !important;
-    position: absolute !important;
-    bottom: 20px !important;
-    left: 20px !important;
-  }
-
-  .switcher-show, .console {
-    bottom: 48px !important;
-    left: 0px !important;
-  }
-
-  .editor-mobile {
-    z-index: 99999;
-    display: block !important;
-    position: fixed;
-    bottom: 0px;
-    left: 0px;
-    height: $editor-mobile-height;
+  .code {
     width: 100%;
-    background-color: $sidebar-background;
-    
-    & > * {
-      padding: 0px 24px !important;
+    height: calc(100% - #{$console-handle-height});
+  }
+
+  .editor-container {
+    height: 100%;
+
+    .fa {
+        width: 30px;
+        text-align: center;
     }
 
-    .btn {
-      text-align: center;
-      width: 50%;
-      line-height: 48px !important;
-      font-size: 20px;
-      display: inline-block !important;
-      float: left;
-      padding: 0px !important;
-      span {
-          display: none;
+    .code {
+        overflow: hidden;
+    }
+
+    .switcher-show {
+      width: 100%;
+      height: $console-handle-height;
+      line-height: $console-handle-height;
+      display: none;
+      text-align: right;
+      cursor: pointer;
+      padding-right: 20px;        
+      z-index: 9;
+    }
+
+    .console {
+      box-sizing: border-box;
+      position: fixed;
+      padding-top: 28px;
+      display: block;
+      bottom: 0;
+      width: 100%;
+      height: $console-height;
+      z-index: 9;
+
+      .handler {
+        width: 100%;
+        height: 6px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 9;
       }
-      i.fa {
-          line-height: 40px;
-          font-size: 20px;
+
+      .switcher-hide {
+        padding-right: 20px;
+        top: -14px;
+        float: right;
+        position: relative;
+        cursor: pointer;
+        z-index: 9;
+        text-align: right;
+      }
+
+      .output-console {
+        padding-top: 10px;
+        padding-left: 28px;
+        overflow-y: auto;
+        width: 100%;
+        height: 100%;
+        font-size: 14px;
       }
     }
   }
-}
 
-@include tablet {
-  .content {  
-    margin-left: 66px !important;
-  }
+  @include phone {
+    .main-panel {
+      left: 0;
+      width: 100%;
+    }
 
-  .editor-topbar {
-    font-size: 20px;
-    li span {
+    .content {
+      height: 100%;
+    }
+
+    .editor-topbar {
       display: none !important;
     }
+
+    .content {
+      margin-left: 0px !important;
+    }
+
+    .btn.run-button.mobile {
+      display: block !important;
+      position: absolute !important;
+      bottom: 20px !important;
+      left: 20px !important;
+    }
+
+    .switcher-show, .console {
+      bottom: 48px !important;
+      left: 0px !important;
+    }
+
+    .editor-mobile {
+      z-index: 99999;
+      display: block !important;
+      position: fixed;
+      bottom: 0px;
+      left: 0px;
+      height: $editor-mobile-height;
+      width: 100%;
+      
+      & > * {
+        padding: 0px 24px !important;
+      }
+
+      .btn {
+        text-align: center;
+        width: 50%;
+        line-height: 48px !important;
+        font-size: 20px;
+        display: inline-block !important;
+        float: left;
+        padding: 0px !important;
+        span {
+            display: none;
+        }
+        i.fa {
+            line-height: 40px;
+            font-size: 20px;
+        }
+      }
+    }
   }
 
-  .editor-mobile {
-    display: none;
+  @include tablet {
+    .content {  
+      margin-left: 66px !important;
+    }
+
+    .editor-topbar {
+      font-size: 20px;
+      li span {
+        display: none !important;
+      }
+    }
+
+    .editor-mobile {
+      display: none;
+    }
+
+    .switcher-show {
+      left: 66px !important;
+    }
+
   }
-
-  .switcher-show {
-    left: 66px !important;
-  }
-
-}
-
 }
