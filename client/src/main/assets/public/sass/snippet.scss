@@ -1,0 +1,179 @@
+@import "commonvars";
+
+@mixin snippet($class) {
+  .snippets-container {
+    height: 100%;
+    overflow-y: auto;
+    
+    color: $snippets-text-color;
+    background-color: $snippets-background;
+    
+    .code-snippets-container {
+      padding: 45px 45px;
+
+      .avatar {
+        height: $header-height;
+        width: $header-height;
+        border-radius: 50%;
+        margin-bottom: 15px;
+      }
+
+      h2 {
+        font-size: 24px;
+        font-weight: bold;
+        color: $snippets-text-color;
+        margin-bottom: 5px;
+        
+      }
+
+      .username {
+        font-size: 17px;
+        margin-bottom: 30px;
+        margin-top: 10px;
+        font-weight: 300;
+        
+        i {
+          margin-right: 3px;
+        }
+      }
+
+      .snippets {
+
+        margin-top: 30px;
+
+        .group {
+
+          position: relative;
+          
+          &:before {
+            border-left: 3px solid $snippets-line-color;
+            content: " ";
+            position: absolute;
+            top: 10px;
+            left: 0;
+            height: 100%;
+          }
+
+          .snippet {
+
+            .header {
+              position: relative;
+              padding-left: 20px;
+              font-family: $code-font-family;
+              font-weight: bold;
+              font-size: 14px;
+
+              &:before {
+                border-top: 3px solid $snippets-line-color;
+                content: " ";
+                position: absolute;
+                top: 78px;
+                left: 0;
+                width: 20px;
+              }
+              
+              .clear-mobile {
+                display: none;
+              }
+
+              .update {
+                color: $snippets-update-color;
+                font-weight: bold;
+                font-style: italic;
+              }
+
+              .actions {
+                float: right;
+
+                .btn {
+                  cursor: pointer;
+                  display: inline-block;
+                  font-size: 18px;
+                  margin-left: 18px;
+                  text-decoration: none;
+                  color: $snippets-text-color;
+                }
+              }
+            }
+            a {
+              text-decoration: none;
+
+              pre.code {
+                background-color: $snippet-background-color;
+                margin: 40px 0 40px 26px;
+                padding: 15px 15px;
+                font-family: monospace;
+                font-size: 14px;
+                text-decoration: none;
+                color: $snippets-text-color;
+                white-space: pre-line;
+              }
+
+            }
+            &:last-child {
+              position: relative;
+
+              &:before {
+                border-left: 3px solid $snippets-background;
+                content: " ";
+                position: absolute;
+                top: 78px;
+                left: 0;
+                height: 100%;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @include tablet {
+    .snippets .header {
+      span {
+        display: none;
+      }
+
+      .clear-mobile {
+        display: block !important;
+        clear: both;
+      }
+
+      .update {
+        display: block;
+        float: left;
+        line-height: 32px;
+      }
+      .actions {
+        display: block;
+        float: right;
+        line-height: 32px;
+      }
+    }
+  }
+
+  @include phone {
+    .snippets .header {
+      span {
+        display: none;
+      }
+
+      .clear-mobile {
+        display: block !important;
+        clear: both;
+      }
+
+      .update {
+        display: block;
+        float: left;
+        line-height: 32px;
+      }
+      .actions {
+        display: block;
+        float: right;
+        line-height: 32px;
+      }
+    }
+  }
+}
+

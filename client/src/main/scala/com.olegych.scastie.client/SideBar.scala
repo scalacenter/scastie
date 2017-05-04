@@ -1,8 +1,7 @@
 package com.olegych.scastie
 package client
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react._, vdom.all._
 
 object SideBar {
 
@@ -36,6 +35,27 @@ object SideBar {
             span("Help")
           )
 
+        def selected(view: View) =
+          if (view == state.view) TagMod(`class` := "selected") else EmptyVdom
+
+        val profileButton =
+          state.user match {
+            case Some(user) =>
+              li(onClick ==> setView2(View.CodeSnippets),
+                 role := "link",
+                 title := "Go to your code snippets",
+                 `class` := "btn",
+                 selected(View.CodeSnippets)
+              )(
+                img(src := user.avatar_url + "&s=30",
+                    alt := "Your Github Avatar",
+                    `class` := "avatar"),
+                "Snippets"
+              )
+            case None => EmptyVdom
+          }
+
+
         nav(`class` := "sidebar")(
           div(`class` := "actions-container")(
             div(`class` := "logo")(
@@ -44,7 +64,8 @@ object SideBar {
             ),
             ul(`class` := "actions-top")(
               EditorButton(state, backend),
-              BuildSettingsButton(state, backend)
+              BuildSettingsButton(state, backend),
+              profileButton
             ),
             ul(`class` := "actions-bottom")(
               themeButton,

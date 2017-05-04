@@ -15,7 +15,7 @@ object EditorTopBar {
           if (state.view != View.Editor) TagMod(`class` := "disabled")
           else EmptyVdom
 
-        nav(`id` := "editor-topbar", isDisabled)(
+        nav(`class` := "editor-topbar", isDisabled)(
           ul(`class` := "editor-buttons")(
             RunButton(state, backend),
             NewButton(state, backend),

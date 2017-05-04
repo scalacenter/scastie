@@ -13,8 +13,8 @@ object BuildSettings {
       ScalaTargetType.JVM,
       ScalaTargetType.Dotty,
       ScalaTargetType.Typelevel,
-      ScalaTargetType.JS,
-      ScalaTargetType.Native
+      ScalaTargetType.JS//,
+      // ScalaTargetType.Native
     )
 
     def defaultTarget(targetType: ScalaTargetType) = {
@@ -50,12 +50,12 @@ object BuildSettings {
       else TagMod(onChange ==> backend.setTarget2(defaultTarget(targetType)))
 
     div(
-      ul(`id` := "target")(
+      ul(`class` := "target")(
         targetTypes.map { targetType =>
           val targetLabel = labelFor(targetType)
           li(
             input(`type` := "radio",
-                  `id` := targetLabel,
+                  `class` := targetLabel,
                   value := targetLabel,
                   name := "target",
                   handler(targetType),
@@ -157,11 +157,11 @@ object BuildSettings {
         else TagMod(`checked` := false)
 
       TagMod(
-        ul(`id` := "suggestedVersions")(
+        ul(`class` := "suggestedVersions")(
           suggestedVersions.map { suggestedVersion =>
             li(
               input(`type` := "radio",
-                    `id` := suggestedVersion,
+                    `class` := suggestedVersion,
                     value := suggestedVersion,
                     name := "scalaV",
                     handler(suggestedVersion),
@@ -174,7 +174,7 @@ object BuildSettings {
           }.toTagMod,
           li(
             input(`type` := "radio",
-                  `id` := scalaVersion,
+                  `class` := scalaVersion,
                   value := scalaVersion,
                   name := "scalaV",
                   handler(scalaVersion)),
@@ -224,7 +224,7 @@ object BuildSettings {
             )
           } else EmptyVdom
 
-        div(`id` := "build-settings-container")(
+        div(`class` := "build-settings-container")(
           h2(
             span("Target")
           ),
@@ -241,7 +241,7 @@ object BuildSettings {
             span("Sbt Configuration")
           ),
           label(`for` := "configuration", "Add more"),
-          pre(`id` := "configuration")(
+          pre(`class` := "configuration")(
             CodeMirrorEditor(
               CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
                                         theme = s"solarized $theme",
@@ -252,7 +252,7 @@ object BuildSettings {
             )
           ),
           div(`class` := "label", "Resulting build.sbt"),
-          pre(`id` := "output")(
+          pre(`class` := "output")(
             CodeMirrorEditor(
               CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
                                         theme = s"solarized $theme",
@@ -262,7 +262,7 @@ object BuildSettings {
               )
             ),
             div(`class` := "label", "Resulting plugins.sbt"),
-            pre(`id` := "plugins-output")(
+            pre(`class` := "plugins-output")(
               CodeMirrorEditor(
                 CodeMirrorEditor.Settings(
                   value = state.inputs.sbtPluginsConfig,

@@ -1,615 +1,96 @@
 @import "reset";
 @import "sidebar";
+@import "sidebar-theme";
+@import "snippet";
 @import "topbar";
 @import "editor";
 @import "modal";
+@import "build-settings";
+@import "build-settings-theme";
+@import "solarized";
 @import "commonvars";
 @import "../../../../../target/web/web-modules/main/webjars/lib/bourbon/app/assets/stylesheets/_bourbon";
 @import "../../../../../target/web/web-modules/main/webjars/lib/neat/app/assets/stylesheets/_neat";
 
-@mixin generic-styles($class) {
-    body {
-        font-family: $font-family;
-        font-size: $text-size;
-        line-height: $text-line-height;
-        overflow: hidden;
-        @include transition();
-        .app.#{$class}
-        {
-            color: $text-color;
-            background: $background-color;
-            a {
-                color: $link-color;
-                @include transition();
-                &.hover {
-                    text-decoration: none;
-                }
-            }
-            h1, h2, h3, h4, h5, h6 {
-                font-weight: bold;
-            }
-            h1 {
-                font-size: 150%;
-            }
-            /* GENERAL ELEMENTS STYLES */
+body, .root, .app {
+  height: 100%;
+}
 
-            .hide {
-                display: none;
-            }
-            i.fa {
-                font-size: 16px;
-                width: 20px;
-                text-align: left;
-            }
-            i.fa-spin {
-                font-size: 16px;
-                width: 16px;
-            }
+body {
+  font-family: $font-family;
+  font-size: $text-size;
+  line-height: $text-line-height;
+  overflow: hidden;  
+}
 
-            pre.debug {
-              position: fixed;
-              bottom: 0;
-              right: 0;
-              height: 600px;
-              width: 1000px;
-              z-index: 10;
-              background-color: red;
-              color: blue;
-              opacity: 0.8;
-              padding: 10px;
-              margin: 0;
-              font-size: 14px;
-              overflow: scroll;
-            }
+a:hover {
+  text-decoration: none;
+}
 
-            .main-panel {
-              display: inline-block;
-              width: calc(100% - #{$sidebar-width});
-            }
+h1, h2, h3, h4, h5, h6 {
+  font-weight: bold;
+}
 
-            @include sidebar($class);
-            @include modal($class);
-            @include topbar($class);
-            @include editor($class);
+h1 {
+  font-size: 150%;
+}
 
-            /* CODE SNIPPETS PAGE STYLES */
+.hide {
+  display: none;
+}
 
-            .inner-container {
-                overflow-y: auto;
-            }
-            #snippets-container {
-                color: $snippets-text-color;
-                background-color: $snippets-background;
-                @include transition();
-                overflow-y: auto;
-                #code-snippets-container {
-                    padding: 45px 45px;
-                    .avatar {
-                        height: $header-height;
-                        width: $header-height;
-                        border-radius: 50%;
-                        margin-bottom: 15px;
-                    }
-                    h2 {
-                        font-size: 24px;
-                        font-weight: bold;
-                        color: $snippets-text-color;
-                        margin-bottom: 5px;
-                        @include transition();
-                    }
-                    .nickname {
-                        font-size: 17px;
-                        margin-bottom: 30px;
-                        margin-top: 10px;
-                        font-weight: 300;
-                        i {
-                            margin-right: 3px;
-                        }
-                    }
-                    #snippets {
-                        margin-top: 30px;
-                        .group {
-                            position: relative;
-                            &:before {
-                                border-left: 3px solid $snippets-line-color;
-                                content: " ";
-                                position: absolute;
-                                top: 10px;
-                                left: 0;
-                                height: 100%;
-                            }
-                            .snippet {
-                                .header {
-                                    position: relative;
-                                    padding-left: 20px;
-                                    font-family: monospace;
-                                    font-weight: bold;
-                                    &:before {
-                                        border-top: 3px solid $snippets-line-color;
-                                        content: " ";
-                                        position: absolute;
-                                        top: 78px;
-                                        left: 0;
-                                        width: 20px;
-                                    }
-                                    font-size: 14px;
-                                    .clear-mobile {
-                                        display: none;
-                                    }
-                                    .update {
-                                        color: $snippets-update-color;
-                                        font-weight: bold;
-                                        font-style: italic;
-                                    }
-                                    .actions {
-                                        float: right;
-                                        .btn {
-                                            cursor: pointer;
-                                            display: inline-block;
-                                            font-size: 18px;
-                                            margin-left: 18px;
-                                            text-decoration: none;
-                                            color: $snippets-text-color;
-                                        }
-                                    }
-                                }
-                                a {
-                                    text-decoration: none;
-                                    pre.code {
-                                        background-color: $snippet-background-color;
-                                        margin: 40px 0 40px 26px;
-                                        padding: 15px 15px;
-                                        font-family: monospace;
-                                        font-size: 14px;
-                                        text-decoration: none;
-                                        color: $snippets-text-color;
-                                        white-space: pre-line;
-                                    }
-                                }
-                                &:last-child {
-                                    position: relative;
-                                    &:before {
-                                        border-left: 3px solid $snippets-background;
-                                        content: " ";
-                                        position: absolute;
-                                        top: 78px;
-                                        left: 0;
-                                        height: 100%;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            /* SETTINGS PAGE STYLES */
+.fa {
+  font-size: 16px;
+  width: 20px;
+  text-align: left;
+}
 
-            #settings-container {
-                @include transition();
-                overflow-y: auto;
-                color: $snippets-text-color;
-                background-color: $snippets-background;
-                font-size: 15px;
-                #build-settings-container {
-                    padding: 45px 45px;
-                    .btn{
-                        cursor: pointer;
-                        background-color: $input-background-color;
-                        width: 90px;
-                        padding: 10px;
-                        align-content: center;
-                        text-align: center;
-                        &:hover {
-                            color: $hover-editor-button-color;
-                        }
-                    }
-                    ul, li {
-                        line-height: 38px;
-                    }
-                    h2 {
-                        @include transition();
-                        font-size: 24px;
-                        font-weight: bold;
-                        color: $snippets-text-color;
-                        margin-bottom: 20px;
-                        &:not(:first-child) {
-                            margin-top: 25px;
-                        }
-                        display: block;
-                        position: relative;
-                        z-index: 1;
-                        &:before {
-                            border-top: 2px solid $title-line-color;
-                            content: "";
-                            margin: 0 auto;
-                            /* this centers the line to the full width specified */
+.fa-spin {
+  font-size: 16px;
+  width: 16px;
+}
 
-                            position: absolute;
-                            /* positioning must be absolute here, and relative positioning must be applied to the parent */
+.main-panel {
+  display: inline-block;
+  width: calc(100% - #{$sidebar-width});
+}
 
-                            top: 50%;
-                            left: 0;
-                            right: 0;
-                            bottom: 0;
-                            width: 100%;
-                            z-index: -1;
-                        }
-                        span {
-                            background-color: $snippets-background;
-                            padding: 0 15px 0 0;
-                        }
-                    }
-                    #target li {
-                        display: inline;
-                        list-style-type: none;
-                        padding-right: 20px;
+.inner-container {
+  overflow-y: auto;
+}
 
-                        .disabled{
-                            cursor: default;
-                        }
+.btn {
+  cursor: pointer;
+}
 
-                        a {
-                            color: $input-color;
-                            text-decoration: none;
-                            position: relative;
-                            margin-left: -20px;
-                        }
-                    }
-                    #suggestedVersions li {
-                        display: inline;
-                        list-style-type: none;
-                        padding-right: 20px;
-                    }
-                    input[type="radio"] {
-                        display: none;
-                        & + label.radio {
-                            font-size: 15px;
-                            line-height: 18px;
-                            display: inline-block;
-                            margin-right: 30px;
-                            &:before {
-                                line-height: 18px;
-                                content: " ";
-                                width: 8px;
-                                height: 8px;
-                                min-width: 8px;
-                                min-height: 8px;
-                                border-radius: 50%;
-                                margin-right: 5px;
-                                border: 5px solid $input-background-color;
-                                background-color: $input-background-color;
-                                display: inline-block;
-                                margin-bottom: -4px;
-                                box-sizing: content-box;
-                                @include transition();
-                            }
-                        }
-                        &:checked + label.radio:before {
-                            content: " ";
-                            width: 8px !important;
-                            height: 8px !important;
-                            border-radius: 50%;
-                            border: 5px solid $input-background-color !important;
-                            background-color: $selected-radio-color !important;
-                            @include transition();
-                        }
-                    }
-                    .select-wrapper {
-                        position: relative;
-                        display: inline-block;
-                        width: 130px;
-                        &:after {
-                            content: "\f0d7";
-                            font-family: FontAwesome;
-                            color: $input-color;
-                            position: absolute;
-                            top: 0px;
-                            right: 10px;
-                            font-size: 13px;
-                        }
-                    }
-                    #scala-version {
-                        display: inline-block;
-                        width: 140px;
-                    }
-                    select,
-                    input {
-                        -webkit-appearance: none;
-                        -moz-appearance: none;
-                        appearance: none;
-                        width: 100%;
-                        height: 36px;
-                        line-height: 36px;
-                        padding-left: 14px;
-                        background-color: $input-background-color;
-                        color: $input-color;
-                        border-radius: 2px;
-                        border: none;
-                        display: block;
-                        font-size: 15px;
-                        box-sizing: border-box;
-                        &::-moz-placeholder {
-                            color: $input-color;
-                            opacity: 1;
-                        }
-                        &:-moz-placeholder {
-                            color: $input-color;
-                            opacity: 1;
-                        }
-                        &::-webkit-input-placeholder {
-                            color: $input-color;
-                            opacity: 1;
-                        }
-                        &:-ms-input-placeholder {
-                            color: $input-color;
-                            opacity: 1;
-                        }
-                    }
-                    .search {
-                        position: relative;
-                        .search-input {
-                            height: 36px;
-                            width: 100%;
-                            background-color: $input-background-color;
-                            .search-query {
-                                display: inline-block;
-                                width: calc(100% - 36px);
-                            }
-                            .close {
-                                width: 36px;
-                                height: 100%;
-                                text-align: center;
-                                padding: 10px;
-                                display: none;
-                                cursor: pointer;
-                                color: $input-color;
-                                &:hover {
-                                    color: $hover-editor-button-color;
-                                }
-                            }
-                        }
-                        .results {
-                            background-color: $input-background-color;
-                            color: $input-color;
-                            border-radius: 2px;
-                            max-height: 300px;
-                            z-index: 20;
-                            margin-top: 10px;
-                            overflow: auto;
-                            display: none;
-                            i.fa {
-                                font-size: 20px;
-                                width: 40px;
-                                text-align: center;
-                                vertical-align: middle;
-                            }
-                            .result {
-                                padding: 10px;
-                                display: block;
-                                cursor: pointer;
-                                font-size: 15px;
-                                &:not(:last-child) {
-                                    padding-bottom: 10px;
-                                }
-                                a {
-                                    color: $input-color;
-                                    margin-right: 10px;
-                                }
-                                .logo {
-                                    width: 30px;
-                                    height: 30px;
-                                    vertical-align: middle;
-                                }
-                                .artifact {
-                                    margin-left: 20px;
-                                    vertical-align: middle;
-                                }
-                            }
-                            .selected {
-                                background-color: $selected-option-background;
-                            }
-                        }
-                        .added {
-                            .result {
-                                padding: 10px;
-                                display: block;
-                                cursor: pointer;
-                                font-size: 15px;
-                                &:not(:last-child) {
-                                    padding-bottom: 10px;
-                                }
-                                i.fa {
-                                    font-size: 20px;
-                                    width: 30px;
-                                    text-align: left;
-                                    vertical-align: middle;
-                                }
-                                a {
-                                    color: $input-color;
-                                    margin-right: 10px;
-                                    margin-left: 10px;
-                                }
-                                .logo {
-                                    width: 30px;
-                                    height: 30px;
-                                    vertical-align: middle;
-                                }
-                                .artifact {
-                                    margin-left: 20px;
-                                    vertical-align: middle;
-                                    width: 250px;
-                                    display: inline-block;
-                                }
-                                .select-wrapper {
-                                    margin-left: 20px;
-                                    &:after {
-                                        top: 10px;
-                                    }
-                                 }
-                                select {
-                                    display: inline-block
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+@include sidebar();
+@include buildSettings();
+@include solarized();
 
-            #editor-mobile {
-                display: none !important;
-            }
+@mixin styles($class) {
+  body {
+    .app.#{$class} {
 
-            @media only screen and (max-width: $tablet-width)  {
-                .modal {
-                    .modal-window {
-                        width:90%;
-                        height:90%;
-                    }
-                }
-            }
+      color: $text-color;
+      background: $background-color;
 
-            // Responsive Table Styles
-            @media only screen and (max-width: $tablet-width) and (min-width: $mobile-width) {
-                #sidebar h1 {
-                    display: none !important;
-                }
+      a {
+        color: $link-color;
+      }
 
-                #topbar .logo img {
-                    display: none !important;
-                }
-
-                #topbar h1 {
-                    display: block !important;
-                    position: relative;
-                    left: -14px;
-                }
-
-                #sidebar, #sidebar ul {
-                    width: 66px !important;
-                    li {
-                        padding-left: 24px !important;
-                    }
-                }
-
-                #content {
-                    margin-left: 66px !important;
-                }
-
-                #editor-topbar {
-                    font-size: 20px;
-                    li span {
-                        display: none !important;
-                    }
-                }
-
-                #editor-mobile {
-                    display: none;
-                }
-
-                #switcher-show {
-                    left: 66px !important;
-                }
-
-                //Code Snippets
-                #snippets .header {
-                    span {
-                        display: none;
-                    }
-
-                    .clear-mobile {
-                        display: block !important;
-                        clear: both;
-                    }
-
-                    .update {
-                        display: block;
-                        float: left;
-                        line-height: 32px;
-                    }
-                    .actions {
-                        display: block;
-                        float: right;
-                        line-height: 32px;
-                    }
-                }
-            }
-
-            // Responsive Mobile Styles
-            @media only screen and (max-width: $mobile-width) {
-                .sidebar, #editor-topbar {
-                    display: none !important;
-                }
-
-                #content {
-                    margin-left: 0px !important;
-                }
-
-                .btn.run-button.mobile {
-                    display: block !important;
-                    position: absolute !important;
-                    bottom: 20px !important;
-                    left: 20px !important;
-                }
-
-                #switcher-show, #console {
-                    bottom: 48px !important;
-                    left: 0px !important;
-                }
-
-                #editor-mobile {
-                    z-index: 99999;
-                    display: block !important;
-                    position: fixed;
-                    bottom: 0px;
-                    left: 0px;
-                    height: $editor-mobile-height;
-                    width: 100%;
-                    background-color: $sidebar-background;
-                    ul {
-                        padding: 0px 24px !important;
-                    }
-                    li.btn {
-                        text-align: center;
-                        width: 50%;
-                        line-height: 48px !important;
-                        font-size: 20px;
-                        display: inline-block !important;
-                        float: left;
-                        padding: 0px !important;
-                        span {
-                            display: none;
-                        }
-                        i.fa {
-                            line-height: 40px;
-                            font-size: 20px;
-                        }
-                    }
-
-                }
-
-                //Code Snippets
-                #snippets .header {
-                    span {
-                        display: none;
-                    }
-
-                    .clear-mobile {
-                        display: block !important;
-                        clear: both;
-                    }
-
-                    .update {
-                        display: block;
-                        float: left;
-                        line-height: 32px;
-                    }
-                    .actions {
-                        display: block;
-                        float: right;
-                        line-height: 32px;
-                    }
-                }
-            }
+      .btn {
+        cursor: pointer;
+        &:hover {
+          color: $hover-option-color;
         }
+      }
+
+      @include sidebarTheme($class);
+      @include modal($class);
+      @include topbar($class);
+      @include editor($class);
+      @include snippet($class);
+      @include buildSettingsTheme($class);
     }
+  }
 }

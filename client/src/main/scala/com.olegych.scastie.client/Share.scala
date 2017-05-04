@@ -1,9 +1,7 @@
 package com.olegych.scastie.client
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.router.RouterCtl
-import japgolly.scalajs.react.vdom.all._
-import org.scalajs.dom
+import japgolly.scalajs.react._, extra.router.RouterCtl, vdom.all._
+// import org.scalajs.dom
 
 object Share {
 
@@ -41,10 +39,10 @@ object Share {
                     "Copy and share your code snippet's URL:"),
                   div(`class` := "snippet-link")(
                     div(
-                      `id` := "link-to-copy",
+                      `class` := "link-to-copy",
                       getSnippetUrl
                     ),
-                    li(`id` := "clipboard-copy",
+                    li(`class` := "clipboard-copy",
                        title := "Copy to Clipboard",
                        `class` := "btn snippet-clip")(
                       i(`class` := "fa fa-clipboard")
@@ -55,29 +53,29 @@ object Share {
             )
           )
       }
-      .componentDidMount { c =>
-        def copyLink(e0: dom.Event) = {
+      // .componentDidMount { c =>
+      //   def copyLink(e0: dom.Event) = {
 
-          val contentHolder = dom.document.getElementById("link-to-copy")
+      //     val contentHolder = dom.document.getElementById("link-to-copy")
 
-          val range = dom.document.createRange()
+      //     val range = dom.document.createRange()
 
-          val selection = dom.window.getSelection()
+      //     val selection = dom.window.getSelection()
 
-          range.selectNodeContents(contentHolder)
+      //     range.selectNodeContents(contentHolder)
 
-          selection.addRange(range)
+      //     selection.addRange(range)
 
-          dom.document.execCommand("copy")
+      //     dom.document.execCommand("copy")
 
-        }
+      //   }
 
-        Callback(
-          dom.document
-            .getElementById("clipboard-copy")
-            .addEventListener("click", copyLink _)
-        )
+      //   Callback(
+      //     dom.document
+      //       .getElementById("clipboard-copy")
+      //       .addEventListener("click", copyLink _)
+      //   )
 
-      }
+      // }
       .build
 }

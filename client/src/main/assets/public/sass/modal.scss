@@ -255,4 +255,14 @@
     overflow: hidden;
 }
 
+
+@media only screen and (max-width: $tablet-width)  {
+  .modal {
+    .modal-window {
+      width:90%;
+      height:90%;
+    }
+  }
+}
+
 }

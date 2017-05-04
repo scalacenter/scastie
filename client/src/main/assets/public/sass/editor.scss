@@ -2,12 +2,16 @@
 
 @mixin editor($class) {
 
-#editor-topbar {
+.editor-mobile {
+  display: none !important;
+}
+
+.editor-topbar {
   width: 100%;
   height: $editor-topbar-height;
 }
 
-#editor-topbar, #editor-mobile {
+.editor-topbar, .editor-mobile {
     box-shadow: inset 0 -2px 0 0 $console-border-color;
     display: inline-block;
     background: $editor-background;
@@ -16,7 +20,7 @@
         display: none;
     }
 
-    #workSheetIndicator {
+    .workSheetIndicator {
         margin-right: 0px;
         text-align: center;
         width: 14px;
@@ -36,7 +40,7 @@
             cursor: pointer;
             padding: 0 20px;
             line-height: 58px;
-            @include transition();
+            
             i {
                 margin-right: 5px;
             }
@@ -54,7 +58,7 @@
 
     }
 
-    #save-buttons {
+    .save-buttons {
         display: inline-block;
         .btn {
             padding: 0 20px;
@@ -73,30 +77,27 @@ $console-handle-height: 33px;
   left: $sidebar-width;
 }
 
-#content {
+.content {
   height: 100%;
   overflow-y: auto;
   display: block;
-  @include transition();
 }
 
-#code {
+.code {
   width: 100%;
   height: calc(100% - #{$console-handle-height});
 }
 
-#editor-container {
+.editor-container {
   height: 100%;
-
-    @include transition();
     i.fa {
         width: 30px;
         text-align: center;
     }
-    #code {
+    .code {
         overflow: hidden;
     }
-    #switcher-show {
+    .switcher-show {
         width: 100%;
         background: $hidden-console-background;
         height: $console-handle-height;
@@ -106,10 +107,10 @@ $console-handle-height: 33px;
         color: $switcher-show-color;
         cursor: pointer;
         padding-right: 20px;
-        @include transition();
+        
         z-index: 9;
     }
-    #console {
+    .console {
         box-sizing: border-box;
         position: fixed;
         padding-top: 28px;
@@ -119,26 +120,26 @@ $console-handle-height: 33px;
         bottom: 0;
         width: 100%;
         height: $console-height;
-        @include transition();
+        
         z-index: 9;
-        #handler {
+        .handler {
             width: 100%;
             height: 6px;
             background: $console-border-color;
             position: absolute;
             top: 0;
             left: 0;
-            @include transition();
+            
             z-index: 9;
         }
-        #switcher-hide {
+        .switcher-hide {
             padding-right: 20px;
             top: -14px;
             float: right;
             background: $console-background;
             position: relative;
             cursor: pointer;
-            @include transition();
+            
             z-index: 9;
             text-align: right;
         }
@@ -153,17 +154,89 @@ $console-handle-height: 33px;
     }
 }
 
-@media only screen and (max-width: $mobile-width) {
+@include phone {
   .main-panel {
     left: 0;
     width: 100%;
   }
-  #content {
+
+  .content {
     height: 100%;
   }
-  #topbar {
+
+  .editor-topbar {
+    display: none !important;
+  }
+
+  .content {
+    margin-left: 0px !important;
+  }
+
+  .btn.run-button.mobile {
+    display: block !important;
+    position: absolute !important;
+    bottom: 20px !important;
+    left: 20px !important;
+  }
+
+  .switcher-show, .console {
+    bottom: 48px !important;
+    left: 0px !important;
+  }
+
+  .editor-mobile {
+    z-index: 99999;
+    display: block !important;
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    height: $editor-mobile-height;
+    width: 100%;
+    background-color: $sidebar-background;
+    
+    & > * {
+      padding: 0px 24px !important;
+    }
+
+    .btn {
+      text-align: center;
+      width: 50%;
+      line-height: 48px !important;
+      font-size: 20px;
+      display: inline-block !important;
+      float: left;
+      padding: 0px !important;
+      span {
+          display: none;
+      }
+      i.fa {
+          line-height: 40px;
+          font-size: 20px;
+      }
+    }
+  }
+}
+
+@include tablet {
+  .content {  
+    margin-left: 66px !important;
+  }
+
+  .editor-topbar {
+    font-size: 20px;
+    li span {
+      display: none !important;
+    }
+  }
+
+  .editor-mobile {
     display: none;
   }
+
+  .switcher-show {
+    left: 66px !important;
+  }
+
 }
 
 }

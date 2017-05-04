@@ -12,7 +12,7 @@ object MobileBar {
         //   if (state.view == View.BuildSettings)
         //   else
 
-        nav(`id` := "editor-mobile")(
+        nav(`class` := "editor-mobile")(
           ul(`class` := "editor-buttons")(
             RunButton(state, backend)//,
             // viewButton

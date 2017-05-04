@@ -20,10 +20,10 @@ object Console {
             if (state.consoleState.consoleIsOpen) (display.block, display.none)
             else (display.none, display.block)
 
-          div(`id` := "console-container")(
-            div(`id` := "console", displayConsole)(
-              div(`id` := "handler"),
-              div(`id` := "switcher-hide",
+          div(`class` := "console-container")(
+            div(`class` := "console", displayConsole)(
+              div(`class` := "handler"),
+              div(`class` := "switcher-hide",
                   role := "button",
                   onClick ==> backend.toggleConsole)(
                 i(`class` := "fa fa-terminal"),
@@ -34,7 +34,7 @@ object Console {
                 state.outputs.console
               )
             ),
-            div(`id` := "switcher-show", role := "button", onClick ==> backend.toggleConsole)(
+            div(`class` := "switcher-show", role := "button", onClick ==> backend.toggleConsole)(
               displaySwitcher,
               i(`class` := "fa fa-terminal"),
               "Console",

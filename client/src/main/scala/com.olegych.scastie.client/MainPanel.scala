@@ -24,24 +24,24 @@ object MainPanel {
           div(`class` := "main-panel")(
             TopBar(state, backend),
             EditorTopBar(state, backend, props.snippetId),
-            div(`id` := "content")(
-              div(`id` := "editor-container",
+            div(`class` := "content")(
+              div(`class` := "editor-container",
                   `class` := "inner-container",
                   show(View.Editor)
               )(
-                div(`id` := "code")(
+                div(`class` := "code")(
                   Editor(state, backend),
                   embeddedMenu
                 ),
                 Console(state, backend)
               ),
-              div(`id` := "settings-container",
+              div(`class` := "settings-container",
                   `class` := "inner-container",
                   show(View.BuildSettings)
               )(
                 BuildSettings(state, backend)
               ),
-              div(`id` := "snippets-container",
+              div(`class` := "snippets-container",
                   `class` := "inner-container",
                   show(View.CodeSnippets))(
                 CodeSnippets(props.router, state, backend)

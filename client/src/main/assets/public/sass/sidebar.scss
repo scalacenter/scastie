@@ -1,83 +1,90 @@
 @import "commonvars";
 
-@mixin sidebar($class) {
-.sidebar {
-  @include transition();
-
-  position: absolute;
-  width: $sidebar-width;
-  height: 100%;
-
-  background: $sidebar-background;
-
-  .logo {
-    text-decoration: none;
-    color: $link-color;
-    display: block;
-    height: $header-height;
-    line-height: $header-height;
-    background: $topbar-background;
-    text-align: left;
-    width: $sidebar-width;
-    cursor: default;
-    @include transition();
-    img {
-      float: left;
-      margin: 21px 10px 21px 18px;
-      width: 24px;
-      height: 28px;
-      line-height: 70px;
-    }
-    h1 {
-        display: inline-block;
-    }
-  }
-  .actions-container {
-    position: relative;
-    overflow: hidden;
-    height: 100%;
-  }
-  
-  .btn {
-    cursor: pointer;
-    padding-left: 20px;
-    line-height: 58px;
-    &.selected {
-      background-color: $selected-option-background;
-      color: $selected-option-color !important;
-    }
-    &:hover {
-      color: $hover-option-color;
-    }
-  }
-
-  .actions-top, .actions-bottom {
-    i {
-      margin-right: 5px;
-    }
-  }
-
-  .actions-top {
-    @include transition();
-    color: $option-color;
-  }
-
-  .actions-bottom {
-    position: fixed;
-    bottom: 0px;
-    .btn {
-      width: 149px;
-      color: $option-color;
-    }
-  }          
-}
-
-@media only screen and (max-width: $mobile-width) {
+@mixin sidebar() {
   .sidebar {
-    display: none !important;
+    position: absolute;
+    width: $sidebar-width;
+    height: 100%;
+
+    .logo {
+      display: block;
+      height: $header-height;
+      width: $sidebar-width;
+      
+      line-height: $header-height;   
+      text-decoration: none;
+      text-align: left;
+      cursor: default;
+
+      img {
+        float: left;
+        margin: 21px 10px 21px 18px;
+        width: 24px;
+        height: 28px;
+        line-height: 70px;
+      }
+
+      h1 {
+        display: inline-block;
+      }
+    }
+
+    .avatar {
+      height: 30px;
+      width: 30px;
+      border-radius: 50%;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    .actions-container {
+      position: relative;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    .btn {
+      text-align: right;
+      padding-right: 20px;
+      line-height: 58px;
+    }
+
+    .actions-top, .actions-bottom {
+      i {
+        margin-right: 5px;
+      }
+    }
+
+    .actions-bottom {
+      position: fixed;
+      bottom: 0px;
+      .btn {
+        width: 149px;
+      }
+    }
   }
-}
 
+  @include phone {
+    .sidebar {
+      display: none;
+    }
+  }
 
+  @include tablet {
+    .sidebar {
+      width: 66px;
+      ul {
+        width: 100%;
+      }
+      li {
+        padding-left: 24px;
+      }
 
+      h1 {
+        display: none;
+      }
+    }
+  }
 }

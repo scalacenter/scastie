@@ -68,15 +68,15 @@ object CodeSnippets {
           }
 
 
-          div(`id` := "code-snippets-container")(
+          div(`class` := "code-snippets-container")(
             userAvatar,
             userName.map(u => h2(u)).getOrElse(EmptyVdom),
-            div(`class` := "nickname")(
+            div(`class` := "username")(
               i(`class` := "fa fa-github"),
               userLogin
             ),
             h2("Saved Code Snippets"),
-            div(`id` := "snippets")(
+            div(`class` := "snippets")(
               summaries.groupBy(_.snippetId.base64UUID).map {
                 case (base64UUID, groupedSummaries) =>
                   div(`class` := "group", `key` := base64UUID)(
@@ -96,11 +96,13 @@ object CodeSnippets {
                               div(`class` := "actions")(
                                 li(`class` := "btn",
                                    title := "Share",
+                                   role := "button",
                                    onClick ==> backend
                                      .toggleShare(Some(summary.snippetId)))(
                                   i(`class` := "fa fa-share-alt")
                                 ),
                                 li(`class` := "btn",
+                                   role := "button",
                                    title := "Delete",
                                    onClick ==> scope.backend.delete(summary))(
                                   i(`class` := "fa fa-trash")
@@ -108,6 +110,7 @@ object CodeSnippets {
                               )
                             ),
                             div(`class` := "codesnippet",
+                                role := "button",
                                 router.setOnClick(page))(
                               router.link(page)(
                                 pre(`class` := "code")(summary.summary)
