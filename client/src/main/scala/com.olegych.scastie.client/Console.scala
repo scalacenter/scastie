@@ -20,10 +20,15 @@ object Console {
             if (state.consoleState.consoleIsOpen) (display.block, display.none)
             else (display.none, display.block)
 
-          div(`class` := "console-container")(
+          val consoleCss =
+            if(state.consoleState.consoleIsOpen) TagMod(`class` := "console-open")
+            else EmptyVdom
+
+          div(`class` := "console-container", consoleCss)(
             div(`class` := "console", displayConsole)(
               div(`class` := "handler"),
               div(`class` := "switcher-hide",
+                  displayConsole,
                   role := "button",
                   onClick ==> backend.toggleConsole)(
                 i(`class` := "fa fa-terminal"),

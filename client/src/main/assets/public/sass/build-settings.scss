@@ -3,6 +3,8 @@
 @mixin buildSettings() {
   .settings-container {
     overflow-y: auto;
+    height: calc(100% - #{$header-height});
+
     font-size: 15px;
 
     ul, li {

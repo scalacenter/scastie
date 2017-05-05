@@ -20,6 +20,9 @@ object MainPanel {
             if (embedded) TagMod(EmbeddedMenu(state, backend))
             else EmptyVdom
 
+          val consoleCssForEditor =
+            if(state.consoleState.consoleIsOpen) TagMod(`class` := "console-open")
+            else EmptyVdom
 
           div(`class` := "main-panel")(
             TopBar(state, backend),
@@ -29,7 +32,7 @@ object MainPanel {
                   `class` := "inner-container",
                   show(View.Editor)
               )(
-                div(`class` := "code")(
+                div(`class` := "code", consoleCssForEditor)(
                   Editor(state, backend),
                   embeddedMenu
                 ),
