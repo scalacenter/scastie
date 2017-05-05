@@ -3,7 +3,6 @@ package client
 
 import api._
 import japgolly.scalajs.react._
-import org.scalajs.dom
 import vdom.all._
 
 object BuildSettings {
@@ -14,8 +13,8 @@ object BuildSettings {
       ScalaTargetType.JVM,
       ScalaTargetType.Dotty,
       ScalaTargetType.Typelevel,
-      ScalaTargetType.JS,
-      ScalaTargetType.Native
+      ScalaTargetType.JS//,
+      // ScalaTargetType.Native
     )
 
     def defaultTarget(targetType: ScalaTargetType) = {
@@ -42,43 +41,18 @@ object BuildSettings {
       if (targetType == scalaTarget.targetType) TagMod(`checked` := true)
       else TagMod(`checked` := false)
 
-    val disabledTargets: Set[ScalaTargetType] = Set(
-      ScalaTargetType.Native
-    )
-
-    def handler(targetType: ScalaTargetType) =
-      if (disabledTargets.contains(targetType)) TagMod(`class` := "disabled")
-      else TagMod(onChange ==> backend.setTarget2(defaultTarget(targetType)))
-
-    def vote(targetType: ScalaTargetType) = {
-      val voteIssueId: Map[ScalaTargetType, Int] = Map(
-        ScalaTargetType.Native -> 50
-      )
-      voteIssueId.get(targetType) match {
-        case Some(issueId) => {
-          val link = s"https://github.com/scalacenter/scastie/issues/$issueId"
-          a(href := link, target := "_blank")(
-            i(`class` := "fa fa-long-arrow-left"),
-            " Vote!"
-          )
-        }
-        case None => EmptyVdom
-      }
-    }
-
     div(
-      ul(`id` := "target")(
+      ul(`class` := "target")(
         targetTypes.map { targetType =>
           val targetLabel = labelFor(targetType)
           li(
             input(`type` := "radio",
-                  `id` := targetLabel,
+                  id := targetLabel,
                   value := targetLabel,
                   name := "target",
-                  handler(targetType),
+                  onChange ==> backend.setTarget2(defaultTarget(targetType)),
                   selected(targetType)),
-            label(`for` := targetLabel, role := "button", `class` := "radio", targetLabel),
-            vote(targetType)
+            label(`for` := targetLabel, role := "button", `class` := "radio", targetLabel)
           )
         }.toTagMod
       )
@@ -175,11 +149,11 @@ object BuildSettings {
         else TagMod(`checked` := false)
 
       TagMod(
-        ul(`id` := "suggestedVersions")(
+        ul(`class` := "suggestedVersions")(
           suggestedVersions.map { suggestedVersion =>
             li(
               input(`type` := "radio",
-                    `id` := suggestedVersion,
+                    `class` := suggestedVersion,
                     value := suggestedVersion,
                     name := "scalaV",
                     handler(suggestedVersion),
@@ -192,7 +166,7 @@ object BuildSettings {
           }.toTagMod,
           li(
             input(`type` := "radio",
-                  `id` := scalaVersion,
+                  `class` := scalaVersion,
                   value := scalaVersion,
                   name := "scalaV",
                   handler(scalaVersion)),
@@ -230,8 +204,6 @@ object BuildSettings {
   private val component =
     ScalaComponent.builder[(AppState, AppBackend)]("BuildSettings").render_P {
       case (state, backend) =>
-        import state.dimensions._
-
         val theme = if (state.isDarkTheme) "dark" else "light"
 
         val resetButton =
@@ -244,11 +216,7 @@ object BuildSettings {
             )
           } else EmptyVdom
 
-        def containerStyle =
-          if (forcedDesktop) height := (dom.window.innerHeight - topBarHeight).px
-          else EmptyVdom
-
-        div(`id` := "build-settings-container", containerStyle)(
+        div(`class` := "build-settings-container")(
           h2(
             span("Target")
           ),
@@ -265,7 +233,7 @@ object BuildSettings {
             span("Sbt Configuration")
           ),
           label(`for` := "configuration", "Add more"),
-          pre(`id` := "configuration")(
+          pre(`class` := "configuration")(
             CodeMirrorEditor(
               CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
                                         theme = s"solarized $theme",
@@ -276,7 +244,7 @@ object BuildSettings {
             )
           ),
           div(`class` := "label", "Resulting build.sbt"),
-          pre(`id` := "output")(
+          pre(`class` := "output")(
             CodeMirrorEditor(
               CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
                                         theme = s"solarized $theme",
@@ -286,7 +254,7 @@ object BuildSettings {
               )
             ),
             div(`class` := "label", "Resulting plugins.sbt"),
-            pre(`id` := "plugins-output")(
+            pre(`class` := "plugins-output")(
               CodeMirrorEditor(
                 CodeMirrorEditor.Settings(
                   value = state.inputs.sbtPluginsConfig,

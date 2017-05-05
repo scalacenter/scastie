@@ -1,0 +1,93 @@
+@import "commonvars";
+
+@mixin sidebar() {
+  .sidebar {
+    position: absolute;
+    width: $sidebar-width;
+    height: 100%;
+
+    .logo {
+      display: block;
+      height: $header-height;
+      width: $sidebar-width;
+      
+      line-height: $header-height;   
+      text-decoration: none;
+      text-align: left;
+      cursor: default;
+
+      img {
+        float: left;
+        margin: 21px 10px 21px 18px;
+        width: 24px;
+        height: 28px;
+        line-height: 70px;
+      }
+
+      h1 {
+        display: inline-block;
+      }
+    }
+
+    .avatar {
+      height: 32px;
+      width: 32px;
+      border-radius: 50%;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    .actions-container {
+      position: relative;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    .btn {
+      text-align: right;
+      padding-right: 20px;
+      line-height: 58px;
+    }
+
+    .actions-top, .actions-bottom {
+      i {
+        margin-right: 5px;
+      }
+    }
+
+    .actions-bottom {
+      position: fixed;
+      bottom: 0px;
+      .btn {
+        width: 149px;
+      }
+    }
+  }
+
+  @include phone {
+    .sidebar {
+      display: none;
+    }
+  }
+
+  @include tablet {
+    .sidebar {
+      width: $sidebar-tablet-width;
+
+      li span {
+        display: none;
+      }
+
+      .btn {
+        padding-right: 0;
+        text-align: center;
+      }
+
+      .logo h1 {
+        display: none;
+      }
+    }
+  }
+}

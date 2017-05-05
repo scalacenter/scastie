@@ -1,0 +1,87 @@
+@import "commonvars";
+
+@mixin buildSettingsTheme($class) {
+  .settings-container {
+    color: $snippets-text-color;
+    background-color: $snippets-background;
+
+    .build-settings-container {
+      .btn {
+        background-color: $input-background-color;
+        &:hover {
+          color: $hover-editor-button-color;
+        }
+      }
+
+      h2 {
+        color: $snippets-text-color;
+        span {
+          background-color: $snippets-background;
+        }
+        &:before {
+          border-top-color: $title-line-color;
+        }
+      }
+
+      .target li a {
+        color: $input-color;
+      }
+
+      input[type="radio"] {
+        & + label.radio {
+          &:before {
+            border: 5px solid $input-background-color;
+            background-color: $input-background-color;
+          }
+        }
+        &:checked + label.radio:before {
+          border: 5px solid $input-background-color !important;
+          background-color: $selected-radio-color !important;
+        }
+      }
+
+      .select-wrapper:after {
+        color: $input-color;
+      }
+
+      select, input {
+        background-color: $input-background-color;
+        color: $input-color;
+
+        &::-moz-placeholder,
+        &:-moz-placeholder,
+        &::-webkit-input-placeholder,
+        &:-ms-input-placeholder {
+          color: $input-color;
+        }
+      }
+
+      .search .search-input {
+        background-color: $input-background-color;
+        .close {
+          color: $input-color;
+          &:hover {
+            color: $hover-editor-button-color;
+          }
+        }
+      }
+
+      .results {
+        background-color: $input-background-color;
+        color: $input-color;
+        .selected {
+          background-color: $selected-option-background;
+        }
+        .result a {
+          color: $input-color;
+        }
+      }
+
+      .added .result {
+        a {
+          color: $input-color;
+        }
+      }
+    }
+  }
+}

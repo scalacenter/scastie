@@ -4,11 +4,9 @@ package client
 import api._
 import autowire._
 
+import japgolly.scalajs.react._, vdom.all._, extra.router._
+
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
-import japgolly.scalajs.react._
-import extra.router._
-import vdom.all._
-import org.scalajs.dom.window._
 
 object CodeSnippets {
 
@@ -49,41 +47,20 @@ object CodeSnippets {
       .backend(new Backend(_))
       .renderPS {
         case (scope, (maybeRouter, state, backend), summaries) => {
-
-          import state.dimensions._
-
           assert(maybeRouter.isDefined,
                  "should not be able to access profile view from embedded")
+
           val router = maybeRouter.get
 
-          val (userAvatar, userName, userLogin) = state.user match {
-            case Some(user) =>
-              (div(`class` := "avatar")(
-                 img(src := user.avatar_url + "&s=70",
-                     alt := "Your Github Avatar",
-                     `class` := "image-button avatar")
-               ),
-               user.name,
-               user.login)
-            case None =>
-              (i(`class` := "fa fa-user-circle"),
-               Some("User name"),
-               "Github user")
-          }
 
-          def containerStyle: TagMod =
-            if (forcedDesktop) height := (innerHeight - topBarHeight).px
+          val noSummaries =
+            if(summaries.isEmpty) p("No saved snippets, yet!")
             else EmptyVdom
 
-          div(`id` := "code-snippets-container", containerStyle)(
-            userAvatar,
-            userName.map(u => h2(u)).getOrElse(EmptyVdom),
-            div(`class` := "nickname")(
-              i(`class` := "fa fa-github"),
-              userLogin
-            ),
-            h2("Saved Code Snippets"),
-            div(`id` := "snippets")(
+          div(`class` := "code-snippets-container")(
+
+            div(`class` := "snippets")(
+              noSummaries,
               summaries.groupBy(_.snippetId.base64UUID).map {
                 case (base64UUID, groupedSummaries) =>
                   div(`class` := "group", `key` := base64UUID)(
@@ -103,11 +80,13 @@ object CodeSnippets {
                               div(`class` := "actions")(
                                 li(`class` := "btn",
                                    title := "Share",
+                                   role := "button",
                                    onClick ==> backend
                                      .toggleShare(Some(summary.snippetId)))(
                                   i(`class` := "fa fa-share-alt")
                                 ),
                                 li(`class` := "btn",
+                                   role := "button",
                                    title := "Delete",
                                    onClick ==> scope.backend.delete(summary))(
                                   i(`class` := "fa fa-trash")
@@ -115,6 +94,7 @@ object CodeSnippets {
                               )
                             ),
                             div(`class` := "codesnippet",
+                                role := "button",
                                 router.setOnClick(page))(
                               router.link(page)(
                                 pre(`class` := "code")(summary.summary)

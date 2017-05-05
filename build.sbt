@@ -45,7 +45,7 @@ lazy val scastie = project
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.17.0"
+  version := "0.18.0"
 )
 
 lazy val baseSettings = Seq(
@@ -245,7 +245,7 @@ lazy val codemirror = project
 def react(artifact: String,
           name: String,
           configuration: Configuration = Compile): JSModuleID =
-  "org.webjars.bower" % "react" % "15.3.2" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
+  "org.webjars.bower" % "react" % "15.5.4" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
 
 def reactWithDepends(artifact: String,
                      name: String,
@@ -270,16 +270,14 @@ lazy val client = project
     ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.0.0",
+      "com.github.japgolly.scalajs-react" %%% "test"  % "1.0.0" % Test,
+      "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
       "org.webjars" % "font-awesome" % "4.7.0",
       "org.webjars.npm" % "firacode" % "1.205.0",
-      "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
-      "com.github.japgolly.scalajs-react" %%% "test" % "1.0.0" % Test,
       "org.webjars.bower" % "bourbon" % "3.1.8",
       "org.webjars.bower" % "neat" % "1.8.0"
     ),
     requiresDOM := true,
-    // persistLauncher := true,
-    // persistLauncher in Test := false,
     scalaJSStage in Test := FastOptStage,
     jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
   )

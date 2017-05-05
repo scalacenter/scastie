@@ -1,0 +1,25 @@
+@import "commonvars";
+
+@mixin sidebarTheme($class) {
+  .sidebar {
+    background: $sidebar-background;
+
+    .logo {
+      color: $link-color;
+      background: $topbar-background;
+      
+    }
+
+    .actions-top {
+      .btn.selected {
+        background: $selected-option-background;
+      }
+
+      color: $option-color;
+    }
+
+    .actions-bottom .btn {
+      color: $option-color;
+    }
+  }
+}

@@ -4,7 +4,6 @@ RUN apk update
 RUN apk add --update bash
 RUN apk add --update ncurses
 RUN apk add --update nodejs
-RUN apk add --update git
 
 ENV COURSIER_CACHE /root/.coursier
 ENV SBT_OPTS -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
@@ -78,6 +77,7 @@ ENV LANG en_US.UTF-8
 # see https://github.com/docker-library/openjdk/issues/73#issuecomment-207816707
 RUN apk add --update ttf-dejavu
 RUN apk add --update font-adobe-100dpi
+RUN apk add --update git
 
 # These fonts are somewhat prettier
 RUN git clone --depth 1 --branch release https://github.com/adobe-fonts/source-code-pro.git /usr/share/fonts/source-code-pro && \
