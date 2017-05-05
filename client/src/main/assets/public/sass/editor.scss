@@ -2,7 +2,7 @@
 
 @mixin editor() {
   .editor-mobile {
-    display: none !important;
+    display: none;
   }
 
   .editor-topbar {
@@ -128,6 +128,15 @@
       height: 100%;
     }
 
+    .editor-container {
+      .code {
+        height: calc(100% - #{$editor-mobile-height + $console-handle-height});
+        &.console-open{
+          height: calc(100% - #{$editor-mobile-height + $console-height});
+        }
+      }
+    }
+
     .editor-topbar {
       display: none !important;
     }
@@ -137,10 +146,10 @@
     }
 
     .btn.run-button.mobile {
-      display: block !important;
-      position: absolute !important;
-      bottom: 20px !important;
-      left: 20px !important;
+      display: block;
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
     }
 
     .switcher-show, .console {
@@ -149,8 +158,7 @@
     }
 
     .editor-mobile {
-      z-index: 99999;
-      display: block !important;
+      display: block;
       position: fixed;
       bottom: 0px;
       left: 0px;
