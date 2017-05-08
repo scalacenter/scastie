@@ -155,7 +155,7 @@ lazy val sbtRunner = project
         val artifactTargetPath = s"/app/${artifact.name}"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.13")
+          from("scalacenter/scastie-docker-sbt:0.0.18")
 
           add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 

@@ -102,4 +102,4 @@ Those people have access:
 
 ## Running with docker locally
 
-`docker run --network=host scalacenter/scastie-sbt-runner:0.16.0`
+`docker run --network=host scalacenter/scastie-sbt-runner:0.18.0`
