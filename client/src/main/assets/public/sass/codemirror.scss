@@ -2,6 +2,22 @@
   height: 100%;
 }
 
+.CodeMirror-simplescroll-vertical {
+  width: 10px;
+}
+
+.CodeMirror-simplescroll-horizontal {
+  height: 10px;
+}
+
+.CodeMirror-simplescroll-vertical,
+.CodeMirror-simplescroll-horizontal { 
+  background-color: transparent;
+  div {
+    border: none;
+  }
+}
+
 .CodeMirror-scroll {
   overflow: auto;
 }

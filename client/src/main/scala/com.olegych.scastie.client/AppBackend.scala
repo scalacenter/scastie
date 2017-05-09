@@ -185,6 +185,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   )(e: ReactEventFromInput): Callback =
     scope.modState(_.toggleShare(snippetId))
 
+  def forceDesktop(e: ReactEventFromInput): Callback =
+    scope.modState(_.forceDesktop)
+
   def toggleWorksheetMode: Callback = scope.modState(_.toggleWorksheetMode)
   def toggleWorksheetMode(e: ReactEventFromInput): Callback =
     toggleWorksheetMode

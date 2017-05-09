@@ -30,11 +30,11 @@ object App {
             if (state.isDarkTheme) "dark"
             else "light"
 
-          val appClass =
-            if (!props.isEmbedded) "app"
-            else "app embedded"
+          val embeddedClass = TagMod(`class` := "embedded").when(props.isEmbedded)
+          val forceDesktopClass = 
+            TagMod(`class` := "force-desktop").when(state.isDesktopForced)
 
-          div(`class` := s"$appClass $theme")(
+          div(`class` := s"app $theme", embeddedClass, forceDesktopClass)(
             SideBar(state, scope.backend).unless(props.isEmbedded),
             MainPanel(state, scope.backend, props),
             Welcome(state, scope.backend),

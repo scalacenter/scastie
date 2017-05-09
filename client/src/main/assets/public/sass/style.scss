@@ -15,8 +15,8 @@
 @import "../../../../../target/web/web-modules/main/webjars/lib/bourbon/app/assets/stylesheets/_bourbon";
 @import "../../../../../target/web/web-modules/main/webjars/lib/neat/app/assets/stylesheets/_neat";
 
-body, .root, .app {
-  height: 100%;
+.app {
+  position: relative;
 }
 
 body {

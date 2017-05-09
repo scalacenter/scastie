@@ -13,6 +13,7 @@
     .actions-top {
       .btn.selected {
         background: $selected-option-background;
+        color: white;
       }
 
       color: $option-color;

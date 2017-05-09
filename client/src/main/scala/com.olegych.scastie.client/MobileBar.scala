@@ -11,7 +11,8 @@ object MobileBar {
         case (state, backend) =>
           nav(`class` := "editor-mobile")(
             ul(`class` := "editor-buttons")(
-              RunButton(state, backend)
+              RunButton(state, backend),
+              DesktopButton(state, backend)
             )
           )
       }

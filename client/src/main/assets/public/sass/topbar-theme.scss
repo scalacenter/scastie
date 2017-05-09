@@ -13,12 +13,23 @@
     ul.actions {
       color: $hover-dropdown-color;
 
-      li {
+      li.dropdown {
         color: $hover-dropdown-color;
-
+        &.selected,
         &:hover {
           background-color: $selected-dropdown-background;
           color: $hover-dropdown-color;
+        }
+
+        ul.subactions .btn {
+          color: $submenu-text-color;
+          background: $sidebar-background;
+          border-bottom-color: $submenu-border-color;
+
+          &:hover {
+            background-color: $selected-dropdown-background;
+            color: $hover-submenu-dropdown-color;
+          }
         }
       }
     }

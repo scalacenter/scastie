@@ -54,11 +54,30 @@ object CodeSnippets {
 
           val router = maybeRouter.get
 
+          val user = state.user.get
+
+          val userAvatar = 
+            div(`class` := "avatar")(
+              img(src := user.avatar_url + "&s=70",
+                  alt := "Your Github Avatar",
+                  `class` := "image-button avatar")
+            )
+
+          val userName = user.name.getOrElse("")
+          val userLogin = user.login
+
           val noSummaries =
             if (summaries.isEmpty) p("No saved snippets, yet!")
             else EmptyVdom
 
           div(`class` := "code-snippets-container")(
+            userAvatar,
+            h2(userName),
+            div(`class` := "username")(
+              i(`class` := "fa fa-github"),
+              userLogin
+            ),
+            h2("Saved Code Snippets"),
             div(`class` := "snippets")(
               noSummaries,
               summaries

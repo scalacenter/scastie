@@ -57,3 +57,15 @@ $cm-dialog-color: #586e75;
 $cm-simplescroll-background: #859900;
 $cm-s-background-color: #073642;
 
+.code {
+  .cm-s-solarized.cm-s-dark {
+    color: $cm-color;
+    background-color: $cm-background-color;
+
+    .CodeMirror-simplescroll-vertical div,
+    .CodeMirror-simplescroll-horizontal div,
+    .CodeMirror-hints div {
+      background-color: $cm-simplescroll-background;
+    }
+  }
+}

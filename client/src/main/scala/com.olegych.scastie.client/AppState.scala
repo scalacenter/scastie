@@ -16,6 +16,7 @@ object AppState {
     websocket = None,
     modalState = ModalState.default,
     isDarkTheme = false,
+    isDesktopForced = false,
     consoleState = ConsoleState.default,
     inputsHasChanged = false,
     snippetId = None,
@@ -51,6 +52,7 @@ case class AppState(
     websocket: Option[WebSocket],
     modalState: ModalState,
     isDarkTheme: Boolean,
+    isDesktopForced: Boolean,
     consoleState: ConsoleState,
     inputsHasChanged: Boolean,
     snippetId: Option[SnippetId],
@@ -71,6 +73,7 @@ case class AppState(
                   websocket: Option[WebSocket] = websocket,
                   modalState: ModalState = modalState,
                   isDarkTheme: Boolean = isDarkTheme,
+                  isDesktopForced: Boolean = isDesktopForced,
                   consoleState: ConsoleState = consoleState,
                   inputsHasChanged: Boolean = inputsHasChanged,
                   snippetId: Option[SnippetId] = snippetId,
@@ -99,6 +102,7 @@ case class AppState(
         websocket,
         modalState,
         isDarkTheme,
+        isDesktopForced,
         consoleState,
         inputsHasChanged,
         snippetId0,
@@ -191,6 +195,8 @@ case class AppState(
         modalState.copy(isShareModalClosed = !modalState.isShareModalClosed),
       snippetId = snippetId
     )
+
+  def forceDesktop: AppState = copyAndSave(isDesktopForced = true)
 
   def openConsole: AppState =
     copyAndSave(consoleState = consoleState.copy(consoleIsOpen = true))
