@@ -14,10 +14,6 @@
     <link href="/assets/lib/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="https://scala.epfl.ch/resources/css/vendor/bootstrap.3.3.6.min.css" rel="stylesheet">
 
-    <!-- Typekit fonts -->
-    <script src="https://use.typekit.net/slz1hxf.js"></script>
-    <script>try{Typekit.load({ async: true });}catch(e){}</script>
-
     <!-- JQuery JS -->
     <script src="https://scala.epfl.ch/resources/js/vendor/jquery-1.9.1.min.js"></script>
     <script src="https://scala.epfl.ch/resources/js/vendor/jquery.backstretch.min.js" type="text/javascript"></script>
@@ -99,11 +95,12 @@
           <div class="col-md-12">
             <h1 class="pitch">Join the Beta.</h1>
             <br>
-            <form action="/login?home" method="GET">
+            <form action="/login" method="GET">
               <button class="btn btn-danger call-to-action" autofocus>
                 <p>Sign up with</p>
                 <i class="fa fa-github" aria-hidden="true"></i>
               </button>
+              <input type="hidden" name="home" value="">
             </form>
           </div>
         </div>

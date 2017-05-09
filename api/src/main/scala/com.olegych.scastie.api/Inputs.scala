@@ -35,7 +35,7 @@ case class Inputs(
     librariesFrom: Map[ScalaDependency, Project] = Map(),
     sbtConfigExtra: String,
     sbtPluginsConfigExtra: String,
-    showInUserProfile: Boolean,
+    showInUserProfile: Boolean = false,
     forked: Option[SnippetId] = None
 ) {
   def addScalaDependency(scalaDependency: ScalaDependency,

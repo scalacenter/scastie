@@ -57,6 +57,12 @@ $cm-dialog-color: #93a1a1;
 $cm-simplescroll-background: #00acdb;
 $cm-s-background-color: #f4f3f3;
 
+.light {
+  .main-panel {
+    background-color: $cm-background-color; 
+  }
+}
+
 .code {
   .cm-s-solarized.cm-s-light {
     color: $cm-color;
