@@ -63,7 +63,7 @@ case class Inputs(
           """addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "0.1.0")"""
 
         case ScalaTarget.Dotty =>
-          """addSbtPlugin("com.felixmulder" % "sbt-dotty" % "0.1.9")"""
+          """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.0-RC4")"""
 
         case _: ScalaTarget.Jvm => ""
 
@@ -125,7 +125,7 @@ case class Inputs(
         }
         case ScalaTarget.Dotty => {
           (
-            """|// you can set scalaVersion with the lastest http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22ch.epfl.lamp%22%20dotty
+            """|scalaVersion := dottyLatestNightlyBuild.getOrElse("0.1.1-bin-20170509-7a3f880-NIGHTLY")
                |enablePlugins(DottyPlugin)""".stripMargin,
             ScalaDependency(
               "org.scastie",

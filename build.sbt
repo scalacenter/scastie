@@ -6,7 +6,7 @@ import sbt.Keys._
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.19.0"
+  version := "0.20.0"
 )
 
 lazy val upickleVersion = "0.4.4"
@@ -48,7 +48,7 @@ lazy val scastie = project
     // api213JVM,
     // api213JS
   )
-  .settings(orgSettings)
+  .settings(baseSettings)
   .settings(Deployment.settings(server, sbtRunner))
   .settings(addCommandAlias("drone", ";test ;server/universal:packageBin"))
 
@@ -427,9 +427,10 @@ lazy val runtimeDotty = project
   .settings(orgSettings)
   .enablePlugins(DottyPlugin)
   .settings(
+    libraryDependencies += "org.scastie" % "api_2.11" % version.value,
+    scalaVersion := dottyLatestNightlyBuild.getOrElse("0.1.1-bin-20170509-7a3f880-NIGHTLY"),
     moduleName := "runtime-dotty"
   )
-  .dependsOn(api211JVM)
 
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))
