@@ -26,6 +26,16 @@ object MainPanel {
               TagMod(`class` := "console-open")
             else EmptyVdom
 
+          val snippets =
+            if(state.user.isDefined) {
+              div(`class` := "snippets-container",
+                  `class` := "inner-container",
+                  show(View.CodeSnippets))(
+                CodeSnippets(props.router, state, backend)
+              )
+            }
+            else EmptyVdom
+
           div(`class` := "main-panel")(
             TopBar(state, backend),
             EditorTopBar(state, backend, props.snippetId),
@@ -44,11 +54,7 @@ object MainPanel {
                   show(View.BuildSettings))(
                 BuildSettings(state, backend)
               ),
-              div(`class` := "snippets-container",
-                  `class` := "inner-container",
-                  show(View.CodeSnippets))(
-                CodeSnippets(props.router, state, backend)
-              ),
+              snippets,
               MobileBar(state, backend)
             )
           )

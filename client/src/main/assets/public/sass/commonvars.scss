@@ -50,12 +50,14 @@ $force-desktop-width: 1920px;
   }
 }
 
-.app.force-desktop {
-  min-height: $force-desktop-height;
-  min-width: $force-desktop-width;
-  position: relative;
+@include phone {
+  .app.force-desktop {
+    min-height: $force-desktop-height;
+    min-width: $force-desktop-width;
+    position: relative;
 
-  .editor-mobile {
-    display: none;
+    .editor-mobile {
+      display: none;
+    }
   }
 }

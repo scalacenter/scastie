@@ -22,17 +22,9 @@ object SaveButton {
 
           import View.ctrl
 
-          snippetId match {
-            case None =>
-              li(title := s"Save ($ctrl + S)",
-                 role := "button",
-                 `class` := s"btn $disabledIfSaved",
-                 onClick ==> backend.save)(
-                i(`class` := "fa fa-download"),
-                span("Save")
-              )
-            case Some(sid) =>
-              ul(`class` := "save-buttons")(
+          def userFunctions(sid: SnippetId) =
+            if(state.user.isDefined) {
+              TagMod(
                 li(title := "Amend this code snippet",
                    `class` := s"btn $disabledIfSaved",
                    onClick ==> backend.amend(sid))(
@@ -44,7 +36,23 @@ object SaveButton {
                    onClick ==> backend.update(sid))(
                   i(`class` := "fa fa-download"),
                   span("Update")
-                ),
+                )
+              )
+            }
+            else EmptyVdom
+
+          snippetId match {
+            case None =>
+              li(title := s"Save ($ctrl + S)",
+                 role := "button",
+                 `class` := s"btn $disabledIfSaved",
+                 onClick ==> backend.save)(
+                i(`class` := "fa fa-download"),
+                span("Save")
+              )
+            case Some(sid) =>
+              ul(`class` := "save-buttons")(
+                userFunctions(sid),
                 li(title := "Save as a new forked code snippet",
                    `class` := s"btn $disabledIfSaved",
                    onClick ==> backend.fork(sid))(
