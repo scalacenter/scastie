@@ -192,8 +192,7 @@ case class AppState(
   def toggleShare(snippetId: Option[SnippetId]): AppState =
     copyAndSave(
       modalState =
-        modalState.copy(isShareModalClosed = !modalState.isShareModalClosed),
-      snippetId = snippetId
+        modalState.copy(shareModalSnippetId = snippetId)
     )
 
   def forceDesktop: AppState = copyAndSave(isDesktopForced = true)
@@ -285,15 +284,7 @@ case class AppState(
       )
     )
 
-  def closeModals: AppState =
-    copyAndSave(
-      modalState = modalState.copy(
-        isHelpModalClosed = true,
-        isWelcomeModalClosed = true,
-        isShareModalClosed = true,
-        isResetModalClosed = true
-      )
-    )
+  def closeModals: AppState = copyAndSave(modalState = ModalState.allClosed)
 
   def setRuntimeError(runtimeError: Option[RuntimeError]): AppState =
     if (runtimeError.isEmpty) this

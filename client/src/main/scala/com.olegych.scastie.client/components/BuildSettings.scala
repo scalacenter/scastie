@@ -224,6 +224,7 @@ object BuildSettings {
             } else EmptyVdom
 
           div(clazz := "build-settings-container")(
+            ResetBuildModal(state, backend),
             div(onClick ==> backend.toggleReset, clazz := "btn")(
               "Reset"
             ),

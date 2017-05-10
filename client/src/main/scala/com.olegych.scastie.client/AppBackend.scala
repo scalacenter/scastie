@@ -168,21 +168,16 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def toggleConsole: Callback = scope.modState(_.toggleConsole)
   def toggleConsole(e: ReactEventFromInput): Callback = toggleConsole
-  def toggleWelcome(e: ReactEventFromInput): Callback =
-    scope.modState(_.toggleWelcome)
 
-  def toggleHelp(e: ReactEventFromInput): Callback =
-    scope.modState(_.toggleHelp)
 
   def toggleReset(e: ReactEventFromInput): Callback = toggleReset
   def toggleReset: Callback = scope.modState(_.toggleReset)
 
-  def toggleWelcomeHelp(e: ReactEventFromInput): Callback =
-    scope.modState(_.toggleWelcomeHelp)
+  def toggleHelp: Callback = scope.modState(_.toggleHelp)
+  def toggleWelcome: Callback = scope.modState(_.toggleWelcome)
+  def toggleWelcomeHelp: Callback = scope.modState(_.toggleWelcomeHelp)
 
-  def toggleShare(
-      snippetId: Option[SnippetId]
-  )(e: ReactEventFromInput): Callback =
+  def toggleShare(snippetId: Option[SnippetId]): Callback =
     scope.modState(_.toggleShare(snippetId))
 
   def forceDesktop(e: ReactEventFromInput): Callback =

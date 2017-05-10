@@ -39,10 +39,8 @@ object App {
           div(clazz := s"app $theme", embeddedClass, forceDesktopClass)(
             SideBar(state, scope.backend).unless(props.isEmbedded),
             MainPanel(state, scope.backend, props),
-            Welcome(state, scope.backend),
-            Help(state, scope.backend),
-            Share(props.router, state, scope.backend),
-            Reset(state, scope.backend)
+            WelcomeModal(state.modalState.isWelcomeModalClosed, scope.backend.toggleWelcomeHelp),
+            HelpModal(state.modalState.isHelpModalClosed, scope.backend.toggleHelp)
           )
         }
       }

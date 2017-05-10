@@ -30,7 +30,7 @@ object SideBar {
             )
 
           val helpButton =
-            li(onClick ==> toggleHelp,
+            li(onClick ==> (_ => toggleHelp),
                role := "button",
                title := "Show help Menu",
                clazz := "btn")(

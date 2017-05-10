@@ -97,16 +97,21 @@ object CodeSnippets {
                               .flatMap(_.update)
                               .getOrElse("")
                             div(clazz := "snippet")(
+                              ShareModal(
+                                router,
+                                summary.snippetId,
+                                state.modalState.isShareModalClosed(summary.snippetId),
+                                backend.toggleShare(None)
+                              ),
                               div(clazz := "header", "/" + base64UUID)(
                                 span(" - "),
                                 div(clazz := "clear-mobile"),
                                 span(clazz := "update", "Update: " + update),
                                 div(clazz := "actions")(
-                                  li(clazz := "btn",
+                                  li(onClick ==> (_ => backend.toggleShare(Some(summary.snippetId))),
+                                     clazz := "btn",
                                      title := "Share",
-                                     role := "button",
-                                     onClick ==> backend
-                                       .toggleShare(Some(summary.snippetId)))(
+                                     role := "button")(
                                     i(clazz := "fa fa-share-alt")
                                   ),
                                   li(
