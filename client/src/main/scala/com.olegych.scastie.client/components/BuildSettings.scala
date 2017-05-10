@@ -224,7 +224,9 @@ object BuildSettings {
             } else EmptyVdom
 
           div(clazz := "build-settings-container")(
-            // div()
+            div(onClick ==> backend.toggleReset, clazz := "btn")(
+              "Reset"
+            ),
             h2(
               span("Target")
             ),
