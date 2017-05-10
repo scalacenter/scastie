@@ -87,8 +87,7 @@ lazy val loggingAndTest =
 
 lazy val remapSourcMap =
   scalacOptions ++= {
-    // val ver = version.value
-    val ver = "0.18.0"
+    val ver = version.value
     val fromScastie = (baseDirectory in LocalRootProject).value.toURI.toString
     val toScastie =
       s"https://raw.githubusercontent.com/scalacenter/scastie/v$ver/"
@@ -180,7 +179,7 @@ lazy val sbtRunner = project
         val artifactTargetPath = s"/app/${artifact.name}"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.18")
+          from("scalacenter/scastie-docker-sbt:0.0.20")
 
           add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 

@@ -79,7 +79,7 @@ If you have any questions join us in the [gitter channel](https://gitter.im/scal
 
 * `scastie@scastie.scala-lang.org`
 
-Those people have access:
+These people have access:
 
 * @MasseGuillaume
 * @heathermiller
@@ -102,4 +102,4 @@ Those people have access:
 
 ## Running with docker locally
 
-`docker run --network=host scalacenter/scastie-sbt-runner:0.18.0`
+`docker run --network=host scalacenter/scastie-sbt-runner:0.20.0`
