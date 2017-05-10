@@ -1,7 +1,9 @@
 package com.olegych.scastie
 package client
+package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object SideBar {
 
@@ -22,8 +24,8 @@ object SideBar {
             li(onClick ==> toggleTheme,
                role := "button",
                title := s"Select $toggleThemeLabel Theme (F2)",
-               `class` := "btn")(
-              i(`class` := s"fa $selectedIcon"),
+               clazz := "btn")(
+              i(clazz := s"fa $selectedIcon"),
               span(toggleThemeLabel)
             )
 
@@ -31,22 +33,22 @@ object SideBar {
             li(onClick ==> toggleHelp,
                role := "button",
                title := "Show help Menu",
-               `class` := "btn")(
-              i(`class` := "fa fa-question-circle"),
+               clazz := "btn")(
+              i(clazz := "fa fa-question-circle"),
               span("Help")
             )
 
-          nav(`class` := "sidebar")(
-            div(`class` := "actions-container")(
-              div(`class` := "logo")(
+          nav(clazz := "sidebar")(
+            div(clazz := "actions-container")(
+              div(clazz := "logo")(
                 img(src := "/assets/public/img/icon-scastie.png"),
                 h1("Scastie")
               ),
-              ul(`class` := "actions-top")(
+              ul(clazz := "actions-top")(
                 EditorButton(state, backend),
                 BuildSettingsButton(state, backend)
               ),
-              ul(`class` := "actions-bottom")(
+              ul(clazz := "actions-bottom")(
                 themeButton,
                 helpButton
               )

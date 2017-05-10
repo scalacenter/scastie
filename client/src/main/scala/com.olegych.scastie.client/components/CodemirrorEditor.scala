@@ -1,7 +1,9 @@
 package com.olegych.scastie
 package client
+package components
 
 import japgolly.scalajs.react._, vdom.all._
+// import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 import codemirror.TextAreaEditor
 import org.scalajs.dom.raw.HTMLTextAreaElement

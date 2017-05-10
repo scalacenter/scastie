@@ -1,9 +1,11 @@
 package com.olegych.scastie
 package client
+package components
 
 import api.SnippetId
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object EditorTopBar {
 
@@ -13,11 +15,11 @@ object EditorTopBar {
       .render_P {
         case (state, backend, snippetId) =>
           def isDisabled =
-            if (state.view != View.Editor) TagMod(`class` := "disabled")
+            if (state.view != View.Editor) TagMod(clazz := "disabled")
             else EmptyVdom
 
-          nav(`class` := "editor-topbar", isDisabled)(
-            ul(`class` := "editor-buttons")(
+          nav(clazz := "editor-topbar", isDisabled)(
+            ul(clazz := "editor-buttons")(
               RunButton(state, backend),
               NewButton(state, backend),
               FormatButton(state, backend),

@@ -1,7 +1,9 @@
 package com.olegych.scastie
 package client
+package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object BuildSettingsButton {
 
@@ -13,15 +15,15 @@ object BuildSettingsButton {
           import backend._
 
           def selected =
-            if (state.view == View.BuildSettings) TagMod(`class` := "selected")
+            if (state.view == View.BuildSettings) TagMod(clazz := "selected")
             else EmptyVdom
 
           li(onClick ==> setView2(View.BuildSettings),
              role := "button",
              title := "Open Build Settings",
              selected,
-             `class` := "btn")(
-            i(`class` := "fa fa-gear"),
+             clazz := "btn")(
+            i(clazz := "fa fa-gear"),
             span("Build Settings")
           )
       }

@@ -1,7 +1,9 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object Welcome {
 
@@ -16,46 +18,46 @@ object Welcome {
             if (state.modalState.isWelcomeModalClosed) display.none
             else display.block
 
-          div(`class` := "modal", displayWelcome)(
-            div(`class` := "modal-fade-screen")(
-              div(`class` := "modal-window")(
-                div(`class` := "modal-header")(
+          div(clazz := "modal", displayWelcome)(
+            div(clazz := "modal-fade-screen")(
+              div(clazz := "modal-window")(
+                div(clazz := "modal-header")(
                   div(
                     role := "button",
                     title := "close help modal",
-                    `class` := "modal-close",
+                    clazz := "modal-close",
                     onClick ==> backend.toggleWelcome
                   )
                 )(
                   h1("Welcome to Scastie!")
                 ),
-                div(`class` := "modal-inner")(
-                  p(`class` := "modal-intro",
+                div(clazz := "modal-inner")(
+                  p(clazz := "modal-intro",
                     "Scastie is an interactive playground for Scala."),
                   h2("Run / Edit"),
-                  p(`class` := "modal-intro",
+                  p(clazz := "modal-intro",
                     "The code editor where you can write and run your code."),
                   h2("Build Settings"),
                   p(
-                    `class` := "modal-intro",
+                    clazz := "modal-intro",
                     """In Build Settings you can change the Scala version and add libraries,
                               choose your desired target and even add your own custom sbt configuration."""
                   ),
                   h2("User's Code Snippets"),
                   p(
-                    `class` := "modal-intro",
+                    clazz := "modal-intro",
                     "Your saved code fragments will appear here and you’ll be able to edit or share them."
                   ),
                   h2("Console"),
                   p(
-                    `class` := "modal-intro",
+                    clazz := "modal-intro",
                     "You can see your code’s output in the Scastie’s console."
                   ),
                   h2("Feedback"),
-                  p(`class` := "modal-intro",
+                  p(clazz := "modal-intro",
                     "You can join our Gitter channel and send issues."),
-                  p(`class` := "modal-intro")(
-                    i(`class` := "fa fa-question-circle"),
+                  p(clazz := "modal-intro")(
+                    i(clazz := "fa fa-question-circle"),
                     "If you want to learn more about how Scastie works, you can go to our ",
                     a(href := "",
                       "Help",
@@ -66,7 +68,6 @@ object Welcome {
               )
             )
           )
-
       }
       .build
 }

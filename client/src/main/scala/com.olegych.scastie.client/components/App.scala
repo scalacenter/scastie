@@ -1,9 +1,11 @@
 package com.olegych.scastie
 package client
+package components
 
 import api._
 import japgolly.scalajs.react._
-import vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+
 
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
@@ -30,11 +32,11 @@ object App {
             if (state.isDarkTheme) "dark"
             else "light"
 
-          val embeddedClass = TagMod(`class` := "embedded").when(props.isEmbedded)
+          val embeddedClass = TagMod(clazz := "embedded").when(props.isEmbedded)
           val forceDesktopClass = 
-            TagMod(`class` := "force-desktop").when(state.isDesktopForced)
+            TagMod(clazz := "force-desktop").when(state.isDesktopForced)
 
-          div(`class` := s"app $theme", embeddedClass, forceDesktopClass)(
+          div(clazz := s"app $theme", embeddedClass, forceDesktopClass)(
             SideBar(state, scope.backend).unless(props.isEmbedded),
             MainPanel(state, scope.backend, props),
             Welcome(state, scope.backend),

@@ -1,7 +1,10 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+
 import org.scalajs.dom
 
 object TopBar {
@@ -37,61 +40,61 @@ object TopBar {
             Callback(dom.window.location.pathname = "/login")
 
           def selected(view: View) =
-            if (view == state.view) TagMod(`class` := "selected")
+            if (view == state.view) TagMod(clazz := "selected")
             else EmptyVdom
 
           val profileButton =
             state.user match {
               case Some(user) =>
-                li(`class` := "btn dropdown")(
+                li(clazz := "btn dropdown")(
                   img(
                     src := user.avatar_url + "&s=30",
                     alt := "Your Github Avatar",
-                    `class` := "avatar"),
+                    clazz := "avatar"),
                   span(user.login),
-                  i(`class` := "fa fa-caret-down"),
-                  ul(`class` := "subactions")(
+                  i(clazz := "fa fa-caret-down"),
+                  ul(clazz := "subactions")(
                     li(onClick ==> setView2(View.CodeSnippets),
                        role := "link",
                        title := "Go to your code snippets",
-                       `class` := "btn",
+                       clazz := "btn",
                        selected(View.CodeSnippets)(
-                      i(`class` := "fa fa-code"),
+                      i(clazz := "fa fa-code"),
                       "Snippets"),
                     ),
-                    li(role := "link", onClick ==> logout, `class` := "btn")(
-                      i(`class` := "fa fa-sign-out"),
+                    li(role := "link", onClick ==> logout, clazz := "btn")(
+                      i(clazz := "fa fa-sign-out"),
                       "Logout"
                     )
                   )
                 )
 
               case None =>
-                li(role := "link", onClick ==> login, `class` := "btn")(
-                  i(`class` := "fa fa-sign-in"),
+                li(role := "link", onClick ==> login, clazz := "btn")(
+                  i(clazz := "fa fa-sign-in"),
                   "Login"
                 )
             }
 
-          nav(`class` := "topbar")(
-            ul(`class` := "actions")(
-              li(`class` := "btn dropdown")(
-                i(`class` := "fa fa-comments"),
+          nav(clazz := "topbar")(
+            ul(clazz := "actions")(
+              li(clazz := "btn dropdown")(
+                i(clazz := "fa fa-comments"),
                 span("Feedback"),
-                i(`class` := "fa fa-caret-down"),
-                ul(`class` := "subactions")(
+                i(clazz := "fa fa-caret-down"),
+                ul(clazz := "subactions")(
                   li(onClick ==> feedback,
                      role := "link",
                      title := "Open Gitter.im Chat to give us feedback",
-                     `class` := "btn")(
-                    i(`class` := "fa fa-gitter"),
+                     clazz := "btn")(
+                    i(clazz := "fa fa-gitter"),
                     span("Scastie's gitter")
                   ),
                   li(onClick ==> issue,
                      role := "link",
                      title := "Create new issue on GitHub",
-                     `class` := "btn")(
-                    i(`class` := "fa fa-github"),
+                     clazz := "btn")(
+                    i(clazz := "fa fa-github"),
                     span("Github issues")
                   )
                 )

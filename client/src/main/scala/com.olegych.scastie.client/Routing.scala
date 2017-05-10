@@ -2,6 +2,7 @@ package com.olegych.scastie
 package client
 
 import api.{SnippetId, SnippetUserPart}
+import components._
 
 import japgolly.scalajs.react.vdom.Implicits._
 import japgolly.scalajs.react.extra.router.{

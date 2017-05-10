@@ -1,7 +1,9 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object NewButton {
 
@@ -14,9 +16,9 @@ object NewButton {
         case (state, backend) =>
           li(title := "New code snippet",
              role := "button",
-             `class` := "btn",
+             clazz := "btn",
              onClick ==> backend.newSnippet)(
-            i(`class` := "fa fa-file-o"),
+            i(clazz := "fa fa-file-o"),
             span("New")
           )
       }

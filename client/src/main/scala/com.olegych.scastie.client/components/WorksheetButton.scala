@@ -1,7 +1,9 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object WorksheetButton {
 
@@ -14,8 +16,8 @@ object WorksheetButton {
         case (state, backend) =>
           val worksheetModeSelected =
             if (state.inputs.worksheetMode && state.view != View.Editor)
-              TagMod(`class` := "enabled alpha")
-            else if (state.inputs.worksheetMode) TagMod(`class` := "enabled")
+              TagMod(clazz := "enabled alpha")
+            else if (state.inputs.worksheetMode) TagMod(clazz := "enabled")
             else EmptyVdom
 
           val worksheetModeToogleLabel =
@@ -25,12 +27,12 @@ object WorksheetButton {
           li(title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
              worksheetModeSelected,
              role := "button",
-             `class` := "btn editor",
+             clazz := "btn editor",
              onClick ==> backend.toggleWorksheetMode)(
-            i(`class` := "fa fa-calendar"),
+            i(clazz := "fa fa-calendar"),
             span("Worksheet"),
-            i(`class` := "workSheetIndicator",
-              `class` := "fa fa-circle",
+            i(clazz := "workSheetIndicator",
+              clazz := "fa fa-circle",
               worksheetModeSelected)
           )
       }

@@ -1,8 +1,11 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
-import com.olegych.scastie.api.SnippetId
+import api.SnippetId
+
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object SaveButton {
 
@@ -26,15 +29,15 @@ object SaveButton {
             if(state.user.isDefined) {
               TagMod(
                 li(title := "Amend this code snippet",
-                   `class` := s"btn $disabledIfSaved",
+                   clazz := s"btn $disabledIfSaved",
                    onClick ==> backend.amend(sid))(
-                  i(`class` := "fa fa-pencil-square-o"),
+                  i(clazz := "fa fa-pencil-square-o"),
                   span("Amend")
                 ),
                 li(title := s"Save as a new updated version ($ctrl + S)",
-                   `class` := s"btn $disabledIfSaved",
+                   clazz := s"btn $disabledIfSaved",
                    onClick ==> backend.update(sid))(
-                  i(`class` := "fa fa-download"),
+                  i(clazz := "fa fa-download"),
                   span("Update")
                 )
               )
@@ -45,18 +48,18 @@ object SaveButton {
             case None =>
               li(title := s"Save ($ctrl + S)",
                  role := "button",
-                 `class` := s"btn $disabledIfSaved",
+                 clazz := s"btn $disabledIfSaved",
                  onClick ==> backend.save)(
-                i(`class` := "fa fa-download"),
+                i(clazz := "fa fa-download"),
                 span("Save")
               )
             case Some(sid) =>
-              ul(`class` := "save-buttons")(
+              ul(clazz := "save-buttons")(
                 userFunctions(sid),
                 li(title := "Save as a new forked code snippet",
-                   `class` := s"btn $disabledIfSaved",
+                   clazz := s"btn $disabledIfSaved",
                    onClick ==> backend.fork(sid))(
-                  i(`class` := "fa fa-code-fork"),
+                  i(clazz := "fa fa-code-fork"),
                   span("Fork")
                 )
               )

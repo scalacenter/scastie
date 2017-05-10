@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package client
 
+import components._
+
 import org.scalajs.dom
 import org.scalajs.dom.raw.{HTMLElement, Node}
 import org.scalajs.dom.ext._

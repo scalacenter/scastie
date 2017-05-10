@@ -1,6 +1,9 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object RunButton {
 
@@ -18,15 +21,15 @@ object RunButton {
             li(onClick ==> run,
                role := "button",
                title := s"Run Code ($ctrl + Enter)",
-               `class` := "btn run-button")(
-              i(`class` := "fa fa-play"),
+               clazz := "btn run-button")(
+              i(clazz := "fa fa-play"),
               span("Run")
             )
           } else {
             li(onClick ==> setView2(View.Editor),
                title := "Running your Code...",
-               `class` := "btn run-button")(
-              i(`class` := "fa fa-spinner fa-spin"),
+               clazz := "btn run-button")(
+              i(clazz := "fa fa-spinner fa-spin"),
               span("Running")
             )
           }

@@ -1,6 +1,8 @@
 package com.olegych.scastie.client
+package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object ClearButton {
 
@@ -13,9 +15,9 @@ object ClearButton {
         case (state, backend) =>
           li(title := "Clear Instrumentations (Esc)",
              role := "button",
-             `class` := "btn",
+             clazz := "btn",
              onClick ==> backend.clear)(
-            i(`class` := "fa fa-eraser"),
+            i(clazz := "fa fa-eraser"),
             span("Clear")
           )
       }

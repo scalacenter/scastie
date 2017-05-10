@@ -1,7 +1,9 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object Reset {
 
@@ -17,26 +19,26 @@ object Reset {
             if (state.modalState.isResetModalClosed) display.none
             else display.block
 
-          div(`class` := "modal", displayReset)(
-            div(`class` := "modal-fade-screen")(
-              div(`class` := "modal-window  modal-reset")(
-                div(`class` := "modal-header")(
-                  div(`class` := "modal-close",
+          div(clazz := "modal", displayReset)(
+            div(clazz := "modal-fade-screen")(
+              div(clazz := "modal-window  modal-reset")(
+                div(clazz := "modal-header")(
+                  div(clazz := "modal-close",
                       onClick ==> backend.toggleReset)
                 )(
                   h1("Reset Configuration")
                 ),
-                div(`class` := "modal-inner")(
+                div(clazz := "modal-inner")(
                   p(
-                    `class` := "modal-intro",
+                    clazz := "modal-intro",
                     "Are you sure you want to reset the current configuration?"
                   ),
                   ul(
                     li(onClick ==> backend.resetBuildAndClose,
-                       `class` := "btn")(
+                       clazz := "btn")(
                       "Accept"
                     ),
-                    li(onClick ==> backend.toggleReset, `class` := "btn")(
+                    li(onClick ==> backend.toggleReset, clazz := "btn")(
                       "Cancel"
                     )
                   )

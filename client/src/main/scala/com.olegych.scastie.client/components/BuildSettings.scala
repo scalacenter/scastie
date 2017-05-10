@@ -1,9 +1,10 @@
 package com.olegych.scastie
 package client
+package components
 
 import api._
 import japgolly.scalajs.react._
-import vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object BuildSettings {
 
@@ -42,7 +43,7 @@ object BuildSettings {
       else TagMod(`checked` := false)
 
     div(
-      ul(`class` := "target")(
+      ul(clazz := "target")(
         targetTypes.map { targetType =>
           val targetLabel = labelFor(targetType)
           li(
@@ -54,7 +55,7 @@ object BuildSettings {
                   selected(targetType)),
             label(`for` := targetLabel,
                   role := "button",
-                  `class` := "radio",
+                  clazz := "radio",
                   targetLabel)
           )
         }.toTagMod
@@ -153,7 +154,7 @@ object BuildSettings {
         else TagMod(`checked` := false)
 
       TagMod(
-        ul(`class` := "suggestedVersions")(
+        ul(clazz := "suggestedVersions")(
           suggestedVersions.map { suggestedVersion =>
             li(
               input(`type` := "radio",
@@ -163,7 +164,7 @@ object BuildSettings {
                     handler(suggestedVersion),
                     selected(suggestedVersion)),
               label(`for` := s"scala-$suggestedVersion",
-                    `class` := "radio",
+                    clazz := "radio",
                     role := "button",
                     suggestedVersion)
             )
@@ -175,7 +176,7 @@ object BuildSettings {
                   name := "scalaV",
                   handler(scalaVersion)),
             label(
-              div(`class` := "select-wrapper")(
+              div(clazz := "select-wrapper")(
                 select(name := "scalaVersion",
                        value := scalaVersion.toString,
                        onChange ==> setScalaVersion(targetApply))(
@@ -216,13 +217,14 @@ object BuildSettings {
             if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
               div(onClick ==> backend.toggleReset,
                   role := "button",
-                  `class` := "btn",
+                  clazz := "btn",
                   title := "Reset your configuration")(
                 "Reset"
               )
             } else EmptyVdom
 
-          div(`class` := "build-settings-container")(
+          div(clazz := "build-settings-container")(
+            // div()
             h2(
               span("Target")
             ),
@@ -239,7 +241,7 @@ object BuildSettings {
               span("Sbt Configuration")
             ),
             label(`for` := "configuration", "Add more"),
-            pre(`class` := "configuration")(
+            pre(clazz := "configuration")(
               CodeMirrorEditor(
                 CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
                                           theme = s"solarized $theme",
@@ -249,8 +251,8 @@ object BuildSettings {
                 )
               )
             ),
-            div(`class` := "label", "Resulting build.sbt"),
-            pre(`class` := "output")(
+            div(clazz := "label", "Resulting build.sbt"),
+            pre(clazz := "output")(
               CodeMirrorEditor(
                 CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
                                           theme = s"solarized $theme",
@@ -259,8 +261,8 @@ object BuildSettings {
                   _ => Callback(())
                 )
               ),
-              div(`class` := "label", "Resulting plugins.sbt"),
-              pre(`class` := "plugins-output")(
+              div(clazz := "label", "Resulting plugins.sbt"),
+              pre(clazz := "plugins-output")(
                 CodeMirrorEditor(
                   CodeMirrorEditor.Settings(
                     value = state.inputs.sbtPluginsConfig,

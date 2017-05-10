@@ -1,8 +1,9 @@
 package com.olegych.scastie
 package client
+package components
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object MainPanel {
   private val component =
@@ -23,34 +24,34 @@ object MainPanel {
 
           val consoleCssForEditor =
             if (state.consoleState.consoleIsOpen)
-              TagMod(`class` := "console-open")
+              TagMod(clazz := "console-open")
             else EmptyVdom
 
           val snippets =
             if(state.user.isDefined) {
-              div(`class` := "snippets-container",
-                  `class` := "inner-container",
+              div(clazz := "snippets-container",
+                  clazz := "inner-container",
                   show(View.CodeSnippets))(
                 CodeSnippets(props.router, state, backend)
               )
             }
             else EmptyVdom
 
-          div(`class` := "main-panel")(
+          div(clazz := "main-panel")(
             TopBar(state, backend),
             EditorTopBar(state, backend, props.snippetId),
-            div(`class` := "content")(
-              div(`class` := "editor-container",
-                  `class` := "inner-container",
+            div(clazz := "content")(
+              div(clazz := "editor-container",
+                  clazz := "inner-container",
                   show(View.Editor))(
-                div(`class` := "code", consoleCssForEditor)(
+                div(clazz := "code", consoleCssForEditor)(
                   Editor(state, backend),
                   embeddedMenu
                 ),
                 Console(state, backend)
               ),
-              div(`class` := "settings-container",
-                  `class` := "inner-container",
+              div(clazz := "settings-container",
+                  clazz := "inner-container",
                   show(View.BuildSettings))(
                 BuildSettings(state, backend)
               ),

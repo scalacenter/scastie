@@ -1,9 +1,11 @@
 package com.olegych.scastie
 package client
+package components
 
 import api._
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 import org.scalajs.dom
 import dom.ext.KeyCode
@@ -330,7 +332,7 @@ object ScaladexSearch {
       .renderPS {
         case (scope, (state, backend), searchState) => {
           def selectedIndex(index: Int, selected: Int) = {
-            if (index == selected) TagMod(`class` := "selected")
+            if (index == selected) TagMod(clazz := "selected")
             else EmptyVdom
           }
 
@@ -342,7 +344,7 @@ object ScaladexSearch {
                             options: TagMod = EmptyVdom) = {
             import project._
 
-            val common = TagMod(title := organization, `class` := "logo")
+            val common = TagMod(title := organization, clazz := "logo")
             val artifact2 =
               artifact
                 .replaceAllLiterally(project.repository + "-", "")
@@ -356,11 +358,11 @@ object ScaladexSearch {
             val scaladexLink =
               s"https://scaladex.scala-lang.org/$organization/$repository/$artifact"
 
-            div(`class` := "result", selected, handlers)(
-              a(`class` := "scaladexresult",
+            div(clazz := "result", selected, handlers)(
+              a(clazz := "scaladexresult",
                 href := scaladexLink,
                 target := "_blank")(
-                i(`class` := "fa fa-external-link")
+                i(clazz := "fa fa-external-link")
               ),
               remove,
               span(
@@ -376,14 +378,14 @@ object ScaladexSearch {
                         common,
                         alt := s"placeholder for $organization")
                   ),
-                span(`class` := "artifact")(label)
+                span(clazz := "artifact")(label)
               ),
               options
             )
           }
 
           def renderOptions(selected: Selected) = {
-            div(`class` := "select-wrapper")(
+            div(clazz := "select-wrapper")(
               select(value := selected.release.version,
                      onChange ==> scope.backend.updateVersion(selected))(
                 selected.options.versions.reverse
@@ -398,16 +400,16 @@ object ScaladexSearch {
               if (searchState.selecteds.isEmpty) display.none
               else EmptyVdom
 
-            div(`class` := "added", hideAdded)(
+            div(clazz := "added", hideAdded)(
               searchState.selecteds.toList.sorted
                 .map(
                   selected =>
                     renderProject(
                       selected.project,
                       selected.release.artifact,
-                      i(`class` := "fa fa-close")(
+                      i(clazz := "fa fa-close")(
                         onClick ==> scope.backend.removeSelected(selected),
-                        `class` := "remove"
+                        clazz := "remove"
                       ),
                       options = renderOptions(selected)
                   )
@@ -424,23 +426,23 @@ object ScaladexSearch {
             if (searchState.search.isEmpty) display.none
             else display.`inline-block`
 
-          div(`class` := "search", `class` := "library")(
+          div(clazz := "search", clazz := "library")(
             added,
-            div(`class` := "search-input")(
+            div(clazz := "search-input")(
               input.search.ref(searchInputRef = _)(
-                `class` := "search-query",
+                clazz := "search-query",
                 placeholder := "Search for 'cats'",
                 value := searchState.query,
                 onChange ==> scope.backend.setQuery,
                 onKeyDown ==> scope.backend.keyDown
               ),
-              div(`class` := "close", displayClose)(
-                i(`class` := "fa fa-close")(
+              div(clazz := "close", displayClose)(
+                i(clazz := "fa fa-close")(
                   onClick ==> scope.backend.resetQuery
                 )
               )
             ),
-            div.ref(projectListRef = _)(`class` := "results", displayResults)(
+            div.ref(projectListRef = _)(clazz := "results", displayResults)(
               searchState.search.zipWithIndex.toList.map {
                 case ((project, artifact), index) => {
                   renderProject(

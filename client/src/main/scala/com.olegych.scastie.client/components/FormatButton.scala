@@ -1,7 +1,9 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object FormatButton {
 
@@ -18,9 +20,9 @@ object FormatButton {
 
           li(title := "Format Code (F6)",
              role := "button",
-             `class` := s"btn $disabledIfSameInputs",
+             clazz := s"btn $disabledIfSameInputs",
              onClick ==> backend.formatCode)(
-            i(`class` := "fa fa-align-left"),
+            i(clazz := "fa fa-align-left"),
             span("Format")
           )
       }

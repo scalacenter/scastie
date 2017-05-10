@@ -1,8 +1,11 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
 import org.scalajs.dom.raw.HTMLPreElement
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object Console {
 
@@ -22,31 +25,31 @@ object Console {
 
           val consoleCss =
             if (state.consoleState.consoleIsOpen)
-              TagMod(`class` := "console-open")
+              TagMod(clazz := "console-open")
             else EmptyVdom
 
-          div(`class` := "console-container", consoleCss)(
-            div(`class` := "console", displayConsole)(
-              div(`class` := "handler"),
-              div(`class` := "switcher-hide",
+          div(clazz := "console-container", consoleCss)(
+            div(clazz := "console", displayConsole)(
+              div(clazz := "handler"),
+              div(clazz := "switcher-hide",
                   displayConsole,
                   role := "button",
                   onClick ==> backend.toggleConsole)(
-                i(`class` := "fa fa-terminal"),
+                i(clazz := "fa fa-terminal"),
                 "Console",
-                i(`class` := "fa fa-caret-down")
+                i(clazz := "fa fa-caret-down")
               ),
-              pre.ref(consoleElement = _)(`class` := "output-console")(
+              pre.ref(consoleElement = _)(clazz := "output-console")(
                 state.outputs.console
               )
             ),
-            div(`class` := "switcher-show",
+            div(clazz := "switcher-show",
                 role := "button",
                 onClick ==> backend.toggleConsole)(
               displaySwitcher,
-              i(`class` := "fa fa-terminal"),
+              i(clazz := "fa fa-terminal"),
               "Console",
-              i(`class` := "fa fa-caret-up")
+              i(clazz := "fa fa-caret-up")
             )
           )
 

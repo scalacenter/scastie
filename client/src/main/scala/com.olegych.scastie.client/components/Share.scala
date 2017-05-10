@@ -1,6 +1,12 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
-import japgolly.scalajs.react._, extra.router.RouterCtl, vdom.all._
+
+import japgolly.scalajs.react._, vdom.all._
+// import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react.extra.router.RouterCtl
+
 import org.scalajs.dom
 
 object Share {
@@ -26,27 +32,27 @@ object Share {
               case _ => "Snippet URl not found"
             }
 
-          div(`class` := "modal", displayShare)(
-            div(`class` := "modal-fade-screen")(
-              div(`class` := "modal-window  modal-share")(
-                div(`class` := "modal-header")(
-                  div(`class` := "modal-close",
+          div("modal", displayShare)(
+            div("modal-fade-screen")(
+              div("modal-window  modal-share")(
+                div("modal-header")(
+                  div("modal-close",
                       onClick ==> backend.toggleShare(state.snippetId))
                 )(
                   h1("Share your Code Snippet")
                 ),
-                div(`class` := "modal-inner")(
-                  p(`class` := "modal-intro",
+                div("modal-inner")(
+                  p("modal-intro",
                     "Copy and share your code snippet's URL:"),
-                  div(`class` := "snippet-link")(
+                  div("snippet-link")(
                     div(
                       id := "link-to-copy",
                       getSnippetUrl
                     ),
                     li(id := "clipboard-copy",
                        title := "Copy to Clipboard",
-                       `class` := "btn snippet-clip")(
-                      i(`class` := "fa fa-clipboard")
+                       "btn snippet-clip")(
+                      i("fa fa-clipboard")
                     )
                   )
                 )

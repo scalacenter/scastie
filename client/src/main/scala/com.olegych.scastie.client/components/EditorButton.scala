@@ -1,7 +1,9 @@
-package com.olegych.scastie.client
+package com.olegych.scastie
+package client
+package components
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 object EditorButton {
 
@@ -13,15 +15,15 @@ object EditorButton {
       .render_P {
         case (state, backend) =>
           def selected(view: View) =
-            if (view == state.view) TagMod(`class` := "selected")
+            if (view == state.view) TagMod(clazz := "selected")
             else EmptyVdom
 
           li(onClick ==> backend.setView2(View.Editor),
              title := "Open Editor View",
              role := "button",
-             `class` := "btn run-button",
+             clazz := "btn run-button",
              selected(View.Editor))(
-            i(`class` := "fa fa-edit"),
+            i(clazz := "fa fa-edit"),
             span("Editor")
           )
 

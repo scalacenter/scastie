@@ -1,8 +1,11 @@
 package com.olegych.scastie
 package client
+package components
 
 import api.{Instrumentation, Value, Html, AttachedDom}
+
 import japgolly.scalajs.react._, vdom.all._
+// import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 import org.scalajs.dom.raw.{
   HTMLTextAreaElement,
