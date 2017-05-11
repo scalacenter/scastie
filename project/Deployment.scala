@@ -103,16 +103,15 @@ class Deployment(rootFolder: File,
                  val logger: Logger) {
   def deploy(serverZip: Path): Unit = {
     deployRunners()
-
     deployServer(serverZip)
   }
 
   def deployServer(serverZip: Path): Unit = {
     logger.info("Generate server script")
 
-    val serverScript = Files.createTempFile("server", ".sh")
-    Files.setPosixFilePermissions(serverScript, executablePermissions)
-
+    val serverScriptDir = Files.createTempDirectory("server")
+    val serverScript = serverScriptDir.resolve("server.sh")
+    
     val applicationRootConfig = "application.conf"
     val productionConfigFileName = productionConfig.getFileName
     val logbackConfigFileName = logbackConfig.getFileName
@@ -124,12 +123,10 @@ class Deployment(rootFolder: File,
           |whoami
           |
           |kill -9 `cat RUNNING_PID`
-          |rm -rf server
-          |rm server.log
-          |rm server*.sh
           |
           |unzip -d server $serverZipFileName
           |mv server/*/* server/
+          |rm $serverZipFileName
           |
           |nohup server/bin/server \\
           |  -Dconfig.file=/home/$userName/$applicationRootConfig \\
@@ -137,6 +134,7 @@ class Deployment(rootFolder: File,
           |""".stripMargin
 
     Files.write(serverScript, content.getBytes)
+    Files.setPosixFilePermissions(serverScript, executablePermissions)
 
     logger.info("Deploy servers")
 
@@ -166,8 +164,8 @@ class Deployment(rootFolder: File,
     val dockerNamespace = dockerImage.namespace.get
     val dockerRepository = dockerImage.repository
 
-    val sbtScript = Files.createTempFile("sbt", ".sh")
-    Files.setPosixFilePermissions(sbtScript, executablePermissions)
+    val sbtScriptDir = Files.createTempDirectory("sbt")
+    val sbtScript = sbtScriptDir.resolve("sbt.sh")
 
     logger.info("Generate sbt script")
 
@@ -185,8 +183,6 @@ class Deployment(rootFolder: File,
           |
           |docker rmi -f $dockerImagePath
           |
-          |rm sbt*.sh
-          |
           |# Run all instances
           |for i in `seq $runnersPortsStart $runnersPortsEnd`;
           |do
@@ -201,21 +197,23 @@ class Deployment(rootFolder: File,
           |""".stripMargin
 
     Files.write(sbtScript, sbtScriptContent.getBytes)
+    Files.setPosixFilePermissions(sbtScript, executablePermissions)
     val scriptFileName = sbtScript.getFileName
 
     val runnerUri = userName + "@" + runnersHostname
     val serverUri = userName + "@" + serverHostname
 
-    val proxyScript = Files.createTempFile("proxy", ".sh")
+    val proxyScript = sbtScriptDir.resolve("proxy.sh")
     val proxyScriptFileName = proxyScript.getFileName
-    Files.setPosixFilePermissions(proxyScript, executablePermissions)
 
     val proxyScriptContent =
       s"""|rm proxy*.sh
           |rsync $scriptFileName $runnerUri:$scriptFileName
-          |ssh $runnerUri ./$scriptFileName""".stripMargin
+          |ssh $runnerUri ./$scriptFileName
+          |rm $scriptFileName""".stripMargin
 
     Files.write(proxyScript, proxyScriptContent.getBytes)
+    Files.setPosixFilePermissions(proxyScript, executablePermissions)
 
     rsyncServer(sbtScript)
     rsyncServer(proxyScript)
