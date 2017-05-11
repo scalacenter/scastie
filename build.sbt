@@ -6,7 +6,7 @@ import sbt.Keys._
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.20.0"
+  version := "0.20.1"
 )
 
 lazy val upickleVersion = "0.4.4"
@@ -179,7 +179,7 @@ lazy val sbtRunner = project
         val artifactTargetPath = s"/app/${artifact.name}"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.20")
+          from("scalacenter/scastie-docker-sbt:0.0.21")
 
           add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 
