@@ -18,7 +18,7 @@ object RunButton {
           import View.ctrl
 
           if (!state.isRunning) {
-            li(onClick ==> run,
+            li(onClick --> run,
                role := "button",
                title := s"Run Code ($ctrl + Enter)",
                clazz := "btn run-button")(
@@ -26,7 +26,7 @@ object RunButton {
               span("Run")
             )
           } else {
-            li(onClick ==> setView2(View.Editor),
+            li(onClick --> setView(View.Editor),
                title := "Running your Code...",
                clazz := "btn run-button")(
               i(clazz := "fa fa-spinner fa-spin"),

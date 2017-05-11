@@ -14,20 +14,12 @@ import scala.util.{Failure, Success}
 class AppBackend(scope: BackendScope[AppProps, AppState]) {
   Global.subsribe(scope)
 
-  def goHome(e: ReactEventFromInput): Callback = {
+  def goHome: Callback = {
     scope.props.flatMap(
       props => props.router.fold(Callback.empty)(_.set(Home))
     ) >>
       scope.modState(_.setView(View.Editor))
   }
-
-  def resetBuildAndClose(e: ReactEventFromInput): Callback =
-    resetBuild >> toggleReset
-
-  def resetBuild: Callback =
-    scope.modState(
-      state => state.setInputs(Inputs.default.copy(code = state.inputs.code))
-    )
 
   def codeChange(newCode: String) =
     scope.modState(_.setCode(newCode))
@@ -112,42 +104,39 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     socket
   }
 
-  def newSnippet(e: ReactEventFromInput): Callback = {
+  private def setHome = scope.props.flatMap(
+    _.router
+      .map(_.set(Home))
+      .getOrElse(Callback.empty)
+  )
 
-    val snippetId = SnippetId("", None)
-
+  def resetBuild: Callback = {
     val setData = scope.modState(
-      _.clearOutputs
-        .setInputs(Inputs.default.copy(code = ""))
-        .setSnippetSaved(false)
-        .setSnippetId(snippetId)
-        .setChangedInputs
+      state =>
+        state
+          .setInputs(Inputs.default.copy(code = state.inputs.code))
+          .clearOutputs
+          .clearSnippetId
+          .setChangedInputs
     )
 
-    val setPage = scope.props.flatMap(
-      props =>
-        props.router
-          .map(_.set(Page.fromSnippetId(snippetId)))
-          .getOrElse(Callback.empty)
-    )
-
-    setData >> setPage
-
+    setData >> setHome
   }
 
-  def clear(e: ReactEventFromInput): Callback = clear
+  def newSnippet: Callback = {
+    val setData = scope.modState(
+      _.setInputs(Inputs.default.copy(code = "")).clearOutputs.clearSnippetId.setChangedInputs
+    )
+
+    setData >> setHome
+  }
+
   def clear: Callback = scope.modState(_.clearOutputs)
 
   def clearCode: Callback = scope.modState(_.setCode(""))
 
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
-
-  def setView2(newView: View)(e: ReactEventFromInput): Callback =
-    setView(newView)
-
-  def setTarget2(target: ScalaTarget)(e: ReactEventFromInput): Callback =
-    setTarget(target)
 
   def setTarget(target: ScalaTarget): Callback =
     scope.modState(_.setTarget(target))
@@ -163,31 +152,29 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                               version: String): Callback =
     scope.modState(_.updateDependencyVersion(scalaDependency, version))
 
-  def toggleTheme(e: ReactEventFromInput): Callback = toggleTheme
   def toggleTheme: Callback = scope.modState(_.toggleTheme)
-
   def toggleConsole: Callback = scope.modState(_.toggleConsole)
-  def toggleConsole(e: ReactEventFromInput): Callback = toggleConsole
 
+  def openResetModal: Callback = scope.modState(_.openResetModal)
+  def closeResetModal: Callback = scope.modState(_.closeResetModal)
 
-  def toggleReset(e: ReactEventFromInput): Callback = toggleReset
-  def toggleReset: Callback = scope.modState(_.toggleReset)
+  def openNewSnippetModal: Callback = scope.modState(_.openNewSnippetModal)
+  def closeNewSnippetModal: Callback = scope.modState(_.closeNewSnippetModal)
 
-  def toggleHelp: Callback = scope.modState(_.toggleHelp)
-  def toggleWelcome: Callback = scope.modState(_.toggleWelcome)
-  def toggleWelcomeHelp: Callback = scope.modState(_.toggleWelcomeHelp)
+  def openHelpModal: Callback = scope.modState(_.openHelpModal)
+  def closeHelpModal: Callback = scope.modState(_.closeHelpModal)
 
-  def toggleShare(snippetId: Option[SnippetId]): Callback =
-    scope.modState(_.toggleShare(snippetId))
+  def openWelcomeModal: Callback = scope.modState(_.openWelcomeModal)
+  def closeWelcomeModal: Callback = scope.modState(_.closeWelcomeModal)
 
-  def forceDesktop(e: ReactEventFromInput): Callback =
-    scope.modState(_.forceDesktop)
+  def closeShareModal: Callback = scope.modState(_.closeShareModal)
+  def openShareModal(snippetId: Option[SnippetId]): Callback =
+    scope.modState(_.openShareModal(snippetId))
+
+  def forceDesktop: Callback = scope.modState(_.forceDesktop)
 
   def toggleWorksheetMode: Callback = scope.modState(_.toggleWorksheetMode)
-  def toggleWorksheetMode(e: ReactEventFromInput): Callback =
-    toggleWorksheetMode
 
-  def run(e: ReactEventFromInput): Callback = run
   def run: Callback = {
     scope.state.flatMap(
       state =>
@@ -230,7 +217,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     )
   }
 
-  def save(e: ReactEventFromInput): Callback = save
   def save: Callback = {
     scope.state.flatMap(
       state =>
@@ -261,12 +247,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.props.flatMap(
       props =>
         props.snippetId match {
-          case Some(snippetId) => update2(snippetId)
+          case Some(snippetId) => update(snippetId)
           case None => save
       }
     )
 
-  def amend(snippetId: SnippetId)(e: ReactEventFromInput): Callback =
+  def amend(snippetId: SnippetId): Callback =
     scope.state.flatMap(
       state =>
         Callback.unless(state.isSnippetSaved)(
@@ -283,7 +269,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       )
     )
 
-  def fork(snippetId: SnippetId)(e: ReactEventFromInput): Callback =
+  def fork(snippetId: SnippetId): Callback =
     scope.state.flatMap(
       state =>
         Callback.unless(state.isSnippetSaved)(
@@ -307,9 +293,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       )
     )
 
-  def update(snippetId: SnippetId)(e: ReactEventFromInput): Callback =
-    update2(snippetId)
-  def update2(snippetId: SnippetId): Callback =
+  def update(snippetId: SnippetId): Callback =
     scope.state.flatMap(
       state =>
         Callback.unless(state.isSnippetSaved)(
@@ -404,7 +388,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     initialState >> loadUser
   }
 
-  def formatCode(e: ReactEventFromInput): Callback = formatCode
   def formatCode: Callback =
     scope.state.flatMap(
       state =>

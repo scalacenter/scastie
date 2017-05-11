@@ -2,7 +2,9 @@ package com.olegych.scastie.client
 
 import org.scalatest.FunSpec
 
-import japgolly.scalajs.react._, vdom.html_<^._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
+
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.test._
 
@@ -11,9 +13,10 @@ object NameChangerSpec extends FunSpec {
   val NameChanger = ScalaComponent
     .builder[StateSnapshot[String]]("Name changer")
     .render_P { ss =>
-      def updateName =
-        (event: ReactEventFromInput) => ss.setState(event.target.value)
-      <.input.text(^.value := ss.value, ^.onChange ==> updateName)
+      def updateName(event: ReactEventFromInput): Callback =
+        ss.setState(event.target.value)
+
+      input.text(value := ss.value, onChange --> updateName)
     }
     .build
 

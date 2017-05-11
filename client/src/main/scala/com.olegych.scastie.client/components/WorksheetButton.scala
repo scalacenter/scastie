@@ -28,7 +28,7 @@ object WorksheetButton {
              worksheetModeSelected,
              role := "button",
              clazz := "btn editor",
-             onClick ==> backend.toggleWorksheetMode)(
+             onClick --> backend.toggleWorksheetMode)(
             i(clazz := "fa fa-calendar"),
             span("Worksheet"),
             i(clazz := "workSheetIndicator",

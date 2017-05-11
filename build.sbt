@@ -426,7 +426,8 @@ lazy val runtimeDotty = project
   .settings(orgSettings)
   .enablePlugins(DottyPlugin)
   .settings(
-    scalaVersion := dottyLatestNightlyBuild.getOrElse("0.1.1-bin-20170509-7a3f880-NIGHTLY"),
+    scalaVersion := dottyLatestNightlyBuild
+      .getOrElse("0.1.1-bin-20170509-7a3f880-NIGHTLY"),
     moduleName := "runtime-dotty",
     projectDependencies ~= (_.map(_.withDottyCompat()))
   )

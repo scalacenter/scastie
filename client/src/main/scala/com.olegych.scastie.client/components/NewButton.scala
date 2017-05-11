@@ -16,10 +16,20 @@ object NewButton {
         case (state, backend) =>
           li(title := "New code snippet",
              role := "button",
-             clazz := "btn",
-             onClick ==> backend.newSnippet)(
+             onClick --> backend.openNewSnippetModal,
+             clazz := "btn")(
             i(clazz := "fa fa-file-o"),
-            span("New")
+            span("New"),
+            PrompModal(
+              PrompModal.Props(
+                modalText = "New Snippet",
+                isClosed = state.modalState.isNewSnippetModalClosed,
+                close = backend.closeNewSnippetModal,
+                actionText = "Are you sure you want to create a new snippet ?",
+                actionLabel = "New",
+                action = backend.newSnippet
+              )
+            )
           )
       }
       .build

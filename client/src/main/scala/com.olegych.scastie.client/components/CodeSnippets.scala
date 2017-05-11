@@ -31,9 +31,8 @@ object CodeSnippets {
       )
     }
 
-    def delete(summary: SnippetSummary)(e: ReactEventFromInput): Callback = {
-      e.preventDefaultCB >>
-        scope.modState(_.filterNot(_ == summary)) >>
+    def delete(summary: SnippetSummary): Callback = {
+      scope.modState(_.filterNot(_ == summary)) >>
         Callback.future(
           ApiClient[AutowireApi]
             .delete(summary.snippetId)
@@ -59,7 +58,7 @@ object CodeSnippets {
 
           val user = state.user.get
 
-          val userAvatar = 
+          val userAvatar =
             div(clazz := "avatar")(
               img(src := user.avatar_url + "&s=70",
                   alt := "Your Github Avatar",
@@ -98,17 +97,20 @@ object CodeSnippets {
                               .getOrElse("")
                             div(clazz := "snippet")(
                               ShareModal(
-                                router,
-                                summary.snippetId,
-                                state.modalState.isShareModalClosed(summary.snippetId),
-                                backend.toggleShare(None)
+                                router = router,
+                                snippetId = summary.snippetId,
+                                isClosed = state.modalState
+                                  .isShareModalClosed(summary.snippetId),
+                                close = backend.closeShareModal
                               ),
                               div(clazz := "header", "/" + base64UUID)(
                                 span(" - "),
                                 div(clazz := "clear-mobile"),
                                 span(clazz := "update", "Update: " + update),
                                 div(clazz := "actions")(
-                                  li(onClick ==> (_ => backend.toggleShare(Some(summary.snippetId))),
+                                  li(onClick --> backend.openShareModal(
+                                       Some(summary.snippetId)
+                                     ),
                                      clazz := "btn",
                                      title := "Share",
                                      role := "button")(
@@ -118,7 +120,7 @@ object CodeSnippets {
                                     clazz := "btn",
                                     role := "button",
                                     title := "Delete",
-                                    onClick ==> scope.backend.delete(summary)
+                                    onClick --> scope.backend.delete(summary)
                                   )(
                                     i(clazz := "fa fa-trash")
                                   )

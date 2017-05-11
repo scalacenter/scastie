@@ -6,7 +6,6 @@ import api._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
-
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
 
@@ -32,15 +31,22 @@ object App {
             if (state.isDarkTheme) "dark"
             else "light"
 
-          val embeddedClass = TagMod(clazz := "embedded").when(props.isEmbedded)
-          val forceDesktopClass = 
+          val embeddedClass =
+            TagMod(clazz := "embedded").when(props.isEmbedded)
+          val forceDesktopClass =
             TagMod(clazz := "force-desktop").when(state.isDesktopForced)
 
           div(clazz := s"app $theme", embeddedClass, forceDesktopClass)(
             SideBar(state, scope.backend).unless(props.isEmbedded),
             MainPanel(state, scope.backend, props),
-            WelcomeModal(state.modalState.isWelcomeModalClosed, scope.backend.toggleWelcomeHelp),
-            HelpModal(state.modalState.isHelpModalClosed, scope.backend.toggleHelp)
+            WelcomeModal(
+              isClosed = state.modalState.isWelcomeModalClosed,
+              close = scope.backend.closeWelcomeModal
+            ),
+            HelpModal(
+              isClosed = state.modalState.isHelpModalClosed,
+              close = scope.backend.closeHelpModal
+            )
           )
         }
       }

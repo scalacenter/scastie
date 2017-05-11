@@ -8,25 +8,21 @@ pipeline:
       - /drone/.coursier-cache
       - /drone/.sbt
       - /drone/.git
-
-  test:
-    image: scalacenter/scastie-docker-sbt:0.0.10
-    commands:
-      - export SBT_OPTS="-Xmx8G -Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true"
-      - time sbt drone
-
-  notify:
-    image: drillster/drone-email
-    host: smtp.mailgun.org
-    username: noreply@drone.geirsson.com
-    password: ${MAILGUN_PASSWORD}
-    from: noreply@drone.geirsson.com
-    recipients:
-      - masgui@gmail.com
     when:
-      event: push
-      branch: [master]
-      status: [changed, failure]
+      event: [push, pull_request, tag, deployment]
+
+  tests:
+    image: scalaplatform/scala:0.6
+    pull: true
+    environment:
+      - COURSIER_CACHE=/drone/cache/coursier
+    commands:
+      - git fetch --tags && git log | head -n 20
+      - ./bin/scalafmt --test
+      - ./bin/copy_cache.sh /drone /root
+      - /usr/bin/sbt $CI_TEST
+      - ./bin/before_cache.sh
+      - ./bin/copy_cache.sh /root /drone
 
   # Save folders in distributed cache
   sftp_cache_rebuild:

@@ -18,7 +18,7 @@ object EditorButton {
             if (view == state.view) TagMod(clazz := "selected")
             else EmptyVdom
 
-          li(onClick ==> backend.setView2(View.Editor),
+          li(onClick --> backend.setView(View.Editor),
              title := "Open Editor View",
              role := "button",
              clazz := "btn run-button",

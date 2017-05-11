@@ -21,7 +21,7 @@ object SideBar {
             else "fa fa-moon-o"
 
           val themeButton =
-            li(onClick ==> toggleTheme,
+            li(onClick --> toggleTheme,
                role := "button",
                title := s"Select $toggleThemeLabel Theme (F2)",
                clazz := "btn")(
@@ -30,7 +30,7 @@ object SideBar {
             )
 
           val helpButton =
-            li(onClick ==> (_ => toggleHelp),
+            li(onClick --> openHelpModal,
                role := "button",
                title := "Show help Menu",
                clazz := "btn")(

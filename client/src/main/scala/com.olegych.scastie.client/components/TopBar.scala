@@ -24,19 +24,19 @@ object TopBar {
             )
           }
 
-          def feedback(e: ReactEventFromInput): Callback =
+          def feedback: Callback =
             openInNewTab("https://gitter.im/scalacenter/scastie")
 
-          def issue(e: ReactEventFromInput): Callback =
+          def issue: Callback =
             openInNewTab("https://github.com/scalacenter/scastie/issues/new")
 
           val logoutUrl = "/logout"
 
-          def logout(e: ReactEventFromInput): Callback =
+          def logout: Callback =
             backend.setView(View.Editor) >>
               Callback(dom.window.location.pathname = logoutUrl)
 
-          def login(e: ReactEventFromInput): Callback =
+          def login: Callback =
             Callback(dom.window.location.pathname = "/login")
 
           def selected(view: View) =
@@ -47,22 +47,21 @@ object TopBar {
             state.user match {
               case Some(user) =>
                 li(clazz := "btn dropdown")(
-                  img(
-                    src := user.avatar_url + "&s=30",
-                    alt := "Your Github Avatar",
-                    clazz := "avatar"),
+                  img(src := user.avatar_url + "&s=30",
+                      alt := "Your Github Avatar",
+                      clazz := "avatar"),
                   span(user.login),
                   i(clazz := "fa fa-caret-down"),
                   ul(clazz := "subactions")(
-                    li(onClick ==> setView2(View.CodeSnippets),
+                    li(onClick --> setView(View.CodeSnippets),
                        role := "link",
                        title := "Go to your code snippets",
                        clazz := "btn",
                        selected(View.CodeSnippets)(
-                      i(clazz := "fa fa-code"),
-                      "Snippets"),
-                    ),
-                    li(role := "link", onClick ==> logout, clazz := "btn")(
+                         i(clazz := "fa fa-code"),
+                         "Snippets"
+                       )),
+                    li(role := "link", onClick --> logout, clazz := "btn")(
                       i(clazz := "fa fa-sign-out"),
                       "Logout"
                     )
@@ -70,7 +69,7 @@ object TopBar {
                 )
 
               case None =>
-                li(role := "link", onClick ==> login, clazz := "btn")(
+                li(role := "link", onClick --> login, clazz := "btn")(
                   i(clazz := "fa fa-sign-in"),
                   "Login"
                 )
@@ -83,14 +82,14 @@ object TopBar {
                 span("Feedback"),
                 i(clazz := "fa fa-caret-down"),
                 ul(clazz := "subactions")(
-                  li(onClick ==> feedback,
+                  li(onClick --> feedback,
                      role := "link",
                      title := "Open Gitter.im Chat to give us feedback",
                      clazz := "btn")(
                     i(clazz := "fa fa-gitter"),
                     span("Scastie's gitter")
                   ),
-                  li(onClick ==> issue,
+                  li(onClick --> issue,
                      role := "link",
                      title := "Create new issue on GitHub",
                      clazz := "btn")(

@@ -182,11 +182,6 @@ object ScaladexSearch {
       }
     }
 
-    def addArtifact(
-        projectAndArtifact: (Project, String)
-    )(e: ReactEventFromInput): Callback =
-      addArtifact(projectAndArtifact)
-
     private def withBackend(f: AppBackend => Callback): Callback = {
       scope.props.flatMap {
         case (_, backend) =>
@@ -194,7 +189,7 @@ object ScaladexSearch {
       }
     }
 
-    private def addArtifact(projectAndArtifact: (Project, String)): Callback = {
+    def addArtifact(projectAndArtifact: (Project, String)): Callback = {
       val (project, artifact) = projectAndArtifact
       scope.props.flatMap {
         case (appState, _) =>
@@ -202,7 +197,7 @@ object ScaladexSearch {
       }
     }
 
-    def removeSelected(selected: Selected)(e: ReactEventFromInput): Callback = {
+    def removeSelected(selected: Selected): Callback = {
 
       def removeDependencyLocal =
         scope.modState(_.removeSelected(selected))
@@ -244,11 +239,9 @@ object ScaladexSearch {
       }
     }
 
-    def selectIndex(index: Int)(e: ReactEventFromInput): Callback = {
+    def selectIndex(index: Int): Callback =
       scope.modState(s => s.copy(selectedIndex = index))
-    }
 
-    def resetQuery(e: ReactEventFromInput): Callback = resetQuery()
     def resetQuery(): Callback =
       scope.modState(s => s.copy(query = "", projects = Nil))
 
@@ -408,7 +401,7 @@ object ScaladexSearch {
                       selected.project,
                       selected.release.artifact,
                       i(clazz := "fa fa-close")(
-                        onClick ==> scope.backend.removeSelected(selected),
+                        onClick --> scope.backend.removeSelected(selected),
                         clazz := "remove"
                       ),
                       options = renderOptions(selected)
@@ -438,7 +431,7 @@ object ScaladexSearch {
               ),
               div(clazz := "close", displayClose)(
                 i(clazz := "fa fa-close")(
-                  onClick ==> scope.backend.resetQuery
+                  onClick --> scope.backend.resetQuery
                 )
               )
             ),
@@ -450,9 +443,9 @@ object ScaladexSearch {
                     artifact,
                     selected = selectedIndex(index, searchState.selectedIndex),
                     handlers = TagMod(
-                      onClick ==> scope.backend
+                      onClick --> scope.backend
                         .addArtifact((project, artifact)),
-                      onMouseOver ==> scope.backend.selectIndex(index)
+                      onMouseOver --> scope.backend.selectIndex(index)
                     )
                   )
                 }

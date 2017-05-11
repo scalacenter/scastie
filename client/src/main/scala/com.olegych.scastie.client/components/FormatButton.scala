@@ -21,7 +21,7 @@ object FormatButton {
           li(title := "Format Code (F6)",
              role := "button",
              clazz := s"btn $disabledIfSameInputs",
-             onClick ==> backend.formatCode)(
+             onClick --> backend.formatCode)(
             i(clazz := "fa fa-align-left"),
             span("Format")
           )
