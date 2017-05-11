@@ -125,8 +125,7 @@ case class Inputs(
         }
         case ScalaTarget.Dotty => {
           (
-            """|scalaVersion := dottyLatestNightlyBuild.getOrElse("0.1.1-bin-20170509-7a3f880-NIGHTLY")
-               |enablePlugins(DottyPlugin)""".stripMargin,
+            """|scalaVersion := dottyLatestNightlyBuild.getOrElse("0.1.1-bin-20170509-7a3f880-NIGHTLY")""".stripMargin,
             ScalaDependency(
               "org.scastie",
               "runtime-dotty",
