@@ -111,7 +111,7 @@ class Deployment(rootFolder: File,
 
     val serverScriptDir = Files.createTempDirectory("server")
     val serverScript = serverScriptDir.resolve("server.sh")
-    
+
     val applicationRootConfig = "application.conf"
     val productionConfigFileName = productionConfig.getFileName
     val logbackConfigFileName = logbackConfig.getFileName
@@ -126,7 +126,6 @@ class Deployment(rootFolder: File,
           |
           |unzip -d server $serverZipFileName
           |mv server/*/* server/
-          |rm $serverZipFileName
           |
           |nohup server/bin/server \\
           |  -Dconfig.file=/home/$userName/$applicationRootConfig \\

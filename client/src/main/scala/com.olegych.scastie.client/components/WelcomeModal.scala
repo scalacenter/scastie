@@ -12,7 +12,8 @@ object WelcomeModal {
   private val component =
     ScalaComponent
       .builder[(Boolean, Callback)]("WelcomeModal")
-      .render_P { case (isClosed, close) =>
+      .render_P {
+        case (isClosed, close) =>
           Modal(
             "Welcome to Scastie!",
             isClosed,
@@ -41,7 +42,8 @@ object WelcomeModal {
                 "You can see your code’s output in the Scastie’s console."
               ),
               h2("Feedback"),
-              p(clazz := "modal-intro", "You can join our Gitter channel and send issues.")
+              p(clazz := "modal-intro",
+                "You can join our Gitter channel and send issues.")
             )
           )
       }

@@ -66,21 +66,16 @@
         @include position(fixed, 0px 0px 0px 0px);
         background-color: rgba(#000, 0.55);
         opacity: 1;
-        padding-top: 0.6em;
         text-align: left;
         transition: opacity 0.25s ease;
         visibility: visible;
         z-index: 99999999999;
-        @include media($large-screen) {
-            padding-top: 10em;
-        }
         .modal-bg {
             @include position(absolute, 0px 0px 0px 0px);
             cursor: pointer;
         }
         .modal-reset {
-            margin-top: 10em;
-            height: 250px;
+            height: 300px;
             width: 500px;
             .modal-inner {
                 overflow: hidden;
@@ -126,16 +121,19 @@
         }
     }
     .modal-window {
+        position: relative;
+        overflow: auto;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);  
+        max-width: 60%;
+        max-height: 80%;
+
         background: $modal-background;
         border-radius: $base-border-radius;
-        margin: auto;
-        margin-top: 0;
-        height: 70%;
-        position: relative;
         transition: opacity 0.25s ease;
-        width: 50%;
-        overflow: hidden;
         padding-bottom: 10px;
+
         .modal-header {
             background: $modal-background;
             padding: 30px;
@@ -144,9 +142,9 @@
             width: 100%;
             border-radius: $base-border-radius;
         }
+
         .modal-inner {
             width: 100%;
-            overflow-y: scroll;
             height: calc(100% - 90px);
             padding: 0 30px 10px 30px;
             p {

@@ -10,13 +10,16 @@ object DesktopButton {
   def apply(state: AppState, backend: AppBackend) = component((state, backend))
 
   private val component =
-    ScalaComponent.builder[(AppState, AppBackend)]("DesktopButton").render_P {
-      case (state, backend) =>
-        li(title := "Go to desktop",
-           clazz := "btn",
-           onClick ==> backend.forceDesktop)(
-          i(clazz := "fa fa-desktop"),
-          span("Desktop")
-        )
-    }.build
+    ScalaComponent
+      .builder[(AppState, AppBackend)]("DesktopButton")
+      .render_P {
+        case (state, backend) =>
+          li(title := "Go to desktop",
+             clazz := "btn",
+             onClick --> backend.forceDesktop)(
+            i(clazz := "fa fa-desktop"),
+            span("Desktop")
+          )
+      }
+      .build
 }

@@ -28,14 +28,13 @@ object MainPanel {
             else EmptyVdom
 
           val snippets =
-            if(state.user.isDefined) {
+            if (state.user.isDefined) {
               div(clazz := "snippets-container",
                   clazz := "inner-container",
                   show(View.CodeSnippets))(
                 CodeSnippets(props.router, state, backend)
               )
-            }
-            else EmptyVdom
+            } else EmptyVdom
 
           div(clazz := "main-panel")(
             TopBar(state, backend),

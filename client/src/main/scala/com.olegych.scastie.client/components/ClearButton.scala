@@ -16,9 +16,11 @@ object ClearButton {
           li(title := "Clear Instrumentations (Esc)",
              role := "button",
              clazz := "btn",
-             onClick ==> backend.clear)(
-            i(clazz := "fa fa-eraser"),
-            span("Clear")
+             onClick --> backend.clear)(
+            div(
+              i(clazz := "fa fa-eraser"),
+              span("Clear")
+            )
           )
       }
       .build

@@ -51,7 +51,7 @@ object BuildSettings {
                   id := targetLabel,
                   value := targetLabel,
                   name := "target",
-                  onChange ==> backend.setTarget2(defaultTarget(targetType)),
+                  onChange --> backend.setTarget(defaultTarget(targetType)),
                   selected(targetType)),
             label(`for` := targetLabel,
                   role := "button",
@@ -139,15 +139,15 @@ object BuildSettings {
 
     def setScalaVersion(
         targetApply: String => ScalaTarget
-    )(e: ReactEventFromInput): Callback =
-      backend.setTarget(targetApply(e.target.value))
+    )(event: ReactEventFromInput): Callback =
+      backend.setTarget(targetApply(event.target.value))
 
     val notSupported = div("Not supported")
 
     def versionSelector(scalaVersion: String,
                         targetApply: String => ScalaTarget) = {
       def handler(scalaVersion: String) =
-        TagMod(onChange ==> backend.setTarget2(targetApply(scalaVersion)))
+        TagMod(onChange --> backend.setTarget(targetApply(scalaVersion)))
 
       def selected(version: String) =
         if (targetApply(version) == target) TagMod(`checked` := true)
@@ -158,8 +158,8 @@ object BuildSettings {
           suggestedVersions.map { suggestedVersion =>
             li(
               input(`type` := "radio",
-                    id := suggestedVersion,
-                    value := s"scala-$suggestedVersion",
+                    id := s"scala-$suggestedVersion",
+                    value := suggestedVersion,
                     name := "scalaV",
                     handler(suggestedVersion),
                     selected(suggestedVersion)),
@@ -200,10 +200,7 @@ object BuildSettings {
         case ScalaTarget.Native => notSupported
       }
 
-    div(
-      versionSelectors
-    )
-
+    versionSelectors
   }
 
   private val component =
@@ -212,22 +209,30 @@ object BuildSettings {
       .render_P {
         case (state, backend) =>
           val theme = if (state.isDarkTheme) "dark" else "light"
-
           val resetButton =
             if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
-              div(onClick ==> backend.toggleReset,
-                  role := "button",
-                  clazz := "btn",
-                  title := "Reset your configuration")(
-                "Reset"
+              TagMod(
+                PrompModal(
+                  PrompModal.Props(
+                    modalText = "Reset Build",
+                    isClosed = state.modalState.isResetModalClosed,
+                    close = backend.closeResetModal,
+                    actionText = "Are you sure you want to reset the build ?",
+                    actionLabel = "Reset",
+                    action = backend.resetBuild
+                  )
+                ),
+                div(title := "Reset your configuration",
+                    onClick --> backend.openResetModal,
+                    role := "button",
+                    clazz := "btn")(
+                  "Reset"
+                )
               )
             } else EmptyVdom
 
           div(clazz := "build-settings-container")(
-            ResetBuildModal(state, backend),
-            div(onClick ==> backend.toggleReset, clazz := "btn")(
-              "Reset"
-            ),
+            resetButton,
             h2(
               span("Target")
             ),
@@ -276,8 +281,7 @@ object BuildSettings {
                     _ => Callback(())
                   )
                 )
-              ),
-              resetButton
+              )
             )
           )
       }

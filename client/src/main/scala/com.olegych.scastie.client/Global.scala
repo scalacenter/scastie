@@ -54,8 +54,6 @@ object Global {
         case Right(instrumentations) => (instrumentations, None)
       }
 
-      println(instr)
-
       direct.modState(
         state =>
           state

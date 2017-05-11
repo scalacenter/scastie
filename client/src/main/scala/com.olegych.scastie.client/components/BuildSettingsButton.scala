@@ -18,7 +18,7 @@ object BuildSettingsButton {
             if (state.view == View.BuildSettings) TagMod(clazz := "selected")
             else EmptyVdom
 
-          li(onClick ==> setView2(View.BuildSettings),
+          li(onClick --> setView(View.BuildSettings),
              role := "button",
              title := "Open Build Settings",
              selected,

@@ -164,36 +164,35 @@ case class AppState(
       inputsHasChanged = true
     )
 
-  def toggleWelcome: AppState =
-    copyAndSave(
-      modalState = modalState
-        .copy(isWelcomeModalClosed = !modalState.isWelcomeModalClosed)
-    )
+  def openWelcomeModal: AppState =
+    copyAndSave(modalState = modalState.copy(isWelcomeModalClosed = false))
 
-  def toggleHelp: AppState =
-    copyAndSave(
-      modalState =
-        modalState.copy(isHelpModalClosed = !modalState.isHelpModalClosed)
-    )
+  def closeWelcomeModal: AppState =
+    copyAndSave(modalState = modalState.copy(isWelcomeModalClosed = true))
 
-  def toggleReset: AppState =
-    copyAndSave(
-      modalState =
-        modalState.copy(isResetModalClosed = !modalState.isResetModalClosed)
-    )
+  def openHelpModal: AppState =
+    copyAndSave(modalState = modalState.copy(isHelpModalClosed = false))
 
-  def toggleWelcomeHelp: AppState =
-    copyAndSave(
-      modalState = modalState
-        .copy(isWelcomeModalClosed = !modalState.isWelcomeModalClosed,
-              isHelpModalClosed = !modalState.isHelpModalClosed)
-    )
+  def closeHelpModal: AppState =
+    copyAndSave(modalState = modalState.copy(isHelpModalClosed = true))
 
-  def toggleShare(snippetId: Option[SnippetId]): AppState =
-    copyAndSave(
-      modalState =
-        modalState.copy(shareModalSnippetId = snippetId)
-    )
+  def openResetModal: AppState =
+    copyAndSave(modalState = modalState.copy(isResetModalClosed = false))
+
+  def closeResetModal: AppState =
+    copyAndSave(modalState = modalState.copy(isResetModalClosed = true))
+
+  def openNewSnippetModal: AppState =
+    copyAndSave(modalState = modalState.copy(isNewSnippetModalClosed = false))
+
+  def closeNewSnippetModal: AppState =
+    copyAndSave(modalState = modalState.copy(isNewSnippetModalClosed = true))
+
+  def openShareModal(snippetId: Option[SnippetId]): AppState =
+    copyAndSave(modalState = modalState.copy(shareModalSnippetId = snippetId))
+
+  def closeShareModal: AppState =
+    copyAndSave(modalState = modalState.copy(shareModalSnippetId = None))
 
   def forceDesktop: AppState = copyAndSave(isDesktopForced = true)
 
@@ -338,6 +337,13 @@ case class AppState(
       snippetId = Some(snippetId),
       snippetIdIsScalaJS = inputs.target.targetType == ScalaTargetType.JS
     )
+  }
+
+  def clearSnippetId: AppState = {
+    copyAndSave(
+      snippetId = None,
+      snippetIdIsScalaJS = false
+    ).setSnippetSaved(false)
   }
 
   private def info(message: String) = Problem(api.Info, None, message)

@@ -14,7 +14,8 @@ object HelpModal {
   private val component =
     ScalaComponent
       .builder[(Boolean, Callback)]("HelpModal")
-      .render_P { case (isClosed, close) =>
+      .render_P {
+        case (isClosed, close) =>
           def generateATag(url: String, text: String) =
             a(href := url, target := "_blank", rel := "nofollow", text)
 
@@ -34,7 +35,8 @@ object HelpModal {
           val originalScastie =
             generateATag("https://github.com/OlegYch/scastie", "GitHub")
 
-          Modal("Help about Scastie",
+          Modal(
+            "Help about Scastie",
             isClosed,
             close,
             TagMod(),
