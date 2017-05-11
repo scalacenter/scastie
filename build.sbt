@@ -426,10 +426,11 @@ lazy val runtimeDotty = project
   .settings(orgSettings)
   .enablePlugins(DottyPlugin)
   .settings(
-    libraryDependencies += "org.scastie" % "api_2.11" % version.value,
     scalaVersion := dottyLatestNightlyBuild.getOrElse("0.1.1-bin-20170509-7a3f880-NIGHTLY"),
-    moduleName := "runtime-dotty"
+    moduleName := "runtime-dotty",
+    projectDependencies ~= (_.map(_.withDottyCompat()))
   )
+  .dependsOn(api211JVM)
 
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))
