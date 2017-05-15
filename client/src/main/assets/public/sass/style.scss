@@ -57,6 +57,15 @@ h1 {
   cursor: pointer;
 }
 
+.debug {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999999999;
+  background-color: red;
+  color: white;
+}
+
 @include sidebar();
 @include editor();
 @include snippet();

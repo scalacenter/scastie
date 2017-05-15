@@ -37,6 +37,7 @@ object MainPanel {
             } else EmptyVdom
 
           div(clazz := "main-panel")(
+            // pre(clazz := "debug")(),
             TopBar(state, backend),
             EditorTopBar(state, backend, props.snippetId),
             div(clazz := "content")(

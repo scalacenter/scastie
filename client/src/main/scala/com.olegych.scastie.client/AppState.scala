@@ -138,13 +138,10 @@ case class AppState(
   }
 
   def setRunning(isRunning: Boolean): AppState = {
-    val console =
-      !isRunning &&
-        !consoleState.consoleHasUserOutput &&
-        !outputs.sbtError
+    val openConsole =
+      isRunning || consoleState.consoleHasUserOutput || outputs.sbtError
 
-    copyAndSave(isRunning = isRunning,
-                consoleState = consoleState.copy(consoleIsOpen = !console))
+    copyAndSave(isRunning = isRunning).setConsoleAuto(openConsole )
   }
 
   def setIsReRunningScalaJs(value: Boolean): AppState =
@@ -155,12 +152,6 @@ case class AppState(
 
   def toggleTheme: AppState =
     copyAndSave(isDarkTheme = !isDarkTheme)
-
-  def toggleConsole: AppState =
-    copyAndSave(
-      consoleState =
-        consoleState.copy(consoleIsOpen = !consoleState.consoleIsOpen)
-    )
 
   def toggleWorksheetMode: AppState =
     copyAndSave(
@@ -200,8 +191,48 @@ case class AppState(
 
   def forceDesktop: AppState = copyAndSave(isDesktopForced = true)
 
-  def openConsole: AppState =
-    copyAndSave(consoleState = consoleState.copy(consoleIsOpen = true))
+  def openConsole: AppState = {
+    println("openConsole")
+    copyAndSave(consoleState = consoleState.copy(
+      consoleIsOpen = true,
+      userOpenedConsole = true
+    ))
+  }
+
+  def closeConsole: AppState = {
+    println("closeConsole")
+    copyAndSave(consoleState = consoleState.copy(
+      consoleIsOpen = false,
+      userOpenedConsole = false
+    ))
+  }
+
+  def setConsoleAuto(isOpen: Boolean): AppState = {
+    println("setConsoleAuto: " + isOpen)
+    if(!isOpen && consoleState.userOpenedConsole)
+      this
+    else
+      copyAndSave(consoleState = consoleState.copy(
+        consoleIsOpen = isOpen
+      ))
+  }
+
+  def toggleConsole: AppState = {
+    println("toggleConsole")
+
+    copyAndSave(consoleState = 
+      if(consoleState.consoleIsOpen)
+        consoleState.copy(
+          consoleIsOpen = false,
+          userOpenedConsole = false
+        )
+      else
+        consoleState.copy(
+          consoleIsOpen = true,
+          userOpenedConsole = true
+        )
+    )
+  }
 
   def setUserOutput: AppState =
     copyAndSave(consoleState = consoleState.copy(consoleHasUserOutput = true))

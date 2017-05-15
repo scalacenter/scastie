@@ -153,6 +153,10 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.modState(_.updateDependencyVersion(scalaDependency, version))
 
   def toggleTheme: Callback = scope.modState(_.toggleTheme)
+  
+
+  def openConsole: Callback = scope.modState(_.openConsole)
+  def closeConsole: Callback = scope.modState(_.closeConsole)
   def toggleConsole: Callback = scope.modState(_.toggleConsole)
 
   def openResetModal: Callback = scope.modState(_.openResetModal)

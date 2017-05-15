@@ -34,7 +34,7 @@ object Console {
               div(clazz := "switcher-hide",
                   displayConsole,
                   role := "button",
-                  onClick --> backend.toggleConsole)(
+                  onClick --> backend.closeConsole)(
                 i(clazz := "fa fa-terminal"),
                 "Console",
                 i(clazz := "fa fa-caret-down")
@@ -45,7 +45,7 @@ object Console {
             ),
             div(clazz := "switcher-show",
                 role := "button",
-                onClick --> backend.toggleConsole)(
+                onClick --> backend.openConsole)(
               displaySwitcher,
               i(clazz := "fa fa-terminal"),
               "Console",
