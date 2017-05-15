@@ -15,3 +15,4 @@ deployment/users.txt
 node_modules
 bin/.scalafmt
 bin/.coursier
+bin/drone

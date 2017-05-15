@@ -32,8 +32,12 @@ class Sbt(defaultConfig: Inputs) {
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
 
-  setConfig(defaultConfig)
-  setPlugins(defaultConfig)
+  private def setup(): Unit = {
+    setConfig(defaultConfig)
+    setPlugins(defaultConfig)
+  }
+
+  setup()
 
   private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
 
@@ -71,32 +75,49 @@ class Sbt(defaultConfig: Inputs) {
     (process, process.getOutputStream, in)
   }
 
-  private def collect(lineCallback: (String, Boolean, Boolean) => Unit,
-                      reload: Boolean): Unit = {
+  private def collect(
+      lineCallback: (String, Boolean, Boolean, Boolean) => Unit,
+      reload: Boolean
+  ): Boolean = {
     val chars = new collection.mutable.Queue[Character]()
     var read = 0
-    var prompt = false
-    while (read != -1 && !prompt) {
+    var done = false
+    var sbtError = false
+
+    while (read != -1 && !done) {
       read = fout.read()
       if (read == 10) {
         val line = chars.mkString
-        prompt = line == uniqueId
+
+        val prompt = line == uniqueId
+        sbtError = line == "[error] Type error in expression"
+        done = prompt || sbtError
 
         log.info(line)
 
-        lineCallback(line, prompt, reload)
+        lineCallback(line, done, sbtError, reload)
         chars.clear()
       } else {
         chars += read.toChar
       }
     }
+    if (sbtError) {
+      setup()
+      process("r", noop, reload = false)
+    }
+
+    sbtError
   }
 
-  collect((_, _, _) => (), reload = false)
+  type LineCallback = (String, Boolean, Boolean, Boolean) => Unit
+  val noop: LineCallback =
+    (_, _, _, _) => ()
+
+  collect(noop, reload = false)
 
   private def process(command: String,
-                      lineCallback: (String, Boolean, Boolean) => Unit,
-                      reload: Boolean): Unit = {
+                      lineCallback: LineCallback,
+                      reload: Boolean): Boolean = {
     fin.write((command + nl).getBytes)
     fin.flush()
     collect(lineCallback, reload)
@@ -116,7 +137,8 @@ class Sbt(defaultConfig: Inputs) {
       inputs.sbtPluginsConfig != currentSbtPluginConfig
 
   def exit(): Unit = {
-    process("exit", (_, _, _) => (), reload = false)
+    process("exit", noop, reload = false)
+    ()
   }
 
   private def writeFile(path: Path, content: String): Unit = {
@@ -141,8 +163,8 @@ class Sbt(defaultConfig: Inputs) {
 
   def eval(command: String,
            inputs: Inputs,
-           lineCallback: (String, Boolean, Boolean) => Unit,
-           reload: Boolean): Unit = {
+           lineCallback: LineCallback,
+           reload: Boolean): Boolean = {
 
     val isReloading = needsReload(inputs)
 
@@ -154,19 +176,24 @@ class Sbt(defaultConfig: Inputs) {
       setPlugins(inputs)
     }
 
-    if (isReloading) {
-      process("reload", lineCallback, reload = true)
-    }
+    val reloadError =
+      if (isReloading) {
+        process("reload", lineCallback, reload = true)
+      } else false
 
-    write(codeFile, inputs.code, truncate = true)
-    try {
-      process(command, lineCallback, reload)
-    } catch {
-      case e: IOException => {
-        // when the snippet is pkilled (timeout) the sbt output stream is closed
-        if (e.getMessage == "Stream closed") ()
-        else throw e
+    if (!reloadError) {
+      write(codeFile, inputs.code, truncate = true)
+      try {
+        process(command, lineCallback, reload)
+      } catch {
+        case e: IOException => {
+          // when the snippet is pkilled (timeout) the sbt output stream is closed
+          if (e.getMessage == "Stream closed") ()
+          else throw e
+        }
       }
     }
+
+    reloadError
   }
 }

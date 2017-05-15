@@ -14,6 +14,7 @@ object SnippetProgress {
       scalaJsSourceMapContent = None,
       done = true,
       timeout = false,
+      sbtError = false,
       forcedProgramMode = false
     )
 }
@@ -29,5 +30,6 @@ case class SnippetProgress(
     scalaJsSourceMapContent: Option[String],
     done: Boolean,
     timeout: Boolean,
+    sbtError: Boolean,
     forcedProgramMode: Boolean
 )

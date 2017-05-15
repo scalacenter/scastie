@@ -248,7 +248,6 @@ object BuildSettings {
             h2(
               span("Sbt Configuration")
             ),
-            label(`for` := "configuration", "Add more"),
             pre(clazz := "configuration")(
               CodeMirrorEditor(
                 CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
@@ -256,30 +255,6 @@ object BuildSettings {
                                           readOnly = false),
                 CodeMirrorEditor.Handler(
                   updatedSettings => backend.sbtConfigChange(updatedSettings)
-                )
-              )
-            ),
-            div(clazz := "label", "Resulting build.sbt"),
-            pre(clazz := "output")(
-              CodeMirrorEditor(
-                CodeMirrorEditor.Settings(value = state.inputs.sbtConfig,
-                                          theme = s"solarized $theme",
-                                          readOnly = true),
-                CodeMirrorEditor.Handler(
-                  _ => Callback(())
-                )
-              ),
-              div(clazz := "label", "Resulting plugins.sbt"),
-              pre(clazz := "plugins-output")(
-                CodeMirrorEditor(
-                  CodeMirrorEditor.Settings(
-                    value = state.inputs.sbtPluginsConfig,
-                    theme = s"solarized $theme",
-                    readOnly = true
-                  ),
-                  CodeMirrorEditor.Handler(
-                    _ => Callback(())
-                  )
                 )
               )
             )

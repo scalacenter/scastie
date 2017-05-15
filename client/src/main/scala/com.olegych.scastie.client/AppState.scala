@@ -138,7 +138,11 @@ case class AppState(
   }
 
   def setRunning(isRunning: Boolean): AppState = {
-    val console = !isRunning && !consoleState.consoleHasUserOutput
+    val console =
+      !isRunning &&
+        !consoleState.consoleHasUserOutput &&
+        !outputs.sbtError
+
     copyAndSave(isRunning = isRunning,
                 consoleState = consoleState.copy(consoleIsOpen = !console))
   }
@@ -289,6 +293,9 @@ case class AppState(
     if (runtimeError.isEmpty) this
     else copyAndSave(outputs = outputs.copy(runtimeError = runtimeError))
 
+  def setSbtError(err: Boolean): AppState =
+    copyAndSave(outputs = outputs.copy(sbtError = err))
+
   def logOutput(line: Option[String],
                 wrap: String => ConsoleOutput): AppState = {
     line match {
@@ -318,9 +325,10 @@ case class AppState(
         .logOutput(progress.userOutput, ConsoleOutput.UserOutput(_))
         .logOutput(progress.sbtOutput, ConsoleOutput.SbtOutput(_))
         .setForcedProgramMode(progress.forcedProgramMode)
-        .setRunning(!progress.done)
         .setLoadScalaJsScript(loadScalaJsScript | progress.done)
         .setRuntimeError(progress.runtimeError)
+        .setSbtError(progress.sbtError)
+        .setRunning(!progress.done)
 
     if (progress.userOutput.isDefined) state.setUserOutput
     else state

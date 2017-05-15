@@ -11,14 +11,16 @@ object Outputs {
     consoleOutputs = Vector(),
     compilationInfos = Set(),
     instrumentations = Set(),
-    runtimeError = None
+    runtimeError = None,
+    sbtError = false
   )
 }
 case class Outputs(
     consoleOutputs: Vector[ConsoleOutput],
     compilationInfos: Set[Problem],
     instrumentations: Set[Instrumentation],
-    runtimeError: Option[RuntimeError]
+    runtimeError: Option[RuntimeError],
+    sbtError: Boolean
 ) {
 
   def console: String = consoleOutputs.map(_.show).mkString("\n")
