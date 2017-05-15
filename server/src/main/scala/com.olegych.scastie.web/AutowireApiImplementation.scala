@@ -34,7 +34,7 @@ class AutowireApiImplementation(
   }
 
   def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean] = {
-    if (userOwnsSnippet(snippetId)) {
+    if (snippetId.isOwnedBy(maybeUser)) {
       (dispatchActor ? AmendSnippet(snippetId, wrap(inputs))).mapTo[Boolean]
     } else {
       Future.successful(false)
@@ -42,7 +42,7 @@ class AutowireApiImplementation(
   }
 
   def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
-    if (userOwnsSnippet(snippetId)) {
+    if (snippetId.isOwnedBy(maybeUser)) {
       (dispatchActor ? UpdateSnippet(snippetId, wrap(inputs)))
         .mapTo[Option[SnippetId]]
     } else {
@@ -51,7 +51,7 @@ class AutowireApiImplementation(
   }
 
   def delete(snippetId: SnippetId): Future[Boolean] = {
-    if (userOwnsSnippet(snippetId)) {
+    if (snippetId.isOwnedBy(maybeUser)) {
       (dispatchActor ? DeleteSnippet(snippetId)).mapTo[Unit].map(_ => true)
     } else {
       Future.successful(false)
@@ -75,15 +75,6 @@ class AutowireApiImplementation(
       case Some(user) =>
         (dispatchActor ? FetchUserSnippets(user)).mapTo[List[SnippetSummary]]
       case _ => Future.successful(Nil)
-    }
-  }
-
-  private def userOwnsSnippet(snippetId: SnippetId): Boolean = {
-    (snippetId.user, maybeUser) match {
-      case (Some(SnippetUserPart(snippetLogin, _)),
-            Some(User(userLogin, _, _))) =>
-        snippetLogin == userLogin
-      case _ => false
     }
   }
 }

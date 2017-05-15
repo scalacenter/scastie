@@ -3,6 +3,15 @@ package api
 
 case class SnippetUserPart(login: String, update: Option[Int])
 case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
+  def isOwnedBy(user2: Option[User]): Boolean = {
+    (user, user2) match {
+      case (Some(SnippetUserPart(snippetLogin, _)),
+            Some(User(userLogin, _, _))) =>
+        snippetLogin == userLogin
+      case _ => false
+    }
+  }
+
   def url(end: String) = {
     val middle =
       this match {

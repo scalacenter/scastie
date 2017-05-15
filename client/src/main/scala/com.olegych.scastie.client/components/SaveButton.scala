@@ -26,7 +26,7 @@ object SaveButton {
           import View.ctrl
 
           def userFunctions(sid: SnippetId) =
-            if (state.user.isDefined) {
+            if (sid.isOwnedBy(state.user)) {
               TagMod(
                 li(title := "Amend this code snippet",
                    clazz := s"btn $disabledIfSaved",

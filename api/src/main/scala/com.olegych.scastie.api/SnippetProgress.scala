@@ -26,10 +26,10 @@ case class SnippetProgress(
     compilationInfos: List[Problem],
     instrumentations: List[Instrumentation],
     runtimeError: Option[RuntimeError],
-    scalaJsContent: Option[String],
-    scalaJsSourceMapContent: Option[String],
+    scalaJsContent: Option[String] = None,
+    scalaJsSourceMapContent: Option[String] = None,
     done: Boolean,
     timeout: Boolean,
-    sbtError: Boolean,
+    sbtError: Boolean = false,
     forcedProgramMode: Boolean
 )
