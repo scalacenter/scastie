@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package api
 
-case class ReleaseOptions(groupId: String, versions: List[String])
+case class ReleaseOptions(groupId: String, versions: List[String], version: String)
 
 // case class MavenReference(groupId: String, artifactId: String, version: String)
 

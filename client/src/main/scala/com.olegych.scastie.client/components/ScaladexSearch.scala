@@ -34,8 +34,11 @@ object ScaladexSearch {
             Selected(
               project,
               scalaDependency,
-              ReleaseOptions(scalaDependency.groupId,
-                             List(scalaDependency.version))
+              ReleaseOptions(
+                scalaDependency.groupId,
+                List(scalaDependency.version),
+                scalaDependency.version
+              )
             )
         }
       )
@@ -208,25 +211,6 @@ object ScaladexSearch {
       removeDependencyLocal >> removeDependecyBackend
     }
 
-    def reloadSelecteds(
-        librariesFrom: Map[ScalaDependency, Project]
-    ): Callback = {
-      scope.modState(
-        s =>
-          s.copy(
-            selecteds = librariesFrom.toList.map {
-              case (scalaDependency, project) =>
-                Selected(
-                  project,
-                  scalaDependency,
-                  ReleaseOptions(scalaDependency.groupId,
-                                 List(scalaDependency.version))
-                )
-            }
-        )
-      )
-    }
-
     def updateVersion(selected: Selected)(e: ReactEventFromInput): Callback = {
       e.extract(_.target.value) { version =>
         def updateDependencyVersionLocal =
@@ -301,7 +285,7 @@ object ScaladexSearch {
                 options.groupId,
                 artifact,
                 target,
-                options.versions.last
+                options.version
               )
 
             def addScalaDependencyLocal =
@@ -455,20 +439,14 @@ object ScaladexSearch {
         }
       }
       .componentWillReceiveProps { v =>
-        val (current, _) = v.currentProps
         val (next, _) = v.nextProps
-
-        val reloadLibraries =
-          if (next != current)
-            v.backend.reloadSelecteds(next.inputs.librariesFrom)
-          else Callback(())
 
         val resetQuery =
           if (next.inputs.copy(code = "") == Inputs.default.copy(code = ""))
             v.backend.resetQuery()
           else Callback(())
 
-        reloadLibraries >> resetQuery
+        resetQuery
       }
       .componentDidMount(_ => Callback(searchInputRef.focus))
       .build
