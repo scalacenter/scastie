@@ -1,7 +1,10 @@
 package com.olegych.scastie
 package api
 
-sealed trait ScalaTargetType
+sealed trait ScalaTargetType {
+  def defaultScalaTarget: ScalaTarget
+}
+
 object ScalaTargetType {
 
   def parse(targetType: String): Option[ScalaTargetType] = {
@@ -15,9 +18,23 @@ object ScalaTargetType {
     }
   }
 
-  case object JVM extends ScalaTargetType
-  case object Dotty extends ScalaTargetType
-  case object JS extends ScalaTargetType
-  case object Native extends ScalaTargetType
-  case object Typelevel extends ScalaTargetType
+  case object JVM extends ScalaTargetType {
+    def defaultScalaTarget: ScalaTarget = ScalaTarget.Jvm.default
+  }
+
+  case object Dotty extends ScalaTargetType {
+    def defaultScalaTarget: ScalaTarget = ScalaTarget.Dotty.default
+  }
+
+  case object JS extends ScalaTargetType {
+    def defaultScalaTarget: ScalaTarget = ScalaTarget.Js.default
+  }
+
+  case object Native extends ScalaTargetType {
+    def defaultScalaTarget: ScalaTarget = ScalaTarget.Native.default
+  }
+
+  case object Typelevel extends ScalaTargetType {
+    def defaultScalaTarget: ScalaTarget = ScalaTarget.Typelevel.default
+  }
 }

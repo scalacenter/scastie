@@ -16,6 +16,7 @@ object ScalaTarget {
   object Jvm {
     def default = ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
   }
+
   case class Jvm(scalaVersion: String) extends ScalaTarget {
     def targetType = ScalaTargetType.JVM
     def scaladexRequest =
@@ -29,6 +30,7 @@ object ScalaTarget {
   object Typelevel {
     def default = ScalaTarget.Typelevel(scalaVersion = defaultScalaVersion)
   }
+
   case class Typelevel(scalaVersion: String) extends ScalaTarget {
     def targetType = ScalaTargetType.Typelevel
     def scaladexRequest =
@@ -51,6 +53,7 @@ object ScalaTarget {
         scalaJsVersion = ScalaTarget.defaultScalaJsVersion
       )
   }
+
   case class Js(scalaVersion: String, scalaJsVersion: String)
       extends ScalaTarget {
 
@@ -65,19 +68,31 @@ object ScalaTarget {
       s""" "$groupId" %%% "$artifact" % "$version" """
     }
   }
-  case object Native extends ScalaTarget {
+
+  object Native {
+    def default = 
+      ScalaTarget.Native(
+        scalaVersion = "2.11.11",
+        scalaNativeVersion = "0.2.1"
+      )
+  }
+
+  case class Native(scalaVersion: String, scalaNativeVersion: String) extends ScalaTarget {
     def targetType = ScalaTargetType.Native
     def scaladexRequest = Map(
       "target" -> "NATIVE",
-      "scalaVersion" -> "2.11",
-      "scalaNativeVersion" -> "0.1.0"
+      "scalaVersion" -> scalaVersion,
+      "scalaNativeVersion" -> scalaNativeVersion
     )
     def renderSbt(lib: ScalaDependency): String = {
       import lib._
       s""" "$groupId" %%% "$artifact" % "$version" """
     }
   }
+
   case object Dotty extends ScalaTarget {
+    def default = this
+
     def targetType = ScalaTargetType.Dotty
     def scaladexRequest = Map("target" -> "JVM", "scalaVersion" -> "2.11")
     def renderSbt(lib: ScalaDependency): String = {

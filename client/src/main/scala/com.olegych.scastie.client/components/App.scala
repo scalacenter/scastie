@@ -23,7 +23,14 @@ object App {
   private val component =
     ScalaComponent
       .builder[AppProps]("App")
-      .initialState(LocalStorage.load.getOrElse(AppState.default))
+      .initialStateFromProps{ props =>
+        val state = LocalStorage.load.getOrElse(AppState.default)
+
+        props.targetType match {
+          case Some(targetType) => state.setTarget(targetType.defaultScalaTarget)
+          case _ => state
+        }
+      }
       .backend(new AppBackend(_))
       .renderPS {
         case (scope, props, state) => {

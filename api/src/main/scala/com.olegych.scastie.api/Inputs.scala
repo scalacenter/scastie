@@ -59,8 +59,8 @@ case class Inputs(
         case ScalaTarget.Js(_, scalaJsVersion) =>
           s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
 
-        case ScalaTarget.Native =>
-          """addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "0.1.0")"""
+        case ScalaTarget.Native(_, scalaNativeVersion) =>
+          s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
 
         case ScalaTarget.Dotty =>
           """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.0-RC4")"""
@@ -134,9 +134,9 @@ case class Inputs(
             )
           )
         }
-        case ScalaTarget.Native => {
+        case ScalaTarget.Native(scalaVersion, _) => {
           (
-            """scalaVersion := "2.11.8"""",
+            s"""scalaVersion := "$scalaVersion"""",
             ScalaDependency(
               "org.scastie",
               "runtime-scala",

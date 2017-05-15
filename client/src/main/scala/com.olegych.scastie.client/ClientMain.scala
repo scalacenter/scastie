@@ -77,7 +77,8 @@ object ClientMain extends JSApp {
           AppProps(
             router = None,
             snippetId = None,
-            embedded = Some(embeddedOptions0)
+            embedded = Some(embeddedOptions0),
+            targetType = None
           )
         ).renderIntoDOM(
           container

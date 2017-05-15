@@ -10,23 +10,13 @@ object BuildSettings {
 
   def renderTarget(scalaTarget: ScalaTarget, backend: AppBackend) = {
 
-    val targetTypes = List(
+    val targetTypes: List[ScalaTargetType] = List(
       ScalaTargetType.JVM,
       ScalaTargetType.Dotty,
       ScalaTargetType.Typelevel,
       ScalaTargetType.JS //,
       // ScalaTargetType.Native
     )
-
-    def defaultTarget(targetType: ScalaTargetType) = {
-      targetType match {
-        case ScalaTargetType.JVM => ScalaTarget.Jvm.default
-        case ScalaTargetType.JS => ScalaTarget.Js.default
-        case ScalaTargetType.Dotty => ScalaTarget.Dotty
-        case ScalaTargetType.Native => ScalaTarget.Native
-        case ScalaTargetType.Typelevel => ScalaTarget.Typelevel.default
-      }
-    }
 
     def labelFor(targetType: ScalaTargetType) = {
       targetType match {
@@ -51,7 +41,7 @@ object BuildSettings {
                   id := targetLabel,
                   value := targetLabel,
                   name := "target",
-                  onChange --> backend.setTarget(defaultTarget(targetType)),
+                  onChange --> backend.setTarget(targetType.defaultScalaTarget),
                   selected(targetType)),
             label(`for` := targetLabel,
                   role := "button",
@@ -193,11 +183,18 @@ object BuildSettings {
       target match {
         case ScalaTarget.Jvm(scalaVersion) =>
           versionSelector(scalaVersion, ScalaTarget.Jvm.apply)
+
         case ScalaTarget.Typelevel(scalaVersion) =>
           versionSelector(scalaVersion, ScalaTarget.Typelevel.apply)
-        case ScalaTarget.Dotty => notSupported
-        case ScalaTarget.Js(scalaVersion, scalaJsVersion) => notSupported
-        case ScalaTarget.Native => notSupported
+
+        case ScalaTarget.Dotty =>
+          notSupported
+
+        case ScalaTarget.Js(scalaVersion, scalaJsVersion) =>
+          notSupported
+
+        case ScalaTarget.Native(scalaVersion, scalaNativeVersion) =>
+          notSupported
       }
 
     versionSelectors

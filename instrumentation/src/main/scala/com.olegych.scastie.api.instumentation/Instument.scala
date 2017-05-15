@@ -206,7 +206,7 @@ object Instrument {
       target match {
         case Jvm(scalaVersion) => scala(scalaVersion)
         case Js(scalaVersion, _) => scala(scalaVersion)
-        case Native => scala("2.11")
+        case Native(scalaVersion, _) => scala(scalaVersion)
         case Dotty => Some(dialects.Dotty)
         case Typelevel(scalaVersion) => typelevel(scalaVersion)
         case _ => None
