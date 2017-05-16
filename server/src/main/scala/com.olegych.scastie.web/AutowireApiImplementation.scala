@@ -67,6 +67,10 @@ class AutowireApiImplementation(
     (dispatchActor ? FetchSnippet(snippetId)).mapTo[Option[FetchResult]]
   }
 
+  def fetchOld(id: Int): Future[Option[FetchResult]] = {
+    (dispatchActor ? FetchOldSnippet(id)).mapTo[Option[FetchResult]]
+  }
+
   def fetchUser(): Future[Option[User]] =
     Future.successful(maybeUser)
 

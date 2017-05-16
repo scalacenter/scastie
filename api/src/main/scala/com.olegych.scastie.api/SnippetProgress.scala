@@ -2,9 +2,9 @@ package com.olegych.scastie
 package api
 
 object SnippetProgress {
-  def default(snippetId: SnippetId) =
+  def default =
     SnippetProgress(
-      snippetId = snippetId,
+      snippetId = None,
       userOutput = None,
       sbtOutput = None,
       compilationInfos = Nil,
@@ -20,7 +20,7 @@ object SnippetProgress {
 }
 
 case class SnippetProgress(
-    snippetId: SnippetId,
+    snippetId: Option[SnippetId],
     userOutput: Option[String],
     sbtOutput: Option[String],
     compilationInfos: List[Problem],

@@ -77,6 +77,7 @@ object ClientMain extends JSApp {
           AppProps(
             router = None,
             snippetId = None,
+            oldSnippetId = None,
             embedded = Some(embeddedOptions0),
             targetType = None
           )

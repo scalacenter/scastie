@@ -99,9 +99,9 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     def timeout(duration: FiniteDuration): Boolean = {
       log.info(s"restarting sbt: $inputs")
       progressActor !
-        SnippetProgress
-          .default(snippetId)
+        SnippetProgress.default
           .copy(
+            snippetId = Some(snippetId),
             timeout = true,
             done = true,
             compilationInfos = List(
@@ -164,8 +164,9 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           def signalError(message: String, line: Option[Int]): Unit = {
             val progress =
               SnippetProgress
-                .default(snippetId)
+                .default
                 .copy(
+                  snippetId = Some(snippetId),
                   compilationInfos = List(Problem(Error, line, message))
                 )
 
@@ -268,7 +269,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           } else (None, None)
 
         val progress = SnippetProgress(
-          snippetId = snippetId,
+          snippetId = Some(snippetId),
           userOutput = userOutput,
           sbtOutput = if (isSbtMessage) Some(line) else sbtOutput.map(_.line),
           compilationInfos = problems.getOrElse(Nil),

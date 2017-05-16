@@ -24,6 +24,8 @@ case object Embeded extends Page
 
 case class TargetTypePage(targetType: ScalaTargetType) extends Page
 
+case class OldSnippetIdPage(id: Int) extends Page
+
 sealed trait ResourcePage extends Page
 
 case class AnonymousResource(

@@ -200,7 +200,6 @@ case class AppState(
   }
 
   def closeConsole: AppState = {
-    println("closeConsole")
     copyAndSave(consoleState = consoleState.copy(
       consoleIsOpen = false,
       userOpenedConsole = false
@@ -208,7 +207,6 @@ case class AppState(
   }
 
   def setConsoleAuto(isOpen: Boolean): AppState = {
-    println("setConsoleAuto: " + isOpen)
     if(!isOpen && consoleState.userOpenedConsole)
       this
     else
@@ -218,8 +216,6 @@ case class AppState(
   }
 
   def toggleConsole: AppState = {
-    println("toggleConsole")
-
     copyAndSave(consoleState = 
       if(consoleState.consoleIsOpen)
         consoleState.copy(

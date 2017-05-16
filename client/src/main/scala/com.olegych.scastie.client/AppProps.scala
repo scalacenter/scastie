@@ -10,6 +10,7 @@ object AppProps {
     AppProps(
       router = Some(router),
       snippetId = None,
+      oldSnippetId = None,
       embedded = None,
       targetType = None
     )
@@ -18,6 +19,7 @@ object AppProps {
 case class AppProps(
     router: Option[RouterCtl[Page]],
     snippetId: Option[SnippetId],
+    oldSnippetId: Option[Int],
     embedded: Option[EmbededOptions],
     targetType: Option[ScalaTargetType]
 ) {

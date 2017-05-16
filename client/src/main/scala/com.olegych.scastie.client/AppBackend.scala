@@ -10,6 +10,7 @@ import org.scalajs.dom._
 import upickle.default.{read => uread}
 
 import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 class AppBackend(scope: BackendScope[AppProps, AppState]) {
   Global.subsribe(scope)
@@ -321,33 +322,50 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       )
     )
 
-  def loadSnippet(snippetId: SnippetId): Callback =
-    scope.state.flatMap(
-      state =>
-        if (state.loadSnippet) {
-          Callback.future(
-            ApiClient[AutowireApi]
-              .fetch(snippetId)
-              .call()
-              .map {
-                case Some(FetchResult(inputs, progresses)) =>
-                  loadStateFromLocalStorage >>
-                    clear >>
-                    scope.modState(
-                      _.setInputs(inputs)
-                        .setProgresses(progresses)
-                        .setCleanInputs
-                    )
-                case _ =>
-                  scope.modState(_.setCode(s"//snippet not found"))
-              }
-          ) >> setView(View.Editor) >> scope.modState(
-            _.clearOutputs.closeModals
-          )
-        } else {
-          scope.modState(_.setLoadSnippet(true))
-      }
+  def loadOldSnippet(id: Int): Callback = {
+    loadSnippetBase(
+      ApiClient[AutowireApi]
+        .fetchOld(id)
+        .call()
+    )
+  }
+
+  def loadSnippet(snippetId: SnippetId): Callback = {
+    loadSnippetBase(
+      ApiClient[AutowireApi]
+        .fetch(snippetId)
+        .call()
     ) >> scope.modState(_.setSnippetId(snippetId))
+  }
+
+  def loadSnippetBase(fetchSnippet: => Future[Option[FetchResult]]): Callback = {
+    scope.state.flatMap(state =>
+      if (state.loadSnippet) {
+        val loadStateFromApi = 
+          Callback.future(
+            fetchSnippet.map {
+              case Some(FetchResult(inputs, progresses)) =>
+                loadStateFromLocalStorage >>
+                  clear >>
+                  scope.modState(
+                    _.setInputs(inputs)
+                      .setProgresses(progresses)
+                      .setCleanInputs
+                  )
+              case _ =>
+                scope.modState(_.setCode(s"//snippet not found"))
+            }
+          )
+
+        loadStateFromApi >> 
+          setView(View.Editor) >> 
+          scope.modState(_.clearOutputs.closeModals)
+
+      } else {
+        scope.modState(_.setLoadSnippet(true))
+      }
+    )
+  }
 
   def loadStateFromLocalStorage =
     LocalStorage.load
@@ -376,7 +394,11 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
         case None => {
           props.snippetId match {
             case Some(snippetId) => loadSnippet(snippetId)
-            case None => loadStateFromLocalStorage
+            case None => 
+              props.oldSnippetId match {
+                case Some(id) => loadOldSnippet(id)
+                case None => loadStateFromLocalStorage
+              }
           }
         }
         case Some(embededOptions) => {

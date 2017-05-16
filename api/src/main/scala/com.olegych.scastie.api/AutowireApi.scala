@@ -15,6 +15,7 @@ trait AutowireApi {
   def fork(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]]
 
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]]
+  def fetchOld(id: Int): Future[Option[FetchResult]]
   def fetchUser(): Future[Option[User]]
   def fetchUserSnippets(): Future[List[SnippetSummary]]
 }

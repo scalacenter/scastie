@@ -8,7 +8,6 @@ import upickle.default.{write => uwrite, read => uread}
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.file._
-import attribute.BasicFileAttributes
 import FileVisitResult.CONTINUE
 
 import java.util.{Base64, UUID}
@@ -17,7 +16,7 @@ import System.{lineSeparator => nl}
 
 case class UserLogin(login: String)
 
-class SnippetsContainer(root: Path) {
+class SnippetsContainer(root: Path, oldRoot: Path) {
 
   def create(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
     val uuid = randomUrlFirendlyBase64UUID
@@ -88,24 +87,45 @@ class SnippetsContainer(root: Path) {
   }
 
   def appendOutput(progress: SnippetProgress): Unit = {
-    (progress.scalaJsContent, progress.scalaJsSourceMapContent) match {
-      case (Some(scalaJsContent), Some(scalaJsSourceMapContent)) => {
-        write(scalaJsFile(progress.snippetId), scalaJsContent)
-        write(scalaJsSourceMapFile(progress.snippetId),
+    (progress.scalaJsContent, progress.scalaJsSourceMapContent, 
+      progress.snippetId) match {
+
+      case (Some(scalaJsContent), Some(scalaJsSourceMapContent), Some(sid)) => {
+        write(scalaJsFile(sid), scalaJsContent)
+        write(scalaJsSourceMapFile(sid),
               scalaJsSourceMapContent)
+        write(outputsFile(sid),
+              uwrite(progress) + nl,
+              append = true)
       }
       case _ => ()
     }
 
-    write(outputsFile(progress.snippetId),
-          uwrite(progress) + nl,
-          append = true)
   }
 
   def readSnippet(snippetId: SnippetId): Option[FetchResult] = {
     readInputs(snippetId).map(
       inputs => FetchResult(inputs, readOutputs(snippetId).getOrElse(Nil))
     )
+  }
+
+  def readOldSnippet(id: Int): Option[FetchResult] = {
+    readOldInputs(id).map(
+      inputs => FetchResult(inputs, readOldOutputs(id).getOrElse(Nil))
+    )
+  }
+
+  def oldPath(id: Int): Path =
+    oldRoot
+     .resolve("paste%20d".format(id).replaceAll(" ", "0"))
+     .resolve("src/main/scala/")
+
+  def readOldInputs(id: Int): Option[Inputs] = {
+    slurp(oldPath(id).resolve("test.scala")).map(OldScastieConverter.convertOldInput)
+  }
+
+  def readOldOutputs(id: Int): Option[List[SnippetProgress]] = {
+    slurp(oldPath(id).resolve("output.txt")).map(OldScastieConverter.convertOldOutput)
   }
 
   def readScalaJs(snippetId: SnippetId): Option[FetchResultScalaJs] = {
@@ -301,20 +321,13 @@ class SnippetsContainer(root: Path) {
 
     Files.walkFileTree(
       base,
-      new FileVisitor[Path] {
-        def postVisitDirectory(path: Path, ex: IOException): FileVisitResult = {
+      new SimpleFileVisitor[Path] {
+        override def postVisitDirectory(path: Path, ex: IOException): FileVisitResult = {
           if (dirIsEmpty(path)) {
             Files.delete(path)
           }
           CONTINUE
         }
-        def preVisitDirectory(path: Path,
-                              x$2: BasicFileAttributes): FileVisitResult =
-          CONTINUE
-        def visitFile(path: Path, x$2: BasicFileAttributes): FileVisitResult =
-          CONTINUE
-        def visitFileFailed(path: Path, ex: IOException): FileVisitResult =
-          CONTINUE
       }
     )
 

@@ -27,6 +27,7 @@ object Routing {
     val anon = alpha
     val user = (alpha / alpha)
     val userUpdate = (alpha / alpha / int)
+    val oldId = int
 
     (
       trimSlashes
@@ -35,6 +36,9 @@ object Routing {
 
         | dynamicRouteCT(targetType.caseClass[TargetTypePage]) ~>
           dynRenderR((page, router) => renderTargetTypePage(page, router))
+
+        | dynamicRouteCT(oldId.caseClass[OldSnippetIdPage]) ~>
+          dynRenderR((page, router) => renderOldSnippetIdPage(page, router))
 
         | dynamicRouteCT(anon.caseClass[AnonymousResource]) ~>
           dynRenderR((page, router) => renderPage(page, router))
@@ -67,6 +71,9 @@ object Routing {
     
   private def renderTargetTypePage(page: TargetTypePage, router: RouterCtl[Page]) =
     App(AppProps.default(router).copy(targetType = Some(page.targetType)))
+
+  private def renderOldSnippetIdPage(page: OldSnippetIdPage, router: RouterCtl[Page]) =
+    App(AppProps.default(router).copy(oldSnippetId = Some(page.id)))
 
   private def renderAppDefaultEmbedded(router: RouterCtl[Page]) =
     App(AppProps.default(router).copy(embedded = Some(EmbededOptions.empty)))
@@ -102,6 +109,7 @@ object Routing {
       AppProps(
         router = Some(router),
         snippetId = Some(snippetId),
+        oldSnippetId = None,
         embedded = embedded,
         targetType = None
       )

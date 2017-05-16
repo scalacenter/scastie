@@ -26,6 +26,7 @@ case class DeleteSnippet(snippetId: SnippetId)
 case class ForkSnippet(snippetId: SnippetId, inputs: InputsWithIpAndUser)
 
 case class FetchSnippet(snippetId: SnippetId)
+case class FetchOldSnippet(id: Int)
 case class FetchUserSnippets(user: User)
 
 case object LoadBalancerStateRequest
@@ -67,7 +68,8 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
   }
 
   private val container = new SnippetsContainer(
-    Paths.get(configuration.getString("snippets-dir"))
+    Paths.get(configuration.getString("snippets-dir")),
+    Paths.get(configuration.getString("old-snippets-dir"))
   )
 
   private val portsInfo = ports.mkString("[", ", ", "]")
@@ -151,6 +153,10 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
       sender ! container.readSnippet(snippetId)
     }
 
+    case FetchOldSnippet(id) => {
+      sender ! container.readOldSnippet(id)
+    }
+
     case FetchUserSnippets(user) => {
       sender ! container.listSnippets(UserLogin(user.login))
     }
@@ -169,7 +175,9 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
 
     case progress: api.SnippetProgress => {
       if (progress.done) {
-        loadBalancer = loadBalancer.done(progress.snippetId)
+        progress.snippetId.foreach(sid =>
+          loadBalancer = loadBalancer.done(sid)
+        )
       }
       container.appendOutput(progress)
     }

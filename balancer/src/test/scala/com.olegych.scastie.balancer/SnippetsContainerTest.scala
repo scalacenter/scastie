@@ -10,7 +10,10 @@ import org.scalatest.FunSuite
 class SnippetsContainerTest extends FunSuite {
 
   private def testContainer =
-    new SnippetsContainer(Files.createTempDirectory("test"))
+    new SnippetsContainer(
+      Files.createTempDirectory("test"),
+      Files.createTempDirectory("old-test")
+    )
 
   test("create snippet with logged in user") {
     val container = testContainer
