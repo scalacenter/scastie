@@ -70,14 +70,15 @@ object ScalaTarget {
   }
 
   object Native {
-    def default = 
+    def default =
       ScalaTarget.Native(
         scalaVersion = "2.11.11",
         scalaNativeVersion = "0.2.1"
       )
   }
 
-  case class Native(scalaVersion: String, scalaNativeVersion: String) extends ScalaTarget {
+  case class Native(scalaVersion: String, scalaNativeVersion: String)
+      extends ScalaTarget {
     def targetType = ScalaTargetType.Native
     def scaladexRequest = Map(
       "target" -> "NATIVE",

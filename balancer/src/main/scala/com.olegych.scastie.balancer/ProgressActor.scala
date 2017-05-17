@@ -26,7 +26,7 @@ class ProgressActor extends Actor with ActorLogging {
       sender ! source
     }
     case snippetProgress: SnippetProgress => {
-      snippetProgress.snippetId.foreach{sid =>
+      snippetProgress.snippetId.foreach { sid =>
         val (_, publisher) = getOrCreatePublisher(sid)
         publisher ! snippetProgress
       }
@@ -73,7 +73,7 @@ class ProgressForwarder(progressActor: ActorRef)
         onNext(progress)
 
         if (progress.done) {
-          progress.snippetId.foreach{sid =>
+          progress.snippetId.foreach { sid =>
             progressActor ! ProgressDone(sid)
           }
         }

@@ -10,7 +10,7 @@ import org.scalatest.FunSuite
 class OldScastieConverterTest extends FunSuite {
 
   test("convert-simple") {
-    val original = 
+    val original =
       """|/***
          |scalaVersion := "2.11.8"
          |scalacOptions ++= Seq(""-deprecation", "-feature")
@@ -21,16 +21,16 @@ class OldScastieConverterTest extends FunSuite {
          |}""".stripMargin
 
     assert(
-      OldScastieConverter.convertOldInput(original) ==    
-      
-      Inputs.default.copy(
-        target = ScalaTarget.Jvm("2.11.8"),
-        sbtConfigExtra = """scalacOptions ++= Seq(""-deprecation", "-feature")""",
-        code = 
-          """|object Main extends App {
-             |  println("Hello, World!")
-             |}""".stripMargin
-      )
+      OldScastieConverter.convertOldInput(original) ==
+
+        Inputs.default.copy(
+          target = ScalaTarget.Jvm("2.11.8"),
+          sbtConfigExtra =
+            """scalacOptions ++= Seq(""-deprecation", "-feature")""",
+          code = """|object Main extends App {
+                    |  println("Hello, World!")
+                    |}""".stripMargin
+        )
     )
   }
 
@@ -38,7 +38,7 @@ class OldScastieConverterTest extends FunSuite {
     val path = Paths.get("balancer", "src", "test", "resources")
     val original = slurp(path.resolve("convert-test.scala")).get
 
-    val expected = 
+    val expected =
       Inputs.default.copy(
         sbtConfigExtra = slurp(path.resolve("config.sbt")).get,
         target = ScalaTarget.Typelevel("2.11.8"),

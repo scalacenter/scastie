@@ -6,7 +6,7 @@ import api.{SnippetId, SnippetUserPart, ScalaTargetType}
 object Page {
   def fromSnippetId(snippetId: SnippetId): ResourcePage = {
     snippetId match {
-      case SnippetId(uuid, None) => 
+      case SnippetId(uuid, None) =>
         AnonymousResource(uuid)
 
       case SnippetId(uuid, Some(SnippetUserPart(login, None))) =>
@@ -29,31 +29,31 @@ case class OldSnippetIdPage(id: Int) extends Page
 sealed trait ResourcePage extends Page
 
 case class AnonymousResource(
-  uuid: String
+    uuid: String
 ) extends ResourcePage
 
 case class UserResource(
-  login: String,
-  uuid: String
+    login: String,
+    uuid: String
 ) extends ResourcePage
 
 case class UserResourceUpdated(
-  login: String,
-  uuid: String,
-  update: Int
+    login: String,
+    uuid: String,
+    update: Int
 ) extends ResourcePage
 
 case class EmbeddedAnonymousResource(
-  uuid: String
+    uuid: String
 ) extends ResourcePage
 
 case class EmbeddedUserResource(
-  login: String,
-  uuid: String
+    login: String,
+    uuid: String
 ) extends ResourcePage
 
 case class EmbeddedUserResourceUpdated(
-  login: String,
-  uuid: String,
-  update: Int
+    login: String,
+    uuid: String,
+    update: Int
 ) extends ResourcePage

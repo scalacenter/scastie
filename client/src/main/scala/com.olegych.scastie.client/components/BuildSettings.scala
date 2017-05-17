@@ -37,12 +37,14 @@ object BuildSettings {
         targetTypes.map { targetType =>
           val targetLabel = labelFor(targetType)
           li(
-            input(`type` := "radio",
-                  id := targetLabel,
-                  value := targetLabel,
-                  name := "target",
-                  onChange --> backend.setTarget(targetType.defaultScalaTarget),
-                  selected(targetType)),
+            input(
+              `type` := "radio",
+              id := targetLabel,
+              value := targetLabel,
+              name := "target",
+              onChange --> backend.setTarget(targetType.defaultScalaTarget),
+              selected(targetType)
+            ),
             label(`for` := targetLabel,
                   role := "button",
                   clazz := "radio",

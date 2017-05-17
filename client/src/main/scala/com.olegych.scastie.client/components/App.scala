@@ -23,11 +23,12 @@ object App {
   private val component =
     ScalaComponent
       .builder[AppProps]("App")
-      .initialStateFromProps{ props =>
+      .initialStateFromProps { props =>
         val state = LocalStorage.load.getOrElse(AppState.default)
 
         props.targetType match {
-          case Some(targetType) => state.setTarget(targetType.defaultScalaTarget)
+          case Some(targetType) =>
+            state.setTarget(targetType.defaultScalaTarget)
           case _ => state
         }
       }

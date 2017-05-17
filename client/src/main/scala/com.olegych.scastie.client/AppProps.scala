@@ -6,7 +6,7 @@ import api.{SnippetId, ScalaTargetType}
 import japgolly.scalajs.react.extra.router.RouterCtl
 
 object AppProps {
-  def default(router: RouterCtl[Page]) =  
+  def default(router: RouterCtl[Page]) =
     AppProps(
       router = Some(router),
       snippetId = None,

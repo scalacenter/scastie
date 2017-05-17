@@ -9,7 +9,7 @@ object ConsoleState {
 }
 
 case class ConsoleState(
-  consoleIsOpen: Boolean,
-  consoleHasUserOutput: Boolean,
-  userOpenedConsole: Boolean = false
+    consoleIsOpen: Boolean,
+    consoleHasUserOutput: Boolean,
+    userOpenedConsole: Boolean = false
 )

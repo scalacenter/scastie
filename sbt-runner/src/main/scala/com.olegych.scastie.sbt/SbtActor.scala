@@ -163,8 +163,7 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         case Left(error) => {
           def signalError(message: String, line: Option[Int]): Unit = {
             val progress =
-              SnippetProgress
-                .default
+              SnippetProgress.default
                 .copy(
                   snippetId = Some(snippetId),
                   compilationInfos = List(Problem(Error, line, message))

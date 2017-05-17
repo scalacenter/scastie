@@ -175,8 +175,8 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
 
     case progress: api.SnippetProgress => {
       if (progress.done) {
-        progress.snippetId.foreach(sid =>
-          loadBalancer = loadBalancer.done(sid)
+        progress.snippetId.foreach(
+          sid => loadBalancer = loadBalancer.done(sid)
         )
       }
       container.appendOutput(progress)

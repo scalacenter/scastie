@@ -154,7 +154,6 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     scope.modState(_.updateDependencyVersion(scalaDependency, version))
 
   def toggleTheme: Callback = scope.modState(_.toggleTheme)
-  
 
   def openConsole: Callback = scope.modState(_.openConsole)
   def closeConsole: Callback = scope.modState(_.closeConsole)
@@ -339,30 +338,31 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   }
 
   def loadSnippetBase(fetchSnippet: => Future[Option[FetchResult]]): Callback = {
-    scope.state.flatMap(state =>
-      if (state.loadSnippet) {
-        val loadStateFromApi = 
-          Callback.future(
-            fetchSnippet.map {
-              case Some(FetchResult(inputs, progresses)) =>
-                loadStateFromLocalStorage >>
-                  clear >>
-                  scope.modState(
-                    _.setInputs(inputs)
-                      .setProgresses(progresses)
-                      .setCleanInputs
-                  )
-              case _ =>
-                scope.modState(_.setCode(s"//snippet not found"))
-            }
-          )
+    scope.state.flatMap(
+      state =>
+        if (state.loadSnippet) {
+          val loadStateFromApi =
+            Callback.future(
+              fetchSnippet.map {
+                case Some(FetchResult(inputs, progresses)) =>
+                  loadStateFromLocalStorage >>
+                    clear >>
+                    scope.modState(
+                      _.setInputs(inputs)
+                        .setProgresses(progresses)
+                        .setCleanInputs
+                    )
+                case _ =>
+                  scope.modState(_.setCode(s"//snippet not found"))
+              }
+            )
 
-        loadStateFromApi >> 
-          setView(View.Editor) >> 
-          scope.modState(_.clearOutputs.closeModals)
+          loadStateFromApi >>
+            setView(View.Editor) >>
+            scope.modState(_.clearOutputs.closeModals)
 
-      } else {
-        scope.modState(_.setLoadSnippet(true))
+        } else {
+          scope.modState(_.setLoadSnippet(true))
       }
     )
   }
@@ -394,7 +394,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
         case None => {
           props.snippetId match {
             case Some(snippetId) => loadSnippet(snippetId)
-            case None => 
+            case None =>
               props.oldSnippetId match {
                 case Some(id) => loadOldSnippet(id)
                 case None => loadStateFromLocalStorage

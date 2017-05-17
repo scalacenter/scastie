@@ -27,8 +27,7 @@ libraryDependencies ++= (scalaBinaryVersion.value match {
   case _ =>
     Nil
 })
-*/
-
+ */
 import cats.free.Free
 import cats.instances.future._
 import cats.~>
@@ -36,7 +35,7 @@ import freek._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.language.higherKinds
 
 object Main extends App {
@@ -88,7 +87,8 @@ object Main extends App {
   // 2/ .replace creates a natural trans that replaces MainProgram.Foo2 in MainProgram.PRG.Cop by Free[SubProgram.PRG.Cop, ?] using transpiler
   // 3/ The result is a terrible natural transformation (don't try to write that type, it's too ugly, let's scalac do it) :
   //    (Foo1 :|: Foo2 :|: NilDSL) ~> (Foo1 :|: Free[SubProgram.PRG.Cop, ?] :|: NilDSL)
-  val transpileNat = CopKNat[MainProgram.PRG.Cop].replace(SubProgram.transpiler)
+  val transpileNat =
+    CopKNat[MainProgram.PRG.Cop].replace(SubProgram.transpiler)
 
   // Transpile does 2 operations:
   // 1/ Replaces Foo2 in MainProgram.PRG.Cop by Free[SubProgram.PRG.Cop, A]

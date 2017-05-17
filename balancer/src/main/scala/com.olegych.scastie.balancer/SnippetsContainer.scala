@@ -87,16 +87,14 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   def appendOutput(progress: SnippetProgress): Unit = {
-    (progress.scalaJsContent, progress.scalaJsSourceMapContent, 
-      progress.snippetId) match {
+    (progress.scalaJsContent,
+     progress.scalaJsSourceMapContent,
+     progress.snippetId) match {
 
       case (Some(scalaJsContent), Some(scalaJsSourceMapContent), Some(sid)) => {
         write(scalaJsFile(sid), scalaJsContent)
-        write(scalaJsSourceMapFile(sid),
-              scalaJsSourceMapContent)
-        write(outputsFile(sid),
-              uwrite(progress) + nl,
-              append = true)
+        write(scalaJsSourceMapFile(sid), scalaJsSourceMapContent)
+        write(outputsFile(sid), uwrite(progress) + nl, append = true)
       }
       case _ => ()
     }
@@ -117,15 +115,17 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
 
   def oldPath(id: Int): Path =
     oldRoot
-     .resolve("paste%20d".format(id).replaceAll(" ", "0"))
-     .resolve("src/main/scala/")
+      .resolve("paste%20d".format(id).replaceAll(" ", "0"))
+      .resolve("src/main/scala/")
 
   def readOldInputs(id: Int): Option[Inputs] = {
-    slurp(oldPath(id).resolve("test.scala")).map(OldScastieConverter.convertOldInput)
+    slurp(oldPath(id).resolve("test.scala"))
+      .map(OldScastieConverter.convertOldInput)
   }
 
   def readOldOutputs(id: Int): Option[List[SnippetProgress]] = {
-    slurp(oldPath(id).resolve("output.txt")).map(OldScastieConverter.convertOldOutput)
+    slurp(oldPath(id).resolve("output.txt"))
+      .map(OldScastieConverter.convertOldOutput)
   }
 
   def readScalaJs(snippetId: SnippetId): Option[FetchResultScalaJs] = {
@@ -322,7 +322,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     Files.walkFileTree(
       base,
       new SimpleFileVisitor[Path] {
-        override def postVisitDirectory(path: Path, ex: IOException): FileVisitResult = {
+        override def postVisitDirectory(path: Path,
+                                        ex: IOException): FileVisitResult = {
           if (dirIsEmpty(path)) {
             Files.delete(path)
           }

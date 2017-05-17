@@ -141,7 +141,7 @@ case class AppState(
     val openConsole =
       isRunning || consoleState.consoleHasUserOutput || outputs.sbtError
 
-    copyAndSave(isRunning = isRunning).setConsoleAuto(openConsole )
+    copyAndSave(isRunning = isRunning).setConsoleAuto(openConsole)
   }
 
   def setIsReRunningScalaJs(value: Boolean): AppState =
@@ -193,40 +193,47 @@ case class AppState(
 
   def openConsole: AppState = {
     println("openConsole")
-    copyAndSave(consoleState = consoleState.copy(
-      consoleIsOpen = true,
-      userOpenedConsole = true
-    ))
+    copyAndSave(
+      consoleState = consoleState.copy(
+        consoleIsOpen = true,
+        userOpenedConsole = true
+      )
+    )
   }
 
   def closeConsole: AppState = {
-    copyAndSave(consoleState = consoleState.copy(
-      consoleIsOpen = false,
-      userOpenedConsole = false
-    ))
+    copyAndSave(
+      consoleState = consoleState.copy(
+        consoleIsOpen = false,
+        userOpenedConsole = false
+      )
+    )
   }
 
   def setConsoleAuto(isOpen: Boolean): AppState = {
-    if(!isOpen && consoleState.userOpenedConsole)
+    if (!isOpen && consoleState.userOpenedConsole)
       this
     else
-      copyAndSave(consoleState = consoleState.copy(
-        consoleIsOpen = isOpen
-      ))
+      copyAndSave(
+        consoleState = consoleState.copy(
+          consoleIsOpen = isOpen
+        )
+      )
   }
 
   def toggleConsole: AppState = {
-    copyAndSave(consoleState = 
-      if(consoleState.consoleIsOpen)
-        consoleState.copy(
-          consoleIsOpen = false,
-          userOpenedConsole = false
-        )
-      else
-        consoleState.copy(
-          consoleIsOpen = true,
-          userOpenedConsole = true
-        )
+    copyAndSave(
+      consoleState =
+        if (consoleState.consoleIsOpen)
+          consoleState.copy(
+            consoleIsOpen = false,
+            userOpenedConsole = false
+          )
+        else
+          consoleState.copy(
+            consoleIsOpen = true,
+            userOpenedConsole = true
+          )
     )
   }
 

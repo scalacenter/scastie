@@ -21,8 +21,8 @@ object Routing {
     val alpha = string("[a-zA-Z0-9-]*")
 
     val targetType = ("?target=" ~ alpha.pmap(
-      in => ScalaTargetType.parse(in.toUpperCase))(_.toString)
-    )
+      in => ScalaTargetType.parse(in.toUpperCase)
+    )(_.toString))
 
     val anon = alpha
     val user = (alpha / alpha)
@@ -68,22 +68,24 @@ object Routing {
 
   private def renderAppDefault(router: RouterCtl[Page]) =
     App(AppProps.default(router))
-    
-  private def renderTargetTypePage(page: TargetTypePage, router: RouterCtl[Page]) =
+
+  private def renderTargetTypePage(page: TargetTypePage,
+                                   router: RouterCtl[Page]) =
     App(AppProps.default(router).copy(targetType = Some(page.targetType)))
 
-  private def renderOldSnippetIdPage(page: OldSnippetIdPage, router: RouterCtl[Page]) =
+  private def renderOldSnippetIdPage(page: OldSnippetIdPage,
+                                     router: RouterCtl[Page]) =
     App(AppProps.default(router).copy(oldSnippetId = Some(page.id)))
 
   private def renderAppDefaultEmbedded(router: RouterCtl[Page]) =
     App(AppProps.default(router).copy(embedded = Some(EmbededOptions.empty)))
-    
+
   private def renderPage(page: ResourcePage, router: RouterCtl[Page]) = {
     val defaultEmbedded = Some(EmbededOptions.empty)
 
     val (embedded, snippetId) =
       page match {
-        case AnonymousResource(uuid) => 
+        case AnonymousResource(uuid) =>
           (None, SnippetId(uuid, None))
 
         case UserResource(login, uuid) =>
