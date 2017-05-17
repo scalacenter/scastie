@@ -295,7 +295,6 @@ class SbtActor(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   )(sourceMapRaw: String): String = {
     try {
       val sourceMap = uread[SourceMap](sourceMapRaw)
-      sourceMap.sources.foreach(println)
 
       val sourceMap0 =
         sourceMap.copy(

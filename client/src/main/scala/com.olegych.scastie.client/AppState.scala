@@ -192,7 +192,6 @@ case class AppState(
   def forceDesktop: AppState = copyAndSave(isDesktopForced = true)
 
   def openConsole: AppState = {
-    println("openConsole")
     copyAndSave(
       consoleState = consoleState.copy(
         consoleIsOpen = true,

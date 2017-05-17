@@ -333,11 +333,15 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
     loadSnippetBase(
       ApiClient[AutowireApi]
         .fetch(snippetId)
-        .call()
-    ) >> scope.modState(_.setSnippetId(snippetId))
+        .call(),
+      afterLoading = _.setSnippetId(snippetId)
+    )
   }
 
-  def loadSnippetBase(fetchSnippet: => Future[Option[FetchResult]]): Callback = {
+  def loadSnippetBase(
+    fetchSnippet: => Future[Option[FetchResult]],
+    afterLoading: AppState => AppState = identity
+  ): Callback = {
     scope.state.flatMap(
       state =>
         if (state.loadSnippet) {
@@ -347,10 +351,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 case Some(FetchResult(inputs, progresses)) => {
                   loadStateFromLocalStorage >>
                     clear >>
-                    scope.modState(
-                      _.setInputs(inputs)
-                        .setProgresses(progresses)
-                        .setCleanInputs
+                    scope.modState(state =>
+                      afterLoading(
+                        state.setInputs(inputs)
+                             .setProgresses(progresses)
+                             .setCleanInputs
+                      )
                     )
                 }
                 case _ =>
