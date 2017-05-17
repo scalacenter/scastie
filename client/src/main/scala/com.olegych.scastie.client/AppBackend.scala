@@ -346,7 +346,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
               fetchSnippet.map {
                 case Some(FetchResult(inputs, progresses)) => {
                   println(progresses)
-                  
+
                   loadStateFromLocalStorage >>
                     clear >>
                     scope.modState(

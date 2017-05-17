@@ -87,8 +87,9 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   def appendOutput(progress: SnippetProgress): Unit = {
-    (progress.scalaJsContent, progress.scalaJsSourceMapContent,
-      progress.snippetId) match {
+    (progress.scalaJsContent,
+     progress.scalaJsSourceMapContent,
+     progress.snippetId) match {
       case (Some(scalaJsContent), Some(scalaJsSourceMapContent), Some(sid)) => {
         write(scalaJsFile(sid), scalaJsContent)
         write(scalaJsSourceMapFile(sid), scalaJsSourceMapContent)
@@ -96,8 +97,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
       case _ => ()
     }
 
-    progress.snippetId.foreach(sid =>
-      write(outputsFile(sid), uwrite(progress) + nl, append = true)
+    progress.snippetId.foreach(
+      sid => write(outputsFile(sid), uwrite(progress) + nl, append = true)
     )
   }
 
