@@ -20,18 +20,21 @@ class OldScastieConverterTest extends FunSuite {
          |  println("Hello, World!")
          |}""".stripMargin
 
-    assert(
-      OldScastieConverter.convertOldInput(original) ==
+    val obtained =
+      OldScastieConverter.convertOldInput(original)
 
-        Inputs.default.copy(
-          target = ScalaTarget.Jvm("2.11.8"),
-          sbtConfigExtra =
-            """scalacOptions ++= Seq(""-deprecation", "-feature")""",
-          code = """|object Main extends App {
-                    |  println("Hello, World!")
-                    |}""".stripMargin
-        )
-    )
+    val expected =
+      Inputs.default.copy(
+        target = ScalaTarget.Jvm("2.11.8"),
+        sbtConfigExtra =
+          """scalacOptions ++= Seq(""-deprecation", "-feature")""",
+        code = """|object Main extends App {
+                  |  println("Hello, World!")
+                  |}""".stripMargin,
+        worksheetMode = false
+      )
+
+    assert(obtained == expected)
   }
 
   test("convert") {
@@ -42,7 +45,8 @@ class OldScastieConverterTest extends FunSuite {
       Inputs.default.copy(
         sbtConfigExtra = slurp(path.resolve("config.sbt")).get,
         target = ScalaTarget.Typelevel("2.11.8"),
-        code = slurp(path.resolve("code.scala")).get
+        code = slurp(path.resolve("code.scala")).get,
+        worksheetMode = false
       )
 
     val obtained = OldScastieConverter.convertOldInput(original)
