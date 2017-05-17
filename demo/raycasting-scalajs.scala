@@ -1,6 +1,8 @@
 import org.scalajs.dom.html.{Canvas => JsCanvas}
 import org.scalajs.dom
 val canvas = dom.document.createElement("canvas").asInstanceOf[JsCanvas]
+canvas.width = 400
+canvas.height = 400
 
 canvas
 
@@ -18,9 +20,6 @@ import math._
 import scala.scalajs.js
 
 import scala.language.{postfixOps, implicitConversions}
-
-canvas.width = dom.document.body.clientWidth / 2
-canvas.height = dom.document.body.clientHeight / 2
 
 val Epsilon = 0.00001
 type Color = Vec

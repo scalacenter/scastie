@@ -344,7 +344,9 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
           val loadStateFromApi =
             Callback.future(
               fetchSnippet.map {
-                case Some(FetchResult(inputs, progresses)) =>
+                case Some(FetchResult(inputs, progresses)) => {
+                  println(progresses)
+                  
                   loadStateFromLocalStorage >>
                     clear >>
                     scope.modState(
@@ -352,6 +354,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                         .setProgresses(progresses)
                         .setCleanInputs
                     )
+                }
                 case _ =>
                   scope.modState(_.setCode(s"//snippet not found"))
               }
