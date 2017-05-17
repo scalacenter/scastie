@@ -6,7 +6,7 @@ import sbt.Keys._
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.22.0-SNAPSHOT"
+  version := "0.21.3"
 )
 
 lazy val upickleVersion = "0.4.4"
