@@ -339,8 +339,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   }
 
   def loadSnippetBase(
-    fetchSnippet: => Future[Option[FetchResult]],
-    afterLoading: AppState => AppState = identity
+      fetchSnippet: => Future[Option[FetchResult]],
+      afterLoading: AppState => AppState = identity
   ): Callback = {
     scope.state.flatMap(
       state =>
@@ -351,11 +351,13 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
                 case Some(FetchResult(inputs, progresses)) => {
                   loadStateFromLocalStorage >>
                     clear >>
-                    scope.modState(state =>
-                      afterLoading(
-                        state.setInputs(inputs)
-                             .setProgresses(progresses)
-                             .setCleanInputs
+                    scope.modState(
+                      state =>
+                        afterLoading(
+                          state
+                            .setInputs(inputs)
+                            .setProgresses(progresses)
+                            .setCleanInputs
                       )
                     )
                 }
