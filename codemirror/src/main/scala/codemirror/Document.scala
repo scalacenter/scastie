@@ -87,5 +87,5 @@ class Document protected () extends js.Object {
   def getMode(): js.Object = js.native
   def lineSeparator(): Unit = js.native
   def posFromIndex(index: Int): Position = js.native
-  def indexFromPosition(pos: Position): Int = js.native
+  def indexFromPos(pos: Position): Int = js.native
 }

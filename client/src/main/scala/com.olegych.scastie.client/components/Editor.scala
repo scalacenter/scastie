@@ -2,9 +2,11 @@ package com.olegych.scastie
 package client
 package components
 
-import api.{Instrumentation, Value, Html, AttachedDom, RuntimeError, Problem}
+import api._
 
 import japgolly.scalajs.react._, vdom.all._
+
+import codemirror.{Hint, HintConfig}
 
 import org.scalajs.dom.raw.{
   HTMLTextAreaElement,
@@ -32,6 +34,7 @@ final case class Editor(isDarkTheme: Boolean,
                         instrumentations: Set[Instrumentation],
                         compilationInfos: Set[Problem],
                         runtimeError: Option[RuntimeError],
+                        completions: List[Completion],
                         run: Callback,
                         saveOrUpdate: Callback,
                         newSnippet: Callback,
@@ -40,7 +43,9 @@ final case class Editor(isDarkTheme: Boolean,
                         toggleWorksheetMode: Callback,
                         toggleTheme: Callback,
                         formatCode: Callback,
-                        codeChange: String => Callback) {
+                        codeChange: String => Callback,
+                        completeCodeAt: Int => Callback,
+                        clearCompletions: Callback) {
   @inline def render: VdomElement = Editor.component(this)
 }
 
@@ -78,6 +83,7 @@ object Editor {
           ctrl + "-Enter" -> "run",
           ctrl + "-S" -> "save",
           ctrl + "-M" -> "newSnippet",
+          "Ctrl" + "-Space" -> "autocomplete",
           "Esc" -> "clear",
           "F1" -> "help",
           "F2" -> "toggleSolarized",
@@ -168,11 +174,23 @@ object Editor {
           props.formatCode.runNow()
         }
 
-        scope.modState(_.copy(editor = Some(editor))) >>
+        CodeMirror.commands.autocomplete = (editor: CodeMirrorEditor2) => {
+          val doc = editor.getDoc()
+          val pos = doc.indexFromPos(doc.getCursor())
+
+          props.completeCodeAt(pos).runNow()
+        }
+
+        val setEditor =
+          scope.modState(_.copy(editor = Some(editor)))
+          
+        val applyDeltas =
           scope.state.flatMap(
             state =>
               runDelta(editor, (f => scope.modState(f)), state, None, props)
           )
+
+        setEditor >> applyDeltas
       }
     }
   }
@@ -189,7 +207,6 @@ object Editor {
                        state: EditorState,
                        current: Option[Editor],
                        next: Editor): Callback = {
-
     def setTheme() = {
       if (current.map(_.isDarkTheme) != Some(next.isDarkTheme)) {
         val theme =
@@ -460,6 +477,70 @@ object Editor {
       } yield ()
     }
 
+    def setCompletions(): Unit = {
+      if (!next.completions.isEmpty) {
+        val doc = editor.getDoc()
+        val cursor = doc.getCursor()
+        var fr = cursor.ch
+        val to = cursor.ch
+        val currLine = cursor.line
+        val alphaNum = ('a' to 'z').toSet ++ ('A' to 'Z').toSet ++ ('0' to '9').toSet ++ Set('_')
+        val lineContent = doc.getLine(currLine).getOrElse("")
+
+        var i = fr - 1
+        while (i >= 0 && alphaNum.contains(lineContent.charAt(i))) {
+          fr = i
+          i -= 1
+        }
+
+        CodeMirror.showHint(editor,
+          (_, options) => {
+            js.Dictionary(
+              "from" -> new CMPosition {
+                line = currLine; ch = fr
+              },
+              "to" -> new CMPosition {
+                line = currLine; ch = to
+              },
+              "list" -> next.completions.map(_.hint).map {
+                hint =>
+                  println("rendering hint: " + hint)
+                  HintConfig
+                    .className("autocomplete")
+                    .text(hint)
+                    .render((el, _, _) ⇒ {
+
+                      val node = dom.document
+                        .createElement("pre")
+                        .asInstanceOf[HTMLPreElement]
+                      node.className = "signature"
+
+                      CodeMirror.runMode(hint, modeScala, node)
+
+                      val span = dom.document
+                        .createElement("span")
+                        .asInstanceOf[HTMLPreElement]
+                      span.className = "name cm-def"
+
+                      el.appendChild(span)
+                      el.appendChild(node)
+                      ()
+                    }): Hint
+              }.to[js.Array]
+            )
+          },
+          js.Dictionary(
+            "container" -> dom.document.querySelector(".CodeMirror"),
+            "alignWithWord" -> true,
+            "completeSingle" -> (next.completions.length == 1)
+          )
+        )
+
+        // FIXME: find another way to do it
+        next.clearCompletions.runNow()
+      }
+    }
+
     def refresh(): Unit = {
       editor.refresh()
     }
@@ -469,6 +550,7 @@ object Editor {
       setProblemAnnotations() >>
       setRenderAnnotations() >>
       setRuntimeError >>
+      Callback(setCompletions()) >>
       Callback(refresh())
   }
 
@@ -501,6 +583,7 @@ object Editor {
                        next)
           )
           .getOrElse(Callback(()))
+
       }
       .componentDidMount(_.backend.start())
       .componentWillUnmount(_.backend.stop())

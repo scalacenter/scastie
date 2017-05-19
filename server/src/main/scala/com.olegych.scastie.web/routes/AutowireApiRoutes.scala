@@ -23,7 +23,7 @@ class AutowireApiRoutes(
   import system.dispatcher
   import userDirectives.optionnalLogin
 
-  implicit val timeout = Timeout(1.seconds)
+  implicit val timeout = Timeout(5.seconds)
 
   val routes =
     post(

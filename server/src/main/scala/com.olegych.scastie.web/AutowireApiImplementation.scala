@@ -29,6 +29,10 @@ class AutowireApiImplementation(
     (dispatchActor ? formatRequest).mapTo[FormatResponse]
   }
 
+  def complete(completionRequest: CompletionRequest): Future[CompletionResponse] = {
+    (dispatchActor ? completionRequest).mapTo[CompletionResponse]
+  }
+
   def save(inputs: Inputs): Future[SnippetId] = {
     (dispatchActor ? SaveSnippet(wrap(inputs))).mapTo[SnippetId]
   }

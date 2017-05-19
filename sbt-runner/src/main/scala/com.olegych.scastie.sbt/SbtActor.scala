@@ -24,6 +24,9 @@ class SbtActor(system: ActorSystem,
     case SbtPing => 
       sender ! SbtPong
 
+    case completion: CompletionRequest =>
+      sbtRunner.tell(completion, sender)
+
     case format: FormatRequest =>
       formatActor.tell(format, sender)
 

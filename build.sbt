@@ -3,10 +3,12 @@ import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
 import sbt.Keys._
+import scala.util.Try
+import java.io.FileNotFoundException
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.22.11"
+  version := "0.23.0-SNAPSHOT"
 )
 
 lazy val upickleVersion = "0.4.4"
@@ -139,11 +141,31 @@ lazy val runnerRuntimeDependencies = Seq(
   sbtScastie
 ).map(publishLocal in _)
 
+// https://github.com/ensime/ensime-sbt/blob/2.0/src/main/scala/EnsimePlugin.scala#L587
+lazy val JdkDir: File = List(
+  // manual
+  sys.env.get("JDK_HOME"),
+  sys.env.get("JAVA_HOME"),
+  // fallback
+  sys.props.get("java.home").map(new File(_).getParent),
+  sys.props.get("java.home"),
+  // osx
+  Try("/usr/libexec/java_home".!!.trim).toOption
+).flatten.filter { n =>
+  new File(n + "/lib/tools.jar").exists
+}.headOption.map(new File(_).getCanonicalFile).getOrElse(
+  throw new FileNotFoundException(
+    """Could not automatically find the JDK/lib/tools.jar.
+      |You must explicitly set JDK_HOME or JAVA_HOME.""".stripMargin
+  )
+)
+
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
   .settings(loggingAndTest)
   .settings(
+    unmanagedJars in Compile += JdkDir / "lib/tools.jar", // otherwise ENSIME actors crushes
     scalacOptions -= "-Xfatal-warnings", // Thread.stop
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     libraryDependencies ++= Seq(
@@ -151,7 +173,8 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("remote"),
       akka("slf4j"),
-      "com.geirsson" %% "scalafmt-core" % "0.7.0-RC1"
+      "com.geirsson" %% "scalafmt-core" % "0.7.0-RC1",
+      "org.ensime" %% "core" % "2.0.0-M1"
     ),
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "com.olegych.scastie.buildinfo",
@@ -268,11 +291,15 @@ lazy val codemirror = project
         "addon/search/match-highlighter",
         "addon/search/search",
         "addon/search/searchcursor",
+        "addon/hint/show-hint",
         "keymap/sublime",
         "mode/clike/clike"
       ).map(codemirrorD)
     },
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion,
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion,
+      "org.querki" %%% "querki-jsext" % "0.8"
+    ),
     jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
   )
   .enablePlugins(ScalaJSPlugin)
@@ -326,7 +353,9 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "1.8.0",
+      // see https://github.com/ensime/ensime-server/issues/1784
+      // not 1.8.0 because it depends on fastparse 0.4.4 and this breaks ensime (using fastparse 0.4.2)
+      "org.scalameta" %% "scalameta" % "1.7.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

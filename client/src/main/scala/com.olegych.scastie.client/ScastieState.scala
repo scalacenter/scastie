@@ -20,18 +20,21 @@ object ScastieState {
     isDesktopForced = false,
     consoleState = ConsoleState.default,
     inputsHasChanged = false,
-    snippetId = None,
-    isSnippetSaved = false,
-    loadSnippet = true,
-    loadScalaJsScript = false,
-    isScalaJsScriptLoaded = false,
-    snippetIdIsScalaJS = false,
-    isReRunningScalaJs = false,
+    snippetState = SnippetState(
+      snippetId = None,
+      isSnippetSaved = false,
+      loadSnippet = true,
+      loadScalaJsScript = false,
+      isScalaJsScriptLoaded = false,
+      snippetIdIsScalaJS = false,
+      isReRunningScalaJs = false,
+    ),
     user = None,
     attachedDoms = Map(),
     inputs = Inputs.default,
     outputs = Outputs.default,
-    status = StatusState.default
+    status = StatusState.default,
+    completions = List()
   )
 
   implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
@@ -47,6 +50,16 @@ object ScastieState {
     upickleMacroRW[ScastieState]
 }
 
+case class SnippetState(
+  snippetId: Option[SnippetId],
+  isSnippetSaved: Boolean,
+  loadSnippet: Boolean,
+  loadScalaJsScript: Boolean,
+  isScalaJsScriptLoaded: Boolean,
+  snippetIdIsScalaJS: Boolean,
+  isReRunningScalaJs: Boolean,
+)
+
 case class ScastieState(
     view: View,
     isRunning: Boolean,
@@ -58,19 +71,23 @@ case class ScastieState(
     isDesktopForced: Boolean,
     consoleState: ConsoleState,
     inputsHasChanged: Boolean,
-    snippetId: Option[SnippetId],
-    isSnippetSaved: Boolean,
-    loadSnippet: Boolean,
-    loadScalaJsScript: Boolean,
-    isScalaJsScriptLoaded: Boolean,
-    snippetIdIsScalaJS: Boolean,
-    isReRunningScalaJs: Boolean,
+    snippetState: SnippetState,
     user: Option[User],
     attachedDoms: AttachedDoms,
     inputs: Inputs,
     outputs: Outputs,
-    status: StatusState
+    status: StatusState,
+    completions: List[Completion]
 ) {
+
+  def snippetId: Option[SnippetId] = snippetState.snippetId
+  def isSnippetSaved: Boolean = snippetState.isSnippetSaved
+  def loadSnippet: Boolean = snippetState.loadSnippet
+  def loadScalaJsScript: Boolean = snippetState.loadScalaJsScript
+  def isScalaJsScriptLoaded: Boolean = snippetState.isScalaJsScriptLoaded
+  def snippetIdIsScalaJS: Boolean = snippetState.snippetIdIsScalaJS
+  def isReRunningScalaJs: Boolean = snippetState.isReRunningScalaJs
+
   def copyAndSave(view: View = view,
                   isRunning: Boolean = isRunning,
                   eventSource: Option[EventSource] = eventSource,
@@ -107,13 +124,15 @@ case class ScastieState(
         isDesktopForced,
         consoleState,
         inputsHasChanged,
-        snippetId,
-        isSnippetSaved0,
-        loadSnippet,
-        loadScalaJsScript,
-        isScalaJsScriptLoaded0,
-        snippetIdIsScalaJS,
-        isReRunningScalaJs,
+        SnippetState(
+          snippetId,
+          isSnippetSaved0,
+          loadSnippet,
+          loadScalaJsScript,
+          isScalaJsScriptLoaded0,
+          snippetIdIsScalaJS,
+          isReRunningScalaJs
+        ),
         user,
         attachedDoms,
         inputs.copy(
@@ -121,7 +140,8 @@ case class ScastieState(
           forked = None
         ),
         outputs,
-        status
+        status,
+        completions
       )
 
     LocalStorage.save(state0)
@@ -150,10 +170,10 @@ case class ScastieState(
   }
 
   def setIsReRunningScalaJs(value: Boolean): ScastieState =
-    copy(isReRunningScalaJs = value)
+    copy(snippetState = snippetState.copy(isReRunningScalaJs = value))
 
   def setSnippetSaved(value: Boolean): ScastieState =
-    copy(isSnippetSaved = value, inputsHasChanged = false)
+    copy(snippetState = snippetState.copy(isSnippetSaved = value), inputsHasChanged = false)
 
   def toggleTheme: ScastieState =
     copyAndSave(isDarkTheme = !isDarkTheme)
@@ -248,7 +268,7 @@ case class ScastieState(
     copyAndSave(consoleState = consoleState.copy(consoleHasUserOutput = true))
 
   def setLoadSnippet(value: Boolean): ScastieState =
-    copy(loadSnippet = value)
+    copy(snippetState = snippetState.copy(loadSnippet = value))
 
   def setUser(user: Option[User]): ScastieState =
     copyAndSave(user = user)
@@ -263,6 +283,9 @@ case class ScastieState(
     copyAndSave(
       inputs = inputs
     )
+
+  def setCompletions(completions: List[Completion]): ScastieState =
+    copy(completions = completions)
 
   def setSbtConfigExtra(config: String): ScastieState =
     copyAndSave(
@@ -310,13 +333,15 @@ case class ScastieState(
   }
 
   def scalaJsScriptLoaded: ScastieState =
-    copy(isScalaJsScriptLoaded = true)
+    copy(snippetState = snippetState.copy(isScalaJsScriptLoaded = true))
 
   def resetScalajs: ScastieState =
     copy(
       attachedDoms = Map(),
-      isScalaJsScriptLoaded = false,
-      loadScalaJsScript = true
+      snippetState = snippetState.copy(
+        isScalaJsScriptLoaded = false,
+        loadScalaJsScript = true
+      )
     )
 
   def clearOutputs: ScastieState =
@@ -424,7 +449,7 @@ case class ScastieState(
   }
 
   def setLoadScalaJsScript(value: Boolean): ScastieState = {
-    copy(loadScalaJsScript = value)
+    copy(snippetState = snippetState.copy(loadScalaJsScript = value))
   }
 
   def addOutputs(compilationInfos: List[api.Problem],

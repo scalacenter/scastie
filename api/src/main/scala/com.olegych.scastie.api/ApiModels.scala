@@ -34,6 +34,9 @@ case class SnippetSummary(snippetId: SnippetId, summary: String)
 case class FormatRequest(code: String, worksheetMode: Boolean)
 case class FormatResponse(formattedCode: Either[String, String])
 
+case class CompletionRequest(inputs: Inputs, position: Int)
+case class CompletionResponse(completions: List[Completion])
+
 case class FetchResult(inputs: Inputs, progresses: List[SnippetProgress])
 
 case class FetchScalaJs(snippetId: SnippetId)
@@ -57,6 +60,10 @@ case class Project(
     repository: String,
     logo: Option[String] = None,
     artifacts: List[String] = Nil
+)
+
+case class Completion(
+    hint: String
 )
 
 // Keep websocket connection
