@@ -59,6 +59,7 @@ object MainPanel {
         instrumentations = state.outputs.instrumentations,
         compilationInfos = state.outputs.compilationInfos,
         runtimeError = state.outputs.runtimeError,
+        completions = state.completions,
         run = backend.run,
         saveOrUpdate = backend.saveOrUpdate,
         newSnippet = backend.newSnippet,
@@ -67,7 +68,9 @@ object MainPanel {
         toggleWorksheetMode = backend.toggleWorksheetMode,
         toggleTheme = backend.toggleTheme,
         formatCode = backend.formatCode,
-        codeChange = backend.codeChange
+        codeChange = backend.codeChange,
+        completeCodeAt = backend.completeCodeAt,
+        clearCompletions = backend.clearCompletions
       ).render
 
     val console =

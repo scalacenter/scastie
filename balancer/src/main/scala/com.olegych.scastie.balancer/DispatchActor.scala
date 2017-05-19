@@ -2,14 +2,12 @@ package com.olegych.scastie
 package balancer
 
 import api._
-
-import akka.actor.{Actor, ActorRef, ActorSelection, ActorLogging}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
 import akka.remote.DisassociatedEvent
 import akka.pattern.ask
 import akka.util.Timeout
 
 import com.typesafe.config.ConfigFactory
-
 import java.nio.file._
 
 import scala.concurrent._
@@ -122,6 +120,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef) extends Acto
       val server = loadBalancer.getRandomServer
       server.ref.tell(format, sender)
       ()
+    }
+
+    case req: CompletionRequest => {
+      log.info("Got completion request in LoadBalancer")
+      loadBalancer.getRandomServer.ref.tell(req, sender)
     }
 
     case RunSnippet(inputsWithIpAndUser) => {

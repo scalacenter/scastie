@@ -505,4 +505,28 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
           )
       )
     )
+
+  def completeCodeAt(pos: Int): Callback = {
+    println("at completeCodeAt")
+    scope.state.flatMap(
+      state =>
+        Callback.future(
+          ApiClient[AutowireApi]
+            .complete(
+              CompletionRequest(state.inputs, pos)
+            )
+            .call()
+            .map {
+              response: CompletionResponse => {
+                println("Received: " + response.completions)
+                scope.modState(_.setCompletions(response.completions))
+              }
+            }
+        )
+    )
+  }
+
+  def clearCompletions(): Callback = {
+    scope.modState(_.setCompletions(List()))
+  }
 }

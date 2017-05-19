@@ -1,3 +1,5 @@
+@import "commonvars";
+
 .CodeMirror, .CodeMirror-scroll {
   height: 100%;
 }
@@ -117,6 +119,27 @@ $margin: 24px;
       margin-left: 16px;
       margin-right: 6px;
       font-size: 12px;
+    }
+  }
+}
+
+.CodeMirror-hints {
+  z-index: 10;
+  max-height: 200px;
+  border: none;
+  margin-left: -$sidebar-width;
+  margin-top: -($header-height + $editor-topbar-height);
+
+  .autocomplete {
+    display: table-row;
+    max-width: none;
+    resize: none;
+    .name{
+      display: table-cell;
+    }
+    .signature{
+      padding-left: 5px;
+      display: table-cell;
     }
   }
 }

@@ -8,9 +8,16 @@ import ScalaTargetType._
 
 import scala.meta.parsers.Parsed
 
+import akka.util.Timeout
+import org.ensime.api._
+import org.ensime.config.EnsimeConfigProtocol
+import org.ensime.core.{Broadcaster, Project}
+import org.ensime.util.path._
+
 import upickle.default.{read => uread, write => uwrite, Reader}
 
 import akka.actor.{Actor, ActorRef}
+import akka.pattern.ask
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -20,11 +27,23 @@ import scala.util.control.NonFatal
 
 import org.slf4j.LoggerFactory
 
+import java.io.File
+import java.nio.charset.Charset
+
 class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private val defaultConfig = Inputs.default
 
   private var sbt = new Sbt(defaultConfig)
   private val log = LoggerFactory.getLogger(getClass)
+
+  private val broadcaster = context.actorOf(Broadcaster(), "broadcaster")
+  private val project = {
+    sbt.eval("ensimeConfig", defaultConfig, (_, _, _, _) => (), reload = false)
+    val config = EnsimeConfigProtocol.parse(
+      new File(sbt.ensimeConfigFile.toString).toPath.readString()(Charset.forName("UTF-8"))
+    )
+    context.actorOf(Project(broadcaster)(config), "project")
+  }
 
   override def preStart(): Unit = warmUp()
   override def postStop(): Unit = sbt.exit()
@@ -36,6 +55,13 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       sbt.eval("run", in, (line, _, _, _) => log.info(line), reload = false)
       ()
     }
+    broadcaster ! Broadcaster.Register
+    project ! ConnectionInfoReq
+    log.info("Warming up ENSIME...")
+    project ! CompletionsReq(
+      fileInfo = SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath), Some(defaultConfig.code)),
+      point = 0, maxResults = 100, caseSens = false, reload = false
+    )
   }
 
   private def instrument(
@@ -119,7 +145,30 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
   }
 
-  def receive = {    
+  def receive = {
+    case CompletionRequest(inputs, position) => {
+      log.info("completion request for inputs: {} at position: {}", inputs, position)
+
+      implicit val timeout = Timeout(5.seconds)
+      import scala.concurrent.ExecutionContext.Implicits._
+
+      sbt.evalIfNeedsReload("ensimeConfig", inputs, (line, _, _, _) => log.info(line), reload = false)
+
+      val future = project ? CompletionsReq(
+        fileInfo = SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath), Some(inputs.code)),
+        point = position, maxResults = 100, caseSens = false, reload = false
+      )
+
+      val completions = future.map {
+        case CompletionInfoList(prefix, completionList) => {
+          completionList.sortBy(- _.relevance).map(ci => Completion(ci.name))
+        }
+      }
+
+      val response = CompletionResponse(Await.result(completions, 3.seconds))
+      log.info("Completions: {}", response.completions)
+      sender ! response
+    }
     case SbtTask(snippetId, inputs, ip, login, progressActor) => {
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 

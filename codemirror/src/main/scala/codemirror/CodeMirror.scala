@@ -16,6 +16,19 @@ object CodeMirror extends js.Object {
                    options: Options): TextAreaEditor = js.native
   def runMode(value: String, mode: String, destination: HTMLElement): Editor =
     js.native
+  def showHint(editor: Editor,
+               func: js.Function2[Editor, ShowHintOptions, js.Any],
+               options: js.Any): Unit = js.native
+}
+
+@js.native
+trait ShowHintOptions extends js.Object {
+  var alignWithWord: Boolean = js.native
+  var async: Boolean = js.native
+  var closeOnUnfocus: Boolean = js.native
+  var completeOnSingleClick: Boolean = js.native
+  var completeSingle: Boolean = js.native
+  var container: Element = js.native
 }
 
 @ScalaJSDefined

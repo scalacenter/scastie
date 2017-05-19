@@ -39,7 +39,8 @@ class Sbt(defaultConfig: Inputs) {
 
   setup()
 
-  private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
+  val codeFile = sbtDir.resolve("src/main/scala/main.scala")
+  val ensimeConfigFile = sbtDir.resolve(".ensime")
 
   Files.createDirectories(codeFile.getParent)
 
@@ -165,6 +166,21 @@ class Sbt(defaultConfig: Inputs) {
            inputs: Inputs,
            lineCallback: LineCallback,
            reload: Boolean): Boolean = {
+    maybeReloadAndEval(command = command, commandIfNeedsReload = "", inputs, lineCallback, reload)
+  }
+
+  def evalIfNeedsReload(command: String,
+           inputs: Inputs,
+           lineCallback: LineCallback,
+           reload: Boolean): Boolean = {
+    maybeReloadAndEval(command = "", commandIfNeedsReload = command, inputs, lineCallback, reload)
+  }
+
+  private def maybeReloadAndEval(command: String,
+                                 commandIfNeedsReload: String,
+                                 inputs: Inputs,
+                                 lineCallback: LineCallback,
+                                 reload: Boolean) = {
 
     val isReloading = needsReload(inputs)
 
@@ -184,7 +200,8 @@ class Sbt(defaultConfig: Inputs) {
     if (!reloadError) {
       write(codeFile, inputs.code, truncate = true)
       try {
-        process(command, lineCallback, reload)
+        if (isReloading && !commandIfNeedsReload.isEmpty) process(commandIfNeedsReload, lineCallback, reload)
+        if (!command.isEmpty) process(command, lineCallback, reload)
       } catch {
         case e: IOException => {
           // when the snippet is pkilled (timeout) the sbt output stream is closed
