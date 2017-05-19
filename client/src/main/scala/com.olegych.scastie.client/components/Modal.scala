@@ -23,8 +23,8 @@ object Modal {
             else TagMod(display.block)
 
           div(clazz := "modal", modalStyle)(
-            div(clazz := "modal-fade-screen")(
-              div(clazz := "modal-window", modalClazz)(
+            div(clazz := "modal-fade-screen", onClick ==> (e => e.stopPropagationCB >> close))(
+              div(clazz := "modal-window", modalClazz, onClick ==> (e => e.stopPropagationCB))(
                 div(clazz := "modal-header")(
                   div(clazz := "modal-close",
                       onClick ==> (e => e.stopPropagationCB >> close),
