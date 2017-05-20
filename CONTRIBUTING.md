@@ -100,7 +100,18 @@ These people have access:
 
 7. Make sure everything went well: https://scastie.scala-lang.org
 
+## Restarting
 
-## Running with docker locally
+In case anything goes wrong:
+
+```
+ssh scastie@scastie.scala-lang.org
+ssh scastie@scastie-sbt.scala-lang.org
+./sbt.sh
+exit
+./server.sh
+```
+
+# Running with docker locally
 
 `docker run --network=host scalacenter/scastie-sbt-runner:0.20.0`
