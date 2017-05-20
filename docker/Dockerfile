@@ -89,3 +89,5 @@ RUN mkdir /root/dotty/src/main
 RUN mkdir /root/dotty/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /root/dotty/src/main/scala/Main.scala
 RUN cd /root/dotty; sbt run
+
+RUN apk add --update procps
