@@ -4,11 +4,10 @@ package client
 import api._
 import japgolly.scalajs.react._
 import autowire._
-
+import japgolly.scalajs.react.extra.StateSnapshot
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scalajs.dom._
 import upickle.default.{read => uread}
-
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
 
@@ -138,6 +137,8 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
+
+  val viewSnapshot = StateSnapshot.withReuse.prepare(setView)
 
   def setTarget(target: ScalaTarget): Callback =
     scope.modState(_.setTarget(target))

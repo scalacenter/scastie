@@ -3,55 +3,50 @@ package client
 package components
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react.vdom.all._
 
 object MainPanel {
   private val component =
     ScalaComponent
       .builder[(AppState, AppBackend, AppProps)]("MainPanel")
       .render_P {
-        case (state, backend, props) => {
-          def show(view: View) = {
-            if (view == state.view) TagMod(display.block)
-            else TagMod(display.none)
-          }
+        case (state, backend, props) =>
+
+          def show(view: View) =
+            if (view == state.view) display.block
+            else display.none
 
           val embedded = props.embedded.isDefined
 
           val embeddedMenu =
-            if (embedded) TagMod(EmbeddedMenu(state, backend))
-            else EmptyVdom
+            EmbeddedMenu(state, backend).when(embedded)
 
           val consoleCssForEditor =
-            if (state.consoleState.consoleIsOpen)
-              TagMod(clazz := "console-open")
-            else EmptyVdom
+            (cls := "console-open").when(state.consoleState.consoleIsOpen)
 
           val snippets =
-            if (state.user.isDefined) {
-              div(clazz := "snippets-container",
-                  clazz := "inner-container",
-                  show(View.CodeSnippets))(
-                CodeSnippets(props.router, state, backend)
-              )
-            } else EmptyVdom
+            div(cls := "snippets-container",
+                cls := "inner-container",
+                show(View.CodeSnippets))(
+              CodeSnippets(props.router, state, backend)
+            ).when(state.user.isDefined)
 
-          div(clazz := "main-panel")(
-            // pre(clazz := "debug")(),
-            TopBar(state, backend),
+          div(cls := "main-panel",
+            // pre(cls := "debug")(),
+            TopBar(backend.viewSnapshot(state.view), state.user).render,
             EditorTopBar(state, backend, props.snippetId),
-            div(clazz := "content")(
-              div(clazz := "editor-container",
-                  clazz := "inner-container",
+            div(cls := "content",
+              div(cls := "editor-container",
+                  cls := "inner-container",
                   show(View.Editor))(
-                div(clazz := "code", consoleCssForEditor)(
+                div(cls := "code", consoleCssForEditor)(
                   Editor(state, backend),
                   embeddedMenu
                 ),
                 Console(state, backend)
               ),
-              div(clazz := "settings-container",
-                  clazz := "inner-container",
+              div(cls := "settings-container",
+                  cls := "inner-container",
                   show(View.BuildSettings))(
                 BuildSettings(state, backend)
               ),
@@ -59,7 +54,6 @@ object MainPanel {
               MobileBar(state, backend)
             )
           )
-        }
       }
       .build
 
