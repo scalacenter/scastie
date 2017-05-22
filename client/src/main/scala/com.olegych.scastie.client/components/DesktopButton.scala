@@ -2,24 +2,24 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+
+final case class DesktopButton(forceDesktop: Callback) {
+  @inline def render: VdomElement = DesktopButton.component(this)
+}
 
 object DesktopButton {
 
-  def apply(state: AppState, backend: AppBackend) = component((state, backend))
+  private def render(props: DesktopButton): VdomElement = {
+    li(title := "Go to desktop", cls := "btn", onClick --> props.forceDesktop)(
+      i(cls := "fa fa-desktop"),
+      span("Desktop")
+    )
+  }
 
   private val component =
     ScalaComponent
-      .builder[(AppState, AppBackend)]("DesktopButton")
-      .render_P {
-        case (state, backend) =>
-          li(title := "Go to desktop",
-             clazz := "btn",
-             onClick --> backend.forceDesktop)(
-            i(clazz := "fa fa-desktop"),
-            span("Desktop")
-          )
-      }
+      .builder[DesktopButton]("DesktopButton")
+      .render_P(render)
       .build
 }

@@ -2,21 +2,32 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+
+final case class EmbeddedMenu(isRunning: Boolean,
+                              run: Callback,
+                              setView: View => Callback,
+                              clear: Callback) {
+  @inline def render: VdomElement = EmbeddedMenu.component(this)
+}
 
 object EmbeddedMenu {
-  def apply(state: AppState, backend: AppBackend) = component((state, backend))
+  private def render(props: EmbeddedMenu): VdomElement = {
+    div(cls := "embedded-menu")(
+      RunButton(
+        isRunning = props.isRunning,
+        run = props.run,
+        setView = props.setView
+      ).render,
+      ClearButton(
+        clear = props.clear
+      ).render
+    )
+  }
 
   private val component =
     ScalaComponent
-      .builder[(AppState, AppBackend)]("RunButton")
-      .render_P {
-        case (state, backend) =>
-          div(clazz := "embedded-menu")(
-            RunButton(state, backend),
-            ClearButton(state, backend)
-          )
-      }
+      .builder[EmbeddedMenu]("EmbeddedMenu")
+      .render_P(render)
       .build
 }

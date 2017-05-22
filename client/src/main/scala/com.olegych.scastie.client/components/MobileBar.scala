@@ -2,24 +2,34 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+
+final case class MobileBar(isRunning: Boolean,
+                           run: Callback,
+                           setView: View => Callback,
+                           forceDesktop: Callback) {
+  @inline def render: VdomElement = MobileBar.component(this)
+}
 
 object MobileBar {
+  private def render(props: MobileBar): VdomElement = {
+    nav(cls := "editor-mobile")(
+      ul(cls := "editor-buttons")(
+        RunButton(
+          isRunning = props.isRunning,
+          run = props.run,
+          setView = props.setView
+        ).render,
+        DesktopButton(
+          forceDesktop = props.forceDesktop
+        ).render
+      )
+    )
+  }
+
   private val component =
     ScalaComponent
-      .builder[(AppState, AppBackend)]("MobileBar")
-      .render_P {
-        case (state, backend) =>
-          nav(clazz := "editor-mobile")(
-            ul(clazz := "editor-buttons")(
-              RunButton(state, backend),
-              DesktopButton(state, backend)
-            )
-          )
-      }
+      .builder[MobileBar]("MobileBar")
+      .render_P(render)
       .build
-
-  def apply(state: AppState, backend: AppBackend) =
-    component((state, backend))
 }

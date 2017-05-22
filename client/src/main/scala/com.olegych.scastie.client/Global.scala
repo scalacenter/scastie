@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package client
 
+import components.Scastie
+
 import scala.scalajs.js
 
 import org.scalajs.dom.raw.HTMLElement
@@ -11,7 +13,7 @@ import japgolly.scalajs.react._
 import upickle.default.{read => uread}
 
 object Global {
-  type Scope = BackendScope[AppProps, AppState]
+  type Scope = BackendScope[Scastie, ScastieState]
 
   private var scope0: Option[Scope] = _
 

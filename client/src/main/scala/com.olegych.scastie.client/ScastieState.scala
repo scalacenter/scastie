@@ -8,8 +8,8 @@ import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
 import org.scalajs.dom.{EventSource, WebSocket}
 import org.scalajs.dom.raw.HTMLElement
 
-object AppState {
-  def default = AppState(
+object ScastieState {
+  def default = ScastieState(
     view = View.Editor,
     isRunning = false,
     eventSource = None,
@@ -41,11 +41,11 @@ object AppState {
   implicit val dontSerializeEventSource: ReadWriter[Option[EventSource]] =
     dontSerializeOption[EventSource]
 
-  implicit val pkl: ReadWriter[AppState] =
-    upickleMacroRW[AppState]
+  implicit val pkl: ReadWriter[ScastieState] =
+    upickleMacroRW[ScastieState]
 }
 
-case class AppState(
+case class ScastieState(
     view: View,
     isRunning: Boolean,
     eventSource: Option[EventSource],
@@ -80,7 +80,7 @@ case class AppState(
                   snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
                   user: Option[User] = user,
                   inputs: Inputs = inputs,
-                  outputs: Outputs = outputs): AppState = {
+                  outputs: Outputs = outputs): ScastieState = {
 
     val snippetId0 =
       if (inputsHasChanged) None
@@ -126,10 +126,12 @@ case class AppState(
     state0
   }
 
+  def isBuildDefault = inputs.isDefault
+
   def isClearable: Boolean =
     outputs.isClearable
 
-  def run(snippetId: SnippetId): AppState = {
+  def run(snippetId: SnippetId): ScastieState = {
     clearOutputs.resetScalajs
       .setRunning(true)
       .logSystem("Connecting.")
@@ -137,61 +139,64 @@ case class AppState(
       .setSnippetId(snippetId)
   }
 
-  def setRunning(isRunning: Boolean): AppState = {
+  def setRunning(isRunning: Boolean): ScastieState = {
     val openConsole =
       isRunning || consoleState.consoleHasUserOutput || outputs.sbtError
 
     copyAndSave(isRunning = isRunning).setConsoleAuto(openConsole)
   }
 
-  def setIsReRunningScalaJs(value: Boolean): AppState =
+  def setIsReRunningScalaJs(value: Boolean): ScastieState =
     copy(isReRunningScalaJs = value)
 
-  def setSnippetSaved(value: Boolean): AppState =
+  def setSnippetSaved(value: Boolean): ScastieState =
     copy(isSnippetSaved = value, inputsHasChanged = false)
 
-  def toggleTheme: AppState =
+  def toggleTheme: ScastieState =
     copyAndSave(isDarkTheme = !isDarkTheme)
 
-  def toggleWorksheetMode: AppState =
+  def setTheme(dark: Boolean): ScastieState =
+    copyAndSave(isDarkTheme = dark)
+
+  def toggleWorksheetMode: ScastieState =
     copyAndSave(
       inputs = inputs.copy(worksheetMode = !inputs.worksheetMode),
       inputsHasChanged = true
     )
 
-  def openWelcomeModal: AppState =
+  def openWelcomeModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isWelcomeModalClosed = false))
 
-  def closeWelcomeModal: AppState =
+  def closeWelcomeModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isWelcomeModalClosed = true))
 
-  def openHelpModal: AppState =
+  def openHelpModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isHelpModalClosed = false))
 
-  def closeHelpModal: AppState =
+  def closeHelpModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isHelpModalClosed = true))
 
-  def openResetModal: AppState =
+  def openResetModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isResetModalClosed = false))
 
-  def closeResetModal: AppState =
+  def closeResetModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isResetModalClosed = true))
 
-  def openNewSnippetModal: AppState =
+  def openNewSnippetModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isNewSnippetModalClosed = false))
 
-  def closeNewSnippetModal: AppState =
+  def closeNewSnippetModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isNewSnippetModalClosed = true))
 
-  def openShareModal(snippetId: Option[SnippetId]): AppState =
+  def openShareModal(snippetId: Option[SnippetId]): ScastieState =
     copyAndSave(modalState = modalState.copy(shareModalSnippetId = snippetId))
 
-  def closeShareModal: AppState =
+  def closeShareModal: ScastieState =
     copyAndSave(modalState = modalState.copy(shareModalSnippetId = None))
 
-  def forceDesktop: AppState = copyAndSave(isDesktopForced = true)
+  def forceDesktop: ScastieState = copyAndSave(isDesktopForced = true)
 
-  def openConsole: AppState = {
+  def openConsole: ScastieState = {
     copyAndSave(
       consoleState = consoleState.copy(
         consoleIsOpen = true,
@@ -200,7 +205,7 @@ case class AppState(
     )
   }
 
-  def closeConsole: AppState = {
+  def closeConsole: ScastieState = {
     copyAndSave(
       consoleState = consoleState.copy(
         consoleIsOpen = false,
@@ -209,7 +214,7 @@ case class AppState(
     )
   }
 
-  def setConsoleAuto(isOpen: Boolean): AppState = {
+  def setConsoleAuto(isOpen: Boolean): ScastieState = {
     if (!isOpen && consoleState.userOpenedConsole)
       this
     else
@@ -220,7 +225,7 @@ case class AppState(
       )
   }
 
-  def toggleConsole: AppState = {
+  def toggleConsole: ScastieState = {
     copyAndSave(
       consoleState =
         if (consoleState.consoleIsOpen)
@@ -236,62 +241,62 @@ case class AppState(
     )
   }
 
-  def setUserOutput: AppState =
+  def setUserOutput: ScastieState =
     copyAndSave(consoleState = consoleState.copy(consoleHasUserOutput = true))
 
-  def setLoadSnippet(value: Boolean): AppState =
+  def setLoadSnippet(value: Boolean): ScastieState =
     copy(loadSnippet = value)
 
-  def setUser(user: Option[User]): AppState =
+  def setUser(user: Option[User]): ScastieState =
     copyAndSave(user = user)
 
-  def setCode(code: String): AppState =
+  def setCode(code: String): ScastieState =
     copyAndSave(
       inputs = inputs.copy(code = code),
       inputsHasChanged = true
     )
 
-  def setInputs(inputs: Inputs): AppState =
+  def setInputs(inputs: Inputs): ScastieState =
     copyAndSave(
       inputs = inputs
     )
 
-  def setSbtConfigExtra(config: String): AppState =
+  def setSbtConfigExtra(config: String): ScastieState =
     copyAndSave(
       inputs = inputs.copy(sbtConfigExtra = config),
       inputsHasChanged = true
     )
 
-  def setChangedInputs: AppState =
+  def setChangedInputs: ScastieState =
     copyAndSave(inputsHasChanged = true)
 
-  def setCleanInputs: AppState =
+  def setCleanInputs: ScastieState =
     copyAndSave(inputsHasChanged = false)
 
-  def setView(newView: View): AppState =
+  def setView(newView: View): ScastieState =
     copyAndSave(view = newView)
 
-  def setTarget(target: ScalaTarget): AppState =
+  def setTarget(target: ScalaTarget): ScastieState =
     copyAndSave(
       inputs = inputs.copy(target = target),
       inputsHasChanged = true
     )
 
   def addScalaDependency(scalaDependency: ScalaDependency,
-                         project: Project): AppState =
+                         project: Project): ScastieState =
     copyAndSave(
       inputs = inputs.addScalaDependency(scalaDependency, project),
       inputsHasChanged = true
     )
 
-  def removeScalaDependency(scalaDependency: ScalaDependency): AppState =
+  def removeScalaDependency(scalaDependency: ScalaDependency): ScastieState =
     copyAndSave(
       inputs = inputs.removeScalaDependency(scalaDependency),
       inputsHasChanged = true
     )
 
   def updateDependencyVersion(scalaDependency: ScalaDependency,
-                              version: String): AppState = {
+                              version: String): ScastieState = {
     val newScalaDependency = scalaDependency.copy(version = version)
     copyAndSave(
       inputs = inputs.copy(
@@ -301,17 +306,17 @@ case class AppState(
     )
   }
 
-  def scalaJsScriptLoaded: AppState =
+  def scalaJsScriptLoaded: ScastieState =
     copy(isScalaJsScriptLoaded = true)
 
-  def resetScalajs: AppState =
+  def resetScalajs: ScastieState =
     copy(
       attachedDoms = Map(),
       isScalaJsScriptLoaded = false,
       loadScalaJsScript = true
     )
 
-  def clearOutputs: AppState =
+  def clearOutputs: ScastieState =
     copyAndSave(
       outputs = Outputs.default,
       consoleState = consoleState.copy(
@@ -320,17 +325,17 @@ case class AppState(
       )
     )
 
-  def closeModals: AppState = copyAndSave(modalState = ModalState.allClosed)
+  def closeModals: ScastieState = copyAndSave(modalState = ModalState.allClosed)
 
-  def setRuntimeError(runtimeError: Option[RuntimeError]): AppState =
+  def setRuntimeError(runtimeError: Option[RuntimeError]): ScastieState =
     if (runtimeError.isEmpty) this
     else copyAndSave(outputs = outputs.copy(runtimeError = runtimeError))
 
-  def setSbtError(err: Boolean): AppState =
+  def setSbtError(err: Boolean): ScastieState =
     copyAndSave(outputs = outputs.copy(sbtError = err))
 
   def logOutput(line: Option[String],
-                wrap: String => ConsoleOutput): AppState = {
+                wrap: String => ConsoleOutput): ScastieState = {
     line match {
       case Some(l) =>
         copyAndSave(
@@ -342,7 +347,7 @@ case class AppState(
     }
   }
 
-  def logSystem(line: String): AppState = {
+  def logSystem(line: String): ScastieState = {
     copyAndSave(
       outputs = outputs.copy(
         consoleOutputs = outputs.consoleOutputs ++ Vector(
@@ -352,7 +357,7 @@ case class AppState(
     )
   }
 
-  def addProgress(progress: SnippetProgress): AppState = {
+  def addProgress(progress: SnippetProgress): ScastieState = {
     val state =
       addOutputs(progress.compilationInfos, progress.instrumentations)
         .logOutput(progress.userOutput, ConsoleOutput.UserOutput(_))
@@ -367,20 +372,20 @@ case class AppState(
     else state
   }
 
-  def setProgresses(progresses: List[SnippetProgress]): AppState = {
+  def setProgresses(progresses: List[SnippetProgress]): ScastieState = {
     progresses.foldLeft(this) {
       case (state, progress) => state.addProgress(progress)
     }
   }
 
-  def setSnippetId(snippetId: SnippetId): AppState = {
+  def setSnippetId(snippetId: SnippetId): ScastieState = {
     copyAndSave(
       snippetId = Some(snippetId),
       snippetIdIsScalaJS = inputs.target.targetType == ScalaTargetType.JS
     )
   }
 
-  def clearSnippetId: AppState = {
+  def clearSnippetId: ScastieState = {
     copyAndSave(
       snippetId = None,
       snippetIdIsScalaJS = false
@@ -389,26 +394,26 @@ case class AppState(
 
   private def info(message: String) = Problem(api.Info, None, message)
 
-  def setForcedProgramMode(forcedProgramMode: Boolean): AppState = {
+  def setForcedProgramMode(forcedProgramMode: Boolean): ScastieState = {
     if (!forcedProgramMode) this
     else {
       copyAndSave(
         outputs = outputs.copy(
           compilationInfos = outputs.compilationInfos +
             info(
-              "You don't need a main method (or extends App) in Worksheet Mode"
+              "You don't need a main method (or extends Scastie) in Worksheet Mode"
             )
         )
       )
     }
   }
 
-  def setLoadScalaJsScript(value: Boolean): AppState = {
+  def setLoadScalaJsScript(value: Boolean): ScastieState = {
     copy(loadScalaJsScript = value)
   }
 
   def addOutputs(compilationInfos: List[api.Problem],
-                 instrumentations: List[api.Instrumentation]): AppState = {
+                 instrumentations: List[api.Instrumentation]): ScastieState = {
 
     def topDef(problem: api.Problem): Boolean = {
       problem.severity == api.Error &&

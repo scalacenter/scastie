@@ -3,7 +3,6 @@ package client
 package components
 
 import japgolly.scalajs.react._, vdom.all._
-// import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 import codemirror.TextAreaEditor
 import org.scalajs.dom.raw.HTMLTextAreaElement
@@ -27,7 +26,7 @@ object CodeMirrorEditor {
       readOnly: Boolean
   )
 
-  private[CodeMirrorEditor] class Backend(
+  private[CodeMirrorEditor] class CodeMirrorEditorBackend(
       scope: BackendScope[(Settings, Handler), State]
   ) {
     def start(): Callback = {
@@ -112,7 +111,7 @@ object CodeMirrorEditor {
     ScalaComponent
       .builder[(Settings, Handler)]("CodemirrorEditor")
       .initialState(State())
-      .backend(new Backend(_))
+      .backend(new CodeMirrorEditorBackend(_))
       .renderPS {
         case (scope, (props, handler), _) =>
           textarea.ref(texteareaRef = _)(

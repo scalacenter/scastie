@@ -38,6 +38,8 @@ case class Inputs(
     showInUserProfile: Boolean = false,
     forked: Option[SnippetId] = None
 ) {
+  def isDefault = copy(code = "") != Inputs.default.copy(code = "")
+
   def addScalaDependency(scalaDependency: ScalaDependency,
                          project: Project): Inputs = {
     copy(

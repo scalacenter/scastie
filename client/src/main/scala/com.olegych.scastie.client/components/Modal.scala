@@ -2,43 +2,47 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+
+final case class Modal(title: String,
+                       isClosed: Boolean,
+                       close: Callback,
+                       modalcls: TagMod,
+                       content: TagMod) {
+  @inline def render: VdomElement = Modal.component(this)
+}
 
 object Modal {
-  def apply(title: String,
-            isClosed: Boolean,
-            close: Callback,
-            modalClazz: TagMod,
-            content: TagMod) =
-    component((title, isClosed, close, modalClazz, content))
+  private def render(props: Modal): VdomElement = {
+    val modalStyle =
+      if (props.isClosed) TagMod(display.none)
+      else TagMod(display.block)
+
+    div(cls := "modal", modalStyle)(
+      div(cls := "modal-fade-screen",
+          onClick ==> (e => e.stopPropagationCB >> props.close))(
+        div(cls := "modal-window",
+            props.modalcls,
+            onClick ==> (e => e.stopPropagationCB))(
+          div(cls := "modal-header")(
+            div(cls := "modal-close",
+                onClick ==> (e => e.stopPropagationCB >> props.close),
+                role := "button",
+                title := "close help modal")
+          )(
+            h1(props.title)
+          ),
+          div(cls := "modal-inner")(
+            props.content
+          )
+        )
+      )
+    )
+  }
 
   private val component =
     ScalaComponent
-      .builder[(String, Boolean, Callback, TagMod, TagMod)]("Modal")
-      .render_P {
-        case (titleText, isClosed, close, modalClazz, content) =>
-          val modalStyle =
-            if (isClosed) TagMod(display.none)
-            else TagMod(display.block)
-
-          div(clazz := "modal", modalStyle)(
-            div(clazz := "modal-fade-screen", onClick ==> (e => e.stopPropagationCB >> close))(
-              div(clazz := "modal-window", modalClazz, onClick ==> (e => e.stopPropagationCB))(
-                div(clazz := "modal-header")(
-                  div(clazz := "modal-close",
-                      onClick ==> (e => e.stopPropagationCB >> close),
-                      role := "button",
-                      title := "close help modal")
-                )(
-                  h1(titleText)
-                ),
-                div(clazz := "modal-inner")(
-                  content
-                )
-              )
-            )
-          )
-      }
+      .builder[Modal]("Modal")
+      .render_P(render)
       .build
 }

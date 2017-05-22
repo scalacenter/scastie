@@ -3,28 +3,85 @@ package client
 package components
 
 import api._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._, extra.router._
+import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
 
 import scalajs.js.timers
 
-object App {
+final case class Scastie(router: Option[RouterCtl[Page]],
+                             snippetId: Option[SnippetId],
+                             oldSnippetId: Option[Int],
+                             embedded: Option[EmbededOptions],
+                             targetType: Option[ScalaTargetType]) {
 
-  private def setTitle(state: AppState) =
+  @inline def render = Scastie.component(this)
+
+  def isEmbedded: Boolean = embedded.isDefined
+}
+
+object Scastie {
+  def default(router: RouterCtl[Page]): Scastie =
+    Scastie(
+      router = Some(router),
+      snippetId = None,
+      oldSnippetId = None,
+      embedded = None,
+      targetType = None
+    )
+
+  private def setTitle(state: ScastieState) =
     if (state.inputsHasChanged) {
       Callback(dom.document.title = "Scastie (*)")
     } else {
       Callback(dom.document.title = "Scastie")
     }
 
+  private def render(
+      scope: RenderScope[Scastie, ScastieState, ScastieBackend],
+      props: Scastie,
+      state: ScastieState
+  ): VdomElement = {
+    val theme =
+      if (state.isDarkTheme) "dark"
+      else "light"
+
+    val embeddedClass =
+      (cls := "embedded").when(props.isEmbedded)
+
+    val forceDesktopClass =
+      (cls := "force-desktop").when(state.isDesktopForced)
+
+    div(cls := s"app $theme", embeddedClass, forceDesktopClass)(
+      SideBar(
+        isDarkTheme = state.isDarkTheme,
+        toggleTheme = scope.backend.toggleTheme,
+        view = scope.backend.viewSnapshot(state.view),
+        openHelpModal = scope.backend.openHelpModal
+      ).render.unless(props.isEmbedded),
+      MainPanel(
+        state,
+        scope.backend,
+        props
+      ).render,
+      WelcomeModal(
+        isClosed = state.modalState.isWelcomeModalClosed,
+        close = scope.backend.closeWelcomeModal
+      ).render,
+      HelpModal(
+        isClosed = state.modalState.isHelpModalClosed,
+        close = scope.backend.closeHelpModal
+      ).render
+    )
+  }
+
   private val component =
     ScalaComponent
-      .builder[AppProps]("App")
+      .builder[Scastie]("Scastie")
       .initialStateFromProps { props =>
-        val state = LocalStorage.load.getOrElse(AppState.default)
+        val state = LocalStorage.load.getOrElse(ScastieState.default)
 
         props.targetType match {
           case Some(targetType) =>
@@ -32,32 +89,8 @@ object App {
           case _ => state
         }
       }
-      .backend(new AppBackend(_))
-      .renderPS {
-        case (scope, props, state) => {
-          val theme =
-            if (state.isDarkTheme) "dark"
-            else "light"
-
-          val embeddedClass =
-            TagMod(clazz := "embedded").when(props.isEmbedded)
-          val forceDesktopClass =
-            TagMod(clazz := "force-desktop").when(state.isDesktopForced)
-
-          div(clazz := s"app $theme", embeddedClass, forceDesktopClass)(
-            SideBar(state, scope.backend).unless(props.isEmbedded),
-            MainPanel(state, scope.backend, props),
-            WelcomeModal(
-              isClosed = state.modalState.isWelcomeModalClosed,
-              close = scope.backend.closeWelcomeModal
-            ),
-            HelpModal(
-              isClosed = state.modalState.isHelpModalClosed,
-              close = scope.backend.closeHelpModal
-            )
-          )
-        }
-      }
+      .backend(new ScastieBackend(_))
+      .renderPS(render _)
       .componentWillMount { current =>
         current.backend.start(current.props) >> setTitle(current.state)
       }
@@ -159,6 +192,4 @@ object App {
         setTitle(state) >> loadSnippet.get.void
       }
       .build
-
-  def apply(props: AppProps) = component(props)
 }

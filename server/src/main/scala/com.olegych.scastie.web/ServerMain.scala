@@ -79,7 +79,7 @@ object ServerMain {
     val routes = concat(publicRoutes, privateRoutes)
 
     Await.result(Http().bindAndHandle(routes, "0.0.0.0", port), 1.seconds)
-    logger.info(s"Application started (port: $port)")
+    logger.info(s"Scastie started (port: $port)")
 
     Await.result(system.whenTerminated, Duration.Inf)
 

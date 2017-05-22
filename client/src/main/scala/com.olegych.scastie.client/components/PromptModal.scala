@@ -2,47 +2,49 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+
+final case class PrompModal(modalText: String,
+                            isClosed: Boolean,
+                            close: Callback,
+                            actionText: String,
+                            actionLabel: String,
+                            action: Callback) {
+
+  @inline def render: VdomElement = PrompModal.component(this)
+}
 
 object PrompModal {
-  case class Props(
-      modalText: String,
-      isClosed: Boolean,
-      close: Callback,
-      actionText: String,
-      actionLabel: String,
-      action: Callback
-  )
-
-  def apply(props: Props) = component(props)
+  private def render(props: PrompModal): VdomElement = {
+    Modal(
+      props.modalText,
+      props.isClosed,
+      props.close,
+      TagMod(cls := "modal-reset"),
+      TagMod(
+        p(
+          cls := "modal-intro",
+          props.actionText
+        ),
+        ul(
+          li(onClick ==> (
+                 e => e.stopPropagationCB >> props.action >> props.close
+             ),
+             cls := "btn")(
+            props.actionLabel
+          ),
+          li(onClick ==> (e => e.stopPropagationCB >> props.close),
+             cls := "btn")(
+            "Cancel"
+          )
+        )
+      )
+    ).render
+  }
 
   private val component =
     ScalaComponent
-      .builder[Props]("PrompModal")
-      .render_P { props =>
-        import props._
-
-        Modal(modalText,
-              isClosed,
-              close,
-              TagMod(clazz := "modal-reset"),
-              TagMod(
-                p(
-                  clazz := "modal-intro",
-                  actionText
-                ),
-                ul(
-                  li(onClick ==> (e => e.stopPropagationCB >> action >> close),
-                     clazz := "btn")(
-                    actionLabel
-                  ),
-                  li(onClick ==> (e => e.stopPropagationCB >> close),
-                     clazz := "btn")(
-                    "Cancel"
-                  )
-                )
-              ))
-      }
+      .builder[PrompModal]("PrompModal")
+      .render_P(render)
       .build
 }

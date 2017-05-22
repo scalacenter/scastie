@@ -4,13 +4,7 @@ package client
 import api.{SnippetId, SnippetUserPart, ScalaTargetType}
 import components._
 
-import japgolly.scalajs.react.vdom.Implicits._
-import japgolly.scalajs.react.extra.router.{
-  RouterConfigDsl,
-  RouterCtl,
-  Resolution,
-  Redirect
-}
+import japgolly.scalajs.react._, vdom.all._, extra.router.
 
 object Routing {
   val config = RouterConfigDsl[Page].buildConfig { dsl =>
@@ -32,7 +26,7 @@ object Routing {
     (
       trimSlashes
         | staticRoute(root, Home) ~>
-          renderR(renderAppDefault)
+          renderR(renderScastieDefault)
 
         | dynamicRouteCT(targetType.caseClass[TargetTypePage]) ~>
           dynRenderR((page, router) => renderTargetTypePage(page, router))
@@ -50,7 +44,7 @@ object Routing {
           dynRenderR((page, router) => renderPage(page, router))
 
         | staticRoute(embedded, Embeded) ~>
-          renderR(renderAppDefaultEmbedded)
+          renderR(renderScastieDefaultEmbedded)
 
         | dynamicRouteCT(embedded / anon.caseClass[EmbeddedAnonymousResource]) ~>
           dynRenderR((page, router) => renderPage(page, router))
@@ -66,21 +60,24 @@ object Routing {
       .renderWith((page, router) => layout(page, router))
   }
 
-  private def renderAppDefault(router: RouterCtl[Page]) =
-    App(AppProps.default(router))
+  private def renderScastieDefault(router: RouterCtl[Page]): VdomElement =
+    Scastie.default(router).render
 
   private def renderTargetTypePage(page: TargetTypePage,
-                                   router: RouterCtl[Page]) =
-    App(AppProps.default(router).copy(targetType = Some(page.targetType)))
+                                   router: RouterCtl[Page]): VdomElement =
+    Scastie.default(router).copy(targetType = Some(page.targetType)).render
 
   private def renderOldSnippetIdPage(page: OldSnippetIdPage,
-                                     router: RouterCtl[Page]) =
-    App(AppProps.default(router).copy(oldSnippetId = Some(page.id)))
+                                     router: RouterCtl[Page]): VdomElement =
+    Scastie.default(router).copy(oldSnippetId = Some(page.id)).render
 
-  private def renderAppDefaultEmbedded(router: RouterCtl[Page]) =
-    App(AppProps.default(router).copy(embedded = Some(EmbededOptions.empty)))
+  private def renderScastieDefaultEmbedded(
+      router: RouterCtl[Page]
+  ): VdomElement =
+    Scastie.default(router).copy(embedded = Some(EmbededOptions.empty)).render
 
-  private def renderPage(page: ResourcePage, router: RouterCtl[Page]) = {
+  private def renderPage(page: ResourcePage,
+                         router: RouterCtl[Page]): VdomElement = {
     val defaultEmbedded = Some(EmbededOptions.empty)
 
     val (embedded, snippetId) =
@@ -107,15 +104,13 @@ object Routing {
 
       }
 
-    App(
-      AppProps(
-        router = Some(router),
-        snippetId = Some(snippetId),
-        oldSnippetId = None,
-        embedded = embedded,
-        targetType = None
-      )
-    )
+    Scastie(
+      router = Some(router),
+      snippetId = Some(snippetId),
+      oldSnippetId = None,
+      embedded = embedded,
+      targetType = None
+    ).render
   }
 
   private def layout(c: RouterCtl[Page], r: Resolution[Page]) = r.render()

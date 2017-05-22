@@ -1,7 +1,6 @@
 package com.olegych.scastie
 package client
 
-import japgolly.scalajs.react.extra.Reusability
 import org.scalajs.dom
 
 sealed trait View
@@ -9,9 +8,6 @@ object View {
   case object Editor extends View
   case object BuildSettings extends View
   case object CodeSnippets extends View
-
-  implicit val reusability: Reusability[View] =
-    Reusability.by_==
 
   import upickle.default._
 

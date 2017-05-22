@@ -4,8 +4,8 @@ package components
 
 import api._
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 
 import org.scalajs.dom
 import dom.ext.KeyCode
@@ -16,6 +16,16 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import upickle.default.{read => uread}
 
+final case class ScaladexSearch(
+    removeScalaDependency: ScalaDependency => Callback,
+    updateDependencyVersion: (ScalaDependency, String) => Callback,
+    addScalaDependency: (ScalaDependency, Project) => Callback,
+    librariesFrom: Map[ScalaDependency, Project],
+    scalaTarget: ScalaTarget
+) {
+  @inline def render: VdomElement = ScaladexSearch.component(this)
+}
+
 object ScaladexSearch {
   private[ScaladexSearch] object SearchState {
     def default = SearchState(
@@ -25,11 +35,9 @@ object ScaladexSearch {
       selecteds = List()
     )
 
-    def fromProps(props: (AppState, AppBackend)): SearchState = {
-      val (state, _) = props
-
+    def fromProps(props: ScaladexSearch): SearchState = {
       SearchState.default.copy(
-        selecteds = state.inputs.librariesFrom.toList.map {
+        selecteds = props.librariesFrom.toList.map {
           case (scalaDependency, project) =>
             Selected(
               project,
@@ -126,8 +134,8 @@ object ScaladexSearch {
   private var projectListRef: HTMLElement = _
   private var searchInputRef: HTMLInputElement = _
 
-  private[ScaladexSearch] class SearchBackend(
-      scope: BackendScope[(AppState, AppBackend), SearchState]
+  private[ScaladexSearch] class ScaladexSearchBackend(
+      scope: BackendScope[ScaladexSearch, SearchState]
   ) {
     def keyDown(e: ReactKeyboardEventFromInput): Callback = {
 
@@ -185,19 +193,11 @@ object ScaladexSearch {
       }
     }
 
-    private def withBackend(f: AppBackend => Callback): Callback = {
-      scope.props.flatMap {
-        case (_, backend) =>
-          f(backend)
-      }
-    }
-
     def addArtifact(projectAndArtifact: (Project, String)): Callback = {
       val (project, artifact) = projectAndArtifact
-      scope.props.flatMap {
-        case (appState, _) =>
-          fetchReleaseOptions(project, artifact, appState.inputs.target)
-      }
+      scope.props.flatMap(
+        props => fetchReleaseOptions(project, artifact, props.scalaTarget)
+      )
     }
 
     def removeSelected(selected: Selected): Callback = {
@@ -206,7 +206,7 @@ object ScaladexSearch {
         scope.modState(_.removeSelected(selected))
 
       def removeDependecyBackend =
-        withBackend(_.removeScalaDependency(selected.release))
+        scope.props.flatMap(_.removeScalaDependency(selected.release))
 
       removeDependencyLocal >> removeDependecyBackend
     }
@@ -217,7 +217,9 @@ object ScaladexSearch {
           scope.modState(_.updateVersion(selected, version))
 
         def updateDependencyVersionBackend =
-          withBackend(_.updateDependencyVersion(selected.release, version))
+          scope.props.flatMap(
+            _.updateDependencyVersion(selected.release, version)
+          )
 
         updateDependencyVersionLocal >> updateDependencyVersionBackend
       }
@@ -237,11 +239,10 @@ object ScaladexSearch {
     }
 
     private def fetchProjects(): Callback = {
-      def fetch(appState: AppState, searchState: SearchState): Callback = {
+      def fetch(target: ScalaTarget, searchState: SearchState): Callback = {
         if (!searchState.query.isEmpty) {
           val query = toQuery(
-            Map("q" -> searchState.query) ++
-              appState.inputs.target.scaladexRequest
+            Map("q" -> searchState.query) ++ target.scaladexRequest
           )
 
           Callback.future(
@@ -255,9 +256,8 @@ object ScaladexSearch {
 
       for {
         props <- scope.props
-        (appState, _) = props
         searchState <- scope.state
-        _ <- fetch(appState, searchState)
+        _ <- fetch(props.scalaTarget, searchState)
       } yield ()
     }
 
@@ -293,7 +293,8 @@ object ScaladexSearch {
                 .modState(_.addDependency(project, scalaDependency, options))
 
             def addScalaDependencyBackend =
-              withBackend(_.addScalaDependency(scalaDependency, project))
+              scope.props
+                .flatMap(_.addScalaDependency(scalaDependency, project))
 
             addScalaDependencyLocal >> addScalaDependencyBackend
           }
@@ -301,155 +302,143 @@ object ScaladexSearch {
     }
   }
 
-  private val component =
-    ScalaComponent
-      .builder[(AppState, AppBackend)]("Scaladex Search")
-      .initialStateFromProps(SearchState.fromProps)
-      .backend(new SearchBackend(_))
-      .renderPS {
-        case (scope, (state, backend), searchState) => {
-          def selectedIndex(index: Int, selected: Int) = {
-            if (index == selected) TagMod(clazz := "selected")
-            else EmptyVdom
-          }
+  private def render(
+      scope: RenderScope[ScaladexSearch, SearchState, ScaladexSearchBackend],
+      props: ScaladexSearch,
+      searchState: SearchState
+  ): VdomElement = {
+    def selectedIndex(index: Int, selected: Int) =
+      (cls := "selected").when(index == selected)
 
-          def renderProject(project: Project,
-                            artifact: String,
-                            selected: TagMod,
-                            handlers: TagMod = EmptyVdom,
-                            remove: TagMod = EmptyVdom,
-                            options: TagMod = EmptyVdom) = {
-            import project._
+    def renderProject(project: Project,
+                      artifact: String,
+                      selected: TagMod,
+                      handlers: TagMod = EmptyVdom,
+                      remove: TagMod = EmptyVdom,
+                      options: TagMod = EmptyVdom) = {
+      import project._
 
-            val common = TagMod(title := organization, clazz := "logo")
-            val artifact2 =
-              artifact
-                .replaceAllLiterally(project.repository + "-", "")
-                .replaceAllLiterally(project.repository, "")
+      val common = TagMod(title := organization, cls := "logo")
+      val artifact2 =
+        artifact
+          .replaceAllLiterally(project.repository + "-", "")
+          .replaceAllLiterally(project.repository, "")
 
-            val label =
-              if (project.repository != artifact)
-                s"${project.repository} / $artifact2"
-              else artifact
+      val label =
+        if (project.repository != artifact)
+          s"${project.repository} / $artifact2"
+        else artifact
 
-            val scaladexLink =
-              s"https://scaladex.scala-lang.org/$organization/$repository/$artifact"
+      val scaladexLink =
+        s"https://scaladex.scala-lang.org/$organization/$repository/$artifact"
 
-            div(clazz := "result", selected, handlers)(
-              a(clazz := "scaladexresult",
-                href := scaladexLink,
-                target := "_blank")(
-                i(clazz := "fa fa-external-link")
-              ),
-              remove,
-              span(
-                logo
-                  .map(
-                    url =>
-                      img(src := url + "&s=40",
-                          common,
-                          alt := s"$organization logo or avatar")
-                  )
-                  .getOrElse(
-                    img(src := "/assets/public/placeholder.svg",
-                        common,
-                        alt := s"placeholder for $organization")
-                  ),
-                span(clazz := "artifact")(label)
-              ),
-              options
+      div(cls := "result", selected, handlers)(
+        a(cls := "scaladexresult", href := scaladexLink, target := "_blank")(
+          i(cls := "fa fa-external-link")
+        ),
+        remove,
+        span(
+          logo
+            .map(
+              url =>
+                img(src := url + "&s=40",
+                    common,
+                    alt := s"$organization logo or avatar")
             )
-          }
-
-          def renderOptions(selected: Selected) = {
-            div(clazz := "select-wrapper")(
-              select(value := selected.release.version,
-                     onChange ==> scope.backend.updateVersion(selected))(
-                selected.options.versions.reverse
-                  .map(v => option(value := v)(v))
-                  .toTagMod
-              )
-            )
-          }
-
-          val added = {
-            val hideAdded =
-              if (searchState.selecteds.isEmpty) display.none
-              else EmptyVdom
-
-            div(clazz := "added", hideAdded)(
-              searchState.selecteds.toList.sorted
-                .map(
-                  selected =>
-                    renderProject(
-                      selected.project,
-                      selected.release.artifact,
-                      i(clazz := "fa fa-close")(
-                        onClick --> scope.backend.removeSelected(selected),
-                        clazz := "remove"
-                      ),
-                      options = renderOptions(selected)
-                  )
-                )
-                .toTagMod
-            )
-          }
-
-          val displayResults =
-            if (searchState.search.isEmpty) display.none
-            else display.block
-
-          val displayClose =
-            if (searchState.search.isEmpty) display.none
-            else display.`inline-block`
-
-          div(clazz := "search", clazz := "library")(
-            added,
-            div(clazz := "search-input")(
-              input.search.ref(searchInputRef = _)(
-                clazz := "search-query",
-                placeholder := "Search for 'cats'",
-                value := searchState.query,
-                onChange ==> scope.backend.setQuery,
-                onKeyDown ==> scope.backend.keyDown
-              ),
-              div(clazz := "close", displayClose)(
-                i(clazz := "fa fa-close")(
-                  onClick --> scope.backend.resetQuery
-                )
-              )
+            .getOrElse(
+              img(src := "/assets/public/placeholder.svg",
+                  common,
+                  alt := s"placeholder for $organization")
             ),
-            div.ref(projectListRef = _)(clazz := "results", displayResults)(
-              searchState.search.zipWithIndex.toList.map {
-                case ((project, artifact), index) => {
-                  renderProject(
-                    project,
-                    artifact,
-                    selected = selectedIndex(index, searchState.selectedIndex),
-                    handlers = TagMod(
-                      onClick --> scope.backend
-                        .addArtifact((project, artifact)),
-                      onMouseOver --> scope.backend.selectIndex(index)
-                    )
-                  )
-                }
-              }.toTagMod
+          span(cls := "artifact")(label)
+        ),
+        options
+      )
+    }
+
+    def renderOptions(selected: Selected) = {
+      div(cls := "select-wrapper")(
+        select(value := selected.release.version,
+               onChange ==> scope.backend.updateVersion(selected))(
+          selected.options.versions.reverse
+            .map(v => option(value := v)(v))
+            .toTagMod
+        )
+      )
+    }
+
+    val added = {
+      val hideAdded =
+        if (searchState.selecteds.isEmpty) display.none
+        else EmptyVdom
+
+      div(cls := "added", hideAdded)(
+        searchState.selecteds.toList.sorted
+          .map(
+            selected =>
+              renderProject(
+                selected.project,
+                selected.release.artifact,
+                i(cls := "fa fa-close")(
+                  onClick --> scope.backend.removeSelected(selected),
+                  cls := "remove"
+                ),
+                options = renderOptions(selected)
             )
           )
-        }
-      }
-      .componentWillReceiveProps { v =>
-        val (next, _) = v.nextProps
+          .toTagMod
+      )
+    }
 
-        val resetQuery =
-          if (next.inputs.copy(code = "") == Inputs.default.copy(code = ""))
-            v.backend.resetQuery()
-          else Callback(())
+    val displayResults =
+      if (searchState.search.isEmpty) display.none
+      else display.block
 
-        resetQuery
-      }
+    val displayClose =
+      if (searchState.search.isEmpty) display.none
+      else display.`inline-block`
+
+    div(cls := "search", cls := "library")(
+      added,
+      div(cls := "search-input")(
+        input.search.ref(searchInputRef = _)(
+          cls := "search-query",
+          placeholder := "Search for 'cats'",
+          value := searchState.query,
+          onChange ==> scope.backend.setQuery,
+          onKeyDown ==> scope.backend.keyDown
+        ),
+        div(cls := "close", displayClose)(
+          i(cls := "fa fa-close")(
+            onClick --> scope.backend.resetQuery
+          )
+        )
+      ),
+      div.ref(projectListRef = _)(cls := "results", displayResults)(
+        searchState.search.zipWithIndex.toList.map {
+          case ((project, artifact), index) => {
+            renderProject(
+              project,
+              artifact,
+              selected = selectedIndex(index, searchState.selectedIndex),
+              handlers = TagMod(
+                onClick --> scope.backend
+                  .addArtifact((project, artifact)),
+                onMouseOver --> scope.backend.selectIndex(index)
+              )
+            )
+          }
+        }.toTagMod
+      )
+    )
+  }
+
+  private val component =
+    ScalaComponent
+      .builder[ScaladexSearch]("Scaladex Search")
+      .initialStateFromProps(SearchState.fromProps)
+      .backend(new ScaladexSearchBackend(_))
+      .renderPS(render)
       .componentDidMount(_ => Callback(searchInputRef.focus))
       .build
-
-  def apply(state: AppState, backend: AppBackend) = component((state, backend))
 }

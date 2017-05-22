@@ -2,67 +2,73 @@ package com.olegych.scastie
 package client
 package components
 
-import api.SnippetId
+import api.{SnippetId, User}
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+
+final case class SaveButton(isSnippetSaved: Boolean,
+                            user: Option[User],
+                            snippetId: Option[SnippetId],
+                            amend: SnippetId => Callback,
+                            update: SnippetId => Callback,
+                            save: Callback,
+                            fork: SnippetId => Callback) {
+  @inline def render: VdomElement = SaveButton.component(this)
+}
 
 object SaveButton {
+  def render(props: SaveButton): VdomElement = {
+    import View.ctrl
 
-  def apply(state: AppState,
-            backend: AppBackend,
-            snippetId: Option[SnippetId]) =
-    component((state, backend, snippetId))
+    val disabledIfSaved = (cls := "disabled").when(props.isSnippetSaved)
+
+    def userFunctions(sid: SnippetId): TagMod =
+      TagMod(
+        li(title := "Amend this code snippet",
+           cls := "btn",
+           disabledIfSaved,
+           onClick --> props.amend(sid))(
+          i(cls := "fa fa-pencil-square-o"),
+          span("Amend")
+        ),
+        li(title := s"Save as a new updated version ($ctrl + S)",
+           cls := "btn",
+           disabledIfSaved,
+           onClick --> props.update(sid))(
+          i(cls := "fa fa-download"),
+          span("Update")
+        )
+      ).when(sid.isOwnedBy(props.user))
+
+    props.snippetId match {
+      case None =>
+        li(title := s"Save ($ctrl + S)",
+           role := "button",
+           cls := "btn",
+           disabledIfSaved,
+           onClick --> props.save)(
+          i(cls := "fa fa-download"),
+          span("Save")
+        )
+      case Some(sid) =>
+        li(
+          ul(cls := "save-buttons")(
+            userFunctions(sid),
+            li(title := "Save as a new forked code snippet",
+               cls := "btn",
+               disabledIfSaved,
+               onClick --> props.fork(sid))(
+              i(cls := "fa fa-code-fork"),
+              span("Fork")
+            )
+          )
+        )
+    }
+  }
 
   private val component =
     ScalaComponent
-      .builder[(AppState, AppBackend, Option[SnippetId])]("SaveButton")
-      .render_P {
-        case (state, backend, snippetId) =>
-          val disabledIfSaved =
-            if (state.isSnippetSaved) "disabled"
-            else ""
-
-          import View.ctrl
-
-          def userFunctions(sid: SnippetId) =
-            if (sid.isOwnedBy(state.user)) {
-              TagMod(
-                li(title := "Amend this code snippet",
-                   clazz := s"btn $disabledIfSaved",
-                   onClick --> backend.amend(sid))(
-                  i(clazz := "fa fa-pencil-square-o"),
-                  span("Amend")
-                ),
-                li(title := s"Save as a new updated version ($ctrl + S)",
-                   clazz := s"btn $disabledIfSaved",
-                   onClick --> backend.update(sid))(
-                  i(clazz := "fa fa-download"),
-                  span("Update")
-                )
-              )
-            } else EmptyVdom
-
-          snippetId match {
-            case None =>
-              li(title := s"Save ($ctrl + S)",
-                 role := "button",
-                 clazz := s"btn $disabledIfSaved",
-                 onClick --> backend.save)(
-                i(clazz := "fa fa-download"),
-                span("Save")
-              )
-            case Some(sid) =>
-              ul(clazz := "save-buttons")(
-                userFunctions(sid),
-                li(title := "Save as a new forked code snippet",
-                   clazz := s"btn $disabledIfSaved",
-                   onClick --> backend.fork(sid))(
-                  i(clazz := "fa fa-code-fork"),
-                  span("Fork")
-                )
-              )
-          }
-      }
+      .builder[SaveButton]("SaveButton")
+      .render_P(render)
       .build
 }

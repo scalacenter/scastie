@@ -1,17 +1,28 @@
 package com.olegych.scastie
 package client
 
+import components.Scastie
+
 import api._
-import japgolly.scalajs.react._
-import autowire._
-import japgolly.scalajs.react.extra.StateSnapshot
+import japgolly.scalajs.react._, vdom.all._, extra.StateSnapshot, component.Scala.BackendScope
+
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
-import org.scalajs.dom._
+
+import autowire._
 import upickle.default.{read => uread}
+
+import org.scalajs.dom._
+
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
 
-class AppBackend(scope: BackendScope[AppProps, AppState]) {
+class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
+  scope.props.map(_.router)
+  scope.props.map(_.snippetId)
+  scope.props.map(_.oldSnippetId)
+  scope.props.map(_.embedded)
+  scope.props.map(_.targetType)
+
   Global.subsribe(scope)
 
   def goHome: Callback = {
@@ -173,8 +184,12 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
   def closeWelcomeModal: Callback = scope.modState(_.closeWelcomeModal)
 
   def closeShareModal: Callback = scope.modState(_.closeShareModal)
+
   def openShareModal(snippetId: Option[SnippetId]): Callback =
     scope.modState(_.openShareModal(snippetId))
+
+  def openShareModal(snippetId: SnippetId): Callback =
+    scope.modState(_.openShareModal(Some(snippetId)))
 
   def forceDesktop: Callback = scope.modState(_.forceDesktop)
 
@@ -341,7 +356,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
 
   def loadSnippetBase(
       fetchSnippet: => Future[Option[FetchResult]],
-      afterLoading: AppState => AppState = identity
+      afterLoading: ScastieState => ScastieState = identity
   ): Callback = {
     scope.state.flatMap(
       state =>
@@ -390,7 +405,7 @@ class AppBackend(scope: BackendScope[AppProps, AppState]) {
       )
       .getOrElse(Callback.empty)
 
-  def start(props: AppProps): Callback = {
+  def start(props: Scastie): Callback = {
     def loadUser: Callback =
       Callback.future(
         ApiClient[AutowireApi]

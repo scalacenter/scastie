@@ -4,56 +4,58 @@ package components
 
 import org.scalajs.dom.raw.HTMLPreElement
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+
+final case class Console(isOpen: Boolean,
+                         close: Callback,
+                         open: Callback,
+                         content: String) {
+  @inline def render: VdomElement = Console.component(this)
+}
 
 object Console {
 
-  def apply(state: AppState, backend: AppBackend) = component((state, backend))
-
   private var consoleElement: HTMLPreElement = _
+
+  def render(props: Console): VdomElement = {
+    val (displayConsole, displaySwitcher) =
+      if (props.isOpen) (display.block, display.none)
+      else (display.none, display.block)
+
+    val consoleCss =
+      if (props.isOpen)
+        TagMod(cls := "console-open")
+      else EmptyVdom
+
+    div(cls := "console-container", consoleCss)(
+      div(cls := "console", displayConsole)(
+        div(cls := "handler"),
+        div(cls := "switcher-hide",
+            displayConsole,
+            role := "button",
+            onClick --> props.close)(
+          i(cls := "fa fa-terminal"),
+          "Console",
+          i(cls := "fa fa-caret-down")
+        ),
+        pre.ref(consoleElement = _)(cls := "output-console")(
+          props.content
+        )
+      ),
+      div(cls := "switcher-show", role := "button", onClick --> props.open)(
+        displaySwitcher,
+        i(cls := "fa fa-terminal"),
+        "Console",
+        i(cls := "fa fa-caret-up")
+      )
+    )
+  }
 
   private val component =
     ScalaComponent
-      .builder[(AppState, AppBackend)]("Console")
+      .builder[Console]("Console")
       .initialState(ConsoleState.default)
-      .render_P {
-        case (state, backend) =>
-          val (displayConsole, displaySwitcher) =
-            if (state.consoleState.consoleIsOpen) (display.block, display.none)
-            else (display.none, display.block)
-
-          val consoleCss =
-            if (state.consoleState.consoleIsOpen)
-              TagMod(clazz := "console-open")
-            else EmptyVdom
-
-          div(clazz := "console-container", consoleCss)(
-            div(clazz := "console", displayConsole)(
-              div(clazz := "handler"),
-              div(clazz := "switcher-hide",
-                  displayConsole,
-                  role := "button",
-                  onClick --> backend.closeConsole)(
-                i(clazz := "fa fa-terminal"),
-                "Console",
-                i(clazz := "fa fa-caret-down")
-              ),
-              pre.ref(consoleElement = _)(clazz := "output-console")(
-                state.outputs.console
-              )
-            ),
-            div(clazz := "switcher-show",
-                role := "button",
-                onClick --> backend.openConsole)(
-              displaySwitcher,
-              i(clazz := "fa fa-terminal"),
-              "Console",
-              i(clazz := "fa fa-caret-up")
-            )
-          )
-
-      }
+      .render_P(render)
       .componentDidUpdate(
         scope =>
           Callback {

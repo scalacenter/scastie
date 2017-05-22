@@ -9,10 +9,10 @@ import upickle.default.{write => uwrite, read => uread}
 
 object LocalStorage {
   private val stateKey = "state"
-  def save(state: AppState): Unit =
+  def save(state: ScastieState): Unit =
     localStorage.setItem(stateKey, uwrite(state))
 
-  def load: Option[AppState] =
+  def load: Option[ScastieState] =
     Option(localStorage.getItem(stateKey))
-      .flatMap(raw => Try(uread[AppState](raw)).toOption)
+      .flatMap(raw => Try(uread[ScastieState](raw)).toOption)
 }

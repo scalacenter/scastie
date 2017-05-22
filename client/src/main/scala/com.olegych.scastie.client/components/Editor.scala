@@ -2,10 +2,9 @@ package com.olegych.scastie
 package client
 package components
 
-import api.{Instrumentation, Value, Html, AttachedDom}
+import api.{Instrumentation, Value, Html, AttachedDom, RuntimeError, Problem}
 
 import japgolly.scalajs.react._, vdom.all._
-// import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
 
 import org.scalajs.dom.raw.{
   HTMLTextAreaElement,
@@ -27,9 +26,26 @@ import codemirror.{
 
 import scala.scalajs._
 
+final case class Editor(isDarkTheme: Boolean,
+                        code: String,
+                        attachedDoms: AttachedDoms,
+                        instrumentations: Set[Instrumentation],
+                        compilationInfos: Set[Problem],
+                        runtimeError: Option[RuntimeError],
+                        run: Callback,
+                        saveOrUpdate: Callback,
+                        clear: Callback,
+                        toggleConsole: Callback,
+                        toggleWorksheetMode: Callback,
+                        toggleTheme: Callback,
+                        formatCode: Callback,
+                        codeChange: String => Callback) {
+  @inline def render: VdomElement = Editor.component(this)
+}
+
 object Editor {
 
-  CodeMirror.keyMap.sublime.delete("Ctrl-L")
+  // CodeMirror.keyMap.sublime.delete("Ctrl-L")
 
   private var codemirrorTextarea: HTMLTextAreaElement = _
 
@@ -90,70 +106,67 @@ object Editor {
       runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map()
   )
 
-  private[Editor] class Backend(
-      scope: BackendScope[(AppState, AppBackend), EditorState]
+  private[Editor] class EditorBackend(
+      scope: BackendScope[Editor, EditorState]
   ) {
 
-    def codeChangeF(event: ReactEventFromInput): Callback = {
-      scope.props.flatMap {
-        case (_, backend) => backend.codeChange(event.target.value)
-      }
-    }
+    def codeChangeF(event: ReactEventFromInput): Callback =
+      scope.props.flatMap(
+        _.codeChange(event.target.value)
+      )
 
-    def stop() = {
+    def stop(): Callback = {
       scope.modState { s =>
         s.editor.map(_.toTextArea())
         s.copy(editor = None)
       }
     }
-    def start() = {
-      scope.props.flatMap {
-        case (props, backend) =>
-          val editor =
-            codemirror.CodeMirror.fromTextArea(codemirrorTextarea,
-                                               options(props.isDarkTheme))
 
-          editor.onFocus(_.refresh())
+    def start(): Callback = {
+      scope.props.flatMap { props =>
+        val editor =
+          codemirror.CodeMirror.fromTextArea(codemirrorTextarea,
+                                             options(props.isDarkTheme))
 
-          editor.onChange(
-            (_, _) => backend.codeChange(editor.getDoc().getValue()).runNow
+        editor.onFocus(_.refresh())
+
+        editor.onChange(
+          (_, _) => props.codeChange(editor.getDoc().getValue()).runNow
+        )
+
+        CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
+          props.run.runNow()
+        }
+
+        CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
+          props.saveOrUpdate.runNow()
+        }
+
+        CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
+          props.clear.runNow()
+        }
+
+        CodeMirror.commands.toggleConsole = (editor: CodeMirrorEditor2) => {
+          props.toggleConsole.runNow()
+        }
+
+        CodeMirror.commands.toggleWorksheet = (editor: CodeMirrorEditor2) => {
+          props.toggleWorksheetMode.runNow()
+        }
+
+        CodeMirror.commands.toggleSolarized = (editor: CodeMirrorEditor2) => {
+          props.toggleTheme.runNow()
+        }
+
+        CodeMirror.commands.formatCode = (editor: CodeMirrorEditor2) => {
+          props.formatCode.runNow()
+        }
+
+        scope.modState(_.copy(editor = Some(editor))) >>
+          scope.state.flatMap(
+            state =>
+              runDelta(editor, (f => scope.modState(f)), state, None, props)
           )
-
-          CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
-            backend.run.runNow()
-          }
-
-          CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
-            backend.saveOrUpdate.runNow()
-          }
-
-          CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
-            backend.clear.runNow()
-          }
-
-          CodeMirror.commands.toggleConsole = (editor: CodeMirrorEditor2) => {
-            backend.toggleConsole.runNow()
-          }
-
-          CodeMirror.commands.toggleWorksheet =
-            (editor: CodeMirrorEditor2) => {
-              backend.toggleWorksheetMode.runNow()
-            }
-
-          CodeMirror.commands.toggleSolarized =
-            (editor: CodeMirrorEditor2) => {
-              backend.toggleTheme.runNow()
-            }
-
-          CodeMirror.commands.formatCode = (editor: CodeMirrorEditor2) => {
-            backend.formatCode.runNow()
-          }
-
-          scope.modState(_.copy(editor = Some(editor))) >>
-            scope.state.flatMap(
-              state =>
-                runDelta(editor, (f => scope.modState(f)), state, None, props)
-            )
       }
     }
   }
@@ -168,8 +181,8 @@ object Editor {
   private def runDelta(editor: TextAreaEditor,
                        modState: (EditorState => EditorState) => Callback,
                        state: EditorState,
-                       current: Option[AppState],
-                       next: AppState): Callback = {
+                       current: Option[Editor],
+                       next: Editor): Callback = {
 
     def setTheme() = {
       if (current.map(_.isDarkTheme) != Some(next.isDarkTheme)) {
@@ -182,10 +195,10 @@ object Editor {
     }
 
     def setCode() = {
-      if (current.map(_.inputs.code) != Some(next.inputs.code)) {
+      if (current.map(_.code) != Some(next.code)) {
         val doc = editor.getDoc()
-        if (doc.getValue() != next.inputs.code) {
-          setCode2(editor, next.inputs.code)
+        if (doc.getValue() != next.code) {
+          setCode2(editor, next.code)
         }
       }
     }
@@ -274,7 +287,7 @@ object Editor {
       }
 
       setAnnotations[api.Instrumentation](
-        _.outputs.instrumentations, {
+        _.instrumentations, {
           case instrumentation @ Instrumentation(api.Position(start, end),
                                                  Value(value, tpe)) => {
             val startPos = doc.posFromIndex(start)
@@ -334,7 +347,7 @@ object Editor {
     def setProblemAnnotations() = {
       val doc = editor.getDoc()
       setAnnotations[api.Problem](
-        _.outputs.compilationInfos,
+        _.compilationInfos,
         info => {
           val line = info.line.getOrElse(0)
 
@@ -378,7 +391,7 @@ object Editor {
     def setRuntimeError(): Callback = {
       val doc = editor.getDoc()
       setAnnotations[api.RuntimeError](
-        _.outputs.runtimeError.toSet,
+        _.runtimeError.toSet,
         runtimeError => {
           val line = runtimeError.line.getOrElse(0)
 
@@ -411,7 +424,7 @@ object Editor {
     }
 
     def setAnnotations[T](
-        fromState: AppState => Set[T],
+        fromState: Editor => Set[T],
         annotate: T => Annotation,
         fromEditorState: EditorState => Map[T, Annotation],
         updateEditorState: (
@@ -455,21 +468,21 @@ object Editor {
 
   private val component =
     ScalaComponent
-      .builder[(AppState, AppBackend)]("Editor")
+      .builder[Editor]("Editor")
       .initialState(EditorState())
-      .backend(new Backend(_))
+      .backend(new EditorBackend(_))
       .renderPS {
-        case (scope, (props, backend), state) =>
+        case (scope, props, _) =>
           textarea.ref(codemirrorTextarea = _)(
             onChange ==> scope.backend.codeChangeF,
-            value := props.inputs.code,
+            value := props.code,
             name := "CodeArea",
             autoComplete := "off"
           )
       }
       .componentWillReceiveProps { scope =>
-        val (current, _) = scope.currentProps
-        val (next, _) = scope.nextProps
+        val current = scope.currentProps
+        val next = scope.nextProps
         val state = scope.state
 
         state.editor
@@ -486,7 +499,4 @@ object Editor {
       .componentDidMount(_.backend.start())
       .componentWillUnmount(_.backend.stop())
       .build
-
-  def apply(state: AppState, backend: AppBackend) =
-    component((state, backend))
 }

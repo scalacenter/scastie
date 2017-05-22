@@ -3,12 +3,32 @@ package client
 package components
 
 import api._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+
+import japgolly.scalajs.react._, vdom.all._
+
+final case class BuildSettings(
+    setTarget: ScalaTarget => Callback,
+    closeResetModal: Callback,
+    resetBuild: Callback,
+    openResetModal: Callback,
+    sbtConfigChange: String => Callback,
+    removeScalaDependency: ScalaDependency => Callback,
+    updateDependencyVersion: (ScalaDependency, String) => Callback,
+    addScalaDependency: (ScalaDependency, Project) => Callback,
+    librariesFrom: Map[ScalaDependency, Project],
+    isDarkTheme: Boolean,
+    isBuildDefault: Boolean,
+    isResetModalClosed: Boolean,
+    scalaTarget: ScalaTarget,
+    sbtConfigExtra: String
+) {
+
+  @inline def render: VdomElement = BuildSettings.component(this)
+}
 
 object BuildSettings {
 
-  def renderTarget(scalaTarget: ScalaTarget, backend: AppBackend) = {
+  def renderTarget(props: BuildSettings) = {
 
     val targetTypes: List[ScalaTargetType] = List(
       ScalaTargetType.JVM,
@@ -29,11 +49,10 @@ object BuildSettings {
     }
 
     def selected(targetType: ScalaTargetType) =
-      if (targetType == scalaTarget.targetType) TagMod(`checked` := true)
-      else TagMod(`checked` := false)
+      TagMod(`checked` := targetType == props.scalaTarget.targetType)
 
     div(
-      ul(clazz := "target")(
+      ul(cls := "target")(
         targetTypes.map { targetType =>
           val targetLabel = labelFor(targetType)
           li(
@@ -42,12 +61,12 @@ object BuildSettings {
               id := targetLabel,
               value := targetLabel,
               name := "target",
-              onChange --> backend.setTarget(targetType.defaultScalaTarget),
+              onChange --> props.setTarget(targetType.defaultScalaTarget),
               selected(targetType)
             ),
             label(`for` := targetLabel,
                   role := "button",
-                  clazz := "radio",
+                  cls := "radio",
                   targetLabel)
           )
         }.toTagMod
@@ -55,7 +74,7 @@ object BuildSettings {
     )
   }
 
-  def renderVersions(target: ScalaTarget, backend: AppBackend) = {
+  def renderVersions(props: BuildSettings) = {
     val suggestedVersions = List(
       // "2.13.0-M1",
       "2.12.2",
@@ -63,90 +82,23 @@ object BuildSettings {
       "2.10.6"
     )
 
-    val allVersions = List(
-      "2.13.0-M1",
-      "2.12.2",
-      "2.12.1",
-      "2.12.0",
-      "2.12.0-RC2",
-      "2.12.0-RC1",
-      "2.12.0-M5",
-      "2.12.0-M4",
-      "2.12.0-M3",
-      "2.12.0-M2",
-      "2.12.0-M1",
-      "2.11.11",
-      "2.11.8",
-      "2.11.6",
-      "2.11.5",
-      "2.11.4",
-      "2.11.3",
-      "2.11.2",
-      "2.11.1",
-      "2.11.0",
-      "2.11.0-RC4",
-      "2.11.0-RC3",
-      "2.11.0-RC1",
-      "2.11.0-M8",
-      "2.11.0-M7",
-      "2.11.0-M6",
-      "2.11.0-M5",
-      "2.11.0-M3",
-      "2.10.6",
-      "2.10.5",
-      "2.10.4-RC3",
-      "2.10.4-RC2",
-      "2.10.3",
-      "2.10.3-RC3",
-      "2.10.3-RC2",
-      "2.10.3-RC1",
-      "2.10.2",
-      "2.10.2-RC2",
-      "2.10.2-RC1",
-      "2.10.1",
-      "2.10.1-RC3",
-      "2.10.1-RC1",
-      "2.10.0",
-      "2.10.0-RC5",
-      "2.10.0-RC4",
-      "2.10.0-RC3",
-      "2.10.0-RC2",
-      "2.10.0-RC1",
-      "2.10.0-M7",
-      "2.10.0-M6",
-      "2.10.0-M5",
-      "2.10.0-M4",
-      "2.10.0-M2",
-      "2.10.0-M1",
-      "2.9.3",
-      "2.9.3-RC2",
-      "2.9.3-RC1",
-      "2.9.2",
-      "2.9.2-RC3",
-      "2.9.2-RC2",
-      "2.9.1-1-RC1",
-      "2.9.1-1",
-      "2.9.0"
-    )
-
     def setScalaVersion(
-        targetApply: String => ScalaTarget
+        targetFun: String => ScalaTarget
     )(event: ReactEventFromInput): Callback =
-      backend.setTarget(targetApply(event.target.value))
+      props.setTarget(targetFun(event.target.value))
 
     val notSupported = div("Not supported")
 
     def versionSelector(scalaVersion: String,
-                        targetApply: String => ScalaTarget) = {
+                        targetFun: String => ScalaTarget) = {
       def handler(scalaVersion: String) =
-        TagMod(onChange --> backend.setTarget(targetApply(scalaVersion)))
+        TagMod(onChange --> props.setTarget(targetFun(scalaVersion)))
 
       def selected(version: String) =
-        if (targetApply(version) == target) TagMod(`checked` := true)
-        else TagMod(`checked` := false)
+        TagMod(`checked` := targetFun(version) == props.scalaTarget)
 
       TagMod(
-        ul(clazz := "suggestedVersions")(
+        ul(cls := "suggestedVersions")(
           suggestedVersions.map { suggestedVersion =>
             li(
               input(`type` := "radio",
@@ -156,7 +108,7 @@ object BuildSettings {
                     handler(suggestedVersion),
                     selected(suggestedVersion)),
               label(`for` := s"scala-$suggestedVersion",
-                    clazz := "radio",
+                    cls := "radio",
                     role := "button",
                     suggestedVersion)
             )
@@ -168,11 +120,13 @@ object BuildSettings {
                   name := "scalaV",
                   handler(scalaVersion)),
             label(
-              div(clazz := "select-wrapper")(
+              div(cls := "select-wrapper")(
                 select(name := "scalaVersion",
                        value := scalaVersion.toString,
-                       onChange ==> setScalaVersion(targetApply))(
-                  allVersions.map(version => option(version)).toTagMod
+                       onChange ==> setScalaVersion(targetFun))(
+                  ScalaTarget.allVersions
+                    .map(version => option(version))
+                    .toTagMod
                 )
               )
             )
@@ -182,7 +136,7 @@ object BuildSettings {
     }
 
     val versionSelectors =
-      target match {
+      props.scalaTarget match {
         case ScalaTarget.Jvm(scalaVersion) =>
           versionSelector(scalaVersion, ScalaTarget.Jvm.apply)
 
@@ -202,63 +156,64 @@ object BuildSettings {
     versionSelectors
   }
 
+  private def render(props: BuildSettings): VdomElement = {
+    val theme =
+      if (props.isDarkTheme) "dark"
+      else "light"
+
+    val resetButton =
+      TagMod(
+        PrompModal(
+          modalText = "Reset Build",
+          isClosed = props.isResetModalClosed,
+          close = props.closeResetModal,
+          actionText = "Are you sure you want to reset the build ?",
+          actionLabel = "Reset",
+          action = props.resetBuild
+        ).render,
+        div(title := "Reset your configuration",
+            onClick --> props.openResetModal,
+            role := "button",
+            cls := "btn")(
+          "Reset"
+        )
+      ).when(!props.isBuildDefault)
+
+    div(cls := "build-settings-container")(
+      resetButton,
+      h2(
+        span("Target")
+      ),
+      renderTarget(props),
+      h2(
+        span("Scala Version")
+      ),
+      renderVersions(props),
+      h2(
+        span("Libraries")
+      ),
+      // ScaladexSearch(props),
+      h2(
+        span("Sbt Configuration")
+      ),
+      pre(cls := "configuration")(
+        CodeMirrorEditor(
+          CodeMirrorEditor.Settings(
+            value = props.sbtConfigExtra,
+            theme = s"solarized $theme",
+            readOnly = false
+          ),
+          CodeMirrorEditor.Handler(
+            updatedSettings => props.sbtConfigChange(updatedSettings)
+          )
+        )
+      )
+    )
+  }
+
   private val component =
     ScalaComponent
-      .builder[(AppState, AppBackend)]("BuildSettings")
-      .render_P {
-        case (state, backend) =>
-          val theme = if (state.isDarkTheme) "dark" else "light"
-          val resetButton =
-            if (state.inputs.copy(code = "") != Inputs.default.copy(code = "")) {
-              TagMod(
-                PrompModal(
-                  PrompModal.Props(
-                    modalText = "Reset Build",
-                    isClosed = state.modalState.isResetModalClosed,
-                    close = backend.closeResetModal,
-                    actionText = "Are you sure you want to reset the build ?",
-                    actionLabel = "Reset",
-                    action = backend.resetBuild
-                  )
-                ),
-                div(title := "Reset your configuration",
-                    onClick --> backend.openResetModal,
-                    role := "button",
-                    clazz := "btn")(
-                  "Reset"
-                )
-              )
-            } else EmptyVdom
-
-          div(clazz := "build-settings-container")(
-            resetButton,
-            h2(
-              span("Target")
-            ),
-            renderTarget(state.inputs.target, backend),
-            h2(
-              span("Scala Version")
-            ),
-            renderVersions(state.inputs.target, backend),
-            h2(
-              span("Libraries")
-            ),
-            ScaladexSearch(state, backend),
-            h2(
-              span("Sbt Configuration")
-            ),
-            pre(clazz := "configuration")(
-              CodeMirrorEditor(
-                CodeMirrorEditor.Settings(value = state.inputs.sbtConfigExtra,
-                                          theme = s"solarized $theme",
-                                          readOnly = false),
-                CodeMirrorEditor.Handler(
-                  updatedSettings => backend.sbtConfigChange(updatedSettings)
-                )
-              )
-            )
-          )
-      }
+      .builder[BuildSettings]("BuildSettings")
+      .render_P(render)
       .build
-  def apply(state: AppState, backend: AppBackend) = component((state, backend))
 }

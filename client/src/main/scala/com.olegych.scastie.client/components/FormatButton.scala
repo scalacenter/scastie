@@ -2,29 +2,28 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+
+final case class FormatButton(inputsHasChanged: Boolean, formatCode: Callback) {
+  @inline def render: VdomElement = FormatButton.component(this)
+}
 
 object FormatButton {
 
-  def apply(state: AppState, backend: AppBackend) = component((state, backend))
+  private def render(props: FormatButton): VdomElement = {
+    li(title := "Format Code (F6)",
+       role := "button",
+       (cls := "disabled").when(!props.inputsHasChanged),
+       cls := "btn",
+       onClick --> props.formatCode)(
+      i(cls := "fa fa-align-left"),
+      span("Format")
+    )
+  }
 
   private val component =
     ScalaComponent
-      .builder[(AppState, AppBackend)]("FormatButton")
-      .render_P {
-        case (state, backend) =>
-          val disabledIfSameInputs =
-            if (!state.inputsHasChanged) "disabled"
-            else ""
-
-          li(title := "Format Code (F6)",
-             role := "button",
-             clazz := s"btn $disabledIfSameInputs",
-             onClick --> backend.formatCode)(
-            i(clazz := "fa fa-align-left"),
-            span("Format")
-          )
-      }
+      .builder[FormatButton]("FormatButton")
+      .render_P(render)
       .build
 }

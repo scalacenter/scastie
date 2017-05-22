@@ -1,27 +1,29 @@
 package com.olegych.scastie.client
 package components
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+
+final case class ClearButton(clear: Callback) {
+  @inline def render: VdomElement = ClearButton.component(this)
+}
 
 object ClearButton {
 
-  def apply(state: AppState, backend: AppBackend) = component((state, backend))
+  private def render(props: ClearButton): VdomElement = {
+    li(title := "Clear Instrumentations (Esc)",
+       role := "button",
+       cls := "btn",
+       onClick --> props.clear)(
+      div(
+        i(cls := "fa fa-eraser"),
+        span("Clear")
+      )
+    )
+  }
 
   private val component =
     ScalaComponent
-      .builder[(AppState, AppBackend)]("ClearButton")
-      .render_P {
-        case (state, backend) =>
-          li(title := "Clear Instrumentations (Esc)",
-             role := "button",
-             clazz := "btn",
-             onClick --> backend.clear)(
-            div(
-              i(clazz := "fa fa-eraser"),
-              span("Clear")
-            )
-          )
-      }
+      .builder[ClearButton]("ClearButton")
+      .render_P(render)
       .build
 }

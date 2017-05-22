@@ -66,24 +66,23 @@ object ClientMain extends JSApp {
 
     nodes.foreach {
       case node: dom.raw.HTMLElement =>
-        val container = dom.document.createElement("div")
+        val container = dom.document
+          .createElement("div")
+          .asInstanceOf[dom.raw.HTMLDivElement]
+        container.className = "root"
 
         val embeddedOptions0 =
           if (node.textContent.isEmpty || embeddedOptions.hasCode)
             embeddedOptions
           else embeddedOptions.setCode(node.textContent)
 
-        App(
-          AppProps(
-            router = None,
-            snippetId = None,
-            oldSnippetId = None,
-            embedded = Some(embeddedOptions0),
-            targetType = None
-          )
-        ).renderIntoDOM(
-          container
-        )
+        Scastie(
+          router = None,
+          snippetId = None,
+          oldSnippetId = None,
+          embedded = Some(embeddedOptions0),
+          targetType = None
+        ).render.renderIntoDOM(container)
 
         node.parentNode.insertBefore(container, node.nextSibling)
         node.style.display = "none"

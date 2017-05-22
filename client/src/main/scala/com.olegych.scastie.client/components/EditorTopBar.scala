@@ -2,37 +2,91 @@ package com.olegych.scastie
 package client
 package components
 
-import api.SnippetId
+import api.{SnippetId, User}
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all.{`class` => clazz, _}
+import japgolly.scalajs.react._, vdom.all._
+
+final case class EditorTopBar(amend: SnippetId => Callback,
+                              clear: Callback,
+                              closeNewSnippetModal: Callback,
+                              fork: SnippetId => Callback,
+                              formatCode: Callback,
+                              newSnippet: Callback,
+                              openNewSnippetModal: Callback,
+                              run: Callback,
+                              save: Callback,
+                              setView: View => Callback,
+                              toggleWorksheetMode: Callback,
+                              update: SnippetId => Callback,
+                              inputsHasChanged: Boolean,
+                              isNewSnippetModalClosed: Boolean,
+                              isRunning: Boolean,
+                              isSnippetSaved: Boolean,
+                              snippetId: Option[SnippetId],
+                              user: Option[User],
+                              view: View,
+                              worksheetMode: Boolean) {
+  @inline def render: VdomElement = EditorTopBar.component(this)
+}
 
 object EditorTopBar {
 
+  private def render(props: EditorTopBar): VdomElement = {
+    def isDisabled = (cls := "disabled").when(props.view != View.Editor)
+
+    val runButton = RunButton(
+      isRunning = props.isRunning,
+      run = props.run,
+      setView = props.setView
+    ).render
+
+    val newButton = NewButton(
+      isNewSnippetModalClosed = props.isNewSnippetModalClosed,
+      openNewSnippetModal = props.openNewSnippetModal,
+      closeNewSnippetModal = props.closeNewSnippetModal,
+      newSnippet = props.newSnippet
+    ).render
+
+    val formatButton = FormatButton(
+      inputsHasChanged = props.inputsHasChanged,
+      formatCode = props.formatCode
+    ).render
+
+    val clearButton = ClearButton(
+      clear = props.clear
+    ).render
+
+    val worksheetButton = WorksheetButton(
+      props.worksheetMode,
+      props.toggleWorksheetMode,
+      props.view
+    ).render
+
+    val saveButton = SaveButton(
+      isSnippetSaved = props.isSnippetSaved,
+      user = props.user,
+      snippetId = props.snippetId,
+      amend = props.amend,
+      update = props.update,
+      save = props.save,
+      fork = props.fork
+    ).render
+
+    nav(cls := "editor-topbar", isDisabled)(
+      ul(cls := "editor-buttons")(
+        runButton,
+        newButton,
+        formatButton,
+        clearButton,
+        worksheetButton,
+        saveButton
+      )
+    )
+  }
+
   private val component =
     ScalaComponent
-      .builder[(AppState, AppBackend, Option[SnippetId])]("EditorTopBar")
-      .render_P {
-        case (state, backend, snippetId) =>
-          def isDisabled =
-            if (state.view != View.Editor) TagMod(clazz := "disabled")
-            else EmptyVdom
-
-          nav(clazz := "editor-topbar", isDisabled)(
-            ul(clazz := "editor-buttons")(
-              RunButton(state, backend),
-              NewButton(state, backend),
-              FormatButton(state, backend),
-              ClearButton(state, backend),
-              WorksheetButton(state, backend),
-              SaveButton(state, backend, snippetId)
-            )
-          )
-      }
+      .builder[EditorTopBar]("EditorTopBar")
+      .render_P(render)
       .build
-
-  def apply(state: AppState,
-            backend: AppBackend,
-            snippetId: Option[SnippetId]) =
-    component((state, backend, snippetId))
 }
