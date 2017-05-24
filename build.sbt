@@ -6,16 +6,16 @@ import sbt.Keys._
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.22.6"
+  version := "0.22.8"
 )
 
 lazy val upickleVersion = "0.4.4"
 lazy val autowireVersion = "0.2.5"
-lazy val scalajsDomVersion = "0.9.1"
+lazy val scalajsDomVersion = "0.9.2"
 lazy val scalaTestVersion = "3.0.1"
-lazy val akkaHttpVersion = "10.0.3"
+lazy val akkaHttpVersion = "10.0.6"
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.4.16"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
 
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
@@ -80,8 +80,9 @@ lazy val baseSettings = Seq(
 
 lazy val loggingAndTest =
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.2.1",
+    "ch.qos.logback" % "logback-classic" % "1.2.2",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+    "com.getsentry.raven" % "raven-logback" % "8.0.3",
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   )
 
@@ -218,10 +219,10 @@ lazy val server = project
       .value,
     unmanagedResourceDirectories in Compile += (WebKeys.public in (client, Assets)).value,
     libraryDependencies ++= Seq(
-      "ch.megard" %% "akka-http-cors" % "0.1.11",
+      "ch.megard" %% "akka-http-cors" % "0.2.1",
       "com.softwaremill.akka-http-session" %% "core" % "0.4.0",
-      "de.heikoseeberger" %% "akka-sse" % "2.0.0",
-      "org.json4s" %% "json4s-native" % "3.5.0",
+      "de.heikoseeberger" %% "akka-sse" % "3.0.0",
+      "org.json4s" %% "json4s-native" % "3.5.2",
       akkaHttp,
       akka("remote"),
       akka("slf4j")
@@ -234,6 +235,7 @@ lazy val balancer = project
   .settings(baseSettings)
   .settings(loggingAndTest)
   .settings(
+    scalacOptions -= "-Xfatal-warnings", // scastie #210
     libraryDependencies ++= Seq(
       akka("remote"),
       akkaHttpCore
@@ -248,6 +250,7 @@ lazy val codemirror = project
     test := {},
     scalacOptions -= "-Ywarn-dead-code",
     jsDependencies ++= {
+      // latest: "5.26.0"
       def codemirrorD(path: String): JSModuleID =
         "org.webjars.bower" % "codemirror" % "5.18.2" % "compile" / s"$path.js" minified s"$path.js"
 
@@ -298,7 +301,11 @@ lazy val client = project
                        "ReactDOMServer",
                        "react-dom",
                        Test),
-      RuntimeDOM % Test
+      
+      RuntimeDOM % Test,
+
+      "org.webjars.bower" % "raven-js" % "3.11.0" / 
+        "dist/raven.js" minified "dist/raven.min.js"
     ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.0.0",
@@ -321,7 +328,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "1.7.0",
+      "org.scalameta" %% "scalameta" % "1.8.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

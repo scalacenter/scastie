@@ -7,17 +7,8 @@
       </encoder>
   </appender>
 
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-      <file>server.log</file>
-      <append>true</append>
-      <encoder>
-        <pattern>%date{ISO8601} %-5level %logger{36}:%line %X{sourceThread} - %msg%n</pattern>
-      </encoder>
-  </appender>
-
   <logger name="akka" level="INFO" />
   <root level="INFO">
       <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="FILE"/>
   </root>
 </configuration>
