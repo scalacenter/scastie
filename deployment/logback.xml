@@ -8,16 +8,23 @@
   </appender>
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-      <file>server.log</file>
+      <file>output.log</file>
       <append>true</append>
       <encoder>
         <pattern>%date{ISO8601} %-5level %logger{36}:%line %X{sourceThread} - %msg%n</pattern>
       </encoder>
   </appender>
 
+  <appender name="SENTRY" class="com.getsentry.raven.logback.SentryAppender">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>WARN</level>
+    </filter>
+  </appender>
+
   <logger name="akka" level="INFO" />
   <root level="INFO">
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="FILE"/>
+      <appender-ref ref="SENTRY"/>
   </root>
 </configuration>

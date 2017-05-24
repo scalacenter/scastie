@@ -12,10 +12,10 @@ import org.scalajs.dom.raw.HTMLScriptElement
 import scalajs.js.timers
 
 final case class Scastie(router: Option[RouterCtl[Page]],
-                             snippetId: Option[SnippetId],
-                             oldSnippetId: Option[Int],
-                             embedded: Option[EmbededOptions],
-                             targetType: Option[ScalaTargetType]) {
+                         snippetId: Option[SnippetId],
+                         oldSnippetId: Option[Int],
+                         embedded: Option[EmbededOptions],
+                         targetType: Option[ScalaTargetType]) {
 
   @inline def render = Scastie.component(this)
 

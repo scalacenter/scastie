@@ -4,7 +4,8 @@ package client
 import components.Scastie
 
 import api._
-import japgolly.scalajs.react._, vdom.all._, extra.StateSnapshot, component.Scala.BackendScope
+import japgolly.scalajs.react._, vdom.all._, extra.StateSnapshot,
+component.Scala.BackendScope
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 

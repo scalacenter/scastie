@@ -4,7 +4,7 @@ package client
 import api.{SnippetId, SnippetUserPart, ScalaTargetType}
 import components._
 
-import japgolly.scalajs.react._, vdom.all._, extra.router.
+import japgolly.scalajs.react._, vdom.all._, extra.router._
 
 object Routing {
   val config = RouterConfigDsl[Page].buildConfig { dsl =>

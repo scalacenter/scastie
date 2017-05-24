@@ -325,7 +325,8 @@ case class ScastieState(
       )
     )
 
-  def closeModals: ScastieState = copyAndSave(modalState = ModalState.allClosed)
+  def closeModals: ScastieState =
+    copyAndSave(modalState = ModalState.allClosed)
 
   def setRuntimeError(runtimeError: Option[RuntimeError]): ScastieState =
     if (runtimeError.isEmpty) this
