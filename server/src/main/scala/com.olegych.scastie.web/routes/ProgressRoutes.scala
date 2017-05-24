@@ -7,8 +7,8 @@ import SnippetIdDirectives._
 import api._
 import balancer._
 
-import de.heikoseeberger.akkasse.ServerSentEvent
-import de.heikoseeberger.akkasse.EventStreamMarshalling._
+import de.heikoseeberger.akkasse.scaladsl.model.ServerSentEvent
+import de.heikoseeberger.akkasse.scaladsl.marshalling.EventStreamMarshalling._
 
 import akka.util.Timeout
 import akka.NotUsed

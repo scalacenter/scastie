@@ -112,10 +112,12 @@ class Deployment(rootFolder: File,
     val serverScriptDir = Files.createTempDirectory("server")
     val serverScript = serverScriptDir.resolve("server.sh")
 
-    val applicationRootConfig = "application.conf"
     val productionConfigFileName = productionConfig.getFileName
     val logbackConfigFileName = logbackConfig.getFileName
     val serverZipFileName = serverZip.getFileName
+
+    val secretConfig = getSecretConfig()
+    val sentryDsn = getSentryDsn(secretConfig)
 
     val content =
       s"""|#!/usr/bin/env bash
@@ -129,7 +131,10 @@ class Deployment(rootFolder: File,
           |
           |nohup server/bin/server \\
           |  -Dconfig.file=/home/$userName/$applicationRootConfig \\
-          |  -Dlogger.file=/home/$userName/$logbackConfigFileName &>/dev/null &
+          |  -Dlogger.file=/home/$userName/$logbackConfigFileName \\
+          |  -Dsentry.dsn=$sentryDsn \\
+          |  -Dsentry.release=$version \\
+          |  &>/dev/null &
           |""".stripMargin
 
     Files.write(serverScript, content.getBytes)
@@ -137,18 +142,9 @@ class Deployment(rootFolder: File,
 
     logger.info("Deploy servers")
 
-    val scastieSecrets = "scastie-secrets"
-    val secretFolder = rootFolder / ".." / scastieSecrets
-
-    if (Files.exists(secretFolder.toPath)) {
-      Process("git pull origin master", secretFolder)
-    } else {
-      Process(s"git clone git@github.com:scalacenter/$scastieSecrets.git")
-    }
-
     Process("rm -rf server*.sh") ! logger
 
-    rsyncServer((secretFolder / applicationRootConfig).toPath)
+    rsyncServer(secretConfig)
     rsyncServer(serverZip)
     rsyncServer(serverScript)
     rsyncServer(productionConfig)
@@ -172,6 +168,8 @@ class Deployment(rootFolder: File,
 
     val dockerImagePath = s"$dockerNamespace/$dockerRepository:$version"
 
+    val sentryDsn = getSentryDsn(getSecretConfig())
+
     val sbtScriptContent =
       s"""|#!/usr/bin/env bash
           |
@@ -191,6 +189,8 @@ class Deployment(rootFolder: File,
           |    -e RUNNER_PRODUCTION=true \\
           |    -e RUNNER_PORT=$$i \\
           |    -e RUNNER_HOSTNAME=$runnersHostname \\
+          |    -e SENTRY_DSN=$sentryDsn \\
+          |    -e SENTRY_RELEASE=$version \\
           |    $dockerImagePath
           |done
           |""".stripMargin
@@ -217,6 +217,27 @@ class Deployment(rootFolder: File,
     rsyncServer(sbtScript)
     rsyncServer(proxyScript)
     Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
+  }
+
+  private val applicationRootConfig = "application.conf"
+
+  private def getSecretConfig(): Path = {
+    val scastieSecrets = "scastie-secrets"
+    val secretFolder = rootFolder / ".." / scastieSecrets
+
+    if (Files.exists(secretFolder.toPath)) {
+      Process("git pull origin master", secretFolder)
+    } else {
+      Process(s"git clone git@github.com:scalacenter/$scastieSecrets.git")
+    }
+
+    (secretFolder / applicationRootConfig).toPath
+  }
+
+  private def getSentryDsn(secretConfig: Path): String = {
+    val config = ConfigFactory.parseFile(secretConfig.toFile)
+    val scastieConfig = config.getConfig("com.olegych.scastie")
+    scastieConfig.getString("sentry.dsn")
   }
 
   private val userName = "scastie"

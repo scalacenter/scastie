@@ -18,22 +18,30 @@ class DebugRoutes(dispatchActor: ActorRef) {
   implicit val timeout = Timeout(1.seconds)
 
   val routes =
-    path("loadbalancer-debug")(
-      onSuccess(
-        (dispatchActor ? LoadBalancerStateRequest)
-          .mapTo[LoadBalancerStateResponse]
-      )(
-        state =>
-          complete(
-            serveStatic(
-              getResource("/public/views/loadbalancer.html").map(
-                _.replaceAllLiterally(
-                  "==STATE==",
-                  state.loadBalancer.debug
+    concat(
+      path("loadbalancer-debug")(
+        onSuccess(
+          (dispatchActor ? LoadBalancerStateRequest)
+            .mapTo[LoadBalancerStateResponse]
+        )(
+          state =>
+            complete(
+              serveStatic(
+                getResource("/public/views/loadbalancer.html").map(
+                  _.replaceAllLiterally(
+                    "==STATE==",
+                    state.loadBalancer.debug
+                  )
                 )
               )
-            )
+          )
         )
+      ),
+      path("exception-debug")(
+        complete {
+          throw new Exception("Boom")
+          "OK"
+        }
       )
     )
 }

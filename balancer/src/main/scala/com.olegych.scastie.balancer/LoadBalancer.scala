@@ -133,7 +133,11 @@ case class LoadBalancer[C: Ordering, S](
   def getRandomServer: Server[C, S] = random(servers)
 
   def add(task: Task[C]): (Server[C, S], LoadBalancer[C, S]) = {
-    assert(servers.size > 0, "All instances are down")
+    if(servers.size <= 0) {
+      val msg = "All instances are down, shutting down the server"
+      log.error(msg)
+      throw new Exception(msg)
+    }
 
     val updatedHistory = history.add(task.toRecord)
     lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
