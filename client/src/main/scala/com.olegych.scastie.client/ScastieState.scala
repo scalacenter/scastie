@@ -82,10 +82,6 @@ case class ScastieState(
                   inputs: Inputs = inputs,
                   outputs: Outputs = outputs): ScastieState = {
 
-    val snippetId0 =
-      if (inputsHasChanged) None
-      else snippetId
-
     val isScalaJsScriptLoaded0 =
       if (inputsHasChanged) false
       else isScalaJsScriptLoaded
@@ -105,7 +101,7 @@ case class ScastieState(
         isDesktopForced,
         consoleState,
         inputsHasChanged,
-        snippetId0,
+        snippetId,
         isSnippetSaved0,
         loadSnippet,
         loadScalaJsScript,

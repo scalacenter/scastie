@@ -41,15 +41,6 @@ object SaveButton {
       ).when(sid.isOwnedBy(props.user))
 
     props.snippetId match {
-      case None =>
-        li(title := s"Save ($ctrl + S)",
-           role := "button",
-           cls := "btn",
-           disabledIfSaved,
-           onClick --> props.save)(
-          i(cls := "fa fa-download"),
-          span("Save")
-        )
       case Some(sid) =>
         li(
           ul(cls := "save-buttons")(
@@ -62,6 +53,15 @@ object SaveButton {
               span("Fork")
             )
           )
+        )
+      case _ =>
+        li(title := s"Save ($ctrl + S)",
+           role := "button",
+           cls := "btn",
+           disabledIfSaved,
+           onClick --> props.save)(
+          i(cls := "fa fa-download"),
+          span("Save")
         )
     }
   }

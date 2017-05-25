@@ -13,7 +13,9 @@ final case class NewButton(isNewSnippetModalClosed: Boolean,
 
 object NewButton {
   def render(props: NewButton): VdomElement = {
-    li(title := "New code snippet",
+    import View.ctrl
+
+    li(title := s"New code snippet ($ctrl + M)",
        role := "button",
        onClick --> props.openNewSnippetModal,
        cls := "btn")(

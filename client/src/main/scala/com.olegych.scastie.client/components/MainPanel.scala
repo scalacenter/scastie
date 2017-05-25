@@ -58,6 +58,7 @@ object MainPanel {
         runtimeError = state.outputs.runtimeError,
         run = backend.run,
         saveOrUpdate = backend.saveOrUpdate,
+        newSnippet = backend.newSnippet,
         clear = backend.clear,
         toggleConsole = backend.toggleConsole,
         toggleWorksheetMode = backend.toggleWorksheetMode,
