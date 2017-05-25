@@ -5,10 +5,17 @@ import api._
 
 import akka.actor.{Actor, ActorRef, ActorSelection, ActorLogging}
 import akka.remote.DisassociatedEvent
+import akka.pattern.ask
+import akka.util.Timeout
 
 import com.typesafe.config.ConfigFactory
 
 import java.nio.file._
+
+import scala.concurrent._
+import scala.concurrent.duration._
+
+import java.util.concurrent.TimeoutException
 
 import scala.collection.immutable.Queue
 
@@ -29,13 +36,7 @@ case class FetchSnippet(snippetId: SnippetId)
 case class FetchOldSnippet(id: Int)
 case class FetchUserSnippets(user: User)
 
-case object LoadBalancerStateRequest
-case class LoadBalancerStateResponse(
-    loadBalancer: LoadBalancer[String, ActorSelection]
-)
-
-class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
-
+class DispatchActor(progressActor: ActorRef, statusActor: ActorRef) extends Actor with ActorLogging {
   private val configuration =
     ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
 
@@ -61,6 +62,23 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
     val history = History(Queue.empty[Record[String]], size = 100)
     LoadBalancer(servers, history)
   }
+  updateBalancer(loadBalancer)
+
+  import context._
+
+  system.scheduler.schedule(0.seconds, 1.seconds){
+
+    implicit val timeout = Timeout(1.seconds)
+    try { 
+      val res = Future.sequence(loadBalancer.servers.map(_.ref ? SbtPing))
+      Await.result(res, 1.seconds)
+      ()
+    } catch {
+      case e: TimeoutException => {
+        log.error(e, "failed to receive pong")
+      }
+    }
+  }
 
   override def preStart = {
     context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
@@ -75,15 +93,24 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
   private val portsInfo = ports.mkString("[", ", ", "]")
   log.info(s"connecting to: $host $portsInfo")
 
+  private def updateBalancer(newBalancer: LoadBalancer[String, ActorSelection]): Unit = {
+    println("updateBalancer")
+    loadBalancer = newBalancer
+    statusActor ! LoadBalancerUpdate(newBalancer)
+    ()
+  }
+
   private def run(inputsWithIpAndUser: InputsWithIpAndUser,
                   snippetId: SnippetId): Unit = {
     val InputsWithIpAndUser(inputs, ip, user) = inputsWithIpAndUser
 
     log.info("id: {}, ip: {} run {}", snippetId, ip, inputs)
 
-    val (server, balancer) =
+    val (server, newBalancer) =
       loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), snippetId))
-    loadBalancer = balancer
+
+    updateBalancer(newBalancer)
+
     server.ref.tell(
       SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
       self
@@ -176,7 +203,7 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
     case progress: api.SnippetProgress => {
       if (progress.done) {
         progress.snippetId.foreach(
-          sid => loadBalancer = loadBalancer.done(sid)
+          sid => updateBalancer(loadBalancer.done(sid))
         )
       }
       container.appendOutput(progress)
@@ -191,12 +218,8 @@ class DispatchActor(progressActor: ActorRef) extends Actor with ActorLogging {
         log.warning(event.toString)
         log.warning("removing disconnected: " + ref)
         remoteSelections = remoteSelections - ((host, port))
-        loadBalancer = loadBalancer.removeServer(ref)
+        updateBalancer(loadBalancer.removeServer(ref))
       }
-    }
-
-    case LoadBalancerStateRequest => {
-      sender ! LoadBalancerStateResponse(loadBalancer)
     }
   }
 }

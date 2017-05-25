@@ -13,6 +13,7 @@ object ScastieState {
     view = View.Editor,
     isRunning = false,
     eventSource = None,
+    statusEventSource = None,
     websocket = None,
     modalState = ModalState.default,
     isDarkTheme = false,
@@ -29,7 +30,8 @@ object ScastieState {
     user = None,
     attachedDoms = Map(),
     inputs = Inputs.default,
-    outputs = Outputs.default
+    outputs = Outputs.default,
+    status = StatusState.default
   )
 
   implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
@@ -49,6 +51,7 @@ case class ScastieState(
     view: View,
     isRunning: Boolean,
     eventSource: Option[EventSource],
+    statusEventSource: Option[EventSource],
     websocket: Option[WebSocket],
     modalState: ModalState,
     isDarkTheme: Boolean,
@@ -65,7 +68,8 @@ case class ScastieState(
     user: Option[User],
     attachedDoms: AttachedDoms,
     inputs: Inputs,
-    outputs: Outputs
+    outputs: Outputs,
+    status: StatusState
 ) {
   def copyAndSave(view: View = view,
                   isRunning: Boolean = isRunning,
@@ -80,7 +84,8 @@ case class ScastieState(
                   snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
                   user: Option[User] = user,
                   inputs: Inputs = inputs,
-                  outputs: Outputs = outputs): ScastieState = {
+                  outputs: Outputs = outputs,
+                  status: StatusState = status): ScastieState = {
 
     val isScalaJsScriptLoaded0 =
       if (inputsHasChanged) false
@@ -95,6 +100,7 @@ case class ScastieState(
         view,
         isRunning,
         eventSource,
+        statusEventSource,
         websocket,
         modalState,
         isDarkTheme,
@@ -114,7 +120,8 @@ case class ScastieState(
           showInUserProfile = false,
           forked = None
         ),
-        outputs
+        outputs,
+        status
       )
 
     LocalStorage.save(state0)
@@ -367,6 +374,17 @@ case class ScastieState(
 
     if (progress.userOutput.isDefined) state.setUserOutput
     else state
+  }
+
+  def addStatus(status: StatusProgress): ScastieState = {
+    status match {
+      case StatusKeepAlive => this
+      case StatusInfo(runners) => copy(status = StatusState(Some(runners)))
+    }
+  }
+
+  def removeStatus: ScastieState = {
+    copy(status = StatusState(None))
   }
 
   def setProgresses(progresses: List[SnippetProgress]): ScastieState = {

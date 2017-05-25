@@ -5,6 +5,7 @@ package components
 import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class SideBar(isDarkTheme: Boolean,
+                         status: StatusState,
                          toggleTheme: Callback,
                          view: StateSnapshot[View],
                          openHelpModal: Callback) {
@@ -39,6 +40,23 @@ object SideBar {
         span("Help")
       )
 
+    val statusButton = {
+      val (statusIcon, statusClass, statusLabel) =
+        props.status.runnerCount match {
+          case None    => ("fa-times-circle", "status-unknown", "Unknown")
+          case Some(0) => ("fa-times-circle", "status-down", "Down")
+          case Some(_) => ("fa-check-circle", "status-up", "Up")
+        }
+
+      li(onClick --> props.view.setState(View.Status),
+         role := "button",
+         title := "Show runners status",
+         cls := s"btn $statusClass")(
+        i(cls := s"fa $statusIcon"),
+        span(statusLabel)
+      )
+    }
+
     val editorButton = ViewToggleButton(
       currentView = props.view,
       forView = View.Editor,
@@ -65,7 +83,8 @@ object SideBar {
         ),
         ul(cls := "actions-bottom")(
           themeButton,
-          helpButton
+          helpButton,
+          statusButton
         )
       )
     )

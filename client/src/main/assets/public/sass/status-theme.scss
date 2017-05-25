@@ -1,0 +1,12 @@
+@import "commonvars";
+
+@mixin statusTheme($class) {
+  .status-container {
+    color: $snippets-text-color;
+    background-color: $snippets-background;
+
+    a {
+      color: $search-link-color;
+    }
+  }
+}

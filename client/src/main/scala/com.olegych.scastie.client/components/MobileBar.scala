@@ -5,6 +5,7 @@ package components
 import japgolly.scalajs.react._, vdom.all._
 
 final case class MobileBar(isRunning: Boolean,
+                           isStatusOk: Boolean,
                            run: Callback,
                            setView: View => Callback,
                            forceDesktop: Callback) {
@@ -17,6 +18,7 @@ object MobileBar {
       ul(cls := "editor-buttons")(
         RunButton(
           isRunning = props.isRunning,
+          isStatusOk = props.isStatusOk,
           run = props.run,
           setView = props.setView
         ).render,

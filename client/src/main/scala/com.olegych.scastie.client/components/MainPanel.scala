@@ -19,9 +19,12 @@ object MainPanel {
       if (view == state.view) display.block
       else display.none
 
+    val isStatusOk = state.status.isOk
+
     val embeddedMenu =
       EmbeddedMenu(
         isRunning = state.isRunning,
+        isStatusOk = isStatusOk,
         run = backend.run,
         setView = backend.setView,
         clear = backend.clear
@@ -96,6 +99,7 @@ object MainPanel {
     val mobileBar =
       MobileBar(
         isRunning = state.isRunning,
+        isStatusOk = isStatusOk,
         run = backend.run,
         setView = backend.setView,
         forceDesktop = backend.forceDesktop
@@ -124,6 +128,7 @@ object MainPanel {
         inputsHasChanged = state.inputsHasChanged,
         isNewSnippetModalClosed = state.modalState.isNewSnippetModalClosed,
         isRunning = state.isRunning,
+        isStatusOk = isStatusOk,
         isSnippetSaved = state.isSnippetSaved,
         snippetId = state.snippetId,
         user = state.user,
@@ -131,25 +136,36 @@ object MainPanel {
         worksheetMode = state.inputs.worksheetMode
       ).render
 
+    val statusView =
+      props.router match {
+        case Some(router) => {
+          Status(
+            state = state.status,
+            router = router,
+            connectStatus = backend.connectStatus
+          ).render
+        }
+        case _ => EmptyVdom
+      }
+
     div(
       cls := "main-panel",
       topBar,
       editorTopBar,
       div(
         cls := "content",
-        div(cls := "editor-container",
-            cls := "inner-container",
-            show(View.Editor))(
+        div(cls := "editor-container inner-container", show(View.Editor))(
           div(cls := "code", consoleCssForEditor)(
             editor,
             embeddedMenu
           ),
           console
         ),
-        div(cls := "settings-container",
-            cls := "inner-container",
-            show(View.BuildSettings))(
+        div(cls := "settings-container inner-container", show(View.BuildSettings))(
           buildSettings
+        ),
+        div(cls := "status-container inner-container", show(View.Status))(
+          statusView
         ),
         codeSnippets,
         mobileBar

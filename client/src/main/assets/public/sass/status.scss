@@ -1,0 +1,10 @@
+@import "commonvars";
+
+@mixin status() {
+  .status-container {
+    overflow-y: auto;
+    height: calc(100% - #{$header-height});
+
+    padding: 45px 45px;
+  }
+}

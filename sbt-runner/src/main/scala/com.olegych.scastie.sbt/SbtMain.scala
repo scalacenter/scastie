@@ -27,6 +27,7 @@ object SbtMain {
     system.actorOf(
       Props(
         new SbtActor(
+          system = system,
           runTimeout = timeout,
           production = config.getBoolean("production")
         )

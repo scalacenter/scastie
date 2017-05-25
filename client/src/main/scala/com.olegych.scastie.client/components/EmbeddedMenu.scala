@@ -5,6 +5,7 @@ package components
 import japgolly.scalajs.react._, vdom.all._
 
 final case class EmbeddedMenu(isRunning: Boolean,
+                              isStatusOk: Boolean,
                               run: Callback,
                               setView: View => Callback,
                               clear: Callback) {
@@ -16,6 +17,7 @@ object EmbeddedMenu {
     div(cls := "embedded-menu")(
       RunButton(
         isRunning = props.isRunning,
+        isStatusOk = props.isStatusOk,
         run = props.run,
         setView = props.setView
       ).render,

@@ -51,9 +51,15 @@ object ServerMain {
         name = "ProgressActor"
       )
 
+    val statusActor =
+      system.actorOf(
+        Props[StatusActor],
+        name = "StatusActor"
+      )
+
     val dispatchActor =
       system.actorOf(
-        Props(new DispatchActor(progressActor)),
+        Props(new DispatchActor(progressActor, statusActor)),
         name = "DispatchActor"
       )
 
@@ -62,8 +68,9 @@ object ServerMain {
 
     val programmaticRoutes =
       concat(
-        new DebugRoutes(dispatchActor).routes,
+        DebugRoutes.routes,
         new ProgressRoutes(progressActor).routes,
+        new StatusRoutes(statusActor).routes,
         new ScalaJsRoutes(dispatchActor).routes,
         new AutowireApiRoutes(dispatchActor, userDirectives).routes
       )

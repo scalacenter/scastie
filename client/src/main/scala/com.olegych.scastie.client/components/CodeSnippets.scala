@@ -133,7 +133,7 @@ object CodeSnippets {
           .groupBy(_.snippetId.base64UUID)
           .map {
             case (base64UUID, groupedSummaries) =>
-              div(cls := "group", `key` := base64UUID)(
+              div(cls := "group", key := base64UUID)(
                 groupedSummaries
                   .sortBy(_.snippetId.user.flatMap(_.update))
                   .map(renderSnippet(scope.backend, props))

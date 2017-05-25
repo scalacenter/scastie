@@ -57,9 +57,10 @@ object Scastie {
     div(cls := s"app $theme", embeddedClass, forceDesktopClass)(
       SideBar(
         isDarkTheme = state.isDarkTheme,
+        status = state.status,
         toggleTheme = scope.backend.toggleTheme,
         view = scope.backend.viewSnapshot(state.view),
-        openHelpModal = scope.backend.openHelpModal
+        openHelpModal = scope.backend.openHelpModal,
       ).render.unless(props.isEmbedded),
       MainPanel(
         state,

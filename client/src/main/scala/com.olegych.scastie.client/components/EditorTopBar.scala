@@ -21,6 +21,7 @@ final case class EditorTopBar(amend: SnippetId => Callback,
                               inputsHasChanged: Boolean,
                               isNewSnippetModalClosed: Boolean,
                               isRunning: Boolean,
+                              isStatusOk: Boolean,
                               isSnippetSaved: Boolean,
                               snippetId: Option[SnippetId],
                               user: Option[User],
@@ -36,6 +37,7 @@ object EditorTopBar {
 
     val runButton = RunButton(
       isRunning = props.isRunning,
+      isStatusOk = props.isStatusOk,
       run = props.run,
       setView = props.setView
     ).render
@@ -49,7 +51,8 @@ object EditorTopBar {
 
     val formatButton = FormatButton(
       inputsHasChanged = props.inputsHasChanged,
-      formatCode = props.formatCode
+      formatCode = props.formatCode,
+      isStatusOk = props.isStatusOk
     ).render
 
     val clearButton = ClearButton(

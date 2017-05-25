@@ -21,6 +21,14 @@
 
     .actions-bottom .btn {
       color: $option-color;
+
+      &.status-down {
+        color: red;
+      }
+
+      &.status-up {
+        color: green;
+      }
     }
   }
 }

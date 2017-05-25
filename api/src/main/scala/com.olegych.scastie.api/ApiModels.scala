@@ -1,6 +1,9 @@
 package com.olegych.scastie
 package api
 
+case object SbtPing
+case object SbtPong
+
 case class SnippetUserPart(login: String, update: Option[Int])
 case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
   def isOwnedBy(user2: Option[User]): Boolean = {

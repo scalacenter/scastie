@@ -1,15 +1,25 @@
 @import "reset";
+
 @import "sidebar";
 @import "sidebar-theme";
+
 @import "snippet";
 @import "snippet-theme";
+
 @import "topbar";
 @import "topbar-theme";
+
 @import "editor";
 @import "editor-theme";
+
 @import "modal";
+
 @import "build-settings";
 @import "build-settings-theme";
+
+@import "status";
+@import "status-theme";
+
 @import "solarized";
 @import "commonvars";
 @import "../../../../../target/web/web-modules/main/webjars/lib/bourbon/app/assets/stylesheets/_bourbon";
@@ -70,6 +80,7 @@ h1 {
 @include editor();
 @include snippet();
 @include buildSettings();
+@include status();
 @include solarized();
 @include modal();
 @include topbar();
@@ -97,6 +108,7 @@ h1 {
       @include editorTheme($class);
       @include snippetTheme($class);
       @include buildSettingsTheme($class);
+      @include statusTheme($class);
     }
   }
 }
