@@ -30,8 +30,11 @@
       }
     }
     .editor-buttons {
-      .btn {
+      li {
         display: inline-block;
+      }
+      
+      .btn {
         cursor: pointer;
         padding: 0 20px;
         line-height: 58px;

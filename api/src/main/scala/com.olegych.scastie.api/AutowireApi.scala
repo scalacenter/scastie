@@ -10,9 +10,8 @@ trait AutowireApi {
   def save(inputs: Inputs): Future[SnippetId]
   def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean]
   def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]]
-  def delete(snippetId: SnippetId): Future[Boolean]
-
   def fork(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]]
+  def delete(snippetId: SnippetId): Future[Boolean]
 
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]]
   def fetchOld(id: Int): Future[Option[FetchResult]]

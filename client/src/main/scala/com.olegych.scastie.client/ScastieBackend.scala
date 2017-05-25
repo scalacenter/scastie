@@ -238,28 +238,33 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     )
   }
 
+  private def saveCallback(sId: SnippetId): Callback = {
+    val setState = 
+      scope.modState(
+        _.setSnippetSaved(true)
+         .setSnippetId(sId)
+         .setLoadSnippet(false)
+         .clearOutputs
+      )
+
+    val page = Page.fromSnippetId(sId)
+    val setUrl = 
+      scope.props.flatMap(
+        _.router.map(_.set(page)).getOrElse(Callback.empty)
+      )
+
+    setState >> setUrl
+  }
+
   def save: Callback = {
-    scope.state.flatMap(
-      state =>
-        Callback.unless(state.isSnippetSaved)(
-          Callback.future(
-            ApiClient[AutowireApi]
-              .save(state.inputs)
-              .call()
-              .map(
-                snippetId =>
-                  scope.modState(
-                    _.setLoadSnippet(false).setCleanInputs
-                      .setSnippetSaved(true)
-                  ) >>
-                    scope.props.flatMap(
-                      props =>
-                        props.router
-                          .map(_.set(Page.fromSnippetId(snippetId)))
-                          .getOrElse(Callback.empty)
-                  )
-              )
-          )
+    scope.state.flatMap(state =>
+      Callback.unless(state.isSnippetSaved)(
+        Callback.future(
+          ApiClient[AutowireApi]
+            .save(state.inputs)
+            .call()
+            .map(saveCallback)
+        )
       )
     )
   }
@@ -283,7 +288,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
               .call()
               .map(
                 success =>
-                  if (success) scope.modState(_.setSnippetSaved(true))
+                  if (success) saveCallback(snippetId)
                   else Callback(window.alert("Failed to amend"))
               )
           )
@@ -299,15 +304,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
               .fork(snippetId, state.inputs)
               .call()
               .map {
-                case Some(sId) =>
-                  val page = Page.fromSnippetId(sId)
-                  scope.modState(_.setSnippetSaved(true)) >>
-                    scope.modState(
-                      _.setLoadSnippet(false).clearOutputs
-                    ) >>
-                    scope.props.flatMap(
-                      _.router.map(_.set(page)).getOrElse(Callback.empty)
-                    )
+                case Some(sId) => saveCallback(sId)
                 case None => Callback(window.alert("Failed to fork"))
               }
           )
@@ -323,15 +320,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
               .update(snippetId, state.inputs)
               .call()
               .map {
-                case Some(sId) =>
-                  val page = Page.fromSnippetId(sId)
-                  scope.modState(_.setSnippetSaved(true)) >>
-                    scope.modState(
-                      _.setLoadSnippet(false).clearOutputs
-                    ) >>
-                    scope.props.flatMap(
-                      _.router.map(_.set(page)).getOrElse(Callback.empty)
-                    )
+                case Some(sId) => saveCallback(sId)
                 case None => Callback(window.alert("Failed to update"))
               }
           )

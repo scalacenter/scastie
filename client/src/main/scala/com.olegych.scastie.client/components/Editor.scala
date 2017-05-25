@@ -34,6 +34,7 @@ final case class Editor(isDarkTheme: Boolean,
                         runtimeError: Option[RuntimeError],
                         run: Callback,
                         saveOrUpdate: Callback,
+                        newSnippet: Callback,
                         clear: Callback,
                         toggleConsole: Callback,
                         toggleWorksheetMode: Callback,
@@ -76,6 +77,7 @@ object Editor {
           "Tab" -> "defaultTab",
           ctrl + "-Enter" -> "run",
           ctrl + "-S" -> "save",
+          ctrl + "-M" -> "newSnippet",
           "Esc" -> "clear",
           "F1" -> "help",
           "F2" -> "toggleSolarized",
@@ -140,6 +142,10 @@ object Editor {
 
         CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
           props.saveOrUpdate.runNow()
+        }
+
+        CodeMirror.commands.newSnippet = (editor: CodeMirrorEditor2) => {
+          props.newSnippet.runNow()
         }
 
         CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
