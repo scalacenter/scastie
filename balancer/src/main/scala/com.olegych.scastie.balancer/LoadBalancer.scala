@@ -133,7 +133,7 @@ case class LoadBalancer[C: Ordering, S](
   def getRandomServer: Server[C, S] = random(servers)
 
   def add(task: Task[C]): (Server[C, S], LoadBalancer[C, S]) = {
-    if(servers.size <= 0) {
+    if (servers.size <= 0) {
       val msg = "All instances are down, shutting down the server"
       log.error(msg)
       throw new Exception(msg)

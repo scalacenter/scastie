@@ -239,16 +239,16 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   }
 
   private def saveCallback(sId: SnippetId): Callback = {
-    val setState = 
+    val setState =
       scope.modState(
         _.setSnippetSaved(true)
-         .setSnippetId(sId)
-         .setLoadSnippet(false)
-         .clearOutputs
+          .setSnippetId(sId)
+          .setLoadSnippet(false)
+          .clearOutputs
       )
 
     val page = Page.fromSnippetId(sId)
-    val setUrl = 
+    val setUrl =
       scope.props.flatMap(
         _.router.map(_.set(page)).getOrElse(Callback.empty)
       )
@@ -257,14 +257,15 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   }
 
   def save: Callback = {
-    scope.state.flatMap(state =>
-      Callback.unless(state.isSnippetSaved)(
-        Callback.future(
-          ApiClient[AutowireApi]
-            .save(state.inputs)
-            .call()
-            .map(saveCallback)
-        )
+    scope.state.flatMap(
+      state =>
+        Callback.unless(state.isSnippetSaved)(
+          Callback.future(
+            ApiClient[AutowireApi]
+              .save(state.inputs)
+              .call()
+              .map(saveCallback)
+          )
       )
     )
   }

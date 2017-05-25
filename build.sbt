@@ -6,7 +6,7 @@ import sbt.Keys._
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.22.9-SNAPSHOT"
+  version := "0.22.9"
 )
 
 lazy val upickleVersion = "0.4.4"
@@ -301,10 +301,8 @@ lazy val client = project
                        "ReactDOMServer",
                        "react-dom",
                        Test),
-      
       RuntimeDOM % Test,
-
-      "org.webjars.bower" % "raven-js" % "3.11.0" / 
+      "org.webjars.bower" % "raven-js" % "3.11.0" /
         "dist/raven.js" minified "dist/raven.min.js"
     ),
     libraryDependencies ++= Seq(
