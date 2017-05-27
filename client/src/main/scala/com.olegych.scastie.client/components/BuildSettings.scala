@@ -179,6 +179,14 @@ object BuildSettings {
         )
       ).when(!props.isBuildDefault)
 
+    val scaladexSearch = ScaladexSearch(
+      removeScalaDependency = props.removeScalaDependency,
+      updateDependencyVersion = props.updateDependencyVersion,
+      addScalaDependency = props.addScalaDependency,
+      librariesFrom = props.librariesFrom,
+      scalaTarget = props.scalaTarget
+    ).render
+
     div(cls := "build-settings-container")(
       resetButton,
       h2(
@@ -192,7 +200,7 @@ object BuildSettings {
       h2(
         span("Libraries")
       ),
-      // ScaladexSearch(props),
+      scaladexSearch,
       h2(
         span("Sbt Configuration")
       ),
