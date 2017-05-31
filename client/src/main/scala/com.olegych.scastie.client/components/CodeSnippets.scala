@@ -21,8 +21,8 @@ final case class CodeSnippets(view: View,
 
 object CodeSnippets {
   private[CodeSnippets] class CodeSnippetsBackend(
-      scope: BackendScope[CodeSnippets, List[SnippetSummary]]
-  ) {
+                                                   scope: BackendScope[CodeSnippets, List[SnippetSummary]]
+                                                 ) {
 
     def loadProfile(): Callback = {
       Callback.future(
@@ -49,7 +49,7 @@ object CodeSnippets {
   }
 
   private def renderSnippet(backend: CodeSnippetsBackend, props: CodeSnippets)(
-      summary: SnippetSummary
+    summary: SnippetSummary
   ): VdomElement = {
     val page = Page.fromSnippetId(summary.snippetId)
     val update = summary.snippetId.user
@@ -69,9 +69,9 @@ object CodeSnippets {
         span(cls := "update", "Update: " + update),
         div(cls := "actions")(
           li(onClick --> props.openShareModal(summary.snippetId),
-             cls := "btn",
-             title := "Share",
-             role := "button")(
+            cls := "btn",
+            title := "Share",
+            role := "button")(
             i(cls := "fa fa-share-alt")
           ),
           li(
@@ -85,8 +85,8 @@ object CodeSnippets {
         )
       ),
       div(cls := "codesnippet",
-          role := "button",
-          props.router.setOnClick(page))(
+        role := "button",
+        props.router.setOnClick(page))(
         props.router.link(page)(
           pre(cls := "code")(summary.summary)
         )
@@ -96,20 +96,20 @@ object CodeSnippets {
   }
 
   private def render(
-      scope: RenderScope[
-        CodeSnippets,
-        List[SnippetSummary],
-        CodeSnippetsBackend
-      ],
-      props: CodeSnippets,
-      summaries: List[SnippetSummary]
-  ): VdomElement = {
+                      scope: RenderScope[
+                        CodeSnippets,
+                        List[SnippetSummary],
+                        CodeSnippetsBackend
+                        ],
+                      props: CodeSnippets,
+                      summaries: List[SnippetSummary]
+                    ): VdomElement = {
 
     val userAvatar =
       div(cls := "avatar")(
         img(src := props.user.avatar_url + "&s=70",
-            alt := "Your Github Avatar",
-            cls := "image-button avatar")
+          alt := "Your Github Avatar",
+          cls := "image-button avatar")
       )
 
     val userName = props.user.name.getOrElse("")
@@ -118,6 +118,18 @@ object CodeSnippets {
     val noSummaries =
       if (summaries.isEmpty) p("No saved snippets, yet!")
       else EmptyVdom
+
+    def sortSnippets(xs: List[SnippetSummary]) : List[SnippetSummary] = {
+      def update(snippetSummary: SnippetSummary): Int =
+        snippetSummary.snippetId.user.flatMap(_.update).getOrElse(0)
+
+      xs
+        .groupBy(_.snippetId.base64UUID)
+        .toList
+        .flatMap { case(_, snippets) => List(snippets.sortBy(update).last) }
+        .sortBy(_.time)
+        .reverse
+    }
 
     div(cls := "code-snippets-container")(
       userAvatar,
@@ -129,18 +141,11 @@ object CodeSnippets {
       h2("Saved Code Snippets"),
       div(cls := "snippets")(
         noSummaries,
-        summaries
-          .groupBy(_.snippetId.base64UUID)
-          .map {
-            case (base64UUID, groupedSummaries) =>
-              div(cls := "group", key := base64UUID)(
-                groupedSummaries
-                  .sortBy(_.snippetId.user.flatMap(_.update))
-                  .map(renderSnippet(scope.backend, props))
-                  .toTagMod
-              )
-          }
-          .toTagMod
+        sortSnippets(summaries).map(summary =>
+          div(cls := "group", key := summary.snippetId.base64UUID)(
+            renderSnippet(scope.backend, props)(summary)
+          )
+        ).toTagMod
       )
     )
   }

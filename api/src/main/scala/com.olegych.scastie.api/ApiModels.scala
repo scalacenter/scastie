@@ -9,7 +9,7 @@ case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
   def isOwnedBy(user2: Option[User]): Boolean = {
     (user, user2) match {
       case (Some(SnippetUserPart(snippetLogin, _)),
-            Some(User(userLogin, _, _))) =>
+      Some(User(userLogin, _, _))) =>
         snippetLogin == userLogin
       case _ => false
     }
@@ -29,7 +29,7 @@ case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
 
 case class User(login: String, name: Option[String], avatar_url: String)
 
-case class SnippetSummary(snippetId: SnippetId, summary: String)
+case class SnippetSummary(snippetId: SnippetId, summary: String, time: Long)
 
 case class FormatRequest(code: String, worksheetMode: Boolean)
 case class FormatResponse(formattedCode: Either[String, String])
@@ -49,22 +49,22 @@ case class FetchScalaSource(snippetId: SnippetId)
 case class FetchResultScalaSource(content: String)
 
 case class ScalaDependency(
-    groupId: String,
-    artifact: String,
-    target: ScalaTarget,
-    version: String
-)
+                            groupId: String,
+                            artifact: String,
+                            target: ScalaTarget,
+                            version: String
+                          )
 
 case class Project(
-    organization: String,
-    repository: String,
-    logo: Option[String] = None,
-    artifacts: List[String] = Nil
-)
+                    organization: String,
+                    repository: String,
+                    logo: Option[String] = None,
+                    artifacts: List[String] = Nil
+                  )
 
 case class Completion(
-    hint: String
-)
+                       hint: String
+                     )
 
 // Keep websocket connection
 case class KeepAlive(msg: String = "") extends AnyVal
