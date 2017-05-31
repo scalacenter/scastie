@@ -63,6 +63,8 @@ object ServerMain {
         name = "DispatchActor"
       )
 
+    statusActor ! SetDispatcher(dispatchActor)
+
     val userFacingRoutes =
       new FrontPageRoutes(production).routes
 

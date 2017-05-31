@@ -34,6 +34,8 @@ case class FetchSnippet(snippetId: SnippetId)
 case class FetchOldSnippet(id: Int)
 case class FetchUserSnippets(user: User)
 
+case class ReceiveStatus(originalSender: ActorRef)
+
 class DispatchActor(progressActor: ActorRef, statusActor: ActorRef) extends Actor with ActorLogging {
   private val configuration =
     ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
@@ -224,5 +226,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef) extends Acto
         updateBalancer(loadBalancer.removeServer(ref))
       }
     }
+
+    case ReceiveStatus(originalSender) =>
+      println(s" status Actor asks for status info")
+      sender ! LoadBalancerInfo(loadBalancer, originalSender)
   }
 }
