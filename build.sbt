@@ -359,7 +359,7 @@ lazy val instrumentation = project
     libraryDependencies ++= Seq(
       // see https://github.com/ensime/ensime-server/issues/1784
       // not 1.8.0 because it depends on fastparse 0.4.4 and this breaks ensime (using fastparse 0.4.2)
-      "org.scalameta" %% "scalameta" % "1.7.0",
+      "org.scalameta" %% "scalameta" % "1.8.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

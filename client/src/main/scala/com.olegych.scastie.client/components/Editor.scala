@@ -398,7 +398,8 @@ object Editor {
           el.className = s"compilation-info $classSeverity"
 
           val msg = dom.document.createElement("pre")
-          msg.textContent = info.message
+
+          msg.innerHTML = AnsiColorFormatter.formatToHtml(info.message)
 
           el.appendChild(icon)
           el.appendChild(msg)
