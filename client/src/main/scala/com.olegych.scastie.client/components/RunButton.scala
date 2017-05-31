@@ -15,13 +15,13 @@ object RunButton {
   def render(props: RunButton) = {
     if (!props.isRunning) {
       val runTitle =
-        if(props.isStatusOk)
+        if (props.isStatusOk)
           s"Run Code (${View.ctrl} + Enter)"
         else
           "Something is wrong check the status"
 
       val run =
-        if(props.isStatusOk) props.run
+        if (props.isStatusOk) props.run
         else Callback(())
 
       li(onClick --> run,

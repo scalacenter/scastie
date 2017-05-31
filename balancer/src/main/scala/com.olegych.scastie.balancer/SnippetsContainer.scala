@@ -36,7 +36,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     if (readInputs(snippetId).isDefined) {
       Some(
         create(inputs.copy(forked = Some(snippetId), showInUserProfile = true),
-          user)
+               user)
       )
     } else None
   }
@@ -55,7 +55,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
             )
           )
         write(inputsFile(nextSnippetId),
-          uwrite(inputs.copy(showInUserProfile = true)))
+              uwrite(inputs.copy(showInUserProfile = true)))
         Some(nextSnippetId)
       }
       case None => None
@@ -81,15 +81,15 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   def amend(snippetId: SnippetId, inputs: Inputs): Boolean = {
     if (delete(snippetId)) {
       write(inputsFile(snippetId),
-        uwrite(inputs.copy(showInUserProfile = true)))
+            uwrite(inputs.copy(showInUserProfile = true)))
       true
     } else false
   }
 
   def appendOutput(progress: SnippetProgress): Unit = {
     (progress.scalaJsContent,
-      progress.scalaJsSourceMapContent,
-      progress.snippetId) match {
+     progress.scalaJsSourceMapContent,
+     progress.snippetId) match {
       case (Some(scalaJsContent), Some(scalaJsSourceMapContent), Some(sid)) => {
         write(scalaJsFile(sid), scalaJsContent)
         write(scalaJsSourceMapFile(sid), scalaJsSourceMapContent)
@@ -134,8 +134,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   def readScalaJsSourceMap(
-                            snippetId: SnippetId
-                          ): Option[FetchResultScalaJsSourceMap] = {
+      snippetId: SnippetId
+  ): Option[FetchResultScalaJsSourceMap] = {
     slurp(scalaJsSourceMapFile(snippetId))
       .map(content => FetchResultScalaJsSourceMap(content))
   }
@@ -148,7 +148,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
           case Right(instrumented) =>
             Some(FetchResultScalaSource(instrumented))
           case _ => None
-        }
+      }
     )
   }
 
@@ -190,7 +190,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     } else Nil
   }
 
-  private def getFileTimestamp(snippetId: SnippetId) : Long = {
+  private def getFileTimestamp(snippetId: SnippetId): Long = {
     import java.nio.file.Files
     import java.nio.file.attribute.BasicFileAttributes
 
@@ -205,8 +205,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   private def readOutputs(
-                           snippetId: SnippetId
-                         ): Option[List[SnippetProgress]] = {
+      snippetId: SnippetId
+  ): Option[List[SnippetProgress]] = {
     slurp(outputsFile(snippetId)).map(
       _.lines
         .filter(_.nonEmpty)

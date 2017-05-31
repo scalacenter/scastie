@@ -7,7 +7,9 @@ trait AutowireApi {
   def run(inputs: Inputs): Future[SnippetId]
   def format(code: FormatRequest): Future[FormatResponse]
 
-  def complete(completionRequest: CompletionRequest): Future[CompletionResponse]
+  def complete(
+      completionRequest: CompletionRequest
+  ): Future[CompletionResponse]
 
   def save(inputs: Inputs): Future[SnippetId]
   def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean]

@@ -8,5 +8,3 @@ case object StatusKeepAlive extends StatusProgress
 case class StatusInfo(runners: Vector[Runner]) extends StatusProgress
 
 case class Runner(tasks: Queue[SnippetId])
-
-

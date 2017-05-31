@@ -163,7 +163,8 @@ object MainPanel {
           ),
           console
         ),
-        div(cls := "settings-container inner-container", show(View.BuildSettings))(
+        div(cls := "settings-container inner-container",
+            show(View.BuildSettings))(
           buildSettings
         ),
         div(cls := "status-container inner-container", show(View.Status))(

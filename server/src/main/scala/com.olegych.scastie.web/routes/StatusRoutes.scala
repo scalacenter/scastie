@@ -31,9 +31,7 @@ class StatusRoutes(statusActor: ActorRef) {
   val routes =
     path("status-sse")(
       complete(
-        statusSource().map(progress =>
-          ServerSentEvent(uwrite(progress))
-        )
+        statusSource().map(progress => ServerSentEvent(uwrite(progress)))
       )
     )
 

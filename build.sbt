@@ -151,14 +151,18 @@ lazy val JdkDir: File = List(
   sys.props.get("java.home"),
   // osx
   Try("/usr/libexec/java_home".!!.trim).toOption
-).flatten.filter { n =>
-  new File(n + "/lib/tools.jar").exists
-}.headOption.map(new File(_).getCanonicalFile).getOrElse(
-  throw new FileNotFoundException(
-    """Could not automatically find the JDK/lib/tools.jar.
-      |You must explicitly set JDK_HOME or JAVA_HOME.""".stripMargin
+).flatten
+  .filter { n =>
+    new File(n + "/lib/tools.jar").exists
+  }
+  .headOption
+  .map(new File(_).getCanonicalFile)
+  .getOrElse(
+    throw new FileNotFoundException(
+      """Could not automatically find the JDK/lib/tools.jar.
+        |You must explicitly set JDK_HOME or JAVA_HOME.""".stripMargin
+    )
   )
-)
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))

@@ -18,7 +18,7 @@ object FormatButton {
       !props.inputsHasChanged || !props.isStatusOk
 
     val formatCode =
-      if(!isDisabled) props.formatCode
+      if (!isDisabled) props.formatCode
       else Callback(())
 
     li(title := "Format Code (F6)",

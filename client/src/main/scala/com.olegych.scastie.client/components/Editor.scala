@@ -183,7 +183,7 @@ object Editor {
 
         val setEditor =
           scope.modState(_.copy(editor = Some(editor)))
-          
+
         val applyDeltas =
           scope.state.flatMap(
             state =>
@@ -484,7 +484,9 @@ object Editor {
         var fr = cursor.ch
         val to = cursor.ch
         val currLine = cursor.line
-        val alphaNum = ('a' to 'z').toSet ++ ('A' to 'Z').toSet ++ ('0' to '9').toSet ++ Set('_')
+        val alphaNum = ('a' to 'z').toSet ++ ('A' to 'Z').toSet ++ ('0' to '9').toSet ++ Set(
+          '_'
+        )
         val lineContent = doc.getLine(currLine).getOrElse("")
 
         var i = fr - 1
@@ -493,7 +495,8 @@ object Editor {
           i -= 1
         }
 
-        CodeMirror.showHint(editor,
+        CodeMirror.showHint(
+          editor,
           (_, options) => {
             js.Dictionary(
               "from" -> new CMPosition {
@@ -502,31 +505,34 @@ object Editor {
               "to" -> new CMPosition {
                 line = currLine; ch = to
               },
-              "list" -> next.completions.map(_.hint).map {
-                hint =>
-                  println("rendering hint: " + hint)
-                  HintConfig
-                    .className("autocomplete")
-                    .text(hint)
-                    .render((el, _, _) ⇒ {
+              "list" -> next.completions
+                .map(_.hint)
+                .map {
+                  hint =>
+                    println("rendering hint: " + hint)
+                    HintConfig
+                      .className("autocomplete")
+                      .text(hint)
+                      .render((el, _, _) ⇒ {
 
-                      val node = dom.document
-                        .createElement("pre")
-                        .asInstanceOf[HTMLPreElement]
-                      node.className = "signature"
+                        val node = dom.document
+                          .createElement("pre")
+                          .asInstanceOf[HTMLPreElement]
+                        node.className = "signature"
 
-                      CodeMirror.runMode(hint, modeScala, node)
+                        CodeMirror.runMode(hint, modeScala, node)
 
-                      val span = dom.document
-                        .createElement("span")
-                        .asInstanceOf[HTMLPreElement]
-                      span.className = "name cm-def"
+                        val span = dom.document
+                          .createElement("span")
+                          .asInstanceOf[HTMLPreElement]
+                        span.className = "name cm-def"
 
-                      el.appendChild(span)
-                      el.appendChild(node)
-                      ()
-                    }): Hint
-              }.to[js.Array]
+                        el.appendChild(span)
+                        el.appendChild(node)
+                        ()
+                      }): Hint
+                }
+                .to[js.Array]
             )
           },
           js.Dictionary(

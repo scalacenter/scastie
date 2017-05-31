@@ -30,7 +30,8 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
 
-class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
+class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
+    extends Actor {
   private val defaultConfig = Inputs.default
 
   private var sbt = new Sbt(defaultConfig)
@@ -147,7 +148,9 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
   def receive = {
     case CompletionRequest(inputs, position) => {
-      log.info("completion request for inputs: {} at position: {}", inputs, position)
+      log.info("completion request for inputs: {} at position: {}",
+               inputs,
+               position)
 
       // implicit val timeout = Timeout(5.seconds)
       // import scala.concurrent.ExecutionContext.Implicits._

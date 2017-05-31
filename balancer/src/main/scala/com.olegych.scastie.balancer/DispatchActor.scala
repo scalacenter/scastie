@@ -36,7 +36,9 @@ case class FetchUserSnippets(user: User)
 
 case class ReceiveStatus(originalSender: ActorRef)
 
-class DispatchActor(progressActor: ActorRef, statusActor: ActorRef) extends Actor with ActorLogging {
+class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
+    extends Actor
+    with ActorLogging {
   private val configuration =
     ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
 
@@ -66,10 +68,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef) extends Acto
 
   import context._
 
-  system.scheduler.schedule(0.seconds, 1.seconds){
+  system.scheduler.schedule(0.seconds, 1.seconds) {
 
     implicit val timeout = Timeout(1.seconds)
-    try { 
+    try {
       val res = Future.sequence(loadBalancer.servers.map(_.ref ? SbtPing))
       Await.result(res, 1.seconds)
       ()
@@ -93,7 +95,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef) extends Acto
   private val portsInfo = ports.mkString("[", ", ", "]")
   log.info(s"connecting to: $host $portsInfo")
 
-  private def updateBalancer(newBalancer: LoadBalancer[String, ActorSelection]): Unit = {
+  private def updateBalancer(
+      newBalancer: LoadBalancer[String, ActorSelection]
+  ): Unit = {
     println("updateBalancer")
     loadBalancer = newBalancer
     statusActor ! LoadBalancerUpdate(newBalancer)

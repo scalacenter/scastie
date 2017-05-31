@@ -20,7 +20,8 @@ trait Hint extends js.Object {
   var className: String = js.native
 
   // A method used to create the DOM structure for showing the completion by appending it to its first argument.
-  var render: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit] = js.native
+  var render: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit] =
+    js.native
 
   // A method used to actually apply the completion, instead of the default behavior.
   var hint: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit] = js.native
@@ -31,13 +32,15 @@ trait Hint extends js.Object {
 }
 
 object HintConfig extends HintConfig(noOpts)
-class HintConfig(val dict:OptMap) extends JSOptionBuilder[Hint, HintConfig](new HintConfig(_))
-{
+class HintConfig(val dict: OptMap)
+    extends JSOptionBuilder[Hint, HintConfig](new HintConfig(_)) {
   def text(v: String) = jsOpt("text", v)
   def displayText(v: String) = jsOpt("displayText", v)
   def className(v: String) = jsOpt("className", v)
-  def render(v: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit]) = jsOpt("render", v)
-  def hint(v: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit]) = jsOpt("hint", v)
+  def render(v: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit]) =
+    jsOpt("render", v)
+  def hint(v: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit]) =
+    jsOpt("hint", v)
   def from(v: Position) = jsOpt("from", v)
   def to(v: Position) = jsOpt("to", v)
 }

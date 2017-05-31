@@ -119,11 +119,11 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   private def connectStatusEventSource() = CallbackTo[EventSource] {
     val direct = scope.withEffectsImpure
     val eventSource = new EventSource("/status-sse")
-    
+
     def onopen(e: Event): Unit = {
       console.log("connect status status open", e)
     }
-    
+
     def onmessage(e: MessageEvent): Unit = {
       val status = uread[StatusProgress](e.data.toString)
       direct.modState(_.addStatus(status))
@@ -516,13 +516,13 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
               CompletionRequest(state.inputs, pos)
             )
             .call()
-            .map {
-              response: CompletionResponse => {
+            .map { response: CompletionResponse =>
+              {
                 println("Received: " + response.completions)
                 scope.modState(_.setCompletions(response.completions))
               }
             }
-        )
+      )
     )
   }
 

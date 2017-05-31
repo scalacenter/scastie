@@ -166,14 +166,22 @@ class Sbt(defaultConfig: Inputs) {
            inputs: Inputs,
            lineCallback: LineCallback,
            reload: Boolean): Boolean = {
-    maybeReloadAndEval(command = command, commandIfNeedsReload = "", inputs, lineCallback, reload)
+    maybeReloadAndEval(command = command,
+                       commandIfNeedsReload = "",
+                       inputs,
+                       lineCallback,
+                       reload)
   }
 
   def evalIfNeedsReload(command: String,
-           inputs: Inputs,
-           lineCallback: LineCallback,
-           reload: Boolean): Boolean = {
-    maybeReloadAndEval(command = "", commandIfNeedsReload = command, inputs, lineCallback, reload)
+                        inputs: Inputs,
+                        lineCallback: LineCallback,
+                        reload: Boolean): Boolean = {
+    maybeReloadAndEval(command = "",
+                       commandIfNeedsReload = command,
+                       inputs,
+                       lineCallback,
+                       reload)
   }
 
   private def maybeReloadAndEval(command: String,
@@ -200,7 +208,8 @@ class Sbt(defaultConfig: Inputs) {
     if (!reloadError) {
       write(codeFile, inputs.code, truncate = true)
       try {
-        if (isReloading && !commandIfNeedsReload.isEmpty) process(commandIfNeedsReload, lineCallback, reload)
+        if (isReloading && !commandIfNeedsReload.isEmpty)
+          process(commandIfNeedsReload, lineCallback, reload)
         if (!command.isEmpty) process(command, lineCallback, reload)
       } catch {
         case e: IOException => {

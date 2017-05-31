@@ -8,20 +8,21 @@ import akka.actor.{ActorSystem, Props, Actor}
 import scala.concurrent.duration._
 
 class SbtActor(system: ActorSystem,
-               runTimeout: FiniteDuration, 
-               production: Boolean) extends Actor {
+               runTimeout: FiniteDuration,
+               production: Boolean)
+    extends Actor {
 
-  val formatActor = 
+  val formatActor =
     system.actorOf(Props(new FormatActor()), name = "FormatActor")
 
   val sbtRunner =
     system.actorOf(
-      Props(new SbtRunner(runTimeout,production)),
+      Props(new SbtRunner(runTimeout, production)),
       name = "SbtRunner"
     )
 
   def receive = {
-    case SbtPing => 
+    case SbtPing =>
       sender ! SbtPong
 
     case completion: CompletionRequest =>

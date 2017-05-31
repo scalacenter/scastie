@@ -27,7 +27,7 @@ object ScastieState {
       loadScalaJsScript = false,
       isScalaJsScriptLoaded = false,
       snippetIdIsScalaJS = false,
-      isReRunningScalaJs = false,
+      isReRunningScalaJs = false
     ),
     user = None,
     attachedDoms = Map(),

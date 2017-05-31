@@ -15,8 +15,11 @@ import scala.concurrent.duration._
 import scala.collection.mutable.{Queue => MQueue, Buffer}
 
 case object SubscribeStatus
-case class LoadBalancerUpdate(newBalancer: LoadBalancer[String, ActorSelection])
-case class LoadBalancerInfo(balancer: LoadBalancer[String, ActorSelection], originalSender: ActorRef)
+case class LoadBalancerUpdate(
+    newBalancer: LoadBalancer[String, ActorSelection]
+)
+case class LoadBalancerInfo(balancer: LoadBalancer[String, ActorSelection],
+                            originalSender: ActorRef)
 case class SetDispatcher(dispatchActor: ActorRef)
 
 class StatusActor extends Actor with ActorLogging {
@@ -29,12 +32,13 @@ class StatusActor extends Actor with ActorLogging {
       val publisher = context.actorOf(Props(new StatusForwarder()))
       publishers += publisher
 
-      val source = 
-        Source.fromPublisher(ActorPublisher[StatusProgress](publisher))
-              .keepAlive(
-                FiniteDuration(1, TimeUnit.SECONDS),
-                () => StatusKeepAlive
-              )
+      val source =
+        Source
+          .fromPublisher(ActorPublisher[StatusProgress](publisher))
+          .keepAlive(
+            FiniteDuration(1, TimeUnit.SECONDS),
+            () => StatusKeepAlive
+          )
 
       sender ! source
 
@@ -52,10 +56,12 @@ class StatusActor extends Actor with ActorLogging {
       dispatchActor = Some(dispatchActorReference)
   }
 
-  private def convert(newBalancer: LoadBalancer[String, ActorSelection]): StatusProgress = {
+  private def convert(
+      newBalancer: LoadBalancer[String, ActorSelection]
+  ): StatusProgress = {
     StatusInfo(
-      newBalancer.servers.map(server =>
-        Runner(server.mailbox.map(_.snippetId))
+      newBalancer.servers.map(
+        server => Runner(server.mailbox.map(_.snippetId))
       )
     )
   }
@@ -67,7 +73,7 @@ class StatusForwarder() extends Actor with ActorPublisher[StatusProgress] {
 
   def receive = {
     case progress: StatusProgress => {
-      if(buffer.size >= maxSize) {
+      if (buffer.size >= maxSize) {
         buffer.dequeue()
       }
       buffer.enqueue(progress)

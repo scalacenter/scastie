@@ -43,7 +43,7 @@ object SideBar {
     val statusButton = {
       val (statusIcon, statusClass, statusLabel) =
         props.status.runnerCount match {
-          case None    => ("fa-times-circle", "status-unknown", "Unknown")
+          case None => ("fa-times-circle", "status-unknown", "Unknown")
           case Some(0) => ("fa-times-circle", "status-down", "Down")
           case Some(_) => ("fa-check-circle", "status-up", "Up")
         }
