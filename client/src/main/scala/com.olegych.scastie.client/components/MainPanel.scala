@@ -144,8 +144,7 @@ object MainPanel {
         case Some(router) => {
           Status(
             state = state.status,
-            router = router,
-            connectStatus = backend.connectStatus
+            router = router
           ).render
         }
         case _ => EmptyVdom

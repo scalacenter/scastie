@@ -5,8 +5,7 @@ package components
 import japgolly.scalajs.react._, vdom.all._, extra.router._
 
 final case class Status(state: StatusState,
-                        router: RouterCtl[Page],
-                        connectStatus: Callback) {
+                        router: RouterCtl[Page]) {
   @inline def render: VdomElement = Status.component(this)
 }
 
@@ -48,6 +47,5 @@ object Status {
     ScalaComponent
       .builder[Status]("Status")
       .render_P(render)
-      .componentWillMount(_.props.connectStatus)
       .build
 }

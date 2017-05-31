@@ -121,7 +121,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     val eventSource = new EventSource("/status-sse")
     
     def onopen(e: Event): Unit = {
-      console.log(e)
+      console.log("connect status status open", e)
     }
     
     def onmessage(e: MessageEvent): Unit = {

@@ -16,9 +16,13 @@ import scala.collection.mutable.{Queue => MQueue, Buffer}
 
 case object SubscribeStatus
 case class LoadBalancerUpdate(newBalancer: LoadBalancer[String, ActorSelection])
+case class LoadBalancerInfo(balancer: LoadBalancer[String, ActorSelection], originalSender: ActorRef)
+case class SetDispatcher(dispatchActor: ActorRef)
 
 class StatusActor extends Actor with ActorLogging {
   val publishers = Buffer.empty[ActorRef]
+
+  var dispatchActor: Option[ActorRef] = _
 
   def receive = {
     case SubscribeStatus => {
@@ -33,10 +37,19 @@ class StatusActor extends Actor with ActorLogging {
               )
 
       sender ! source
+
+      dispatchActor.foreach(_ ! ReceiveStatus(publisher))
     }
+
     case LoadBalancerUpdate(newBalancer) => {
       publishers.foreach(_ ! convert(newBalancer))
     }
+
+    case LoadBalancerInfo(balancer, originalSender) =>
+      originalSender ! convert(balancer)
+
+    case SetDispatcher(dispatchActorReference) =>
+      dispatchActor = Some(dispatchActorReference)
   }
 
   private def convert(newBalancer: LoadBalancer[String, ActorSelection]): StatusProgress = {
