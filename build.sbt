@@ -8,7 +8,7 @@ import java.io.FileNotFoundException
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.23.0-SNAPSHOT"
+  version := "0.23.0"
 )
 
 lazy val upickleVersion = "0.4.4"
@@ -203,7 +203,7 @@ lazy val sbtRunner = project
         val artifactTargetPath = s"/app/${artifact.name}"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.22")
+          from("scalacenter/scastie-docker-sbt:0.0.23")
 
           add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 
@@ -460,8 +460,7 @@ lazy val runtimeDotty = project
   .settings(orgSettings)
   .enablePlugins(DottyPlugin)
   .settings(
-    scalaVersion := dottyLatestNightlyBuild
-      .getOrElse("0.1.1-bin-20170509-7a3f880-NIGHTLY"),
+    scalaVersion := "0.1.2-RC1",
     moduleName := "runtime-dotty",
     projectDependencies ~= (_.map(_.withDottyCompat()))
   )

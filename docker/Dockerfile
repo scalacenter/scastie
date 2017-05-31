@@ -83,7 +83,7 @@ RUN mkdir /root/dotty
 RUN mkdir /root/dotty/project
 RUN echo 'sbt.version = 0.13.15' > /root/dotty/project/build.properties
 RUN echo 'addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.0-RC4")' > /root/dotty/project/plugins.sbt
-RUN echo 'scalaVersion := dottyLatestNightlyBuild.getOrElse("0.1.1-bin-20170509-7a3f880-NIGHTLY")' > /root/dotty/build.sbt
+RUN echo 'scalaVersion := "0.1.2-RC1"' > /root/dotty/build.sbt
 RUN mkdir /root/dotty/src
 RUN mkdir /root/dotty/src/main
 RUN mkdir /root/dotty/src/main/scala
