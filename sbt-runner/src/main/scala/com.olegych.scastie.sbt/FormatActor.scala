@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package sbt
 
-import api.{FormatRequest, FormatResponse}
+import api.{FormatRequest, FormatResponse, ScalaTargetType}
 
 import akka.actor.Actor
 
@@ -16,12 +16,13 @@ class FormatActor() extends Actor {
   private val log = LoggerFactory.getLogger(getClass)
 
   private def format(code: String,
-                     worksheetMode: Boolean): Either[String, String] = {
+                     worksheetMode: Boolean,
+                     targetType: ScalaTargetType): Either[String, String] = {
     log.info(s"format (worksheetMode: $worksheetMode)")
     log.info(code)
 
     val config =
-      if (worksheetMode)
+      if (worksheetMode && targetType != ScalaTargetType.Dotty)
         ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
       else
         ScalafmtConfig.default
@@ -38,8 +39,8 @@ class FormatActor() extends Actor {
   }
 
   def receive = {
-    case FormatRequest(code, worksheetMode) => {
-      sender ! FormatResponse(format(code, worksheetMode))
+    case FormatRequest(code, worksheetMode, targetType) => {
+      sender ! FormatResponse(format(code, worksheetMode, targetType))
     }
   }
 }

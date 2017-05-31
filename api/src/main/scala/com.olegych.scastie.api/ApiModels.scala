@@ -31,7 +31,9 @@ case class User(login: String, name: Option[String], avatar_url: String)
 
 case class SnippetSummary(snippetId: SnippetId, summary: String, time: Long)
 
-case class FormatRequest(code: String, worksheetMode: Boolean)
+case class FormatRequest(code: String,
+                         worksheetMode: Boolean,
+                         targetType: ScalaTargetType)
 case class FormatResponse(formattedCode: Either[String, String])
 
 case class CompletionRequest(inputs: Inputs, position: Int)

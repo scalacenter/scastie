@@ -8,7 +8,7 @@ import ScalaTargetType._
 
 import scala.meta.parsers.Parsed
 
-import akka.util.Timeout
+// import akka.util.Timeout
 // import org.ensime.api._
 // import org.ensime.config.EnsimeConfigProtocol
 // import org.ensime.core.{Broadcaster, Project}
@@ -17,7 +17,7 @@ import akka.util.Timeout
 import upickle.default.{read => uread, write => uwrite, Reader}
 
 import akka.actor.{Actor, ActorRef}
-import akka.pattern.ask
+// import akka.pattern.ask
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -27,8 +27,8 @@ import scala.util.control.NonFatal
 
 import org.slf4j.LoggerFactory
 
-import java.io.File
-import java.nio.charset.Charset
+// import java.io.File
+// import java.nio.charset.Charset
 
 class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
     extends Actor {
@@ -68,7 +68,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
   private def instrument(
       inputs: Inputs
   ): Either[InstrumentationFailure, Inputs] = {
-    if (inputs.worksheetMode) {
+    if (inputs.worksheetMode && inputs.target.targetType != ScalaTargetType.Dotty) {
       instrumentation
         .Instrument(inputs.code, inputs.target)
         .map(instrumented => inputs.copy(code = instrumented))

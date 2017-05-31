@@ -94,8 +94,8 @@ object Scastie {
       .renderPS(render _)
       .componentWillMount { current =>
         current.backend.start(current.props) >>
-        setTitle(current.state) >>
-        current.backend.connectStatus
+          setTitle(current.state) >>
+          current.backend.connectStatus
       }
       .componentDidUpdate { scope =>
         val state = scope.prevState

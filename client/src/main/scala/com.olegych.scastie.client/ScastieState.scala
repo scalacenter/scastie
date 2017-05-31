@@ -51,13 +51,13 @@ object ScastieState {
 }
 
 case class SnippetState(
-  snippetId: Option[SnippetId],
-  isSnippetSaved: Boolean,
-  loadSnippet: Boolean,
-  loadScalaJsScript: Boolean,
-  isScalaJsScriptLoaded: Boolean,
-  snippetIdIsScalaJS: Boolean,
-  isReRunningScalaJs: Boolean,
+    snippetId: Option[SnippetId],
+    isSnippetSaved: Boolean,
+    loadSnippet: Boolean,
+    loadScalaJsScript: Boolean,
+    isScalaJsScriptLoaded: Boolean,
+    snippetIdIsScalaJS: Boolean,
+    isReRunningScalaJs: Boolean
 )
 
 case class ScastieState(
@@ -173,7 +173,8 @@ case class ScastieState(
     copy(snippetState = snippetState.copy(isReRunningScalaJs = value))
 
   def setSnippetSaved(value: Boolean): ScastieState =
-    copy(snippetState = snippetState.copy(isSnippetSaved = value), inputsHasChanged = false)
+    copy(snippetState = snippetState.copy(isSnippetSaved = value),
+         inputsHasChanged = false)
 
   def toggleTheme: ScastieState =
     copyAndSave(isDarkTheme = !isDarkTheme)

@@ -6,7 +6,6 @@ addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15-1")
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.8.0")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.16")
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.0")
-addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.0-RC4")
 addSbtPlugin("org.irundaia.sbt" % "sbt-sassify" % "1.4.8")
 
 libraryDependencies += "com.typesafe" % "config" % "1.3.1"

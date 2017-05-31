@@ -85,11 +85,13 @@ case class Inputs(
         case ScalaTarget.Jvm(scalaVersion) => {
           (
             s"""scalaVersion := "$scalaVersion"""",
-            ScalaDependency(
-              "org.scastie",
-              "runtime-scala",
-              target,
-              buildVersion
+            Some(
+              ScalaDependency(
+                "org.scastie",
+                "runtime-scala",
+                target,
+                buildVersion
+              )
             )
           )
         }
@@ -98,11 +100,13 @@ case class Inputs(
           (
             s"""|scalaVersion := "$scalaVersion"
                 |scalaOrganization in ThisBuild := "org.typelevel"""".stripMargin,
-            ScalaDependency(
-              "org.scastie",
-              "runtime-scala",
-              target,
-              buildVersion
+            Some(
+              ScalaDependency(
+                "org.scastie",
+                "runtime-scala",
+                target,
+                buildVersion
+              )
             )
           )
         }
@@ -118,40 +122,39 @@ case class Inputs(
                 |  "-P:scalajs:mapSourceURI:" + from + "->" + to
                 |}
                 """.stripMargin,
-            ScalaDependency(
-              "org.scastie",
-              "runtime-scala",
-              target,
-              buildVersion
+            Some(
+              ScalaDependency(
+                "org.scastie",
+                "runtime-scala",
+                target,
+                buildVersion
+              )
             )
           )
         }
         case ScalaTarget.Dotty => {
           (
             """scalaVersion := "0.1.2-RC1"""",
-            ScalaDependency(
-              "org.scastie",
-              "runtime-dotty",
-              target,
-              buildVersion
-            )
+            None
           )
         }
         case ScalaTarget.Native(scalaVersion, _) => {
           (
             s"""scalaVersion := "$scalaVersion"""",
-            ScalaDependency(
-              "org.scastie",
-              "runtime-scala",
-              target,
-              buildVersion
+            Some(
+              ScalaDependency(
+                "org.scastie",
+                "runtime-scala",
+                target,
+                buildVersion
+              )
             )
           )
         }
       }
 
     val optionnalTargetDependecy =
-      if (worksheetMode) Some(targetDependecy)
+      if (worksheetMode) targetDependecy
       else None
 
     val allLibraries =

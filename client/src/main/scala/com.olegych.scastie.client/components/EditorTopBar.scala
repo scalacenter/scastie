@@ -2,7 +2,7 @@ package com.olegych.scastie
 package client
 package components
 
-import api.{SnippetId, User}
+import api.{SnippetId, User, ScalaTargetType}
 
 import japgolly.scalajs.react._, vdom.all._
 
@@ -26,7 +26,8 @@ final case class EditorTopBar(amend: SnippetId => Callback,
                               snippetId: Option[SnippetId],
                               user: Option[User],
                               view: View,
-                              worksheetMode: Boolean) {
+                              worksheetMode: Boolean,
+                              targetType: ScalaTargetType) {
   @inline def render: VdomElement = EditorTopBar.component(this)
 }
 
@@ -81,7 +82,7 @@ object EditorTopBar {
         newButton,
         formatButton,
         clearButton,
-        worksheetButton,
+        worksheetButton.when(props.targetType != ScalaTargetType.Dotty),
         saveButton
       )
     )

@@ -477,7 +477,9 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
           Callback.future(
             ApiClient[AutowireApi]
               .format(
-                FormatRequest(state.inputs.code, state.inputs.worksheetMode)
+                FormatRequest(state.inputs.code,
+                              state.inputs.worksheetMode,
+                              state.inputs.target.targetType)
               )
               .call()
               .map {

@@ -136,7 +136,8 @@ object MainPanel {
         snippetId = state.snippetId,
         user = state.user,
         view = state.view,
-        worksheetMode = state.inputs.worksheetMode
+        worksheetMode = state.inputs.worksheetMode,
+        targetType = state.inputs.target.targetType
       ).render
 
     val statusView =

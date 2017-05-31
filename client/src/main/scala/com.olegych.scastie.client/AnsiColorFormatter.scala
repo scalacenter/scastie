@@ -21,23 +21,22 @@ object AnsiColorFormatter extends AnsiColor {
     MAGENTA_B -> "ansi-bg-color-magenta",
     CYAN_B -> "ansi-bg-color-cyan",
     WHITE_B -> "ansi-bg-color-white",
-
     RESET -> "",
     BLINK -> "ansi-blink",
     BOLD -> "ansi-bold",
     REVERSED -> "ansi-reversed",
     INVISIBLE -> "ansi-invisible"
-
   )
 
   def formatToHtml(unformatted: String): String = {
 
-    colors.foldLeft(unformatted) { case (message, (ansiCode, replacement)) =>
-
-     ansiCode match {
-       case RESET => message.replace(ansiCode, "</span>")
-       case _ => message.replace(ansiCode, s"""<span class="$replacement">""")
-     }
+    colors.foldLeft(unformatted) {
+      case (message, (ansiCode, replacement)) =>
+        ansiCode match {
+          case RESET => message.replace(ansiCode, "</span>")
+          case _ =>
+            message.replace(ansiCode, s"""<span class="$replacement">""")
+        }
     }
   }
 }

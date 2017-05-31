@@ -8,7 +8,7 @@ import java.io.FileNotFoundException
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.23.2"
+  version := "0.23.3"
 )
 
 lazy val upickleVersion = "0.4.4"
@@ -31,7 +31,6 @@ lazy val scastie = project
     sbtRunner,
     codemirror,
     client,
-    runtimeDotty,
     sbtScastie,
     runtimeScala210JVM,
     runtimeScala210JS,
@@ -137,7 +136,6 @@ lazy val runnerRuntimeDependencies = Seq(
   api212JS,
   // api213JVM,
   // api213JS,
-  runtimeDotty,
   sbtScastie
 ).map(publishLocal in _)
 
@@ -458,17 +456,6 @@ lazy val runtimeScala212JVM = runtimeScala212.jvm
 lazy val runtimeScala212JS = runtimeScala212.js
 // lazy val runtimeScala213JVM = runtimeScala213.jvm
 // lazy val runtimeScala213JS = runtimeScala213.js
-
-lazy val runtimeDotty = project
-  .in(file("runtime-dotty"))
-  .settings(orgSettings)
-  .enablePlugins(DottyPlugin)
-  .settings(
-    scalaVersion := "0.1.2-RC1",
-    moduleName := "runtime-dotty",
-    projectDependencies ~= (_.map(_.withDottyCompat()))
-  )
-  .dependsOn(api211JVM)
 
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))
