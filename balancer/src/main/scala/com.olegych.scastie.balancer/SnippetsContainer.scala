@@ -133,9 +133,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     slurp(scalaJsFile(snippetId)).map(content => FetchResultScalaJs(content))
   }
 
-  def readScalaJsSourceMap(
-                            snippetId: SnippetId
-                          ): Option[FetchResultScalaJsSourceMap] = {
+  def readScalaJsSourceMap(snippetId: SnippetId): Option[FetchResultScalaJsSourceMap] = {
     slurp(scalaJsSourceMapFile(snippetId))
       .map(content => FetchResultScalaJsSourceMap(content))
   }
@@ -204,9 +202,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     slurp(inputsFile(snippetId)).map(content => uread[Inputs](content))
   }
 
-  private def readOutputs(
-                           snippetId: SnippetId
-                         ): Option[List[SnippetProgress]] = {
+  private def readOutputs(snippetId: SnippetId): Option[List[SnippetProgress]] = {
     slurp(outputsFile(snippetId)).map(
       _.lines
         .filter(_.nonEmpty)

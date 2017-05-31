@@ -21,8 +21,7 @@ final case class CodeSnippets(view: View,
 
 object CodeSnippets {
   private[CodeSnippets] class CodeSnippetsBackend(
-                                                   scope: BackendScope[CodeSnippets, List[SnippetSummary]]
-                                                 ) {
+    scope: BackendScope[CodeSnippets, List[SnippetSummary]]) {
 
     def loadProfile(): Callback = {
       Callback.future(
@@ -96,14 +95,14 @@ object CodeSnippets {
   }
 
   private def render(
-                      scope: RenderScope[
-                        CodeSnippets,
-                        List[SnippetSummary],
-                        CodeSnippetsBackend
-                        ],
-                      props: CodeSnippets,
-                      summaries: List[SnippetSummary]
-                    ): VdomElement = {
+    scope: RenderScope[
+      CodeSnippets,
+      List[SnippetSummary],
+      CodeSnippetsBackend
+      ],
+    props: CodeSnippets,
+    summaries: List[SnippetSummary]
+  ): VdomElement = {
 
     val userAvatar =
       div(cls := "avatar")(

@@ -49,22 +49,22 @@ case class FetchScalaSource(snippetId: SnippetId)
 case class FetchResultScalaSource(content: String)
 
 case class ScalaDependency(
-                            groupId: String,
-                            artifact: String,
-                            target: ScalaTarget,
-                            version: String
-                          )
+    groupId: String,
+    artifact: String,
+    target: ScalaTarget,
+    version: String
+)
 
 case class Project(
-                    organization: String,
-                    repository: String,
-                    logo: Option[String] = None,
-                    artifacts: List[String] = Nil
-                  )
+    organization: String,
+    repository: String,
+    logo: Option[String] = None,
+    artifacts: List[String] = Nil
+)
 
 case class Completion(
-                       hint: String
-                     )
+    hint: String
+)
 
 // Keep websocket connection
 case class KeepAlive(msg: String = "") extends AnyVal
