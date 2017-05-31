@@ -8,7 +8,7 @@ import java.io.FileNotFoundException
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.23.0"
+  version := "0.23.1"
 )
 
 lazy val upickleVersion = "0.4.4"
@@ -173,8 +173,8 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("remote"),
       akka("slf4j"),
-      "com.geirsson" %% "scalafmt-core" % "0.7.0-RC1",
-      "org.ensime" %% "core" % "2.0.0-M1"
+      "com.geirsson" %% "scalafmt-core" % "0.7.0-RC1"
+      // "org.ensime" %% "core" % "2.0.0-M1"
     ),
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "com.olegych.scastie.buildinfo",
