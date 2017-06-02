@@ -13,6 +13,7 @@ requirements:
 * sbt
 * docker (for deploying)
 * sass (http://sass-lang.com/install)
+* protoc
 
 ```
 sbt

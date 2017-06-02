@@ -1,10 +1,15 @@
 import ScalaJSHelper._
+
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
+
+import com.trueaccord.scalapb.compiler.Version.scalapbVersion
+
 import sbt.Keys._
 import scala.util.Try
 import java.io.FileNotFoundException
+
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
@@ -366,6 +371,29 @@ lazy val instrumentation = project
 def crossDir(projectId: String) = file(".cross/" + projectId)
 def dash(name: String) = name.replaceAllLiterally(".", "-")
 
+def proto(scalaV: String) = {
+  val projectName = "proto"
+  val projectId = s"$projectName-${dash(scalaV)}"
+  CrossProject(id = projectId,
+               base = crossDir(projectId),
+               crossType = CrossType.Pure)
+    .settings(baseSettings)
+    .settings(
+      PB.runProtoc := { args => Process("protoc", args).! },
+      scalaVersion := scalaV,
+      moduleName := projectName,
+      PB.targets in Compile := Seq(
+        scalapb.gen() -> (sourceManaged in Compile).value
+      ),
+      PB.protoSources in Compile := Seq((baseDirectory in ThisBuild).value / "proto"),
+      libraryDependencies ++= Seq(
+        "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion,
+        "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion % "protobuf"
+      )
+    )
+}
+
+
 /* api is for the communication between sbt <=> server <=> frontend */
 def api(scalaV: String) = {
   val projectName = "api"
@@ -406,6 +434,7 @@ val api211 = api("2.11.11")
 val api212 = api("2.12.2")
 // val api213 = api("2.13.0-M1")
 
+
 lazy val api210JVM = api210.jvm
 lazy val api210JS = api210.js
 lazy val api211JVM = api211.jvm
@@ -414,6 +443,12 @@ lazy val api212JVM = api212.jvm
 lazy val api212JS = api212.js
 // lazy val api213JVM = api213.jvm
 // lazy val api213JS = api213.js
+
+val proto210 = proto("2.10.6")
+lazy val proto210JVM = proto210.jvm
+lazy val proto210JS = proto210.js
+
+
 
 /* runtime* pretty print values and type */
 def runtimeScala(scalaV: String, apiProject: CrossProject) = {
