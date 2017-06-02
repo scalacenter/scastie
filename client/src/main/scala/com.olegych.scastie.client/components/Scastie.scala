@@ -95,7 +95,7 @@ object Scastie {
       .componentWillMount { current =>
         current.backend.start(current.props) >>
           setTitle(current.state) >>
-          current.backend.connectStatus
+          current.backend.connectStatus(current.state.user)
       }
       .componentDidUpdate { scope =>
         val state = scope.prevState

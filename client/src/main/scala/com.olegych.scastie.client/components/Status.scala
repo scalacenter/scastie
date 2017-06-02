@@ -4,15 +4,14 @@ package components
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._
 
-final case class Status(state: StatusState, router: RouterCtl[Page]) {
+final case class Status(state: StatusState, router: RouterCtl[Page], isAdmin: Boolean) {
   @inline def render: VdomElement = Status.component(this)
 }
 
 object Status {
-  def render(props: Status) = {
+  def render(props: Status): VdomElement = {
     props.state.runners match {
-      case Some(runners) => {
-        println(runners)
+      case Some(runners) if props.isAdmin => {
         ul(
           runners.zipWithIndex.map {
             case (runner, i) =>
@@ -36,9 +35,7 @@ object Status {
           }.toTagMod
         )
       }
-
-      case None =>
-        div("Status Unknown")
+      case _ => div()
     }
 
   }

@@ -116,38 +116,39 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     socket
   }
 
-  private def connectStatusEventSource() = CallbackTo[EventSource] {
-    val direct = scope.withEffectsImpure
-    val eventSource = new EventSource("/status-sse")
+  private def connectStatusEventSource(user: Option[User]): CallbackTo[Option[EventSource]] = 
+    CallbackTo[EventSource] {
+      val direct = scope.withEffectsImpure
+      val eventSource = new EventSource("/status-sse")
 
-    def onopen(e: Event): Unit = {
-      console.log("connect status status open", e)
-    }
-
-    def onmessage(e: MessageEvent): Unit = {
-      val status = uread[StatusProgress](e.data.toString)
-      direct.modState(_.addStatus(status))
-    }
-
-    def onerror(e: Event): Unit = {
-      console.log(e)
-      if (e.eventPhase == EventSource.CLOSED) {
-        eventSource.close()
+      def onopen(e: Event): Unit = {
+        console.log("connect status status open", e)
       }
-      direct.modState(_.removeStatus)
-    }
 
-    eventSource.onopen = onopen _
-    eventSource.onmessage = onmessage _
-    eventSource.onerror = onerror _
-    eventSource
-  }
+      def onmessage(e: MessageEvent): Unit = {
+        val status = uread[StatusProgress](e.data.toString)
+        direct.modState(_.addStatus(status))
+      }
 
-  def connectStatus(): Callback = {
-    connectStatusEventSource().attemptTry.flatMap {
+      def onerror(e: Event): Unit = {
+        console.log(e)
+        if (e.eventPhase == EventSource.CLOSED) {
+          eventSource.close()
+        }
+        direct.modState(_.removeStatus)
+      }
+
+      eventSource.onopen = onopen _
+      eventSource.onmessage = onmessage _
+      eventSource.onerror = onerror _
+      eventSource
+    }.when(user.map(_.isAdmin).getOrElse(false))
+
+  def connectStatus(user: Option[User]): Callback = {
+    connectStatusEventSource(user).attemptTry.flatMap {
       case Success(eventSource) => {
         scope.modState(
-          _.copy(statusEventSource = Some(eventSource))
+          _.copy(statusEventSource = eventSource)
         )
       }
       case Failure(errorEventSource) => {

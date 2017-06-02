@@ -145,7 +145,8 @@ object MainPanel {
         case Some(router) => {
           Status(
             state = state.status,
-            router = router
+            router = router,
+            isAdmin = state.user.map(_.isAdmin).getOrElse(false)
           ).render
         }
         case _ => EmptyVdom
