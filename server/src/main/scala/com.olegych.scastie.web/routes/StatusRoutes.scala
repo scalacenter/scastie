@@ -34,7 +34,7 @@ class StatusRoutes(statusActor: ActorRef,
   implicit val timeout = Timeout(1.seconds)
 
   val adminUser: Directive1[Boolean] =
-    userDirectives.userLogin.map(user =>
+    userDirectives.optionnalLogin.map(user =>
       user.map(_.isAdmin).getOrElse(false)
     )
 
