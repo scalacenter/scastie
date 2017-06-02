@@ -8,7 +8,7 @@ import java.io.FileNotFoundException
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.23.4"
+  version := "0.23.5"
 )
 
 lazy val upickleVersion = "0.4.4"

@@ -116,7 +116,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     socket
   }
 
-  private def connectStatusEventSource(user: Option[User]): CallbackTo[Option[EventSource]] = 
+  private def connectStatusEventSource: CallbackTo[EventSource] = 
     CallbackTo[EventSource] {
       val direct = scope.withEffectsImpure
       val eventSource = new EventSource("/status-sse")
@@ -142,13 +142,13 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       eventSource.onmessage = onmessage _
       eventSource.onerror = onerror _
       eventSource
-    }.when(user.map(_.isAdmin).getOrElse(false))
+    }
 
-  def connectStatus(user: Option[User]): Callback = {
-    connectStatusEventSource(user).attemptTry.flatMap {
+  def connectStatus: Callback = {
+    connectStatusEventSource.attemptTry.flatMap {
       case Success(eventSource) => {
         scope.modState(
-          _.copy(statusEventSource = eventSource)
+          _.copy(statusEventSource = Some(eventSource))
         )
       }
       case Failure(errorEventSource) => {
