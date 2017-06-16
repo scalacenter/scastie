@@ -25,6 +25,8 @@ import org.ensime.api._
 import scala.io.Source.fromFile
 import JerkyFormats._
 
+import scala.util.{Success, Failure}
+
 case object Heartbeat
 
 class EnsimeActor(system: ActorSystem) extends Actor {
@@ -113,6 +115,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
           }
           case x => {
             log.info(s"Payload's not recognized: $x")
+            log.info("Sending it to an actor anyway...")
             ref ! x
           }
         }
@@ -141,25 +144,34 @@ class EnsimeActor(system: ActorSystem) extends Actor {
       Source
         .actorRef[TextMessage.Strict](bufferSize = 10, OverflowStrategy.fail)
 
+    def handleIncomingMessage(message: String) = {
+      try {
+        val env = message.parseJson.convertTo[RpcResponseEnvelope]
+        env.callId match {
+          case Some(id) => {
+            log.info(s"Received message for $id")
+            handleRPCResponse(id, env.payload)
+          }
+          case None => {
+            log.info(s"Received message with no id.")
+          }
+        }
+      } catch {
+        case e: Throwable => log.info(e)
+      }
+    }
+
     val messageSink: Sink[Message, NotUsed] =
       Flow[Message]
         .map {
           case msg: TextMessage.Strict => {
-            try {
-              val env = msg.text.parseJson.convertTo[RpcResponseEnvelope]
-              env.callId match {
-                case Some(id) => {
-                  log.info(s"Received ${msg.text} for ${id}")
-                  handleRPCResponse(id, env.payload)
-                }
-                case None => {
-                  log.info(s"Received ${msg.text}")
-                }
-              }
-            } catch {
-              case e => log.info(s"EXCEPTION – ${e}")
+            handleIncomingMessage(msg.text)
+          }
+          case msgStream: TextMessage.Streamed => {
+            msgStream.textStream.runFold("")(_ + _).onComplete {
+              case Success(msg) => handleIncomingMessage(msg)
+              case Failure(e) => log.info(s"Couldn't process incoming text stream. $e")
             }
-
           }
           case _ => log.info("Unsupported ws response message type from ENSIME")
         }
@@ -259,7 +271,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
       sendToEnsime(ConnectionInfoReq, self)
 
     case x => {
-      log.info(s"Unknown request request at EnsimeActor: $x")
+      log.info(s"Unknown request at EnsimeActor: $x")
     }
   }
 
