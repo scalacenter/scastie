@@ -121,8 +121,6 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     }
   }
 
-
-
   def sendToEnsime(rpcRequest: RpcRequest, sender: ActorRef): Unit = {
     requests += (nextId -> sender)
     val env = RpcRequestEnvelope(rpcRequest, nextId)
@@ -134,9 +132,9 @@ class EnsimeActor(system: ActorSystem) extends Actor {
   }
 
   private def connectToEnsime(uri: String) = {
-    log.info("Connecting to " + uri)
+    log.info(s"Connecting to $uri")
 
-    val req = WebSocketRequest(uri, subprotocol=Some("jerky"))
+    val req = WebSocketRequest(uri, subprotocol = Some("jerky"))
     val webSocketFlow = Http()(system).webSocketClientFlow(req)
 
     val messageSource: Source[Message, ActorRef] =
@@ -151,11 +149,11 @@ class EnsimeActor(system: ActorSystem) extends Actor {
               val env = msg.text.parseJson.convertTo[RpcResponseEnvelope]
               env.callId match {
                 case Some(id) => {
-                  log.info("Received " + msg.text + " for " + id)
+                  log.info(s"Received ${msg.text} for ${id}")
                   handleRPCResponse(id, env.payload)
                 }
                 case None => {
-                  log.info("Received " + msg.text)
+                  log.info(s"Received ${msg.text}")
                 }
               }
             } catch {
@@ -263,8 +261,6 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     case x => {
       log.info(s"Unknown request request at EnsimeActor: $x")
     }
-
-
   }
 
   private def waitForAndReadPort(path: Path): Int = {
@@ -272,6 +268,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     var res: Option[Int] = None
     val file = path.toFile
     log.info(s"Trying to read port file at: $path")
+
     while(count < 30 && res.isEmpty) {
       if(file.exists) {
         val handler = fromFile(file)

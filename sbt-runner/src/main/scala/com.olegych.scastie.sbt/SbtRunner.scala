@@ -37,15 +37,6 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
   private var sbt = new Sbt(defaultConfig)
   private val log = LoggerFactory.getLogger(getClass)
 
-  // private val broadcaster = context.actorOf(Broadcaster(), "broadcaster")
-  // private val project = {
-  //   sbt.eval("ensimeConfig", defaultConfig, (_, _, _, _) => (), reload = false)
-  //   val config = EnsimeConfigProtocol.parse(
-  //     new File(sbt.ensimeConfigFile.toString).toPath.readString()(Charset.forName("UTF-8"))
-  //   )
-  //   context.actorOf(Project(broadcaster)(config), "project")
-  // }
-
   override def preStart(): Unit = warmUp()
   override def postStop(): Unit = sbt.exit()
 
@@ -56,13 +47,6 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
       sbt.eval("run", in, (line, _, _, _) => log.info(line), reload = false)
       ()
     }
-    // broadcaster ! Broadcaster.Register
-    // project ! ConnectionInfoReq
-    // log.info("Warming up ENSIME...")
-    // project ! CompletionsReq(
-    //   fileInfo = SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath), Some(defaultConfig.code)),
-    //   point = 0, maxResults = 100, caseSens = false, reload = false
-    // )
   }
 
   private def instrument(
