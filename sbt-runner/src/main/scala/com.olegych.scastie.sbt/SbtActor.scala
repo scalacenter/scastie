@@ -21,12 +21,18 @@ class SbtActor(system: ActorSystem,
       name = "SbtRunner"
     )
 
+  val ensimeActor =
+    system.actorOf(
+      Props(new EnsimeActor(system)),
+      name = "EnsimeActor"
+    )
+
   def receive = {
     case SbtPing =>
       sender ! SbtPong
 
     case completion: CompletionRequest =>
-      sbtRunner.tell(completion, sender)
+      ensimeActor.tell(completion, sender)
 
     case format: FormatRequest =>
       formatActor.tell(format, sender)

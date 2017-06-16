@@ -147,32 +147,6 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
   }
 
   def receive = {
-    case CompletionRequest(inputs, position) => {
-      log.info("completion request for inputs: {} at position: {}",
-               inputs,
-               position)
-
-      // implicit val timeout = Timeout(5.seconds)
-      // import scala.concurrent.ExecutionContext.Implicits._
-
-      // sbt.evalIfNeedsReload("ensimeConfig", inputs, (line, _, _, _) => log.info(line), reload = false)
-
-      // val future = project ? CompletionsReq(
-      //   fileInfo = SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath), Some(inputs.code)),
-      //   point = position, maxResults = 100, caseSens = false, reload = false
-      // )
-
-      // val completions = future.map {
-      //   case CompletionInfoList(prefix, completionList) => {
-      //     completionList.sortBy(- _.relevance).map(ci => Completion(ci.name))
-      //   }
-      // }
-
-      // val response = CompletionResponse(Await.result(completions, 3.seconds))
-      // log.info("Completions: {}", response.completions)
-      val response = CompletionResponse(List())
-      sender ! response
-    }
     case SbtTask(snippetId, inputs, ip, login, progressActor) => {
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 

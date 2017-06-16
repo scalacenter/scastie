@@ -167,18 +167,22 @@ lazy val sbtRunner = project
   .settings(baseSettings)
   .settings(loggingAndTest)
   .settings(
-    unmanagedJars in Compile += JdkDir / "lib/tools.jar", // otherwise ENSIME actors crushes
     scalacOptions -= "-Xfatal-warnings", // Thread.stop
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
+    resolvers += Resolver.sonatypeRepo("public"),
     libraryDependencies ++= Seq(
       akka("actor"),
       akka("testkit") % Test,
       akka("remote"),
       akka("slf4j"),
-      "com.geirsson" %% "scalafmt-core" % "0.7.0-RC1"
-      // "org.ensime" %% "core" % "2.0.0-M1"
+      akkaHttp,
+      "com.geirsson" %% "scalafmt-core" % "0.7.0-RC1",
+      "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT"
     ),
-    buildInfoKeys := Seq[BuildInfoKey](version),
+    buildInfoKeys := Seq[BuildInfoKey](
+      version,
+      "JdkDir" -> JdkDir
+    ),
     buildInfoPackage := "com.olegych.scastie.buildinfo",
     imageNames in docker := Seq(
       ImageName(
