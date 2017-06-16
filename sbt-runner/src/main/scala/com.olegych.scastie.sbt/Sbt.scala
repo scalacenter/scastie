@@ -11,11 +11,9 @@ import java.nio.file._
 import java.io.{IOException, BufferedReader, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
-class Sbt(defaultConfig: Inputs) {
+class Sbt(defaultConfig: Inputs, sbtDir: Path = Files.createTempDirectory("scastie")) {
 
   private val log = LoggerFactory.getLogger(getClass)
-
-  private val sbtDir = Files.createTempDirectory("scastie")
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
 
@@ -40,9 +38,11 @@ class Sbt(defaultConfig: Inputs) {
   setup()
 
   val codeFile = sbtDir.resolve("src/main/scala/main.scala")
-  val ensimeConfigFile = sbtDir.resolve(".ensime")
-
   Files.createDirectories(codeFile.getParent)
+
+  val ensimeConfigFile = sbtDir.resolve(".ensime")
+  val ensimeCacheDir = sbtDir.resolve(".ensime_cache")
+  Files.createDirectories(ensimeCacheDir)
 
   def scalaJsContent(): Option[String] = {
     slurp(sbtDir.resolve(ScalaTarget.Js.targetFilename))
