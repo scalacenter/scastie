@@ -40,10 +40,6 @@ class Sbt(defaultConfig: Inputs, sbtDir: Path = Files.createTempDirectory("scast
   val codeFile = sbtDir.resolve("src/main/scala/main.scala")
   Files.createDirectories(codeFile.getParent)
 
-  val ensimeConfigFile = sbtDir.resolve(".ensime")
-  val ensimeCacheDir = sbtDir.resolve(".ensime_cache")
-  Files.createDirectories(ensimeCacheDir)
-
   def scalaJsContent(): Option[String] = {
     slurp(sbtDir.resolve(ScalaTarget.Js.targetFilename))
   }
