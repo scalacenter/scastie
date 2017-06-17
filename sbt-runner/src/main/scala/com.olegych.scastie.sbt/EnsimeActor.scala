@@ -25,7 +25,7 @@ import org.ensime.api._
 import scala.io.Source.fromFile
 import JerkyFormats._
 
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 
 case object Heartbeat
 
@@ -39,55 +39,31 @@ class EnsimeActor(system: ActorSystem) extends Actor {
   implicit val timeout = Timeout(5.seconds)
 
   private val rootDir = Files.createTempDirectory("scastie-ensime")
-  private val classpathFile = rootDir.resolve("classpath")
   private val ensimeVersion = "2.0.0-SNAPSHOT"
-  private val sbtClasspathScript = s"""
-      |import sbt._
-      |import IO._
-      |import java.io._
-      |
-      |ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
-      |
-      |// allows local builds of scala
-      |resolvers += Resolver.mavenLocal
-      |
+  private val ensimeConfigFile = rootDir.resolve(".ensime")
+  private val ensimeCacheDir = rootDir.resolve(".ensime_cache")
+  Files.createDirectories(ensimeCacheDir)
+
+  private val sbtConfigExtra = s"""
       |// this is where the ensime-server snapshots are hosted
       |resolvers += Resolver.sonatypeRepo("snapshots")
-      |
       |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
-      |
-      |dependencyOverrides ++= Set(
-      |   "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-      |   "org.scala-lang" % "scala-library" % scalaVersion.value,
-      |   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      |   "org.scala-lang" % "scalap" % scalaVersion.value
-      |)
-      |
-      |val saveClasspathTask = TaskKey[Unit]("saveClasspath", "Save the classpath to a file")
-      |saveClasspathTask := {
-      |   val managed = (managedClasspath in Runtime).value.map(_.data.getAbsolutePath)
-      |   val unmanaged = (unmanagedClasspath in Runtime).value.map(_.data.getAbsolutePath)
-      |   val out = file("$classpathFile")
-      |   write(out, (unmanaged ++ managed).mkString(File.pathSeparator))
-      |}
       |""".stripMargin
-
+  private val sbtPluginsConfigExtra = s"""addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.11")""".stripMargin
   private val config = Inputs(
     worksheetMode = true,
     code = "object Main extends App {}",
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
     librariesFrom = Map(),
-    sbtConfigExtra = sbtClasspathScript,
-    sbtPluginsConfigExtra = "",
+    sbtConfigExtra = sbtConfigExtra,
+    sbtPluginsConfigExtra = sbtPluginsConfigExtra,
     showInUserProfile = false,
     forked = None
   )
   private val sbt = new Sbt(config, rootDir)
 
-  private val ensimeCache = rootDir.resolve(".ensime_cache")
-  private val httpPortFile = ensimeCache.resolve("http")
-  private val tcpPortFile = ensimeCache.resolve("port")
+  private val httpPortFile = ensimeCacheDir.resolve("http")
 
   private var ensimeProcess: Process = _
   private var ensimeWS: ActorRef =  _
@@ -95,13 +71,6 @@ class EnsimeActor(system: ActorSystem) extends Actor {
 
   private var nextId = 1
   private var requests = Map[Int, ActorRef]()
-
-  private def initProject() = {
-    log.info("Saving classpath")
-    sbt.eval("saveClasspath", config, (_, _, _, _) => (), reload = false)
-    log.info("Generating ensime config file")
-    sbt.eval("ensimeConfig", config, (_, _, _, _) => (), reload = false)
-  }
 
   def handleRPCResponse(id: Int, payload: EnsimeServerMessage) = {
     requests.get(id) match {
@@ -145,19 +114,15 @@ class EnsimeActor(system: ActorSystem) extends Actor {
         .actorRef[TextMessage.Strict](bufferSize = 10, OverflowStrategy.fail)
 
     def handleIncomingMessage(message: String) = {
-      try {
-        val env = message.parseJson.convertTo[RpcResponseEnvelope]
-        env.callId match {
-          case Some(id) => {
-            log.info(s"Received message for $id")
-            handleRPCResponse(id, env.payload)
-          }
-          case None => {
-            log.info(s"Received message with no id.")
-          }
+      val env = message.parseJson.convertTo[RpcResponseEnvelope]
+      env.callId match {
+        case Some(id) => {
+          log.info(s"Received message for $id")
+          handleRPCResponse(id, env.payload)
         }
-      } catch {
-        case e: Throwable => log.info(e)
+        case None => {
+          log.info(s"Received message with no id.")
+        }
       }
     }
 
@@ -198,17 +163,29 @@ class EnsimeActor(system: ActorSystem) extends Actor {
   }
 
   override def preStart() = {
-    initProject()
+    log.info("Generating ensime config file")
+    sbt.eval("ensimeConfig", config, (_, _, _, _) => (), reload = false)
+
+    log.info("Form classpath using .ensime file")
+    val ensimeConf = fromFile(ensimeConfigFile.toFile).mkString
+
+    def parseEnsimeConfFor(field: String): String = {
+      s":$field \\(.*?\\)".r findFirstIn ensimeConf match {
+        case Some(x) => {
+          // we need to take everything inside ("...") & replace " " with : to form a classpath string
+          x.substring(x.indexOf("(") + 2 , x.length - 2).replace("\" \"", ":")
+        }
+        case None => throw new Exception("Can't parse ensime config!")
+      }
+    }
+    val classpath = parseEnsimeConfFor("ensime-server-jars") +
+      parseEnsimeConfFor("scala-compiler-jars") +
+      parseEnsimeConfFor("compile-deps")
 
     log.info("Starting Ensime server")
-    val toolsJarPath = buildinfo.BuildInfo.JdkDir.toPath.resolve("lib/tools.jar")
-    val classpathFileHandler = fromFile(classpathFile.toFile)
-    val classpath = classpathFileHandler.mkString + ":" + toolsJarPath
-    classpathFileHandler.close()
-
     ensimeProcess = new ProcessBuilder(
       "java",
-      "-Densime.config=" + sbt.ensimeConfigFile,
+      "-Densime.config=" + ensimeConfigFile,
       "-classpath", classpath,
       "-Densime.explode.on.disconnect=true",
       "org.ensime.server.Server"
