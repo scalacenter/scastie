@@ -87,7 +87,7 @@ lazy val loggingAndTest =
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   )
 
-lazy val remapSourcMap =
+lazy val remapSourceMap =
   scalacOptions ++= {
     val ver = version.value
     val fromScastie = (baseDirectory in LocalRootProject).value.toURI.toString
@@ -398,7 +398,7 @@ def api(scalaV: String) = {
       test := {},
       libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion
     )
-    .jsSettings(remapSourcMap)
+    .jsSettings(remapSourceMap)
     .enablePlugins(BuildInfoPlugin)
 }
 
@@ -433,7 +433,7 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
       ),
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "shared" / "src" / "main" / "scala"
     )
-    .jsSettings(remapSourcMap)
+    .jsSettings(remapSourceMap)
     .jsSettings(
       test := {},
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "js" / "src" / "main" / "scala"

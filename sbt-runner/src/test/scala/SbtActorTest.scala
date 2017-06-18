@@ -92,7 +92,7 @@ class SbtActorTest()
     })
   }
 
-  test("repport parsing error") {
+  test("report parsing error") {
     run("{")(assertCompilationInfo { info =>
       assert(info.message == "} expected but end of file found")
       assert(info.line == Some(1))

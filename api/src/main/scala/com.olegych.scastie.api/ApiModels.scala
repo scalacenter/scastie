@@ -15,7 +15,7 @@ case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
     }
   }
 
-  def url(end: String) = {
+  def url(end: String): String = {
     val middle =
       this match {
         case SnippetId(uuid, None) => uuid

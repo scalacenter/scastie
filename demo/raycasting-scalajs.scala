@@ -88,11 +88,11 @@ s.render(c)
 
 object Vec{
   case class Unit(x: Double, y: Double, z: Double)
-  implicit def normalizer(v: Vec) = {
+  implicit def normalizer(v: Vec): Unit = {
     val l = v.magnitude
     new Unit(v.x / l, v.y / l, v.z / l)
   }
-  implicit def denormalizer(v: Vec.Unit) = new Vec(v.x, v.y, v.z)
+  implicit def denormalizer(v: Vec.Unit): Vec = new Vec(v.x, v.y, v.z)
   implicit def pointify[X: Numeric, Y: Numeric, Z: Numeric](x: (X, Y, Z)): Vec = Vec(
     implicitly[Numeric[X]].toDouble(x._1),
     implicitly[Numeric[Y]].toDouble(x._2),
@@ -251,7 +251,7 @@ class Scene(objects: Array[(Form, Surface)],
     val length = (l - p).magnitude
     var visible = true
     for (i <- 0 until objects.length){
-      val (o, s) = objects(i)
+      val (o, _) = objects(i)
       val t = o.intersectionTime(ray)
       if (t > Epsilon && t < length - Epsilon){
         visible = false
@@ -275,7 +275,7 @@ class Scene(objects: Array[(Form, Surface)],
       }
       minT match{
         case -1 => (0, 0, 0)
-        case t =>
+        case _ =>
           val p = ray.pointAtTime(minT)
           minS.colorAt(this, ray, p, minO.normalAt(p), depth + 1)
       }
@@ -294,7 +294,7 @@ class Scene(objects: Array[(Form, Surface)],
     val vpRight = eye.vector.cross((0, 1, 0)).normalized
     val vpUp = vpRight.cross(eye.vector).normalized
 
-    var y = 0;
+    var y = 0
     lazy val interval: Int = dom.window.setInterval({ () => 
       for (x <- 0 until canvas.width){
         val xcomp = vpRight * (x * pixelWidth - halfWidth)

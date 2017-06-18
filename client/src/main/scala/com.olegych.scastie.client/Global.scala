@@ -17,7 +17,7 @@ object Global {
 
   private var scope0: Option[Scope] = _
 
-  def subsribe(scope: Scope): Unit = {
+  def subscribe(scope: Scope): Unit = {
     scope0 = Some(scope)
   }
 

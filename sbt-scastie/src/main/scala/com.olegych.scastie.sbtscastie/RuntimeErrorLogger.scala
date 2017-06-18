@@ -47,7 +47,7 @@ object RuntimeErrorLogger {
                 )
 
             if (!sbtTrap) {
-              println(uwrite(RuntimeError.fromTrowable(t)))
+              println(uwrite(RuntimeError.fromThrowable(t)))
             }
           }
         }
