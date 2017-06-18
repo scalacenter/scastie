@@ -1,0 +1,1 @@
+-Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
