@@ -27,6 +27,7 @@ case class SaveSnippet(inputs: InputsWithIpAndUser)
 case class AmendSnippet(snippetId: SnippetId, inputs: InputsWithIpAndUser)
 case class UpdateSnippet(snippetId: SnippetId, inputs: InputsWithIpAndUser)
 case class DeleteSnippet(snippetId: SnippetId)
+case class DownloadSnippet(snippetId: SnippetId)
 
 case class ForkSnippet(snippetId: SnippetId, inputs: InputsWithIpAndUser)
 
@@ -183,6 +184,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case DeleteSnippet(snippetId) => {
       container.delete(snippetId)
       sender ! (())
+    }
+
+    case DownloadSnippet(snippetId) => {
+      sender ! container.downloadSnippet(snippetId)
     }
 
     case FetchSnippet(snippetId) => {

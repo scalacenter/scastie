@@ -2,17 +2,16 @@ package com.olegych.scastie
 package balancer
 
 import api._
-
-import upickle.default.{write => uwrite, read => uread}
-
+import upickle.default.{read => uread, write => uwrite}
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.file._
 import FileVisitResult.CONTINUE
-
 import java.util.{Base64, UUID}
-
 import System.{lineSeparator => nl}
+
+import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.model.ZipParameters
 
 case class UserLogin(login: String)
 
@@ -100,6 +99,38 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     progress.snippetId.foreach(
       sid => write(outputsFile(sid), uwrite(progress) + nl, append = true)
     )
+  }
+
+  def downloadSnippet(snippetId: SnippetId): Option[Path] = {
+    readSnippet(snippetId) match {
+      case Some(FetchResult(inputs, _)) => Some(zipSnippet(snippetId, inputs))
+      case None => None
+    }
+  }
+
+  private def zipSnippet(snippetId: SnippetId, inputs: Inputs): Path = {
+    val projectDir = rootDir(snippetId).resolve(s"project_${snippetId.base64UUID}")
+    if (!Files.exists(projectDir)) {
+      Files.createDirectory(projectDir)
+
+      val buildFile = projectDir.resolve("build.sbt")
+      write(buildFile, inputs.sbtConfig, truncate = true)
+
+      val projectFile = projectDir.resolve("project/plugins.sbt")
+      Files.createDirectories(projectFile.getParent)
+      write(projectFile, inputs.sbtPluginsConfig, truncate = true)
+
+      val codeFile = projectDir.resolve("src/main/scala/main.scala")
+      Files.createDirectories(codeFile.getParent)
+      write(codeFile, inputs.code, truncate = true)
+    }
+
+    val zippedProjectDir = Paths.get(s"$projectDir.zip")
+    if (!Files.exists(zippedProjectDir)) {
+      new ZipFile(zippedProjectDir.toFile).addFolder(projectDir.toFile, new ZipParameters())
+    }
+
+    zippedProjectDir
   }
 
   def readSnippet(snippetId: SnippetId): Option[FetchResult] = {

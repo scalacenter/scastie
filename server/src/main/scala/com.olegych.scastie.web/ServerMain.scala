@@ -72,6 +72,7 @@ object ServerMain {
       concat(
         DebugRoutes.routes,
         new ProgressRoutes(progressActor).routes,
+        new DownloadRoutes(dispatchActor).routes,
         new StatusRoutes(statusActor, userDirectives).routes,
         new ScalaJsRoutes(dispatchActor).routes,
         new AutowireApiRoutes(dispatchActor, userDirectives).routes

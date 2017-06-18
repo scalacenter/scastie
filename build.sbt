@@ -263,7 +263,8 @@ lazy val balancer = project
     scalacOptions -= "-Xfatal-warnings", // scastie #210
     libraryDependencies ++= Seq(
       akka("remote"),
-      akkaHttpCore
+      akkaHttpCore,
+      "net.lingala.zip4j" % "zip4j" % "1.3.1"
     )
   )
   .dependsOn(api212JVM, utils, instrumentation)
