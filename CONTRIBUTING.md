@@ -9,7 +9,6 @@ requirements:
 
 * node (for less)
 * phantomjs (for running client tests) ```npm install -g phantomjs```
-* `export SBT_OPTS = "-Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"`
 * sbt
 * docker (for deploying)
 
