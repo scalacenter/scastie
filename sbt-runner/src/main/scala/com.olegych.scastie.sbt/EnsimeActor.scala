@@ -13,7 +13,6 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import com.olegych.scastie._
 import com.olegych.scastie.api._
 import org.slf4j.LoggerFactory
 import org.ensime.jerky.JerkyFormats
@@ -30,10 +29,10 @@ import scala.util.{Failure, Success}
 case object Heartbeat
 
 class EnsimeActor(system: ActorSystem) extends Actor {
-
   import spray.json._
 
   private val log = LoggerFactory.getLogger(getClass)
+  private val ensimeLog = LoggerFactory.getLogger("ensime")
 
   implicit val materializer = ActorMaterializer()
   implicit val timeout = Timeout(5.seconds)
@@ -82,11 +81,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
             log.info(s"Got completions: $completions")
             ref ! completions
           }
-          case x => {
-            log.info(s"Payload's not recognized: $x")
-            log.info("Sending it to an actor anyway...")
-            ref ! x
-          }
+          case x => ref ! x
         }
       case _ =>
         log.info(s"Got response without requester $id -> $payload")
@@ -116,13 +111,8 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     def handleIncomingMessage(message: String) = {
       val env = message.parseJson.convertTo[RpcResponseEnvelope]
       env.callId match {
-        case Some(id) => {
-          log.info(s"Received message for $id")
-          handleRPCResponse(id, env.payload)
-        }
-        case None => {
-          log.info(s"Received message with no id.")
-        }
+        case Some(id) => handleRPCResponse(id, env.payload)
+        case None => ()
       }
     }
 
@@ -138,7 +128,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
               case Failure(e) => log.info(s"Couldn't process incoming text stream. $e")
             }
           }
-          case _ => log.info("Unsupported ws response message type from ENSIME")
+          case _ => log.info("Got unsupported ws response message type from ensime-server")
         }
         .to(Sink.ignore)
 
@@ -191,11 +181,10 @@ class EnsimeActor(system: ActorSystem) extends Actor {
       "org.ensime.server.Server"
     ).directory(rootDir.toFile).start()
 
-    // val stdout = ensimeProcess.getInputStream
-    // streamLogger(stdout, "[EnsimeServer]")
-
+    val stdout = ensimeProcess.getInputStream
+    streamLogger(stdout)
     val stderr = ensimeProcess.getErrorStream
-    streamLogger(stderr, "[EnsimeServer]")
+    streamLogger(stderr)
 
     connectToEnsime(f"ws://127.0.0.1:${waitForAndReadPort(httpPortFile)}/websocket")
 
@@ -217,15 +206,16 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     }
   }
 
-  def streamLogger(inputStream: InputStream, opTag: String): Unit = {
+  def streamLogger(inputStream: InputStream): Unit = {
     Future {
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while(line != null) {
-        log.info(s"$opTag: $line")
+        ensimeLog.info(s"$line")
         line = is.readLine()
       }
     }
+    ()
   }
 
   def receive = {
@@ -240,15 +230,11 @@ class EnsimeActor(system: ActorSystem) extends Actor {
       sendToEnsime(req, sender)
     }
 
-    case c: ConnectionInfo => {
-      log.info("ConnectionInfo request at EnsimeActor")
-    }
-
     case Heartbeat =>
       sendToEnsime(ConnectionInfoReq, self)
 
     case x => {
-      log.info(s"Unknown request at EnsimeActor: $x")
+      log.info(s"Got $x at EnsimeActor")
     }
   }
 
@@ -277,6 +263,4 @@ class EnsimeActor(system: ActorSystem) extends Actor {
         throw new IllegalStateException(s"Port file $file not available")
     }
   }
-
-
 }

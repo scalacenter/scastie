@@ -3,12 +3,25 @@
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
       <target>System.out</target>
       <encoder>
-        <pattern>%logger{36}:%line | %msg%n</pattern>
+        <pattern>%d{HH:mm:ss.SSS} %logger{36}:%line | %msg%n</pattern>
       </encoder>
+  </appender>
+
+  <appender name="ENSIME-FILE" class="ch.qos.logback.core.FileAppender">
+      <file>ensime.log</file>
+        <append>true</append>
+        <encoder>
+            <!-- Ensime server already logs time -->
+            <pattern>%msg%n</pattern>
+        </encoder>
   </appender>
 
   <logger name="akka" level="INFO" />
   <root level="INFO">
       <appender-ref ref="CONSOLE"/>
   </root>
+
+  <logger name="ensime" level="INFO" additivity="false">
+    <appender-ref ref="ENSIME-FILE"/>
+  </logger>
 </configuration>
