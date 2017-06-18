@@ -49,18 +49,13 @@ class EnsimeActor(system: ActorSystem) extends Actor {
       |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
       |""".stripMargin
   private val sbtPluginsConfigExtra = s"""addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.11")""".stripMargin
-  private val config = Inputs(
-    worksheetMode = true,
-    code = "object Main extends App {}",
-    target = ScalaTarget.Jvm.default,
-    libraries = Set(),
-    librariesFrom = Map(),
-    sbtConfigExtra = sbtConfigExtra,
-    sbtPluginsConfigExtra = sbtPluginsConfigExtra,
-    showInUserProfile = false,
-    forked = None
+  private val defaultConfig = Inputs.default
+  private val sbt = new Sbt(
+    defaultConfig,
+    rootDir,
+    secretSbtConfigExtra = sbtConfigExtra,
+    secretSbtPluginsConfigExtra = sbtPluginsConfigExtra
   )
-  private val sbt = new Sbt(config, rootDir)
 
   private val httpPortFile = ensimeCacheDir.resolve("http")
 
@@ -154,7 +149,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
 
   override def preStart() = {
     log.info("Generating ensime config file")
-    sbt.eval("ensimeConfig", config, (_, _, _, _) => (), reload = false)
+    sbt.eval("ensimeConfig", defaultConfig, (_, _, _, _) => (), reload = false)
 
     log.info("Form classpath using .ensime file")
     val ensimeConf = fromFile(ensimeConfigFile.toFile).mkString
@@ -190,7 +185,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
 
     log.info("Warming up Ensime...")
     sendToEnsime(CompletionsReq(
-      fileInfo = SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath), Some(config.code)),
+      fileInfo = SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath), Some(defaultConfig.code)),
       point = 2, maxResults = 100, caseSens = false, reload = false
     ), self)
 
@@ -222,12 +217,12 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     case CompletionRequest(inputs, position) => {
       log.info("Completion request at EnsimeActor")
 
-      val req = CompletionsReq(
+      sbt.evalIfNeedsReload("ensimeConfig", inputs, (_, _, _, _) => (), reload = false)
+
+      sendToEnsime(CompletionsReq(
         fileInfo = SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath), Some(inputs.code)),
         point = position, maxResults = 100, caseSens = false, reload = false
-      )
-
-      sendToEnsime(req, sender)
+      ), sender)
     }
 
     case Heartbeat =>
