@@ -11,14 +11,19 @@ import java.nio.file._
 import java.io.{IOException, BufferedReader, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
-class Sbt(defaultConfig: Inputs, sbtDir: Path = Files.createTempDirectory("scastie")) {
+class Sbt(
+           defaultConfig: Inputs,
+           sbtDir: Path = Files.createTempDirectory("scastie"),
+           secretSbtConfigExtra: String = "", // invisible for users
+           secretSbtPluginsConfigExtra: String = "" // they don't participate in configs comparision later
+         ) {
 
   private val log = LoggerFactory.getLogger(getClass)
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
 
   private var currentSbtConfig = ""
-  private var currentSbtPluginConfig = ""
+  private var currentSbtPluginsConfig = ""
 
   private val buildFile = sbtDir.resolve("build.sbt")
   private val prompt = s"""shellPrompt := (_ => "$uniqueId\\n")"""
@@ -131,7 +136,7 @@ class Sbt(defaultConfig: Inputs, sbtDir: Path = Files.createTempDirectory("scast
 
   def needsReload(inputs: Inputs): Boolean =
     inputs.sbtConfig != currentSbtConfig ||
-      inputs.sbtPluginsConfig != currentSbtPluginConfig
+      inputs.sbtPluginsConfig != currentSbtPluginsConfig
 
   def exit(): Unit = {
     process("exit", noop, reload = false)
@@ -149,12 +154,12 @@ class Sbt(defaultConfig: Inputs, sbtDir: Path = Files.createTempDirectory("scast
   }
 
   private def setPlugins(inputs: Inputs): Unit = {
-    writeFile(pluginFile, inputs.sbtPluginsConfig)
-    currentSbtPluginConfig = inputs.sbtPluginsConfig
+    writeFile(pluginFile, inputs.sbtPluginsConfig + nl + secretSbtPluginsConfigExtra)
+    currentSbtPluginsConfig = inputs.sbtPluginsConfig
   }
 
   private def setConfig(inputs: Inputs): Unit = {
-    writeFile(buildFile, prompt + nl + inputs.sbtConfig)
+    writeFile(buildFile, prompt + nl + inputs.sbtConfig + nl + secretSbtConfigExtra)
     currentSbtConfig = inputs.sbtConfig
   }
 
@@ -192,7 +197,7 @@ class Sbt(defaultConfig: Inputs, sbtDir: Path = Files.createTempDirectory("scast
       setConfig(inputs)
     }
 
-    if (inputs.sbtPluginsConfig != currentSbtPluginConfig) {
+    if (inputs.sbtPluginsConfig != currentSbtPluginsConfig) {
       setPlugins(inputs)
     }
 
