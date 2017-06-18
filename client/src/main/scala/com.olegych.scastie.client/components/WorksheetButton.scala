@@ -22,11 +22,11 @@ object WorksheetButton {
       else
         EmptyVdom
 
-    val worksheetModeToogleLabel =
+    val worksheetModeToggleLabel =
       if (props.isWorksheetMode) "OFF"
       else "ON"
 
-    li(title := s"Turn Worksheet Mode $worksheetModeToogleLabel (F4)",
+    li(title := s"Turn Worksheet Mode $worksheetModeToggleLabel (F4)",
        worksheetModeSelected,
        role := "button",
        cls := "btn editor",

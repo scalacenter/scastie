@@ -19,7 +19,7 @@ case class UserLogin(login: String)
 class SnippetsContainer(root: Path, oldRoot: Path) {
 
   def create(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
-    val uuid = randomUrlFirendlyBase64UUID
+    val uuid = randomUrlFriendlyBase64UUID
     val snippetId =
       SnippetId(uuid, user.map(u => SnippetUserPart(u.login, None)))
     write(inputsFile(snippetId), uwrite(inputs))
@@ -301,7 +301,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   // example output: GGdknrcEQVu3elXyboKcYQ
-  private def randomUrlFirendlyBase64UUID(): String = {
+  private def randomUrlFriendlyBase64UUID(): String = {
     def toBase64(uuid: UUID): String = {
       val (high, low) =
         (uuid.getMostSignificantBits, uuid.getLeastSignificantBits)

@@ -24,7 +24,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   scope.props.map(_.embedded)
   scope.props.map(_.targetType)
 
-  Global.subsribe(scope)
+  Global.subscribe(scope)
 
   def goHome: Callback = {
     scope.props.flatMap(

@@ -16,7 +16,7 @@ case object UnsupportedDialect extends InstrumentationFailure
 case class ParsingError(error: Parsed.Error) extends InstrumentationFailure
 
 object Instrument {
-  private val instrumnedClass = "Playground"
+  private val instrumentedClass = "Playground"
   private val instrumentationMethod = "instrumentations$"
   private val instrumentationMap = "instrumentationMap$"
 
@@ -81,7 +81,7 @@ object Instrument {
     val instrumentedCodePatches =
       source.stats.collect {
         case c: Defn.Class
-            if c.name.value == instrumnedClass &&
+            if c.name.value == instrumentedClass &&
               c.templ.stats.nonEmpty => {
 
           val openCurlyBrace =
@@ -108,7 +108,7 @@ object Instrument {
     val entryPoint =
       if (!isScalaJs) {
         s"""|object Main {
-            |  val playground = new $instrumnedClass
+            |  val playground = new $instrumentedClass
             |  def main(args: Array[String]): Unit = {
             |    println($runtimeT.write(playground.${instrumentationMethod}))
             |  }
@@ -116,7 +116,7 @@ object Instrument {
             |""".stripMargin
       } else {
         s"""|@${jsExportTopLevelT}("Main") class Main {
-            |  val playground = $runtimeErrorT.wrap(new $instrumnedClass)
+            |  val playground = $runtimeErrorT.wrap(new $instrumentedClass)
             |  @$jsExportT def result = $runtimeT.write(playground.right.map(_.${instrumentationMethod}))
             |  @$jsExportT def attachedElements: $elemArrayT =
             |    playground match {
@@ -148,7 +148,7 @@ object Instrument {
 
     source.stats.exists {
       case c: Defn.Class
-          if c.name.value == instrumnedClass &&
+          if c.name.value == instrumentedClass &&
             c.templ.stats.nonEmpty => {
 
         c.templ.stats.get.exists {
@@ -171,8 +171,8 @@ object Instrument {
     val isScalaJs = target.targetType == ScalaTargetType.JS
 
     val classBegin =
-      if (!isScalaJs) s"class $instrumnedClass {"
-      else s"class $instrumnedClass extends $domhookT {"
+      if (!isScalaJs) s"class $instrumentedClass {"
+      else s"class $instrumentedClass extends $domhookT {"
 
     val prelude =
       s"""|$runtimeImport
@@ -217,9 +217,9 @@ object Instrument {
         implicit val selectedDialect = dialect
 
         code0.parse[Source] match {
-          case Parsed.Success(souce) =>
-            if (!hasMainMethod(souce))
-              Right(instrument(souce, prelude.length + 1, isScalaJs))
+          case Parsed.Success(source) =>
+            if (!hasMainMethod(source))
+              Right(instrument(source, prelude.length + 1, isScalaJs))
             else Left(HasMainMethod)
           case e: Parsed.Error => Left(ParsingError(e))
         }

@@ -1,7 +1,7 @@
 # Contributing
 
 We are currently in the V2 Milestone. Take a look at the V2 Column in the [Project Page](https://github.com/scalacenter/scastie/projects/1) to see our priorities.
-You are more than welcome to contribute any PR regardeless if it's listed or not.
+You are more than welcome to contribute any PR regardless if it's listed or not.
 
 ## How to run locally
 

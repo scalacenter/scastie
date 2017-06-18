@@ -21,7 +21,7 @@ class AutowireApiRoutes(
     userDirectives: UserDirectives
 )(implicit system: ActorSystem) {
   import system.dispatcher
-  import userDirectives.optionnalLogin
+  import userDirectives.optionalLogin
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -33,7 +33,7 @@ class AutowireApiRoutes(
             e ⇒
               extractClientIP(
                 remoteAddress ⇒
-                  optionnalLogin(
+                  optionalLogin(
                     user ⇒
                       complete {
                         val api = new AutowireApiImplementation(

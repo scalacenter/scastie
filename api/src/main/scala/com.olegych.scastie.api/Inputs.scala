@@ -38,7 +38,7 @@ case class Inputs(
     showInUserProfile: Boolean = false,
     forked: Option[SnippetId] = None
 ) {
-  def isDefault = copy(code = "") != Inputs.default.copy(code = "")
+  def isDefault: Boolean = copy(code = "") != Inputs.default.copy(code = "")
 
   def addScalaDependency(scalaDependency: ScalaDependency,
                          project: Project): Inputs = {
@@ -80,9 +80,9 @@ case class Inputs(
   }
 
   def sbtConfig: String = {
-    val (targetConfig, targetDependecy) =
+    val (targetConfig, targetDependency) =
       target match {
-        case ScalaTarget.Jvm(scalaVersion) => {
+        case ScalaTarget.Jvm(scalaVersion) =>
           (
             s"""scalaVersion := "$scalaVersion"""",
             Some(
@@ -94,9 +94,8 @@ case class Inputs(
               )
             )
           )
-        }
 
-        case ScalaTarget.Typelevel(scalaVersion) => {
+        case ScalaTarget.Typelevel(scalaVersion) =>
           (
             s"""|scalaVersion := "$scalaVersion"
                 |scalaOrganization in ThisBuild := "org.typelevel"""".stripMargin,
@@ -109,9 +108,8 @@ case class Inputs(
               )
             )
           )
-        }
 
-        case ScalaTarget.Js(scalaVersion, _) => {
+        case ScalaTarget.Js(scalaVersion, _) =>
           (
             s"""|scalaVersion := "$scalaVersion"
                 |enablePlugins(ScalaJSPlugin)
@@ -131,14 +129,12 @@ case class Inputs(
               )
             )
           )
-        }
-        case ScalaTarget.Dotty => {
+        case ScalaTarget.Dotty =>
           (
             """scalaVersion := "0.1.2-RC1"""",
             None
           )
-        }
-        case ScalaTarget.Native(scalaVersion, _) => {
+        case ScalaTarget.Native(scalaVersion, _) =>
           (
             s"""scalaVersion := "$scalaVersion"""",
             Some(
@@ -150,15 +146,14 @@ case class Inputs(
               )
             )
           )
-        }
       }
 
-    val optionnalTargetDependecy =
-      if (worksheetMode) targetDependecy
+    val optionalTargetDependency =
+      if (worksheetMode) targetDependency
       else None
 
     val allLibraries =
-      optionnalTargetDependecy.map(libraries + _).getOrElse(libraries)
+      optionalTargetDependency.map(libraries + _).getOrElse(libraries)
 
     val librariesConfig =
       if (allLibraries.isEmpty) ""

@@ -28,10 +28,10 @@ case class Outputs(
   def console: String = consoleOutputs.map(_.show).mkString("\n")
 
   def isClearable: Boolean =
-    !consoleOutputs.isEmpty ||
-      !compilationInfos.isEmpty ||
-      !instrumentations.isEmpty ||
-      !runtimeError.isEmpty
+    consoleOutputs.nonEmpty ||
+      compilationInfos.nonEmpty ||
+      instrumentations.nonEmpty ||
+      runtimeError.isDefined
 }
 
 case class Position(start: Int, end: Int)

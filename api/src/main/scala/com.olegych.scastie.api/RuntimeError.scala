@@ -14,16 +14,15 @@ object RuntimeError {
     try {
       Right(in)
     } catch {
-      case ex: Exception => {
-        Left(RuntimeError.fromTrowable(ex, fromScala = false))
-      }
+      case ex: Exception =>
+        Left(RuntimeError.fromThrowable(ex, fromScala = false))
     }
   }
 
-  def fromTrowable(t: Throwable,
-                   fromScala: Boolean = true): Option[RuntimeError] = {
+  def fromThrowable(t: Throwable,
+                    fromScala: Boolean = true): Option[RuntimeError] = {
     def search(e: Throwable) = {
-      e.getStackTrace()
+      e.getStackTrace
         .find(
           trace =>
             if (fromScala)
@@ -36,7 +35,7 @@ object RuntimeError {
     def loop(e: Throwable): Option[(Throwable, Option[Int])] = {
       val s = search(e)
       if (s.isEmpty)
-        if (e.getCause() != null) loop(e.getCause())
+        if (e.getCause != null) loop(e.getCause)
         else Some((e, None))
       else s
     }
@@ -45,7 +44,7 @@ object RuntimeError {
       case (err, line) ⇒
         val errors = new StringWriter()
         t.printStackTrace(new PrintWriter(errors))
-        val fullStack = errors.toString()
+        val fullStack = errors.toString
 
         RuntimeError(err.toString, line, fullStack)
     }

@@ -23,7 +23,7 @@ class SnippetsContainerTest extends FunSuite {
     assert(snippetId.user.get.login == bob)
   }
 
-  test("create snippet with annonymous user") {
+  test("create snippet with anonymous user") {
     val container = testContainer
     val snippetId = container.create(Inputs.default, user = None)
     assert(snippetId.user.isEmpty)

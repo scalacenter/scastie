@@ -34,7 +34,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
     Paths.get(configuration.getString("oauth2.sessions-file"))
 
   private val sessionConfig =
-    SessionConfig.default(configuration.getString("sesssion-secret"))
+    SessionConfig.default(configuration.getString("session-secret"))
 
   private lazy val users = {
     val trie = ParTrieMap[UUID, User]()

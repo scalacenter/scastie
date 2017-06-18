@@ -14,6 +14,6 @@ import SessionOptions._
 class UserDirectives(session: GithubUserSession) {
   import session._
 
-  def optionnalLogin: Directive1[Option[User]] =
+  def optionalLogin: Directive1[Option[User]] =
     optionalSession(refreshable, usingCookies).map(getUser)
 }
