@@ -306,18 +306,36 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
               .call()
               .map(saveCallback)
           )
-      )
+        )
     )
   }
 
-  def saveOrUpdate: Callback =
+  def saveOrUpdate: Callback = {
     scope.props.flatMap(
       props =>
         props.snippetId match {
           case Some(snippetId) => update(snippetId)
           case None => save
-      }
+        }
     )
+  }
+
+  def saveAndDownload: Callback = {
+    scope.state.flatMap(
+      state =>
+        Callback.unless(state.isSnippetSaved)(
+          Callback.future(
+            ApiClient[AutowireApi]
+              .save(state.inputs)
+              .call()
+              .map(sid => {
+                window.location.replace(s"http://${window.location.host}/download/${sid.base64UUID}")
+                saveCallback(sid)
+              })
+          )
+        )
+    )
+  }
 
   def amend(snippetId: SnippetId): Callback =
     scope.state.flatMap(
@@ -510,8 +528,9 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
   def completeCodeAt(pos: Int): Callback = {
     println("at completeCodeAt")
+
     scope.state.flatMap(
-      state =>
+      state => {
         Callback.future(
           ApiClient[AutowireApi]
             .complete(
@@ -519,12 +538,11 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
             )
             .call()
             .map { response: CompletionResponse =>
-              {
-                println("Received: " + response.completions)
-                scope.modState(_.setCompletions(response.completions))
-              }
+              println("Received: " + response.completions)
+              scope.modState(_.setCompletions(response.completions))
             }
-      )
+        )
+      }
     )
   }
 
