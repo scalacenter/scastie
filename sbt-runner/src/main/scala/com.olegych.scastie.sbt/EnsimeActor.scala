@@ -88,7 +88,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     val env = RpcRequestEnvelope(rpcRequest, nextId)
     nextId += 1
 
-    log.info(s"Sending $env")
+    log.debug(s"Sending $env")
     val json = env.toJson.prettyPrint
     ensimeWS ! TextMessage.Strict(json)
   }
@@ -229,7 +229,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
       sendToEnsime(ConnectionInfoReq, self)
 
     case x => {
-      log.info(s"Got $x at EnsimeActor")
+      log.debug(s"Got $x at EnsimeActor")
     }
   }
 
