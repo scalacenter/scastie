@@ -15,7 +15,6 @@ final case class EditorTopBar(amend: SnippetId => Callback,
                               openNewSnippetModal: Callback,
                               run: Callback,
                               save: Callback,
-                              saveAndDownload: Callback,
                               setView: View => Callback,
                               toggleWorksheetMode: Callback,
                               update: SnippetId => Callback,
@@ -77,10 +76,11 @@ object EditorTopBar {
       fork = props.fork
     ).render
 
-    val downloadButton = DownloadButton(
-      saveAndDownload = props.saveAndDownload,
-      snippetId = props.snippetId
-    ).render
+    val downloadButton =
+      props.snippetId match {
+        case Some(sid) => DownloadButton(snippetId = sid).render
+        case None => EmptyVdom
+      }
 
     nav(cls := "editor-topbar", isDisabled)(
       ul(cls := "editor-buttons")(

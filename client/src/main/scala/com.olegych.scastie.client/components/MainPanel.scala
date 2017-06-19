@@ -125,7 +125,6 @@ object MainPanel {
         openNewSnippetModal = backend.openNewSnippetModal,
         run = backend.run,
         save = backend.save,
-        saveAndDownload = backend.saveAndDownload,
         setView = backend.setView,
         toggleWorksheetMode = backend.toggleWorksheetMode,
         update = backend.update,

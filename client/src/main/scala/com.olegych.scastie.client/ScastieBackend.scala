@@ -321,25 +321,6 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     )
   }
 
-  def saveAndDownload: Callback = {
-    scope.state.flatMap(
-      state =>
-        Callback.unless(state.isSnippetSaved)(
-          Callback.future(
-            ApiClient[AutowireApi]
-              .save(state.inputs)
-              .call()
-              .map(sid => {
-                window.location.replace(
-                  s"http://${window.location.host}/download/${sid.base64UUID}"
-                )
-                saveCallback(sid)
-              })
-          )
-      )
-    )
-  }
-
   def amend(snippetId: SnippetId): Callback =
     scope.state.flatMap(
       state =>
