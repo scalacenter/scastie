@@ -44,11 +44,12 @@ class EnsimeActor(system: ActorSystem) extends Actor {
   Files.createDirectories(ensimeCacheDir)
 
   private val sbtConfigExtra = s"""
-      |// this is where the ensime-server snapshots are hosted
-      |resolvers += Resolver.sonatypeRepo("snapshots")
-      |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
-      |""".stripMargin
-  private val sbtPluginsConfigExtra = s"""addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.11")""".stripMargin
+                                  |// this is where the ensime-server snapshots are hosted
+                                  |resolvers += Resolver.sonatypeRepo("snapshots")
+                                  |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
+                                  |""".stripMargin
+  private val sbtPluginsConfigExtra =
+    s"""addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.11")""".stripMargin
   private val defaultConfig = Inputs.default
   private val sbt = new Sbt(
     defaultConfig,
@@ -60,7 +61,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
   private val httpPortFile = ensimeCacheDir.resolve("http")
 
   private var ensimeProcess: Process = _
-  private var ensimeWS: ActorRef =  _
+  private var ensimeWS: ActorRef = _
   private var hbRef: Option[Cancellable] = None
 
   private var nextId = 1
@@ -72,7 +73,11 @@ class EnsimeActor(system: ActorSystem) extends Actor {
         requests -= id
         payload match {
           case CompletionInfoList(prefix, completionList) => {
-            val completions = CompletionResponse(completionList.sortBy(- _.relevance).map(ci => Completion(ci.name)))
+            val completions = CompletionResponse(
+              completionList
+                .sortBy(-_.relevance)
+                .map(ci => Completion(ci.name))
+            )
             log.info(s"Got completions: $completions")
             ref ! completions
           }
@@ -120,10 +125,14 @@ class EnsimeActor(system: ActorSystem) extends Actor {
           case msgStream: TextMessage.Streamed => {
             msgStream.textStream.runFold("")(_ + _).onComplete {
               case Success(msg) => handleIncomingMessage(msg)
-              case Failure(e) => log.info(s"Couldn't process incoming text stream. $e")
+              case Failure(e) =>
+                log.info(s"Couldn't process incoming text stream. $e")
             }
           }
-          case _ => log.info("Got unsupported ws response message type from ensime-server")
+          case _ =>
+            log.info(
+              "Got unsupported ws response message type from ensime-server"
+            )
         }
         .to(Sink.ignore)
 
@@ -137,14 +146,19 @@ class EnsimeActor(system: ActorSystem) extends Actor {
       if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
         Future.successful(Done)
       } else {
-        throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
+        throw new RuntimeException(
+          s"Connection failed: ${upgrade.response.status}"
+        )
       }
     }
 
     ensimeWS = ws
 
     sendToEnsime(ConnectionInfoReq, self)
-    hbRef = Some(context.system.scheduler.schedule(30.seconds, 30.seconds, self, Heartbeat))
+    hbRef = Some(
+      context.system.scheduler
+        .schedule(30.seconds, 30.seconds, self, Heartbeat)
+    )
   }
 
   override def preStart() = {
@@ -158,7 +172,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
       s":$field \\(.*?\\)".r findFirstIn ensimeConf match {
         case Some(x) => {
           // we need to take everything inside ("...") & replace " " with : to form a classpath string
-          x.substring(x.indexOf("(") + 2 , x.length - 2).replace("\" \"", ":")
+          x.substring(x.indexOf("(") + 2, x.length - 2).replace("\" \"", ":")
         }
         case None => throw new Exception("Can't parse ensime config!")
       }
@@ -171,7 +185,8 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     ensimeProcess = new ProcessBuilder(
       "java",
       "-Densime.config=" + ensimeConfigFile,
-      "-classpath", classpath,
+      "-classpath",
+      classpath,
       "-Densime.explode.on.disconnect=true",
       "org.ensime.server.Server"
     ).directory(rootDir.toFile).start()
@@ -181,13 +196,23 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     val stderr = ensimeProcess.getErrorStream
     streamLogger(stderr)
 
-    connectToEnsime(f"ws://127.0.0.1:${waitForAndReadPort(httpPortFile)}/websocket")
+    connectToEnsime(
+      f"ws://127.0.0.1:${waitForAndReadPort(httpPortFile)}/websocket"
+    )
 
     log.info("Warming up Ensime...")
-    sendToEnsime(CompletionsReq(
-      fileInfo = SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath), Some(defaultConfig.code)),
-      point = 2, maxResults = 100, caseSens = false, reload = false
-    ), self)
+    sendToEnsime(
+      CompletionsReq(
+        fileInfo =
+          SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath),
+                         Some(defaultConfig.code)),
+        point = 2,
+        maxResults = 100,
+        caseSens = false,
+        reload = false
+      ),
+      self
+    )
 
     log.info("EnsimeActor is ready!")
   }
@@ -205,7 +230,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     Future {
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
-      while(line != null) {
+      while (line != null) {
         ensimeLog.info(s"$line")
         line = is.readLine()
       }
@@ -217,12 +242,23 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     case CompletionRequest(inputs, position) => {
       log.info("Completion request at EnsimeActor")
 
-      sbt.evalIfNeedsReload("ensimeConfig", inputs, (_, _, _, _) => (), reload = false)
+      sbt.evalIfNeedsReload("ensimeConfig",
+                            inputs,
+                            (_, _, _, _) => (),
+                            reload = false)
 
-      sendToEnsime(CompletionsReq(
-        fileInfo = SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath), Some(inputs.code)),
-        point = position, maxResults = 100, caseSens = false, reload = false
-      ), sender)
+      sendToEnsime(
+        CompletionsReq(
+          fileInfo =
+            SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath),
+                           Some(inputs.code)),
+          point = position,
+          maxResults = 100,
+          caseSens = false,
+          reload = false
+        ),
+        sender
+      )
     }
 
     case Heartbeat =>
@@ -239,8 +275,8 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     val file = path.toFile
     log.info(s"Trying to read port file at: $path")
 
-    while(count < 30 && res.isEmpty) {
-      if(file.exists) {
+    while (count < 30 && res.isEmpty) {
+      if (file.exists) {
         val handler = fromFile(file)
         val contents = fromFile(file).mkString
         handler.close()

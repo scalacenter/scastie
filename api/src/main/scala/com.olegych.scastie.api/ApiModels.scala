@@ -39,10 +39,10 @@ object User {
     "olafurpg",
     "rorygraves",
     "travissarles"
-  ) 
+  )
 }
 case class User(login: String, name: Option[String], avatar_url: String) {
-  def isAdmin = User.admins.contains(login)  
+  def isAdmin = User.admins.contains(login)
 }
 
 case class SnippetSummary(snippetId: SnippetId, summary: String, time: Long)

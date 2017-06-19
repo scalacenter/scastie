@@ -19,12 +19,17 @@ class DownloadRoutes(dispatchActor: ActorRef) {
     get {
       snippetId("download")(
         sid ⇒
-            Await.result((dispatchActor ? DownloadSnippet(sid)).mapTo[Option[Path]], 5.second) match {
-              case Some(path) =>
-                getFromFile(path.toFile)
-              case None =>
-                throw new Exception(s"Can't serve project ${sid.base64UUID} to user ${sid.user.getOrElse("anon")}")
-            }
+          Await.result(
+            (dispatchActor ? DownloadSnippet(sid)).mapTo[Option[Path]],
+            5.second
+          ) match {
+            case Some(path) =>
+              getFromFile(path.toFile)
+            case None =>
+              throw new Exception(
+                s"Can't serve project ${sid.base64UUID} to user ${sid.user.getOrElse("anon")}"
+              )
+        }
       )
     }
 }

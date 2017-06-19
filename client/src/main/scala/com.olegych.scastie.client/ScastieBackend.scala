@@ -116,7 +116,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     socket
   }
 
-  private def connectStatusEventSource: CallbackTo[EventSource] = 
+  private def connectStatusEventSource: CallbackTo[EventSource] =
     CallbackTo[EventSource] {
       val direct = scope.withEffectsImpure
       val eventSource = new EventSource("/status-sse")
@@ -307,7 +307,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
               .call()
               .map(saveCallback)
           )
-        )
+      )
     )
   }
 
@@ -317,7 +317,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
         props.snippetId match {
           case Some(snippetId) => update(snippetId)
           case None => save
-        }
+      }
     )
   }
 
@@ -330,11 +330,13 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
               .save(state.inputs)
               .call()
               .map(sid => {
-                window.location.replace(s"http://${window.location.host}/download/${sid.base64UUID}")
+                window.location.replace(
+                  s"http://${window.location.host}/download/${sid.base64UUID}"
+                )
                 saveCallback(sid)
               })
           )
-        )
+      )
     )
   }
 

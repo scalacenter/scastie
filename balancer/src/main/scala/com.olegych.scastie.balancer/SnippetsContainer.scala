@@ -109,7 +109,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   private def zipSnippet(snippetId: SnippetId, inputs: Inputs): Path = {
-    val projectDir = rootDir(snippetId).resolve(s"project_${snippetId.base64UUID}")
+    val projectDir =
+      rootDir(snippetId).resolve(s"project_${snippetId.base64UUID}")
     if (!Files.exists(projectDir)) {
       Files.createDirectory(projectDir)
 
@@ -127,7 +128,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
 
     val zippedProjectDir = Paths.get(s"$projectDir.zip")
     if (!Files.exists(zippedProjectDir)) {
-      new ZipFile(zippedProjectDir.toFile).addFolder(projectDir.toFile, new ZipParameters())
+      new ZipFile(zippedProjectDir.toFile)
+        .addFolder(projectDir.toFile, new ZipParameters())
     }
 
     zippedProjectDir

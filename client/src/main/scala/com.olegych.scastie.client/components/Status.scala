@@ -4,7 +4,9 @@ package components
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._
 
-final case class Status(state: StatusState, router: RouterCtl[Page], isAdmin: Boolean) {
+final case class Status(state: StatusState,
+                        router: RouterCtl[Page],
+                        isAdmin: Boolean) {
   @inline def render: VdomElement = Status.component(this)
 }
 

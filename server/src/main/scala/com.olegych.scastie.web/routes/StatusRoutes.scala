@@ -27,19 +27,17 @@ import scala.concurrent.duration._
 
 import scala.collection.immutable.Queue
 
-
-class StatusRoutes(statusActor: ActorRef, 
-                   userDirectives: UserDirectives) {
+class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
 
   implicit val timeout = Timeout(1.seconds)
 
   val adminUser: Directive1[Boolean] =
-    userDirectives.optionnalLogin.map(user =>
-      user.map(_.isAdmin).getOrElse(false)
+    userDirectives.optionnalLogin.map(
+      user => user.map(_.isAdmin).getOrElse(false)
     )
 
   def hideTask(isAdmin: Boolean, progress: StatusProgress): StatusProgress =
-    if(isAdmin) progress
+    if (isAdmin) progress
     else
       progress match {
         case StatusInfo(runners) =>
@@ -52,11 +50,15 @@ class StatusRoutes(statusActor: ActorRef,
 
   val routes =
     path("status-sse")(
-      adminUser(isAdmin =>
-        complete(
-          statusSource().map(progress => ServerSentEvent(
-            uwrite(progress)
-          ))
+      adminUser(
+        isAdmin =>
+          complete(
+            statusSource().map(
+              progress =>
+                ServerSentEvent(
+                  uwrite(progress)
+              )
+            )
         )
       )
     )

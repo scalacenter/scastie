@@ -17,9 +17,7 @@ object DownloadButton {
         a(
           href := s"/download/${sid.base64UUID}",
           download := s"${sid.base64UUID}",
-          li(title := s"Download ($ctrl + D)",
-            role := "button",
-            cls := "btn")(
+          li(title := s"Download ($ctrl + D)", role := "button", cls := "btn")(
             i(cls := "fa fa-download"),
             span("Download")
           )
@@ -27,9 +25,9 @@ object DownloadButton {
 
       case None =>
         li(title := s"Download ($ctrl + D)",
-          role := "button",
-          cls := "btn",
-          onClick --> props.saveAndDownload)(
+           role := "button",
+           cls := "btn",
+           onClick --> props.saveAndDownload)(
           i(cls := "fa fa-download"),
           span("Download")
         )

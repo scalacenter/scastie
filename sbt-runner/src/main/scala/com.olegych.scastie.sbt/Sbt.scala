@@ -12,11 +12,11 @@ import java.io.{IOException, BufferedReader, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
 class Sbt(
-           defaultConfig: Inputs,
-           sbtDir: Path = Files.createTempDirectory("scastie"),
-           secretSbtConfigExtra: String = "", // invisible for users
-           secretSbtPluginsConfigExtra: String = "" // they don't participate in configs comparision later
-         ) {
+    defaultConfig: Inputs,
+    sbtDir: Path = Files.createTempDirectory("scastie"),
+    secretSbtConfigExtra: String = "", // invisible for users
+    secretSbtPluginsConfigExtra: String = "" // they don't participate in configs comparision later
+) {
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -154,12 +154,14 @@ class Sbt(
   }
 
   private def setPlugins(inputs: Inputs): Unit = {
-    writeFile(pluginFile, inputs.sbtPluginsConfig + nl + secretSbtPluginsConfigExtra)
+    writeFile(pluginFile,
+              inputs.sbtPluginsConfig + nl + secretSbtPluginsConfigExtra)
     currentSbtPluginsConfig = inputs.sbtPluginsConfig
   }
 
   private def setConfig(inputs: Inputs): Unit = {
-    writeFile(buildFile, prompt + nl + inputs.sbtConfig + nl + secretSbtConfigExtra)
+    writeFile(buildFile,
+              prompt + nl + inputs.sbtConfig + nl + secretSbtConfigExtra)
     currentSbtConfig = inputs.sbtConfig
   }
 
