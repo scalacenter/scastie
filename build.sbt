@@ -139,29 +139,6 @@ lazy val runnerRuntimeDependencies = Seq(
   sbtScastie
 ).map(publishLocal in _)
 
-// https://github.com/ensime/ensime-sbt/blob/2.0/src/main/scala/EnsimePlugin.scala#L587
-lazy val JdkDir: File = List(
-  // manual
-  sys.env.get("JDK_HOME"),
-  sys.env.get("JAVA_HOME"),
-  // fallback
-  sys.props.get("java.home").map(new File(_).getParent),
-  sys.props.get("java.home"),
-  // osx
-  Try("/usr/libexec/java_home".!!.trim).toOption
-).flatten
-  .filter { n =>
-    new File(n + "/lib/tools.jar").exists
-  }
-  .headOption
-  .map(new File(_).getCanonicalFile)
-  .getOrElse(
-    throw new FileNotFoundException(
-      """Could not automatically find the JDK/lib/tools.jar.
-        |You must explicitly set JDK_HOME or JAVA_HOME.""".stripMargin
-    )
-  )
-
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
@@ -179,10 +156,7 @@ lazy val sbtRunner = project
       "com.geirsson" %% "scalafmt-core" % "0.7.0-RC1",
       "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT"
     ),
-    buildInfoKeys := Seq[BuildInfoKey](
-      version,
-      "JdkDir" -> JdkDir
-    ),
+    buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "com.olegych.scastie.buildinfo",
     imageNames in docker := Seq(
       ImageName(
