@@ -14,7 +14,7 @@ lazy val orgSettings = Seq(
 )
 
 lazy val upickleVersion = "0.4.4"
-lazy val autowireVersion = "0.2.5"
+lazy val autowireVersion = "0.2.6"
 lazy val scalajsDomVersion = "0.9.2"
 lazy val scalaTestVersion = "3.0.1"
 lazy val akkaHttpVersion = "10.0.6"
@@ -371,7 +371,7 @@ def api(scalaV: String) = {
       scalaVersion := scalaV,
       moduleName := projectName,
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "autowire" % "0.2.6",
+        "com.lihaoyi" %%% "autowire" % autowireVersion,
         "com.lihaoyi" %%% "upickle" % upickleVersion
       ),
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "src" / "main" / "scala"
