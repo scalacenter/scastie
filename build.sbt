@@ -8,7 +8,7 @@ import java.io.FileNotFoundException
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := "0.24.0"
+  version := s"0.24.0+${githash()}"
 )
 
 lazy val upickleVersion = "0.4.4"
@@ -81,7 +81,7 @@ lazy val baseSettings = Seq(
 
 lazy val loggingAndTest =
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.2.2",
+    "ch.qos.logback" % "logback-classic" % "1.1.7",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
     "com.getsentry.raven" % "raven-logback" % "8.0.3",
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
@@ -92,7 +92,7 @@ lazy val remapSourceMap =
     val ver = version.value
     val fromScastie = (baseDirectory in LocalRootProject).value.toURI.toString
     val toScastie =
-      s"https://raw.githubusercontent.com/scalacenter/scastie/v$ver/"
+      s"https://raw.githubusercontent.com/scalacenter/scastie/${githash()}"
 
     Map(
       fromScastie ->
@@ -176,11 +176,14 @@ lazy val sbtRunner = project
     test in assembly := {},
     dockerfile in docker := Def
       .task {
+        val base = (baseDirectory in ThisBuild).value
         val ivy = ivyPaths.value.ivyHome.get
 
         val org = organization.value
         val artifact = assembly.value
         val artifactTargetPath = s"/app/${artifact.name}"
+
+        val logbackConfDestination = "/root/logback.xml"
 
         new Dockerfile {
           from("scalacenter/scastie-docker-sbt:0.0.23")
@@ -189,9 +192,12 @@ lazy val sbtRunner = project
 
           add(artifact, artifactTargetPath)
 
+          add(base / "logback.xml", logbackConfDestination)
+
           entryPoint("java",
                      "-Xmx256M",
                      "-Xms256M",
+                     s"-Dlogback.configurationFile=$logbackConfDestination",
                      "-jar",
                      artifactTargetPath)
         }
@@ -345,6 +351,13 @@ lazy val instrumentation = project
 def crossDir(projectId: String) = file(".cross/" + projectId)
 def dash(name: String) = name.replaceAllLiterally(".", "-")
 
+def githash(): String = {
+  import sys.process._
+  if (!sys.env.contains("CI")) {
+    Process("git describe --long --dirty --always").lines.mkString("")
+  } else "CI"
+}
+
 /* api is for the communication between sbt <=> server <=> frontend */
 def api(scalaV: String) = {
   val projectName = "api"
@@ -356,12 +369,7 @@ def api(scalaV: String) = {
     .settings(
       buildInfoKeys := Seq[BuildInfoKey](
         version,
-        BuildInfoKey.action("githash") {
-          import sys.process._
-          if (!sys.env.contains("CI")) {
-            Process("git describe --long --dirty --always").lines.mkString("")
-          } else "CI"
-        }
+        BuildInfoKey.action("githash") { githash() }
       ),
       buildInfoPackage := "com.olegych.scastie.buildinfo",
       scalaVersion := scalaV,

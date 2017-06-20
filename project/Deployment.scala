@@ -131,7 +131,7 @@ class Deployment(rootFolder: File,
           |
           |nohup server/bin/server \\
           |  -Dconfig.file=/home/$userName/$applicationRootConfig \\
-          |  -Dlogger.file=/home/$userName/$logbackConfigFileName \\
+          |  -Dlogback.configurationFile=/home/$userName/$logbackConfigFileName \\
           |  -Dsentry.dsn=$sentryDsn \\
           |  -Dsentry.release=$version \\
           |  &>/dev/null &
