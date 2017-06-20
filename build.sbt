@@ -1,4 +1,6 @@
 import ScalaJSHelper._
+import Deployment.githash
+
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
@@ -351,18 +353,6 @@ lazy val instrumentation = project
 
 def crossDir(projectId: String) = file(".cross/" + projectId)
 def dash(name: String) = name.replaceAllLiterally(".", "-")
-
-def githash(): String = {
-  import sys.process._
-  if (!sys.env.contains("CI")) {
-    val isDirty = Process("git diff-files --quiet").! == 1
-    val indexState =
-      if(isDirty) "-dirty"
-      else ""
-
-    Process("git rev-parse --verify HEAD").lines.mkString("") + indexState
-  } else "CI"
-}
 
 /* api is for the communication between sbt <=> server <=> frontend */
 def api(scalaV: String) = {
