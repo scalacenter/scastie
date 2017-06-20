@@ -1,0 +1,14 @@
+language: scala
+os:
+  - linux
+scala:
+  - 2.12.2
+jdk:
+  - oraclejdk8
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt/boot/
+    - $HOME/.coursier/cache
+script:
+  - sbt test
