@@ -22,6 +22,7 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 
+
 lazy val scastie = project
   .in(file("."))
   .aggregate(
@@ -162,7 +163,7 @@ lazy val sbtRunner = project
       ImageName(
         namespace = Some("scalacenter"),
         repository = "scastie-sbt-runner",
-        tag = Some(version.value)
+        tag = Some(githash())
       )
     ),
     assemblyMergeStrategy in assembly := {
@@ -192,7 +193,7 @@ lazy val sbtRunner = project
 
           add(artifact, artifactTargetPath)
 
-          add(base / "logback.xml", logbackConfDestination)
+          add(base / "deployment" / "logback.xml", logbackConfDestination)
 
           entryPoint("java",
                      "-Xmx256M",
@@ -354,7 +355,12 @@ def dash(name: String) = name.replaceAllLiterally(".", "-")
 def githash(): String = {
   import sys.process._
   if (!sys.env.contains("CI")) {
-    Process("git describe --long --dirty --always").lines.mkString("")
+    val isDirty = Process("git diff-files --quiet").! == 1
+    val indexState =
+      if(isDirty) "-dirty"
+      else ""
+
+    Process("git rev-parse --verify HEAD").lines.mkString("") + indexState
   } else "CI"
 }
 
