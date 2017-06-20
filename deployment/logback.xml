@@ -15,23 +15,6 @@
       </encoder>
   </appender>
 
-  <appender name="ENSIME-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>logs/ensime.log</file>
-    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-        <fileNamePattern>logs/ensime-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-
-        <!-- each file should be at most 100MB, keep 30 days worth of history, but at most 5GB -->
-        <maxFileSize>100MB</maxFileSize>
-        <maxHistory>30</maxHistory>
-        <totalSizeCap>5GB</totalSizeCap>
-    </rollingPolicy>
-    <encoder>
-        <!-- Ensime server already logs time -->
-        <pattern>%msg%n</pattern>
-    </encoder>
-  </appender>
-
-
   <appender name="SENTRY" class="com.getsentry.raven.logback.SentryAppender">
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
       <level>WARN</level>
@@ -39,10 +22,6 @@
   </appender>
 
   <logger name="akka" level="INFO" />
-
-  <logger name="ensime" level="INFO" additivity="false">
-    <appender-ref ref="ENSIME-FILE"/>
-  </logger>
   
   <root level="INFO">
       <appender-ref ref="CONSOLE"/>
