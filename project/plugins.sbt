@@ -5,7 +5,7 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-web" % "1.2.2")
 addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15-1")
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.8.0")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.16")
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.0")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.1")
 addSbtPlugin("org.irundaia.sbt" % "sbt-sassify" % "1.4.8")
 
 libraryDependencies += "com.typesafe" % "config" % "1.3.1"
