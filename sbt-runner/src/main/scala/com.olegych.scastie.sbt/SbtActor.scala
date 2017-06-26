@@ -2,8 +2,7 @@ package com.olegych.scastie
 package sbt
 
 import api._
-
-import akka.actor.{ActorSystem, Props, Actor}
+import akka.actor.{Actor, ActorSystem, Props}
 
 import scala.concurrent.duration._
 
@@ -23,7 +22,7 @@ class SbtActor(system: ActorSystem,
 
   val ensimeActor =
     system.actorOf(
-      Props(new EnsimeActor(system)),
+      Props(new EnsimeActor(system, sbtRunner)),
       name = "EnsimeActor"
     )
 

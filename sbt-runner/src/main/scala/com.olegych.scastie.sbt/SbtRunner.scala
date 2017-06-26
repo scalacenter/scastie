@@ -131,6 +131,12 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
   }
 
   def receive = {
+    case MkEnsimeConfigRequest => {
+      log.info("Generating ensime config file")
+      sbt.eval("ensimeConfig", defaultConfig, (_, _, _, _) => (), reload = false)
+      sender ! MkEnsimeConfigResponse(sbt.sbtDir)
+    }
+
     case SbtTask(snippetId, inputs, ip, login, progressActor) => {
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 

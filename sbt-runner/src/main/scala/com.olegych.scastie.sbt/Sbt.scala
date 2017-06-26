@@ -11,12 +11,7 @@ import java.nio.file._
 import java.io.{IOException, BufferedReader, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
-class Sbt(
-    defaultConfig: Inputs,
-    sbtDir: Path = Files.createTempDirectory("scastie"),
-    secretSbtConfigExtra: String = "", // invisible for users
-    secretSbtPluginsConfigExtra: String = "" // they don't participate in configs comparision later
-) {
+class Sbt(defaultConfig: Inputs) {
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -25,6 +20,7 @@ class Sbt(
   private var currentSbtConfig = ""
   private var currentSbtPluginsConfig = ""
 
+  val sbtDir = Files.createTempDirectory("scastie")
   private val buildFile = sbtDir.resolve("build.sbt")
   private val prompt = s"""shellPrompt := (_ => "$uniqueId\\n")"""
 
@@ -34,6 +30,13 @@ class Sbt(
   write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.15")
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
+
+  private val ensimeVersion = "2.0.0-SNAPSHOT"
+  private val secretSbtConfigExtra = s"""
+                                        |// this is where the ensime-server snapshots are hosted
+                                        |resolvers += Resolver.sonatypeRepo("snapshots")
+                                        |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
+                                        |""".stripMargin
 
   private def setup(): Unit = {
     setConfig(defaultConfig)
@@ -155,7 +158,7 @@ class Sbt(
 
   private def setPlugins(inputs: Inputs): Unit = {
     writeFile(pluginFile,
-              inputs.sbtPluginsConfig + nl + secretSbtPluginsConfigExtra)
+              inputs.sbtPluginsConfig)
     currentSbtPluginsConfig = inputs.sbtPluginsConfig
   }
 

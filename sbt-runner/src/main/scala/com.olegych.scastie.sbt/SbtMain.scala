@@ -6,7 +6,6 @@ import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
 import java.util.concurrent.TimeUnit
 
 object SbtMain {

@@ -38,6 +38,7 @@ RUN mkdir /root/.sbt
 RUN mkdir /root/.sbt/0.13
 RUN mkdir /root/.sbt/0.13/plugins
 RUN echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC2")' >> /root/.sbt/0.13/plugins/plugins.sbt
+RUN echo 'addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.11")' >> /root/.sbt/0.13/plugins/plugins.sbt
 
 RUN mkdir /root/scala-210
 RUN mkdir /root/scala-210/project
@@ -91,3 +92,4 @@ RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, Wo
 RUN cd /root/dotty; sbt run
 
 RUN apk add --update procps
+

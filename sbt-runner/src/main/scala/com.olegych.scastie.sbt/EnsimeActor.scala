@@ -28,37 +28,17 @@ import scala.util.{Failure, Success}
 
 case object Heartbeat
 
-class EnsimeActor(system: ActorSystem) extends Actor {
+case object MkEnsimeConfigRequest
+case class MkEnsimeConfigResponse(sbtDir: Path)
+
+class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   import spray.json._
 
   private val log = LoggerFactory.getLogger(getClass)
-  private val ensimeLog = LoggerFactory.getLogger("ensime")
+//  private val ensimeLog = log // LoggerFactory.getLogger("ensime")
 
-  implicit val materializer = ActorMaterializer()
+  implicit val materializer_ = ActorMaterializer()
   implicit val timeout = Timeout(5.seconds)
-
-  private val rootDir = Files.createTempDirectory("scastie-ensime")
-  private val ensimeVersion = "2.0.0-SNAPSHOT"
-  private val ensimeConfigFile = rootDir.resolve(".ensime")
-  private val ensimeCacheDir = rootDir.resolve(".ensime_cache")
-  Files.createDirectories(ensimeCacheDir)
-
-  private val sbtConfigExtra = s"""
-                                  |// this is where the ensime-server snapshots are hosted
-                                  |resolvers += Resolver.sonatypeRepo("snapshots")
-                                  |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
-                                  |""".stripMargin
-  private val sbtPluginsConfigExtra =
-    s"""addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.11")""".stripMargin
-  private val defaultConfig = Inputs.default
-  private val sbt = new Sbt(
-    defaultConfig,
-    rootDir,
-    secretSbtConfigExtra = sbtConfigExtra,
-    secretSbtPluginsConfigExtra = sbtPluginsConfigExtra
-  )
-
-  private val httpPortFile = ensimeCacheDir.resolve("http")
 
   private var ensimeProcess: Process = _
   private var ensimeWS: ActorRef = _
@@ -66,6 +46,8 @@ class EnsimeActor(system: ActorSystem) extends Actor {
 
   private var nextId = 1
   private var requests = Map[Int, ActorRef]()
+
+  private var codeFile: Path = _
 
   def handleRPCResponse(id: Int, payload: EnsimeServerMessage) = {
     requests.get(id) match {
@@ -162,8 +144,16 @@ class EnsimeActor(system: ActorSystem) extends Actor {
   }
 
   override def preStart() = {
-    log.info("Generating ensime config file")
-    sbt.eval("ensimeConfig", defaultConfig, (_, _, _, _) => (), reload = false)
+    log.info("Request ensime info from sbtRunner [TELL!]")
+    sbtRunner.tell(MkEnsimeConfigRequest, self)
+  }
+
+  private def startEnsimeServer(sbtDir: Path) = {
+    val ensimeConfigFile = sbtDir.resolve(".ensime")
+    val ensimeCacheDir = sbtDir.resolve(".ensime_cache")
+    Files.createDirectories(ensimeCacheDir)
+
+    val httpPortFile = ensimeCacheDir.resolve("http")
 
     log.info("Form classpath using .ensime file")
     val ensimeConf = fromFile(ensimeConfigFile.toFile).mkString
@@ -189,7 +179,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
       classpath,
       "-Densime.explode.on.disconnect=true",
       "org.ensime.server.Server"
-    ).directory(rootDir.toFile).start()
+    ).directory(sbtDir.toFile).start()
 
     val stdout = ensimeProcess.getInputStream
     streamLogger(stdout)
@@ -201,11 +191,12 @@ class EnsimeActor(system: ActorSystem) extends Actor {
     )
 
     log.info("Warming up Ensime...")
+    codeFile = sbtDir.resolve("src/main/scala/main.scala")
     sendToEnsime(
       CompletionsReq(
         fileInfo =
-          SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath),
-                         Some(defaultConfig.code)),
+          SourceFileInfo(RawFile(new File(codeFile.toString).toPath),
+                         Some(Inputs.defaultCode)),
         point = 2,
         maxResults = 100,
         caseSens = false,
@@ -220,7 +211,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
   override def postStop(): Unit = {
     log.info("ensimeActor: postStop")
     hbRef.foreach(_.cancel())
-    if (ensimeProcess.isAlive) {
+    if (ensimeProcess != null && ensimeProcess.isAlive) {
       log.info("Killing Ensime server")
       ensimeProcess.destroy()
     }
@@ -231,7 +222,7 @@ class EnsimeActor(system: ActorSystem) extends Actor {
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        ensimeLog.info(s"$line")
+        log.info(s"$line")
         line = is.readLine()
       }
     }
@@ -239,18 +230,26 @@ class EnsimeActor(system: ActorSystem) extends Actor {
   }
 
   def receive = {
+    case MkEnsimeConfigResponse(sbtDir: Path) => {
+      log.info("Got MkEnsimeConfigResponse")
+      startEnsimeServer(sbtDir)
+    }
+
     case CompletionRequest(inputs, position) => {
       log.info("Completion request at EnsimeActor")
 
-      sbt.evalIfNeedsReload("ensimeConfig",
-                            inputs,
-                            (_, _, _, _) => (),
-                            reload = false)
+      if (!inputs.target.targetType.equals(ScalaTarget.Jvm.default)) {
+        log.info(s"Not supported target type ${inputs.target.targetType} – drop")
+      }
+//      sbt.evalIfNeedsReload("ensimeConfig",
+//                            inputs,
+//                            (_, _, _, _) => (),
+//                            reload = false)
 
       sendToEnsime(
         CompletionsReq(
           fileInfo =
-            SourceFileInfo(RawFile(new File(sbt.codeFile.toString).toPath),
+            SourceFileInfo(RawFile(new File(codeFile.toString).toPath),
                            Some(inputs.code)),
           point = position,
           maxResults = 100,
