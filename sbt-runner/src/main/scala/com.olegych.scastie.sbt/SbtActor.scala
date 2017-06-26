@@ -2,8 +2,7 @@ package com.olegych.scastie
 package sbt
 
 import api._
-
-import akka.actor.{ActorSystem, Props, Actor}
+import akka.actor.{Actor, ActorSystem, Props}
 
 import scala.concurrent.duration._
 
@@ -13,32 +12,31 @@ class SbtActor(system: ActorSystem,
     extends Actor {
 
   val formatActor =
-    system.actorOf(Props(new FormatActor()), name = "FormatActor")
+    context.actorOf(Props(new FormatActor()), name = "FormatActor")
 
   val sbtRunner =
-    system.actorOf(
+    context.actorOf(
       Props(new SbtRunner(runTimeout, production)),
       name = "SbtRunner"
     )
 
-  // val ensimeActor =
-  //   system.actorOf(
-  //     Props(new EnsimeActor(system)),
-  //     name = "EnsimeActor"
-  //   )
+  val ensimeActor =
+    context.actorOf(
+      Props(new EnsimeActor(system, sbtRunner)),
+      name = "EnsimeActor"
+    )
 
   def receive = {
     case SbtPing =>
       sender ! SbtPong
 
-    case completion: CompletionRequest => 
-      sender ! CompletionResponse(Nil)
-      // ensimeActor.tell(completion, sender)
+    case req: EnsimeRequest =>
+      ensimeActor.forward(req)
 
     case format: FormatRequest =>
-      formatActor.tell(format, sender)
+      formatActor.forward(format)
 
     case task: SbtTask =>
-      sbtRunner.tell(task, sender)
+      sbtRunner.forward(task)
   }
 }

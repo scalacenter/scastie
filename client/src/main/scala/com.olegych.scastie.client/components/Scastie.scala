@@ -61,7 +61,7 @@ object Scastie {
         toggleTheme = scope.backend.toggleTheme,
         view = scope.backend.viewSnapshot(state.view),
         openHelpModal = scope.backend.openHelpModal
-      ).render.unless(props.isEmbedded),
+      ).render.unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(
         state,
         scope.backend,

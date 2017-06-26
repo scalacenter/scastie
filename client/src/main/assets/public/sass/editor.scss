@@ -125,6 +125,12 @@
     width: calc(100% - #{$sidebar-width});
   }
 
+  .main-panel-presentation-mode {
+    width: 100%;
+    height: calc(100% + #{$header-height});
+    left: 0;
+  }
+
   @include phone {
     .main-panel {
       left: 0;
