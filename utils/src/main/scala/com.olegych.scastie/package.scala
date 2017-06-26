@@ -27,13 +27,13 @@ package object scastie {
     }
   }
 
-  def writeRunningPid(): Unit = {
+  def writeRunningPid(): String = {
     val pid = ManagementFactory.getRuntimeMXBean.getName().split("@").head
     val pidFile = Paths.get("RUNNING_PID")
     Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8))
     sys.addShutdownHook {
       Files.delete(pidFile)
     }
-    ()
+    pid
   }
 }

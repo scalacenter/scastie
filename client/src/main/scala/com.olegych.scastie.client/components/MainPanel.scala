@@ -54,6 +54,8 @@ object MainPanel {
     val editor =
       Editor(
         isDarkTheme = state.isDarkTheme,
+        isPresentationMode = state.isPresentationMode,
+        showLineNumbers = state.showLineNumbers,
         code = state.inputs.code,
         attachedDoms = state.attachedDoms,
         instrumentations = state.outputs.instrumentations,
@@ -67,9 +69,13 @@ object MainPanel {
         toggleConsole = backend.toggleConsole,
         toggleWorksheetMode = backend.toggleWorksheetMode,
         toggleTheme = backend.toggleTheme,
+        toggleLineNumbers = backend.toggleLineNumbers,
+        togglePresentationMode = backend.togglePresentationMode,
         formatCode = backend.formatCode,
         codeChange = backend.codeChange,
         completeCodeAt = backend.completeCodeAt,
+        requestTypeAt = backend.typeAt,
+        typeAtInfo = state.typeAtInfo,
         clearCompletions = backend.clearCompletions
       ).render
 
@@ -112,7 +118,7 @@ object MainPanel {
       TopBar(
         backend.viewSnapshot(state.view),
         state.user
-      ).render
+      ).render.unless(state.isPresentationMode)
 
     val editorTopBar =
       EditorTopBar(
@@ -152,8 +158,12 @@ object MainPanel {
         case _ => EmptyVdom
       }
 
+    val presentationModeClass =
+      (cls := "main-panel-presentation-mode").when(state.isPresentationMode)
+
     div(
       cls := "main-panel",
+      presentationModeClass,
       topBar,
       editorTopBar,
       div(
