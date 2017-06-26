@@ -25,7 +25,7 @@ object Deployment {
   }
 
 
-  def settings(server: Project, sbtRunner: Project) = Seq(
+  def settings(server: Project, sbtRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
     deploy := deployTask(server, sbtRunner).value,
     deployServer := deployServerTask(server, sbtRunner).value,
     deployQuick := deployQuickTask(server, sbtRunner).value,
