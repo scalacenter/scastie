@@ -198,8 +198,10 @@ lazy val sbtRunner = project
           add(base / "deployment" / "logback.xml", logbackConfDestination)
 
           entryPoint("java",
-                     "-Xmx256M",
-                     "-Xms256M",
+                     "-Xms512M",
+                     "-Xmx1536M",
+                     "-Xss1M",
+                     "-XX:+CMSClassUnloadingEnabled",
                      s"-Dlogback.configurationFile=$logbackConfDestination",
                      "-jar",
                      artifactTargetPath)

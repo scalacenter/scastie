@@ -12,16 +12,16 @@ class SbtActor(system: ActorSystem,
     extends Actor {
 
   val formatActor =
-    system.actorOf(Props(new FormatActor()), name = "FormatActor")
+    context.actorOf(Props(new FormatActor()), name = "FormatActor")
 
   val sbtRunner =
-    system.actorOf(
+    context.actorOf(
       Props(new SbtRunner(runTimeout, production)),
       name = "SbtRunner"
     )
 
   val ensimeActor =
-    system.actorOf(
+    context.actorOf(
       Props(new EnsimeActor(system, sbtRunner)),
       name = "EnsimeActor"
     )
@@ -31,12 +31,12 @@ class SbtActor(system: ActorSystem,
       sender ! SbtPong
 
     case completion: CompletionRequest =>
-      ensimeActor.tell(completion, sender)
+      ensimeActor.forward(completion)
 
     case format: FormatRequest =>
-      formatActor.tell(format, sender)
+      formatActor.forward(format)
 
     case task: SbtTask =>
-      sbtRunner.tell(task, sender)
+      sbtRunner.forward(task)
   }
 }

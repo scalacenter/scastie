@@ -74,7 +74,6 @@ case class Inputs(
 
     s"""|$targetConfig
         |addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
-        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")
         |$sbtPluginsConfigExtra
         |""".stripMargin
 

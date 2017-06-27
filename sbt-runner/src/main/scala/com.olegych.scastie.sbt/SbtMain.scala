@@ -8,13 +8,19 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.util.concurrent.TimeUnit
 
+import org.slf4j.LoggerFactory
+
 object SbtMain {
+  private val logger = LoggerFactory.getLogger("SbtMain")
+
   def main(args: Array[String]): Unit = {
-    writeRunningPid()
+    val pid = writeRunningPid()
+    logger.info(s"Starting sbtRunner pid: $pid")
 
     val system = ActorSystem("SbtRemote")
 
     val config = ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
+    val isProduction = config.getBoolean("production")
     val timeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(
@@ -23,12 +29,15 @@ object SbtMain {
       )
     }
 
+    logger.info(s" timeout: $timeout")
+    logger.info(s" isProduction: $isProduction")
+
     system.actorOf(
       Props(
         new SbtActor(
           system = system,
           runTimeout = timeout,
-          production = config.getBoolean("production")
+          production = isProduction
         )
       ),
       name = "SbtActor"

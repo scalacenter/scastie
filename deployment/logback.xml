@@ -17,7 +17,7 @@
 
   <appender name="SENTRY" class="com.getsentry.raven.logback.SentryAppender">
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-      <level>WARN</level>
+      <level>DEBUG</level>
     </filter>
   </appender>
 

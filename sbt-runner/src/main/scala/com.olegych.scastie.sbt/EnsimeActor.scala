@@ -35,7 +35,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   import spray.json._
 
   private val log = LoggerFactory.getLogger(getClass)
-//  private val ensimeLog = log // LoggerFactory.getLogger("ensime")
+  private val ensimeLog = LoggerFactory.getLogger("EnsimeOutput")
 
   implicit val materializer_ = ActorMaterializer()
   implicit val timeout = Timeout(5.seconds)
@@ -222,7 +222,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        log.info(s"$line")
+        ensimeLog.info(s"$line")
         line = is.readLine()
       }
     }

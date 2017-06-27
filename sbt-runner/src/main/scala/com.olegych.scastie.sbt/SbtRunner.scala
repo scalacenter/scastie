@@ -34,7 +34,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
     extends Actor {
   private val defaultConfig = Inputs.default
 
-  private var sbt = new Sbt(defaultConfig)
+  private var sbt = new Sbt(defaultConfig, "SbtRunner")
   private val log = LoggerFactory.getLogger(getClass)
 
   override def preStart(): Unit = warmUp()
@@ -101,7 +101,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
           )
 
       sbt.kill()
-      sbt = new Sbt(defaultConfig)
+      sbt = new Sbt(defaultConfig, "SbtRunner")
       warmUp()
       true
     }

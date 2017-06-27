@@ -5,15 +5,16 @@ import api._
 
 import scala.util.Random
 import System.{lineSeparator => nl}
-import org.slf4j.LoggerFactory
 
+import org.slf4j.LoggerFactory
 import java.nio.file._
-import java.io.{IOException, BufferedReader, InputStreamReader}
+import java.io.{BufferedReader, IOException, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
-class Sbt(defaultConfig: Inputs) {
+class Sbt(defaultConfig: Inputs, name: String) {
 
-  private val log = LoggerFactory.getLogger(getClass)
+  private val log = LoggerFactory.getLogger(getClass.toString + "(" + name + ")")
+  private val sbtLog = LoggerFactory.getLogger(s"SbtOutputIO($name)")
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
 
@@ -57,7 +58,7 @@ class Sbt(defaultConfig: Inputs) {
   }
 
   private val (process, fin, fout) = {
-
+    log.info("Starting sbt process")
     val builder = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     builder
       .environment()
@@ -89,29 +90,65 @@ class Sbt(defaultConfig: Inputs) {
     var done = false
     var sbtError = false
 
-    while (read != -1 && !done) {
-      read = fout.read()
-      if (read == 10) {
-        val line = chars.mkString
+    try {
+      while (read != -1 && !done) {
 
-        val prompt = line == uniqueId
-        sbtError = line == "[error] Type error in expression"
-        done = prompt || sbtError
+        read = fout.read()
+        if (read == 10) {
+          val line = chars.mkString
 
-        log.info(line)
+          val prompt = line == uniqueId
+          sbtError = line == "[error] Type error in expression"
+          done = prompt || sbtError
 
-        lineCallback(line, done, sbtError, reload)
-        chars.clear()
-      } else {
-        chars += read.toChar
+          sbtLog.info(line)
+
+          lineCallback(line, done, sbtError, reload)
+          chars.clear()
+        } else {
+          chars += read.toChar
+        }
       }
-    }
-    if (sbtError) {
-      setup()
-      process("r", noop, reload = false)
+      if (sbtError) {
+        setup()
+        process("r", noop, reload = false)
+      }
+    } catch {
+      case e => sbtLog.info(s"Error!!! ${e.toString}")
     }
 
     sbtError
+
+//    var read = 0
+//    var done = false
+//    var sbtError = false
+//
+//    var line = fout.readLine()
+//    while (!done) {
+//
+//      val prompt = line.equals(uniqueId)
+//      sbtError = line.equals("[error] Type error in expression")
+//      done = prompt || sbtError
+//      sbtLog.info(s"PROMT??? $prompt")
+//      sbtLog.info(s"sbtError??? $sbtError")
+//      sbtLog.info(s"done??? $done")
+//      sbtLog.info(line)
+//      lineCallback(line, done, sbtError, reload)
+//
+//      val ch = fout.read()
+//      if (ch != -1)
+//        line = ch.toChar.toString.concat(fout.readLine())
+//      else
+//        done = true
+//    }
+//    if (sbtError) {
+//      sbtLog.info("sbt >> collect >> got sbtError")
+//      setup()
+//      process("r", noop, reload = false)
+//    }
+//
+//    sbtLog.info("COLLECTED")
+//    sbtError
   }
 
   type LineCallback = (String, Boolean, Boolean, Boolean) => Unit
