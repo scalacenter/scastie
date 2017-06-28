@@ -15,6 +15,7 @@ import org.scalajs.dom.raw.{
   HTMLDivElement
 }
 import org.scalajs.dom
+import org.scalajs.dom.ext.KeyCode
 
 import codemirror.{
   Position => CMPosition,
@@ -107,11 +108,27 @@ object Editor {
     def clear() = tm.clear()
   }
 
+  /**
+    *    +------------------------+-------------+
+    *    v                        |             |
+    *   Idle --> Requested --> Active <--> NeedRender
+    *    ^           |
+    *    +-----------+
+    *   only if exactly one
+    *   completion returned
+    */
+  private[Editor] sealed trait CompletionState
+  private[Editor] case object Idle extends CompletionState
+  private[Editor] case object Requested extends CompletionState
+  private[Editor] case object Active extends CompletionState
+  private[Editor] case object NeedRender extends CompletionState
+
   private[Editor] case class EditorState(
       editor: Option[TextAreaEditor] = None,
       problemAnnotations: Map[api.Problem, Annotation] = Map(),
       renderAnnotations: Map[api.Instrumentation, Annotation] = Map(),
-      runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map()
+      runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map(),
+      completionState: CompletionState = Idle
   )
 
   private[Editor] class EditorBackend(
@@ -139,8 +156,46 @@ object Editor {
         editor.onFocus(_.refresh())
 
         editor.onChange(
-          (_, _) => props.codeChange(editor.getDoc().getValue()).runNow
+          (_, _) => props.codeChange(editor.getDoc().getValue()).runNow()
         )
+
+        // don't show completions if cursor moves to some other place
+        editor.onMouseDown(
+          (_, _) => scope.modState(_.copy(completionState = Idle)).runNow()
+        )
+
+        val terminateKeys = Set(
+          KeyCode.Space, KeyCode.Escape, KeyCode.Enter,
+          KeyCode.Shift, KeyCode.Up, KeyCode.Down
+        )
+
+        editor.onKeyDown((_, e) => {
+          scope.modState(s => {
+            var resultState = s
+
+            // if any of these keys are pressed
+            // then user doesn't need completions anymore
+            if (terminateKeys.contains(e.keyCode)) {
+              resultState = resultState.copy(completionState = Idle)
+            }
+
+            // we still show completions but user pressed a key,
+            // => render completions again (filters may apply there)
+            if (resultState.completionState == Active) {
+              // we might need to fetch new completions
+              // when user goes backwards
+              if (e.keyCode == KeyCode.Backspace) {
+                val doc = editor.getDoc()
+                val pos = doc.indexFromPos(doc.getCursor()) - 1
+                props.completeCodeAt(pos).runNow()
+              }
+
+              resultState = resultState.copy(completionState = NeedRender)
+            }
+
+            resultState
+          }).runNow()
+        })
 
         CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
           props.run.runNow()
@@ -179,6 +234,9 @@ object Editor {
           val pos = doc.indexFromPos(doc.getCursor())
 
           props.completeCodeAt(pos).runNow()
+          scope.modState(_
+            .copy(completionState = Requested)
+          ).runNow()
         }
 
         val setEditor =
@@ -479,15 +537,16 @@ object Editor {
     }
 
     def setCompletions(): Unit = {
-      if (!next.completions.isEmpty) {
+      if (state.completionState == Requested ||
+          state.completionState == NeedRender ||
+          !next.completions.equals(current.getOrElse(next).completions)
+      ) {
         val doc = editor.getDoc()
         val cursor = doc.getCursor()
         var fr = cursor.ch
         val to = cursor.ch
         val currLine = cursor.line
-        val alphaNum = ('a' to 'z').toSet ++ ('A' to 'Z').toSet ++ ('0' to '9').toSet ++ Set(
-          '_'
-        )
+        val alphaNum = ('a' to 'z').toSet ++ ('A' to 'Z').toSet ++ ('0' to '9').toSet
         val lineContent = doc.getLine(currLine).getOrElse("")
 
         var i = fr - 1
@@ -496,6 +555,13 @@ object Editor {
           i -= 1
         }
 
+        val currPos = doc.indexFromPos(doc.getCursor())
+        val filter = doc.getValue().substring(doc.indexFromPos(new CMPosition {
+            line = currLine; ch = fr
+        }), currPos)
+
+        // autopick single completion only if it's user's first request
+        val completeSingle = next.completions.length == 1 && state.completionState == Requested
         CodeMirror.showHint(
           editor,
           (_, options) => {
@@ -507,6 +573,7 @@ object Editor {
                 line = currLine; ch = to
               },
               "list" -> next.completions
+                .filter(_.hint.startsWith(filter)) // FIXME: can place not 'important' completions first
                 .map(_.hint)
                 .map {
                   hint =>
@@ -539,12 +606,14 @@ object Editor {
           js.Dictionary(
             "container" -> dom.document.querySelector(".CodeMirror"),
             "alignWithWord" -> true,
-            "completeSingle" -> (next.completions.length == 1)
+            "completeSingle" -> completeSingle
           )
         )
 
-        // FIXME: find another way to do it
-        next.clearCompletions.runNow()
+        modState(_.copy(completionState = Active)).runNow()
+        if (completeSingle) {
+          modState(_.copy(completionState = Idle)).runNow()
+        }
       }
     }
 

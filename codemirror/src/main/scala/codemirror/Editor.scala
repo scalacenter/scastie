@@ -3,6 +3,7 @@ package codemirror
 import org.scalajs.dom.raw.{Element, HTMLTextAreaElement, HTMLElement}
 
 import scala.scalajs.js
+import org.scalajs.dom
 import js.{|, UndefOr}
 import js.annotation._
 
@@ -119,6 +120,8 @@ class EditorEventHandler(val editor: Editor) extends AnyVal {
   def onChange(f: (Editor, EditorChange) => Unit) = editor.on("change", f)
   def onChanges(f: (Editor, Array[EditorChange]) => Unit) =
     editor.on("changes", f)
+  def onKeyDown(f: (Editor, dom.KeyboardEvent) => Unit) = editor.on("keydown", f)
+  def onMouseDown(f: (Editor, dom.MouseEvent) => Unit) = editor.on("mousedown", f)
 
 // "clear"                    (from: {line, ch}, to: {line, ch})
 // "change"                   (CodeMirror, changeObj: object)
