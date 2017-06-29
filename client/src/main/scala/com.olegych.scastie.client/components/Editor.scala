@@ -574,9 +574,9 @@ object Editor {
               },
               "list" -> next.completions
                 .filter(_.hint.startsWith(filter)) // FIXME: can place not 'important' completions first
-                .map(_.hint)
                 .map {
-                  hint =>
+                  completion =>
+                    val hint = completion.hint
                     println("rendering hint: " + hint)
                     HintConfig
                       .className("autocomplete")
@@ -588,12 +588,13 @@ object Editor {
                           .asInstanceOf[HTMLPreElement]
                         node.className = "signature"
 
-                        CodeMirror.runMode(hint, modeScala, node)
+                        CodeMirror.runMode(completion.typeInfo, modeScala, node)
 
                         val span = dom.document
                           .createElement("span")
                           .asInstanceOf[HTMLPreElement]
                         span.className = "name cm-def"
+                        span.textContent = hint
 
                         el.appendChild(span)
                         el.appendChild(node)

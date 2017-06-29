@@ -58,7 +58,13 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
             val completions = CompletionResponse(
               completionList
                 .sortBy(-_.relevance)
-                .map(ci => Completion(ci.name))
+                .map(ci => {
+                  val typeInfo = ci.typeInfo match {
+                    case Some(info) => info.name
+                    case None => "???"
+                  }
+                  Completion(ci.name, typeInfo)
+                })
             )
             log.info(s"Got completions: $completions")
             ref ! completions
@@ -209,7 +215,6 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   }
 
   override def postStop(): Unit = {
-    log.info("ensimeActor: postStop")
     hbRef.foreach(_.cancel())
     if (ensimeProcess != null && ensimeProcess.isAlive) {
       log.info("Killing Ensime server")
@@ -238,9 +243,9 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
     case CompletionRequest(inputs, position) => {
       log.info("Completion request at EnsimeActor")
 
-      if (!inputs.target.targetType.equals(ScalaTarget.Jvm.default)) {
-        log.info(s"Not supported target type ${inputs.target.targetType} – drop")
-      }
+//      if (!inputs.target.targetType.equals(ScalaTarget.Jvm.default)) {
+//        log.info(s"Not supported target type ${inputs.target.targetType} – drop")
+//      }
 //      sbt.evalIfNeedsReload("ensimeConfig",
 //                            inputs,
 //                            (_, _, _, _) => (),

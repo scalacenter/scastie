@@ -81,7 +81,8 @@ case class Project(
 )
 
 case class Completion(
-    hint: String
+    hint: String,
+    typeInfo: String
 )
 
 // Keep websocket connection
