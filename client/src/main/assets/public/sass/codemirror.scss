@@ -204,8 +204,18 @@ $margin: 24px;
       display: table-cell;
     }
     .signature{
+      text-align: right;
       padding-left: 5px;
       display: table-cell;
     }
   }
+}
+
+.CodeMirror-gutters {
+  white-space: nowrap;
+}
+.CodeMirror-linenumber {
+  padding: 0 3px 0 5px;
+  text-align: right;
+  white-space: nowrap;
 }

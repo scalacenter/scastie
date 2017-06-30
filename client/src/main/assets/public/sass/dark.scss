@@ -58,6 +58,8 @@ $cm-simplescroll-background: #859900;
 $cm-s-background-color: #073642;
 $cm-gutters-border-color: #073642;
 $cm-gutters-linenumber-color: #839496;
+$cm-active-hint-background: #7dc8e5;
+$cm-active-hint-text: #002b36;
 
 .dark {
   .main-panel {
@@ -72,8 +74,13 @@ $cm-gutters-linenumber-color: #839496;
 
     .CodeMirror-simplescroll-vertical div,
     .CodeMirror-simplescroll-horizontal div,
-    .CodeMirror-hints div {
-      background-color: $cm-simplescroll-background;
+
+    .CodeMirror-hints {
+      background: $snippet-background-color;
+    }
+    li.CodeMirror-hint-active {
+      background: $cm-active-hint-background;
+      color: $cm-active-hint-text;
     }
 
     .CodeMirror-gutters {
