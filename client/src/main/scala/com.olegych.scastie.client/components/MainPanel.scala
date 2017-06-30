@@ -54,6 +54,7 @@ object MainPanel {
     val editor =
       Editor(
         isDarkTheme = state.isDarkTheme,
+        showLineNumbers = state.showLineNumbers,
         code = state.inputs.code,
         attachedDoms = state.attachedDoms,
         instrumentations = state.outputs.instrumentations,
@@ -67,6 +68,7 @@ object MainPanel {
         toggleConsole = backend.toggleConsole,
         toggleWorksheetMode = backend.toggleWorksheetMode,
         toggleTheme = backend.toggleTheme,
+        toggleLineNumbers = backend.toggleLineNumbers,
         formatCode = backend.formatCode,
         codeChange = backend.codeChange,
         completeCodeAt = backend.completeCodeAt,

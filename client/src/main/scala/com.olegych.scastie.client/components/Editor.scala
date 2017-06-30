@@ -30,6 +30,7 @@ import codemirror.{
 import scala.scalajs._
 
 final case class Editor(isDarkTheme: Boolean,
+                        showLineNumbers: Boolean,
                         code: String,
                         attachedDoms: AttachedDoms,
                         instrumentations: Set[Instrumentation],
@@ -43,6 +44,7 @@ final case class Editor(isDarkTheme: Boolean,
                         toggleConsole: Callback,
                         toggleWorksheetMode: Callback,
                         toggleTheme: Callback,
+                        toggleLineNumbers: Callback,
                         formatCode: Callback,
                         codeChange: String => Callback,
                         completeCodeAt: Int => Callback,
@@ -56,7 +58,7 @@ object Editor {
 
   private var codemirrorTextarea: HTMLTextAreaElement = _
 
-  private def options(dark: Boolean): codemirror.Options = {
+  private def options(dark: Boolean, showLineNumbers: Boolean): codemirror.Options = {
 
     val theme = if (dark) "dark" else "light"
     val ctrl = if (View.isMac) "Cmd" else "Ctrl"
@@ -64,7 +66,7 @@ object Editor {
     js.Dictionary[Any](
         "mode" -> "text/x-scala",
         "autofocus" -> true,
-        "lineNumbers" -> false,
+        "lineNumbers" -> showLineNumbers,
         "lineWrapping" -> false,
         "tabSize" -> 2,
         "indentWithTabs" -> false,
@@ -90,7 +92,8 @@ object Editor {
           "F2" -> "toggleSolarized",
           "F3" -> "toggleConsole",
           "F4" -> "toggleWorksheet",
-          "F6" -> "formatCode"
+          "F6" -> "formatCode",
+          "F7" -> "toggleLineNumbers"
         )
       )
       .asInstanceOf[codemirror.Options]
@@ -151,7 +154,7 @@ object Editor {
       scope.props.flatMap { props =>
         val editor =
           codemirror.CodeMirror.fromTextArea(codemirrorTextarea,
-                                             options(props.isDarkTheme))
+                                             options(props.isDarkTheme, props.showLineNumbers))
 
         editor.onFocus(_.refresh())
 
@@ -229,6 +232,10 @@ object Editor {
           props.formatCode.runNow()
         }
 
+        CodeMirror.commands.toggleLineNumbers = (editor: CodeMirrorEditor2) => {
+          props.toggleLineNumbers.runNow()
+        }
+
         CodeMirror.commands.autocomplete = (editor: CodeMirrorEditor2) => {
           val doc = editor.getDoc()
           val pos = doc.indexFromPos(doc.getCursor())
@@ -272,6 +279,12 @@ object Editor {
           else "light"
 
         editor.setOption("theme", s"solarized $theme")
+      }
+    }
+
+    def setLineNumbers() = {
+      if (current.map(_.showLineNumbers) != Some(next.showLineNumbers)) {
+        editor.setOption("lineNumbers", next.showLineNumbers)
       }
     }
 
@@ -624,6 +637,7 @@ object Editor {
 
     Callback(setTheme()) >>
       Callback(setCode()) >>
+      Callback(setLineNumbers()) >>
       setProblemAnnotations() >>
       setRenderAnnotations() >>
       setRuntimeError >>

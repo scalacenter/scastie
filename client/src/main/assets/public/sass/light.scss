@@ -56,6 +56,8 @@ $cm-selected-background: rgba(0, 0, 0, 0.1);
 $cm-dialog-color: #93a1a1;
 $cm-simplescroll-background: #00acdb;
 $cm-s-background-color: #f4f3f3;
+$cm-gutters-border-color: #eee8d5;
+$cm-gutters-linenumber-color: #657b83;
 
 .light {
   .main-panel {
@@ -73,5 +75,17 @@ $cm-s-background-color: #f4f3f3;
     .CodeMirror-hints div {
       background-color: $cm-simplescroll-background;
     }
+
+    .CodeMirror-gutters {
+      border-right: 1px solid $cm-gutters-border-color;
+      background-color: $snippet-background-color;
+    }
+
+    .CodeMirror-linenumber {
+      color: $cm-gutters-linenumber-color;
+    }
   }
 }
+
+
+

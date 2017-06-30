@@ -208,6 +208,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     scope.modState(_.updateDependencyVersion(scalaDependency, version))
 
   def toggleTheme: Callback = scope.modState(_.toggleTheme)
+  def toggleLineNumbers: Callback = scope.modState(_.toggleLineNumbers)
 
   def openConsole: Callback = scope.modState(_.openConsole)
   def closeConsole: Callback = scope.modState(_.closeConsole)

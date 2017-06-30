@@ -18,6 +18,7 @@ object ScastieState {
     modalState = ModalState.default,
     isDarkTheme = false,
     isDesktopForced = false,
+    showLineNumbers = false,
     consoleState = ConsoleState.default,
     inputsHasChanged = false,
     snippetState = SnippetState(
@@ -69,6 +70,7 @@ case class ScastieState(
     modalState: ModalState,
     isDarkTheme: Boolean,
     isDesktopForced: Boolean,
+    showLineNumbers: Boolean,
     consoleState: ConsoleState,
     inputsHasChanged: Boolean,
     snippetState: SnippetState,
@@ -95,6 +97,7 @@ case class ScastieState(
                   modalState: ModalState = modalState,
                   isDarkTheme: Boolean = isDarkTheme,
                   isDesktopForced: Boolean = isDesktopForced,
+                  showLineNumbers: Boolean = showLineNumbers,
                   consoleState: ConsoleState = consoleState,
                   inputsHasChanged: Boolean = inputsHasChanged,
                   snippetId: Option[SnippetId] = snippetId,
@@ -122,6 +125,7 @@ case class ScastieState(
         modalState,
         isDarkTheme,
         isDesktopForced,
+        showLineNumbers,
         consoleState,
         inputsHasChanged,
         SnippetState(
@@ -181,6 +185,9 @@ case class ScastieState(
 
   def setTheme(dark: Boolean): ScastieState =
     copyAndSave(isDarkTheme = dark)
+
+  def toggleLineNumbers: ScastieState =
+    copyAndSave(showLineNumbers = !showLineNumbers)
 
   def toggleWorksheetMode: ScastieState =
     copyAndSave(
