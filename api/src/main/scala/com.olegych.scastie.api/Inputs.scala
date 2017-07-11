@@ -65,7 +65,7 @@ case class Inputs(
           s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
 
         case ScalaTarget.Dotty =>
-          """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.0-RC4")"""
+          """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")"""
 
         case _: ScalaTarget.Jvm => ""
 
@@ -132,7 +132,7 @@ case class Inputs(
           )
         case ScalaTarget.Dotty =>
           (
-            """scalaVersion := "0.1.2-RC1"""",
+            """scalaVersion := "0.2.0-RC1"""",
             None
           )
         case ScalaTarget.Native(scalaVersion, _) =>

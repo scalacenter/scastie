@@ -189,7 +189,7 @@ lazy val sbtRunner = project
         val logbackConfDestination = "/root/logback.xml"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.23")
+          from("scalacenter/scastie-docker-sbt:0.0.24")
 
           add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 
