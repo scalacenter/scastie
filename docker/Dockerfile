@@ -82,8 +82,8 @@ RUN cd /root/scala-213; sbt run
 RUN mkdir /root/dotty
 RUN mkdir /root/dotty/project
 RUN echo 'sbt.version = 0.13.15' > /root/dotty/project/build.properties
-RUN echo 'addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.0-RC4")' > /root/dotty/project/plugins.sbt
-RUN echo 'scalaVersion := "0.1.2-RC1"' > /root/dotty/build.sbt
+RUN echo 'addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")' > /root/dotty/project/plugins.sbt
+RUN echo 'scalaVersion := "0.2.0-RC1"' > /root/dotty/build.sbt
 RUN mkdir /root/dotty/src
 RUN mkdir /root/dotty/src/main
 RUN mkdir /root/dotty/src/main/scala
