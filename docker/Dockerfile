@@ -92,4 +92,3 @@ RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, Wo
 RUN cd /root/dotty; sbt run
 
 RUN apk add --update procps
-

@@ -39,10 +39,6 @@ class Sbt(defaultConfig: Inputs, name: String) {
                                         |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
                                         |""".stripMargin
 
-//  private val secretSbtPluginExtra = s"""
-//                                        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15-1")
-//                                        |""".stripMargin
-
   private def setup(): Unit = {
     setConfig(defaultConfig)
     setPlugins(defaultConfig)
@@ -94,65 +90,30 @@ class Sbt(defaultConfig: Inputs, name: String) {
     var done = false
     var sbtError = false
 
-    try {
-      while (read != -1 && !done) {
+    while (read != -1 && !done) {
 
-        read = fout.read()
-        if (read == 10) {
-          val line = chars.mkString
+      read = fout.read()
+      if (read == 10) {
+        val line = chars.mkString
 
-          val prompt = line == uniqueId
-          sbtError = line == "[error] Type error in expression"
-          done = prompt || sbtError
+        val prompt = line == uniqueId
+        sbtError = line == "[error] Type error in expression"
+        done = prompt || sbtError
 
-          sbtLog.info(line)
+        sbtLog.info(line)
 
-          lineCallback(line, done, sbtError, reload)
-          chars.clear()
-        } else {
-          chars += read.toChar
-        }
+        lineCallback(line, done, sbtError, reload)
+        chars.clear()
+      } else {
+        chars += read.toChar
       }
-      if (sbtError) {
-        setup()
-        process("r", noop, reload = false)
-      }
-    } catch {
-      case e => sbtLog.info(s"Error!!! ${e.toString}")
+    }
+    if (sbtError) {
+      setup()
+      process("r", noop, reload = false)
     }
 
     sbtError
-
-//    var read = 0
-//    var done = false
-//    var sbtError = false
-//
-//    var line = fout.readLine()
-//    while (!done) {
-//
-//      val prompt = line.equals(uniqueId)
-//      sbtError = line.equals("[error] Type error in expression")
-//      done = prompt || sbtError
-//      sbtLog.info(s"PROMT??? $prompt")
-//      sbtLog.info(s"sbtError??? $sbtError")
-//      sbtLog.info(s"done??? $done")
-//      sbtLog.info(line)
-//      lineCallback(line, done, sbtError, reload)
-//
-//      val ch = fout.read()
-//      if (ch != -1)
-//        line = ch.toChar.toString.concat(fout.readLine())
-//      else
-//        done = true
-//    }
-//    if (sbtError) {
-//      sbtLog.info("sbt >> collect >> got sbtError")
-//      setup()
-//      process("r", noop, reload = false)
-//    }
-//
-//    sbtLog.info("COLLECTED")
-//    sbtError
   }
 
   type LineCallback = (String, Boolean, Boolean, Boolean) => Unit
