@@ -54,22 +54,32 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       case Some(ref) =>
         requests -= id
         payload match {
-          case CompletionInfoList(prefix, completionList) => {
+          case CompletionInfoList(prefix, completionList) =>
             val completions = CompletionResponse(
               completionList
                 .sortBy(-_.relevance)
                 .map(ci => {
                   val typeInfo = ci.typeInfo match {
                     case Some(info) => info.name
-                    case None => "???"
+                    case None => ""
                   }
                   Completion(ci.name, typeInfo)
                 })
             )
             log.info(s"Got completions: $completions")
             ref ! completions
-          }
-          case x => ref ! x
+
+          case symbolInfo: SymbolInfo =>
+            log.info(s"Got symbol info: $symbolInfo")
+            if (symbolInfo.`type`.name == "<none>")
+              ref ! TypeAtPointResponse("")
+            else if (symbolInfo.`type`.fullName.length <= 60)
+              ref ! TypeAtPointResponse(symbolInfo.`type`.fullName)
+            else
+              ref ! TypeAtPointResponse(symbolInfo.`type`.name)
+
+          case x =>
+            ref ! x
         }
       case _ =>
         log.info(s"Got response without requester $id -> $payload")
@@ -240,29 +250,43 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       startEnsimeServer(sbtDir)
     }
 
+    case TypeAtPointRequest(inputs, position) => {
+      log.info("TypeAtPoint request at EnsimeActor")
+
+      if (!inputs.worksheetMode) {
+        sendToEnsime(
+          SymbolAtPointReq(
+            file = Right(
+              SourceFileInfo(
+                RawFile(
+                  new File(codeFile.toString).toPath),
+                Some(inputs.code)
+              )
+            ),
+            point = position
+          ),
+          sender
+        )
+      }
+    }
+
     case CompletionRequest(inputs, position) => {
       log.info("Completion request at EnsimeActor")
 
-//      if (!inputs.target.targetType.equals(ScalaTarget.Jvm.default)) {
-//        log.info(s"Not supported target type ${inputs.target.targetType} – drop")
-//      }
-//      sbt.evalIfNeedsReload("ensimeConfig",
-//                            inputs,
-//                            (_, _, _, _) => (),
-//                            reload = false)
-
-      sendToEnsime(
-        CompletionsReq(
-          fileInfo =
-            SourceFileInfo(RawFile(new File(codeFile.toString).toPath),
-                           Some(inputs.code)),
-          point = position,
-          maxResults = 100,
-          caseSens = false,
-          reload = false
-        ),
-        sender
-      )
+      if (!inputs.worksheetMode) {
+        sendToEnsime(
+          CompletionsReq(
+            fileInfo =
+              SourceFileInfo(RawFile(new File(codeFile.toString).toPath),
+                Some(inputs.code)),
+            point = position,
+            maxResults = 100,
+            caseSens = false,
+            reload = false
+          ),
+          sender
+        )
+      }
     }
 
     case Heartbeat =>

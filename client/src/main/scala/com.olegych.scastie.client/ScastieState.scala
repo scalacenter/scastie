@@ -35,7 +35,8 @@ object ScastieState {
     inputs = Inputs.default,
     outputs = Outputs.default,
     status = StatusState.default,
-    completions = List()
+    completions = List(),
+    typeAtInfo = None
   )
 
   implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
@@ -79,7 +80,8 @@ case class ScastieState(
     inputs: Inputs,
     outputs: Outputs,
     status: StatusState,
-    completions: List[Completion]
+    completions: List[Completion],
+    typeAtInfo: Option[TypeInfoAt]
 ) {
 
   def snippetId: Option[SnippetId] = snippetState.snippetId
@@ -145,7 +147,8 @@ case class ScastieState(
         ),
         outputs,
         status,
-        completions
+        completions,
+        typeAtInfo
       )
 
     LocalStorage.save(state0)
@@ -294,6 +297,9 @@ case class ScastieState(
 
   def setCompletions(completions: List[Completion]): ScastieState =
     copy(completions = completions)
+
+  def setTypeAtInto(typeAtInfoAt: Option[TypeInfoAt]): ScastieState =
+    copy(typeAtInfo = typeAtInfoAt)
 
   def setSbtConfigExtra(config: String): ScastieState =
     copyAndSave(

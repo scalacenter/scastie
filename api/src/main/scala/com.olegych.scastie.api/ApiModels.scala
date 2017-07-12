@@ -52,8 +52,11 @@ case class FormatRequest(code: String,
                          targetType: ScalaTargetType)
 case class FormatResponse(formattedCode: Either[String, String])
 
-case class CompletionRequest(inputs: Inputs, position: Int)
+sealed trait EnsimeRequest
+case class CompletionRequest(inputs: Inputs, position: Int) extends EnsimeRequest
 case class CompletionResponse(completions: List[Completion])
+case class TypeAtPointRequest(inputs: Inputs, position: Int) extends EnsimeRequest
+case class TypeAtPointResponse(typeInfo: String)
 
 case class FetchResult(inputs: Inputs, progresses: List[SnippetProgress])
 
@@ -82,6 +85,11 @@ case class Project(
 
 case class Completion(
     hint: String,
+    typeInfo: String
+)
+
+case class TypeInfoAt(
+    token: String,
     typeInfo: String
 )
 

@@ -30,8 +30,8 @@ class SbtActor(system: ActorSystem,
     case SbtPing =>
       sender ! SbtPong
 
-    case completion: CompletionRequest =>
-      ensimeActor.forward(completion)
+    case req: EnsimeRequest =>
+      ensimeActor.forward(req)
 
     case format: FormatRequest =>
       formatActor.forward(format)

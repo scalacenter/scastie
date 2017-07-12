@@ -1,15 +1,17 @@
 package codemirror
 
-import org.scalajs.dom.raw.{HTMLTextAreaElement, Element, HTMLElement}
+import org.scalajs.dom.raw.{Event, Element, HTMLElement, HTMLTextAreaElement}
+
 import scala.scalajs.js
 import js.annotation._
-import js.{UndefOr, RegExp, Dictionary, |}
+import js.{Dictionary, RegExp, UndefOr, |}
 
 @js.native
 @JSGlobal("CodeMirror")
 object CodeMirror extends js.Object {
   var commands: js.Dynamic = js.native
   var keyMap: KeyMaps = js.native
+  val Init: js.Object = js.native
 
   def apply(element: Element, options: UndefOr[Options]): Editor = js.native
   def fromTextArea(textarea: HTMLTextAreaElement,
@@ -19,6 +21,15 @@ object CodeMirror extends js.Object {
   def showHint(editor: Editor,
                func: js.Function2[Editor, ShowHintOptions, js.Any],
                options: js.Any): Unit = js.native
+
+  def defineExtension(name: String, value: js.Any): Unit = js.native
+  def defineOption(name: String,
+                   default: js.Any,
+                   updateFunc: js.Function3[Editor, js.Any, js.Any, js.Any]): Unit =
+    js.native
+
+  def on[T <: Event](obj: js.Object, t: String, f: js.Function1[T, _]): Unit = js.native
+  def off[T <: Event](obj: js.Object, t: String, f: js.Function1[T, _]): Unit = js.native
 }
 
 @js.native

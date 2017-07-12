@@ -39,6 +39,10 @@ class Sbt(defaultConfig: Inputs, name: String) {
                                         |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
                                         |""".stripMargin
 
+//  private val secretSbtPluginExtra = s"""
+//                                        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15-1")
+//                                        |""".stripMargin
+
   private def setup(): Unit = {
     setConfig(defaultConfig)
     setPlugins(defaultConfig)
@@ -195,7 +199,7 @@ class Sbt(defaultConfig: Inputs, name: String) {
 
   private def setPlugins(inputs: Inputs): Unit = {
     writeFile(pluginFile,
-              inputs.sbtPluginsConfig)
+              inputs.sbtPluginsConfig + nl)
     currentSbtPluginsConfig = inputs.sbtPluginsConfig
   }
 

@@ -129,8 +129,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       ()
     }
 
-    case req: CompletionRequest => {
-      log.info("Got completion request in LoadBalancer")
+    case req: EnsimeRequest => {
       loadBalancer.getRandomServer.ref.tell(req, sender)
     }
 

@@ -512,8 +512,6 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     )
 
   def completeCodeAt(pos: Int): Callback = {
-    println("at completeCodeAt")
-
     scope.state.flatMap(
       state => {
         Callback.future(
@@ -523,8 +521,34 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
             )
             .call()
             .map { response: CompletionResponse =>
-              println("Received: " + response.completions)
               scope.modState(_.setCompletions(response.completions))
+            }
+        )
+      }
+    )
+  }
+
+  def typeAt(token: String, pos: Int): Callback = {
+    scope.state.flatMap(
+      state => {
+        Callback.future(
+          ApiClient[AutowireApi]
+            .typeAt(
+              TypeAtPointRequest(state.inputs, pos)
+            )
+            .call()
+            .map { response: TypeAtPointResponse =>
+              println(s"Received: ${response.typeInfo}")
+              scope.modState(
+                _.setTypeAtInto(
+                  Some(
+                    TypeInfoAt(
+                      token = token,
+                      typeInfo = response.typeInfo
+                    )
+                  )
+                )
+              )
             }
         )
       }

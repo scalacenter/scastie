@@ -35,6 +35,12 @@ class AutowireApiImplementation(
     (dispatchActor ? completionRequest).mapTo[CompletionResponse]
   }
 
+  def typeAt(
+      typeAtPointRequest: TypeAtPointRequest
+  ): Future[TypeAtPointResponse] = {
+    (dispatchActor ? typeAtPointRequest).mapTo[TypeAtPointResponse]
+  }
+
   def save(inputs: Inputs): Future[SnippetId] = {
     (dispatchActor ? SaveSnippet(wrap(inputs))).mapTo[SnippetId]
   }

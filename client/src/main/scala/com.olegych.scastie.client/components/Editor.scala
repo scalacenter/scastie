@@ -2,29 +2,27 @@ package com.olegych.scastie
 package client
 package components
 
-import api._
-
-import japgolly.scalajs.react._, vdom.all._
-
-import codemirror.{Hint, HintConfig}
-
-import org.scalajs.dom.raw.{
-  HTMLTextAreaElement,
-  HTMLElement,
-  HTMLPreElement,
-  HTMLDivElement
+import codemirror.{
+  CodeMirror,
+  Hint,
+  HintConfig,
+  LineWidget,
+  TextAreaEditor,
+  TextMarker,
+  TextMarkerOptions,
+  Editor => CodeMirrorEditor2,
+  Position => CMPosition
 }
+import com.olegych.scastie.api._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
-
-import codemirror.{
-  Position => CMPosition,
-  TextAreaEditor,
-  LineWidget,
-  CodeMirror,
-  Editor => CodeMirrorEditor2,
-  TextMarker,
-  TextMarkerOptions
+import org.scalajs.dom.raw.{
+  HTMLDivElement,
+  HTMLElement,
+  HTMLPreElement,
+  HTMLTextAreaElement
 }
 
 import scala.scalajs._
@@ -48,6 +46,8 @@ final case class Editor(isDarkTheme: Boolean,
                         formatCode: Callback,
                         codeChange: String => Callback,
                         completeCodeAt: Int => Callback,
+                        requestTypeAt: (String, Int) => Callback,
+                        typeAtInfo: Option[TypeInfoAt],
                         clearCompletions: Callback) {
   @inline def render: VdomElement = Editor.component(this)
 }
@@ -67,6 +67,7 @@ object Editor {
         "mode" -> "text/x-scala",
         "autofocus" -> true,
         "lineNumbers" -> showLineNumbers,
+        "gutters" -> js.Array("CodeMirror-linenumbers"),
         "lineWrapping" -> false,
         "tabSize" -> 2,
         "indentWithTabs" -> false,
@@ -131,7 +132,9 @@ object Editor {
       problemAnnotations: Map[api.Problem, Annotation] = Map(),
       renderAnnotations: Map[api.Instrumentation, Annotation] = Map(),
       runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map(),
-      completionState: CompletionState = Idle
+      completionState: CompletionState = Idle,
+      showTypeButtonPressed: Boolean = false,
+      typeAt: Option[TypeInfoAt] = None
   )
 
   private[Editor] class EditorBackend(
@@ -152,6 +155,7 @@ object Editor {
 
     def start(): Callback = {
       scope.props.flatMap { props =>
+
         val editor =
           codemirror.CodeMirror.fromTextArea(codemirrorTextarea,
                                              options(props.isDarkTheme, props.showLineNumbers))
@@ -167,14 +171,22 @@ object Editor {
           (_, _) => scope.modState(_.copy(completionState = Idle)).runNow()
         )
 
+        editor.onKeyUp((_, e) => {
+          scope.modState(s =>
+            s.copy(showTypeButtonPressed = s.showTypeButtonPressed && e.keyCode != KeyCode.Ctrl)
+          ).runNow()
+        })
+
         val terminateKeys = Set(
           KeyCode.Space, KeyCode.Escape, KeyCode.Enter,
-          KeyCode.Shift, KeyCode.Up, KeyCode.Down
+          KeyCode.Up, KeyCode.Down
         )
 
         editor.onKeyDown((_, e) => {
           scope.modState(s => {
             var resultState = s
+
+            resultState = resultState.copy(showTypeButtonPressed = e.keyCode == KeyCode.Ctrl)
 
             // if any of these keys are pressed
             // then user doesn't need completions anymore
@@ -198,6 +210,92 @@ object Editor {
 
             resultState
           }).runNow()
+        })
+
+        CodeMirror.on(editor.getWrapperElement(), "mouseover", (e: dom.MouseEvent) => {
+
+          def initEventHandlers(node: js.Dynamic, message: HTMLElement) = {
+
+            val tooltip = dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+            node.className = node.className.concat(" CodeMirror-hover")
+            tooltip.className = tooltip.className.concat(" CodeMirror-hover-tooltip")
+            tooltip.appendChild(message)
+            dom.document.body.appendChild(tooltip)
+
+            def remove(element: HTMLElement) = {
+              if (element.parentNode != null) {
+                element.parentNode.removeChild(element)
+              }
+            }
+
+            def hideTooltip(e: dom.Event): Unit = {
+              CodeMirror.off(dom.document, "mouseout", hideTooltip)
+              node.className = node.className.replace(" CodeMirror-hover", "")
+
+              if (tooltip.parentNode != null) {
+                if (tooltip.style.opacity == null) {
+                  remove(tooltip)
+                }
+                tooltip.style.opacity = "0"
+                dom.window.setTimeout(() => {
+                  remove(tooltip)
+                }, 600)
+                ()
+              }
+            }
+
+            def position(e: dom.MouseEvent): Unit = {
+              if (tooltip.parentNode == null) {
+                CodeMirror.off(dom.document, "mousemove", position)
+              }
+              tooltip.style.top = Math.max(0, e.clientY - tooltip.offsetHeight - 5) + "px"
+              tooltip.style.left = (e.clientX + 5) + "px"
+            }
+
+            CodeMirror.on(dom.document, "mousemove", position)
+            CodeMirror.on(dom.document, "mouseout", hideTooltip)
+            position(e)
+            if (tooltip.style.opacity != null) {
+              tooltip.style.opacity = "1"
+            }
+          }
+
+          val node = e.target
+          if (node != null && node.isInstanceOf[HTMLElement]) {
+            val text = node.asInstanceOf[HTMLElement].textContent
+            if (text != null) {
+
+              // request token under the cursor
+              val pos = editor.coordsChar(
+                js.Dictionary[Any](
+                  "left" -> e.clientX,
+                  "top" -> e.clientY
+                ),
+                mode = null
+              )
+              val currToken = editor.getTokenAt(pos, precise = null).string
+
+              // Request type info only if Ctrl is pressed
+              if (currToken == text) {
+                val s = scope.state.runNow()
+                if (s.showTypeButtonPressed) {
+                  val message = dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+
+                  val lastTypeInfo = s.typeAt
+                  if (lastTypeInfo.isEmpty || lastTypeInfo.get.token != currToken) {
+                    // if it's the first typeAt request
+                    // OR if user's moved on to a new token
+                    // then we request new type information with curr token and show "..."
+                    props.requestTypeAt(currToken, editor.getDoc().indexFromPos(pos)).runNow()
+                    message.innerHTML = "..."
+                  } else {
+                    message.innerHTML = s.typeAt.get.typeInfo
+                  }
+                  initEventHandlers(node.asInstanceOf[js.Dynamic], message)
+                }
+              }
+            }
+          }
         })
 
         CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
@@ -586,7 +684,8 @@ object Editor {
                 line = currLine; ch = to
               },
               "list" -> next.completions
-                .filter(_.hint.startsWith(filter)) // FIXME: can place not 'important' completions first
+                // FIXME: can place not 'important' completions first
+                .filter(_.hint.startsWith(filter))
                 .map {
                   completion =>
                     val hint = completion.hint
@@ -631,6 +730,12 @@ object Editor {
       }
     }
 
+    def setTypeAt(): Unit = {
+      if (!next.typeAtInfo.equals(current.get)) {
+        modState(_.copy(typeAt = next.typeAtInfo)).runNow()
+      }
+    }
+
     def refresh(): Unit = {
       editor.refresh()
     }
@@ -642,6 +747,7 @@ object Editor {
       setRenderAnnotations() >>
       setRuntimeError >>
       Callback(setCompletions()) >>
+      Callback(setTypeAt()) >>
       Callback(refresh())
   }
 

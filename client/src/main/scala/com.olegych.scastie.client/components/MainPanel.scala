@@ -72,6 +72,8 @@ object MainPanel {
         formatCode = backend.formatCode,
         codeChange = backend.codeChange,
         completeCodeAt = backend.completeCodeAt,
+        requestTypeAt = backend.typeAt,
+        typeAtInfo = state.typeAtInfo,
         clearCompletions = backend.clearCompletions
       ).render
 
