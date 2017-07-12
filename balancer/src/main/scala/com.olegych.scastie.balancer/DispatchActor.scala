@@ -78,6 +78,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       ()
     } catch {
       case e: TimeoutException => {
+        // TODO: this is sending to much events to Sentry
         log.error(e, "failed to receive pong")
       }
     }
