@@ -5,26 +5,23 @@ import api._
 
 import scala.util.Random
 import System.{lineSeparator => nl}
-import org.slf4j.LoggerFactory
 
+import org.slf4j.LoggerFactory
 import java.nio.file._
-import java.io.{IOException, BufferedReader, InputStreamReader}
+import java.io.{BufferedReader, IOException, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
-class Sbt(
-    defaultConfig: Inputs,
-    sbtDir: Path = Files.createTempDirectory("scastie"),
-    secretSbtConfigExtra: String = "", // invisible for users
-    secretSbtPluginsConfigExtra: String = "" // they don't participate in configs comparision later
-) {
+class Sbt(defaultConfig: Inputs, name: String) {
 
-  private val log = LoggerFactory.getLogger(getClass)
+  private val log = LoggerFactory.getLogger(getClass.toString + "(" + name + ")")
+  private val sbtLog = LoggerFactory.getLogger(s"SbtOutputIO($name)")
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
 
   private var currentSbtConfig = ""
   private var currentSbtPluginsConfig = ""
 
+  val sbtDir = Files.createTempDirectory("scastie")
   private val buildFile = sbtDir.resolve("build.sbt")
   private val prompt = s"""shellPrompt := (_ => "$uniqueId\\n")"""
 
@@ -34,6 +31,13 @@ class Sbt(
   write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.15")
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
+
+  private val ensimeVersion = "2.0.0-SNAPSHOT"
+  private val secretSbtConfigExtra = s"""
+                                        |// this is where the ensime-server snapshots are hosted
+                                        |resolvers += Resolver.sonatypeRepo("snapshots")
+                                        |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
+                                        |""".stripMargin
 
   private def setup(): Unit = {
     setConfig(defaultConfig)
@@ -54,7 +58,7 @@ class Sbt(
   }
 
   private val (process, fin, fout) = {
-
+    log.info("Starting sbt process")
     val builder = new ProcessBuilder("sbt").directory(sbtDir.toFile)
     builder
       .environment()
@@ -87,6 +91,7 @@ class Sbt(
     var sbtError = false
 
     while (read != -1 && !done) {
+
       read = fout.read()
       if (read == 10) {
         val line = chars.mkString
@@ -95,7 +100,7 @@ class Sbt(
         sbtError = line == "[error] Type error in expression"
         done = prompt || sbtError
 
-        log.info(line)
+        sbtLog.info(line)
 
         lineCallback(line, done, sbtError, reload)
         chars.clear()
@@ -155,7 +160,7 @@ class Sbt(
 
   private def setPlugins(inputs: Inputs): Unit = {
     writeFile(pluginFile,
-              inputs.sbtPluginsConfig + nl + secretSbtPluginsConfigExtra)
+              inputs.sbtPluginsConfig + nl)
     currentSbtPluginsConfig = inputs.sbtPluginsConfig
   }
 

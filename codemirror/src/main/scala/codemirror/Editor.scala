@@ -1,11 +1,12 @@
 package codemirror
 
-import org.scalajs.dom.raw.{Element, HTMLTextAreaElement, HTMLElement}
+import org.scalajs.dom.raw.{Element, HTMLElement, HTMLTextAreaElement}
 
 import scala.scalajs.js
-import js.{|, UndefOr}
-import js.annotation._
+import org.scalajs.dom
 
+import js.{UndefOr, |}
+import js.annotation._
 import scala.language.implicitConversions
 
 @ScalaJSDefined
@@ -61,7 +62,7 @@ trait Editor extends js.Object {
   // def scrollIntoView(what: Position|{left, top, right, bottom}|{from, to}|null, ?margin: number)
   def cursorCoords(where: Boolean | Position, mode: String): CursorCoords
   // def charCoords(pos: Position, ?mode: String): {left, right, top, bottom}
-  // def coordsChar(js.Object: {left, top}, ?mode: String): Position
+  def coordsChar(where: js.Dictionary[Any], mode: UndefOr[String]): Position
   def lineAtHeight(height: Int, mode: UndefOr[String]): Int
   def heightAtLine(line: Int | LineHandle, mode: UndefOr[String]): Int
   def defaultTextHeight(): Int
@@ -69,7 +70,7 @@ trait Editor extends js.Object {
   // def getViewport():{from: number, to: number}
   def refresh(): Unit
   def getModeAt(pos: Position): js.Object
-  def getTokenAt(pos: Position, precise: UndefOr[Boolean]): js.Object
+  def getTokenAt(pos: Position, precise: UndefOr[Boolean]): Token
   // def getLineTokens(line: Int, ?precise: Boolean): array<{start, end, String, type, state}>
   def getTokenTypeAt(pos: Position): String
   // def getHelpers(pos: Position, type: String): array<helper>
@@ -85,6 +86,11 @@ trait Editor extends js.Object {
   def getWrapperElement(): Element
   def getScrollerElement(): Element
   def getGutterElement(): Element
+}
+
+@ScalaJSDefined
+trait Token extends js.Object {
+  val string: String
 }
 
 @ScalaJSDefined
@@ -119,6 +125,9 @@ class EditorEventHandler(val editor: Editor) extends AnyVal {
   def onChange(f: (Editor, EditorChange) => Unit) = editor.on("change", f)
   def onChanges(f: (Editor, Array[EditorChange]) => Unit) =
     editor.on("changes", f)
+  def onKeyUp(f: (Editor, dom.KeyboardEvent) => Unit) = editor.on("keyup", f)
+  def onKeyDown(f: (Editor, dom.KeyboardEvent) => Unit) = editor.on("keydown", f)
+  def onMouseDown(f: (Editor, dom.MouseEvent) => Unit) = editor.on("mousedown", f)
 
 // "clear"                    (from: {line, ch}, to: {line, ch})
 // "change"                   (CodeMirror, changeObj: object)

@@ -208,6 +208,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     scope.modState(_.updateDependencyVersion(scalaDependency, version))
 
   def toggleTheme: Callback = scope.modState(_.toggleTheme)
+  def toggleLineNumbers: Callback = scope.modState(_.toggleLineNumbers)
+  def togglePresentationMode: Callback = scope.modState(_.togglePresentationMode)
 
   def openConsole: Callback = scope.modState(_.openConsole)
   def closeConsole: Callback = scope.modState(_.closeConsole)
@@ -511,8 +513,6 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     )
 
   def completeCodeAt(pos: Int): Callback = {
-    println("at completeCodeAt")
-
     scope.state.flatMap(
       state => {
         Callback.future(
@@ -522,8 +522,33 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
             )
             .call()
             .map { response: CompletionResponse =>
-              println("Received: " + response.completions)
               scope.modState(_.setCompletions(response.completions))
+            }
+        )
+      }
+    )
+  }
+
+  def typeAt(token: String, pos: Int): Callback = {
+    scope.state.flatMap(
+      state => {
+        Callback.future(
+          ApiClient[AutowireApi]
+            .typeAt(
+              TypeAtPointRequest(state.inputs, pos)
+            )
+            .call()
+            .map { response: TypeAtPointResponse =>
+              scope.modState(
+                _.setTypeAtInto(
+                  Some(
+                    TypeInfoAt(
+                      token = token,
+                      typeInfo = response.typeInfo
+                    )
+                  )
+                )
+              )
             }
         )
       }

@@ -2,33 +2,34 @@ package com.olegych.scastie
 package client
 package components
 
-import api._
-
-import japgolly.scalajs.react._, vdom.all._
-
-import codemirror.{Hint, HintConfig}
-
+import codemirror.{
+  CodeMirror,
+  Hint,
+  HintConfig,
+  LineWidget,
+  TextAreaEditor,
+  TextMarker,
+  TextMarkerOptions,
+  Editor => CodeMirrorEditor2,
+  Position => CMPosition
+}
+import com.olegych.scastie.api._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
+import org.scalajs.dom
+import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.raw.{
-  HTMLTextAreaElement,
+  HTMLDivElement,
   HTMLElement,
   HTMLPreElement,
-  HTMLDivElement
-}
-import org.scalajs.dom
-
-import codemirror.{
-  Position => CMPosition,
-  TextAreaEditor,
-  LineWidget,
-  CodeMirror,
-  Editor => CodeMirrorEditor2,
-  TextMarker,
-  TextMarkerOptions
+  HTMLTextAreaElement
 }
 
 import scala.scalajs._
 
 final case class Editor(isDarkTheme: Boolean,
+                        isPresentationMode: Boolean,
+                        showLineNumbers: Boolean,
                         code: String,
                         attachedDoms: AttachedDoms,
                         instrumentations: Set[Instrumentation],
@@ -42,9 +43,13 @@ final case class Editor(isDarkTheme: Boolean,
                         toggleConsole: Callback,
                         toggleWorksheetMode: Callback,
                         toggleTheme: Callback,
+                        toggleLineNumbers: Callback,
+                        togglePresentationMode: Callback,
                         formatCode: Callback,
                         codeChange: String => Callback,
                         completeCodeAt: Int => Callback,
+                        requestTypeAt: (String, Int) => Callback,
+                        typeAtInfo: Option[TypeInfoAt],
                         clearCompletions: Callback) {
   @inline def render: VdomElement = Editor.component(this)
 }
@@ -55,7 +60,7 @@ object Editor {
 
   private var codemirrorTextarea: HTMLTextAreaElement = _
 
-  private def options(dark: Boolean): codemirror.Options = {
+  private def options(dark: Boolean, showLineNumbers: Boolean): codemirror.Options = {
 
     val theme = if (dark) "dark" else "light"
     val ctrl = if (View.isMac) "Cmd" else "Ctrl"
@@ -63,7 +68,8 @@ object Editor {
     js.Dictionary[Any](
         "mode" -> "text/x-scala",
         "autofocus" -> true,
-        "lineNumbers" -> false,
+        "lineNumbers" -> showLineNumbers,
+        "gutters" -> js.Array("CodeMirror-linenumbers"),
         "lineWrapping" -> false,
         "tabSize" -> 2,
         "indentWithTabs" -> false,
@@ -89,7 +95,9 @@ object Editor {
           "F2" -> "toggleSolarized",
           "F3" -> "toggleConsole",
           "F4" -> "toggleWorksheet",
-          "F6" -> "formatCode"
+          "F6" -> "formatCode",
+          "F7" -> "toggleLineNumbers",
+          "F8" -> "togglePresentationMode"
         )
       )
       .asInstanceOf[codemirror.Options]
@@ -107,11 +115,29 @@ object Editor {
     def clear() = tm.clear()
   }
 
+  /**
+    *    +------------------------+-------------+
+    *    v                        |             |
+    *   Idle --> Requested --> Active <--> NeedRender
+    *    ^           |
+    *    +-----------+
+    *   only if exactly one
+    *   completion returned
+    */
+  private[Editor] sealed trait CompletionState
+  private[Editor] case object Idle extends CompletionState
+  private[Editor] case object Requested extends CompletionState
+  private[Editor] case object Active extends CompletionState
+  private[Editor] case object NeedRender extends CompletionState
+
   private[Editor] case class EditorState(
       editor: Option[TextAreaEditor] = None,
       problemAnnotations: Map[api.Problem, Annotation] = Map(),
       renderAnnotations: Map[api.Instrumentation, Annotation] = Map(),
-      runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map()
+      runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map(),
+      completionState: CompletionState = Idle,
+      showTypeButtonPressed: Boolean = false,
+      typeAt: Option[TypeInfoAt] = None
   )
 
   private[Editor] class EditorBackend(
@@ -132,15 +158,148 @@ object Editor {
 
     def start(): Callback = {
       scope.props.flatMap { props =>
+
         val editor =
           codemirror.CodeMirror.fromTextArea(codemirrorTextarea,
-                                             options(props.isDarkTheme))
+                                             options(props.isDarkTheme, props.showLineNumbers))
 
         editor.onFocus(_.refresh())
 
         editor.onChange(
-          (_, _) => props.codeChange(editor.getDoc().getValue()).runNow
+          (_, _) => props.codeChange(editor.getDoc().getValue()).runNow()
         )
+
+        // don't show completions if cursor moves to some other place
+        editor.onMouseDown(
+          (_, _) => scope.modState(_.copy(completionState = Idle)).runNow()
+        )
+
+        editor.onKeyUp((_, e) => {
+          scope.modState(s =>
+            s.copy(showTypeButtonPressed = s.showTypeButtonPressed && e.keyCode != KeyCode.Ctrl)
+          ).runNow()
+        })
+
+        val terminateKeys = Set(
+          KeyCode.Space, KeyCode.Escape, KeyCode.Enter,
+          KeyCode.Up, KeyCode.Down
+        )
+
+        editor.onKeyDown((_, e) => {
+          scope.modState(s => {
+            var resultState = s
+
+            resultState = resultState.copy(showTypeButtonPressed = e.keyCode == KeyCode.Ctrl)
+
+            // if any of these keys are pressed
+            // then user doesn't need completions anymore
+            if (terminateKeys.contains(e.keyCode)) {
+              resultState = resultState.copy(completionState = Idle)
+            }
+
+            // we still show completions but user pressed a key,
+            // => render completions again (filters may apply there)
+            if (resultState.completionState == Active) {
+              // we might need to fetch new completions
+              // when user goes backwards
+              if (e.keyCode == KeyCode.Backspace) {
+                val doc = editor.getDoc()
+                val pos = doc.indexFromPos(doc.getCursor()) - 1
+                props.completeCodeAt(pos).runNow()
+              }
+
+              resultState = resultState.copy(completionState = NeedRender)
+            }
+
+            resultState
+          }).runNow()
+        })
+
+        CodeMirror.on(editor.getWrapperElement(), "mouseover", (e: dom.MouseEvent) => {
+
+          def initEventHandlers(node: js.Dynamic, message: HTMLElement) = {
+
+            val tooltip = dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+            node.className = node.className.concat(" CodeMirror-hover")
+            tooltip.className = tooltip.className.concat(" CodeMirror-hover-tooltip")
+            tooltip.appendChild(message)
+            dom.document.body.appendChild(tooltip)
+
+            def remove(element: HTMLElement) = {
+              if (element.parentNode != null) {
+                element.parentNode.removeChild(element)
+              }
+            }
+
+            def hideTooltip(e: dom.Event): Unit = {
+              CodeMirror.off(dom.document, "mouseout", hideTooltip)
+              node.className = node.className.replace(" CodeMirror-hover", "")
+
+              if (tooltip.parentNode != null) {
+                if (tooltip.style.opacity == null) {
+                  remove(tooltip)
+                }
+                tooltip.style.opacity = "0"
+                dom.window.setTimeout(() => {
+                  remove(tooltip)
+                }, 600)
+                ()
+              }
+            }
+
+            def position(e: dom.MouseEvent): Unit = {
+              if (tooltip.parentNode == null) {
+                CodeMirror.off(dom.document, "mousemove", position)
+              }
+              tooltip.style.top = Math.max(0, e.clientY - tooltip.offsetHeight - 5) + "px"
+              tooltip.style.left = (e.clientX + 5) + "px"
+            }
+
+            CodeMirror.on(dom.document, "mousemove", position)
+            CodeMirror.on(dom.document, "mouseout", hideTooltip)
+            position(e)
+            if (tooltip.style.opacity != null) {
+              tooltip.style.opacity = "1"
+            }
+          }
+
+          val node = e.target
+          if (node != null && node.isInstanceOf[HTMLElement]) {
+            val text = node.asInstanceOf[HTMLElement].textContent
+            if (text != null) {
+
+              // request token under the cursor
+              val pos = editor.coordsChar(
+                js.Dictionary[Any](
+                  "left" -> e.clientX,
+                  "top" -> e.clientY
+                ),
+                mode = null
+              )
+              val currToken = editor.getTokenAt(pos, precise = null).string
+
+              // Request type info only if Ctrl is pressed
+              if (currToken == text) {
+                val s = scope.state.runNow()
+                if (s.showTypeButtonPressed) {
+                  val message = dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+
+                  val lastTypeInfo = s.typeAt
+                  if (lastTypeInfo.isEmpty || lastTypeInfo.get.token != currToken) {
+                    // if it's the first typeAt request
+                    // OR if user's moved on to a new token
+                    // then we request new type information with curr token and show "..."
+                    props.requestTypeAt(currToken, editor.getDoc().indexFromPos(pos)).runNow()
+                    message.innerHTML = "..."
+                  } else {
+                    message.innerHTML = s.typeAt.get.typeInfo
+                  }
+                  initEventHandlers(node.asInstanceOf[js.Dynamic], message)
+                }
+              }
+            }
+          }
+        })
 
         CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
           props.run.runNow()
@@ -174,11 +333,22 @@ object Editor {
           props.formatCode.runNow()
         }
 
+        CodeMirror.commands.toggleLineNumbers = (editor: CodeMirrorEditor2) => {
+          props.toggleLineNumbers.runNow()
+        }
+
+        CodeMirror.commands.togglePresentationMode = (editor: CodeMirrorEditor2) => {
+          props.togglePresentationMode.runNow()
+        }
+
         CodeMirror.commands.autocomplete = (editor: CodeMirrorEditor2) => {
           val doc = editor.getDoc()
           val pos = doc.indexFromPos(doc.getCursor())
 
           props.completeCodeAt(pos).runNow()
+          scope.modState(_
+            .copy(completionState = Requested)
+          ).runNow()
         }
 
         val setEditor =
@@ -214,6 +384,12 @@ object Editor {
           else "light"
 
         editor.setOption("theme", s"solarized $theme")
+      }
+    }
+
+    def setLineNumbers() = {
+      if (current.map(_.showLineNumbers) != Some(next.showLineNumbers)) {
+        editor.setOption("lineNumbers", next.showLineNumbers)
       }
     }
 
@@ -479,15 +655,16 @@ object Editor {
     }
 
     def setCompletions(): Unit = {
-      if (!next.completions.isEmpty) {
+      if (state.completionState == Requested ||
+          state.completionState == NeedRender ||
+          !next.completions.equals(current.getOrElse(next).completions)
+      ) {
         val doc = editor.getDoc()
         val cursor = doc.getCursor()
         var fr = cursor.ch
         val to = cursor.ch
         val currLine = cursor.line
-        val alphaNum = ('a' to 'z').toSet ++ ('A' to 'Z').toSet ++ ('0' to '9').toSet ++ Set(
-          '_'
-        )
+        val alphaNum = ('a' to 'z').toSet ++ ('A' to 'Z').toSet ++ ('0' to '9').toSet
         val lineContent = doc.getLine(currLine).getOrElse("")
 
         var i = fr - 1
@@ -496,6 +673,13 @@ object Editor {
           i -= 1
         }
 
+        val currPos = doc.indexFromPos(doc.getCursor())
+        val filter = doc.getValue().substring(doc.indexFromPos(new CMPosition {
+            line = currLine; ch = fr
+        }), currPos)
+
+        // autopick single completion only if it's user's first request
+        val completeSingle = next.completions.length == 1 && state.completionState == Requested
         CodeMirror.showHint(
           editor,
           (_, options) => {
@@ -507,10 +691,12 @@ object Editor {
                 line = currLine; ch = to
               },
               "list" -> next.completions
-                .map(_.hint)
+                // FIXME: can place not 'important' completions first
+                .filter(_.hint.startsWith(filter))
                 .map {
-                  hint =>
-                    println("rendering hint: " + hint)
+                  completion =>
+                    val hint = completion.hint
+
                     HintConfig
                       .className("autocomplete")
                       .text(hint)
@@ -521,16 +707,21 @@ object Editor {
                           .asInstanceOf[HTMLPreElement]
                         node.className = "signature"
 
-                        CodeMirror.runMode(hint, modeScala, node)
+                        CodeMirror.runMode(completion.typeInfo, modeScala, node)
 
                         val span = dom.document
                           .createElement("span")
                           .asInstanceOf[HTMLPreElement]
                         span.className = "name cm-def"
+                        span.textContent = hint
 
                         el.appendChild(span)
                         el.appendChild(node)
-                        ()
+
+                        if (next.isPresentationMode) {
+                          val hintsDiv = node.parentElement.parentElement
+                          hintsDiv.className = hintsDiv.className.concat(" CodeMirror-hints-presentation-mode")
+                        }
                       }): Hint
                 }
                 .to[js.Array]
@@ -539,12 +730,20 @@ object Editor {
           js.Dictionary(
             "container" -> dom.document.querySelector(".CodeMirror"),
             "alignWithWord" -> true,
-            "completeSingle" -> (next.completions.length == 1)
+            "completeSingle" -> completeSingle
           )
         )
 
-        // FIXME: find another way to do it
-        next.clearCompletions.runNow()
+        modState(_.copy(completionState = Active)).runNow()
+        if (completeSingle) {
+          modState(_.copy(completionState = Idle)).runNow()
+        }
+      }
+    }
+
+    def setTypeAt(): Unit = {
+      if (current.map(_.typeAtInfo) != Some(next.typeAtInfo)) {
+        modState(_.copy(typeAt = next.typeAtInfo)).runNow()
       }
     }
 
@@ -554,10 +753,12 @@ object Editor {
 
     Callback(setTheme()) >>
       Callback(setCode()) >>
+      Callback(setLineNumbers()) >>
       setProblemAnnotations() >>
       setRenderAnnotations() >>
       setRuntimeError >>
       Callback(setCompletions()) >>
+      Callback(setTypeAt()) >>
       Callback(refresh())
   }
 
