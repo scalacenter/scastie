@@ -84,6 +84,9 @@ class Document protected () extends js.Object {
                     node: Element,
                     options: UndefOr[js.Object] = undefined): LineWidget =
     js.native
+  def setGutterMarker(line: Int | LineHandle,
+                      gutterID: String,
+                      value: Element): LineWidget = js.native
   def getMode(): js.Object = js.native
   def lineSeparator(): Unit = js.native
   def posFromIndex(index: Int): Position = js.native

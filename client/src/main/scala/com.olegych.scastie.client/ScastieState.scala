@@ -18,6 +18,8 @@ object ScastieState {
     modalState = ModalState.default,
     isDarkTheme = false,
     isDesktopForced = false,
+    isPresentationMode = false,
+    showLineNumbers = false,
     consoleState = ConsoleState.default,
     inputsHasChanged = false,
     snippetState = SnippetState(
@@ -34,7 +36,8 @@ object ScastieState {
     inputs = Inputs.default,
     outputs = Outputs.default,
     status = StatusState.default,
-    completions = List()
+    completions = List(),
+    typeAtInfo = None
   )
 
   implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
@@ -69,6 +72,8 @@ case class ScastieState(
     modalState: ModalState,
     isDarkTheme: Boolean,
     isDesktopForced: Boolean,
+    isPresentationMode: Boolean,
+    showLineNumbers: Boolean,
     consoleState: ConsoleState,
     inputsHasChanged: Boolean,
     snippetState: SnippetState,
@@ -77,7 +82,8 @@ case class ScastieState(
     inputs: Inputs,
     outputs: Outputs,
     status: StatusState,
-    completions: List[Completion]
+    completions: List[Completion],
+    typeAtInfo: Option[TypeInfoAt]
 ) {
 
   def snippetId: Option[SnippetId] = snippetState.snippetId
@@ -94,7 +100,9 @@ case class ScastieState(
                   websocket: Option[WebSocket] = websocket,
                   modalState: ModalState = modalState,
                   isDarkTheme: Boolean = isDarkTheme,
+                  isPresentationMode: Boolean = isPresentationMode,
                   isDesktopForced: Boolean = isDesktopForced,
+                  showLineNumbers: Boolean = showLineNumbers,
                   consoleState: ConsoleState = consoleState,
                   inputsHasChanged: Boolean = inputsHasChanged,
                   snippetId: Option[SnippetId] = snippetId,
@@ -122,6 +130,8 @@ case class ScastieState(
         modalState,
         isDarkTheme,
         isDesktopForced,
+        isPresentationMode,
+        showLineNumbers,
         consoleState,
         inputsHasChanged,
         SnippetState(
@@ -141,7 +151,8 @@ case class ScastieState(
         ),
         outputs,
         status,
-        completions
+        completions,
+        typeAtInfo
       )
 
     LocalStorage.save(state0)
@@ -181,6 +192,12 @@ case class ScastieState(
 
   def setTheme(dark: Boolean): ScastieState =
     copyAndSave(isDarkTheme = dark)
+
+  def toggleLineNumbers: ScastieState =
+    copyAndSave(showLineNumbers = !showLineNumbers)
+
+  def togglePresentationMode: ScastieState =
+    copyAndSave(isPresentationMode = !isPresentationMode)
 
   def toggleWorksheetMode: ScastieState =
     copyAndSave(
@@ -287,6 +304,9 @@ case class ScastieState(
 
   def setCompletions(completions: List[Completion]): ScastieState =
     copy(completions = completions)
+
+  def setTypeAtInto(typeAtInfoAt: Option[TypeInfoAt]): ScastieState =
+    copy(typeAtInfo = typeAtInfoAt)
 
   def setSbtConfigExtra(config: String): ScastieState =
     copyAndSave(

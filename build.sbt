@@ -24,7 +24,6 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 
-
 lazy val scastie = project
   .in(file("."))
   .aggregate(
@@ -189,7 +188,7 @@ lazy val sbtRunner = project
         val logbackConfDestination = "/root/logback.xml"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.24")
+          from("scalacenter/scastie-docker-sbt:0.0.25")
 
           add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 
