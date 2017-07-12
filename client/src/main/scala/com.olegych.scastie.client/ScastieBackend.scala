@@ -539,7 +539,6 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
             )
             .call()
             .map { response: TypeAtPointResponse =>
-              println(s"Received: ${response.typeInfo}")
               scope.modState(
                 _.setTypeAtInto(
                   Some(

@@ -742,7 +742,7 @@ object Editor {
     }
 
     def setTypeAt(): Unit = {
-      if (!next.typeAtInfo.equals(current.get)) {
+      if (current.map(_.typeAtInfo) != Some(next.typeAtInfo)) {
         modState(_.copy(typeAt = next.typeAtInfo)).runNow()
       }
     }
