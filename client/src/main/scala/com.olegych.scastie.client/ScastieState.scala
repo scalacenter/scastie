@@ -18,6 +18,7 @@ object ScastieState {
     modalState = ModalState.default,
     isDarkTheme = false,
     isDesktopForced = false,
+    isPresentationMode = false,
     showLineNumbers = false,
     consoleState = ConsoleState.default,
     inputsHasChanged = false,
@@ -71,6 +72,7 @@ case class ScastieState(
     modalState: ModalState,
     isDarkTheme: Boolean,
     isDesktopForced: Boolean,
+    isPresentationMode: Boolean,
     showLineNumbers: Boolean,
     consoleState: ConsoleState,
     inputsHasChanged: Boolean,
@@ -98,6 +100,7 @@ case class ScastieState(
                   websocket: Option[WebSocket] = websocket,
                   modalState: ModalState = modalState,
                   isDarkTheme: Boolean = isDarkTheme,
+                  isPresentationMode: Boolean = isPresentationMode,
                   isDesktopForced: Boolean = isDesktopForced,
                   showLineNumbers: Boolean = showLineNumbers,
                   consoleState: ConsoleState = consoleState,
@@ -127,6 +130,7 @@ case class ScastieState(
         modalState,
         isDarkTheme,
         isDesktopForced,
+        isPresentationMode,
         showLineNumbers,
         consoleState,
         inputsHasChanged,
@@ -191,6 +195,9 @@ case class ScastieState(
 
   def toggleLineNumbers: ScastieState =
     copyAndSave(showLineNumbers = !showLineNumbers)
+
+  def togglePresentationMode: ScastieState =
+    copyAndSave(isPresentationMode = !isPresentationMode)
 
   def toggleWorksheetMode: ScastieState =
     copyAndSave(

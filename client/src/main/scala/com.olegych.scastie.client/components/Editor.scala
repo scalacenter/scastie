@@ -28,6 +28,7 @@ import org.scalajs.dom.raw.{
 import scala.scalajs._
 
 final case class Editor(isDarkTheme: Boolean,
+                        isPresentationMode: Boolean,
                         showLineNumbers: Boolean,
                         code: String,
                         attachedDoms: AttachedDoms,
@@ -43,6 +44,7 @@ final case class Editor(isDarkTheme: Boolean,
                         toggleWorksheetMode: Callback,
                         toggleTheme: Callback,
                         toggleLineNumbers: Callback,
+                        togglePresentationMode: Callback,
                         formatCode: Callback,
                         codeChange: String => Callback,
                         completeCodeAt: Int => Callback,
@@ -94,7 +96,8 @@ object Editor {
           "F3" -> "toggleConsole",
           "F4" -> "toggleWorksheet",
           "F6" -> "formatCode",
-          "F7" -> "toggleLineNumbers"
+          "F7" -> "toggleLineNumbers",
+          "F8" -> "togglePresentationMode"
         )
       )
       .asInstanceOf[codemirror.Options]
@@ -332,6 +335,10 @@ object Editor {
 
         CodeMirror.commands.toggleLineNumbers = (editor: CodeMirrorEditor2) => {
           props.toggleLineNumbers.runNow()
+        }
+
+        CodeMirror.commands.togglePresentationMode = (editor: CodeMirrorEditor2) => {
+          props.togglePresentationMode.runNow()
         }
 
         CodeMirror.commands.autocomplete = (editor: CodeMirrorEditor2) => {
@@ -689,7 +696,7 @@ object Editor {
                 .map {
                   completion =>
                     val hint = completion.hint
-                    println("rendering hint: " + hint)
+
                     HintConfig
                       .className("autocomplete")
                       .text(hint)
@@ -710,7 +717,11 @@ object Editor {
 
                         el.appendChild(span)
                         el.appendChild(node)
-                        ()
+
+                        if (next.isPresentationMode) {
+                          val hintsDiv = node.parentElement.parentElement
+                          hintsDiv.className = hintsDiv.className.concat(" CodeMirror-hints-presentation-mode")
+                        }
                       }): Hint
                 }
                 .to[js.Array]
