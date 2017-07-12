@@ -710,70 +710,80 @@ object Editor {
             line = currLine; ch = fr
           }), currPos)
 
-        // autopick single completion only if it's user's first request
-        val completeSingle = next.completions.length == 1 && state.completionState == Requested
-        CodeMirror.showHint(
-          editor,
-          (_, options) => {
-            js.Dictionary(
-              "from" -> new CMPosition {
-                line = currLine; ch = fr
-              },
-              "to" -> new CMPosition {
-                line = currLine; ch = to
-              },
-              "list" -> next.completions
-              // FIXME: can place not 'important' completions first
-                .filter(_.hint.startsWith(filter))
-                .map {
-                  completion =>
-                    val hint = completion.hint
+        // stop autocomplete if user reached brackets
+        val enteredBrackets =
+          doc.getValue().substring(currPos - 1, currPos + 1) == "()" &&
+            state.completionState != Requested
 
-                    HintConfig
-                      .className("autocomplete")
-                      .text(hint)
-                      .render(
-                        (el, _, _) ⇒ {
-
-                          val node = dom.document
-                            .createElement("pre")
-                            .asInstanceOf[HTMLPreElement]
-                          node.className = "signature"
-
-                          CodeMirror.runMode(completion.typeInfo,
-                                             modeScala,
-                                             node)
-
-                          val span = dom.document
-                            .createElement("span")
-                            .asInstanceOf[HTMLPreElement]
-                          span.className = "name cm-def"
-                          span.textContent = hint
-
-                          el.appendChild(span)
-                          el.appendChild(node)
-
-                          if (next.isPresentationMode) {
-                            val hintsDiv = node.parentElement.parentElement
-                            hintsDiv.className = hintsDiv.className
-                              .concat(" CodeMirror-hints-presentation-mode")
-                          }
-                        }
-                      ): Hint
-                }
-                .to[js.Array]
-            )
-          },
-          js.Dictionary(
-            "container" -> dom.document.querySelector(".CodeMirror"),
-            "alignWithWord" -> true,
-            "completeSingle" -> completeSingle
-          )
-        )
-
-        modState(_.copy(completionState = Active)).runNow()
-        if (completeSingle) {
+        if (enteredBrackets) {
           modState(_.copy(completionState = Idle)).runNow()
+        } else {
+          // autopick single completion only if it's user's first request
+          val completeSingle = next.completions.length == 1 && state.completionState == Requested
+
+          CodeMirror.showHint(
+            editor,
+            (_, options) => {
+              js.Dictionary(
+                "from" -> new CMPosition {
+                  line = currLine; ch = fr
+                },
+                "to" -> new CMPosition {
+                  line = currLine; ch = to
+                },
+                "list" -> next.completions
+                  // FIXME: can place not 'important' completions first
+                  .filter(_.hint.startsWith(filter))
+                  .map {
+                    completion =>
+                      val hint = completion.hint
+
+                      HintConfig
+                        .className("autocomplete")
+                        .text(hint)
+                        .render(
+                          (el, _, _) ⇒ {
+
+                            val node = dom.document
+                              .createElement("pre")
+                              .asInstanceOf[HTMLPreElement]
+                            node.className = "signature"
+
+                            CodeMirror.runMode(completion.typeInfo,
+                              modeScala,
+                              node)
+
+                            val span = dom.document
+                              .createElement("span")
+                              .asInstanceOf[HTMLPreElement]
+                            span.className = "name cm-def"
+                            span.textContent = hint
+
+                            el.appendChild(span)
+                            el.appendChild(node)
+
+                            if (next.isPresentationMode) {
+                              val hintsDiv = node.parentElement.parentElement
+                              hintsDiv.className = hintsDiv.className
+                                .concat(" CodeMirror-hints-presentation-mode")
+                            }
+                          }
+                        ): Hint
+                  }
+                  .to[js.Array]
+              )
+            },
+            js.Dictionary(
+              "container" -> dom.document.querySelector(".CodeMirror"),
+              "alignWithWord" -> true,
+              "completeSingle" -> completeSingle
+            )
+          )
+
+          modState(_.copy(completionState = Active)).runNow()
+          if (completeSingle) {
+            modState(_.copy(completionState = Idle)).runNow()
+          }
         }
       }
     }

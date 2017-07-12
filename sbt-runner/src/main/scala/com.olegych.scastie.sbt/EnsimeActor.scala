@@ -1,32 +1,25 @@
 package com.olegych.scastie.sbt
 
 import com.olegych.scastie.api._
-
 import akka.{Done, NotUsed}
 import akka.util.Timeout
-
 import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-
 import org.ensime.jerky.JerkyFormats
 import org.ensime.api._
 import JerkyFormats._
 
 import scala.io.Source.fromFile
-
 import org.slf4j.LoggerFactory
-
-import java.io.{BufferedReader, File, InputStream, InputStreamReader}
+import java.io._
 import java.nio.file.{Files, Path}
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.util.{Failure, Success}
 
 case object Heartbeat
@@ -36,20 +29,21 @@ case class MkEnsimeConfigResponse(sbtDir: Path)
 
 class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   import spray.json._
+  import system.dispatcher
 
   private val log = LoggerFactory.getLogger(getClass)
 
   implicit val materializer_ = ActorMaterializer()
   implicit val timeout = Timeout(5.seconds)
 
-  private var ensimeProcess: Process = _
-  private var ensimeWS: ActorRef = _
+  private var ensimeProcess: Option[Process] = None
+  private var ensimeWS: Option[ActorRef] = None
   private var hbRef: Option[Cancellable] = None
 
   private var nextId = 1
   private var requests = Map[Int, ActorRef]()
 
-  private var codeFile: Path = _
+  private var codeFile: Option[Path] = None
 
   def handleRPCResponse(id: Int, payload: EnsimeServerMessage) = {
     requests.get(id) match {
@@ -95,7 +89,10 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
 
     log.debug(s"Sending $env")
     val json = env.toJson.prettyPrint
-    ensimeWS ! TextMessage.Strict(json)
+    ensimeWS match {
+      case Some(ws) => ws ! TextMessage.Strict(json)
+      case None => log.error("Trying to use not initialized WebSocket")
+    }
   }
 
   private def connectToEnsime(uri: String) = {
@@ -152,7 +149,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       }
     }
 
-    ensimeWS = ws
+    ensimeWS = Some(ws)
 
     sendToEnsime(ConnectionInfoReq, self)
     hbRef = Some(
@@ -162,7 +159,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   }
 
   override def preStart() = {
-    log.info("Request ensime info from sbtRunner [TELL!]")
+    log.info("Request ensime info from sbtRunner")
     sbtRunner.tell(MkEnsimeConfigRequest, self)
   }
 
@@ -190,18 +187,18 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       parseEnsimeConfFor("compile-deps")
 
     log.info("Starting Ensime server")
-    ensimeProcess = new ProcessBuilder(
+    ensimeProcess = Some(new ProcessBuilder(
       "java",
       "-Densime.config=" + ensimeConfigFile,
       "-classpath",
       classpath,
       "-Densime.explode.on.disconnect=true",
       "org.ensime.server.Server"
-    ).directory(sbtDir.toFile).start()
+    ).directory(sbtDir.toFile).start())
 
-    val stdout = ensimeProcess.getInputStream
+    val stdout = ensimeProcess.get.getInputStream
     streamLogger(stdout)
-    val stderr = ensimeProcess.getErrorStream
+    val stderr = ensimeProcess.get.getErrorStream
     streamLogger(stderr)
 
     connectToEnsime(
@@ -209,10 +206,10 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
     )
 
     log.info("Warming up Ensime...")
-    codeFile = sbtDir.resolve("src/main/scala/main.scala")
+    codeFile = Some(sbtDir.resolve("src/main/scala/main.scala"))
     sendToEnsime(
       CompletionsReq(
-        fileInfo = SourceFileInfo(RawFile(new File(codeFile.toString).toPath),
+        fileInfo = SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
                                   Some(Inputs.defaultCode)),
         point = 2,
         maxResults = 100,
@@ -227,9 +224,9 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
 
   override def postStop(): Unit = {
     hbRef.foreach(_.cancel())
-    if (ensimeProcess != null && ensimeProcess.isAlive) {
+    if (ensimeProcess.isDefined && ensimeProcess.get.isAlive) {
       log.info("Killing Ensime server")
-      ensimeProcess.destroy()
+      ensimeProcess.get.destroy()
     }
   }
 
@@ -248,18 +245,23 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   def receive = {
     case MkEnsimeConfigResponse(sbtDir: Path) => {
       log.info("Got MkEnsimeConfigResponse")
-      startEnsimeServer(sbtDir)
+      try {
+        startEnsimeServer(sbtDir)
+      } catch {
+        case e: FileNotFoundException => log.error(e.getMessage)
+      }
+
     }
 
     case TypeAtPointRequest(inputs, position) => {
       log.info("TypeAtPoint request at EnsimeActor")
 
-      if (!inputs.worksheetMode) {
+      if (!inputs.worksheetMode && codeFile.isDefined) {
         sendToEnsime(
           SymbolAtPointReq(
             file = Right(
               SourceFileInfo(
-                RawFile(new File(codeFile.toString).toPath),
+                RawFile(new File(codeFile.get.toString).toPath),
                 Some(inputs.code)
               )
             ),
@@ -273,11 +275,11 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
     case CompletionRequest(inputs, position) => {
       log.info("Completion request at EnsimeActor")
 
-      if (!inputs.worksheetMode) {
+      if (!inputs.worksheetMode && codeFile.isDefined) {
         sendToEnsime(
           CompletionsReq(
             fileInfo =
-              SourceFileInfo(RawFile(new File(codeFile.toString).toPath),
+              SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
                              Some(inputs.code)),
             point = position,
             maxResults = 100,
