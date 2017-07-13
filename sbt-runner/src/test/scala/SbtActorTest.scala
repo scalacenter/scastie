@@ -102,6 +102,7 @@ class SbtActorTest()
   test("Regression #55: Dotty fails to resolve") {
     val dotty = Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Dotty)
     run(dotty)(_.instrumentations.nonEmpty)
+    pending
   }
 
   test("Encoding issues #100") {
@@ -138,7 +139,12 @@ class SbtActorTest()
 
   private val timeout = 20.seconds
   private val sbtActor = TestActorRef(
-    new SbtActor(timeout, production = false)
+    new SbtActor(
+      system = system,
+      runTimeout = timeout,
+      production = false,
+      withEnsime = false
+    )
   )
   private var currentId = 0
   private def snippetId = {

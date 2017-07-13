@@ -8,7 +8,8 @@ import scala.concurrent.duration._
 
 class SbtActor(system: ActorSystem,
                runTimeout: FiniteDuration,
-               production: Boolean)
+               production: Boolean,
+               withEnsime: Boolean)
     extends Actor {
 
   val formatActor =
@@ -21,17 +22,24 @@ class SbtActor(system: ActorSystem,
     )
 
   val ensimeActor =
-    context.actorOf(
-      Props(new EnsimeActor(system, sbtRunner)),
-      name = "EnsimeActor"
-    )
+    if(withEnsime) {
+      Some(
+        context.actorOf(
+          Props(new EnsimeActor(system, sbtRunner)),
+          name = "EnsimeActor"
+        )
+      )
+    } else {
+      None
+    }
+
 
   def receive = {
     case SbtPing =>
       sender ! SbtPong
 
     case req: EnsimeRequest =>
-      ensimeActor.forward(req)
+      ensimeActor.foreach(_.forward(req))
 
     case format: FormatRequest =>
       formatActor.forward(format)
