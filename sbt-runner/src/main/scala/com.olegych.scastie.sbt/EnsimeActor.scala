@@ -256,28 +256,34 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
 
     case TypeAtPointRequest(inputs, position) =>
       log.info("TypeAtPoint request at EnsimeActor")
-      processRequest(sender, inputs, position,
+      processRequest(
+        sender,
+        inputs,
+        position,
         (code: String, pos: Int) => {
           SymbolAtPointReq(
             file = Right(
               SourceFileInfo(
                 RawFile(new File(codeFile.get.toString).toPath),
-                Some(inputs.code)
+                Some(code)
               )
             ),
-            point = position
+            point = pos
           )
         }
       )
 
     case CompletionRequest(inputs, position) =>
       log.info("Completion request at EnsimeActor")
-      processRequest(sender, inputs, position,
+      processRequest(
+        sender,
+        inputs,
+        position,
         (code: String, pos: Int) => {
           CompletionsReq(
             fileInfo =
               SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
-                Some(code)),
+                             Some(code)),
             point = pos,
             maxResults = 100,
             caseSens = false,
@@ -293,8 +299,11 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       log.debug(s"Got $x at EnsimeActor")
   }
 
-  private def processRequest(sender: ActorRef, inputs: Inputs, position: Int,
-                             rpcRequestFun: (String, Int) => RpcRequest
+  private def processRequest(
+      sender: ActorRef,
+      inputs: Inputs,
+      position: Int,
+      rpcRequestFun: (String, Int) => RpcRequest
   ): Unit = {
     val (code, pos) = if (inputs.worksheetMode) {
       (s"object Main extends App { ${inputs.code} }", position + 26)
@@ -305,7 +314,9 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
     if (codeFile.isDefined) {
       sendToEnsime(rpcRequestFun(code, pos), sender)
     } else {
-      log.info("Can't process request: code file's not defined – are sure Ensime started?")
+      log.info(
+        "Can't process request: code file's not defined – are sure Ensime started?"
+      )
     }
   }
 
