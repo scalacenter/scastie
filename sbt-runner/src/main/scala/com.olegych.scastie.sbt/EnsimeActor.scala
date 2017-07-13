@@ -246,7 +246,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   }
 
   def receive = {
-    case MkEnsimeConfigResponse(sbtDir: Path) => {
+    case MkEnsimeConfigResponse(sbtDir: Path) =>
       log.info("Got MkEnsimeConfigResponse")
       try {
         startEnsimeServer(sbtDir)
@@ -254,13 +254,10 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
         case e: FileNotFoundException => log.error(e.getMessage)
       }
 
-    }
-
-    case TypeAtPointRequest(inputs, position) => {
+    case TypeAtPointRequest(inputs, position) =>
       log.info("TypeAtPoint request at EnsimeActor")
-
-      if (!inputs.worksheetMode && codeFile.isDefined) {
-        sendToEnsime(
+      processRequest(sender, inputs, position,
+        (code: String, pos: Int) => {
           SymbolAtPointReq(
             file = Right(
               SourceFileInfo(
@@ -269,36 +266,46 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
               )
             ),
             point = position
-          ),
-          sender
-        )
-      }
-    }
+          )
+        }
+      )
 
-    case CompletionRequest(inputs, position) => {
+    case CompletionRequest(inputs, position) =>
       log.info("Completion request at EnsimeActor")
-
-      if (!inputs.worksheetMode && codeFile.isDefined) {
-        sendToEnsime(
+      processRequest(sender, inputs, position,
+        (code: String, pos: Int) => {
           CompletionsReq(
             fileInfo =
               SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
-                             Some(inputs.code)),
-            point = position,
+                Some(code)),
+            point = pos,
             maxResults = 100,
             caseSens = false,
             reload = false
-          ),
-          sender
-        )
-      }
-    }
+          )
+        }
+      )
 
     case Heartbeat =>
       sendToEnsime(ConnectionInfoReq, self)
 
-    case x => {
+    case x =>
       log.debug(s"Got $x at EnsimeActor")
+  }
+
+  private def processRequest(sender: ActorRef, inputs: Inputs, position: Int,
+                             rpcRequestFun: (String, Int) => RpcRequest
+  ): Unit = {
+    val (code, pos) = if (inputs.worksheetMode) {
+      (s"object Main extends App { ${inputs.code} }", position + 26)
+    } else {
+      (inputs.code, position)
+    }
+
+    if (codeFile.isDefined) {
+      sendToEnsime(rpcRequestFun(code, pos), sender)
+    } else {
+      log.info("Can't process request: code file's not defined – are sure Ensime started?")
     }
   }
 
