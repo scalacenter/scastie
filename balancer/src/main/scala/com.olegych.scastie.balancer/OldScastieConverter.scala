@@ -6,27 +6,26 @@ import api._
 import System.{lineSeparator => nl}
 
 object OldScastieConverter {
-  private def convertLine(line: String): Converter => Converter = {
-    converter =>
-      val sv = "scalaVersion := \""
+  private def convertLine(line: String): Converter => Converter = { converter =>
+    val sv = "scalaVersion := \""
 
-      if (line.startsWith(sv)) {
-        converter.copy(scalaVersion = Some(line.drop(sv.length).dropRight(1)))
-      } else {
-        line match {
-          case "com.felixmulder.dotty.plugin.DottyPlugin.projectSettings" =>
-            converter.setTargetType(ScalaTargetType.Dotty)
+    if (line.startsWith(sv)) {
+      converter.copy(scalaVersion = Some(line.drop(sv.length).dropRight(1)))
+    } else {
+      line match {
+        case "com.felixmulder.dotty.plugin.DottyPlugin.projectSettings" =>
+          converter.setTargetType(ScalaTargetType.Dotty)
 
-          case """scalaOrganization in ThisBuild := "org.typelevel"""" =>
-            converter.setTargetType(ScalaTargetType.Typelevel)
+        case """scalaOrganization in ThisBuild := "org.typelevel"""" =>
+          converter.setTargetType(ScalaTargetType.Typelevel)
 
-          case "coursier.CoursierPlugin.projectSettings" =>
-            converter
+        case "coursier.CoursierPlugin.projectSettings" =>
+          converter
 
-          case _ =>
-            converter.appendSbt(line)
-        }
+        case _ =>
+          converter.appendSbt(line)
       }
+    }
   }
 
   def convertOldOutput(content: String): List[SnippetProgress] = {

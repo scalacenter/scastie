@@ -95,8 +95,7 @@ object Routing {
           (defaultEmbedded, SnippetId(uuid, None))
 
         case EmbeddedUserResource(login, uuid) =>
-          (defaultEmbedded,
-           SnippetId(uuid, Some(SnippetUserPart(login, None))))
+          (defaultEmbedded, SnippetId(uuid, Some(SnippetUserPart(login, None))))
 
         case EmbeddedUserResourceUpdated(login, uuid, update) =>
           (defaultEmbedded,

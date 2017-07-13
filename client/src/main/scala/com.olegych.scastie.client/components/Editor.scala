@@ -222,8 +222,7 @@ object Editor {
                       props.completeCodeAt(pos).runNow()
                     }
 
-                    resultState =
-                      resultState.copy(completionState = NeedRender)
+                    resultState = resultState.copy(completionState = NeedRender)
                   }
 
                   resultState
@@ -256,8 +255,7 @@ object Editor {
 
               def hideTooltip(e: dom.Event): Unit = {
                 CodeMirror.off(dom.document, "mouseout", hideTooltip)
-                node.className =
-                  node.className.replace(" CodeMirror-hover", "")
+                node.className = node.className.replace(" CodeMirror-hover", "")
 
                 if (tooltip.parentNode != null) {
                   if (tooltip.style.opacity == null) {
@@ -364,10 +362,9 @@ object Editor {
           props.formatCode.runNow()
         }
 
-        CodeMirror.commands.toggleLineNumbers =
-          (editor: CodeMirrorEditor2) => {
-            props.toggleLineNumbers.runNow()
-          }
+        CodeMirror.commands.toggleLineNumbers = (editor: CodeMirrorEditor2) => {
+          props.toggleLineNumbers.runNow()
+        }
 
         CodeMirror.commands.togglePresentationMode =
           (editor: CodeMirrorEditor2) => {
@@ -568,8 +565,7 @@ object Editor {
           }
         },
         _.renderAnnotations,
-        f =>
-          state => state.copy(renderAnnotations = f(state.renderAnnotations))
+        f => state => state.copy(renderAnnotations = f(state.renderAnnotations))
       )
 
     }
@@ -586,16 +582,16 @@ object Editor {
 
           val iconSeverity =
             info.severity match {
-              case api.Info => "fa fa-info"
+              case api.Info    => "fa fa-info"
               case api.Warning => "fa fa-exclamation-triangle"
-              case api.Error => "fa fa-times-circle"
+              case api.Error   => "fa fa-times-circle"
             }
 
           val classSeverity =
             info.severity match {
-              case api.Info => "info"
+              case api.Info    => "info"
               case api.Warning => "warning"
-              case api.Error => "error"
+              case api.Error   => "error"
             }
 
           icon.className = iconSeverity
@@ -732,7 +728,7 @@ object Editor {
                   line = currLine; ch = to
                 },
                 "list" -> next.completions
-                  // FIXME: can place not 'important' completions first
+                // FIXME: can place not 'important' completions first
                   .filter(_.hint.startsWith(filter))
                   .map {
                     completion =>
@@ -750,8 +746,8 @@ object Editor {
                             node.className = "signature"
 
                             CodeMirror.runMode(completion.typeInfo,
-                              modeScala,
-                              node)
+                                               modeScala,
+                                               node)
 
                             val span = dom.document
                               .createElement("span")

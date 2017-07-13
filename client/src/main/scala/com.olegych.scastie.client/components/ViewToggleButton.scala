@@ -16,11 +16,13 @@ object ViewToggleButton {
     Reusability.caseClass
 
   private def render(props: ViewToggleButton): VdomElement = {
-    li(onClick --> props.currentView.setState(props.forView),
-       role := "button",
-       title := props.buttonTitle,
-       (cls := "selected").when(props.currentView.value == props.forView),
-       cls := "btn")(
+    li(
+      onClick --> props.currentView.setState(props.forView),
+      role := "button",
+      title := props.buttonTitle,
+      (cls := "selected").when(props.currentView.value == props.forView),
+      cls := "btn"
+    )(
       i(cls := props.faIcon, cls := "fa"),
       span(props.buttonTitle)
     )

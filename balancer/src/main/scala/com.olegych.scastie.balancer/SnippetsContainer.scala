@@ -104,7 +104,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   def downloadSnippet(snippetId: SnippetId): Option[Path] = {
     readSnippet(snippetId) match {
       case Some(FetchResult(inputs, _)) => Some(zipSnippet(snippetId, inputs))
-      case None => None
+      case None                         => None
     }
   }
 

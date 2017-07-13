@@ -23,7 +23,7 @@ package object routes {
   def serveStatic(content: Option[String]) = {
     content match {
       case Some(c) => html(c)
-      case None => HttpResponse(status = NotFound)
+      case None    => HttpResponse(status = NotFound)
     }
   }
 }

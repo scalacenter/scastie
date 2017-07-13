@@ -26,11 +26,13 @@ object WorksheetButton {
       if (props.isWorksheetMode) "OFF"
       else "ON"
 
-    li(title := s"Turn Worksheet Mode $worksheetModeToggleLabel (F4)",
-       worksheetModeSelected,
-       role := "button",
-       cls := "btn editor",
-       onClick --> props.toggleWorksheetMode)(
+    li(
+      title := s"Turn Worksheet Mode $worksheetModeToggleLabel (F4)",
+      worksheetModeSelected,
+      role := "button",
+      cls := "btn editor",
+      onClick --> props.toggleWorksheetMode
+    )(
       i(cls := "fa fa-calendar"),
       span("Worksheet"),
       i(cls := "workSheetIndicator",

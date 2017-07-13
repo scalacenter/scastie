@@ -9,12 +9,12 @@ object ScalaTargetType {
 
   def parse(targetType: String): Option[ScalaTargetType] = {
     targetType match {
-      case "JVM" => Some(JVM)
-      case "DOTTY" => Some(Dotty)
-      case "JS" => Some(JS)
-      case "NATIVE" => Some(Native)
+      case "JVM"       => Some(JVM)
+      case "DOTTY"     => Some(Dotty)
+      case "JS"        => Some(JS)
+      case "NATIVE"    => Some(Native)
       case "TYPELEVEL" => Some(Typelevel)
-      case _ => None
+      case _           => None
     }
   }
 

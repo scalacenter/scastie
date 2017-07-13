@@ -14,7 +14,7 @@ protected[runtime] trait SharedRuntime {
     import pprint.Config.Defaults._
     a match {
       case html: Html => html
-      case v => Value(pprint.tokenize(v).mkString, tp.render)
+      case v          => Value(pprint.tokenize(v).mkString, tp.render)
     }
   }
 }

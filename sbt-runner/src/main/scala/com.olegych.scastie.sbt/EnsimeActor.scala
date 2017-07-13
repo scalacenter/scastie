@@ -57,7 +57,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
                 .map(ci => {
                   val typeInfo = ci.typeInfo match {
                     case Some(info) => info.name
-                    case None => ""
+                    case None       => ""
                   }
                   Completion(ci.name, typeInfo)
                 })
@@ -91,7 +91,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
     val json = env.toJson.prettyPrint
     ensimeWS match {
       case Some(ws) => ws ! TextMessage.Strict(json)
-      case None => log.error("Trying to use not initialized WebSocket")
+      case None     => log.error("Trying to use not initialized WebSocket")
     }
   }
 
@@ -109,7 +109,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       val env = message.parseJson.convertTo[RpcResponseEnvelope]
       env.callId match {
         case Some(id) => handleRPCResponse(id, env.payload)
-        case None => ()
+        case None     => ()
       }
     }
 
@@ -187,14 +187,16 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       parseEnsimeConfFor("compile-deps")
 
     log.info("Starting Ensime server")
-    ensimeProcess = Some(new ProcessBuilder(
-      "java",
-      "-Densime.config=" + ensimeConfigFile,
-      "-classpath",
-      classpath,
-      "-Densime.explode.on.disconnect=true",
-      "org.ensime.server.Server"
-    ).directory(sbtDir.toFile).start())
+    ensimeProcess = Some(
+      new ProcessBuilder(
+        "java",
+        "-Densime.config=" + ensimeConfigFile,
+        "-classpath",
+        classpath,
+        "-Densime.explode.on.disconnect=true",
+        "org.ensime.server.Server"
+      ).directory(sbtDir.toFile).start()
+    )
 
     val stdout = ensimeProcess.get.getInputStream
     streamLogger(stdout)
@@ -209,8 +211,9 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
     codeFile = Some(sbtDir.resolve("src/main/scala/main.scala"))
     sendToEnsime(
       CompletionsReq(
-        fileInfo = SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
-                                  Some(Inputs.defaultCode)),
+        fileInfo =
+          SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
+                         Some(Inputs.defaultCode)),
         point = 2,
         maxResults = 100,
         caseSens = false,

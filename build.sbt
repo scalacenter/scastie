@@ -57,25 +57,13 @@ lazy val scastie = project
 
 lazy val baseSettings = Seq(
   scalaVersion := "2.12.2",
-  scalacOptions := {
-    val extraOptions =
-      if (scalaBinaryVersion.value != "2.10") {
-        Seq("-Ywarn-unused-import")
-      } else Seq()
-
-    Seq(
-      "-deprecation",
-      "-encoding",
-      "UTF-8",
-      "-feature",
-      "-unchecked",
-      "-Xfatal-warnings",
-      "-Xlint",
-      "-Yno-adapted-args",
-      "-Ywarn-numeric-widen",
-      "-Ywarn-value-discard"
-    ) ++ extraOptions
-  },
+  scalacOptions := Seq(
+    "-deprecation",
+    "-encoding",
+    "UTF-8",
+    "-feature",
+    "-unchecked"
+  ),
   console := (console in Test).value,
   scalacOptions in (Test, console) -= "-Ywarn-unused-import",
   scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"
@@ -168,8 +156,8 @@ lazy val sbtRunner = project
       )
     ),
     assemblyMergeStrategy in assembly := {
-      case PathList("META-INF", xs @ _ *) => MergeStrategy.discard
-      case in @ PathList("reference.conf", xs @ _ *) => {
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case in @ PathList("reference.conf", xs @ _*) => {
         val old = (assemblyMergeStrategy in assembly).value
         old(in)
       }
@@ -313,10 +301,7 @@ lazy val client = project
       reactWithDepends("react-dom", "ReactDOM", "react-with-addons"),
       reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom"),
       reactWithDepends("react-dom", "ReactDOM", "react-with-addons", Test),
-      reactWithDepends("react-dom-server",
-                       "ReactDOMServer",
-                       "react-dom",
-                       Test),
+      reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom", Test),
       RuntimeDOM % Test,
       "org.webjars.bower" % "raven-js" % "3.11.0" /
         "dist/raven.js" minified "dist/raven.min.js"

@@ -424,7 +424,7 @@ case class ScastieState(
 
   def addStatus(status: StatusProgress): ScastieState = {
     status match {
-      case StatusKeepAlive => this
+      case StatusKeepAlive     => this
       case StatusInfo(runners) => copy(status = StatusState(Some(runners)))
     }
   }

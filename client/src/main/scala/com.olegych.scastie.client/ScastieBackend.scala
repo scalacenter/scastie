@@ -319,7 +319,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       props =>
         props.snippetId match {
           case Some(snippetId) => update(snippetId)
-          case None => save
+          case None            => save
       }
     )
   }
@@ -351,7 +351,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
               .call()
               .map {
                 case Some(sId) => saveCallback(sId)
-                case None => Callback(window.alert("Failed to fork"))
+                case None      => Callback(window.alert("Failed to fork"))
               }
           )
       )
@@ -367,7 +367,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
               .call()
               .map {
                 case Some(sId) => saveCallback(sId)
-                case None => Callback(window.alert("Failed to update"))
+                case None      => Callback(window.alert("Failed to update"))
               }
           )
       )
@@ -458,7 +458,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
             case None =>
               props.oldSnippetId match {
                 case Some(id) => loadOldSnippet(id)
-                case None => loadStateFromLocalStorage
+                case None     => loadStateFromLocalStorage
               }
           }
         }

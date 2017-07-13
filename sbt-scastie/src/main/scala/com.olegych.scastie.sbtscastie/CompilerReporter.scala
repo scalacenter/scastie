@@ -39,8 +39,8 @@ object CompilerReporter {
             }
             val severity =
               p.severity match {
-                case xsbti.Severity.Info => api.Info
-                case xsbti.Severity.Warn => api.Warning
+                case xsbti.Severity.Info  => api.Info
+                case xsbti.Severity.Warn  => api.Warning
                 case xsbti.Severity.Error => api.Error
               }
             api.Problem(severity,

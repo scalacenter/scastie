@@ -15,9 +15,9 @@ case class Patch(from: Token, to: Token, replace: String) {
   val tokens = replace.tokenize.get.tokens.toSeq
   def runOn(str: Seq[Token]): Seq[Token] = {
     str.flatMap {
-      case `from` => tokens
+      case `from`              => tokens
       case x if insideRange(x) => Nil
-      case x => Seq(x)
+      case x                   => Seq(x)
     }
   }
 }

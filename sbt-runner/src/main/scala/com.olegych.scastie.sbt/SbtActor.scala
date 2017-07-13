@@ -22,7 +22,7 @@ class SbtActor(system: ActorSystem,
     )
 
   val ensimeActor =
-    if(withEnsime) {
+    if (withEnsime) {
       Some(
         context.actorOf(
           Props(new EnsimeActor(system, sbtRunner)),
@@ -32,7 +32,6 @@ class SbtActor(system: ActorSystem,
     } else {
       None
     }
-
 
   def receive = {
     case SbtPing =>

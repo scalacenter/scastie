@@ -1,4 +1,5 @@
 language: scala
+dist: trusty
 os:
   - linux
 scala:
@@ -11,4 +12,5 @@ cache:
     - $HOME/.sbt/boot/
     - $HOME/.coursier/cache
 script:
+  - bin/scalafmt --test
   - sbt test

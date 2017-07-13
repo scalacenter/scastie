@@ -85,19 +85,21 @@ object TopBar {
           i(cls := "fa fa-comments"),
           span("Feedback"),
           i(cls := "fa fa-caret-down"),
-          ul(cls := "subactions",
-             li(onClick --> feedback,
-                role := "link",
-                title := "Open Gitter.im Chat to give us feedback",
-                cls := "btn",
-                i(cls := "fa fa-gitter"),
-                span("Scastie's gitter")),
-             li(onClick --> issue,
-                role := "link",
-                title := "Create new issue on GitHub",
-                cls := "btn",
-                i(cls := "fa fa-github"),
-                span("Github issues")))
+          ul(
+            cls := "subactions",
+            li(onClick --> feedback,
+               role := "link",
+               title := "Open Gitter.im Chat to give us feedback",
+               cls := "btn",
+               i(cls := "fa fa-gitter"),
+               span("Scastie's gitter")),
+            li(onClick --> issue,
+               role := "link",
+               title := "Create new issue on GitHub",
+               cls := "btn",
+               i(cls := "fa fa-github"),
+               span("Github issues"))
+          )
         ),
         profileButton
       )

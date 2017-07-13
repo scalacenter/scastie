@@ -30,8 +30,7 @@ import org.slf4j.LoggerFactory
 // import java.io.File
 // import java.nio.charset.Charset
 
-class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
-    extends Actor {
+class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private val defaultConfig = Inputs.default
 
   private var sbt = new Sbt(defaultConfig, "SbtRunner")
@@ -122,7 +121,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
       withTimeout(runTimeout)({
         scalaTargetType match {
           case JVM | Dotty | Native | Typelevel => eval("run", reload = false)
-          case JS => eval("fastOptJS", reload = false)
+          case JS                               => eval("fastOptJS", reload = false)
         }
       })(timeout(runTimeout))
 
@@ -321,8 +320,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean)
     )
   }
 
-  def extractRuntimeError(line: String,
-                          lineOffset: Int): Option[RuntimeError] = {
+  def extractRuntimeError(line: String, lineOffset: Int): Option[RuntimeError] = {
     extract[Option[RuntimeError]](line).flatMap(
       _.map(error => error.copy(line = error.line.map(_ + lineOffset)))
     )

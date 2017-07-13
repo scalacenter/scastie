@@ -21,6 +21,12 @@ sbt
 
 open http://localhost:9000
 
+## Scalafmt
+
+Make shure to run `bin/scalafmt` to format your code.
+
+You can intall a pre-commit hook with `bin/hooks.sh`
+
 ## Structure
 
 ```

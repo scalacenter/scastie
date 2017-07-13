@@ -79,7 +79,7 @@ object EditorTopBar {
     val downloadButton =
       props.snippetId match {
         case Some(sid) => DownloadButton(snippetId = sid).render
-        case None => EmptyVdom
+        case None      => EmptyVdom
       }
 
     nav(cls := "editor-topbar", isDisabled)(

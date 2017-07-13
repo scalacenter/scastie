@@ -40,10 +40,10 @@ object BuildSettings {
 
     def labelFor(targetType: ScalaTargetType) = {
       targetType match {
-        case ScalaTargetType.JVM => "Scalac"
-        case ScalaTargetType.JS => "Scala.js"
-        case ScalaTargetType.Dotty => "Dotty"
-        case ScalaTargetType.Native => "Native"
+        case ScalaTargetType.JVM       => "Scalac"
+        case ScalaTargetType.JS        => "Scala.js"
+        case ScalaTargetType.Dotty     => "Dotty"
+        case ScalaTargetType.Native    => "Native"
         case ScalaTargetType.Typelevel => "Typelevel"
       }
     }

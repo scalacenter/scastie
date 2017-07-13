@@ -56,7 +56,7 @@ object Instrument {
 
     val treeQuote =
       tpeTree match {
-        case None => s"val t = $term"
+        case None      => s"val t = $term"
         case Some(tpe) => s"val t: $tpe = $term"
       }
 
@@ -136,7 +136,7 @@ object Instrument {
         case Some(ss) => {
           ss.exists {
             case q"def main(args: Array[String]): $_ = $_" => true
-            case _ => false
+            case _                                         => false
           }
         }
         case _ => false
@@ -152,10 +152,10 @@ object Instrument {
             c.templ.stats.nonEmpty => {
 
         c.templ.stats.get.exists {
-          case c: Defn.Class => hasMain(c.templ) || hasApp(c.templ)
-          case t: Defn.Trait => hasMain(t.templ) || hasApp(t.templ)
+          case c: Defn.Class  => hasMain(c.templ) || hasApp(c.templ)
+          case t: Defn.Trait  => hasMain(t.templ) || hasApp(t.templ)
           case o: Defn.Object => hasMain(o.templ) || hasApp(o.templ)
-          case _ => false
+          case _              => false
         }
       }
       case _ => false
@@ -204,12 +204,12 @@ object Instrument {
 
     val maybeDialect =
       target match {
-        case Jvm(scalaVersion) => scala(scalaVersion)
-        case Js(scalaVersion, _) => scala(scalaVersion)
+        case Jvm(scalaVersion)       => scala(scalaVersion)
+        case Js(scalaVersion, _)     => scala(scalaVersion)
         case Native(scalaVersion, _) => scala(scalaVersion)
-        case Dotty => Some(dialects.Dotty)
+        case Dotty                   => Some(dialects.Dotty)
         case Typelevel(scalaVersion) => typelevel(scalaVersion)
-        case _ => None
+        case _                       => None
       }
 
     maybeDialect match {
