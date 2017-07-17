@@ -3,14 +3,15 @@ package web
 package routes
 
 import SnippetIdDirectives._
-
 import api._
 
 import akka.util.Timeout
 
 import akka.pattern.ask
 import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl._, server.Directives._
+import akka.http.scaladsl._
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 
 import scala.concurrent.duration.DurationInt
 
@@ -19,7 +20,7 @@ class ScalaJsRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
 
   implicit val timeout = Timeout(1.seconds)
 
-  val routes =
+  val routes: Route =
     concat(
       snippetIdEnd(Shared.scalaJsHttpPathPrefix, ScalaTarget.Js.targetFilename)(
         sid =>

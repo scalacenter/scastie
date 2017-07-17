@@ -16,9 +16,10 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 
 import akka.http.scaladsl._
-import model._
-import ws.TextMessage._
-import server.Directives._
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.ws.TextMessage._
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 
 import akka.stream.scaladsl._
 
@@ -32,7 +33,7 @@ class ProgressRoutes(progressActor: ActorRef) {
 
   implicit val timeout = Timeout(1.seconds)
 
-  val routes =
+  val routes: Route =
     concat(
       snippetId("progress-sse")(
         sid ⇒

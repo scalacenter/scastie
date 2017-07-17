@@ -15,8 +15,10 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 
 import akka.http.scaladsl._
-import server._
-import server.Directives._
+import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.Directives._
+
 import akka.stream.scaladsl._
 
 import upickle.default.{write => uwrite}
@@ -48,7 +50,7 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
           progress
       }
 
-  val routes =
+  val routes: Route =
     path("status-sse")(
       adminUser(
         isAdmin =>

@@ -1,20 +1,24 @@
-package com.olegych.scastie.web.routes
+package com.olegych.scastie
+package web.routes
+
+import SnippetIdDirectives._
+import balancer.DownloadSnippet
+
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+
+import akka.actor.ActorRef
+import akka.pattern.ask
 
 import java.nio.file.Path
 
-import akka.actor.ActorRef
-import akka.http.scaladsl.server.Directives._
-import com.olegych.scastie.balancer.DownloadSnippet
-import akka.pattern.ask
-
-import scala.concurrent.duration.DurationInt
-import SnippetIdDirectives._
 import akka.util.Timeout
+import scala.concurrent.duration.DurationInt
 
 class DownloadRoutes(dispatchActor: ActorRef) {
   implicit val timeout = Timeout(5.seconds)
 
-  val routes =
+  val routes: Route =
     get {
       snippetId("download")(
         sid ⇒

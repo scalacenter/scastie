@@ -240,6 +240,33 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
   def toggleWorksheetMode: Callback = scope.modState(_.toggleWorksheetMode)
 
+  private def connectProgress(snippetId: SnippetId): Callback = {
+    connectEventSource(snippetId).attemptTry.flatMap {
+      case Success(eventSource) => {
+        scope.modState(
+          _.run(snippetId)
+            .copy(eventSource = Some(eventSource))
+        )
+      }
+      case Failure(errorEventSource) =>
+        connectWebSocket(snippetId).attemptTry.flatMap {
+          case Success(websocket) => {
+            scope.modState(
+              _.run(snippetId)
+                .copy(websocket = Some(websocket))
+            )
+          }
+          case Failure(errorWebSocket) =>
+            scope.modState(
+              _.clearOutputs
+                .logSystem(errorEventSource.toString)
+                .logSystem(errorWebSocket.toString)
+                .setRunning(false)
+            )
+        }
+    }
+  }
+
   def run: Callback = {
     scope.state.flatMap(
       state =>
@@ -248,33 +275,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
             ApiClient[AutowireApi]
               .run(state.inputs)
               .call()
-              .map(
-                snippetId =>
-                  connectEventSource(snippetId).attemptTry.flatMap {
-                    case Success(eventSource) => {
-                      scope.modState(
-                        _.run(snippetId)
-                          .copy(eventSource = Some(eventSource))
-                      )
-                    }
-                    case Failure(errorEventSource) =>
-                      connectWebSocket(snippetId).attemptTry.flatMap {
-                        case Success(websocket) => {
-                          scope.modState(
-                            _.run(snippetId)
-                              .copy(websocket = Some(websocket))
-                          )
-                        }
-                        case Failure(errorWebSocket) =>
-                          scope.modState(
-                            _.clearOutputs
-                              .logSystem(errorEventSource.toString)
-                              .logSystem(errorWebSocket.toString)
-                              .setRunning(false)
-                          )
-                      }
-                }
-              )
+              .map(connectProgress)
           )
         } else {
           scope.modState(_.setIsReRunningScalaJs(true))
@@ -387,7 +388,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
         .fetch(snippetId)
         .call(),
       afterLoading = _.setSnippetId(snippetId)
-    )
+    ) >> connectProgress(snippetId)
   }
 
   def loadSnippetBase(
@@ -417,7 +418,6 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
                   scope.modState(_.setCode(s"//snippet not found"))
               }
             )
-
           loadStateFromApi >>
             setView(View.Editor) >>
             scope.modState(_.clearOutputs.closeModals)
