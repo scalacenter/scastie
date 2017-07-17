@@ -15,14 +15,16 @@ case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
     }
   }
 
-  def url(end: String): String = {
-    val middle =
-      this match {
-        case SnippetId(uuid, None) => uuid
-        case SnippetId(uuid, Some(SnippetUserPart(login, update))) =>
-          s"$login/$uuid/${update.getOrElse(0)}"
-      }
+  def url: String = {
+    this match {
+      case SnippetId(uuid, None) => uuid
+      case SnippetId(uuid, Some(SnippetUserPart(login, update))) =>
+        s"$login/$uuid/${update.getOrElse(0)}"
+    }
+  }
 
+  def scalaJsUrl(end: String): String = {
+    val middle = url
     s"/${Shared.scalaJsHttpPathPrefix}/$middle/$end"
   }
 }

@@ -2,12 +2,11 @@ package com.olegych.scastie
 package web
 package routes
 
-import akka.http.scaladsl._
-
-import server.Directives._
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.Directives._
 
 class FrontPageRoutes(production: Boolean) {
-  val routes = (
+  val routes: Route =
     get(
       concat(
         pathSingleSlash(index),
@@ -23,7 +22,6 @@ class FrontPageRoutes(production: Boolean) {
         path(Segment / Segment / Segment ~ Slash.?)((_, _, _) => index)
       )
     )
-  )
 
   private def substituteScalaJs(content: String): String = {
     if (!production)

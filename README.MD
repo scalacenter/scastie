@@ -1,5 +1,5 @@
-[![Build Status](https://platform-ci.scala-lang.org/api/badges/scalacenter/scastie/status.svg)](
-  https://platform-ci.scala-lang.org/scalacenter/scastie
+[![Build Status](https://travis-ci.org/scalacenter/scastie.svg?branch=master)](
+  https://travis-ci.org/scalacenter/scastie
 )
 
 [![Join the chat](https://badges.gitter.im/scalacenter/scastie.svg)](

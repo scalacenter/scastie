@@ -5,17 +5,17 @@ package routes
 import oauth2._
 
 import com.softwaremill.session._
-import SessionDirectives._
-import SessionOptions._
-import CsrfDirectives._
-import CsrfOptions._
+import com.softwaremill.session.SessionDirectives._
+import com.softwaremill.session.SessionOptions._
+import com.softwaremill.session.CsrfDirectives._
+import com.softwaremill.session.CsrfOptions._
 
 import akka.http.scaladsl._
-import model._
-import Uri.Query
-import StatusCodes.TemporaryRedirect
-import headers.Referer
-import server.Directives._
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.Uri.Query
+import akka.http.scaladsl.model.StatusCodes.TemporaryRedirect
+import akka.http.scaladsl.model.headers.Referer
+import akka.http.scaladsl.server.Directives._
 
 class OAuth2Routes(github: Github, session: GithubUserSession) {
   import session._

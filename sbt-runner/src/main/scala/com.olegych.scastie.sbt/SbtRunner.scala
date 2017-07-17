@@ -297,7 +297,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
                   if (production) "https://scastie.scala-lang.org"
                   else "http://localhost:9000"
 
-                host + snippetId.url(ScalaTarget.Js.sourceFilename)
+                host + snippetId.scalaJsUrl(ScalaTarget.Js.sourceFilename)
               } else source
           )
         )

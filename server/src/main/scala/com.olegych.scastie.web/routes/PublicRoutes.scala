@@ -3,9 +3,10 @@ package web
 package routes
 
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 
 object PublicRoutes {
-  val routes =
+  val routes: Route =
     concat(
       get(
         concat(

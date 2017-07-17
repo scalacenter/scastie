@@ -158,8 +158,9 @@ object Scastie {
                 }
                 if (state.snippetId.nonEmpty) {
                   timers.setTimeout(500) {
-                    scalaJsScriptElement.src =
-                      state.snippetId.get.url(ScalaTarget.Js.targetFilename)
+                    scalaJsScriptElement.src = state.snippetId.get.scalaJsUrl(
+                      ScalaTarget.Js.targetFilename
+                    )
                   }
                 } else {
                   println("empty snippetId")
