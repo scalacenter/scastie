@@ -2,7 +2,7 @@ package com.olegych.scastie
 package client
 package components
 
-import buildinfo.BuildInfo.{githash, version}
+import buildinfo.BuildInfo.{gitHash, version}
 
 import japgolly.scalajs.react._, vdom.all._
 
@@ -149,7 +149,7 @@ object HelpModal {
           br,
           s"Version: $version",
           br,
-          s"Git: $githash"
+          s"Git: $gitHash"
         ),
         p(
           cls := "normal",

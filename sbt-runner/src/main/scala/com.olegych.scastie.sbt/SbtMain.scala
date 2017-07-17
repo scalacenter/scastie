@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 
 object SbtMain {
-  private val logger = LoggerFactory.getLogger("SbtMain")
+  private val logger = LoggerFactory.getLogger(getClass)
 
   def main(args: Array[String]): Unit = {
     val pid = writeRunningPid()

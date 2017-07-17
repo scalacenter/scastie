@@ -75,8 +75,8 @@ object Server {
   // (found by experimentation)
   val averageReloadTime = 10 //s
 
-  //([0s, 10s] upper bound Defined in SbtMain)
-  val averageRunTime = 3 // s
+  //([0s, 30s] upper bound Defined in SbtMain)
+  val averageRunTime = 15 // s
 
   def apply[C, S](ref: S, config: C): Server[C, S] =
     Server(

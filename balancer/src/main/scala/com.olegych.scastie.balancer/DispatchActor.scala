@@ -70,17 +70,16 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   import context._
 
   system.scheduler.schedule(0.seconds, 1.seconds) {
-
     implicit val timeout = Timeout(1.seconds)
     try {
-      val res = Future.sequence(loadBalancer.servers.map(_.ref ? SbtPing))
-      Await.result(res, 1.seconds)
+      val res = 
+      Await.result(
+        Future.sequence(loadBalancer.servers.map(_.ref ? SbtPing)),
+        1.seconds
+      )
       ()
     } catch {
-      case e: TimeoutException => {
-        // TODO: this is sending to much events to Sentry
-        log.error(e, "failed to receive pong")
-      }
+      case e: TimeoutException => ()
     }
   }
 
@@ -100,7 +99,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private def updateBalancer(
       newBalancer: LoadBalancer[String, ActorSelection]
   ): Unit = {
-    println("updateBalancer")
     loadBalancer = newBalancer
     statusActor ! LoadBalancerUpdate(newBalancer)
     ()

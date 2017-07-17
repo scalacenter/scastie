@@ -12,12 +12,15 @@ import sbtdocker.ImageName
 
 object Deployment {
 
-  def githash(): String = {
+  def gitIsDirty(): Boolean =
+    Process("git diff-files --quiet").! == 1
+
+  def gitHash(): String = {
     import sys.process._
     if (!sys.env.contains("CI")) {
-      val isDirty = Process("git diff-files --quiet").! == 1
+
       val indexState =
-        if (isDirty) "-dirty"
+        if (gitIsDirty()) "-dirty"
         else ""
 
       Process("git rev-parse --verify HEAD").lines.mkString("") + indexState
@@ -180,7 +183,7 @@ class Deployment(rootFolder: File,
     val runnersPortsEnd = runnersPortsStart + runnersPortsSize
 
     val dockerImagePath =
-      s"$dockerNamespace/$dockerRepository:${Deployment.githash()}"
+      s"$dockerNamespace/$dockerRepository:${Deployment.gitHash()}"
 
     val sentryDsn = getSentryDsn(getSecretConfig())
 

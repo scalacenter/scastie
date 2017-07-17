@@ -1,5 +1,5 @@
 import ScalaJSHelper._
-import Deployment.githash
+import Deployment._
 
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
@@ -10,7 +10,15 @@ import java.io.FileNotFoundException
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
-  version := s"0.24.0+${githash()}"
+  version := {
+    val base = "0.25.0"
+    if (gitIsDirty())
+      base + "-SNAPSHOT"
+    else {
+      val hash = gitHash()
+      s"$base+$hash"
+    }
+  }
 )
 
 lazy val upickleVersion = "0.4.4"
@@ -82,7 +90,7 @@ lazy val remapSourceMap =
     val ver = version.value
     val fromScastie = (baseDirectory in LocalRootProject).value.toURI.toString
     val toScastie =
-      s"https://raw.githubusercontent.com/scalacenter/scastie/${githash()}"
+      s"https://raw.githubusercontent.com/scalacenter/scastie/${gitHash()}"
 
     Map(
       fromScastie ->
@@ -143,8 +151,8 @@ lazy val sbtRunner = project
       akka("remote"),
       akka("slf4j"),
       akkaHttp,
-      "com.geirsson" %% "scalafmt-core" % "0.7.0-RC1",
-      "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT"
+      "com.geirsson" %% "scalafmt-core" % "1.1.0"
+      // "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT"
     ),
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "com.olegych.scastie.buildinfo",
@@ -152,7 +160,7 @@ lazy val sbtRunner = project
       ImageName(
         namespace = Some("scalacenter"),
         repository = "scastie-sbt-runner",
-        tag = Some(githash())
+        tag = Some(gitHash())
       )
     ),
     assemblyMergeStrategy in assembly := {
@@ -176,7 +184,7 @@ lazy val sbtRunner = project
         val logbackConfDestination = "/root/logback.xml"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.25")
+          from("scalacenter/scastie-docker-sbt:0.0.30")
 
           add(ivy / "local" / org, s"/root/.ivy2/local/$org")
 
@@ -349,7 +357,7 @@ def api(scalaV: String) = {
     .settings(
       buildInfoKeys := Seq[BuildInfoKey](
         version,
-        BuildInfoKey.action("githash") { githash() }
+        BuildInfoKey.action("gitHash") { gitHash() }
       ),
       buildInfoPackage := "com.olegych.scastie.buildinfo",
       scalaVersion := scalaV,

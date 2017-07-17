@@ -72,10 +72,11 @@ case class Inputs(
         case _: ScalaTarget.Typelevel => ""
       }
 
+    // addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
+
     s"""|$targetConfig
         |addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
         |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")
-        |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
         |$sbtPluginsConfigExtra
         |""".stripMargin
 

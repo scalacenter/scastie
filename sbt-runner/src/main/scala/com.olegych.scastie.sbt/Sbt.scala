@@ -11,11 +11,9 @@ import java.nio.file._
 import java.io.{BufferedReader, IOException, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
-class Sbt(defaultConfig: Inputs, name: String) {
+class Sbt(defaultConfig: Inputs, production: Boolean) {
 
-  private val log =
-    LoggerFactory.getLogger(getClass.toString + "(" + name + ")")
-  private val sbtLog = LoggerFactory.getLogger(s"SbtOutputIO($name)")
+  private val log = LoggerFactory.getLogger(getClass)
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
 
@@ -33,19 +31,17 @@ class Sbt(defaultConfig: Inputs, name: String) {
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
 
-  private val ensimeVersion = "2.0.0-SNAPSHOT"
-  private val secretSbtConfigExtra = s"""
-                                        |// this is where the ensime-server snapshots are hosted
-                                        |resolvers += Resolver.sonatypeRepo("snapshots")
-                                        |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
-                                        |""".stripMargin
+  // private val ensimeVersion = "2.0.0-SNAPSHOT"
+  // private val secretSbtConfigExtra = s"""
+  //                                       |// this is where the ensime-server snapshots are hosted
+  //                                       |resolvers += Resolver.sonatypeRepo("snapshots")
+  //                                       |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
+  //                                       |""".stripMargin
 
   private def setup(): Unit = {
     setConfig(defaultConfig)
     setPlugins(defaultConfig)
   }
-
-  setup()
 
   val codeFile = sbtDir.resolve("src/main/scala/main.scala")
   Files.createDirectories(codeFile.getParent)
@@ -82,6 +78,16 @@ class Sbt(defaultConfig: Inputs, name: String) {
     (process, process.getOutputStream, in)
   }
 
+  private def warmUp(): Unit = {
+    if (production) {
+      log.info("warming up sbt")
+      val Right(in) = SbtRunner.instrument(defaultConfig)
+      eval("run", in, (line, _, _, _) => log.info(line), reload = false)
+      log.info("warming up sbt done")
+      ()
+    }
+  }
+
   private def collect(
       lineCallback: (String, Boolean, Boolean, Boolean) => Unit,
       reload: Boolean
@@ -101,8 +107,6 @@ class Sbt(defaultConfig: Inputs, name: String) {
         sbtError = line == "[error] Type error in expression"
         done = prompt || sbtError
 
-        sbtLog.info(line)
-
         lineCallback(line, done, sbtError, reload)
         chars.clear()
       } else {
@@ -118,10 +122,11 @@ class Sbt(defaultConfig: Inputs, name: String) {
   }
 
   type LineCallback = (String, Boolean, Boolean, Boolean) => Unit
-  val noop: LineCallback =
-    (_, _, _, _) => ()
+  val noop: LineCallback = (line, _, _, _) => log.info(line)
 
+  setup()
   collect(noop, reload = false)
+  warmUp()
 
   private def process(command: String,
                       lineCallback: LineCallback,
@@ -165,8 +170,7 @@ class Sbt(defaultConfig: Inputs, name: String) {
   }
 
   private def setConfig(inputs: Inputs): Unit = {
-    writeFile(buildFile,
-              prompt + nl + inputs.sbtConfig + nl + secretSbtConfigExtra)
+    writeFile(buildFile, prompt + nl + inputs.sbtConfig)// + nl + secretSbtConfigExtra)
     currentSbtConfig = inputs.sbtConfig
   }
 
