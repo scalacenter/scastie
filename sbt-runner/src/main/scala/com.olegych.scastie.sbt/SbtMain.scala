@@ -41,8 +41,7 @@ object SbtMain {
         new SbtActor(
           system = system,
           runTimeout = timeout,
-          production = isProduction,
-          withEnsime = true
+          production = isProduction
         )
       ),
       name = "SbtActor"

@@ -71,6 +71,7 @@ case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {
     reloadsPenalties + mailbox.map(_ => averageRunTime).sum
   }
 }
+
 object Server {
   // (found by experimentation)
   val averageReloadTime = 10 //s

@@ -77,7 +77,7 @@ object ScalaTarget {
   )
 
   private val defaultScalaVersion = "2.12.2"
-  private val defaultScalaJsVersion = "0.6.16"
+  private val defaultScalaJsVersion = "0.6.18"
 
   object Jvm {
     def default = ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)

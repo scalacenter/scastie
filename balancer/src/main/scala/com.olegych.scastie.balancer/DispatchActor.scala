@@ -130,6 +130,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case req: EnsimeRequest => {
       loadBalancer.getRandomServer.ref.tell(req, sender)
+
+      
     }
 
     case RunSnippet(inputsWithIpAndUser) => {

@@ -97,4 +97,15 @@ RUN mkdir /home/ensime/dotty/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/dotty/src/main/scala/Main.scala
 RUN cd /home/ensime/dotty; sbt run
 
+RUN mkdir /home/ensime/scalajs-212
+RUN mkdir /home/ensime/scalajs-212/project
+RUN echo 'sbt.version = 0.13.15' > /home/ensime/scalajs-212/project/build.properties
+RUN echo 'addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.18")' > /home/ensime/scalajs-212/project/plugins.sbt
+RUN echo 'scalaVersion := "2.12.2"' > /home/ensime/scalajs-212/build.sbt
+RUN mkdir /home/ensime/scalajs-212/src
+RUN mkdir /home/ensime/scalajs-212/src/main
+RUN mkdir /home/ensime/scalajs-212/src/main/scala
+RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/scalajs-212/src/main/scala/Main.scala
+RUN cd /home/ensime/scalajs-212; sbt run
+
 WORKDIR /home/ensime
