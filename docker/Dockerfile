@@ -46,26 +46,6 @@ RUN mkdir /home/ensime/.sbt/0.13/plugins
 RUN echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC2")' >> /home/ensime/.sbt/0.13/plugins/plugins.sbt
 RUN echo 'addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.11")' >> /home/ensime/.sbt/0.13/plugins/plugins.sbt
 
-# RUN mkdir /home/ensime/scala-210
-# RUN mkdir /home/ensime/scala-210/project
-# RUN echo 'sbt.version = 0.13.15' > /home/ensime/scala-210/project/build.properties
-# RUN echo 'scalaVersion := "2.10.6"' > /home/ensime/scala-210/build.sbt
-# RUN mkdir /home/ensime/scala-210/src
-# RUN mkdir /home/ensime/scala-210/src/main
-# RUN mkdir /home/ensime/scala-210/src/main/scala
-# RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/scala-210/src/main/scala/Main.scala
-# RUN cd /home/ensime/scala-210; sbt run
-
-# RUN mkdir /home/ensime/scala-211
-# RUN mkdir /home/ensime/scala-211/project
-# RUN echo 'sbt.version = 0.13.15' > /home/ensime/scala-211/project/build.properties
-# RUN echo 'scalaVersion := "2.11.11"' > /home/ensime/scala-211/build.sbt
-# RUN mkdir /home/ensime/scala-211/src
-# RUN mkdir /home/ensime/scala-211/src/main
-# RUN mkdir /home/ensime/scala-211/src/main/scala
-# RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/scala-211/src/main/scala/Main.scala
-# RUN cd /home/ensime/scala-211; sbt run
-
 RUN mkdir /home/ensime/scala-212
 RUN mkdir /home/ensime/scala-212/project
 RUN echo 'sbt.version = 0.13.15' > /home/ensime/scala-212/project/build.properties
@@ -76,25 +56,45 @@ RUN mkdir /home/ensime/scala-212/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/scala-212/src/main/scala/Main.scala
 RUN cd /home/ensime/scala-212; sbt run
 
+RUN mkdir /home/ensime/scala-210
+RUN mkdir /home/ensime/scala-210/project
+RUN echo 'sbt.version = 0.13.15' > /home/ensime/scala-210/project/build.properties
+RUN echo 'scalaVersion := "2.10.6"' > /home/ensime/scala-210/build.sbt
+RUN mkdir /home/ensime/scala-210/src
+RUN mkdir /home/ensime/scala-210/src/main
+RUN mkdir /home/ensime/scala-210/src/main/scala
+RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/scala-210/src/main/scala/Main.scala
+RUN cd /home/ensime/scala-210; sbt run
+
+RUN mkdir /home/ensime/scala-211
+RUN mkdir /home/ensime/scala-211/project
+RUN echo 'sbt.version = 0.13.15' > /home/ensime/scala-211/project/build.properties
+RUN echo 'scalaVersion := "2.11.11"' > /home/ensime/scala-211/build.sbt
+RUN mkdir /home/ensime/scala-211/src
+RUN mkdir /home/ensime/scala-211/src/main
+RUN mkdir /home/ensime/scala-211/src/main/scala
+RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/scala-211/src/main/scala/Main.scala
+RUN cd /home/ensime/scala-211; sbt run
+
+RUN mkdir /home/ensime/scala-213
+RUN mkdir /home/ensime/scala-213/project
+RUN echo 'sbt.version = 0.13.15' > /home/ensime/scala-213/project/build.properties
+RUN echo 'scalaVersion := "2.13.0-M1"' > /home/ensime/scala-213/build.sbt
+RUN mkdir /home/ensime/scala-213/src
+RUN mkdir /home/ensime/scala-213/src/main
+RUN mkdir /home/ensime/scala-213/src/main/scala
+RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/scala-213/src/main/scala/Main.scala
+RUN cd /home/ensime/scala-213; sbt run
+
+RUN mkdir /home/ensime/dotty
+RUN mkdir /home/ensime/dotty/project
+RUN echo 'sbt.version = 0.13.15' > /home/ensime/dotty/project/build.properties
+RUN echo 'addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")' > /home/ensime/dotty/project/plugins.sbt
+RUN echo 'scalaVersion := "0.2.0-RC1"' > /home/ensime/dotty/build.sbt
+RUN mkdir /home/ensime/dotty/src
+RUN mkdir /home/ensime/dotty/src/main
+RUN mkdir /home/ensime/dotty/src/main/scala
+RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/dotty/src/main/scala/Main.scala
+RUN cd /home/ensime/dotty; sbt run
+
 WORKDIR /home/ensime
-
-# RUN mkdir /home/ensime/scala-213
-# RUN mkdir /home/ensime/scala-213/project
-# RUN echo 'sbt.version = 0.13.15' > /home/ensime/scala-213/project/build.properties
-# RUN echo 'scalaVersion := "2.13.0-M1"' > /home/ensime/scala-213/build.sbt
-# RUN mkdir /home/ensime/scala-213/src
-# RUN mkdir /home/ensime/scala-213/src/main
-# RUN mkdir /home/ensime/scala-213/src/main/scala
-# RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/scala-213/src/main/scala/Main.scala
-# RUN cd /home/ensime/scala-213; sbt run
-
-# RUN mkdir /home/ensime/dotty
-# RUN mkdir /home/ensime/dotty/project
-# RUN echo 'sbt.version = 0.13.15' > /home/ensime/dotty/project/build.properties
-# RUN echo 'addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")' > /home/ensime/dotty/project/plugins.sbt
-# RUN echo 'scalaVersion := "0.2.0-RC1"' > /home/ensime/dotty/build.sbt
-# RUN mkdir /home/ensime/dotty/src
-# RUN mkdir /home/ensime/dotty/src/main
-# RUN mkdir /home/ensime/dotty/src/main/scala
-# RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/ensime/dotty/src/main/scala/Main.scala
-# RUN cd /home/ensime/dotty; sbt run
