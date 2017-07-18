@@ -9,10 +9,10 @@ trait AutowireApi {
 
   def complete(
       completionRequest: CompletionRequest
-  ): Future[CompletionResponse]
+  ): Future[Option[CompletionResponse]]
   def typeAt(
       typeAtPointRequest: TypeAtPointRequest
-  ): Future[TypeAtPointResponse]
+  ): Future[Option[TypeAtPointResponse]]
 
   def save(inputs: Inputs): Future[SnippetId]
   def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean]

@@ -34,14 +34,16 @@ class AutowireApiImplementation(
 
   def complete(
       completionRequest: CompletionRequest
-  ): Future[CompletionResponse] = {
-    (dispatchActor ? wrapEnsime(completionRequest)).mapTo[CompletionResponse]
+  ): Future[Option[CompletionResponse]] = {
+    (dispatchActor ? wrapEnsime(completionRequest))
+      .mapTo[Option[CompletionResponse]]
   }
 
   def typeAt(
       typeAtPointRequest: TypeAtPointRequest
-  ): Future[TypeAtPointResponse] = {
-    (dispatchActor ? wrapEnsime(typeAtPointRequest)).mapTo[TypeAtPointResponse]
+  ): Future[Option[TypeAtPointResponse]] = {
+    (dispatchActor ? wrapEnsime(typeAtPointRequest))
+      .mapTo[Option[TypeAtPointResponse]]
   }
 
   def save(inputs: Inputs): Future[SnippetId] = {

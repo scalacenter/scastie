@@ -4,6 +4,8 @@ package api
 import buildinfo.BuildInfo.{version => buildVersion}
 import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
 
+import System.{lineSeparator => nl}
+
 object Inputs {
   val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
 
@@ -38,6 +40,36 @@ case class Inputs(
     showInUserProfile: Boolean = false,
     forked: Option[SnippetId] = None
 ) {
+
+  override def toString: String = {
+    if (this == Inputs.default) {
+      "Inputs.default"
+    } else if (this.copy(code = Inputs.default.code) == Inputs.default) {
+      "Inputs.default" + nl +
+        code + nl
+    } else {
+
+      val showSbtConfigExtra =
+        if (sbtConfigExtra == Inputs.default.sbtConfigExtra) "default"
+        else sbtConfigExtra
+
+      s"""|worksheetMode = $worksheetMode
+          |target = $target
+          |libraries
+          |${libraries.mkString(nl)}
+          |
+          |sbtConfigExtra
+          |$showSbtConfigExtra
+          |
+          |sbtPluginsConfigExtra
+          |$sbtPluginsConfigExtra
+          |
+          |code
+          |$code
+          |""".stripMargin
+    }
+  }
+
   def isDefault: Boolean = copy(code = "") != Inputs.default.copy(code = "")
 
   def addScalaDependency(scalaDependency: ScalaDependency,
@@ -176,14 +208,18 @@ case class Inputs(
             )
       }
 
+    val ensimeConfig =
+      if (target.targetType != ScalaTargetType.Dotty) {
+        """|resolvers += Resolver.sonatypeRepo("snapshots")
+           |libraryDependencies += "org.ensime" %% "ensime" % "2.0.0-SNAPSHOT"""".stripMargin
+      } else ""
+
     s"""|$targetConfig
         |
         |$librariesConfig
         |
         |$sbtConfigExtra
         |
-        |resolvers += Resolver.sonatypeRepo("snapshots")
-        |libraryDependencies += "org.ensime" %% "ensime" % "2.0.0-SNAPSHOT"
-        |""".stripMargin
+        |$ensimeConfig""".stripMargin
   }
 }

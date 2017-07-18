@@ -121,6 +121,8 @@ case class LoadBalancer[C, S](
   def getRandomServer: Server[C, S] = random(servers)
 
   def add(task: Task[C]): (Server[C, S], LoadBalancer[C, S]) = {
+    log.info("Task added: {}", task.taskId)
+
     if (servers.size <= 0) {
       val msg = "All instances are down, shutting down the server"
       log.error(msg)
@@ -137,8 +139,6 @@ case class LoadBalancer[C, S](
     def overBooked =
       hits.forall(i => servers(i).cost > Server.averageReloadTime)
     def cacheMiss = hits.isEmpty
-
-    log.info(s"Balancing config: ${task.config.hashCode}")
 
     val selectedServerIndice =
       if (cacheMiss || overBooked) {

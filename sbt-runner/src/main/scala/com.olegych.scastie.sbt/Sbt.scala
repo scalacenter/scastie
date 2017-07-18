@@ -124,9 +124,20 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
   private def process(command: String,
                       lineCallback: LineCallback,
                       reload: Boolean): Boolean = {
-    fin.write((command + nl).getBytes)
-    fin.flush()
-    collect(lineCallback, reload)
+    log.info("running: {}", command)
+
+    try {
+      fin.write((command + nl).getBytes)
+      fin.flush()
+      collect(lineCallback, reload)
+    } catch {
+      case e: IOException => {
+        // when the snippet is pkilled (timeout) the sbt output stream is closed
+        if (e.getMessage == "Stream closed") true
+        else throw e
+      }
+    }
+
   }
 
   def kill(): Unit = {
@@ -206,22 +217,18 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
     }
 
     val reloadError =
-      if (isReloading) {
-        process("reload", lineCallback, reload = true)
-      } else false
+      if (isReloading) process("reload", lineCallback, reload = true)
+      else false
 
     if (!reloadError) {
       write(codeFile, inputs.code, truncate = true)
-      try {
-        if (isReloading && !commandIfNeedsReload.isEmpty)
-          process(commandIfNeedsReload, lineCallback, reload)
-        if (!command.isEmpty) process(command, lineCallback, reload)
-      } catch {
-        case e: IOException => {
-          // when the snippet is pkilled (timeout) the sbt output stream is closed
-          if (e.getMessage == "Stream closed") ()
-          else throw e
-        }
+
+      if (isReloading && !commandIfNeedsReload.isEmpty) {
+        process(commandIfNeedsReload, lineCallback, reload)
+      }
+
+      if (!command.isEmpty) {
+        process(command, lineCallback, reload)
       }
     }
 

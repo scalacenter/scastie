@@ -111,13 +111,13 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
                   snippetId: SnippetId): Unit = {
 
     val InputsWithIpAndUser(inputs, UserTrace(ip, user)) = inputsWithIpAndUser
-    val userLogin = user.map(u => UserLogin(u.login))
-    val snippetId = container.create(inputs, userLogin)
 
     log.info("id: {}, ip: {} run inputs: {}", snippetId, ip, inputs)
 
     val (server, newBalancer) =
       loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), SbtRunTaskId(snippetId)))
+
+    updateBalancer(newBalancer)
 
     server.ref.tell(
       SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),

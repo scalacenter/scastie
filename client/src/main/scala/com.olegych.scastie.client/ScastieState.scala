@@ -168,7 +168,7 @@ case class ScastieState(
   def run(snippetId: SnippetId): ScastieState = {
     clearOutputs.resetScalajs
       .setRunning(true)
-      .logSystem("Connecting.")
+      .logSystem("Sending task to the server.")
       .copyAndSave(inputsHasChanged = false)
       .setSnippetId(snippetId)
   }

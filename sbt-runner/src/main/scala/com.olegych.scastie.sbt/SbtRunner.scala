@@ -213,6 +213,8 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   ): (String, Boolean, Boolean, Boolean) => Unit = {
     (line, done, sbtError, reload) =>
       {
+        log.debug(line)
+
         val lineOffset = getLineOffset(worksheetMode)
 
         val problems = extractProblems(line, lineOffset)

@@ -36,7 +36,10 @@ class SbtActor(system: ActorSystem,
       sender ! SbtPong
 
     case req: EnsimeTaskRequest =>
-      ensimeActor.foreach(_.forward(req))
+      ensimeActor match {
+        case Some(ensimeRef) => ensimeRef.forward(req)
+        case _               => sender ! EnsimeTaskResponse(None, req.taskId)
+      }
 
     case format: FormatRequest =>
       formatActor.forward(format)

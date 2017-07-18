@@ -52,8 +52,9 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
 
         def reply(response: EnsimeResponse): Unit = {
           maybeTaskId match {
-            case Some(taskId) => ref ! EnsimeTaskResponse(response, taskId)
-            case None         => ref ! response
+            case Some(taskId) =>
+              ref ! EnsimeTaskResponse(Some(response), taskId)
+            case None => ref ! response
           }
         }
 
