@@ -151,8 +151,8 @@ lazy val sbtRunner = project
       akka("remote"),
       akka("slf4j"),
       akkaHttp,
-      "com.geirsson" %% "scalafmt-core" % "1.1.0"
-      // "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT"
+      "com.geirsson" %% "scalafmt-core" % "1.1.0",
+      "org.ensime" %% "jerky" % "2.0.0-M3"
     ),
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "com.olegych.scastie.buildinfo",
@@ -181,12 +181,12 @@ lazy val sbtRunner = project
         val artifact = assembly.value
         val artifactTargetPath = s"/app/${artifact.name}"
 
-        val logbackConfDestination = "/root/logback.xml"
+        val logbackConfDestination = "/home/ensime/logback.xml"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.30")
+          from("scalacenter/scastie-docker-sbt:0.0.31")
 
-          add(ivy / "local" / org, s"/root/.ivy2/local/$org")
+          add(ivy / "local" / org, s"/home/ensime/.ivy2/local/$org")
 
           add(artifact, artifactTargetPath)
 

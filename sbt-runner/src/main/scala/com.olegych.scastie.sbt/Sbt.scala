@@ -31,13 +31,6 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
 
-  // private val ensimeVersion = "2.0.0-SNAPSHOT"
-  // private val secretSbtConfigExtra = s"""
-  //                                       |// this is where the ensime-server snapshots are hosted
-  //                                       |resolvers += Resolver.sonatypeRepo("snapshots")
-  //                                       |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
-  //                                       |""".stripMargin
-
   private def setup(): Unit = {
     setConfig(defaultConfig)
     setPlugins(defaultConfig)
@@ -170,7 +163,7 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
   }
 
   private def setConfig(inputs: Inputs): Unit = {
-    writeFile(buildFile, prompt + nl + inputs.sbtConfig)// + nl + secretSbtConfigExtra)
+    writeFile(buildFile, prompt + nl + inputs.sbtConfig)
     currentSbtConfig = inputs.sbtConfig
   }
 

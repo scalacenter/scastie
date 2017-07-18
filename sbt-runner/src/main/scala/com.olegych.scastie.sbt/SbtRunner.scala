@@ -117,18 +117,18 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   def receive = {
-    // case MkEnsimeConfigRequest => {
-    //   log.info("Generating ensime config file")
-    //   sbt.eval(
-    //     "ensimeConfig",
-    //     defaultConfig,
-    //     (line, _, _, _) => {
-    //       log.info(line)
-    //     },
-    //     reload = false
-    //   )
-    //   sender ! MkEnsimeConfigResponse(sbt.sbtDir)
-    // }
+    case MkEnsimeConfigRequest => {
+      log.info("Generating ensime config file")
+      sbt.eval(
+        "ensimeConfig",
+        defaultConfig,
+        (line, _, _, _) => {
+          log.info(line)
+        },
+        reload = false
+      )
+      sender ! MkEnsimeConfigResponse(sbt.sbtDir)
+    }
 
     case SbtTask(snippetId, inputs, ip, login, progressActor) => {
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
