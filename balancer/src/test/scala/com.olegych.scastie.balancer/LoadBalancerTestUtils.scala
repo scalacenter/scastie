@@ -1,8 +1,7 @@
 package com.olegych.scastie
 package balancer
 
-import api.SnippetId
-
+import api._
 import utils._
 
 import org.scalatest.{FunSuite, Assertion}
@@ -15,7 +14,9 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   private var taskId = 1000
   def add(balancer: TestLoadBalancer, config: String): TestLoadBalancer = {
     val (_, balancer0) =
-      balancer.add(Task(config, nextIp, SnippetId(taskId.toString, None)))
+      balancer.add(
+        Task(config, nextIp, SbtRunTaskId(SnippetId(taskId.toString, None)))
+      )
     taskId += 1
     balancer0
   }

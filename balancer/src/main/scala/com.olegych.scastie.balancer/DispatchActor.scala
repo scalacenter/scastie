@@ -20,7 +20,10 @@ import scala.collection.immutable.Queue
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
 
-case class InputsWithIpAndUser(inputs: Inputs, ip: String, user: Option[User])
+case class UserTrace(ip: String, user: Option[User])
+
+case class InputsWithIpAndUser(inputs: Inputs, user: UserTrace)
+case class EnsimeRequestEnvelop(request: EnsimeRequest, user: UserTrace)
 
 case class RunSnippet(inputs: InputsWithIpAndUser)
 case class SaveSnippet(inputs: InputsWithIpAndUser)
@@ -72,11 +75,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   system.scheduler.schedule(0.seconds, 1.seconds) {
     implicit val timeout = Timeout(1.seconds)
     try {
-      val res = 
-      Await.result(
-        Future.sequence(loadBalancer.servers.map(_.ref ? SbtPing)),
-        1.seconds
-      )
+      val res =
+        Await.result(
+          Future.sequence(loadBalancer.servers.map(_.ref ? SbtPing)),
+          1.seconds
+        )
       ()
     } catch {
       case e: TimeoutException => ()
@@ -106,14 +109,15 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   private def run(inputsWithIpAndUser: InputsWithIpAndUser,
                   snippetId: SnippetId): Unit = {
-    val InputsWithIpAndUser(inputs, ip, user) = inputsWithIpAndUser
 
-    log.info("id: {}, ip: {} run {}", snippetId, ip, inputs)
+    val InputsWithIpAndUser(inputs, UserTrace(ip, user)) = inputsWithIpAndUser
+    val userLogin = user.map(u => UserLogin(u.login))
+    val snippetId = container.create(inputs, userLogin)
+
+    log.info("id: {}, ip: {} run inputs: {}", snippetId, ip, inputs)
 
     val (server, newBalancer) =
-      loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), snippetId))
-
-    updateBalancer(newBalancer)
+      loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), SbtRunTaskId(snippetId)))
 
     server.ref.tell(
       SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
@@ -128,14 +132,32 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       ()
     }
 
-    case req: EnsimeRequest => {
-      loadBalancer.getRandomServer.ref.tell(req, sender)
+    case EnsimeRequestEnvelop(request, UserTrace(ip, user)) => {
+      val taskId = EnsimeTaskId.create
+      log.info("id: {}, ip: {} task: {}", taskId, ip, request)
 
-      
+      val (server, newBalancer) =
+        loadBalancer.add(Task(request.info.inputs.sbtConfig, Ip(ip), taskId))
+
+      updateBalancer(newBalancer)
+
+      implicit val timeout = Timeout(20.seconds)
+      val senderRef = sender()
+
+      (server.ref ? EnsimeTaskRequest(request, taskId))
+        .mapTo[EnsimeTaskResponse]
+        .map { taskResponse =>
+          updateBalancer(loadBalancer.done(taskResponse.taskId))
+          senderRef ! taskResponse.response
+        }
+    }
+
+    case EnsimeTaskResponse(response, taskId) => {
+      updateBalancer(loadBalancer.done(taskId))
     }
 
     case RunSnippet(inputsWithIpAndUser) => {
-      val InputsWithIpAndUser(inputs, _, user) = inputsWithIpAndUser
+      val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val snippetId =
         container.create(inputs, user.map(u => UserLogin(u.login)))
       run(inputsWithIpAndUser, snippetId)
@@ -143,7 +165,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     }
 
     case SaveSnippet(inputsWithIpAndUser) => {
-      val InputsWithIpAndUser(inputs, _, user) = inputsWithIpAndUser
+      val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val snippetId = container.save(inputs, user.map(u => UserLogin(u.login)))
       run(inputsWithIpAndUser, snippetId)
       sender ! snippetId
@@ -169,7 +191,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     }
 
     case ForkSnippet(snippetId, inputsWithIpAndUser) => {
-      val InputsWithIpAndUser(inputs, _, user) = inputsWithIpAndUser
+      val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
 
       container
         .fork(snippetId, inputs, user.map(u => UserLogin(u.login))) match {
@@ -217,7 +239,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case progress: api.SnippetProgress => {
       if (progress.done) {
         progress.snippetId.foreach(
-          sid => updateBalancer(loadBalancer.done(sid))
+          sid => updateBalancer(loadBalancer.done(SbtRunTaskId(sid)))
         )
       }
       container.appendOutput(progress)

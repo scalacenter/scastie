@@ -61,7 +61,7 @@ class StatusActor extends Actor with ActorLogging {
   ): StatusProgress = {
     StatusInfo(
       newBalancer.servers.map(
-        server => Runner(server.mailbox.map(_.snippetId))
+        server => Runner(server.mailbox.map(_.taskId))
       )
     )
   }

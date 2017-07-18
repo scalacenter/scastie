@@ -41,14 +41,22 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   private var hbRef: Option[Cancellable] = None
 
   private var nextId = 1
-  private var requests = Map[Int, ActorRef]()
+  private var requests = Map[Int, (ActorRef, Option[EnsimeTaskId])]()
 
   private var codeFile: Option[Path] = None
 
   def handleRPCResponse(id: Int, payload: EnsimeServerMessage) = {
     requests.get(id) match {
-      case Some(ref) =>
+      case Some((ref, maybeTaskId)) =>
         requests -= id
+
+        def reply(response: EnsimeResponse): Unit = {
+          maybeTaskId match {
+            case Some(taskId) => ref ! EnsimeTaskResponse(response, taskId)
+            case None         => ref ! response
+          }
+        }
+
         payload match {
           case CompletionInfoList(prefix, completionList) =>
             val completions = CompletionResponse(
@@ -62,28 +70,35 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
                   Completion(ci.name, typeInfo)
                 })
             )
-            log.info(s"Got completions: $completions")
-            ref ! completions
+            log.debug(s"Got completions: $completions")
+            reply(completions)
 
           case symbolInfo: SymbolInfo =>
             log.info(s"Got symbol info: $symbolInfo")
             if (symbolInfo.`type`.name == "<none>")
-              ref ! TypeAtPointResponse("")
+              reply(TypeAtPointResponse(""))
             else if (symbolInfo.`type`.fullName.length <= 60)
-              ref ! TypeAtPointResponse(symbolInfo.`type`.fullName)
+              reply(TypeAtPointResponse(symbolInfo.`type`.fullName))
             else
-              ref ! TypeAtPointResponse(symbolInfo.`type`.name)
+              reply(TypeAtPointResponse(symbolInfo.`type`.name))
+
+          case ci: ConnectionInfo =>
+            ()
 
           case x =>
-            ref ! x
+            log.info(s"Got unexpected response from ensime : {}", x)
         }
+
       case _ =>
         log.info(s"Got response without requester $id -> $payload")
     }
   }
 
-  def sendToEnsime(rpcRequest: RpcRequest, sender: ActorRef): Unit = {
-    requests += (nextId -> sender)
+  def sendToEnsime(rpcRequest: RpcRequest,
+                   sender: ActorRef,
+                   taskId: Option[EnsimeTaskId] = None): Unit = {
+
+    requests += (nextId -> (sender, taskId))
     val env = RpcRequestEnvelope(rpcRequest, nextId)
     nextId += 1
 
@@ -238,7 +253,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        log.info(s"$line")
+        log.debug(line)
         line = is.readLine()
       }
     }
@@ -254,9 +269,13 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
         case e: FileNotFoundException => log.error(e.getMessage)
       }
 
-    case TypeAtPointRequest(inputs, position) =>
+    case EnsimeTaskRequest(
+        TypeAtPointRequest(EnsimeRequestInfo(inputs, position)),
+        taskId
+        ) =>
       log.info("TypeAtPoint request at EnsimeActor")
       processRequest(
+        taskId,
         sender,
         inputs,
         position,
@@ -273,9 +292,13 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
         }
       )
 
-    case CompletionRequest(inputs, position) =>
+    case EnsimeTaskRequest(
+        CompletionRequest(EnsimeRequestInfo(inputs, position)),
+        taskId
+        ) =>
       log.info("Completion request at EnsimeActor")
       processRequest(
+        taskId,
         sender,
         inputs,
         position,
@@ -300,6 +323,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   }
 
   private def processRequest(
+      taskId: EnsimeTaskId,
       sender: ActorRef,
       inputs: Inputs,
       position: Int,
@@ -312,7 +336,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
     }
 
     if (codeFile.isDefined) {
-      sendToEnsime(rpcRequestFun(code, pos), sender)
+      sendToEnsime(rpcRequestFun(code, pos), sender, Some(taskId))
     } else {
       log.info(
         "Can't process request: code file's not defined – are sure Ensime started?"

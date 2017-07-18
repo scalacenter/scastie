@@ -519,7 +519,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
         Callback.future(
           ApiClient[AutowireApi]
             .complete(
-              CompletionRequest(state.inputs, pos)
+              CompletionRequest(EnsimeRequestInfo(state.inputs, pos))
             )
             .call()
             .map { response: CompletionResponse =>
@@ -536,7 +536,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
         Callback.future(
           ApiClient[AutowireApi]
             .typeAt(
-              TypeAtPointRequest(state.inputs, pos)
+              TypeAtPointRequest(EnsimeRequestInfo(state.inputs, pos))
             )
             .call()
             .map { response: TypeAtPointResponse =>

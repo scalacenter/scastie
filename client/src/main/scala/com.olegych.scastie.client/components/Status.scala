@@ -4,6 +4,8 @@ package components
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._
 
+import api._
+
 final case class Status(state: StatusState,
                         router: RouterCtl[Page],
                         isAdmin: Boolean) {
@@ -24,12 +26,18 @@ object Status {
                 } else {
                   ul(
                     runner.tasks.zipWithIndex.map {
-                      case (snippetId, j) =>
+                      case (SbtRunTaskId(snippetId), j) => {
                         li(key := snippetId.toString)(
                           props.router.link(Page.fromSnippetId(snippetId))(
                             s"Task $j"
                           )
                         )
+                      }
+                      case (EnsimeTaskId(uuid), j) => {
+                        li(key := uuid.toString)(
+                          s"Ensime $j"
+                        )
+                      }
                     }.toTagMod
                   )
                 }

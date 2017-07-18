@@ -152,7 +152,7 @@ lazy val sbtRunner = project
       akka("slf4j"),
       akkaHttp,
       "com.geirsson" %% "scalafmt-core" % "1.1.0",
-      "org.ensime" %% "jerky" % "2.0.0-M3"
+      "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT"
     ),
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "com.olegych.scastie.buildinfo",

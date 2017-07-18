@@ -30,7 +30,8 @@ class Document protected () extends js.Object {
   def isClean(generation: UndefOr[Int]): Boolean = js.native
   def getSelection(lineSep: UndefOr[String]): String = js.native
   def getSelections(lineSep: UndefOr[String]): Array[String] = js.native
-  def replaceSelection(replacement: String, select: UndefOr[String] = undefined): Unit =
+  def replaceSelection(replacement: String,
+                       select: UndefOr[String] = undefined): Unit =
     js.native
   def replaceSelections(replacements: Array[String],
                         select: UndefOr[String] = undefined): Unit = js.native

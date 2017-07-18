@@ -19,7 +19,10 @@ class AutowireApiImplementation(
     extends AutowireApi {
 
   private def wrap(inputs: Inputs): InputsWithIpAndUser =
-    InputsWithIpAndUser(inputs, ip.toString, maybeUser)
+    InputsWithIpAndUser(inputs, UserTrace(ip.toString, maybeUser))
+
+  private def wrapEnsime(request: EnsimeRequest): EnsimeRequestEnvelop =
+    EnsimeRequestEnvelop(request, UserTrace(ip.toString, maybeUser))
 
   def run(inputs: Inputs): Future[SnippetId] = {
     (dispatchActor ? RunSnippet(wrap(inputs))).mapTo[SnippetId]
@@ -32,13 +35,13 @@ class AutowireApiImplementation(
   def complete(
       completionRequest: CompletionRequest
   ): Future[CompletionResponse] = {
-    (dispatchActor ? completionRequest).mapTo[CompletionResponse]
+    (dispatchActor ? wrapEnsime(completionRequest)).mapTo[CompletionResponse]
   }
 
   def typeAt(
       typeAtPointRequest: TypeAtPointRequest
   ): Future[TypeAtPointResponse] = {
-    (dispatchActor ? typeAtPointRequest).mapTo[TypeAtPointResponse]
+    (dispatchActor ? wrapEnsime(typeAtPointRequest)).mapTo[TypeAtPointResponse]
   }
 
   def save(inputs: Inputs): Future[SnippetId] = {

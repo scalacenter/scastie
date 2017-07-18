@@ -29,7 +29,7 @@ object SbtRunner {
         .Instrument(inputs.code, inputs.target)
         .map(instrumented => inputs.copy(code = instrumented))
     } else Right(inputs)
-  }  
+  }
 }
 
 class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {

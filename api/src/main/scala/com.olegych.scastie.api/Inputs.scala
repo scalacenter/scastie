@@ -176,18 +176,14 @@ case class Inputs(
             )
       }
 
-    // val ensimeVersion = "2.0.0-SNAPSHOT"
-    // val secretSbtConfigExtra = 
-    //   s"""|// this is where the ensime-server snapshots are hosted
-    //       |resolvers += Resolver.sonatypeRepo("snapshots")
-    //       |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
-    //       |""".stripMargin
-
-
     s"""|$targetConfig
         |
         |$librariesConfig
         |
-        |$sbtConfigExtra""".stripMargin
+        |$sbtConfigExtra
+        |
+        |resolvers += Resolver.sonatypeRepo("snapshots")
+        |libraryDependencies += "org.ensime" %% "ensime" % "2.0.0-SNAPSHOT"
+        |""".stripMargin
   }
 }
