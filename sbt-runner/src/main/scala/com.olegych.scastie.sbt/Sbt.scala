@@ -11,7 +11,7 @@ import java.nio.file._
 import java.io.{BufferedReader, IOException, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
-class Sbt(defaultConfig: Inputs, production: Boolean) {
+class Sbt(defaultConfig: Inputs) {
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -71,14 +71,11 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
     (process, process.getOutputStream, in)
   }
 
-  private def warmUp(): Unit = {
-    if (production) {
-      log.info("warming up sbt")
-      val Right(in) = SbtRunner.instrument(defaultConfig)
-      eval("run", in, (line, _, _, _) => log.info(line), reload = false)
-      log.info("warming up sbt done")
-      ()
-    }
+  def warmUp(): Unit = {
+    log.info("warming up sbt")
+    val Right(in) = SbtRunner.instrument(defaultConfig)
+    eval("run", in, (line, _, _, _) => log.info(line), reload = false)
+    log.info("warming up sbt done")
   }
 
   private def collect(

@@ -201,7 +201,9 @@ class Deployment(rootFolder: File,
           |for i in `seq $runnersPortsStart $runnersPortsEnd`;
           |do
           |  echo "Starting Runner: Port $$i"
-          |  docker run --network=host -d \\
+          |  docker run \\
+          |    --network=host \\
+          |    -d \\
           |    -v /home/$userName/.coursier/cache:/drone/.coursier \\
           |    -e RUNNER_PRODUCTION=true \\
           |    -e RUNNER_PORT=$$i \\

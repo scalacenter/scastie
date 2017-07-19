@@ -109,3 +109,7 @@ RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, Wo
 RUN cd /home/ensime/scalajs-212; sbt run
 
 WORKDIR /home/ensime
+
+USER root
+RUN apk add nano
+USER ensime

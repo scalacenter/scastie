@@ -32,6 +32,7 @@ case object Heartbeat
 
 case object MkEnsimeConfigRequest
 case class MkEnsimeConfigResponse(sbtDir: Path)
+case object EnsimeReady
 
 class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   import spray.json._
@@ -178,6 +179,8 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       context.system.scheduler
         .schedule(30.seconds, 30.seconds, self, Heartbeat)
     )
+
+    sbtRunner ! EnsimeReady
   }
 
   override def preStart() = {
@@ -213,6 +216,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
     ensimeProcess = Some(
       new ProcessBuilder(
         "java",
+        "-XX:MaxDirectMemorySize=64m",
         "-Densime.config=" + ensimeConfigFile,
         "-classpath",
         classpath,

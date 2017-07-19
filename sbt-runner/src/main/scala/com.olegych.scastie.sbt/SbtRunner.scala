@@ -10,7 +10,7 @@ import scala.meta.parsers.Parsed
 
 import upickle.default.{read => uread, write => uwrite, Reader}
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, Props}
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -32,10 +32,31 @@ object SbtRunner {
   }
 }
 
-class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
+class SbtRunner(runTimeout: FiniteDuration,
+                production: Boolean,
+                withEnsime: Boolean)
+    extends Actor {
+
   private val defaultConfig = Inputs.default
 
-  private var sbt = new Sbt(defaultConfig, production)
+  private var sbt = new Sbt(defaultConfig)
+  if (production) {
+    sbt.warmUp()
+  }
+
+  // make shure to warmUp sbt before starting the ensime actor
+  // othewise it creates a deadlock in docker
+  val ensimeActor: Option[ActorRef] =
+    if (withEnsime) {
+      None
+      // Some(
+      //   context.actorOf(
+      //     Props(new EnsimeActor(context.system, self)),
+      //     name = "EnsimeActor"
+      //   )
+      // )
+    } else None
+
   private val log = LoggerFactory.getLogger(getClass)
 
   override def preStart(): Unit = ()
@@ -83,7 +104,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           )
 
       sbt.kill()
-      sbt = new Sbt(defaultConfig, production)
+      sbt = new Sbt(defaultConfig)
       true
     }
 
@@ -117,7 +138,20 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   def receive = {
+    case EnsimeReady => {
+      if (production) {
+        sbt.warmUp()
+      }
+    }
+
+    case req: EnsimeTaskRequest =>
+      ensimeActor match {
+        case Some(ensimeRef) => ensimeRef.forward(req)
+        case _               => sender ! EnsimeTaskResponse(None, req.taskId)
+      }
+
     case MkEnsimeConfigRequest => {
+
       log.info("Generating ensime config file")
       sbt.eval(
         "ensimeConfig",
@@ -127,7 +161,8 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         },
         reload = false
       )
-      sender ! MkEnsimeConfigResponse(sbt.sbtDir)
+      sender() ! MkEnsimeConfigResponse(sbt.sbtDir)
+
     }
 
     case SbtTask(snippetId, inputs, ip, login, progressActor) => {
