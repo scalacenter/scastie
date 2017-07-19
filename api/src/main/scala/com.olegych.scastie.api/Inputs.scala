@@ -208,11 +208,18 @@ case class Inputs(
             )
       }
 
-    val ensimeConfig =
-      if (target.targetType != ScalaTargetType.Dotty) {
-        """|resolvers += Resolver.sonatypeRepo("snapshots")
-           |libraryDependencies += "org.ensime" %% "ensime" % "2.0.0-SNAPSHOT"""".stripMargin
-      } else ""
+    val ensimeConfig = {
+      val base = "ensimeIgnoreMissingDirectories := true"
+
+      // https://github.com/scalacenter/scastie/issues/278
+      val snapshot =
+        if (target.targetType != ScalaTargetType.Dotty) {
+          """|resolvers += Resolver.sonatypeRepo("snapshots")
+             |libraryDependencies += "org.ensime" %% "ensime" % "2.0.0-SNAPSHOT"""".stripMargin
+        } else ""
+
+      base + nl + snapshot
+    }
 
     s"""|$targetConfig
         |

@@ -152,6 +152,7 @@ lazy val sbtRunner = project
       akka("slf4j"),
       akkaHttp,
       "com.geirsson" %% "scalafmt-core" % "1.1.0",
+      // sbt-ensime 1.12.13 creates .ensime with 2.0.0-SNAPSHOT server jar
       "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT"
     ),
     buildInfoKeys := Seq[BuildInfoKey](version),

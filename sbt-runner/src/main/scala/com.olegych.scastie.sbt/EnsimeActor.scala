@@ -1,20 +1,26 @@
-package com.olegych.scastie.sbt
+package com.olegych.scastie
+package sbt
 
 import com.olegych.scastie.api._
-import akka.{Done, NotUsed}
-import akka.util.Timeout
-import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable}
+
+import org.ensime.api._
+import org.ensime.jerky.JerkyFormats._
+
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
+
+import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable}
+
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import org.ensime.jerky.JerkyFormats
-import org.ensime.api._
-import JerkyFormats._
+
+import akka.{Done, NotUsed}
+import akka.util.Timeout
 
 import scala.io.Source.fromFile
 import org.slf4j.LoggerFactory
+
 import java.io._
 import java.nio.file.{Files, Path}
 
@@ -203,6 +209,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       parseEnsimeConfFor("compile-deps")
 
     log.info("Starting Ensime server")
+
     ensimeProcess = Some(
       new ProcessBuilder(
         "java",
@@ -254,7 +261,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        log.debug(line)
+        log.info(line)
         line = is.readLine()
       }
     }
