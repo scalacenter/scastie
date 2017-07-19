@@ -53,6 +53,7 @@ You can intall a pre-commit hook with `bin/hooks.sh`
 
 ## High-Level Architecture
 
+
 ```
                                                                             +-------------------------------------------+
                                                                            +-------------------------------------------+|
@@ -120,4 +121,6 @@ exit
 
 # Running with docker locally
 
-`docker run --network=host scalacenter/scastie-sbt-runner:0.20.0`
+`docker run --network=host -e RUNNER_PRODUCTION=true scalacenter/scastie-sbt-runner`
+ 
+

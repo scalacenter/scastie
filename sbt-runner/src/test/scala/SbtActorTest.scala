@@ -44,9 +44,6 @@ class SbtActorTest()
   test("capture runtime errors") {
     run("1/0")(
       progress => {
-        println()
-        println(progress.runtimeError)
-        println()
         val gotRuntimeError = progress.runtimeError.nonEmpty
 
         if (gotRuntimeError) {
@@ -100,9 +97,17 @@ class SbtActorTest()
   }
 
   test("Regression #55: Dotty fails to resolve") {
-    val dotty = Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Dotty)
-    run(dotty)(_.instrumentations.nonEmpty)
-    pending
+    val dotty = Inputs.default.copy(
+      code = """|object Main {
+                |  def main(args: Array[String]): Unit = {
+                |    println("Hello, Dotty!")
+                |  }
+                |}
+                |""".stripMargin,
+      target = ScalaTarget.Dotty,
+      worksheetMode = false
+    )
+    run(dotty)(_.userOutput.contains("Hello, Dotty!"))
   }
 
   test("Encoding issues #100") {

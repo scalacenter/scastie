@@ -91,6 +91,7 @@ object Editor {
           ctrl + "-S" -> "save",
           ctrl + "-M" -> "newSnippet",
           "Ctrl" + "-Space" -> "autocomplete",
+          "." -> "autocompleteDot",
           "Esc" -> "clear",
           "F1" -> "help",
           "F2" -> "toggleSolarized",
@@ -371,10 +372,18 @@ object Editor {
             props.togglePresentationMode.runNow()
           }
 
+        CodeMirror.commands.autocompleteDot = (editor: CodeMirrorEditor2) => {
+          editor.getDoc().replaceSelection(".")
+          autocomplete(editor)
+        }
+
         CodeMirror.commands.autocomplete = (editor: CodeMirrorEditor2) => {
+          autocomplete(editor)
+        }
+
+        def autocomplete(editor: CodeMirrorEditor2): Unit = {
           val doc = editor.getDoc()
           val pos = doc.indexFromPos(doc.getCursor())
-
           props.completeCodeAt(pos).runNow()
           scope.modState(_.copy(completionState = Requested)).runNow()
         }

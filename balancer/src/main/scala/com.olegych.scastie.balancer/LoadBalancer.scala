@@ -1,8 +1,7 @@
 package com.olegych.scastie
 package balancer
 
-import api.{SnippetId, SnippetUserPart}
-
+import api._
 import utils._
 
 import scala.collection.immutable.Queue
@@ -12,36 +11,22 @@ import System.{lineSeparator => nl}
 
 import org.slf4j.LoggerFactory
 
-object Ip {
-  implicit val ord = Ordering.by(unapply)
-}
 case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
 
-object Task {
-  implicit def ordSnippetUserPart: Ordering[SnippetUserPart] =
-    Ordering.by(SnippetUserPart.unapply)
-
-  implicit def ordSnippetId: Ordering[SnippetId] =
-    Ordering.by(SnippetId.unapply)
-
-  implicit def ord[C: Ordering]: Ordering[Task[C]] =
-    Ordering.by(Task.unapply[C])
-}
-
-case class Task[C](config: C, ip: Ip, snippetId: SnippetId) {
+case class Task[C](config: C, ip: Ip, taskId: TaskId) {
   def toRecord = Record(config, ip)
 }
 
 case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {
 
-  def currentSnippetId: Option[SnippetId] = mailbox.headOption.map(_.snippetId)
+  def currentTaskId: Option[TaskId] = mailbox.headOption.map(_.taskId)
   def currentConfig: C = mailbox.headOption.map(_.config).getOrElse(lastConfig)
 
   def done: Server[C, S] = {
     val (task, mailbox0) = mailbox.dequeue
 
-    assert(Some(task.snippetId) == currentSnippetId)
+    assert(Some(task.taskId) == currentTaskId)
 
     copy(
       lastConfig = task.config,
@@ -71,12 +56,13 @@ case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {
     reloadsPenalties + mailbox.map(_ => averageRunTime).sum
   }
 }
+
 object Server {
   // (found by experimentation)
   val averageReloadTime = 10 //s
 
-  //([0s, 10s] upper bound Defined in SbtMain)
-  val averageRunTime = 3 // s
+  //([0s, 30s] upper bound Defined in SbtMain)
+  val averageRunTime = 15 // s
 
   def apply[C, S](ref: S, config: C): Server[C, S] =
     Server(
@@ -101,7 +87,7 @@ case class History[C](data: Queue[Record[C]], size: Int) {
     History(data1, size)
   }
 }
-case class LoadBalancer[C: Ordering, S](
+case class LoadBalancer[C, S](
     servers: Vector[Server[C, S]],
     history: History[C]
 ) {
@@ -109,20 +95,22 @@ case class LoadBalancer[C: Ordering, S](
 
   private lazy val configs = servers.map(_.currentConfig)
 
-  def done(snippetId: SnippetId): LoadBalancer[C, S] = {
-    log.info(s"Task done: $snippetId")
-    val res =
-      servers.zipWithIndex.find(_._1.currentSnippetId == Some(snippetId))
-    if (res.nonEmpty) {
-      val (server, i) = res.get
-      copy(servers = servers.updated(i, server.done))
-    } else {
-      val serversSnippetIds =
-        servers.flatMap(_.currentSnippetId).mkString("[", ", ", "]")
-      log.info(
-        s"""cannot find snippetId: $snippetId from servers task ids $serversSnippetIds"""
-      )
-      this
+  def done(taskId: TaskId): LoadBalancer[C, S] = {
+    log.info(s"Task done: $taskId")
+    val serverRunningTask =
+      servers.zipWithIndex.find(_._1.currentTaskId.contains(taskId))
+
+    serverRunningTask match {
+      case Some((server, index)) => {
+        copy(servers = servers.updated(index, server.done))
+      }
+      case None => {
+        val serversTaskIds =
+          servers.flatMap(_.currentTaskId).mkString("[", ", ", "]")
+        throw new Exception(
+          s"""cannot find taskId: $taskId from servers task ids $serversTaskIds"""
+        )
+      }
     }
   }
 
@@ -133,6 +121,8 @@ case class LoadBalancer[C: Ordering, S](
   def getRandomServer: Server[C, S] = random(servers)
 
   def add(task: Task[C]): (Server[C, S], LoadBalancer[C, S]) = {
+    log.info("Task added: {}", task.taskId)
+
     if (servers.size <= 0) {
       val msg = "All instances are down, shutting down the server"
       log.error(msg)
@@ -149,9 +139,6 @@ case class LoadBalancer[C: Ordering, S](
     def overBooked =
       hits.forall(i => servers(i).cost > Server.averageReloadTime)
     def cacheMiss = hits.isEmpty
-
-    log.info(s"Balancing config: ${task.config.hashCode}")
-    debugState(historyHistogram)
 
     val selectedServerIndice =
       if (cacheMiss || overBooked) {
@@ -184,8 +171,6 @@ case class LoadBalancer[C: Ordering, S](
     val newConfigsHistogram = newConfigs.to[Histogram]
     val distance = historyHistogram.distance(newConfigsHistogram)
 
-    debugMin(i, config, newConfigsHistogram, distance)
-
     distance
   }
 
@@ -199,61 +184,4 @@ case class LoadBalancer[C: Ordering, S](
 
   // select one at random
   private def random[T](xs: Vector[T]): T = xs(Random.nextInt(xs.size))
-
-  private def debugMin(targetServerIndex: Int,
-                       config: C,
-                       newConfigsHistogram: Histogram[C],
-                       distance: Double): Unit = {
-    val i = targetServerIndex
-    val config = servers(i).currentConfig
-    val d2 = Math.floor(distance * 100).toInt
-
-    val load = servers(i).cost
-    log.debug(s"== Server($i) load: $load(s) config: $config distance: $d2 ==")
-    log.debug(newConfigsHistogram.toString)
-  }
-
-  private def debugState(updatedHistory: Histogram[C]): Unit = {
-    val configHistogram = servers.map(_.currentConfig).to[Histogram]
-
-    log.debug("== History ==")
-    log.debug(updatedHistory.toString)
-    log.debug("== Configs ==")
-    log.debug(configHistogram.toString)
-  }
-
-  def debug: String = {
-    val historyConfig = history.data.map(_.config)
-    val historyHistogram = historyConfig.map(_.hashCode).to[Histogram]
-
-    val serversConfig = servers.map(_.currentConfig)
-    val serversHistogram = serversConfig.map(_.hashCode).to[Histogram]
-
-    val configs =
-      (serversConfig ++ historyConfig)
-        .map(x => x.hashCode -> x)
-        .toMap
-        .values
-        .map(config => s"""|Config #${config.hashCode}
-                           |$config""".stripMargin)
-        .mkString(nl)
-
-    // ref: S, lastConfig: C, mailbox: Queue[Task[C]]
-    val serversDebug =
-      servers
-        .map(
-          server =>
-            s"ref: ${server.ref}, lastConfig: ${server.lastConfig.hashCode}, tasks: ${Multiset(server.mailbox)}"
-        )
-        .mkString(nl)
-
-    s"""|== Servers ==
-        |$serversDebug
-        |== History ==
-        |$historyHistogram
-        |== Servers ==
-        |$serversHistogram
-        |== Configs ==
-        |$configs""".stripMargin
-  }
 }

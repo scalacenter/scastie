@@ -45,8 +45,10 @@ class AutowireApiRoutes(
                       val inputs =
                         InputsWithIpAndUser(
                           Inputs.default.copy(code = code),
-                          remoteAddress.toString,
-                          None
+                          UserTrace(
+                            remoteAddress.toString,
+                            None
+                          )
                         )
                       complete(
                         (dispatchActor ? RunSnippet(inputs))

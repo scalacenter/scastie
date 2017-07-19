@@ -4,7 +4,7 @@ package balancer
 import api._
 
 import akka.NotUsed
-import akka.actor.{ActorLogging, Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.stream.actor.ActorPublisher
 import akka.stream.scaladsl.Source
 import akka.stream.actor.ActorPublisherMessage.Request
@@ -14,7 +14,7 @@ import scala.collection.mutable.{Map => MMap, Queue => MQueue}
 case class SubscribeProgress(snippetId: SnippetId)
 case class ProgressDone(snippetId: SnippetId)
 
-class ProgressActor extends Actor with ActorLogging {
+class ProgressActor extends Actor {
   type ProgressSource = Source[SnippetProgress, NotUsed]
 
   private val subscribers =
@@ -55,30 +55,34 @@ class ProgressActor extends Actor with ActorLogging {
 class ProgressForwarder(progressActor: ActorRef)
     extends Actor
     with ActorPublisher[SnippetProgress] {
-  var buffer = MQueue.empty[SnippetProgress]
+
+  private var buffer = MQueue.empty[SnippetProgress]
+  private var toDeliver = 0L
 
   def receive = {
     case progress: SnippetProgress => {
       buffer.enqueue(progress)
-      deliver()
+      deliver(0L)
     }
-    case _: Request => {
-      deliver()
+    case Request(demand) => {
+      deliver(demand)
     }
   }
 
-  private def deliver(): Unit = {
-    if (totalDemand > 0) {
-      buffer.foreach { progress =>
+  private def deliver(demand: Long): Unit = {
+    toDeliver += demand
+    if (toDeliver > 0) {
+      val (deliverNow, deliverLater) = buffer.splitAt(toDeliver.toInt)
+      buffer = deliverLater
+      toDeliver -= deliverNow.size
+      deliverNow.foreach { progress =>
         onNext(progress)
-
         if (progress.done) {
           progress.snippetId.foreach { sid =>
             progressActor ! ProgressDone(sid)
           }
         }
       }
-      buffer.clear()
     }
   }
 }

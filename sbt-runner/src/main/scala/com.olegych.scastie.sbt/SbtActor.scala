@@ -29,16 +29,17 @@ class SbtActor(system: ActorSystem,
           name = "EnsimeActor"
         )
       )
-    } else {
-      None
-    }
+    } else None
 
   def receive = {
     case SbtPing =>
       sender ! SbtPong
 
-    case req: EnsimeRequest =>
-      ensimeActor.foreach(_.forward(req))
+    case req: EnsimeTaskRequest =>
+      ensimeActor match {
+        case Some(ensimeRef) => ensimeRef.forward(req)
+        case _               => sender ! EnsimeTaskResponse(None, req.taskId)
+      }
 
     case format: FormatRequest =>
       formatActor.forward(format)

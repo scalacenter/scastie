@@ -30,8 +30,7 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration._
 
 class ProgressRoutes(progressActor: ActorRef) {
-
-  implicit val timeout = Timeout(1.seconds)
+  implicit private val timeout = Timeout(1.seconds)
 
   val routes: Route =
     concat(

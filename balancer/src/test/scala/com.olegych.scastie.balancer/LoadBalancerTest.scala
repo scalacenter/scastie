@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package balancer
 
-import api.SnippetId
+import api._
 
 import scala.collection.immutable.Queue
 
@@ -70,7 +70,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
   test("reconfigure busy configuration") {
     val tasks = (1 to 5).map(
-      i => Task("c1", Ip(i.toString), SnippetId(i.toString, None))
+      i => Task("c1", Ip(i.toString), SbtRunTaskId(SnippetId(i.toString, None)))
     )
     val balancer =
       LoadBalancer(
@@ -103,7 +103,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
   test("dont reconfigure if some configuration if not busy") {
     val tasks = (1 to 5).map(
-      i => Task("c1", Ip(i.toString), SnippetId(i.toString, None))
+      i => Task("c1", Ip(i.toString), SbtRunTaskId(SnippetId(i.toString, None)))
     )
     val balancer =
       LoadBalancer(
@@ -145,14 +145,14 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server.mailbox.size == 0)
 
     val config = "c1"
-    val snippetId = SnippetId("1", None)
+    val taskId = SbtRunTaskId(SnippetId("1", None))
 
-    val (assigned, balancer0) = balancer.add(Task(config, nextIp, snippetId))
+    val (assigned, balancer0) = balancer.add(Task(config, nextIp, taskId))
 
     assert(assigned.ref == server.ref)
     assert(balancer0.servers.head.mailbox.size == 1)
 
-    val balancer1 = balancer0.done(snippetId)
+    val balancer1 = balancer0.done(taskId)
     assert(balancer1.servers.head.mailbox.size == 0)
   }
 
@@ -165,33 +165,33 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
     val server = balancer.servers.head
     assert(server.mailbox.size == 0)
-    assert(server.currentSnippetId == None)
+    assert(server.currentTaskId == None)
 
-    val snippetId1 = SnippetId("1", None)
-    val (assigned0, balancer0) = balancer.add(Task("c1", nextIp, snippetId1))
+    val taskId1 = SbtRunTaskId(SnippetId("1", None))
+    val (assigned0, balancer0) = balancer.add(Task("c1", nextIp, taskId1))
 
     val server0 = balancer0.servers.head
 
     assert(assigned0.ref == server.ref)
     assert(server0.mailbox.size == 1)
-    assert(server0.currentSnippetId == Some(snippetId1))
+    assert(server0.currentTaskId == Some(taskId1))
 
-    val snippetId2 = SnippetId("2", None)
-    val (assigned1, balancer1) = balancer0.add(Task("c2", nextIp, snippetId2))
+    val taskId2 = SbtRunTaskId(SnippetId("2", None))
+    val (assigned1, balancer1) = balancer0.add(Task("c2", nextIp, taskId2))
 
     val server1 = balancer1.servers.head
     assert(server1.mailbox.size == 2)
-    assert(server1.currentSnippetId == Some(snippetId1))
+    assert(server1.currentTaskId == Some(taskId1))
 
-    val balancer2 = balancer1.done(snippetId1)
+    val balancer2 = balancer1.done(taskId1)
     val server2 = balancer2.servers.head
     assert(server2.mailbox.size == 1)
-    assert(server2.currentSnippetId == Some(snippetId2))
+    assert(server2.currentTaskId == Some(taskId2))
 
-    val balancer3 = balancer2.done(snippetId2)
+    val balancer3 = balancer2.done(taskId2)
     val server3 = balancer3.servers.head
     assert(server3.mailbox.size == 0)
-    assert(server3.currentSnippetId == None)
+    assert(server3.currentTaskId == None)
   }
 
   test("remove a server") {

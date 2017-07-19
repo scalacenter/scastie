@@ -4,6 +4,8 @@ package api
 import buildinfo.BuildInfo.{version => buildVersion}
 import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
 
+import System.{lineSeparator => nl}
+
 object Inputs {
   val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
 
@@ -38,6 +40,36 @@ case class Inputs(
     showInUserProfile: Boolean = false,
     forked: Option[SnippetId] = None
 ) {
+
+  override def toString: String = {
+    if (this == Inputs.default) {
+      "Inputs.default"
+    } else if (this.copy(code = Inputs.default.code) == Inputs.default) {
+      "Inputs.default" + nl +
+        code + nl
+    } else {
+
+      val showSbtConfigExtra =
+        if (sbtConfigExtra == Inputs.default.sbtConfigExtra) "default"
+        else sbtConfigExtra
+
+      s"""|worksheetMode = $worksheetMode
+          |target = $target
+          |libraries
+          |${libraries.mkString(nl)}
+          |
+          |sbtConfigExtra
+          |$showSbtConfigExtra
+          |
+          |sbtPluginsConfigExtra
+          |$sbtPluginsConfigExtra
+          |
+          |code
+          |$code
+          |""".stripMargin
+    }
+  }
+
   def isDefault: Boolean = copy(code = "") != Inputs.default.copy(code = "")
 
   def addScalaDependency(scalaDependency: ScalaDependency,
@@ -67,15 +99,17 @@ case class Inputs(
         case ScalaTarget.Dotty =>
           """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")"""
 
-        case _: ScalaTarget.Jvm => ""
+        case _: ScalaTarget.Jvm =>
+          ""
 
-        case _: ScalaTarget.Typelevel => ""
+        case _: ScalaTarget.Typelevel =>
+          ""
       }
 
     s"""|$targetConfig
-        |addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
-        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")
         |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
+        |addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
+        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
         |$sbtPluginsConfigExtra
         |""".stripMargin
 
@@ -174,10 +208,25 @@ case class Inputs(
             )
       }
 
+    val ensimeConfig = {
+      val base = "ensimeIgnoreMissingDirectories := true"
+
+      // https://github.com/scalacenter/scastie/issues/278
+      val snapshot =
+        if (target.targetType != ScalaTargetType.Dotty) {
+          """|resolvers += Resolver.sonatypeRepo("snapshots")
+             |libraryDependencies += "org.ensime" %% "ensime" % "2.0.0-SNAPSHOT"""".stripMargin
+        } else ""
+
+      base + nl + snapshot
+    }
+
     s"""|$targetConfig
         |
         |$librariesConfig
         |
-        |$sbtConfigExtra""".stripMargin
+        |$sbtConfigExtra
+        |
+        |$ensimeConfig""".stripMargin
   }
 }

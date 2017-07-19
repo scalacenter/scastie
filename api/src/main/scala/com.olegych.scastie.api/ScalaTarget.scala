@@ -77,7 +77,7 @@ object ScalaTarget {
   )
 
   private val defaultScalaVersion = "2.12.2"
-  private val defaultScalaJsVersion = "0.6.16"
+  private val defaultScalaJsVersion = "0.6.18"
 
   object Jvm {
     def default = ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
@@ -91,6 +91,7 @@ object ScalaTarget {
       import lib._
       s""" "$groupId" %% "$artifact" % "$version" """
     }
+    override def toString: String = s"Scala $scalaVersion"
   }
 
   object Typelevel {
@@ -105,6 +106,8 @@ object ScalaTarget {
       import lib._
       s""" "$groupId" %% "$artifact" % "$version" """
     }
+
+    override def toString: String = s"Typelevel $scalaVersion"
   }
 
   object Js {
@@ -133,6 +136,8 @@ object ScalaTarget {
       import lib._
       s""" "$groupId" %%% "$artifact" % "$version" """
     }
+
+    override def toString: String = s"Scala.Js $scalaVersion $scalaJsVersion"
   }
 
   object Native {
@@ -155,6 +160,9 @@ object ScalaTarget {
       import lib._
       s""" "$groupId" %%% "$artifact" % "$version" """
     }
+
+    override def toString: String =
+      s"Scala.Js $scalaVersion $scalaNativeVersion"
   }
 
   case object Dotty extends ScalaTarget {
@@ -166,6 +174,8 @@ object ScalaTarget {
       import lib._
       s""""$groupId" %% "$artifact" % "$version""""
     }
+
+    override def toString: String = "Dotty"
   }
 
   implicit val pkl: ReadWriter[ScalaTarget] = upickleMacroRW[ScalaTarget]

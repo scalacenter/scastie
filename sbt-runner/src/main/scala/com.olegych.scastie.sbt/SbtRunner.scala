@@ -8,16 +8,9 @@ import ScalaTargetType._
 
 import scala.meta.parsers.Parsed
 
-// import akka.util.Timeout
-// import org.ensime.api._
-// import org.ensime.config.EnsimeConfigProtocol
-// import org.ensime.core.{Broadcaster, Project}
-// import org.ensime.util.path._
-
 import upickle.default.{read => uread, write => uwrite, Reader}
 
 import akka.actor.{Actor, ActorRef}
-// import akka.pattern.ask
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -27,28 +20,8 @@ import scala.util.control.NonFatal
 
 import org.slf4j.LoggerFactory
 
-// import java.io.File
-// import java.nio.charset.Charset
-
-class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
-  private val defaultConfig = Inputs.default
-
-  private var sbt = new Sbt(defaultConfig, "SbtRunner")
-  private val log = LoggerFactory.getLogger(getClass)
-
-  override def preStart(): Unit = warmUp()
-  override def postStop(): Unit = sbt.exit()
-
-  private def warmUp(): Unit = {
-    if (production) {
-      log.info("warming up sbt")
-      val Right(in) = instrument(defaultConfig)
-      sbt.eval("run", in, (line, _, _, _) => log.info(line), reload = false)
-      ()
-    }
-  }
-
-  private def instrument(
+object SbtRunner {
+  def instrument(
       inputs: Inputs
   ): Either[InstrumentationFailure, Inputs] = {
     if (inputs.worksheetMode && inputs.target.targetType != ScalaTargetType.Dotty) {
@@ -57,6 +30,16 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         .map(instrumented => inputs.copy(code = instrumented))
     } else Right(inputs)
   }
+}
+
+class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
+  private val defaultConfig = Inputs.default
+
+  private var sbt = new Sbt(defaultConfig, production)
+  private val log = LoggerFactory.getLogger(getClass)
+
+  override def preStart(): Unit = ()
+  override def postStop(): Unit = sbt.exit()
 
   private def run(snippetId: SnippetId,
                   inputs: Inputs,
@@ -100,16 +83,15 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           )
 
       sbt.kill()
-      sbt = new Sbt(defaultConfig, "SbtRunner")
-      warmUp()
+      sbt = new Sbt(defaultConfig, production)
       true
     }
-
-    log.info(s"== updating $snippetId ==")
 
     val sbtReloadTime = 40.seconds
     val reloadError =
       if (sbt.needsReload(inputs)) {
+        log.info(s"== updating $snippetId ==")
+
         withTimeout(sbtReloadTime)(eval("compile", reload = true))(
           timeout(sbtReloadTime)
         )
@@ -120,29 +102,38 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
       withTimeout(runTimeout)({
         scalaTargetType match {
-          case JVM | Dotty | Native | Typelevel => eval("run", reload = false)
-          case JS                               => eval("fastOptJS", reload = false)
+          case JVM | Dotty | Native | Typelevel =>
+            eval("run", reload = false)
+
+          case JS =>
+            eval("fastOptJS", reload = false)
         }
       })(timeout(runTimeout))
 
       log.info(s"== done  $snippetId ==")
+    } else {
+      log.info(s"== reload errors ==")
     }
   }
 
   def receive = {
     case MkEnsimeConfigRequest => {
       log.info("Generating ensime config file")
-      sbt.eval("ensimeConfig",
-               defaultConfig,
-               (_, _, _, _) => (),
-               reload = false)
+      sbt.eval(
+        "ensimeConfig",
+        defaultConfig,
+        (line, _, _, _) => {
+          log.info(line)
+        },
+        reload = false
+      )
       sender ! MkEnsimeConfigResponse(sbt.sbtDir)
     }
 
     case SbtTask(snippetId, inputs, ip, login, progressActor) => {
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 
-      instrument(inputs) match {
+      SbtRunner.instrument(inputs) match {
         case Right(inputs0) => {
           run(snippetId,
               inputs0,
@@ -222,6 +213,8 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   ): (String, Boolean, Boolean, Boolean) => Unit = {
     (line, done, sbtError, reload) =>
       {
+        log.debug(line)
+
         val lineOffset = getLineOffset(worksheetMode)
 
         val problems = extractProblems(line, lineOffset)

@@ -53,6 +53,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     s"/$connectionMethod/$snippetPart"
   }
 
+  private val connectedMessage = "Waiting for sbt."
+
   private def connectEventSource(snippetId: SnippetId) =
     CallbackTo[EventSource] {
       val direct = scope.withEffectsImpure
@@ -60,8 +62,9 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       val eventSource = new EventSource(snippetUri(snippetId, "progress-sse"))
 
       def onopen(e: Event): Unit = {
-        direct.modState(_.logSystem("Connected."))
+        direct.modState(_.logSystem(connectedMessage))
       }
+
       def onmessage(e: MessageEvent): Unit = {
         val progress = uread[SnippetProgress](e.data.toString)
 
@@ -74,6 +77,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
           eventSource.close()
         }
       }
+
       def onerror(e: Event): Unit = {
         if (e.eventPhase == EventSource.CLOSED) {
           eventSource.close()
@@ -91,13 +95,19 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   private def connectWebSocket(snippetId: SnippetId) = CallbackTo[WebSocket] {
     val direct = scope.withEffectsImpure
 
-    def onopen(e: Event): Unit = direct.modState(_.logSystem("Connected."))
+    def onopen(e: Event): Unit = {
+      direct.modState(_.logSystem(connectedMessage))
+    }
+
     def onmessage(e: MessageEvent): Unit = {
       val progress = uread[SnippetProgress](e.data.toString)
       direct.modState(_.addProgress(progress))
     }
-    def onerror(e: ErrorEvent): Unit =
+
+    def onerror(e: ErrorEvent): Unit = {
       direct.modState(_.logSystem(s"Error: ${e.message}"))
+    }
+
     def onclose(e: CloseEvent): Unit =
       direct.modState(
         _.copy(websocket = None, isRunning = false)
@@ -516,16 +526,26 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   def completeCodeAt(pos: Int): Callback = {
     scope.state.flatMap(
       state => {
-        Callback.future(
-          ApiClient[AutowireApi]
-            .complete(
-              CompletionRequest(state.inputs, pos)
-            )
-            .call()
-            .map { response: CompletionResponse =>
-              scope.modState(_.setCompletions(response.completions))
-            }
-        )
+        // we only autocomplete for the default configuration
+        // https://github.com/scalacenter/scastie/issues/275
+        if (state.inputs.copy(code = Inputs.default.code) != Inputs.default) {
+          Callback()
+        } else {
+          Callback.future(
+            ApiClient[AutowireApi]
+              .complete(
+                CompletionRequest(EnsimeRequestInfo(state.inputs, pos))
+              )
+              .call()
+              .map {
+                case Some(response) =>
+                  scope.modState(_.setCompletions(response.completions))
+                case _ =>
+                  Callback()
+              }
+          )
+        }
+
       }
     )
   }
@@ -536,20 +556,23 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
         Callback.future(
           ApiClient[AutowireApi]
             .typeAt(
-              TypeAtPointRequest(state.inputs, pos)
+              TypeAtPointRequest(EnsimeRequestInfo(state.inputs, pos))
             )
             .call()
-            .map { response: TypeAtPointResponse =>
-              scope.modState(
-                _.setTypeAtInto(
-                  Some(
-                    TypeInfoAt(
-                      token = token,
-                      typeInfo = response.typeInfo
+            .map {
+              case Some(response) =>
+                scope.modState(
+                  _.setTypeAtInto(
+                    Some(
+                      TypeInfoAt(
+                        token = token,
+                        typeInfo = response.typeInfo
+                      )
                     )
                   )
                 )
-              )
+              case _ =>
+                Callback()
             }
         )
       }

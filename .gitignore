@@ -9,7 +9,7 @@ RUNNING_PID
 sbt-api-*
 TODO
 *.log
-.idea
+.idea/
 deployment/beta
 deployment/users.txt
 node_modules

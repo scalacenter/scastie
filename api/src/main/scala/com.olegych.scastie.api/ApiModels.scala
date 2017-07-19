@@ -1,66 +1,58 @@
 package com.olegych.scastie
 package api
 
+import java.util.UUID
+
+sealed trait TaskId {
+  def cost: Int
+}
+
+case class SbtRunTaskId(snippetId: SnippetId) extends TaskId {
+  //([0s, 30s] upper bound Defined in SbtMain)
+  def cost: Int = 15 // s
+}
+
+object EnsimeTaskId {
+  def create = EnsimeTaskId(UUID.randomUUID())
+}
+case class EnsimeTaskId(id: UUID) extends TaskId {
+  // ensime is pretty fast when indexed
+  def cost: Int = 3 // s
+}
+
 case object SbtPing
 case object SbtPong
 
-case class SnippetUserPart(login: String, update: Option[Int])
-case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
-  def isOwnedBy(user2: Option[User]): Boolean = {
-    (user, user2) match {
-      case (Some(SnippetUserPart(snippetLogin, _)),
-            Some(User(userLogin, _, _))) =>
-        snippetLogin == userLogin
-      case _ => false
-    }
-  }
+case class SnippetSummary(
+    snippetId: SnippetId,
+    summary: String,
+    time: Long
+)
 
-  def url: String = {
-    this match {
-      case SnippetId(uuid, None) => uuid
-      case SnippetId(uuid, Some(SnippetUserPart(login, update))) =>
-        s"$login/$uuid/${update.getOrElse(0)}"
-    }
-  }
+case class FormatRequest(
+    code: String,
+    worksheetMode: Boolean,
+    targetType: ScalaTargetType
+)
+case class FormatResponse(
+    formattedCode: Either[String, String]
+)
 
-  def scalaJsUrl(end: String): String = {
-    val middle = url
-    s"/${Shared.scalaJsHttpPathPrefix}/$middle/$end"
-  }
+sealed trait EnsimeRequest {
+  def info: EnsimeRequestInfo
 }
+case class EnsimeRequestInfo(inputs: Inputs, offset: Int)
+case class CompletionRequest(info: EnsimeRequestInfo) extends EnsimeRequest
+case class TypeAtPointRequest(info: EnsimeRequestInfo) extends EnsimeRequest
 
-object User {
-  // low tech solution
-  val admins = Set(
-    "dimart",
-    "Duhemm",
-    "heathermiller",
-    "julienrf",
-    "jvican",
-    "MasseGuillaume",
-    "olafurpg",
-    "rorygraves",
-    "travissarles"
-  )
-}
-case class User(login: String, name: Option[String], avatar_url: String) {
-  def isAdmin = User.admins.contains(login)
-}
-
-case class SnippetSummary(snippetId: SnippetId, summary: String, time: Long)
-
-case class FormatRequest(code: String,
-                         worksheetMode: Boolean,
-                         targetType: ScalaTargetType)
-case class FormatResponse(formattedCode: Either[String, String])
-
-sealed trait EnsimeRequest
-case class CompletionRequest(inputs: Inputs, position: Int)
-    extends EnsimeRequest
+sealed trait EnsimeResponse
 case class CompletionResponse(completions: List[Completion])
-case class TypeAtPointRequest(inputs: Inputs, position: Int)
-    extends EnsimeRequest
-case class TypeAtPointResponse(typeInfo: String)
+    extends EnsimeResponse
+case class TypeAtPointResponse(typeInfo: String) extends EnsimeResponse
+
+case class EnsimeTaskRequest(request: EnsimeRequest, taskId: EnsimeTaskId)
+case class EnsimeTaskResponse(response: Option[EnsimeResponse],
+                              taskId: EnsimeTaskId)
 
 case class FetchResult(inputs: Inputs, progresses: List[SnippetProgress])
 
@@ -78,7 +70,10 @@ case class ScalaDependency(
     artifact: String,
     target: ScalaTarget,
     version: String
-)
+) {
+
+  override def toString: String = target.renderSbt(this)
+}
 
 case class Project(
     organization: String,
