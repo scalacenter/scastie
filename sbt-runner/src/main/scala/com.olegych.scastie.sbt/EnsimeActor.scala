@@ -340,7 +340,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       sendToEnsime(rpcRequestFun(code, pos), sender, Some(taskId))
     } else {
       log.info(
-        "Can't process request: code file's not defined – are sure Ensime started?"
+        "Can't process request: code file's not defined – are you sure Ensime started?"
       )
     }
   }

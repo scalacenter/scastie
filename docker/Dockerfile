@@ -43,7 +43,7 @@ ENV SBT_OPTS -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
 RUN mkdir /home/ensime/.sbt
 RUN mkdir /home/ensime/.sbt/0.13
 RUN mkdir /home/ensime/.sbt/0.13/plugins
-RUN echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC2")' >> /home/ensime/.sbt/0.13/plugins/plugins.sbt
+RUN echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")' >> /home/ensime/.sbt/0.13/plugins/plugins.sbt
 RUN echo 'addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.11")' >> /home/ensime/.sbt/0.13/plugins/plugins.sbt
 
 RUN mkdir /home/ensime/scala-212
