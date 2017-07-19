@@ -49,6 +49,12 @@ object ScastieState {
   implicit val dontSerializeEventSource: ReadWriter[Option[EventSource]] =
     dontSerializeOption[EventSource]
 
+  implicit val dontSerializeCompletions: ReadWriter[List[Completion]] =
+    dontSerializeList[Completion]
+
+  implicit val dontSerializeTypeAtInfo: ReadWriter[Option[TypeInfoAt]] =
+    dontSerializeOption[TypeInfoAt]
+
   implicit val pkl: ReadWriter[ScastieState] =
     upickleMacroRW[ScastieState]
 }
