@@ -106,10 +106,10 @@ case class Inputs(
           ""
       }
 
+      // |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
     s"""|$targetConfig
         |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
         |addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
-        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
         |$sbtPluginsConfigExtra
         |""".stripMargin
 

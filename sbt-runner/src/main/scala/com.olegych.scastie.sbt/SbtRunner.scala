@@ -24,7 +24,9 @@ object SbtRunner {
   def instrument(
       inputs: Inputs
   ): Either[InstrumentationFailure, Inputs] = {
-    if (inputs.worksheetMode && inputs.target.targetType != ScalaTargetType.Dotty) {
+    if (inputs.worksheetMode &&
+        inputs.target.targetType != ScalaTargetType.Dotty) {
+
       instrumentation
         .Instrument(inputs.code, inputs.target)
         .map(instrumented => inputs.copy(code = instrumented))
@@ -32,34 +34,19 @@ object SbtRunner {
   }
 }
 
-class SbtRunner(runTimeout: FiniteDuration,
-                production: Boolean,
-                withEnsime: Boolean)
-    extends Actor {
+class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
+
+  private case object SbtWarmUp
 
   private val defaultConfig = Inputs.default
 
   private var sbt = new Sbt(defaultConfig)
-  if (production) {
-    sbt.warmUp()
-  }
-
-  // make shure to warmUp sbt before starting the ensime actor
-  // othewise it creates a deadlock in docker
-  val ensimeActor: Option[ActorRef] =
-    if (withEnsime) {
-      None
-      // Some(
-      //   context.actorOf(
-      //     Props(new EnsimeActor(context.system, self)),
-      //     name = "EnsimeActor"
-      //   )
-      // )
-    } else None
 
   private val log = LoggerFactory.getLogger(getClass)
 
-  override def preStart(): Unit = ()
+  override def preStart(): Unit = {
+    self ! SbtWarmUp
+  }
   override def postStop(): Unit = sbt.exit()
 
   private def run(snippetId: SnippetId,
@@ -138,20 +125,13 @@ class SbtRunner(runTimeout: FiniteDuration,
   }
 
   def receive = {
-    case EnsimeReady => {
+    case SbtWarmUp => {
+      log.info("Got SbtWarmUp")
       if (production) {
         sbt.warmUp()
       }
     }
-
-    case req: EnsimeTaskRequest =>
-      ensimeActor match {
-        case Some(ensimeRef) => ensimeRef.forward(req)
-        case _               => sender ! EnsimeTaskResponse(None, req.taskId)
-      }
-
-    case MkEnsimeConfigRequest => {
-
+    case CreateEnsimeConfigRequest => {
       log.info("Generating ensime config file")
       sbt.eval(
         "ensimeConfig",
@@ -161,8 +141,7 @@ class SbtRunner(runTimeout: FiniteDuration,
         },
         reload = false
       )
-      sender() ! MkEnsimeConfigResponse(sbt.sbtDir)
-
+      sender() ! EnsimeConfigResponse(sbt.sbtDir)
     }
 
     case SbtTask(snippetId, inputs, ip, login, progressActor) => {

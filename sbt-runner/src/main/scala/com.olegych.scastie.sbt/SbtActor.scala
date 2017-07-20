@@ -17,21 +17,29 @@ class SbtActor(system: ActorSystem,
 
   val sbtRunner =
     context.actorOf(
-      Props(new SbtRunner(runTimeout, production, withEnsime)),
+      Props(new SbtRunner(runTimeout, production)),
       name = "SbtRunner"
     )
+
+  val ensimeActor =
+    if (withEnsime) {
+      Some(
+        context.actorOf(
+          Props(new EnsimeActor(context.system, sbtRunner)),
+          name = "EnsimeActor"
+        )
+      )
+    } else None
 
   def receive = {
     case SbtPing =>
       sender ! SbtPong
 
     case req: EnsimeTaskRequest =>
-      sbtRunner.forward(req)
-
-    // ensimeActor match {
-    //   case Some(ensimeRef) => ensimeRef.forward(req)
-    //   case _               => sender ! EnsimeTaskResponse(None, req.taskId)
-    // }
+      ensimeActor match {
+        case Some(ensimeRef) => ensimeRef.forward(req)
+        case _               => sender ! EnsimeTaskResponse(None, req.taskId)
+      }
 
     case format: FormatRequest =>
       formatActor.forward(format)
