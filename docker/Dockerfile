@@ -43,40 +43,30 @@ RUN mkdir /home/scastie/.sbt
 RUN mkdir /home/scastie/.sbt/0.13
 RUN mkdir /home/scastie/.sbt/0.13/plugins
 
-# RUN echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")' >> /home/scastie/.sbt/0.13/plugins/plugins.sbt
+RUN echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")' >> /home/scastie/.sbt/0.13/plugins/plugins.sbt
 RUN echo 'addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")' >> /home/scastie/.sbt/0.13/plugins/plugins.sbt
 
 RUN mkdir /home/scastie/scala-212
 RUN mkdir /home/scastie/scala-212/project
 RUN echo 'sbt.version = 0.13.15' > /home/scastie/scala-212/project/build.properties
 RUN echo 'scalaVersion := "2.12.2"' > /home/scastie/scala-212/build.sbt
-RUN echo 'resolvers += Resolver.sonatypeRepo("snapshots")' >> /home/scastie/scala-212/build.sbt
-RUN echo 'libraryDependencies += "org.ensime" %% "ensime" % "2.0.0-SNAPSHOT"' >> /home/scastie/scala-212/build.sbt
 RUN mkdir /home/scastie/scala-212/src
 RUN mkdir /home/scastie/scala-212/src/main
 RUN mkdir /home/scastie/scala-212/src/main/scala
 RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/scastie/scala-212/src/main/scala/Main.scala
 RUN cd /home/scastie/scala-212; sbt run
+RUN cd /home/scastie/scala-212; sbt ensimeConfig
 
-RUN mkdir /home/scastie/scala-210
-RUN mkdir /home/scastie/scala-210/project
-RUN echo 'sbt.version = 0.13.15' > /home/scastie/scala-210/project/build.properties
-RUN echo 'scalaVersion := "2.10.6"' > /home/scastie/scala-210/build.sbt
-RUN mkdir /home/scastie/scala-210/src
-RUN mkdir /home/scastie/scala-210/src/main
-RUN mkdir /home/scastie/scala-210/src/main/scala
-RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/scastie/scala-210/src/main/scala/Main.scala
-RUN cd /home/scastie/scala-210; sbt run
-
-RUN mkdir /home/scastie/scala-211
-RUN mkdir /home/scastie/scala-211/project
-RUN echo 'sbt.version = 0.13.15' > /home/scastie/scala-211/project/build.properties
-RUN echo 'scalaVersion := "2.11.11"' > /home/scastie/scala-211/build.sbt
-RUN mkdir /home/scastie/scala-211/src
-RUN mkdir /home/scastie/scala-211/src/main
-RUN mkdir /home/scastie/scala-211/src/main/scala
-RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/scastie/scala-211/src/main/scala/Main.scala
-RUN cd /home/scastie/scala-211; sbt run
+# RUN mkdir /home/scastie/scala-211
+# RUN mkdir /home/scastie/scala-211/project
+# RUN echo 'sbt.version = 0.13.15' > /home/scastie/scala-211/project/build.properties
+# RUN echo 'scalaVersion := "2.11.11"' > /home/scastie/scala-211/build.sbt
+# RUN mkdir /home/scastie/scala-211/src
+# RUN mkdir /home/scastie/scala-211/src/main
+# RUN mkdir /home/scastie/scala-211/src/main/scala
+# RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/scastie/scala-211/src/main/scala/Main.scala
+# RUN cd /home/scastie/scala-211; sbt run
+# RUN cd /home/scastie/scala-211; sbt ensimeConfig
 
 # RUN mkdir /home/scastie/scala-213
 # RUN mkdir /home/scastie/scala-213/project
@@ -88,27 +78,27 @@ RUN cd /home/scastie/scala-211; sbt run
 # RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/scastie/scala-213/src/main/scala/Main.scala
 # RUN cd /home/scastie/scala-213; sbt run
 
-RUN mkdir /home/scastie/dotty
-RUN mkdir /home/scastie/dotty/project
-RUN echo 'sbt.version = 0.13.15' > /home/scastie/dotty/project/build.properties
-RUN echo 'addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")' > /home/scastie/dotty/project/plugins.sbt
-RUN echo 'scalaVersion := "0.2.0-RC1"' > /home/scastie/dotty/build.sbt
-RUN mkdir /home/scastie/dotty/src
-RUN mkdir /home/scastie/dotty/src/main
-RUN mkdir /home/scastie/dotty/src/main/scala
-RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/scastie/dotty/src/main/scala/Main.scala
-RUN cd /home/scastie/dotty; sbt run
+# RUN mkdir /home/scastie/dotty
+# RUN mkdir /home/scastie/dotty/project
+# RUN echo 'sbt.version = 0.13.15' > /home/scastie/dotty/project/build.properties
+# RUN echo 'addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")' > /home/scastie/dotty/project/plugins.sbt
+# RUN echo 'scalaVersion := "0.2.0-RC1"' > /home/scastie/dotty/build.sbt
+# RUN mkdir /home/scastie/dotty/src
+# RUN mkdir /home/scastie/dotty/src/main
+# RUN mkdir /home/scastie/dotty/src/main/scala
+# RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/scastie/dotty/src/main/scala/Main.scala
+# RUN cd /home/scastie/dotty; sbt run
 
-RUN mkdir /home/scastie/scalajs-212
-RUN mkdir /home/scastie/scalajs-212/project
-RUN echo 'sbt.version = 0.13.15' > /home/scastie/scalajs-212/project/build.properties
-# See ScalaTarget defaultScalaJsVersion/defaultScalaVersion for Scala.js/Scala version
-RUN echo 'addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.18")' > /home/scastie/scalajs-212/project/plugins.sbt
-RUN echo 'scalaVersion := "2.12.2"' > /home/scastie/scalajs-212/build.sbt
-RUN mkdir /home/scastie/scalajs-212/src
-RUN mkdir /home/scastie/scalajs-212/src/main
-RUN mkdir /home/scastie/scalajs-212/src/main/scala
-RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/scastie/scalajs-212/src/main/scala/Main.scala
-RUN cd /home/scastie/scalajs-212; sbt run
+# RUN mkdir /home/scastie/scalajs-212
+# RUN mkdir /home/scastie/scalajs-212/project
+# RUN echo 'sbt.version = 0.13.15' > /home/scastie/scalajs-212/project/build.properties
+# # See ScalaTarget defaultScalaJsVersion/defaultScalaVersion for Scala.js/Scala version
+# RUN echo 'addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.18")' > /home/scastie/scalajs-212/project/plugins.sbt
+# RUN echo 'scalaVersion := "2.12.2"' > /home/scastie/scalajs-212/build.sbt
+# RUN mkdir /home/scastie/scalajs-212/src
+# RUN mkdir /home/scastie/scalajs-212/src/main
+# RUN mkdir /home/scastie/scalajs-212/src/main/scala
+# RUN echo 'object Main { def main(args: Array[String]): Unit = println("Hello, World!") }' > /home/scastie/scalajs-212/src/main/scala/Main.scala
+# RUN cd /home/scastie/scalajs-212; sbt run
 
 WORKDIR /home/scastie

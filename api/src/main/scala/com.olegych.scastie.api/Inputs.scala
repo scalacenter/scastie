@@ -70,7 +70,11 @@ case class Inputs(
     }
   }
 
-  def isDefault: Boolean = copy(code = "") != Inputs.default.copy(code = "")
+  def isDefault: Boolean = copy(code = "") == Inputs.default.copy(code = "")
+
+  // we only autocomplete for the default configuration
+  // https://github.com/scalacenter/scastie/issues/275
+  def isEnsimeEnabled = isDefault
 
   def addScalaDependency(scalaDependency: ScalaDependency,
                          project: Project): Inputs = {
@@ -106,8 +110,8 @@ case class Inputs(
           ""
       }
 
-      // |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
     s"""|$targetConfig
+        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
         |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
         |addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
         |$sbtPluginsConfigExtra
@@ -208,19 +212,8 @@ case class Inputs(
             )
       }
 
-    val ensimeConfig = {
-      val base = "ensimeIgnoreMissingDirectories := true"
-
-      // https://github.com/scalacenter/scastie/issues/278
-      val snapshot =
-        if (target.targetType != ScalaTargetType.Dotty) {
-          """|resolvers += Resolver.sonatypeRepo("snapshots")
-             |libraryDependencies += "org.ensime" %% "ensime" % "2.0.0-SNAPSHOT"""".stripMargin
-        } else ""
-
-      base + nl + snapshot
-    }
-
+    val ensimeConfig = "ensimeIgnoreMissingDirectories := true"
+    
     s"""|$targetConfig
         |
         |$librariesConfig

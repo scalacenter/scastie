@@ -526,26 +526,19 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   def completeCodeAt(pos: Int): Callback = {
     scope.state.flatMap(
       state => {
-        // we only autocomplete for the default configuration
-        // https://github.com/scalacenter/scastie/issues/275
-        if (state.inputs.copy(code = Inputs.default.code) != Inputs.default) {
-          Callback()
-        } else {
-          Callback.future(
-            ApiClient[AutowireApi]
-              .complete(
-                CompletionRequest(EnsimeRequestInfo(state.inputs, pos))
-              )
-              .call()
-              .map {
-                case Some(response) =>
-                  scope.modState(_.setCompletions(response.completions))
-                case _ =>
-                  Callback()
-              }
-          )
-        }
-
+        Callback.future(
+          ApiClient[AutowireApi]
+            .complete(
+              CompletionRequest(EnsimeRequestInfo(state.inputs, pos))
+            )
+            .call()
+            .map {
+              case Some(response) =>
+                scope.modState(_.setCompletions(response.completions))
+              case _ =>
+                Callback()
+            }
+        ).when_(state.inputs.isEnsimeEnabled)
       }
     )
   }
@@ -574,7 +567,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
               case _ =>
                 Callback()
             }
-        )
+        ).when_(state.inputs.isEnsimeEnabled)
       }
     )
   }

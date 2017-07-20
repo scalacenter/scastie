@@ -2,27 +2,24 @@ package com.olegych.scastie
 package sbt
 
 import com.olegych.scastie.api._
-
 import org.ensime.api._
 import org.ensime.jerky.JerkyFormats._
-
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
-
 import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable}
-
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-
 import akka.{Done, NotUsed}
 import akka.util.Timeout
 
 import scala.io.Source.fromFile
 import org.slf4j.LoggerFactory
-
+import java.io.File.pathSeparatorChar
 import java.io._
 import java.nio.file.{Files, Path}
+
+import org.ensime.sexp.formats.{CamelCaseToDashes, DefaultSexpProtocol, OptionAltFormat}
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -209,20 +206,24 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
     val httpPortFile = ensimeCacheDir.resolve("http")
 
     log.info("Form classpath using .ensime file")
-    val ensimeConf = fromFile(ensimeConfigFile.toFile).mkString
 
-    def parseEnsimeConfFor(field: String): String = {
-      s":$field \\(.*?\\)".r findFirstIn ensimeConf match {
-        case Some(x) => {
-          // we need to take everything inside ("...") & replace " " with : to form a classpath string
-          x.substring(x.indexOf("(") + 2, x.length - 2).replace("\" \"", ":")
-        }
-        case None => throw new Exception("Can't parse ensime config!")
-      }
-    }
-    val classpath = parseEnsimeConfFor("ensime-server-jars") +
-      parseEnsimeConfFor("scala-compiler-jars") +
-      parseEnsimeConfFor("compile-deps")
+    val ensimeConf = slurp(ensimeConfigFile)
+    assert(ensimeConf.isDefined, "ensime config does not exist")
+
+    case class EnsimeClasspathConfig(
+      ensimeServerJars: List[String],
+      scalaCompilerJars: List[String]
+    )
+
+    object EsimeConfProtocol extends DefaultSexpProtocol  with OptionAltFormat with CamelCaseToDashes
+    import EsimeConfProtocol._
+    import org.ensime.sexp._
+
+    val parsedEnsimeConfig = ensimeConf.get.parseSexp.convertTo[EnsimeClasspathConfig]
+
+    val classpathItems = parsedEnsimeConfig.ensimeServerJars ++ parsedEnsimeConfig.scalaCompilerJars
+
+    val classpath = classpathItems.mkString(pathSeparatorChar.toString)
 
     log.info("Starting Ensime server")
 
@@ -231,7 +232,6 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
         "java",
         "-Xms512m",
         "-Xmx1G",
-        "-XX:MaxDirectMemorySize=64m",
         "-Densime.config=" + ensimeConfigFile,
         "-classpath",
         classpath,
@@ -257,7 +257,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
           SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
                          Some(Inputs.defaultCode)),
         point = 2,
-        maxResults = 100,
+        maxResults = 2000,
         caseSens = false,
         reload = false
       ),
@@ -280,7 +280,9 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        log.info(line)
+        if(!line.contains("received handled message ConnectionInfo")) {
+          log.info(line)
+        }
         line = is.readLine()
       }
     }
