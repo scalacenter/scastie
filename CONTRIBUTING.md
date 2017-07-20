@@ -122,5 +122,3 @@ exit
 # Running with docker locally
 
 `docker run --network=host -e RUNNER_PRODUCTION=true scalacenter/scastie-sbt-runner`
- 
-

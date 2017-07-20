@@ -182,12 +182,12 @@ lazy val sbtRunner = project
         val artifact = assembly.value
         val artifactTargetPath = s"/app/${artifact.name}"
 
-        val logbackConfDestination = "/home/ensime/logback.xml"
+        val logbackConfDestination = "/home/scastie/logback.xml"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.34")
+          from("scalacenter/scastie-docker-sbt:0.0.40")
 
-          add(ivy / "local" / org, s"/home/ensime/.ivy2/local/$org")
+          add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
 
           add(artifact, artifactTargetPath)
 

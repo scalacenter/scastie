@@ -116,7 +116,6 @@ class Sbt(defaultConfig: Inputs) {
 
   setup()
   collect(noop, reload = false)
-  warmUp()
 
   private def process(command: String,
                       lineCallback: LineCallback,

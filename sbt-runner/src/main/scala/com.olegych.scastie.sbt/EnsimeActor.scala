@@ -30,13 +30,20 @@ import scala.util.{Failure, Success}
 
 case object Heartbeat
 
-case object MkEnsimeConfigRequest
-case class MkEnsimeConfigResponse(sbtDir: Path)
-case object EnsimeReady
+case object CreateEnsimeConfigRequest
+case class EnsimeConfigResponse(sbtDir: Path)
 
 class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
+  private sealed trait EnsimeServerState
+  private case object Initializing extends EnsimeServerState
+  private case object CreatingConfig extends EnsimeServerState
+  private case object Connecting extends EnsimeServerState
+  private case object Ready extends EnsimeServerState
+
   import spray.json._
   import system.dispatcher
+
+  private var serverState: EnsimeServerState = Initializing
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -119,6 +126,9 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   }
 
   private def connectToEnsime(uri: String) = {
+    assert(serverState == CreatingConfig)
+    serverState = Connecting
+
     log.info(s"Connecting to $uri")
 
     val req = WebSocketRequest(uri, subprotocol = Some("jerky"))
@@ -164,6 +174,9 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
 
     upgradeResponse.flatMap { upgrade =>
       if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
+        assert(serverState == Connecting)
+        serverState = Ready
+
         Future.successful(Done)
       } else {
         throw new RuntimeException(
@@ -179,13 +192,13 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
       context.system.scheduler
         .schedule(30.seconds, 30.seconds, self, Heartbeat)
     )
-
-    sbtRunner ! EnsimeReady
   }
 
   override def preStart() = {
     log.info("Request ensime info from sbtRunner")
-    sbtRunner.tell(MkEnsimeConfigRequest, self)
+    assert(serverState == Initializing)
+    serverState = CreatingConfig
+    sbtRunner ! CreateEnsimeConfigRequest
   }
 
   private def startEnsimeServer(sbtDir: Path) = {
@@ -273,13 +286,14 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
   }
 
   def receive = {
-    case MkEnsimeConfigResponse(sbtDir: Path) =>
-      log.info("Got MkEnsimeConfigResponse")
+    case EnsimeConfigResponse(sbtDir: Path) => {
+      log.info("Got EnsimeConfigResponse")
       try {
         startEnsimeServer(sbtDir)
       } catch {
         case e: FileNotFoundException => log.error(e.getMessage)
       }
+    }
 
     case EnsimeTaskRequest(
         TypeAtPointRequest(EnsimeRequestInfo(inputs, position)),
