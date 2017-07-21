@@ -19,7 +19,11 @@ import java.io.File.pathSeparatorChar
 import java.io._
 import java.nio.file.{Files, Path}
 
-import org.ensime.sexp.formats.{CamelCaseToDashes, DefaultSexpProtocol, OptionAltFormat}
+import org.ensime.sexp.formats.{
+  CamelCaseToDashes,
+  DefaultSexpProtocol,
+  OptionAltFormat
+}
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -32,7 +36,10 @@ case class EnsimeConfigResponse(sbtDir: Path)
 
 case object EnsimeReady
 
-class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef, readyRef: Option[ActorRef]) extends Actor {
+class EnsimeActor(system: ActorSystem,
+                  sbtRunner: ActorRef,
+                  readyRef: Option[ActorRef])
+    extends Actor {
   private sealed trait EnsimeServerState
   private case object Initializing extends EnsimeServerState
   private case object CreatingConfig extends EnsimeServerState
@@ -213,15 +220,19 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef, readyRef: Option[Act
     assert(ensimeConf.isDefined, "ensime config does not exist")
 
     case class EnsimeClasspathConfig(
-      ensimeServerJars: List[String],
-      scalaCompilerJars: List[String]
+        ensimeServerJars: List[String],
+        scalaCompilerJars: List[String]
     )
 
-    object EsimeConfProtocol extends DefaultSexpProtocol  with OptionAltFormat with CamelCaseToDashes
+    object EsimeConfProtocol
+        extends DefaultSexpProtocol
+        with OptionAltFormat
+        with CamelCaseToDashes
     import EsimeConfProtocol._
     import org.ensime.sexp._
 
-    val parsedEnsimeConfig = ensimeConf.get.parseSexp.convertTo[EnsimeClasspathConfig]
+    val parsedEnsimeConfig =
+      ensimeConf.get.parseSexp.convertTo[EnsimeClasspathConfig]
 
     val classpathItems = parsedEnsimeConfig.ensimeServerJars ++ parsedEnsimeConfig.scalaCompilerJars
 
@@ -283,7 +294,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef, readyRef: Option[Act
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        if(!line.contains("received handled message ConnectionInfo")) {
+        if (!line.contains("received handled message ConnectionInfo")) {
           log.info(line)
         }
         line = is.readLine()

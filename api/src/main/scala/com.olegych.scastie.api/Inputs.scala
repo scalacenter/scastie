@@ -213,7 +213,7 @@ case class Inputs(
       }
 
     val ensimeConfig = "ensimeIgnoreMissingDirectories := true"
-    
+
     s"""|$targetConfig
         |
         |$librariesConfig

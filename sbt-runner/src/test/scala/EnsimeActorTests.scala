@@ -33,9 +33,10 @@ class EnsimeActorTests()
       case EnsimeTaskResponse(Some(CompletionResponse(completions)), taskId0) => {
         assert(taskId0 == taskId)
         assert(
-          completions.exists(completion =>
-            completion.hint == "List" && 
-            completion.typeInfo == "List"
+          completions.exists(
+            completion =>
+              completion.hint == "List" &&
+                completion.typeInfo == "List"
           )
         )
         true

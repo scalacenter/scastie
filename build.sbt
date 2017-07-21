@@ -142,6 +142,7 @@ lazy val sbtRunner = project
   .settings(baseSettings)
   .settings(loggingAndTest)
   .settings(
+    parallelExecution in Test := false,
     scalacOptions -= "-Xfatal-warnings", // Thread.stop
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     resolvers += Resolver.sonatypeRepo("public"),

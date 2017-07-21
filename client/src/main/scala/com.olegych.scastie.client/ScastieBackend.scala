@@ -526,19 +526,21 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   def completeCodeAt(pos: Int): Callback = {
     scope.state.flatMap(
       state => {
-        Callback.future(
-          ApiClient[AutowireApi]
-            .complete(
-              CompletionRequest(EnsimeRequestInfo(state.inputs, pos))
-            )
-            .call()
-            .map {
-              case Some(response) =>
-                scope.modState(_.setCompletions(response.completions))
-              case _ =>
-                Callback()
-            }
-        ).when_(state.inputs.isEnsimeEnabled)
+        Callback
+          .future(
+            ApiClient[AutowireApi]
+              .complete(
+                CompletionRequest(EnsimeRequestInfo(state.inputs, pos))
+              )
+              .call()
+              .map {
+                case Some(response) =>
+                  scope.modState(_.setCompletions(response.completions))
+                case _ =>
+                  Callback()
+              }
+          )
+          .when_(state.inputs.isEnsimeEnabled)
       }
     )
   }
@@ -546,28 +548,30 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   def typeAt(token: String, pos: Int): Callback = {
     scope.state.flatMap(
       state => {
-        Callback.future(
-          ApiClient[AutowireApi]
-            .typeAt(
-              TypeAtPointRequest(EnsimeRequestInfo(state.inputs, pos))
-            )
-            .call()
-            .map {
-              case Some(response) =>
-                scope.modState(
-                  _.setTypeAtInto(
-                    Some(
-                      TypeInfoAt(
-                        token = token,
-                        typeInfo = response.typeInfo
+        Callback
+          .future(
+            ApiClient[AutowireApi]
+              .typeAt(
+                TypeAtPointRequest(EnsimeRequestInfo(state.inputs, pos))
+              )
+              .call()
+              .map {
+                case Some(response) =>
+                  scope.modState(
+                    _.setTypeAtInto(
+                      Some(
+                        TypeInfoAt(
+                          token = token,
+                          typeInfo = response.typeInfo
+                        )
                       )
                     )
                   )
-                )
-              case _ =>
-                Callback()
-            }
-        ).when_(state.inputs.isEnsimeEnabled)
+                case _ =>
+                  Callback()
+              }
+          )
+          .when_(state.inputs.isEnsimeEnabled)
       }
     )
   }

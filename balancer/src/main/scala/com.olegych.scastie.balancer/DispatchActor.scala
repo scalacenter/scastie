@@ -126,11 +126,29 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   def receive = {
-    case format: FormatRequest => {
+    case EnsimeRequestEnvelop(request, UserTrace(ip, user)) => {
+      log.info("id: {}, ip: {}, request: {}", ip, request)
+
       val server = loadBalancer.getRandomServer
-      server.ref.tell(format, sender)
+      val taskId = EnsimeTaskId.create
+
+      implicit val timeout = Timeout(20.seconds)
+      val senderRef = sender()
+      (server.ref ? EnsimeTaskRequest(request, taskId))
+        .mapTo[EnsimeTaskResponse]
+        .map { taskResponse =>
+          senderRef ! taskResponse.response
+        }
+
+    }
+
+    case EnsimeTaskResponse(response, taskId) => {
       ()
     }
+
+    /*
+    uncomment when https://github.com/scalacenter/scastie/issues/275 is ready
+    and remove above
 
     case EnsimeRequestEnvelop(request, UserTrace(ip, user)) => {
       val taskId = EnsimeTaskId.create
@@ -154,6 +172,13 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case EnsimeTaskResponse(response, taskId) => {
       updateBalancer(loadBalancer.done(taskId))
+    }
+     */
+
+    case format: FormatRequest => {
+      val server = loadBalancer.getRandomServer
+      server.ref.tell(format, sender)
+      ()
     }
 
     case RunSnippet(inputsWithIpAndUser) => {
