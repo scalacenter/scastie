@@ -2,7 +2,8 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import vdom.all._
 
 final case class RunButton(isRunning: Boolean,
                            isStatusOk: Boolean,
@@ -12,7 +13,7 @@ final case class RunButton(isRunning: Boolean,
 }
 
 object RunButton {
-  def render(props: RunButton) = {
+  def render(props: RunButton): VdomElement = {
     if (!props.isRunning) {
       val runTitle =
         if (props.isStatusOk)
@@ -22,7 +23,7 @@ object RunButton {
 
       val run =
         if (props.isStatusOk) props.run
-        else Callback(())
+        else Callback.empty
 
       li(onClick --> run,
          role := "button",

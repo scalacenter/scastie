@@ -9,5 +9,5 @@ object StatusState {
 
 final case class StatusState(runners: Option[Vector[Runner]]) {
   def runnerCount: Option[Int] = runners.map(_.size)
-  def isOk: Boolean = runners.map(_.size > 0).getOrElse(false)
+  def isOk: Boolean = runners.exists(_.nonEmpty)
 }

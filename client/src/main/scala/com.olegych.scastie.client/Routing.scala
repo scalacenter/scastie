@@ -43,7 +43,7 @@ object Routing {
         | dynamicRouteCT(userUpdate.caseClass[UserResourceUpdated]) ~>
           dynRenderR((page, router) => renderPage(page, router))
 
-        | staticRoute(embedded, Embeded) ~>
+        | staticRoute(embedded, Embedded) ~>
           renderR(renderScastieDefaultEmbedded)
 
         | dynamicRouteCT(embedded / anon.caseClass[EmbeddedAnonymousResource]) ~>
@@ -74,11 +74,11 @@ object Routing {
   private def renderScastieDefaultEmbedded(
       router: RouterCtl[Page]
   ): VdomElement =
-    Scastie.default(router).copy(embedded = Some(EmbededOptions.empty)).render
+    Scastie.default(router).copy(embedded = Some(EmbeddedOptions.empty)).render
 
   private def renderPage(page: ResourcePage,
                          router: RouterCtl[Page]): VdomElement = {
-    val defaultEmbedded = Some(EmbededOptions.empty)
+    val defaultEmbedded = Some(EmbeddedOptions.empty)
 
     val (embedded, snippetId) =
       page match {

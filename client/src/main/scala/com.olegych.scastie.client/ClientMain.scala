@@ -1,5 +1,4 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 
 import components._
 
@@ -48,21 +47,19 @@ object ClientMain extends JSApp {
 
   @JSExport
   def embedded(selector: String | Node,
-               options: UndefOr[EmbededOptionsJs]): Unit = {
+               options: UndefOr[EmbeddedOptionsJs]): Unit = {
     val nodes =
       (selector: Any) match {
-        case cssSelector: String => {
+        case cssSelector: String =>
           dom.document.querySelectorAll(cssSelector).toList
-        }
-        case node: Node => {
+        case node: Node =>
           List(node)
-        }
       }
 
     val embeddedOptions =
       options.toOption
-        .map(EmbededOptions.fromJs)
-        .getOrElse(EmbededOptions.empty)
+        .map(EmbeddedOptions.fromJs)
+        .getOrElse(EmbeddedOptions.empty)
 
     nodes.foreach {
       case node: dom.raw.HTMLElement =>

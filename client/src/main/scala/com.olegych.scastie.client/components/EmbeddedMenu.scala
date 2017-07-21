@@ -1,8 +1,8 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
-import japgolly.scalajs.react._, vdom.all._
+import com.olegych.scastie.client.View
+import japgolly.scalajs.react._
+import vdom.all._
 
 final case class EmbeddedMenu(isRunning: Boolean,
                               isStatusOk: Boolean,

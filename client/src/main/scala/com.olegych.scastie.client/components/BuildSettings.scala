@@ -3,8 +3,10 @@ package client
 package components
 
 import api._
-
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.TagOf
+import org.scalajs.dom.html.Div
+import vdom.all._
 
 final case class BuildSettings(
     setTarget: ScalaTarget => Callback,
@@ -28,7 +30,7 @@ final case class BuildSettings(
 
 object BuildSettings {
 
-  def renderTarget(props: BuildSettings) = {
+  def renderTarget(props: BuildSettings): TagOf[Div] = {
 
     val targetTypes: List[ScalaTargetType] = List(
       ScalaTargetType.JVM,
@@ -74,7 +76,7 @@ object BuildSettings {
     )
   }
 
-  def renderVersions(props: BuildSettings) = {
+  def renderVersions(props: BuildSettings): TagMod = {
     val suggestedVersions = List(
       // "2.13.0-M1",
       "2.12.2",
@@ -145,10 +147,10 @@ object BuildSettings {
         case ScalaTarget.Dotty =>
           notSupported
 
-        case ScalaTarget.Js(scalaVersion, scalaJsVersion) =>
+        case ScalaTarget.Js(_, _) =>
           notSupported
 
-        case ScalaTarget.Native(scalaVersion, scalaNativeVersion) =>
+        case ScalaTarget.Native(_, _) =>
           notSupported
       }
 
@@ -162,7 +164,7 @@ object BuildSettings {
 
     val resetButton =
       TagMod(
-        PrompModal(
+        PromptModal(
           modalText = "Reset Build",
           isClosed = props.isResetModalClosed,
           close = props.closeResetModal,

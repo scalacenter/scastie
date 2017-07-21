@@ -60,8 +60,8 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
     )
   implicit val sessionManager = new SessionManager[UUID](sessionConfig)
   implicit val refreshTokenStorage = new InMemoryRefreshTokenStorage[UUID] {
-    def log(msg: String) =
-      if (msg.startsWith("Looking up token for selector")) () // borring
+    def log(msg: String): Unit =
+      if (msg.startsWith("Looking up token for selector")) () // boring
       else logger.info(msg)
   }
 
@@ -103,7 +103,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
       if (Files.exists(usersFile)) Files.readAllLines(usersFile).asScala
       else Seq()
 
-    if (!lines.exists(_ == login)) {
+    if (!lines.contains(login)) {
       Files.write(usersFile,
                   (login + nl).getBytes,
                   StandardOpenOption.APPEND,

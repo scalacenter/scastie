@@ -26,7 +26,7 @@ class Github(implicit system: ActorSystem, materializer: ActorMaterializer)
 
   private val config =
     ConfigFactory.load().getConfig("com.olegych.scastie.web.oauth2")
-  val clientId = config.getString("client-id")
+  val clientId: String = config.getString("client-id")
   private val clientSecret = config.getString("client-secret")
   private val redirectUri = config.getString("uri") + "/callback"
 

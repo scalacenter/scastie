@@ -1,12 +1,10 @@
-package com.olegych.scastie
-
-package sbt
-
-import api._
+package com.olegych.scastie.sbt
 
 import akka.actor.ActorSystem
-import akka.testkit.{TestKit, ImplicitSender, TestProbe, TestActorRef}
-import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import com.olegych.scastie.SbtTask
+import com.olegych.scastie.api._
+import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
 
@@ -29,7 +27,6 @@ class SbtActorTest()
       val gotInstrumentation = progress.instrumentations.nonEmpty
 
       if (gotInstrumentation) {
-        val instrumentations = progress.instrumentations.head
         assert(
           progress.instrumentations == List(
             Instrumentation(Position(0, 5), Value("2", "Int"))
@@ -50,7 +47,7 @@ class SbtActorTest()
           val error = progress.runtimeError.get
           assert(error.message == "java.lang.ArithmeticException: / by zero")
           assert(error.line == Some(1))
-          assert(error.fullStack.size > 0)
+          assert(error.fullStack.nonEmpty)
         }
         gotRuntimeError
       }
@@ -62,7 +59,7 @@ class SbtActorTest()
     run(s"""println("$message")""")(progress => {
       // we should only receive an hello message
       val gotHelloMessage = progress.userOutput == Some(message)
-      if (!gotHelloMessage) assert(progress.userOutput == None)
+      if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
       gotHelloMessage
     })
   }
@@ -75,7 +72,7 @@ class SbtActorTest()
       assert(progress.forcedProgramMode)
 
       val gotHelloMessage = progress.userOutput == Some(message)
-      if (!gotHelloMessage) assert(progress.userOutput == None)
+      if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
 
       gotHelloMessage
     }
@@ -113,7 +110,7 @@ class SbtActorTest()
   test("Encoding issues #100") {
     run("""println("€")""") { progress =>
       val gotHelloMessage = progress.userOutput == Some("€")
-      if (!gotHelloMessage) assert(progress.userOutput == None)
+      if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
       gotHelloMessage
     }
   }
@@ -170,12 +167,11 @@ class SbtActorTest()
       else timeout
 
     progressActor.fishForMessage(totalTimeout + 5.seconds) {
-      case progress: SnippetProgress => {
+      case progress: SnippetProgress =>
         val fishResult = fish(progress)
         if (progress.done && !fishResult)
           throw new Exception("Fail to meet expectation")
         else fishResult
-      }
     }
 
     firstRun = false

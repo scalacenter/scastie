@@ -1,10 +1,8 @@
 package com.olegych.scastie.instrumentation
 
+import scala.collection.immutable.Seq
 import scala.meta._
 import scala.meta.tokens.Token
-import scala.meta.tokens.Token
-
-import scala.collection.immutable.Seq
 
 case class Patch(from: Token, to: Token, replace: String) {
   def insideRange(token: Token): Boolean =
@@ -12,7 +10,7 @@ case class Patch(from: Token, to: Token, replace: String) {
       token.end <= to.end &&
       token.start >= from.start
 
-  val tokens = replace.tokenize.get.tokens.toSeq
+  val tokens: scala.Seq[Token] = replace.tokenize.get.tokens.toSeq
   def runOn(str: Seq[Token]): Seq[Token] = {
     str.flatMap {
       case `from`              => tokens

@@ -1,8 +1,6 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
-import buildinfo.BuildInfo.{gitHash, version}
+import com.olegych.scastie.buildinfo.BuildInfo.{gitHash, version}
 
 import japgolly.scalajs.react._, vdom.all._
 

@@ -1,6 +1,6 @@
 package com.olegych.scastie.instrumentation
 
-import System.{lineSeparator => nl}
+import java.lang.System.{lineSeparator => nl}
 
 case class DiffFailure(title: String,
                        expected: String,
@@ -36,7 +36,7 @@ object Diff {
                    title: String = ""): Unit = {
     val result = compareContents(obtained, expected)
     if (result.nonEmpty) {
-      throw new DiffFailure(title, expected, obtained, result)
+      throw DiffFailure(title, expected, obtained, result)
     }
   }
 

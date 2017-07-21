@@ -23,5 +23,5 @@ case class ModalState(
     isNewSnippetModalClosed: Boolean
 ) {
   def isShareModalClosed(shareModalSnippetId2: SnippetId): Boolean =
-    shareModalSnippetId != Some(shareModalSnippetId2)
+    !shareModalSnippetId.contains(shareModalSnippetId2)
 }

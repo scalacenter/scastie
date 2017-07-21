@@ -10,7 +10,7 @@ import org.scalajs.dom.raw.HTMLTextAreaElement
 import scala.scalajs._
 
 object CodeMirrorEditor {
-  private var texteareaRef: HTMLTextAreaElement = _
+  private var textareaRef: HTMLTextAreaElement = _
 
   private[CodeMirrorEditor] case class State(
       editor: Option[TextAreaEditor] = None
@@ -57,9 +57,9 @@ object CodeMirrorEditor {
             .asInstanceOf[codemirror.Options]
 
           val editor =
-            codemirror.CodeMirror.fromTextArea(texteareaRef, options)
+            codemirror.CodeMirror.fromTextArea(textareaRef, options)
 
-          editor.getDoc.setValue(settings.value)
+          editor.getDoc().setValue(settings.value)
 
           editor.onChange(
             (_, _) => handler.onChange(editor.getDoc().getValue()).runNow
@@ -114,7 +114,7 @@ object CodeMirrorEditor {
       .backend(new CodeMirrorEditorBackend(_))
       .renderPS {
         case (scope, (props, handler), _) =>
-          textarea.ref(texteareaRef = _)(
+          textarea.ref(textareaRef = _)(
             value := props.value,
             onChange ==> scope.backend.onChangeF,
             autoComplete := "off"
@@ -127,7 +127,7 @@ object CodeMirrorEditor {
 
         state.editor
           .map(editor => runDelta(editor, state, current, next))
-          .getOrElse(Callback(()))
+          .getOrElse(Callback.empty)
       }
       .componentDidMount(_.backend.start())
       .componentWillUnmount(_.backend.stop())

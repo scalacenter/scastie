@@ -1,6 +1,4 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
 import japgolly.scalajs.react._, vdom.all._
 
@@ -19,7 +17,7 @@ object FormatButton {
 
     val formatCode =
       if (!isDisabled) props.formatCode
-      else Callback(())
+      else Callback.empty
 
     li(title := "Format Code (F6)",
        role := "button",

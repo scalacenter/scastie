@@ -1,7 +1,6 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
+import com.olegych.scastie.client.View
 import japgolly.scalajs.react._, vdom.all._
 
 final case class NewButton(isNewSnippetModalClosed: Boolean,
@@ -21,7 +20,7 @@ object NewButton {
        cls := "btn")(
       i(cls := "fa fa-file-o"),
       span("New"),
-      PrompModal(
+      PromptModal(
         modalText = "New Snippet",
         isClosed = props.isNewSnippetModalClosed,
         close = props.closeNewSnippetModal,

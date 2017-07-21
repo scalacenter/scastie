@@ -41,7 +41,7 @@ object CodeSnippets {
           ApiClient[AutowireApi]
             .delete(summary.snippetId)
             .call()
-            .map(_ => Callback(()))
+            .map(_ => Callback.empty)
         )
 
       locally >> remotely
@@ -164,7 +164,7 @@ object CodeSnippets {
             delta.nextProps.view == View.CodeSnippets
 
         val loadProfile: Callback =
-          delta.backend.loadProfile
+          delta.backend.loadProfile()
 
         loadProfile.when_(viewChangedToCodeSnippet)
       }

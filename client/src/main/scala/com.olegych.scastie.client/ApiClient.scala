@@ -1,7 +1,4 @@
-package com.olegych.scastie
-package client
-
-import upickle.default._
+package com.olegych.scastie.client
 
 import org.scalajs.dom
 import scala.concurrent.Future
@@ -19,6 +16,6 @@ object ApiClient extends autowire.Client[String, Reader, Writer] {
       .map(_.responseText)
   }
 
-  def read[T: Reader](p: String) = uread[T](p)
-  def write[T: Writer](r: T) = uwrite(r)
+  def read[T: Reader](p: String): T = uread[T](p)
+  def write[T: Writer](r: T): String = uwrite(r)
 }

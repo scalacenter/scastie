@@ -20,21 +20,18 @@ class ProgressActor extends Actor {
   private val subscribers =
     MMap.empty[SnippetId, (ProgressSource, ActorRef)]
 
-  def receive = {
-    case SubscribeProgress(snippetId) => {
+  override def receive: Receive = {
+    case SubscribeProgress(snippetId) =>
       val (source, _) = getOrCreatePublisher(snippetId)
       sender ! source
-    }
-    case snippetProgress: SnippetProgress => {
+    case snippetProgress: SnippetProgress =>
       snippetProgress.snippetId.foreach { sid =>
         val (_, publisher) = getOrCreatePublisher(sid)
         publisher ! snippetProgress
       }
-    }
-    case ProgressDone(snippetId) => {
+    case ProgressDone(snippetId) =>
       subscribers.remove(snippetId)
       ()
-    }
   }
 
   private def getOrCreatePublisher(
@@ -48,7 +45,7 @@ class ProgressActor extends Actor {
       subscribers(snippetId) = sourceAndPublisher
       sourceAndPublisher
     }
-    subscribers.get(snippetId).getOrElse(createPublisher())
+    subscribers.getOrElse(snippetId, createPublisher())
   }
 }
 
@@ -59,14 +56,12 @@ class ProgressForwarder(progressActor: ActorRef)
   private var buffer = MQueue.empty[SnippetProgress]
   private var toDeliver = 0L
 
-  def receive = {
-    case progress: SnippetProgress => {
+  override def receive: Receive = {
+    case progress: SnippetProgress =>
       buffer.enqueue(progress)
       deliver(0L)
-    }
-    case Request(demand) => {
+    case Request(demand) =>
       deliver(demand)
-    }
   }
 
   private def deliver(demand: Long): Unit = {

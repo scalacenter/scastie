@@ -69,7 +69,7 @@ class ProgressRoutes(progressActor: ActorRef) {
         case Strict(c) ⇒ Future.successful(c)
         case e => Future.failed(new Exception(e.toString))
       }
-      .map(uread[KeepAlive](_))
+      .map(uread[KeepAlive])
       .via(flow)
       .map(progress ⇒ ws.TextMessage.Strict(uwrite(progress)))
   }

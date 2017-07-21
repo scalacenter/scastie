@@ -18,7 +18,7 @@ case class UserLogin(login: String)
 class SnippetsContainer(root: Path, oldRoot: Path) {
 
   def create(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
-    val uuid = randomUrlFriendlyBase64UUID
+    val uuid = randomUrlFriendlyBase64UUID()
     val snippetId =
       SnippetId(uuid, user.map(u => SnippetUserPart(u.login, None)))
     write(inputsFile(snippetId), uwrite(inputs))
@@ -42,7 +42,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
 
   def update(snippetId: SnippetId, inputs: Inputs): Option[SnippetId] = {
     snippetId.user match {
-      case Some(SnippetUserPart(login, _)) => {
+      case Some(SnippetUserPart(login, _)) =>
         val nextSnippetId =
           SnippetId(
             snippetId.base64UUID,
@@ -56,7 +56,6 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
         write(inputsFile(nextSnippetId),
               uwrite(inputs.copy(showInUserProfile = true)))
         Some(nextSnippetId)
-      }
       case None => None
     }
   }
@@ -89,10 +88,9 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     (progress.scalaJsContent,
      progress.scalaJsSourceMapContent,
      progress.snippetId) match {
-      case (Some(scalaJsContent), Some(scalaJsSourceMapContent), Some(sid)) => {
+      case (Some(scalaJsContent), Some(scalaJsSourceMapContent), Some(sid)) =>
         write(scalaJsFile(sid), scalaJsContent)
         write(scalaJsSourceMapFile(sid), scalaJsSourceMapContent)
-      }
       case _ => ()
     }
 
@@ -194,7 +192,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
         try {
           ds.asScala.map(_.getFileName.toString)
         } catch {
-          case util.control.NonFatal(e) => Nil
+          case util.control.NonFatal(_) => Nil
         } finally {
           ds.close()
         }
@@ -230,7 +228,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     val filePath = inputsFile(snippetId)
     val attr = Files.readAttributes(filePath, classOf[BasicFileAttributes])
 
-    return attr.creationTime().toMillis()
+    attr.creationTime().toMillis
   }
 
   private def readInputs(snippetId: SnippetId): Option[Inputs] = {
@@ -283,7 +281,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
       try {
         ds.asScala.map(_.getFileName.toString.toInt).toList
       } catch {
-        case util.control.NonFatal(e) => Nil
+        case util.control.NonFatal(_) => Nil
       } finally {
         ds.close()
       }
@@ -296,9 +294,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
 
   private def rootDir(snippetId: SnippetId): Path = {
     snippetId.user match {
-      case Some(SnippetUserPart(login, update)) => {
+      case Some(SnippetUserPart(login, _)) =>
         root.resolve(login)
-      }
       case _ => root.resolve(anonFolder)
     }
   }
@@ -308,7 +305,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
 
     val baseDirectory =
       snippetId.user match {
-        case Some(SnippetUserPart(login, update)) => {
+        case Some(SnippetUserPart(login, update)) =>
           val userFolder = root.resolve(login)
           if (!Files.exists(userFolder)) Files.createDirectory(userFolder)
 
@@ -319,15 +316,13 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
           if (!Files.exists(baseVersion)) Files.createDirectory(baseVersion)
 
           baseVersion
-        }
-        case None => {
+        case None =>
           val anon = root.resolve(anonFolder)
           if (!Files.exists(anon)) Files.createDirectory(anon)
 
           val base = anon.resolve(snippetId.base64UUID)
           if (!Files.exists(base)) Files.createDirectory(base)
           base
-        }
       }
 
     baseDirectory.resolve(Paths.get(fileName))
@@ -359,7 +354,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   private def deleteEmptyDirectories(base: Path): Unit = {
     def dirIsEmpty(dir: Path): Boolean = {
       val ds = Files.newDirectoryStream(dir)
-      val ret = ds.iterator().hasNext()
+      val ret = ds.iterator().hasNext
       ds.close()
       !ret
     }

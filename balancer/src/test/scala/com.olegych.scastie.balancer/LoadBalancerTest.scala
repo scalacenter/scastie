@@ -101,7 +101,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     )
   }
 
-  test("dont reconfigure if some configuration if not busy") {
+  test("do not reconfigure if some configuration if not busy") {
     val tasks = (1 to 5).map(
       i => Task("c1", Ip(i.toString), SbtRunTaskId(SnippetId(i.toString, None)))
     )
@@ -142,7 +142,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
       )
 
     val server = balancer.servers.head
-    assert(server.mailbox.size == 0)
+    assert(server.mailbox.isEmpty)
 
     val config = "c1"
     val taskId = SbtRunTaskId(SnippetId("1", None))
@@ -153,7 +153,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(balancer0.servers.head.mailbox.size == 1)
 
     val balancer1 = balancer0.done(taskId)
-    assert(balancer1.servers.head.mailbox.size == 0)
+    assert(balancer1.servers.head.mailbox.isEmpty)
   }
 
   test("run two tasks") {
@@ -164,8 +164,8 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
       )
 
     val server = balancer.servers.head
-    assert(server.mailbox.size == 0)
-    assert(server.currentTaskId == None)
+    assert(server.mailbox.isEmpty)
+    assert(server.currentTaskId.isEmpty)
 
     val taskId1 = SbtRunTaskId(SnippetId("1", None))
     val (assigned0, balancer0) = balancer.add(Task("c1", nextIp, taskId1))
@@ -174,24 +174,24 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
     assert(assigned0.ref == server.ref)
     assert(server0.mailbox.size == 1)
-    assert(server0.currentTaskId == Some(taskId1))
+    assert(server0.currentTaskId.contains(taskId1))
 
     val taskId2 = SbtRunTaskId(SnippetId("2", None))
     val (assigned1, balancer1) = balancer0.add(Task("c2", nextIp, taskId2))
 
     val server1 = balancer1.servers.head
     assert(server1.mailbox.size == 2)
-    assert(server1.currentTaskId == Some(taskId1))
+    assert(server1.currentTaskId.contains(taskId1))
 
     val balancer2 = balancer1.done(taskId1)
     val server2 = balancer2.servers.head
     assert(server2.mailbox.size == 1)
-    assert(server2.currentTaskId == Some(taskId2))
+    assert(server2.currentTaskId.contains(taskId2))
 
     val balancer3 = balancer2.done(taskId2)
     val server3 = balancer3.servers.head
-    assert(server3.mailbox.size == 0)
-    assert(server3.currentTaskId == None)
+    assert(server3.mailbox.isEmpty)
+    assert(server3.currentTaskId.isEmpty)
   }
 
   test("remove a server") {
@@ -200,6 +200,6 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
       Vector(Server("s1", "c1")),
       History(Queue(), size = 1)
     )
-    assert(balancer.removeServer(ref).servers.size == 0)
+    assert(balancer.removeServer(ref).servers.isEmpty)
   }
 }

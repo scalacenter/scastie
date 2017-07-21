@@ -74,7 +74,7 @@ case class Inputs(
 
   // we only autocomplete for the default configuration
   // https://github.com/scalacenter/scastie/issues/275
-  def isEnsimeEnabled = isDefault
+  def isEnsimeEnabled: Boolean = isDefault
 
   def addScalaDependency(scalaDependency: ScalaDependency,
                          project: Project): Inputs = {

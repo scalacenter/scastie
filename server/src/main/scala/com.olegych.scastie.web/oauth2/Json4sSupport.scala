@@ -54,10 +54,9 @@ private[oauth2] trait Json4sSupport {
           serialization.read(ret)
         } catch {
           case MappingException("unknown error",
-                                ite: InvocationTargetException) => {
+                                ite: InvocationTargetException) =>
             logger.error(ret)
             throw ite.getCause
-          }
         }
       }
 
