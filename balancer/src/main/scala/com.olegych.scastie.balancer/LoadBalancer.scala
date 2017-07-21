@@ -7,8 +7,6 @@ import utils._
 import scala.collection.immutable.Queue
 import util.Random
 
-import System.{lineSeparator => nl}
-
 import org.slf4j.LoggerFactory
 
 case class Ip(v: String)
@@ -26,7 +24,7 @@ case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {
   def done: Server[C, S] = {
     val (task, mailbox0) = mailbox.dequeue
 
-    assert(Some(task.taskId) == currentTaskId)
+    assert(currentTaskId.contains(task.taskId))
 
     copy(
       lastConfig = task.config,
@@ -101,16 +99,14 @@ case class LoadBalancer[C, S](
       servers.zipWithIndex.find(_._1.currentTaskId.contains(taskId))
 
     serverRunningTask match {
-      case Some((server, index)) => {
+      case Some((server, index)) =>
         copy(servers = servers.updated(index, server.done))
-      }
-      case None => {
+      case None =>
         val serversTaskIds =
           servers.flatMap(_.currentTaskId).mkString("[", ", ", "]")
         throw new Exception(
           s"""cannot find taskId: $taskId from servers task ids $serversTaskIds"""
         )
-      }
     }
   }
 

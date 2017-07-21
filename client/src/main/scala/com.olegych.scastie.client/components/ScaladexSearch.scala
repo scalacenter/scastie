@@ -1,8 +1,6 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
-import api._
+import com.olegych.scastie.api._
 
 import japgolly.scalajs.react._, vdom.all._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
@@ -31,8 +29,8 @@ object ScaladexSearch {
     def default = SearchState(
       query = "",
       selectedIndex = 0,
-      projects = List(),
-      selecteds = List()
+      projects = List.empty,
+      selecteds = List.empty
     )
 
     def fromProps(props: ScaladexSearch): SearchState = {
@@ -70,7 +68,7 @@ object ScaladexSearch {
       .map(selected => (selected.project, selected.release.artifact))
       .toSet
 
-    val search =
+    val search: List[(Project, String)] =
       projects
         .flatMap(
           project => project.artifacts.map(artifact => (project, artifact))
@@ -182,14 +180,14 @@ object ScaladexSearch {
           scope.state.flatMap(
             s =>
               if (0 <= s.selectedIndex && s.selectedIndex < s.search.size)
-                addArtifact(s.search.toList(s.selectedIndex))
+                addArtifact(s.search(s.selectedIndex))
               else
-                Callback(())
+                Callback.empty
           )
 
         addArtifactIfInRange >> Callback(searchInputRef.focus)
       } else {
-        Callback(())
+        Callback.empty
       }
     }
 
@@ -373,7 +371,7 @@ object ScaladexSearch {
         else EmptyVdom
 
       div(cls := "added", hideAdded)(
-        searchState.selecteds.toList.sorted
+        searchState.selecteds.sorted
           .map(
             selected =>
               renderProject(
@@ -415,8 +413,8 @@ object ScaladexSearch {
         )
       ),
       div.ref(projectListRef = _)(cls := "results", displayResults)(
-        searchState.search.zipWithIndex.toList.map {
-          case ((project, artifact), index) => {
+        searchState.search.zipWithIndex.map {
+          case ((project, artifact), index) =>
             renderProject(
               project,
               artifact,
@@ -427,7 +425,6 @@ object ScaladexSearch {
                 onMouseOver --> scope.backend.selectIndex(index)
               )
             )
-          }
         }.toTagMod
       )
     )

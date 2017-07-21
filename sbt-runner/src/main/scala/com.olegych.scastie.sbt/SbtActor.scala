@@ -13,16 +13,16 @@ class SbtActor(system: ActorSystem,
                readyRef: Option[ActorRef])
     extends Actor {
 
-  val formatActor =
+  private val formatActor =
     context.actorOf(Props(new FormatActor()), name = "FormatActor")
 
-  val sbtRunner =
+  private val sbtRunner =
     context.actorOf(
       Props(new SbtRunner(runTimeout, production)),
       name = "SbtRunner"
     )
 
-  val ensimeActor =
+  private val ensimeActor =
     if (withEnsime) {
       Some(
         context.actorOf(
@@ -32,7 +32,7 @@ class SbtActor(system: ActorSystem,
       )
     } else None
 
-  def receive = {
+  override def receive: Receive = {
     case SbtPing =>
       sender ! SbtPong
 

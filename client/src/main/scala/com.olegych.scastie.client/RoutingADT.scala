@@ -20,7 +20,7 @@ object Page {
 
 sealed trait Page
 case object Home extends Page
-case object Embeded extends Page
+case object Embedded extends Page
 
 case class TargetTypePage(targetType: ScalaTargetType) extends Page
 

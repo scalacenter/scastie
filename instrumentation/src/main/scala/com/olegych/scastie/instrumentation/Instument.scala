@@ -1,14 +1,13 @@
 package com.olegych.scastie
 package instrumentation
 
-import api.{ScalaTarget, ScalaTargetType}
-import api.ScalaTarget._
-
-import scala.meta._
-import parsers.Parsed
-import inputs.Position
+import com.olegych.scastie.api.ScalaTarget._
+import com.olegych.scastie.api.{ScalaTarget, ScalaTargetType}
 
 import scala.collection.immutable.Seq
+import scala.meta._
+import scala.meta.inputs.Position
+import scala.meta.parsers.Parsed
 
 sealed trait InstrumentationFailure
 case object HasMainMethod extends InstrumentationFailure
@@ -42,7 +41,7 @@ object Instrument {
     val lits =
       position match {
         case Position.None => tuple2(0, 0)
-        case Position.Range(input, start, end) =>
+        case Position.Range(_, start, end) =>
           tuple2(start.offset - offset, end.offset - offset)
       }
 
@@ -82,15 +81,14 @@ object Instrument {
       source.stats.collect {
         case c: Defn.Class
             if c.name.value == instrumentedClass &&
-              c.templ.stats.nonEmpty => {
-
+              c.templ.stats.nonEmpty =>
           val openCurlyBrace =
             if (!isScalaJs) c.templ.tokens.head
             else c.templ.tokens.find(_.toString == "{").get
 
           val instrumentationMapCode = Seq(
             s"{ private val $instrumentationMap = $emptyMapT[$positionT, $renderT]",
-            s"def $instrumentationMethod = ${instrumentationMap}.toList.map{ case (pos, r) => $instrumentationT(pos, r) }"
+            s"def $instrumentationMethod = $instrumentationMap.toList.map{ case (pos, r) => $instrumentationT(pos, r) }"
           ).mkString("", ";", ";")
 
           val instrumentationMapPatch =
@@ -100,7 +98,6 @@ object Instrument {
             c.templ.stats.get.collect {
             case term: Term => instrumentOne(term, None, offset, isScalaJs)
           }
-        }
       }.flatten
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
@@ -110,14 +107,14 @@ object Instrument {
         s"""|object Main {
             |  val playground = new $instrumentedClass
             |  def main(args: Array[String]): Unit = {
-            |    println($runtimeT.write(playground.${instrumentationMethod}))
+            |    println($runtimeT.write(playground.$instrumentationMethod))
             |  }
             |}
             |""".stripMargin
       } else {
-        s"""|@${jsExportTopLevelT}("Main") class Main {
+        s"""|@$jsExportTopLevelT("Main") class Main {
             |  val playground = $runtimeErrorT.wrap(new $instrumentedClass)
-            |  @$jsExportT def result = $runtimeT.write(playground.right.map(_.${instrumentationMethod}))
+            |  @$jsExportT def result = $runtimeT.write(playground.right.map(_.$instrumentationMethod))
             |  @$jsExportT def attachedElements: $elemArrayT =
             |    playground match {
             |      case Right(p) => p.attachedElements
@@ -133,12 +130,11 @@ object Instrument {
   private def hasMainMethod(source: Source): Boolean = {
     def hasMain(templ: Template): Boolean = {
       templ.stats match {
-        case Some(ss) => {
+        case Some(ss) =>
           ss.exists {
             case q"def main(args: Array[String]): $_ = $_" => true
             case _                                         => false
           }
-        }
         case _ => false
       }
     }
@@ -148,16 +144,13 @@ object Instrument {
 
     source.stats.exists {
       case c: Defn.Class
-          if c.name.value == instrumentedClass &&
-            c.templ.stats.nonEmpty => {
-
+          if c.name.value == instrumentedClass && c.templ.stats.nonEmpty =>
         c.templ.stats.get.exists {
           case c: Defn.Class  => hasMain(c.templ) || hasApp(c.templ)
           case t: Defn.Trait  => hasMain(t.templ) || hasApp(t.templ)
           case o: Defn.Object => hasMain(o.templ) || hasApp(o.templ)
           case _              => false
         }
-      }
       case _ => false
     }
   }
@@ -213,7 +206,7 @@ object Instrument {
       }
 
     maybeDialect match {
-      case Some(dialect) => {
+      case Some(dialect) =>
         implicit val selectedDialect = dialect
 
         code0.parse[Source] match {
@@ -223,7 +216,6 @@ object Instrument {
             else Left(HasMainMethod)
           case e: Parsed.Error => Left(ParsingError(e))
         }
-      }
       case None => Left(UnsupportedDialect)
     }
   }

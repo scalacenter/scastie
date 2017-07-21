@@ -20,7 +20,7 @@ class Sbt(defaultConfig: Inputs) {
   private var currentSbtConfig = ""
   private var currentSbtPluginsConfig = ""
 
-  val sbtDir = Files.createTempDirectory("scastie")
+  val sbtDir: Path = Files.createTempDirectory("scastie")
   private val buildFile = sbtDir.resolve("build.sbt")
   private val prompt = s"""shellPrompt := (_ => "$uniqueId\\n")"""
 
@@ -36,7 +36,7 @@ class Sbt(defaultConfig: Inputs) {
     setPlugins(defaultConfig)
   }
 
-  val codeFile = sbtDir.resolve("src/main/scala/main.scala")
+  private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
   Files.createDirectories(codeFile.getParent)
 
   def scalaJsContent(): Option[String] = {
@@ -127,11 +127,10 @@ class Sbt(defaultConfig: Inputs) {
       fin.flush()
       collect(lineCallback, reload)
     } catch {
-      case e: IOException => {
+      case e: IOException =>
         // when the snippet is pkilled (timeout) the sbt output stream is closed
         if (e.getMessage == "Stream closed") true
         else throw e
-      }
     }
 
   }

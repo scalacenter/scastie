@@ -29,18 +29,16 @@ class FormatActor() extends Actor {
 
     Scalafmt.format(code, style = config) match {
       case Formatted.Success(formattedCode) => Right(formattedCode)
-      case Formatted.Failure(failure) => {
+      case Formatted.Failure(failure) =>
         val errors = new StringWriter()
         failure.printStackTrace(new PrintWriter(errors))
-        val fullStack = errors.toString()
+        val fullStack = errors.toString
         Left(fullStack)
-      }
     }
   }
 
-  def receive = {
-    case FormatRequest(code, worksheetMode, targetType) => {
+  override def receive: Receive = {
+    case FormatRequest(code, worksheetMode, targetType) =>
       sender ! FormatResponse(format(code, worksheetMode, targetType))
-    }
   }
 }

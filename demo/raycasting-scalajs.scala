@@ -90,7 +90,7 @@ object Vec{
   case class Unit(x: Double, y: Double, z: Double)
   implicit def normalizer(v: Vec): Unit = {
     val l = v.magnitude
-    new Unit(v.x / l, v.y / l, v.z / l)
+    Unit(v.x / l, v.y / l, v.z / l)
   }
   implicit def denormalizer(v: Vec.Unit): Vec = new Vec(v.x, v.y, v.z)
   implicit def pointify[X: Numeric, Y: Numeric, Z: Numeric](x: (X, Y, Z)): Vec = Vec(

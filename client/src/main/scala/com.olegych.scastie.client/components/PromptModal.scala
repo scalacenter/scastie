@@ -4,18 +4,18 @@ package components
 
 import japgolly.scalajs.react._, vdom.all._
 
-final case class PrompModal(modalText: String,
-                            isClosed: Boolean,
-                            close: Callback,
-                            actionText: String,
-                            actionLabel: String,
-                            action: Callback) {
+final case class PromptModal(modalText: String,
+                             isClosed: Boolean,
+                             close: Callback,
+                             actionText: String,
+                             actionLabel: String,
+                             action: Callback) {
 
-  @inline def render: VdomElement = PrompModal.component(this)
+  @inline def render: VdomElement = PromptModal.component(this)
 }
 
-object PrompModal {
-  private def render(props: PrompModal): VdomElement = {
+object PromptModal {
+  private def render(props: PromptModal): VdomElement = {
     Modal(
       props.modalText,
       props.isClosed,
@@ -44,7 +44,7 @@ object PrompModal {
 
   private val component =
     ScalaComponent
-      .builder[PrompModal]("PrompModal")
+      .builder[PromptModal]("PrompModal")
       .render_P(render)
       .build
 }

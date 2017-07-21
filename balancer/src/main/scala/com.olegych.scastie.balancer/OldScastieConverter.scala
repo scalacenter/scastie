@@ -48,7 +48,7 @@ object OldScastieConverter {
     if (blockStartPos != -1 && blockEndPos != -1 && blockEndPos > blockStartPos) {
       val start = blockStartPos + blockStart.length
 
-      val sbtConfig = content.drop(start).take(blockEndPos - start)
+      val sbtConfig = content.slice(start, start + blockEndPos - start)
       val code = content.drop(blockEndPos + blockEnd.length)
 
       val converter =

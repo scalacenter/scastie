@@ -10,9 +10,8 @@ import scala.meta.parsers.Parsed
 
 import upickle.default.{read => uread, write => uwrite, Reader}
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef}
 
-import scala.concurrent._
 import scala.concurrent.duration._
 import java.util.concurrent.{TimeoutException, Callable, FutureTask, TimeUnit}
 
@@ -128,14 +127,13 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
   }
 
-  def receive = {
-    case SbtWarmUp => {
+  override def receive: Receive = {
+    case SbtWarmUp =>
       log.info("Got SbtWarmUp")
       if (production) {
         sbt.warmUp()
       }
-    }
-    case CreateEnsimeConfigRequest => {
+    case CreateEnsimeConfigRequest =>
       log.info("Generating ensime config file")
       sbt.eval(
         "ensimeConfig",
@@ -146,13 +144,12 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         reload = false
       )
       sender() ! EnsimeConfigResponse(sbt.sbtDir)
-    }
 
-    case SbtTask(snippetId, inputs, ip, login, progressActor) => {
+    case SbtTask(snippetId, inputs, ip, login, progressActor) =>
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 
       SbtRunner.instrument(inputs) match {
-        case Right(inputs0) => {
+        case Right(inputs0) =>
           run(snippetId,
               inputs0,
               ip,
@@ -160,8 +157,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
               progressActor,
               sender,
               forcedProgramMode = false)
-        }
-        case Left(error) => {
+        case Left(error) =>
           def signalError(message: String, line: Option[Int]): Unit = {
             val progress =
               SnippetProgress.default
@@ -175,7 +171,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           }
 
           error match {
-            case HasMainMethod => {
+            case HasMainMethod =>
               run(snippetId,
                   inputs.copy(worksheetMode = false),
                   ip,
@@ -183,35 +179,30 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
                   progressActor,
                   sender,
                   forcedProgramMode = true)
-            }
             case UnsupportedDialect =>
               signalError(
                 "The worksheet mode does not support this Scala target",
                 None
               )
 
-            case ParsingError(Parsed.Error(pos, message, _)) => {
+            case ParsingError(Parsed.Error(pos, message, _)) =>
               val lineOffset = getLineOffset(worksheetMode = true)
 
               signalError(message, Some(pos.start.line + lineOffset))
-            }
-
           }
-        }
       }
-    }
   }
 
   private def withTimeout[T](
       timeout: Duration
   )(block: ⇒ T)(onTimeout: => T): T = {
-    val task = new FutureTask(new Callable[T]() { def call = block })
+    val task = new FutureTask(new Callable[T]() { def call: T = block })
     val thread = new Thread(task)
     try {
       thread.start()
       task.get(timeout.toMillis, TimeUnit.MILLISECONDS)
     } catch {
-      case e: TimeoutException ⇒ onTimeout
+      case _: TimeoutException ⇒ onTimeout
     } finally {
       if (thread.isAlive) thread.stop()
     }
@@ -315,10 +306,9 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
       uwrite(sourceMap0)
     } catch {
-      case e: Exception => {
+      case e: Exception =>
         e.printStackTrace()
         sourceMapRaw
-      }
     }
   }
 
@@ -340,7 +330,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private def extract[T: Reader](line: String,
                                  report: Boolean = false): Option[T] = {
     try { Some(uread[T](line)) } catch {
-      case NonFatal(e: scala.MatchError) => {
+      case NonFatal(e: scala.MatchError) =>
         if (report) {
           println("---")
           println(line)
@@ -350,7 +340,6 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         }
 
         None
-      }
       case NonFatal(_) => None
     }
   }

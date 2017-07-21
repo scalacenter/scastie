@@ -474,8 +474,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
         }
         case Some(embededOptions) => {
           embededOptions match {
-            case EmbededOptions(Some(snippetId), _) => loadSnippet(snippetId)
-            case EmbededOptions(_, Some(inputs)) =>
+            case EmbeddedOptions(Some(snippetId), _) => loadSnippet(snippetId)
+            case EmbeddedOptions(_, Some(inputs)) =>
               scope.modState(_.setInputs(inputs))
             case _ => Callback.empty
           }
@@ -537,7 +537,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
                 case Some(response) =>
                   scope.modState(_.setCompletions(response.completions))
                 case _ =>
-                  Callback()
+                  Callback.empty
               }
           )
           .when_(state.inputs.isEnsimeEnabled)
@@ -568,7 +568,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
                     )
                   )
                 case _ =>
-                  Callback()
+                  Callback.empty
               }
           )
           .when_(state.inputs.isEnsimeEnabled)
@@ -577,6 +577,6 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   }
 
   def clearCompletions(): Callback = {
-    scope.modState(_.setCompletions(List()))
+    scope.modState(_.setCompletions(List.empty))
   }
 }

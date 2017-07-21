@@ -1,11 +1,18 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
-import api._
-import japgolly.scalajs.react._, vdom.all._, extra.router._
+import com.olegych.scastie.api._
+import com.olegych.scastie.client.{
+  EmbeddedOptions,
+  LocalStorage,
+  Page,
+  ScastieBackend,
+  ScastieState,
+  View
+}
+import japgolly.scalajs.react._
+import vdom.all._
+import extra.router._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
-
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
 
@@ -14,7 +21,7 @@ import scalajs.js.timers
 final case class Scastie(router: Option[RouterCtl[Page]],
                          snippetId: Option[SnippetId],
                          oldSnippetId: Option[Int],
-                         embedded: Option[EmbededOptions],
+                         embedded: Option[EmbeddedOptions],
                          targetType: Option[ScalaTargetType]) {
 
   @inline def render = Scastie.component(this)
@@ -91,7 +98,7 @@ object Scastie {
         }
       }
       .backend(new ScastieBackend(_))
-      .renderPS(render _)
+      .renderPS(render)
       .componentWillMount { current =>
         current.backend.start(current.props) >>
           setTitle(current.state) >>

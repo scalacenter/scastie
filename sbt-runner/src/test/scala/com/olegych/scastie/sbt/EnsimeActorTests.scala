@@ -1,12 +1,9 @@
-package com.olegych.scastie
-
-package sbt
-
-import api._
+package com.olegych.scastie.sbt
 
 import akka.actor.ActorSystem
-import akka.testkit.{TestKit, ImplicitSender, TestProbe, TestActorRef}
-import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import com.olegych.scastie.api._
+import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
 
@@ -30,7 +27,7 @@ class EnsimeActorTests()
     )
 
     probe.fishForMessage(30.seconds) {
-      case EnsimeTaskResponse(Some(CompletionResponse(completions)), taskId0) => {
+      case EnsimeTaskResponse(Some(CompletionResponse(completions)), taskId0) =>
         assert(taskId0 == taskId)
         assert(
           completions.exists(
@@ -40,7 +37,6 @@ class EnsimeActorTests()
           )
         )
         true
-      }
     }
   }
 

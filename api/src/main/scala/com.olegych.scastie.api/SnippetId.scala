@@ -16,7 +16,7 @@ object User {
   )
 }
 case class User(login: String, name: Option[String], avatar_url: String) {
-  def isAdmin = User.admins.contains(login)
+  def isAdmin: Boolean = User.admins.contains(login)
 }
 
 case class SnippetUserPart(login: String, update: Option[Int])
@@ -30,7 +30,7 @@ case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
     }
   }
 
-  override def toString(): String = url
+  override def toString: String = url
 
   def url: String = {
     this match {

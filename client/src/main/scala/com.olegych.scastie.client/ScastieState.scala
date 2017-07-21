@@ -416,8 +416,8 @@ case class ScastieState(
   def addProgress(progress: SnippetProgress): ScastieState = {
     val state =
       addOutputs(progress.compilationInfos, progress.instrumentations)
-        .logOutput(progress.userOutput, ConsoleOutput.UserOutput(_))
-        .logOutput(progress.sbtOutput, ConsoleOutput.SbtOutput(_))
+        .logOutput(progress.userOutput, ConsoleOutput.UserOutput)
+        .logOutput(progress.sbtOutput, ConsoleOutput.SbtOutput)
         .setForcedProgramMode(progress.forcedProgramMode)
         .setLoadScalaJsScript(loadScalaJsScript | progress.done)
         .setRuntimeError(progress.runtimeError)

@@ -110,11 +110,11 @@ object Editor {
   }
 
   private[Editor] case class Line(lw: LineWidget) extends Annotation {
-    def clear() = lw.clear()
+    def clear(): Unit = lw.clear()
   }
 
   private[Editor] case class Marked(tm: TextMarker) extends Annotation {
-    def clear() = tm.clear()
+    def clear(): Unit = tm.clear()
   }
 
   /**
@@ -396,7 +396,7 @@ object Editor {
         val applyDeltas =
           scope.state.flatMap(
             state =>
-              runDelta(editor, (f => scope.modState(f)), state, None, props)
+              runDelta(editor, f => scope.modState(f), state, None, props)
           )
 
         setEditor >> applyDeltas
@@ -496,23 +496,19 @@ object Editor {
           val doc2 = editor2.getDoc()
           val lineNumber = startPos.line
           doc2.getLine(lineNumber).toOption match {
-            case Some(line) => {
-
+            case Some(line) =>
               val basePos = new CMPosition { line = lineNumber; ch = 0 }
               val offsetPos = new CMPosition {
-                line = lineNumber;
+                line = lineNumber
                 ch = doc2.getLine(lineNumber).map(_.length).getOrElse(0)
               }
               val mode = "local"
               val base = editor2.cursorCoords(basePos, mode)
               val offset = editor2.cursorCoords(offsetPos, mode)
               node.style.left = (offset.left - base.left) + "px"
-
-            }
-            case _ => {
+            case _ =>
               // the line was deleted
               node.innerHTML = null
-            }
           }
         }
         updateLeft(editor)
@@ -526,8 +522,7 @@ object Editor {
 
       setAnnotations[api.Instrumentation](
         _.instrumentations, {
-          case instrumentation @ Instrumentation(api.Position(start, end),
-                                                 Value(value, tpe)) => {
+          case Instrumentation(api.Position(start, end), Value(value, tpe)) =>
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)
 
@@ -538,9 +533,8 @@ object Editor {
             }
             if (value.contains(nl)) nextline(endPos, value, process)
             else inline(startPos, value, process)
-          }
-          case instrumentation @ Instrumentation(api.Position(start, end),
-                                                 Html(content, folded)) => {
+          case Instrumentation(api.Position(start, end),
+                               Html(content, folded)) => {
 
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)
@@ -558,13 +552,13 @@ object Editor {
             val endPos = doc.posFromIndex(end)
 
             val domNode =
-              next.attachedDoms.get(uuid).getOrElse {
+              next.attachedDoms.getOrElse(uuid, {
                 val node = dom.document
                   .createElement("pre")
                   .asInstanceOf[HTMLPreElement]
                 node.innerHTML = "cannot find dom element uuid: " + uuid
                 node
-              }
+              })
 
             val process: (HTMLElement => Unit) = element => {
               element.appendChild(domNode)
@@ -844,7 +838,7 @@ object Editor {
                        Some(current),
                        next)
           )
-          .getOrElse(Callback(()))
+          .getOrElse(Callback.empty)
 
       }
       .componentDidMount(_.backend.start())

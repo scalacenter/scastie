@@ -65,7 +65,7 @@ class EnsimeActor(system: ActorSystem,
 
   private var codeFile: Option[Path] = None
 
-  def handleRPCResponse(id: Int, payload: EnsimeServerMessage) = {
+  def handleRPCResponse(id: Int, payload: EnsimeServerMessage): Unit = {
     requests.get(id) match {
       case Some((ref, maybeTaskId)) =>
         requests -= id
@@ -79,7 +79,7 @@ class EnsimeActor(system: ActorSystem,
         }
 
         payload match {
-          case CompletionInfoList(prefix, completionList) =>
+          case CompletionInfoList(_, completionList) =>
             val response = CompletionResponse(
               completionList
                 .sortBy(-_.relevance)
@@ -103,7 +103,8 @@ class EnsimeActor(system: ActorSystem,
             else
               reply(TypeAtPointResponse(symbolInfo.`type`.name))
 
-          case ci: ConnectionInfo =>
+          // used as keepalive
+          case _: ConnectionInfo =>
             ()
 
           case x =>
@@ -155,16 +156,14 @@ class EnsimeActor(system: ActorSystem,
     val messageSink: Sink[Message, NotUsed] =
       Flow[Message]
         .map {
-          case msg: TextMessage.Strict => {
+          case msg: TextMessage.Strict =>
             handleIncomingMessage(msg.text)
-          }
-          case msgStream: TextMessage.Streamed => {
+          case msgStream: TextMessage.Streamed =>
             msgStream.textStream.runFold("")(_ + _).onComplete {
               case Success(msg) => handleIncomingMessage(msg)
               case Failure(e) =>
                 log.info(s"Couldn't process incoming text stream. $e")
             }
-          }
           case _ =>
             log.info(
               "Got unsupported ws response message type from ensime-server"
@@ -200,7 +199,7 @@ class EnsimeActor(system: ActorSystem,
     )
   }
 
-  override def preStart() = {
+  override def preStart(): Unit = {
     log.info("Request ensime info from sbtRunner")
     assert(serverState == Initializing)
     serverState = CreatingConfig
@@ -224,11 +223,11 @@ class EnsimeActor(system: ActorSystem,
         scalaCompilerJars: List[String]
     )
 
-    object EsimeConfProtocol
+    object EnsimeConfProtocol
         extends DefaultSexpProtocol
         with OptionAltFormat
         with CamelCaseToDashes
-    import EsimeConfProtocol._
+    import EnsimeConfProtocol._
     import org.ensime.sexp._
 
     val parsedEnsimeConfig =
@@ -303,15 +302,14 @@ class EnsimeActor(system: ActorSystem,
     ()
   }
 
-  def receive = {
-    case EnsimeConfigResponse(sbtDir: Path) => {
+  override def receive: Receive = {
+    case EnsimeConfigResponse(sbtDir: Path) =>
       log.info("Got EnsimeConfigResponse")
       try {
         startEnsimeServer(sbtDir)
       } catch {
         case e: FileNotFoundException => log.error(e.getMessage)
       }
-    }
 
     case EnsimeTaskRequest(
         TypeAtPointRequest(EnsimeRequestInfo(inputs, position)),

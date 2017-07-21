@@ -112,7 +112,7 @@ object ScalaTarget {
 
   object Js {
     val targetFilename = "fastopt.js"
-    val sourceMapFilename = targetFilename + ".map"
+    val sourceMapFilename: String = targetFilename + ".map"
     val sourceFilename = "main.scala"
     val sourceUUID = "file:///tmp/LxvjvKARSa2U5ctNis9LIA"
 
@@ -166,7 +166,7 @@ object ScalaTarget {
   }
 
   case object Dotty extends ScalaTarget {
-    def default = this
+    def default: ScalaTarget = this
 
     def targetType = ScalaTargetType.Dotty
     def scaladexRequest = Map("target" -> "JVM", "scalaVersion" -> "2.11")

@@ -26,11 +26,10 @@ object RuntimeError {
         .find(
           trace =>
             if (fromScala)
-              trace.getFileName() == "main.scala" && trace
-                .getLineNumber() != -1
+              trace.getFileName == "main.scala" && trace.getLineNumber != -1
             else true
         )
-        .map(v ⇒ (e, Some(v.getLineNumber())))
+        .map(v ⇒ (e, Some(v.getLineNumber)))
     }
     def loop(e: Throwable): Option[(Throwable, Option[Int])] = {
       val s = search(e)

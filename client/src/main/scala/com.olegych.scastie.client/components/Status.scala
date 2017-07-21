@@ -15,7 +15,7 @@ final case class Status(state: StatusState,
 object Status {
   def render(props: Status): VdomElement = {
     props.state.runners match {
-      case Some(runners) if props.isAdmin => {
+      case Some(runners) if props.isAdmin =>
         ul(
           runners.zipWithIndex.map {
             case (runner, i) =>
@@ -26,25 +26,22 @@ object Status {
                 } else {
                   ul(
                     runner.tasks.zipWithIndex.map {
-                      case (SbtRunTaskId(snippetId), j) => {
+                      case (SbtRunTaskId(snippetId), j) =>
                         li(key := snippetId.toString)(
                           props.router.link(Page.fromSnippetId(snippetId))(
                             s"Task $j"
                           )
                         )
-                      }
-                      case (EnsimeTaskId(uuid), j) => {
+                      case (EnsimeTaskId(uuid), j) =>
                         li(key := uuid.toString)(
                           s"Ensime $j"
                         )
-                      }
                     }.toTagMod
                   )
                 }
               )
           }.toTagMod
         )
-      }
       case _ => div()
     }
 

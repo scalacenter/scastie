@@ -1,8 +1,8 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
-import japgolly.scalajs.react._, vdom.all._
+import com.olegych.scastie.client.{ScastieBackend, ScastieState, View}
+import japgolly.scalajs.react._
+import vdom.all._
 
 final case class MainPanel(state: ScastieState,
                            backend: ScastieBackend,
@@ -35,8 +35,7 @@ object MainPanel {
 
     val codeSnippets =
       (props.router, state.user) match {
-        case (Some(router), Some(user))
-            if (state.view == View.CodeSnippets) => {
+        case (Some(router), Some(user)) if state.view == View.CodeSnippets =>
           div(cls := "snippets-container inner-container")(
             CodeSnippets(
               view = state.view,
@@ -47,7 +46,6 @@ object MainPanel {
               openShareModal = backend.openShareModal
             ).render
           )
-        }
         case _ => EmptyVdom
       }
 
@@ -76,7 +74,7 @@ object MainPanel {
         completeCodeAt = backend.completeCodeAt,
         requestTypeAt = backend.typeAt,
         typeAtInfo = state.typeAtInfo,
-        clearCompletions = backend.clearCompletions
+        clearCompletions = backend.clearCompletions()
       ).render
 
     val console =
@@ -148,13 +146,12 @@ object MainPanel {
 
     val statusView =
       props.router match {
-        case Some(router) => {
+        case Some(router) =>
           Status(
             state = state.status,
             router = router,
-            isAdmin = state.user.map(_.isAdmin).getOrElse(false)
+            isAdmin = state.user.exists(_.isAdmin)
           ).render
-        }
         case _ => EmptyVdom
       }
 

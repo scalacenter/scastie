@@ -8,7 +8,7 @@ import js.UndefOr
 import api.{Inputs, SnippetId, SnippetUserPart}
 
 @ScalaJSDefined
-trait EmbededOptionsJs extends js.Object {
+trait EmbeddedOptionsJs extends js.Object {
   val base64UUID: UndefOr[String]
   val user: UndefOr[String]
   val update: UndefOr[Int]
@@ -19,12 +19,12 @@ trait EmbededOptionsJs extends js.Object {
   val sbtConfig: UndefOr[String]
 }
 
-object EmbededOptions {
-  def empty: EmbededOptions = EmbededOptions(None, None)
-  def fromJs(options: EmbededOptionsJs): EmbededOptions = {
+object EmbeddedOptions {
+  def empty: EmbeddedOptions = EmbeddedOptions(None, None)
+  def fromJs(options: EmbeddedOptionsJs): EmbeddedOptions = {
     import options._
 
-    EmbededOptions(
+    EmbeddedOptions(
       inputs = code.toOption.map(c => Inputs.default.copy(code = c)),
       snippetId = base64UUID.toOption.map(
         uuid =>
@@ -36,9 +36,9 @@ object EmbededOptions {
   }
 }
 
-case class EmbededOptions(snippetId: Option[SnippetId], inputs: Option[Inputs]) {
+case class EmbeddedOptions(snippetId: Option[SnippetId], inputs: Option[Inputs]) {
   def hasCode: Boolean = inputs.map(!_.code.isEmpty).getOrElse(false)
-  def setCode(code: String): EmbededOptions = {
+  def setCode(code: String): EmbeddedOptions = {
     val inputs0 = inputs.getOrElse(Inputs.default)
     copy(inputs = Some(inputs0.copy(code = code)))
   }
