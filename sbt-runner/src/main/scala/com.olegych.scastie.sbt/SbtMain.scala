@@ -42,7 +42,7 @@ object SbtMain {
           system = system,
           runTimeout = timeout,
           production = isProduction,
-          withEnsime = true,
+          withEnsime = false,
           readyRef = None
         )
       ),
