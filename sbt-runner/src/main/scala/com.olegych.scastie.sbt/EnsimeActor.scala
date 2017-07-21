@@ -30,7 +30,9 @@ case object Heartbeat
 case object CreateEnsimeConfigRequest
 case class EnsimeConfigResponse(sbtDir: Path)
 
-class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
+case object EnsimeReady
+
+class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef, readyRef: Option[ActorRef]) extends Actor {
   private sealed trait EnsimeServerState
   private case object Initializing extends EnsimeServerState
   private case object CreatingConfig extends EnsimeServerState
@@ -71,7 +73,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
 
         payload match {
           case CompletionInfoList(prefix, completionList) =>
-            val completions = CompletionResponse(
+            val response = CompletionResponse(
               completionList
                 .sortBy(-_.relevance)
                 .map(ci => {
@@ -82,8 +84,8 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
                   Completion(ci.name, typeInfo)
                 })
             )
-            log.debug(s"Got completions: $completions")
-            reply(completions)
+            log.debug(s"Got ${response.completions.size} completions")
+            reply(response)
 
           case symbolInfo: SymbolInfo =>
             log.info(s"Got symbol info: $symbolInfo")
@@ -265,6 +267,7 @@ class EnsimeActor(system: ActorSystem, sbtRunner: ActorRef) extends Actor {
     )
 
     log.info("EnsimeActor is ready!")
+    readyRef.foreach(_ ! EnsimeReady)
   }
 
   override def postStop(): Unit = {

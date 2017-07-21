@@ -148,7 +148,8 @@ class SbtActorTest()
       system = system,
       runTimeout = timeout,
       production = false,
-      withEnsime = false
+      withEnsime = false,
+      readyRef = None
     )
   )
   private var currentId = 0

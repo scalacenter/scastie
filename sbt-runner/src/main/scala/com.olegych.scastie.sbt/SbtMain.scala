@@ -42,7 +42,8 @@ object SbtMain {
           system = system,
           runTimeout = timeout,
           production = isProduction,
-          withEnsime = true
+          withEnsime = true,
+          readyRef = None
         )
       ),
       name = "SbtActor"

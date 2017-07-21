@@ -2,14 +2,15 @@ package com.olegych.scastie
 package sbt
 
 import api._
-import akka.actor.{Actor, ActorSystem, Props}
+import akka.actor.{Actor, ActorSystem, Props, ActorRef}
 
 import scala.concurrent.duration._
 
 class SbtActor(system: ActorSystem,
                runTimeout: FiniteDuration,
                production: Boolean,
-               withEnsime: Boolean)
+               withEnsime: Boolean,
+               readyRef: Option[ActorRef])
     extends Actor {
 
   val formatActor =
@@ -25,7 +26,7 @@ class SbtActor(system: ActorSystem,
     if (withEnsime) {
       Some(
         context.actorOf(
-          Props(new EnsimeActor(context.system, sbtRunner)),
+          Props(new EnsimeActor(context.system, sbtRunner, readyRef)),
           name = "EnsimeActor"
         )
       )
