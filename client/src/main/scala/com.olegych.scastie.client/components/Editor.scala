@@ -331,7 +331,7 @@ object Editor {
             }
           }
         )
-        */
+         */
 
         CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
           props.run.runNow()

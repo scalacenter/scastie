@@ -75,7 +75,8 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
     def timeout(duration: FiniteDuration): Boolean = {
       log.info(s"restarting sbt: $inputs")
-      progressActor !
+
+      val timeoutProgress =
         SnippetProgress.default
           .copy(
             snippetId = Some(snippetId),
@@ -89,6 +90,9 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
               )
             )
           )
+
+      progressActor ! timeoutProgress
+      snippetActor ! timeoutProgress
 
       sbt.kill()
       sbt = new Sbt(defaultConfig)
