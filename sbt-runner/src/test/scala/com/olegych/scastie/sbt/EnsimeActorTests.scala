@@ -92,7 +92,7 @@ class EnsimeActorTests()
     )
   )
 
-  readyProbe.fishForMessage(1.minute) {
+  readyProbe.fishForMessage(3.minute) {
     case EnsimeReady => true
   }
 
