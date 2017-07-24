@@ -130,6 +130,8 @@ class SbtActorTest()
       gotHelloMessage
     })
 
+  test("#258 instrumentation with variable t") {
+    run("val t = 1; t")(_.instrumentations.nonEmpty)
   }
 
   def assertCompilationInfo(
