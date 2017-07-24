@@ -121,6 +121,17 @@ class SbtActorTest()
     run(scalaJs)(_.done)
   }
 
+  test("Capture System.err #284") {
+    val message = "Failure"
+    run(s"""System.err.println("$message")""")(progress => {
+      // we should only receive an hello message
+      val gotHelloMessage = progress.userOutput == Some(message)
+      if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
+      gotHelloMessage
+    })
+
+  }
+
   def assertCompilationInfo(
       infoAssert: Problem => Any
   )(progress: SnippetProgress): Boolean = {
@@ -139,7 +150,7 @@ class SbtActorTest()
     TestKit.shutdownActorSystem(system)
   }
 
-  private val timeout = 20.seconds
+  private val timeout = 1.minute
   private val sbtActor = TestActorRef(
     new SbtActor(
       system = system,

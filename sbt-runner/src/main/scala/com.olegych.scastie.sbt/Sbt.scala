@@ -49,7 +49,11 @@ class Sbt(defaultConfig: Inputs) {
 
   private val (process, fin, fout) = {
     log.info("Starting sbt process")
-    val builder = new ProcessBuilder("sbt").directory(sbtDir.toFile)
+    val builder = 
+      new ProcessBuilder("sbt")
+        .directory(sbtDir.toFile)
+        .redirectErrorStream(true)
+
     builder
       .environment()
       .put(
@@ -67,6 +71,8 @@ class Sbt(defaultConfig: Inputs) {
     val in = new BufferedReader(
       new InputStreamReader(process.getInputStream, StandardCharsets.UTF_8)
     )
+
+    process.getOutputStream
 
     (process, process.getOutputStream, in)
   }
