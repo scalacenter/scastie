@@ -3,7 +3,7 @@ class Playground extends _root_.com.olegych.scastie.api.runtime.DomHook { privat
 import org.scalajs.dom
 import org.scalajs.dom.html.Canvas
 
-locally {val t = dom.document.createElement("canvas").asInstanceOf[Canvas]; instrumentationMap$(_root_.com.olegych.scastie.api.Position(59, 116)) = _root_.com.olegych.scastie.api.runtime.Runtime.render(t, attach _);t} 
+locally {val $t = dom.document.createElement("canvas").asInstanceOf[Canvas]; instrumentationMap$(_root_.com.olegych.scastie.api.Position(59, 116)) = _root_.com.olegych.scastie.api.runtime.Runtime.render($t, attach _);$t} 
 }
 @_root_.scala.scalajs.js.annotation.JSExportTopLevel("Main") class Main {
   val playground = _root_.com.olegych.scastie.api.RuntimeError.wrap(new Playground)

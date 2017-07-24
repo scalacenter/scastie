@@ -55,20 +55,20 @@ object Instrument {
 
     val treeQuote =
       tpeTree match {
-        case None      => s"val t = $term"
-        case Some(tpe) => s"val t: $tpe = $term"
+        case None      => s"val $$t = $term"
+        case Some(tpe) => s"val $$t: $tpe = $term"
       }
 
     val renderCall =
-      if (!isScalaJs) s"$runtimeT.render(t);"
-      else s"$runtimeT.render(t, attach _);"
+      if (!isScalaJs) s"$runtimeT.render($$t);"
+      else s"$runtimeT.render($$t, attach _);"
 
     val replacement =
       Seq(
         "locally {",
         treeQuote + "; ",
         s"$instrumentationMap(${posToApi(term.pos, offset)}) = $renderCall",
-        "t}"
+        "$t}"
       ).mkString("")
 
     Patch(term.tokens.head, term.tokens.last, replacement)
