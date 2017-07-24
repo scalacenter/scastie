@@ -29,6 +29,11 @@ object ServerMain {
       if (args.isEmpty) 9000
       else args.head.toInt
 
+    val config2 = ConfigFactory.load().getConfig("akka.remote.netty.tcp")
+    println("akka tcp config")
+    println(config2.getString("hostname"))
+    println(config2.getInt("port"))
+
     val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
     val production = config.getBoolean("production")
 
@@ -36,7 +41,7 @@ object ServerMain {
       writeRunningPid()
     }
 
-    implicit val system = ActorSystem("scastie")
+    implicit val system = ActorSystem("Web")
     import system.dispatcher
     implicit val materializer = ActorMaterializer()
 

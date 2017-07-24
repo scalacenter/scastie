@@ -15,10 +15,19 @@ object SbtMain {
   def main(args: Array[String]): Unit = {
     val logger = LoggerFactory.getLogger(getClass)
 
-    val system = ActorSystem("SbtRemote")
+    val system = ActorSystem("Runner")
 
-    val config = ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
-    val isProduction = config.getBoolean("production")
+    val config2 = ConfigFactory.load().getConfig("akka.remote.netty.tcp")
+    logger.info("akka tcp config")
+    logger.info("  '" + config2.getString("hostname") + "'")
+    logger.info("  " + config2.getInt("port"))
+
+    val config = ConfigFactory.load().getConfig("com.olegych.scastie")
+
+    val serverConfig = config.getConfig("web")
+    val sbtConfig = config.getConfig("sbt")
+
+    val isProduction = sbtConfig.getBoolean("production")
 
     if (isProduction) {
       val pid = writeRunningPid()
@@ -28,13 +37,22 @@ object SbtMain {
     val timeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(
-        config.getDuration("runTimeout", timeunit),
+        sbtConfig.getDuration("runTimeout", timeunit),
         timeunit
       )
     }
 
-    logger.info(s" timeout: $timeout")
-    logger.info(s" isProduction: $isProduction")
+    val reconnectInfo =
+      ReconnectInfo(
+        serverHostname = serverConfig.getString("hostname"),
+        serverAkkaPort = serverConfig.getInt("akka-port"),
+        runnerHostname = sbtConfig.getString("hostname"),
+        runnerAkkaPort = sbtConfig.getInt("akka-port")
+      )
+
+    logger.info("  timeout: {}", timeout)
+    logger.info("  isProduction: {}", isProduction)
+    logger.info("  port: {}", reconnectInfo.runnerAkkaPort)
 
     system.actorOf(
       Props(
@@ -43,7 +61,8 @@ object SbtMain {
           runTimeout = timeout,
           production = isProduction,
           withEnsime = false,
-          readyRef = None
+          readyRef = None,
+          reconnectInfo = Some(reconnectInfo)
         )
       ),
       name = "SbtActor"

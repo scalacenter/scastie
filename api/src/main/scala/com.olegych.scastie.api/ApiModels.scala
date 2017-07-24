@@ -23,6 +23,9 @@ case class EnsimeTaskId(id: UUID) extends TaskId {
 case object SbtPing
 case object SbtPong
 
+case class SbtRunnerConnect(hostname: String, port: Int)
+case object SbtRunnerConnected
+
 case class SnippetSummary(
     snippetId: SnippetId,
     summary: String,

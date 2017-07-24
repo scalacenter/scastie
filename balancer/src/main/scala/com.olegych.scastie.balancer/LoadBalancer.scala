@@ -104,10 +104,15 @@ case class LoadBalancer[C, S](
       case None =>
         val serversTaskIds =
           servers.flatMap(_.currentTaskId).mkString("[", ", ", "]")
+
         throw new Exception(
           s"""cannot find taskId: $taskId from servers task ids $serversTaskIds"""
         )
     }
+  }
+
+  def addServer(server: Server[C, S]): LoadBalancer[C, S] = {
+    copy(servers = server +: servers)
   }
 
   def removeServer(ref: S): LoadBalancer[C, S] = {
