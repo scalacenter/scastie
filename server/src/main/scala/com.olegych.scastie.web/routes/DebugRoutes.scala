@@ -1,6 +1,4 @@
-package com.olegych.scastie
-package web
-package routes
+package com.olegych.scastie.web.routes
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route

@@ -1,22 +1,19 @@
-package com.olegych.scastie
-package sbt
+package com.olegych.scastie.sbt
 
-import instrumentation._
-
-import api._
+import com.olegych.scastie.instrumentation._
+import com.olegych.scastie.api._
 import ScalaTargetType._
 
 import scala.meta.parsers.Parsed
-
-import upickle.default.{read => uread, write => uwrite, Reader}
-
+import upickle.default.{Reader, read => uread, write => uwrite}
 import akka.actor.{Actor, ActorRef}
 
 import scala.concurrent.duration._
-import java.util.concurrent.{TimeoutException, Callable, FutureTask, TimeUnit}
+import java.util.concurrent.{Callable, FutureTask, TimeUnit, TimeoutException}
+
+import com.olegych.scastie.SbtTask
 
 import scala.util.control.NonFatal
-
 import org.slf4j.LoggerFactory
 
 object SbtRunner {
@@ -26,8 +23,7 @@ object SbtRunner {
     if (inputs.worksheetMode &&
         inputs.target.targetType != ScalaTargetType.Dotty) {
 
-      instrumentation
-        .Instrument(inputs.code, inputs.target)
+      Instrument(inputs.code, inputs.target)
         .map(instrumented => inputs.copy(code = instrumented))
     } else Right(inputs)
   }
@@ -232,7 +228,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
         val problems = extractProblems(line, lineOffset)
         val instrumentations =
-          extract[List[api.Instrumentation]](line, report = true)
+          extract[List[Instrumentation]](line, report = true)
         val runtimeError = extractRuntimeError(line, lineOffset)
         val sbtOutput = extract[ConsoleOutput.SbtOutput](line)
 

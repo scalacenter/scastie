@@ -1,7 +1,7 @@
-package com.olegych.scastie
-package sbt
+package com.olegych.scastie.sbt
 
-import api._
+import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
+import com.olegych.scastie.api._
 
 import scala.util.Random
 import System.{lineSeparator => nl}
@@ -49,7 +49,7 @@ class Sbt(defaultConfig: Inputs) {
 
   private val (process, fin, fout) = {
     log.info("Starting sbt process")
-    val builder = 
+    val builder =
       new ProcessBuilder("sbt")
         .directory(sbtDir.toFile)
         .redirectErrorStream(true)

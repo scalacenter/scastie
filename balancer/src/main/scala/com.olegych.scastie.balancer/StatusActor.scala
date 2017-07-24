@@ -1,18 +1,16 @@
-package com.olegych.scastie
-package balancer
+package com.olegych.scastie.balancer
 
-import api._
+import com.olegych.scastie.api._
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, Props}
 import akka.stream.actor.ActorPublisher
 import akka.stream.scaladsl.Source
-import akka.stream.actor.ActorPublisherMessage.Request
 import java.util.concurrent.TimeUnit
 
 import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.collection.mutable.{Queue => MQueue}
 
 case object SubscribeStatus
+
 case class LoadBalancerUpdate(
     newBalancer: LoadBalancer[String, ActorSelection]
 )
@@ -20,14 +18,17 @@ case class LoadBalancerInfo(balancer: LoadBalancer[String, ActorSelection],
                             originalSender: ActorRef)
 case class SetDispatcher(dispatchActor: ActorRef)
 
-class StatusActor extends Actor with ActorLogging {
+object StatusActor {
+  def props: Props = Props(new StatusActor)
+}
+class StatusActor private () extends Actor with ActorLogging {
   private val publishers = mutable.Buffer.empty[ActorRef]
 
   var dispatchActor: Option[ActorRef] = _
 
   override def receive: Receive = {
     case SubscribeStatus =>
-      val publisher = context.actorOf(Props(new StatusForwarder()))
+      val publisher = context.actorOf(StatusForwarder.props)
       publishers += publisher
 
       val source =
@@ -60,30 +61,5 @@ class StatusActor extends Actor with ActorLogging {
         server => Runner(server.mailbox.map(_.taskId))
       )
     )
-  }
-}
-
-class StatusForwarder() extends Actor with ActorPublisher[StatusProgress] {
-  private val buffer = MQueue.empty[StatusProgress]
-  val maxSize = 10
-
-  override def receive: Receive = {
-    case progress: StatusProgress =>
-      if (buffer.size >= maxSize) {
-        buffer.dequeue()
-      }
-      buffer.enqueue(progress)
-      deliver()
-    case _: Request =>
-      deliver()
-  }
-
-  private def deliver(): Unit = {
-    if (totalDemand > 0) {
-      buffer.foreach { progress =>
-        onNext(progress)
-      }
-      buffer.clear()
-    }
   }
 }

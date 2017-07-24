@@ -1,10 +1,14 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 
-import api.SnippetId
+import com.olegych.scastie.api.SnippetId
 
 object ModalState {
-  def allClosed = ModalState(true, true, None, true, true)
+  def allClosed =
+    ModalState(isWelcomeModalClosed = true,
+               isHelpModalClosed = true,
+               None,
+               isResetModalClosed = true,
+               isNewSnippetModalClosed = true)
 
   def default = ModalState(
     isHelpModalClosed = true,

@@ -3,24 +3,21 @@ package web
 package routes
 
 import oauth2._
-
-import com.softwaremill.session._
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import com.softwaremill.session.CsrfDirectives._
 import com.softwaremill.session.CsrfOptions._
-
-import akka.http.scaladsl._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.StatusCodes.TemporaryRedirect
 import akka.http.scaladsl.model.headers.Referer
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 
 class OAuth2Routes(github: Github, session: GithubUserSession) {
   import session._
 
-  val routes =
+  val routes: Route =
     get(
       concat(
         path("login") {

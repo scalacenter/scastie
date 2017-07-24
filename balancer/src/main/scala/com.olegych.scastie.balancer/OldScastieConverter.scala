@@ -1,7 +1,6 @@
-package com.olegych.scastie
-package balancer
+package com.olegych.scastie.balancer
 
-import api._
+import com.olegych.scastie.api._
 
 import System.{lineSeparator => nl}
 
@@ -51,13 +50,13 @@ object OldScastieConverter {
       val sbtConfig = content.slice(start, start + blockEndPos - start)
       val code = content.drop(blockEndPos + blockEnd.length)
 
-      val converter =
+      val converterFn =
         sbtConfig.split(nl).foldLeft(Converter.nil) {
           case (converter, line) =>
             convertLine(line)(converter)
         }
 
-      converter(Inputs.default).copy(code = code.trim)
+      converterFn(Inputs.default).copy(code = code.trim)
     } else {
       Inputs.default.copy(code = content.trim)
     }

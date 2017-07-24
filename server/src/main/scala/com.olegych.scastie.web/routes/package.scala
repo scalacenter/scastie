@@ -1,5 +1,4 @@
-package com.olegych.scastie
-package web
+package com.olegych.scastie.web
 
 import scala.io.Source
 import System.{lineSeparator => nl}
@@ -20,7 +19,7 @@ package object routes {
   private def html(content: String) =
     HttpResponse(entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, content))
 
-  def serveStatic(content: Option[String]) = {
+  def serveStatic(content: Option[String]): HttpResponse = {
     content match {
       case Some(c) => html(c)
       case None    => HttpResponse(status = NotFound)

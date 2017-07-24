@@ -46,7 +46,7 @@ class SbtActorTest()
         if (gotRuntimeError) {
           val error = progress.runtimeError.get
           assert(error.message == "java.lang.ArithmeticException: / by zero")
-          assert(error.line == Some(1))
+          assert(error.line.contains(1))
           assert(error.fullStack.nonEmpty)
         }
         gotRuntimeError
@@ -58,7 +58,7 @@ class SbtActorTest()
     val message = "Hello"
     run(s"""println("$message")""")(progress => {
       // we should only receive an hello message
-      val gotHelloMessage = progress.userOutput == Some(message)
+      val gotHelloMessage = progress.userOutput.contains(message)
       if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
       gotHelloMessage
     })
@@ -71,7 +71,7 @@ class SbtActorTest()
     ) { progress =>
       assert(progress.forcedProgramMode)
 
-      val gotHelloMessage = progress.userOutput == Some(message)
+      val gotHelloMessage = progress.userOutput.contains(message)
       if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
 
       gotHelloMessage
@@ -89,7 +89,7 @@ class SbtActorTest()
   test("report parsing error") {
     run("{")(assertCompilationInfo { info =>
       assert(info.message == "} expected but end of file found")
-      assert(info.line == Some(1))
+      assert(info.line.contains(1))
     })
   }
 
@@ -109,7 +109,7 @@ class SbtActorTest()
 
   test("Encoding issues #100") {
     run("""println("€")""") { progress =>
-      val gotHelloMessage = progress.userOutput == Some("€")
+      val gotHelloMessage = progress.userOutput.contains("€")
       if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
       gotHelloMessage
     }
@@ -129,6 +129,7 @@ class SbtActorTest()
       if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
       gotHelloMessage
     })
+  }
 
   test("#258 instrumentation with variable t") {
     run("val t = 1; t")(_.instrumentations.nonEmpty)

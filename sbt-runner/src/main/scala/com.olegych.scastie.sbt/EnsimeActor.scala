@@ -1,6 +1,6 @@
-package com.olegych.scastie
-package sbt
+package com.olegych.scastie.sbt
 
+import com.olegych.scastie.util.ScastieFileUtil.slurp
 import com.olegych.scastie.api._
 import org.ensime.api._
 import org.ensime.jerky.JerkyFormats._

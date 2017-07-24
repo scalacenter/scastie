@@ -79,7 +79,7 @@ object EditorTopBar {
 
     val downloadButton =
       props.snippetId match {
-        case Some(sid) if props.isSnippetSaved => 
+        case Some(sid) if props.isSnippetSaved =>
           DownloadButton(snippetId = sid).render
 
         case _ =>

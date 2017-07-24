@@ -559,7 +559,7 @@ object Editor {
 
             val domNode = next.attachedDoms.get(uuid)
 
-            if(!domNode.isEmpty) {
+            if (!domNode.isEmpty) {
               val process: (HTMLElement => Unit) = element => {
                 domNode.foreach(element.appendChild)
                 ()

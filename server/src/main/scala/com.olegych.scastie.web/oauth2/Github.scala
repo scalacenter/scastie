@@ -1,8 +1,4 @@
-package com.olegych.scastie
-package web
-package oauth2
-
-import api.User
+package com.olegych.scastie.web.oauth2
 
 import akka.http.scaladsl._
 import akka.http.scaladsl.model._
@@ -10,12 +6,11 @@ import HttpMethods.POST
 import headers._
 import Uri._
 import unmarshalling.Unmarshal
-
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.olegych.scastie.api.User
 
 import scala.concurrent.Future
-
 import com.typesafe.config.ConfigFactory
 
 case class AccessToken(access_token: String)

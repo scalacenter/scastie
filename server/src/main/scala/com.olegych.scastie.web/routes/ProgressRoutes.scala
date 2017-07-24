@@ -1,11 +1,9 @@
-package com.olegych.scastie
-package web
-package routes
+package com.olegych.scastie.web.routes
 
 import SnippetIdDirectives._
 
-import api._
-import balancer._
+import com.olegych.scastie.api._
+import com.olegych.scastie.balancer._
 
 import de.heikoseeberger.akkasse.scaladsl.model.ServerSentEvent
 import de.heikoseeberger.akkasse.scaladsl.marshalling.EventStreamMarshalling._
@@ -15,7 +13,6 @@ import akka.NotUsed
 import akka.actor.ActorRef
 import akka.pattern.ask
 
-import akka.http.scaladsl._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.TextMessage._
 import akka.http.scaladsl.server.Directives._
@@ -27,7 +24,6 @@ import upickle.default.{write => uwrite, read => uread}
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.duration._
 
 class ProgressRoutes(progressActor: ActorRef) {
   implicit private val timeout = Timeout(1.seconds)

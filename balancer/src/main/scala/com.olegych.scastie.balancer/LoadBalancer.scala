@@ -1,12 +1,11 @@
 package com.olegych.scastie
 package balancer
 
-import api._
-import utils._
+import com.olegych.scastie.api._
+import com.olegych.scastie.balancer.utils.Histogram
 
+import scala.util.Random
 import scala.collection.immutable.Queue
-import util.Random
-
 import org.slf4j.LoggerFactory
 
 case class Ip(v: String)
@@ -180,7 +179,7 @@ case class LoadBalancer[C, S](
     val evals = xs.map(x => (x, f(x)))
     val min = evals.minBy(_._2)._2
     val ranking = evals.filter { case (_, e) => e == min }
-    ranking(util.Random.nextInt(ranking.size))._1
+    ranking(Random.nextInt(ranking.size))._1
   }
 
   // select one at random

@@ -1,10 +1,8 @@
-package com.olegych.scastie
-package web
-package routes
+package com.olegych.scastie.web.routes
 
-import api._
-import balancer._
-import oauth2.UserDirectives
+import com.olegych.scastie.api._
+import com.olegych.scastie.balancer._
+import com.olegych.scastie.web.oauth2.UserDirectives
 
 import de.heikoseeberger.akkasse.scaladsl.model.ServerSentEvent
 import de.heikoseeberger.akkasse.scaladsl.marshalling.EventStreamMarshalling._
@@ -14,7 +12,6 @@ import akka.NotUsed
 import akka.actor.ActorRef
 import akka.pattern.ask
 
-import akka.http.scaladsl._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
@@ -25,7 +22,6 @@ import upickle.default.{write => uwrite}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.duration._
 
 import scala.collection.immutable.Queue
 
@@ -35,7 +31,7 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
 
   val adminUser: Directive1[Boolean] =
     userDirectives.optionalLogin.map(
-      user => user.map(_.isAdmin).getOrElse(false)
+      user => user.exists(_.isAdmin)
     )
 
   def hideTask(isAdmin: Boolean, progress: StatusProgress): StatusProgress =

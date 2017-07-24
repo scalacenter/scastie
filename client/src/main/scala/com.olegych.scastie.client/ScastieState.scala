@@ -1,7 +1,6 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 
-import api._
+import com.olegych.scastie.api._
 
 import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
 
@@ -164,7 +163,7 @@ case class ScastieState(
     state0
   }
 
-  def isBuildDefault = inputs.isDefault
+  def isBuildDefault: Boolean = inputs.isDefault
 
   def isClearable: Boolean =
     outputs.isClearable
@@ -458,7 +457,7 @@ case class ScastieState(
     ).setSnippetSaved(false)
   }
 
-  private def info(message: String) = Problem(api.Info, None, message)
+  private def info(message: String) = Problem(Info, None, message)
 
   def setForcedProgramMode(forcedProgramMode: Boolean): ScastieState = {
     if (!forcedProgramMode) this
@@ -478,11 +477,11 @@ case class ScastieState(
     copy(snippetState = snippetState.copy(loadScalaJsScript = value))
   }
 
-  def addOutputs(compilationInfos: List[api.Problem],
-                 instrumentations: List[api.Instrumentation]): ScastieState = {
+  def addOutputs(compilationInfos: List[Problem],
+                 instrumentations: List[Instrumentation]): ScastieState = {
 
-    def topDef(problem: api.Problem): Boolean = {
-      problem.severity == api.Error &&
+    def topDef(problem: Problem): Boolean = {
+      problem.severity == Error &&
       problem.message == "expected class or object definition"
     }
 

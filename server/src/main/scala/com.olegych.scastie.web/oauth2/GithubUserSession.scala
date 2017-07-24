@@ -1,23 +1,18 @@
-package com.olegych.scastie
-package web
-package oauth2
-
-import api.User
+package com.olegych.scastie.web.oauth2
 
 import com.softwaremill.session._
 import com.typesafe.config.ConfigFactory
-
-import upickle.default.{ReadWriter, write => uwrite, read => uread}
+import upickle.default.{ReadWriter, read => uread, write => uwrite}
 
 import scala.collection.parallel.mutable.ParTrieMap
 import scala.concurrent.ExecutionContext
-
 import com.typesafe.scalalogging.Logger
 
 import scala.util.Try
 import java.util.UUID
 import java.nio.file._
-// import util.Properties
+
+import com.olegych.scastie.api.User
 
 import scala.collection.JavaConverters._
 

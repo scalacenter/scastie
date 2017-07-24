@@ -3,6 +3,7 @@ package instrumentation
 
 import java.nio.file._
 
+import com.olegych.scastie.util.ScastieFileUtil.slurp
 import com.olegych.scastie.api.ScalaTarget
 import org.scalatest.FunSuite
 
