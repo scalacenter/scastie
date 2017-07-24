@@ -25,6 +25,8 @@ import org.scalajs.dom.raw.{
   HTMLTextAreaElement
 }
 
+import org.scalajs.dom.console
+
 import scala.scalajs._
 
 final case class Editor(isDarkTheme: Boolean,
@@ -115,6 +117,10 @@ object Editor {
 
   private[Editor] case class Marked(tm: TextMarker) extends Annotation {
     def clear(): Unit = tm.clear()
+  }
+
+  private[Editor] case object Empty extends Annotation {
+    def clear(): Unit = ()
   }
 
   /**
@@ -551,22 +557,21 @@ object Editor {
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)
 
-            val domNode =
-              next.attachedDoms.getOrElse(uuid, {
-                val node = dom.document
-                  .createElement("pre")
-                  .asInstanceOf[HTMLPreElement]
-                node.innerHTML = "cannot find dom element uuid: " + uuid
-                node
-              })
+            val domNode = next.attachedDoms.get(uuid)
 
-            val process: (HTMLElement => Unit) = element => {
-              element.appendChild(domNode)
-              ()
+            if(!domNode.isEmpty) {
+              val process: (HTMLElement => Unit) = element => {
+                domNode.foreach(element.appendChild)
+                ()
+              }
+
+              if (!folded) nextline(endPos, "", process)
+              else fold(startPos, endPos, "", process)
+
+            } else {
+              console.log("cannot find dom element uuid: " + uuid)
+              Empty
             }
-
-            if (!folded) nextline(endPos, "", process)
-            else fold(startPos, endPos, "", process)
           }
         },
         _.renderAnnotations,

@@ -7,6 +7,7 @@ import api.{SnippetId, User}
 import japgolly.scalajs.react._, vdom.all._
 
 final case class SaveButton(isSnippetSaved: Boolean,
+                            inputsHasChanged: Boolean,
                             user: Option[User],
                             snippetId: Option[SnippetId],
                             amend: SnippetId => Callback,
@@ -20,7 +21,11 @@ object SaveButton {
   def render(props: SaveButton): VdomElement = {
     import View.ctrl
 
-    val disabledIfSaved = (cls := "disabled").when(props.isSnippetSaved)
+    val disabledIfSaved = 
+      (cls := "disabled").when(props.isSnippetSaved)
+
+    val disabledIfInputsHasNotChanged =
+      (cls := "disabled").when(!props.inputsHasChanged)
 
     def userFunctions(sid: SnippetId): TagMod =
       TagMod(
@@ -41,13 +46,13 @@ object SaveButton {
       ).when(sid.isOwnedBy(props.user))
 
     props.snippetId match {
-      case Some(sid) =>
+      case Some(sid) if props.isSnippetSaved =>
         li(
           ul(cls := "save-buttons")(
             userFunctions(sid),
             li(title := "Save as a new forked code snippet",
                cls := "btn",
-               disabledIfSaved,
+               disabledIfInputsHasNotChanged,
                onClick --> props.fork(sid))(
               i(cls := "fa fa-code-fork"),
               span("Fork")

@@ -5,6 +5,8 @@ import api._
 
 import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
 
+import scalajs.js.debugger
+
 import org.scalajs.dom.{EventSource, WebSocket}
 import org.scalajs.dom.raw.HTMLElement
 
@@ -122,10 +124,6 @@ case class ScastieState(
       if (inputsHasChanged) false
       else isScalaJsScriptLoaded
 
-    val isSnippetSaved0 =
-      if (inputsHasChanged) false
-      else isSnippetSaved
-
     val state0 =
       copy(
         view,
@@ -142,7 +140,7 @@ case class ScastieState(
         inputsHasChanged,
         SnippetState(
           snippetId,
-          isSnippetSaved0,
+          isSnippetSaved,
           loadSnippet,
           loadScalaJsScript,
           isScalaJsScriptLoaded0,
@@ -189,9 +187,10 @@ case class ScastieState(
   def setIsReRunningScalaJs(value: Boolean): ScastieState =
     copy(snippetState = snippetState.copy(isReRunningScalaJs = value))
 
-  def setSnippetSaved(value: Boolean): ScastieState =
+  def setSnippetSaved(value: Boolean): ScastieState = {
     copy(snippetState = snippetState.copy(isSnippetSaved = value),
          inputsHasChanged = false)
+  }
 
   def toggleTheme: ScastieState =
     copyAndSave(isDarkTheme = !isDarkTheme)

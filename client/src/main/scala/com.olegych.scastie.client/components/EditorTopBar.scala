@@ -68,6 +68,7 @@ object EditorTopBar {
 
     val saveButton = SaveButton(
       isSnippetSaved = props.isSnippetSaved,
+      inputsHasChanged = props.inputsHasChanged,
       user = props.user,
       snippetId = props.snippetId,
       amend = props.amend,
@@ -78,8 +79,11 @@ object EditorTopBar {
 
     val downloadButton =
       props.snippetId match {
-        case Some(sid) => DownloadButton(snippetId = sid).render
-        case None      => EmptyVdom
+        case Some(sid) if props.isSnippetSaved => 
+          DownloadButton(snippetId = sid).render
+
+        case _ =>
+          EmptyVdom
       }
 
     nav(cls := "editor-topbar", isDisabled)(
@@ -89,8 +93,8 @@ object EditorTopBar {
         formatButton,
         clearButton,
         worksheetButton.when(props.targetType != ScalaTargetType.Dotty),
-        saveButton,
-        downloadButton
+        downloadButton,
+        saveButton
       )
     )
   }
