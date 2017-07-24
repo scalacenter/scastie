@@ -146,7 +146,8 @@ class SbtActorTest()
       runTimeout = timeout,
       production = false,
       withEnsime = false,
-      readyRef = None
+      readyRef = None,
+      reconnectInfo = None
     )
   )
   private var currentId = 0

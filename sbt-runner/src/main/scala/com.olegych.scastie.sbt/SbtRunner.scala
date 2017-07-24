@@ -45,8 +45,12 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
   override def preStart(): Unit = {
     self ! SbtWarmUp
+    super.preStart()
   }
-  override def postStop(): Unit = sbt.exit()
+  override def postStop(): Unit = {
+    sbt.exit()
+    super.postStop()
+  }
 
   private def run(snippetId: SnippetId,
                   inputs: Inputs,

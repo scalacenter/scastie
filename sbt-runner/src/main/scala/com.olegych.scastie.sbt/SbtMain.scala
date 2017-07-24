@@ -17,8 +17,12 @@ object SbtMain {
 
     val system = ActorSystem("SbtRemote")
 
-    val config = ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
-    val isProduction = config.getBoolean("production")
+    val config = ConfigFactory.load().getConfig("com.olegych.scastie")
+
+    val serverConfig = config.getConfig("web")
+    val sbtConfig = config.getConfig("sbt")
+
+    val isProduction = sbtConfig.getBoolean("production")
 
     if (isProduction) {
       val pid = writeRunningPid()
@@ -28,13 +32,21 @@ object SbtMain {
     val timeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(
-        config.getDuration("runTimeout", timeunit),
+        sbtConfig.getDuration("runTimeout", timeunit),
         timeunit
       )
     }
 
     logger.info(s" timeout: $timeout")
     logger.info(s" isProduction: $isProduction")
+
+    val reconnectInfo =
+      ReconnectInfo(
+        serverHostname = serverConfig.getString("hostname"),
+        serverAkkaPort = serverConfig.getInt("akka-port"),
+        runnerHostname = sbtConfig.getString("hostname"),
+        runnerAkkaPort = sbtConfig.getInt("akka-port")
+      )
 
     system.actorOf(
       Props(
@@ -43,7 +55,8 @@ object SbtMain {
           runTimeout = timeout,
           production = isProduction,
           withEnsime = false,
-          readyRef = None
+          readyRef = None,
+          reconnectInfo = Some(reconnectInfo)
         )
       ),
       name = "SbtActor"

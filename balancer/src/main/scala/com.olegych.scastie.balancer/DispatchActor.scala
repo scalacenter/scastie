@@ -52,12 +52,19 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   private val ports = (0 until portsSize).map(portsStart + _)
 
-  private var remoteSelections = ports.map { port =>
-    val selection = context.actorSelection(
-      s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
-    )
+  def connectRunner(host: String)(port: Int): ((String, Int), ActorSelection) = {
+
+    val selection =
+      context.actorSelection(
+        s"akka.tcp://SbtRemote@$host:$port/user/SbtActor"
+      )
+
+    selection ! SbtRunnerConnected
+
     (host, port) -> selection
-  }.toMap
+  }
+
+  private var remoteSelections = ports.map(connectRunner(host)).toMap
 
   private var loadBalancer: LoadBalancer[String, ActorSelection] = {
     val servers = remoteSelections.to[Vector].map {
@@ -72,8 +79,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   import context._
 
-  system.scheduler.schedule(0.seconds, 1.seconds) {
-    implicit val timeout = Timeout(1.seconds)
+  system.scheduler.schedule(0.seconds, 5.seconds) {
+    implicit val timeout = Timeout(5.seconds)
     try {
       val res =
         Await.result(
@@ -86,9 +93,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     }
   }
 
-  override def preStart = {
+  override def preStart(): Unit = {
     context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
-    ()
+    super.preStart()
   }
 
   private val container = new SnippetsContainer(
@@ -102,8 +109,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private def updateBalancer(
       newBalancer: LoadBalancer[String, ActorSelection]
   ): Unit = {
+    if (loadBalancer != newBalancer) {
+      statusActor ! LoadBalancerUpdate(newBalancer)
+    }
     loadBalancer = newBalancer
-    statusActor ! LoadBalancerUpdate(newBalancer)
     ()
   }
 
@@ -174,6 +183,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       updateBalancer(loadBalancer.done(taskId))
     }
      */
+
+    case SbtPong => {
+      ()
+    }
 
     case format: FormatRequest => {
       val server = loadBalancer.getRandomServer
@@ -276,15 +289,31 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         port <- event.remoteAddress.port
         ref <- remoteSelections.get((host, port))
       } {
-        log.warning(event.toString)
-        log.warning("removing disconnected: " + ref)
+        log.warning("removing disconnected: {}", ref)
         remoteSelections = remoteSelections - ((host, port))
         updateBalancer(loadBalancer.removeServer(ref))
       }
     }
 
-    case ReceiveStatus(originalSender) =>
-      println(s" status Actor asks for status info")
+    case SbtRunnerConnect(runnerHostname, runnerAkkaPort) => {
+      if (!remoteSelections.contains((runnerHostname, runnerAkkaPort))) {
+        log.info("Connected Runner {}", runnerAkkaPort)
+
+        val sel = connectRunner(runnerHostname)(runnerAkkaPort)
+        val (_, ref) = sel
+
+        remoteSelections = remoteSelections + sel
+
+        updateBalancer(
+          loadBalancer.addServer(
+            Server(ref, Inputs.default.sbtConfig)
+          )
+        )
+      }
+    }
+
+    case ReceiveStatus(originalSender) => {
       sender ! LoadBalancerInfo(loadBalancer, originalSender)
+    }
   }
 }

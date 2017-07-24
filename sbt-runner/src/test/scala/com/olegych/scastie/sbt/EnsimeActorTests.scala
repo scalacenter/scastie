@@ -87,7 +87,8 @@ class EnsimeActorTests()
       runTimeout = 20.seconds,
       production = false,
       withEnsime = true,
-      readyRef = Some(readyProbe.ref)
+      readyRef = Some(readyProbe.ref),
+      reconnectInfo = None
     )
   )
 

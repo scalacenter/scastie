@@ -204,6 +204,7 @@ class EnsimeActor(system: ActorSystem,
     assert(serverState == Initializing)
     serverState = CreatingConfig
     sbtRunner ! CreateEnsimeConfigRequest
+    super.preStart()
   }
 
   private def startEnsimeServer(sbtDir: Path) = {
@@ -286,6 +287,7 @@ class EnsimeActor(system: ActorSystem,
       log.info("Killing Ensime server")
       ensimeProcess.get.destroy()
     }
+    super.postStop()
   }
 
   def streamLogger(inputStream: InputStream): Unit = {

@@ -204,9 +204,10 @@ class Deployment(rootFolder: File,
           |  docker run \\
           |    --network=host \\
           |    -d \\
-          |    -v /home/$userName/.coursier/cache:/drone/.coursier \\
           |    -e RUNNER_PRODUCTION=true \\
           |    -e RUNNER_PORT=$$i \\
+          |    -e SERVER_HOSTNAME=$serverHostname \\
+          |    -e SERVER_AKKA_PORT=$serverAkkaPort \\
           |    -e RUNNER_HOSTNAME=$runnersHostname \\
           |    -e SENTRY_DSN=$sentryDsn \\
           |    -e SENTRY_RELEASE=$version \\
@@ -271,7 +272,9 @@ class Deployment(rootFolder: File,
 
   val balancerConfig = config.getConfig("com.olegych.scastie.balancer")
 
-  private val serverHostname = config.getString("server-hostname")
+  private val serverConfig = config.getConfig("com.olegych.scastie.web")
+  private val serverHostname = serverConfig.getString("server-hostname")
+  private val serverAkkaPort = serverConfig.getInt("akka-port")
 
   private val runnersHostname = balancerConfig.getString("remote-hostname")
   private val runnersPortsStart = balancerConfig.getInt("remote-ports-start")

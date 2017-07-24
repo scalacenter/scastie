@@ -36,7 +36,7 @@ object ServerMain {
       writeRunningPid()
     }
 
-    implicit val system = ActorSystem("scastie")
+    implicit val system = ActorSystem("SbtRemote")
     import system.dispatcher
     implicit val materializer = ActorMaterializer()
 
