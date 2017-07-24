@@ -1,15 +1,12 @@
-package com.olegych.scastie
-package web
-package routes
+package com.olegych.scastie.web.routes
 
 import SnippetIdDirectives._
-import api._
+import com.olegych.scastie.api._
 
 import akka.util.Timeout
 
 import akka.pattern.ask
 import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 

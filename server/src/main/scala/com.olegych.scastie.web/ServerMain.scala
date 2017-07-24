@@ -1,21 +1,15 @@
-package com.olegych.scastie
-package web
+package com.olegych.scastie.web
 
-import routes._
-import oauth2._
-import balancer._
-
+import com.olegych.scastie.web.routes._
+import com.olegych.scastie.web.oauth2._
+import com.olegych.scastie.balancer._
 import akka.http.scaladsl._
-import server._
-
 import server.Directives._
-
 import com.typesafe.config.ConfigFactory
-
 import com.typesafe.scalalogging.Logger
-
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
+import com.olegych.scastie.util.ScastieFileUtil
 
 import scala.concurrent.duration._
 import scala.concurrent.Await
@@ -38,7 +32,7 @@ object ServerMain {
     val production = config.getBoolean("production")
 
     if (production) {
-      writeRunningPid()
+      ScastieFileUtil.writeRunningPid()
     }
 
     implicit val system = ActorSystem("Web")
@@ -57,7 +51,7 @@ object ServerMain {
 
     val statusActor =
       system.actorOf(
-        Props[StatusActor],
+        StatusActor.props,
         name = "StatusActor"
       )
 

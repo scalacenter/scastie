@@ -1,6 +1,4 @@
-package com.olegych.scastie
-package web
-package oauth2
+package com.olegych.scastie.web.oauth2
 
 /*
  * Copyright 2015 Heiko Seeberger

@@ -21,7 +21,7 @@ object SaveButton {
   def render(props: SaveButton): VdomElement = {
     import View.ctrl
 
-    val disabledIfSaved = 
+    val disabledIfSaved =
       (cls := "disabled").when(props.isSnippetSaved)
 
     val disabledIfInputsHasNotChanged =

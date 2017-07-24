@@ -1,12 +1,9 @@
-package com.olegych.scastie
-package web
-package routes
-
-import api._
+package com.olegych.scastie.web.routes
 
 import akka.http.scaladsl._
-import server.Directives._
-import server.{Route, PathMatcher}
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{PathMatcher, Route}
+import com.olegych.scastie.api._
 
 object SnippetIdDirectives {
   def snippetId(pathStart: String)(f: SnippetId => Route): Route =

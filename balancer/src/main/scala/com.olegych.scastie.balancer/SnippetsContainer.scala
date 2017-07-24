@@ -1,7 +1,7 @@
-package com.olegych.scastie
-package balancer
+package com.olegych.scastie.balancer
 
-import api._
+import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
+import com.olegych.scastie.api._
 import upickle.default.{read => uread, write => uwrite}
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -10,6 +10,7 @@ import FileVisitResult.CONTINUE
 import java.util.{Base64, UUID}
 import System.{lineSeparator => nl}
 
+import com.olegych.scastie.instrumentation.Instrument
 import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 
@@ -174,8 +175,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   def readScalaSource(snippetId: SnippetId): Option[FetchResultScalaSource] = {
     readSnippet(snippetId).flatMap(
       snippet =>
-        instrumentation
-          .Instrument(snippet.inputs.code, snippet.inputs.target) match {
+        Instrument(snippet.inputs.code, snippet.inputs.target) match {
           case Right(instrumented) =>
             Some(FetchResultScalaSource(instrumented))
           case _ => None

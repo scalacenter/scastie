@@ -6,7 +6,7 @@ import api._
 import scala.collection.immutable.Queue
 
 class LoadBalancerTest extends LoadBalancerTestUtils {
-  util.Random.setSeed(0)
+  scala.util.Random.setSeed(0)
 
   test("simple cache miss") {
     val balancer =

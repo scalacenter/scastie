@@ -1,8 +1,7 @@
-package com.olegych.scastie
-package balancer
+package com.olegych.scastie.balancer
 
-import api._
-import utils._
+import com.olegych.scastie.api._
+import com.olegych.scastie.balancer.utils._
 
 import org.scalatest.{FunSuite, Assertion}
 
@@ -34,7 +33,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
     assert(Multiset(xs) == Multiset(ys))
 
   private var serverId = 0
-  def server(config: String) = {
+  def server(config: String): Server[String, String] = {
     val t = Server("s" + serverId, config)
     serverId += 1
     t
@@ -45,7 +44,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   }
 
   private var currentIp = 0
-  def nextIp = {
+  def nextIp: Ip = {
     val t = Ip("ip" + currentIp)
     currentIp += 1
     t

@@ -1,9 +1,8 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 
 import components.Scastie
 
-import api._
+import com.olegych.scastie.api._
 import japgolly.scalajs.react._, vdom.all._, extra.StateSnapshot,
 component.Scala.BackendScope
 
@@ -326,20 +325,21 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   }
 
   def saveOrUpdate: Callback = {
-    scope.state.flatMap(state =>
-      scope.props.flatMap(props =>
-        props.snippetId match {
-          case Some(snippetId) => {
-            if(snippetId.isOwnedBy(state.user)) {
-              update(snippetId)
-            }
-            else {
-              fork(snippetId)
-            }
-          }
+    scope.state.flatMap(
+      state =>
+        scope.props.flatMap(
+          props =>
+            props.snippetId match {
+              case Some(snippetId) => {
+                if (snippetId.isOwnedBy(state.user)) {
+                  update(snippetId)
+                } else {
+                  fork(snippetId)
+                }
+              }
 
-          case None => save
-        }
+              case None => save
+          }
       )
     )
   }
@@ -362,29 +362,35 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     )
 
   def fork(snippetId: SnippetId): Callback =
-    scope.state.flatMap(state =>
-      Callback.future(
-        ApiClient[AutowireApi]
-          .fork(snippetId, state.inputs)
-          .call()
-          .map {
-            case Some(sId) => saveCallback(sId)
-            case None      => Callback(window.alert("Failed to fork"))
-          }
-      ).when_(state.isSnippetSaved)
+    scope.state.flatMap(
+      state =>
+        Callback
+          .future(
+            ApiClient[AutowireApi]
+              .fork(snippetId, state.inputs)
+              .call()
+              .map {
+                case Some(sId) => saveCallback(sId)
+                case None      => Callback(window.alert("Failed to fork"))
+              }
+          )
+          .when_(state.isSnippetSaved)
     )
 
   def update(snippetId: SnippetId): Callback =
-    scope.state.flatMap(state =>
-      Callback.future(
-        ApiClient[AutowireApi]
-          .update(snippetId, state.inputs)
-          .call()
-          .map {
-            case Some(sId) => saveCallback(sId)
-            case None      => Callback(window.alert("Failed to update"))
-          }
-      ).when_(state.isSnippetSaved)
+    scope.state.flatMap(
+      state =>
+        Callback
+          .future(
+            ApiClient[AutowireApi]
+              .update(snippetId, state.inputs)
+              .call()
+              .map {
+                case Some(sId) => saveCallback(sId)
+                case None      => Callback(window.alert("Failed to update"))
+              }
+          )
+          .when_(state.isSnippetSaved)
     )
 
   def loadOldSnippet(id: Int): Callback = {

@@ -1,7 +1,6 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 
-import api.{SnippetId, SnippetUserPart, ScalaTargetType}
+import com.olegych.scastie.api.{SnippetId, SnippetUserPart, ScalaTargetType}
 
 object Page {
   def fromSnippetId(snippetId: SnippetId): ResourcePage = {

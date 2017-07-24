@@ -134,7 +134,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     )
   }
 
-  def receive = {
+  def receive: Receive = {
     case EnsimeRequestEnvelop(request, UserTrace(ip, user)) => {
       log.info("id: {}, ip: {}, request: {}", ip, request)
 
@@ -194,30 +194,27 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       ()
     }
 
-    case RunSnippet(inputsWithIpAndUser) => {
+    case RunSnippet(inputsWithIpAndUser) =>
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val snippetId =
         container.create(inputs, user.map(u => UserLogin(u.login)))
       run(inputsWithIpAndUser, snippetId)
       sender ! snippetId
-    }
 
-    case SaveSnippet(inputsWithIpAndUser) => {
+    case SaveSnippet(inputsWithIpAndUser) =>
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val snippetId = container.save(inputs, user.map(u => UserLogin(u.login)))
       run(inputsWithIpAndUser, snippetId)
       sender ! snippetId
-    }
 
-    case AmendSnippet(snippetId, inputsWithIpAndUser) => {
+    case AmendSnippet(snippetId, inputsWithIpAndUser) =>
       val amendSuccess = container.amend(snippetId, inputsWithIpAndUser.inputs)
       if (amendSuccess) {
         run(inputsWithIpAndUser, snippetId)
       }
       sender ! amendSuccess
-    }
 
-    case UpdateSnippet(snippetId, inputsWithIpAndUser) => {
+    case UpdateSnippet(snippetId, inputsWithIpAndUser) =>
       val updatedSnippetId =
         container.update(snippetId, inputsWithIpAndUser.inputs)
 
@@ -226,64 +223,52 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       )
 
       sender ! updatedSnippetId
-    }
 
-    case ForkSnippet(snippetId, inputsWithIpAndUser) => {
+    case ForkSnippet(snippetId, inputsWithIpAndUser) =>
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
 
       container
         .fork(snippetId, inputs, user.map(u => UserLogin(u.login))) match {
-        case Some(forkedSnippetId) => {
+        case Some(forkedSnippetId) =>
           sender ! Some(forkedSnippetId)
           run(inputsWithIpAndUser, forkedSnippetId)
-        }
         case None => sender ! None
       }
-    }
 
-    case DeleteSnippet(snippetId) => {
+    case DeleteSnippet(snippetId) =>
       container.delete(snippetId)
       sender ! (())
-    }
 
-    case DownloadSnippet(snippetId) => {
+    case DownloadSnippet(snippetId) =>
       sender ! container.downloadSnippet(snippetId)
-    }
 
-    case FetchSnippet(snippetId) => {
+    case FetchSnippet(snippetId) =>
       sender ! container.readSnippet(snippetId)
-    }
 
-    case FetchOldSnippet(id) => {
+    case FetchOldSnippet(id) =>
       sender ! container.readOldSnippet(id)
-    }
 
-    case FetchUserSnippets(user) => {
+    case FetchUserSnippets(user) =>
       sender ! container.listSnippets(UserLogin(user.login))
-    }
 
-    case FetchScalaJs(snippetId) => {
+    case FetchScalaJs(snippetId) =>
       sender ! container.readScalaJs(snippetId)
-    }
 
-    case FetchScalaSource(snippetId) => {
+    case FetchScalaSource(snippetId) =>
       sender ! container.readScalaSource(snippetId)
-    }
 
-    case FetchScalaJsSourceMap(snippetId) => {
+    case FetchScalaJsSourceMap(snippetId) =>
       sender ! container.readScalaJsSourceMap(snippetId)
-    }
 
-    case progress: api.SnippetProgress => {
+    case progress: api.SnippetProgress =>
       if (progress.done) {
         progress.snippetId.foreach(
           sid => updateBalancer(loadBalancer.done(SbtRunTaskId(sid)))
         )
       }
       container.appendOutput(progress)
-    }
 
-    case event: DisassociatedEvent => {
+    case event: DisassociatedEvent =>
       for {
         host <- event.remoteAddress.host
         port <- event.remoteAddress.port
@@ -293,7 +278,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         remoteSelections = remoteSelections - ((host, port))
         updateBalancer(loadBalancer.removeServer(ref))
       }
-    }
 
     case SbtRunnerConnect(runnerHostname, runnerAkkaPort) => {
       if (!remoteSelections.contains((runnerHostname, runnerAkkaPort))) {

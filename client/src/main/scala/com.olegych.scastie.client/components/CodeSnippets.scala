@@ -1,11 +1,11 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
-import api._
+import com.olegych.scastie.api._
 import autowire._
-
-import japgolly.scalajs.react._, vdom.all._, extra.router._
+import com.olegych.scastie.client.{ApiClient, Page, View}
+import japgolly.scalajs.react._
+import vdom.all._
+import extra.router._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue

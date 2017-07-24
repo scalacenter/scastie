@@ -1,11 +1,17 @@
-package com.olegych.scastie
-package web
-package routes
+package com.olegych.scastie.web.routes
 
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 
 class FrontPageRoutes(production: Boolean) {
+
+  private val index =
+    complete(
+      serveStatic(
+        getResource("/public/views/index.html").map(substituteScalaJs)
+      )
+    )
+
   val routes: Route =
     get(
       concat(
@@ -32,11 +38,4 @@ class FrontPageRoutes(production: Boolean) {
         """<script src="/assets/client-opt.js"></script>"""
       )
   }
-
-  private val index =
-    complete(
-      serveStatic(
-        getResource("/public/views/index.html").map(substituteScalaJs)
-      )
-    )
 }

@@ -1,6 +1,6 @@
-package com.olegych.scastie
-package sbt
+package com.olegych.scastie.sbt
 
+import com.olegych.scastie.util.ScastieFileUtil.writeRunningPid
 import akka.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 

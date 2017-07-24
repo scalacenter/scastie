@@ -1,26 +1,25 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 
-import api.{SnippetId, SnippetUserPart, ScalaTargetType}
-import components._
+import com.olegych.scastie.api.{SnippetId, SnippetUserPart, ScalaTargetType}
+import com.olegych.scastie.client.components._
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._
 
 object Routing {
-  val config = RouterConfigDsl[Page].buildConfig { dsl =>
+  val config: RouterConfig[Page] = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
 
     val embedded = "embedded"
 
     val alpha = string("[a-zA-Z0-9-]*")
 
-    val targetType = ("?target=" ~ alpha.pmap(
+    val targetType = "?target=" ~ alpha.pmap(
       in => ScalaTargetType.parse(in.toUpperCase)
-    )(_.toString))
+    )(_.toString)
 
     val anon = alpha
-    val user = (alpha / alpha)
-    val userUpdate = (alpha / alpha / int)
+    val user = alpha / alpha
+    val userUpdate = alpha / alpha / int
     val oldId = int
 
     (
