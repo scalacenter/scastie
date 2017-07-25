@@ -1,5 +1,4 @@
-package com.olegych.scastie
-package sbtscastie
+package com.olegych.scastie.sbtScastie
 
 import sbt._
 

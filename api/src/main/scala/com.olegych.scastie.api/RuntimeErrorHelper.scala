@@ -1,21 +1,16 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
+
+import com.olegych.scastie.proto.RuntimeError
 
 import java.io.{PrintWriter, StringWriter}
 
-case class RuntimeError(
-    message: String,
-    line: Option[Int],
-    fullStack: String
-)
-
-object RuntimeError {
+object RuntimeErrorHelper {
   def wrap[T](in: => T): Either[Option[RuntimeError], T] = {
     try {
       Right(in)
     } catch {
       case ex: Exception =>
-        Left(RuntimeError.fromThrowable(ex, fromScala = false))
+        Left(fromThrowable(ex, fromScala = false))
     }
   }
 
@@ -43,9 +38,12 @@ object RuntimeError {
       case (err, line) ⇒
         val errors = new StringWriter()
         t.printStackTrace(new PrintWriter(errors))
-        val fullStack = errors.toString
 
-        RuntimeError(err.toString, line, fullStack)
+        RuntimeError(
+          message = err.toString,
+          line = line,
+          fullStack = errors.toString
+        )
     }
   }
 }

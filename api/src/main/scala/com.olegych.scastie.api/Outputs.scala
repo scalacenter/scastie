@@ -1,13 +1,7 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
 
-case class ReleaseOptions(groupId: String,
-                          versions: List[String],
-                          version: String)
+import com.olegych.scastie.proto.{Problem, RuntimeError}
 
-// case class MavenReference(groupId: String, artifactId: String, version: String)
-
-// outputs
 object Outputs {
   def default = Outputs(
     consoleOutputs = Vector(),
@@ -35,12 +29,6 @@ case class Outputs(
 }
 
 case class Position(start: Int, end: Int)
-
-case class CompilationInfo(
-    severity: Severity,
-    position: Position,
-    message: String
-)
 
 sealed trait ConsoleOutput {
   def show: String

@@ -76,7 +76,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       log.info(s"restarting sbt: $inputs")
 
       val timeoutProgress =
-        SnippetProgress.default
+        SnippetProgressHelper.default
           .copy(
             snippetId = Some(snippetId),
             timeout = true,
@@ -160,7 +160,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         case Left(error) =>
           def signalError(message: String, line: Option[Int]): Unit = {
             val progress =
-              SnippetProgress.default
+              SnippetProgressHelper.default
                 .copy(
                   snippetId = Some(snippetId),
                   compilationInfos = List(Problem(Error, line, message))
@@ -294,12 +294,12 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         sourceMap.copy(
           sources = sourceMap.sources.map(
             source =>
-              if (source.startsWith(ScalaTarget.Js.sourceUUID)) {
+              if (source.startsWith(ScalaTarget.ScalaJs.sourceUUID)) {
                 val host =
                   if (production) "https://scastie.scala-lang.org"
                   else "http://localhost:9000"
 
-                host + snippetId.scalaJsUrl(ScalaTarget.Js.sourceFilename)
+                host + snippetId.scalaJsUrl(ScalaTarget.ScalaJs.sourceFilename)
               } else source
           )
         )

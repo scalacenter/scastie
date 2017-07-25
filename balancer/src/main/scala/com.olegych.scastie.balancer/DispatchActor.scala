@@ -1,7 +1,9 @@
-package com.olegych.scastie
-package balancer
+package com.olegych.scastie.balancer
 
-import api._
+import com.olegych.scastie.balancer
+
+import com.olegych.scastie.proto.{User, SbtRunnerConnected, SbtPing}
+
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
 import akka.remote.DisassociatedEvent
 import akka.pattern.ask

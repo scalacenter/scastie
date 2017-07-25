@@ -27,8 +27,8 @@ class InstrumentSpecs extends FunSuite {
       val expected = slurp(path.resolve("instrumented.scala")).get
 
       val target =
-        if (dirName == "scalajs") ScalaTarget.Js.default
-        else ScalaTarget.Jvm.default
+        if (dirName == "scalajs") ScalaTarget.ScalaJs.default
+        else ScalaTarget.PlainScala.default
 
       val Right(obtained) = Instrument(original, target)
 
@@ -58,7 +58,7 @@ class InstrumentSpecs extends FunSuite {
 
   test("unsupported dialect") {
     val Left(UnsupportedDialect) =
-      Instrument("1", ScalaTarget.Jvm("2.13.0"))
+      Instrument("1", ScalaTarget.PlainScala("2.13.0"))
   }
 
   test("extends App primary fails") {

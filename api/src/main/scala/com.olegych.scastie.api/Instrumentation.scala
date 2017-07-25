@@ -1,5 +1,4 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
 
 case class Instrumentation(
     position: Position,

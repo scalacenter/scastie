@@ -2,8 +2,6 @@ package com.olegych.scastie.client
 
 import com.olegych.scastie.api._
 
-import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
-
 import scalajs.js.debugger
 
 import org.scalajs.dom.{EventSource, WebSocket}
@@ -40,24 +38,6 @@ object ScastieState {
     completions = List(),
     typeAtInfo = None
   )
-
-  implicit val dontSerializeAttachedDoms: ReadWriter[Map[String, HTMLElement]] =
-    dontSerializeMap[String, HTMLElement]
-
-  implicit val dontSerializeWebSocket: ReadWriter[Option[WebSocket]] =
-    dontSerializeOption[WebSocket]
-
-  implicit val dontSerializeEventSource: ReadWriter[Option[EventSource]] =
-    dontSerializeOption[EventSource]
-
-  implicit val dontSerializeCompletions: ReadWriter[List[Completion]] =
-    dontSerializeList[Completion]
-
-  implicit val dontSerializeTypeAtInfo: ReadWriter[Option[TypeInfoAt]] =
-    dontSerializeOption[TypeInfoAt]
-
-  implicit val pkl: ReadWriter[ScastieState] =
-    upickleMacroRW[ScastieState]
 }
 
 case class SnippetState(
@@ -73,9 +53,9 @@ case class SnippetState(
 case class ScastieState(
     view: View,
     isRunning: Boolean,
-    eventSource: Option[EventSource],
-    statusEventSource: Option[EventSource],
-    websocket: Option[WebSocket],
+    eventSource: Option[EventSource], // << NO
+    statusEventSource: Option[EventSource], // << NO
+    websocket: Option[WebSocket], // << NO
     modalState: ModalState,
     isDarkTheme: Boolean,
     isDesktopForced: Boolean,
@@ -85,12 +65,12 @@ case class ScastieState(
     inputsHasChanged: Boolean,
     snippetState: SnippetState,
     user: Option[User],
-    attachedDoms: AttachedDoms,
+    attachedDoms: AttachedDoms, // << NO
     inputs: Inputs,
     outputs: Outputs,
-    status: StatusState,
-    completions: List[Completion],
-    typeAtInfo: Option[TypeInfoAt]
+    status: StatusState, // << NO
+    completions: List[Completion], // << NO
+    typeAtInfo: Option[TypeInfoAt] // << NO
 ) {
 
   def snippetId: Option[SnippetId] = snippetState.snippetId

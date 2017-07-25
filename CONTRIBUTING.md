@@ -12,6 +12,7 @@ requirements:
 * sbt
 * docker (for deploying)
 * sass (http://sass-lang.com/install)
+* protoc
 
 ```
 sbt
@@ -55,23 +56,35 @@ You can install a pre-commit hook with `bin/hooks.sh`
 
 
 ```
-                                                                            +-------------------------------------------+
-                                                                           +-------------------------------------------+|
- Scala.js Client     run/save/format                                      +-------------------------------------------+||
-+-----------------+  AutowireApi      +---------------------+             |    SbtActor                Sbt(Proccess)  |||
-|  ScastieBackend |  (HTTP)           | +------------+      | akka+remote |   +----------+             +-----------+  |||
-|      +--------+ +-----------------> | |LoadBalancer| <--------------------> |          |  <----->    |sbt|scastie|  |||
-|      |        | |                   | +------------+      |             |   +----+-----+ I/O Stream  +-----------+  |||
-|      |        | |                   |                     |             |        ^                                  |||
-|      |        | |                   | SnippetContainer(DB)|             |        |                                  |||
-|      |        | |                   |                     |             |        v                                  |||
-|      |        | | <-----------------+ oauth               |             |   +----+-----+  <----->    +-----------+  |||
-|      +--------+ |  SnippetProgress  | static ressources   |             |   |          |   Jerky     |           |  |||
-+-----------------+  (sse/websocket)  +---------------------+             |   +----------+ (websocket) +-----------+  ||+
-                                                                          |    EnsimeActor               Ensime       |+
-                                                                          +-------------------------------------------+
+                                                                           +--------------------------------------------+
+                                                                          +--------------------------------------------+|
+                                                                         +--------------------------------------------+||
++-----------------+  AutowireApi      +---------------------+            |                                            |||
+| Client          |  [PB] (HTTP)      | Server              | [PB] (TCP) |   +-----------+  <----->    +-----------+  |||
+|                 +-----------------> |    +------------+ <----------------> | SbtActor  | [JSON-PB]   |   *sbt*   |  |||
+|                 |                   |    |LoadBalancer|   |            |   +----+------+   (I/O)     +-----------+  |||
+|                 | <-----------------+    +------------+   |            |        ^                     sbt-scastie   |||
+|                 |  StatusInfo       |                     |            |        |                                   |||
+|                 |  [PB] (SSE/WS)    |                     |            |        |                                   |||
+|                 |                   |                Oauth|            |        v                                   |||
+|       CodeMirror| <-----------------+    Static Ressources|            |   +----+------+  <----->    +-----------+  |||
+| LocalStorage[PB]|  SnippetProgress  | SnippetContainer[PB]|            |   |EnsimeActor|   Jerky     |  *ensime* |  |||
++-----------------+  [PB] (SSE/WS)    +---------------------+            |   +-----------+ [JSON](WS)  +-----------+  ||+
+                                                                         |                                            |+
+                                                                         +--------------------------------------------+
 
-Editor: http://asciiflow.com/
+Message
+  
+
+[Protocol]
+  PB: Protobuf
+
+(Transport)
+  I/O: Proccess OutputStream/InputStream
+
+*external process*
+
+http://asciiflow.com/
 ```
 
 # Let's talk

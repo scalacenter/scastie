@@ -1,7 +1,6 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
 
-import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
+import com.olegych.scastie.proto.ScalaTargetType
 
 sealed trait ScalaTarget {
   def targetType: ScalaTargetType
@@ -79,14 +78,17 @@ object ScalaTarget {
   private val defaultScalaVersion = "2.12.3"
   private val defaultScalaJsVersion = "0.6.18"
 
-  object Jvm {
-    def default = ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
+  object PlainScala {
+    def default = ScalaTarget.PlainScala(scalaVersion = defaultScalaVersion)
   }
 
-  case class Jvm(scalaVersion: String) extends ScalaTarget {
-    def targetType = ScalaTargetType.JVM
+  val default = PlainScala.default
+
+  case class PlainScala(scalaVersion: String) extends ScalaTarget {
+    def targetType = ScalaTargetType.PlainScala
     def scaladexRequest =
       Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
+
     def renderSbt(lib: ScalaDependency): String = {
       import lib._
       s""" "$groupId" %% "$artifact" % "$version" """
@@ -94,12 +96,12 @@ object ScalaTarget {
     override def toString: String = s"Scala $scalaVersion"
   }
 
-  object Typelevel {
-    def default = ScalaTarget.Typelevel(scalaVersion = defaultScalaVersion)
+  object TypelevelScala {
+    def default = ScalaTarget.TypelevelScala(scalaVersion = defaultScalaVersion)
   }
 
-  case class Typelevel(scalaVersion: String) extends ScalaTarget {
-    def targetType = ScalaTargetType.Typelevel
+  case class TypelevelScala(scalaVersion: String) extends ScalaTarget {
+    def targetType = ScalaTargetType.TypelevelScala
     def scaladexRequest =
       Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
     def renderSbt(lib: ScalaDependency): String = {
@@ -110,23 +112,23 @@ object ScalaTarget {
     override def toString: String = s"Typelevel $scalaVersion"
   }
 
-  object Js {
+  object ScalaJs {
     val targetFilename = "fastopt.js"
     val sourceMapFilename: String = targetFilename + ".map"
     val sourceFilename = "main.scala"
     val sourceUUID = "file:///tmp/LxvjvKARSa2U5ctNis9LIA"
 
     def default =
-      ScalaTarget.Js(
+      ScalaTarget.ScalaJs(
         scalaVersion = ScalaTarget.defaultScalaVersion,
         scalaJsVersion = ScalaTarget.defaultScalaJsVersion
       )
   }
 
-  case class Js(scalaVersion: String, scalaJsVersion: String)
+  case class ScalaJs(scalaVersion: String, scalaJsVersion: String)
       extends ScalaTarget {
 
-    def targetType = ScalaTargetType.JS
+    def targetType = ScalaTargetType.ScalaJs
     def scaladexRequest = Map(
       "target" -> "JS",
       "scalaVersion" -> scalaVersion,
@@ -140,17 +142,17 @@ object ScalaTarget {
     override def toString: String = s"Scala.Js $scalaVersion $scalaJsVersion"
   }
 
-  object Native {
+  object ScalaNative {
     def default =
-      ScalaTarget.Native(
+      ScalaTarget.ScalaNative(
         scalaVersion = "2.11.11",
         scalaNativeVersion = "0.2.1"
       )
   }
 
-  case class Native(scalaVersion: String, scalaNativeVersion: String)
+  case class ScalaNative(scalaVersion: String, scalaNativeVersion: String)
       extends ScalaTarget {
-    def targetType = ScalaTargetType.Native
+    def targetType = ScalaTargetType.ScalaNative
     def scaladexRequest = Map(
       "target" -> "NATIVE",
       "scalaVersion" -> scalaVersion,
@@ -165,8 +167,12 @@ object ScalaTarget {
       s"Scala.Js $scalaVersion $scalaNativeVersion"
   }
 
-  case object Dotty extends ScalaTarget {
-    def default: ScalaTarget = this
+  object Dotty {
+    def default: ScalaTarget =
+      Dotty("0.2.0-RC1")    
+  }
+
+  case class Dotty(dottyVersion: String) extends ScalaTarget {
 
     def targetType = ScalaTargetType.Dotty
     def scaladexRequest = Map("target" -> "JVM", "scalaVersion" -> "2.11")
@@ -177,6 +183,4 @@ object ScalaTarget {
 
     override def toString: String = "Dotty"
   }
-
-  implicit val pkl: ReadWriter[ScalaTarget] = upickleMacroRW[ScalaTarget]
 }

@@ -15,3 +15,14 @@ if [ ! -f $HERE/.scalafmt ]; then
 fi
 
 $HERE/.scalafmt "$@"
+
+# This is way faster !
+#
+# coursier bootstrap \
+#   --standalone com.geirsson:scalafmt-cli_2.12:1.1.0 \
+#   -o scalafmt_ng \
+#   -f --main com.martiansoftware.nailgun.NGServer
+# ./scalafmt_ng &
+# nix-env -i nailgun
+# ng ng-alias scalafmt org.scalafmt.cli.Cli
+# ng scalafmt --version # should be 1.1.0

@@ -1,8 +1,7 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
 
-import buildinfo.BuildInfo.{version => buildVersion}
-import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
+import com.olegych.scastie.proto.Project
+import com.olegych.scastie.buildinfo.BuildInfo
 
 import System.{lineSeparator => nl}
 
@@ -12,7 +11,7 @@ object Inputs {
   def default = Inputs(
     worksheetMode = true,
     code = defaultCode,
-    target = ScalaTarget.Jvm.default,
+    target = ScalaTarget.default,
     libraries = Set(),
     librariesFrom = Map(),
     sbtConfigExtra = """|scalacOptions ++= Seq(
@@ -25,8 +24,6 @@ object Inputs {
     showInUserProfile = false,
     forked = None
   )
-
-  implicit val pkl: ReadWriter[Inputs] = upickleMacroRW[Inputs]
 }
 
 case class Inputs(
@@ -94,26 +91,26 @@ case class Inputs(
   def sbtPluginsConfig: String = {
     val targetConfig =
       target match {
-        case ScalaTarget.Js(_, scalaJsVersion) =>
+        case ScalaTarget.ScalaJs(_, scalaJsVersion) =>
           s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
 
-        case ScalaTarget.Native(_, scalaNativeVersion) =>
+        case ScalaTarget.ScalaNative(_, scalaNativeVersion) =>
           s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
 
-        case ScalaTarget.Dotty =>
+        case ScalaTarget.Dotty(_) =>
           """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")"""
 
-        case _: ScalaTarget.Jvm =>
+        case _: ScalaTarget.PlainScala =>
           ""
 
-        case _: ScalaTarget.Typelevel =>
+        case _: ScalaTarget.TypelevelScala =>
           ""
       }
 
     s"""|$targetConfig
         |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
         |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
-        |addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
+        |addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.version}")
         |$sbtPluginsConfigExtra
         |""".stripMargin
 
@@ -122,7 +119,7 @@ case class Inputs(
   def sbtConfig: String = {
     val (targetConfig, targetDependency) =
       target match {
-        case ScalaTarget.Jvm(scalaVersion) =>
+        case ScalaTarget.PlainScala(scalaVersion) =>
           (
             s"""scalaVersion := "$scalaVersion"""",
             Some(
@@ -130,12 +127,12 @@ case class Inputs(
                 "org.scastie",
                 "runtime-scala",
                 target,
-                buildVersion
+                BuildInfo.version
               )
             )
           )
 
-        case ScalaTarget.Typelevel(scalaVersion) =>
+        case ScalaTarget.TypelevelScala(scalaVersion) =>
           (
             s"""|scalaVersion := "$scalaVersion"
                 |scalaOrganization in ThisBuild := "org.typelevel"""".stripMargin,
@@ -144,19 +141,20 @@ case class Inputs(
                 "org.scastie",
                 "runtime-scala",
                 target,
-                buildVersion
+                BuildInfo.version
               )
             )
           )
 
-        case ScalaTarget.Js(scalaVersion, _) =>
+        case ScalaTarget.ScalaJs(scalaVersion, _) =>
           (
             s"""|scalaVersion := "$scalaVersion"
                 |enablePlugins(ScalaJSPlugin)
-                |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "${ScalaTarget.Js.targetFilename}"
+                |artifactPath in (Compile, fastOptJS) := 
+                |  baseDirectory.value / "${ScalaTarget.ScalaJs.targetFilename}"
                 |scalacOptions += {
                 |  val from = (baseDirectory in LocalRootProject).value.toURI.toString
-                |  val to = "${ScalaTarget.Js.sourceUUID}/"
+                |  val to = "${ScalaTarget.ScalaJs.sourceUUID}/"
                 |  "-P:scalajs:mapSourceURI:" + from + "->" + to
                 |}
                 """.stripMargin,
@@ -165,16 +163,16 @@ case class Inputs(
                 "org.scastie",
                 "runtime-scala",
                 target,
-                buildVersion
+                BuildInfo.version
               )
             )
           )
-        case ScalaTarget.Dotty =>
+        case ScalaTarget.Dotty(dottyVersion) =>
           (
-            """scalaVersion := "0.2.0-RC1"""",
+            s"""scalaVersion := "$dottyVersion"""",
             None
           )
-        case ScalaTarget.Native(scalaVersion, _) =>
+        case ScalaTarget.ScalaNative(scalaVersion, _) =>
           (
             s"""scalaVersion := "$scalaVersion"""",
             Some(
@@ -182,7 +180,7 @@ case class Inputs(
                 "org.scastie",
                 "runtime-scala",
                 target,
-                buildVersion
+                BuildInfo.version
               )
             )
           )

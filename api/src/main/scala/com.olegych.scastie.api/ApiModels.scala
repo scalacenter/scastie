@@ -1,5 +1,6 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
+
+import com.olegych.scastie.proto.EnsimeResponse.CompletionItem
 
 import java.util.UUID
 
@@ -20,80 +21,29 @@ case class EnsimeTaskId(id: UUID) extends TaskId {
   def cost: Int = 3 // s
 }
 
-case object SbtPing
-case object SbtPong
-
-case class SbtRunnerConnect(hostname: String, port: Int)
-case object SbtRunnerConnected
-
-case class SnippetSummary(
-    snippetId: SnippetId,
-    summary: String,
-    time: Long
-)
-
-case class FormatRequest(
-    code: String,
-    worksheetMode: Boolean,
-    targetType: ScalaTargetType
-)
-case class FormatResponse(
-    formattedCode: Either[String, String]
-)
-
 sealed trait EnsimeRequest {
   def info: EnsimeRequestInfo
 }
+
 case class EnsimeRequestInfo(inputs: Inputs, offset: Int)
 case class CompletionRequest(info: EnsimeRequestInfo) extends EnsimeRequest
 case class TypeAtPointRequest(info: EnsimeRequestInfo) extends EnsimeRequest
 
 sealed trait EnsimeResponse
-case class CompletionResponse(completions: List[Completion])
-    extends EnsimeResponse
-case class TypeAtPointResponse(typeInfo: String) extends EnsimeResponse
+case class CompletionResponse(
+    completions: List[CompletionItem]
+) extends EnsimeResponse
 
-case class EnsimeTaskRequest(request: EnsimeRequest, taskId: EnsimeTaskId)
-case class EnsimeTaskResponse(response: Option[EnsimeResponse],
-                              taskId: EnsimeTaskId)
-
-case class FetchResult(inputs: Inputs, progresses: List[SnippetProgress])
-
-case class FetchScalaJs(snippetId: SnippetId)
-case class FetchResultScalaJs(content: String)
-
-case class FetchScalaJsSourceMap(snippetId: SnippetId)
-case class FetchResultScalaJsSourceMap(content: String)
-
-case class FetchScalaSource(snippetId: SnippetId)
-case class FetchResultScalaSource(content: String)
-
-case class ScalaDependency(
-    groupId: String,
-    artifact: String,
-    target: ScalaTarget,
-    version: String
-) {
-
-  override def toString: String = target.renderSbt(this)
-}
-
-case class Project(
-    organization: String,
-    repository: String,
-    logo: Option[String] = None,
-    artifacts: List[String] = Nil
-)
-
-case class Completion(
-    hint: String,
+case class TypeAtPointResponse(
     typeInfo: String
+) extends EnsimeResponse
+
+case class EnsimeTaskRequest(
+    request: EnsimeRequest,
+    taskId: EnsimeTaskId
 )
 
-case class TypeInfoAt(
-    token: String,
-    typeInfo: String
+case class EnsimeTaskResponse(
+    response: Option[EnsimeResponse],
+    taskId: EnsimeTaskId
 )
-
-// Keep websocket connection
-case class KeepAlive(msg: String = "") extends AnyVal

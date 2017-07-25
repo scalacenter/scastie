@@ -1,6 +1,7 @@
 package com.olegych.scastie.balancer
 
 import com.olegych.scastie.api._
+import com.olegych.scastie.proto.{ScalaTargetType, SnippetProgress}
 
 import System.{lineSeparator => nl}
 
@@ -16,7 +17,7 @@ object OldScastieConverter {
           converter.setTargetType(ScalaTargetType.Dotty)
 
         case """scalaOrganization in ThisBuild := "org.typelevel"""" =>
-          converter.setTargetType(ScalaTargetType.Typelevel)
+          converter.setTargetType(ScalaTargetType.TypelevelScala)
 
         case "coursier.CoursierPlugin.projectSettings" =>
           converter
@@ -32,7 +33,10 @@ object OldScastieConverter {
       .split(nl)
       .map(
         line =>
-          SnippetProgress.default.copy(userOutput = Some(line), done = true)
+          SnippetProgressHelper.default.copy(
+            userOutput = Some(line),
+            done = true
+          )
       )
       .toList
   }
@@ -83,23 +87,23 @@ object OldScastieConverter {
       copy(targetType = Some(targetType0))
 
     def apply(inputs: Inputs): Inputs = {
-      val scalaTarget =
+      val scalaTarget: ScalaTarget =
         targetType match {
           case Some(ScalaTargetType.Dotty) =>
-            ScalaTarget.Dotty
+            ScalaTarget.Dotty.default
 
-          case Some(ScalaTargetType.Typelevel) =>
+          case Some(ScalaTargetType.TypelevelScala) =>
             scalaVersion
-              .map(sv => ScalaTarget.Typelevel(sv))
+              .map(sv => ScalaTarget.TypelevelScala(sv))
               .getOrElse(
-                ScalaTarget.Typelevel.default
+                ScalaTarget.TypelevelScala.default
               )
 
           case _ =>
             scalaVersion
-              .map(sv => ScalaTarget.Jvm(sv))
+              .map(sv => ScalaTarget.PlainScala(sv))
               .getOrElse(
-                ScalaTarget.Jvm.default
+                ScalaTarget.PlainScala.default
               )
         }
 

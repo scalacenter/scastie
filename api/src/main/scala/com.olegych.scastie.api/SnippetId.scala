@@ -1,23 +1,6 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
 
-object User {
-  // low tech solution
-  val admins = Set(
-    "dimart",
-    "Duhemm",
-    "heathermiller",
-    "julienrf",
-    "jvican",
-    "MasseGuillaume",
-    "olafurpg",
-    "rorygraves",
-    "travissarles"
-  )
-}
-case class User(login: String, name: Option[String], avatar_url: String) {
-  def isAdmin: Boolean = User.admins.contains(login)
-}
+import com.olegych.scastie.proto.User
 
 case class SnippetUserPart(login: String, update: Option[Int])
 case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {

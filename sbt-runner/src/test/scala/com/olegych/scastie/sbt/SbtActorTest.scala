@@ -79,7 +79,7 @@ class SbtActorTest()
   }
 
   test("report unsupported dialects") {
-    run("1+1", ScalaTarget.Jvm("10.10.10"))(assertCompilationInfo { info =>
+    run("1+1", ScalaTarget.PlainScala("10.10.10"))(assertCompilationInfo { info =>
       assert(
         info.message == "The worksheet mode does not support this Scala target"
       )
@@ -117,7 +117,7 @@ class SbtActorTest()
 
   test("Scala.js support") {
     val scalaJs =
-      Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Js.default)
+      Inputs.default.copy(code = "1 + 1", target = ScalaTarget.ScalaJs.default)
     run(scalaJs)(_.done)
   }
 
@@ -191,7 +191,7 @@ class SbtActorTest()
 
     firstRun = false
   }
-  private def run(code: String, target: ScalaTarget = ScalaTarget.Jvm.default)(
+  private def run(code: String, target: ScalaTarget = ScalaTarget.PlainScala.default)(
       fish: SnippetProgress => Boolean
   ): Unit = {
     run(Inputs.default.copy(code = code, target = target))(fish)
