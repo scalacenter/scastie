@@ -153,10 +153,9 @@ object Editor {
       scope: BackendScope[Editor, EditorState]
   ) {
 
+    // via editor.onChanges
     def codeChangeF(event: ReactEventFromInput): Callback = {
-      scope.props.flatMap(
-        _.codeChange(event.target.value)
-      )
+      Callback(())
     }
 
     def stop(): Callback = {
@@ -175,6 +174,10 @@ object Editor {
           )
 
         editor.onFocus(_.refresh())
+
+        editor.onChanges(
+          (e, _) => props.codeChange(e.getDoc().getValue()).runNow()
+        )
 
         // don't show completions if cursor moves to some other place
         editor.onMouseDown(
@@ -803,7 +806,6 @@ object Editor {
         current.map(c => !editorReuse.test(c, next)).getOrElse(true)
 
       if(shouldRefresh) {
-        println("refresh")
         editor.refresh()
       }
     }

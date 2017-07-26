@@ -61,6 +61,10 @@ object CodeMirrorEditor {
 
           editor.getDoc().setValue(settings.value)
 
+          editor.onChanges(
+            (e, _) => handler.onChange(e.getDoc().getValue()).runNow
+          )
+
           scope.modState(_.copy(editor = Some(editor)))
       }
     }
@@ -71,10 +75,9 @@ object CodeMirrorEditor {
       }
     }
 
+    // via editor.onChanges
     def onChangeF(event: ReactEventFromInput): Callback = {
-      scope.props.flatMap {
-        case (_, handler) => handler.onChange(event.target.value)
-      }
+      Callback(())
     }
   }
 
