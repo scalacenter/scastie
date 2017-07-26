@@ -123,7 +123,7 @@ class EditorEventHandler(val editor: Editor) extends AnyVal {
   def onBeforeChange(f: (Editor, BeforeEditorChange) => Unit) =
     editor.on("beforeChange", f)
   def onChange(f: (Editor, EditorChange) => Unit) = editor.on("change", f)
-  def onChanges(f: (Editor, Array[EditorChange]) => Unit) =
+  def onChanges(f: (Editor, js.Array[EditorChange]) => Unit) =
     editor.on("changes", f)
   def onKeyUp(f: (Editor, dom.KeyboardEvent) => Unit) = editor.on("keyup", f)
   def onKeyDown(f: (Editor, dom.KeyboardEvent) => Unit) =

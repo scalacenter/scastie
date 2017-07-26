@@ -61,10 +61,6 @@ object CodeMirrorEditor {
 
           editor.getDoc().setValue(settings.value)
 
-          editor.onChange(
-            (_, _) => handler.onChange(editor.getDoc().getValue()).runNow
-          )
-
           scope.modState(_.copy(editor = Some(editor)))
       }
     }

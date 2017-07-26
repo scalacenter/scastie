@@ -68,7 +68,9 @@ object Global {
             .setRunning(false)
             .copy(
               attachedDoms =
-                attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap
+                AttachedDoms(
+                  attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap
+                )
           )
       )
     }

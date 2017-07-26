@@ -33,7 +33,7 @@ object ScastieState {
       isReRunningScalaJs = false
     ),
     user = None,
-    attachedDoms = Map(),
+    attachedDoms = AttachedDoms(Map()),
     inputs = Inputs.default,
     outputs = Outputs.default,
     status = StatusState.default,
@@ -41,7 +41,7 @@ object ScastieState {
     typeAtInfo = None
   )
 
-  implicit val dontSerializeAttachedDoms: ReadWriter[AttachedDoms] =
+  implicit val dontSerializeAttachedDoms: ReadWriter[Map[String, HTMLElement]] =
     dontSerializeMap[String, HTMLElement]
 
   implicit val dontSerializeWebSocket: ReadWriter[Option[WebSocket]] =
@@ -362,7 +362,7 @@ case class ScastieState(
 
   def resetScalajs: ScastieState =
     copy(
-      attachedDoms = Map(),
+      attachedDoms = AttachedDoms(Map()),
       snippetState = snippetState.copy(
         isScalaJsScriptLoaded = false,
         loadScalaJsScript = true

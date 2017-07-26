@@ -2,6 +2,8 @@ package com.olegych.scastie
 package client
 package components
 
+import com.olegych.scastie.api._
+
 import codemirror.{
   CodeMirror,
   Hint,
@@ -13,9 +15,9 @@ import codemirror.{
   Editor => CodeMirrorEditor2,
   Position => CMPosition
 }
-import com.olegych.scastie.api._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.all._
+
+import japgolly.scalajs.react._, vdom.all._, extra.{Reusability, StateSnapshot}
+
 import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.raw.{
@@ -57,8 +59,7 @@ final case class Editor(isDarkTheme: Boolean,
 }
 
 object Editor {
-
-  // CodeMirror.keyMap.sublime.delete("Ctrl-L")
+  CodeMirror.keyMap.sublime.delete("Ctrl-L")
 
   private var codemirrorTextarea: HTMLTextAreaElement = _
 
@@ -152,10 +153,11 @@ object Editor {
       scope: BackendScope[Editor, EditorState]
   ) {
 
-    def codeChangeF(event: ReactEventFromInput): Callback =
+    def codeChangeF(event: ReactEventFromInput): Callback = {
       scope.props.flatMap(
         _.codeChange(event.target.value)
       )
+    }
 
     def stop(): Callback = {
       scope.modState { s =>
@@ -173,10 +175,6 @@ object Editor {
           )
 
         editor.onFocus(_.refresh())
-
-        editor.onChange(
-          (_, _) => props.codeChange(editor.getDoc().getValue()).runNow()
-        )
 
         // don't show completions if cursor moves to some other place
         editor.onMouseDown(
@@ -801,7 +799,13 @@ object Editor {
     }
 
     def refresh(): Unit = {
-      editor.refresh()
+      val shouldRefresh = 
+        current.map(c => !editorReuse.test(c, next)).getOrElse(true)
+
+      if(shouldRefresh) {
+        println("refresh")
+        editor.refresh()
+      }
     }
 
     Callback(setTheme()) >>
