@@ -8,7 +8,8 @@ final case class SideBar(isDarkTheme: Boolean,
                          status: StatusState,
                          toggleTheme: Callback,
                          view: StateSnapshot[View],
-                         openHelpModal: Callback) {
+                         openHelpModal: Callback,
+                         updateEnsimeConfig: Callback) {
   @inline def render: VdomElement = SideBar.component(this)
 }
 
@@ -61,14 +62,16 @@ object SideBar {
       currentView = props.view,
       forView = View.Editor,
       buttonTitle = "Editor",
-      faIcon = "fa-edit"
+      faIcon = "fa-edit",
+      onClick = props.updateEnsimeConfig
     ).render
 
     val buildSettingsButton = ViewToggleButton(
       currentView = props.view,
       forView = View.BuildSettings,
       buttonTitle = "Build Settings",
-      faIcon = "fa-gear"
+      faIcon = "fa-gear",
+      onClick = Callback.empty
     ).render
 
     nav(cls := "sidebar")(

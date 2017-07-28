@@ -72,10 +72,6 @@ case class Inputs(
 
   def isDefault: Boolean = copy(code = "") == Inputs.default.copy(code = "")
 
-  // we only autocomplete for the default configuration
-  // https://github.com/scalacenter/scastie/issues/275
-  def isEnsimeEnabled: Boolean = isDefault
-
   def addScalaDependency(scalaDependency: ScalaDependency,
                          project: Project): Inputs = {
     copy(

@@ -47,6 +47,8 @@ sealed trait EnsimeRequest {
 case class EnsimeRequestInfo(inputs: Inputs, offset: Int)
 case class CompletionRequest(info: EnsimeRequestInfo) extends EnsimeRequest
 case class TypeAtPointRequest(info: EnsimeRequestInfo) extends EnsimeRequest
+case class UpdateEnsimeConfigRequest(info: EnsimeRequestInfo)
+    extends EnsimeRequest
 
 sealed trait EnsimeResponse
 case class CompletionResponse(completions: List[Completion])

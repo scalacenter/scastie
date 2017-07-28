@@ -7,17 +7,18 @@ import japgolly.scalajs.react._, vdom.all._, extra.{Reusability, StateSnapshot}
 final case class ViewToggleButton(currentView: StateSnapshot[View],
                                   forView: View,
                                   buttonTitle: String,
-                                  faIcon: String) {
+                                  faIcon: String,
+                                  onClick: Callback) {
   @inline def render: VdomElement = ViewToggleButton.component(this)
 }
 
 object ViewToggleButton {
   implicit val reusability: Reusability[ViewToggleButton] =
-    Reusability.caseClass
+    Reusability.byRef
 
   private def render(props: ViewToggleButton): VdomElement = {
     li(
-      onClick --> props.currentView.setState(props.forView),
+      onClick --> (props.currentView.setState(props.forView) >> props.onClick),
       role := "button",
       title := props.buttonTitle,
       (cls := "selected").when(props.currentView.value == props.forView),
