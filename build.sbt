@@ -64,7 +64,7 @@ lazy val scastie = project
   .settings(addCommandAlias("drone", ";test ;server/universal:packageBin"))
 
 lazy val baseSettings = Seq(
-  scalaVersion := "2.12.2",
+  scalaVersion := "2.12.3",
   scalacOptions := Seq(
     "-deprecation",
     "-encoding",
@@ -187,7 +187,7 @@ lazy val sbtRunner = project
         val logbackConfDestination = "/home/scastie/logback.xml"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.41")
+          from("scalacenter/scastie-docker-sbt:0.0.42")
 
           add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
 
@@ -381,7 +381,7 @@ def api(scalaV: String) = {
 
 val api210 = api("2.10.6")
 val api211 = api("2.11.11")
-val api212 = api("2.12.2")
+val api212 = api("2.12.3")
 // val api213 = api("2.13.0-M1")
 
 lazy val api210JVM = api210.jvm
@@ -423,7 +423,7 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
 
 val runtimeScala210 = runtimeScala("2.10.6", api210)
 val runtimeScala211 = runtimeScala("2.11.11", api211)
-val runtimeScala212 = runtimeScala("2.12.2", api212)
+val runtimeScala212 = runtimeScala("2.12.3", api212)
 // val runtimeScala213 = runtimeScala("2.13.0-M1", api213)
 
 lazy val runtimeScala210JVM = runtimeScala210.jvm

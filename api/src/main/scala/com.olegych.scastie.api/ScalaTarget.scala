@@ -12,7 +12,7 @@ sealed trait ScalaTarget {
 object ScalaTarget {
   val allVersions = List(
     "2.13.0-M1",
-    "2.12.2",
+    "2.12.3",
     "2.12.1",
     "2.12.0",
     "2.12.0-RC2",
@@ -76,7 +76,7 @@ object ScalaTarget {
     "2.9.0"
   )
 
-  private val defaultScalaVersion = "2.12.2"
+  private val defaultScalaVersion = "2.12.3"
   private val defaultScalaJsVersion = "0.6.18"
 
   object Jvm {

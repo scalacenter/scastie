@@ -49,7 +49,7 @@ RUN echo 'addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")' >> /home/scasti
 RUN mkdir /home/scastie/scala-212
 RUN mkdir /home/scastie/scala-212/project
 RUN echo 'sbt.version = 0.13.15' > /home/scastie/scala-212/project/build.properties
-RUN echo 'scalaVersion := "2.12.2"' > /home/scastie/scala-212/build.sbt
+RUN echo 'scalaVersion := "2.12.3"' > /home/scastie/scala-212/build.sbt
 RUN mkdir /home/scastie/scala-212/src
 RUN mkdir /home/scastie/scala-212/src/main
 RUN mkdir /home/scastie/scala-212/src/main/scala
@@ -94,7 +94,7 @@ RUN mkdir /home/scastie/scalajs-212/project
 RUN echo 'sbt.version = 0.13.15' > /home/scastie/scalajs-212/project/build.properties
 # See ScalaTarget defaultScalaJsVersion/defaultScalaVersion for Scala.js/Scala version
 RUN echo 'addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.18")' > /home/scastie/scalajs-212/project/plugins.sbt
-RUN echo 'scalaVersion := "2.12.2"' > /home/scastie/scalajs-212/build.sbt
+RUN echo 'scalaVersion := "2.12.3"' > /home/scastie/scalajs-212/build.sbt
 RUN mkdir /home/scastie/scalajs-212/src
 RUN mkdir /home/scastie/scalajs-212/src/main
 RUN mkdir /home/scastie/scalajs-212/src/main/scala

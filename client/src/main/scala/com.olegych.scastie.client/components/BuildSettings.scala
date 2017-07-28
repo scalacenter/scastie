@@ -79,7 +79,7 @@ object BuildSettings {
   def renderVersions(props: BuildSettings): TagMod = {
     val suggestedVersions = List(
       // "2.13.0-M1",
-      "2.12.2",
+      "2.12.3",
       "2.11.11"
     )
 

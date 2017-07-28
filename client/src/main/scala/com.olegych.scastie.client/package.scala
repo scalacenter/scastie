@@ -26,7 +26,7 @@ package object client {
 
   implicit val attachedDomsReuse: Reusability[AttachedDoms] =
     Reusability.byRef ||
-    Reusability.by(_.v.keys.toSet)
+      Reusability.by(_.v.keys.toSet)
 
   implicit val instrumentationReuse: Reusability[Set[Instrumentation]] =
     Reusability.byRefOr_==
@@ -40,15 +40,15 @@ package object client {
   implicit val completionsReuse: Reusability[List[Completion]] =
     Reusability.byRefOr_==
 
-  implicit val editorReuse: Reusability[Editor] = 
+  implicit val editorReuse: Reusability[Editor] =
     Reusability.byRef ||
-    (
-      Reusability.by((_: Editor).attachedDoms) &&
-      Reusability.by((_: Editor).instrumentations) &&
-      Reusability.by((_: Editor).compilationInfos) &&
-      Reusability.by((_: Editor).runtimeError) &&
-      Reusability.by((_: Editor).completions)
-    )
+      (
+        Reusability.by((_: Editor).attachedDoms) &&
+          Reusability.by((_: Editor).instrumentations) &&
+          Reusability.by((_: Editor).compilationInfos) &&
+          Reusability.by((_: Editor).runtimeError) &&
+          Reusability.by((_: Editor).completions)
+      )
 
   def dontSerializeOption[T]: ReadWriter[Option[T]] = dontSerialize(None)
 

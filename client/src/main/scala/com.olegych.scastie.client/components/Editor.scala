@@ -802,10 +802,10 @@ object Editor {
     }
 
     def refresh(): Unit = {
-      val shouldRefresh = 
+      val shouldRefresh =
         current.map(c => !editorReuse.test(c, next)).getOrElse(true)
 
-      if(shouldRefresh) {
+      if (shouldRefresh) {
         editor.refresh()
       }
     }
