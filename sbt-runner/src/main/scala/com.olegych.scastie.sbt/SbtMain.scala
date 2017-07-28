@@ -52,7 +52,10 @@ object SbtMain {
 
     logger.info("  timeout: {}", timeout)
     logger.info("  isProduction: {}", isProduction)
-    logger.info("  port: {}", reconnectInfo.runnerAkkaPort)
+    logger.info("  runner hostname: {}", reconnectInfo.runnerHostname)
+    logger.info("  runner port: {}", reconnectInfo.runnerAkkaPort)
+    logger.info("  server hostname: {}", reconnectInfo.serverHostname)
+    logger.info("  server port: {}", reconnectInfo.serverAkkaPort)
 
     system.actorOf(
       Props(
