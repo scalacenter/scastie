@@ -63,7 +63,7 @@ object SbtMain {
           system = system,
           runTimeout = timeout,
           production = isProduction,
-          withEnsime = false,
+          withEnsime = true,
           readyRef = None,
           reconnectInfo = Some(reconnectInfo)
         )

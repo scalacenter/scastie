@@ -46,6 +46,12 @@ class AutowireApiImplementation(
       .mapTo[Option[TypeAtPointResponse]]
   }
 
+  def updateEnsimeConfig(
+      updateEnsimeConfigRequest: UpdateEnsimeConfigRequest
+  ): Future[Unit] = {
+    (dispatchActor ? wrapEnsime(updateEnsimeConfigRequest)).map(_ => ())
+  }
+
   def save(inputs: Inputs): Future[SnippetId] = {
     (dispatchActor ? SaveSnippet(wrap(inputs))).mapTo[SnippetId]
   }

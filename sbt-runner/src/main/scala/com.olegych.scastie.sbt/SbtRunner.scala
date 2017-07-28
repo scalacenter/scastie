@@ -133,11 +133,12 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       if (production) {
         sbt.warmUp()
       }
-    case CreateEnsimeConfigRequest =>
+
+    case CreateEnsimeConfigRequest(inputs: Inputs) =>
       log.info("Generating ensime config file")
       sbt.eval(
         "ensimeConfig",
-        defaultConfig,
+        inputs,
         (line, _, _, _) => {
           log.info(line)
         },

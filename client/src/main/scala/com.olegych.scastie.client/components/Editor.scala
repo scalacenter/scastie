@@ -93,8 +93,8 @@ object Editor {
           ctrl + "-Enter" -> "run",
           ctrl + "-S" -> "save",
           ctrl + "-M" -> "newSnippet",
-          // "Ctrl" + "-Space" -> "autocomplete",
-          // "." -> "autocompleteDot",
+          "Ctrl" + "-Space" -> "autocomplete",
+          "." -> "autocompleteDot",
           "Esc" -> "clear",
           "F1" -> "help",
           "F2" -> "toggleSolarized",
@@ -240,7 +240,6 @@ object Editor {
           }
         )
 
-        /*
         CodeMirror.on(
           editor.getWrapperElement(),
           "mouseover",
@@ -338,7 +337,6 @@ object Editor {
             }
           }
         )
-         */
 
         CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
           props.run.runNow()

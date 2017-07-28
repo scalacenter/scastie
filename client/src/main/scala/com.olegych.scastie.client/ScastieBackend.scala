@@ -550,7 +550,6 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
                   Callback.empty
               }
           )
-          .when_(state.inputs.isEnsimeEnabled)
       }
     )
   }
@@ -581,7 +580,23 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
                   Callback.empty
               }
           )
-          .when_(state.inputs.isEnsimeEnabled)
+      }
+    )
+  }
+
+  def updateEnsimeConfig(): Callback = {
+    scope.state.flatMap(
+      state => {
+        Callback.future(
+          ApiClient[AutowireApi]
+            .updateEnsimeConfig(
+              UpdateEnsimeConfigRequest(EnsimeRequestInfo(state.inputs, 0))
+            )
+            .call()
+            .map { _ =>
+              Callback.empty
+            }
+        )
       }
     )
   }

@@ -13,6 +13,9 @@ trait AutowireApi {
   def typeAt(
       typeAtPointRequest: TypeAtPointRequest
   ): Future[Option[TypeAtPointResponse]]
+  def updateEnsimeConfig(
+      updateEnsimeConfigRequest: UpdateEnsimeConfigRequest
+  ): Future[Unit]
 
   def save(inputs: Inputs): Future[SnippetId]
   def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean]
