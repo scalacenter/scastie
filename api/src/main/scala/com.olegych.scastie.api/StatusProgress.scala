@@ -13,7 +13,8 @@ case class Runner(tasks: Queue[TaskId])
 
 object StatusProgress {
   implicit object StatusProgressFormat extends Format[StatusProgress] {
-    private val formatStatusInfo = Json.format[StatusInfo]
+    private val formatRunnersInfo = Json.format[StatusRunnersInfo]
+    private val formatEnsimeInfo = Json.format[StatusEnsimeInfo]
 
     def writes(status: StatusProgress): JsValue = {
 
@@ -22,9 +23,14 @@ object StatusProgress {
           JsObject(Seq("$type" -> JsString("StatusKeepAlive")))
         }
 
-        case si: StatusInfo => {
-          formatStatusInfo.writes(si).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("StatusInfo")))
+        case runners: StatusRunnersInfo => {
+          formatStatusInfo.writes(runners).asInstanceOf[JsObject] ++
+            JsObject(Seq("$type" -> JsString("StatusRunnersInfo")))
+        }
+
+        case ensime: StatusEnsimeInfo => {
+          formatEnsimeInfo.writes(ensime).asInstanceOf[JsObject] ++
+            JsObject(Seq("$type" -> JsString("StatusEnsimeInfo")))
         }
       }
     }
@@ -38,8 +44,11 @@ object StatusProgress {
             case Some(tpe) => {
               tpe match {
                 case JsString("StatusKeepAlive") => JsSuccess(StatusKeepAlive)
-                case JsString("StatusInfo")      => formatStatusInfo.reads(json)
-                case _                           => JsError(Seq())
+                case JsString("StatusRunnersInfo") =>
+                  formatRunnersInfo.reads(json)
+                case JsString("StatusEnsimeInfo") =>
+                  formatEnsimeInfo.reads(json)
+                case _ => JsError(Seq())
               }
             }
             case None => JsError(Seq())
@@ -53,4 +62,12 @@ object StatusProgress {
 
 sealed trait StatusProgress
 case object StatusKeepAlive extends StatusProgress
-case class StatusInfo(runners: Vector[Runner]) extends StatusProgress
+case class StatusRunnersInfo(runners: Vector[Runner]) extends StatusProgress
+case class StatusEnsimeInfo(ensimeStatus: EnsimeStatus) extends StatusProgress
+
+sealed trait EnsimeStatus
+case object EnsimeDown extends EnsimeStatus
+case object EnsimeRestarting extends EnsimeStatus
+case object EnsimeUp extends EnsimeStatus
+
+case class Runner(tasks: Queue[TaskId])

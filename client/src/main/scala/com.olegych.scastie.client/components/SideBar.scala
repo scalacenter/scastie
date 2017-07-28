@@ -2,7 +2,10 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._, vdom.all._, extra._
+import com.olegych.scastie.api.{EnsimeDown, EnsimeRestarting, EnsimeUp}
+import japgolly.scalajs.react._
+import vdom.all._
+import extra._
 
 import scala.scalajs.js
 import js.annotation._
@@ -51,7 +54,7 @@ object SideBar {
         span("Help")
       )
 
-    val statusButton = {
+    val runnersStatusButton = {
       val (statusIcon, statusClass, statusLabel) =
         props.status.runnerCount match {
           case None    => ("fa-times-circle", "status-unknown", "Unknown")
@@ -65,6 +68,21 @@ object SideBar {
          cls := s"btn $statusClass")(
         i(cls := s"fa $statusIcon"),
         span(statusLabel)
+      )
+    }
+
+    val ensimeStatusIcon = {
+      val (statusIcon, statusClass, statusLabel) =
+        props.status.ensimeStatus match {
+          case EnsimeDown => ("fa-times-circle", "status-down", "Ensime's Down")
+          case EnsimeRestarting =>
+            ("fa-times-circle", "status-unknown", "Ensime's Restarting")
+          case EnsimeUp => ("fa-check-circle", "status-up", "Ensime's Up")
+        }
+
+      li(title := "Show ensime status", cls := s"btn $statusClass")(
+        i(cls := s"fa $statusIcon"),
+        span(fontSize := "9px", statusLabel)
       )
     }
 
@@ -97,7 +115,8 @@ object SideBar {
         ul(cls := "actions-bottom")(
           themeButton,
           helpButton,
-          statusButton
+          runnersStatusButton,
+          ensimeStatusIcon
         )
       )
     )

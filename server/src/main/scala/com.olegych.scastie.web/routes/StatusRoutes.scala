@@ -42,11 +42,13 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
       isAdmin =>
         concat(
           path("status-sse")(
-            complete(
-              statusSource(isAdmin).map(
-                progress =>
-                  ServerSentEvent(
-                    Json.stringify(Json.toJson(progress))
+            extractClientIP(ip ⇒
+              complete(
+                statusSource(isAdmin, ip).map(
+                  progress =>
+                    ServerSentEvent(
+                      Json.stringify(Json.toJson(progress))
+                  )
                 )
               )
             )
@@ -57,7 +59,7 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
       )
     )
 
-  private def statusSource(isAdmin: Boolean) = {
+  private def statusSource(isAdmin: Boolean, ip: RemoteAddress) = {
     def hideTask(progress: StatusProgress): StatusProgress =
       if (isAdmin) progress
       else
@@ -73,7 +75,8 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
     // TODO find a way to flatten Source[Source[T]]
     Await
       .result(
-        (statusActor ? SubscribeStatus).mapTo[Source[StatusProgress, NotUsed]],
+        (statusActor ? SubscribeStatus(Ip(ip.toString))))
+          .mapTo[Source[StatusProgress, NotUsed]],
         1.second
       )
       .map(hideTask)

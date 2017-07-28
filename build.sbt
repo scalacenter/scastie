@@ -6,6 +6,9 @@ import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
 
+import scala.util.Try
+import java.io.FileNotFoundException
+
 import scalajsbundler.util.JSON
 
 import scala.util.Try
@@ -60,8 +63,14 @@ lazy val loggingAndTest =
 lazy val utils = project
   .in(file("utils"))
   .settings(baseSettings)
+  .settings(loggingAndTest)
   .settings(
-    libraryDependencies += akka("stream")
+    libraryDependencies ++= Seq(
+      akka("stream"),
+      akka("actor"),
+      akka("remote"),
+      akka("slf4j")
+    )
   )
   .dependsOn(apiJVM)
 
@@ -85,8 +94,60 @@ lazy val runnerRuntimeDependencies = Seq(
   sbtScastie
 ).map(publishLocal in _)
 
-val dockerOrg = "scalacenter"
-val dockerBaseImageName = "scastie-docker-sbt"
+lazy val dockerOrg = "scalacenter"
+
+lazy val ensimeRunner = project
+  .in(file("ensime-runner"))
+  .settings(baseSettings)
+  .settings(loggingAndTest)
+  .settings(
+    resolvers += Resolver.sonatypeRepo("public"),
+    libraryDependencies ++= Seq(
+      akka("actor"),
+      akka("remote"),
+      akka("slf4j"),
+      akkaHttp,
+      "org.ensime" %% "jerky" % latestEnsime,
+      "org.ensime" %% "s-express" % latestEnsime
+    ),
+    assemblyMergeStrategy in assembly := {
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case in @ PathList("reference.conf", xs @ _*) =>
+        val old = (assemblyMergeStrategy in assembly).value
+        old(in)
+      case x => MergeStrategy.first
+    },
+    imageNames in docker := Seq(
+      ImageName(
+        namespace = Some(dockerOrg),
+        repository = "scastie-ensime-runner",
+        tag = Some(gitHash())
+      )
+    )
+    // TODO: DockerHelper for ensime
+    // dockerfile in docker := Def.task {
+    //   val base = (baseDirectory in ThisBuild).value
+    //   val ivy = ivyPaths.value.ivyHome.get
+    //   val org = organization.value
+    //   val artifact = assembly.value
+    //   val artifactTargetPath = s"/app/${artifact.name}"
+    //   val logbackConfDestination = "/home/scastie/logback.xml"
+    //   new Dockerfile {
+    //     from("scalacenter/scastie-docker-sbt:0.0.42")
+    //     add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
+    //     add(artifact, artifactTargetPath)
+    //     add(base / "deployment" / "logback.xml", logbackConfDestination)
+    //     entryPoint("java",
+    //                "-Xmx256M",
+    //                "-Xms256M",
+    //                s"-Dlogback.configurationFile=$logbackConfDestination",
+    //                "-jar",
+    //                artifactTargetPath)
+    //   }
+    // }.value
+  )
+  .dependsOn(apiJVM, utils, sbtRunner)
+  .enablePlugins(sbtdocker.DockerPlugin)
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
@@ -104,13 +165,11 @@ lazy val sbtRunner = project
       akka("remote"),
       akka("slf4j"),
       akkaHttp,
-      "com.geirsson" %% "scalafmt-core" % "1.1.0",
-      "org.ensime" %% "jerky" % latestEnsime,
-      "org.ensime" %% "s-express" % latestEnsime
+      "com.geirsson" %% "scalafmt-core" % "1.1.0"
     ),
     imageNames in docker := Seq(
       ImageName(
-        namespace = Some("scalacenter"),
+        namespace = Some(dockerOrg),
         repository = "scastie-sbt-runner",
         tag = Some(gitHashNow)
       )
