@@ -6,7 +6,8 @@ case object SbtPing
 case object SbtPong
 
 case class SbtRunnerConnect(hostname: String, port: Int)
-case object SbtRunnerConnected
+case class EnsimeRunnerConnect(hostname: String, port: Int)
+case object ActorConnected
 
 object SnippetSummary {
   implicit val formatSnippetSummary: OFormat[SnippetSummary] =
@@ -73,6 +74,9 @@ object FormatResponse {
 case class FormatResponse(
     result: Either[String, String]
 )
+
+case class CreateEnsimeConfigRequest(inputs: Inputs)
+case class EnsimeConfigResponse(sbtDir: String, config: String)
 
 sealed trait EnsimeRequest {
   def inputs: Inputs

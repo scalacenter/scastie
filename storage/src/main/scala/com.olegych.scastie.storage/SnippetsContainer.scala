@@ -18,10 +18,40 @@ import net.lingala.zip4j.model.ZipParameters
 
 case class UserLogin(login: String)
 
+object SnippetsContainer {
+
+  def randomSnippetId(): SnippetId = {
+    SnippetId(randomUrlFriendlyBase64UUID(), None)
+  }
+
+  // example output: GGdknrcEQVu3elXyboKcYQ
+  protected def randomUrlFriendlyBase64UUID(): String = {
+    def toBase64(uuid: UUID): String = {
+      val (high, low) =
+        (uuid.getMostSignificantBits, uuid.getLeastSignificantBits)
+      val buffer = ByteBuffer.allocate(java.lang.Long.BYTES * 2)
+      buffer.putLong(high)
+      buffer.putLong(low)
+      val encoded = Base64.getMimeEncoder.encodeToString(buffer.array())
+      encoded.take(encoded.length - 2)
+    }
+
+    var res: String = null
+    val allowed = ('a' to 'z').toSet ++ ('A' to 'Z').toSet ++ ('0' to '9').toSet
+
+    while (res == null || res.exists(c => !allowed.contains(c))) {
+      val uuid = java.util.UUID.randomUUID()
+      res = toBase64(uuid)
+    }
+
+    res
+  }
+}
+
 class SnippetsContainer(root: Path, oldRoot: Path) {
 
   def create(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
-    val uuid = randomUrlFriendlyBase64UUID()
+    val uuid = SnippetsContainer.randomUrlFriendlyBase64UUID()
     val snippetId =
       SnippetId(uuid, user.map(u => SnippetUserPart(u.login)))
     write(inputsFile(snippetId), Json.prettyPrint(Json.toJson(inputs)))
@@ -338,29 +368,6 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
       }
 
     baseDirectory.resolve(Paths.get(fileName))
-  }
-
-  // example output: GGdknrcEQVu3elXyboKcYQ
-  private def randomUrlFriendlyBase64UUID(): String = {
-    def toBase64(uuid: UUID): String = {
-      val (high, low) =
-        (uuid.getMostSignificantBits, uuid.getLeastSignificantBits)
-      val buffer = ByteBuffer.allocate(java.lang.Long.BYTES * 2)
-      buffer.putLong(high)
-      buffer.putLong(low)
-      val encoded = Base64.getMimeEncoder.encodeToString(buffer.array())
-      encoded.take(encoded.length - 2)
-    }
-
-    var res: String = null
-    val allowed = ('a' to 'z').toSet ++ ('A' to 'Z').toSet ++ ('0' to '9').toSet
-
-    while (res == null || res.exists(c => !allowed.contains(c))) {
-      val uuid = java.util.UUID.randomUUID()
-      res = toBase64(uuid)
-    }
-
-    res
   }
 
   private def deleteEmptyDirectories(base: Path): Unit = {

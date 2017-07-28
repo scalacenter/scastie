@@ -3,6 +3,7 @@ package com.olegych.scastie.sbt
 import com.olegych.scastie.instrumentation._
 import com.olegych.scastie.api._
 import com.olegych.scastie.api.ScalaTargetType._
+import com.olegych.scastie.util.ScastieFileUtil.slurp
 
 import play.api.libs.json._
 
@@ -131,18 +132,6 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       if (production) {
         sbt.warmUp()
       }
-
-    case CreateEnsimeConfigRequest(inputs: Inputs) =>
-      log.info("Generating ensime config file")
-      sbt.eval(
-        "ensimeConfig",
-        inputs,
-        (line, _, _, _) => {
-          log.info(line)
-        },
-        reload = false
-      )
-      sender() ! EnsimeConfigResponse(sbt.sbtDir)
 
     case SbtTask(snippetId, inputs, ip, login, progressActor) =>
       log.info("login: {}, ip: {} run {}", login, ip, inputs)

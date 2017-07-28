@@ -11,7 +11,7 @@ object ScalaJSHelper {
 
   def packageScalaJS(client: Project) = {
     def webpackOutputDir = Def.task {
-      webpackDir.value / "out"      
+      webpackDir.value / "out"
     }
 
     def webpackDir = Def.task {

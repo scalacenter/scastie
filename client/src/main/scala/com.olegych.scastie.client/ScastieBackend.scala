@@ -421,7 +421,7 @@ class ScastieBackend(serverUrl: Option[String],
         }
       }
 
-    initialState >> loadUser
+    initialState >> updateEnsimeConfig >> loadUser
   }
 
   def formatCode: Callback =
@@ -518,7 +518,7 @@ class ScastieBackend(serverUrl: Option[String],
     restApiClient.delete(snippetId)
   }
 
-  def updateEnsimeConfig(): Callback = {
+  def updateEnsimeConfig: Callback = {
     scope.state.flatMap(
       state => {
         Callback.future(

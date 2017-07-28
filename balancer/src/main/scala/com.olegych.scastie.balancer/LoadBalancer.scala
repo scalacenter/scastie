@@ -50,16 +50,14 @@ case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {
         acc + reloadPenalty
       }
 
-    reloadsPenalties + mailbox.map(_ => averageRunTime).sum
+    reloadsPenalties + mailbox.map(_.cost).sum
   }
 }
 
 object Server {
+  // time it takes to change a sbt configuration
   // (found by experimentation)
   val averageReloadTime = 10 //s
-
-  //([0s, 30s] upper bound Defined in SbtMain)
-  val averageRunTime = 15 // s
 
   def apply[C, S](ref: S, config: C): Server[C, S] =
     Server(
