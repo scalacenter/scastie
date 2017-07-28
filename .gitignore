@@ -14,5 +14,6 @@ deployment/beta
 deployment/users.txt
 node_modules
 bin/.scalafmt
+bin/scalafmt_ng
 bin/.coursier
 bin/drone
