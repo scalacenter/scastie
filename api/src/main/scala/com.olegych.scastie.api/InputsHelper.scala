@@ -1,85 +1,45 @@
 package com.olegych.scastie.api
 
-import com.olegych.scastie.proto._
+import com.olegych.scastie.proto.{
+  Inputs, ScalaDependency, ScalaTarget,
+  ScalaTargetType, Project, Version,
+  LibrariesFrom
+}
 import com.olegych.scastie.buildinfo.BuildInfo
 
+import System.{lineSeparator => nl}
+
 object InputsHelper {
+  val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
+
+  val defaultTarget = PlainScala.default
+
+  def default = Inputs(
+    worksheetMode = true,
+    code = defaultCode,
+    target = defaultTarget,
+    libraries = Set(),
+    librariesFrom = Seq(),
+    sbtConfigExtra = """|scalacOptions ++= Seq(
+                        |  "-deprecation",
+                        |  "-encoding", "UTF-8",
+                        |  "-feature",
+                        |  "-unchecked"
+                        |)""".stripMargin,
+    sbtPluginsConfigExtra = "",
+    showInUserProfile = false,
+    forked = None
+  )
+
   def sbtConfig(inputs: Inputs): String = {
     import inputs._
 
     val buildVersion = Version(BuildInfo.version)
 
-    val (targetConfig, targetDependency) =
-      target match {
-        case PlainScala(scalaVersion) =>
-          (
-            s"""scalaVersion := "$scalaVersion"""",
-            Some(
-              ScalaDependency(
-                "org.scastie",
-                "runtime-scala",
-                target,
-                buildVersion
-              )
-            )
-          )
-
-        case TypelevelScala(scalaVersion) =>
-          (
-            s"""|scalaVersion := "$scalaVersion"
-                |scalaOrganization in ThisBuild := "org.typelevel"""".stripMargin,
-            Some(
-              ScalaDependency(
-                "org.scastie",
-                "runtime-scala",
-                target,
-                buildVersion
-              )
-            )
-          )
-
-        case ScalaJs(scalaVersion, _) =>
-          (
-            s"""|scalaVersion := "$scalaVersion"
-                |enablePlugins(ScalaJSPlugin)
-                |artifactPath in (Compile, fastOptJS) := 
-                |  baseDirectory.value / "${ScalaJs.targetFilename}"
-                |scalacOptions += {
-                |  val from = (baseDirectory in LocalRootProject).value.toURI.toString
-                |  val to = "${ScalaJs.sourceUUID}/"
-                |  "-P:scalajs:mapSourceURI:" + from + "->" + to
-                |}
-                """.stripMargin,
-            Some(
-              ScalaDependency(
-                "org.scastie",
-                "runtime-scala",
-                target,
-                buildVersion
-              )
-            )
-          )
-        case Dotty(dottyVersion) =>
-          (
-            s"""scalaVersion := "$dottyVersion"""",
-            None
-          )
-        case ScalaNative(scalaVersion, _) =>
-          (
-            s"""scalaVersion := "$scalaVersion"""",
-            Some(
-              ScalaDependency(
-                "org.scastie",
-                "runtime-scala",
-                target,
-                buildVersion
-              )
-            )
-          )
-      }
-
+    val targetConfig = target.sbtConfig
+      
     val optionalTargetDependency =
-      if (worksheetMode) targetDependency
+      if (worksheetMode) target.runtimeDependency
       else None
 
     val allLibraries =
@@ -115,159 +75,97 @@ object InputsHelper {
   }
 
   def sbtPluginsConfig(inputs: Inputs): String = {
-    ???
+    import inputs._
+
+    val targetConfig = target.sbtPluginsConfig
+
+    s"""|$targetConfig
+        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
+        |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
+        |addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.version}")
+        |$sbtPluginsConfigExtra
+        |""".stripMargin
+
+  }
+
+  def show(inputs: Inputs): String = {
+    import inputs._
+
+    if (inputs == InputsHelper.default) {
+      "Inputs.default"
+    } else if (inputs.copy(code = default.code) == default) {
+      "Inputs.default" + nl +
+        code + nl
+    } else {
+      import inputs._
+
+      val showSbtConfigExtra =
+        if (sbtConfigExtra == default.sbtConfigExtra) "default"
+        else sbtConfigExtra
+
+      s"""|worksheetMode = $worksheetMode
+          |target = $target
+          |libraries
+          |${libraries.mkString(nl)}
+          |
+          |sbtConfigExtra
+          |$showSbtConfigExtra
+          |
+          |sbtPluginsConfigExtra
+          |$sbtPluginsConfigExtra
+          |
+          |code
+          |$code
+          |""".stripMargin
+    }
+  }
+
+  def isDefault(inputs: Inputs): Boolean = {
+    inputs.copy(code = "") == default.copy(code = "")
+  }
+
+  private def librariesFromMap(inputs: Inputs): Map[ScalaDependency, Project] = {
+    inputs.librariesFrom.map(
+      libraryFrom => (libraryFrom.scalaDependency, libraryFrom.project)
+    ).toMap
+  }
+
+  private def libraryFromProto(map: Map[ScalaDependency, Project]): Seq[LibrariesFrom] = {
+    map.toSeq.map{
+      case (dep, pro) =>
+        LibrariesFrom(
+          scalaDependency = dep,
+          project = pro
+        )
+    }
+  }
+
+  def addScalaDependency(inputs: Inputs,
+                         scalaDependency: ScalaDependency,
+                         project: Project): Inputs = {
+
+    val librariesFromM = librariesFromMap(inputs)
+
+    inputs.copy(
+      libraries = inputs.libraries + scalaDependency,
+      librariesFrom = 
+        libraryFromProto(
+          librariesFromM + (scalaDependency -> project)
+        )
+    )
+  }
+
+  def removeScalaDependency(inputs: Inputs,
+                            scalaDependency: ScalaDependency): Inputs = {
+
+    val librariesFromM = librariesFromMap(inputs)
+
+    inputs.copy(
+      libraries = inputs.libraries - scalaDependency,
+      librariesFrom = 
+        libraryFromProto(
+          librariesFromM - scalaDependency
+        )
+    )
   }
 }
-
-
-
-// import System.{lineSeparator => nl}
-
-// object Inputs {
-//   val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
-
-//   def default = Inputs(
-//     worksheetMode = true,
-//     code = defaultCode,
-//     target = ScalaTarget.default,
-//     libraries = Set(),
-//     librariesFrom = Map(),
-//     sbtConfigExtra = """|scalacOptions ++= Seq(
-//                         |  "-deprecation",
-//                         |  "-encoding", "UTF-8",
-//                         |  "-feature",
-//                         |  "-unchecked"
-//                         |)""".stripMargin,
-//     sbtPluginsConfigExtra = "",
-//     showInUserProfile = false,
-//     forked = None
-//   )
-// }
-
-// case class Inputs(
-//     worksheetMode: Boolean = false,
-//     code: String,
-//     target: ScalaTarget,
-//     libraries: Set[ScalaDependency],
-//     librariesFrom: Map[ScalaDependency, Project] = Map(),
-//     sbtConfigExtra: String,
-//     sbtPluginsConfigExtra: String,
-//     showInUserProfile: Boolean = false,
-//     forked: Option[SnippetId] = None
-// ) {
-
-//   override def toString: String = {
-//     if (this == Inputs.default) {
-//       "Inputs.default"
-//     } else if (this.copy(code = Inputs.default.code) == Inputs.default) {
-//       "Inputs.default" + nl +
-//         code + nl
-//     } else {
-
-//       val showSbtConfigExtra =
-//         if (sbtConfigExtra == Inputs.default.sbtConfigExtra) "default"
-//         else sbtConfigExtra
-
-//       s"""|worksheetMode = $worksheetMode
-//           |target = $target
-//           |libraries
-//           |${libraries.mkString(nl)}
-//           |
-//           |sbtConfigExtra
-//           |$showSbtConfigExtra
-//           |
-//           |sbtPluginsConfigExtra
-//           |$sbtPluginsConfigExtra
-//           |
-//           |code
-//           |$code
-//           |""".stripMargin
-//     }
-//   }
-
-//   def isDefault: Boolean = copy(code = "") == Inputs.default.copy(code = "")
-
-//   // we only autocomplete for the default configuration
-//   // https://github.com/scalacenter/scastie/issues/275
-//   def isEnsimeEnabled: Boolean = isDefault
-
-//   def addScalaDependency(scalaDependency: ScalaDependency,
-//                          project: Project): Inputs = {
-//     copy(
-//       libraries = libraries + scalaDependency,
-//       librariesFrom = librariesFrom + (scalaDependency -> project)
-//     )
-//   }
-
-//   def removeScalaDependency(scalaDependency: ScalaDependency): Inputs = {
-//     copy(
-//       libraries = libraries - scalaDependency,
-//       librariesFrom = librariesFrom - scalaDependency
-//     )
-//   }
-
-//   def sbtPluginsConfig: String = {
-//     val targetConfig =
-//       target match {
-//         case ScalaTarget.ScalaJs(_, scalaJsVersion) =>
-//           s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
-
-//         case ScalaTarget.ScalaNative(_, scalaNativeVersion) =>
-//           s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
-
-//         case ScalaTarget.Dotty(_) =>
-//           """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")"""
-
-//         case _: ScalaTarget.PlainScala =>
-//           ""
-
-//         case _: ScalaTarget.TypelevelScala =>
-//           ""
-//       }
-
-//     s"""|$targetConfig
-//         |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
-//         |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
-//         |addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.version}")
-//         |$sbtPluginsConfigExtra
-//         |""".stripMargin
-
-//   }
-
-
-
-//     val optionalTargetDependency =
-//       if (worksheetMode) targetDependency
-//       else None
-
-//     val allLibraries =
-//       optionalTargetDependency.map(libraries + _).getOrElse(libraries)
-
-//     val librariesConfig =
-//       if (allLibraries.isEmpty) ""
-//       else if (allLibraries.size == 1)
-//         s"libraryDependencies += " + target.renderSbt(allLibraries.head)
-//       else {
-//         val nl = "\n"
-//         val tab = "  "
-//         "libraryDependencies ++= " +
-//           allLibraries
-//             .map(target.renderSbt)
-//             .mkString(
-//               "Seq(" + nl + tab,
-//               "," + nl + tab,
-//               nl + ")"
-//             )
-//       }
-
-//     val ensimeConfig = "ensimeIgnoreMissingDirectories := true"
-
-//     s"""|$targetConfig
-//         |
-//         |$librariesConfig
-//         |
-//         |$sbtConfigExtra
-//         |
-//         |$ensimeConfig""".stripMargin
-//   }
-// }

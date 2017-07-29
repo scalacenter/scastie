@@ -1,6 +1,6 @@
 package com.olegych.scastie.storage
 
-import com.olegych.scastie.api.ProtoExtensions._
+import com.olegych.scastie.api._
 import com.olegych.scastie.proto._
 import com.olegych.scastie.util.ScastieFileUtil._
 import com.olegych.scastie.instrumentation.Instrument
@@ -310,8 +310,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
 
   private val inputFileName = "input.json"
   private val outputFileName = "output.json"
-  private val scalaJsFileName = ScalaTarget.ScalaJs.targetFilename
-  private val scalaJsSourceMapFileName = ScalaTarget.ScalaJs.sourceMapFilename
+  private val scalaJsFileName = ScalaJs.targetFilename
+  private val scalaJsSourceMapFileName = ScalaJs.sourceMapFilename
 
   private def inputsFile(snippetId: SnippetId): Path = {
     snippetFile(snippetId, inputFileName)

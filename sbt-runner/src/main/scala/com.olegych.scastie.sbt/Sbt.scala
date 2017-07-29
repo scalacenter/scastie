@@ -27,7 +27,7 @@ class Sbt(defaultConfig: Inputs) {
   private val projectDir = sbtDir.resolve("project")
   Files.createDirectories(projectDir)
 
-  write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.15")
+  write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.16")
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
 

@@ -13,6 +13,8 @@ val latest210 = "2.10.6"
 val latest211 = "2.11.11"
 val latest212 = "2.12.3"
 
+val runtimeProjectName = "runtime-scala"
+
 // blocked by ScalaPB -> (fastparse, utest)
 val latest213 = "2.13.0-M1"
 
@@ -199,7 +201,7 @@ lazy val sbtRunner = project
         val logbackConfDestination = "/home/scastie/logback.xml"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.42")
+          from("scalacenter/scastie-docker-sbt:0.0.43")
 
           add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
 
@@ -431,7 +433,9 @@ def api(scalaV: String, protoProject: CrossProject) = {
     .settings(baseSettings)
     .settings(
       buildInfoKeys := Seq[BuildInfoKey](
+        organization,
         version,
+        "runtimeProjectName" -> runtimeProjectName,
         BuildInfoKey.action("gitHash") { gitHash() }
       ),
       buildInfoPackage := "com.olegych.scastie.buildinfo",
@@ -465,7 +469,7 @@ lazy val apiJVM = apiCurrent.jvm
 
 /* runtime* pretty print values and type */
 def runtimeScala(scalaV: String, apiProject: CrossProject) = {
-  val projectName = "runtime-scala"
+  val projectName = runtimeProjectName
 
   val projectId =
     if (scalaV != currentScalaVersion) {

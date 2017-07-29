@@ -1,7 +1,8 @@
 package com.olegych.scastie.storage
 
 import com.olegych.scastie.proto._
-import com.olegych.scastie.api.SnippetProgressHelper
+import com.olegych.scastie.api
+import api.{SnippetProgressHelper, InputsHelper}
 
 
 import System.{lineSeparator => nl}
@@ -61,9 +62,9 @@ object OldScastieConverter {
             convertLine(line)(converter)
         }
 
-      converterFn(Inputs.default).copy(code = code.trim)
+      converterFn(InputsHelper.default).copy(code = code.trim)
     } else {
-      Inputs.default.copy(code = content.trim)
+      InputsHelper.default.copy(code = content.trim)
     }
   }
 
@@ -91,20 +92,21 @@ object OldScastieConverter {
       val scalaTarget: ScalaTarget =
         targetType match {
           case Some(ScalaTargetType.Dotty) =>
-            ScalaTarget.Dotty.default
+            api.Dotty.default
 
           case Some(ScalaTargetType.TypelevelScala) =>
             scalaVersion
-              .map(sv => ScalaTarget.TypelevelScala(sv))
+              .map(sv => api.TypelevelScala(sv))
               .getOrElse(
-                ScalaTarget.TypelevelScala.default
+                api.TypelevelScala.default
               )
 
-          case _ =>
+
+          case _ => 
             scalaVersion
-              .map(sv => ScalaTarget.PlainScala(sv))
+              .map(sv => api.PlainScala(sv))
               .getOrElse(
-                ScalaTarget.PlainScala.default
+                api.PlainScala.default
               )
         }
 
