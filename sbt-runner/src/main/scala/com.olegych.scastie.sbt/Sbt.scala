@@ -27,7 +27,7 @@ class Sbt(defaultConfig: Inputs) {
   private val projectDir = sbtDir.resolve("project")
   Files.createDirectories(projectDir)
 
-  write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.15")
+  write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.16")
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
 
@@ -40,11 +40,11 @@ class Sbt(defaultConfig: Inputs) {
   Files.createDirectories(codeFile.getParent)
 
   def scalaJsContent(): Option[String] = {
-    slurp(sbtDir.resolve(ScalaTarget.Js.targetFilename))
+    slurp(sbtDir.resolve(ScalaTarget.ScalaJs.targetFilename))
   }
 
   def scalaJsSourceMapContent(): Option[String] = {
-    slurp(sbtDir.resolve(ScalaTarget.Js.sourceMapFilename))
+    slurp(sbtDir.resolve(ScalaTarget.ScalaJs.sourceMapFilename))
   }
 
   private val (process, fin, fout) = {

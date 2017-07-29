@@ -1,0 +1,406 @@
+syntax = "proto2";
+
+package com.olegych.scastie.proto;
+
+import "scalapb/scalapb.proto";
+
+message KeepAlive { }
+
+message StatusInfo {
+  repeated Runner runners = 1 [(scalapb.field).collection_type="Vector"];
+
+}
+
+message Runner {
+  repeated TaskId tasks = 1 [(scalapb.field).collection_type="scala.collection.immutable.Queue"];
+}
+
+message TaskId {
+  oneof value {
+    SbtRun sbtRunValue = 1;
+    Ensime ensimeValue = 2;   
+  }
+
+  message SbtRun {
+    required SnippetId snippetId = 1;
+  }
+
+  message Ensime {
+    required UUID id = 1;
+  }
+}
+
+message Base64UUID {
+  required string value = 1;
+}
+
+message UUID {
+  required string value = 1;
+}
+
+message SnippetId {
+  required Base64UUID base64UUID = 1;
+  optional SnippetUserPart user = 2;
+}
+
+message SnippetUserPart {
+  required string login = 1;
+  optional int32 update = 2;
+}
+
+message SnippetProgressStorage {
+  repeated SnippetProgress progresses = 1;
+}
+
+message SnippetProgress {
+  optional SnippetId snippetId = 1;
+  optional string userOutput = 2;
+  optional string sbtOutput = 3;
+  repeated Problem compilationInfos = 4;
+  repeated Instrumentation instrumentations = 5;
+  optional RuntimeError runtimeError = 6;
+  optional string scalaJsContent = 7;
+  optional string scalaJsSourceMapContent = 8;
+  required bool done = 9;
+  required bool timeout = 10;
+  required bool sbtError = 11;
+  required bool forcedProgramMode = 12;
+}
+
+enum Severity {
+  Info = 1;
+  Warning = 2;
+  Error = 3;
+}
+
+message Problem {
+  required Severity severity = 1;
+  optional int32 line = 2;
+  required string message = 3;
+}
+
+message RuntimeError {
+  required string message = 1;
+  optional int32 line = 2;
+  required string fullStack = 3;
+}
+
+message SbtOutput {
+  required string message = 1;
+}
+
+message CompilationReport {
+  repeated Problem problems = 1;
+}
+
+// sbt-runner <-> sbt-scastie
+message Sbt {
+  oneof value {
+    SbtOutput sbtOutput = 1;
+    RuntimeError runtimeError = 2;
+    CompilationReport compilationReport = 3;
+  }
+}
+
+message Instrumentation {
+  required Position position = 1;
+
+  oneof render {
+    Value value = 2;
+    Html html = 3;
+    AttachedDom attachedDom = 4;
+  }
+
+  message Value {
+    required string value = 1;
+    required string className = 2;
+  }
+
+  message Html {
+    required string content = 1;
+    required bool folded = 2;
+  }
+
+  message AttachedDom {
+    required UUID uuid = 1;
+    required bool folded = 2;
+  }
+}
+
+message Position {
+  required int32 start = 1;
+  required int32 end = 2;
+}
+
+enum ScalaTargetType {
+  PlainScala = 1;
+  Dotty = 2;
+  ScalaJs = 3;
+  ScalaNative = 4;
+  TypelevelScala = 5;
+}
+
+message ScalaTarget {
+  message PlainScala {
+    required string scalaVersion = 1;
+  }
+
+  message TypelevelScala {
+    required string scalaVersion = 1;
+  }
+
+  message Dotty {
+    required string dottyVersion = 1;
+  }
+
+  message ScalaJs {
+    required string scalaVersion = 1;
+    required string scalaJsVersion = 2;
+  }
+
+  message ScalaNative {
+    required string scalaVersion = 1;
+    required string scalaNativeVersion = 2;
+  }
+
+  oneof value {
+    PlainScala wrapPlainScala = 1;
+    TypelevelScala wrapTypelevelScala = 2;
+    Dotty wrapDotty = 3;
+    ScalaJs wrapScalaJs = 4;
+    ScalaNative wrapScalaNative = 5;
+  }
+}
+
+message ReleaseOptions {
+  required string groupId = 1;
+  repeated Version versions = 2;
+  required Version version = 3;
+}
+
+message Outputs {
+  repeated ConsoleOutput consoleOutputs = 1 [(scalapb.field).collection_type="Vector"];
+  repeated Problem compilationInfos = 2 [(scalapb.field).collection_type="Set"];
+  repeated Instrumentation instrumentations = 3 [(scalapb.field).collection_type="Set"];
+  optional bool runtimeError = 4;
+  required bool sbtError = 5;
+}
+
+message ConsoleOutput {
+  required string line = 1;
+  required OutputType outputType = 2;
+
+  enum OutputType {
+    Sbt = 1;
+    User = 2;
+    System = 3;
+  }
+}
+
+message Inputs {
+  required bool worksheetMode = 1;
+  required string code = 2;
+  required ScalaTarget target  = 3;
+  repeated ScalaDependency libraries = 4 [(scalapb.field).collection_type="Set"];;
+  repeated LibrariesFrom librariesFrom = 5;
+  required string sbtConfigExtra = 6;
+  required string sbtPluginsConfigExtra = 7;
+  required bool showInUserProfile = 8;
+  optional SnippetId forked = 9;
+}
+
+message LibrariesFrom {
+  required ScalaDependency scalaDependency = 1;
+  required Project project = 2;
+}
+
+message Project {
+  required string organization = 1;
+  required string repository = 2;
+  optional string logo = 3;
+  repeated string artifacts = 4;
+}
+
+message Version {
+  required string value = 1;
+}
+
+message ScalaDependency {
+  required string groupId = 1;
+  required string artifact = 2;
+  required ScalaTarget target = 3;
+  required Version version = 4;
+}
+
+message SnippetSummary {
+  required SnippetId snippetId = 1;
+  required string summary = 2;
+  required int64 time = 3;
+}
+
+message User {
+  required string login = 1;
+  optional string name = 2;
+  required string avatar_url = 3;
+}
+
+
+message SbtPing { }
+message SbtPong { }
+
+message SbtRunnerConnect {
+  required string hostname = 1;
+  required int32 port = 2;
+}
+
+message SbtRunnerConnected { }
+
+message FormatRequest {
+  required string code = 1;
+  required bool worksheetMode = 2;
+  required ScalaTargetType targetType = 3;
+}
+
+message FormatResponse {
+  oneof value {
+    Success success = 1;
+    Failure failure = 2;   
+  }
+
+  message Success {
+    required string formattedCode = 1;
+  }
+
+  message Failure {
+    required string errorMessag = 1;
+  }
+}
+
+message EnsimeRequest {
+  oneof value {
+    Completion completion = 1;
+    TypeAtPoint typeAtPoint = 2;
+  }
+
+  message Info {
+    required Inputs inputs = 1;
+    required int32 offset = 2;
+  }
+
+  message Completion {
+    required Info info = 1;
+  }
+
+  message TypeAtPoint {
+    required Info info = 1;
+  }
+}
+
+message EnsimeResponse {
+  oneof value {
+    Completion completion = 1;
+    TypeAtPoint typeAtPoint = 2;
+  }
+
+  message Completion {
+    repeated CompletionItem completions = 1;
+  }
+
+  message CompletionItem {
+    required string hint = 1;
+    required string symbol = 2;
+  }
+
+  message TypeAtPoint {
+    required string symbol = 1;
+  }
+}
+
+message EnsimeTaskRequest {
+  required TaskId.Ensime taskId = 1;
+  required EnsimeRequest request = 2;
+}
+
+message EnsimeTaskResponse {
+  required TaskId.Ensime taskId = 1;
+  optional EnsimeResponse response = 2;
+}
+
+message FetchResult {
+  required Inputs inputs = 1;
+  repeated SnippetProgress progresses = 2;
+}
+
+message FetchScalaJs {
+  required SnippetId snippetId = 1;
+}
+
+message FetchResultScalaJs {
+  required string content = 1;
+}
+
+
+message FetchScalaJsSourceMap {
+  required SnippetId snippetId = 1;
+}
+
+message FetchResultScalaJsSourceMap {
+  required string content = 1;
+}
+
+message FetchScalaSource {
+  required SnippetId snippetId = 1;
+}
+
+message FetchResultScalaSource {
+  required string content = 1;
+}
+
+// Client
+
+enum View {
+  Editor = 1;
+  BuildSettings = 2;
+  CodeSnippets = 3;
+  Status = 4;
+}
+
+message ScastieState {
+  required View view  = 1;
+  required bool isRunning = 2;
+  required ModalState modalState = 3;
+  required bool isDarkTheme = 4;
+  required bool isDesktopForced = 5;
+  required bool isPresentationMode = 6;
+  required bool showLineNumbers = 7;
+  required ConsoleState consoleState = 8;
+  required bool inputsHasChanged = 9;
+  required SnippetState snippetState = 10;
+  optional User user = 11;
+  required Inputs inputs = 12;
+  required Outputs outputs = 13;
+}
+
+message ModalState { 
+  required bool isWelcomeModalClosed = 1;
+  required bool isHelpModalClosed = 2;
+  optional SnippetId shareModalSnippetId = 3;
+  required bool isResetModalClosed = 4;
+  required bool isNewSnippetModalClosed = 5;
+}
+
+message ConsoleState {
+  required bool consoleIsOpen = 1;
+  required bool consoleHasUserOutput = 2;
+  required bool userOpenedConsole = 3;
+}
+
+message SnippetState {
+  optional SnippetId snippetId = 1;
+  required bool isSnippetSaved = 2;
+  required bool loadSnippet = 3;
+  required bool loadScalaJsScript = 4;
+  required bool isScalaJsScriptLoaded = 5;
+  required bool snippetIdIsScalaJS = 6;
+  required bool isReRunningScalaJs = 7;
+}

@@ -1,5 +1,6 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
+
+import com.olegych.scastie.proto._
 
 import scala.concurrent.Future
 
@@ -8,11 +9,11 @@ trait AutowireApi {
   def format(code: FormatRequest): Future[FormatResponse]
 
   def complete(
-      completionRequest: CompletionRequest
-  ): Future[Option[CompletionResponse]]
+      completionRequest: EnsimeRequest.Completion
+  ): Future[Option[EnsimeResponse.Completion]]
   def typeAt(
-      typeAtPointRequest: TypeAtPointRequest
-  ): Future[Option[TypeAtPointResponse]]
+      typeAtPointRequest: EnsimeRequest.TypeAtPoint
+  ): Future[Option[EnsimeResponse.TypeAtPoint]]
 
   def save(inputs: Inputs): Future[SnippetId]
   def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean]

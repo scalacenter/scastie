@@ -19,7 +19,7 @@ class ScalaJsRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
 
   val routes: Route =
     concat(
-      snippetIdEnd(Shared.scalaJsHttpPathPrefix, ScalaTarget.Js.targetFilename)(
+      snippetIdEnd(Shared.scalaJsHttpPathPrefix, ScalaTarget.ScalaJs.targetFilename)(
         sid =>
           complete(
             (dispatchActor ? FetchScalaJs(sid))
@@ -27,7 +27,7 @@ class ScalaJsRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
               .map(_.map(_.content))
         )
       ),
-      snippetIdEnd(Shared.scalaJsHttpPathPrefix, ScalaTarget.Js.sourceFilename)(
+      snippetIdEnd(Shared.scalaJsHttpPathPrefix, ScalaTarget.ScalaJs.sourceFilename)(
         sid =>
           complete(
             (dispatchActor ? FetchScalaSource(sid))
@@ -36,7 +36,7 @@ class ScalaJsRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
         )
       ),
       snippetIdEnd(Shared.scalaJsHttpPathPrefix,
-                   ScalaTarget.Js.sourceMapFilename)(
+                   ScalaTarget.ScalaJs.sourceMapFilename)(
         sid =>
           complete(
             (dispatchActor ? FetchScalaJsSourceMap(sid))

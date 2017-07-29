@@ -25,9 +25,9 @@ RUN apk update && apk add --no-cache fontconfig && \
   && curl -L https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/2.11/phantomjs-alpine-x86_64.tar.bz2 | tar xj \
   && ln -s /usr/share/phantomjs/phantomjs /usr/bin/phantomjs
 
-RUN wget http://dl.bintray.com/sbt/native-packages/sbt/0.13.15/sbt-0.13.15.tgz -O /tmp/sbt-0.13.15.tgz
+RUN wget http://dl.bintray.com/sbt/native-packages/sbt/0.13.16/sbt-0.13.16.tgz -O /tmp/sbt-0.13.16.tgz
 RUN mkdir -p /app/sbt
-RUN tar -xzvf /tmp/sbt-0.13.15.tgz -C /app/sbt
+RUN tar -xzvf /tmp/sbt-0.13.16.tgz -C /app/sbt
 RUN ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt
 
 RUN addgroup -g 433 scastie
@@ -48,8 +48,8 @@ RUN echo 'addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")' >> /home/scasti
 
 RUN mkdir /home/scastie/scala-212
 RUN mkdir /home/scastie/scala-212/project
-RUN echo 'sbt.version = 0.13.15' > /home/scastie/scala-212/project/build.properties
-RUN echo 'scalaVersion := "2.12.2"' > /home/scastie/scala-212/build.sbt
+RUN echo 'sbt.version = 0.13.16' > /home/scastie/scala-212/project/build.properties
+RUN echo 'scalaVersion := "2.12.3"' > /home/scastie/scala-212/build.sbt
 RUN mkdir /home/scastie/scala-212/src
 RUN mkdir /home/scastie/scala-212/src/main
 RUN mkdir /home/scastie/scala-212/src/main/scala
@@ -59,7 +59,7 @@ RUN cd /home/scastie/scala-212; sbt ensimeConfig
 
 RUN mkdir /home/scastie/scala-211
 RUN mkdir /home/scastie/scala-211/project
-RUN echo 'sbt.version = 0.13.15' > /home/scastie/scala-211/project/build.properties
+RUN echo 'sbt.version = 0.13.16' > /home/scastie/scala-211/project/build.properties
 RUN echo 'scalaVersion := "2.11.11"' > /home/scastie/scala-211/build.sbt
 RUN mkdir /home/scastie/scala-211/src
 RUN mkdir /home/scastie/scala-211/src/main
@@ -70,7 +70,7 @@ RUN cd /home/scastie/scala-211; sbt ensimeConfig
 
 RUN mkdir /home/scastie/scala-213
 RUN mkdir /home/scastie/scala-213/project
-RUN echo 'sbt.version = 0.13.15' > /home/scastie/scala-213/project/build.properties
+RUN echo 'sbt.version = 0.13.16' > /home/scastie/scala-213/project/build.properties
 RUN echo 'scalaVersion := "2.13.0-M1"' > /home/scastie/scala-213/build.sbt
 RUN mkdir /home/scastie/scala-213/src
 RUN mkdir /home/scastie/scala-213/src/main
@@ -80,7 +80,7 @@ RUN cd /home/scastie/scala-213; sbt run
 
 RUN mkdir /home/scastie/dotty
 RUN mkdir /home/scastie/dotty/project
-RUN echo 'sbt.version = 0.13.15' > /home/scastie/dotty/project/build.properties
+RUN echo 'sbt.version = 0.13.16' > /home/scastie/dotty/project/build.properties
 RUN echo 'addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")' > /home/scastie/dotty/project/plugins.sbt
 RUN echo 'scalaVersion := "0.2.0-RC1"' > /home/scastie/dotty/build.sbt
 RUN mkdir /home/scastie/dotty/src
@@ -91,10 +91,10 @@ RUN cd /home/scastie/dotty; sbt run
 
 RUN mkdir /home/scastie/scalajs-212
 RUN mkdir /home/scastie/scalajs-212/project
-RUN echo 'sbt.version = 0.13.15' > /home/scastie/scalajs-212/project/build.properties
+RUN echo 'sbt.version = 0.13.16' > /home/scastie/scalajs-212/project/build.properties
 # See ScalaTarget defaultScalaJsVersion/defaultScalaVersion for Scala.js/Scala version
-RUN echo 'addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.18")' > /home/scastie/scalajs-212/project/plugins.sbt
-RUN echo 'scalaVersion := "2.12.2"' > /home/scastie/scalajs-212/build.sbt
+RUN echo 'addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.19")' > /home/scastie/scalajs-212/project/plugins.sbt
+RUN echo 'scalaVersion := "2.12.3"' > /home/scastie/scalajs-212/build.sbt
 RUN mkdir /home/scastie/scalajs-212/src
 RUN mkdir /home/scastie/scalajs-212/src/main
 RUN mkdir /home/scastie/scalajs-212/src/main/scala

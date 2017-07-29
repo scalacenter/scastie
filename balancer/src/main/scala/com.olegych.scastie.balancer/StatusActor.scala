@@ -1,13 +1,15 @@
 package com.olegych.scastie.balancer
 
 import com.olegych.scastie.api._
+
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, Props}
 import akka.stream.actor.ActorPublisher
 import akka.stream.scaladsl.Source
+
 import java.util.concurrent.TimeUnit
+import scala.concurrent.duration._
 
 import scala.collection.mutable
-import scala.concurrent.duration._
 
 case object SubscribeStatus
 

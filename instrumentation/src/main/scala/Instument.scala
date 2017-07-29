@@ -1,13 +1,13 @@
-package com.olegych.scastie
-package instrumentation
+package com.olegych.scastie.instrumentation
 
-import com.olegych.scastie.api.ScalaTarget._
-import com.olegych.scastie.api.{ScalaTarget, ScalaTargetType}
+import com.olegych.scastie.proto._
+import com.olegych.scastie.api._
 
-import scala.collection.immutable.Seq
 import scala.meta._
 import scala.meta.inputs.Position
 import scala.meta.parsers.Parsed
+
+import scala.collection.immutable.Seq
 
 sealed trait InstrumentationFailure
 case object HasMainMethod extends InstrumentationFailure
@@ -157,11 +157,11 @@ object Instrument {
 
   def apply(
       code: String,
-      target: ScalaTarget = Jvm.default
+      target: ScalaTarget
   ): Either[InstrumentationFailure, String] = {
     val runtimeImport = "import _root_.com.olegych.scastie.api.runtime._"
 
-    val isScalaJs = target.targetType == ScalaTargetType.JS
+    val isScalaJs = target.targetType == ScalaTargetType.ScalaJs
 
     val classBegin =
       if (!isScalaJs) s"class $instrumentedClass {"
@@ -181,6 +181,7 @@ object Instrument {
     // dialects.Paradise212
     // dialects.ParadiseTypelevel211
     // dialects.ParadiseTypelevel212
+    // dotty versions
 
     def typelevel(scalaVersion: String): Option[Dialect] = {
       if (scalaVersion.startsWith("2.12")) Some(dialects.Typelevel212)
@@ -197,12 +198,22 @@ object Instrument {
 
     val maybeDialect =
       target match {
-        case Jvm(scalaVersion)       => scala(scalaVersion)
-        case Js(scalaVersion, _)     => scala(scalaVersion)
-        case Native(scalaVersion, _) => scala(scalaVersion)
-        case Dotty                   => Some(dialects.Dotty)
-        case Typelevel(scalaVersion) => typelevel(scalaVersion)
-        case _                       => None
+        case PlainScala(scalaVersion) =>
+          scala(scalaVersion)
+
+        case ScalaJs(scalaVersion, _) =>
+          scala(scalaVersion)
+
+        case ScalaNative(scalaVersion, _) =>
+          scala(scalaVersion)
+
+        case Dotty(_) =>
+          Some(dialects.Dotty)
+
+        case TypelevelScala(scalaVersion) =>
+          typelevel(scalaVersion)
+
+        case _ => None
       }
 
     maybeDialect match {

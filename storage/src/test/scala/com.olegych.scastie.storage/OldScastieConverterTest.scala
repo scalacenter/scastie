@@ -25,7 +25,7 @@ class OldScastieConverterTest extends FunSuite {
 
     val expected =
       Inputs.default.copy(
-        target = ScalaTarget.Jvm("2.11.8"),
+        target = ScalaTarget.PlainScala("2.11.8"),
         sbtConfigExtra =
           """scalacOptions ++= Seq(""-deprecation", "-feature")""",
         code = """|object Main extends App {

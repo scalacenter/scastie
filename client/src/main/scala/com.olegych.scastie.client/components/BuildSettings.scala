@@ -79,7 +79,7 @@ object BuildSettings {
   def renderVersions(props: BuildSettings): TagMod = {
     val suggestedVersions = List(
       // "2.13.0-M1",
-      "2.12.2",
+      "2.12.3",
       "2.11.11"
     )
 
@@ -138,8 +138,8 @@ object BuildSettings {
 
     val versionSelectors =
       props.scalaTarget match {
-        case ScalaTarget.Jvm(scalaVersion) =>
-          versionSelector(scalaVersion, ScalaTarget.Jvm.apply)
+        case ScalaTarget.PlainScala(scalaVersion) =>
+          versionSelector(scalaVersion, ScalaTarget.PlainScala.apply)
 
         case ScalaTarget.Typelevel(scalaVersion) =>
           versionSelector(scalaVersion, ScalaTarget.Typelevel.apply)
@@ -147,7 +147,7 @@ object BuildSettings {
         case ScalaTarget.Dotty =>
           notSupported
 
-        case ScalaTarget.Js(_, _) =>
+        case ScalaTarget.ScalaJs(_, _) =>
           notSupported
 
         case ScalaTarget.Native(_, _) =>

@@ -1,6 +1,9 @@
-package com.olegych.scastie.balancer
+package com.olegych.scastie.storage
 
-import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
+import com.olegych.scastie.api
+import api.{SnippetProgressHelper, InputsHelper}
+
 
 import System.{lineSeparator => nl}
 
@@ -16,7 +19,7 @@ object OldScastieConverter {
           converter.setTargetType(ScalaTargetType.Dotty)
 
         case """scalaOrganization in ThisBuild := "org.typelevel"""" =>
-          converter.setTargetType(ScalaTargetType.Typelevel)
+          converter.setTargetType(ScalaTargetType.TypelevelScala)
 
         case "coursier.CoursierPlugin.projectSettings" =>
           converter
@@ -32,7 +35,10 @@ object OldScastieConverter {
       .split(nl)
       .map(
         line =>
-          SnippetProgress.default.copy(userOutput = Some(line), done = true)
+          SnippetProgressHelper.default.copy(
+            userOutput = Some(line),
+            done = true
+          )
       )
       .toList
   }
@@ -56,9 +62,9 @@ object OldScastieConverter {
             convertLine(line)(converter)
         }
 
-      converterFn(Inputs.default).copy(code = code.trim)
+      converterFn(InputsHelper.default).copy(code = code.trim)
     } else {
-      Inputs.default.copy(code = content.trim)
+      InputsHelper.default.copy(code = content.trim)
     }
   }
 
@@ -83,23 +89,24 @@ object OldScastieConverter {
       copy(targetType = Some(targetType0))
 
     def apply(inputs: Inputs): Inputs = {
-      val scalaTarget =
+      val scalaTarget: ScalaTarget =
         targetType match {
           case Some(ScalaTargetType.Dotty) =>
-            ScalaTarget.Dotty
+            api.Dotty.default
 
-          case Some(ScalaTargetType.Typelevel) =>
+          case Some(ScalaTargetType.TypelevelScala) =>
             scalaVersion
-              .map(sv => ScalaTarget.Typelevel(sv))
+              .map(sv => api.TypelevelScala(sv))
               .getOrElse(
-                ScalaTarget.Typelevel.default
+                api.TypelevelScala.default
               )
 
-          case _ =>
+
+          case _ => 
             scalaVersion
-              .map(sv => ScalaTarget.Jvm(sv))
+              .map(sv => api.PlainScala(sv))
               .getOrElse(
-                ScalaTarget.Jvm.default
+                api.PlainScala.default
               )
         }
 

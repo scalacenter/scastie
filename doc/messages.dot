@@ -1,0 +1,13 @@
+digraph g{
+  w -> c [label="StatusInfo (Event Stream)"]
+  w -> c [label="SnippetProgress (Event Stream)"]
+  w -> c [label="Ressources | Format | Ensime (Autowire)"]
+  c -> ls [label="ScastieState"]
+  
+  ls [label="local storage"];
+  c [label="client"];
+  w [label="server"];
+  ws [label="storage"]
+  sr [label="sbt runner"];
+  e [label="ensime"];
+}
