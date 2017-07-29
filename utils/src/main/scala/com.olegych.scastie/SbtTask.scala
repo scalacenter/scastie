@@ -1,6 +1,6 @@
 package com.olegych.scastie
 
-import com.olegych.scastie.api._
+import com.olegych.scastie.proto.{SnippetId, Inputs}
 
 import akka.actor.ActorRef
 

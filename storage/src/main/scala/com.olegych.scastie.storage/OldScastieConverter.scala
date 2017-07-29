@@ -1,7 +1,8 @@
-package com.olegych.scastie.balancer
+package com.olegych.scastie.storage
 
-import com.olegych.scastie.api._
-import com.olegych.scastie.proto.{ScalaTargetType, SnippetProgress}
+import com.olegych.scastie.proto._
+import com.olegych.scastie.api.SnippetProgressHelper
+
 
 import System.{lineSeparator => nl}
 

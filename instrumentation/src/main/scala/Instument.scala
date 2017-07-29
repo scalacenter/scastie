@@ -1,8 +1,7 @@
 package com.olegych.scastie.instrumentation
 
+import com.olegych.scastie.proto._
 import com.olegych.scastie.api._
-
-import com.olegych.scastie.proto.ScalaTargetType
 
 import scala.meta._
 import scala.meta.inputs.Position
@@ -199,19 +198,19 @@ object Instrument {
 
     val maybeDialect =
       target match {
-        case ScalaTarget.PlainScala(scalaVersion) =>
+        case PlainScala(scalaVersion) =>
           scala(scalaVersion)
 
-        case ScalaTarget.ScalaJs(scalaVersion, _) =>
+        case ScalaJs(scalaVersion, _) =>
           scala(scalaVersion)
 
-        case ScalaTarget.ScalaNative(scalaVersion, _) =>
+        case ScalaNative(scalaVersion, _) =>
           scala(scalaVersion)
 
-        case ScalaTarget.Dotty(_) =>
+        case Dotty(_) =>
           Some(dialects.Dotty)
 
-        case ScalaTarget.TypelevelScala(scalaVersion) =>
+        case TypelevelScala(scalaVersion) =>
           typelevel(scalaVersion)
 
         case _ => None

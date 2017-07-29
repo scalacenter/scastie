@@ -48,6 +48,10 @@ message SnippetUserPart {
   optional int32 update = 2;
 }
 
+message SnippetProgressStorage {
+  repeated SnippetProgress progresses = 1;
+}
+
 message SnippetProgress {
   optional SnippetId snippetId = 1;
   optional string userOutput = 2;
