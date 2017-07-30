@@ -329,7 +329,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
   private def extract[T: Reader](line: String,
                                  report: Boolean = false): Option[T] = {
-    try { Some(uread[T](line)) } catch {
+    try { Option(uread[T](line)) } catch {
       case NonFatal(e: scala.MatchError) =>
         if (report) {
           println("---")

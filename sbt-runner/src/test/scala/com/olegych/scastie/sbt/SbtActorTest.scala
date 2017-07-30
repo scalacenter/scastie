@@ -135,6 +135,18 @@ class SbtActorTest()
     run("val t = 1; t")(_.instrumentations.nonEmpty)
   }
 
+  test("#304 null pointer") {
+    run("""|trait A {
+           |  val a = "1"
+           |  val b = a
+           |}
+           |
+           |new A {
+           |  override val a = ("2")
+           |  println(b)
+           |}""".stripMargin)(_.done)
+  }
+
   def assertCompilationInfo(
       infoAssert: Problem => Any
   )(progress: SnippetProgress): Boolean = {
