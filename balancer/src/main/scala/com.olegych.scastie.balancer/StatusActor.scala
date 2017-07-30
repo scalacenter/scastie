@@ -1,6 +1,8 @@
 package com.olegych.scastie.balancer
 
+import com.olegych.scastie.util.ActorForwarder
 import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, Props}
 import akka.stream.actor.ActorPublisher
@@ -16,9 +18,15 @@ case object SubscribeStatus
 case class LoadBalancerUpdate(
     newBalancer: LoadBalancer[String, ActorSelection]
 )
-case class LoadBalancerInfo(balancer: LoadBalancer[String, ActorSelection],
-                            originalSender: ActorRef)
-case class SetDispatcher(dispatchActor: ActorRef)
+
+case class LoadBalancerInfo(
+  balancer: LoadBalancer[String, ActorSelection],
+  originalSender: ActorRef
+)
+
+case class SetDispatcher(
+  dispatchActor: ActorRef
+)
 
 object StatusActor {
   def props: Props = Props(new StatusActor)
@@ -30,7 +38,8 @@ class StatusActor private () extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case SubscribeStatus =>
-      val publisher = context.actorOf(StatusForwarder.props)
+      val publisher = context.actorOf(Props(new ActorForwarder[SnippetProgress]()))
+
       publishers += publisher
 
       val source =
@@ -38,7 +47,7 @@ class StatusActor private () extends Actor with ActorLogging {
           .fromPublisher(ActorPublisher[StatusProgress](publisher))
           .keepAlive(
             FiniteDuration(1, TimeUnit.SECONDS),
-            () => StatusKeepAlive
+            () => StatusProgress.KeepAlive
           )
 
       sender ! source

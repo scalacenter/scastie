@@ -4,11 +4,17 @@ package com.olegych.scastie.proto;
 
 import "scalapb/scalapb.proto";
 
-message KeepAlive { }
+message StatusProgress {
+  oneof value {
+    KeepAlive wrapKeepAlive = 1;
+    StatusInfo wrapStatusInfo = 2;    
+  }
 
-message StatusInfo {
-  repeated Runner runners = 1 [(scalapb.field).collection_type="Vector"];
+  message KeepAlive { }
 
+  message StatusInfo {
+    repeated Runner runners = 1 [(scalapb.field).collection_type="Vector"];
+  }
 }
 
 message Runner {
@@ -17,8 +23,8 @@ message Runner {
 
 message TaskId {
   oneof value {
-    SbtRun sbtRunValue = 1;
-    Ensime ensimeValue = 2;   
+    SbtRun wrapSbtRun = 1;
+    Ensime wrapEnsime = 2;   
   }
 
   message SbtRun {
@@ -26,8 +32,20 @@ message TaskId {
   }
 
   message Ensime {
-    required UUID id = 1;
+    required UUID uuid = 1;
   }
+}
+
+message SbtTask {
+  required SnippetId snippetId = 1;
+  required Inputs inputs = 2;
+  required string ip = 3;
+  optional string login = 4;
+  required ActorRefData progressActor = 5;
+}
+
+message ActorRefData {
+  required string path = 1;
 }
 
 message Base64UUID {

@@ -2,6 +2,7 @@ package com.olegych.scastie
 package balancer
 
 import com.olegych.scastie.api._
+import com.olegych.scastie.proto.TaskId
 import com.olegych.scastie.balancer.utils.Histogram
 
 import scala.util.Random

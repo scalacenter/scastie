@@ -126,7 +126,7 @@ lazy val utils = project
   .in(file("utils"))
   .settings(baseSettings)
   .settings(
-    libraryDependencies += akka("actor")
+    libraryDependencies += akka("stream")
   )
   .dependsOn(apiJVM)
 
@@ -253,7 +253,7 @@ lazy val server = project
     )
   )
   .enablePlugins(SbtWeb, JavaServerAppPackaging)
-  .dependsOn(apiJVM, utils, balancer, storage)
+  .dependsOn(apiJVM, utils, balancer)
 
 lazy val balancer = project
   .settings(baseSettings)
@@ -264,7 +264,7 @@ lazy val balancer = project
       akkaHttpCore
     )
   )
-  .dependsOn(apiJVM, utils)
+  .dependsOn(apiJVM, utils, storage)
 
 lazy val storage = project
   .settings(baseSettings)

@@ -1,10 +1,14 @@
 package com.olegych.scastie.balancer
 
-import com.olegych.scastie.balancer
+import com.olegych.scastie.storage.{SnippetsContainer, UserLogin}
 
-import com.olegych.scastie.proto.{User, SbtRunnerConnected, SbtPing}
+import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
+
+import com.olegych.scastie.api.InputsHelper
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
+import akka.serialization.Serialization
 import akka.remote.DisassociatedEvent
 import akka.pattern.ask
 import akka.util.Timeout
@@ -71,7 +75,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private var loadBalancer: LoadBalancer[String, ActorSelection] = {
     val servers = remoteSelections.to[Vector].map {
       case (_, ref) =>
-        Server(ref, Inputs.default.sbtConfig)
+        Server(ref, InputsHelper.default.sbtConfig)
     }
 
     val history = History(Queue.empty[Record[String]], size = 100)
@@ -130,8 +134,17 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     updateBalancer(newBalancer)
 
+    val progressActorPath =
+      ActorRefData(path = Serialization.serializedActorPath(progressActor))
+
     server.ref.tell(
-      SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
+      SbtTask(
+        snippetId = snippetId,
+        inputs = inputs,
+        ip = ip,
+        login = user.map(_.login),
+        progressActor = progressActorPath
+      ),
       self
     )
   }
@@ -145,12 +158,12 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
       implicit val timeout = Timeout(20.seconds)
       val senderRef = sender()
-      (server.ref ? EnsimeTaskRequest(request, taskId))
-        .mapTo[EnsimeTaskResponse]
-        .map { taskResponse =>
-          senderRef ! taskResponse.response
-        }
 
+      (server.ref ? EnsimeTaskRequest(taskId = taskId, request = request))
+        .mapTo[EnsimeTaskResponse]
+        .map(taskResponse =>
+          senderRef ! taskResponse.response
+        )
     }
 
     case EnsimeTaskResponse(response, taskId) => {
@@ -262,7 +275,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case FetchScalaJsSourceMap(snippetId) =>
       sender ! container.readScalaJsSourceMap(snippetId)
 
-    case progress: api.SnippetProgress =>
+    case progress: SnippetProgress =>
       if (progress.done) {
         progress.snippetId.foreach(
           sid => updateBalancer(loadBalancer.done(SbtRunTaskId(sid)))
@@ -292,7 +305,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
         updateBalancer(
           loadBalancer.addServer(
-            Server(ref, Inputs.default.sbtConfig)
+            Server(ref, InputsHelper.default.sbtConfig)
           )
         )
       }
