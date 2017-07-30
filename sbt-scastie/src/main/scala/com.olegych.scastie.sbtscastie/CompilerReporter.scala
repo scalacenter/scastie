@@ -13,6 +13,8 @@ import System.{lineSeparator => nl}
 import xsbti.{Reporter, Problem, Position, Severity, Maybe}
 
 class CompilerReporter() extends xsbti.Reporter {
+  val jsonPbPrinter = new JsonPbPrinter()
+
   private val buffer = collection.mutable.ArrayBuffer.empty[Problem]
   def reset(): Unit = buffer.clear()
   def hasErrors: Boolean = buffer.exists(_.severity == Severity.Error)
@@ -38,7 +40,11 @@ class CompilerReporter() extends xsbti.Reporter {
     }
 
     if (problems.nonEmpty) {
-      // println(JsonPB.toJson(problems.map(toProtobuf)))
+      val report = proto.CompilationReport(
+        problems = problems.map(toProtobuf)
+      )
+
+      println(jsonPbPrinter.print(report))
     }
   }
   def problems: Array[Problem] = buffer.toArray

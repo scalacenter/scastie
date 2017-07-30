@@ -2,8 +2,17 @@ package com.olegych.scastie.sbt
 
 import com.olegych.scastie.util.ScastieFileUtil.slurp
 import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
+
 import org.ensime.api._
 import org.ensime.jerky.JerkyFormats._
+
+import org.ensime.sexp.formats.{
+  CamelCaseToDashes,
+  DefaultSexpProtocol,
+  OptionAltFormat
+}
+
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
@@ -18,12 +27,6 @@ import org.slf4j.LoggerFactory
 import java.io.File.pathSeparatorChar
 import java.io._
 import java.nio.file.{Files, Path}
-
-import org.ensime.sexp.formats.{
-  CamelCaseToDashes,
-  DefaultSexpProtocol,
-  OptionAltFormat
-}
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -61,7 +64,7 @@ class EnsimeActor(system: ActorSystem,
   private var hbRef: Option[Cancellable] = None
 
   private var nextId = 1
-  private var requests = Map[Int, (ActorRef, Option[EnsimeTaskId])]()
+  private var requests = Map[Int, (ActorRef, Option[TaskId.Ensime])]()
 
   private var codeFile: Option[Path] = None
 
@@ -73,7 +76,7 @@ class EnsimeActor(system: ActorSystem,
         def reply(response: EnsimeResponse): Unit = {
           maybeTaskId match {
             case Some(taskId) =>
-              ref ! EnsimeTaskResponse(Some(response), taskId)
+              ref ! EnsimeTaskResponse(taskId, Some(response))
             case None => ref ! response
           }
         }
@@ -88,20 +91,20 @@ class EnsimeActor(system: ActorSystem,
                     case Some(info) => info.name
                     case None       => ""
                   }
-                  Completion(ci.name, typeInfo)
+                  EnsimeResponse.CompletionItem(ci.name, typeInfo)
                 })
             )
-            log.debug(s"Got ${response.completions.size} completions")
+            log.debug(s"Got ${completionList.size} completions")
             reply(response)
 
           case symbolInfo: SymbolInfo =>
             log.info(s"Got symbol info: $symbolInfo")
             if (symbolInfo.`type`.name == "<none>")
-              reply(TypeAtPointResponse(""))
+              reply(TypeAtPointResponse(None))
             else if (symbolInfo.`type`.fullName.length <= 60)
-              reply(TypeAtPointResponse(symbolInfo.`type`.fullName))
+              reply(TypeAtPointResponse(Some(symbolInfo.`type`.fullName)))
             else
-              reply(TypeAtPointResponse(symbolInfo.`type`.name))
+              reply(TypeAtPointResponse(Some(symbolInfo.`type`.name)))
 
           // used as keepalive
           case _: ConnectionInfo =>
@@ -118,7 +121,7 @@ class EnsimeActor(system: ActorSystem,
 
   def sendToEnsime(rpcRequest: RpcRequest,
                    sender: ActorRef,
-                   taskId: Option[EnsimeTaskId] = None): Unit = {
+                   taskId: Option[TaskId.Ensime] = None): Unit = {
 
     requests += (nextId -> (sender, taskId))
     val env = RpcRequestEnvelope(rpcRequest, nextId)
@@ -268,7 +271,7 @@ class EnsimeActor(system: ActorSystem,
       CompletionsReq(
         fileInfo =
           SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
-                         Some(Inputs.defaultCode)),
+                         Some(InputsHelper.defaultCode)),
         point = 2,
         maxResults = 2000,
         caseSens = false,
@@ -314,9 +317,10 @@ class EnsimeActor(system: ActorSystem,
       }
 
     case EnsimeTaskRequest(
-        TypeAtPointRequest(EnsimeRequestInfo(inputs, position)),
-        taskId
-        ) =>
+           taskId,
+           TypeAtPointRequest(EnsimeRequest.Info(inputs, position))
+         ) =>
+
       log.info("TypeAtPoint request at EnsimeActor")
       processRequest(
         taskId,
@@ -337,9 +341,10 @@ class EnsimeActor(system: ActorSystem,
       )
 
     case EnsimeTaskRequest(
-        CompletionRequest(EnsimeRequestInfo(inputs, position)),
-        taskId
-        ) =>
+           taskId,
+           CompletionRequest(EnsimeRequest.Info(inputs, position))
+         ) =>
+
       log.info("Completion request at EnsimeActor")
       processRequest(
         taskId,
@@ -367,7 +372,7 @@ class EnsimeActor(system: ActorSystem,
   }
 
   private def processRequest(
-      taskId: EnsimeTaskId,
+      taskId: TaskId.Ensime,
       sender: ActorRef,
       inputs: Inputs,
       position: Int,

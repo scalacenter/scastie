@@ -1,7 +1,9 @@
-package com.olegych.scastie
-package sbt
+package com.olegych.scastie.sbt
 
-import api._
+
+import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
+
 import akka.actor.{
   Actor,
   ActorSystem,
@@ -78,7 +80,7 @@ class SbtActor(system: ActorSystem,
     case req: EnsimeTaskRequest => {
       ensimeActor match {
         case Some(ensimeRef) => ensimeRef.forward(req)
-        case _               => sender ! EnsimeTaskResponse(None, req.taskId)
+        case _               => sender ! EnsimeTaskResponse(req.taskId, None)
       }
     }
 

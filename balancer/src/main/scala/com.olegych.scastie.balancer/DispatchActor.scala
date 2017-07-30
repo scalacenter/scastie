@@ -8,7 +8,7 @@ import com.olegych.scastie.proto._
 import com.olegych.scastie.api.InputsHelper
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
-import akka.serialization.Serialization
+import akka.remote.serialization.ProtobufSerializer
 import akka.remote.DisassociatedEvent
 import akka.pattern.ask
 import akka.util.Timeout
@@ -134,8 +134,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     updateBalancer(newBalancer)
 
-    val progressActorPath =
-      ActorRefData(path = Serialization.serializedActorPath(progressActor))
+    val progressActorPath = 
+      ActorRefData(path =
+        ProtobufSerializer.serializeActorRef(progressActor).getPath
+      )
 
     server.ref.tell(
       SbtTask(

@@ -1,12 +1,12 @@
-package com.olegych.scastie
-package sbt
+package com.olegych.scastie.sbt
 
-import api.{FormatRequest, FormatResponse, ScalaTargetType}
-
-import akka.actor.Actor
+import com.olegych.scastie.proto._
+import com.olegych.scastie.api.FormatResponseHelper
 
 import org.scalafmt.{Scalafmt, Formatted}
 import org.scalafmt.config.{ScalafmtConfig, ScalafmtRunner}
+
+import akka.actor.Actor
 
 import org.slf4j.LoggerFactory
 
@@ -17,7 +17,7 @@ class FormatActor() extends Actor {
 
   private def format(code: String,
                      worksheetMode: Boolean,
-                     targetType: ScalaTargetType): Either[String, String] = {
+                     targetType: ScalaTargetType): FormatResponse.Value = {
     log.info(s"format (worksheetMode: $worksheetMode)")
     log.info(code)
 
@@ -28,12 +28,14 @@ class FormatActor() extends Actor {
         ScalafmtConfig.default
 
     Scalafmt.format(code, style = config) match {
-      case Formatted.Success(formattedCode) => Right(formattedCode)
+      case Formatted.Success(formattedCode) =>
+        FormatResponseHelper.success(formattedCode)
+
       case Formatted.Failure(failure) =>
         val errors = new StringWriter()
         failure.printStackTrace(new PrintWriter(errors))
         val fullStack = errors.toString
-        Left(fullStack)
+        FormatResponseHelper.failure(fullStack)
     }
   }
 

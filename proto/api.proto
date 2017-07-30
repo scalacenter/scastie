@@ -281,8 +281,8 @@ message FormatRequest {
 
 message FormatResponse {
   oneof value {
-    Success success = 1;
-    Failure failure = 2;   
+    Success wrapSuccess = 1;
+    Failure wrapFailure = 2;   
   }
 
   message Success {
@@ -290,14 +290,14 @@ message FormatResponse {
   }
 
   message Failure {
-    required string errorMessag = 1;
+    required string stackTrace = 1;
   }
 }
 
 message EnsimeRequest {
   oneof value {
-    Completion completion = 1;
-    TypeAtPoint typeAtPoint = 2;
+    Completion wrapCompletion = 1;
+    TypeAtPoint wrapTypeAtPoint = 2;
   }
 
   message Info {
@@ -316,8 +316,8 @@ message EnsimeRequest {
 
 message EnsimeResponse {
   oneof value {
-    Completion completion = 1;
-    TypeAtPoint typeAtPoint = 2;
+    Completion wrapCompletion = 1;
+    TypeAtPoint wrapTypeAtPoint = 2;
   }
 
   message Completion {
@@ -330,7 +330,7 @@ message EnsimeResponse {
   }
 
   message TypeAtPoint {
-    required string symbol = 1;
+    optional string symbol = 1;
   }
 }
 

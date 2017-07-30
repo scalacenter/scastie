@@ -2,16 +2,22 @@ package com.olegych.scastie.sbt
 
 import com.olegych.scastie.instrumentation._
 import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
 import ScalaTargetType._
 
+import com.trueaccord.scalapb.json.{Parser => JsonPbParser}
+
+import com.trueaccord.scalapb.{
+  GeneratedMessage, GeneratedMessageCompanion, Message}
+
 import scala.meta.parsers.Parsed
-import upickle.default.{Reader, read => uread, write => uwrite}
-import akka.actor.{Actor, ActorRef}
+
+import akka.actor.{Actor, ActorRef, ExtendedActorSystem}
+import akka.remote.WireFormats.ActorRefData
+import akka.remote.serialization.ProtobufSerializer
 
 import scala.concurrent.duration._
 import java.util.concurrent.{Callable, FutureTask, TimeUnit, TimeoutException}
-
-import com.olegych.scastie.SbtTask
 
 import scala.util.control.NonFatal
 import org.slf4j.LoggerFactory
@@ -31,9 +37,11 @@ object SbtRunner {
 
 class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
+  private val jsonPbParser = new JsonPbParser()
+
   private case object SbtWarmUp
 
-  private val defaultConfig = Inputs.default
+  private val defaultConfig = InputsHelper.default
 
   private var sbt = new Sbt(defaultConfig)
 
@@ -57,7 +65,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
                   forcedProgramMode: Boolean) = {
 
     val scalaTargetType = inputs.target.targetType
-    val isScalaJs = inputs.target.targetType == ScalaTargetType.JS
+    val isScalaJs = inputs.target.targetType == ScalaTargetType.ScalaJs
 
     def eval(command: String, reload: Boolean): Boolean =
       sbt.eval(command,
@@ -83,7 +91,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
             done = true,
             compilationInfos = List(
               Problem(
-                Error,
+                Severity.Error,
                 line = None,
                 message = s"timed out after $duration"
               )
@@ -113,10 +121,14 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
       withTimeout(runTimeout)({
         scalaTargetType match {
-          case JVM | Dotty | Native | Typelevel =>
+          case ScalaTargetType.PlainScala | 
+               ScalaTargetType.Dotty |
+               ScalaTargetType.ScalaNative |
+               ScalaTargetType.TypelevelScala =>
+
             eval("run", reload = false)
 
-          case JS =>
+          case ScalaTargetType.ScalaJs =>
             eval("fastOptJS", reload = false)
         }
       })(timeout(runTimeout))
@@ -145,8 +157,14 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       )
       sender() ! EnsimeConfigResponse(sbt.sbtDir)
 
-    case SbtTask(snippetId, inputs, ip, login, progressActor) =>
+    case SbtTask(snippetId, inputs, ip, login, progressActorData) =>
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
+
+      val progressActor = 
+        ProtobufSerializer.deserializeActorRef(
+          context.system.asInstanceOf[ExtendedActorSystem],
+          ActorRefData.newBuilder().setPath(progressActorData.path).build()
+        )
 
       SbtRunner.instrument(inputs) match {
         case Right(inputs0) =>
@@ -163,7 +181,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
               SnippetProgressHelper.default
                 .copy(
                   snippetId = Some(snippetId),
-                  compilationInfos = List(Problem(Error, line, message))
+                  compilationInfos = List(Problem(Severity.Error, line, message))
                 )
 
             progressActor ! progress
@@ -327,9 +345,10 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     )
   }
 
-  private def extract[T: Reader](line: String,
-                                 report: Boolean = false): Option[T] = {
-    try { Some(uread[T](line)) } catch {
+  private def extract[A <: GeneratedMessage with Message[A]](
+    line: String, report: Boolean = false)(implicit cmp: GeneratedMessageCompanion[A]): Option[A] = {
+
+    try { Option(jsonPbParser.fromJsonString[A]) } catch {
       case NonFatal(e: scala.MatchError) =>
         if (report) {
           println("---")

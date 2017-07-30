@@ -2,6 +2,7 @@ package com.olegych.scastie.sbt
 
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
 
 import scala.util.Random
 import System.{lineSeparator => nl}
@@ -40,11 +41,11 @@ class Sbt(defaultConfig: Inputs) {
   Files.createDirectories(codeFile.getParent)
 
   def scalaJsContent(): Option[String] = {
-    slurp(sbtDir.resolve(ScalaTarget.ScalaJs.targetFilename))
+    slurp(sbtDir.resolve(ScalaJs.targetFilename))
   }
 
   def scalaJsSourceMapContent(): Option[String] = {
-    slurp(sbtDir.resolve(ScalaTarget.ScalaJs.sourceMapFilename))
+    slurp(sbtDir.resolve(ScalaJs.sourceMapFilename))
   }
 
   private val (process, fin, fout) = {
