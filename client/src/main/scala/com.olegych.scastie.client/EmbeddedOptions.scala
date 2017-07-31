@@ -25,7 +25,7 @@ object EmbeddedOptions {
     import options._
 
     EmbeddedOptions(
-      inputs = code.toOption.map(c => Inputs.default.copy(code = c)),
+      inputs = code.toOption.map(c => InputsHelper.default.copy(code = c)),
       snippetId = base64UUID.toOption.map(
         uuid =>
           SnippetId(uuid,
@@ -39,7 +39,7 @@ object EmbeddedOptions {
 case class EmbeddedOptions(snippetId: Option[SnippetId], inputs: Option[Inputs]) {
   def hasCode: Boolean = inputs.map(!_.code.isEmpty).getOrElse(false)
   def setCode(code: String): EmbeddedOptions = {
-    val inputs0 = inputs.getOrElse(Inputs.default)
+    val inputs0 = inputs.getOrElse(InputsHelper.default)
     copy(inputs = Some(inputs0.copy(code = code)))
   }
 }

@@ -1,10 +1,11 @@
-package com.olegych.scastie
-package instrumentation
+package com.olegych.scastie.instrumentation
 
 import java.nio.file._
 
+import com.olegych.scastie.api._
+import com.olegych.scastie.proto
+import com.olegych.scastie.proto.ScalaTarget
 import com.olegych.scastie.util.ScastieFileUtil.slurp
-import com.olegych.scastie.api.ScalaTarget
 import org.scalatest.FunSuite
 
 import scala.collection.JavaConverters._
@@ -26,9 +27,9 @@ class InstrumentSpecs extends FunSuite {
       val original = slurp(path.resolve("original.scala")).get
       val expected = slurp(path.resolve("instrumented.scala")).get
 
-      val target =
-        if (dirName == "scalajs") ScalaTarget.ScalaJs.default
-        else ScalaTarget.PlainScala.default
+      val target: proto.ScalaTarget =
+        if (dirName == "scalajs") ScalaJs.default
+        else PlainScala.default
 
       val Right(obtained) = Instrument(original, target)
 
@@ -37,39 +38,57 @@ class InstrumentSpecs extends FunSuite {
   }
 
   test("top level fails") {
-    val Left(e) = Instrument("package foo { }")
+    val Left(e) = Instrument("package foo { }", PlainScala.default)
     assert(e.isInstanceOf[ParsingError])
   }
 
   test("main method fails") {
     val Left(HasMainMethod) =
-      Instrument("object Main { def main(args: Array[String]): Unit = () }")
+      Instrument(
+        "object Main { def main(args: Array[String]): Unit = () }",
+        PlainScala.default
+      )
   }
 
   test("extends App trait fails") {
     val Left(HasMainMethod) =
-      Instrument("object Main extends App { }")
+      Instrument(
+        "object Main extends App { }",
+        PlainScala.default
+      )
   }
 
   test("with App trait fails") {
     val Left(HasMainMethod) =
-      Instrument("trait Foo; object Main extends Foo with App { }")
+      Instrument(
+        "trait Foo; object Main extends Foo with App { }",
+        PlainScala.default
+      )
   }
 
   test("unsupported dialect") {
     val Left(UnsupportedDialect) =
-      Instrument("1", ScalaTarget.PlainScala("2.13.0"))
+      Instrument("1", PlainScala("2.13.0"))
   }
 
   test("extends App primary fails") {
-    val Left(HasMainMethod) = Instrument("object Main extends App")
+    val Left(HasMainMethod) = Instrument(
+      "object Main extends App",
+      PlainScala.default
+    )
   }
 
   test("extends App secondary fails") {
-    val Left(HasMainMethod) = Instrument("object Main extends A with App")
+    val Left(HasMainMethod) = Instrument(
+      "object Main extends A with App",
+      PlainScala.default
+    )
   }
 
   test("bug #83") {
-    val Right(_) = Instrument("val answer: 42 = 42", ScalaTarget.Dotty)
+    val Right(_) = Instrument(
+      "val answer: 42 = 42",
+      Dotty.default
+    )
   }
 }

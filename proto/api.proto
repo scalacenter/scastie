@@ -56,6 +56,10 @@ message UUID {
   required string value = 1;
 }
 
+message OldId {
+  required int32 value = 1;
+}
+
 message SnippetId {
   required Base64UUID base64UUID = 1;
   optional SnippetUserPart user = 2;

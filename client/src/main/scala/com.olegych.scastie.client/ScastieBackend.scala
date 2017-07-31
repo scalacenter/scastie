@@ -176,7 +176,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     val setData = scope.modState(
       state =>
         state
-          .setInputs(Inputs.default.copy(code = state.inputs.code))
+          .setInputs(InputsHelper.default.copy(code = state.inputs.code))
           .clearOutputs
           .clearSnippetId
           .setChangedInputs
@@ -187,7 +187,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
   def newSnippet: Callback = {
     val setData = scope.modState(
-      _.setInputs(Inputs.default.copy(code = "")).clearOutputs.clearSnippetId.setChangedInputs
+      _.setInputs(InputsHelper.default.copy(code = "")).clearOutputs.clearSnippetId.setChangedInputs
     )
 
     setData >> setHome

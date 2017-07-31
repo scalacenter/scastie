@@ -17,7 +17,7 @@ private object LinePrinter {
   def apply(): LinePrinter = {
     def out(in: String): Unit = {
       val protoMessage =
-        proto.Sbt().withSbtOutput(proto.SbtOutput(in.trim))
+        proto.Sbt().withWrapSbtOutput(proto.SbtOutput(in.trim))
 
       println(jsonPbPrinter.print(protoMessage))
     }
@@ -58,7 +58,8 @@ class RuntimeErrorLogger() extends Logger {
         .foreach(
           error =>
             println(
-              jsonPbPrinter.print(proto.Sbt().withRuntimeError(error))
+              jsonPbPrinter.print(proto.Sbt().withWrapRuntimeError(error)
+            )
           )
         )
     }

@@ -16,11 +16,11 @@ private[api] trait ScalaTargetExtensionsBase {
 
   protected def renderSbtDouble(lib: ScalaDependency): String = {
     import lib._
-    s""" "$groupId" %% "$artifact" % "$version" """
+    s""""$groupId" %% "$artifact" % "${version.value}""""
   }
 
   protected def renderSbtCross(lib: ScalaDependency): String = {
     import lib._
-    s""" "$groupId" %%% "$artifact" % "$version" """
+    s""""$groupId" %%% "$artifact" % "${version.value}""""
   }
 }

@@ -111,7 +111,7 @@ lazy val loggingAndTest =
     "ch.qos.logback" % "logback-classic" % "1.1.7",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
     "com.getsentry.raven" % "raven-logback" % "8.0.3",
-    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+    "org.scalatest" %% "scalatest" % scalaTestVersion % Test
   )
 
 lazy val remapSourceMap =
@@ -144,6 +144,14 @@ lazy val runnerRuntimeDependencies = Seq(
   apiJVM,
   // api213JS,
   // api213JVM,
+  proto210JS,
+  proto210JVM,
+  proto211JS,
+  proto211JVM,
+  protoJS,
+  protoJVM,
+  // proto213JS,
+  // proto213JVM,
   runtimeScala210JS,
   runtimeScala210JVM,
   runtimeScala211JS,
@@ -177,8 +185,8 @@ lazy val sbtRunner = project
       "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT",
       "org.ensime" %% "s-express" % "2.0.0-SNAPSHOT"
     ),
-    buildInfoKeys := Seq[BuildInfoKey](version),
-    buildInfoPackage := "com.olegych.scastie.buildinfo",
+    // buildInfoKeys := Seq[BuildInfoKey](version),
+    // buildInfoPackage := "com.olegych.scastie.buildinfo",
     imageNames in docker := Seq(
       ImageName(
         namespace = Some("scalacenter"),
@@ -241,6 +249,7 @@ lazy val sbtRunner = project
 lazy val server = project
   .settings(baseSettings)
   .settings(loggingAndTest)
+  .settings(json4s)
   .settings(packageScalaJS(client))
   .settings(
     reStart := reStart.dependsOn(WebKeys.assets in (client, Assets)).evaluated,
@@ -438,6 +447,9 @@ def api(scalaV: String, protoProject: CrossProject) = {
                crossType = CrossType.Pure)
     .settings(baseSettings)
     .settings(
+      libraryDependencies += "org.scalatest" %% "scalatest" % scalaTestVersion % Test
+    )
+    .settings(
       buildInfoKeys := Seq[BuildInfoKey](
         organization,
         version,
@@ -448,7 +460,8 @@ def api(scalaV: String, protoProject: CrossProject) = {
       scalaVersion := scalaV,
       moduleName := projectName,
       libraryDependencies += "com.lihaoyi" %%% "autowire" % autowireVersion,
-      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "src" / "main" / "scala"
+      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "src" / "main" / "scala",
+      unmanagedSourceDirectories in Test += (baseDirectory in ThisBuild).value / projectName / "src" / "test" / "scala"
     )
     .jsSettings(
       test := {},

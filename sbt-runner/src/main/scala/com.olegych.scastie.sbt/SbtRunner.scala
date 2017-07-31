@@ -111,7 +111,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     val sbtReloadTime = 40.seconds
     val reloadError =
       if (sbt.needsReload(inputs)) {
-        log.info(s"== updating $snippetId ==")
+        log.info(s"== updating ${snippetId.show} ==")
 
         withTimeout(sbtReloadTime)(eval("compile", reload = true))(
           timeout(sbtReloadTime)
@@ -119,7 +119,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       } else false
 
     if (!reloadError) {
-      log.info(s"== running $snippetId ==")
+      log.info(s"== running ${snippetId.show} ==")
 
       withTimeout(runTimeout)({
         scalaTargetType match {
@@ -138,7 +138,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         }
       })(timeout(runTimeout))
 
-      log.info(s"== done  $snippetId ==")
+      log.info(s"== done  ${snippetId.show} ==")
     } else {
       log.info(s"== reload errors ==")
     }

@@ -24,7 +24,7 @@ class OldScastieConverterTest extends FunSuite {
       OldScastieConverter.convertOldInput(original)
 
     val expected =
-      Inputs.default.copy(
+      InputsHelper.default.copy(
         target = ScalaTarget.PlainScala("2.11.8"),
         sbtConfigExtra =
           """scalacOptions ++= Seq(""-deprecation", "-feature")""",
@@ -42,7 +42,7 @@ class OldScastieConverterTest extends FunSuite {
     val original = slurp(path.resolve("convert-test.scala")).get
 
     val expected =
-      Inputs.default.copy(
+      InputsHelper.default.copy(
         sbtConfigExtra = slurp(path.resolve("config.sbt")).get,
         target = ScalaTarget.Typelevel("2.11.8"),
         code = slurp(path.resolve("code.scala")).get,

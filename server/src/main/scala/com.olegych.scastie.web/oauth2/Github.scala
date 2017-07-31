@@ -1,14 +1,16 @@
 package com.olegych.scastie.web.oauth2
 
+import com.olegych.scastie.proto.User
+
 import akka.http.scaladsl._
 import akka.http.scaladsl.model._
-import HttpMethods.POST
-import headers._
-import Uri._
-import unmarshalling.Unmarshal
+import akka.http.scaladsl.model.HttpMethods.POST
+import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.model.Uri._
+import akka.http.scaladsl.unmarshalling.Unmarshal
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.olegych.scastie.api.User
 
 import scala.concurrent.Future
 import com.typesafe.config.ConfigFactory

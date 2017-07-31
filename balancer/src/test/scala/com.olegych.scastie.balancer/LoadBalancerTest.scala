@@ -1,7 +1,7 @@
-package com.olegych.scastie
-package balancer
+package com.olegych.scastie.balancer
 
-import api._
+import com.olegych.scastie.api.SbtRunTaskId
+import com.olegych.scastie.proto.{SnippetId, Base64UUID}
 
 import scala.collection.immutable.Queue
 
@@ -70,7 +70,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
   test("reconfigure busy configuration") {
     val tasks = (1 to 5).map(
-      i => Task("c1", Ip(i.toString), SbtRunTaskId(SnippetId(i.toString, None)))
+      i => Task("c1", Ip(i.toString), SbtRunTaskId(SnippetId(Base64UUID(i.toString), None)))
     )
     val balancer =
       LoadBalancer(
@@ -103,7 +103,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
   test("do not reconfigure if some configuration if not busy") {
     val tasks = (1 to 5).map(
-      i => Task("c1", Ip(i.toString), SbtRunTaskId(SnippetId(i.toString, None)))
+      i => Task("c1", Ip(i.toString), SbtRunTaskId(SnippetId(Base64UUID(i.toString), None)))
     )
     val balancer =
       LoadBalancer(
@@ -145,7 +145,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server.mailbox.isEmpty)
 
     val config = "c1"
-    val taskId = SbtRunTaskId(SnippetId("1", None))
+    val taskId = SbtRunTaskId(SnippetId(Base64UUID("1"), None))
 
     val (assigned, balancer0) = balancer.add(Task(config, nextIp, taskId))
 
@@ -167,7 +167,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server.mailbox.isEmpty)
     assert(server.currentTaskId.isEmpty)
 
-    val taskId1 = SbtRunTaskId(SnippetId("1", None))
+    val taskId1 = SbtRunTaskId(SnippetId(Base64UUID("1"), None))
     val (assigned0, balancer0) = balancer.add(Task("c1", nextIp, taskId1))
 
     val server0 = balancer0.servers.head
@@ -176,7 +176,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server0.mailbox.size == 1)
     assert(server0.currentTaskId.contains(taskId1))
 
-    val taskId2 = SbtRunTaskId(SnippetId("2", None))
+    val taskId2 = SbtRunTaskId(SnippetId(Base64UUID("2"), None))
     val (assigned1, balancer1) = balancer0.add(Task("c2", nextIp, taskId2))
 
     val server1 = balancer1.servers.head

@@ -1,6 +1,9 @@
 package com.olegych.scastie.balancer
 
-import com.olegych.scastie.api._
+
+import com.olegych.scastie.api.SbtRunTaskId
+import com.olegych.scastie.proto.{SnippetId, Base64UUID}
+
 import com.olegych.scastie.balancer.utils._
 
 import org.scalatest.{FunSuite, Assertion}
@@ -14,7 +17,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   def add(balancer: TestLoadBalancer, config: String): TestLoadBalancer = {
     val (_, balancer0) =
       balancer.add(
-        Task(config, nextIp, SbtRunTaskId(SnippetId(taskId.toString, None)))
+        Task(config, nextIp, SbtRunTaskId(SnippetId(Base64UUID(taskId.toString), None)))
       )
     taskId += 1
     balancer0

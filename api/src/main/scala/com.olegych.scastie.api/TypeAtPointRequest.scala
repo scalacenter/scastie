@@ -10,4 +10,10 @@ object TypeAtPointRequest {
       case _ => None
     }
   }
+
+  def apply(info: EnsimeRequest.Info): EnsimeRequest = {
+    EnsimeRequest(
+      EnsimeRequest.Value.WrapTypeAtPoint(EnsimeRequest.TypeAtPoint(info))
+    )
+  }
 }

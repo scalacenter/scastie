@@ -5,8 +5,8 @@ import com.olegych.scastie.proto.{ScalaTarget, ScalaTargetType, ScalaDependency}
 object ScalaJs {
   private val defaultScalaJsVersion = "0.6.19"
 
-  def default =
-    ScalaTarget.ScalaJs(
+  def default: ScalaTarget =
+    ScalaJs(
       scalaVersion = PlainScala.defaultScalaVersion,
       scalaJsVersion = defaultScalaJsVersion
     )
@@ -15,6 +15,16 @@ object ScalaJs {
   val sourceMapFilename: String = targetFilename + ".map"
   val sourceFilename: String = "main.scala"
   val sourceUUID: String = "file:///tmp/LxvjvKARSa2U5ctNis9LIA"
+
+  def apply(scalaVersion: String, scalaJsVersion: String): ScalaTarget =
+    ScalaTarget(
+      value = ScalaTarget.Value.WrapScalaJs(
+        ScalaTarget.ScalaJs(
+          scalaVersion = scalaVersion,
+          scalaJsVersion = scalaJsVersion
+        )
+      )
+    )
   
   def unapply(scalaTarget: ScalaTarget): Option[(String, String)]  = {
     scalaTarget.value match {

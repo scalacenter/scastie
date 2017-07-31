@@ -46,7 +46,7 @@ class CompilerReporter() extends xsbti.Reporter {
 
       println(
         jsonPbPrinter.print(
-          proto.Sbt().withCompilationReport(report)
+          proto.Sbt().withWrapCompilationReport(report)
         )
       )
     }

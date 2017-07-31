@@ -1,8 +1,8 @@
-package com.olegych.scastie
-package web
+package com.olegych.scastie.web
 
-import api._
-import balancer._
+import com.olegych.scastie.proto._
+import com.olegych.scastie.api._
+import com.olegych.scastie.balancer._
 
 import akka.pattern.ask
 import akka.actor.ActorRef
@@ -32,18 +32,18 @@ class AutowireApiImplementation(
     (dispatchActor ? formatRequest).mapTo[FormatResponse]
   }
 
-  def complete(
-      completionRequest: CompletionRequest
-  ): Future[Option[CompletionResponse]] = {
+  def complete(completionRequest: EnsimeRequest
+    ): Future[Option[EnsimeResponse.Completion]] = {
+
     (dispatchActor ? wrapEnsime(completionRequest))
-      .mapTo[Option[CompletionResponse]]
+      .mapTo[Option[EnsimeResponse.Completion]]
   }
 
-  def typeAt(
-      typeAtPointRequest: TypeAtPointRequest
-  ): Future[Option[TypeAtPointResponse]] = {
+  def typeAt(typeAtPointRequest: EnsimeRequest
+    ): Future[Option[EnsimeResponse.TypeAtPoint]] = {
+
     (dispatchActor ? wrapEnsime(typeAtPointRequest))
-      .mapTo[Option[TypeAtPointResponse]]
+      .mapTo[Option[EnsimeResponse.TypeAtPoint]]
   }
 
   def save(inputs: Inputs): Future[SnippetId] = {

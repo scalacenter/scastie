@@ -32,7 +32,7 @@ object ScastieState {
     ),
     user = None,
     attachedDoms = AttachedDoms(Map()),
-    inputs = Inputs.default,
+    inputs = InputsHelper.default,
     outputs = Outputs.default,
     status = StatusState.default,
     completions = List(),

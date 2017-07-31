@@ -47,8 +47,10 @@ object InputsHelper {
 
     val librariesConfig =
       if (allLibraries.isEmpty) ""
-      else if (allLibraries.size == 1)
+      else if (allLibraries.size == 1) {
         s"libraryDependencies += " + target.renderSbt(allLibraries.head)
+      }
+
       else {
         val nl = "\n"
         val tab = "  "
@@ -92,9 +94,9 @@ object InputsHelper {
     import inputs._
 
     if (inputs == InputsHelper.default) {
-      "Inputs.default"
+      "InputsHelper.default"
     } else if (inputs.copy(code = default.code) == default) {
-      "Inputs.default" + nl +
+      "InputsHelper.default" + nl +
         code + nl
     } else {
       import inputs._
