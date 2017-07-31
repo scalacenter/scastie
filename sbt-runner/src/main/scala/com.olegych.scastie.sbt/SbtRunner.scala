@@ -1,7 +1,9 @@
 package com.olegych.scastie.sbt
 
 import com.olegych.scastie.instrumentation._
+import com.olegych.scastie.api
 import com.olegych.scastie.api._
+import com.olegych.scastie.proto
 import com.olegych.scastie.proto._
 import ScalaTargetType._
 
@@ -130,6 +132,9 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
           case ScalaTargetType.ScalaJs =>
             eval("fastOptJS", reload = false)
+
+          case _ =>
+            log.error("Not valid ScalaTargetType")
         }
       })(timeout(runTimeout))
 
@@ -244,32 +249,21 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
         val lineOffset = getLineOffset(worksheetMode)
 
-        val problems = extractProblems(line, lineOffset)
+        
         val instrumentations =
-          extract[List[Instrumentation]](line, report = true)
-        val runtimeError = extractRuntimeError(line, lineOffset)
-        val sbtOutput = extract[ConsoleOutput.SbtOutput](line)
+          extract[proto.Instrumentations](line, report = true).map(_.instrumentations)
 
-        // sbt plugin is not loaded at this stage. we need to drop those messages
-        val initializationMessages = List(
-          "[info] Loading global plugins from",
-          "[info] Loading project definition from",
-          "[info] Set current project to scastie",
-          "[info] Updating {file:",
-          "[info] Done updating.",
-          "[info] Resolving",
-          "[error] Type error in expression"
-        )
+        val fromSbt = extract[proto.Sbt](line)
 
-        val isSbtMessage =
-          initializationMessages.exists(message => line.startsWith(message))
+        val runtimeError = extractRuntimeError(fromSbt, lineOffset)
+        val problems = extractProblems(fromSbt, lineOffset)
+        val sbtOutput = extractSbtOutput(fromSbt, line)
 
         val userOutput =
           if (problems.isEmpty
               && instrumentations.isEmpty
               && runtimeError.isEmpty
               && !done
-              && !isSbtMessage
               && sbtOutput.isEmpty)
             Some(line)
           else None
@@ -282,9 +276,9 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         val progress = SnippetProgress(
           snippetId = Some(snippetId),
           userOutput = userOutput,
-          sbtOutput = if (isSbtMessage) Some(line) else sbtOutput.map(_.line),
+          sbtOutput = sbtOutput,
           compilationInfos = problems.getOrElse(Nil),
-          instrumentations = instrumentations.getOrElse(Nil),
+          instrumentations = instrumentations.getOrElse(Set()),
           runtimeError = runtimeError,
           scalaJsContent = scalaJsContent,
           scalaJsSourceMapContent = scalaJsSourceMapContent.map(
@@ -306,23 +300,26 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       snippetId: SnippetId
   )(sourceMapRaw: String): String = {
     try {
-      val sourceMap = uread[SourceMap](sourceMapRaw)
+      implicit val formats = org.json4s.DefaultFormats
+      import org.json4s.jackson.Serialization.{read, write}
+
+      val sourceMap = read[SourceMap](sourceMapRaw)
 
       val sourceMap0 =
         sourceMap.copy(
           sources = sourceMap.sources.map(
             source =>
-              if (source.startsWith(ScalaTarget.ScalaJs.sourceUUID)) {
+              if (source.startsWith(api.ScalaJs.sourceUUID)) {
                 val host =
                   if (production) "https://scastie.scala-lang.org"
                   else "http://localhost:9000"
 
-                host + snippetId.scalaJsUrl(ScalaTarget.ScalaJs.sourceFilename)
+                host + snippetId.scalaJsUrl(api.ScalaJs.sourceFilename)
               } else source
           )
         )
 
-      uwrite(sourceMap0)
+      write(sourceMap0)
     } catch {
       case e: Exception =>
         e.printStackTrace()
@@ -330,25 +327,64 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
   }
 
-  private def extractProblems(line: String,
-                              lineOffset: Int): Option[List[Problem]] = {
-    val problems = extract[List[Problem]](line)
+  private def extractSbtOutput(fromSbt: Option[proto.Sbt],
+                               line: String): Option[String] = {
 
-    problems.map(
-      _.map(problem => problem.copy(line = problem.line.map(_ + lineOffset)))
-    )
+    fromSbt match {
+      case Some(Sbt(Sbt.Value.WrapSbtOutput(SbtOutput(line)))) =>
+        Some(line)
+
+      case _ => {
+        // sbt plugin is not loaded at this stage. we need to drop those messages
+        val initializationMessages = List(
+          "[info] Loading global plugins from",
+          "[info] Loading project definition from",
+          "[info] Set current project to scastie",
+          "[info] Updating {file:",
+          "[info] Done updating.",
+          "[info] Resolving",
+          "[error] Type error in expression"
+        )
+
+        val isSbtMessage =
+          initializationMessages.exists(message => line.startsWith(message))
+
+        if (isSbtMessage) Some(line)
+        else None
+      }
+    }
   }
 
-  def extractRuntimeError(line: String, lineOffset: Int): Option[RuntimeError] = {
-    extract[Option[RuntimeError]](line).flatMap(
-      _.map(error => error.copy(line = error.line.map(_ + lineOffset)))
-    )
+  private def extractProblems(fromSbt: Option[proto.Sbt],
+                              lineOffset: Int): Option[Seq[Problem]] = {
+    fromSbt match {
+      case Some(Sbt(Sbt.Value.WrapCompilationReport(CompilationReport(problems)))) =>
+        Some(
+          problems.map(problem =>
+            problem.copy(line = problem.line.map(_ + lineOffset))
+          )
+        )
+
+      case _ =>
+        None
+    }
+  }
+
+  private def extractRuntimeError(fromSbt: Option[proto.Sbt],
+                                  lineOffset: Int): Option[RuntimeError] = {
+    fromSbt match {
+      case Some(Sbt(Sbt.Value.WrapRuntimeError(runtimeError))) => 
+        Some(runtimeError.copy(line = runtimeError.line.map(_ + lineOffset)))
+
+      case _ =>
+        None
+    }
   }
 
   private def extract[A <: GeneratedMessage with Message[A]](
     line: String, report: Boolean = false)(implicit cmp: GeneratedMessageCompanion[A]): Option[A] = {
 
-    try { Option(jsonPbParser.fromJsonString[A]) } catch {
+    try { Option(jsonPbParser.fromJsonString[A](line)) } catch {
       case NonFatal(e: scala.MatchError) =>
         if (report) {
           println("---")

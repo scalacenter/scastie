@@ -75,7 +75,7 @@ message SnippetProgress {
   optional string userOutput = 2;
   optional string sbtOutput = 3;
   repeated Problem compilationInfos = 4;
-  repeated Instrumentation instrumentations = 5;
+  repeated Instrumentation instrumentations = 5  [(scalapb.field).collection_type="Set"];
   optional RuntimeError runtimeError = 6;
   optional string scalaJsContent = 7;
   optional string scalaJsSourceMapContent = 8;
@@ -104,7 +104,7 @@ message RuntimeError {
 }
 
 message SbtOutput {
-  required string message = 1;
+  required string line = 1;
 }
 
 message CompilationReport {
@@ -114,9 +114,9 @@ message CompilationReport {
 // sbt-runner <-> sbt-scastie
 message Sbt {
   oneof value {
-    SbtOutput sbtOutput = 1;
-    RuntimeError runtimeError = 2;
-    CompilationReport compilationReport = 3;
+    SbtOutput wrapSbtOutput = 1;
+    RuntimeError wrapRuntimeError = 2;
+    CompilationReport wrapCompilationReport = 3;
   }
 }
 
@@ -124,14 +124,14 @@ message Instrumentation {
   required Position position = 1;
 
   oneof render {
-    Value value = 2;
-    Html html = 3;
-    AttachedDom attachedDom = 4;
+    Value wrapValue = 2;
+    Html wrapHtml = 3;
+    AttachedDom wrapAttachedDom = 4;
   }
 
   message Value {
     required string value = 1;
-    required string className = 2;
+    required string tpe = 2;
   }
 
   message Html {
@@ -202,6 +202,21 @@ message Outputs {
   repeated Instrumentation instrumentations = 3 [(scalapb.field).collection_type="Set"];
   optional bool runtimeError = 4;
   required bool sbtError = 5;
+}
+
+message Instrumentations {
+  repeated Instrumentation instrumentations = 1 [(scalapb.field).collection_type="Set"];
+}
+
+message InstrumentationsJs {
+  oneof value {
+    Error wrapError = 1;
+    Instrumentations wrapInstrumentations = 2;
+  }
+
+  message Error {
+    optional RuntimeError error = 1;
+  }
 }
 
 message ConsoleOutput {

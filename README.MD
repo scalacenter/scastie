@@ -1,12 +1,10 @@
 [![Build Status](https://travis-ci.org/scalacenter/scastie.svg?branch=master)](
   https://travis-ci.org/scalacenter/scastie
-)
-
-[![Join the chat](https://badges.gitter.im/scalacenter/scastie.svg)](
+) [![Join the chat](https://badges.gitter.im/scalacenter/scastie.svg)](
   https://gitter.im/scalacenter/scastie
 )
 
-# Scala pastebin
+# Scastie
 
 https://scastie.scala-lang.org
 
@@ -23,12 +21,6 @@ https://scastie.scala-lang.org
 *  realtime update of snippet compilation/running progress
 *  timeout long-running snippets
 *  allow specifying scala version, target and external libraries
-
-## Why it does it this way, benefits and drawbacks
-
-Scastie relies on existing scala infrastructure to provide close to real world experience inside
-a pastebin-like sandbox. This minimizes the effort to create meaningful snippet but might require some
-prior experience to fully unleash its (and scala) power.
 
 ## High-level design and architecture
 

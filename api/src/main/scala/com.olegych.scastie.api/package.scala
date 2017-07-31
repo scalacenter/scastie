@@ -1,10 +1,37 @@
 package com.olegych.scastie
 
 import com.olegych.scastie.proto.{
-  Inputs, ScalaDependency, ScalaTarget, ScalaTargetType, Project
+  Inputs, ScalaDependency, ScalaTarget, ScalaTargetType, Project,
+  SnippetId, User, SnippetUserPart
 }
 
 package object api {
+  implicit class SnippetIdExtensions(val snippetId: SnippetId) extends AnyVal {
+    def isOwnedBy(user2: Option[User]): Boolean = {
+      (snippetId.user, user2) match {
+        case (Some(SnippetUserPart(snippetLogin, _)),
+              Some(User(userLogin, _, _))) =>
+          snippetLogin == userLogin
+        case _ => false
+      }
+    }
+
+    def show: String = url
+
+    def url: String = {
+      snippetId match {
+        case SnippetId(uuid, None) => uuid.value
+        case SnippetId(uuid, Some(SnippetUserPart(login, update))) =>
+          s"$login/$uuid/${update.getOrElse(0)}"
+      }
+    }
+
+    def scalaJsUrl(end: String): String = {
+      val middle = url
+      s"/${Shared.scalaJsHttpPathPrefix}/$middle/$end"
+    }
+  }
+
   implicit class InputsExtensions(val inputs: Inputs) extends AnyVal {
     def sbtConfig: String = InputsHelper.sbtConfig(inputs)
     def sbtPluginsConfig: String = InputsHelper.sbtPluginsConfig(inputs)

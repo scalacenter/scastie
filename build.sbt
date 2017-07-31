@@ -33,11 +33,19 @@ lazy val orgSettings = Seq(
   }
 )
 
-lazy val pprintVersion = "0.4.4"
+lazy val pprintVersion = "0.5.2"
 lazy val autowireVersion = "0.2.6"
 lazy val scalajsDomVersion = "0.9.2"
 lazy val scalaTestVersion = "3.0.1"
 lazy val akkaHttpVersion = "10.0.6"
+
+lazy val protoJson =
+  libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-json4s" % "0.3.2"
+
+// has to be compatible with scalapb-json4s
+val json4s = 
+  libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.5.1"
+
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
 
@@ -106,9 +114,6 @@ lazy val loggingAndTest =
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   )
 
-lazy val protoJson =
-  libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-json4s" % "0.3.2"
-
 lazy val remapSourceMap =
   scalacOptions ++= {
     val ver = version.value
@@ -155,6 +160,7 @@ lazy val sbtRunner = project
   .settings(baseSettings)
   .settings(loggingAndTest)
   .settings(protoJson)
+  .settings(json4s)
   .settings(
     parallelExecution in Test := false,
     scalacOptions -= "-Xfatal-warnings", // Thread.stop
@@ -480,6 +486,7 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
                base = crossDir(projectId),
                crossType = CrossType.Full)
     .settings(baseSettings)
+    .settings(protoJson)
     .settings(
       scalaVersion := scalaV,
       moduleName := projectName,

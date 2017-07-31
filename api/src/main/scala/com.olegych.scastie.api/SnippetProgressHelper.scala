@@ -9,7 +9,7 @@ object SnippetProgressHelper {
       userOutput = None,
       sbtOutput = None,
       compilationInfos = Nil,
-      instrumentations = Nil,
+      instrumentations = Set(),
       runtimeError = None,
       scalaJsContent = None,
       scalaJsSourceMapContent = None,

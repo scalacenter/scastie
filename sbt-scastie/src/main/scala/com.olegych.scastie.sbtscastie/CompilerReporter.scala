@@ -44,7 +44,11 @@ class CompilerReporter() extends xsbti.Reporter {
         problems = problems.map(toProtobuf)
       )
 
-      println(jsonPbPrinter.print(report))
+      println(
+        jsonPbPrinter.print(
+          proto.Sbt().withCompilationReport(report)
+        )
+      )
     }
   }
   def problems: Array[Problem] = buffer.toArray

@@ -1,20 +1,17 @@
-package com.olegych.scastie.api
-package runtime
+package com.olegych.scastie.api.runtime
 
-import upickle.default.{write => uwrite}
+import com.olegych.scastie.api
+import com.trueaccord.scalapb.json.{Printer => JsonPbPrinter}
 
 protected[runtime] trait SharedRuntime {
-  def write(instrumentations: List[Instrumentation]): String = {
-    uwrite(instrumentations)
-  }
+  protected val jsonPbPrinter = new JsonPbPrinter()
 
-  protected[runtime] def render[T: pprint.PPrint](
+  protected[runtime] def render[T](
       a: T
-  )(implicit tp: pprint.TPrint[T]): Render = {
-    import pprint.Config.Defaults._
+  )(implicit tp: pprint.TPrint[T]): api.Render = {
     a match {
-      case html: Html => html
-      case v          => Value(pprint.tokenize(v).mkString, tp.render)
+      case html: api.Html => html
+      case v          => api.Value(pprint.tokenize(v).mkString, tp.render)
     }
   }
 }
