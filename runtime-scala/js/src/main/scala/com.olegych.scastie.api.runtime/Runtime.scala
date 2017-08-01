@@ -24,7 +24,7 @@ object Runtime extends SharedRuntime {
         case Right(instrumentations) => {
           proto.InstrumentationsJs.Value.WrapInstrumentations(
             proto.Instrumentations(instrumentations = 
-              instrumentations.map(_.toProto).toSet
+              instrumentations.map(_.toProto).toSeq
             )
           )
         }

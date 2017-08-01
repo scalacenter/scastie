@@ -209,7 +209,7 @@ message Outputs {
 }
 
 message Instrumentations {
-  repeated Instrumentation instrumentations = 1 [(scalapb.field).collection_type="Set"];
+  repeated Instrumentation instrumentations = 1;
 }
 
 message InstrumentationsJs {

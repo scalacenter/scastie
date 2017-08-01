@@ -13,7 +13,9 @@ object Runtime extends SharedRuntime {
   private def convert(
     instrumentations: List[api.Instrumentation]): proto.Instrumentations = {
 
-    ???
+    proto.Instrumentations(
+      instrumentations = instrumentations.map(_.toProto).toSeq
+    )
   }
 
   def write(instrumentations: List[api.Instrumentation]): String = {

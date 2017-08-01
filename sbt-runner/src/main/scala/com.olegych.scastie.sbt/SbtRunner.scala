@@ -278,7 +278,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           userOutput = userOutput,
           sbtOutput = sbtOutput,
           compilationInfos = problems.getOrElse(Nil),
-          instrumentations = instrumentations.getOrElse(Set()),
+          instrumentations = instrumentations.map(_.toSet).getOrElse(Set()),
           runtimeError = runtimeError,
           scalaJsContent = scalaJsContent,
           scalaJsSourceMapContent = scalaJsSourceMapContent.map(
