@@ -1,8 +1,14 @@
 package com.olegych.scastie
 
 import com.olegych.scastie.proto.{
-  Inputs, ScalaDependency, ScalaTarget, ScalaTargetType, Project,
-  SnippetId, User, SnippetUserPart
+  Inputs,
+  ScalaDependency,
+  ScalaTarget,
+  ScalaTargetType,
+  Project,
+  SnippetId,
+  User,
+  SnippetUserPart
 }
 
 package object api {
@@ -46,10 +52,11 @@ package object api {
       InputsHelper.addScalaDependency(inputs, scalaDependency, project)
 
     def removeScalaDependency(scalaDependency: ScalaDependency): Inputs =
-      InputsHelper.removeScalaDependency(inputs, scalaDependency)      
+      InputsHelper.removeScalaDependency(inputs, scalaDependency)
   }
 
-  implicit class ScalaTargetExtensions(val scalaTarget: ScalaTarget) extends ScalaTargetExtensionsBase {
+  implicit class ScalaTargetExtensions(val scalaTarget: ScalaTarget)
+      extends ScalaTargetExtensionsBase {
     private def dispatch: ScalaTargetExtensionsBase = {
       scalaTarget.value match {
         case ScalaTarget.Value.WrapPlainScala(t) =>

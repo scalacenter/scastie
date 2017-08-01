@@ -4,9 +4,10 @@ import com.olegych.scastie.proto.EnsimeResponse
 import EnsimeResponse.CompletionItem
 
 object TypeAtPointResponse {
-  def unapply(response: EnsimeResponse): Option[Option[String]]  = {
+  def unapply(response: EnsimeResponse): Option[Option[String]] = {
     response.value match {
-      case EnsimeResponse.Value.WrapTypeAtPoint(EnsimeResponse.TypeAtPoint(symbol)) =>
+      case EnsimeResponse.Value
+            .WrapTypeAtPoint(EnsimeResponse.TypeAtPoint(symbol)) =>
         Some(symbol)
       case _ => None
     }

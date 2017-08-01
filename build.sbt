@@ -43,9 +43,8 @@ lazy val protoJson =
   libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-json4s" % "0.3.2"
 
 // has to be compatible with scalapb-json4s
-val json4s = 
+val json4s =
   libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.5.1"
-
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
 

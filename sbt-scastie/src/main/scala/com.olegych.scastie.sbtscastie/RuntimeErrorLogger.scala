@@ -58,8 +58,7 @@ class RuntimeErrorLogger() extends Logger {
         .foreach(
           error =>
             println(
-              jsonPbPrinter.print(proto.Sbt().withWrapRuntimeError(error)
-            )
+              jsonPbPrinter.print(proto.Sbt().withWrapRuntimeError(error))
           )
         )
     }

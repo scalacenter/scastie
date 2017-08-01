@@ -19,9 +19,11 @@ trait AutowireApi {
   def fetchUser(): Future[Option[User]]
   def fetchUserSnippets(): Future[List[SnippetSummary]]
 
-  def complete(request: EnsimeRequest.Completion
-    ): Future[Option[EnsimeResponse.Completion]]
+  def complete(
+      request: EnsimeRequest.Completion
+  ): Future[Option[EnsimeResponse.Completion]]
 
-  def typeAt(request: EnsimeRequest.TypeAtPoint
-    ): Future[Option[EnsimeResponse.TypeAtPoint]]
+  def typeAt(
+      request: EnsimeRequest.TypeAtPoint
+  ): Future[Option[EnsimeResponse.TypeAtPoint]]
 }

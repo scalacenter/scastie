@@ -32,15 +32,17 @@ class AutowireApiImplementation(
     (dispatchActor ? formatRequest).mapTo[FormatResponse]
   }
 
-  def complete(completionRequest: EnsimeRequest
-    ): Future[Option[EnsimeResponse.Completion]] = {
+  def complete(
+      completionRequest: EnsimeRequest
+  ): Future[Option[EnsimeResponse.Completion]] = {
 
     (dispatchActor ? wrapEnsime(completionRequest))
       .mapTo[Option[EnsimeResponse.Completion]]
   }
 
-  def typeAt(typeAtPointRequest: EnsimeRequest
-    ): Future[Option[EnsimeResponse.TypeAtPoint]] = {
+  def typeAt(
+      typeAtPointRequest: EnsimeRequest
+  ): Future[Option[EnsimeResponse.TypeAtPoint]] = {
 
     (dispatchActor ? wrapEnsime(typeAtPointRequest))
       .mapTo[Option[EnsimeResponse.TypeAtPoint]]

@@ -11,7 +11,7 @@ protected[runtime] trait SharedRuntime {
   )(implicit tp: pprint.TPrint[T]): api.Render = {
     a match {
       case html: api.Html => html
-      case v          => api.Value(pprint.tokenize(v).mkString, tp.render)
+      case v              => api.Value(pprint.tokenize(v).mkString, tp.render)
     }
   }
 }

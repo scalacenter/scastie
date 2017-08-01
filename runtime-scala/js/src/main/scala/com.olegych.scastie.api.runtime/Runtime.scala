@@ -11,8 +11,8 @@ import java.awt.image.BufferedImage
 
 object Runtime extends SharedRuntime {
   private def convert(
-    in: Either[Option[proto.RuntimeError], List[api.Instrumentation]]):
-     proto.InstrumentationsJs = {
+      in: Either[Option[proto.RuntimeError], List[api.Instrumentation]]
+  ): proto.InstrumentationsJs = {
 
     val value =
       in match {
@@ -23,8 +23,8 @@ object Runtime extends SharedRuntime {
         }
         case Right(instrumentations) => {
           proto.InstrumentationsJs.Value.WrapInstrumentations(
-            proto.Instrumentations(instrumentations = 
-              instrumentations.map(_.toProto).toSeq
+            proto.Instrumentations(
+              instrumentations = instrumentations.map(_.toProto).toSeq
             )
           )
         }
@@ -33,7 +33,9 @@ object Runtime extends SharedRuntime {
     proto.InstrumentationsJs(value = value)
   }
 
-  def write(in: Either[Option[proto.RuntimeError], List[api.Instrumentation]]): String = {
+  def write(
+      in: Either[Option[proto.RuntimeError], List[api.Instrumentation]]
+  ): String = {
     jsonPbPrinter.print(convert(in))
   }
 

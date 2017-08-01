@@ -1,6 +1,5 @@
 package com.olegych.scastie.sbt
 
-
 import com.olegych.scastie.api._
 import com.olegych.scastie.proto._
 

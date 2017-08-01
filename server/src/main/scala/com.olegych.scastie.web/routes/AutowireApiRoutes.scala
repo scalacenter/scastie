@@ -30,51 +30,55 @@ class AutowireApiRoutes(
 
   val routes: Route =
     post(
-      extractClientIP(remoteAddress ⇒
-        optionalLogin(user ⇒
-          concat(
-            // temporary route for the scala-lang frontpage
-            path("scala-lang")(
-              cors()(
-                entity(as[String]) { code ⇒
-                  val inputs =
-                    InputsWithIpAndUser(
-                      InputsHelper.default.copy(code = code),
-                      UserTrace(
-                        remoteAddress.toString,
-                        None
-                      )
-                    )
-                  complete(
-                    (dispatchActor ? RunSnippet(inputs))
-                      .mapTo[SnippetId]
-                      .map(
-                        snippetId =>
-                          (
-                            Created,
-                            snippetId.url
+      extractClientIP(
+        remoteAddress ⇒
+          optionalLogin(
+            user ⇒
+              concat(
+                // temporary route for the scala-lang frontpage
+                path("scala-lang")(
+                  cors()(
+                    entity(as[String]) { code ⇒
+                      val inputs =
+                        InputsWithIpAndUser(
+                          InputsHelper.default.copy(code = code),
+                          UserTrace(
+                            remoteAddress.toString,
+                            None
+                          )
                         )
+                      complete(
+                        (dispatchActor ? RunSnippet(inputs))
+                          .mapTo[SnippetId]
+                          .map(
+                            snippetId =>
+                              (
+                                Created,
+                                snippetId.url
+                            )
+                          )
                       )
+                    }
                   )
-                }
-              )
-            ),
-            path("api" / Segments)(s ⇒
-              entity(as[ByteString])(bs ⇒
-                complete {
-                  val api = new AutowireApiImplementation(
-                    dispatchActor,
-                    remoteAddress,
-                    user
-                  )
+                ),
+                path("api" / Segments)(
+                  s ⇒
+                    entity(as[ByteString])(
+                      bs ⇒
+                        complete {
+                          val api = new AutowireApiImplementation(
+                            dispatchActor,
+                            remoteAddress,
+                            user
+                          )
 
-                  AutowireServer.route[AutowireApi](api)(
-                    autowire.Core.Request(s, bs)
+                          AutowireServer.route[AutowireApi](api)(
+                            autowire.Core.Request(s, bs)
+                          )
+                      }
                   )
-                }
-              )
+                )
             )
-          )
         )
       )
     )

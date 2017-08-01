@@ -317,10 +317,9 @@ class EnsimeActor(system: ActorSystem,
       }
 
     case EnsimeTaskRequest(
-           taskId,
-           TypeAtPointRequest(EnsimeRequest.Info(inputs, position))
-         ) =>
-
+        taskId,
+        TypeAtPointRequest(EnsimeRequest.Info(inputs, position))
+        ) =>
       log.info("TypeAtPoint request at EnsimeActor")
       processRequest(
         taskId,
@@ -341,10 +340,9 @@ class EnsimeActor(system: ActorSystem,
       )
 
     case EnsimeTaskRequest(
-           taskId,
-           CompletionRequest(EnsimeRequest.Info(inputs, position))
-         ) =>
-
+        taskId,
+        CompletionRequest(EnsimeRequest.Info(inputs, position))
+        ) =>
       log.info("Completion request at EnsimeActor")
       processRequest(
         taskId,

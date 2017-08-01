@@ -166,9 +166,9 @@ class SbtActorTest()
     val ip = "my-ip"
     val progressActor = TestProbe()
 
-    val progressActorPath = 
-      ActorRefData(path =
-        ProtobufSerializer.serializeActorRef(progressActor.ref).getPath
+    val progressActorPath =
+      ActorRefData(
+        path = ProtobufSerializer.serializeActorRef(progressActor.ref).getPath
       )
 
     sbtActor ! SbtTask(snippetId, inputs, ip, None, progressActorPath)

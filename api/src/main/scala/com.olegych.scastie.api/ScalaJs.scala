@@ -10,7 +10,7 @@ object ScalaJs {
       scalaVersion = PlainScala.defaultScalaVersion,
       scalaJsVersion = defaultScalaJsVersion
     )
-  
+
   val targetFilename: String = "fastopt.js"
   val sourceMapFilename: String = targetFilename + ".map"
   val sourceFilename: String = "main.scala"
@@ -25,23 +25,26 @@ object ScalaJs {
         )
       )
     )
-  
-  def unapply(scalaTarget: ScalaTarget): Option[(String, String)]  = {
+
+  def unapply(scalaTarget: ScalaTarget): Option[(String, String)] = {
     scalaTarget.value match {
-      case ScalaTarget.Value.WrapScalaJs(ScalaTarget.ScalaJs(scalaVersion, scalaJsVersion)) =>
+      case ScalaTarget.Value
+            .WrapScalaJs(ScalaTarget.ScalaJs(scalaVersion, scalaJsVersion)) =>
         Some((scalaVersion, scalaJsVersion))
       case _ => None
     }
   }
 }
 
-private[api] class ScalaJsExtension(base: ScalaTarget, value: ScalaTarget.ScalaJs) extends ScalaTargetExtensionsBase{
+private[api] class ScalaJsExtension(base: ScalaTarget,
+                                    value: ScalaTarget.ScalaJs)
+    extends ScalaTargetExtensionsBase {
   import value._
-  
+
   def targetType: ScalaTargetType =
     ScalaTargetType.ScalaJs
 
-  def scaladexRequest: Map[String, String] = 
+  def scaladexRequest: Map[String, String] =
     Map(
       "target" -> "JS",
       "scalaVersion" -> scalaVersion,

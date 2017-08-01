@@ -41,7 +41,8 @@ class SnippetsContainerTest extends FunSuite {
 
   test("fork") {
     val container = testContainer
-    val inputs = InputsHelper.default.copy(code = "source", showInUserProfile = true)
+    val inputs =
+      InputsHelper.default.copy(code = "source", showInUserProfile = true)
     val snippetId = container.save(inputs, user = None)
 
     val forkedInputs =

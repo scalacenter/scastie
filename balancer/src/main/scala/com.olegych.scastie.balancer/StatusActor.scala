@@ -20,12 +20,12 @@ case class LoadBalancerUpdate(
 )
 
 case class LoadBalancerInfo(
-  balancer: LoadBalancer[String, ActorSelection],
-  originalSender: ActorRef
+    balancer: LoadBalancer[String, ActorSelection],
+    originalSender: ActorRef
 )
 
 case class SetDispatcher(
-  dispatchActor: ActorRef
+    dispatchActor: ActorRef
 )
 
 object StatusActor {
@@ -38,7 +38,8 @@ class StatusActor private () extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case SubscribeStatus =>
-      val publisher = context.actorOf(Props(new ActorForwarder[SnippetProgress]()))
+      val publisher =
+        context.actorOf(Props(new ActorForwarder[SnippetProgress]()))
 
       publishers += publisher
 

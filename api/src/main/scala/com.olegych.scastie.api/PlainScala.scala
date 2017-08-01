@@ -3,9 +3,10 @@ package com.olegych.scastie.api
 import com.olegych.scastie.proto.{ScalaTarget, ScalaTargetType, ScalaDependency}
 
 object PlainScala {
-  def unapply(scalaTarget: ScalaTarget): Option[String]  = {
+  def unapply(scalaTarget: ScalaTarget): Option[String] = {
     scalaTarget.value match {
-      case ScalaTarget.Value.WrapPlainScala(ScalaTarget.PlainScala(scalaVersion)) =>
+      case ScalaTarget.Value
+            .WrapPlainScala(ScalaTarget.PlainScala(scalaVersion)) =>
         Some(scalaVersion)
       case _ => None
     }
@@ -22,14 +23,16 @@ object PlainScala {
   def default: ScalaTarget = PlainScala(defaultScalaVersion)
 }
 
-private[api] class PlainScalaExtension(base: ScalaTarget, value: ScalaTarget.PlainScala) extends ScalaTargetExtensionsBase{
+private[api] class PlainScalaExtension(base: ScalaTarget,
+                                       value: ScalaTarget.PlainScala)
+    extends ScalaTargetExtensionsBase {
   import value._
   def targetType: ScalaTargetType =
     ScalaTargetType.PlainScala
 
-  def scaladexRequest: Map[String, String] = 
+  def scaladexRequest: Map[String, String] =
     Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
-  
+
   def renderSbt(lib: ScalaDependency): String =
     renderSbtDouble(lib)
 
@@ -38,8 +41,8 @@ private[api] class PlainScalaExtension(base: ScalaTarget, value: ScalaTarget.Pla
 
   def sbtPluginsConfig: String = ""
 
-  def runtimeDependency: Option[ScalaDependency] = 
+  def runtimeDependency: Option[ScalaDependency] =
     VersionHelper.runtimeDependency(base)
-  
+
   def show: String = s"Scala $scalaVersion"
 }

@@ -24,7 +24,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   def create(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
-    val uuid = 
+    val uuid =
       Base64UUID(
         value = randomUrlFriendlyBase64UUID()
       )
@@ -32,14 +32,15 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     val snippetId =
       SnippetId(
         base64UUID = uuid,
-        user = user.map(u => 
-          SnippetUserPart(
-            login = u.login,
-            update = None
+        user = user.map(
+          u =>
+            SnippetUserPart(
+              login = u.login,
+              update = None
           )
         )
       )
-    
+
     writeInputs(snippetId, inputs)
 
     snippetId
@@ -66,7 +67,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   def update(snippetId: SnippetId, inputs: Inputs): Option[SnippetId] = {
-    snippetId.user.map{
+    snippetId.user.map {
       case SnippetUserPart(login, _) => {
         val nextSnippetId =
           SnippetId(
@@ -126,18 +127,17 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
       case _ => ()
     }
 
-
-    progress.snippetId.foreach{snippetId => 
+    progress.snippetId.foreach { snippetId =>
       val progresses = readOutputs(snippetId).map(_.progresses).getOrElse(Nil)
       val file = outputsFile(snippetId)
 
-      val progressStorage = 
+      val progressStorage =
         SnippetProgressStorage(
           progresses = progresses ++ List(progress)
         )
 
-      usingOutputStream(file)(outputStream =>
-        progressStorage.writeTo(outputStream)
+      usingOutputStream(file)(
+        outputStream => progressStorage.writeTo(outputStream)
       )
     }
   }
@@ -177,9 +177,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   def readSnippet(snippetId: SnippetId): Option[FetchResult] = {
-    readInputs(snippetId).map{inputs =>
-      
-      val progresses = 
+    readInputs(snippetId).map { inputs =>
+      val progresses =
         readOutputs(snippetId).map(_.progresses).getOrElse(Nil)
 
       FetchResult(inputs, progresses)
@@ -291,17 +290,16 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   private def readInputs(snippetId: SnippetId): Option[Inputs] = {
     val file = inputsFile(snippetId)
     if (Files.exists(file)) {
-      usingInputStream(file)(stream =>
-        Some(Inputs.parseFrom(stream))
-      )
-    }
-    else None
+      usingInputStream(file)(stream => Some(Inputs.parseFrom(stream)))
+    } else None
   }
 
-  private def readOutputs(snippetId: SnippetId): Option[SnippetProgressStorage] = {
+  private def readOutputs(
+      snippetId: SnippetId
+  ): Option[SnippetProgressStorage] = {
     val file = outputsFile(snippetId)
-    
-    if(Files.exists(file)) {
+
+    if (Files.exists(file)) {
       Some(usingInputStream(file)(SnippetProgressStorage.parseFrom))
     } else {
       None

@@ -4,7 +4,6 @@ import com.olegych.scastie.proto._
 import com.olegych.scastie.api
 import api.{SnippetProgressHelper, InputsHelper}
 
-
 import System.{lineSeparator => nl}
 
 object OldScastieConverter {
@@ -38,7 +37,7 @@ object OldScastieConverter {
           SnippetProgressHelper.default.copy(
             userOutput = Some(line),
             done = true
-          )
+        )
       )
       .toList
   }
@@ -101,8 +100,7 @@ object OldScastieConverter {
                 api.TypelevelScala.default
               )
 
-
-          case _ => 
+          case _ =>
             scalaVersion
               .map(sv => api.PlainScala(sv))
               .getOrElse(

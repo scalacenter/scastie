@@ -134,9 +134,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     updateBalancer(newBalancer)
 
-    val progressActorPath = 
-      ActorRefData(path =
-        ProtobufSerializer.serializeActorRef(progressActor).getPath
+    val progressActorPath =
+      ActorRefData(
+        path = ProtobufSerializer.serializeActorRef(progressActor).getPath
       )
 
     server.ref.tell(
@@ -163,9 +163,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
       (server.ref ? EnsimeTaskRequest(taskId = taskId, request = request))
         .mapTo[EnsimeTaskResponse]
-        .map(taskResponse =>
-          senderRef ! taskResponse.response
-        )
+        .map(taskResponse => senderRef ! taskResponse.response)
     }
 
     case EnsimeTaskResponse(response, taskId) => {

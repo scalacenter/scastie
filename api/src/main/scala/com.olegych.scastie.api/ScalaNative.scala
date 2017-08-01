@@ -3,9 +3,11 @@ package com.olegych.scastie.api
 import com.olegych.scastie.proto.{ScalaTarget, ScalaTargetType, ScalaDependency}
 
 object ScalaNative {
-  def unapply(scalaTarget: ScalaTarget): Option[(String, String)]  = {
+  def unapply(scalaTarget: ScalaTarget): Option[(String, String)] = {
     scalaTarget.value match {
-      case ScalaTarget.Value.WrapScalaNative(ScalaTarget.ScalaNative(scalaVersion, scalaNativeVersion)) =>
+      case ScalaTarget.Value.WrapScalaNative(
+          ScalaTarget.ScalaNative(scalaVersion, scalaNativeVersion)
+          ) =>
         Some((scalaVersion, scalaNativeVersion))
       case _ => None
     }
@@ -29,10 +31,9 @@ object ScalaNative {
     )
 }
 
-private[api] class ScalaNativeExtension(
-  base: ScalaTarget,
-  value: ScalaTarget.ScalaNative)
-  extends ScalaTargetExtensionsBase {
+private[api] class ScalaNativeExtension(base: ScalaTarget,
+                                        value: ScalaTarget.ScalaNative)
+    extends ScalaTargetExtensionsBase {
 
   import value._
 
@@ -42,7 +43,7 @@ private[api] class ScalaNativeExtension(
   def sbtPluginsConfig: String =
     s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
 
-  def runtimeDependency: Option[ScalaDependency] = 
+  def runtimeDependency: Option[ScalaDependency] =
     VersionHelper.runtimeDependency(base)
 
   def targetType = ScalaTargetType.ScalaNative
@@ -56,5 +57,5 @@ private[api] class ScalaNativeExtension(
   def renderSbt(lib: ScalaDependency): String =
     renderSbtCross(lib)
 
-  def show: String = s"Scala-Native $scalaVersion $scalaNativeVersion" 
+  def show: String = s"Scala-Native $scalaVersion $scalaNativeVersion"
 }

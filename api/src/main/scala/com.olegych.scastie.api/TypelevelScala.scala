@@ -17,16 +17,19 @@ object TypelevelScala {
       )
     )
 
-  def unapply(scalaTarget: ScalaTarget): Option[String]  = {
+  def unapply(scalaTarget: ScalaTarget): Option[String] = {
     scalaTarget.value match {
-      case ScalaTarget.Value.WrapTypelevelScala(ScalaTarget.TypelevelScala(scalaVersion)) =>
+      case ScalaTarget.Value
+            .WrapTypelevelScala(ScalaTarget.TypelevelScala(scalaVersion)) =>
         Some(scalaVersion)
       case _ => None
     }
   }
 }
 
-private[api] class TypelevelScalaExtension(base: ScalaTarget, value: ScalaTarget.TypelevelScala) extends ScalaTargetExtensionsBase{
+private[api] class TypelevelScalaExtension(base: ScalaTarget,
+                                           value: ScalaTarget.TypelevelScala)
+    extends ScalaTargetExtensionsBase {
   import value._
 
   def targetType: ScalaTargetType =

@@ -93,7 +93,6 @@ class EnsimeActorTests()
       }
     }
 
-
     pending
   }
 

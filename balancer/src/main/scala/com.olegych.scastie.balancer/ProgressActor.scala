@@ -29,7 +29,7 @@ class ProgressActor extends Actor {
         publisher ! snippetProgress
       }
 
-      if(snippetProgress.done) {
+      if (snippetProgress.done) {
         snippetProgress.snippetId.foreach { snippetId =>
           subscribers.remove(snippetId)
         }

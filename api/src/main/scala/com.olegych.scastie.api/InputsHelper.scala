@@ -1,8 +1,12 @@
 package com.olegych.scastie.api
 
 import com.olegych.scastie.proto.{
-  Inputs, ScalaDependency, ScalaTarget,
-  ScalaTargetType, Project, Version,
+  Inputs,
+  ScalaDependency,
+  ScalaTarget,
+  ScalaTargetType,
+  Project,
+  Version,
   LibrariesFrom
 }
 import com.olegych.scastie.buildinfo.BuildInfo
@@ -37,7 +41,7 @@ object InputsHelper {
     val buildVersion = Version(BuildInfo.version)
 
     val targetConfig = target.sbtConfig
-      
+
     val optionalTargetDependency =
       if (worksheetMode) target.runtimeDependency
       else None
@@ -49,9 +53,7 @@ object InputsHelper {
       if (allLibraries.isEmpty) ""
       else if (allLibraries.size == 1) {
         s"libraryDependencies += " + target.renderSbt(allLibraries.head)
-      }
-
-      else {
+      } else {
         val nl = "\n"
         val tab = "  "
         "libraryDependencies ++= " +
@@ -127,13 +129,17 @@ object InputsHelper {
   }
 
   private def librariesFromMap(inputs: Inputs): Map[ScalaDependency, Project] = {
-    inputs.librariesFrom.map(
-      libraryFrom => (libraryFrom.scalaDependency, libraryFrom.project)
-    ).toMap
+    inputs.librariesFrom
+      .map(
+        libraryFrom => (libraryFrom.scalaDependency, libraryFrom.project)
+      )
+      .toMap
   }
 
-  private def libraryFromProto(map: Map[ScalaDependency, Project]): Seq[LibrariesFrom] = {
-    map.toSeq.map{
+  private def libraryFromProto(
+      map: Map[ScalaDependency, Project]
+  ): Seq[LibrariesFrom] = {
+    map.toSeq.map {
       case (dep, pro) =>
         LibrariesFrom(
           scalaDependency = dep,
@@ -150,10 +156,9 @@ object InputsHelper {
 
     inputs.copy(
       libraries = inputs.libraries + scalaDependency,
-      librariesFrom = 
-        libraryFromProto(
-          librariesFromM + (scalaDependency -> project)
-        )
+      librariesFrom = libraryFromProto(
+        librariesFromM + (scalaDependency -> project)
+      )
     )
   }
 
@@ -164,10 +169,9 @@ object InputsHelper {
 
     inputs.copy(
       libraries = inputs.libraries - scalaDependency,
-      librariesFrom = 
-        libraryFromProto(
-          librariesFromM - scalaDependency
-        )
+      librariesFrom = libraryFromProto(
+        librariesFromM - scalaDependency
+      )
     )
   }
 }

@@ -10,7 +10,10 @@ import ScalaTargetType._
 import com.trueaccord.scalapb.json.{Parser => JsonPbParser}
 
 import com.trueaccord.scalapb.{
-  GeneratedMessage, GeneratedMessageCompanion, Message}
+  GeneratedMessage,
+  GeneratedMessageCompanion,
+  Message
+}
 
 import scala.meta.parsers.Parsed
 
@@ -123,11 +126,8 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
       withTimeout(runTimeout)({
         scalaTargetType match {
-          case ScalaTargetType.PlainScala | 
-               ScalaTargetType.Dotty |
-               ScalaTargetType.ScalaNative |
-               ScalaTargetType.TypelevelScala =>
-
+          case ScalaTargetType.PlainScala | ScalaTargetType.Dotty |
+              ScalaTargetType.ScalaNative | ScalaTargetType.TypelevelScala =>
             eval("run", reload = false)
 
           case ScalaTargetType.ScalaJs =>
@@ -165,7 +165,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     case SbtTask(snippetId, inputs, ip, login, progressActorData) =>
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 
-      val progressActor = 
+      val progressActor =
         ProtobufSerializer.deserializeActorRef(
           context.system.asInstanceOf[ExtendedActorSystem],
           ActorRefData.newBuilder().setPath(progressActorData.path).build()
@@ -186,7 +186,8 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
               SnippetProgressHelper.default
                 .copy(
                   snippetId = Some(snippetId),
-                  compilationInfos = List(Problem(Severity.Error, line, message))
+                  compilationInfos =
+                    List(Problem(Severity.Error, line, message))
                 )
 
             progressActor ! progress
@@ -249,9 +250,9 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
         val lineOffset = getLineOffset(worksheetMode)
 
-        
         val instrumentations =
-          extract[proto.Instrumentations](line, report = true).map(_.instrumentations)
+          extract[proto.Instrumentations](line, report = true)
+            .map(_.instrumentations)
 
         val fromSbt = extract[proto.Sbt](line)
 
@@ -358,10 +359,12 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private def extractProblems(fromSbt: Option[proto.Sbt],
                               lineOffset: Int): Option[Seq[Problem]] = {
     fromSbt match {
-      case Some(Sbt(Sbt.Value.WrapCompilationReport(CompilationReport(problems)))) =>
+      case Some(
+          Sbt(Sbt.Value.WrapCompilationReport(CompilationReport(problems)))
+          ) =>
         Some(
-          problems.map(problem =>
-            problem.copy(line = problem.line.map(_ + lineOffset))
+          problems.map(
+            problem => problem.copy(line = problem.line.map(_ + lineOffset))
           )
         )
 
@@ -373,7 +376,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   private def extractRuntimeError(fromSbt: Option[proto.Sbt],
                                   lineOffset: Int): Option[RuntimeError] = {
     fromSbt match {
-      case Some(Sbt(Sbt.Value.WrapRuntimeError(runtimeError))) => 
+      case Some(Sbt(Sbt.Value.WrapRuntimeError(runtimeError))) =>
         Some(runtimeError.copy(line = runtimeError.line.map(_ + lineOffset)))
 
       case _ =>
@@ -382,7 +385,9 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
   }
 
   private def extract[A <: GeneratedMessage with Message[A]](
-    line: String, report: Boolean = false)(implicit cmp: GeneratedMessageCompanion[A]): Option[A] = {
+      line: String,
+      report: Boolean = false
+  )(implicit cmp: GeneratedMessageCompanion[A]): Option[A] = {
 
     try { Option(jsonPbParser.fromJsonString[A](line)) } catch {
       case NonFatal(e: scala.MatchError) =>

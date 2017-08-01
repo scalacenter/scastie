@@ -7,9 +7,7 @@ import scala.collection.mutable.{Queue => MQueue}
 import akka.stream.actor.ActorPublisherMessage.Request
 import scala.reflect.ClassTag
 
-class ActorForwarder[T: ClassTag]()
-    extends Actor
-    with ActorPublisher[T] {
+class ActorForwarder[T: ClassTag]() extends Actor with ActorPublisher[T] {
 
   private var buffer = MQueue.empty[T]
   private var toDeliver = 0L

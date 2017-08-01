@@ -14,7 +14,7 @@ object Dotty {
       )
     )
 
-  def unapply(scalaTarget: ScalaTarget): Option[String]  = {
+  def unapply(scalaTarget: ScalaTarget): Option[String] = {
     scalaTarget.value match {
       case ScalaTarget.Value.WrapDotty(ScalaTarget.Dotty(dottyVersion)) =>
         Some(dottyVersion)
@@ -23,8 +23,8 @@ object Dotty {
   }
 }
 
-
-private[api] class DottyExtension(base: ScalaTarget, value: ScalaTarget.Dotty) extends ScalaTargetExtensionsBase{
+private[api] class DottyExtension(base: ScalaTarget, value: ScalaTarget.Dotty)
+    extends ScalaTargetExtensionsBase {
   import value._
   def targetType: ScalaTargetType =
     ScalaTargetType.Dotty

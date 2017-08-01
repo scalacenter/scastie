@@ -11,7 +11,8 @@ import java.awt.image.BufferedImage
 object Runtime extends SharedRuntime {
 
   private def convert(
-    instrumentations: List[api.Instrumentation]): proto.Instrumentations = {
+      instrumentations: List[api.Instrumentation]
+  ): proto.Instrumentations = {
 
     proto.Instrumentations(
       instrumentations = instrumentations.map(_.toProto).toSeq
