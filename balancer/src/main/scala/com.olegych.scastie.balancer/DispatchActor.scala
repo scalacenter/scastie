@@ -38,7 +38,7 @@ case class FetchSnippet(snippetId: SnippetId)
 case class FetchOldSnippet(id: Int)
 case class FetchUserSnippets(user: User)
 
-case class ReceiveStatus(originalSender: ActorRef)
+case class ReceiveStatus(requester: ActorRef)
 
 class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     extends Actor
@@ -94,6 +94,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   override def preStart(): Unit = {
+    statusActor ! SetDispatcher(self)
     context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
     super.preStart()
   }
@@ -296,8 +297,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       }
     }
 
-    case ReceiveStatus(originalSender) => {
-      sender ! LoadBalancerInfo(loadBalancer, originalSender)
+    case ReceiveStatus(requester) => {
+      sender ! LoadBalancerInfo(loadBalancer, requester)
     }
   }
 }

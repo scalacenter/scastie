@@ -6,10 +6,10 @@ import java.io.{File, ByteArrayOutputStream}
 import java.util.Base64
 import java.awt.image.BufferedImage
 
+import scala.reflect.ClassTag
+
 object Runtime extends SharedRuntime {
-  override def render[T: pprint.PPrint](
-      a: T
-  )(implicit tp: pprint.TPrint[T]): Render = {
+  override def render[T: ClassTag](a: T): Render = {
     super.render(a)
   }
 

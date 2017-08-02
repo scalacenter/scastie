@@ -2,10 +2,11 @@ package com.olegych.scastie.sbt
 
 import com.olegych.scastie.instrumentation._
 import com.olegych.scastie.api._
-import ScalaTargetType._
+import com.olegych.scastie.api.ScalaTargetType._
+
+import play.api.libs.json._
 
 import scala.meta.parsers.Parsed
-import upickle.default.{Reader, read => uread, write => uwrite}
 import akka.actor.{Actor, ActorRef}
 
 import scala.concurrent.duration._
@@ -32,6 +33,9 @@ object SbtRunner {
 class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
   private case object SbtWarmUp
+
+  private implicit val sbtOutputFormat =
+    ConsoleOutput.ConsoleOutputFormat.formatSbtOutput
 
   private val defaultConfig = Inputs.default
 
@@ -227,9 +231,9 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
         val lineOffset = getLineOffset(worksheetMode)
 
-        val problems = extractProblems(line, lineOffset)
+        val problems = extractProblems(line, lineOffset, worksheetMode)
         val instrumentations =
-          extract[List[Instrumentation]](line, report = true)
+          extract[List[Instrumentation]](line)
         val runtimeError = extractRuntimeError(line, lineOffset)
         val sbtOutput = extract[ConsoleOutput.SbtOutput](line)
 
@@ -285,67 +289,9 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       }
   }
 
-  private def remapSourceMap(
-      snippetId: SnippetId
-  )(sourceMapRaw: String): String = {
-    try {
-      val sourceMap = uread[SourceMap](sourceMapRaw)
+  private implicit val formatSourceMap = Json.format[SourceMap]
 
-      val sourceMap0 =
-        sourceMap.copy(
-          sources = sourceMap.sources.map(
-            source =>
-              if (source.startsWith(ScalaTarget.Js.sourceUUID)) {
-                val host =
-                  if (production) "https://scastie.scala-lang.org"
-                  else "http://localhost:9000"
-
-                host + snippetId.scalaJsUrl(ScalaTarget.Js.sourceFilename)
-              } else source
-          )
-        )
-
-      uwrite(sourceMap0)
-    } catch {
-      case e: Exception =>
-        e.printStackTrace()
-        sourceMapRaw
-    }
-  }
-
-  private def extractProblems(line: String,
-                              lineOffset: Int): Option[List[Problem]] = {
-    val problems = extract[List[Problem]](line)
-
-    problems.map(
-      _.map(problem => problem.copy(line = problem.line.map(_ + lineOffset)))
-    )
-  }
-
-  def extractRuntimeError(line: String, lineOffset: Int): Option[RuntimeError] = {
-    extract[Option[RuntimeError]](line).flatMap(
-      _.map(error => error.copy(line = error.line.map(_ + lineOffset)))
-    )
-  }
-
-  private def extract[T: Reader](line: String,
-                                 report: Boolean = false): Option[T] = {
-    try { Option(uread[T](line)) } catch {
-      case NonFatal(e: scala.MatchError) =>
-        if (report) {
-          println("---")
-          println(line)
-          println("---")
-          e.printStackTrace()
-          println("---")
-        }
-
-        None
-      case NonFatal(_) => None
-    }
-  }
-
-  private[SbtRunner] case class SourceMap(
+  private case class SourceMap(
       version: Int,
       file: String,
       mappings: String,
@@ -353,4 +299,63 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       names: List[String],
       lineCount: Int
   )
+
+  private def remapSourceMap(
+      snippetId: SnippetId
+  )(sourceMapRaw: String): String = {
+    Json
+      .fromJson[SourceMap](Json.parse(sourceMapRaw))
+      .asOpt
+      .map { sourceMap =>
+        val sourceMap0 =
+          sourceMap.copy(
+            sources = sourceMap.sources.map(
+              source =>
+                if (source.startsWith(ScalaTarget.Js.sourceUUID)) {
+                  val host =
+                    if (production) "https://scastie.scala-lang.org"
+                    else "http://localhost:9000"
+
+                  host + snippetId.scalaJsUrl(ScalaTarget.Js.sourceFilename)
+                } else source
+            )
+          )
+
+        Json.prettyPrint(Json.toJson(sourceMap0))
+      }
+      .getOrElse(sourceMapRaw)
+  }
+
+  private def extractProblems(line: String,
+                              lineOffset: Int,
+                              worksheetMode: Boolean): Option[List[Problem]] = {
+    val problems = extract[List[Problem]](line)
+
+    val problemsWithOffset =
+      problems.map(
+        _.map(problem => problem.copy(line = problem.line.map(_ + lineOffset)))
+      )
+
+    def annoying(in: Problem): Boolean = {
+      in.severity == Warning &&
+      in.message == "a pure expression does nothing in statement position; you may be omitting necessary parentheses"
+    }
+
+    if (worksheetMode) problemsWithOffset.map(_.filterNot(annoying))
+    else problemsWithOffset
+  }
+
+  def extractRuntimeError(line: String, lineOffset: Int): Option[RuntimeError] = {
+    extract[RuntimeErrorWrap](line).flatMap(
+      _.error.map(error => error.copy(line = error.line.map(_ + lineOffset)))
+    )
+  }
+
+  private def extract[T: Reads](line: String): Option[T] = {
+    try {
+      Json.fromJson[T](Json.parse(line)).asOpt
+    } catch {
+      case NonFatal(e) => None
+    }
+  }
 }

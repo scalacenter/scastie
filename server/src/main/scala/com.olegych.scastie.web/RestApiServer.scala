@@ -11,12 +11,12 @@ import akka.http.scaladsl.model.RemoteAddress
 
 import scala.concurrent.{Future, ExecutionContext}
 
-class AutowireApiImplementation(
+class RestApiServer(
     dispatchActor: ActorRef,
     ip: RemoteAddress,
     maybeUser: Option[User]
 )(implicit timeout: Timeout, executionContext: ExecutionContext)
-    extends AutowireApi {
+    extends RestApi {
 
   private def wrap(inputs: Inputs): InputsWithIpAndUser =
     InputsWithIpAndUser(inputs, UserTrace(ip.toString, maybeUser))
@@ -32,17 +32,15 @@ class AutowireApiImplementation(
     (dispatchActor ? formatRequest).mapTo[FormatResponse]
   }
 
-  def complete(
-      completionRequest: CompletionRequest
-  ): Future[Option[CompletionResponse]] = {
-    (dispatchActor ? wrapEnsime(completionRequest))
-      .mapTo[Option[CompletionResponse]]
+  def autocomplete(
+      request: AutoCompletionRequest
+  ): Future[Option[AutoCompletionResponse]] = {
+    (dispatchActor ? wrapEnsime(request))
+      .mapTo[Option[AutoCompletionResponse]]
   }
 
-  def typeAt(
-      typeAtPointRequest: TypeAtPointRequest
-  ): Future[Option[TypeAtPointResponse]] = {
-    (dispatchActor ? wrapEnsime(typeAtPointRequest))
+  def typeAt(request: TypeAtPointRequest): Future[Option[TypeAtPointResponse]] = {
+    (dispatchActor ? wrapEnsime(request))
       .mapTo[Option[TypeAtPointResponse]]
   }
 
@@ -56,7 +54,8 @@ class AutowireApiImplementation(
     (dispatchActor ? SaveSnippet(wrap(inputs))).mapTo[SnippetId]
   }
 
-  def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean] = {
+  def amend(editInputs: EditInputs): Future[Boolean] = {
+    import editInputs._
     if (snippetId.isOwnedBy(maybeUser)) {
       (dispatchActor ? AmendSnippet(snippetId, wrap(inputs))).mapTo[Boolean]
     } else {
@@ -64,7 +63,8 @@ class AutowireApiImplementation(
     }
   }
 
-  def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
+  def update(editInputs: EditInputs): Future[Option[SnippetId]] = {
+    import editInputs._
     if (snippetId.isOwnedBy(maybeUser)) {
       (dispatchActor ? UpdateSnippet(snippetId, wrap(inputs)))
         .mapTo[Option[SnippetId]]
@@ -81,7 +81,8 @@ class AutowireApiImplementation(
     }
   }
 
-  def fork(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
+  def fork(editInputs: EditInputs): Future[Option[SnippetId]] = {
+    import editInputs._
     (dispatchActor ? ForkSnippet(snippetId, wrap(inputs)))
       .mapTo[Option[SnippetId]]
   }

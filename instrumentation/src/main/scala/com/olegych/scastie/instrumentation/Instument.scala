@@ -200,7 +200,7 @@ object Instrument {
         case Jvm(scalaVersion)       => scala(scalaVersion)
         case Js(scalaVersion, _)     => scala(scalaVersion)
         case Native(scalaVersion, _) => scala(scalaVersion)
-        case Dotty                   => Some(dialects.Dotty)
+        case Dotty(_)                => Some(dialects.Dotty)
         case Typelevel(scalaVersion) => typelevel(scalaVersion)
         case _                       => None
       }

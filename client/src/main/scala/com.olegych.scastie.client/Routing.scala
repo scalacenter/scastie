@@ -85,20 +85,20 @@ object Routing {
           (None, SnippetId(uuid, None))
 
         case UserResource(login, uuid) =>
-          (None, SnippetId(uuid, Some(SnippetUserPart(login, None))))
+          (None, SnippetId(uuid, Some(SnippetUserPart(login))))
 
         case UserResourceUpdated(login, uuid, update) =>
-          (None, SnippetId(uuid, Some(SnippetUserPart(login, Some(update)))))
+          (None, SnippetId(uuid, Some(SnippetUserPart(login, update))))
 
         case EmbeddedAnonymousResource(uuid) =>
           (defaultEmbedded, SnippetId(uuid, None))
 
         case EmbeddedUserResource(login, uuid) =>
-          (defaultEmbedded, SnippetId(uuid, Some(SnippetUserPart(login, None))))
+          (defaultEmbedded, SnippetId(uuid, Some(SnippetUserPart(login))))
 
         case EmbeddedUserResourceUpdated(login, uuid, update) =>
           (defaultEmbedded,
-           SnippetId(uuid, Some(SnippetUserPart(login, Some(update)))))
+           SnippetId(uuid, Some(SnippetUserPart(login, update))))
 
       }
 

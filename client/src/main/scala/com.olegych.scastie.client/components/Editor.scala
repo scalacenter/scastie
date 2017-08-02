@@ -1,8 +1,8 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 package components
 
-import com.olegych.scastie.api._
+import com.olegych.scastie.api
+
 import codemirror.{
   CodeMirror,
   Hint,
@@ -34,10 +34,10 @@ final case class Editor(isDarkTheme: Boolean,
                         showLineNumbers: Boolean,
                         code: String,
                         attachedDoms: AttachedDoms,
-                        instrumentations: Set[Instrumentation],
-                        compilationInfos: Set[Problem],
-                        runtimeError: Option[RuntimeError],
-                        completions: List[Completion],
+                        instrumentations: Set[api.Instrumentation],
+                        compilationInfos: Set[api.Problem],
+                        runtimeError: Option[api.RuntimeError],
+                        completions: List[api.Completion],
                         run: Callback,
                         saveOrUpdate: Callback,
                         newSnippet: Callback,
@@ -51,13 +51,13 @@ final case class Editor(isDarkTheme: Boolean,
                         codeChange: String => Callback,
                         completeCodeAt: Int => Callback,
                         requestTypeAt: (String, Int) => Callback,
-                        typeAtInfo: Option[TypeInfoAt],
+                        typeAtInfo: Option[api.TypeInfoAt],
                         clearCompletions: Callback) {
   @inline def render: VdomElement = Editor.component(this)
 }
 
 object Editor {
-  CodeMirror.keyMap.sublime.delete("Ctrl-L")
+  CodeMirror.keyMap.sublime -= "Ctrl-L"
 
   private var codemirrorTextarea: HTMLTextAreaElement = _
 
@@ -145,7 +145,7 @@ object Editor {
                       showLineNumbers: Boolean): codemirror.Options = {
 
     val theme = if (dark) "dark" else "light"
-    val ctrl = if (View.isMac) "Cmd" else "Ctrl"
+    val ctrl = if (isMac) "Cmd" else "Ctrl"
 
     js.Dictionary[Any](
         "mode" -> "text/x-scala",
@@ -224,7 +224,7 @@ object Editor {
       runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map(),
       completionState: CompletionState = Idle,
       showTypeButtonPressed: Boolean = false,
-      typeAt: Option[TypeInfoAt] = None
+      typeAt: Option[api.TypeInfoAt] = None
   )
 
   private[Editor] class EditorBackend(
@@ -563,7 +563,8 @@ object Editor {
 
       setAnnotations[api.Instrumentation](
         _.instrumentations, {
-          case Instrumentation(api.Position(start, end), Value(value, tpe)) =>
+          case api.Instrumentation(api.Position(start, end),
+                                   api.Value(value, tpe)) =>
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)
 
@@ -574,8 +575,8 @@ object Editor {
             }
             if (value.contains(nl)) nextline(endPos, value, process)
             else inline(startPos, value, process)
-          case Instrumentation(api.Position(start, end),
-                               Html(content, folded)) => {
+          case api.Instrumentation(api.Position(start, end),
+                                   api.Html(content, folded)) => {
 
             val startPos = doc.posFromIndex(start)
             val endPos = doc.posFromIndex(end)
@@ -584,9 +585,9 @@ object Editor {
             if (!folded) nextline(endPos, content, process)
             else fold(startPos, endPos, content, process)
           }
-          case instrumentation @ Instrumentation(
+          case instrumentation @ api.Instrumentation(
                 api.Position(start, end),
-                AttachedDom(uuid, folded)
+                api.AttachedDom(uuid, folded)
               ) => {
 
             val startPos = doc.posFromIndex(start)
@@ -795,7 +796,7 @@ object Editor {
                             val signature = dom.document
                               .createElement("pre")
                               .asInstanceOf[HTMLPreElement]
-                            signature.className = "signature"
+                            typeInfo.className = "signature"
 
                             CodeMirror.runMode(completion.signature,
                                                modeScala,

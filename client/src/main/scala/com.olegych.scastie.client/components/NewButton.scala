@@ -1,6 +1,6 @@
-package com.olegych.scastie.client.components
+package com.olegych.scastie.client
+package components
 
-import com.olegych.scastie.client.View
 import japgolly.scalajs.react._, vdom.all._
 
 final case class NewButton(isNewSnippetModalClosed: Boolean,
@@ -12,7 +12,6 @@ final case class NewButton(isNewSnippetModalClosed: Boolean,
 
 object NewButton {
   def render(props: NewButton): VdomElement = {
-    import View.ctrl
 
     li(title := s"New code snippet ($ctrl + M)",
        role := "button",

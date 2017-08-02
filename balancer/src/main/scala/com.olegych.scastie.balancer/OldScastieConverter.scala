@@ -86,7 +86,7 @@ object OldScastieConverter {
       val scalaTarget =
         targetType match {
           case Some(ScalaTargetType.Dotty) =>
-            ScalaTarget.Dotty
+            ScalaTarget.Dotty.default
 
           case Some(ScalaTargetType.Typelevel) =>
             scalaVersion

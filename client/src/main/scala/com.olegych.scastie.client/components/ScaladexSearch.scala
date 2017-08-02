@@ -2,6 +2,8 @@ package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
 
+import play.api.libs.json.Json
+
 import japgolly.scalajs.react._, vdom.all._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 
@@ -11,8 +13,6 @@ import dom.raw.{HTMLInputElement, HTMLElement}
 import dom.ext.Ajax
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-import upickle.default.{read => uread}
 
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency => Callback,
@@ -246,7 +246,13 @@ object ScaladexSearch {
           Callback.future(
             Ajax
               .get(scaladexApiUrl + "/search" + query)
-              .map(ret => uread[List[Project]](ret.responseText))
+              .map(
+                ret =>
+                  Json
+                    .fromJson[List[Project]](Json.parse(ret.responseText))
+                    .asOpt
+                    .getOrElse(Nil)
+              )
               .map(projects => scope.modState(_.setProjects(projects)))
           )
         } else scope.modState(_.clearProjects)
@@ -276,25 +282,31 @@ object ScaladexSearch {
       Callback.future(
         Ajax
           .get(scaladexApiUrl + "/project" + query)
-          .map(ret => uread[ReleaseOptions](ret.responseText))
-          .map { options =>
-            val scalaDependency =
-              ScalaDependency(
-                options.groupId,
-                artifact,
-                target,
-                options.version
-              )
+          .map(
+            ret =>
+              Json.fromJson[ReleaseOptions](Json.parse(ret.responseText)).asOpt
+          )
+          .map {
+            case Some(options) => {
+              val scalaDependency =
+                ScalaDependency(
+                  options.groupId,
+                  artifact,
+                  target,
+                  options.version
+                )
 
-            def addScalaDependencyLocal =
-              scope
-                .modState(_.addDependency(project, scalaDependency, options))
+              def addScalaDependencyLocal =
+                scope
+                  .modState(_.addDependency(project, scalaDependency, options))
 
-            def addScalaDependencyBackend =
-              scope.props
-                .flatMap(_.addScalaDependency(scalaDependency, project))
+              def addScalaDependencyBackend =
+                scope.props
+                  .flatMap(_.addScalaDependency(scalaDependency, project))
 
-            addScalaDependencyLocal >> addScalaDependencyBackend
+              addScalaDependencyLocal >> addScalaDependencyBackend
+            }
+            case None => Callback(())
           }
       )
     }

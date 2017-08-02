@@ -1,8 +1,8 @@
 package com.olegych.scastie
 package api
 
-import buildinfo.BuildInfo.{version => buildVersion}
-import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
+import play.api.libs.json._
+import buildinfo.BuildInfo
 
 import System.{lineSeparator => nl}
 
@@ -14,7 +14,7 @@ object Inputs {
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
-    librariesFrom = Map(),
+    librariesFromList = List(),
     sbtConfigExtra = """|scalacOptions ++= Seq(
                         |  "-deprecation",
                         |  "-encoding", "UTF-8",
@@ -26,7 +26,7 @@ object Inputs {
     forked = None
   )
 
-  implicit val pkl: ReadWriter[Inputs] = upickleMacroRW[Inputs]
+  implicit val formatInputs = Json.format[Inputs]
 }
 
 case class Inputs(
@@ -34,12 +34,14 @@ case class Inputs(
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
-    librariesFrom: Map[ScalaDependency, Project] = Map(),
+    librariesFromList: List[(ScalaDependency, Project)] = List(),
     sbtConfigExtra: String,
     sbtPluginsConfigExtra: String,
     showInUserProfile: Boolean = false,
     forked: Option[SnippetId] = None
 ) {
+
+  val librariesFrom = librariesFromList.toMap
 
   override def toString: String = {
     if (this == Inputs.default) {
@@ -76,116 +78,22 @@ case class Inputs(
                          project: Project): Inputs = {
     copy(
       libraries = libraries + scalaDependency,
-      librariesFrom = librariesFrom + (scalaDependency -> project)
+      librariesFromList = (librariesFrom + (scalaDependency -> project)).toList
     )
   }
 
   def removeScalaDependency(scalaDependency: ScalaDependency): Inputs = {
     copy(
       libraries = libraries - scalaDependency,
-      librariesFrom = librariesFrom - scalaDependency
+      librariesFromList = (librariesFrom - scalaDependency).toList
     )
   }
 
-  def sbtPluginsConfig: String = {
-    val targetConfig =
-      target match {
-        case ScalaTarget.Js(_, scalaJsVersion) =>
-          s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
-
-        case ScalaTarget.Native(_, scalaNativeVersion) =>
-          s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
-
-        case ScalaTarget.Dotty =>
-          """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.3")"""
-
-        case _: ScalaTarget.Jvm =>
-          ""
-
-        case _: ScalaTarget.Typelevel =>
-          ""
-      }
-
-    s"""|$targetConfig
-        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
-        |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
-        |addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
-        |$sbtPluginsConfigExtra
-        |""".stripMargin
-
-  }
-
   def sbtConfig: String = {
-    val (targetConfig, targetDependency) =
-      target match {
-        case ScalaTarget.Jvm(scalaVersion) =>
-          (
-            s"""scalaVersion := "$scalaVersion"""",
-            Some(
-              ScalaDependency(
-                "org.scastie",
-                "runtime-scala",
-                target,
-                buildVersion
-              )
-            )
-          )
-
-        case ScalaTarget.Typelevel(scalaVersion) =>
-          (
-            s"""|scalaVersion := "$scalaVersion"
-                |scalaOrganization in ThisBuild := "org.typelevel"""".stripMargin,
-            Some(
-              ScalaDependency(
-                "org.scastie",
-                "runtime-scala",
-                target,
-                buildVersion
-              )
-            )
-          )
-
-        case ScalaTarget.Js(scalaVersion, _) =>
-          (
-            s"""|scalaVersion := "$scalaVersion"
-                |enablePlugins(ScalaJSPlugin)
-                |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "${ScalaTarget.Js.targetFilename}"
-                |scalacOptions += {
-                |  val from = (baseDirectory in LocalRootProject).value.toURI.toString
-                |  val to = "${ScalaTarget.Js.sourceUUID}/"
-                |  "-P:scalajs:mapSourceURI:" + from + "->" + to
-                |}
-                """.stripMargin,
-            Some(
-              ScalaDependency(
-                "org.scastie",
-                "runtime-scala",
-                target,
-                buildVersion
-              )
-            )
-          )
-        case ScalaTarget.Dotty =>
-          (
-            """scalaVersion := "0.2.0-RC1"""",
-            None
-          )
-        case ScalaTarget.Native(scalaVersion, _) =>
-          (
-            s"""scalaVersion := "$scalaVersion"""",
-            Some(
-              ScalaDependency(
-                "org.scastie",
-                "runtime-scala",
-                target,
-                buildVersion
-              )
-            )
-          )
-      }
+    val targetConfig = target.sbtConfig
 
     val optionalTargetDependency =
-      if (worksheetMode) targetDependency
+      if (worksheetMode) target.runtimeDependency
       else None
 
     val allLibraries =
@@ -193,9 +101,9 @@ case class Inputs(
 
     val librariesConfig =
       if (allLibraries.isEmpty) ""
-      else if (allLibraries.size == 1)
+      else if (allLibraries.size == 1) {
         s"libraryDependencies += " + target.renderSbt(allLibraries.head)
-      else {
+      } else {
         val nl = "\n"
         val tab = "  "
         "libraryDependencies ++= " +
@@ -218,4 +126,22 @@ case class Inputs(
         |
         |$ensimeConfig""".stripMargin
   }
+
+  def sbtPluginsConfig: String = {
+    val targetConfig = target.sbtPluginsConfig
+
+    s"""|$targetConfig
+        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
+        |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
+        |addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.version}")
+        |$sbtPluginsConfigExtra
+        |""".stripMargin
+
+  }
 }
+
+object EditInputs {
+  implicit val formatEditInputs = Json.format[EditInputs]
+}
+
+case class EditInputs(snippetId: SnippetId, inputs: Inputs)

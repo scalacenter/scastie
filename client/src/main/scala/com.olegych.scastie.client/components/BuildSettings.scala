@@ -78,7 +78,7 @@ object BuildSettings {
 
   def renderVersions(props: BuildSettings): TagMod = {
     val suggestedVersions = List(
-      // "2.13.0-M1",
+      "2.13.0-M1",
       "2.12.3",
       "2.11.11"
     )
@@ -144,7 +144,7 @@ object BuildSettings {
         case ScalaTarget.Typelevel(scalaVersion) =>
           versionSelector(scalaVersion, ScalaTarget.Typelevel.apply)
 
-        case ScalaTarget.Dotty =>
+        case ScalaTarget.Dotty(_) =>
           notSupported
 
         case ScalaTarget.Js(_, _) =>

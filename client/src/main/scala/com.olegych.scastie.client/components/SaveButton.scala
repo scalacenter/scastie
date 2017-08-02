@@ -1,8 +1,7 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 package components
 
-import api.{SnippetId, User}
+import com.olegych.scastie.api.{SnippetId, User}
 
 import japgolly.scalajs.react._, vdom.all._
 
@@ -19,7 +18,6 @@ final case class SaveButton(isSnippetSaved: Boolean,
 
 object SaveButton {
   def render(props: SaveButton): VdomElement = {
-    import View.ctrl
 
     val disabledIfSaved =
       (cls := "disabled").when(props.isSnippetSaved)

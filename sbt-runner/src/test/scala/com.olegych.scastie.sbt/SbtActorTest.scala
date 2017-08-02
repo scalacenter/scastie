@@ -101,7 +101,7 @@ class SbtActorTest()
                 |  }
                 |}
                 |""".stripMargin,
-      target = ScalaTarget.Dotty,
+      target = ScalaTarget.Dotty.default,
       worksheetMode = false
     )
     run(dotty)(_.userOutput.contains("Hello, Dotty!"))

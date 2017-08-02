@@ -20,14 +20,15 @@ class EnsimeActorTests()
 
     sbtActor.tell(
       EnsimeTaskRequest(
-        CompletionRequest(EnsimeRequestInfo(inputs, 1)),
+        AutoCompletionRequest(EnsimeRequestInfo(inputs, 1)),
         taskId
       ),
       probe.ref
     )
 
     probe.fishForMessage(30.seconds) {
-      case EnsimeTaskResponse(Some(CompletionResponse(completions)), taskId0) =>
+      case EnsimeTaskResponse(Some(AutoCompletionResponse(completions)),
+                              taskId0) =>
         assert(taskId0 == taskId)
         assert(
           completions.exists(
