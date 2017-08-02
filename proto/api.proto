@@ -402,7 +402,7 @@ enum View {
   Status = 4;
 }
 
-message ScastieState {
+message ScastiePersistedState {
   required View view  = 1;
   required bool isRunning = 2;
   required ModalState modalState = 3;
@@ -440,4 +440,8 @@ message SnippetState {
   required bool isScalaJsScriptLoaded = 5;
   required bool snippetIdIsScalaJS = 6;
   required bool isReRunningScalaJs = 7;
+}
+
+message AutowireArgs {
+  map<string, bytes> args = 1;
 }

@@ -1,18 +1,14 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
-import com.olegych.scastie.client.{
-  EmbeddedOptions,
-  LocalStorage,
-  Page,
-  ScastieBackend,
-  ScastieState,
-  View
-}
+import com.olegych.scastie.proto._
+import com.olegych.scastie.client._
+
 import japgolly.scalajs.react._
-import vdom.all._
-import extra.router._
+import japgolly.scalajs.react.vdom.all._
+import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
+
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
 

@@ -1,9 +1,7 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
 import japgolly.scalajs.react._
-import vdom.all._
+import japgolly.scalajs.react.vdom.all._
 
 final case class RunButton(isRunning: Boolean,
                            isStatusOk: Boolean,

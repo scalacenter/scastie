@@ -1,11 +1,8 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 
 import scala.util.Try
 
 import org.scalajs.dom.window.localStorage
-
-import upickle.default.{write => uwrite, read => uread}
 
 object LocalStorage {
   private val stateKey = "state"

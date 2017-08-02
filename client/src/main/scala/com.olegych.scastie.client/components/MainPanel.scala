@@ -1,8 +1,9 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.client.{ScastieBackend, ScastieState, View}
+
 import japgolly.scalajs.react._
-import vdom.all._
+import japgolly.scalajs.react.vdom.all._
 
 final case class MainPanel(state: ScastieState,
                            backend: ScastieBackend,

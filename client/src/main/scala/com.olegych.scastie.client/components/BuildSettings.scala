@@ -1,12 +1,13 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
-import api._
+import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
+
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.TagOf
+import japgolly.scalajs.react.vdom.all._
+
 import org.scalajs.dom.html.Div
-import vdom.all._
 
 final case class BuildSettings(
     setTarget: ScalaTarget => Callback,

@@ -1,24 +1,18 @@
 package com.olegych.scastie
 
+import com.olegych.scastie.proto._
 import com.olegych.scastie.api._
 import com.olegych.scastie.client.components.Editor
-
-import upickle.default.ReadWriter
-
-import org.scalajs.dom.raw.HTMLElement
 
 import japgolly.scalajs.react.extra.Reusability
 
 package object client {
-  // type AttachedDoms = Map[String, HTMLElement]
+  val isMac = dom.window.navigator.userAgent.contains("Mac")
+  val ctrl = if (isMac) "⌘" else "Ctrl"
 
-  case class AttachedDoms(v: Map[String, HTMLElement]) {
-    def get(key: String): Option[HTMLElement] = v.get(key)
-  }
-
-  def dontSerialize[T](v: T): ReadWriter[T] = {
-    import upickle.Js
-    ReadWriter[T](_ => Js.Null, { case _ => v })
+  implicit class ModalStateExtension(val modalState: ModalState) extends AnyVal {
+    def isShareModalClosed(shareModalSnippetId2: SnippetId): Boolean =
+      !modalState.shareModalSnippetId.contains(shareModalSnippetId2)
   }
 
   implicit val reusability: Reusability[View] =
@@ -28,7 +22,7 @@ package object client {
     Reusability.byRef ||
       Reusability.by(_.v.keys.toSet)
 
-  implicit val instrumentationReuse: Reusability[Set[Instrumentation]] =
+  implicit val instrumentationReuse: Reusability[Set[proto.Instrumentation]] =
     Reusability.byRefOr_==
 
   implicit val compilationInfosReuse: Reusability[Set[Problem]] =
@@ -37,7 +31,7 @@ package object client {
   implicit val runtimeErrorReuse: Reusability[Option[RuntimeError]] =
     Reusability.byRefOr_==
 
-  implicit val completionsReuse: Reusability[List[Completion]] =
+  implicit val completionsReuse: Reusability[List[EnsimeResponse.Completion]] =
     Reusability.byRefOr_==
 
   implicit val editorReuse: Reusability[Editor] =
@@ -49,10 +43,4 @@ package object client {
           Reusability.by((_: Editor).runtimeError) &&
           Reusability.by((_: Editor).completions)
       )
-
-  def dontSerializeOption[T]: ReadWriter[Option[T]] = dontSerialize(None)
-
-  def dontSerializeList[T]: ReadWriter[List[T]] = dontSerialize(List())
-
-  def dontSerializeMap[K, V]: ReadWriter[Map[K, V]] = dontSerialize(Map())
 }

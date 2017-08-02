@@ -20,8 +20,6 @@ import akka.http.scaladsl.server.Route
 
 import akka.stream.scaladsl._
 
-import upickle.default.{write => uwrite, read => uread}
-
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.DurationInt
 

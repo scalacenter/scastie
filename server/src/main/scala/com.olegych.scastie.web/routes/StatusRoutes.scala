@@ -18,8 +18,6 @@ import akka.http.scaladsl.server.Directives._
 
 import akka.stream.scaladsl._
 
-import upickle.default.{write => uwrite}
-
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 

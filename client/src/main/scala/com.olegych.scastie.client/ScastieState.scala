@@ -1,6 +1,7 @@
 package com.olegych.scastie.client
 
 import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
 
 import scalajs.js.debugger
 
@@ -9,69 +10,65 @@ import org.scalajs.dom.raw.HTMLElement
 
 object ScastieState {
   def default = ScastieState(
-    view = View.Editor,
-    isRunning = false,
     eventSource = None,
-    statusEventSource = None,
     websocket = None,
-    modalState = ModalState.default,
-    isDarkTheme = false,
-    isDesktopForced = false,
-    isPresentationMode = false,
-    showLineNumbers = false,
-    consoleState = ConsoleState.default,
-    inputsHasChanged = false,
-    snippetState = SnippetState(
-      snippetId = None,
-      isSnippetSaved = false,
-      loadSnippet = true,
-      loadScalaJsScript = false,
-      isScalaJsScriptLoaded = false,
-      snippetIdIsScalaJS = false,
-      isReRunningScalaJs = false
-    ),
-    user = None,
+    statusEventSource = None,
     attachedDoms = AttachedDoms(Map()),
-    inputs = InputsHelper.default,
-    outputs = Outputs.default,
     status = StatusState.default,
     completions = List(),
-    typeAtInfo = None
+    typeAtInfo = None,
+    persistedState = ScastiePersistedState(
+      view = View.Editor,
+      isRunning = false,
+      modalState = ModalStateHelper.default,
+      isDarkTheme = false,
+      isDesktopForced = false,
+      isPresentationMode = false,
+      showLineNumbers = false,
+      consoleState = ConsoleStateHelper.default,
+      inputsHasChanged = false,
+      snippetState = SnippetState(
+        snippetId = None,
+        isSnippetSaved = false,
+        loadSnippet = true,
+        loadScalaJsScript = false,
+        isScalaJsScriptLoaded = false,
+        snippetIdIsScalaJS = false,
+        isReRunningScalaJs = false
+      ),
+      user = None,
+      inputs = InputsHelper.default,
+      outputs = Outputs.default,
+    )
   )
 }
 
-case class SnippetState(
-    snippetId: Option[SnippetId],
-    isSnippetSaved: Boolean,
-    loadSnippet: Boolean,
-    loadScalaJsScript: Boolean,
-    isScalaJsScriptLoaded: Boolean,
-    snippetIdIsScalaJS: Boolean,
-    isReRunningScalaJs: Boolean
-)
-
 case class ScastieState(
-    view: View,
-    isRunning: Boolean,
-    eventSource: Option[EventSource], // << NO
-    statusEventSource: Option[EventSource], // << NO
-    websocket: Option[WebSocket], // << NO
-    modalState: ModalState,
-    isDarkTheme: Boolean,
-    isDesktopForced: Boolean,
-    isPresentationMode: Boolean,
-    showLineNumbers: Boolean,
-    consoleState: ConsoleState,
-    inputsHasChanged: Boolean,
-    snippetState: SnippetState,
-    user: Option[User],
-    attachedDoms: AttachedDoms, // << NO
-    inputs: Inputs,
-    outputs: Outputs,
-    status: StatusState, // << NO
-    completions: List[Completion], // << NO
-    typeAtInfo: Option[TypeInfoAt] // << NO
+    eventSource: Option[EventSource],
+    statusEventSource: Option[EventSource],
+    websocket: Option[WebSocket],
+    attachedDoms: AttachedDoms,
+    status: StatusState,
+    completions: List[EnsimeResponse.Completion],
+    typeAtInfo: Option[EnsimeResponse.TypeAtPoint],
+    persistedState: ScastiePersistedState
 ) {
+  import persistedState._
+
+  // def view
+  // def isRunning
+  // def modalState
+  // def isDarkTheme
+  // def isDesktopForced
+  // def isPresentationMode
+  // def showLineNumbers
+  // def consoleState
+  // def inputsHasChanged
+  // def snippetState
+  // def user
+  // def inputs
+  // def outputs
+
 
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def isSnippetSaved: Boolean = snippetState.isSnippetSaved
@@ -359,7 +356,7 @@ case class ScastieState(
     )
 
   def closeModals: ScastieState =
-    copyAndSave(modalState = ModalState.allClosed)
+    copyAndSave(modalState = ModalStateHelper.allClosed)
 
   def setRuntimeError(runtimeError: Option[RuntimeError]): ScastieState =
     if (runtimeError.isEmpty) this

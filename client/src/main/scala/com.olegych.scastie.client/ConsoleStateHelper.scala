@@ -1,15 +1,9 @@
 package com.olegych.scastie.client
 
-object ConsoleState {
+object ConsoleStateHelper {
   def default = ConsoleState(
     consoleIsOpen = false,
     consoleHasUserOutput = false,
     userOpenedConsole = true
   )
 }
-
-case class ConsoleState(
-    consoleIsOpen: Boolean,
-    consoleHasUserOutput: Boolean,
-    userOpenedConsole: Boolean = false
-)

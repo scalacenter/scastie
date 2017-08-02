@@ -1,8 +1,10 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
-import autowire._
+import com.olegych.scastie.api.autowire._
+import com.olegych.scastie.proto._
 import com.olegych.scastie.client.{ApiClient, Page, View}
+
 import japgolly.scalajs.react._
 import vdom.all._
 import extra.router._

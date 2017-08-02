@@ -1,6 +1,6 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.Runner
+import com.olegych.scastie.proto.Runner
 
 object StatusState {
   def default = StatusState(runners = None)

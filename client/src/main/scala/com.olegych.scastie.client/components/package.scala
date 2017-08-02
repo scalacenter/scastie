@@ -1,7 +1,6 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 
-import api.User
+import com.olegych.scastie.proto.User
 
 import japgolly.scalajs.react.extra.Reusability
 

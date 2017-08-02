@@ -1,6 +1,9 @@
 package com.olegych.scastie.client
 package components
 
+import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
+
 import japgolly.scalajs.react._, vdom.all._
 
 final case class ClearButton(clear: Callback) {

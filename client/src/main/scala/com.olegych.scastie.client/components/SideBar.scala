@@ -1,6 +1,4 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 

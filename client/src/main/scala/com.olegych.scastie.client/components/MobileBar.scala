@@ -2,7 +2,7 @@ package com.olegych.scastie.client.components
 
 import com.olegych.scastie.client.View
 import japgolly.scalajs.react._
-import vdom.all._
+import japgolly.scalajs.react.vdom.all._
 
 final case class MobileBar(isRunning: Boolean,
                            isStatusOk: Boolean,

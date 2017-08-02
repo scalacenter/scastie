@@ -1,7 +1,6 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
+import com.olegych.scastie.client.View
 import japgolly.scalajs.react._, vdom.all._, extra.{Reusability, StateSnapshot}
 
 final case class ViewToggleButton(currentView: StateSnapshot[View],

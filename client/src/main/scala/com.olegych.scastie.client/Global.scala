@@ -1,16 +1,14 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 
-import components.Scastie
+import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
+import com.olegych.scastie.client.components.Scastie
 
 import scala.scalajs.js
 
 import org.scalajs.dom.raw.HTMLElement
 
-import api._
 import japgolly.scalajs.react._
-
-import upickle.default.{read => uread}
 
 object Global {
   type Scope = BackendScope[Scastie, ScastieState]

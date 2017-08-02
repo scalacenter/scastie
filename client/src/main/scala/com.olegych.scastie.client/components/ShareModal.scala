@@ -1,13 +1,11 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
-import api._
+import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
 
 import japgolly.scalajs.react._, vdom.all._, extra.router.RouterCtl
 
 import org.scalajs.dom
-
 import org.scalajs.dom.html
 import org.scalajs.dom.{window, document}
 

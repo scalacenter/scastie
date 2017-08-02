@@ -9,7 +9,6 @@ component.Scala.BackendScope
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import autowire._
-import upickle.default.{read => uread}
 
 import org.scalajs.dom._
 

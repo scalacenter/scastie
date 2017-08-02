@@ -1,6 +1,4 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
 import org.scalajs.dom.raw.HTMLPreElement
 
@@ -54,7 +52,7 @@ object Console {
   private val component =
     ScalaComponent
       .builder[Console]("Console")
-      .initialState(ConsoleState.default)
+      .initialState(ConsoleStateHelper.default)
       .render_P(render)
       .componentDidUpdate(
         scope =>

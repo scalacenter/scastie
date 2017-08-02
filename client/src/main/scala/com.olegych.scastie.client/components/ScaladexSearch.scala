@@ -1,14 +1,16 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
+import com.olegych.scastie.proto._
+
 
 import japgolly.scalajs.react._, vdom.all._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 
 import org.scalajs.dom
-import dom.ext.KeyCode
-import dom.raw.{HTMLInputElement, HTMLElement}
-import dom.ext.Ajax
+import org.scalajs.dom.ext.KeyCode
+import org.scalajs.dom.raw.{HTMLInputElement, HTMLElement}
+import org.scalajs.dom.ext.Ajax
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 

@@ -1,10 +1,9 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._
 
-import api._
+import com.olegych.scastie.proto._
+import com.olegych.scastie.api._
 
 final case class Status(state: StatusState,
                         router: RouterCtl[Page],
