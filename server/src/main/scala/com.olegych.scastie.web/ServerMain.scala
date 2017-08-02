@@ -61,19 +61,17 @@ object ServerMain {
         name = "DispatchActor"
       )
 
-    statusActor ! SetDispatcher(dispatchActor)
-
     val userFacingRoutes =
       new FrontPageRoutes(production).routes
 
     val programmaticRoutes =
       concat(
+        new ApiRoutes(dispatchActor, userDirectives).routes,
         DebugRoutes.routes,
         new ProgressRoutes(progressActor).routes,
         new DownloadRoutes(dispatchActor).routes,
         new StatusRoutes(statusActor, userDirectives).routes,
-        new ScalaJsRoutes(dispatchActor).routes,
-        new AutowireApiRoutes(dispatchActor, userDirectives).routes
+        new ScalaJsRoutes(dispatchActor).routes
       )
 
     val publicRoutes =

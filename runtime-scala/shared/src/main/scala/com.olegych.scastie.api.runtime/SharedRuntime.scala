@@ -1,20 +1,19 @@
 package com.olegych.scastie.api
 package runtime
 
-import upickle.default.{write => uwrite}
+import play.api.libs.json.Json
+
+import scala.reflect.ClassTag
 
 protected[runtime] trait SharedRuntime {
   def write(instrumentations: List[Instrumentation]): String = {
-    uwrite(instrumentations)
+    Json.stringify(Json.toJson(instrumentations))
   }
 
-  protected[runtime] def render[T: pprint.PPrint](
-      a: T
-  )(implicit tp: pprint.TPrint[T]): Render = {
-    import pprint.Config.Defaults._
+  protected[runtime] def render[T](a: T)(implicit ct: ClassTag[T]): Render = {
     a match {
       case html: Html => html
-      case v          => Value(pprint.tokenize(v).mkString, tp.render)
+      case v          => Value(v.toString, ct.toString)
     }
   }
 }

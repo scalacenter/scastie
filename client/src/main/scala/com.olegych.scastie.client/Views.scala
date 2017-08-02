@@ -1,6 +1,6 @@
 package com.olegych.scastie.client
 
-import org.scalajs.dom
+import play.api.libs.json._
 
 sealed trait View
 object View {
@@ -9,14 +9,29 @@ object View {
   case object CodeSnippets extends View
   case object Status extends View
 
-  import upickle.default._
+  implicit object ViewFormat extends Format[View] {
+    def writes(view: View): JsValue = {
+      JsString(view.toString)
+    }
 
-  implicit val pkl: ReadWriter[View] =
-    macroRW[Editor.type] merge
-      macroRW[CodeSnippets.type] merge
-      macroRW[BuildSettings.type] merge
-      macroRW[Status.type]
+    private val values =
+      List(
+        Editor,
+        BuildSettings,
+        CodeSnippets,
+        Status
+      ).map(v => (v.toString, v)).toMap
 
-  val isMac = dom.window.navigator.userAgent.contains("Mac")
-  val ctrl = if (isMac) "⌘" else "Ctrl"
+    def reads(json: JsValue): JsResult[View] = {
+      json match {
+        case JsString(tpe) => {
+          values.get(tpe) match {
+            case Some(v) => JsSuccess(v)
+            case _       => JsError(Seq())
+          }
+        }
+        case _ => JsError(Seq())
+      }
+    }
+  }
 }

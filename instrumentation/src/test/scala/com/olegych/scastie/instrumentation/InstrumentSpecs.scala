@@ -70,6 +70,6 @@ class InstrumentSpecs extends FunSuite {
   }
 
   test("bug #83") {
-    val Right(_) = Instrument("val answer: 42 = 42", ScalaTarget.Dotty)
+    val Right(_) = Instrument("val answer: 42 = 42", ScalaTarget.Dotty.default)
   }
 }

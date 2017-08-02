@@ -1,8 +1,11 @@
 package com.olegych.scastie.web.oauth2
 
+import com.olegych.scastie.api.User
+
+import play.api.libs.json.Json
+
 import com.softwaremill.session._
 import com.typesafe.config.ConfigFactory
-import upickle.default.{ReadWriter, read => uread, write => uwrite}
 
 import scala.collection.parallel.mutable.ParTrieMap
 import scala.concurrent.ExecutionContext
@@ -12,13 +15,12 @@ import scala.util.Try
 import java.util.UUID
 import java.nio.file._
 
-import com.olegych.scastie.api.User
-
 import scala.collection.JavaConverters._
 
 import System.{lineSeparator => nl}
 
 class GithubUserSession()(implicit val executionContext: ExecutionContext) {
+
   val logger = Logger("GithubUserSession")
 
   private val configuration =
@@ -41,13 +43,6 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
     trie
   }
 
-  import upickle.Js
-  private implicit val pkl: ReadWriter[UUID] =
-    ReadWriter[UUID](
-      uuid => Js.Str(uuid.toString),
-      { case Js.Str(rawUUID) => UUID.fromString(rawUUID) }
-    )
-
   implicit def serializer: SessionSerializer[UUID, String] =
     new SingleValueSessionSerializer(
       _.toString(),
@@ -63,7 +58,11 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   private def readSessionsFile(): Array[(UUID, User)] = {
     if (Files.exists(usersSessions)) {
       val content = Files.readAllLines(usersSessions).toArray.mkString(nl)
-      uread[Array[(UUID, User)]](content)
+
+      Json
+        .fromJson[Array[(UUID, User)]](Json.parse(content))
+        .asOpt
+        .getOrElse(Array())
     } else Array()
   }
 
@@ -79,7 +78,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
 
     Files.write(
       usersSessions,
-      uwrite(sessions0).getBytes,
+      Json.prettyPrint(Json.toJson(sessions0)).getBytes,
       StandardOpenOption.CREATE
     )
 

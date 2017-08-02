@@ -1,11 +1,9 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
-import autowire._
 import com.olegych.scastie.client.{ApiClient, Page, View}
-import japgolly.scalajs.react._
-import vdom.all._
-import extra.router._
+
+import japgolly.scalajs.react._, vdom.all._, extra.router._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -26,9 +24,8 @@ object CodeSnippets {
 
     def loadProfile(): Callback = {
       Callback.future(
-        ApiClient[AutowireApi]
+        ApiClient
           .fetchUserSnippets()
-          .call()
           .map(summaries => scope.modState(_ => summaries))
       )
     }
@@ -38,9 +35,8 @@ object CodeSnippets {
 
       val remotely =
         Callback.future(
-          ApiClient[AutowireApi]
+          ApiClient
             .delete(summary.snippetId)
-            .call()
             .map(_ => Callback.empty)
         )
 
@@ -52,9 +48,7 @@ object CodeSnippets {
       summary: SnippetSummary
   ): VdomElement = {
     val page = Page.fromSnippetId(summary.snippetId)
-    val update = summary.snippetId.user
-      .flatMap(_.update.map(_.toString))
-      .getOrElse("")
+    val update = summary.snippetId.user.map(_.update.toString).getOrElse("")
 
     div(cls := "snippet")(
       ShareModal(
@@ -120,12 +114,15 @@ object CodeSnippets {
       else EmptyVdom
 
     def sortSnippets(xs: List[SnippetSummary]): List[SnippetSummary] = {
-      def update(snippetSummary: SnippetSummary): Int =
-        snippetSummary.snippetId.user.flatMap(_.update).getOrElse(0)
 
       xs.groupBy(_.snippetId.base64UUID)
         .toList
-        .flatMap { case (_, snippets) => List(snippets.sortBy(update).last) }
+        .flatMap {
+          case (_, snippets) =>
+            List(
+              snippets.sortBy(_.snippetId.user.map(_.update).getOrElse(0)).last
+            )
+        }
         .sortBy(_.time)
         .reverse
     }

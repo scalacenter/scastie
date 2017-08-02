@@ -8,10 +8,10 @@ object Page {
       case SnippetId(uuid, None) =>
         AnonymousResource(uuid)
 
-      case SnippetId(uuid, Some(SnippetUserPart(login, None))) =>
+      case SnippetId(uuid, Some(SnippetUserPart(login, 0))) =>
         UserResource(login, uuid)
 
-      case SnippetId(uuid, Some(SnippetUserPart(login, Some(update)))) =>
+      case SnippetId(uuid, Some(SnippetUserPart(login, update))) =>
         UserResourceUpdated(login, uuid, update)
     }
   }

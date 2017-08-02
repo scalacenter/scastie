@@ -1,14 +1,21 @@
 package com.olegych.scastie
 package api
 
+import play.api.libs.json._
+
+object ReleaseOptions {
+  implicit val formatReleaseOptions = Json.format[ReleaseOptions]
+}
+
 case class ReleaseOptions(groupId: String,
                           versions: List[String],
                           version: String)
 
 // case class MavenReference(groupId: String, artifactId: String, version: String)
 
-// outputs
 object Outputs {
+  implicit val formatOutputs = Json.format[Outputs]
+
   def default = Outputs(
     consoleOutputs = Vector(),
     compilationInfos = Set(),
@@ -34,27 +41,8 @@ case class Outputs(
       runtimeError.isDefined
 }
 
+object Position {
+  implicit val formatPosition = Json.format[Position]
+}
+
 case class Position(start: Int, end: Int)
-
-case class CompilationInfo(
-    severity: Severity,
-    position: Position,
-    message: String
-)
-
-sealed trait ConsoleOutput {
-  def show: String
-}
-object ConsoleOutput {
-  case class SbtOutput(line: String) extends ConsoleOutput {
-    def show: String = s"sbt: $line"
-  }
-
-  case class UserOutput(line: String) extends ConsoleOutput {
-    def show: String = line
-  }
-
-  case class ScastieOutput(line: String) extends ConsoleOutput {
-    def show: String = s"scastie: $line"
-  }
-}

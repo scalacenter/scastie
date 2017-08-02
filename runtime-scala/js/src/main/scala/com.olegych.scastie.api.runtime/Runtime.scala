@@ -1,21 +1,21 @@
 package com.olegych.scastie.api
 package runtime
 
+import play.api.libs.json.Json
+
 import org.scalajs.dom.raw.HTMLElement
 
 import java.util.UUID
 
-import upickle.default.{write => uwrite}
-
 import java.awt.image.BufferedImage
+
+import scala.reflect.ClassTag
 
 object Runtime extends SharedRuntime {
   def write(in: Either[Option[RuntimeError], List[Instrumentation]]): String = {
-    uwrite(in)
+    Json.stringify(Json.toJson(ScalaJsResult(in)))
   }
-  def render[T: pprint.PPrint](a: T, attach: HTMLElement => UUID)(
-      implicit tp: pprint.TPrint[T]
-  ): Render = {
+  def render[T: ClassTag](a: T, attach: HTMLElement => UUID): Render = {
     a match {
       case element: HTMLElement => {
         val uuid = attach(element)

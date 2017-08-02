@@ -2,6 +2,7 @@ package com.olegych.scastie
 package api
 
 import java.io.{PrintWriter, StringWriter}
+import play.api.libs.json._
 
 case class RuntimeError(
     message: String,
@@ -10,6 +11,8 @@ case class RuntimeError(
 )
 
 object RuntimeError {
+  implicit val formatRuntimeError = Json.format[RuntimeError]
+
   def wrap[T](in: => T): Either[Option[RuntimeError], T] = {
     try {
       Right(in)
@@ -49,3 +52,9 @@ object RuntimeError {
     }
   }
 }
+
+object RuntimeErrorWrap {
+  implicit val formatRuntimeErrorWrap = Json.format[RuntimeErrorWrap]
+}
+
+case class RuntimeErrorWrap(error: Option[RuntimeError])

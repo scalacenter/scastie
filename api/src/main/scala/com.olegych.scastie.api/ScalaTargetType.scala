@@ -1,5 +1,6 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
+
+import play.api.libs.json._
 
 sealed trait ScalaTargetType {
   def defaultScalaTarget: ScalaTarget
@@ -15,6 +16,33 @@ object ScalaTargetType {
       case "NATIVE"    => Some(Native)
       case "TYPELEVEL" => Some(Typelevel)
       case _           => None
+    }
+  }
+
+  implicit object ScalaTargetTypeFormat extends Format[ScalaTargetType] {
+    def writes(scalaTargetType: ScalaTargetType): JsValue = {
+      JsString(scalaTargetType.toString)
+    }
+
+    private val values =
+      List(
+        JVM,
+        Dotty,
+        JS,
+        Native,
+        Typelevel
+      ).map(v => (v.toString, v)).toMap
+
+    def reads(json: JsValue): JsResult[ScalaTargetType] = {
+      json match {
+        case JsString(tpe) => {
+          values.get(tpe) match {
+            case Some(v) => JsSuccess(v)
+            case _       => JsError(Seq())
+          }
+        }
+        case _ => JsError(Seq())
+      }
     }
   }
 

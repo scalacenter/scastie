@@ -2,7 +2,9 @@ package com.olegych.scastie.balancer
 
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.api._
-import upickle.default.{read => uread, write => uwrite}
+
+import play.api.libs.json.Json
+
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.file._
@@ -21,8 +23,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   def create(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
     val uuid = randomUrlFriendlyBase64UUID()
     val snippetId =
-      SnippetId(uuid, user.map(u => SnippetUserPart(u.login, None)))
-    write(inputsFile(snippetId), uwrite(inputs))
+      SnippetId(uuid, user.map(u => SnippetUserPart(u.login)))
+    write(inputsFile(snippetId), Json.prettyPrint(Json.toJson(inputs)))
     snippetId
   }
 
@@ -50,12 +52,15 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
             Some(
               SnippetUserPart(
                 login,
-                Some(lastUpdateId(login, snippetId.base64UUID) + 1)
+                lastUpdateId(login, snippetId.base64UUID) + 1
               )
             )
           )
-        write(inputsFile(nextSnippetId),
-              uwrite(inputs.copy(showInUserProfile = true)))
+        write(
+          inputsFile(nextSnippetId),
+          Json.prettyPrint(Json.toJson(inputs.copy(showInUserProfile = true)))
+        )
+
         Some(nextSnippetId)
       case None => None
     }
@@ -79,8 +84,10 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
 
   def amend(snippetId: SnippetId, inputs: Inputs): Boolean = {
     if (delete(snippetId)) {
-      write(inputsFile(snippetId),
-            uwrite(inputs.copy(showInUserProfile = true)))
+      write(
+        inputsFile(snippetId),
+        Json.prettyPrint(Json.toJson(inputs.copy(showInUserProfile = true)))
+      )
       true
     } else false
   }
@@ -96,7 +103,10 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     }
 
     progress.snippetId.foreach(
-      sid => write(outputsFile(sid), uwrite(progress) + nl, append = true)
+      sid =>
+        write(outputsFile(sid),
+              Json.stringify(Json.toJson(progress)) + nl,
+              append = true)
     )
   }
 
@@ -202,7 +212,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
 
         updates.flatMap { update =>
           val snippetId =
-            SnippetId(uuid, Some(SnippetUserPart(user.login, Some(update))))
+            SnippetId(uuid, Some(SnippetUserPart(user.login, update)))
           readInputs(snippetId) match {
             case Some(inputs) =>
               if (inputs.showInUserProfile) {
@@ -232,7 +242,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   private def readInputs(snippetId: SnippetId): Option[Inputs] = {
-    slurp(inputsFile(snippetId)).map(content => uread[Inputs](content))
+    slurp(inputsFile(snippetId))
+      .flatMap(content => Json.fromJson[Inputs](Json.parse(content)).asOpt)
   }
 
   private def readOutputs(
@@ -241,7 +252,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     slurp(outputsFile(snippetId)).map(
       _.lines
         .filter(_.nonEmpty)
-        .map(line => uread[SnippetProgress](line))
+        .map(line => Json.fromJson[SnippetProgress](Json.parse(line)).asOpt)
+        .flatten
         .toList
     )
   }
@@ -275,7 +287,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
 
   private def updateIdS(login: String, base64UUID: String): List[Int] = {
     val dir = root.resolve(Paths.get(login, base64UUID))
-    if (Files.exists(dir)) {
+    if (Files.isDirectory(dir)) {
       import scala.collection.JavaConverters._
       val ds = Files.newDirectoryStream(dir)
       try {
@@ -312,7 +324,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
           val base = userFolder.resolve(snippetId.base64UUID)
           if (!Files.exists(base)) Files.createDirectory(base)
 
-          val baseVersion = base.resolve(update.getOrElse(0).toString)
+          val baseVersion = base.resolve(update.toString)
           if (!Files.exists(baseVersion)) Files.createDirectory(baseVersion)
 
           baseVersion

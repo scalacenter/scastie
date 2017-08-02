@@ -1,5 +1,8 @@
-package com.olegych.scastie
-package sbtscastie
+package com.olegych.scastie.sbtscastie
+
+import com.olegych.scastie.api
+
+import play.api.libs.json.Json
 
 import sbt._
 import Keys._
@@ -8,7 +11,6 @@ import KeyRanks.DTask
 import System.{lineSeparator => nl}
 
 import xsbti.{Reporter, Problem, Position, Severity, Maybe}
-import upickle.default.{write => uwrite}
 
 object CompilerReporter {
   // compilerReporter is marked private in sbt
@@ -25,11 +27,6 @@ object CompilerReporter {
         def reset(): Unit = buffer.clear()
         def hasErrors: Boolean = buffer.exists(_.severity == Severity.Error)
         def hasWarnings: Boolean = buffer.exists(_.severity == Severity.Warn)
-
-        def annoying(in: Problem): Boolean = {
-          in.severity == xsbti.Severity.Warn &&
-          in.message == "a pure expression does nothing in statement position; you may be omitting necessary parentheses"
-        }
 
         def printSummary(): Unit = {
           def toApi(p: Problem): api.Problem = {
@@ -48,7 +45,8 @@ object CompilerReporter {
                         p.message)
           }
           if (problems.nonEmpty) {
-            println(uwrite(problems.filterNot(annoying).map(toApi)))
+            val apiProblems = problems.map(toApi)
+            println(Json.stringify(Json.toJson(apiProblems)))
           }
         }
         def problems: Array[Problem] = buffer.toArray

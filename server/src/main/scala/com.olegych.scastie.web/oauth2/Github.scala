@@ -1,11 +1,14 @@
 package com.olegych.scastie.web.oauth2
 
+import com.olegych.scastie.web.PlayJsonSupport
+
 import akka.http.scaladsl._
 import akka.http.scaladsl.model._
 import HttpMethods.POST
 import headers._
 import Uri._
 import unmarshalling.Unmarshal
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.olegych.scastie.api.User
@@ -16,8 +19,12 @@ import com.typesafe.config.ConfigFactory
 case class AccessToken(access_token: String)
 
 class Github(implicit system: ActorSystem, materializer: ActorMaterializer)
-    extends Json4sSupport {
+    extends PlayJsonSupport {
   import system.dispatcher
+
+  import play.api.libs.json._
+  implicit val formatUser = Json.format[User]
+  implicit val readAccessToken = Json.reads[AccessToken]
 
   private val config =
     ConfigFactory.load().getConfig("com.olegych.scastie.web.oauth2")

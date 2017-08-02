@@ -10,7 +10,7 @@ import org.scalajs.dom.raw.HTMLElement
 import api._
 import japgolly.scalajs.react._
 
-import upickle.default.{read => uread}
+import play.api.libs.json.Json
 
 object Global {
   type Scope = BackendScope[Scastie, ScastieState]
@@ -47,13 +47,18 @@ object Global {
              attachedDoms: js.Array[HTMLElement]): Unit = {
     scope0.foreach { scope =>
       val direct = scope.withEffectsImpure
-      val result = uread[Either[Option[RuntimeError], List[Instrumentation]]](
-        instrumentationsRaw
-      )
 
-      val (instr, runtimeError) = result match {
-        case Left(maybeRuntimeError) => (Nil, maybeRuntimeError)
-        case Right(instrumentations) => (instrumentations, None)
+      val result =
+        Json
+          .fromJson[ScalaJsResult](
+            Json.parse(instrumentationsRaw)
+          )
+          .asOpt
+
+      val (instr, runtimeError) = result.map(_.in) match {
+        case Some(Left(maybeRuntimeError)) => (Nil, maybeRuntimeError)
+        case Some(Right(instrumentations)) => (instrumentations, None)
+        case _                             => (Nil, None)
       }
 
       direct.modState(

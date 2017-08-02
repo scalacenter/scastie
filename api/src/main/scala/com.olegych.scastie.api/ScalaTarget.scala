@@ -1,15 +1,89 @@
 package com.olegych.scastie
 package api
 
-import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
+import com.olegych.scastie.buildinfo.BuildInfo
 
 sealed trait ScalaTarget {
   def targetType: ScalaTargetType
   def scaladexRequest: Map[String, String]
   def renderSbt(lib: ScalaDependency): String
+  def sbtConfig: String
+  def sbtPluginsConfig: String
+  def runtimeDependency: Option[ScalaDependency]
+
+  protected def sbtConfigScalaVersion(scalaVersion: String): String =
+    s"""scalaVersion := "$scalaVersion""""
+
+  protected def renderSbtDouble(lib: ScalaDependency): String = {
+    import lib._
+    s""""$groupId" %% "$artifact" % "$version""""
+  }
+
+  protected def renderSbtCross(lib: ScalaDependency): String = {
+    import lib._
+    s""""$groupId" %%% "$artifact" % "$version""""
+  }
 }
 
 object ScalaTarget {
+  import play.api.libs.json._
+
+  implicit object ScalaTargetFormat extends Format[ScalaTarget] {
+    private val formatJvm = Json.format[Jvm]
+    private val formatJs = Json.format[Js]
+    private val formatTypelevel = Json.format[Typelevel]
+    private val formatNative = Json.format[Native]
+    private val formatDotty = Json.format[Dotty]
+
+    def writes(target: ScalaTarget): JsValue = {
+      target match {
+        case jvm: Jvm => {
+          formatJvm.writes(jvm).asInstanceOf[JsObject] ++
+            JsObject(Seq("$type" -> JsString("Jvm")))
+        }
+        case js: Js => {
+          formatJs.writes(js).asInstanceOf[JsObject] ++
+            JsObject(Seq("$type" -> JsString("Js")))
+        }
+        case typelevel: Typelevel => {
+          formatTypelevel.writes(typelevel).asInstanceOf[JsObject] ++
+            JsObject(Seq("$type" -> JsString("Typelevel")))
+        }
+        case native: Native => {
+          formatNative.writes(native).asInstanceOf[JsObject] ++
+            JsObject(Seq("$type" -> JsString("Native")))
+        }
+        case dotty: Dotty => {
+          formatDotty.writes(dotty).asInstanceOf[JsObject] ++
+            JsObject(Seq("$type" -> JsString("Dotty")))
+        }
+      }
+    }
+
+    def reads(json: JsValue): JsResult[ScalaTarget] = {
+      json match {
+        case obj: JsObject => {
+          val vs = obj.value
+
+          vs.get("$type") match {
+            case Some(JsString(tpe)) => {
+              tpe match {
+                case "Jvm"       => formatJvm.reads(json)
+                case "Js"        => formatJs.reads(json)
+                case "Typelevel" => formatTypelevel.reads(json)
+                case "Native"    => formatNative.reads(json)
+                case "Dotty"     => formatDotty.reads(json)
+                case _           => JsError(Seq())
+              }
+            }
+            case _ => JsError(Seq())
+          }
+        }
+        case _ => JsError(Seq())
+      }
+    }
+  }
+
   val allVersions = List(
     "2.13.0-M1",
     "2.12.3",
@@ -77,7 +151,20 @@ object ScalaTarget {
   )
 
   private val defaultScalaVersion = "2.12.3"
-  private val defaultScalaJsVersion = "0.6.18"
+  private val defaultScalaJsVersion = "0.6.19"
+
+  private def runtimeDependencyFrom(
+      target: ScalaTarget
+  ): Option[ScalaDependency] = {
+    Some(
+      ScalaDependency(
+        BuildInfo.organization,
+        BuildInfo.runtimeProjectName,
+        target,
+        BuildInfo.version
+      )
+    )
+  }
 
   object Jvm {
     def default = ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
@@ -87,10 +174,18 @@ object ScalaTarget {
     def targetType = ScalaTargetType.JVM
     def scaladexRequest =
       Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
-    def renderSbt(lib: ScalaDependency): String = {
-      import lib._
-      s""" "$groupId" %% "$artifact" % "$version" """
-    }
+
+    def renderSbt(lib: ScalaDependency): String =
+      renderSbtDouble(lib)
+
+    def sbtConfig: String =
+      sbtConfigScalaVersion(scalaVersion)
+
+    def sbtPluginsConfig: String = ""
+
+    def runtimeDependency: Option[ScalaDependency] =
+      runtimeDependencyFrom(this)
+
     override def toString: String = s"Scala $scalaVersion"
   }
 
@@ -99,13 +194,25 @@ object ScalaTarget {
   }
 
   case class Typelevel(scalaVersion: String) extends ScalaTarget {
-    def targetType = ScalaTargetType.Typelevel
+
+    def targetType =
+      ScalaTargetType.Typelevel
+
     def scaladexRequest =
       Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
-    def renderSbt(lib: ScalaDependency): String = {
-      import lib._
-      s""" "$groupId" %% "$artifact" % "$version" """
+
+    def renderSbt(lib: ScalaDependency): String =
+      renderSbtDouble(lib)
+
+    def sbtConfig: String = {
+      s"""|${sbtConfigScalaVersion(scalaVersion)}
+          |scalaOrganization in ThisBuild := "org.typelevel"""".stripMargin
     }
+
+    def sbtPluginsConfig: String = ""
+
+    def runtimeDependency: Option[ScalaDependency] =
+      runtimeDependencyFrom(this)
 
     override def toString: String = s"Typelevel $scalaVersion"
   }
@@ -127,15 +234,32 @@ object ScalaTarget {
       extends ScalaTarget {
 
     def targetType = ScalaTargetType.JS
+
     def scaladexRequest = Map(
       "target" -> "JS",
       "scalaVersion" -> scalaVersion,
       "scalaJsVersion" -> scalaJsVersion
     )
-    def renderSbt(lib: ScalaDependency): String = {
-      import lib._
-      s""" "$groupId" %%% "$artifact" % "$version" """
+
+    def renderSbt(lib: ScalaDependency): String =
+      renderSbtCross(lib)
+
+    def sbtConfig: String = {
+      s"""|${sbtConfigScalaVersion(scalaVersion)}
+          |enablePlugins(ScalaJSPlugin)
+          |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "${ScalaTarget.Js.targetFilename}"
+          |scalacOptions += {
+          |  val from = (baseDirectory in LocalRootProject).value.toURI.toString
+          |  val to = "${ScalaTarget.Js.sourceUUID}/"
+          |  "-P:scalajs:mapSourceURI:" + from + "->" + to
+          |}""".stripMargin
     }
+
+    def sbtPluginsConfig: String =
+      s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
+
+    def runtimeDependency: Option[ScalaDependency] =
+      runtimeDependencyFrom(this)
 
     override def toString: String = s"Scala.Js $scalaVersion $scalaJsVersion"
   }
@@ -144,39 +268,63 @@ object ScalaTarget {
     def default =
       ScalaTarget.Native(
         scalaVersion = "2.11.11",
-        scalaNativeVersion = "0.2.1"
+        scalaNativeVersion = "0.3.1"
       )
   }
 
   case class Native(scalaVersion: String, scalaNativeVersion: String)
       extends ScalaTarget {
-    def targetType = ScalaTargetType.Native
-    def scaladexRequest = Map(
-      "target" -> "NATIVE",
-      "scalaVersion" -> scalaVersion,
-      "scalaNativeVersion" -> scalaNativeVersion
-    )
-    def renderSbt(lib: ScalaDependency): String = {
-      import lib._
-      s""" "$groupId" %%% "$artifact" % "$version" """
-    }
+
+    def targetType =
+      ScalaTargetType.Native
+
+    def scaladexRequest =
+      Map(
+        "target" -> "NATIVE",
+        "scalaVersion" -> scalaVersion,
+        "scalaNativeVersion" -> scalaNativeVersion
+      )
+
+    def renderSbt(lib: ScalaDependency): String =
+      renderSbtCross(lib)
+
+    def sbtConfig: String =
+      sbtConfigScalaVersion(scalaVersion)
+
+    def sbtPluginsConfig: String =
+      s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
+
+    def runtimeDependency: Option[ScalaDependency] =
+      runtimeDependencyFrom(this)
 
     override def toString: String =
-      s"Scala.Js $scalaVersion $scalaNativeVersion"
+      s"Scala-Native $scalaVersion $scalaNativeVersion"
   }
 
-  case object Dotty extends ScalaTarget {
-    def default: ScalaTarget = this
-
-    def targetType = ScalaTargetType.Dotty
-    def scaladexRequest = Map("target" -> "JVM", "scalaVersion" -> "2.11")
-    def renderSbt(lib: ScalaDependency): String = {
-      import lib._
-      s""""$groupId" %% "$artifact" % "$version""""
-    }
-
-    override def toString: String = "Dotty"
+  object Dotty {
+    def default = Dotty("0.2.0-RC1")
   }
 
-  implicit val pkl: ReadWriter[ScalaTarget] = upickleMacroRW[ScalaTarget]
+  case class Dotty(dottyVersion: String) extends ScalaTarget {
+    def targetType =
+      ScalaTargetType.Dotty
+
+    def scaladexRequest =
+      Map("target" -> "JVM", "scalaVersion" -> "2.11")
+
+    def renderSbt(lib: ScalaDependency): String =
+      renderSbtDouble(lib)
+
+    def sbtConfig: String =
+      sbtConfigScalaVersion(dottyVersion)
+
+    def sbtPluginsConfig: String =
+      """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.4")"""
+
+    def runtimeDependency: Option[ScalaDependency] =
+      None
+
+    override def toString: String =
+      s"Dotty $dottyVersion"
+  }
 }

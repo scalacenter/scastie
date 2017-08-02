@@ -2,14 +2,13 @@ package com.olegych.scastie.client
 
 import components.Scastie
 
+import play.api.libs.json.Json
+
 import com.olegych.scastie.api._
 import japgolly.scalajs.react._, vdom.all._, extra.StateSnapshot,
 component.Scala.BackendScope
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-import autowire._
-import upickle.default.{read => uread}
 
 import org.scalajs.dom._
 
@@ -37,134 +36,6 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
   def sbtConfigChange(newConfig: String) =
     scope.modState(_.setSbtConfigExtra(newConfig))
-
-  private def snippetUri(snippetId: SnippetId,
-                         connectionMethod: String): String = {
-    val snippetPart =
-      snippetId.user match {
-        case Some(SnippetUserPart(login, update)) => {
-          val updatePart = update.map(_.toString).getOrElse("")
-          s"$login/${snippetId.base64UUID}/$updatePart"
-        }
-        case None => s"${snippetId.base64UUID}"
-      }
-
-    s"/$connectionMethod/$snippetPart"
-  }
-
-  private val connectedMessage = "Waiting for sbt."
-
-  private def connectEventSource(snippetId: SnippetId) =
-    CallbackTo[EventSource] {
-      val direct = scope.withEffectsImpure
-
-      val eventSource = new EventSource(snippetUri(snippetId, "progress-sse"))
-
-      def onopen(e: Event): Unit = {
-        direct.modState(_.logSystem(connectedMessage))
-      }
-
-      def onmessage(e: MessageEvent): Unit = {
-        val progress = uread[SnippetProgress](e.data.toString)
-
-        direct.modState(_.addProgress(progress))
-
-        if (progress.done) {
-          direct.modState(
-            _.copy(eventSource = None, isRunning = false)
-          )
-          eventSource.close()
-        }
-      }
-
-      def onerror(e: Event): Unit = {
-        if (e.eventPhase == EventSource.CLOSED) {
-          eventSource.close()
-        } else {
-          direct.modState(_.logSystem(s"Error: ${e.toString}"))
-        }
-      }
-
-      eventSource.onopen = onopen _
-      eventSource.onmessage = onmessage _
-      eventSource.onerror = onerror _
-      eventSource
-    }
-
-  private def connectWebSocket(snippetId: SnippetId) = CallbackTo[WebSocket] {
-    val direct = scope.withEffectsImpure
-
-    def onopen(e: Event): Unit = {
-      direct.modState(_.logSystem(connectedMessage))
-    }
-
-    def onmessage(e: MessageEvent): Unit = {
-      val progress = uread[SnippetProgress](e.data.toString)
-      direct.modState(_.addProgress(progress))
-    }
-
-    def onerror(e: ErrorEvent): Unit = {
-      direct.modState(_.logSystem(s"Error: ${e.message}"))
-    }
-
-    def onclose(e: CloseEvent): Unit =
-      direct.modState(
-        _.copy(websocket = None, isRunning = false)
-          .logSystem(s"Closed: ${e.reason}")
-      )
-
-    val protocol = if (window.location.protocol == "https:") "wss" else "ws"
-    val connectionPart = snippetUri(snippetId, "progress-websocket")
-    val uri = s"$protocol://${window.location.host}${connectionPart}"
-    val socket = new WebSocket(uri)
-
-    socket.onopen = onopen _
-    socket.onclose = onclose _
-    socket.onmessage = onmessage _
-    socket.onerror = onerror _
-    socket
-  }
-
-  private def connectStatusEventSource: CallbackTo[EventSource] =
-    CallbackTo[EventSource] {
-      val direct = scope.withEffectsImpure
-      val eventSource = new EventSource("/status-sse")
-
-      def onopen(e: Event): Unit = {
-        console.log("connect status status open", e)
-      }
-
-      def onmessage(e: MessageEvent): Unit = {
-        val status = uread[StatusProgress](e.data.toString)
-        direct.modState(_.addStatus(status))
-      }
-
-      def onerror(e: Event): Unit = {
-        console.log(e)
-        if (e.eventPhase == EventSource.CLOSED) {
-          eventSource.close()
-        }
-        direct.modState(_.removeStatus)
-      }
-
-      eventSource.onopen = onopen _
-      eventSource.onmessage = onmessage _
-      eventSource.onerror = onerror _
-      eventSource
-    }
-
-  def connectStatus: Callback = {
-    connectStatusEventSource.attemptTry.flatMap {
-      case Success(eventSource) => {
-        scope.modState(
-          _.copy(statusEventSource = Some(eventSource))
-        )
-      }
-      case Failure(errorEventSource) => {
-        Callback(println(errorEventSource))
-      }
-    }
-  }
 
   private def setHome = scope.props.flatMap(
     _.router
@@ -250,30 +121,75 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   def toggleWorksheetMode: Callback = scope.modState(_.toggleWorksheetMode)
 
   private def connectProgress(snippetId: SnippetId): Callback = {
-    connectEventSource(snippetId).attemptTry.flatMap {
-      case Success(eventSource) => {
-        scope.modState(
-          _.run(snippetId)
-            .copy(eventSource = Some(eventSource))
-        )
-      }
-      case Failure(errorEventSource) =>
-        connectWebSocket(snippetId).attemptTry.flatMap {
-          case Success(websocket) => {
-            scope.modState(
-              _.run(snippetId)
-                .copy(websocket = Some(websocket))
-            )
-          }
-          case Failure(errorWebSocket) =>
-            scope.modState(
-              _.clearOutputs
-                .logSystem(errorEventSource.toString)
-                .logSystem(errorWebSocket.toString)
-                .setRunning(false)
-            )
+    EventStream.connect(
+      eventSourceUri = s"/progress-sse/${snippetId.url}",
+      websocketUri = s"/progress-ws/${snippetId.url}",
+      handler = new EventStreamHandler[SnippetProgress] {
+        val direct = scope.withEffectsImpure
+
+        def onMessage(progress: SnippetProgress): Boolean = {
+          direct.modState(_.addProgress(progress))
+          progress.done
         }
-    }
+
+        def onOpen(): Unit =
+          direct.modState(_.logSystem("Connected. Waiting for sbt"))
+
+        def onError(error: String): Unit =
+          direct.modState(_.logSystem(s"Error: $error"))
+
+        def onClose(reason: Option[String]): Unit = {
+          val msg = reason.map(": " + _).getOrElse(".")
+          direct.modState(
+            _.copy(
+              isRunning = false,
+              progressStream = None
+            ).logSystem("Closed" + msg)
+          )
+        }
+
+        def onErrorC(error: String): Callback =
+          scope.modState(_.logSystem(s"Error: $error"))
+
+        def onConnected(stream: EventStream[SnippetProgress]): Callback =
+          scope.modState(
+            _.run(snippetId)
+              .copy(progressStream = Some(stream))
+          )
+      }
+    )
+  }
+
+  def connectStatus: Callback = {
+    EventStream.connect(
+      eventSourceUri = "/status-sse",
+      websocketUri = "/status-ws",
+      handler = new EventStreamHandler[StatusProgress] {
+        val direct = scope.withEffectsImpure
+
+        def onMessage(status: StatusProgress): Boolean = {
+          direct.modState(_.addStatus(status))
+          false
+        }
+
+        def onOpen(): Unit =
+          console.log("connect status open")
+
+        def onError(error: String): Unit =
+          console.log("connect status error: " + error)
+
+        def onClose(reason: Option[String]): Unit =
+          direct.modState(_.removeStatus)
+
+        def onErrorC(error: String): Callback =
+          Callback(onError(error))
+
+        def onConnected(stream: EventStream[StatusProgress]): Callback =
+          scope.modState(
+            _.copy(statusStream = Some(stream))
+          )
+      }
+    )
   }
 
   def run: Callback = {
@@ -281,9 +197,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         if (!state.isScalaJsScriptLoaded || state.inputsHasChanged) {
           Callback.future(
-            ApiClient[AutowireApi]
+            ApiClient
               .run(state.inputs)
-              .call()
               .map(connectProgress)
           )
         } else {
@@ -315,9 +230,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         Callback.unless(state.isSnippetSaved)(
           Callback.future(
-            ApiClient[AutowireApi]
+            ApiClient
               .save(state.inputs)
-              .call()
               .map(saveCallback)
           )
       )
@@ -349,9 +263,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         Callback.unless(state.isSnippetSaved)(
           Callback.future(
-            ApiClient[AutowireApi]
-              .amend(snippetId, state.inputs)
-              .call()
+            ApiClient
+              .amend(EditInputs(snippetId, state.inputs))
               .map(
                 success =>
                   if (success) saveCallback(snippetId)
@@ -366,9 +279,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         Callback
           .future(
-            ApiClient[AutowireApi]
-              .fork(snippetId, state.inputs)
-              .call()
+            ApiClient
+              .fork(EditInputs(snippetId, state.inputs))
               .map {
                 case Some(sId) => saveCallback(sId)
                 case None      => Callback(window.alert("Failed to fork"))
@@ -382,9 +294,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         Callback
           .future(
-            ApiClient[AutowireApi]
-              .update(snippetId, state.inputs)
-              .call()
+            ApiClient
+              .update(EditInputs(snippetId, state.inputs))
               .map {
                 case Some(sId) => saveCallback(sId)
                 case None      => Callback(window.alert("Failed to update"))
@@ -395,17 +306,15 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
   def loadOldSnippet(id: Int): Callback = {
     loadSnippetBase(
-      ApiClient[AutowireApi]
+      ApiClient
         .fetchOld(id)
-        .call()
     )
   }
 
   def loadSnippet(snippetId: SnippetId): Callback = {
     loadSnippetBase(
-      ApiClient[AutowireApi]
-        .fetch(snippetId)
-        .call(),
+      ApiClient
+        .fetch(snippetId),
       afterLoading = _.setSnippetId(snippetId)
     ) >> connectProgress(snippetId)
   }
@@ -464,9 +373,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   def start(props: Scastie): Callback = {
     def loadUser: Callback =
       Callback.future(
-        ApiClient[AutowireApi]
+        ApiClient
           .fetchUser()
-          .call()
           .map(result => scope.modState(_.setUser(result)))
       )
 
@@ -500,13 +408,12 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         Callback.when(state.inputsHasChanged)(
           Callback.future(
-            ApiClient[AutowireApi]
+            ApiClient
               .format(
                 FormatRequest(state.inputs.code,
                               state.inputs.worksheetMode,
                               state.inputs.target.targetType)
               )
-              .call()
               .map {
                 case FormatResponse(Right(formattedCode)) =>
                   scope.modState { s =>
@@ -538,11 +445,10 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state => {
         Callback
           .future(
-            ApiClient[AutowireApi]
-              .complete(
-                CompletionRequest(EnsimeRequestInfo(state.inputs, pos))
+            ApiClient
+              .autocomplete(
+                AutoCompletionRequest(EnsimeRequestInfo(state.inputs, pos))
               )
-              .call()
               .map {
                 case Some(response) =>
                   scope.modState(_.setCompletions(response.completions))
@@ -559,11 +465,10 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state => {
         Callback
           .future(
-            ApiClient[AutowireApi]
+            ApiClient
               .typeAt(
                 TypeAtPointRequest(EnsimeRequestInfo(state.inputs, pos))
               )
-              .call()
               .map {
                 case Some(response) =>
                   scope.modState(

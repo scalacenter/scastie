@@ -1,9 +1,7 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 package components
 
-import japgolly.scalajs.react._
-import vdom.all._
+import japgolly.scalajs.react._, vdom.all._
 
 final case class RunButton(isRunning: Boolean,
                            isStatusOk: Boolean,
@@ -17,7 +15,7 @@ object RunButton {
     if (!props.isRunning) {
       val runTitle =
         if (props.isStatusOk)
-          s"Run Code (${View.ctrl} + Enter)"
+          s"Run Code ($ctrl + Enter)"
         else
           "Something is wrong check the status"
 

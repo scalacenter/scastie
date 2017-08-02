@@ -100,7 +100,7 @@ class EnsimeActor(system: ActorSystem,
 
         payload match {
           case CompletionInfoList(_, completionList) =>
-            val response = CompletionResponse(
+            val response = AutoCompletionResponse(
               completionList
                 .sortBy(-_.relevance)
                 .map(ci => {
@@ -371,7 +371,7 @@ class EnsimeActor(system: ActorSystem,
       )
 
     case EnsimeTaskRequest(
-        CompletionRequest(EnsimeRequestInfo(inputs, position)),
+        AutoCompletionRequest(EnsimeRequestInfo(inputs, position)),
         taskId
         ) =>
       log.info("Completion request at EnsimeActor")

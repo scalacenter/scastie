@@ -1,6 +1,8 @@
 package com.olegych.scastie.balancer
 
 import com.olegych.scastie.api._
+import com.olegych.scastie.util.ActorForwarder
+
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, Props}
 import akka.stream.actor.ActorPublisher
 import akka.stream.scaladsl.Source
@@ -15,7 +17,7 @@ case class LoadBalancerUpdate(
     newBalancer: LoadBalancer[String, ActorSelection]
 )
 case class LoadBalancerInfo(balancer: LoadBalancer[String, ActorSelection],
-                            originalSender: ActorRef)
+                            requester: ActorRef)
 case class SetDispatcher(dispatchActor: ActorRef)
 
 object StatusActor {
@@ -27,8 +29,13 @@ class StatusActor private () extends Actor with ActorLogging {
   var dispatchActor: Option[ActorRef] = _
 
   override def receive: Receive = {
-    case SubscribeStatus =>
-      val publisher = context.actorOf(StatusForwarder.props)
+    case SubscribeStatus => {
+
+      def noop(snippetProgress: StatusProgress, noDemmand: Boolean): Unit = {}
+
+      val publisher =
+        context.actorOf(Props(new ActorForwarder[StatusProgress](noop _)))
+
       publishers += publisher
 
       val source =
@@ -42,15 +49,19 @@ class StatusActor private () extends Actor with ActorLogging {
       sender ! source
 
       dispatchActor.foreach(_ ! ReceiveStatus(publisher))
+    }
 
-    case LoadBalancerUpdate(newBalancer) =>
+    case LoadBalancerUpdate(newBalancer) => {
       publishers.foreach(_ ! convert(newBalancer))
+    }
 
-    case LoadBalancerInfo(balancer, originalSender) =>
-      originalSender ! convert(balancer)
+    case LoadBalancerInfo(balancer, requester) => {
+      requester ! convert(balancer)
+    }
 
-    case SetDispatcher(dispatchActorReference) =>
+    case SetDispatcher(dispatchActorReference) => {
       dispatchActor = Some(dispatchActorReference)
+    }
   }
 
   private def convert(

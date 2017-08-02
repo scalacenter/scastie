@@ -3,6 +3,8 @@ package balancer
 
 import api._
 
+import util.ActorForwarder
+
 import akka.NotUsed
 import akka.actor.{Actor, ActorRef, Props}
 import akka.stream.actor.ActorPublisher
@@ -21,63 +23,50 @@ class ProgressActor extends Actor {
     MMap.empty[SnippetId, (ProgressSource, ActorRef)]
 
   override def receive: Receive = {
-    case SubscribeProgress(snippetId) =>
-      val (source, _) = getOrCreatePublisher(snippetId)
+    case SubscribeProgress(snippetId) => {
+      val (source, _) = getOrCreatePublisher(snippetId, self)
       sender ! source
-    case snippetProgress: SnippetProgress =>
-      snippetProgress.snippetId.foreach { sid =>
-        val (_, publisher) = getOrCreatePublisher(sid)
+    }
+
+    case snippetProgress: SnippetProgress => {
+      snippetProgress.snippetId.foreach { snippetId =>
+        val (_, publisher) = getOrCreatePublisher(snippetId, self)
         publisher ! snippetProgress
       }
-    case ProgressDone(snippetId) =>
+    }
+
+    case ProgressDone(snippetId) => {
       subscribers.remove(snippetId)
       ()
+    }
   }
 
   private def getOrCreatePublisher(
-      snippetId: SnippetId
+      snippetId: SnippetId,
+      self: ActorRef
   ): (ProgressSource, ActorRef) = {
-    def createPublisher() = {
-      val ref = context.actorOf(Props(new ProgressForwarder(self)))
-      val source = Source.fromPublisher(ActorPublisher[SnippetProgress](ref))
-      val sourceAndPublisher = (source, ref)
 
-      subscribers(snippetId) = sourceAndPublisher
-      sourceAndPublisher
-    }
-    subscribers.getOrElse(snippetId, createPublisher())
-  }
-}
-
-class ProgressForwarder(progressActor: ActorRef)
-    extends Actor
-    with ActorPublisher[SnippetProgress] {
-
-  private var buffer = MQueue.empty[SnippetProgress]
-  private var toDeliver = 0L
-
-  override def receive: Receive = {
-    case progress: SnippetProgress =>
-      buffer.enqueue(progress)
-      deliver(0L)
-    case Request(demand) =>
-      deliver(demand)
-  }
-
-  private def deliver(demand: Long): Unit = {
-    toDeliver += demand
-    if (toDeliver > 0) {
-      val (deliverNow, deliverLater) = buffer.splitAt(toDeliver.toInt)
-      buffer = deliverLater
-      toDeliver -= deliverNow.size
-      deliverNow.foreach { progress =>
-        onNext(progress)
-        if (progress.done) {
-          progress.snippetId.foreach { sid =>
-            progressActor ! ProgressDone(sid)
-          }
+    def doneCallback(snippetProgress: SnippetProgress,
+                     noDemmand: Boolean): Unit = {
+      if (snippetProgress.done && noDemmand) {
+        snippetProgress.snippetId.foreach { snippetId =>
+          self ! ProgressDone
         }
       }
     }
+
+    def createPublisher() = {
+      val ref = context.actorOf(
+        Props(
+          new ActorForwarder[SnippetProgress](doneCallback _)
+        )
+      )
+      val source = Source.fromPublisher(ActorPublisher[SnippetProgress](ref))
+      val sourceAndPublisher = (source, ref)
+
+      sourceAndPublisher
+    }
+
+    subscribers.getOrElseUpdate(snippetId, createPublisher())
   }
 }

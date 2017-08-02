@@ -1,21 +1,33 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api._
+import play.api.libs.json._
 
-import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
+import com.olegych.scastie.api._
 
 import scalajs.js.debugger
 
-import org.scalajs.dom.{EventSource, WebSocket}
 import org.scalajs.dom.raw.HTMLElement
+
+object SnippetState {
+  implicit val formatSnippetState = Json.format[SnippetState]
+}
+
+case class SnippetState(
+    snippetId: Option[SnippetId],
+    isSnippetSaved: Boolean,
+    loadSnippet: Boolean,
+    loadScalaJsScript: Boolean,
+    isScalaJsScriptLoaded: Boolean,
+    snippetIdIsScalaJS: Boolean,
+    isReRunningScalaJs: Boolean
+)
 
 object ScastieState {
   def default = ScastieState(
     view = View.Editor,
     isRunning = false,
-    eventSource = None,
-    statusEventSource = None,
-    websocket = None,
+    statusStream = None,
+    progressStream = None,
     modalState = ModalState.default,
     isDarkTheme = false,
     isDesktopForced = false,
@@ -41,41 +53,38 @@ object ScastieState {
     typeAtInfo = None
   )
 
-  implicit val dontSerializeAttachedDoms: ReadWriter[Map[String, HTMLElement]] =
-    dontSerializeMap[String, HTMLElement]
-
-  implicit val dontSerializeWebSocket: ReadWriter[Option[WebSocket]] =
-    dontSerializeOption[WebSocket]
-
-  implicit val dontSerializeEventSource: ReadWriter[Option[EventSource]] =
-    dontSerializeOption[EventSource]
-
-  implicit val dontSerializeCompletions: ReadWriter[List[Completion]] =
+  implicit val dontSerializeCompletions: Format[List[Completion]] =
     dontSerializeList[Completion]
 
-  implicit val dontSerializeTypeAtInfo: ReadWriter[Option[TypeInfoAt]] =
+  implicit val dontSerializeAttachedDoms: Format[AttachedDoms] =
+    dontSerialize[AttachedDoms](AttachedDoms(Map()))
+
+  implicit val dontSerializeStatusState: Format[StatusState] =
+    dontSerialize[StatusState](StatusState.default)
+
+  type TypeInfoAtHint = Option[TypeInfoAt]
+
+  implicit val dontSerializeTypeInfoAt: Format[TypeInfoAtHint] =
     dontSerializeOption[TypeInfoAt]
 
-  implicit val pkl: ReadWriter[ScastieState] =
-    upickleMacroRW[ScastieState]
-}
+  type StatusProgressHint = Option[EventStream[StatusProgress]]
 
-case class SnippetState(
-    snippetId: Option[SnippetId],
-    isSnippetSaved: Boolean,
-    loadSnippet: Boolean,
-    loadScalaJsScript: Boolean,
-    isScalaJsScriptLoaded: Boolean,
-    snippetIdIsScalaJS: Boolean,
-    isReRunningScalaJs: Boolean
-)
+  implicit val dontSerializeStatusStream: Format[StatusProgressHint] =
+    dontSerializeOption[EventStream[StatusProgress]]
+
+  type SnippetProgressHint = Option[EventStream[SnippetProgress]]
+
+  implicit val dontSerializeProgressStream: Format[SnippetProgressHint] =
+    dontSerializeOption[EventStream[SnippetProgress]]
+
+  implicit val formatScastieState = Json.format[ScastieState]
+}
 
 case class ScastieState(
     view: View,
     isRunning: Boolean,
-    eventSource: Option[EventSource],
-    statusEventSource: Option[EventSource],
-    websocket: Option[WebSocket],
+    statusStream: ScastieState.StatusProgressHint,
+    progressStream: ScastieState.SnippetProgressHint,
     modalState: ModalState,
     isDarkTheme: Boolean,
     isDesktopForced: Boolean,
@@ -90,7 +99,7 @@ case class ScastieState(
     outputs: Outputs,
     status: StatusState,
     completions: List[Completion],
-    typeAtInfo: Option[TypeInfoAt]
+    typeAtInfo: ScastieState.TypeInfoAtHint
 ) {
 
   def snippetId: Option[SnippetId] = snippetState.snippetId
@@ -101,23 +110,25 @@ case class ScastieState(
   def snippetIdIsScalaJS: Boolean = snippetState.snippetIdIsScalaJS
   def isReRunningScalaJs: Boolean = snippetState.isReRunningScalaJs
 
-  def copyAndSave(view: View = view,
-                  isRunning: Boolean = isRunning,
-                  eventSource: Option[EventSource] = eventSource,
-                  websocket: Option[WebSocket] = websocket,
-                  modalState: ModalState = modalState,
-                  isDarkTheme: Boolean = isDarkTheme,
-                  isPresentationMode: Boolean = isPresentationMode,
-                  isDesktopForced: Boolean = isDesktopForced,
-                  showLineNumbers: Boolean = showLineNumbers,
-                  consoleState: ConsoleState = consoleState,
-                  inputsHasChanged: Boolean = inputsHasChanged,
-                  snippetId: Option[SnippetId] = snippetId,
-                  snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
-                  user: Option[User] = user,
-                  inputs: Inputs = inputs,
-                  outputs: Outputs = outputs,
-                  status: StatusState = status): ScastieState = {
+  def copyAndSave(
+      view: View = view,
+      isRunning: Boolean = isRunning,
+      statusStream: Option[EventStream[StatusProgress]] = statusStream,
+      progressStream: Option[EventStream[SnippetProgress]] = progressStream,
+      modalState: ModalState = modalState,
+      isDarkTheme: Boolean = isDarkTheme,
+      isPresentationMode: Boolean = isPresentationMode,
+      isDesktopForced: Boolean = isDesktopForced,
+      showLineNumbers: Boolean = showLineNumbers,
+      consoleState: ConsoleState = consoleState,
+      inputsHasChanged: Boolean = inputsHasChanged,
+      snippetId: Option[SnippetId] = snippetId,
+      snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
+      user: Option[User] = user,
+      inputs: Inputs = inputs,
+      outputs: Outputs = outputs,
+      status: StatusState = status
+  ): ScastieState = {
 
     val isScalaJsScriptLoaded0 =
       if (inputsHasChanged) false
@@ -127,9 +138,8 @@ case class ScastieState(
       copy(
         view,
         isRunning,
-        eventSource,
-        statusEventSource,
-        websocket,
+        statusStream,
+        progressStream,
         modalState,
         isDarkTheme,
         isDesktopForced,

@@ -1,9 +1,7 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 package components
 
-import api.{SnippetId, SnippetUserPart}
-import View.ctrl
+import com.olegych.scastie.api.{SnippetId, SnippetUserPart}
 
 import japgolly.scalajs.react._, vdom.all._
 
@@ -13,19 +11,7 @@ final case class DownloadButton(snippetId: SnippetId) {
 
 object DownloadButton {
   def render(props: DownloadButton): VdomElement = {
-    val url =
-      props.snippetId match {
-        case SnippetId(base64UUID, None) =>
-          s"$base64UUID"
-
-        case SnippetId(base64UUID, Some(SnippetUserPart(login, None))) =>
-          s"$login/$base64UUID/0"
-
-        case SnippetId(base64UUID,
-                       Some(SnippetUserPart(login, Some(update)))) =>
-          s"$login/$base64UUID/$update"
-      }
-
+    val url = props.snippetId.url
     val fullUrl = s"/download/$url"
 
     li(

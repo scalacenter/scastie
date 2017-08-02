@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package api
 
+import play.api.libs.json._
+
 object SnippetProgress {
   def default =
     SnippetProgress(
@@ -17,6 +19,8 @@ object SnippetProgress {
       sbtError = false,
       forcedProgramMode = false
     )
+
+  implicit val formatSnippetProgress = Json.format[SnippetProgress]
 }
 
 case class SnippetProgress(

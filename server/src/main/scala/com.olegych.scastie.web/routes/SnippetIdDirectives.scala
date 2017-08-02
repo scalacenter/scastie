@@ -24,7 +24,7 @@ object SnippetIdDirectives {
       path(fp1(pathStart / Segment))(uuid ⇒ f(SnippetId(uuid, None))),
       path(fp2(pathStart / Segment / Segment / IntNumber.?))(
         (user, uuid, update) ⇒
-          f(SnippetId(uuid, Some(SnippetUserPart(user, update))))
+          f(SnippetId(uuid, Some(SnippetUserPart(user, update.getOrElse(0)))))
       )
     )
   }

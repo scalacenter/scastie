@@ -5,6 +5,8 @@ import SnippetIdDirectives._
 import com.olegych.scastie.api._
 import com.olegych.scastie.balancer._
 
+import play.api.libs.json.Json
+
 import de.heikoseeberger.akkasse.scaladsl.model.ServerSentEvent
 import de.heikoseeberger.akkasse.scaladsl.marshalling.EventStreamMarshalling._
 
@@ -20,8 +22,6 @@ import akka.http.scaladsl.server.Route
 
 import akka.stream.scaladsl._
 
-import upickle.default.{write => uwrite, read => uread}
-
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.DurationInt
 
@@ -34,15 +34,20 @@ class ProgressRoutes(progressActor: ActorRef) {
         sid ⇒
           complete(
             progressSource(sid)
-              .map(progress => ServerSentEvent(uwrite(progress)))
+              .map(
+                progress =>
+                  ServerSentEvent(Json.stringify(Json.toJson(progress)))
+              )
         )
       ),
       snippetId("progress-websocket")(
-        sid => handleWebSocketMessages(webSocketProgress(sid))
+        sid => handleWebSocketMessages(webSocket(sid))
       )
     )
 
-  private def progressSource(snippetId: SnippetId) = {
+  private def progressSource(
+      snippetId: SnippetId
+  ): Source[SnippetProgress, NotUsed] = {
     // TODO find a way to flatten Source[Source[T]]
     Await.result(
       (progressActor ? SubscribeProgress(snippetId))
@@ -51,11 +56,9 @@ class ProgressRoutes(progressActor: ActorRef) {
     )
   }
 
-  private def webSocketProgress(
-      snippetId: SnippetId
-  ): Flow[ws.Message, ws.Message, _] = {
-    def flow: Flow[KeepAlive, SnippetProgress, NotUsed] = {
-      val in = Flow[KeepAlive].to(Sink.ignore)
+  private def webSocket(snippetId: SnippetId): Flow[ws.Message, ws.Message, _] = {
+    def flow: Flow[String, SnippetProgress, NotUsed] = {
+      val in = Flow[String].to(Sink.ignore)
       val out = progressSource(snippetId)
       Flow.fromSinkAndSource(in, out)
     }
@@ -65,8 +68,9 @@ class ProgressRoutes(progressActor: ActorRef) {
         case Strict(c) ⇒ Future.successful(c)
         case e => Future.failed(new Exception(e.toString))
       }
-      .map(uread[KeepAlive])
       .via(flow)
-      .map(progress ⇒ ws.TextMessage.Strict(uwrite(progress)))
+      .map(
+        progress ⇒ ws.TextMessage.Strict(Json.stringify(Json.toJson(progress)))
+      )
   }
 }

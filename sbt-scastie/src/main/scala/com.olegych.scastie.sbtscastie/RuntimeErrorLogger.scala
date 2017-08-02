@@ -1,19 +1,20 @@
-package com.olegych.scastie
-package sbtscastie
+package com.olegych.scastie.sbtscastie
 
-import api.{ConsoleOutput, RuntimeError}
+import com.olegych.scastie.api.{ConsoleOutput, RuntimeError, RuntimeErrorWrap}
 
 import sbt._
 import Keys._
 
+import play.api.libs.json.Json
+
 import java.io.{PrintWriter, OutputStream, StringWriter}
-import upickle.default.{write => uwrite}
 
 object RuntimeErrorLogger {
   private object NoOp {
     def apply(): NoOp = {
-      def out(in: String): Unit =
-        println(uwrite(ConsoleOutput.SbtOutput(in.trim)))
+      def out(in: String): Unit = {
+        println(Json.stringify(Json.toJson(ConsoleOutput.SbtOutput(in.trim))))
+      }
 
       new NoOp(new OutputStream {
         override def close(): Unit = ()
@@ -47,7 +48,8 @@ object RuntimeErrorLogger {
                 )
 
             if (!sbtTrap) {
-              println(uwrite(RuntimeError.fromThrowable(t)))
+              val error = RuntimeErrorWrap(RuntimeError.fromThrowable(t))
+              println(Json.stringify(Json.toJson(error)))
             }
           }
         }
