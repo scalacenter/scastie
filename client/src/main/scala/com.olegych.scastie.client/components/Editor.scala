@@ -92,6 +92,55 @@ object Editor {
     }
   }
 
+  private object hoverMessage {
+    private val message = dom.document
+      .createElement("div")
+      .asInstanceOf[HTMLDivElement]
+
+    private val tooltip =
+      dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+    tooltip.className = tooltip.className.concat(" CodeMirror-hover-tooltip")
+    tooltip.appendChild(message)
+    dom.document.body.appendChild(tooltip)
+
+    private var node: Option[HTMLElement] = None
+
+    def hideTooltip(e: dom.Event): Unit = {
+      CodeMirror.off(dom.document, "mouseout", hideTooltip)
+      if (node.isDefined)
+        node.get.className = node.get.className.replace(" CodeMirror-hover", "")
+
+      if (tooltip.parentNode != null) {
+        tooltip.style.opacity = "0"
+        ()
+      }
+    }
+
+    def position(e: dom.MouseEvent): Unit = {
+      if (tooltip.style.opacity == null) {
+        CodeMirror.off(dom.document, "mousemove", position)
+      }
+      tooltip.style.top = Math
+        .max(0, e.clientY - tooltip.offsetHeight - 5) + "px"
+      tooltip.style.left = (e.clientX + 5) + "px"
+    }
+
+    def show(nodeElement: HTMLElement, messageString: String): Unit = {
+      node = Some(nodeElement)
+      node.get.className = node.get.className.concat(" CodeMirror-hover")
+      message.innerHTML = messageString
+      CodeMirror.on(dom.document, "mousemove", position)
+      CodeMirror.on(dom.document, "mouseout", hideTooltip)
+      if (tooltip.style.opacity != null) {
+        tooltip.style.opacity = "1"
+      }
+    }
+
+    def updateMessage(messageString: String) = {
+      message.innerHTML = messageString
+    }
+  }
+
   private def options(dark: Boolean,
                       showLineNumbers: Boolean): codemirror.Options = {
 
@@ -275,57 +324,8 @@ object Editor {
 
         CodeMirror.on(
           editor.getWrapperElement(),
-          "mouseover",
+          "mousemove",
           (e: dom.MouseEvent) => {
-
-            def initEventHandlers(node: js.Dynamic, message: HTMLElement) = {
-
-              val tooltip =
-                dom.document.createElement("div").asInstanceOf[HTMLDivElement]
-              node.className = node.className.concat(" CodeMirror-hover")
-              tooltip.className =
-                tooltip.className.concat(" CodeMirror-hover-tooltip")
-              tooltip.appendChild(message)
-              dom.document.body.appendChild(tooltip)
-
-              def remove(element: HTMLElement) = {
-                if (element.parentNode != null) {
-                  element.parentNode.removeChild(element)
-                }
-              }
-
-              def hideTooltip(e: dom.Event): Unit = {
-                CodeMirror.off(dom.document, "mouseout", hideTooltip)
-                node.className = node.className.replace(" CodeMirror-hover", "")
-
-                if (tooltip.parentNode != null) {
-                  if (tooltip.style.opacity == null) {
-                    remove(tooltip)
-                  }
-                  tooltip.style.opacity = "0"
-                  dom.window.setTimeout(() => {
-                    remove(tooltip)
-                  }, 600)
-                  ()
-                }
-              }
-
-              def position(e: dom.MouseEvent): Unit = {
-                if (tooltip.parentNode == null) {
-                  CodeMirror.off(dom.document, "mousemove", position)
-                }
-                tooltip.style.top = Math
-                  .max(0, e.clientY - tooltip.offsetHeight - 5) + "px"
-                tooltip.style.left = (e.clientX + 5) + "px"
-              }
-
-              CodeMirror.on(dom.document, "mousemove", position)
-              CodeMirror.on(dom.document, "mouseout", hideTooltip)
-              position(e)
-              if (tooltip.style.opacity != null) {
-                tooltip.style.opacity = "1"
-              }
-            }
 
             val node = e.target
             if (node != null && node.isInstanceOf[HTMLElement]) {
@@ -346,24 +346,21 @@ object Editor {
                 if (currToken == text) {
                   val s = scope.state.runNow()
                   if (s.showTypeButtonPressed) {
-                    val message = dom.document
-                      .createElement("div")
-                      .asInstanceOf[HTMLDivElement]
-
                     val lastTypeInfo = s.typeAt
-                    if (lastTypeInfo.isEmpty || lastTypeInfo.get.token != currToken) {
-                      // if it's the first typeAt request
-                      // OR if user's moved on to a new token
-                      // then we request new type information with curr token and show "..."
-                      props
-                        .requestTypeAt(currToken,
-                                       editor.getDoc().indexFromPos(pos))
-                        .runNow()
-                      message.innerHTML = "..."
-                    } else {
-                      message.innerHTML = s.typeAt.get.typeInfo
-                    }
-                    initEventHandlers(node.asInstanceOf[js.Dynamic], message)
+                    val message =
+                      if (lastTypeInfo.isEmpty || lastTypeInfo.get.token != currToken) {
+                        // if it's the first typeAt request
+                        // OR if user's moved on to a new token
+                        // then we request new type information with curr token and show "..."
+                        props
+                          .requestTypeAt(currToken,
+                                         editor.getDoc().indexFromPos(pos))
+                          .runNow()
+                        "..."
+                      } else {
+                        s.typeAt.get.typeInfo
+                      }
+                    hoverMessage.show(node.asInstanceOf[HTMLElement], message)
                   }
                 }
               }
@@ -847,6 +844,9 @@ object Editor {
 
     def setTypeAt(): Unit = {
       if (current.map(_.typeAtInfo) != Some(next.typeAtInfo)) {
+        if (next.typeAtInfo.isDefined) {
+          hoverMessage.updateMessage(next.typeAtInfo.get.typeInfo)
+        }
         modState(_.copy(typeAt = next.typeAtInfo)).runNow()
       }
     }
