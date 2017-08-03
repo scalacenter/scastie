@@ -89,7 +89,8 @@ case class Project(
 
 case class Completion(
     hint: String,
-    typeInfo: String
+    signature: String,
+    resultType: String
 )
 
 case class TypeInfoAt(
