@@ -99,8 +99,12 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     }
 
     val sbtReloadTime = 40.seconds
+    val compilationRequired = scalaTargetType match {
+      case Stainless => false
+      case _ => sbt.needsReload(inputs)
+    }
     val reloadError =
-      if (sbt.needsReload(inputs)) {
+      if (compilationRequired) {
         log.info(s"== updating $snippetId ==")
 
         withTimeout(sbtReloadTime)(eval("compile", reload = true))(
@@ -122,16 +126,118 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
           case Stainless =>
             log.info(s"RUNNING STAINLESS")
 
-            val progress =
-              SnippetProgress.default
-                .copy(
-                  snippetId = Some(snippetId),
-                  timeout = false,
-                  done = true
-                )
+            log.info(s"inputs's code = ${inputs.code}")
+            val file = java.io.File.createTempFile("user-code", ".scala")
+            file.deleteOnExit()
+            java.nio.file.Files.write(file.toPath, inputs.code.toString.getBytes)
 
-            progressActor ! progress
-            snippetActor ! progress
+            /*
+             * val lines = java.nio.file.Files.lines(file.toPath)
+             * log.info(s"just wrote this: " + (lines.toArray mkString "\n"))
+             */
+
+            import scala.sys.process._
+            val jsonFile = java.io.File.createTempFile("report", ".json")
+            jsonFile.deleteOnExit()
+            val status = s"stainless ${file.getAbsolutePath} --json=${jsonFile.getAbsolutePath}".!
+            if (status == 0) {
+              log.info(s"Success from stainless")
+              import org.json4s._
+              import org.json4s.native.JsonMethods._
+              import java.io.{ BufferedReader, File, FileInputStream, InputStreamReader }
+              import java.util.Scanner
+
+              val sc = new Scanner(jsonFile)
+              val sb = new StringBuilder
+              while (sc.hasNextLine) { sb ++= sc.nextLine }
+
+              val Some(report) = parseOpt(sb.toString)
+
+              def splitPadReform(str: String, pad: String, post: String = "", on: String = "\n") = {
+                str split on map { pad + _ + post } mkString on
+              }
+
+              def j2Position(value: JValue): Option[Int] = if (value == JString("Unknown")) None else {
+                val JInt(end) = value \ "end" \ "line"
+                Some(end.intValue)
+              }
+
+              for {
+                JArray(subReports) <- report \ "verification"
+                sub <- subReports
+                status = sub \ "status"
+                if status == JString("invalid")
+                JObject(info) = sub \ "counterexample"
+                pos = j2Position(sub \ "pos")
+                JString(kind) = sub \ "kind"
+                JString(fd) = sub \ "fd"
+              } {
+                val message: String = {
+                  val details: Seq[String] = if (info.nonEmpty) {
+                    (info map {
+                      case (vd, JString(value)) => s"  when $vd is:\n${splitPadReform(value, "    ")}";
+                      case _ => ???
+                    })
+                  } else {
+                    Seq("empty counter example")
+                  }
+                  s"Counterexample for $kind violation in `$fd`:" + (details mkString "\n")
+                }
+
+                log.info(s"Counterexample: $message")
+
+                val progress =
+                  SnippetProgress.default
+                    .copy(
+                      snippetId = Some(snippetId),
+                      timeout = false,
+                      done = false,
+                      compilationInfos = List(
+                        Problem(
+                          Error,
+                          line = pos,
+                          message = message
+                        )
+                      )
+                    )
+
+                progressActor ! progress
+                snippetActor ! progress
+              }
+
+              val progress =
+                SnippetProgress.default
+                  .copy(
+                    snippetId = Some(snippetId),
+                    timeout = false,
+                    done = true
+                  )
+
+              progressActor ! progress
+              snippetActor ! progress
+
+            } else {
+              log.info(s"ERROR!")
+              // TODO get error!!!
+
+              val progress =
+                SnippetProgress.default
+                  .copy(
+                    snippetId = Some(snippetId),
+                    timeout = false,
+                    done = true,
+                    compilationInfos = List(
+                      Problem(
+                        Error,
+                        line = None,
+                        message = s"stainless failed"
+                      )
+                    )
+                  )
+
+              progressActor ! progress
+              snippetActor ! progress
+            }
             true
         }
       })(timeout(runTimeout))

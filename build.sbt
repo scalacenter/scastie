@@ -31,6 +31,8 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
 
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+def json4s = "org.json4s" %% "json4s-native" % "3.5.2"
+
 
 lazy val scastie = project
   .in(file("."))
@@ -152,6 +154,7 @@ lazy val sbtRunner = project
       akka("remote"),
       akka("slf4j"),
       akkaHttp,
+      json4s,
       "com.geirsson" %% "scalafmt-core" % "1.1.0",
       // sbt-ensime 1.12.13 creates .ensime with 2.0.0-SNAPSHOT server jar
       "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT",
