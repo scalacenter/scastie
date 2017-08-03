@@ -3,7 +3,6 @@ package client
 package components
 
 import com.olegych.scastie.api._
-
 import codemirror.{
   CodeMirror,
   Hint,
@@ -15,9 +14,9 @@ import codemirror.{
   Editor => CodeMirrorEditor2,
   Position => CMPosition
 }
-
-import japgolly.scalajs.react._, vdom.all._, extra.{Reusability, StateSnapshot}
-
+import japgolly.scalajs.react._
+import vdom.all._
+import extra.{Reusability, StateSnapshot}
 import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.raw.{
@@ -26,7 +25,6 @@ import org.scalajs.dom.raw.{
   HTMLPreElement,
   HTMLTextAreaElement
 }
-
 import org.scalajs.dom.console
 
 import scala.scalajs._
@@ -62,6 +60,37 @@ object Editor {
   CodeMirror.keyMap.sublime.delete("Ctrl-L")
 
   private var codemirrorTextarea: HTMLTextAreaElement = _
+
+  private object loadingMessage {
+    private val message = {
+      val ul = dom.document
+        .createElement("ul")
+        .asInstanceOf[HTMLElement]
+      ul.className = ul.className.concat(" CodeMirror-hints loading-message")
+      ul.style.opacity = "0"
+
+      val li = dom.document.createElement("li").asInstanceOf[HTMLElement]
+      li.className = li.className.concat(" autocomplete CodeMirror-hint")
+
+      val span = dom.document.createElement("span").asInstanceOf[HTMLElement]
+      span.className = span.className.concat(" name cm-def")
+      span.innerHTML = "Loading..."
+
+      li.appendChild(span)
+      ul.appendChild(li)
+
+      ul
+    }
+
+    def hide(): Unit = {
+      message.style.opacity = "0"
+    }
+
+    def show(editor: codemirror.Editor, pos: codemirror.Position): Unit = {
+      editor.addWidget(pos, message, scrollIntoView = true)
+      message.style.opacity = "1"
+    }
+  }
 
   private def options(dark: Boolean,
                       showLineNumbers: Boolean): codemirror.Options = {
@@ -181,7 +210,10 @@ object Editor {
 
         // don't show completions if cursor moves to some other place
         editor.onMouseDown(
-          (_, _) => scope.modState(_.copy(completionState = Idle)).runNow()
+          (_, _) => {
+            loadingMessage.hide()
+            scope.modState(_.copy(completionState = Idle)).runNow()
+          }
         )
 
         editor.onKeyUp((_, e) => {
@@ -215,7 +247,8 @@ object Editor {
 
                   // if any of these keys are pressed
                   // then user doesn't need completions anymore
-                  if (terminateKeys.contains(e.keyCode)) {
+                  if (terminateKeys.contains(e.keyCode) && !e.ctrlKey) {
+                    loadingMessage.hide()
                     resultState = resultState.copy(completionState = Idle)
                   }
 
@@ -392,6 +425,10 @@ object Editor {
           val doc = editor.getDoc()
           val pos = doc.indexFromPos(doc.getCursor())
           props.completeCodeAt(pos).runNow()
+
+          if (scope.state.runNow().completionState == Idle) {
+            loadingMessage.show(editor, doc.getCursor())
+          }
           scope.modState(_.copy(completionState = Requested)).runNow()
         }
 
@@ -694,6 +731,9 @@ object Editor {
       if (state.completionState == Requested ||
           state.completionState == NeedRender ||
           !next.completions.equals(current.getOrElse(next).completions)) {
+
+        loadingMessage.hide()
+
         val doc = editor.getDoc()
         val cursor = doc.getCursor()
         var fr = cursor.ch
@@ -720,8 +760,9 @@ object Editor {
           doc.getValue().substring(currPos - 1, currPos + 1) == "()" &&
             state.completionState != Requested
 
-        if (enteredBrackets) {
+        if (enteredBrackets || next.completions.isEmpty) {
           modState(_.copy(completionState = Idle)).runNow()
+          next.clearCompletions.runNow()
         } else {
           // autopick single completion only if it's user's first request
           val completeSingle = next.completions.length == 1 && state.completionState == Requested
@@ -788,6 +829,7 @@ object Editor {
           modState(_.copy(completionState = Active)).runNow()
           if (completeSingle) {
             modState(_.copy(completionState = Idle)).runNow()
+            next.clearCompletions.runNow()
           }
         }
       }
