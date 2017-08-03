@@ -414,6 +414,7 @@ object Editor {
 
         CodeMirror.commands.autocompleteDot = (editor: CodeMirrorEditor2) => {
           editor.getDoc().replaceSelection(".")
+          props.codeChange(editor.getDoc().getValue()).runNow()
           autocomplete(editor)
         }
 
