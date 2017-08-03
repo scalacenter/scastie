@@ -104,11 +104,13 @@ class EnsimeActor(system: ActorSystem,
               completionList
                 .sortBy(-_.relevance)
                 .map(ci => {
-                  val typeInfo = ci.typeInfo match {
-                    case Some(info) => info.name
-                    case None       => ""
+                  val (signature, resultType) = ci.typeInfo match {
+                    case Some(ati: ArrowTypeInfo) =>
+                      (ati.name, ati.resultType.name)
+                    case Some(ti) => (ti.name, "")
+                    case _        => ("", "")
                   }
-                  Completion(ci.name, typeInfo)
+                  Completion(ci.name, signature, resultType)
                 })
             )
             log.debug(s"Got ${response.completions.size} completions")

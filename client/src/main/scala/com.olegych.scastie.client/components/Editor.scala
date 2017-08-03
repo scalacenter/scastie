@@ -70,10 +70,10 @@ object Editor {
       ul.style.opacity = "0"
 
       val li = dom.document.createElement("li").asInstanceOf[HTMLElement]
-      li.className = li.className.concat(" autocomplete CodeMirror-hint")
+      li.className = li.className.concat("CodeMirror-hint")
 
       val span = dom.document.createElement("span").asInstanceOf[HTMLElement]
-      span.className = span.className.concat(" name cm-def")
+      span.className = span.className.concat("cm-def")
       span.innerHTML = "Loading..."
 
       li.appendChild(span)
@@ -783,34 +783,43 @@ object Editor {
                   .filter(_.hint.startsWith(filter))
                   .map {
                     completion =>
-                      val hint = completion.hint
-
                       HintConfig
                         .className("autocomplete")
-                        .text(hint)
+                        .text(completion.hint)
                         .render(
                           (el, _, _) ⇒ {
 
-                            val node = dom.document
-                              .createElement("pre")
-                              .asInstanceOf[HTMLPreElement]
-                            node.className = "signature"
-
-                            CodeMirror.runMode(completion.typeInfo,
-                                               modeScala,
-                                               node)
-
-                            val span = dom.document
+                            val hint = dom.document
                               .createElement("span")
                               .asInstanceOf[HTMLPreElement]
-                            span.className = "name cm-def"
-                            span.textContent = hint
+                            hint.className = "name cm-def"
+                            hint.textContent = completion.hint
 
-                            el.appendChild(span)
-                            el.appendChild(node)
+                            val signature = dom.document
+                              .createElement("pre")
+                              .asInstanceOf[HTMLPreElement]
+                            signature.className = "signature"
+
+                            CodeMirror.runMode(completion.signature,
+                                               modeScala,
+                                               signature)
+
+                            val resultType = dom.document
+                              .createElement("pre")
+                              .asInstanceOf[HTMLPreElement]
+                            resultType.className = "result-type"
+
+                            CodeMirror.runMode(completion.resultType,
+                                               modeScala,
+                                               resultType)
+
+                            el.appendChild(hint)
+                            el.appendChild(signature)
+                            el.appendChild(resultType)
 
                             if (next.isPresentationMode) {
-                              val hintsDiv = node.parentElement.parentElement
+                              val hintsDiv =
+                                signature.parentElement.parentElement
                               hintsDiv.className = hintsDiv.className
                                 .concat(" CodeMirror-hints-presentation-mode")
                             }
