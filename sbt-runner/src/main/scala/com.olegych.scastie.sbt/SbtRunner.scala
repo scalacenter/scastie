@@ -54,7 +54,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
                   login: Option[String],
                   progressActor: ActorRef,
                   snippetActor: ActorRef,
-                  forcedProgramMode: Boolean) = {
+                  forcedProgramMode: Boolean): Boolean = {
 
     val scalaTargetType = inputs.target.targetType
     val isScalaJs = inputs.target.targetType == ScalaTargetType.JS
@@ -111,19 +111,36 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
     if (!reloadError) {
       log.info(s"== running $snippetId ==")
 
-      withTimeout(runTimeout)({
+      val res = withTimeout(runTimeout)({
         scalaTargetType match {
           case JVM | Dotty | Native | Typelevel =>
             eval("run", reload = false)
 
           case JS =>
             eval("fastOptJS", reload = false)
+
+          case Stainless =>
+            log.info(s"RUNNING STAINLESS")
+
+            val progress =
+              SnippetProgress.default
+                .copy(
+                  snippetId = Some(snippetId),
+                  timeout = false,
+                  done = true
+                )
+
+            progressActor ! progress
+            snippetActor ! progress
+            true
         }
       })(timeout(runTimeout))
 
       log.info(s"== done  $snippetId ==")
+      res
     } else {
       log.info(s"== reload errors ==")
+      false
     }
   }
 

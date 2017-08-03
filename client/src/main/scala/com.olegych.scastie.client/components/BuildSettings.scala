@@ -36,7 +36,8 @@ object BuildSettings {
       ScalaTargetType.JVM,
       ScalaTargetType.Dotty,
       ScalaTargetType.Typelevel,
-      ScalaTargetType.JS //,
+      ScalaTargetType.JS,
+      ScalaTargetType.Stainless
       // ScalaTargetType.Native
     )
 
@@ -47,6 +48,7 @@ object BuildSettings {
         case ScalaTargetType.Dotty     => "Dotty"
         case ScalaTargetType.Native    => "Native"
         case ScalaTargetType.Typelevel => "Typelevel"
+        case ScalaTargetType.Stainless => "Stainless"
       }
     }
 
@@ -151,6 +153,9 @@ object BuildSettings {
           notSupported
 
         case ScalaTarget.Native(_, _) =>
+          notSupported
+
+        case ScalaTarget.Stainless =>
           notSupported
       }
 

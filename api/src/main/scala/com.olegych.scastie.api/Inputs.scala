@@ -108,6 +108,9 @@ case class Inputs(
 
         case _: ScalaTarget.Typelevel =>
           ""
+
+        case ScalaTarget.Stainless =>
+          ""
       }
 
     s"""|$targetConfig
@@ -185,6 +188,12 @@ case class Inputs(
                 buildVersion
               )
             )
+          )
+
+        case ScalaTarget.Stainless =>
+          (
+            """/* ??? */""",
+            None
           )
       }
 

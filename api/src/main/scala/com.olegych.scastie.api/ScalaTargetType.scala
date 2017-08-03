@@ -14,6 +14,7 @@ object ScalaTargetType {
       case "JS"        => Some(JS)
       case "NATIVE"    => Some(Native)
       case "TYPELEVEL" => Some(Typelevel)
+      case "STAINLESS" => Some(Stainless)
       case _           => None
     }
   }
@@ -36,5 +37,9 @@ object ScalaTargetType {
 
   case object Typelevel extends ScalaTargetType {
     def defaultScalaTarget: ScalaTarget = ScalaTarget.Typelevel.default
+  }
+
+  case object Stainless extends ScalaTargetType {
+    def defaultScalaTarget: ScalaTarget = ScalaTarget.Stainless.default
   }
 }

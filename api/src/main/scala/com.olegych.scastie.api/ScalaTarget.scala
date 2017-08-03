@@ -178,5 +178,16 @@ object ScalaTarget {
     override def toString: String = "Dotty"
   }
 
+  case object Stainless extends ScalaTarget {
+    def default: ScalaTarget = this
+
+    def targetType = ScalaTargetType.Stainless
+    def scaladexRequest = Map("target" -> "Stainless")
+    def renderSbt(lib: ScalaDependency): String = {
+      import lib._
+      s""""$groupId" %% "$artifact" % "$version""""
+    }
+  }
+
   implicit val pkl: ReadWriter[ScalaTarget] = upickleMacroRW[ScalaTarget]
 }
