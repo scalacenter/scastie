@@ -424,6 +424,7 @@ object Editor {
         def autocomplete(editor: CodeMirrorEditor2): Unit = {
           val doc = editor.getDoc()
           val pos = doc.indexFromPos(doc.getCursor())
+          props.clearCompletions.runNow()
           props.completeCodeAt(pos).runNow()
 
           if (scope.state.runNow().completionState == Idle) {
@@ -762,7 +763,6 @@ object Editor {
 
         if (enteredBrackets || next.completions.isEmpty) {
           modState(_.copy(completionState = Idle)).runNow()
-          next.clearCompletions.runNow()
         } else {
           // autopick single completion only if it's user's first request
           val completeSingle = next.completions.length == 1 && state.completionState == Requested
