@@ -6,16 +6,15 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
 import akka.remote.DisassociatedEvent
 import akka.pattern.ask
 import akka.util.Timeout
-
 import com.typesafe.config.ConfigFactory
 import java.nio.file._
 
 import scala.concurrent._
 import scala.concurrent.duration._
-
 import java.util.concurrent.TimeoutException
 
 import scala.collection.immutable.Queue
+import scala.util.Random
 
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
@@ -46,25 +45,35 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private val configuration =
     ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
 
-  private val portsStart = configuration.getInt("remote-ports-start")
-  private val portsSize = configuration.getInt("remote-ports-size")
   private val host = configuration.getString("remote-hostname")
+  private val sbtPortsStart = configuration.getInt("remote-sbt-ports-start")
+  private val sbtPortsSize = configuration.getInt("remote-sbt-ports-size")
+  private val ensimePortsStart =
+    configuration.getInt("remote-ensime-ports-start")
+  private val ensimePortsSize = configuration.getInt("remote-ensime-ports-size")
 
-  private val ports = (0 until portsSize).map(portsStart + _)
+  private val sbtPorts = (0 until sbtPortsSize).map(sbtPortsStart + _)
+  private val ensimePorts = (0 until ensimePortsSize).map(ensimePortsStart + _)
 
-  def connectRunner(host: String)(port: Int): ((String, Int), ActorSelection) = {
+  def connectRunner(runnerName: String, actorName: String)(
+      host: String
+  )(port: Int): ((String, Int), ActorSelection) = {
 
     val selection =
       context.actorSelection(
-        s"akka.tcp://Runner@$host:$port/user/SbtActor"
+        s"akka.tcp://$runnerName@$host:$port/user/$actorName"
       )
 
-    selection ! SbtRunnerConnected
+    selection ! ActorConnected
 
     (host, port) -> selection
   }
 
-  private var remoteSelections = ports.map(connectRunner(host)).toMap
+  private var remoteSelections =
+    sbtPorts.map(connectRunner("SbtRunner", "SbtActor")(host)).toMap
+  private var remoteEnsimeSelections = ensimePorts
+    .map(connectRunner("EnsimeRunner", "EnsimeRunnerActor")(host))
+    .toMap
 
   private var loadBalancer: LoadBalancer[String, ActorSelection] = {
     val servers = remoteSelections.to[Vector].map {
@@ -103,7 +112,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     Paths.get(configuration.getString("old-snippets-dir"))
   )
 
-  private val portsInfo = ports.mkString("[", ", ", "]")
+  private val portsInfo = sbtPorts.mkString("\nsbt: [", ", ", "]") + ensimePorts
+    .mkString("\nensime: [", ", ", "]")
   log.info(s"connecting to: $host $portsInfo")
 
   private def updateBalancer(
@@ -135,25 +145,29 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   def receive: Receive = {
-    case EnsimeRequestEnvelop(request, UserTrace(ip, user)) => {
+
+    case req @ CreateEnsimeConfigRequest(inputs: Inputs) =>
+//      val (server, newBalancer) =
+//        loadBalancer.add(Task(inputs.sbtConfig, Ip("localhost"), EnsimeTaskId.create))
+//      updateBalancer(newBalancer)
+      loadBalancer.getRandomServer.ref.tell(req, sender())
+
+    case EnsimeRequestEnvelop(request, UserTrace(ip, user)) =>
       log.info("id: {}, ip: {}, request: {}", ip, request)
 
-      val server = loadBalancer.getRandomServer
+      val server = remoteEnsimeSelections.values.last
       val taskId = EnsimeTaskId.create
 
       implicit val timeout = Timeout(20.seconds)
       val senderRef = sender()
-      (server.ref ? EnsimeTaskRequest(request, taskId))
+      (server ? EnsimeTaskRequest(request, taskId))
         .mapTo[EnsimeTaskResponse]
         .map { taskResponse =>
           senderRef ! taskResponse.response
         }
 
-    }
-
-    case EnsimeTaskResponse(response, taskId) => {
+    case EnsimeTaskResponse(response, taskId) =>
       ()
-    }
 
     /*
     uncomment when https://github.com/scalacenter/scastie/issues/275 is ready
@@ -283,7 +297,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       if (!remoteSelections.contains((runnerHostname, runnerAkkaPort))) {
         log.info("Connected Runner {}", runnerAkkaPort)
 
-        val sel = connectRunner(runnerHostname)(runnerAkkaPort)
+        val sel =
+          connectRunner("SbtRunner", "SbtActor")(runnerHostname)(runnerAkkaPort)
         val (_, ref) = sel
 
         remoteSelections = remoteSelections + sel
@@ -293,6 +308,19 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
             Server(ref, Inputs.default.sbtConfig)
           )
         )
+      }
+    }
+
+    case EnsimeRunnerConnect(runnerHostname, runnerAkkaPort) => {
+      if (!remoteSelections.contains((runnerHostname, runnerAkkaPort))) {
+        log.info("Connected Ensime Runner {}", runnerAkkaPort)
+
+        val sel = connectRunner("EnsimeRunner", "EnsimeRunnerActor")(
+          runnerHostname
+        )(runnerAkkaPort)
+        val (_, ref) = sel
+
+        remoteEnsimeSelections = remoteEnsimeSelections + sel
       }
     }
 

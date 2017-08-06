@@ -144,7 +144,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         },
         reload = false
       )
-      sender() ! EnsimeConfigResponse(sbt.sbtDir)
+      sender() ! EnsimeConfigResponse(sbt.sbtDir.toString)
 
     case SbtTask(snippetId, inputs, ip, login, progressActor) =>
       log.info("login: {}, ip: {} run {}", login, ip, inputs)

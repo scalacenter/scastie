@@ -1,45 +1,35 @@
-package com.olegych.scastie.sbt
+package com.olegych.scastie.ensime
 
-import com.olegych.scastie.util.ScastieFileUtil.slurp
-import com.olegych.scastie.api._
-import org.ensime.api._
-import org.ensime.jerky.JerkyFormats._
+import java.io.File._
+import java.io._
+import java.nio.file.{Files, Path, Paths}
+
+import akka.{Done, NotUsed}
+import akka.actor.{Actor, ActorRef, ActorSelection, ActorSystem, Cancellable}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
-import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.{Done, NotUsed}
 import akka.util.Timeout
-
-import scala.io.Source.fromFile
+import com.olegych.scastie.api._
+import com.olegych.scastie.util.ScastieFileUtil._
+import org.ensime.api._
+import org.ensime.sexp.formats.{CamelCaseToDashes, DefaultSexpProtocol, OptionAltFormat}
 import org.slf4j.LoggerFactory
-import java.io.File.pathSeparatorChar
-import java.io._
-import java.nio.file.{Files, Path}
-
-import org.ensime.sexp.formats.{
-  CamelCaseToDashes,
-  DefaultSexpProtocol,
-  OptionAltFormat
-}
+import org.ensime.jerky.JerkyFormats._
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.io.Source._
 import scala.util.{Failure, Success}
 
 case object Heartbeat
 
-case class CreateEnsimeConfigRequest(inputs: Inputs)
-case class EnsimeConfigResponse(sbtDir: Path)
-
 case object EnsimeReady
 
-class EnsimeActor(system: ActorSystem,
-                  sbtRunner: ActorRef,
-                  readyRef: Option[ActorRef])
-    extends Actor {
+class EnsimeActor(system: ActorSystem, sbtRunner: ActorSelection)
+  extends Actor {
   private sealed trait EnsimeServerState
   private case object Initializing extends EnsimeServerState
   private case object CreatingConfig extends EnsimeServerState
@@ -239,12 +229,12 @@ class EnsimeActor(system: ActorSystem,
     assert(ensimeConf.isDefined, "ensime config does not exist")
 
     case class EnsimeClasspathConfig(
-        ensimeServerJars: List[String],
-        scalaCompilerJars: List[String]
-    )
+                                      ensimeServerJars: List[String],
+                                      scalaCompilerJars: List[String]
+                                    )
 
     object EnsimeConfProtocol
-        extends DefaultSexpProtocol
+      extends DefaultSexpProtocol
         with OptionAltFormat
         with CamelCaseToDashes
     import EnsimeConfProtocol._
@@ -287,7 +277,7 @@ class EnsimeActor(system: ActorSystem,
       CompletionsReq(
         fileInfo =
           SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
-                         Some(Inputs.defaultCode)),
+            Some(Inputs.defaultCode)),
         point = 2,
         maxResults = 2000,
         caseSens = false,
@@ -297,7 +287,6 @@ class EnsimeActor(system: ActorSystem,
     )
 
     log.info("EnsimeActor is ready!")
-    readyRef.foreach(_ ! EnsimeReady)
   }
 
   override def postStop(): Unit = {
@@ -339,18 +328,18 @@ class EnsimeActor(system: ActorSystem,
   }
 
   override def receive: Receive = {
-    case EnsimeConfigResponse(sbtDir: Path) =>
+    case EnsimeConfigResponse(sbtDir: String) =>
       log.info("Got EnsimeConfigResponse")
       try {
-        startEnsimeServer(sbtDir)
+        startEnsimeServer(Paths.get(sbtDir))
       } catch {
         case e: FileNotFoundException => log.error(e.getMessage)
       }
 
     case EnsimeTaskRequest(
-        TypeAtPointRequest(EnsimeRequestInfo(inputs, position)),
-        taskId
-        ) =>
+    TypeAtPointRequest(EnsimeRequestInfo(inputs, position)),
+    taskId
+    ) =>
       log.info("TypeAtPoint request at EnsimeActor")
       processRequest(
         taskId,
@@ -371,9 +360,9 @@ class EnsimeActor(system: ActorSystem,
       )
 
     case EnsimeTaskRequest(
-        CompletionRequest(EnsimeRequestInfo(inputs, position)),
-        taskId
-        ) =>
+    CompletionRequest(EnsimeRequestInfo(inputs, position)),
+    taskId
+    ) =>
       log.info("Completion request at EnsimeActor")
       processRequest(
         taskId,
@@ -384,7 +373,7 @@ class EnsimeActor(system: ActorSystem,
           CompletionsReq(
             fileInfo =
               SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
-                             Some(code)),
+                Some(code)),
             point = pos,
             maxResults = 100,
             caseSens = false,
@@ -394,9 +383,9 @@ class EnsimeActor(system: ActorSystem,
       )
 
     case EnsimeTaskRequest(
-        UpdateEnsimeConfigRequest(EnsimeRequestInfo(inputs, _)),
-        taskId
-        ) =>
+    UpdateEnsimeConfigRequest(EnsimeRequestInfo(inputs, _)),
+    taskId
+    ) =>
       log.info("UpdateEnsimeConfig request at EnsimeActor")
       if (needsReload(inputs)) {
         restartEnsimeServer(inputs)
@@ -412,17 +401,17 @@ class EnsimeActor(system: ActorSystem,
 
   private def needsReload(inputs: Inputs) = {
     currentConfig.target != inputs.target ||
-    currentConfig.libraries != inputs.libraries ||
-    currentConfig.sbtPluginsConfig != inputs.sbtPluginsConfig
+      currentConfig.libraries != inputs.libraries ||
+      currentConfig.sbtPluginsConfig != inputs.sbtPluginsConfig
   }
 
   private def processRequest(
-      taskId: EnsimeTaskId,
-      sender: ActorRef,
-      inputs: Inputs,
-      position: Int,
-      rpcRequestFun: (String, Int) => RpcRequest
-  ): Unit = {
+                              taskId: EnsimeTaskId,
+                              sender: ActorRef,
+                              inputs: Inputs,
+                              position: Int,
+                              rpcRequestFun: (String, Int) => RpcRequest
+                            ): Unit = {
     val (code, pos) = if (inputs.worksheetMode) {
       (s"object Main extends App { ${inputs.code} }", position + 26)
     } else {

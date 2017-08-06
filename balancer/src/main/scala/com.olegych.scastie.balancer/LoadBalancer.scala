@@ -68,6 +68,7 @@ object Server {
       mailbox = Queue()
     )
 }
+
 case class History[C](data: Queue[Record[C]], size: Int) {
   def add(record: Record[C]): History[C] = {
     // the user has changed configuration, we assume he will not go back to the
@@ -84,6 +85,7 @@ case class History[C](data: Queue[Record[C]], size: Int) {
     History(data1, size)
   }
 }
+
 case class LoadBalancer[C, S](
     servers: Vector[Server[C, S]],
     history: History[C]

@@ -6,16 +6,16 @@ import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
 import java.util.concurrent.TimeUnit
 
+import com.olegych.scastie.ReconnectInfo
 import org.slf4j.LoggerFactory
 
 object SbtMain {
   def main(args: Array[String]): Unit = {
     val logger = LoggerFactory.getLogger(getClass)
 
-    val system = ActorSystem("Runner")
+    val system = ActorSystem("SbtRunner")
 
     val config2 = ConfigFactory.load().getConfig("akka.remote.netty.tcp")
     logger.info("akka tcp config")
@@ -46,14 +46,14 @@ object SbtMain {
       ReconnectInfo(
         serverHostname = serverConfig.getString("hostname"),
         serverAkkaPort = serverConfig.getInt("akka-port"),
-        runnerHostname = sbtConfig.getString("hostname"),
-        runnerAkkaPort = sbtConfig.getInt("akka-port")
+        actorHostname = sbtConfig.getString("hostname"),
+        actorAkkaPort = sbtConfig.getInt("akka-port")
       )
 
     logger.info("  timeout: {}", timeout)
     logger.info("  isProduction: {}", isProduction)
-    logger.info("  runner hostname: {}", reconnectInfo.runnerHostname)
-    logger.info("  runner port: {}", reconnectInfo.runnerAkkaPort)
+    logger.info("  runner hostname: {}", reconnectInfo.actorHostname)
+    logger.info("  runner port: {}", reconnectInfo.actorAkkaPort)
     logger.info("  server hostname: {}", reconnectInfo.serverHostname)
     logger.info("  server port: {}", reconnectInfo.serverAkkaPort)
 
@@ -63,9 +63,8 @@ object SbtMain {
           system = system,
           runTimeout = timeout,
           production = isProduction,
-          withEnsime = true,
           readyRef = None,
-          reconnectInfo = Some(reconnectInfo)
+          reconnectInfo = reconnectInfo
         )
       ),
       name = "SbtActor"

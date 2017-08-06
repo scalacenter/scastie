@@ -112,8 +112,13 @@ lazy val remapSourceMap =
 lazy val utils = project
   .in(file("utils"))
   .settings(baseSettings)
+  .settings(loggingAndTest)
   .settings(
-    libraryDependencies += akka("actor")
+    libraryDependencies ++= Seq(
+      akka("actor"),
+      akka("remote"),
+      akka("slf4j")
+    )
   )
   .dependsOn(api212JVM)
 
@@ -136,6 +141,24 @@ lazy val runnerRuntimeDependencies = Seq(
   // api213JS,
   sbtScastie
 ).map(publishLocal in _)
+
+lazy val ensimeRunner = project
+  .in(file("ensime-runner"))
+  .settings(baseSettings)
+  .settings(loggingAndTest)
+  .settings(
+    resolvers += Resolver.sonatypeRepo("public"),
+    libraryDependencies ++= Seq(
+      akka("actor"),
+      akka("remote"),
+      akka("slf4j"),
+      akkaHttp,
+      // sbt-ensime 1.12.13 creates .ensime with 2.0.0-SNAPSHOT server jar
+      "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT",
+      "org.ensime" %% "s-express" % "2.0.0-SNAPSHOT"
+    )
+  )
+  .dependsOn(api212JVM, utils)
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
