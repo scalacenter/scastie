@@ -1,6 +1,7 @@
 package com.olegych.scastie
 package api
 
+import java.nio.file.Path
 import java.util.UUID
 
 sealed trait TaskId {
@@ -24,7 +25,8 @@ case object SbtPing
 case object SbtPong
 
 case class SbtRunnerConnect(hostname: String, port: Int)
-case object SbtRunnerConnected
+case class EnsimeRunnerConnect(hostname: String, port: Int)
+case object ActorConnected
 
 case class SnippetSummary(
     snippetId: SnippetId,
@@ -40,6 +42,9 @@ case class FormatRequest(
 case class FormatResponse(
     formattedCode: Either[String, String]
 )
+
+case class CreateEnsimeConfigRequest(inputs: Inputs)
+case class EnsimeConfigResponse(sbtDir: String)
 
 sealed trait EnsimeRequest {
   def info: EnsimeRequestInfo
