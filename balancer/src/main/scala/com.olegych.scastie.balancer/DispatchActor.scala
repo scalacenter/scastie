@@ -137,35 +137,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   def receive: Receive = {
     case EnsimeRequestEnvelop(request, UserTrace(ip, user)) => {
-      log.info("id: {}, ip: {}, request: {}", ip, request)
-
-      val server = loadBalancer.getRandomServer
-      val taskId = EnsimeTaskId.create
-
-      implicit val timeout = Timeout(20.seconds)
-      val senderRef = sender()
-      (server.ref ? EnsimeTaskRequest(request, taskId))
-        .mapTo[EnsimeTaskResponse]
-        .map { taskResponse =>
-          senderRef ! taskResponse.response
-        }
-
-    }
-
-    case EnsimeTaskResponse(response, taskId) => {
-      ()
-    }
-
-    /*
-    uncomment when https://github.com/scalacenter/scastie/issues/275 is ready
-    and remove above
-
-    case EnsimeRequestEnvelop(request, UserTrace(ip, user)) => {
       val taskId = EnsimeTaskId.create
       log.info("id: {}, ip: {} task: {}", taskId, ip, request)
 
       val (server, newBalancer) =
-        loadBalancer.add(Task(request.info.inputs.sbtConfig, Ip(ip), taskId))
+        loadBalancer.add(Task(request.inputs.sbtConfig, Ip(ip), taskId))
 
       updateBalancer(newBalancer)
 
@@ -183,7 +159,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case EnsimeTaskResponse(response, taskId) => {
       updateBalancer(loadBalancer.done(taskId))
     }
-     */
 
     case SbtPong => {
       ()

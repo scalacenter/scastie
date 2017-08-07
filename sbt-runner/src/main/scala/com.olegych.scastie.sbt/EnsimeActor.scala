@@ -2,8 +2,16 @@ package com.olegych.scastie.sbt
 
 import com.olegych.scastie.util.ScastieFileUtil.slurp
 import com.olegych.scastie.api._
+
 import org.ensime.api._
 import org.ensime.jerky.JerkyFormats._
+
+import org.ensime.sexp.formats.{
+  CamelCaseToDashes,
+  DefaultSexpProtocol,
+  OptionAltFormat
+}
+
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
@@ -18,12 +26,6 @@ import org.slf4j.LoggerFactory
 import java.io.File.pathSeparatorChar
 import java.io._
 import java.nio.file.{Files, Path}
-
-import org.ensime.sexp.formats.{
-  CamelCaseToDashes,
-  DefaultSexpProtocol,
-  OptionAltFormat
-}
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -54,15 +56,23 @@ class EnsimeActor(system: ActorSystem,
 
     def apply(that: EnsimeServerState) = {
       that match {
-        case Connecting =>
+        case Connecting => {
           assert(
             state == CreatingConfig && ensimeProcess.isDefined && ensimeProcess.get.isAlive
           )
-        case Ready =>
-          assert(state == Connecting && ensimeWS.isDefined)
+        }
+        case Ready => {
+          if(state != Ready) {
+            assert(state == Connecting && ensimeWS.isDefined)
+            log.info("EnsimeActor is ready!")
+            readyRef.foreach(_ ! EnsimeReady)
+          }
+        }
         case _ => ()
       }
-      log.info(s"Server State: $state => $that")
+      if(state != that) {
+        log.info(s"Server State: $state => $that")
+      }
       state = that
     }
 
@@ -99,7 +109,10 @@ class EnsimeActor(system: ActorSystem,
         }
 
         payload match {
-          case CompletionInfoList(_, completionList) =>
+          case CompletionInfoList(_, completionList) => {
+
+            serverState(Ready)
+
             val response = AutoCompletionResponse(
               completionList
                 .sortBy(-_.relevance)
@@ -115,8 +128,9 @@ class EnsimeActor(system: ActorSystem,
             )
             log.debug(s"Got ${response.completions.size} completions")
             reply(response)
+          }
 
-          case symbolInfo: SymbolInfo =>
+          case symbolInfo: SymbolInfo => {
             log.info(s"Got symbol info: $symbolInfo")
             if (symbolInfo.`type`.name == "<none>")
               reply(TypeAtPointResponse(""))
@@ -124,10 +138,15 @@ class EnsimeActor(system: ActorSystem,
               reply(TypeAtPointResponse(symbolInfo.`type`.fullName))
             else
               reply(TypeAtPointResponse(symbolInfo.`type`.name))
+          }
 
           // used as keepalive
           case _: ConnectionInfo =>
             ()
+
+          case FalseResponse => {
+            println("-- FalseResponse --")
+          }
 
           case x =>
             log.info(s"Got unexpected response from ensime : {}", x)
@@ -200,7 +219,6 @@ class EnsimeActor(system: ActorSystem,
 
     upgradeResponse.flatMap { upgrade =>
       if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
-        serverState(Ready)
         Future.successful(Done)
       } else {
         throw new RuntimeException(
@@ -295,9 +313,6 @@ class EnsimeActor(system: ActorSystem,
       ),
       self
     )
-
-    log.info("EnsimeActor is ready!")
-    readyRef.foreach(_ ! EnsimeReady)
   }
 
   override def postStop(): Unit = {
@@ -310,7 +325,8 @@ class EnsimeActor(system: ActorSystem,
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        if (!line.contains("received handled message ConnectionInfo")) {
+        if (!line.contains("received handled message ConnectionInfo") &&
+            !line.contains("DEBUG")) {
           log.info(line)
         }
         line = is.readLine()
@@ -339,18 +355,19 @@ class EnsimeActor(system: ActorSystem,
   }
 
   override def receive: Receive = {
-    case EnsimeConfigResponse(sbtDir: Path) =>
+    case EnsimeConfigResponse(sbtDir: Path) => {
       log.info("Got EnsimeConfigResponse")
       try {
         startEnsimeServer(sbtDir)
       } catch {
         case e: FileNotFoundException => log.error(e.getMessage)
       }
+    }
 
     case EnsimeTaskRequest(
         TypeAtPointRequest(EnsimeRequestInfo(inputs, position)),
-        taskId
-        ) =>
+        taskId) => {
+
       log.info("TypeAtPoint request at EnsimeActor")
       processRequest(
         taskId,
@@ -369,11 +386,12 @@ class EnsimeActor(system: ActorSystem,
           )
         }
       )
+    }
 
     case EnsimeTaskRequest(
         AutoCompletionRequest(EnsimeRequestInfo(inputs, position)),
-        taskId
-        ) =>
+        taskId) => {
+
       log.info("Completion request at EnsimeActor")
       processRequest(
         taskId,
@@ -392,22 +410,23 @@ class EnsimeActor(system: ActorSystem,
           )
         }
       )
+    }
 
-    case EnsimeTaskRequest(
-        UpdateEnsimeConfigRequest(EnsimeRequestInfo(inputs, _)),
-        taskId
-        ) =>
+    case EnsimeTaskRequest(UpdateEnsimeConfigRequest(inputs),taskId) => {
       log.info("UpdateEnsimeConfig request at EnsimeActor")
       if (needsReload(inputs)) {
         restartEnsimeServer(inputs)
       }
-      sender ! EnsimeTaskResponse(None, taskId)
+      sender ! EnsimeTaskResponse(Some(EnsimeConfigUpdated()), taskId)
+    }
 
-    case Heartbeat =>
+    case Heartbeat => {
       sendToEnsime(ConnectionInfoReq, self)
+    }
 
-    case x =>
+    case x => {
       log.debug(s"Got $x at EnsimeActor")
+    }
   }
 
   private def needsReload(inputs: Inputs) = {

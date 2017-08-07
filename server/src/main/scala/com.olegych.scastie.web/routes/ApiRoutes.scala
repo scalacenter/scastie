@@ -82,6 +82,11 @@ class ApiRoutes(
                     request => complete(server.typeAt(request))
                   )
                 ),
+                path("updateEnsimeConfig")(
+                  entity(as[UpdateEnsimeConfigRequest])(
+                    request => complete(server.updateEnsimeConfig(request))
+                  )
+                ),
                 path("format")(
                   entity(as[FormatRequest])(
                     request => complete(server.format(request))

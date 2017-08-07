@@ -14,13 +14,42 @@ class EnsimeActorTests()
     with BeforeAndAfterAll {
 
   test("autocomplete") {
+    autocompleteEnd("List(1).ma")(autocompletions =>
+      autocompletions.exists(completion =>
+        completion.hint == "max" &&
+        completion.signature == "(Ordering[B]) => Int" &&
+        completion.resultType == "Int"
+      )
+    )    
+  }
+
+  test("autocomplete failure") {
+    autocomplete("L", 100)(_.isEmpty)
+  }
+
+  // test("autocomplete after restart") {
+  //   autocompleteEnd("List(1).")(_.nonEmpty)
+  //   autocompleteEnd("List(1).", ScalaTarget.Js.default)(_.nonEmpty)
+  //   ^ returns None
+  //   autocompleteEnd("List(1).")(_.nonEmpty)
+  // }
+
+  // does not work properly
+  // test("typeAt") {
+  //   typeAt(
+  //     code = "val foobar = List(1)", 
+  //     //            ^
+  //     offset = 7
+  //   )(_ == "List[Int]")
+  // }
+
+  private def autocomplete(inputs: Inputs, offset: Int)(
+    fish: List[Completion] => Boolean): Unit = {
+
     val taskId = EnsimeTaskId.create
-
-    val inputs = Inputs.default.copy(code = "L")
-
     sbtActor.tell(
       EnsimeTaskRequest(
-        AutoCompletionRequest(EnsimeRequestInfo(inputs, 1)),
+        AutoCompletionRequest(EnsimeRequestInfo(inputs, offset)),
         taskId
       ),
       probe.ref
@@ -30,54 +59,65 @@ class EnsimeActorTests()
       case EnsimeTaskResponse(Some(AutoCompletionResponse(completions)),
                               taskId0) =>
         assert(taskId0 == taskId)
-        assert(
-          completions.exists(
-            completion =>
-              completion.hint == "List" &&
-                completion.typeInfo == "List"
-          )
-        )
+        assert(fish(completions))
         true
     }
   }
 
-  // test("typeAt") {
-  //   val taskId = EnsimeTaskId.create
+  private def autocomplete(code: String, offset: Int, target: ScalaTarget = ScalaTarget.Jvm.default)(
+      fish: List[Completion] => Boolean
+  ): Unit = {
+    autocomplete(
+      inputs = Inputs.default.copy(code = code, target = target),
+      offset = offset
+    )(fish)
+  }
 
-  //   val code = "List(1)"
-  //   val inputs = Inputs.default.copy(code = code)
+  private def autocompleteEnd(code: String, target: ScalaTarget = ScalaTarget.Jvm.default)(
+      fish: List[Completion] => Boolean
+  ): Unit = {
+    autocomplete(
+      inputs = Inputs.default.copy(code = code, target = target),
+      offset = code.length
+    )(fish)
+  }
 
-  //   sbtActor.tell(
-  //     EnsimeTaskRequest(
-  //       TypeAtPointRequest(EnsimeRequestInfo(inputs, code.length - 1)),
-  //       taskId
-  //     ),
-  //     probe.ref
-  //   )
+  private def typeAt(code: String, offset: Int)(fish: String => Boolean): Unit = {
+    val taskId = EnsimeTaskId.create
 
-  //   probe.fishForMessage(30.seconds) {
-  //     case EnsimeTaskResponse(Some(TypeAtPointResponse(symbol)), taskId0) => {
-  //       println()
-  //       println("===")
-  //       println(symbol)
-  //       println("===")
-  //       println()
+    val inputs = Inputs.default.copy(code = code)
 
-  //       assert(taskId0 == taskId)
-  //       assert(symbol == "List[Int]")
-  //       true
-  //     }
-  //     case e => {
-  //       println()
-  //       println("===")
-  //       println(e)
-  //       println("===")
-  //       println()
+    sbtActor.tell(
+      EnsimeTaskRequest(
+        TypeAtPointRequest(EnsimeRequestInfo(inputs, offset)),
+        taskId
+      ),
+      probe.ref
+    )
 
-  //       false
-  //     }
-  //   }
-  // }
+    probe.fishForMessage(30.seconds) {
+      case EnsimeTaskResponse(Some(TypeAtPointResponse(symbol)), taskId0) => {
+        println()
+        println("===")
+        println(symbol)
+        println("===")
+        println()
+
+        assert(taskId0 == taskId)
+        assert(fish(symbol))
+        true
+      }
+      case e => {
+        println()
+        println("===")
+        println(e)
+        println("===")
+        println()
+
+        false
+      }
+    }
+  }
 
   private val probe = TestProbe()
   private val readyProbe = TestProbe()
@@ -94,7 +134,12 @@ class EnsimeActorTests()
   )
 
   readyProbe.fishForMessage(3.minute) {
-    case EnsimeReady => true
+    case EnsimeReady => {
+      println("===============")
+      println("==EnsimeReady==")
+      println("===============")
+      true
+    }
   }
 
   override def afterAll {
