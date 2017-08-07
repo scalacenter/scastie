@@ -497,7 +497,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
             .updateEnsimeConfig(
               UpdateEnsimeConfigRequest(state.inputs)
             )
-            .map(_ =>Callback.empty)
+            .map(_ => Callback.empty)
         )
       }
     )

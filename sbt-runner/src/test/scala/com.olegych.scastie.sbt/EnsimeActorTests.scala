@@ -14,13 +14,15 @@ class EnsimeActorTests()
     with BeforeAndAfterAll {
 
   test("autocomplete") {
-    autocompleteEnd("List(1).ma")(autocompletions =>
-      autocompletions.exists(completion =>
-        completion.hint == "max" &&
-        completion.signature == "(Ordering[B]) => Int" &&
-        completion.resultType == "Int"
+    autocompleteEnd("List(1).ma")(
+      autocompletions =>
+        autocompletions.exists(
+          completion =>
+            completion.hint == "max" &&
+              completion.signature == "(Ordering[B]) => Int" &&
+              completion.resultType == "Int"
       )
-    )    
+    )
   }
 
   test("autocomplete failure") {
@@ -37,14 +39,15 @@ class EnsimeActorTests()
   // does not work properly
   // test("typeAt") {
   //   typeAt(
-  //     code = "val foobar = List(1)", 
+  //     code = "val foobar = List(1)",
   //     //            ^
   //     offset = 7
   //   )(_ == "List[Int]")
   // }
 
   private def autocomplete(inputs: Inputs, offset: Int)(
-    fish: List[Completion] => Boolean): Unit = {
+      fish: List[Completion] => Boolean
+  ): Unit = {
 
     val taskId = EnsimeTaskId.create
     sbtActor.tell(
@@ -64,7 +67,9 @@ class EnsimeActorTests()
     }
   }
 
-  private def autocomplete(code: String, offset: Int, target: ScalaTarget = ScalaTarget.Jvm.default)(
+  private def autocomplete(code: String,
+                           offset: Int,
+                           target: ScalaTarget = ScalaTarget.Jvm.default)(
       fish: List[Completion] => Boolean
   ): Unit = {
     autocomplete(
@@ -73,7 +78,8 @@ class EnsimeActorTests()
     )(fish)
   }
 
-  private def autocompleteEnd(code: String, target: ScalaTarget = ScalaTarget.Jvm.default)(
+  private def autocompleteEnd(code: String,
+                              target: ScalaTarget = ScalaTarget.Jvm.default)(
       fish: List[Completion] => Boolean
   ): Unit = {
     autocomplete(

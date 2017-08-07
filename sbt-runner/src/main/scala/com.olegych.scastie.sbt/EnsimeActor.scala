@@ -62,7 +62,7 @@ class EnsimeActor(system: ActorSystem,
           )
         }
         case Ready => {
-          if(state != Ready) {
+          if (state != Ready) {
             assert(state == Connecting && ensimeWS.isDefined)
             log.info("EnsimeActor is ready!")
             readyRef.foreach(_ ! EnsimeReady)
@@ -70,7 +70,7 @@ class EnsimeActor(system: ActorSystem,
         }
         case _ => ()
       }
-      if(state != that) {
+      if (state != that) {
         log.info(s"Server State: $state => $that")
       }
       state = that
@@ -366,7 +366,8 @@ class EnsimeActor(system: ActorSystem,
 
     case EnsimeTaskRequest(
         TypeAtPointRequest(EnsimeRequestInfo(inputs, position)),
-        taskId) => {
+        taskId
+        ) => {
 
       log.info("TypeAtPoint request at EnsimeActor")
       processRequest(
@@ -390,7 +391,8 @@ class EnsimeActor(system: ActorSystem,
 
     case EnsimeTaskRequest(
         AutoCompletionRequest(EnsimeRequestInfo(inputs, position)),
-        taskId) => {
+        taskId
+        ) => {
 
       log.info("Completion request at EnsimeActor")
       processRequest(
@@ -412,7 +414,7 @@ class EnsimeActor(system: ActorSystem,
       )
     }
 
-    case EnsimeTaskRequest(UpdateEnsimeConfigRequest(inputs),taskId) => {
+    case EnsimeTaskRequest(UpdateEnsimeConfigRequest(inputs), taskId) => {
       log.info("UpdateEnsimeConfig request at EnsimeActor")
       if (needsReload(inputs)) {
         restartEnsimeServer(inputs)

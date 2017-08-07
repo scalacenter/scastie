@@ -87,7 +87,8 @@ object AutoCompletionRequest {
   implicit val formatAutoCompletionRequest = Json.format[AutoCompletionRequest]
 }
 
-case class AutoCompletionRequest(info: EnsimeRequestInfo) extends EnsimeRequest {
+case class AutoCompletionRequest(info: EnsimeRequestInfo)
+    extends EnsimeRequest {
   def inputs: Inputs = info.inputs
 }
 
@@ -143,8 +144,9 @@ object TypeAtPointResponse {
 
 case class TypeAtPointResponse(typeInfo: String) extends EnsimeResponse
 
-object EnsimeConfigUpdated{
-  implicit object EnsimeConfigUpdatedFormat extends Format[EnsimeConfigUpdated] {
+object EnsimeConfigUpdated {
+  implicit object EnsimeConfigUpdatedFormat
+      extends Format[EnsimeConfigUpdated] {
     def writes(response: EnsimeConfigUpdated): JsValue = {
       JsString("EnsimeConfigUpdated")
     }
@@ -152,7 +154,7 @@ object EnsimeConfigUpdated{
     def reads(json: JsValue): JsResult[EnsimeConfigUpdated] = {
       json match {
         case JsString("EnsimeConfigUpdated") => JsSuccess(EnsimeConfigUpdated())
-        case _ => JsError(Seq())
+        case _                               => JsError(Seq())
       }
     }
   }

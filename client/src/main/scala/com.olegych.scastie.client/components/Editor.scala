@@ -407,7 +407,7 @@ object Editor {
         CodeMirror.commands.togglePresentationMode =
           (editor: CodeMirrorEditor2) => {
             props.togglePresentationMode.runNow()
-            if(!props.isPresentationMode) {
+            if (!props.isPresentationMode) {
               dom.window.alert("Press F8 again to leave the presentation mode")
             }
           }
