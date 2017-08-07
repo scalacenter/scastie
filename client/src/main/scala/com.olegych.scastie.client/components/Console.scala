@@ -57,10 +57,11 @@ object Console {
       .builder[Console]("Console")
       .initialState(ConsoleState.default)
       .render_P(render)
-      .componentDidUpdate(scope =>
-        Callback {
-          consoleElement.scrollTop = consoleElement.scrollHeight.toDouble
-        }.when_(scope.prevProps.isRunning)
+      .componentDidUpdate(
+        scope =>
+          Callback {
+            consoleElement.scrollTop = consoleElement.scrollHeight.toDouble
+          }.when_(scope.prevProps.isRunning)
       )
       .build
 }

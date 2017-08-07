@@ -47,8 +47,12 @@ object ApiClient extends RestApi {
   def typeAt(request: TypeAtPointRequest): Future[Option[TypeAtPointResponse]] =
     post[TypeAtPointResponse].using("/typeAt", request).map(x => Some(x))
 
-  def updateEnsimeConfig(request: UpdateEnsimeConfigRequest): Future[Option[EnsimeConfigUpdated]] =
-    post[EnsimeConfigUpdated].using("/updateEnsimeConfig", request).map(x => Some(x))
+  def updateEnsimeConfig(
+      request: UpdateEnsimeConfigRequest
+  ): Future[Option[EnsimeConfigUpdated]] =
+    post[EnsimeConfigUpdated]
+      .using("/updateEnsimeConfig", request)
+      .map(x => Some(x))
 
   def save(inputs: Inputs): Future[SnippetId] =
     post[SnippetId].using("/save", inputs)
