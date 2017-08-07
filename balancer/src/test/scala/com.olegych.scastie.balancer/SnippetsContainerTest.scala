@@ -61,12 +61,12 @@ class SnippetsContainerTest extends FunSuite {
     val inputs1 =
       Inputs.default.copy(code = "inputs1").copy(showInUserProfile = true)
     val snippetId1 = container.save(inputs1, Some(user))
-    assert(snippetId1.user.get.update == None)
+    assert(snippetId1.user.get.update == 0)
 
     val inputs2 =
       Inputs.default.copy(code = "inputs2").copy(showInUserProfile = true)
     val snippetId2 = container.update(snippetId1, inputs2).get
-    assert(snippetId2.user.get.update == Some(1), "we get a new update id")
+    assert(snippetId2.user.get.update == 1, "we get a new update id")
 
     val readInputs1 = container.readSnippet(snippetId1).get.inputs
     val readInputs2 = container.readSnippet(snippetId2).get.inputs
