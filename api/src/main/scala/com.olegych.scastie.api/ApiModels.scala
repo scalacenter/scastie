@@ -74,28 +74,39 @@ case class FormatResponse(
 )
 
 sealed trait EnsimeRequest {
-  def info: EnsimeRequestInfo
+  def inputs: Inputs
 }
 
 object EnsimeRequestInfo {
   implicit val formatEnsimeRequestInfo = Json.format[EnsimeRequestInfo]
 }
 
+case class EnsimeRequestInfo(inputs: Inputs, offset: Int)
+
 object AutoCompletionRequest {
   implicit val formatAutoCompletionRequest = Json.format[AutoCompletionRequest]
 }
 
-case class AutoCompletionRequest(info: EnsimeRequestInfo) extends EnsimeRequest
+case class AutoCompletionRequest(info: EnsimeRequestInfo) extends EnsimeRequest {
+  def inputs: Inputs = info.inputs
+}
 
 object TypeAtPointRequest {
   implicit val formatTypeAtPointRequest = Json.format[TypeAtPointRequest]
 }
 
-case class TypeAtPointRequest(info: EnsimeRequestInfo) extends EnsimeRequest
-case class UpdateEnsimeConfigRequest(info: EnsimeRequestInfo)
-    extends EnsimeRequest
+case class TypeAtPointRequest(info: EnsimeRequestInfo) extends EnsimeRequest {
+  def inputs: Inputs = info.inputs
+}
 
-case class EnsimeRequestInfo(inputs: Inputs, offset: Int)
+object UpdateEnsimeConfigRequest {
+  implicit val formatUpdateEnsimeConfigRequest =
+    Json.format[UpdateEnsimeConfigRequest]
+}
+
+case class UpdateEnsimeConfigRequest(newInputs: Inputs) extends EnsimeRequest {
+  def inputs: Inputs = newInputs
+}
 
 object Completion {
   implicit val formatCompletion = Json.format[Completion]
@@ -131,6 +142,23 @@ object TypeAtPointResponse {
 }
 
 case class TypeAtPointResponse(typeInfo: String) extends EnsimeResponse
+
+object EnsimeConfigUpdated{
+  implicit object EnsimeConfigUpdatedFormat extends Format[EnsimeConfigUpdated] {
+    def writes(response: EnsimeConfigUpdated): JsValue = {
+      JsString("EnsimeConfigUpdated")
+    }
+
+    def reads(json: JsValue): JsResult[EnsimeConfigUpdated] = {
+      json match {
+        case JsString("EnsimeConfigUpdated") => JsSuccess(EnsimeConfigUpdated())
+        case _ => JsError(Seq())
+      }
+    }
+  }
+}
+
+case class EnsimeConfigUpdated() extends EnsimeResponse
 
 case class EnsimeTaskRequest(request: EnsimeRequest, taskId: EnsimeTaskId)
 case class EnsimeTaskResponse(response: Option[EnsimeResponse],

@@ -493,14 +493,11 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     scope.state.flatMap(
       state => {
         Callback.future(
-          ApiClient[AutowireApi]
+          ApiClient
             .updateEnsimeConfig(
-              UpdateEnsimeConfigRequest(EnsimeRequestInfo(state.inputs, 0))
+              UpdateEnsimeConfigRequest(state.inputs)
             )
-            .call()
-            .map { _ =>
-              Callback.empty
-            }
+            .map(_ =>Callback.empty)
         )
       }
     )

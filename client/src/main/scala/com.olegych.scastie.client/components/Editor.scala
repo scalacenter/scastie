@@ -796,7 +796,7 @@ object Editor {
                             val signature = dom.document
                               .createElement("pre")
                               .asInstanceOf[HTMLPreElement]
-                            typeInfo.className = "signature"
+                            signature.className = "signature"
 
                             CodeMirror.runMode(completion.signature,
                                                modeScala,

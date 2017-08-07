@@ -16,6 +16,7 @@ trait RestApi {
       request: AutoCompletionRequest
   ): Future[Option[AutoCompletionResponse]]
   def typeAt(request: TypeAtPointRequest): Future[Option[TypeAtPointResponse]]
+  def updateEnsimeConfig(request: UpdateEnsimeConfigRequest): Future[Option[EnsimeConfigUpdated]]
 
   def format(request: FormatRequest): Future[FormatResponse]
 
