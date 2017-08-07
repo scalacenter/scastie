@@ -200,7 +200,7 @@ object Project {
 case class Project(
     organization: String,
     repository: String,
-    logo: Option[String] = None,
+    logo: Option[List[String]] = None,
     artifacts: List[String] = Nil
 )
 

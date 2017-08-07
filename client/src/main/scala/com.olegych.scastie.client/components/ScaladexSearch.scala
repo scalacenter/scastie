@@ -246,13 +246,12 @@ object ScaladexSearch {
           Callback.future(
             Ajax
               .get(scaladexApiUrl + "/search" + query)
-              .map(
-                ret =>
-                  Json
-                    .fromJson[List[Project]](Json.parse(ret.responseText))
-                    .asOpt
-                    .getOrElse(Nil)
-              )
+              .map{ret =>
+
+                Json.fromJson[List[Project]](Json.parse(ret.responseText))
+                 .asOpt
+                 .getOrElse(Nil)
+              }
               .map(projects => scope.modState(_.setProjects(projects)))
           )
         } else scope.modState(_.clearProjects)
@@ -348,14 +347,16 @@ object ScaladexSearch {
         ),
         remove,
         span(
-          logo
-            .map(
+          logo.flatMap(
+
+            _.map(
               url =>
                 img(src := url + "&s=40",
                     common,
                     alt := s"$organization logo or avatar")
             )
-            .getOrElse(
+            .headOption
+          ).getOrElse(
               img(src := "/assets/public/placeholder.svg",
                   common,
                   alt := s"placeholder for $organization")
