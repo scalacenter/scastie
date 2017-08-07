@@ -7,6 +7,7 @@ import org.scalajs.dom.raw.HTMLPreElement
 import japgolly.scalajs.react._, vdom.all._
 
 final case class Console(isOpen: Boolean,
+                         isRunning: Boolean,
                          close: Callback,
                          open: Callback,
                          content: String) {
@@ -56,11 +57,10 @@ object Console {
       .builder[Console]("Console")
       .initialState(ConsoleState.default)
       .render_P(render)
-      .componentDidUpdate(
-        scope =>
-          Callback {
-            consoleElement.scrollTop = consoleElement.scrollHeight.toDouble
-        }
+      .componentDidUpdate(scope =>
+        Callback {
+          consoleElement.scrollTop = consoleElement.scrollHeight.toDouble
+        }.when_(scope.prevProps.isRunning)
       )
       .build
 }

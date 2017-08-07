@@ -80,6 +80,7 @@ object MainPanel {
     val console =
       Console(
         isOpen = state.consoleState.consoleIsOpen,
+        isRunning = state.isRunning,
         close = backend.closeConsole,
         open = backend.openConsole,
         content = state.outputs.console
