@@ -10,10 +10,19 @@ protected[runtime] trait SharedRuntime {
     Json.stringify(Json.toJson(instrumentations))
   }
 
-  protected[runtime] def render[T](a: T)(implicit ct: ClassTag[T]): Render = {
+  private val maxValueLength = 500
+
+  protected[runtime] def render[T](a: T)(implicit ct: ClassTag[T]): Render = {    
     a match {
       case html: Html => html
-      case v          => Value(v.toString, ct.toString)
+      case v          => {
+        val vs = v.toString
+        val out =
+          if(vs.size > maxValueLength) vs.take(maxValueLength) + "..."
+          else vs
+
+        Value(out, ct.toString)
+      }
     }
   }
 }
