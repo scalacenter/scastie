@@ -26,6 +26,7 @@
 
 $margin: 24px;
 .CodeMirror-lines {
+  line-height: initial;
   padding: $margin;
   .cm-tab {
     visibility: hidden;
@@ -191,13 +192,14 @@ $margin: 24px;
 
 .CodeMirror-hints {
   z-index: 10;
-  max-height: 200px;
-  max-width: 35%;
+  max-height: 50%;
+  max-width: 60%;
   border: none;
   margin-left: -$sidebar-width;
   margin-top: -($header-height + $editor-topbar-height);
 
   .autocomplete {
+    line-height: initial;
     display: inline-table;
     max-width: none;
     width: 100%;

@@ -127,8 +127,19 @@
 
   .main-panel-presentation-mode {
     width: 100%;
-    height: calc(100% + #{$header-height});
+    height: 100%;
     left: 0;
+
+    .CodeMirror {
+      font-size: 32px;
+    }
+
+    .code {
+      height: 100%;
+      &.console-open{
+        height: calc(100% - #{$console-height});
+      }
+    }
   }
 
   @include phone {
