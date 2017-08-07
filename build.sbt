@@ -143,6 +143,7 @@ lazy val sbtRunner = project
   .settings(baseSettings)
   .settings(loggingAndTest)
   .settings(
+    javaOptions in reStart += "-Xmx256m",
     parallelExecution in Test := false,
     scalacOptions -= "-Xfatal-warnings", // Thread.stop
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
@@ -222,6 +223,7 @@ lazy val server = project
   .settings(loggingAndTest)
   .settings(packageScalaJS(client))
   .settings(
+    javaOptions in reStart += "-Xmx512m",
     reStart := reStart.dependsOn(WebKeys.assets in (client, Assets)).evaluated,
     (packageBin in Universal) := (packageBin in Universal)
       .dependsOn(WebKeys.assets in (client, Assets))

@@ -142,7 +142,7 @@ object MainPanel {
         view = state.view,
         worksheetMode = state.inputs.worksheetMode,
         targetType = state.inputs.target.targetType
-      ).render
+      ).render.unless(state.isPresentationMode)
 
     val statusView =
       props.router match {

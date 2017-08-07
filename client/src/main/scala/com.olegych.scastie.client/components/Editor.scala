@@ -407,6 +407,9 @@ object Editor {
         CodeMirror.commands.togglePresentationMode =
           (editor: CodeMirrorEditor2) => {
             props.togglePresentationMode.runNow()
+            if(!props.isPresentationMode) {
+              dom.window.alert("Press F8 again to leave the presentation mode")
+            }
           }
 
         CodeMirror.commands.autocompleteDot = (editor: CodeMirrorEditor2) => {
