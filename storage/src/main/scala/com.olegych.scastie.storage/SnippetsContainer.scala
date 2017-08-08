@@ -258,8 +258,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     )
   }
 
-  private val inputFileName = "input.json"
-  private val outputFileName = "output.json"
+  private val inputFileName = "input2.json"
+  private val outputFileName = "output2.json"
   private val scalaJsFileName = ScalaTarget.Js.targetFilename
   private val scalaJsSourceMapFileName = ScalaTarget.Js.sourceMapFilename
 
