@@ -13,7 +13,7 @@ final case class NewButton(isNewSnippetModalClosed: Boolean,
 object NewButton {
   def render(props: NewButton): VdomElement = {
 
-    li(title := s"New code snippet ($ctrl + M)",
+    li(title := s"New code snippet",
        role := "button",
        onClick --> props.openNewSnippetModal,
        cls := "btn")(

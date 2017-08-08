@@ -62,7 +62,6 @@ object MainPanel {
         completions = state.completions,
         run = backend.run,
         saveOrUpdate = backend.saveOrUpdate,
-        newSnippet = backend.newSnippet,
         clear = backend.clear,
         toggleConsole = backend.toggleConsole,
         toggleWorksheetMode = backend.toggleWorksheetMode,
