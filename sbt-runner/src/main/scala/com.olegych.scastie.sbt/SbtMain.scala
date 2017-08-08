@@ -29,6 +29,8 @@ object SbtMain {
 
     val isProduction = sbtConfig.getBoolean("production")
 
+    val isReconnecting = sbtConfig.getBoolean("reconnect")
+
     if (isProduction) {
       val pid = writeRunningPid()
       logger.info(s"Starting sbtRunner pid: $pid")
@@ -65,7 +67,9 @@ object SbtMain {
           production = isProduction,
           withEnsime = true,
           readyRef = None,
-          reconnectInfo = Some(reconnectInfo)
+          reconnectInfo =
+            if (isReconnecting) Some(reconnectInfo)
+            else None
         )
       ),
       name = "SbtActor"

@@ -127,7 +127,10 @@ git commit
 sbt sbtRunner/docker
 
 docker run \
-  --network=host \
+  --network=host
+  -e RUNNER_PORT=5150 \
+  -e RUNNER_HOSTNAME=localhost \
+  -e RUNNER_RECONNECT=false \
   -e RUNNER_PRODUCTION=true \
   scalacenter/scastie-sbt-runner:`git rev-parse --verify HEAD`
 ```

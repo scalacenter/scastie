@@ -29,21 +29,43 @@ class EnsimeActorTests()
     autocomplete("L", 100)(_.isEmpty)
   }
 
-  // test("autocomplete after restart") {
-  //   autocompleteEnd("List(1).")(_.nonEmpty)
-  //   autocompleteEnd("List(1).", ScalaTarget.Js.default)(_.nonEmpty)
-  //   ^ returns None
-  //   autocompleteEnd("List(1).")(_.nonEmpty)
-  // }
+  test("autocompletion should fail when the code does not compile") {
+    // https://github.com/ensime/ensime-server/issues/1850
+    pending
+  }
 
-  // does not work properly
-  // test("typeAt") {
-  //   typeAt(
-  //     code = "val foobar = List(1)",
-  //     //            ^
-  //     offset = 7
-  //   )(_ == "List[Int]")
-  // }
+  test("autocomplete after restart") {
+    autocompleteEnd("List(1).")(_.nonEmpty)
+    autocompleteEnd("List(1).", ScalaTarget.Js.default)(_.nonEmpty)
+    ^ returns None
+    autocompleteEnd("List(1).")(_.nonEmpty)
+  }
+
+  test("typeAt 1") {
+    // https://github.com/scalacenter/scastie/issues/311
+
+    // SymbolInfo(<empty>,<empty>,None,BasicTypeInfo(<empty>,Object,<empty>,List(),List(),None,List()))
+    typeAt(
+      code = "val foobar = List(1)",
+      //            ^
+      offset = 7
+    )(_ == "List[Int]")
+
+    pending
+  }
+
+  test("typeAt 2") {
+    // https://github.com/scalacenter/scastie/issues/311
+
+    // SymbolInfo(<empty>,<empty>,None,BasicTypeInfo(<empty>,Object,<empty>,List(),List(),None,List()))
+    typeAt(
+      code = "val foobar = 42",
+      //            ^
+      offset = 7
+    )(_ == "List[Int]")
+
+    pending
+  }
 
   private def autocomplete(inputs: Inputs, offset: Int)(
       fish: List[Completion] => Boolean

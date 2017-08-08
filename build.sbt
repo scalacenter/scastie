@@ -19,7 +19,7 @@ val currentScalaVersion = latest212
 lazy val orgSettings = Seq(
   organization := "org.scastie",
   version := {
-    val base = "0.25.0"
+    val base = "0.26.0"
     if (gitIsDirty())
       base + "-SNAPSHOT"
     else {
@@ -187,7 +187,7 @@ lazy val sbtRunner = project
         val logbackConfDestination = "/home/scastie/logback.xml"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.43")
+          from("scalacenter/scastie-docker-sbt:0.0.42")
 
           add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
 

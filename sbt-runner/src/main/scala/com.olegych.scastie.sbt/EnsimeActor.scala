@@ -110,7 +110,6 @@ class EnsimeActor(system: ActorSystem,
 
         payload match {
           case CompletionInfoList(_, completionList) => {
-
             serverState(Ready)
 
             val response = AutoCompletionResponse(
@@ -126,12 +125,14 @@ class EnsimeActor(system: ActorSystem,
                   Completion(ci.name, signature, resultType)
                 })
             )
-            log.debug(s"Got ${response.completions.size} completions")
+            log.debug(s"$id: Got ${response.completions.size} completions")
             reply(response)
           }
 
           case symbolInfo: SymbolInfo => {
+
             log.info(s"Got symbol info: $symbolInfo")
+
             if (symbolInfo.`type`.name == "<none>")
               reply(TypeAtPointResponse(""))
             else if (symbolInfo.`type`.fullName.length <= 60)
@@ -145,11 +146,14 @@ class EnsimeActor(system: ActorSystem,
             ()
 
           case FalseResponse => {
+            // 500
             println("-- FalseResponse --")
           }
 
-          case x =>
+          case x => {
+            // 500
             log.info(s"Got unexpected response from ensime : {}", x)
+          }
         }
 
       case _ =>
@@ -282,6 +286,7 @@ class EnsimeActor(system: ActorSystem,
         "java",
         "-Xms512m",
         "-Xmx1G",
+        "-XX:MaxDirectMemorySize=512g",
         "-Densime.config=" + ensimeConfigFile,
         "-classpath",
         classpath,
@@ -326,7 +331,9 @@ class EnsimeActor(system: ActorSystem,
       var line = is.readLine()
       while (line != null) {
         if (!line.contains("received handled message ConnectionInfo") &&
-            !line.contains("DEBUG")) {
+            true
+            //!line.contains("DEBUG")
+            ) {
           log.info(line)
         }
         line = is.readLine()

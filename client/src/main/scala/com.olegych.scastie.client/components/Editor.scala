@@ -38,6 +38,7 @@ final case class Editor(isDarkTheme: Boolean,
                         compilationInfos: Set[api.Problem],
                         runtimeError: Option[api.RuntimeError],
                         completions: List[api.Completion],
+                        isDefaultConfiguration: Boolean,
                         run: Callback,
                         saveOrUpdate: Callback,
                         clear: Callback,
@@ -321,51 +322,54 @@ object Editor {
           }
         )
 
-        CodeMirror.on(
-          editor.getWrapperElement(),
-          "mousemove",
-          (e: dom.MouseEvent) => {
+        // typeAt disabled for now
+        if (false) {
+          CodeMirror.on(
+            editor.getWrapperElement(),
+            "mousemove",
+            (e: dom.MouseEvent) => {
 
-            val node = e.target
-            if (node != null && node.isInstanceOf[HTMLElement]) {
-              val text = node.asInstanceOf[HTMLElement].textContent
-              if (text != null) {
+              val node = e.target
+              if (node != null && node.isInstanceOf[HTMLElement]) {
+                val text = node.asInstanceOf[HTMLElement].textContent
+                if (text != null) {
 
-                // request token under the cursor
-                val pos = editor.coordsChar(
-                  js.Dictionary[Any](
-                    "left" -> e.clientX,
-                    "top" -> e.clientY
-                  ),
-                  mode = null
-                )
-                val currToken = editor.getTokenAt(pos, precise = null).string
+                  // request token under the cursor
+                  val pos = editor.coordsChar(
+                    js.Dictionary[Any](
+                      "left" -> e.clientX,
+                      "top" -> e.clientY
+                    ),
+                    mode = null
+                  )
+                  val currToken = editor.getTokenAt(pos, precise = null).string
 
-                // Request type info only if Ctrl is pressed
-                if (currToken == text) {
-                  val s = scope.state.runNow()
-                  if (s.showTypeButtonPressed) {
-                    val lastTypeInfo = s.typeAt
-                    val message =
-                      if (lastTypeInfo.isEmpty || lastTypeInfo.get.token != currToken) {
-                        // if it's the first typeAt request
-                        // OR if user's moved on to a new token
-                        // then we request new type information with curr token and show "..."
-                        props
-                          .requestTypeAt(currToken,
-                                         editor.getDoc().indexFromPos(pos))
-                          .runNow()
-                        "..."
-                      } else {
-                        s.typeAt.get.typeInfo
-                      }
-                    hoverMessage.show(node.asInstanceOf[HTMLElement], message)
+                  // Request type info only if Ctrl is pressed
+                  if (currToken == text) {
+                    val s = scope.state.runNow()
+                    if (s.showTypeButtonPressed) {
+                      val lastTypeInfo = s.typeAt
+                      val message =
+                        if (lastTypeInfo.isEmpty || lastTypeInfo.get.token != currToken) {
+                          // if it's the first typeAt request
+                          // OR if user's moved on to a new token
+                          // then we request new type information with curr token and show "..."
+                          props
+                            .requestTypeAt(currToken,
+                                           editor.getDoc().indexFromPos(pos))
+                            .runNow()
+                          "..."
+                        } else {
+                          s.typeAt.get.typeInfo
+                        }
+                      hoverMessage.show(node.asInstanceOf[HTMLElement], message)
+                    }
                   }
                 }
               }
             }
-          }
-        )
+          )
+        }
 
         CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
           props.run.runNow()
@@ -408,13 +412,17 @@ object Editor {
           }
 
         CodeMirror.commands.autocompleteDot = (editor: CodeMirrorEditor2) => {
-          editor.getDoc().replaceSelection(".")
-          props.codeChange(editor.getDoc().getValue()).runNow()
-          autocomplete(editor)
+          if (props.isDefaultConfiguration) {
+            editor.getDoc().replaceSelection(".")
+            props.codeChange(editor.getDoc().getValue()).runNow()
+            autocomplete(editor)
+          }
         }
 
         CodeMirror.commands.autocomplete = (editor: CodeMirrorEditor2) => {
-          autocomplete(editor)
+          if (props.isDefaultConfiguration) {
+            autocomplete(editor)
+          }
         }
 
         def autocomplete(editor: CodeMirrorEditor2): Unit = {
