@@ -344,65 +344,75 @@ object Main {
   def main(args: Array[String]): Unit = {
     import upickle.default._
 
-    // val dir = Paths.get("/home/gui/scastie/server/target/snippets")
-    val dir = Paths.get("/home/gui/snippetsmis")
-    Files.isDirectory(dir)
+    val dir = Paths.get(args.head)
+    assert(Files.isDirectory(dir))
 
     val inputs = collection.mutable.Buffer.empty[Path]
     val outputs = collection.mutable.Buffer.empty[Path]
 
     val ds = Files.newDirectoryStream(dir)
     ds.asScala.foreach { user =>
-      val userStream = Files.newDirectoryStream(user)
-      userStream.asScala.foreach { base =>
-        if (Files.isDirectory(base)) {
-          if (!base.getFileName.toString.startsWith("project_")) {
-            val baseStream = Files.newDirectoryStream(base)
-            baseStream.asScala.foreach { sid =>
-              val in = sid.resolve("input.json")
-              if (Files.isRegularFile(in)) {
-                inputs += in
+      println(user)
+      if(!(user.getFileName.toString == ".snapshot")) {
+        val userStream = Files.newDirectoryStream(user)
+        userStream.asScala.foreach { base =>
+          if (Files.isDirectory(base)) {
+            if (!base.getFileName.toString.startsWith("project_")) {
+              val baseStream = Files.newDirectoryStream(base)
+              baseStream.asScala.foreach { sid =>
+                val in = sid.resolve("input.json")
+                if (Files.isRegularFile(in)) {
+                  inputs += in
+                }
+                val out = sid.resolve("output.json")
+                if (Files.isRegularFile(out)) {
+                  outputs += out
+                }
               }
-              val out = sid.resolve("output.json")
-              if (Files.isRegularFile(out)) {
-                outputs += out
-              }
+              baseStream.close
             }
-            baseStream.close
           }
         }
+        userStream.close
       }
-      userStream.close
     }
     ds.close()
 
-//     var failedInputs = 0
-//     var successInputs = 0
+    println()
+    println("Scanning done. Found")
+    println("  " + inputs.size + " inputs")
+    println("  " + outputs.size + " outputs")
 
-//     inputs.foreach{ path =>
-//       val content = Files.readAllLines(path).toArray.mkString(nl)
-//       try {
-//         val inputs0 = read[Inputs](content)
-//         val inputs =
-//             inputs0.copy(
-//               librariesFromList = inputs0.librariesFrom.toList
-//             )
+    var failedInputs = 0
+    var successInputs = 0
 
-//         val json = Json.prettyPrint(Json.toJson(inputs))
-//         val path2 = path.getParent().resolve("input2.json")
-//         Files.write(path2, json.getBytes)
+    inputs.foreach{ path =>
+      val content = Files.readAllLines(path).toArray.mkString(nl)
+      try {
+        val inputs0 = read[Inputs](content)
+        val inputs =
+            inputs0.copy(
+              librariesFromList = inputs0.librariesFrom.toList
+            )
 
-//         successInputs += 1
-//       } catch {
-//         case scala.util.control.NonFatal(e) => {
-//           failedInputs += 1
-//         }
-//       }
-//     }
+        val json = Json.prettyPrint(Json.toJson(inputs))
+        val path2 = path.getParent().resolve("input2.json")
+        Files.write(path2, json.getBytes)
 
-//     println("Inputs")
-//     println("  success: " + successInputs)
-//     println("  failure: " + failedInputs)
+        successInputs += 1
+        if(successInputs % 100 == 0) {
+          print("*")
+        }
+      } catch {
+        case scala.util.control.NonFatal(e) => {
+          failedInputs += 1
+        }
+      }
+    }
+
+    println("Inputs")
+    println("  success: " + successInputs)
+    println("  failure: " + failedInputs)
 
     var failedOutputs = 0
     var successOutputs = 0
@@ -424,6 +434,10 @@ object Main {
         Files.write(path2, outputsLines.getBytes)
 
         successOutputs += 1
+
+        if(successOutputs % 100 == 0) {
+          print("*")
+        }
       } catch {
         case scala.util.control.NonFatal(e) => {
           failedOutputs += 1

@@ -453,3 +453,18 @@ lazy val sbtScastie = project
     sbtPlugin := true
   )
   .dependsOn(api210JVM)
+
+
+// migration from upickle to play-json
+// sbt migration/assembly
+// scp ./migration/target/scala-2.12/migration-assembly-0.25.0-SNAPSHOT.jar scastie@scastie.scala-lang.org:migration.jar
+// java -jar migration.jar snippets
+lazy val migration = project
+  .settings(baseSettings)
+  .settings(
+    moduleName := "sbt-scastie",
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "upickle" % "0.4.4",
+      "com.typesafe.play" %% "play-json" % "2.6.2"
+    )
+  )
