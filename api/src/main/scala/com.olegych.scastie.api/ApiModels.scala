@@ -44,7 +44,7 @@ case class FormatResponse(
 )
 
 case class CreateEnsimeConfigRequest(inputs: Inputs)
-case class EnsimeConfigResponse(sbtDir: String)
+case class EnsimeConfigResponse(sbtDir: String, config: String)
 
 sealed trait EnsimeRequest {
   def info: EnsimeRequestInfo

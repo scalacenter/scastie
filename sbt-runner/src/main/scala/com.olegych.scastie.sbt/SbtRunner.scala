@@ -2,6 +2,7 @@ package com.olegych.scastie.sbt
 
 import com.olegych.scastie.instrumentation._
 import com.olegych.scastie.api._
+import com.olegych.scastie.util.ScastieFileUtil.slurp
 import ScalaTargetType._
 
 import scala.meta.parsers.Parsed
@@ -144,7 +145,11 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         },
         reload = false
       )
-      sender() ! EnsimeConfigResponse(sbt.sbtDir.toString)
+      slurp(sbt.sbtDir.resolve(".ensime")) match {
+        case Some(config) => sender ! EnsimeConfigResponse(sbt.sbtDir.toString, config)
+        case None => log.warn(s"Actor ${sender.path} will not receive ensime config file")
+      }
+
 
     case SbtTask(snippetId, inputs, ip, login, progressActor) =>
       log.info("login: {}, ip: {} run {}", login, ip, inputs)

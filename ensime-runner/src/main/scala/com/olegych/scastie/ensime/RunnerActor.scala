@@ -14,7 +14,6 @@ class RunnerActor(system: ActorSystem,
     extends Actor
     with ActorLogging with ActorReconnecting {
 
-
   private var dispatchActor: Option[ActorSelection] = None
   private var ensimeActor: Option[ActorRef] = None
 
@@ -51,7 +50,5 @@ class RunnerActor(system: ActorSystem,
         case Some(ensimeRef) => ensimeRef.forward(req)
         case _               => sender ! EnsimeTaskResponse(None, req.taskId)
       }
-    case x =>
-      log.warning(s"Unknown incoming message: $x")
   }
 }
