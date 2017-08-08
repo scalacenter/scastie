@@ -66,6 +66,8 @@ $margin: 24px;
   }
 
   pre {
+    width: 100vw;
+    white-space: pre-wrap;
     padding: 10px 0px 10px $margin/2;
     display: inline-block;
   }

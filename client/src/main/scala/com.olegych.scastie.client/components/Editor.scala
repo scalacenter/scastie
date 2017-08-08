@@ -40,7 +40,6 @@ final case class Editor(isDarkTheme: Boolean,
                         completions: List[api.Completion],
                         run: Callback,
                         saveOrUpdate: Callback,
-                        newSnippet: Callback,
                         clear: Callback,
                         toggleConsole: Callback,
                         toggleWorksheetMode: Callback,
@@ -374,10 +373,6 @@ object Editor {
 
         CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
           props.saveOrUpdate.runNow()
-        }
-
-        CodeMirror.commands.newSnippet = (editor: CodeMirrorEditor2) => {
-          props.newSnippet.runNow()
         }
 
         CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
