@@ -3,7 +3,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % "2.6.2",
   "com.lihaoyi" %% "upickle" % "0.4.4"
 )
-*/
+ */
 
 package com.olegych.scastie.api
 
@@ -79,8 +79,10 @@ object ScalaTarget {
   }
   case class Jvm(scalaVersion: String) extends ScalaTarget
   case class Typelevel(scalaVersion: String) extends ScalaTarget
-  case class Js(scalaVersion: String, scalaJsVersion: String) extends ScalaTarget
-  case class Native(scalaVersion: String, scalaNativeVersion: String) extends ScalaTarget
+  case class Js(scalaVersion: String, scalaJsVersion: String)
+      extends ScalaTarget
+  case class Native(scalaVersion: String, scalaNativeVersion: String)
+      extends ScalaTarget
   case class Dotty(dottyVersion: String = "0.2.0-RC1") extends ScalaTarget
 }
 
@@ -89,10 +91,10 @@ object ScalaDependency {
 }
 
 case class ScalaDependency(
-  groupId: String,
-  artifact: String,
-  target: ScalaTarget,
-  version: String
+    groupId: String,
+    artifact: String,
+    target: ScalaTarget,
+    version: String
 )
 
 object Project {
@@ -100,10 +102,10 @@ object Project {
 }
 
 case class Project(
-  organization: String,
-  repository: String,
-  logo: Option[String] = None,
-  artifacts: List[String] = Nil
+    organization: String,
+    repository: String,
+    logo: Option[String] = None,
+    artifacts: List[String] = Nil
 )
 
 object SnippetUserPart {
@@ -111,8 +113,8 @@ object SnippetUserPart {
 }
 
 case class SnippetUserPart(
-  login: String,
-  update: Option[Int]
+    login: String,
+    update: Option[Int]
 )
 
 object SnippetId {
@@ -120,8 +122,8 @@ object SnippetId {
 }
 
 case class SnippetId(
-  base64UUID: String,
-  user: Option[SnippetUserPart]
+    base64UUID: String,
+    user: Option[SnippetUserPart]
 )
 
 object Inputs {
@@ -134,16 +136,16 @@ object Inputs {
 }
 
 case class Inputs(
-  worksheetMode: Boolean = false,
-  code: String,
-  target: ScalaTarget,
-  libraries: Set[ScalaDependency],
-  librariesFromList: List[(ScalaDependency, Project)] = List(),
-  librariesFrom: Inputs.Hack = Map(),
-  sbtConfigExtra: String,
-  sbtPluginsConfigExtra: String,
-  showInUserProfile: Boolean = false,
-  forked: Option[SnippetId] = None
+    worksheetMode: Boolean = false,
+    code: String,
+    target: ScalaTarget,
+    libraries: Set[ScalaDependency],
+    librariesFromList: List[(ScalaDependency, Project)] = List(),
+    librariesFrom: Inputs.Hack = Map(),
+    sbtConfigExtra: String,
+    sbtPluginsConfigExtra: String,
+    showInUserProfile: Boolean = false,
+    forked: Option[SnippetId] = None
 )
 
 // outputs
@@ -232,9 +234,9 @@ object Problem {
 }
 
 case class Problem(
-  severity: Severity,
-  line: Option[Int],
-  message: String
+    severity: Severity,
+    line: Option[Int],
+    message: String
 )
 
 object Render {
@@ -302,8 +304,8 @@ object Instrumentation {
 }
 
 case class Instrumentation(
-  position: Position,
-  render: Render
+    position: Position,
+    render: Render
 )
 
 object RuntimeError {
@@ -311,9 +313,9 @@ object RuntimeError {
 }
 
 case class RuntimeError(
-  message: String,
-  line: Option[Int],
-  fullStack: String
+    message: String,
+    line: Option[Int],
+    fullStack: String
 )
 
 object SnippetProgress {
@@ -335,7 +337,6 @@ case class SnippetProgress(
     forcedProgramMode: Boolean
 )
 
-
 import java.nio.file._
 import scala.collection.JavaConverters._
 
@@ -353,7 +354,7 @@ object Main {
     val ds = Files.newDirectoryStream(dir)
     ds.asScala.foreach { user =>
       println(user)
-      if(!(user.getFileName.toString == ".snapshot")) {
+      if (!(user.getFileName.toString == ".snapshot")) {
         val userStream = Files.newDirectoryStream(user)
         userStream.asScala.foreach { base =>
           if (Files.isDirectory(base)) {
@@ -386,21 +387,21 @@ object Main {
     var failedInputs = 0
     var successInputs = 0
 
-    inputs.foreach{ path =>
+    inputs.foreach { path =>
       val content = Files.readAllLines(path).toArray.mkString(nl)
       try {
         val inputs0 = read[Inputs](content)
         val inputs =
-            inputs0.copy(
-              librariesFromList = inputs0.librariesFrom.toList
-            )
+          inputs0.copy(
+            librariesFromList = inputs0.librariesFrom.toList
+          )
 
         val json = Json.prettyPrint(Json.toJson(inputs))
         val path2 = path.getParent().resolve("input2.json")
         Files.write(path2, json.getBytes)
 
         successInputs += 1
-        if(successInputs % 100 == 0) {
+        if (successInputs % 100 == 0) {
           print("*")
         }
       } catch {
@@ -419,15 +420,15 @@ object Main {
 
     outputs.foreach { path =>
       try {
-        val outputsLines0 = 
+        val outputsLines0 =
           Files.readAllLines(path).toArray.toList.map { line =>
             read[SnippetProgress](line.toString)
           }
-        
-        val outputsLines = 
-          outputsLines0.map(ouputs =>
-            Json.stringify(Json.toJson(ouputs))
-          ).mkString(nl)
+
+        val outputsLines =
+          outputsLines0
+            .map(ouputs => Json.stringify(Json.toJson(ouputs)))
+            .mkString(nl)
 
         val path2 = path.getParent().resolve("output2.json")
 
@@ -435,7 +436,7 @@ object Main {
 
         successOutputs += 1
 
-        if(successOutputs % 100 == 0) {
+        if (successOutputs % 100 == 0) {
           print("*")
         }
       } catch {
