@@ -1,4 +1,4 @@
-package com.olegych.scastie.balancer
+package com.olegych.scastie.storage
 
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.api._

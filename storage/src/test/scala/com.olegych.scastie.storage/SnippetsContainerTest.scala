@@ -1,7 +1,6 @@
-package com.olegych.scastie
-package balancer
+package com.olegych.scastie.storage
 
-import api._
+import com.olegych.scastie.api._
 
 import java.nio.file._
 

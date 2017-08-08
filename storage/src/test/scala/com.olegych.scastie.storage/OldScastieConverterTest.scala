@@ -1,4 +1,4 @@
-package com.olegych.scastie.balancer
+package com.olegych.scastie.storage
 
 import com.olegych.scastie.util.ScastieFileUtil.slurp
 import com.olegych.scastie.api._
@@ -38,7 +38,7 @@ class OldScastieConverterTest extends FunSuite {
   }
 
   test("convert") {
-    val path = Paths.get("balancer", "src", "test", "resources")
+    val path = Paths.get("storage", "src", "test", "resources")
     val original = slurp(path.resolve("convert-test.scala")).get
 
     val expected =
