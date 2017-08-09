@@ -284,9 +284,9 @@ class EnsimeActor(system: ActorSystem,
     ensimeProcess = Some(
       new ProcessBuilder(
         "java",
-        "-Xms512m",
-        "-Xmx1G",
-        "-XX:MaxDirectMemorySize=512g",
+        "-Xms512M",
+        "-Xmx1200M",
+        "-XX:MaxDirectMemorySize=512M",
         "-Densime.config=" + ensimeConfigFile,
         "-classpath",
         classpath,
