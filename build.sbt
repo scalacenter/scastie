@@ -1,5 +1,6 @@
 import ScalaJSHelper._
 import Deployment._
+import SbtShared._
 
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
@@ -7,30 +8,6 @@ import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
 import sbt.Keys._
 import scala.util.Try
 
-val latest210 = "2.10.6"
-val latest211 = "2.11.11"
-val latest212 = "2.12.3"
-val latest213 = "2.13.0-M1"
-
-val runtimeProjectName = "runtime-scala"
-
-val currentScalaVersion = latest212
-
-lazy val orgSettings = Seq(
-  organization := "org.scastie",
-  version := {
-    val base = "0.26.0"
-    if (gitIsDirty())
-      base + "-SNAPSHOT"
-    else {
-      val hash = gitHash()
-      s"$base+$hash"
-    }
-  }
-)
-
-val playJsonVersion = "2.6.2"
-val scalajsDomVersion = "0.9.3"
 val scalaTestVersion = "3.0.1"
 val akkaHttpVersion = "10.0.6"
 
@@ -38,9 +15,6 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
 
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
-
-val playJson =
-  libraryDependencies += "com.typesafe.play" %%% "play-json" % playJsonVersion
 
 lazy val scastie = project
   .in(file("."))
@@ -75,20 +49,6 @@ lazy val scastie = project
   .settings(Deployment.settings(server, sbtRunner))
   .settings(addCommandAlias("drone", ";test ;server/universal:packageBin"))
 
-lazy val baseSettings = Seq(
-  scalaVersion := currentScalaVersion,
-  scalacOptions := Seq(
-    "-deprecation",
-    "-encoding",
-    "UTF-8",
-    "-feature",
-    "-unchecked"
-  ),
-  console := (console in Test).value,
-  scalacOptions in (Test, console) -= "-Ywarn-unused-import",
-  scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"
-) ++ orgSettings
-
 lazy val loggingAndTest =
   libraryDependencies ++= Seq(
     "ch.qos.logback" % "logback-classic" % "1.1.7",
@@ -96,19 +56,6 @@ lazy val loggingAndTest =
     "com.getsentry.raven" % "raven-logback" % "8.0.3",
     "org.scalatest" %% "scalatest" % scalaTestVersion % Test
   )
-
-lazy val remapSourceMap =
-  scalacOptions ++= {
-    val ver = version.value
-    val fromScastie = (baseDirectory in LocalRootProject).value.toURI.toString
-    val toScastie =
-      s"https://raw.githubusercontent.com/scalacenter/scastie/${gitHash()}"
-
-    Map(fromScastie -> toScastie).map {
-      case (from, to) =>
-        s"-P:scalajs:mapSourceURI:$from->$to"
-    }.toList
-  }
 
 lazy val utils = project
   .in(file("utils"))
@@ -138,6 +85,88 @@ lazy val runnerRuntimeDependencies = Seq(
   sbtScastie
 ).map(publishLocal in _)
 
+val dockerOrg = "scalacenter"
+val dockerBaseImageName = "scastie-docker-sbt"
+val sbtVersion = "0.13.16"
+val sbtVersionFlat = sbtVersion.replaceAllLiterally(".", "")
+
+lazy val dockerBase = project
+  .in(file("docker-base"))
+  .settings(
+    imageNames in docker := Seq(
+      ImageName(
+        namespace = Some("scalacenter"),
+        repository = "scastie-docker-sbt",
+        tag = Some(gitHashNow)
+      )
+    ),
+    dockerfile in docker := Def.task {
+
+      val base = baseDirectory.value
+      val sbtGlobal = base / ".sbt"
+
+      val generatedProjects = new GenerateProjects(base)
+      generatedProjects.write
+
+      new Dockerfile {
+        from("openjdk:8u131-jdk-alpine")
+
+        // Install ca-certificates for wget https
+        run("apk update")
+        run("apk --update upgrade")
+        run("apk add ca-certificates")
+        run("update-ca-certificates")
+        run("apk add openssl")
+
+        // Misc tools
+        run("apk add bash")
+        run("apk add ncurses")
+        run("apk add nodejs")
+        run("apk add curl")
+        run("apk add graphviz")
+
+        // fonts for ref-tree
+        run("apk add ttf-dejavu")
+        run("apk add font-adobe-100dpi")
+        run("apk add git")
+        run("apk add procps")
+        run("""|git clone --depth 1 --branch release https://github.com/adobe-fonts/source-code-pro.git /usr/share/fonts/source-code-pro && \
+               |rm -rf /usr/share/fonts/source-code-pro/.git && \
+               |fc-cache -f -v /usr/share/fonts/source-code-pro""".stripMargin)
+
+        run(
+          """|apk update && apk add --no-cache fontconfig && \
+             |mkdir -p /usr/share && \
+             |cd /usr/share && \
+             |curl -L https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/2.11/phantomjs-alpine-x86_64.tar.bz2 | tar xj && \
+             |ln -s /usr/share/phantomjs/phantomjs /usr/bin/phantomjs""".stripMargin
+        )
+
+        run(
+          s"wget https://cocl.us/sbt${sbtVersionFlat}tgz -O /tmp/sbt-${sbtVersion}.tgz"
+        )
+
+        run("mkdir -p /app/sbt")
+        run(s"tar -xzvf /tmp/sbt-$sbtVersion.tgz -C /app/sbt")
+        run("ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt")
+
+        run("addgroup -g 433 scastie")
+        run("adduser -h /home/scastie -G scastie -D -u 433 -s /bin/sh scastie")
+
+        user("scastie")
+
+        env("LANG", "en_US.UTF-8")
+
+        add(sbtGlobal, "/home/scastie/.sbt")
+        add(generatedProjects.root, "/home/scastie/projects")
+
+        generatedProjects.projects
+          .foreach(generatedProject => run(generatedProject.runCmd))
+      }
+    }.value
+  )
+  .enablePlugins(sbtdocker.DockerPlugin)
+
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
@@ -163,7 +192,7 @@ lazy val sbtRunner = project
       ImageName(
         namespace = Some("scalacenter"),
         repository = "scastie-sbt-runner",
-        tag = Some(gitHash())
+        tag = Some(gitHashNow)
       )
     ),
     assemblyMergeStrategy in assembly := {
@@ -187,7 +216,7 @@ lazy val sbtRunner = project
         val logbackConfDestination = "/home/scastie/logback.xml"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.42")
+          from(s"$dockerOrg/$dockerBaseImageName:$gitHashNow")
 
           add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
 
@@ -351,46 +380,10 @@ lazy val instrumentation = project
   )
   .dependsOn(apiJVM, utils)
 
-def crossDir(projectId: String) = file(".cross/" + projectId)
-def dash(name: String) = name.replaceAllLiterally(".", "-")
-
-/* api is for the communication between sbt <=> server <=> frontend */
-def api(scalaV: String) = {
-  val projectName = "api"
-  val projectId =
-    if (scalaV != currentScalaVersion) {
-      s"$projectName-${dash(scalaV)}"
-    } else projectName
-
-  CrossProject(id = projectId,
-               base = crossDir(projectId),
-               crossType = CrossType.Pure)
-    .settings(baseSettings)
-    .settings(
-      buildInfoKeys := Seq[BuildInfoKey](
-        organization,
-        version,
-        "runtimeProjectName" -> runtimeProjectName,
-        BuildInfoKey.action("gitHash") { gitHash() }
-      ),
-      buildInfoPackage := "com.olegych.scastie.buildinfo",
-      scalaVersion := scalaV,
-      moduleName := projectName,
-      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "src" / "main" / "scala"
-    )
-    .settings(playJson)
-    .jsSettings(
-      test := {},
-      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion
-    )
-    .jsSettings(remapSourceMap)
-    .enablePlugins(BuildInfoPlugin)
-}
-
-val api210 = api(latest210)
-val api211 = api(latest211)
-val apiCurrent = api(currentScalaVersion)
-val api213 = api(latest213)
+val api210 = apiProject(sbt210)
+val api211 = apiProject(latest211)
+val apiCurrent = apiProject(currentScalaVersion)
+val api213 = apiProject(latest213)
 
 lazy val api210JS = api210.js
 lazy val api210JVM = api210.jvm
@@ -430,7 +423,7 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
     .dependsOn(apiProject)
 }
 
-val runtimeScala210 = runtimeScala(latest210, api210)
+val runtimeScala210 = runtimeScala(sbt210, api210)
 val runtimeScala211 = runtimeScala(latest211, api211)
 val runtimeScalaCurrent = runtimeScala(currentScalaVersion, apiCurrent)
 val runtimeScala213 = runtimeScala(latest213, api213)
@@ -449,7 +442,7 @@ lazy val sbtScastie = project
   .settings(orgSettings)
   .settings(
     moduleName := "sbt-scastie",
-    scalaVersion := latest210,
+    scalaVersion := sbt210,
     sbtPlugin := true
   )
   .dependsOn(api210JVM)
