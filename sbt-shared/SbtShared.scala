@@ -6,6 +6,12 @@ import org.scalajs.sbtplugin.cross.CrossProject
 import sbtbuildinfo.BuildInfoPlugin
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
 
+import System.{lineSeparator => nl}
+
+import java.util.Properties
+import java.nio.file._
+import java.io.FileInputStream
+
 /*
 This code is shared between the build and the "build-build".
 it allows us to use the api project at the build level
@@ -16,8 +22,11 @@ object SbtShared {
   val sbt210 = "2.10.6"
   val latest211 = "2.11.11"
   val latest212 = "2.12.3"
-  val latest213 = "2.13.0-M1"
+  val latest213 = "2.13.0-M1" // waiting for play-json for M2
   val currentScalaVersion = latest212
+
+  val latestScalaJs = "0.6.19"
+  val latestDotty = "0.2.0-RC1"
 
   val runtimeProjectName = "runtime-scala"
 
@@ -117,6 +126,33 @@ object SbtShared {
       base / projectName / "src" / config / "scala"
     }
 
+    def readSbtVersion(base: Path): String = {
+      val sbtPropertiesFileName = "build.properties"
+      val projectFolder = "project"
+
+      val to = Paths.get(projectFolder, sbtPropertiesFileName)
+
+      val guess1 = base.resolve(to)
+      val guess2 = base.getParent.resolve(to)
+
+      val sbtPropertiesFile = 
+        if (Files.isRegularFile(guess1)) guess1
+        else if (Files.isRegularFile(guess2)) guess2
+        else {
+          sys.error(s"cannot find $sbtPropertiesFileName in $guess1 and $guess2")
+        }
+
+      val prop = new Properties()
+      val input = new FileInputStream(sbtPropertiesFile.toFile)
+      prop.load(input)
+      input.close()
+
+      val res = prop.getProperty("sbt.version")
+      assert(res != null)
+
+      res
+    }
+
     CrossProject(id = projectId,
                  base = crossDir(projectId),
                  crossType = CrossType.Pure)
@@ -126,6 +162,10 @@ object SbtShared {
           organization,
           version,
           "runtimeProjectName" -> runtimeProjectName,
+          "defaultScalaVersion" -> latest212,
+          "defaultScalaJsVersion" -> latestScalaJs,
+          "defaultDottyVersion" -> latestDotty,
+          "sbtVersion" -> readSbtVersion((baseDirectory in ThisBuild).value.toPath),
           BuildInfoKey.action("gitHash") { gitHashNow }
         ),
         buildInfoPackage := "com.olegych.scastie.buildinfo",
