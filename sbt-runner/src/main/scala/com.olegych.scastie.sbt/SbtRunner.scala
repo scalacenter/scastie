@@ -191,7 +191,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
                     .copy(
                       snippetId = Some(snippetId),
                       timeout = false,
-                      done = false,
+                      done = true,
                       compilationInfos = List(
                         Problem(
                           Error,
