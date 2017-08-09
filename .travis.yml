@@ -13,4 +13,4 @@ cache:
     - $HOME/.coursier/cache
 script:
   - bin/scalafmt --test
-  - sbt test
+  - sbt test:compile

@@ -27,6 +27,10 @@ Make sure to run `bin/scalafmt` to format your code.
 
 You can install a pre-commit hook with `bin/hooks.sh`
 
+## Scalafix
+
+run `sbt scalafix`
+
 ## Structure
 
 ```
