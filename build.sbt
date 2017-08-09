@@ -90,83 +90,6 @@ val dockerBaseImageName = "scastie-docker-sbt"
 val sbtVersion = "0.13.16"
 val sbtVersionFlat = sbtVersion.replaceAllLiterally(".", "")
 
-lazy val dockerBase = project
-  .in(file("docker-base"))
-  .settings(
-    imageNames in docker := Seq(
-      ImageName(
-        namespace = Some("scalacenter"),
-        repository = "scastie-docker-sbt",
-        tag = Some(gitHashNow)
-      )
-    ),
-    dockerfile in docker := Def.task {
-
-      val base = baseDirectory.value
-      val sbtGlobal = base / ".sbt"
-
-      val generatedProjects = new GenerateProjects(base)
-      generatedProjects.write
-
-      new Dockerfile {
-        from("openjdk:8u131-jdk-alpine")
-
-        // Install ca-certificates for wget https
-        run("apk update")
-        run("apk --update upgrade")
-        run("apk add ca-certificates")
-        run("update-ca-certificates")
-        run("apk add openssl")
-
-        // Misc tools
-        run("apk add bash")
-        run("apk add ncurses")
-        run("apk add nodejs")
-        run("apk add curl")
-        run("apk add graphviz")
-
-        // fonts for ref-tree
-        run("apk add ttf-dejavu")
-        run("apk add font-adobe-100dpi")
-        run("apk add git")
-        run("apk add procps")
-        run("""|git clone --depth 1 --branch release https://github.com/adobe-fonts/source-code-pro.git /usr/share/fonts/source-code-pro && \
-               |rm -rf /usr/share/fonts/source-code-pro/.git && \
-               |fc-cache -f -v /usr/share/fonts/source-code-pro""".stripMargin)
-
-        run(
-          """|apk update && apk add --no-cache fontconfig && \
-             |mkdir -p /usr/share && \
-             |cd /usr/share && \
-             |curl -L https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/2.11/phantomjs-alpine-x86_64.tar.bz2 | tar xj && \
-             |ln -s /usr/share/phantomjs/phantomjs /usr/bin/phantomjs""".stripMargin
-        )
-
-        run(
-          s"wget https://cocl.us/sbt${sbtVersionFlat}tgz -O /tmp/sbt-${sbtVersion}.tgz"
-        )
-
-        run("mkdir -p /app/sbt")
-        run(s"tar -xzvf /tmp/sbt-$sbtVersion.tgz -C /app/sbt")
-        run("ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt")
-
-        run("addgroup -g 433 scastie")
-        run("adduser -h /home/scastie -G scastie -D -u 433 -s /bin/sh scastie")
-
-        user("scastie")
-
-        env("LANG", "en_US.UTF-8")
-
-        add(sbtGlobal, "/home/scastie/.sbt")
-        add(generatedProjects.root, "/home/scastie/projects")
-
-        generatedProjects.projects
-          .foreach(generatedProject => run(generatedProject.runCmd))
-      }
-    }.value
-  )
-  .enablePlugins(sbtdocker.DockerPlugin)
-
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
@@ -209,6 +132,9 @@ lazy val sbtRunner = project
         val base = (baseDirectory in ThisBuild).value
         val ivy = ivyPaths.value.ivyHome.get
 
+        val generatedProjects = new GenerateProjects(base)
+        generatedProjects.write
+
         val org = organization.value
         val artifact = assembly.value
         val artifactTargetPath = s"/app/${artifact.name}"
@@ -216,9 +142,63 @@ lazy val sbtRunner = project
         val logbackConfDestination = "/home/scastie/logback.xml"
 
         new Dockerfile {
-          from(s"$dockerOrg/$dockerBaseImageName:$gitHashNow")
+          from("openjdk:8u131-jdk-alpine")
+
+          // Install ca-certificates for wget https
+          run("apk update")
+          run("apk --update upgrade")
+          run("apk add ca-certificates")
+          run("update-ca-certificates")
+          run("apk add openssl")
+
+          // Misc tools
+          run("apk add bash")
+          run("apk add ncurses")
+          run("apk add nodejs")
+          run("apk add curl")
+          run("apk add graphviz")
+
+          // fonts for ref-tree
+          run("apk add ttf-dejavu")
+          run("apk add font-adobe-100dpi")
+          run("apk add git")
+          run("apk add procps")
+          run("""|git clone --depth 1 --branch release https://github.com/adobe-fonts/source-code-pro.git /usr/share/fonts/source-code-pro && \
+                 |rm -rf /usr/share/fonts/source-code-pro/.git && \
+                 |fc-cache -f -v /usr/share/fonts/source-code-pro""".stripMargin)
+
+          run(
+            """|apk update && apk add --no-cache fontconfig && \
+               |mkdir -p /usr/share && \
+               |cd /usr/share && \
+               |curl -L https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/2.11/phantomjs-alpine-x86_64.tar.bz2 | tar xj && \
+               |ln -s /usr/share/phantomjs/phantomjs /usr/bin/phantomjs""".stripMargin
+          )
+
+          run(
+            s"wget https://cocl.us/sbt${sbtVersionFlat}tgz -O /tmp/sbt-${sbtVersion}.tgz"
+          )
+
+          run("mkdir -p /app/sbt")
+          run(s"tar -xzvf /tmp/sbt-$sbtVersion.tgz -C /app/sbt")
+          run("ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt")
+
+          run("addgroup -g 433 scastie")
+          run("adduser -h /home/scastie -G scastie -D -u 433 -s /bin/sh scastie")
+
+          user("scastie")
+
+          env("LANG", "en_US.UTF-8")
 
           add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
+
+          // add(sbtGlobal, "/home/scastie/.sbt")
+          val dest = "/home/scastie/projects"
+          add(generatedProjects.root, dest)
+
+          generatedProjects.projects.foreach(generatedProject => 
+            run(generatedProject.runCmd(dest))
+          )
 
           add(artifact, artifactTargetPath)
 

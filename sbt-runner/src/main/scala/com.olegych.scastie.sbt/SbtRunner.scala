@@ -116,13 +116,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       log.info(s"== running $snippetId ==")
 
       withTimeout(runTimeout)({
-        scalaTargetType match {
-          case JVM | Dotty | Native | Typelevel =>
-            eval("run", reload = false)
-
-          case JS =>
-            eval("fastOptJS", reload = false)
-        }
+        eval(inputs.target.sbtRunCommand, reload = false)
       })(timeout(runTimeout))
 
       log.info(s"== done  $snippetId ==")

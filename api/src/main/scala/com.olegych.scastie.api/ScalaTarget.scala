@@ -2,12 +2,17 @@ package com.olegych.scastie.api
 
 import com.olegych.scastie.buildinfo.BuildInfo
 
+import BuildInfo.defaultScalaVersion
+import BuildInfo.defaultScalaJsVersion
+import BuildInfo.defaultDottyVersion
+
 sealed trait ScalaTarget {
   def targetType: ScalaTargetType
   def scaladexRequest: Map[String, String]
   def renderSbt(lib: ScalaDependency): String
   def sbtConfig: String
   def sbtPluginsConfig: String
+  def sbtRunCommand: String
   def runtimeDependency: Option[ScalaDependency]
 
   protected def sbtConfigScalaVersion(scalaVersion: String): String =
@@ -149,9 +154,6 @@ object ScalaTarget {
     "2.9.0"
   )
 
-  private val defaultScalaVersion = "2.12.3"
-  private val defaultScalaJsVersion = "0.6.19"
-
   private def runtimeDependencyFrom(
       target: ScalaTarget
   ): Option[ScalaDependency] = {
@@ -182,6 +184,8 @@ object ScalaTarget {
 
     def sbtPluginsConfig: String = ""
 
+    def sbtRunCommand: String = "run"
+
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
 
@@ -210,6 +214,8 @@ object ScalaTarget {
 
     def sbtPluginsConfig: String = ""
 
+    def sbtRunCommand: String = "run"
+
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
 
@@ -224,8 +230,8 @@ object ScalaTarget {
 
     def default =
       ScalaTarget.Js(
-        scalaVersion = ScalaTarget.defaultScalaVersion,
-        scalaJsVersion = ScalaTarget.defaultScalaJsVersion
+        scalaVersion = defaultScalaVersion,
+        scalaJsVersion = defaultScalaJsVersion
       )
   }
 
@@ -256,6 +262,8 @@ object ScalaTarget {
 
     def sbtPluginsConfig: String =
       s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
+
+    def sbtRunCommand: String = "fastOptJS"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
@@ -293,6 +301,8 @@ object ScalaTarget {
     def sbtPluginsConfig: String =
       s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
 
+    def sbtRunCommand: String = "run"    
+
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
 
@@ -301,7 +311,7 @@ object ScalaTarget {
   }
 
   object Dotty {
-    def default = Dotty("0.2.0-RC1")
+    def default = Dotty(defaultDottyVersion)
   }
 
   case class Dotty(dottyVersion: String) extends ScalaTarget {
@@ -319,6 +329,8 @@ object ScalaTarget {
 
     def sbtPluginsConfig: String =
       """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.4")"""
+
+    def sbtRunCommand: String = "run"
 
     def runtimeDependency: Option[ScalaDependency] =
       None
