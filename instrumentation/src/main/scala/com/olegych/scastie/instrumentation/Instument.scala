@@ -189,6 +189,7 @@ object Instrument {
     }
 
     def scala(scalaVersion: String): Option[Dialect] = {
+      if (scalaVersion.startsWith("2.13")) Some(dialects.Scala212)
       if (scalaVersion.startsWith("2.12")) Some(dialects.Scala212)
       else if (scalaVersion.startsWith("2.11")) Some(dialects.Scala211)
       else if (scalaVersion.startsWith("2.10")) Some(dialects.Scala210)

@@ -1,8 +1,7 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
 
 import play.api.libs.json._
-import buildinfo.BuildInfo
+import com.olegych.scastie.buildinfo.BuildInfo
 
 import System.{lineSeparator => nl}
 
@@ -132,7 +131,7 @@ case class Inputs(
 
     s"""|$targetConfig
         |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
-        |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.13")
+        |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.14")
         |addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.version}")
         |$sbtPluginsConfigExtra
         |""".stripMargin

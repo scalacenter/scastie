@@ -1,5 +1,4 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
 
 import com.olegych.scastie.buildinfo.BuildInfo
 

@@ -1,5 +1,4 @@
-package com.olegych.scastie
-package api
+package com.olegych.scastie.api
 
 import java.io.{PrintWriter, StringWriter}
 import play.api.libs.json._

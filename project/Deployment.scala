@@ -1,6 +1,8 @@
 import sbt._
 import Keys._
 
+import SbtShared.gitHashNow
+
 import java.io.File
 import java.nio.file._
 import java.nio.file.attribute._
@@ -11,22 +13,6 @@ import sbtdocker.DockerKeys.{docker, dockerBuildAndPush, imageNames}
 import sbtdocker.ImageName
 
 object Deployment {
-
-  def gitIsDirty(): Boolean =
-    Process("git diff-files --quiet").! == 1
-
-  def gitHash(): String = {
-    import sys.process._
-    if (!sys.env.contains("CI")) {
-
-      val indexState =
-        if (gitIsDirty()) "-dirty"
-        else ""
-
-      Process("git rev-parse --verify HEAD").lines.mkString("") + indexState
-    } else "CI"
-  }
-
   def settings(server: Project,
                sbtRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
     deploy := deployTask(server, sbtRunner).value,
@@ -183,7 +169,7 @@ class Deployment(rootFolder: File,
     val runnersPortsEnd = runnersPortsStart + runnersPortsSize
 
     val dockerImagePath =
-      s"$dockerNamespace/$dockerRepository:${Deployment.gitHash()}"
+      s"$dockerNamespace/$dockerRepository:$gitHashNow"
 
     val sentryDsn = getSentryDsn(getSecretConfig())
 
