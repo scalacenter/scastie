@@ -37,7 +37,7 @@ class EnsimeActorTests()
   test("autocomplete after restart") {
     autocompleteEnd("List(1).")(_.nonEmpty)
     autocompleteEnd("List(1).", ScalaTarget.Js.default)(_.nonEmpty)
-    ^ returns None
+    // ^ returns None
     autocompleteEnd("List(1).")(_.nonEmpty)
   }
 

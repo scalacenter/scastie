@@ -7,5 +7,6 @@ addSbtPlugin("io.spray" % "sbt-revolver" % "0.8.0")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.19")
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.1")
 addSbtPlugin("org.irundaia.sbt" % "sbt-sassify" % "1.4.8")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.0-M2")
 
 libraryDependencies += "com.typesafe" % "config" % "1.3.1"
