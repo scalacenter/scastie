@@ -1,3 +1,5 @@
+import sbt.Keys._
+
 import ScalaJSHelper._
 import Deployment._
 import SbtShared._
@@ -5,7 +7,7 @@ import SbtShared._
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
-import sbt.Keys._
+
 import scala.util.Try
 
 val scalaTestVersion = "3.0.1"
@@ -87,8 +89,29 @@ lazy val runnerRuntimeDependencies = Seq(
 
 val dockerOrg = "scalacenter"
 val dockerBaseImageName = "scastie-docker-sbt"
-val sbtVersion = "0.13.16"
-val sbtVersionFlat = sbtVersion.replaceAllLiterally(".", "")
+
+lazy val foobar = project
+  .settings(baseSettings)
+  .settings(
+    imageNames in docker := Seq(
+      ImageName(
+        namespace = Some("scalacenter"),
+        repository = "scastie-sbt-runner",
+        tag = Some(gitHashNow)
+      )
+    ),
+    dockerfile in docker := Def.task {
+      DockerHelper(
+        sbtTargetDir = target.value.toPath,
+        ivyHome = ivyPaths.value.ivyHome.get.toPath,
+        organization = organization.value,
+        artifact = assembly.value.toPath,
+        sbtScastie = (moduleName in sbtScastie).value
+      )
+    }.value
+    // .dependsOn(runnerRuntimeDependencies: _*)
+  )
+  .enablePlugins(sbtdocker.DockerPlugin)
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
@@ -107,9 +130,8 @@ lazy val sbtRunner = project
       akka("slf4j"),
       akkaHttp,
       "com.geirsson" %% "scalafmt-core" % "1.1.0",
-      // sbt-ensime 1.12.14 creates .ensime with 2.0.0-M4 server jar
-      "org.ensime" %% "jerky" % "2.0.0-M4",
-      "org.ensime" %% "s-express" % "2.0.0-M4"
+      "org.ensime" %% "jerky" % latestEnsime,
+      "org.ensime" %% "s-express" % latestEnsime
     ),
     imageNames in docker := Seq(
       ImageName(
@@ -127,93 +149,6 @@ lazy val sbtRunner = project
       case x => MergeStrategy.first
     },
     test in assembly := {},
-    dockerfile in docker := Def
-      .task {
-        val base = (baseDirectory in ThisBuild).value
-        val ivy = ivyPaths.value.ivyHome.get
-
-        val generatedProjects = new GenerateProjects(base)
-        generatedProjects.write
-
-        val org = organization.value
-        val artifact = assembly.value
-        val artifactTargetPath = s"/app/${artifact.name}"
-
-        val logbackConfDestination = "/home/scastie/logback.xml"
-
-        new Dockerfile {
-          from("openjdk:8u131-jdk-alpine")
-
-          // Install ca-certificates for wget https
-          run("apk update")
-          run("apk --update upgrade")
-          run("apk add ca-certificates")
-          run("update-ca-certificates")
-          run("apk add openssl")
-
-          // Misc tools
-          run("apk add bash")
-          run("apk add ncurses")
-          run("apk add nodejs")
-          run("apk add curl")
-          run("apk add graphviz")
-
-          // fonts for ref-tree
-          run("apk add ttf-dejavu")
-          run("apk add font-adobe-100dpi")
-          run("apk add git")
-          run("apk add procps")
-          run("""|git clone --depth 1 --branch release https://github.com/adobe-fonts/source-code-pro.git /usr/share/fonts/source-code-pro && \
-                 |rm -rf /usr/share/fonts/source-code-pro/.git && \
-                 |fc-cache -f -v /usr/share/fonts/source-code-pro""".stripMargin)
-
-          run(
-            """|apk update && apk add --no-cache fontconfig && \
-               |mkdir -p /usr/share && \
-               |cd /usr/share && \
-               |curl -L https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/2.11/phantomjs-alpine-x86_64.tar.bz2 | tar xj && \
-               |ln -s /usr/share/phantomjs/phantomjs /usr/bin/phantomjs""".stripMargin
-          )
-
-          run(
-            s"wget https://cocl.us/sbt${sbtVersionFlat}tgz -O /tmp/sbt-${sbtVersion}.tgz"
-          )
-
-          run("mkdir -p /app/sbt")
-          run(s"tar -xzvf /tmp/sbt-$sbtVersion.tgz -C /app/sbt")
-          run("ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt")
-
-          run("addgroup -g 433 scastie")
-          run("adduser -h /home/scastie -G scastie -D -u 433 -s /bin/sh scastie")
-
-          user("scastie")
-
-          env("LANG", "en_US.UTF-8")
-
-          add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
-
-          // add(sbtGlobal, "/home/scastie/.sbt")
-          val dest = "/home/scastie/projects"
-          add(generatedProjects.root, dest)
-
-          generatedProjects.projects.foreach(generatedProject => 
-            run(generatedProject.runCmd(dest))
-          )
-
-          add(artifact, artifactTargetPath)
-
-          add(base / "deployment" / "logback.xml", logbackConfDestination)
-
-          entryPoint("java",
-                     "-Xmx256M",
-                     "-Xms256M",
-                     s"-Dlogback.configurationFile=$logbackConfDestination",
-                     "-jar",
-                     artifactTargetPath)
-        }
-      }
-      .dependsOn(runnerRuntimeDependencies: _*)
-      .value,
     test in Test := (test in Test)
       .dependsOn(runnerRuntimeDependencies: _*)
       .value,

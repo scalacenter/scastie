@@ -130,8 +130,8 @@ case class Inputs(
     val targetConfig = target.sbtPluginsConfig
 
     s"""|$targetConfig
-        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
-        |addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.14")
+        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "${BuildInfo.latestCoursier}")
+        |addSbtPlugin("org.ensime" % "sbt-ensime" % "${BuildInfo.latestSbtEnsime}")
         |addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.version}")
         |$sbtPluginsConfigExtra
         |""".stripMargin
