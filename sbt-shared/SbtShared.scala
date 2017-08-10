@@ -28,6 +28,13 @@ object SbtShared {
   val latestScalaJs = "0.6.19"
   val latestDotty = "0.2.0-RC1"
 
+  // sbt-ensime 1.12.14 creates .ensime with 2.0.0-M4 server jar
+  val latestSbtEnsime = "1.12.14"
+  val latestEnsime = "2.0.0-M4"
+  val latestCoursier = "1.0.0-RC10"
+
+  val sbtVersion = "0.13.16"
+
   val runtimeProjectName = "runtime-scala"
 
   def gitIsDirty(): Boolean = {
@@ -110,17 +117,16 @@ object SbtShared {
       } else projectName
 
     val extra =
-      if(fromSbt) "-sbt"
+      if (fromSbt) "-sbt"
       else ""
 
     val projectId = projectId0 + extra
-
 
     def src(config: String): Def.Initialize[File] = Def.setting {
       val base0 = (baseDirectory in ThisBuild).value
 
       val base =
-        if(fromSbt) base0.getParentFile
+        if (fromSbt) base0.getParentFile
         else base0
 
       base / projectName / "src" / config / "scala"
@@ -135,11 +141,13 @@ object SbtShared {
       val guess1 = base.resolve(to)
       val guess2 = base.getParent.resolve(to)
 
-      val sbtPropertiesFile = 
+      val sbtPropertiesFile =
         if (Files.isRegularFile(guess1)) guess1
         else if (Files.isRegularFile(guess2)) guess2
         else {
-          sys.error(s"cannot find $sbtPropertiesFileName in $guess1 and $guess2")
+          sys.error(
+            s"cannot find $sbtPropertiesFileName in $guess1 and $guess2"
+          )
         }
 
       val prop = new Properties()
@@ -165,7 +173,11 @@ object SbtShared {
           "defaultScalaVersion" -> latest212,
           "defaultScalaJsVersion" -> latestScalaJs,
           "defaultDottyVersion" -> latestDotty,
-          "sbtVersion" -> readSbtVersion((baseDirectory in ThisBuild).value.toPath),
+          "latestCoursier" -> latestCoursier,
+          "latestSbtEnsime" -> latestSbtEnsime,
+          "sbtVersion" -> readSbtVersion(
+            (baseDirectory in ThisBuild).value.toPath
+          ),
           BuildInfoKey.action("gitHash") { gitHashNow }
         ),
         buildInfoPackage := "com.olegych.scastie.buildinfo",

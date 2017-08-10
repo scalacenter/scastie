@@ -351,26 +351,52 @@ object Main {
     val inputs = collection.mutable.Buffer.empty[Path]
     val outputs = collection.mutable.Buffer.empty[Path]
 
+    /*
+
+    _anonymous_
+      MSTWUrJdQ6uIfeIRTr5n4g
+        input.json
+        output.json
+
+    ches
+      project_7xo3oHKVRgmQRxZYUxAnRA/
+      project_7xo3oHKVRgmQRxZYUxAnRA.zip
+
+      7xo3oHKVRgmQRxZYUxAnRA
+        0
+          input.json
+
+    .snapshot (epfl backup)
+
+    */
+
+    def addSnippet(dir: Path): Unit = {
+      val in = dir.resolve("input.json")
+      if (Files.isRegularFile(in)) {
+        inputs += in
+      }
+      val out = dir.resolve("output.json")
+      if (Files.isRegularFile(out)) {
+        outputs += out
+      }
+    }
+
     val ds = Files.newDirectoryStream(dir)
     ds.asScala.foreach { user =>
       println(user)
+
       if (!(user.getFileName.toString == ".snapshot")) {
         val userStream = Files.newDirectoryStream(user)
-        userStream.asScala.foreach { base =>
-          if (Files.isDirectory(base)) {
-            if (!base.getFileName.toString.startsWith("project_")) {
-              val baseStream = Files.newDirectoryStream(base)
-              baseStream.asScala.foreach { sid =>
-                val in = sid.resolve("input.json")
-                if (Files.isRegularFile(in)) {
-                  inputs += in
-                }
-                val out = sid.resolve("output.json")
-                if (Files.isRegularFile(out)) {
-                  outputs += out
-                }
+        userStream.asScala.foreach { base64UUID =>
+          if (Files.isDirectory(base64UUID)) {
+            if (!base64UUID.getFileName.toString.startsWith("project_")) {
+              val baseStream = Files.newDirectoryStream(base64UUID)
+              baseStream.asScala.foreach { update =>
+                addSnippet(update)
               }
               baseStream.close
+
+              addSnippet(base64UUID)
             }
           }
         }

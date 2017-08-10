@@ -8,14 +8,21 @@ import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
 
 import SbtShared._
 
-class GenerateProjects(base: File) {
-  val root: File = base / "projects"
+class GenerateProjects(sbtTargetDir: Path) {
+  val projectTarget: Path = sbtTargetDir.resolve("projects")
+  val sbtGlobal: Path = sbtTargetDir.resolve(".sbt")
 
-  def write: Unit = {
+  private val globalPlugins = sbtGlobal.resolve("0.13/plugins/plugins.sbt")
 
-  }
+  Files.createDirectories(globalPlugins.getParent)
 
-  def projects: List[GeneratedProject] = {
+  val plugins =
+    s"""|addSbtPlugin("io.get-coursier" % "sbt-coursier" % "$latestCoursier")
+        |addSbtPlugin("org.ensime" % "sbt-ensime" % "$latestSbtEnsime")""".stripMargin
+
+  Files.write(globalPlugins, plugins.getBytes)
+
+  val projects: List[GeneratedProject] = {
     val helloWorld =
       """|object Main {
          |  def main(args: Array[String]): Unit = {
@@ -24,11 +31,11 @@ class GenerateProjects(base: File) {
          |}
          |""".stripMargin
 
-    val default: Inputs = Inputs.default.copy(code = helloWorld)
+    val default = Inputs.default.copy(code = helloWorld)
 
     def scala(version: String): Inputs =
       default.copy(target = ScalaTarget.Jvm(version))
-      
+
     val scala210 = scala(sbt210)
     val scala211 = scala(latest211)
     val scala212 = scala(latest212)
@@ -44,25 +51,30 @@ class GenerateProjects(base: File) {
         target = ScalaTarget.Typelevel.default
       )
 
-    val scalaJs = 
+    val scalaJs =
       default.copy(
         target = ScalaTarget.Js.default
       )
 
     List(
-      scala210,
-      scala211,
-      scala212,
-      scala213,
-      dotty,
-      typelevel,
-      scalaJs
-    ).map(inputs => new GeneratedProject(inputs))
+      (scala210, "scala210"),
+      (scala211, "scala211"),
+      (scala212, "scala212"),
+      (scala213, "scala213"),
+      (dotty, "dotty"),
+      (typelevel, "typelevel"),
+      (scalaJs, "scalaJs")
+    ).map {
+      case (inputs, name) =>
+        new GeneratedProject(inputs, projectTarget.resolve(name))
+    }
   }
+
+  def generateSbtProjects(): Unit =
+    projects.foreach(_.generateSbtProject)
 }
 
-class GeneratedProject(inputs: Inputs) {
-  private val sbtDir = Files.createTempDirectory("scastie")
+class GeneratedProject(inputs: Inputs, sbtDir: Path) {
   private val buildFile = sbtDir.resolve("build.sbt")
   private val projectDir = sbtDir.resolve("project")
   private val pluginFile = projectDir.resolve("plugins.sbt")
@@ -83,8 +95,9 @@ class GeneratedProject(inputs: Inputs) {
     Files.write(codeFile, inputs.code.getBytes)
   }
 
-
   def runCmd(dest: String): String = {
-    """cd $dest; sbt ";ensimeConfig;${inputs.sbtRunCommand}""""
+    val dir = sbtDir.getFileName
+
+    s"""cd $dest/$dir && sbt ";ensimeConfig;${inputs.target.sbtRunCommand}""""
   }
 }

@@ -301,7 +301,7 @@ object ScalaTarget {
     def sbtPluginsConfig: String =
       s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
 
-    def sbtRunCommand: String = "run"    
+    def sbtRunCommand: String = "run"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
