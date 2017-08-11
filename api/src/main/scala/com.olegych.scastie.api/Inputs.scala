@@ -88,6 +88,13 @@ case class Inputs(
     )
   }
 
+  def hasEnsimeSupport: Boolean = {
+    // for now
+    isDefault
+
+    // target.hasEnsimeSupport
+  }
+
   def sbtConfig: String = {
     val targetConfig = target.sbtConfig
 
@@ -115,7 +122,9 @@ case class Inputs(
             )
       }
 
-    val ensimeConfig = "ensimeIgnoreMissingDirectories := true"
+    val ensimeConfig =
+      if (hasEnsimeSupport) "ensimeIgnoreMissingDirectories := true"
+      else ""
 
     s"""|$targetConfig
         |
@@ -127,13 +136,31 @@ case class Inputs(
   }
 
   def sbtPluginsConfig: String = {
+    sbtPluginsConfig0(withSbtScasite = true)
+  }
+
+  def sbtPluginsConfigWithoutSbtScastie: String = {
+    sbtPluginsConfig0(withSbtScasite = false)
+  }
+
+  private def sbtPluginsConfig0(withSbtScasite: Boolean): String = {
     val targetConfig = target.sbtPluginsConfig
+
+    val ensimeConfig =
+      if (hasEnsimeSupport)
+        s"""addSbtPlugin("org.ensime" % "sbt-ensime" % "${BuildInfo.latestSbtEnsime}")"""
+      else ""
+
+    val sbtScastie =
+      if (withSbtScasite)
+        s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.version}")"""
+      else ""
 
     s"""|$targetConfig
         |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "${BuildInfo.latestCoursier}")
-        |addSbtPlugin("org.ensime" % "sbt-ensime" % "${BuildInfo.latestSbtEnsime}")
-        |addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.version}")
+        |$sbtScastie
         |$sbtPluginsConfigExtra
+        |$ensimeConfig
         |""".stripMargin
 
   }

@@ -3,6 +3,8 @@ package com.olegych.scastie.sbt
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.api._
 
+import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
+
 import scala.util.Random
 import System.{lineSeparator => nl}
 
@@ -27,7 +29,7 @@ class Sbt(defaultConfig: Inputs) {
   private val projectDir = sbtDir.resolve("project")
   Files.createDirectories(projectDir)
 
-  write(projectDir.resolve("build.properties"), s"sbt.version = 0.13.15")
+  write(projectDir.resolve("build.properties"), s"sbt.version = $sbtVersion")
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
 
