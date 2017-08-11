@@ -14,6 +14,7 @@ sealed trait ScalaTarget {
   def sbtPluginsConfig: String
   def sbtRunCommand: String
   def runtimeDependency: Option[ScalaDependency]
+  def hasEnsimeSupport: Boolean
 
   protected def sbtConfigScalaVersion(scalaVersion: String): String =
     s"""scalaVersion := "$scalaVersion""""
@@ -172,6 +173,12 @@ object ScalaTarget {
   }
 
   case class Jvm(scalaVersion: String) extends ScalaTarget {
+
+    def hasEnsimeSupport: Boolean = {
+      scalaVersion.startsWith("2.12") ||
+      scalaVersion.startsWith("2.11")
+    }
+
     def targetType = ScalaTargetType.JVM
     def scaladexRequest =
       Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
@@ -193,10 +200,13 @@ object ScalaTarget {
   }
 
   object Typelevel {
-    def default = ScalaTarget.Typelevel(scalaVersion = defaultScalaVersion)
+    def default = ScalaTarget.Typelevel(scalaVersion = "2.12.3-bin-typelevel-4")
   }
 
   case class Typelevel(scalaVersion: String) extends ScalaTarget {
+
+    def hasEnsimeSupport: Boolean =
+      Jvm(scalaVersion).hasEnsimeSupport
 
     def targetType =
       ScalaTargetType.Typelevel
@@ -237,6 +247,9 @@ object ScalaTarget {
 
   case class Js(scalaVersion: String, scalaJsVersion: String)
       extends ScalaTarget {
+
+    def hasEnsimeSupport: Boolean =
+      Jvm(scalaVersion).hasEnsimeSupport
 
     def targetType = ScalaTargetType.JS
 
@@ -282,6 +295,9 @@ object ScalaTarget {
   case class Native(scalaVersion: String, scalaNativeVersion: String)
       extends ScalaTarget {
 
+    def hasEnsimeSupport: Boolean =
+      Jvm(scalaVersion).hasEnsimeSupport
+
     def targetType =
       ScalaTargetType.Native
 
@@ -315,6 +331,9 @@ object ScalaTarget {
   }
 
   case class Dotty(dottyVersion: String) extends ScalaTarget {
+
+    def hasEnsimeSupport: Boolean = false
+
     def targetType =
       ScalaTargetType.Dotty
 

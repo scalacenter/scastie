@@ -60,7 +60,7 @@ object MainPanel {
         compilationInfos = state.outputs.compilationInfos,
         runtimeError = state.outputs.runtimeError,
         completions = state.completions,
-        isDefaultConfiguration = state.inputs.isDefault,
+        hasEnsimeSupport = state.inputs.hasEnsimeSupport,
         run = backend.run,
         saveOrUpdate = backend.saveOrUpdate,
         clear = backend.clear,

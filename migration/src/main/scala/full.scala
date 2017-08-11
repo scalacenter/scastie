@@ -368,7 +368,7 @@ object Main {
 
     .snapshot (epfl backup)
 
-    */
+     */
 
     def addSnippet(dir: Path): Unit = {
       val in = dir.resolve("input.json")
@@ -388,16 +388,16 @@ object Main {
       if (!(user.getFileName.toString == ".snapshot")) {
         val userStream = Files.newDirectoryStream(user)
         userStream.asScala.foreach { base64UUID =>
-          if (Files.isDirectory(base64UUID)) {
-            if (!base64UUID.getFileName.toString.startsWith("project_")) {
-              val baseStream = Files.newDirectoryStream(base64UUID)
-              baseStream.asScala.foreach { update =>
-                addSnippet(update)
-              }
-              baseStream.close
+          if (Files.isDirectory(base64UUID) &&
+              !base64UUID.getFileName.toString.startsWith("project_")) {
 
-              addSnippet(base64UUID)
+            val baseStream = Files.newDirectoryStream(base64UUID)
+            baseStream.asScala.foreach { update =>
+              addSnippet(update)
             }
+            baseStream.close
+
+            addSnippet(base64UUID)
           }
         }
         userStream.close

@@ -7,7 +7,8 @@ import java.nio.file.{Path, Files}
 import scala.sys.process._
 
 object DockerHelper {
-  def apply(sbtTargetDir: Path,
+  def apply(baseDirectory: Path,
+            sbtTargetDir: Path,
             sbtScastie: String,
             ivyHome: Path,
             organization: String,
@@ -28,9 +29,9 @@ object DockerHelper {
     /*
       sbt-scastie / scala_2.10 / sbt_0.13 / 0.25.0
       api_2.11    / 0.25.0
-  
+
           0             1           2         3
-    */
+     */
 
     CopyRecursively(
       source = ivyHome.resolve(s"local/$organization"),
@@ -40,8 +41,8 @@ object DockerHelper {
         lazy val dirName = dir.getFileName.toString
 
         if (depth == 1) {
-          dirName == versionNow || 
-            isSbtScastiePath
+          dirName == versionNow ||
+          isSbtScastiePath
         } else if (depth == 3 && isSbtScastiePath) {
           dirName == versionNow
         } else {
@@ -51,6 +52,16 @@ object DockerHelper {
     )
 
     val containerUsername = "scastie"
+
+    val sbtGlobal = sbtTargetDir.resolve(".sbt")
+    val globalPlugins = sbtGlobal.resolve("0.13/plugins/plugins.sbt")
+    Files.createDirectories(globalPlugins.getParent)
+
+    val plugins =
+      s"""|addSbtPlugin("io.get-coursier" % "sbt-coursier" % "$latestCoursier")
+          |addSbtPlugin("org.ensime" % "sbt-ensime" % "$latestSbtEnsime")""".stripMargin
+
+    Files.write(globalPlugins, plugins.getBytes)
 
     new Dockerfile {
       from("openjdk:8u131-jdk-alpine")
@@ -90,7 +101,7 @@ object DockerHelper {
       )
 
       runRaw("mkdir -p /app/sbt")
-      
+
       runRaw(
         s"wget https://cocl.us/sbt${sbtVersionFlat}tgz -O /tmp/sbt-${sbtVersion}.tgz"
       )
@@ -98,56 +109,56 @@ object DockerHelper {
 
       runRaw("ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt")
 
+      val userHome = s"/home/$containerUsername"
+
       runRaw(s"addgroup -g 433 $containerUsername")
       runRaw(
         s"adduser -h $userHome -G $containerUsername -D -u 433 -s /bin/sh $containerUsername"
       )
-      
-      val userHome = s"/home/$containerUsername"
+
+      def chown(dir: String) = {
+        user("root")
+        runRaw(s"chown -R $containerUsername:$containerUsername $userHome/$dir")
+        user(containerUsername)
+      }
+
+      add(sbtGlobal.toFile, s"$userHome/.sbt")
+      chown(".sbt")
 
       user(containerUsername)
       workDir(userHome)
       env("LANG", "en_US.UTF-8")
+      env("HOME", userHome)
 
+      runRaw("sbt scalaVersion")
 
-      add(generatedProjects.sbtGlobal.toFile, s"$userHome/.sbt")
       val dest = s"$userHome/projects"
       add(generatedProjects.projectTarget.toFile, dest)
+      chown("projects")
 
-      def chownUser(dir: String): Unit = {
-        user("root")
+      runRaw("sbt scalaVersion")
 
-        runRaw(
-          s"chown -R $containerUsername:$containerUsername $userHome/$dir"
-        )
-
-        user(containerUsername)
-      }
-
-      chownUser("")
-
-      runRaw("sbt sbtVersion")
+      generatedProjects.projects.foreach(
+        generatedProject => runRaw(generatedProject.runCmd(dest))
+      )
 
       add(ivyLocalTemp.toFile, s"$userHome/.ivy2/local/$organization")
-      chownUser(s".ivy2/local/$organization")
 
+      add(artifact.toFile, artifactTargetPath)
 
-      // generatedProjects.projects.foreach(
-      //   generatedProject => runRaw(generatedProject.runCmd(dest))
-      // )
+      add(
+        baseDirectory.resolve("deployment/logback.xml").toFile,
+        logbackConfDestination
+      )
 
-      // // add(artifact, artifactTargetPath)
-
-      // // add(base / "deployment" / "logback.xml", logbackConfDestination)
-
-      // // entryPoint(
-      // //   "java",
-      // //   "-Xmx256M",
-      // //   "-Xms256M",
-      // //   s"-Dlogback.configurationFile=$logbackConfDestination",
-      // //   "-jar",
-      // //   artifactTargetPath
-      // // )
+      entryPoint(
+        "java",
+        "-Xmx256M",
+        "-Xms256M",
+        s"-Dlogback.configurationFile=$logbackConfDestination",
+        "-jar",
+        artifactTargetPath
+      )
     }
   }
 }

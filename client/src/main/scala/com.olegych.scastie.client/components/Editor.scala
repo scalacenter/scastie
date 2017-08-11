@@ -38,7 +38,7 @@ final case class Editor(isDarkTheme: Boolean,
                         compilationInfos: Set[api.Problem],
                         runtimeError: Option[api.RuntimeError],
                         completions: List[api.Completion],
-                        isDefaultConfiguration: Boolean,
+                        hasEnsimeSupport: Boolean,
                         run: Callback,
                         saveOrUpdate: Callback,
                         clear: Callback,
@@ -412,15 +412,16 @@ object Editor {
           }
 
         CodeMirror.commands.autocompleteDot = (editor: CodeMirrorEditor2) => {
-          if (props.isDefaultConfiguration) {
-            editor.getDoc().replaceSelection(".")
+          editor.getDoc().replaceSelection(".")
+
+          if (props.hasEnsimeSupport) {
             props.codeChange(editor.getDoc().getValue()).runNow()
             autocomplete(editor)
           }
         }
 
         CodeMirror.commands.autocomplete = (editor: CodeMirrorEditor2) => {
-          if (props.isDefaultConfiguration) {
+          if (props.hasEnsimeSupport) {
             autocomplete(editor)
           }
         }

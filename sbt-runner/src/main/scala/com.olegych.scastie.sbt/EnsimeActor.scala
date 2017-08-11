@@ -376,24 +376,28 @@ class EnsimeActor(system: ActorSystem,
         taskId
         ) => {
 
-      log.info("TypeAtPoint request at EnsimeActor")
-      processRequest(
-        taskId,
-        sender,
-        inputs,
-        position,
-        (code: String, pos: Int) => {
-          SymbolAtPointReq(
-            file = Right(
-              SourceFileInfo(
-                RawFile(new File(codeFile.get.toString).toPath),
-                Some(code)
-              )
-            ),
-            point = pos
-          )
-        }
-      )
+      if (inputs.hasEnsimeSupport) {
+        log.info("TypeAtPoint request at EnsimeActor")
+        processRequest(
+          taskId,
+          sender,
+          inputs,
+          position,
+          (code: String, pos: Int) => {
+            SymbolAtPointReq(
+              file = Right(
+                SourceFileInfo(
+                  RawFile(new File(codeFile.get.toString).toPath),
+                  Some(code)
+                )
+              ),
+              point = pos
+            )
+          }
+        )
+      } else {
+        sender ! EnsimeTaskResponse(None, taskId)
+      }
     }
 
     case EnsimeTaskRequest(
@@ -401,24 +405,28 @@ class EnsimeActor(system: ActorSystem,
         taskId
         ) => {
 
-      log.info("Completion request at EnsimeActor")
-      processRequest(
-        taskId,
-        sender,
-        inputs,
-        position,
-        (code: String, pos: Int) => {
-          CompletionsReq(
-            fileInfo =
-              SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
-                             Some(code)),
-            point = pos,
-            maxResults = 100,
-            caseSens = false,
-            reload = false
-          )
-        }
-      )
+      if (inputs.hasEnsimeSupport) {
+        log.info("Completion request at EnsimeActor")
+        processRequest(
+          taskId,
+          sender,
+          inputs,
+          position,
+          (code: String, pos: Int) => {
+            CompletionsReq(
+              fileInfo =
+                SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
+                               Some(code)),
+              point = pos,
+              maxResults = 100,
+              caseSens = false,
+              reload = false
+            )
+          }
+        )
+      } else {
+        sender ! EnsimeTaskResponse(None, taskId)
+      }
     }
 
     case EnsimeTaskRequest(UpdateEnsimeConfigRequest(inputs), taskId) => {

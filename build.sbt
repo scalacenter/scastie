@@ -90,29 +90,6 @@ lazy val runnerRuntimeDependencies = Seq(
 val dockerOrg = "scalacenter"
 val dockerBaseImageName = "scastie-docker-sbt"
 
-lazy val foobar = project
-  .settings(baseSettings)
-  .settings(
-    imageNames in docker := Seq(
-      ImageName(
-        namespace = Some("scalacenter"),
-        repository = "scastie-sbt-runner",
-        tag = Some(gitHashNow)
-      )
-    ),
-    dockerfile in docker := Def.task {
-      DockerHelper(
-        sbtTargetDir = target.value.toPath,
-        ivyHome = ivyPaths.value.ivyHome.get.toPath,
-        organization = organization.value,
-        artifact = assembly.value.toPath,
-        sbtScastie = (moduleName in sbtScastie).value
-      )
-    }.value
-    // .dependsOn(runnerRuntimeDependencies: _*)
-  )
-  .enablePlugins(sbtdocker.DockerPlugin)
-
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
@@ -140,6 +117,19 @@ lazy val sbtRunner = project
         tag = Some(gitHashNow)
       )
     ),
+    dockerfile in docker := Def
+      .task {
+        DockerHelper(
+          baseDirectory = (baseDirectory in ThisBuild).value.toPath,
+          sbtTargetDir = target.value.toPath,
+          ivyHome = ivyPaths.value.ivyHome.get.toPath,
+          organization = organization.value,
+          artifact = assembly.value.toPath,
+          sbtScastie = (moduleName in sbtScastie).value
+        )
+      }
+      .dependsOn(runnerRuntimeDependencies: _*)
+      .value,
     assemblyMergeStrategy in assembly := {
       case PathList("META-INF", xs @ _*) => MergeStrategy.discard
       case in @ PathList("reference.conf", xs @ _*) => {

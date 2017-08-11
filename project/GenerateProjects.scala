@@ -10,17 +10,6 @@ import SbtShared._
 
 class GenerateProjects(sbtTargetDir: Path) {
   val projectTarget: Path = sbtTargetDir.resolve("projects")
-  val sbtGlobal: Path = sbtTargetDir.resolve(".sbt")
-
-  private val globalPlugins = sbtGlobal.resolve("0.13/plugins/plugins.sbt")
-
-  Files.createDirectories(globalPlugins.getParent)
-
-  val plugins =
-    s"""|addSbtPlugin("io.get-coursier" % "sbt-coursier" % "$latestCoursier")
-        |addSbtPlugin("org.ensime" % "sbt-ensime" % "$latestSbtEnsime")""".stripMargin
-
-  Files.write(globalPlugins, plugins.getBytes)
 
   val projects: List[GeneratedProject] = {
     val helloWorld =
@@ -31,7 +20,11 @@ class GenerateProjects(sbtTargetDir: Path) {
          |}
          |""".stripMargin
 
-    val default = Inputs.default.copy(code = helloWorld)
+    val default =
+      Inputs.default.copy(
+        code = helloWorld,
+        worksheetMode = false
+      )
 
     def scala(version: String): Inputs =
       default.copy(target = ScalaTarget.Jvm(version))
@@ -66,7 +59,10 @@ class GenerateProjects(sbtTargetDir: Path) {
       (scalaJs, "scalaJs")
     ).map {
       case (inputs, name) =>
-        new GeneratedProject(inputs, projectTarget.resolve(name))
+        new GeneratedProject(
+          inputs,
+          projectTarget.resolve(name)
+        )
     }
   }
 
@@ -89,7 +85,7 @@ class GeneratedProject(inputs: Inputs, sbtDir: Path) {
     )
 
     Files.write(buildFile, inputs.sbtConfig.getBytes)
-    Files.write(pluginFile, inputs.sbtPluginsConfig.getBytes)
+    Files.write(pluginFile, inputs.sbtPluginsConfigWithoutSbtScastie.getBytes)
 
     Files.createDirectories(codeFile.getParent)
     Files.write(codeFile, inputs.code.getBytes)
@@ -98,6 +94,10 @@ class GeneratedProject(inputs: Inputs, sbtDir: Path) {
   def runCmd(dest: String): String = {
     val dir = sbtDir.getFileName
 
-    s"""cd $dest/$dir && sbt ";ensimeConfig;${inputs.target.sbtRunCommand}""""
+    val ensimeCmd =
+      if (inputs.hasEnsimeSupport) ";ensimeConfig"
+      else ""
+
+    s"""cd $dest/$dir && sbt "$ensimeCmd;${inputs.target.sbtRunCommand}""""
   }
 }
