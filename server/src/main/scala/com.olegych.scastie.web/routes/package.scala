@@ -1,28 +1,38 @@
 package com.olegych.scastie.web
 
+import com.olegych.scastie.api._
+
+import akka.http.scaladsl._
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{PathMatcher, Route}
+
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.StatusCodes.NotFound
+
 import scala.io.Source
 import System.{lineSeparator => nl}
 
-import akka.http.scaladsl.model._
-import StatusCodes.NotFound
-
 package object routes {
-  def getResource(path: String): Option[String] = {
-    Option(getClass.getResourceAsStream(path)).map { stream =>
-      val source = Source.fromInputStream(stream)
-      val content = source.getLines.mkString(nl)
-      source.close()
-      content
-    }
-  }
+  def snippetId(pathStart: String)(f: SnippetId => Route): Route =
+    snippetIdBase(pathStart, p => p, p => p)(f)
 
-  private def html(content: String) =
-    HttpResponse(entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, content))
+  def snippetIdEnd(pathStart: String,
+                   pathEnd: String)(f: SnippetId => Route): Route =
+    snippetIdBase(pathStart, _ / pathEnd, _ / pathEnd)(f)
 
-  def serveStatic(content: Option[String]): HttpResponse = {
-    content match {
-      case Some(c) => html(c)
-      case None    => HttpResponse(status = NotFound)
-    }
+  private def snippetIdBase(
+      pathStart: String,
+      fp1: PathMatcher[Tuple1[String]] => PathMatcher[Tuple1[String]],
+      fp2: PathMatcher[(String, String, Option[Int])] => PathMatcher[
+        (String, String, Option[Int])
+      ]
+  )(f: SnippetId => Route): Route = {
+    concat(
+      path(fp1(pathStart / Segment))(uuid ⇒ f(SnippetId(uuid, None))),
+      path(fp2(pathStart / Segment / Segment / IntNumber.?))(
+        (user, uuid, update) ⇒
+          f(SnippetId(uuid, Some(SnippetUserPart(user, update.getOrElse(0)))))
+      )
+    )
   }
 }

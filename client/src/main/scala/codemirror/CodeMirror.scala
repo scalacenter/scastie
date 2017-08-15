@@ -7,8 +7,17 @@ import js.annotation._
 import js.{Dictionary, RegExp, UndefOr, |}
 
 @js.native
-@JSGlobal("CodeMirror")
+@JSImport("codemirror", JSImport.Namespace)
 object CodeMirror extends js.Object {
+
+  @js.native
+  class Pos extends js.Object {
+    var line: Int = js.native
+    var ch: Int = js.native
+  }
+
+  type Position = Pos
+
   var commands: js.Dynamic = js.native
   var keyMap: KeyMaps = js.native
   val Init: js.Object = js.native
@@ -51,13 +60,6 @@ trait KeyMaps extends js.Object {
   val sublime: js.Dictionary[String]
 }
 
-@js.native
-@JSGlobal("CodeMirror.Pos")
-class Position extends js.Object {
-  var line: Int = js.native
-  var ch: Int = js.native
-}
-
 @ScalaJSDefined
 trait LineHandle extends js.Object
 
@@ -69,7 +71,7 @@ trait LineWidget extends js.Object {
 @ScalaJSDefined
 trait TextMarker extends js.Object {
   def clear(): Unit
-  def find(): Position
+  def find(): CodeMirror.Position
   def getOptions(copyWidget: Boolean): TextMarkerOptions
 }
 

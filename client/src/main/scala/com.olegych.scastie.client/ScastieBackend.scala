@@ -122,8 +122,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
   private def connectProgress(snippetId: SnippetId): Callback = {
     EventStream.connect(
-      eventSourceUri = s"/progress-sse/${snippetId.url}",
-      websocketUri = s"/progress-ws/${snippetId.url}",
+      eventSourceUri = s"/api/progress-sse/${snippetId.url}",
+      websocketUri = s"/api/progress-ws/${snippetId.url}",
       handler = new EventStreamHandler[SnippetProgress] {
         val direct = scope.withEffectsImpure
 
@@ -162,8 +162,8 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
   def connectStatus: Callback = {
     EventStream.connect(
-      eventSourceUri = "/status-sse",
-      websocketUri = "/status-ws",
+      eventSourceUri = "/api/status-sse",
+      websocketUri = "/api/status-ws",
       handler = new EventStreamHandler[StatusProgress] {
         val direct = scope.withEffectsImpure
 

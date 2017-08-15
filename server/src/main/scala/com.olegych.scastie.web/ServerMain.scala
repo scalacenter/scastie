@@ -61,28 +61,20 @@ object ServerMain {
         name = "DispatchActor"
       )
 
-    val userFacingRoutes =
+    val routes = concat(
+      pathPrefix("api")(
+        concat(
+          new ApiRoutes(dispatchActor, userDirectives).routes,
+          new ProgressRoutes(progressActor).routes,
+          new DownloadRoutes(dispatchActor).routes,
+          new StatusRoutes(statusActor, userDirectives).routes,
+          new ScalaJsRoutes(dispatchActor).routes
+        )
+      ),
+      new OAuth2Routes(github, session).routes,
+      new ScalaLangRoutes(dispatchActor, userDirectives).routes,
       new FrontPageRoutes(production).routes
-
-    val programmaticRoutes =
-      concat(
-        new ApiRoutes(dispatchActor, userDirectives).routes,
-        DebugRoutes.routes,
-        new ProgressRoutes(progressActor).routes,
-        new DownloadRoutes(dispatchActor).routes,
-        new StatusRoutes(statusActor, userDirectives).routes,
-        new ScalaJsRoutes(dispatchActor).routes
-      )
-
-    val publicRoutes =
-      concat(
-        PublicRoutes.routes,
-        new OAuth2Routes(github, session).routes
-      )
-
-    val privateRoutes = concat(programmaticRoutes, userFacingRoutes)
-
-    val routes = concat(publicRoutes, privateRoutes)
+    )
 
     Await.result(Http().bindAndHandle(routes, "0.0.0.0", port), 1.seconds)
     logger.info(s"Scastie started (port: $port)")

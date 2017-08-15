@@ -1,6 +1,5 @@
 package com.olegych.scastie.web.routes
 
-import SnippetIdDirectives._
 import com.olegych.scastie.api._
 
 import akka.util.Timeout

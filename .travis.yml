@@ -7,10 +7,14 @@ scala:
 jdk:
   - oraclejdk8
 cache:
+  yarn: true
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot/
     - $HOME/.coursier/cache
 script:
   - bin/scalafmt --test
+  - git clone git@github.com:MasseGuillaume/scalajs-bundler.git
+  - git checkout dev-server-fix
+  - sbt publishLocal
   - sbt test:compile

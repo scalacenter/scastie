@@ -12,8 +12,10 @@ import codemirror.{
   TextMarker,
   TextMarkerOptions,
   Editor => CodeMirrorEditor2,
-  Position => CMPosition
 }
+
+import codemirror.CodeMirror.{Pos => CMPosition}
+
 import japgolly.scalajs.react._
 import vdom.all._
 import extra.{Reusability, StateSnapshot}
@@ -56,8 +58,39 @@ final case class Editor(isDarkTheme: Boolean,
   @inline def render: VdomElement = Editor.component(this)
 }
 
+/** Facade for the native nodejs modules API
+ *
+ * @see https://nodejs.org/api/modules.html
+ */
+@js.native
+trait JSModules extends js.Any {
+
+  /** Load a module by ID or path.
+   *
+   * @see https://nodejs.org/api/modules.html#modules_require
+   */
+  def require(path: String): Unit = js.native
+}
+
 object Editor {
-  CodeMirror.keyMap.sublime -= "Ctrl-L"
+
+  codemirror.Comment
+  codemirror.Dialog
+  codemirror.CloseBrackets
+  codemirror.MatchBrackets
+  codemirror.BraceFold
+  codemirror.FoldCode
+  codemirror.Search
+  codemirror.SearchCursor
+  codemirror.HardWrap
+  codemirror.ShowHint
+  codemirror.RunMode
+  codemirror.SimpleScrollBars
+  codemirror.MatchHighlighter
+  codemirror.Sublime
+  codemirror.CLike
+
+  // CodeMirror.keyMap.sublime -= "Ctrl-L"
 
   private var codemirrorTextarea: HTMLTextAreaElement = _
 
@@ -86,7 +119,8 @@ object Editor {
       message.style.opacity = "0"
     }
 
-    def show(editor: codemirror.Editor, pos: codemirror.Position): Unit = {
+    def show(editor: codemirror.Editor,
+             pos: codemirror.CodeMirror.Position): Unit = {
       editor.addWidget(pos, message, scrollIntoView = true)
       message.style.opacity = "1"
     }

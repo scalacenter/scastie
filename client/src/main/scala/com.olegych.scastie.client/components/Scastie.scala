@@ -201,7 +201,7 @@ object Scastie {
             )
           } yield ()
 
-        setTitle(state) >> loadSnippet.get.void
+        setTitle(state) >> loadSnippet.toCallback
       }
       .build
 }

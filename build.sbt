@@ -1,5 +1,3 @@
-import sbt.Keys._
-
 import ScalaJSHelper._
 import Deployment._
 import SbtShared._
@@ -7,6 +5,8 @@ import SbtShared._
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
+
+import scalajsbundler.util.JSON
 
 import scala.util.Try
 
@@ -31,7 +31,6 @@ lazy val scastie = project
     api213JVM,
     balancer,
     client,
-    codemirror,
     instrumentation,
     runtimeScala210JS,
     runtimeScala210JVM,
@@ -158,11 +157,6 @@ lazy val server = project
   .settings(packageScalaJS(client))
   .settings(
     javaOptions in reStart += "-Xmx512m",
-    reStart := reStart.dependsOn(WebKeys.assets in (client, Assets)).evaluated,
-    (packageBin in Universal) := (packageBin in Universal)
-      .dependsOn(WebKeys.assets in (client, Assets))
-      .value,
-    unmanagedResourceDirectories in Compile += (WebKeys.public in (client, Assets)).value,
     libraryDependencies ++= Seq(
       "org.json4s" %% "json4s-native" % "3.5.2",
       "ch.megard" %% "akka-http-cors" % "0.2.1",
@@ -173,7 +167,7 @@ lazy val server = project
       akka("slf4j")
     )
   )
-  .enablePlugins(SbtWeb, JavaServerAppPackaging)
+  .enablePlugins(JavaServerAppPackaging)
   .dependsOn(apiJVM, utils, balancer)
 
 lazy val balancer = project
@@ -193,92 +187,58 @@ lazy val storage = project
   )
   .dependsOn(apiJVM, utils, instrumentation)
 
-/* codemirror is a facade to the javascript rich editor codemirror*/
-lazy val codemirror = project
-  .settings(baseSettings)
-  .settings(
-    test := {},
-    scalacOptions -= "-Ywarn-dead-code",
-    jsDependencies ++= {
-      // latest: "5.26.0"
-      def codemirrorD(path: String): JSModuleID =
-        "org.webjars.bower" % "codemirror" % "5.18.2" % "compile" / s"$path.js" minified s"$path.js"
-
-      List(
-        "addon/comment/comment",
-        "addon/dialog/dialog",
-        "addon/edit/closebrackets",
-        "addon/edit/matchbrackets",
-        "addon/fold/brace-fold",
-        "addon/fold/foldcode",
-        "addon/hint/show-hint",
-        "addon/runmode/runmode",
-        "addon/scroll/simplescrollbars",
-        "addon/search/match-highlighter",
-        "addon/search/search",
-        "addon/search/searchcursor",
-        "addon/wrap/hardwrap",
-        "keymap/sublime",
-        "lib/codemirror",
-        "mode/clike/clike"
-      ).map(codemirrorD)
-    },
-    libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion,
-      "org.querki" %%% "querki-jsext" % "0.8"
-    ),
-    jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
-  )
-  .enablePlugins(ScalaJSPlugin)
-
-def react(artifact: String,
-          name: String,
-          configuration: Configuration = Compile): JSModuleID =
-  "org.webjars.bower" % "react" % "15.5.4" % configuration / s"$artifact.js" minified s"$artifact.min.js" commonJSName name
-
-def reactWithDepends(artifact: String,
-                     name: String,
-                     depends: String,
-                     configuration: Configuration = Compile): JSModuleID =
-  react(artifact, name, configuration).dependsOn(s"$depends.js")
-
 lazy val client = project
   .settings(baseSettings)
   .settings(
-    skip in packageJSDependencies := false,
-    jsDependencies ++= Seq(
-      react("react-with-addons", "React"),
-      reactWithDepends("react-dom", "ReactDOM", "react-with-addons"),
-      reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom"),
-      reactWithDepends("react-dom", "ReactDOM", "react-with-addons", Test),
-      reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom", Test),
-      RuntimeDOM % Test,
-      "org.webjars.bower" % "raven-js" % "3.11.0" /
-        "dist/raven.js" minified "dist/raven.min.js"
+    version in webpack := "3.5.5",
+    version in installWebpackDevServer := "2.7.1",
+    webpackConfigFile in startWebpackDevServer :=
+      Some(baseDirectory.value / "webpack-dev.config.js"),
+    webpackConfigFile in fastOptJS :=
+      Some(baseDirectory.value / "webpack-prod.config.js"),
+    webpackConfigFile in fullOptJS :=
+      Some(baseDirectory.value / "webpack-prod.config.js"),
+    webpackMonitoredDirectories += (resourceDirectory in Compile).value,
+    includeFilter in webpackMonitoredFiles := "*",
+    useYarn := true,
+    scalaJSUseMainModuleInitializer := true,
+    emitSourceMaps := false,
+    npmDependencies in Compile ++= Seq(
+      "bourbon" -> "4.3.4",
+      "bourbon-neat" -> "1.9.0",
+      "codemirror" -> "5.28.0",
+      "firacode" -> "1.205.0",
+      "font-awesome" -> "4.7.0",
+      "raven-js" -> "3.11.0",
+      "react" -> "15.6.1",
+      "react-dom" -> "15.6.1",
+      "typeface-roboto-slab" -> "0.0.35"
+    ),
+    npmDevDependencies in Compile ++= Seq(
+      "clean-webpack-plugin" -> "0.1.16",
+      "css-loader" -> "0.28.5",
+      "extract-text-webpack-plugin" -> "3.0.0",
+      "file-loader" -> "0.11.2",
+      "html-webpack-plugin" -> "2.30.1",
+      "node-sass" -> "4.5.3",
+      "resolve-url-loader" -> "2.1.0",
+      "sass-loader" -> "6.0.6",
+      "style-loader" -> "0.18.2",
+      "webpack-merge" -> "4.1.0"
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.0.0",
-      "com.github.japgolly.scalajs-react" %%% "test" % "1.0.0" % Test,
-      "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
-      "org.webjars" % "font-awesome" % "4.7.0",
-      "org.webjars.npm" % "firacode" % "1.205.0",
-      "org.webjars.bower" % "bourbon" % "3.1.8",
-      "org.webjars.bower" % "neat" % "1.8.0"
-    ),
-    requiresDOM := true,
-    scalaJSStage in Test := FastOptStage,
-    jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.0",
+      "org.querki" %%% "querki-jsext" % "0.8"
+    )
   )
-  .enablePlugins(ScalaJSPlugin, SbtWeb)
-  .dependsOn(codemirror, apiJS)
+  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
+  .dependsOn(apiJS)
 
 lazy val instrumentation = project
   .settings(baseSettings)
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      // see https://github.com/ensime/ensime-server/issues/1784
-      // not 1.8.0 because it depends on fastparse 0.4.4 and this breaks ensime (using fastparse 0.4.2)
       "org.scalameta" %% "scalameta" % "1.8.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )

@@ -1,6 +1,5 @@
 package com.olegych.scastie.web.routes
 
-import SnippetIdDirectives._
 import com.olegych.scastie.balancer.DownloadSnippet
 
 import akka.http.scaladsl.server.Directives._
