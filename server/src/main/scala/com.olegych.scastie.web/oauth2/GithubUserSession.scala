@@ -58,12 +58,13 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   private def readSessionsFile(): Array[(UUID, User)] = {
     if (Files.exists(usersSessions)) {
       val content = Files.readAllLines(usersSessions).toArray.mkString(nl)
-
       Json
         .fromJson[Array[(UUID, User)]](Json.parse(content))
         .asOpt
         .getOrElse(Array())
-    } else Array()
+    } else {
+      Array()
+    }
   }
 
   def appendSessionsFile(uuid: UUID, user: User): Unit = {
@@ -88,11 +89,11 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
   def addUser(user: User): UUID = {
     val uuid = UUID.randomUUID
     appendSessionsFile(uuid, user)
-    addBetaUser(user.login)
+    storeUser(user.login)
     uuid
   }
 
-  def addBetaUser(login: String): Unit = {
+  def storeUser(login: String): Unit = {
     val lines =
       if (Files.exists(usersFile)) Files.readAllLines(usersFile).asScala
       else Seq()
@@ -104,26 +105,6 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
                   StandardOpenOption.CREATE)
       ()
     }
-  }
-
-  def rank(login: String): (Option[Int], Int) = {
-    if (Files.exists(usersFile)) {
-
-      def findIndex(xs: Seq[String]): Option[Int] =
-        xs.zipWithIndex.find(_._1 == login).map(_._2 + 1)
-
-      val lines = Files.readAllLines(usersFile).asScala
-
-      (findIndex(lines), lines.size)
-
-    } else (None, 0)
-  }
-
-  def inBeta(user: User): Boolean = {
-    val betaCutoff = 4000
-    val (maybeRank, size) = rank(user.login)
-
-    maybeRank.map(_ <= betaCutoff).getOrElse(size <= betaCutoff)
   }
 
   def getUser(id: Option[UUID]): Option[User] =

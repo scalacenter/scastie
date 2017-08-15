@@ -4,6 +4,16 @@ package components
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 
+import scala.scalajs.js
+import js.annotation._
+@JSImport("resources/images/icon-scastie.png", JSImport.Namespace)
+@js.native
+object ScastieLogo extends js.Object
+
+object Assets {
+  def logoUrl = ScastieLogo.asInstanceOf[String]
+}
+
 final case class SideBar(isDarkTheme: Boolean,
                          status: StatusState,
                          toggleTheme: Callback,
@@ -77,7 +87,7 @@ object SideBar {
     nav(cls := "sidebar")(
       div(cls := "actions-container")(
         div(cls := "logo")(
-          img(src := "/assets/public/img/icon-scastie.png"),
+          img(src := Assets.logoUrl),
           h1("Scastie")
         ),
         ul(cls := "actions-top")(

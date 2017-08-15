@@ -22,8 +22,6 @@
 
 @import "solarized";
 @import "commonvars";
-@import "../../../../../target/web/web-modules/main/webjars/lib/bourbon/app/assets/stylesheets/_bourbon";
-@import "../../../../../target/web/web-modules/main/webjars/lib/neat/app/assets/stylesheets/_neat";
 
 body {
   font-family: $font-family;
@@ -31,6 +29,8 @@ body {
   line-height: $text-line-height;
   overflow: hidden;  
 }
+
+err
 
 a:hover {
   text-decoration: none;

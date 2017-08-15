@@ -7,29 +7,30 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 
 requirements: 
 
-* node
-* phantomjs (for running client tests) ```npm install -g phantomjs```
+* node & yarn (>= 0.28.4) (npm install -g yarn)
 * sbt
 * docker (for deploying)
-* sass (http://sass-lang.com/install)
+
+### Patch Scala.js Bundler
+
+git clone git@github.com:MasseGuillaume/scalajs-bundler.git
+git checkout dev-server-fix
+sbt publishLocal
 
 ```
 sbt
 > sbtRunner/reStart
+> client/fastOptJS::startWebpackDevServer
 > ~server/reStart
 ```
 
-open http://localhost:9000
+open http://localhost:8080
 
 ## Scalafmt
 
 Make sure to run `bin/scalafmt` to format your code.
 
 You can install a pre-commit hook with `bin/hooks.sh`
-
-## Scalafix
-
-run `sbt scalafix`
 
 ## Structure
 
@@ -41,7 +42,6 @@ run `sbt scalafix`
 ├── bin                 | scalfmt runner
 ├── build.sbt           | build definition
 ├── client              | Scala.js & scalajs-react code for the frontend 
-├── codemirror          | Codemirror facade
 ├── demo                | cool examples to try in scastie
 ├── deployment          | production configurations
 ├── docker              | Dockerfile for sbt images
@@ -98,6 +98,7 @@ These people have access:
 * [@jvican](https://github.com/jvican)
 * [@olafurpg](https://github.com/olafurpg)
 * [@dimart](https://github.com/dimart)
+* [@rorygraves](https://github.com/rorygraves)
 
 2. You need to be a member of the scalacenter on dockerhub: https://hub.docker.com/u/scalacenter 
 

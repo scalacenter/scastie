@@ -12,7 +12,7 @@ final case class DownloadButton(snippetId: SnippetId) {
 object DownloadButton {
   def render(props: DownloadButton): VdomElement = {
     val url = props.snippetId.url
-    val fullUrl = s"/download/$url"
+    val fullUrl = s"/api/download/$url"
 
     li(
       a(href := fullUrl,

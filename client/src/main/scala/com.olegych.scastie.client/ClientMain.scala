@@ -7,14 +7,13 @@ import org.scalajs.dom.raw.{HTMLElement, Node}
 import org.scalajs.dom.ext._
 
 import scala.scalajs.js
+import js.annotation._
 import js.{|, UndefOr, JSApp}
 import js.annotation.JSExport
 
 import japgolly.scalajs.react._, extra.router._
 
 object ClientMain extends JSApp {
-
-  @JSExport
   override def main(): Unit = {
     val isMac = dom.window.navigator.userAgent.contains("Mac")
 

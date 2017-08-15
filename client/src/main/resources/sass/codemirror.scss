@@ -74,6 +74,8 @@ $margin: 24px;
 }
 
 .CodeMirror {
+  font-family: $code-font-family;
+  
   // emphasis on not parsed (){}
   .CodeMirror-code > pre > span,
   .CodeMirror-code > div > pre > span,
@@ -249,7 +251,7 @@ $margin: 24px;
 .CodeMirror-hover-tooltip {
   border: 1px solid black;
   border-radius: 2px 2px 2px 2px;
-  font-family: monospace;
+  font-family: $code-font-family;
   font-size: 10pt;
   overflow: hidden;
   padding: 2px 5px;

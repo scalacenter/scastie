@@ -103,7 +103,10 @@
         }
     }
     .modal-close {
-        @include position(absolute, ($modal-padding/2) ($modal-padding /2) 0 0);
+        top: ($modal-padding/2);
+        right: ($modal-padding /2);
+        position: absolute;
+
         @include size(1.5em);
         background: $modal-background;
         cursor: pointer;

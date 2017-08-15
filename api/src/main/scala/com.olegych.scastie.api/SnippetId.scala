@@ -53,6 +53,6 @@ case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
 
   def scalaJsUrl(end: String): String = {
     val middle = url
-    s"/${Shared.scalaJsHttpPathPrefix}/$middle/$end"
+    s"/api/${Shared.scalaJsHttpPathPrefix}/$middle/$end"
   }
 }
