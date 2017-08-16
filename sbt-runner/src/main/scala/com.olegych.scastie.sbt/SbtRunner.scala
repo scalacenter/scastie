@@ -135,22 +135,6 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
         sbt.warmUp()
       }
 
-    case CreateEnsimeConfigRequest(inputs: Inputs) =>
-      log.info("Generating ensime config file")
-      sbt.eval(
-        "ensimeConfig",
-        inputs,
-        (line, _, _, _) => {
-          log.info(line)
-        },
-        reload = false
-      )
-      slurp(sbt.sbtDir.resolve(".ensime")) match {
-        case Some(config) => sender ! EnsimeConfigResponse(sbt.sbtDir.toString, config)
-        case None => log.warn(s"Actor ${sender.path} will not receive ensime config file")
-      }
-
-
     case SbtTask(snippetId, inputs, ip, login, progressActor) =>
       log.info("login: {}, ip: {} run {}", login, ip, inputs)
 

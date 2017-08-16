@@ -1,12 +1,15 @@
 import ScalaJSHelper._
 import Deployment._
-
 import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
 import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
 import sbt.Keys._
+
 import scala.util.Try
 import java.io.FileNotFoundException
+
+import sbt.Def
+import sbtdocker.DockerPlugin.autoImport._
 
 lazy val orgSettings = Seq(
   organization := "org.scastie",
@@ -156,9 +159,52 @@ lazy val ensimeRunner = project
       // sbt-ensime 1.12.13 creates .ensime with 2.0.0-SNAPSHOT server jar
       "org.ensime" %% "jerky" % "2.0.0-SNAPSHOT",
       "org.ensime" %% "s-express" % "2.0.0-SNAPSHOT"
-    )
+    ),
+    assemblyMergeStrategy in assembly := {
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case in @ PathList("reference.conf", xs @ _*) =>
+        val old = (assemblyMergeStrategy in assembly).value
+        old(in)
+      case x => MergeStrategy.first
+    },
+    imageNames in docker := Seq(
+      ImageName(
+        namespace = Some("scalacenter"),
+        repository = "scastie-ensime-runner",
+        tag = Some(gitHash())
+      )
+    ),
+    dockerfile in docker := Def
+      .task {
+        val base = (baseDirectory in ThisBuild).value
+        val ivy = ivyPaths.value.ivyHome.get
+
+        val org = organization.value
+        val artifact = assembly.value
+        val artifactTargetPath = s"/app/${artifact.name}"
+
+        val logbackConfDestination = "/home/scastie/logback.xml"
+
+        new Dockerfile {
+          from("scalacenter/scastie-docker-sbt:0.0.42")
+
+          add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
+
+          add(artifact, artifactTargetPath)
+
+          add(base / "deployment" / "logback.xml", logbackConfDestination)
+
+          entryPoint("java",
+            "-Xmx256M",
+            "-Xms256M",
+            s"-Dlogback.configurationFile=$logbackConfDestination",
+            "-jar",
+            artifactTargetPath)
+        }
+      }.value
   )
-  .dependsOn(api212JVM, utils)
+  .dependsOn(api212JVM, utils, sbtRunner)
+  .enablePlugins(sbtdocker.DockerPlugin)
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
