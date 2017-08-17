@@ -132,6 +132,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
       def onopen(e: Event): Unit = {
         console.log("connect status status open", e)
+        updateEnsimeConfig.runNow()
       }
 
       def onmessage(e: MessageEvent): Unit = {
