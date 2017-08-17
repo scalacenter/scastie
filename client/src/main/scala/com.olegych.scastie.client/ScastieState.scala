@@ -428,13 +428,14 @@ case class ScastieState(
 
   def addStatus(status: StatusProgress): ScastieState = {
     status match {
-      case StatusKeepAlive     => this
-      case StatusInfo(runners) => copy(status = StatusState(Some(runners)))
+      case StatusKeepAlive => this
+      case StatusRunnersInfo(runners) => copy(status = StatusState(Some(runners), this.status.ensimeStatus))
+      case StatusEnsimeInfo(ensimeStatus) => copy(status = StatusState(this.status.runners, ensimeStatus))
     }
   }
 
   def removeStatus: ScastieState = {
-    copy(status = StatusState(None))
+    copy(status = StatusState(None, EnsimeDown))
   }
 
   def setProgresses(progresses: List[SnippetProgress]): ScastieState = {

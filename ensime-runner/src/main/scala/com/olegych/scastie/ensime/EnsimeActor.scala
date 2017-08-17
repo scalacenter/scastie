@@ -45,12 +45,17 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
 
     def apply(that: EnsimeServerState) = {
       that match {
+        case Initializing =>
+          dispatchActor ! StatusEnsimeInfo(EnsimeDown)
+        case CreatingConfig =>
+          dispatchActor ! StatusEnsimeInfo(EnsimeRestarting)
         case Connecting =>
           assert(
             state == CreatingConfig && ensimeProcess.isDefined && ensimeProcess.get.isAlive
           )
         case Ready =>
           assert(state == Connecting && ensimeWS.isDefined)
+          dispatchActor ! StatusEnsimeInfo(EnsimeUp)
         case _ => ()
       }
       log.info(s"Server State: $state => $that")

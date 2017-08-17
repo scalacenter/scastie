@@ -2,7 +2,7 @@ package com.olegych.scastie
 package balancer
 
 import api._
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
+import akka.actor.{Actor, ActorLogging, ActorPath, ActorRef, ActorSelection}
 import akka.remote.DisassociatedEvent
 import akka.pattern.ask
 import akka.util.Timeout
@@ -73,6 +73,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     sbtPorts.map(connectRunner("SbtRunner", "SbtActor")(host)).toMap
   private var remoteEnsimeSelections = ensimePorts
     .map(connectRunner("EnsimeRunner", "EnsimeRunnerActor")(host)).toMap
+
+  // ensime-runner -> IPs
+  private var usersPerEnsime = Map[ActorPath, Set[Ip]]().withDefaultValue(Set())
 
   private var loadBalancer: LoadBalancer[String, ActorSelection] = {
     val sbtServers = remoteSbtSelections.to[Vector].map {
@@ -149,12 +152,19 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   def receive: Receive = {
 
-    case EnsimeRequestEnvelop(request, UserTrace(ip, user)) =>
+    case EnsimeRequestEnvelop(request, UserTrace(ip_, user)) =>
       val taskId = EnsimeTaskId.create
-      log.info("id: {}, ip: {} task: {}", taskId, ip, request)
+      log.info("id: {}, ip: {} task: {}", taskId, ip_, request)
+
+      val ip = Ip(ip_)
 
       val (server, newBalancer) =
-        loadBalancer.add(Task(request.info.inputs.sbtConfig, Ip(ip), taskId))
+        loadBalancer.add(Task(request.info.inputs.sbtConfig, ip, taskId))
+
+      val ensimeRunnerPath = server.ref.anchorPath / "user" / "EnsimeRunnerActor" / "EnsimeActor"
+      log.info(s"Add $ensimeRunnerPath -> $ip")
+      val updatedIPs = usersPerEnsime(ensimeRunnerPath) + ip
+      usersPerEnsime = usersPerEnsime + (ensimeRunnerPath -> updatedIPs)
 
       updateBalancer(newBalancer)
 
@@ -305,5 +315,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case ReceiveStatus(originalSender) => {
       sender ! LoadBalancerInfo(loadBalancer, originalSender)
     }
+
+    case statusProgress: StatusProgress =>
+      log.info(s"Got status progress from ${sender.path}")
+      log.info(s"Send $statusProgress to users: ${usersPerEnsime(sender.path)}")
+      statusActor ! NotifyUsers(usersPerEnsime(sender.path), statusProgress)
   }
 }

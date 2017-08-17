@@ -103,7 +103,8 @@ object Scastie {
       .componentWillMount { current =>
         current.backend.start(current.props) >>
           setTitle(current.state) >>
-          current.backend.connectStatus
+          current.backend.connectStatus >>
+          current.backend.updateEnsimeConfig
       }
       .componentDidUpdate { scope =>
         val state = scope.prevState
