@@ -55,7 +55,7 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
                   )
                 )
             )
-          )
+        )
       )
     )
 

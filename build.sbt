@@ -171,34 +171,33 @@ lazy val ensimeRunner = project
         tag = Some(gitHash())
       )
     ),
-    dockerfile in docker := Def
-      .task {
-        val base = (baseDirectory in ThisBuild).value
-        val ivy = ivyPaths.value.ivyHome.get
+    dockerfile in docker := Def.task {
+      val base = (baseDirectory in ThisBuild).value
+      val ivy = ivyPaths.value.ivyHome.get
 
-        val org = organization.value
-        val artifact = assembly.value
-        val artifactTargetPath = s"/app/${artifact.name}"
+      val org = organization.value
+      val artifact = assembly.value
+      val artifactTargetPath = s"/app/${artifact.name}"
 
-        val logbackConfDestination = "/home/scastie/logback.xml"
+      val logbackConfDestination = "/home/scastie/logback.xml"
 
-        new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.42")
+      new Dockerfile {
+        from("scalacenter/scastie-docker-sbt:0.0.42")
 
-          add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
+        add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
 
-          add(artifact, artifactTargetPath)
+        add(artifact, artifactTargetPath)
 
-          add(base / "deployment" / "logback.xml", logbackConfDestination)
+        add(base / "deployment" / "logback.xml", logbackConfDestination)
 
-          entryPoint("java",
-            "-Xmx256M",
-            "-Xms256M",
-            s"-Dlogback.configurationFile=$logbackConfDestination",
-            "-jar",
-            artifactTargetPath)
-        }
-      }.value
+        entryPoint("java",
+                   "-Xmx256M",
+                   "-Xms256M",
+                   s"-Dlogback.configurationFile=$logbackConfDestination",
+                   "-jar",
+                   artifactTargetPath)
+      }
+    }.value
   )
   .dependsOn(api212JVM, utils, sbtRunner)
   .enablePlugins(sbtdocker.DockerPlugin)

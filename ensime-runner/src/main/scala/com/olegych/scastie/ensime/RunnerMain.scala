@@ -18,7 +18,8 @@ object RunnerMain {
     val system = ActorSystem("EnsimeRunner")
 
     val serverConfig = ConfigFactory.load().getConfig("com.olegych.scastie.web")
-    val ensimeConfig = ConfigFactory.load().getConfig("com.olegych.scastie.ensime")
+    val ensimeConfig =
+      ConfigFactory.load().getConfig("com.olegych.scastie.ensime")
 
     val isProduction = ensimeConfig.getBoolean("production")
 

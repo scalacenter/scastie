@@ -29,7 +29,8 @@ object StatusActor {
   def props: Props = Props(new StatusActor)
 }
 class StatusActor private () extends Actor with ActorLogging {
-  private var publishers = Map[Ip, Vector[ActorRef]]().withDefaultValue(Vector())
+  private var publishers =
+    Map[Ip, Vector[ActorRef]]().withDefaultValue(Vector())
   var dispatchActor: Option[ActorRef] = _
 
   override def receive: Receive = {

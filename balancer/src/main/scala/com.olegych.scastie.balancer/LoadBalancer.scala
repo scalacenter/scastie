@@ -144,14 +144,17 @@ case class LoadBalancer[C, S](
     log.info("Task added: {}", task.taskId)
     val updatedHistory = history.add(task.toRecord)
 
-    def update(servers: Vector[Server[C, S]])(f: Vector[Server[C, S]] => LoadBalancer[C, S]) = {
+    def update(
+        servers: Vector[Server[C, S]]
+    )(f: Vector[Server[C, S]] => LoadBalancer[C, S]) = {
       if (servers.size <= 0) {
         val msg = "All instances are down, shutting down the server"
         log.error(msg)
         throw new Exception(msg)
       }
 
-      lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
+      lazy val historyHistogram =
+        updatedHistory.data.map(_.config).to[Histogram]
 
       val hits = servers.indices
         .to[Vector]

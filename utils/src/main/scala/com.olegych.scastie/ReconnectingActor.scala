@@ -34,10 +34,11 @@ trait ActorReconnecting extends Actor with ActorLogging {
     )
   }
 
-  override def preStart(): Unit = try {
-    context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
-    setupReconnectCallback()
-  } finally super.preStart()
+  override def preStart(): Unit =
+    try {
+      context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
+      setupReconnectCallback()
+    } finally super.preStart()
 
   val reconnectBehavior: Receive = {
     case ActorConnected =>
@@ -48,8 +49,8 @@ trait ActorReconnecting extends Actor with ActorLogging {
 
     case ev: DisassociatedEvent =>
       if (ev.remoteAddress.host.contains(reconnectInfo.serverHostname) &&
-        ev.remoteAddress.port.contains(reconnectInfo.serverAkkaPort) &&
-        ev.inbound) {
+          ev.remoteAddress.port.contains(reconnectInfo.serverAkkaPort) &&
+          ev.inbound) {
         log.warning("Disconnected from server")
         onDisconnected()
         setupReconnectCallback()

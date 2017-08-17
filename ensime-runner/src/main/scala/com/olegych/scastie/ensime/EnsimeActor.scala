@@ -16,7 +16,11 @@ import com.olegych.scastie.api._
 import com.olegych.scastie.sbt.Sbt
 import com.olegych.scastie.util.ScastieFileUtil._
 import org.ensime.api._
-import org.ensime.sexp.formats.{CamelCaseToDashes, DefaultSexpProtocol, OptionAltFormat}
+import org.ensime.sexp.formats.{
+  CamelCaseToDashes,
+  DefaultSexpProtocol,
+  OptionAltFormat
+}
 import org.slf4j.LoggerFactory
 import org.ensime.jerky.JerkyFormats._
 
@@ -30,7 +34,7 @@ case object Heartbeat
 case object EnsimeReady
 
 class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
-  extends Actor {
+    extends Actor {
   private sealed trait EnsimeServerState
   private case object Initializing extends EnsimeServerState
   private case object CreatingConfig extends EnsimeServerState
@@ -252,12 +256,12 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
     assert(ensimeConf.isDefined, "ensime config does not exist")
 
     case class EnsimeClasspathConfig(
-                                      ensimeServerJars: List[String],
-                                      scalaCompilerJars: List[String]
-                                    )
+        ensimeServerJars: List[String],
+        scalaCompilerJars: List[String]
+    )
 
     object EnsimeConfProtocol
-      extends DefaultSexpProtocol
+        extends DefaultSexpProtocol
         with OptionAltFormat
         with CamelCaseToDashes
     import EnsimeConfProtocol._
@@ -297,9 +301,8 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
     log.info("Warming up Ensime...")
     sendToEnsime(
       CompletionsReq(
-        fileInfo =
-          SourceFileInfo(RawFile(new File(codeFile.toString).toPath),
-            Some(Inputs.defaultCode)),
+        fileInfo = SourceFileInfo(RawFile(new File(codeFile.toString).toPath),
+                                  Some(Inputs.defaultCode)),
         point = 2,
         maxResults = 2000,
         caseSens = false,
@@ -350,9 +353,9 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
 
   override def receive: Receive = {
     case EnsimeTaskRequest(
-    TypeAtPointRequest(EnsimeRequestInfo(inputs, position)),
-    taskId
-    ) =>
+        TypeAtPointRequest(EnsimeRequestInfo(inputs, position)),
+        taskId
+        ) =>
       log.info("TypeAtPoint request at EnsimeActor")
       processRequest(
         taskId,
@@ -373,9 +376,9 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
       )
 
     case EnsimeTaskRequest(
-    CompletionRequest(EnsimeRequestInfo(inputs, position)),
-    taskId
-    ) =>
+        CompletionRequest(EnsimeRequestInfo(inputs, position)),
+        taskId
+        ) =>
       log.info("Completion request at EnsimeActor")
       processRequest(
         taskId,
@@ -386,7 +389,7 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
           CompletionsReq(
             fileInfo =
               SourceFileInfo(RawFile(new File(codeFile.toString).toPath),
-                Some(code)),
+                             Some(code)),
             point = pos,
             maxResults = 1000,
             caseSens = false,
@@ -396,12 +399,12 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
       )
 
     case EnsimeTaskRequest(
-    UpdateEnsimeConfigRequest(EnsimeRequestInfo(inputs, _)),
-    taskId
-    ) =>
+        UpdateEnsimeConfigRequest(EnsimeRequestInfo(inputs, _)),
+        taskId
+        ) =>
       log.info("UpdateEnsimeConfig request at EnsimeActor")
       sender ! EnsimeTaskResponse(None, taskId)
-      if (needsReload(inputs)) {
+      if (needsReload(inputs) && serverState.isReady) {
         restartEnsimeServer(inputs)
       }
 
@@ -414,17 +417,17 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
 
   private def needsReload(inputs: Inputs) = {
     currentConfig.target != inputs.target ||
-      currentConfig.libraries != inputs.libraries ||
-      currentConfig.sbtPluginsConfig != inputs.sbtPluginsConfig
+    currentConfig.libraries != inputs.libraries ||
+    currentConfig.sbtPluginsConfig != inputs.sbtPluginsConfig
   }
 
   private def processRequest(
-                              taskId: EnsimeTaskId,
-                              sender: ActorRef,
-                              inputs: Inputs,
-                              position: Int,
-                              rpcRequestFun: (String, Int) => RpcRequest
-                            ): Unit = {
+      taskId: EnsimeTaskId,
+      sender: ActorRef,
+      inputs: Inputs,
+      position: Int,
+      rpcRequestFun: (String, Int) => RpcRequest
+  ): Unit = {
     val (code, pos) = if (inputs.worksheetMode) {
       (s"object Main extends App { ${inputs.code} }", position + 26)
     } else {

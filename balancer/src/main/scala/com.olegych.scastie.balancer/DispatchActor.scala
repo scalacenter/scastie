@@ -72,7 +72,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private var remoteSbtSelections =
     sbtPorts.map(connectRunner("SbtRunner", "SbtActor")(host)).toMap
   private var remoteEnsimeSelections = ensimePorts
-    .map(connectRunner("EnsimeRunner", "EnsimeRunnerActor")(host)).toMap
+    .map(connectRunner("EnsimeRunner", "EnsimeRunnerActor")(host))
+    .toMap
 
   // ensime-runner -> IPs
   private var usersPerEnsime = Map[ActorPath, Set[Ip]]().withDefaultValue(Set())
@@ -88,7 +89,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     }
 
     val history = History(Queue.empty[Record[String]], size = 100)
-    LoadBalancer(sbtServers = sbtServers, ensimeServers = ensimeServers, history)
+    LoadBalancer(sbtServers = sbtServers,
+                 ensimeServers = ensimeServers,
+                 history)
   }
   updateBalancer(loadBalancer)
 
@@ -273,7 +276,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       for {
         host <- event.remoteAddress.host
         port <- event.remoteAddress.port
-        ref <- remoteSbtSelections.get((host, port)).orElse(remoteEnsimeSelections.get((host, port)))
+        ref <- remoteSbtSelections
+          .get((host, port))
+          .orElse(remoteEnsimeSelections.get((host, port)))
       } {
         log.warning("removing disconnected: {}", ref)
         remoteSbtSelections = remoteSbtSelections - ((host, port))

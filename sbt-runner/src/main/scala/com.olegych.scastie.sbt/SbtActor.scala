@@ -2,13 +2,7 @@ package com.olegych.scastie
 package sbt
 
 import api._
-import akka.actor.{
-  Actor,
-  ActorSystem,
-  Props,
-  ActorRef,
-  ActorLogging
-}
+import akka.actor.{Actor, ActorSystem, Props, ActorRef, ActorLogging}
 
 import scala.concurrent.duration._
 
@@ -18,7 +12,8 @@ class SbtActor(system: ActorSystem,
                readyRef: Option[ActorRef],
                override val reconnectInfo: ReconnectInfo)
     extends Actor
-    with ActorLogging with ActorReconnecting {
+    with ActorLogging
+    with ActorReconnecting {
 
   override def tryConnect(): Unit = {
     import reconnectInfo._
@@ -39,7 +34,7 @@ class SbtActor(system: ActorSystem,
       name = "SbtRunner"
     )
 
-  override def receive: Receive = reconnectBehavior orElse[Any, Unit] {
+  override def receive: Receive = reconnectBehavior orElse [Any, Unit] {
     case SbtPing =>
       sender ! SbtPong
 
