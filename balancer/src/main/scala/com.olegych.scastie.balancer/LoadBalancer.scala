@@ -87,82 +87,120 @@ case class History[C](data: Queue[Record[C]], size: Int) {
 }
 
 case class LoadBalancer[C, S](
-    servers: Vector[Server[C, S]],
+    sbtServers: Vector[Server[C, S]],
+    ensimeServers: Vector[Server[C, S]],
     history: History[C]
 ) {
   private val log = LoggerFactory.getLogger(getClass)
 
-  private lazy val configs = servers.map(_.currentConfig)
+  private lazy val configs = (sbtServers ++ ensimeServers).map(_.currentConfig)
 
   def done(taskId: TaskId): LoadBalancer[C, S] = {
-    log.info(s"Task done: $taskId")
-    val serverRunningTask =
-      servers.zipWithIndex.find(_._1.currentTaskId.contains(taskId))
 
-    serverRunningTask match {
-      case Some((server, index)) =>
-        copy(servers = servers.updated(index, server.done))
-      case None =>
-        val serversTaskIds =
-          servers.flatMap(_.currentTaskId).mkString("[", ", ", "]")
+    def update(servers: Vector[Server[C, S]]): Vector[Server[C, S]] = {
+      log.info(s"Task done: $taskId")
+      val serverRunningTask =
+        servers.zipWithIndex.find(_._1.currentTaskId.contains(taskId))
 
-        throw new Exception(
-          s"""cannot find taskId: $taskId from servers task ids $serversTaskIds"""
-        )
+      serverRunningTask match {
+        case Some((server, index)) =>
+          servers.updated(index, server.done)
+        case None =>
+          val serversTaskIds =
+            servers.flatMap(_.currentTaskId).mkString("[", ", ", "]")
+
+          throw new Exception(
+            s"""cannot find taskId: $taskId from servers task ids $serversTaskIds"""
+          )
+      }
+    }
+
+    taskId match {
+      case _: SbtRunTaskId =>
+        copy(sbtServers = update(sbtServers))
+      case _: EnsimeTaskId =>
+        copy(ensimeServers = update(ensimeServers))
     }
   }
 
-  def addServer(server: Server[C, S]): LoadBalancer[C, S] = {
-    copy(servers = server +: servers)
+  def addSbtServer(server: Server[C, S]): LoadBalancer[C, S] = {
+    copy(sbtServers = server +: sbtServers)
+  }
+
+  def addEnsimeServer(server: Server[C, S]): LoadBalancer[C, S] = {
+    copy(ensimeServers = server +: ensimeServers)
   }
 
   def removeServer(ref: S): LoadBalancer[C, S] = {
-    copy(servers = servers.filterNot(_.ref == ref))
+    copy(
+      sbtServers = sbtServers.filterNot(_.ref == ref),
+      ensimeServers = ensimeServers.filterNot(_.ref == ref)
+    )
   }
 
-  def getRandomServer: Server[C, S] = random(servers)
+  def getRandomSbtServer: Server[C, S] = random(sbtServers)
 
   def add(task: Task[C]): (Server[C, S], LoadBalancer[C, S]) = {
     log.info("Task added: {}", task.taskId)
-
-    if (servers.size <= 0) {
-      val msg = "All instances are down, shutting down the server"
-      log.error(msg)
-      throw new Exception(msg)
-    }
-
     val updatedHistory = history.add(task.toRecord)
-    lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
 
-    val hits = servers.indices
-      .to[Vector]
-      .filter(i => servers(i).currentConfig == task.config)
-
-    def overBooked =
-      hits.forall(i => servers(i).cost > Server.averageReloadTime)
-    def cacheMiss = hits.isEmpty
-
-    val selectedServerIndice =
-      if (cacheMiss || overBooked) {
-        // we try to find a new configuration to minimize the distance with
-        // the historical data
-        randomMin(configs.indices) { i =>
-          val config = task.config
-          val distance = distanceFromHistory(i, config, historyHistogram)
-          val load = servers(i).cost
-          (distance, load)
-        }
-      } else {
-        random(hits)
+    def update(servers: Vector[Server[C, S]])(f: Vector[Server[C, S]] => LoadBalancer[C, S]) = {
+      if (servers.size <= 0) {
+        val msg = "All instances are down, shutting down the server"
+        log.error(msg)
+        throw new Exception(msg)
       }
 
-    val updatedServers = {
-      val i = selectedServerIndice
-      servers.updated(i, servers(i).add(task))
+      lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
+
+      val hits = servers.indices
+        .to[Vector]
+        .filter(i => servers(i).currentConfig == task.config)
+
+      def overBooked =
+        hits.forall(i => servers(i).cost > Server.averageReloadTime)
+      def cacheMiss = hits.isEmpty
+
+      val selectedServerIndice =
+        if (cacheMiss || overBooked) {
+          // we try to find a new configuration to minimize the distance with
+          // the historical data
+          randomMin(configs.indices) { i =>
+            val config = task.config
+            val distance = distanceFromHistory(i, config, historyHistogram)
+            val load = servers(i).cost
+            (distance, load)
+          }
+        } else {
+          random(hits)
+        }
+
+      val updatedServers = {
+        val i = selectedServerIndice
+        servers.updated(i, servers(i).add(task))
+      }
+
+      servers(selectedServerIndice) -> f(updatedServers)
     }
 
-    (servers(selectedServerIndice),
-     LoadBalancer(updatedServers, updatedHistory))
+    task.taskId match {
+      case _: SbtRunTaskId =>
+        update(sbtServers) { updatedServers =>
+          LoadBalancer(
+            sbtServers = updatedServers,
+            ensimeServers = ensimeServers,
+            updatedHistory
+          )
+        }
+      case _: EnsimeTaskId =>
+        update(ensimeServers) { updatedServers =>
+          LoadBalancer(
+            sbtServers = sbtServers,
+            ensimeServers = updatedServers,
+            updatedHistory
+          )
+        }
+    }
   }
 
   private def distanceFromHistory(targetServerIndex: Int,

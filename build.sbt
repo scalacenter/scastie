@@ -8,9 +8,6 @@ import sbt.Keys._
 import scala.util.Try
 import java.io.FileNotFoundException
 
-import sbt.Def
-import sbtdocker.DockerPlugin.autoImport._
-
 lazy val orgSettings = Seq(
   organization := "org.scastie",
   version := {

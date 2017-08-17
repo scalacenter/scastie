@@ -57,7 +57,7 @@ class StatusActor private () extends Actor with ActorLogging {
       newBalancer: LoadBalancer[String, ActorSelection]
   ): StatusProgress = {
     StatusInfo(
-      newBalancer.servers.map(
+      newBalancer.sbtServers.map(
         server => Runner(server.mailbox.map(_.taskId))
       )
     )
