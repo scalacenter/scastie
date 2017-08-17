@@ -158,25 +158,31 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
       val ip = Ip(ip_)
 
-      val (server, newBalancer) =
-        loadBalancer.add(Task(request.info.inputs.sbtConfig, ip, taskId))
+      try {
+        val (server, newBalancer) =
+          loadBalancer.add(Task(request.info.inputs.sbtConfig, ip, taskId))
 
-      val ensimeRunnerPath = server.ref.anchorPath / "user" / "EnsimeRunnerActor" / "EnsimeActor"
-      log.info(s"Add $ensimeRunnerPath -> $ip")
-      val updatedIPs = usersPerEnsime(ensimeRunnerPath) + ip
-      usersPerEnsime = usersPerEnsime + (ensimeRunnerPath -> updatedIPs)
+        val ensimeRunnerPath = server.ref.anchorPath / "user" / "EnsimeRunnerActor" / "EnsimeActor"
+        log.info(s"Add $ensimeRunnerPath -> $ip")
+        val updatedIPs = usersPerEnsime(ensimeRunnerPath) + ip
+        usersPerEnsime = usersPerEnsime + (ensimeRunnerPath -> updatedIPs)
 
-      updateBalancer(newBalancer)
+        updateBalancer(newBalancer)
 
-      implicit val timeout = Timeout(20.seconds)
-      val senderRef = sender()
+        implicit val timeout = Timeout(20.seconds)
+        val senderRef = sender()
 
-      (server.ref ? EnsimeTaskRequest(request, taskId))
-        .mapTo[EnsimeTaskResponse]
-        .map { taskResponse =>
-          updateBalancer(loadBalancer.done(taskResponse.taskId))
-          senderRef ! taskResponse.response
-        }
+        (server.ref ? EnsimeTaskRequest(request, taskId))
+          .mapTo[EnsimeTaskResponse]
+          .map { taskResponse =>
+            updateBalancer(loadBalancer.done(taskResponse.taskId))
+            senderRef ! taskResponse.response
+          }
+      } catch {
+        case e: Exception =>
+          sender ! None
+          statusActor ! NotifyAllUsers(StatusEnsimeInfo(EnsimeDown))
+      }
 
     case EnsimeTaskResponse(response, taskId) =>
       updateBalancer(loadBalancer.done(taskId))

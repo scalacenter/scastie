@@ -21,7 +21,9 @@ case class LoadBalancerUpdate(
 case class LoadBalancerInfo(balancer: LoadBalancer[String, ActorSelection],
                             originalSender: ActorRef)
 case class SetDispatcher(dispatchActor: ActorRef)
+
 case class NotifyUsers(IPs: Set[Ip], progress: StatusProgress)
+case class NotifyAllUsers(progress: StatusProgress)
 
 object StatusActor {
   def props: Props = Props(new StatusActor)
@@ -60,6 +62,9 @@ class StatusActor private () extends Actor with ActorLogging {
 
     case NotifyUsers(ips, progress) =>
       ips.foreach(publishers(_).foreach(_ ! progress))
+
+    case NotifyAllUsers(progress) =>
+      publishers.values.flatten.foreach(_ ! progress)
   }
 
   private def convert(
