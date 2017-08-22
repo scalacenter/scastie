@@ -170,7 +170,7 @@ class EnsimeActorTests()
     }
   }
 
-  override def afterAll {
+  override def afterAll: Unit = {
     TestKit.shutdownActorSystem(system)
   }
 }

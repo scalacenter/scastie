@@ -82,7 +82,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   import context._
 
   system.scheduler.schedule(0.seconds, 5.seconds) {
-    implicit val timeout = Timeout(5.seconds)
+    implicit val timeout: akka.util.Timeout = Timeout(5.seconds)
     try {
       val res =
         Await.result(
@@ -147,7 +147,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
       updateBalancer(newBalancer)
 
-      implicit val timeout = Timeout(20.seconds)
+      implicit val timeout: akka.util.Timeout = Timeout(20.seconds)
       val senderRef = sender()
 
       (server.ref ? EnsimeTaskRequest(request, taskId))

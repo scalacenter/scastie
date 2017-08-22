@@ -25,7 +25,7 @@ object Inputs {
     forked = None
   )
 
-  implicit val formatInputs = Json.format[Inputs]
+  implicit val formatInputs: play.api.libs.json.OFormat[com.olegych.scastie.api.Inputs] = Json.format[Inputs]
 }
 
 case class Inputs(
@@ -167,7 +167,7 @@ case class Inputs(
 }
 
 object EditInputs {
-  implicit val formatEditInputs = Json.format[EditInputs]
+  implicit val formatEditInputs: play.api.libs.json.OFormat[com.olegych.scastie.api.EditInputs] = Json.format[EditInputs]
 }
 
 case class EditInputs(snippetId: SnippetId, inputs: Inputs)
