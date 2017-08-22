@@ -27,10 +27,11 @@ body {
   font-family: $font-family;
   font-size: $text-size;
   line-height: $text-line-height;
-  overflow: hidden;  
 }
 
-err
+body.scastie {
+  overflow: hidden;
+}
 
 a:hover {
   text-decoration: none;
