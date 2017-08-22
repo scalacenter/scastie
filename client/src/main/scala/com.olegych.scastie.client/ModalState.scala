@@ -5,7 +5,7 @@ import com.olegych.scastie.api.SnippetId
 import play.api.libs.json._
 
 object ModalState {
-  implicit val formatModalState = Json.format[ModalState]
+  implicit val formatModalState: play.api.libs.json.OFormat[com.olegych.scastie.client.ModalState] = Json.format[ModalState]
 
   def allClosed =
     ModalState(isWelcomeModalClosed = true,

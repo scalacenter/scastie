@@ -34,7 +34,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
   private case object SbtWarmUp
 
-  private implicit val sbtOutputFormat =
+  private implicit val sbtOutputFormat: play.api.libs.json.OFormat[com.olegych.scastie.api.ConsoleOutput.SbtOutput] =
     ConsoleOutput.ConsoleOutputFormat.formatSbtOutput
 
   private val defaultConfig = Inputs.default
@@ -283,7 +283,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       }
   }
 
-  private implicit val formatSourceMap = Json.format[SourceMap]
+  private implicit val formatSourceMap: play.api.libs.json.OFormat[SbtRunner.this.SourceMap] = Json.format[SourceMap]
 
   private case class SourceMap(
       version: Int,

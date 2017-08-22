@@ -3,7 +3,7 @@ package com.olegych.scastie.api
 import play.api.libs.json._
 
 object ReleaseOptions {
-  implicit val formatReleaseOptions = Json.format[ReleaseOptions]
+  implicit val formatReleaseOptions: play.api.libs.json.OFormat[com.olegych.scastie.api.ReleaseOptions] = Json.format[ReleaseOptions]
 }
 
 case class ReleaseOptions(groupId: String,
@@ -13,7 +13,7 @@ case class ReleaseOptions(groupId: String,
 // case class MavenReference(groupId: String, artifactId: String, version: String)
 
 object Outputs {
-  implicit val formatOutputs = Json.format[Outputs]
+  implicit val formatOutputs: play.api.libs.json.OFormat[com.olegych.scastie.api.Outputs] = Json.format[Outputs]
 
   def default = Outputs(
     consoleOutputs = Vector(),
@@ -41,7 +41,7 @@ case class Outputs(
 }
 
 object Position {
-  implicit val formatPosition = Json.format[Position]
+  implicit val formatPosition: play.api.libs.json.OFormat[com.olegych.scastie.api.Position] = Json.format[Position]
 }
 
 case class Position(start: Int, end: Int)

@@ -19,7 +19,7 @@ object SnippetProgress {
       forcedProgramMode = false
     )
 
-  implicit val formatSnippetProgress = Json.format[SnippetProgress]
+  implicit val formatSnippetProgress: play.api.libs.json.OFormat[com.olegych.scastie.api.SnippetProgress] = Json.format[SnippetProgress]
 }
 
 case class SnippetProgress(

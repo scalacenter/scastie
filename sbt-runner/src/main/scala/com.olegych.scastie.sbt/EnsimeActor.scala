@@ -81,8 +81,8 @@ class EnsimeActor(system: ActorSystem,
 
   private val log = LoggerFactory.getLogger(getClass)
 
-  implicit val materializer_ = ActorMaterializer()
-  implicit val timeout = Timeout(5.seconds)
+  implicit val materializer_: akka.stream.ActorMaterializer = ActorMaterializer()
+  implicit val timeout: akka.util.Timeout = Timeout(5.seconds)
 
   private var ensimeProcess: Option[Process] = None
   private var ensimeWS: Option[ActorRef] = None

@@ -3,7 +3,7 @@ package com.olegych.scastie.client
 import play.api.libs.json._
 
 object ConsoleState {
-  implicit val formatConsoleState = Json.format[ConsoleState]
+  implicit val formatConsoleState: play.api.libs.json.OFormat[com.olegych.scastie.client.ConsoleState] = Json.format[ConsoleState]
 
   def default = ConsoleState(
     consoleIsOpen = false,
