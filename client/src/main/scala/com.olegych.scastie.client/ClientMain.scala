@@ -18,11 +18,7 @@ object ClientMain {
 
   @JSExport
   def main(): Unit = {
-    val isMac = dom.window.navigator.userAgent.contains("Mac")
-
-    dom.document.body.className =
-      if (isMac) "mac"
-      else "pc"
+    dom.document.body.className = "scastie"
 
     val container =
       dom.document.createElement("div").asInstanceOf[dom.raw.HTMLDivElement]
@@ -68,7 +64,7 @@ object ClientMain {
         val container = dom.document
           .createElement("div")
           .asInstanceOf[dom.raw.HTMLDivElement]
-        container.className = "root"
+        container.className = "root embedded"
 
         val embeddedOptions0 =
           if (node.textContent.isEmpty || embeddedOptions.hasCode)

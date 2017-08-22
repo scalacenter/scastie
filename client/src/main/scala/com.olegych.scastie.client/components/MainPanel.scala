@@ -117,7 +117,7 @@ object MainPanel {
       TopBar(
         backend.viewSnapshot(state.view),
         state.user
-      ).render.unless(state.isPresentationMode)
+      ).render.unless(props.isEmbedded || state.isPresentationMode)
 
     val editorTopBar =
       EditorTopBar(
@@ -143,7 +143,7 @@ object MainPanel {
         view = state.view,
         worksheetMode = state.inputs.worksheetMode,
         targetType = state.inputs.target.targetType
-      ).render.unless(state.isPresentationMode)
+      ).render.unless(props.isEmbedded || state.isPresentationMode)
 
     val statusView =
       props.router match {

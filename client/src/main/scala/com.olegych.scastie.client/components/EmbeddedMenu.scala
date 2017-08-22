@@ -14,7 +14,7 @@ final case class EmbeddedMenu(isRunning: Boolean,
 
 object EmbeddedMenu {
   private def render(props: EmbeddedMenu): VdomElement = {
-    div(cls := "embedded-menu")(
+    ul(cls := "embedded-menu")(
       RunButton(
         isRunning = props.isRunning,
         isStatusOk = props.isStatusOk,

@@ -55,13 +55,10 @@ object Scastie {
       if (state.isDarkTheme) "dark"
       else "light"
 
-    val embeddedClass =
-      (cls := "embedded").when(props.isEmbedded)
-
     val forceDesktopClass =
       (cls := "force-desktop").when(state.isDesktopForced)
 
-    div(cls := s"app $theme", embeddedClass, forceDesktopClass)(
+    div(cls := s"app $theme", forceDesktopClass)(
       SideBar(
         isDarkTheme = state.isDarkTheme,
         status = state.status,

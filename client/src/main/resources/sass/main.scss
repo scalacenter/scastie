@@ -4,3 +4,7 @@
 @import "style";
 @import "dark-style";
 @import "light-style";
+
+body.scastie-embedded-dev {
+  margin: 20px;
+}
