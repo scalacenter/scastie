@@ -13,8 +13,11 @@ import js.annotation.JSExport
 
 import japgolly.scalajs.react._, extra.router._
 
-object ClientMain extends JSApp {
-  override def main(): Unit = {
+@JSExportTopLevel("scastie.ClientMain")
+object ClientMain {
+
+  @JSExport
+  def main(): Unit = {
     val isMac = dom.window.navigator.userAgent.contains("Mac")
 
     dom.document.body.className =

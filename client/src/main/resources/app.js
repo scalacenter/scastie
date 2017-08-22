@@ -1,5 +1,6 @@
 require("./sass/libs.scss");
 require("./sass/main.scss");
+const scalajs = require("scalajs");
 
 if (window.location.hostname != "localhost") {
   var Raven = require("node_modules/raven-js");
@@ -13,4 +14,30 @@ if (window.location.hostname != "localhost") {
   ga('send', 'pageview');
 
   Raven.config('https://0b9ff62cbc2344369cab867af776ae07@sentry.io/171717').install();
+}
+
+const Main = scalajs.scastie.ClientMain;
+
+Main.embedded("pre");
+
+module.exports = {
+  com: {
+    olegych: {
+      scastie: {
+        client: {
+          ClientMain: {
+            signal: function(a, b) {
+              return Main.signal(a, b);
+            },
+            error: function(e){
+              return Main.error(e);
+            },
+            embedded: function(s, o) {
+              return Main.embedded(s, o);
+            }
+          }
+        }
+      }
+    }
+  }
 }

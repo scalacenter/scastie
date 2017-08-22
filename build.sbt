@@ -48,7 +48,6 @@ lazy val scastie = project
   )
   .settings(baseSettings)
   .settings(Deployment.settings(server, sbtRunner))
-  .settings(addCommandAlias("drone", ";test ;server/universal:packageBin"))
 
 lazy val loggingAndTest =
   libraryDependencies ++= Seq(
@@ -201,7 +200,6 @@ lazy val client = project
     webpackMonitoredDirectories += (resourceDirectory in Compile).value,
     includeFilter in webpackMonitoredFiles := "*",
     useYarn := true,
-    scalaJSUseMainModuleInitializer := true,
     emitSourceMaps := false,
     npmDependencies in Compile ++= Seq(
       "bourbon" -> "4.3.4",
