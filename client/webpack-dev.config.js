@@ -1,3 +1,8 @@
+const Path = require('path');
+
+const rootDir = Path.resolve(__dirname, '../../../..');
+const devDir = Path.resolve(rootDir, 'dev-static');
+
 const Webpack = require('webpack');
 const Merge = require("webpack-merge");
 
@@ -19,6 +24,7 @@ module.exports = Merge(commonConfig, {
   },
   devServer: {
     hot: true,
+    contentBase: devDir,
     proxy: [{
       context: ["/login", "/logout", "callback", "/api"],
       target: "http://localhost:9000",

@@ -7,7 +7,10 @@ const scalaJsConfig = require('./scalajs.webpack.config');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-module.exports = Merge(scalaJsConfig, {
+const scalaJsEntry = scalaJsConfig.entry;
+const scalaJs = scalaJsEntry["client-fastopt"] || scalaJsEntry["client-opt"];
+
+module.exports = {
   entry: {
     app: Path.resolve(resourcesDir, './app.js')
   },
@@ -17,6 +20,7 @@ module.exports = Merge(scalaJsConfig, {
   },
   resolve: {
     alias: {
+      'scalajs': scalaJs[0],
       'resources': resourcesDir,
       'node_modules': Path.resolve(__dirname, 'node_modules')
     }
@@ -38,4 +42,4 @@ module.exports = Merge(scalaJsConfig, {
       favicon: Path.resolve(resourcesDir, './images/favicon.ico')
     })
   ]
-});
+};

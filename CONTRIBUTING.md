@@ -37,7 +37,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
 ```
 .
 ├── api                 | autowire api (rpc server <=> browser)
-|                       |   models for server <=> sbt (akka-remote)
+│                       |   models for server <=> sbt (akka-remote)
 ├── balancer            | distribute load based on sbt configuration
 ├── bin                 | scalfmt runner
 ├── build.sbt           | build definition
