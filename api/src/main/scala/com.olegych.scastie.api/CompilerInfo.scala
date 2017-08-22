@@ -28,7 +28,8 @@ case object Warning extends Severity
 case object Error extends Severity
 
 object Problem {
-  implicit val formatProblem: play.api.libs.json.OFormat[com.olegych.scastie.api.Problem] = Json.format[Problem]
+  implicit val formatProblem: OFormat[com.olegych.scastie.api.Problem] =
+    Json.format[Problem]
 }
 
 case class Problem(

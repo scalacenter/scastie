@@ -208,7 +208,7 @@ object Instrument {
 
     maybeDialect match {
       case Some(dialect) =>
-        implicit val selectedDialect: scala.meta.Dialect = dialect
+        implicit val selectedDialect: Dialect = dialect
 
         code0.parse[Source] match {
           case Parsed.Success(source) =>

@@ -62,7 +62,9 @@ case class AttachedDom(uuid: String, folded: Boolean = false) extends Render {
 }
 
 object Instrumentation {
-  implicit val formatInstrumentation: play.api.libs.json.OFormat[com.olegych.scastie.api.Instrumentation] = Json.format[Instrumentation]
+  implicit val formatInstrumentation
+    : OFormat[com.olegych.scastie.api.Instrumentation] =
+    Json.format[Instrumentation]
 }
 
 case class Instrumentation(
