@@ -860,7 +860,7 @@ object Editor {
                               val hintsDiv =
                                 signature.parentElement.parentElement
                               hintsDiv.className = hintsDiv.className
-                                .concat(" CodeMirror-hints-presentation-mode")
+                                .concat(" presentation-mode")
                             }
                           }
                         ): Hint

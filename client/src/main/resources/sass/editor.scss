@@ -109,24 +109,25 @@
       display: inline-block;
       width: calc(100% - #{$sidebar-width});
     }
-  }
-
-  .main-panel-presentation-mode {
-    width: 100%;
-    height: 100%;
-    left: 0;
-
-    .CodeMirror {
-      font-size: 32px;
-    }
-
-    .code {
+    
+    .main-panel.presentation-mode {
+      width: 100%;
       height: 100%;
-      &.console-open{
-        height: calc(100% - #{$console-height});
+      left: 0;
+
+      .CodeMirror {
+        font-size: 32px;
+      }
+
+      .code {
+        height: 100%;
+        &.console-open{
+          height: calc(100% - #{$console-height});
+        }
       }
     }
   }
+
 
   .embedded-menu {
     position: absolute;

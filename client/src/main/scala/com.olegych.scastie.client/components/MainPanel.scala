@@ -157,7 +157,7 @@ object MainPanel {
       }
 
     val presentationModeClass =
-      (cls := "main-panel-presentation-mode").when(state.isPresentationMode)
+      (cls := "presentation-mode").when(state.isPresentationMode)
 
     div(
       cls := "main-panel",
