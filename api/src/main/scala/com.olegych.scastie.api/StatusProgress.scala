@@ -5,7 +5,8 @@ import play.api.libs.json._
 import scala.collection.immutable.Queue
 
 object Runner {
-  implicit val formatRunner: play.api.libs.json.OFormat[com.olegych.scastie.api.Runner] = Json.format[Runner]
+  implicit val formatRunner: OFormat[com.olegych.scastie.api.Runner] =
+    Json.format[Runner]
 }
 
 case class Runner(tasks: Queue[TaskId])

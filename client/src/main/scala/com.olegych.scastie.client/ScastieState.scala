@@ -9,7 +9,9 @@ import scalajs.js.debugger
 import org.scalajs.dom.raw.HTMLElement
 
 object SnippetState {
-  implicit val formatSnippetState: play.api.libs.json.OFormat[com.olegych.scastie.client.SnippetState] = Json.format[SnippetState]
+  implicit val formatSnippetState
+    : OFormat[com.olegych.scastie.client.SnippetState] =
+    Json.format[SnippetState]
 }
 
 case class SnippetState(
@@ -77,7 +79,9 @@ object ScastieState {
   implicit val dontSerializeProgressStream: Format[SnippetProgressHint] =
     dontSerializeOption[EventStream[SnippetProgress]]
 
-  implicit val formatScastieState: play.api.libs.json.OFormat[com.olegych.scastie.client.ScastieState] = Json.format[ScastieState]
+  implicit val formatScastieState
+    : OFormat[com.olegych.scastie.client.ScastieState] =
+    Json.format[ScastieState]
 }
 
 case class ScastieState(

@@ -174,6 +174,6 @@ trait CursorCoords extends js.Object {
 }
 
 trait Extensions {
-  implicit def toEditorEventHandler(editor: Editor): codemirror.EditorEventHandler =
+  implicit def toEditorEventHandler(editor: Editor): EditorEventHandler =
     new EditorEventHandler(editor)
 }

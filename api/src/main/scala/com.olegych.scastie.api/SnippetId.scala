@@ -15,20 +15,24 @@ object User {
     "rorygraves",
     "travissarles"
   )
-  implicit val formatUser: play.api.libs.json.OFormat[com.olegych.scastie.api.User] = Json.format[User]
+  implicit val formatUser: OFormat[com.olegych.scastie.api.User] =
+    Json.format[User]
 }
 case class User(login: String, name: Option[String], avatar_url: String) {
   def isAdmin: Boolean = User.admins.contains(login)
 }
 
 object SnippetUserPart {
-  implicit val formatSnippetUserPart: play.api.libs.json.OFormat[com.olegych.scastie.api.SnippetUserPart] = Json.format[SnippetUserPart]
+  implicit val formatSnippetUserPart
+    : OFormat[com.olegych.scastie.api.SnippetUserPart] =
+    Json.format[SnippetUserPart]
 }
 
 case class SnippetUserPart(login: String, update: Int = 0)
 
 object SnippetId {
-  implicit val formatSnippetId: play.api.libs.json.OFormat[com.olegych.scastie.api.SnippetId] = Json.format[SnippetId]
+  implicit val formatSnippetId: OFormat[com.olegych.scastie.api.SnippetId] =
+    Json.format[SnippetId]
 }
 
 case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
