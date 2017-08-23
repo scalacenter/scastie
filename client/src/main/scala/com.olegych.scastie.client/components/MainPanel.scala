@@ -25,9 +25,9 @@ object MainPanel {
       EmbeddedMenu(
         isRunning = state.isRunning,
         isStatusOk = isStatusOk,
+        inputs = state.inputs,
         run = backend.run,
-        setView = backend.setView,
-        clear = backend.clear
+        setView = backend.setView
       ).render.when(props.isEmbedded)
 
     val consoleCssForEditor =
@@ -53,6 +53,7 @@ object MainPanel {
       Editor(
         isDarkTheme = state.isDarkTheme,
         isPresentationMode = state.isPresentationMode,
+        isEmbedded = props.isEmbedded,
         showLineNumbers = state.showLineNumbers,
         code = state.inputs.code,
         attachedDoms = state.attachedDoms,
@@ -64,6 +65,8 @@ object MainPanel {
         run = backend.run,
         saveOrUpdate = backend.saveOrUpdate,
         clear = backend.clear,
+        openNewSnippetModal = backend.openNewSnippetModal,
+        toggleHelp = backend.toggleHelpModal,
         toggleConsole = backend.toggleConsole,
         toggleWorksheetMode = backend.toggleWorksheetMode,
         toggleTheme = backend.toggleTheme,

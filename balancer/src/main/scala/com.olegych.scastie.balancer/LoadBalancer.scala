@@ -120,47 +120,49 @@ case class LoadBalancer[C, S](
 
   def getRandomServer: Server[C, S] = random(servers)
 
-  def add(task: Task[C]): (Server[C, S], LoadBalancer[C, S]) = {
+  def add(task: Task[C]): Option[(Server[C, S], LoadBalancer[C, S])] = {
     log.info("Task added: {}", task.taskId)
 
-    if (servers.size <= 0) {
-      val msg = "All instances are down, shutting down the server"
-      log.error(msg)
-      throw new Exception(msg)
-    }
+    if (servers.size > 0) {
+      val updatedHistory = history.add(task.toRecord)
+      lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
 
-    val updatedHistory = history.add(task.toRecord)
-    lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
+      val hits = servers.indices
+        .to[Vector]
+        .filter(i => servers(i).currentConfig == task.config)
 
-    val hits = servers.indices
-      .to[Vector]
-      .filter(i => servers(i).currentConfig == task.config)
+      def overBooked =
+        hits.forall(i => servers(i).cost > Server.averageReloadTime)
+      def cacheMiss = hits.isEmpty
 
-    def overBooked =
-      hits.forall(i => servers(i).cost > Server.averageReloadTime)
-    def cacheMiss = hits.isEmpty
-
-    val selectedServerIndice =
-      if (cacheMiss || overBooked) {
-        // we try to find a new configuration to minimize the distance with
-        // the historical data
-        randomMin(configs.indices) { i =>
-          val config = task.config
-          val distance = distanceFromHistory(i, config, historyHistogram)
-          val load = servers(i).cost
-          (distance, load)
+      val selectedServerIndice =
+        if (cacheMiss || overBooked) {
+          // we try to find a new configuration to minimize the distance with
+          // the historical data
+          randomMin(configs.indices) { i =>
+            val config = task.config
+            val distance = distanceFromHistory(i, config, historyHistogram)
+            val load = servers(i).cost
+            (distance, load)
+          }
+        } else {
+          random(hits)
         }
-      } else {
-        random(hits)
+
+      val updatedServers = {
+        val i = selectedServerIndice
+        servers.updated(i, servers(i).add(task))
       }
 
-    val updatedServers = {
-      val i = selectedServerIndice
-      servers.updated(i, servers(i).add(task))
+      Some((
+        servers(selectedServerIndice),
+        LoadBalancer(updatedServers, updatedHistory)
+      ))
+    } else {
+      val msg = "All instances are down"
+      log.error(msg)
+      None
     }
-
-    (servers(selectedServerIndice),
-     LoadBalancer(updatedServers, updatedHistory))
   }
 
   private def distanceFromHistory(targetServerIndex: Int,

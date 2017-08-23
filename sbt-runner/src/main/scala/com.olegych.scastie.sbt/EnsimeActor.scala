@@ -330,10 +330,7 @@ class EnsimeActor(system: ActorSystem,
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        if (!line.contains("received handled message ConnectionInfo") &&
-            true
-            //!line.contains("DEBUG")
-            ) {
+        if (!line.contains("ConnectionInfo")) {
           log.info(line)
         }
         line = is.readLine()

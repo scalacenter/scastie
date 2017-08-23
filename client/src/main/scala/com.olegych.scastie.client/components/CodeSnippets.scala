@@ -1,7 +1,7 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
-import com.olegych.scastie.client.{ApiClient, Page, View}
+import com.olegych.scastie.client.{RestApiClient, Page, View}
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
@@ -24,7 +24,7 @@ object CodeSnippets {
 
     def loadProfile(): Callback = {
       Callback.future(
-        ApiClient
+        RestApiClient
           .fetchUserSnippets()
           .map(summaries => scope.modState(_ => summaries))
       )
@@ -35,7 +35,7 @@ object CodeSnippets {
 
       val remotely =
         Callback.future(
-          ApiClient
+          RestApiClient
             .delete(summary.snippetId)
             .map(_ => Callback.empty)
         )

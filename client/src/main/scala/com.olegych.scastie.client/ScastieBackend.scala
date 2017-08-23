@@ -5,8 +5,7 @@ import components.Scastie
 import play.api.libs.json.Json
 
 import com.olegych.scastie.api._
-import japgolly.scalajs.react._, vdom.all._, extra.StateSnapshot,
-component.Scala.BackendScope
+import japgolly.scalajs.react._, vdom.all._, extra.StateSnapshot,component.Scala.BackendScope
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -104,6 +103,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
   def openHelpModal: Callback = scope.modState(_.openHelpModal)
   def closeHelpModal: Callback = scope.modState(_.closeHelpModal)
+  def toggleHelpModal: Callback = scope.modState(_.toggleHelpModal)
 
   def openWelcomeModal: Callback = scope.modState(_.openWelcomeModal)
   def closeWelcomeModal: Callback = scope.modState(_.closeWelcomeModal)
@@ -118,7 +118,14 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
   def forceDesktop: Callback = scope.modState(_.forceDesktop)
 
-  def toggleWorksheetMode: Callback = scope.modState(_.toggleWorksheetMode)
+  def toggleWorksheetMode: Callback =
+    unlessEmbedded(_.toggleWorksheetMode)
+    
+  private def unlessEmbedded(f: ScastieState => ScastieState): Callback = {
+    scope.props.map(_.isEmbedded).flatMap(isEmbedded =>
+      scope.modState(f).unless_(isEmbedded)
+    )    
+  }
 
   private def connectProgress(snippetId: SnippetId): Callback = {
     EventStream.connect(
@@ -197,7 +204,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         if (!state.isScalaJsScriptLoaded || state.inputsHasChanged) {
           Callback.future(
-            ApiClient
+            RestApiClient
               .run(state.inputs)
               .map(connectProgress)
           )
@@ -230,7 +237,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         Callback.unless(state.isSnippetSaved)(
           Callback.future(
-            ApiClient
+            RestApiClient
               .save(state.inputs)
               .map(saveCallback)
           )
@@ -239,10 +246,10 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   }
 
   def saveOrUpdate: Callback = {
-    scope.state.flatMap(
-      state =>
-        scope.props.flatMap(
-          props =>
+    scope.props.flatMap(
+      props =>
+        scope.state.flatMap(
+          state =>
             props.snippetId match {
               case Some(snippetId) => {
                 if (snippetId.isOwnedBy(state.user)) {
@@ -254,7 +261,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
               case None => save
           }
-      )
+      ).unless_(props.isEmbedded)
     )
   }
 
@@ -263,7 +270,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         Callback.unless(state.isSnippetSaved)(
           Callback.future(
-            ApiClient
+            RestApiClient
               .amend(EditInputs(snippetId, state.inputs))
               .map(
                 success =>
@@ -279,7 +286,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         Callback
           .future(
-            ApiClient
+            RestApiClient
               .fork(EditInputs(snippetId, state.inputs))
               .map {
                 case Some(sId) => saveCallback(sId)
@@ -294,7 +301,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         Callback
           .future(
-            ApiClient
+            RestApiClient
               .update(EditInputs(snippetId, state.inputs))
               .map {
                 case Some(sId) => saveCallback(sId)
@@ -306,14 +313,14 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
 
   def loadOldSnippet(id: Int): Callback = {
     loadSnippetBase(
-      ApiClient
+      RestApiClient
         .fetchOld(id)
     )
   }
 
   def loadSnippet(snippetId: SnippetId): Callback = {
     loadSnippetBase(
-      ApiClient
+      RestApiClient
         .fetch(snippetId),
       afterLoading = _.setSnippetId(snippetId)
     ) >> connectProgress(snippetId)
@@ -373,7 +380,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
   def start(props: Scastie): Callback = {
     def loadUser: Callback =
       Callback.future(
-        ApiClient
+        RestApiClient
           .fetchUser()
           .map(result => scope.modState(_.setUser(result)))
       )
@@ -408,7 +415,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state =>
         Callback.when(state.inputsHasChanged)(
           Callback.future(
-            ApiClient
+            RestApiClient
               .format(
                 FormatRequest(state.inputs.code,
                               state.inputs.worksheetMode,
@@ -445,7 +452,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state => {
         Callback
           .future(
-            ApiClient
+            RestApiClient
               .autocomplete(
                 AutoCompletionRequest(EnsimeRequestInfo(state.inputs, pos))
               )
@@ -465,7 +472,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
       state => {
         Callback
           .future(
-            ApiClient
+            RestApiClient
               .typeAt(
                 TypeAtPointRequest(EnsimeRequestInfo(state.inputs, pos))
               )
@@ -493,7 +500,7 @@ class ScastieBackend(scope: BackendScope[Scastie, ScastieState]) {
     scope.state.flatMap(
       state => {
         Callback.future(
-          ApiClient
+          RestApiClient
             .updateEnsimeConfig(
               UpdateEnsimeConfigRequest(state.inputs)
             )

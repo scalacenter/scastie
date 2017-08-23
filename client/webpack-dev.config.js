@@ -26,7 +26,12 @@ module.exports = Merge(commonConfig, {
     hot: true,
     contentBase: devDir,
     proxy: [{
-      context: ["/login", "/logout", "callback", "/api"],
+      context: [
+        "/login",
+        "/logout",
+        "/callback",
+        "/api"
+      ],
       target: "http://localhost:9000",
     }]
   },

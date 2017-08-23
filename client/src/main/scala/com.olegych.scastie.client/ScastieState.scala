@@ -229,6 +229,12 @@ case class ScastieState(
   def closeWelcomeModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isWelcomeModalClosed = true))
 
+  def toggleHelpModal: ScastieState =
+    copyAndSave(
+      modalState =
+        modalState.copy(isHelpModalClosed = !modalState.isHelpModalClosed)
+    )
+
   def openHelpModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isHelpModalClosed = false))
 

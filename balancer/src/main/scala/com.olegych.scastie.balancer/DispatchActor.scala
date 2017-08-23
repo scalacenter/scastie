@@ -126,15 +126,19 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     log.info("id: {}, ip: {} run inputs: {}", snippetId, ip, inputs)
 
-    val (server, newBalancer) =
-      loadBalancer.add(Task(inputs.sbtConfig, Ip(ip), SbtRunTaskId(snippetId)))
+    val task = Task(inputs.sbtConfig, Ip(ip), SbtRunTaskId(snippetId))
 
-    updateBalancer(newBalancer)
+    loadBalancer.add(task) match {
+      case Some((server, newBalancer)) => {
+        updateBalancer(newBalancer)
 
-    server.ref.tell(
-      SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
-      self
-    )
+        server.ref.tell(
+          SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
+          self
+        )
+      }
+      case _ => ()
+    }
   }
 
   def receive: Receive = {
@@ -142,20 +146,28 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       val taskId = EnsimeTaskId.create
       log.info("id: {}, ip: {} task: {}", taskId, ip, request)
 
-      val (server, newBalancer) =
-        loadBalancer.add(Task(request.inputs.sbtConfig, Ip(ip), taskId))
+      val task = Task(request.inputs.sbtConfig, Ip(ip), taskId)
 
-      updateBalancer(newBalancer)
+      loadBalancer.add(task) match {
+        case Some((server, newBalancer)) => {
+          updateBalancer(newBalancer)
 
-      implicit val timeout: Timeout = Timeout(20.seconds)
-      val senderRef = sender()
+          implicit val timeout: Timeout = Timeout(20.seconds)
+          val senderRef = sender()
 
-      (server.ref ? EnsimeTaskRequest(request, taskId))
-        .mapTo[EnsimeTaskResponse]
-        .map { taskResponse =>
-          updateBalancer(loadBalancer.done(taskResponse.taskId))
-          senderRef ! taskResponse.response
+          (server.ref ? EnsimeTaskRequest(request, taskId))
+            .mapTo[EnsimeTaskResponse]
+            .map { taskResponse =>
+              updateBalancer(loadBalancer.done(taskResponse.taskId))
+              senderRef ! taskResponse.response
+            }
+
         }
+        case None => {
+          
+        }
+      }
+
     }
 
     case EnsimeTaskResponse(response, taskId) => {
