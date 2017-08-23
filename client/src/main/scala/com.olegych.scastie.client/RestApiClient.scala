@@ -13,7 +13,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import scala.util.{Try, Success, Failure}
 
-object ApiClient extends RestApi {
+object RestApiClient extends RestApi {
 
   def tryParse[T: Reads](request: XMLHttpRequest): Option[T] = {
     val rawJson = request.responseText
@@ -42,7 +42,7 @@ object ApiClient extends RestApi {
   }
 
   class Post[O: Reads]() {
-    def using[I: Writes](url: String, data: I): Future[Option[O]] = {
+    def using[I: Writes](url: String, data: I, async: Boolean = true): Future[Option[O]] = {
       Ajax
         .post(
           url = "/api" + url,
@@ -50,7 +50,7 @@ object ApiClient extends RestApi {
           headers = Map(
             "Content-Type" -> "application/json",
             "Accept" -> "application/json"
-          ),
+          )
         )
         .map(ret => tryParse[O](ret))
     }
@@ -80,6 +80,24 @@ object ApiClient extends RestApi {
 
   def save(inputs: Inputs): Future[SnippetId] =
     post[SnippetId].using("/save", inputs).map(_.get)
+
+  def saveBlocking(inputs: Inputs): Option[SnippetId] = {
+    val req = new dom.XMLHttpRequest()
+    req.open("POST", "/api/save", async = false)
+    req.setRequestHeader("Content-Type", "application/json")
+    req.setRequestHeader("Accept", "application/json")
+
+    var snippetId: Option[SnippetId] = None
+
+    req.onreadystatechange = { (e: dom.Event) =>
+      if (req.readyState == 4 && req.status == 200) {
+        snippetId = tryParse[SnippetId](req)
+      }
+    }
+    req.send(Json.prettyPrint(Json.toJson(inputs)))
+
+    snippetId
+  }
 
   def amend(editInputs: EditInputs): Future[Boolean] =
     post[Boolean].using("/amend", editInputs).map(_.getOrElse(false))

@@ -147,7 +147,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val config = "c1"
     val taskId = SbtRunTaskId(SnippetId("1", None))
 
-    val (assigned, balancer0) = balancer.add(Task(config, nextIp, taskId))
+    val (assigned, balancer0) = balancer.add(Task(config, nextIp, taskId)).get
 
     assert(assigned.ref == server.ref)
     assert(balancer0.servers.head.mailbox.size == 1)
@@ -168,7 +168,8 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server.currentTaskId.isEmpty)
 
     val taskId1 = SbtRunTaskId(SnippetId("1", None))
-    val (assigned0, balancer0) = balancer.add(Task("c1", nextIp, taskId1))
+    val (assigned0, balancer0) = 
+      balancer.add(Task("c1", nextIp, taskId1)).get
 
     val server0 = balancer0.servers.head
 
@@ -177,7 +178,8 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server0.currentTaskId.contains(taskId1))
 
     val taskId2 = SbtRunTaskId(SnippetId("2", None))
-    val (assigned1, balancer1) = balancer0.add(Task("c2", nextIp, taskId2))
+    val (assigned1, balancer1) = 
+      balancer0.add(Task("c2", nextIp, taskId2)).get
 
     val server1 = balancer1.servers.head
     assert(server1.mailbox.size == 2)
@@ -201,5 +203,17 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
       History(Queue(), size = 1)
     )
     assert(balancer.removeServer(ref).servers.isEmpty)
+  }
+
+  test("empty balancer") {
+
+    val emptyBalancer = LoadBalancer[String, String](
+      Vector(),
+      History(Queue(), size = 1)
+    )
+    val taskId1 = SbtRunTaskId(SnippetId("1", None))
+    val task = Task("c1", nextIp, taskId1)
+
+    assert(emptyBalancer.add(task).isEmpty)
   }
 }

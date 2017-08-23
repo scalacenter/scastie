@@ -33,6 +33,7 @@ import scala.scalajs._
 
 final case class Editor(isDarkTheme: Boolean,
                         isPresentationMode: Boolean,
+                        isEmbedded: Boolean,
                         showLineNumbers: Boolean,
                         code: String,
                         attachedDoms: AttachedDoms,
@@ -44,6 +45,8 @@ final case class Editor(isDarkTheme: Boolean,
                         run: Callback,
                         saveOrUpdate: Callback,
                         clear: Callback,
+                        openNewSnippetModal: Callback,
+                        toggleHelp: Callback,
                         toggleConsole: Callback,
                         toggleWorksheetMode: Callback,
                         toggleTheme: Callback,
@@ -175,51 +178,6 @@ object Editor {
     }
   }
 
-  private def options(dark: Boolean,
-                      showLineNumbers: Boolean): codemirror.Options = {
-
-    val theme = if (dark) "dark" else "light"
-    val ctrl = if (isMac) "Cmd" else "Ctrl"
-
-    js.Dictionary[Any](
-        "mode" -> "text/x-scala",
-        "autofocus" -> true,
-        "lineNumbers" -> showLineNumbers,
-        "gutters" -> js.Array("CodeMirror-linenumbers"),
-        "lineWrapping" -> false,
-        "tabSize" -> 2,
-        "indentWithTabs" -> false,
-        "theme" -> s"solarized $theme",
-        "smartIndent" -> true,
-        "keyMap" -> "sublime",
-        "scrollPastEnd" -> false,
-        "scrollbarStyle" -> "simple",
-        "autoCloseBrackets" -> true,
-        "matchBrackets" -> true,
-        "showCursorWhenSelecting" -> true,
-        "autofocus" -> true,
-        "highlightSelectionMatches" -> js
-          .Dictionary("showToken" -> js.Dynamic.global.RegExp("\\w")),
-        "extraKeys" -> js.Dictionary(
-          "Tab" -> "defaultTab",
-          ctrl + "-Enter" -> "run",
-          ctrl + "-S" -> "save",
-          ctrl + "-M" -> "newSnippet",
-          "Ctrl" + "-Space" -> "autocomplete",
-          "." -> "autocompleteDot",
-          "Esc" -> "clear",
-          "F1" -> "help",
-          "F2" -> "toggleSolarized",
-          "F3" -> "toggleConsole",
-          "F4" -> "toggleWorksheet",
-          "F6" -> "formatCode",
-          "F7" -> "toggleLineNumbers",
-          "F8" -> "togglePresentationMode"
-        )
-      )
-      .asInstanceOf[codemirror.Options]
-  }
-
   private[Editor] sealed trait Annotation {
     def clear(): Unit
   }
@@ -277,12 +235,108 @@ object Editor {
       }
     }
 
+    private def options(props: Editor): codemirror.Options = {
+      val theme =
+        if (props.isDarkTheme) "dark"
+        else "light"
+
+      val ctrl =
+        if (isMac) "Cmd"
+        else "Ctrl"
+
+      type CME = CodeMirrorEditor2
+
+      def autocomplete(editor: CodeMirrorEditor2): Unit = {
+        if(!props.isEmbedded){
+          val doc = editor.getDoc()
+          val pos = doc.indexFromPos(doc.getCursor())
+          props.clearCompletions.runNow()
+          props.completeCodeAt(pos).runNow()
+
+          if (scope.state.runNow().completionState == Idle) {
+            loadingMessage.show(editor, doc.getCursor())
+          }
+          scope.modState(_.copy(completionState = Requested)).runNow()
+        }
+      }
+
+      val highlightSelectionMatches =
+        js.Dictionary(
+          "showToken" -> js.Dynamic.global.RegExp("\\w")
+        )
+
+      def command(f: => Unit): js.Function1[CodeMirrorEditor2, Unit] = {
+        ((editor: CodeMirrorEditor2) => f)
+      }
+
+      def commandE(
+          f: CodeMirrorEditor2 => Unit
+      ): js.Function1[CodeMirrorEditor2, Unit] = {
+        ((editor: CodeMirrorEditor2) => f(editor))
+      }
+
+      js.Dictionary[Any](
+          "mode" -> "text/x-scala",
+          "autofocus" -> !props.isEmbedded,
+          "lineNumbers" -> props.showLineNumbers,
+          "gutters" -> js.Array("CodeMirror-linenumbers"),
+          "lineWrapping" -> false,
+          "tabSize" -> 2,
+          "indentWithTabs" -> false,
+          "theme" -> s"solarized $theme",
+          "smartIndent" -> true,
+          "keyMap" -> "sublime",
+          "scrollPastEnd" -> false,
+          "scrollbarStyle" -> "simple",
+          "autoCloseBrackets" -> true,
+          "matchBrackets" -> true,
+          "showCursorWhenSelecting" -> true,
+          "highlightSelectionMatches" -> highlightSelectionMatches,
+          "extraKeys" -> js.Dictionary(
+            "Tab" -> "defaultTab",
+            ctrl + "-Enter" -> command(props.run.runNow()),
+            ctrl + "-S" -> command(props.saveOrUpdate.runNow()),
+            ctrl + "-M" -> command(props.openNewSnippetModal.runNow()),
+            "Ctrl" + "-Space" -> commandE { editor =>
+              if (props.hasEnsimeSupport) {
+                autocomplete(editor)
+              }
+            },
+            "." -> commandE { editor =>
+              editor.getDoc().replaceSelection(".")
+
+              if (props.hasEnsimeSupport) {
+                props.codeChange(editor.getDoc().getValue()).runNow()
+                autocomplete(editor)
+              }
+            },
+            "Esc" -> command(props.clear.runNow()),
+            "F1" -> command(props.toggleHelp.runNow()),
+            "F2" -> command(props.toggleTheme.runNow()),
+            "F3" -> command(props.toggleConsole.runNow()),
+            "F4" -> command(props.toggleWorksheetMode.runNow()),
+            "F6" -> command(props.formatCode.runNow()),
+            "F7" -> command(props.toggleLineNumbers.runNow()),
+            "F8" -> command {
+              if(!props.isEmbedded) {
+                props.togglePresentationMode.runNow()
+                if (!props.isPresentationMode) {
+                  dom.window
+                    .alert("Press F8 again to leave the presentation mode")
+                }
+              }
+            }
+          )
+        )
+        .asInstanceOf[codemirror.Options]
+    }
+
     def start(): Callback = {
       scope.props.flatMap { props =>
         val editor =
           codemirror.CodeMirror.fromTextArea(
             codemirrorTextarea,
-            options(props.isDarkTheme, props.showLineNumbers)
+            options(props)
           )
 
         editor.onFocus(_.refresh())
@@ -403,73 +457,6 @@ object Editor {
               }
             }
           )
-        }
-
-        CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
-          props.run.runNow()
-        }
-
-        CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
-          props.saveOrUpdate.runNow()
-        }
-
-        CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
-          props.clear.runNow()
-        }
-
-        CodeMirror.commands.toggleConsole = (editor: CodeMirrorEditor2) => {
-          props.toggleConsole.runNow()
-        }
-
-        CodeMirror.commands.toggleWorksheet = (editor: CodeMirrorEditor2) => {
-          props.toggleWorksheetMode.runNow()
-        }
-
-        CodeMirror.commands.toggleSolarized = (editor: CodeMirrorEditor2) => {
-          props.toggleTheme.runNow()
-        }
-
-        CodeMirror.commands.formatCode = (editor: CodeMirrorEditor2) => {
-          props.formatCode.runNow()
-        }
-
-        CodeMirror.commands.toggleLineNumbers = (editor: CodeMirrorEditor2) => {
-          props.toggleLineNumbers.runNow()
-        }
-
-        CodeMirror.commands.togglePresentationMode =
-          (editor: CodeMirrorEditor2) => {
-            props.togglePresentationMode.runNow()
-            if (!props.isPresentationMode) {
-              dom.window.alert("Press F8 again to leave the presentation mode")
-            }
-          }
-
-        CodeMirror.commands.autocompleteDot = (editor: CodeMirrorEditor2) => {
-          editor.getDoc().replaceSelection(".")
-
-          if (props.hasEnsimeSupport) {
-            props.codeChange(editor.getDoc().getValue()).runNow()
-            autocomplete(editor)
-          }
-        }
-
-        CodeMirror.commands.autocomplete = (editor: CodeMirrorEditor2) => {
-          if (props.hasEnsimeSupport) {
-            autocomplete(editor)
-          }
-        }
-
-        def autocomplete(editor: CodeMirrorEditor2): Unit = {
-          val doc = editor.getDoc()
-          val pos = doc.indexFromPos(doc.getCursor())
-          props.clearCompletions.runNow()
-          props.completeCodeAt(pos).runNow()
-
-          if (scope.state.runNow().completionState == Idle) {
-            loadingMessage.show(editor, doc.getCursor())
-          }
-          scope.modState(_.copy(completionState = Requested)).runNow()
         }
 
         val setEditor =

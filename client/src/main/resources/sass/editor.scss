@@ -64,19 +64,6 @@
     height: 100%;
   }
 
-
-  .root:not(.embedded) {
-    .editor-container {
-      .code {
-        height: calc(100% - #{$header-height + $editor-topbar-height + $console-handle-height});
-
-        &.console-open{
-          height: calc(100% - #{$header-height + $editor-topbar-height + $console-height});
-        }
-      }
-    }
-  }
-
   .root.embedded {
     width: 800px;
     margin: 100px auto;
@@ -95,9 +82,10 @@
         }
 
         &.console-open{
-          min-height: 0;
-          min-height: $min-height - $console-height + $console-handle-height;
-          height: calc(100% - #{$console-height});
+          .CodeMirror-scroll {
+            min-height: $min-height - $console-height + $console-handle-height;
+            height: 100%;
+          }
         }
       }
     }
@@ -132,6 +120,18 @@
     }
   }
 
+  .root:not(.embedded) {
+    .editor-container {
+      .code {
+        height: calc(100% - #{$header-height + $editor-topbar-height + $console-handle-height});
+
+        &.console-open{
+          height: calc(100% - #{$header-height + $editor-topbar-height + $console-height});
+        }
+      }
+    }
+  }
+
 
   .embedded-menu {
     position: absolute;
@@ -141,9 +141,19 @@
     margin: 20px;
 
     & > * {
+      cursor: pointer;
       margin: 10px;
       padding: 10px;
       font-size: 20px;
+    }
+
+    .logo {
+      img {
+        display: inline-block;
+        width: 20px;
+        margin: 0 5px 0 5px;
+        vertical-align: middle;
+      }
     }
   }
 
@@ -193,108 +203,112 @@
 
   }
 
-  @include phone {
-    .main-panel {
-      left: 0;
-      width: 100%;
-    }
+  .root:not(.embedded) {
+    @include phone {
+      .main-panel {
+        left: 0;
+        width: 100%;
+      }
 
-    .content {
-      height: 100%;
-    }
+      .content {
+        height: 100%;
+      }
 
-    .force-desktop {
-      .editor-container {
-        .code {
-          height: calc(100% - #{$force-desktop-height + $console-handle-height});
-          &.console-open{
-            height: calc(100% - #{$force-desktop-height + $console-height});
+      .force-desktop {
+        .editor-container {
+          .code {
+            height: calc(100% - #{$force-desktop-height + $console-handle-height});
+            &.console-open{
+              height: calc(100% - #{$force-desktop-height + $console-height});
+            }
           }
         }
       }
-    }
 
-    .editor-container {
-      .code {
-        height: calc(100% - #{$editor-mobile-height + $console-handle-height});
-        &.console-open{
-          height: calc(100% - #{$editor-mobile-height + $console-height});
+      .editor-container {
+        .code {
+          height: calc(100% - #{$editor-mobile-height + $console-handle-height});
+          &.console-open{
+            height: calc(100% - #{$editor-mobile-height + $console-height});
+          }
         }
       }
-    }
 
-    .editor-topbar {
-      display: none !important;
-    }
-
-    .content {
-      margin-left: 0px !important;
-    }
-
-    .btn.run-button.mobile {
-      display: block;
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-    }
-
-    .switcher-show, .console {
-      bottom: 48px !important;
-      left: 0px !important;
-    }
-
-    .editor-mobile {
-      display: block;
-      position: fixed;
-      bottom: 0px;
-      left: 0px;
-      height: $editor-mobile-height;
-      width: 100%;
-      
-      & > * {
-        padding: 0px 24px !important;
+      .editor-topbar {
+        display: none !important;
       }
 
-      .btn {
-        text-align: center;
-        width: 50%;
-        line-height: 48px !important;
-        font-size: 20px;
-        display: inline-block !important;
-        float: left;
-        padding: 0px !important;
-        span {
-            display: none;
+      .content {
+        margin-left: 0px !important;
+      }
+
+      .btn.run-button.mobile {
+        display: block;
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+      }
+
+      .switcher-show, .console {
+        bottom: 48px !important;
+        left: 0px !important;
+      }
+
+      .editor-mobile {
+        display: block;
+        position: fixed;
+        bottom: 0px;
+        left: 0px;
+        height: $editor-mobile-height;
+        width: 100%;
+        
+        & > * {
+          padding: 0px 24px !important;
         }
-        i.fa {
-            line-height: 40px;
-            font-size: 20px;
+
+        .btn {
+          text-align: center;
+          width: 50%;
+          line-height: 48px !important;
+          font-size: 20px;
+          display: inline-block !important;
+          float: left;
+          padding: 0px !important;
+          span {
+              display: none;
+          }
+          i.fa {
+              line-height: 40px;
+              font-size: 20px;
+          }
         }
       }
     }
   }
 
-  @include tablet {
-    .force-desktop {
+  .root:not(.embedded) {
+    @include tablet {
+      .force-desktop {
+        .main-panel {
+          width: calc(100% - #{$force-desktop-width});  
+        }      
+      }
+
       .main-panel {
-        width: calc(100% - #{$force-desktop-width});  
-      }      
-    }
+        left: $sidebar-tablet-width;
+        width: calc(100% - #{$sidebar-tablet-width});
+      }
 
-    .main-panel {
-      left: $sidebar-tablet-width;
-      width: calc(100% - #{$sidebar-tablet-width});
-    }
+      .editor-topbar {
+        font-size: 20px;
+        li span {
+          display: none;
+        }
+      }
 
-    .editor-topbar {
-      font-size: 20px;
-      li span {
+      .editor-mobile {
         display: none;
       }
-    }
-
-    .editor-mobile {
-      display: none;
     }
   }
 }
