@@ -125,7 +125,7 @@ object BuildSettings {
                 select(name := "scalaVersion",
                        value := scalaVersion.toString,
                        onChange ==> setScalaVersion(targetFun))(
-                  ScalaTarget.allVersions
+                  ScalaVersions.allVersions
                     .map(version => option(version))
                     .toTagMod
                 )

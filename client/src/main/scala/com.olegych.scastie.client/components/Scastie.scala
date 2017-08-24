@@ -95,8 +95,16 @@ object Scastie {
         val state = LocalStorage.load.getOrElse(ScastieState.default)
 
         props.targetType match {
-          case Some(targetType) =>
-            state.setTarget(targetType.defaultScalaTarget)
+          case Some(targetType) => {
+            val state0 =
+              state.setTarget(targetType.defaultScalaTarget)
+
+            if(targetType == ScalaTargetType.Dotty) {
+              state0.setCode(ScalaTarget.Dotty.defaultCode)
+            } else {
+              state0
+            }
+          }
           case _ => state
         }
       }
