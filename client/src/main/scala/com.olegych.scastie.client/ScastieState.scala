@@ -107,7 +107,7 @@ case class ScastieState(
     status: StatusState,
     completions: List[Completion],
     typeAtInfo: ScastieState.TypeInfoAtHint,
-    isEmbedded: Boolean
+    isEmbedded: Boolean = false
 ) {
 
   def snippetId: Option[SnippetId] = snippetState.snippetId
