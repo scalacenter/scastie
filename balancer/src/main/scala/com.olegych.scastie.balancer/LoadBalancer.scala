@@ -125,7 +125,8 @@ case class LoadBalancer[C, S](
 
     if (servers.size > 0) {
       val updatedHistory = history.add(task.toRecord)
-      lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
+      lazy val historyHistogram =
+        updatedHistory.data.map(_.config).to[Histogram]
 
       val hits = servers.indices
         .to[Vector]
@@ -154,10 +155,12 @@ case class LoadBalancer[C, S](
         servers.updated(i, servers(i).add(task))
       }
 
-      Some((
-        servers(selectedServerIndice),
-        LoadBalancer(updatedServers, updatedHistory)
-      ))
+      Some(
+        (
+          servers(selectedServerIndice),
+          LoadBalancer(updatedServers, updatedHistory)
+        )
+      )
     } else {
       val msg = "All instances are down"
       log.error(msg)

@@ -168,7 +168,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server.currentTaskId.isEmpty)
 
     val taskId1 = SbtRunTaskId(SnippetId("1", None))
-    val (assigned0, balancer0) = 
+    val (assigned0, balancer0) =
       balancer.add(Task("c1", nextIp, taskId1)).get
 
     val server0 = balancer0.servers.head
@@ -178,7 +178,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server0.currentTaskId.contains(taskId1))
 
     val taskId2 = SbtRunTaskId(SnippetId("2", None))
-    val (assigned1, balancer1) = 
+    val (assigned1, balancer1) =
       balancer0.add(Task("c2", nextIp, taskId2)).get
 
     val server1 = balancer1.servers.head

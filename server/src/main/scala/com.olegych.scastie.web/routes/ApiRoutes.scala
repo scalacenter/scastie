@@ -39,75 +39,77 @@ class ApiRoutes(
     }
 
   val routes: Route =
-    withRestApiServer(
-      server =>
-        concat(
-          post(
-            concat(
-              path("run")(
-                entity(as[Inputs])(inputs => complete(server.run(inputs)))
-              ),
-              path("save")(
-                entity(as[Inputs])(inputs => complete(server.save(inputs)))
-              ),
-              path("amend")(
-                entity(as[EditInputs])(
-                  editInputs => complete(server.amend(editInputs))
+    cors()(
+      withRestApiServer(
+        server =>
+          concat(
+            post(
+              concat(
+                path("run")(
+                  entity(as[Inputs])(inputs => complete(server.run(inputs)))
+                ),
+                path("save")(
+                  entity(as[Inputs])(inputs => complete(server.save(inputs)))
+                ),
+                path("amend")(
+                  entity(as[EditInputs])(
+                    editInputs => complete(server.amend(editInputs))
+                  )
+                ),
+                path("update")(
+                  entity(as[EditInputs])(
+                    editInputs => complete(server.update(editInputs))
+                  )
+                ),
+                path("fork")(
+                  entity(as[EditInputs])(
+                    editInputs => complete(server.fork(editInputs))
+                  )
+                ),
+                path("delete")(
+                  entity(as[SnippetId])(
+                    snippetId => complete(server.delete(snippetId))
+                  )
+                ),
+                path("autocomplete")(
+                  entity(as[AutoCompletionRequest])(
+                    request => complete(server.autocomplete(request))
+                  )
+                ),
+                path("typeAt")(
+                  entity(as[TypeAtPointRequest])(
+                    request => complete(server.typeAt(request))
+                  )
+                ),
+                path("updateEnsimeConfig")(
+                  entity(as[UpdateEnsimeConfigRequest])(
+                    request => complete(server.updateEnsimeConfig(request))
+                  )
+                ),
+                path("format")(
+                  entity(as[FormatRequest])(
+                    request => complete(server.format(request))
+                  )
                 )
-              ),
-              path("update")(
-                entity(as[EditInputs])(
-                  editInputs => complete(server.update(editInputs))
-                )
-              ),
-              path("fork")(
-                entity(as[EditInputs])(
-                  editInputs => complete(server.fork(editInputs))
-                )
-              ),
-              path("delete")(
-                entity(as[SnippetId])(
-                  snippetId => complete(server.delete(snippetId))
-                )
-              ),
-              path("autocomplete")(
-                entity(as[AutoCompletionRequest])(
-                  request => complete(server.autocomplete(request))
-                )
-              ),
-              path("typeAt")(
-                entity(as[TypeAtPointRequest])(
-                  request => complete(server.typeAt(request))
-                )
-              ),
-              path("updateEnsimeConfig")(
-                entity(as[UpdateEnsimeConfigRequest])(
-                  request => complete(server.updateEnsimeConfig(request))
-                )
-              ),
-              path("format")(
-                entity(as[FormatRequest])(
-                  request => complete(server.format(request))
+              )
+            ),
+            get(
+              concat(
+                snippetId("snippets")(
+                  sid => complete(server.fetch(sid))
+                ),
+                path("old-snippets" / IntNumber)(
+                  id => complete(server.fetchOld(id))
+                ),
+                path("user" / "settings")(
+                  complete(server.fetchUser())
+                ),
+                path("user" / "snippets")(
+                  complete(server.fetchUserSnippets())
                 )
               )
             )
-          ),
-          get(
-            concat(
-              snippetId("snippets")(
-                sid => complete(server.fetch(sid))
-              ),
-              path("old-snippets" / IntNumber)(
-                id => complete(server.fetchOld(id))
-              ),
-              path("user" / "settings")(
-                complete(server.fetchUser())
-              ),
-              path("user" / "snippets")(
-                complete(server.fetchUserSnippets())
-              )
-            )
-          )
+        )
       )
     )
 }

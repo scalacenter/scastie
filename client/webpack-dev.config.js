@@ -36,6 +36,9 @@ module.exports = Merge(commonConfig, {
     }]
   },
   plugins: [
-    new Webpack.HotModuleReplacementPlugin()
+    new Webpack.HotModuleReplacementPlugin(),
+    new Webpack.DefinePlugin({
+      PRODUCTION: false  
+    })
   ]
 });

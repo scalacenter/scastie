@@ -13,7 +13,9 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import scala.util.{Try, Success, Failure}
 
-object RestApiClient extends RestApi {
+class RestApiClient(serverUrl: Option[String]) extends RestApi {
+
+  val apiBase = serverUrl.getOrElse("")
 
   def tryParse[T: Reads](request: XMLHttpRequest): Option[T] = {
     val rawJson = request.responseText
@@ -35,17 +37,19 @@ object RestApiClient extends RestApi {
   def get[T: Reads](url: String): Future[Option[T]] = {
     Ajax
       .get(
-        url = "/api" + url,
+        url = apiBase + "/api" + url,
         headers = Map("Accept" -> "application/json")
       )
       .map(ret => tryParse[T](ret))
   }
 
   class Post[O: Reads]() {
-    def using[I: Writes](url: String, data: I, async: Boolean = true): Future[Option[O]] = {
+    def using[I: Writes](url: String,
+                         data: I,
+                         async: Boolean = true): Future[Option[O]] = {
       Ajax
         .post(
-          url = "/api" + url,
+          url = apiBase + "/api" + url,
           data = Json.prettyPrint(Json.toJson(data)),
           headers = Map(
             "Content-Type" -> "application/json",
@@ -83,7 +87,11 @@ object RestApiClient extends RestApi {
 
   def saveBlocking(inputs: Inputs): Option[SnippetId] = {
     val req = new dom.XMLHttpRequest()
-    req.open("POST", "/api/save", async = false)
+    req.open(
+      "POST",
+      apiBase + "/api/save",
+      async = false
+    )
     req.setRequestHeader("Content-Type", "application/json")
     req.setRequestHeader("Accept", "application/json")
 

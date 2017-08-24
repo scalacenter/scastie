@@ -17,10 +17,11 @@ trait EmbeddedOptionsJs extends js.Object {
   val targetType: UndefOr[String]
   val scalaVersion: UndefOr[String]
   val sbtConfig: UndefOr[String]
+  val serverUrl: UndefOr[String]
 }
 
 object EmbeddedOptions {
-  def empty: EmbeddedOptions = EmbeddedOptions(None, None)
+  def empty: EmbeddedOptions = EmbeddedOptions(None, None, None)
   def fromJs(options: EmbeddedOptionsJs): EmbeddedOptions = {
     import options._
 
@@ -33,12 +34,16 @@ object EmbeddedOptions {
             user.toOption
               .map(u => SnippetUserPart(u, update.toOption.getOrElse(0)))
         )
-      )
+      ),
+      serverUrl = serverUrl.toOption
     )
   }
 }
 
-case class EmbeddedOptions(snippetId: Option[SnippetId], inputs: Option[Inputs]) {
+case class EmbeddedOptions(snippetId: Option[SnippetId],
+                           inputs: Option[Inputs],
+                           serverUrl: Option[String]) {
+
   def hasCode: Boolean = inputs.map(!_.code.isEmpty).getOrElse(false)
   def setCode(code: String): EmbeddedOptions = {
     val inputs0 = inputs.getOrElse(Inputs.default)

@@ -163,9 +163,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
             }
 
         }
-        case None => {
-          
-        }
+        case None => {}
       }
 
     }

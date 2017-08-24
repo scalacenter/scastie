@@ -247,7 +247,7 @@ object Editor {
       type CME = CodeMirrorEditor2
 
       def autocomplete(editor: CodeMirrorEditor2): Unit = {
-        if(!props.isEmbedded){
+        if (!props.isEmbedded) {
           val doc = editor.getDoc()
           val pos = doc.indexFromPos(doc.getCursor())
           props.clearCompletions.runNow()
@@ -318,7 +318,7 @@ object Editor {
             "F6" -> command(props.formatCode.runNow()),
             "F7" -> command(props.toggleLineNumbers.runNow()),
             "F8" -> command {
-              if(!props.isEmbedded) {
+              if (!props.isEmbedded) {
                 props.togglePresentationMode.runNow()
                 if (!props.isPresentationMode) {
                   dom.window
