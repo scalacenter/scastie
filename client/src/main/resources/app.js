@@ -45,6 +45,8 @@ if (PRODUCTION) {
 
     document.body.className = "scastie-embedded-dev"
 
+    document.title = "Embedded Demo"
+
     Main.embedded(
       "pre",
       {

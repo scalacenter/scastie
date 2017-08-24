@@ -40,11 +40,15 @@ object Scastie {
       targetType = None
     )
 
-  private def setTitle(state: ScastieState) =
-    if (state.inputsHasChanged) {
-      Callback(dom.document.title = "Scastie (*)")
+  private def setTitle(state: ScastieState, props: Scastie) =
+    if(!props.isEmbedded) {
+      if (state.inputsHasChanged) {
+        Callback(dom.document.title = "Scastie (*)")
+      } else {
+        Callback(dom.document.title = "Scastie")
+      }
     } else {
-      Callback(dom.document.title = "Scastie")
+      Callback(())
     }
 
   private def render(
@@ -100,7 +104,7 @@ object Scastie {
       .renderPS(render)
       .componentWillMount { current =>
         current.backend.start(current.props) >>
-          setTitle(current.state) >>
+          setTitle(current.state, current.props) >>
           current.backend.connectStatus
       }
       .componentDidUpdate { scope =>
@@ -182,7 +186,7 @@ object Scastie {
               .modState(_.setIsReRunningScalaJs(false))
           )
 
-        setTitle(state) >> executeScalaJs >> reRunScalaJs
+        setTitle(state, scope.currentProps) >> executeScalaJs >> reRunScalaJs
       }
       .componentWillReceiveProps { scope =>
         val next = scope.nextProps.snippetId
@@ -199,7 +203,7 @@ object Scastie {
             )
           } yield ()
 
-        setTitle(state) >> loadSnippet.toCallback
+        setTitle(state, scope.nextProps) >> loadSnippet.toCallback
       }
       .build
 }
