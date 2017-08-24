@@ -27,12 +27,14 @@ if (PRODUCTION) {
 
     var pre = document.createElement("pre");
     pre.innerText = "1+1";
+    pre.className = "dotty";
 
     var p1 = document.createElement("p");
     p1.innerText = "some text p1";
     
     var pre2 = document.createElement("pre");
-    pre2.innerText = "List(1, 2, 3)";
+    // pre2.innerText = "List(1, 2, 3)";
+    pre2.className = "scala";
 
     var p2 = document.createElement("p");
     p2.innerText = "end of document";
@@ -48,7 +50,15 @@ if (PRODUCTION) {
     document.title = "Embedded Demo"
 
     Main.embedded(
-      "pre",
+      "pre.dotty",
+      {
+        serverUrl: "http://localhost:9000",
+        targetType: "dotty"
+      }
+    );
+
+    Main.embedded(
+      "pre.scala",
       {
         serverUrl: "http://localhost:9000"
       }

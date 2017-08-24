@@ -262,28 +262,28 @@ object ScalaTarget {
   object Dotty {
     def default = Dotty(defaultDottyVersion)
 
-    def defaultCode = 
+    def defaultCode =
       """|// You can find more examples here:
          |//   https://github.com/lampepfl/dotty-example-project
          |
-         |abstract class Base {
-         |  def message: String
+         |// Name Based Pattern
+         |// http://dotty.epfl.ch/docs/reference/changed/pattern-matching.html#name-based-pattern
+         |
+         |class Nat(val x: Int) {
+         |  def get: Int = x
+         |  def isEmpty = x < 0
          |}
          |
-         |class A extends Base {
-         |  def message: String = "Hello"
-         |}
-         |
-         |class B extends Base {
-         |  def message: String = "Dotty!"
+         |object Nat {
+         |  def unapply(x: Int): Nat = new Nat(x)
          |}
          |
          |object Main {
          |  def main(args: Array[String]): Unit = { 
-         |    def helloDotty(msgs: (A | B)*): String = 
-         |      msgs.map(_.message).mkString(", ")
-         |    
-         |    println(helloDotty(new A, new B))
+         |    5 match {
+         |      case Nat(n) => println(s"$n is a natural number")
+         |      case _      => ()
+         |    }
          |  }
          |}""".stripMargin
   }
