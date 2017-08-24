@@ -24,35 +24,40 @@ case class SnippetState(
 )
 
 object ScastieState {
-  def default = ScastieState(
-    view = View.Editor,
-    isRunning = false,
-    statusStream = None,
-    progressStream = None,
-    modalState = ModalState.default,
-    isDarkTheme = false,
-    isDesktopForced = false,
-    isPresentationMode = false,
-    showLineNumbers = false,
-    consoleState = ConsoleState.default,
-    inputsHasChanged = false,
-    snippetState = SnippetState(
-      snippetId = None,
-      isSnippetSaved = false,
-      loadSnippet = true,
-      loadScalaJsScript = false,
-      isScalaJsScriptLoaded = false,
-      snippetIdIsScalaJS = false,
-      isReRunningScalaJs = false
-    ),
-    user = None,
-    attachedDoms = AttachedDoms(Map()),
-    inputs = Inputs.default,
-    outputs = Outputs.default,
-    status = StatusState.default,
-    completions = List(),
-    typeAtInfo = None
-  )
+  def default(isEmbedded: Boolean) = {
+    ScastieState(
+      view = View.Editor,
+      isRunning = false,
+      statusStream = None,
+      progressStream = None,
+      modalState =
+        if (isEmbedded) ModalState.allClosed
+        else ModalState.default,
+      isDarkTheme = false,
+      isDesktopForced = false,
+      isPresentationMode = false,
+      showLineNumbers = false,
+      consoleState = ConsoleState.default,
+      inputsHasChanged = false,
+      snippetState = SnippetState(
+        snippetId = None,
+        isSnippetSaved = false,
+        loadSnippet = true,
+        loadScalaJsScript = false,
+        isScalaJsScriptLoaded = false,
+        snippetIdIsScalaJS = false,
+        isReRunningScalaJs = false
+      ),
+      user = None,
+      attachedDoms = AttachedDoms(Map()),
+      inputs = Inputs.default,
+      outputs = Outputs.default,
+      status = StatusState.default,
+      completions = List(),
+      typeAtInfo = None,
+      isEmbedded = isEmbedded
+    )
+  }
 
   implicit val dontSerializeCompletions: Format[List[Completion]] =
     dontSerializeList[Completion]
@@ -101,7 +106,8 @@ case class ScastieState(
     outputs: Outputs,
     status: StatusState,
     completions: List[Completion],
-    typeAtInfo: ScastieState.TypeInfoAtHint
+    typeAtInfo: ScastieState.TypeInfoAtHint,
+    isEmbedded: Boolean
 ) {
 
   def snippetId: Option[SnippetId] = snippetState.snippetId
@@ -167,10 +173,13 @@ case class ScastieState(
         outputs,
         status,
         completions,
-        typeAtInfo
+        typeAtInfo,
+        isEmbedded
       )
 
-    LocalStorage.save(state0)
+    if (!isEmbedded) {
+      LocalStorage.save(state0)
+    }
 
     state0
   }

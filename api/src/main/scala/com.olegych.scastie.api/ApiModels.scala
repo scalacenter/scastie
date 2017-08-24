@@ -105,7 +105,8 @@ case class TypeAtPointRequest(info: EnsimeRequestInfo) extends EnsimeRequest {
 }
 
 object UpdateEnsimeConfigRequest {
-  implicit val formatUpdateEnsimeConfigRequest: OFormat[UpdateEnsimeConfigRequest] =
+  implicit val formatUpdateEnsimeConfigRequest
+    : OFormat[UpdateEnsimeConfigRequest] =
     Json.format[UpdateEnsimeConfigRequest]
 }
 

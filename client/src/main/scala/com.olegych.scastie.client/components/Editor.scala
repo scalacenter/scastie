@@ -468,7 +468,14 @@ object Editor {
               runDelta(editor, f => scope.modState(f), state, None, props)
           )
 
-        setEditor >> applyDeltas
+        val delayedRefresh =
+          Callback(
+            scalajs.js.timers.setTimeout(0)(
+              editor.refresh()
+            )
+          )
+
+        setEditor >> applyDeltas >> delayedRefresh
       }
     }
   }

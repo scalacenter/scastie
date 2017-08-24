@@ -41,7 +41,7 @@ object Scastie {
     )
 
   private def setTitle(state: ScastieState, props: Scastie) =
-    if(!props.isEmbedded) {
+    if (!props.isEmbedded) {
       if (state.inputsHasChanged) {
         Callback(dom.document.title = "Scastie (*)")
       } else {
@@ -92,14 +92,16 @@ object Scastie {
     ScalaComponent
       .builder[Scastie]("Scastie")
       .initialStateFromProps { props =>
-        val state = LocalStorage.load.getOrElse(ScastieState.default)
+        val state = LocalStorage.load.getOrElse(
+          ScastieState.default(props.isEmbedded)
+        )
 
         props.targetType match {
           case Some(targetType) => {
             val state0 =
               state.setTarget(targetType.defaultScalaTarget)
 
-            if(targetType == ScalaTargetType.Dotty) {
+            if (targetType == ScalaTargetType.Dotty) {
               state0.setCode(ScalaTarget.Dotty.defaultCode)
             } else {
               state0
