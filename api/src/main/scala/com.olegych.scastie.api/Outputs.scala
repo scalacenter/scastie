@@ -3,8 +3,7 @@ package com.olegych.scastie.api
 import play.api.libs.json._
 
 object ReleaseOptions {
-  implicit val formatReleaseOptions
-    : OFormat[com.olegych.scastie.api.ReleaseOptions] =
+  implicit val formatReleaseOptions: OFormat[ReleaseOptions] =
     Json.format[ReleaseOptions]
 }
 
@@ -15,7 +14,7 @@ case class ReleaseOptions(groupId: String,
 // case class MavenReference(groupId: String, artifactId: String, version: String)
 
 object Outputs {
-  implicit val formatOutputs: OFormat[com.olegych.scastie.api.Outputs] =
+  implicit val formatOutputs: OFormat[Outputs] =
     Json.format[Outputs]
 
   def default = Outputs(
@@ -44,7 +43,7 @@ case class Outputs(
 }
 
 object Position {
-  implicit val formatPosition: OFormat[com.olegych.scastie.api.Position] =
+  implicit val formatPosition: OFormat[Position] =
     Json.format[Position]
 }
 

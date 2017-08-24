@@ -19,8 +19,7 @@ object SnippetProgress {
       forcedProgramMode = false
     )
 
-  implicit val formatSnippetProgress
-    : OFormat[com.olegych.scastie.api.SnippetProgress] =
+  implicit val formatSnippetProgress: OFormat[SnippetProgress] =
     Json.format[SnippetProgress]
 }
 
