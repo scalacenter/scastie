@@ -9,8 +9,7 @@ case class SbtRunnerConnect(hostname: String, port: Int)
 case object SbtRunnerConnected
 
 object SnippetSummary {
-  implicit val formatSnippetSummary
-    : OFormat[com.olegych.scastie.api.SnippetSummary] =
+  implicit val formatSnippetSummary: OFormat[SnippetSummary] =
     Json.format[SnippetSummary]
 }
 
@@ -21,8 +20,7 @@ case class SnippetSummary(
 )
 
 object FormatRequest {
-  implicit val formatFormatRequest
-    : OFormat[com.olegych.scastie.api.FormatRequest] =
+  implicit val formatFormatRequest: OFormat[FormatRequest] =
     Json.format[FormatRequest]
 }
 
@@ -81,16 +79,14 @@ sealed trait EnsimeRequest {
 }
 
 object EnsimeRequestInfo {
-  implicit val formatEnsimeRequestInfo
-    : OFormat[com.olegych.scastie.api.EnsimeRequestInfo] =
+  implicit val formatEnsimeRequestInfo: OFormat[EnsimeRequestInfo] =
     Json.format[EnsimeRequestInfo]
 }
 
 case class EnsimeRequestInfo(inputs: Inputs, offset: Int)
 
 object AutoCompletionRequest {
-  implicit val formatAutoCompletionRequest
-    : OFormat[com.olegych.scastie.api.AutoCompletionRequest] =
+  implicit val formatAutoCompletionRequest: OFormat[AutoCompletionRequest] =
     Json.format[AutoCompletionRequest]
 }
 
@@ -100,8 +96,7 @@ case class AutoCompletionRequest(info: EnsimeRequestInfo)
 }
 
 object TypeAtPointRequest {
-  implicit val formatTypeAtPointRequest
-    : OFormat[com.olegych.scastie.api.TypeAtPointRequest] =
+  implicit val formatTypeAtPointRequest: OFormat[TypeAtPointRequest] =
     Json.format[TypeAtPointRequest]
 }
 
@@ -110,8 +105,7 @@ case class TypeAtPointRequest(info: EnsimeRequestInfo) extends EnsimeRequest {
 }
 
 object UpdateEnsimeConfigRequest {
-  implicit val formatUpdateEnsimeConfigRequest
-    : OFormat[com.olegych.scastie.api.UpdateEnsimeConfigRequest] =
+  implicit val formatUpdateEnsimeConfigRequest: OFormat[UpdateEnsimeConfigRequest] =
     Json.format[UpdateEnsimeConfigRequest]
 }
 
@@ -120,7 +114,7 @@ case class UpdateEnsimeConfigRequest(newInputs: Inputs) extends EnsimeRequest {
 }
 
 object Completion {
-  implicit val formatCompletion: OFormat[com.olegych.scastie.api.Completion] =
+  implicit val formatCompletion: OFormat[Completion] =
     Json.format[Completion]
 }
 
@@ -131,7 +125,7 @@ case class Completion(
 )
 
 object TypeInfoAt {
-  implicit val formatTypeInfoAt: OFormat[com.olegych.scastie.api.TypeInfoAt] =
+  implicit val formatTypeInfoAt: OFormat[TypeInfoAt] =
     Json.format[TypeInfoAt]
 }
 
@@ -143,8 +137,7 @@ case class TypeInfoAt(
 sealed trait EnsimeResponse
 
 object AutoCompletionResponse {
-  implicit val formatAutoCompletionResponse
-    : OFormat[com.olegych.scastie.api.AutoCompletionResponse] =
+  implicit val formatAutoCompletionResponse: OFormat[AutoCompletionResponse] =
     Json.format[AutoCompletionResponse]
 }
 
@@ -152,8 +145,7 @@ case class AutoCompletionResponse(completions: List[Completion])
     extends EnsimeResponse
 
 object TypeAtPointResponse {
-  implicit val formatTypeAtPointResponse
-    : OFormat[com.olegych.scastie.api.TypeAtPointResponse] =
+  implicit val formatTypeAtPointResponse: OFormat[TypeAtPointResponse] =
     Json.format[TypeAtPointResponse]
 }
 
@@ -182,7 +174,7 @@ case class EnsimeTaskResponse(response: Option[EnsimeResponse],
                               taskId: EnsimeTaskId)
 
 object FetchResult {
-  implicit val formatFetchResult: OFormat[com.olegych.scastie.api.FetchResult] =
+  implicit val formatFetchResult: OFormat[FetchResult] =
     Json.format[FetchResult]
 }
 
@@ -198,8 +190,7 @@ case class FetchScalaSource(snippetId: SnippetId)
 case class FetchResultScalaSource(content: String)
 
 object ScalaDependency {
-  implicit val formatScalaDependency
-    : OFormat[com.olegych.scastie.api.ScalaDependency] =
+  implicit val formatScalaDependency: OFormat[ScalaDependency] =
     Json.format[ScalaDependency]
 }
 
@@ -214,7 +205,7 @@ case class ScalaDependency(
 }
 
 object Project {
-  implicit val formatProject: OFormat[com.olegych.scastie.api.Project] =
+  implicit val formatProject: OFormat[Project] =
     Json.format[Project]
 }
 

@@ -34,8 +34,7 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
   private case object SbtWarmUp
 
-  private implicit val sbtOutputFormat
-    : OFormat[com.olegych.scastie.api.ConsoleOutput.SbtOutput] =
+  private implicit val sbtOutputFormat: OFormat[ConsoleOutput.SbtOutput] =
     ConsoleOutput.ConsoleOutputFormat.formatSbtOutput
 
   private val defaultConfig = Inputs.default

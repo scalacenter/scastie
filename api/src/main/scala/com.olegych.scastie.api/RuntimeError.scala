@@ -10,8 +10,7 @@ case class RuntimeError(
 )
 
 object RuntimeError {
-  implicit val formatRuntimeError
-    : OFormat[com.olegych.scastie.api.RuntimeError] = Json.format[RuntimeError]
+  implicit val formatRuntimeError: OFormat[RuntimeError] = Json.format[RuntimeError]
 
   def wrap[T](in: => T): Either[Option[RuntimeError], T] = {
     try {
@@ -54,8 +53,7 @@ object RuntimeError {
 }
 
 object RuntimeErrorWrap {
-  implicit val formatRuntimeErrorWrap
-    : OFormat[com.olegych.scastie.api.RuntimeErrorWrap] =
+  implicit val formatRuntimeErrorWrap: OFormat[RuntimeErrorWrap] =
     Json.format[RuntimeErrorWrap]
 }
 

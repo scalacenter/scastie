@@ -114,20 +114,17 @@ object ScaladexSearch {
   private val scaladexBaseUrl = "https://index.scala-lang.org"
   private val scaladexApiUrl = scaladexBaseUrl + "/api"
 
-  private implicit val projectOrdering
-    : Ordering[com.olegych.scastie.api.Project] =
+  private implicit val projectOrdering: Ordering[Project] =
     Ordering.by { project: Project =>
       (project.organization, project.repository)
     }
 
-  private implicit val scalaDependenciesOrdering
-    : Ordering[com.olegych.scastie.api.ScalaDependency] =
+  private implicit val scalaDependenciesOrdering: Ordering[ScalaDependency] =
     Ordering.by { scalaDependency: ScalaDependency =>
       scalaDependency.artifact
     }
 
-  private implicit val selectedOrdering
-    : Ordering[com.olegych.scastie.client.components.ScaladexSearch.Selected] =
+  private implicit val selectedOrdering: Ordering[Selected] =
     Ordering.by { selected: Selected =>
       (selected.project, selected.release)
     }

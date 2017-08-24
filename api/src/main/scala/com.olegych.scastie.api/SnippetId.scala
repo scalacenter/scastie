@@ -15,7 +15,7 @@ object User {
     "rorygraves",
     "travissarles"
   )
-  implicit val formatUser: OFormat[com.olegych.scastie.api.User] =
+  implicit val formatUser: OFormat[User] =
     Json.format[User]
 }
 case class User(login: String, name: Option[String], avatar_url: String) {
@@ -23,15 +23,14 @@ case class User(login: String, name: Option[String], avatar_url: String) {
 }
 
 object SnippetUserPart {
-  implicit val formatSnippetUserPart
-    : OFormat[com.olegych.scastie.api.SnippetUserPart] =
+  implicit val formatSnippetUserPart: OFormat[SnippetUserPart] =
     Json.format[SnippetUserPart]
 }
 
 case class SnippetUserPart(login: String, update: Int = 0)
 
 object SnippetId {
-  implicit val formatSnippetId: OFormat[com.olegych.scastie.api.SnippetId] =
+  implicit val formatSnippetId: OFormat[SnippetId] =
     Json.format[SnippetId]
 }
 

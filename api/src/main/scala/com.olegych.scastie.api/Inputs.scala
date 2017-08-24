@@ -25,7 +25,7 @@ object Inputs {
     forked = None
   )
 
-  implicit val formatInputs: OFormat[com.olegych.scastie.api.Inputs] =
+  implicit val formatInputs: OFormat[Inputs] =
     Json.format[Inputs]
 }
 
@@ -168,7 +168,7 @@ case class Inputs(
 }
 
 object EditInputs {
-  implicit val formatEditInputs: OFormat[com.olegych.scastie.api.EditInputs] =
+  implicit val formatEditInputs: OFormat[EditInputs] =
     Json.format[EditInputs]
 }
 
