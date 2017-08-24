@@ -1,21 +1,33 @@
 const Path = require('path');
 const Webpack = require('webpack');
 const Merge = require("webpack-merge");
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 const commonConfig = require('./webpack.common.js');
 
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const extractSass = new ExtractTextPlugin({
   filename: "[name].[contenthash].css"
 });
 
 const publicFolderName = "out/public"
 
-module.exports = Merge(commonConfig, {
+const scalaJsConfig = require('./scalajs.webpack.config');
+const scalaJsEntry = scalaJsConfig.entry;
+const scalaJs = scalaJsEntry["client-opt"];
+
+module.exports = Merge(common.webpackConfig, {
+  entry: {
+    app: Path.resolve(common.resourcesDir, './prod.js')
+  },
   output: {
     path: Path.resolve(__dirname, publicFolderName),
     publicPath: '/public/'
+  },
+  resolve: {
+    alias: {
+      'scalajs': scalaJs[0],
+    }
   },
   module: {
     rules: [
@@ -34,9 +46,6 @@ module.exports = Merge(commonConfig, {
   },
   plugins: [
     new CleanWebpackPlugin([publicFolderName], {verbose: false}),
-    extractSass,
-    new Webpack.DefinePlugin({
-      PRODUCTION: true
-    })
+    extractSass
   ]
 });

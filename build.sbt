@@ -194,7 +194,7 @@ lazy val client = project
     webpackConfigFile in startWebpackDevServer :=
       Some(baseDirectory.value / "webpack-dev.config.js"),
     webpackConfigFile in fastOptJS :=
-      Some(baseDirectory.value / "webpack-prod.config.js"),
+      Some(baseDirectory.value / "webpack-dev.config.js"),
     webpackConfigFile in fullOptJS :=
       Some(baseDirectory.value / "webpack-prod.config.js"),
     webpackMonitoredDirectories += (resourceDirectory in Compile).value,
