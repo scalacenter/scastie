@@ -8,12 +8,17 @@ import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
+import scala.concurrent.Future
+
 final case class CodeSnippets(view: View,
                               user: User,
                               router: RouterCtl[Page],
                               isShareModalClosed: SnippetId => Boolean,
                               closeShareModal: Callback,
-                              openShareModal: SnippetId => Callback) {
+                              openShareModal: SnippetId => Callback,
+                              loadProfile: () => Future[List[SnippetSummary]],
+                              deleteSnippet: SnippetId => Future[Boolean]) {
+
   @inline def render: VdomElement = CodeSnippets.component(this)
 }
 
@@ -22,31 +27,34 @@ object CodeSnippets {
       scope: BackendScope[CodeSnippets, List[SnippetSummary]]
   ) {
 
-    def loadProfile(): Callback = {
-      Callback.future(
-        RestApiClient
-          .fetchUserSnippets()
-          .map(summaries => scope.modState(_ => summaries))
+    def loadProfile0(): Callback = {
+      scope.props.flatMap(
+        props =>
+          Callback.future(
+            props.loadProfile().map(summaries => scope.modState(_ => summaries))
+        )
       )
     }
 
-    def delete(summary: SnippetSummary): Callback = {
-      val locally = scope.modState(_.filterNot(_ == summary))
-
-      val remotely =
-        Callback.future(
-          RestApiClient
-            .delete(summary.snippetId)
-            .map(_ => Callback.empty)
+    def deleteSnippet0(summary: SnippetSummary): Callback = {
+      scope.props.flatMap(
+        props =>
+          Callback.future(
+            props
+              .deleteSnippet(summary.snippetId)
+              .map(
+                deleted =>
+                  scope.modState(_.filterNot(_ == summary)).when_(deleted)
+              )
         )
-
-      locally >> remotely
+      )
     }
   }
 
   private def renderSnippet(backend: CodeSnippetsBackend, props: CodeSnippets)(
       summary: SnippetSummary
   ): VdomElement = {
+
     val page = Page.fromSnippetId(summary.snippetId)
     val update = summary.snippetId.user.map(_.update.toString).getOrElse("")
 
@@ -72,7 +80,7 @@ object CodeSnippets {
             cls := "btn",
             role := "button",
             title := "Delete",
-            onClick --> backend.delete(summary)
+            onClick --> backend.deleteSnippet0(summary)
           )(
             i(cls := "fa fa-trash")
           )
@@ -161,10 +169,10 @@ object CodeSnippets {
             delta.nextProps.view == View.CodeSnippets
 
         val loadProfile: Callback =
-          delta.backend.loadProfile()
+          delta.backend.loadProfile0()
 
         loadProfile.when_(viewChangedToCodeSnippet)
       }
-      .componentWillMount(_.backend.loadProfile())
+      .componentWillMount(_.backend.loadProfile0())
       .build
 }

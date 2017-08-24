@@ -32,12 +32,14 @@ object ClientMain {
     ()
   }
 
+  // XXX: This should not be global
   @JSExport
   def signal(instrumentations: String,
              attachedDoms: js.Array[HTMLElement]): Unit = {
     Global.signal(instrumentations, attachedDoms)
   }
 
+  // XXX: This should not be global
   @JSExport
   def error(er: js.Error): Unit = {
     Global.error(er)
@@ -60,16 +62,19 @@ object ClientMain {
         .getOrElse(EmbeddedOptions.empty)
 
     nodes.foreach {
-      case node: dom.raw.HTMLElement =>
+      case node: dom.raw.HTMLElement => {
         val container = dom.document
           .createElement("div")
           .asInstanceOf[dom.raw.HTMLDivElement]
+
         container.className = "root embedded"
 
         val embeddedOptions0 =
-          if (node.textContent.isEmpty || embeddedOptions.hasCode)
+          if (node.textContent.isEmpty || embeddedOptions.hasCode) {
             embeddedOptions
-          else embeddedOptions.setCode(node.textContent)
+          } else {
+            embeddedOptions.setCode(node.textContent)
+          }
 
         Scastie(
           router = None,
@@ -81,6 +86,7 @@ object ClientMain {
 
         node.parentNode.insertBefore(container, node.nextSibling)
         node.style.display = "none"
+      }
     }
   }
 }

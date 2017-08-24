@@ -12,21 +12,30 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 final case class EmbeddedMenu(isRunning: Boolean,
                               isStatusOk: Boolean,
                               inputs: Inputs,
+                              serverUrl: Option[String],
                               run: Callback,
+                              save: CallbackTo[Option[SnippetId]],
                               setView: View => Callback) {
   @inline def render: VdomElement = EmbeddedMenu.component(this)
 }
 
 object EmbeddedMenu {
 
-  def openScastie(inputs: Inputs): Callback =
-    Callback(
-      RestApiClient.saveBlocking(inputs).map(sid =>
-        dom.window.open(sid.url, "_blank").focus()
-      )
-    )
-   
   private def render(props: EmbeddedMenu): VdomElement = {
+
+    def openScastie: Callback =
+      props.save.asCBO.flatMap(
+        sid =>
+          Callback(
+            dom.window
+              .open(
+                props.serverUrl.getOrElse("") + "/" + sid.url,
+                "_blank"
+              )
+              .focus()
+        )
+      )
+
     ul(cls := "embedded-menu")(
       RunButton(
         isRunning = props.isRunning,
@@ -37,7 +46,7 @@ object EmbeddedMenu {
       li(cls := "logo")(
         img(src := Assets.logoUrl),
         span("to Scastie"),
-        onClick --> openScastie(props.inputs)
+        onClick --> openScastie
       )
     )
   }

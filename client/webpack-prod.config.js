@@ -1,4 +1,5 @@
 const Path = require('path');
+const Webpack = require('webpack');
 const Merge = require("webpack-merge");
 
 const commonConfig = require('./webpack.common.js');
@@ -33,6 +34,9 @@ module.exports = Merge(commonConfig, {
   },
   plugins: [
     new CleanWebpackPlugin([publicFolderName], {verbose: false}),
-    extractSass
+    extractSass,
+    new Webpack.DefinePlugin({
+      PRODUCTION: true
+    })
   ]
 });

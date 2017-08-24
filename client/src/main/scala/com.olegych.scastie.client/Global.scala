@@ -12,6 +12,7 @@ import japgolly.scalajs.react._
 
 import play.api.libs.json.Json
 
+// XXX: This should not be global
 object Global {
   type Scope = BackendScope[Scastie, ScastieState]
 

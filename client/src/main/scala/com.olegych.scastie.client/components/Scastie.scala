@@ -24,8 +24,9 @@ final case class Scastie(router: Option[RouterCtl[Page]],
                          embedded: Option[EmbeddedOptions],
                          targetType: Option[ScalaTargetType]) {
 
-  @inline def render = Scastie.component(this)
+  @inline def render = Scastie.component(serverUrl)(this)
 
+  def serverUrl: Option[String] = embedded.flatMap(_.serverUrl)
   def isEmbedded: Boolean = embedded.isDefined
 }
 
@@ -83,7 +84,7 @@ object Scastie {
     )
   }
 
-  private val component =
+  private def component(serverUrl: Option[String]) =
     ScalaComponent
       .builder[Scastie]("Scastie")
       .initialStateFromProps { props =>
@@ -95,7 +96,7 @@ object Scastie {
           case _ => state
         }
       }
-      .backend(new ScastieBackend(_))
+      .backend(new ScastieBackend(serverUrl, _))
       .renderPS(render)
       .componentWillMount { current =>
         current.backend.start(current.props) >>

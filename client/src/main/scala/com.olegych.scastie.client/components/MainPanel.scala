@@ -26,7 +26,9 @@ object MainPanel {
         isRunning = state.isRunning,
         isStatusOk = isStatusOk,
         inputs = state.inputs,
+        serverUrl = props.serverUrl,
         run = backend.run,
+        save = backend.saveBlocking,
         setView = backend.setView
       ).render.when(props.isEmbedded)
 
@@ -43,7 +45,9 @@ object MainPanel {
               router = router,
               isShareModalClosed = state.modalState.isShareModalClosed,
               closeShareModal = backend.closeShareModal,
-              openShareModal = backend.openShareModal
+              openShareModal = backend.openShareModal,
+              loadProfile = () => backend.loadProfile,
+              deleteSnippet = backend.deleteSnippet
             ).render
           )
         case _ => EmptyVdom
