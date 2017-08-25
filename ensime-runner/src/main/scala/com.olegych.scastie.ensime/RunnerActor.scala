@@ -18,12 +18,12 @@ import com.olegych.scastie.api.{
 }
 import com.olegych.scastie.{ActorReconnecting, ReconnectInfo}
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 
 class RunnerActor(system: ActorSystem,
                   runTimeout: FiniteDuration,
                   production: Boolean,
-                  override val reconnectInfo: ReconnectInfo)
+                  override val reconnectInfo: Option[ReconnectInfo])
     extends Actor
     with ActorLogging
     with ActorReconnecting {
@@ -32,25 +32,38 @@ class RunnerActor(system: ActorSystem,
   private var ensimeActor: Option[ActorRef] = None
 
   override def tryConnect(): Unit = {
-    import reconnectInfo._
+    reconnectInfo match {
+      case Some(info) => {
+        import info._
 
-    dispatchActor = Some(
-      context.actorSelection(
-        s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
-      )
-    )
+        val sel = context.actorSelection(
+          s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
+        )
 
-    dispatchActor.foreach(_ ! EnsimeRunnerConnect(actorHostname, actorAkkaPort))
+        dispatchActor = Some(sel)
+
+        sel ! EnsimeRunnerConnect(actorHostname, actorAkkaPort)
+      }
+      case _ => ()
+    }
   }
 
   override def onConnected(): Unit = {
+    import system.dispatcher
+
     if (ensimeActor.isEmpty) {
-      ensimeActor = Some(
-        context.actorOf(
-          Props(new EnsimeActor(context.system, dispatchActor.get)),
-          name = "EnsimeActor"
+      dispatchActor.get
+        .resolveOne(1.minute)
+        .foreach(
+          ref =>
+            ensimeActor = Some(
+              context.actorOf(
+                Props(new EnsimeActor(context.system, ref)),
+                name = "EnsimeActor"
+              )
+          )
         )
-      )
+
     }
   }
 
