@@ -51,14 +51,17 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorRef) extends Actor {
     def apply(that: EnsimeServerState) = {
       that match {
         case Initializing => {
+          println("--- Initializing ---")
           dispatchActor ! StatusEnsimeInfo(EnsimeDown)
         }
 
         case CreatingConfig => {
+          println("--- CreatingConfig ---")
           dispatchActor ! StatusEnsimeInfo(EnsimeRestarting)
         }
 
         case Connecting => {
+          println("--- Connecting ---")
           assert(
             state == CreatingConfig &&
               ensimeProcess.isDefined &&
@@ -67,11 +70,14 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorRef) extends Actor {
         }
 
         case Ready => {
+          println("--- Ready ---")
           assert(state == Connecting && ensimeWS.isDefined)
           dispatchActor ! StatusEnsimeInfo(EnsimeUp)
         }
 
-        case _ => ()
+        case e => {
+          println(s"--- Other $e ---")
+        }
       }
       if (state != that) {
         log.info(s"Server State: $state => $that")
@@ -122,7 +128,11 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorRef) extends Actor {
 
         payload match {
           case CompletionInfoList(_, completionList) => {
-            serverState(Ready)
+            if (!serverState.isReady) {
+              println("Got warm up completions")
+              completionList.take(5).foreach(println)
+              serverState(Ready)
+            }
 
             val response = AutoCompletionResponse(
               completionList
@@ -142,7 +152,6 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorRef) extends Actor {
           }
 
           case symbolInfo: SymbolInfo => {
-
             log.info(s"Got symbol info: $symbolInfo")
 
             if (symbolInfo.`type`.name == "<none>")
@@ -235,7 +244,6 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorRef) extends Actor {
 
     upgradeResponse.flatMap { upgrade =>
       if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
-        serverState(Ready)
         Future.successful(Done)
       } else {
         throw new RuntimeException(
@@ -345,8 +353,6 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorRef) extends Actor {
       ),
       self
     )
-
-    log.info("EnsimeActor is ready!")
   }
 
   override def postStop(): Unit = {
@@ -360,9 +366,14 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorRef) extends Actor {
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        if (!line.contains("ConnectionInfo")) {
+        if (!line.contains("ConnectionInfo") &&
+            !line.contains("INFO") &&
+            !line.contains("DEBUG")) {
           log.info(line)
+        } else {
+          print("*")
         }
+
         line = is.readLine()
       }
     }
