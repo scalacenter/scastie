@@ -124,7 +124,7 @@ class SbtActorTest()
   test("Capture System.err #284") {
     val message = "Failure"
     run(s"""System.err.println("$message")""")(progress => {
-      // we should only receive an hello message
+      // we should only aeive an hello message
       val gotHelloMessage = progress.userOutput == Some(message)
       if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
       gotHelloMessage
@@ -171,7 +171,6 @@ class SbtActorTest()
       system = system,
       runTimeout = timeout,
       production = false,
-      withEnsime = false,
       readyRef = None,
       reconnectInfo = None
     )

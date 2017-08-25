@@ -46,8 +46,9 @@ class RestApiServer(
 
   def updateEnsimeConfig(
       updateEnsimeConfigRequest: UpdateEnsimeConfigRequest
-  ): Future[Unit] = {
-    (dispatchActor ? wrapEnsime(updateEnsimeConfigRequest)).map(_ => ())
+  ): Future[Option[EnsimeConfigUpdated]] = {
+    (dispatchActor ? wrapEnsime(updateEnsimeConfigRequest))
+      .mapTo[Option[EnsimeConfigUpdated]]
   }
 
   def save(inputs: Inputs): Future[SnippetId] = {

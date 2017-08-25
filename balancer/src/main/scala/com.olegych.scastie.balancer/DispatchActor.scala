@@ -75,6 +75,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   private var remoteSbtSelections =
     sbtPorts.map(connectRunner("SbtRunner", "SbtActor")(host)).toMap
+
   private var remoteEnsimeSelections = ensimePorts
     .map(connectRunner("EnsimeRunner", "EnsimeRunnerActor")(host))
     .toMap
@@ -82,33 +83,45 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   // ensime-runner -> IPs
   private var usersPerEnsime = Map[ActorPath, Set[Ip]]().withDefaultValue(Set())
 
-  private var loadBalancer: LoadBalancer[String, ActorSelection] = {
+  val emptyHistory = History(Queue.empty[Record[String]], size = 100)
+
+  private var sbtLoadBalancer = {
     val sbtServers = remoteSbtSelections.to[Vector].map {
       case (_, ref) =>
         Server(ref, Inputs.default.sbtConfig)
     }
+
+    LoadBalancer(sbtServers, emptyHistory)
+  }
+
+  updateSbtBalancer(sbtLoadBalancer)
+
+  private var ensimeLoadBalancer = {
     val ensimeServers = remoteEnsimeSelections.to[Vector].map {
       case (_, ref) =>
         Server(ref, Inputs.default.sbtConfig)
     }
 
-    val history = History(Queue.empty[Record[String]], size = 100)
-    LoadBalancer(sbtServers = sbtServers,
-                 ensimeServers = ensimeServers,
-                 history)
+    LoadBalancer(ensimeServers, emptyHistory)
   }
-  updateBalancer(loadBalancer)
+
+  updateEnsimeBalancer(ensimeLoadBalancer)
 
   import context._
 
-  system.scheduler.schedule(0.seconds, 5.seconds) {
-    implicit val timeout: Timeout = Timeout(5.seconds)
+  system.scheduler.schedule(0.seconds, 30.seconds) {
+    implicit val timeout: Timeout = Timeout(10.seconds)
     try {
-      val res =
-        Await.result(
-          Future.sequence(loadBalancer.sbtServers.map(_.ref ? SbtPing)),
-          1.seconds
-        )
+      Await.result(
+        Future.sequence(sbtLoadBalancer.servers.map(_.ref ? SbtPing)),
+        15.seconds
+      )
+
+      Await.result(
+        Future.sequence(ensimeLoadBalancer.servers.map(_.ref ? SbtPing)),
+        10.seconds
+      )
+
       ()
     } catch {
       case e: TimeoutException => ()
@@ -130,13 +143,24 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     .mkString("\nensime: [", ", ", "]")
   log.info(s"connecting to: $host $portsInfo")
 
-  private def updateBalancer(
-      newBalancer: LoadBalancer[String, ActorSelection]
+  private def updateSbtBalancer(
+      newSbtBalancer: LoadBalancer[String, ActorSelection]
   ): Unit = {
-    if (loadBalancer != newBalancer) {
-      statusActor ! LoadBalancerUpdate(newBalancer)
+    if (sbtLoadBalancer != newSbtBalancer) {
+      statusActor ! LoadBalancerUpdate(newSbtBalancer)
     }
-    loadBalancer = newBalancer
+    sbtLoadBalancer = newSbtBalancer
+    ()
+  }
+
+  private def updateEnsimeBalancer(
+      newEnsimeBalancer: LoadBalancer[String, ActorSelection]
+  ): Unit = {
+    if (ensimeLoadBalancer != newEnsimeBalancer) {
+      // TODO ensimeLoadBalancer status
+      // statusActor ! LoadBalancerUpdate(newEnsimeBalancer)
+    }
+    ensimeLoadBalancer = newEnsimeBalancer
     ()
   }
 
@@ -149,9 +173,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     val task = Task(inputs.sbtConfig, Ip(ip), SbtRunTaskId(snippetId))
 
-    loadBalancer.add(task) match {
+    sbtLoadBalancer.add(task) match {
       case Some((server, newBalancer)) => {
-        updateBalancer(newBalancer)
+        updateSbtBalancer(newBalancer)
 
         server.ref.tell(
           SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
@@ -172,42 +196,39 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
       val task = Task(request.inputs.sbtConfig, ip, taskId)
 
-      loadBalancer.add(task) match {
+      ensimeLoadBalancer.add(task) match {
         case Some((server, newBalancer)) => {
-          try {
-            val ensimeRunnerPath = server.ref.anchorPath / "user" / "EnsimeRunnerActor" / "EnsimeActor"
-            log.info(s"Add $ensimeRunnerPath -> $ip")
-            val updatedIPs = usersPerEnsime(ensimeRunnerPath) + ip
-            usersPerEnsime = usersPerEnsime + (ensimeRunnerPath -> updatedIPs)
+          val ensimeRunnerPath = server.ref.anchorPath / "user" / "EnsimeRunnerActor" / "EnsimeActor"
+          log.info(s"Add $ensimeRunnerPath -> $ip")
+          val updatedIPs = usersPerEnsime(ensimeRunnerPath) + ip
+          usersPerEnsime = usersPerEnsime + (ensimeRunnerPath -> updatedIPs)
 
-            updateBalancer(newBalancer)
+          updateEnsimeBalancer(newBalancer)
 
-            implicit val timeout = Timeout(20.seconds)
-            val senderRef = sender()
+          implicit val timeout = Timeout(20.seconds)
+          val senderRef = sender()
 
-            (server.ref ? EnsimeTaskRequest(request, taskId))
-              .mapTo[EnsimeTaskResponse]
-              .map { taskResponse =>
-                updateBalancer(loadBalancer.done(taskResponse.taskId))
-                senderRef ! taskResponse.response
-              }
-          } catch {
-            case NonFatal(_) =>
-              sender ! None
-              statusActor ! NotifyAllUsers(StatusEnsimeInfo(EnsimeDown))
-          }
+          (server.ref ? EnsimeTaskRequest(request, taskId))
+            .mapTo[EnsimeTaskResponse]
+            .map { taskResponse =>
+              updateEnsimeBalancer(ensimeLoadBalancer.done(taskResponse.taskId))
+              senderRef ! taskResponse.response
+            }
         }
-        case None => {}
+        case None => {
+          sender ! None
+          statusActor ! NotifyAllUsers(StatusEnsimeInfo(EnsimeDown))
+        }
       }
 
     case EnsimeTaskResponse(response, taskId) => {
-      updateBalancer(loadBalancer.done(taskId))
+      updateEnsimeBalancer(ensimeLoadBalancer.done(taskId))
     }
 
     case SbtPong => ()
 
     case format: FormatRequest =>
-      val server = loadBalancer.getRandomSbtServer
+      val server = sbtLoadBalancer.getRandomServer
       server.ref.tell(format, sender)
       ()
 
@@ -280,7 +301,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case progress: api.SnippetProgress =>
       if (progress.done) {
         progress.snippetId.foreach(
-          sid => updateBalancer(loadBalancer.done(SbtRunTaskId(sid)))
+          sid => updateSbtBalancer(sbtLoadBalancer.done(SbtRunTaskId(sid)))
         )
       }
       container.appendOutput(progress)
@@ -294,9 +315,17 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
           .orElse(remoteEnsimeSelections.get((host, port)))
       } {
         log.warning("removing disconnected: {}", ref)
+        val previousRemoteSbtSelections = remoteSbtSelections
         remoteSbtSelections = remoteSbtSelections - ((host, port))
+        if (previousRemoteSbtSelections != remoteSbtSelections) {
+          updateSbtBalancer(sbtLoadBalancer.removeServer(ref))
+        }
+
+        val previousRemoteEnsimeSelections = remoteEnsimeSelections
         remoteEnsimeSelections = remoteEnsimeSelections - ((host, port))
-        updateBalancer(loadBalancer.removeServer(ref))
+        if (previousRemoteEnsimeSelections != remoteEnsimeSelections) {
+          updateEnsimeBalancer(ensimeLoadBalancer.removeServer(ref))
+        }
       }
 
     case SbtRunnerConnect(runnerHostname, runnerAkkaPort) => {
@@ -309,8 +338,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
         remoteSbtSelections = remoteSbtSelections + sel
 
-        updateBalancer(
-          loadBalancer.addSbtServer(
+        updateSbtBalancer(
+          sbtLoadBalancer.addServer(
             Server(ref, Inputs.default.sbtConfig)
           )
         )
@@ -328,16 +357,17 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
         remoteEnsimeSelections = remoteEnsimeSelections + sel
 
-        updateBalancer(
-          loadBalancer.addEnsimeServer(
+        updateEnsimeBalancer(
+          ensimeLoadBalancer.addServer(
             Server(ref, Inputs.default.sbtConfig)
           )
         )
+
       }
     }
 
     case ReceiveStatus(requester) => {
-      sender ! LoadBalancerInfo(loadBalancer, requester)
+      sender ! LoadBalancerInfo(sbtLoadBalancer, requester)
     }
 
     case statusProgress: StatusProgress =>

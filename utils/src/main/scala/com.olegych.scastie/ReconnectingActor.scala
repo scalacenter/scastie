@@ -16,7 +16,7 @@ trait ActorReconnecting extends Actor with ActorLogging {
 
   private var tryReconnectCallback: Option[Cancellable] = None
 
-  val reconnectInfo: ReconnectInfo
+  val reconnectInfo: Option[ReconnectInfo]
 
   def tryConnect(): Unit
 
@@ -47,13 +47,22 @@ trait ActorReconnecting extends Actor with ActorLogging {
       tryReconnectCallback = None
       onConnected()
 
-    case ev: DisassociatedEvent =>
-      if (ev.remoteAddress.host.contains(reconnectInfo.serverHostname) &&
-          ev.remoteAddress.port.contains(reconnectInfo.serverAkkaPort) &&
-          ev.inbound) {
+    case ev: DisassociatedEvent => {
+      val isServerHostname =
+        reconnectInfo
+          .map(info => ev.remoteAddress.host.contains(info.serverHostname))
+          .getOrElse(false)
+
+      val isServerAkkaPort =
+        reconnectInfo
+          .map(info => ev.remoteAddress.port.contains(info.serverAkkaPort))
+          .getOrElse(false)
+
+      if (isServerHostname && isServerAkkaPort && ev.inbound) {
         log.warning("Disconnected from server")
         onDisconnected()
         setupReconnectCallback()
       }
+    }
   }
 }

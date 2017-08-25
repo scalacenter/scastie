@@ -24,7 +24,7 @@ object StatusProgress {
         }
 
         case runners: StatusRunnersInfo => {
-          formatStatusInfo.writes(runners).asInstanceOf[JsObject] ++
+          formatRunnersInfo.writes(runners).asInstanceOf[JsObject] ++
             JsObject(Seq("$type" -> JsString("StatusRunnersInfo")))
         }
 
@@ -64,10 +64,3 @@ sealed trait StatusProgress
 case object StatusKeepAlive extends StatusProgress
 case class StatusRunnersInfo(runners: Vector[Runner]) extends StatusProgress
 case class StatusEnsimeInfo(ensimeStatus: EnsimeStatus) extends StatusProgress
-
-sealed trait EnsimeStatus
-case object EnsimeDown extends EnsimeStatus
-case object EnsimeRestarting extends EnsimeStatus
-case object EnsimeUp extends EnsimeStatus
-
-case class Runner(tasks: Queue[TaskId])
