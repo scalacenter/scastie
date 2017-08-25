@@ -66,7 +66,7 @@ object SbtMain {
           runTimeout = timeout,
           production = isProduction,
           readyRef = None,
-          reconnectInfo = reconnectInfo
+          reconnectInfo = Some(reconnectInfo)
         )
       ),
       name = "SbtActor"

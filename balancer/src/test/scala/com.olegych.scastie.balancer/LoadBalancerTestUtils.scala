@@ -13,9 +13,11 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   private var taskId = 1000
   def add(balancer: TestLoadBalancer, config: String): TestLoadBalancer = {
     val (_, balancer0) =
-      balancer.add(
-        Task(config, nextIp, SbtRunTaskId(SnippetId(taskId.toString, None)))
-      )
+      balancer
+        .add(
+          Task(config, nextIp, SbtRunTaskId(SnippetId(taskId.toString, None)))
+        )
+        .get
     taskId += 1
     balancer0
   }

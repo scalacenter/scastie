@@ -40,21 +40,22 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
   val routes: Route =
     isAdminUser(
       isAdmin =>
-        concat(
-          path("status-sse")(
-            extractClientIP(ip ⇒
-              complete(
-                statusSource(isAdmin, ip).map(
-                  progress =>
-                    ServerSentEvent(
-                      Json.stringify(Json.toJson(progress))
+        extractClientIP(
+          ip ⇒
+            concat(
+              path("status-sse")(
+                complete(
+                  statusSource(isAdmin, ip).map(
+                    progress =>
+                      ServerSentEvent(
+                        Json.stringify(Json.toJson(progress))
+                    )
                   )
                 )
+              ),
+              path("status-ws")(
+                handleWebSocketMessages(webSocketProgress(isAdmin, ip))
               )
-            )
-          ),
-          path("status-ws")(
-            handleWebSocketMessages(webSocketProgress(isAdmin))
           )
       )
     )
@@ -64,9 +65,9 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
       if (isAdmin) progress
       else
         progress match {
-          case StatusInfo(runners) =>
+          case StatusRunnersInfo(runners) =>
             // Hide the task Queue for non admin users, they will only see the runner count
-            StatusInfo(runners.map(_.copy(tasks = Queue())))
+            StatusRunnersInfo(runners.map(_.copy(tasks = Queue())))
 
           case _ =>
             progress
@@ -75,7 +76,7 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
     // TODO find a way to flatten Source[Source[T]]
     Await
       .result(
-        (statusActor ? SubscribeStatus(Ip(ip.toString))))
+        (statusActor ? SubscribeStatus(Ip(ip.toString)))
           .mapTo[Source[StatusProgress, NotUsed]],
         1.second
       )
@@ -83,11 +84,12 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
   }
 
   private def webSocketProgress(
-      isAdmin: Boolean
+      isAdmin: Boolean,
+      ip: RemoteAddress
   ): Flow[ws.Message, ws.Message, _] = {
     def flow: Flow[String, StatusProgress, NotUsed] = {
       val in = Flow[String].to(Sink.ignore)
-      val out = statusSource(isAdmin)
+      val out = statusSource(isAdmin, ip)
       Flow.fromSinkAndSource(in, out)
     }
 

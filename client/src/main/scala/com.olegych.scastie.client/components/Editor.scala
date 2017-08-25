@@ -247,6 +247,20 @@ object Editor {
         ((editor: CodeMirrorEditor2) => f(editor))
       }
 
+      def autocomplete(editor: CodeMirrorEditor2): Unit = {
+        if (!props.isEmbedded) {
+          val doc = editor.getDoc()
+          val pos = doc.indexFromPos(doc.getCursor())
+          props.clearCompletions.runNow()
+          props.completeCodeAt(pos).runNow()
+
+          if (scope.state.runNow().completionState == Idle) {
+            loadingMessage.show(editor, doc.getCursor())
+          }
+          scope.modState(_.copy(completionState = Requested)).runNow()
+        }
+      }
+
       js.Dictionary[Any](
           "mode" -> "text/x-scala",
           "autofocus" -> !props.isEmbedded,
@@ -422,71 +436,6 @@ object Editor {
             }
           }
         )
-
-        CodeMirror.commands.run = (editor: CodeMirrorEditor2) => {
-          props.run.runNow()
-        }
-
-        CodeMirror.commands.save = (editor: CodeMirrorEditor2) => {
-          props.saveOrUpdate.runNow()
-        }
-
-        CodeMirror.commands.newSnippet = (editor: CodeMirrorEditor2) => {
-          props.newSnippet.runNow()
-        }
-
-        CodeMirror.commands.clear = (editor: CodeMirrorEditor2) => {
-          props.clear.runNow()
-        }
-
-        CodeMirror.commands.toggleConsole = (editor: CodeMirrorEditor2) => {
-          props.toggleConsole.runNow()
-        }
-
-        CodeMirror.commands.toggleWorksheet = (editor: CodeMirrorEditor2) => {
-          props.toggleWorksheetMode.runNow()
-        }
-
-        CodeMirror.commands.toggleSolarized = (editor: CodeMirrorEditor2) => {
-          props.toggleTheme.runNow()
-        }
-
-        CodeMirror.commands.formatCode = (editor: CodeMirrorEditor2) => {
-          props.formatCode.runNow()
-        }
-
-        CodeMirror.commands.toggleLineNumbers = (editor: CodeMirrorEditor2) => {
-          props.toggleLineNumbers.runNow()
-        }
-
-        CodeMirror.commands.togglePresentationMode =
-          (editor: CodeMirrorEditor2) => {
-            props.togglePresentationMode.runNow()
-          }
-
-        CodeMirror.commands.autocompleteDot = (editor: CodeMirrorEditor2) => {
-          editor.getDoc().replaceSelection(".")
-          props.codeChange(editor.getDoc().getValue()).runNow()
-          autocomplete(editor)
-        }
-
-        CodeMirror.commands.autocomplete = (editor: CodeMirrorEditor2) => {
-          autocomplete(editor)
-        }
-
-        def autocomplete(editor: CodeMirrorEditor2): Unit = {
-          if (!props.isEmbedded) {
-            val doc = editor.getDoc()
-            val pos = doc.indexFromPos(doc.getCursor())
-            props.clearCompletions.runNow()
-            props.completeCodeAt(pos).runNow()
-
-            if (scope.state.runNow().completionState == Idle) {
-              loadingMessage.show(editor, doc.getCursor())
-            }
-            scope.modState(_.copy(completionState = Requested)).runNow()
-          }
-        }
 
         val setEditor =
           scope.modState(_.copy(editor = Some(editor)))

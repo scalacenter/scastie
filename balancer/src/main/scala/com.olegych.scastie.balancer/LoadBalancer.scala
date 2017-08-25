@@ -12,7 +12,8 @@ case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
 
 case class Task[C](config: C, ip: Ip, taskId: TaskId) {
-  def toRecord = Record(config, ip)
+  def toRecord: Record[C] = Record(config, ip)
+  def cost: Int = taskId.cost
 }
 
 case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {

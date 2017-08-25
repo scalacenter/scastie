@@ -10,19 +10,24 @@ class SbtActor(system: ActorSystem,
                runTimeout: FiniteDuration,
                production: Boolean,
                readyRef: Option[ActorRef],
-               override val reconnectInfo: ReconnectInfo)
+               override val reconnectInfo: Option[ReconnectInfo])
     extends Actor
     with ActorLogging
     with ActorReconnecting {
 
   override def tryConnect(): Unit = {
-    import reconnectInfo._
+    reconnectInfo match {
+      case Some(info) => {
+        import info._
 
-    val sel = context.actorSelection(
-      s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
-    )
+        val sel = context.actorSelection(
+          s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
+        )
 
-    sel ! SbtRunnerConnect(actorHostname, actorAkkaPort)
+        sel ! SbtRunnerConnect(actorHostname, actorAkkaPort)
+      }
+      case _ => ()
+    }
   }
 
   private val formatActor =
@@ -43,8 +48,5 @@ class SbtActor(system: ActorSystem,
 
     case task: SbtTask =>
       sbtRunner.forward(task)
-
-    case req: CreateEnsimeConfigRequest =>
-      sbtRunner.forward(req)
   }
 }
