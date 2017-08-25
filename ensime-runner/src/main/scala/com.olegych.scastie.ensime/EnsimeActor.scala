@@ -5,7 +5,7 @@ import com.olegych.scastie.sbt.Sbt
 import com.olegych.scastie.util.ScastieFileUtil._
 
 import akka.{Done, NotUsed}
-import akka.actor.{Actor, ActorRef, ActorSelection, ActorSystem, Cancellable}
+import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
@@ -35,8 +35,7 @@ import scala.util.{Failure, Success}
 case object Heartbeat
 case object EnsimeReady
 
-class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
-    extends Actor {
+class EnsimeActor(system: ActorSystem, dispatchActor: ActorRef) extends Actor {
   private sealed trait EnsimeServerState
   private case object Initializing extends EnsimeServerState
   private case object CreatingConfig extends EnsimeServerState
@@ -384,9 +383,7 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
 
   private def restartEnsimeServer(config: Inputs): Unit = {
     killEnsimeServer()
-    serverState(CreatingConfig)
-    sbtRunner ! CreateEnsimeConfigRequest(config)
-    currentConfig = config
+    startEnsimeServer(withConfig = config)
   }
 
   override def receive: Receive = {
@@ -406,7 +403,7 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
             SymbolAtPointReq(
               file = Right(
                 SourceFileInfo(
-                  RawFile(new File(codeFile.get.toString).toPath),
+                  RawFile(new File(codeFile.toString).toPath),
                   Some(code)
                 )
               ),
@@ -434,7 +431,7 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
           (code: String, pos: Int) => {
             CompletionsReq(
               fileInfo =
-                SourceFileInfo(RawFile(new File(codeFile.get.toString).toPath),
+                SourceFileInfo(RawFile(new File(codeFile.toString).toPath),
                                Some(code)),
               point = pos,
               maxResults = 100,
@@ -463,12 +460,6 @@ class EnsimeActor(system: ActorSystem, dispatchActor: ActorSelection)
     case x => {
       log.debug(s"Got $x at EnsimeActor")
     }
-  }
-
-  private def needsReload(inputs: Inputs) = {
-    currentConfig.target != inputs.target ||
-    currentConfig.libraries != inputs.libraries ||
-    currentConfig.sbtPluginsConfig != inputs.sbtPluginsConfig
   }
 
   private def needsReload(inputs: Inputs) = {

@@ -1,4 +1,4 @@
-package com.olegych.scastie.sbt
+package com.olegych.scastie.ensime
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
@@ -72,7 +72,7 @@ class EnsimeActorTests()
   ): Unit = {
 
     val taskId = EnsimeTaskId.create
-    sbtActor.tell(
+    ensimeActor.tell(
       EnsimeTaskRequest(
         AutoCompletionRequest(EnsimeRequestInfo(inputs, offset)),
         taskId
@@ -115,7 +115,7 @@ class EnsimeActorTests()
 
     val inputs = Inputs.default.copy(code = code)
 
-    sbtActor.tell(
+    ensimeActor.tell(
       EnsimeTaskRequest(
         TypeAtPointRequest(EnsimeRequestInfo(inputs, offset)),
         taskId
@@ -150,23 +150,23 @@ class EnsimeActorTests()
   private val probe = TestProbe()
   private val readyProbe = TestProbe()
 
-  private val sbtActor = TestActorRef(
-    new SbtActor(
+  private val ensimeActor = TestActorRef(
+    new EnsimeActor(
       system = system,
-      runTimeout = 20.seconds,
-      production = false,
-      withEnsime = true,
-      readyRef = Some(readyProbe.ref),
-      reconnectInfo = None
+      dispatchActor = readyProbe.ref
     )
   )
 
   readyProbe.fishForMessage(3.minute) {
-    case EnsimeReady => {
+    case StatusEnsimeInfo(EnsimeUp) => {
       println("===============")
       println("==EnsimeReady==")
       println("===============")
       true
+    }
+    case other => {
+      println(other)
+      false
     }
   }
 

@@ -57,7 +57,7 @@ object RunnerMain {
           system = system,
           runTimeout = timeout,
           production = isProduction,
-          reconnectInfo = reconnectInfo
+          reconnectInfo = Some(reconnectInfo)
         )
       ),
       name = "EnsimeRunnerActor"
