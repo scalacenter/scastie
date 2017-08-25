@@ -20,8 +20,10 @@ sbt publishLocal
 ```
 sbt
 > sbtRunner/reStart
+> ensimeRunner/reStart
+> server/reStart
 > client/fastOptJS::startWebpackDevServer
-> ~server/reStart
+> ~client/fastOptJS
 ```
 
 open http://localhost:8080
@@ -59,21 +61,23 @@ You can install a pre-commit hook with `bin/hooks.sh`
 
 
 ```
+Scala.js Client     run/save/format                                           +-------------------------------------------+
++-----------------+  AutowireApi      +---------------------+                +-------------------------------------------+|
+|  ScastieBackend |  (HTTP)           | +------------+      | akka+remote   +-------------------------------------------+||
+|      +--------+ +-----------------> | |LoadBalancer| <------------------+ |    SbtActor                Sbt(Proccess)  |||
+|      |        | |                   | +------------+      |             | |   +----------+             +-----------+  |||
+|      |        | |                   |                     |             +---> |          |  <----->    |sbt|scastie|  ||+
+|      |        | |                   |                     |               |   +----+-----+ I/O Stream  +-----------+  |+
+|      |        | |                   | +------------+      | akka+remote   +-------------------------------------------+
+|      |        | |                   | |LoadBalancer|<-------------------+
+|      |        | |                   | +------------+      |             |   +-------------------------------------------+
+|      |        | |                   |                     |             |  +-------------------------------------------+|
+|      |        | |                   | SnippetContainer(DB)|             | +-------------------------------------------+||
+|      |        | |                   |                     |             | |    EnsimeActor               Ensime       |||
+|      |        | | <-----------------+ oauth               |             | |   +----+-----+  <----->    +-----------+  |||
+|      +--------+ |  SnippetProgress  | static ressources   |             +---> |          |   Jerky     |           |  ||+
++-----------------+  (sse/websocket)  +---------------------+               |   +----------+ (websocket) +-----------+  |+
                                                                             +-------------------------------------------+
-                                                                           +-------------------------------------------+|
- Scala.js Client     run/save/format                                      +-------------------------------------------+||
-+-----------------+  AutowireApi      +---------------------+             |    SbtActor                Sbt(Proccess)  |||
-|  ScastieBackend |  (HTTP)           | +------------+      | akka+remote |   +----------+             +-----------+  |||
-|      +--------+ +-----------------> | |LoadBalancer| <--------------------> |          |  <----->    |sbt|scastie|  |||
-|      |        | |                   | +------------+      |             |   +----+-----+ I/O Stream  +-----------+  |||
-|      |        | |                   |                     |             |        ^                                  |||
-|      |        | |                   | SnippetContainer(DB)|             |        |                                  |||
-|      |        | |                   |                     |             |        v                                  |||
-|      |        | | <-----------------+ oauth               |             |   +----+-----+  <----->    +-----------+  |||
-|      +--------+ |  SnippetProgress  | static ressources   |             |   |          |   Jerky     |           |  |||
-+-----------------+  (sse/websocket)  +---------------------+             |   +----------+ (websocket) +-----------+  ||+
-                                                                          |    EnsimeActor               Ensime       |+
-                                                                          +-------------------------------------------+
 
 Editor: http://asciiflow.com/
 ```

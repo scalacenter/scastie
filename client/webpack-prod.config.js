@@ -12,10 +12,6 @@ const extractSass = new ExtractTextPlugin({
 
 const publicFolderName = "out/public"
 
-const scalaJsConfig = require('./scalajs.webpack.config');
-const scalaJsEntry = scalaJsConfig.entry;
-const scalaJs = scalaJsEntry["client-opt"];
-
 module.exports = Merge(common.webpackConfig, {
   entry: {
     app: Path.resolve(common.resourcesDir, './prod.js')
@@ -26,7 +22,7 @@ module.exports = Merge(common.webpackConfig, {
   },
   resolve: {
     alias: {
-      'scalajs': scalaJs[0],
+      'scalajs': Path.resolve(__dirname, "client-opt.js"),
     }
   },
   module: {

@@ -26,9 +26,10 @@ https://scastie.scala-lang.org
 
 The application consists of three modules:
 
--  scastie - standard akka-http web application module
--  sbt-runner - encapsulates snippets processing
--  balancer - split the load across multiple sbt instances
+- scastie - standard akka-http web application module
+- sbt-runner - encapsulates snippets processing
+- ensime-runner - autocompletion
+- balancer - split the load across multiple sbt instances
 
 For each snippet create/read request Application controller in scastie module creates a message 
 and sends it to DispatchActor in renderer module. The DispatchActor routes messages to a remote 
