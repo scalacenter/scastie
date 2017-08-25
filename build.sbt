@@ -116,6 +116,7 @@ lazy val ensimeRunner = project
   .settings(loggingAndTest)
   .settings(runnerRuntimeDependenciesInTest)
   .settings(
+    reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     resolvers += Resolver.sonatypeRepo("public"),
     libraryDependencies ++= Seq(
       akka("actor"),
@@ -173,7 +174,6 @@ lazy val sbtRunner = project
   .settings(
     javaOptions in reStart += "-Xmx256m",
     parallelExecution in Test := false,
-    scalacOptions -= "-Xfatal-warnings", // Thread.stop
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     resolvers += Resolver.sonatypeRepo("public"),
     libraryDependencies ++= Seq(
