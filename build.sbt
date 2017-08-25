@@ -95,12 +95,26 @@ lazy val runnerRuntimeDependencies = Seq(
   sbtScastie
 ).map(publishLocal in _)
 
+lazy val runnerRuntimeDependenciesInTest = Seq(
+  test in assembly := {},
+  test in Test := (test in Test)
+    .dependsOn(runnerRuntimeDependencies: _*)
+    .value,
+  testOnly in Test := (testOnly in Test)
+    .dependsOn(runnerRuntimeDependencies: _*)
+    .evaluated,
+  testQuick in Test := (testQuick in Test)
+    .dependsOn(runnerRuntimeDependencies: _*)
+    .evaluated
+)
+
 lazy val dockerOrg = "scalacenter"
 
 lazy val ensimeRunner = project
   .in(file("ensime-runner"))
   .settings(baseSettings)
   .settings(loggingAndTest)
+  .settings(runnerRuntimeDependenciesInTest)
   .settings(
     resolvers += Resolver.sonatypeRepo("public"),
     libraryDependencies ++= Seq(
@@ -155,6 +169,7 @@ lazy val sbtRunner = project
   .in(file("sbt-runner"))
   .settings(baseSettings)
   .settings(loggingAndTest)
+  .settings(runnerRuntimeDependenciesInTest)
   .settings(
     javaOptions in reStart += "-Xmx256m",
     parallelExecution in Test := false,
@@ -196,17 +211,7 @@ lazy val sbtRunner = project
         old(in)
       }
       case x => MergeStrategy.first
-    },
-    test in assembly := {},
-    test in Test := (test in Test)
-      .dependsOn(runnerRuntimeDependencies: _*)
-      .value,
-    testOnly in Test := (testOnly in Test)
-      .dependsOn(runnerRuntimeDependencies: _*)
-      .evaluated,
-    testQuick in Test := (testQuick in Test)
-      .dependsOn(runnerRuntimeDependencies: _*)
-      .evaluated
+    }
   )
   .dependsOn(apiJVM, instrumentation, utils)
   .enablePlugins(sbtdocker.DockerPlugin, BuildInfoPlugin)
