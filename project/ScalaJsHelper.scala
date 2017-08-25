@@ -11,7 +11,11 @@ object ScalaJSHelper {
 
   def packageScalaJS(client: Project) = {
     def webpackOutputDir = Def.task {
-      ((crossTarget in (client, Compile, npmUpdate)).value / "out")
+      webpackDir.value / "out"      
+    }
+
+    def webpackDir = Def.task {
+      ((crossTarget in (client, Compile, npmUpdate)).value)
     }
 
     Seq(
@@ -22,12 +26,13 @@ object ScalaJSHelper {
       },
       mappings in (Compile, packageBin) := {
         val webpackOut = webpackOutputDir.value.toPath
-        val runIt = (webpack in (client, Compile, fullOptJS)).value
 
         val mappingExcludingNonOptimized =
           (mappings in (Compile, packageBin)).value.filterNot {
             case (f, r) => f.toPath.startsWith(webpackOut)
           }
+
+        val runIt = (webpack in (client, Compile, fullOptJS)).value
 
         val optimized =
           (webpackOut.toFile.***.get)

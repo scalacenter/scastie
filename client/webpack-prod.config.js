@@ -4,7 +4,7 @@ const Merge = require("webpack-merge");
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-const commonConfig = require('./webpack.common.js');
+const common = require('./webpack.common.js');
 
 const extractSass = new ExtractTextPlugin({
   filename: "[name].[contenthash].css"
