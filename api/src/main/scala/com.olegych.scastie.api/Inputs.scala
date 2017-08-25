@@ -90,10 +90,7 @@ case class Inputs(
   }
 
   def hasEnsimeSupport: Boolean = {
-    // for now
-    isDefault
-
-    // target.hasEnsimeSupport
+    target.hasEnsimeSupport
   }
 
   def sbtConfig: String = {
