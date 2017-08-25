@@ -20,17 +20,8 @@ object ScalaJSHelper {
 
     Seq(
       watchSources ++= (watchSources in client).value,
-      products in Compile += {
-        val runIt = (webpack in (client, Compile, fastOptJS)).value
-        webpackOutputDir.value
-      },
       mappings in (Compile, packageBin) := {
         val webpackOut = webpackOutputDir.value.toPath
-
-        val mappingExcludingNonOptimized =
-          (mappings in (Compile, packageBin)).value.filterNot {
-            case (f, r) => f.toPath.startsWith(webpackOut)
-          }
 
         val runIt = (webpack in (client, Compile, fullOptJS)).value
 
@@ -39,7 +30,8 @@ object ScalaJSHelper {
             .map(path => (path, webpackOut.relativize(path.toPath).toString))
             .toSeq
 
-        mappingExcludingNonOptimized ++ optimized
+        (mappings in (Compile, packageBin)).value ++ 
+          optimized
       }
     )
   }

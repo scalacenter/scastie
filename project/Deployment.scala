@@ -14,11 +14,12 @@ import sbtdocker.ImageName
 
 object Deployment {
   def settings(server: Project,
-               sbtRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
-    deploy := deployTask(server, sbtRunner).value,
-    deployServer := deployServerTask(server, sbtRunner).value,
-    deployQuick := deployQuickTask(server, sbtRunner).value,
-    deployServerQuick := deployServerQuickTask(server, sbtRunner).value
+               sbtRunner: Project,
+               ensimeRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
+    deploy := deployTask(server, sbtRunner, ensimeRunner).value,
+    deployServer := deployServerTask(server, sbtRunner, ensimeRunner).value,
+    deployQuick := deployQuickTask(server, sbtRunner, ensimeRunner).value,
+    deployServerQuick := deployServerQuickTask(server, sbtRunner, ensimeRunner).value
   )
 
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
@@ -34,9 +35,10 @@ object Deployment {
     taskKey[Unit]("Deploy server without building server zip")
 
   def deployServerTask(server: Project,
-                       sbtRunner: Project): Def.Initialize[Task[Unit]] =
+                       sbtRunner: Project,
+                       ensimeRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner).value
+      val deployment = deploymentTask(sbtRunner, ensimeRunner).value
       val serverZip = (packageBin in (server, Universal)).value.toPath
 
       deployment.deployServer(serverZip)
@@ -44,19 +46,22 @@ object Deployment {
     }
 
   def deployTask(server: Project,
-                 sbtRunner: Project): Def.Initialize[Task[Unit]] =
+                 sbtRunner: Project,
+                 ensimeRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner).value
+      val deployment = deploymentTask(sbtRunner, ensimeRunner).value
       val serverZip = (packageBin in (server, Universal)).value.toPath
-      val imageId = (dockerBuildAndPush in sbtRunner).value
+      val imageIdSbt = (dockerBuildAndPush in sbtRunner).value
+      val imageIdEnsime = (dockerBuildAndPush in ensimeRunner).value
 
       deployment.deploy(serverZip)
     }
 
   def deployQuickTask(server: Project,
-                      sbtRunner: Project): Def.Initialize[Task[Unit]] =
+                      sbtRunner: Project,
+                      ensimeRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner).value
+      val deployment = deploymentTask(sbtRunner, ensimeRunner).value
       val serverZip = serverZipTask(server).value
 
       deployment.logger.warn(
@@ -66,9 +71,10 @@ object Deployment {
     }
 
   def deployServerQuickTask(server: Project,
-                            sbtRunner: Project): Def.Initialize[Task[Unit]] =
+                            sbtRunner: Project,
+                            ensimeRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner).value
+      val deployment = deploymentTask(sbtRunner, ensimeRunner).value
       val serverZip = serverZipTask(server).value
 
       deployment.logger.warn(
@@ -79,13 +85,15 @@ object Deployment {
     }
 
   private def deploymentTask(
-      sbtRunner: Project
+      sbtRunner: Project,
+      ensimeRunner: Project
   ): Def.Initialize[Task[Deployment]] =
     Def.task {
       new Deployment(
         rootFolder = (baseDirectory in ThisBuild).value,
         version = version.value,
-        dockerImage = (imageNames in (sbtRunner, docker)).value.head,
+        sbtDockerImage = (imageNames in (sbtRunner, docker)).value.head,
+        ensimeDockerImage = (imageNames in (ensimeRunner, docker)).value.head,
         logger = streams.value.log
       )
     }
@@ -101,7 +109,8 @@ object Deployment {
 
 class Deployment(rootFolder: File,
                  version: String,
-                 dockerImage: ImageName,
+                 sbtDockerImage: ImageName,
+                 ensimeDockerImage: ImageName,
                  val logger: Logger) {
   def deploy(serverZip: Path): Unit = {
     deployRunners()
@@ -158,9 +167,18 @@ class Deployment(rootFolder: File,
   }
 
   def deployRunners(): Unit = {
-    val dockerNamespace = dockerImage.namespace.get
-    val dockerRepository = dockerImage.repository
+    val sbtDockerNamespace = sbtDockerImage.namespace.get
+    val sbtDockerRepository = sbtDockerImage.repository
 
+    val ensimeDockerNamespace = ensimeDockerImage.namespace.get
+    val ensimeDockerRepository = ensimeDockerImage.repository
+
+    deployRunners(s"$sbtDockerNamespace/$sbtDockerRepository")
+    deployRunners(s"$ensimeDockerNamespace/$ensimeDockerRepository")
+  }
+
+
+  def deployRunners(image: String): Unit = {
     val sbtScriptDir = Files.createTempDirectory("sbt")
     val sbtScript = sbtScriptDir.resolve("sbt.sh")
 
@@ -168,8 +186,7 @@ class Deployment(rootFolder: File,
 
     val runnersPortsEnd = runnersPortsStart + runnersPortsSize
 
-    val dockerImagePath =
-      s"$dockerNamespace/$dockerRepository:$gitHashNow"
+    val dockerImagePath = s"$$image:$gitHashNow"
 
     val sentryDsn = getSentryDsn(getSecretConfig())
 

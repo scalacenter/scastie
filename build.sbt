@@ -51,7 +51,7 @@ lazy val scastie = project
     utils
   )
   .settings(baseSettings)
-  .settings(Deployment.settings(server, sbtRunner))
+  .settings(Deployment.settings(server, sbtRunner, ensimeRunner))
 
 lazy val loggingAndTest =
   libraryDependencies ++= Seq(
@@ -140,28 +140,20 @@ lazy val ensimeRunner = project
         repository = "scastie-ensime-runner",
         tag = Some(gitHash())
       )
-    )
-    // TODO: DockerHelper for ensime
-    // dockerfile in docker := Def.task {
-    //   val base = (baseDirectory in ThisBuild).value
-    //   val ivy = ivyPaths.value.ivyHome.get
-    //   val org = organization.value
-    //   val artifact = assembly.value
-    //   val artifactTargetPath = s"/app/${artifact.name}"
-    //   val logbackConfDestination = "/home/scastie/logback.xml"
-    //   new Dockerfile {
-    //     from("scalacenter/scastie-docker-sbt:0.0.42")
-    //     add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
-    //     add(artifact, artifactTargetPath)
-    //     add(base / "deployment" / "logback.xml", logbackConfDestination)
-    //     entryPoint("java",
-    //                "-Xmx256M",
-    //                "-Xms256M",
-    //                s"-Dlogback.configurationFile=$logbackConfDestination",
-    //                "-jar",
-    //                artifactTargetPath)
-    //   }
-    // }.value
+    ),
+    dockerfile in docker := Def
+      .task {
+        DockerHelper(
+          baseDirectory = (baseDirectory in ThisBuild).value.toPath,
+          sbtTargetDir = target.value.toPath,
+          ivyHome = ivyPaths.value.ivyHome.get.toPath,
+          organization = organization.value,
+          artifact = assembly.value.toPath,
+          sbtScastie = (moduleName in sbtScastie).value
+        )
+      }
+      .dependsOn(runnerRuntimeDependencies: _*)
+      .value
   )
   .dependsOn(apiJVM, utils, sbtRunner)
   .enablePlugins(sbtdocker.DockerPlugin)
