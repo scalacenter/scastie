@@ -133,7 +133,7 @@ exit
 ```
 git commit
 
-sbt sbtRunner/docker
+sbt ";ensimeRunner/docker;sbtRunner/docker"
 
 docker run \
   --network=host \
@@ -142,4 +142,12 @@ docker run \
   -e RUNNER_RECONNECT=false \
   -e RUNNER_PRODUCTION=true \
   scalacenter/scastie-sbt-runner:`git rev-parse --verify HEAD`
+
+docker run \
+  --network=host \
+  -e RUNNER_PORT=6150 \
+  -e RUNNER_HOSTNAME=localhost \
+  -e RUNNER_RECONNECT=false \
+  -e RUNNER_PRODUCTION=true \
+  scalacenter/scastie-ensime-runner:`git rev-parse --verify HEAD`
 ```
