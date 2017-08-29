@@ -31,7 +31,7 @@ object SbtShared {
   // sbt-ensime 1.12.14 creates .ensime with 2.0.0-M4 server jar
   val latestSbtEnsime = "1.12.14"
   val latestEnsime = "2.0.0-M4"
-  val latestCoursier = "1.0.0-RC10"
+  val latestCoursier = "1.0.0-RC11"
 
   val sbtVersion = "0.13.16"
 
@@ -87,6 +87,12 @@ object SbtShared {
     }
 
   lazy val baseSettings = Seq(
+    // skip scaladoc
+    publishArtifact in (Compile, packageDoc) := false,
+    publishArtifact in packageDoc := false,
+    publishArtifact in packageSrc := false,
+    sources in (Compile, doc) := Seq.empty,
+    parallelExecution in Test := false,
     scalaVersion := currentScalaVersion,
     scalacOptions ++= Seq(
       "-deprecation",

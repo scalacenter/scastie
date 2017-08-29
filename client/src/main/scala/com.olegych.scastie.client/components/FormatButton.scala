@@ -1,14 +1,16 @@
 package com.olegych.scastie.client.components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class FormatButton(inputsHasChanged: Boolean,
-                              formatCode: Callback,
-                              isStatusOk: Boolean) {
+                              isStatusOk: Boolean,
+                              formatCode: Reusable[Callback]) {
   @inline def render: VdomElement = FormatButton.component(this)
 }
 
 object FormatButton {
+  implicit val reusability: Reusability[FormatButton] =
+    Reusability.caseClass[FormatButton]
 
   private def render(props: FormatButton): VdomElement = {
 
@@ -17,7 +19,7 @@ object FormatButton {
 
     val formatCode =
       if (!isDisabled) props.formatCode
-      else Callback.empty
+      else reusableEmpty
 
     li(title := "Format Code (F6)",
        role := "button",
@@ -33,5 +35,6 @@ object FormatButton {
     ScalaComponent
       .builder[FormatButton]("FormatButton")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

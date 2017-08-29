@@ -2,19 +2,23 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class PromptModal(modalText: String,
                              isClosed: Boolean,
-                             close: Callback,
+                             close: Reusable[Callback],
                              actionText: String,
                              actionLabel: String,
-                             action: Callback) {
+                             action: Reusable[Callback]) {
 
   @inline def render: VdomElement = PromptModal.component(this)
 }
 
 object PromptModal {
+
+  implicit val reusability: Reusability[PromptModal] =
+    Reusability.caseClass[PromptModal]
+
   private def render(props: PromptModal): VdomElement = {
     Modal(
       props.modalText,
@@ -46,5 +50,6 @@ object PromptModal {
     ScalaComponent
       .builder[PromptModal]("PrompModal")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

@@ -14,12 +14,23 @@ import scalajsbundler.util.JSON
 import scala.util.Try
 
 val scalaTestVersion = "3.0.1"
-val akkaHttpVersion = "10.0.6"
+val akkaHttpVersion = "10.0.9"
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
 
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+
+addCommandAlias(
+  "startAll",
+  List(
+    "sbtRunner/reStart",
+    "ensimeRunner/reStart",
+    "server/reStart",
+    "client/fastOptJS::startWebpackDevServer",
+    "client/fastOptJS"
+  ).mkString(";", ";", "")
+)
 
 lazy val scastie = project
   .in(file("."))
@@ -174,7 +185,7 @@ lazy val sbtRunner = project
       akka("remote"),
       akka("slf4j"),
       akkaHttp,
-      "com.geirsson" %% "scalafmt-core" % "1.1.0"
+      "com.geirsson" %% "scalafmt-core" % "1.2.0"
     ),
     imageNames in docker := Seq(
       ImageName(
@@ -247,9 +258,12 @@ lazy val storage = project
 lazy val client = project
   .settings(baseSettings)
   .settings(
+    test := {},
     version in webpack := "3.5.5",
     version in installWebpackDevServer := "2.7.1",
     webpackConfigFile in startWebpackDevServer :=
+      Some(baseDirectory.value / "webpack-dev.config.js"),
+    webpackConfigFile in webpackReload :=
       Some(baseDirectory.value / "webpack-dev.config.js"),
     webpackConfigFile in fastOptJS :=
       Some(baseDirectory.value / "webpack-dev.config.js"),
@@ -258,6 +272,7 @@ lazy val client = project
     webpackMonitoredDirectories += (resourceDirectory in Compile).value,
     includeFilter in webpackMonitoredFiles := "*",
     useYarn := true,
+    enableReloadWorkflow := true,
     emitSourceMaps := false,
     npmDependencies in Compile ++= Seq(
       "bourbon" -> "4.3.4",

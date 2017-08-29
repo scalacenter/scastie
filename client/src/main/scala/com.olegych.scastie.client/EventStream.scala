@@ -2,6 +2,7 @@ package com.olegych.scastie.client
 
 import play.api.libs.json.{Json, Reads}
 
+import org.scalajs.dom
 import org.scalajs.dom.{
   EventSource,
   WebSocket,
@@ -17,11 +18,15 @@ import japgolly.scalajs.react.{Callback, CallbackTo}
 import scala.util.{Failure, Success}
 
 abstract class EventStream[T: Reads](handler: EventStreamHandler[T]) {
+  var closing = false
+
   def onMessage(raw: String): Unit = {
-    Json.fromJson[T](Json.parse(raw)).asOpt.foreach { msg =>
-      val shouldClose = handler.onMessage(msg)
-      if (shouldClose) {
-        close()
+    if (!closing) {
+      Json.fromJson[T](Json.parse(raw)).asOpt.foreach { msg =>
+        val shouldClose = handler.onMessage(msg)
+        if (shouldClose) {
+          close()
+        }
       }
     }
   }
@@ -29,7 +34,12 @@ abstract class EventStream[T: Reads](handler: EventStreamHandler[T]) {
   def onError(error: String): Unit = handler.onError(error)
   def onClose(reason: Option[String]): Unit = handler.onClose(reason)
 
-  def close(): Unit
+  def close(force: Boolean = false): Unit = {
+    closing = true
+    if (!force) {
+      onClose(None)
+    }
+  }
 }
 
 trait EventStreamHandler[T] {
@@ -38,7 +48,7 @@ trait EventStreamHandler[T] {
   def onError(error: String): Unit
   def onClose(reason: Option[String]): Unit
 
-  def onErrorC(error: String): Callback
+  def onConnectionError(error: String): Callback
   def onConnected(stream: EventStream[T]): Callback
 }
 
@@ -58,15 +68,17 @@ object EventStream {
       )
 
     connectEventSource.attemptTry.flatMap {
-      case Success(eventSource) => handler.onConnected(eventSource)
+      case Success(eventSource) => {
+        handler.onConnected(eventSource)
+      }
       case Failure(errorEventSource) => {
         connectWebSocket.attemptTry.flatMap {
           case Success(websocket) => {
             handler.onConnected(websocket)
           }
           case Failure(errorWebSocket) => {
-            handler.onErrorC(errorEventSource.toString) >>
-              handler.onErrorC(errorWebSocket.toString)
+            handler.onConnectionError(errorEventSource.toString) >>
+              handler.onConnectionError(errorWebSocket.toString)
           }
         }
       }
@@ -93,8 +105,8 @@ class WebSocketStream[T: Reads](uri: String, handler: EventStreamHandler[T])
     onClose(Some(e.reason))
   }
 
-  def close(): Unit = {
-    onClose(None)
+  override def close(force: Boolean = false): Unit = {
+    super.close(force)
     socket.close()
   }
 
@@ -128,8 +140,8 @@ class EventSourceStream[T: Reads](uri: String, handler: EventStreamHandler[T])
     }
   }
 
-  def close(): Unit = {
-    onClose(None)
+  override def close(force: Boolean = false): Unit = {
+    super.close(force)
     eventSource.close()
   }
 

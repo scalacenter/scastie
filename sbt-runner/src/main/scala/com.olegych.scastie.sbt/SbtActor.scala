@@ -8,6 +8,7 @@ import scala.concurrent.duration._
 
 class SbtActor(system: ActorSystem,
                runTimeout: FiniteDuration,
+               sbtReloadTimeout: FiniteDuration,
                production: Boolean,
                readyRef: Option[ActorRef],
                override val reconnectInfo: Option[ReconnectInfo])
@@ -35,7 +36,7 @@ class SbtActor(system: ActorSystem,
 
   private val sbtRunner =
     context.actorOf(
-      Props(new SbtRunner(runTimeout, production)),
+      Props(new SbtRunner(runTimeout, sbtReloadTimeout, production)),
       name = "SbtRunner"
     )
 

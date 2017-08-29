@@ -1,34 +1,33 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
 
-import api._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.TagOf
+import com.olegych.scastie.api._
+import japgolly.scalajs.react._, vdom.TagOf, vdom.all._, extra._
 import org.scalajs.dom.html.Div
-import vdom.all._
 
 final case class BuildSettings(
-    setTarget: ScalaTarget => Callback,
-    closeResetModal: Callback,
-    resetBuild: Callback,
-    openResetModal: Callback,
-    sbtConfigChange: String => Callback,
-    removeScalaDependency: ScalaDependency => Callback,
-    updateDependencyVersion: (ScalaDependency, String) => Callback,
-    addScalaDependency: (ScalaDependency, Project) => Callback,
     librariesFrom: Map[ScalaDependency, Project],
     isDarkTheme: Boolean,
     isBuildDefault: Boolean,
     isResetModalClosed: Boolean,
     scalaTarget: ScalaTarget,
-    sbtConfigExtra: String
+    sbtConfigExtra: String,
+    setTarget: ScalaTarget ~=> Callback,
+    closeResetModal: Reusable[Callback],
+    resetBuild: Reusable[Callback],
+    openResetModal: Reusable[Callback],
+    sbtConfigChange: String ~=> Callback,
+    removeScalaDependency: ScalaDependency ~=> Callback,
+    updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
+    addScalaDependency: (ScalaDependency, Project) ~=> Callback,
 ) {
 
   @inline def render: VdomElement = BuildSettings.component(this)
 }
 
 object BuildSettings {
+
+  implicit val reusability: Reusability[BuildSettings] =
+    Reusability.caseClass[BuildSettings]
 
   def renderTarget(props: BuildSettings): TagOf[Div] = {
 
@@ -207,15 +206,11 @@ object BuildSettings {
       ),
       pre(cls := "configuration")(
         CodeMirrorEditor(
-          CodeMirrorEditor.Settings(
-            value = props.sbtConfigExtra,
-            theme = s"solarized $theme",
-            readOnly = false
-          ),
-          CodeMirrorEditor.Handler(
-            updatedSettings => props.sbtConfigChange(updatedSettings)
-          )
-        )
+          value = props.sbtConfigExtra,
+          theme = s"solarized $theme",
+          readOnly = false,
+          onChange = props.sbtConfigChange
+        ).render
       )
     )
   }
@@ -224,5 +219,6 @@ object BuildSettings {
     ScalaComponent
       .builder[BuildSettings]("BuildSettings")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

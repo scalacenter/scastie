@@ -1,20 +1,38 @@
-language: scala
+language: nix
 dist: trusty
+sudo: false
 os:
   - linux
-scala:
-  - 2.12.3
-jdk:
-  - oraclejdk8
+env:
+  global:
+    - TRAVIS_NODE_VERSION="8"
+
+before_install:
+  - mkdir -p /home/travis/.sbt/0.13/plugins
+  - echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC11")' >> /home/travis/.sbt/0.13/plugins/build.sbt
+
+script:
+  - nix-shell -A scastie --command "sbt scalaVersion"
+
+  - bin/scalafmt --test
+
+  - git clone git://github.com/MasseGuillaume/scalajs-bundler.git
+  - pushd scalajs-bundler
+  - git checkout dev-server-fix
+  - sbt publishLocal
+  - nix-shell -A scastie --command "sbt publishLocal"
+  - popd
+
+  - nix-shell -A scastie --command "sbt ensimeRunner/test"
+
+before_cache:
+  # Cleanup the cached directories to avoid unnecessary cache updates
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt        -name "*.lock"               -print -delete
+  
 cache:
   yarn: true
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot/
     - $HOME/.coursier/cache
-script:
-  - bin/scalafmt --test
-  - git clone git@github.com:MasseGuillaume/scalajs-bundler.git
-  - git checkout dev-server-fix
-  - sbt publishLocal
-  - sbt test:compile

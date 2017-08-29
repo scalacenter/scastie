@@ -2,70 +2,71 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 import codemirror.TextAreaEditor
 import org.scalajs.dom.raw.HTMLTextAreaElement
 
 import scala.scalajs._
 
+final case class CodeMirrorEditor(
+    onChange: String ~=> Callback,
+    value: String,
+    theme: String,
+    readOnly: Boolean
+) {
+  @inline def render: VdomElement = CodeMirrorEditor.component(this)
+}
+
 object CodeMirrorEditor {
+  implicit val reusability: Reusability[CodeMirrorEditor] =
+    Reusability.caseClass[CodeMirrorEditor]
+
   private var textareaRef: HTMLTextAreaElement = _
 
   private[CodeMirrorEditor] case class State(
       editor: Option[TextAreaEditor] = None
   )
 
-  case class Handler(
-      onChange: String => Callback
-  )
-
-  case class Settings(
-      value: String,
-      theme: String,
-      readOnly: Boolean
-  )
-
   private[CodeMirrorEditor] class CodeMirrorEditorBackend(
-      scope: BackendScope[(Settings, Handler), State]
+      scope: BackendScope[CodeMirrorEditor, State]
   ) {
     def start(): Callback = {
-      scope.props.flatMap {
-        case (settings, handler) =>
-          val options = js
-            .Dictionary[Any](
-              "mode" -> "text/x-scala",
-              "readOnly" -> settings.readOnly,
-              "lineNumbers" -> false,
-              "lineWrapping" -> false,
-              "tabSize" -> 2,
-              "indentWithTabs" -> false,
-              "theme" -> settings.theme,
-              "smartIndent" -> true,
-              "keyMap" -> "sublime",
-              "scrollPastEnd" -> false,
-              "scrollbarStyle" -> "simple",
-              "autoCloseBrackets" -> true,
-              "matchBrackets" -> true,
-              "showCursorWhenSelecting" -> true,
-              "autofocus" -> false,
-              "highlightSelectionMatches" -> js.Dictionary(
-                "showToken" -> js.Dynamic.global.RegExp("\\w")
-              ),
-              "extraKeys" -> js.Dictionary("Tab" -> "defaultTab")
-            )
-            .asInstanceOf[codemirror.Options]
-
-          val editor =
-            codemirror.CodeMirror.fromTextArea(textareaRef, options)
-
-          editor.getDoc().setValue(settings.value)
-
-          editor.onChanges(
-            (e, _) => handler.onChange(e.getDoc().getValue()).runNow
+      scope.props.flatMap { props =>
+        val options = js
+          .Dictionary[Any](
+            "mode" -> "text/x-scala",
+            "readOnly" -> props.readOnly,
+            "lineNumbers" -> false,
+            "lineWrapping" -> false,
+            "tabSize" -> 2,
+            "indentWithTabs" -> false,
+            "theme" -> props.theme,
+            "smartIndent" -> true,
+            "keyMap" -> "sublime",
+            "scrollPastEnd" -> false,
+            "scrollbarStyle" -> "simple",
+            "autoCloseBrackets" -> true,
+            "matchBrackets" -> true,
+            "showCursorWhenSelecting" -> true,
+            "autofocus" -> false,
+            "highlightSelectionMatches" -> js.Dictionary(
+              "showToken" -> js.Dynamic.global.RegExp("\\w")
+            ),
+            "extraKeys" -> js.Dictionary("Tab" -> "defaultTab")
           )
+          .asInstanceOf[codemirror.Options]
 
-          scope.modState(_.copy(editor = Some(editor)))
+        val editor =
+          codemirror.CodeMirror.fromTextArea(textareaRef, options)
+
+        editor.getDoc().setValue(props.value)
+
+        editor.onChanges(
+          (e, _) => props.onChange(e.getDoc().getValue()).runNow
+        )
+
+        scope.modState(_.copy(editor = Some(editor)))
       }
     }
     def stop() = {
@@ -83,8 +84,8 @@ object CodeMirrorEditor {
 
   private def runDelta(editor: TextAreaEditor,
                        state: State,
-                       current: Settings,
-                       next: Settings): Callback = {
+                       current: CodeMirrorEditor,
+                       next: CodeMirrorEditor): Callback = {
 
     def setCode(): Unit = {
       if (current.value != next.value) {
@@ -103,16 +104,18 @@ object CodeMirrorEditor {
       }
     }
 
-    Callback(setCode()) >> Callback(setTheme()) >> Callback(editor.refresh())
+    Callback(setCode()) >>
+      Callback(setTheme()) >>
+      Callback(editor.refresh())
   }
 
   private val component =
     ScalaComponent
-      .builder[(Settings, Handler)]("CodemirrorEditor")
+      .builder[CodeMirrorEditor]("CodeMirrorEditor")
       .initialState(State())
       .backend(new CodeMirrorEditorBackend(_))
       .renderPS {
-        case (scope, (props, handler), _) =>
+        case (scope, props, _) =>
           textarea.ref(textareaRef = _)(
             value := props.value,
             onChange ==> scope.backend.onChangeF,
@@ -120,8 +123,8 @@ object CodeMirrorEditor {
           )
       }
       .componentWillReceiveProps { scope =>
-        val (current, _) = scope.currentProps
-        val (next, _) = scope.nextProps
+        val current = scope.currentProps
+        val next = scope.nextProps
         val state = scope.state
 
         state.editor
@@ -132,5 +135,5 @@ object CodeMirrorEditor {
       .componentWillUnmount(_.backend.stop())
       .build
 
-  def apply(props: Settings, handler: Handler) = component((props, handler))
+  def apply(props: CodeMirrorEditor) = component(props)
 }

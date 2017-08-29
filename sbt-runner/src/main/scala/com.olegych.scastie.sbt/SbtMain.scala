@@ -36,10 +36,18 @@ object SbtMain {
       logger.info(s"Starting sbtRunner pid: $pid")
     }
 
-    val timeout = {
+    val runTimeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(
         sbtConfig.getDuration("runTimeout", timeunit),
+        timeunit
+      )
+    }
+
+    val sbtReloadTimeout = {
+      val timeunit = TimeUnit.SECONDS
+      FiniteDuration(
+        sbtConfig.getDuration("sbtReloadTimeout", timeunit),
         timeunit
       )
     }
@@ -52,7 +60,8 @@ object SbtMain {
         actorAkkaPort = sbtConfig.getInt("akka-port")
       )
 
-    logger.info("  timeout: {}", timeout)
+    logger.info("  runTimeout: {}", runTimeout)
+    logger.info("  sbtReloadTimeout: {}", sbtReloadTimeout)
     logger.info("  isProduction: {}", isProduction)
     logger.info("  runner hostname: {}", reconnectInfo.actorHostname)
     logger.info("  runner port: {}", reconnectInfo.actorAkkaPort)
@@ -63,7 +72,8 @@ object SbtMain {
       Props(
         new SbtActor(
           system = system,
-          runTimeout = timeout,
+          runTimeout = runTimeout,
+          sbtReloadTimeout = sbtReloadTimeout,
           production = isProduction,
           readyRef = None,
           reconnectInfo = Some(reconnectInfo)

@@ -30,7 +30,7 @@ object ScalaJSHelper {
             .map(path => (path, webpackOut.relativize(path.toPath).toString))
             .toSeq
 
-        (mappings in (Compile, packageBin)).value ++ 
+        (mappings in (Compile, packageBin)).value ++
           optimized
       }
     )

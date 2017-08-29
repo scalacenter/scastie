@@ -13,14 +13,11 @@ import java.nio.file._
 import java.io.{BufferedReader, IOException, InputStreamReader}
 import java.nio.charset.StandardCharsets
 
-class Sbt(defaultConfig: Inputs) {
+class Sbt(defaultInputs: Inputs, javaOptions: Seq[String]) {
 
   private val log = LoggerFactory.getLogger(getClass)
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
-
-  private var currentSbtConfig = ""
-  private var currentSbtPluginsConfig = ""
 
   val sbtDir: Path = Files.createTempDirectory("scastie")
   private val buildFile = sbtDir.resolve("build.sbt")
@@ -29,14 +26,11 @@ class Sbt(defaultConfig: Inputs) {
   private val projectDir = sbtDir.resolve("project")
   Files.createDirectories(projectDir)
 
+  log.info(s"sbtVersion: $sbtVersion")
+
   write(projectDir.resolve("build.properties"), s"sbt.version = $sbtVersion")
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
-
-  private def setup(): Unit = {
-    setConfig(defaultConfig)
-    setPlugins(defaultConfig)
-  }
 
   private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
   Files.createDirectories(codeFile.getParent)
@@ -49,6 +43,9 @@ class Sbt(defaultConfig: Inputs) {
     slurp(sbtDir.resolve(ScalaTarget.Js.sourceMapFilename))
   }
 
+  private var currentInputs = defaultInputs
+  setInputs(defaultInputs)
+
   private val (process, fin, fout) = {
     log.info("Starting sbt process")
     val builder =
@@ -60,12 +57,10 @@ class Sbt(defaultConfig: Inputs) {
       .environment()
       .put(
         "SBT_OPTS",
-        Seq(
-          "-Xms512m",
-          "-Xmx1g",
+        (javaOptions ++ Seq(
           "-Djline.terminal=jline.UnsupportedTerminal",
           "-Dsbt.log.noformat=true"
-        ).mkString(" ")
+        )).mkString(" ")
       )
 
     val process = builder.start()
@@ -81,7 +76,7 @@ class Sbt(defaultConfig: Inputs) {
 
   def warmUp(): Unit = {
     log.info("warming up sbt")
-    val Right(in) = SbtRunner.instrument(defaultConfig)
+    val Right(in) = SbtRunner.instrument(defaultInputs)
     eval("run", in, (line, _, _, _) => log.info(line), reload = false)
     log.info("warming up sbt done")
   }
@@ -101,6 +96,8 @@ class Sbt(defaultConfig: Inputs) {
       if (read == 10) {
         val line = chars.mkString
 
+        println(line)
+
         val prompt = line == uniqueId
         sbtError = line == "[error] Type error in expression"
         done = prompt || sbtError
@@ -112,7 +109,7 @@ class Sbt(defaultConfig: Inputs) {
       }
     }
     if (sbtError) {
-      setup()
+      setInputs(defaultInputs)
       process("r", noop, reload = false)
     }
 
@@ -122,7 +119,6 @@ class Sbt(defaultConfig: Inputs) {
   type LineCallback = (String, Boolean, Boolean, Boolean) => Unit
   val noop: LineCallback = (line, _, _, _) => log.info(line)
 
-  setup()
   collect(noop, reload = false)
 
   private def process(command: String,
@@ -153,8 +149,7 @@ class Sbt(defaultConfig: Inputs) {
   }
 
   def needsReload(inputs: Inputs): Boolean =
-    inputs.sbtConfig != currentSbtConfig ||
-      inputs.sbtPluginsConfig != currentSbtPluginsConfig
+    currentInputs.needsReload(inputs)
 
   def exit(): Unit = {
     process("exit", noop, reload = false)
@@ -171,14 +166,10 @@ class Sbt(defaultConfig: Inputs) {
     ()
   }
 
-  private def setPlugins(inputs: Inputs): Unit = {
+  private def setInputs(inputs: Inputs): Unit = {
     writeFile(pluginFile, inputs.sbtPluginsConfig + nl)
-    currentSbtPluginsConfig = inputs.sbtPluginsConfig
-  }
-
-  private def setConfig(inputs: Inputs): Unit = {
     writeFile(buildFile, prompt + nl + inputs.sbtConfig)
-    currentSbtConfig = inputs.sbtConfig
+    currentInputs = inputs
   }
 
   def eval(command: String,
@@ -188,13 +179,7 @@ class Sbt(defaultConfig: Inputs) {
 
     val isReloading = needsReload(inputs)
 
-    if (inputs.sbtConfig != currentSbtConfig) {
-      setConfig(inputs)
-    }
-
-    if (inputs.sbtPluginsConfig != currentSbtPluginsConfig) {
-      setPlugins(inputs)
-    }
+    setInputs(inputs)
 
     val reloadError =
       if (isReloading) process("reload", lineCallback, reload = true)

@@ -1,13 +1,17 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.{EnsimeDown, EnsimeStatus, Runner}
+import com.olegych.scastie.api.{SbtRunnerState, EnsimeRunnerState}
 
 object StatusState {
-  def default = StatusState(runners = None, ensimeStatus = EnsimeDown)
+  def empty: StatusState =
+    StatusState(
+      sbtRunners = None,
+      ensimeRunners = None
+    )
 }
 
-final case class StatusState(runners: Option[Vector[Runner]],
-                             ensimeStatus: EnsimeStatus) {
-  def runnerCount: Option[Int] = runners.map(_.size)
-  def isOk: Boolean = runners.exists(_.nonEmpty)
+final case class StatusState(sbtRunners: Option[Vector[SbtRunnerState]],
+                             ensimeRunners: Option[Vector[EnsimeRunnerState]]) {
+  def sbtRunnerCount: Option[Int] = sbtRunners.map(_.size)
+  def isSbtOk: Boolean = sbtRunners.exists(_.nonEmpty)
 }

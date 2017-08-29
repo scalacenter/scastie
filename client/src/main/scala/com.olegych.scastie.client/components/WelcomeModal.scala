@@ -2,13 +2,17 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
-final case class WelcomeModal(isClosed: Boolean, close: Callback) {
+final case class WelcomeModal(isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = WelcomeModal.component(this)
 }
 
 object WelcomeModal {
+
+  implicit val reusability: Reusability[WelcomeModal] =
+    Reusability.caseClass[WelcomeModal]
+
   private def render(props: WelcomeModal): VdomElement = {
     Modal(
       "Welcome to Scastie!",

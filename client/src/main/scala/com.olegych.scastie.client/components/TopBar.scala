@@ -4,7 +4,7 @@ package components
 
 import api.User
 
-import japgolly.scalajs.react._, vdom.all._, extra.{Reusability, StateSnapshot}
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 import org.scalajs.dom
 
@@ -15,7 +15,7 @@ final case class TopBar(view: StateSnapshot[View], user: Option[User]) {
 object TopBar {
 
   implicit val reusability: Reusability[TopBar] =
-    Reusability.caseClass
+    Reusability.caseClass[TopBar]
 
   private def render(props: TopBar): VdomElement = {
     def openInNewTab(link: String): Callback =
@@ -109,6 +109,6 @@ object TopBar {
   private val component = ScalaComponent
     .builder[TopBar]("TopBar")
     .render_P(render)
-    .configure(Reusability.shouldComponentUpdate)
+    .configure(Reusability.shouldComponentUpdateWithOverlay)
     .build
 }

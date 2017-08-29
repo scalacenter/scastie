@@ -1,16 +1,20 @@
 package com.olegych.scastie.client.components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class Modal(title: String,
                        isClosed: Boolean,
-                       close: Callback,
+                       close: Reusable[Callback],
                        modalcls: TagMod,
                        content: TagMod) {
   @inline def render: VdomElement = Modal.component(this)
 }
 
 object Modal {
+
+  implicit val reuse: Reusability[Modal] =
+    Reusability.byRefOr_==
+
   private def render(props: Modal): VdomElement = {
     val modalStyle =
       if (props.isClosed) TagMod(display.none)
@@ -42,5 +46,6 @@ object Modal {
     ScalaComponent
       .builder[Modal]("Modal")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

@@ -1,16 +1,20 @@
 package com.olegych.scastie.client
 package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class RunButton(isRunning: Boolean,
                            isStatusOk: Boolean,
-                           run: Callback,
-                           setView: View => Callback) {
+                           run: Reusable[Callback],
+                           setView: View ~=> Callback) {
   @inline def render: VdomElement = RunButton.component(this)
 }
 
 object RunButton {
+
+  implicit val reusability: Reusability[RunButton] =
+    Reusability.caseClass[RunButton]
+
   def render(props: RunButton): VdomElement = {
     if (!props.isRunning) {
       val runTitle =
@@ -21,7 +25,7 @@ object RunButton {
 
       val run =
         if (props.isStatusOk) props.run
-        else Callback.empty
+        else reusableEmpty
 
       li(onClick --> run,
          role := "button",
@@ -45,5 +49,6 @@ object RunButton {
     ScalaComponent
       .builder[RunButton]("RunButton")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

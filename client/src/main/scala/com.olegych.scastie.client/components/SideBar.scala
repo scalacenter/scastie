@@ -2,7 +2,8 @@ package com.olegych.scastie
 package client
 package components
 
-import com.olegych.scastie.api.{EnsimeDown, EnsimeRestarting, EnsimeUp}
+import com.olegych.scastie.api._
+
 import japgolly.scalajs.react._
 import vdom.all._
 import extra._
@@ -19,14 +20,18 @@ object Assets {
 
 final case class SideBar(isDarkTheme: Boolean,
                          status: StatusState,
-                         toggleTheme: Callback,
+                         toggleTheme: Reusable[Callback],
                          view: StateSnapshot[View],
-                         openHelpModal: Callback,
-                         updateEnsimeConfig: Callback) {
+                         openHelpModal: Reusable[Callback],
+                         updateEnsimeConfig: Reusable[Callback]) {
   @inline def render: VdomElement = SideBar.component(this)
 }
 
 object SideBar {
+
+  implicit val reusability: Reusability[SideBar] =
+    Reusability.caseClass[SideBar]
+
   private def render(props: SideBar): VdomElement = {
     val toggleThemeLabel =
       if (props.isDarkTheme) "Light"
@@ -56,7 +61,7 @@ object SideBar {
 
     val runnersStatusButton = {
       val (statusIcon, statusClass, statusLabel) =
-        props.status.runnerCount match {
+        props.status.sbtRunnerCount match {
           case None    => ("fa-times-circle", "status-unknown", "Unknown")
           case Some(0) => ("fa-times-circle", "status-down", "Down")
           case Some(_) => ("fa-check-circle", "status-up", "Up")
@@ -71,20 +76,20 @@ object SideBar {
       )
     }
 
-    val ensimeStatusIcon = {
-      val (statusIcon, statusClass, statusLabel) =
-        props.status.ensimeStatus match {
-          case EnsimeDown => ("fa-times-circle", "status-down", "Ensime's Down")
-          case EnsimeRestarting =>
-            ("fa-times-circle", "status-unknown", "Ensime's Restarting")
-          case EnsimeUp => ("fa-check-circle", "status-up", "Ensime's Up")
-        }
+    // val ensimeStatusIcon = {
+    //   val (statusIcon, statusClass, statusLabel) =
+    //     props.status.ensimeStatus match {
+    //       case EnsimeDown => ("fa-times-circle", "status-down", "Ensime's Down")
+    //       case EnsimeRestarting =>
+    //         ("fa-times-circle", "status-unknown", "Ensime's Restarting")
+    //       case EnsimeUp => ("fa-check-circle", "status-up", "Ensime's Up")
+    //     }
 
-      li(title := "Show ensime status", cls := s"btn $statusClass")(
-        i(cls := s"fa $statusIcon"),
-        span(fontSize := "9px", statusLabel)
-      )
-    }
+    //   li(title := "Show ensime status", cls := s"btn $statusClass")(
+    //     i(cls := s"fa $statusIcon"),
+    //     span(fontSize := "9px", statusLabel)
+    //   )
+    // }
 
     val editorButton = ViewToggleButton(
       currentView = props.view,
@@ -99,7 +104,7 @@ object SideBar {
       forView = View.BuildSettings,
       buttonTitle = "Build Settings",
       faIcon = "fa-gear",
-      onClick = Callback.empty
+      onClick = reusableEmpty
     ).render
 
     nav(cls := "sidebar")(
@@ -115,8 +120,7 @@ object SideBar {
         ul(cls := "actions-bottom")(
           themeButton,
           helpButton,
-          runnersStatusButton,
-          ensimeStatusIcon
+          runnersStatusButton
         )
       )
     )
@@ -126,5 +130,6 @@ object SideBar {
     ScalaComponent
       .builder[SideBar]("SideBar")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

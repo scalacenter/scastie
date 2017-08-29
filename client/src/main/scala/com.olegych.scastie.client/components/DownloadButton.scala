@@ -3,13 +3,16 @@ package components
 
 import com.olegych.scastie.api.{SnippetId, SnippetUserPart}
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class DownloadButton(snippetId: SnippetId) {
   @inline def render: VdomElement = DownloadButton.component(this)
 }
 
 object DownloadButton {
+  implicit val reusability: Reusability[DownloadButton] =
+    Reusability.caseClass[DownloadButton]
+
   def render(props: DownloadButton): VdomElement = {
     val url = props.snippetId.url
     val fullUrl = s"/api/download/$url"
@@ -30,5 +33,6 @@ object DownloadButton {
     ScalaComponent
       .builder[DownloadButton]("DownloadButton")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

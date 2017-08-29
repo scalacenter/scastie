@@ -25,13 +25,15 @@ trait ActorReconnecting extends Actor with ActorLogging {
   def onDisconnected(): Unit = {}
 
   private def setupReconnectCallback(): Unit = {
-    tryReconnectCallback.foreach(_.cancel())
-    tryReconnectCallback = Some(
-      context.system.scheduler.schedule(0.seconds, 10.seconds) {
-        log.info("Reconnecting to server")
-        tryConnect()
-      }
-    )
+    if (reconnectInfo.isDefined) {
+      tryReconnectCallback.foreach(_.cancel())
+      tryReconnectCallback = Some(
+        context.system.scheduler.schedule(0.seconds, 10.seconds) {
+          log.info("Reconnecting to server")
+          tryConnect()
+        }
+      )
+    }
   }
 
   override def preStart(): Unit =

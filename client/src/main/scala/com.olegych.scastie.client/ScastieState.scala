@@ -52,7 +52,7 @@ object ScastieState {
       attachedDoms = AttachedDoms(Map()),
       inputs = Inputs.default,
       outputs = Outputs.default,
-      status = StatusState.default,
+      status = StatusState.empty,
       completions = List(),
       typeAtInfo = None,
       isEmbedded = isEmbedded
@@ -66,7 +66,7 @@ object ScastieState {
     dontSerialize[AttachedDoms](AttachedDoms(Map()))
 
   implicit val dontSerializeStatusState: Format[StatusState] =
-    dontSerialize[StatusState](StatusState.default)
+    dontSerialize[StatusState](StatusState.empty)
 
   type TypeInfoAtHint = Option[TypeInfoAt]
 
@@ -453,18 +453,22 @@ case class ScastieState(
     else state
   }
 
-  def addStatus(status: StatusProgress): ScastieState = {
-    status match {
-      case StatusKeepAlive => this
-      case StatusRunnersInfo(runners) =>
-        copy(status = StatusState(Some(runners), this.status.ensimeStatus))
-      case StatusEnsimeInfo(ensimeStatus) =>
-        copy(status = StatusState(this.status.runners, ensimeStatus))
+  def addStatus(statusUpdate: StatusProgress): ScastieState = {
+    statusUpdate match {
+      case StatusProgress.KeepAlive => {
+        this
+      }
+      case StatusProgress.Sbt(sbtRunners) => {
+        copy(status = status.copy(sbtRunners = Some(sbtRunners)))
+      }
+      case StatusProgress.Ensime(ensimeRunners) => {
+        copy(status = status.copy(ensimeRunners = Some(ensimeRunners)))
+      }
     }
   }
 
   def removeStatus: ScastieState = {
-    copy(status = StatusState(None, EnsimeDown))
+    copy(status = StatusState.empty)
   }
 
   def setProgresses(progresses: List[SnippetProgress]): ScastieState = {

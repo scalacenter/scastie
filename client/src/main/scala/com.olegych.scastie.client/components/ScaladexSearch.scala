@@ -4,7 +4,7 @@ import com.olegych.scastie.api._
 
 import play.api.libs.json.Json
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 
 import org.scalajs.dom
@@ -15,9 +15,9 @@ import dom.ext.Ajax
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 final case class ScaladexSearch(
-    removeScalaDependency: ScalaDependency => Callback,
-    updateDependencyVersion: (ScalaDependency, String) => Callback,
-    addScalaDependency: (ScalaDependency, Project) => Callback,
+    removeScalaDependency: ScalaDependency ~=> Callback,
+    updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
+    addScalaDependency: (ScalaDependency, Project) ~=> Callback,
     librariesFrom: Map[ScalaDependency, Project],
     scalaTarget: ScalaTarget
 ) {
@@ -25,6 +25,16 @@ final case class ScaladexSearch(
 }
 
 object ScaladexSearch {
+
+  implicit val propsReusability: Reusability[ScaladexSearch] =
+    Reusability.caseClass[ScaladexSearch]
+
+  implicit val selectedReusability: Reusability[Selected] =
+    Reusability.caseClass[Selected]
+
+  implicit val stateReusability: Reusability[SearchState] =
+    Reusability.caseClass[SearchState]
+
   private[ScaladexSearch] object SearchState {
     def default = SearchState(
       query = "",
@@ -450,5 +460,6 @@ object ScaladexSearch {
       .backend(new ScaladexSearchBackend(_))
       .renderPS(render)
       .componentDidMount(_ => Callback(searchInputRef.focus))
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

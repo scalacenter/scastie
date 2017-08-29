@@ -3,26 +3,32 @@ package com.olegych.scastie.client.components
 import com.olegych.scastie.api._
 import com.olegych.scastie.client.{RestApiClient, Page, View}
 
-import japgolly.scalajs.react._, vdom.all._, extra.router._
+import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
+
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import scala.concurrent.Future
 
-final case class CodeSnippets(view: View,
-                              user: User,
-                              router: RouterCtl[Page],
-                              isShareModalClosed: SnippetId => Boolean,
-                              closeShareModal: Callback,
-                              openShareModal: SnippetId => Callback,
-                              loadProfile: () => Future[List[SnippetSummary]],
-                              deleteSnippet: SnippetId => Future[Boolean]) {
+final case class CodeSnippets(
+    view: View,
+    user: User,
+    router: RouterCtl[Page],
+    isShareModalClosed: SnippetId ~=> Boolean,
+    closeShareModal: Reusable[Callback],
+    openShareModal: SnippetId ~=> Callback,
+    loadProfile: Reusable[Future[List[SnippetSummary]]],
+    deleteSnippet: SnippetId ~=> Future[Boolean]
+) {
 
   @inline def render: VdomElement = CodeSnippets.component(this)
 }
 
 object CodeSnippets {
+  implicit val reusability: Reusability[CodeSnippets] =
+    Reusability.caseClass[CodeSnippets]
+
   private[CodeSnippets] class CodeSnippetsBackend(
       scope: BackendScope[CodeSnippets, List[SnippetSummary]]
   ) {
@@ -31,7 +37,9 @@ object CodeSnippets {
       scope.props.flatMap(
         props =>
           Callback.future(
-            props.loadProfile().map(summaries => scope.modState(_ => summaries))
+            props.loadProfile.map(
+              _.map(summaries => scope.modState(_ => summaries))
+            )
         )
       )
     }
@@ -174,5 +182,6 @@ object CodeSnippets {
         loadProfile.when_(viewChangedToCodeSnippet)
       }
       .componentWillMount(_.backend.loadProfile0())
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }
