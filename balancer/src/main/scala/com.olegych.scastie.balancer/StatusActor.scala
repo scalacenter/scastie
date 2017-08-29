@@ -15,43 +15,43 @@ import akka.http.scaladsl.model.RemoteAddress
 import scala.collection.mutable
 import scala.concurrent.duration._
 
-case class SubscribeStatus(ip: Ip)
+case object SubscribeStatus
 
-case class LoadBalancerUpdate(
-    newBalancer: LoadBalancer[String, ActorSelection]
+case class SbtLoadBalancerUpdate(newSbtBalancer: SbtBalancer)
+case class EnsimeLoadBalancerUpdate(newEnsimeBalancer: EnsimeBalancer)
+
+case class LoadBalancerInfo(
+    sbtBalancer: SbtBalancer,
+    ensimeBalancer: EnsimeBalancer,
+    requester: ActorRef
 )
-case class LoadBalancerInfo(balancer: LoadBalancer[String, ActorSelection],
-                            requester: ActorRef)
-case class SetDispatcher(dispatchActor: ActorRef)
 
-case class NotifyUsers(IPs: Set[Ip], progress: StatusProgress)
-case class NotifyAllUsers(progress: StatusProgress)
+case class SetDispatcher(dispatchActor: ActorRef)
 
 object StatusActor {
   def props: Props = Props(new StatusActor)
 }
 class StatusActor private () extends Actor with ActorLogging {
-  private var publishers =
-    Map[Ip, Vector[ActorRef]]().withDefaultValue(Vector())
+  private var publishers = mutable.Buffer.empty[ActorRef]
 
   private var dispatchActor: Option[ActorRef] = _
-  private def noop(snippetProgress: StatusProgress, noDemmand: Boolean): Unit = {}
 
   override def receive: Receive = {
-    case SubscribeStatus(ip) => {
-      log.info(s"statusActor subscribes a client with IP: $ip")
+    case SubscribeStatus => {
+
+      def noop(snippetProgress: StatusProgress, noDemmand: Boolean): Unit = {}
 
       val publisher =
         context.actorOf(Props(new ActorForwarder[StatusProgress](noop _)))
 
-      publishers = publishers + (ip -> (publisher +: publishers(ip)))
+      publishers += publisher
 
       val source =
         Source
           .fromPublisher(ActorPublisher[StatusProgress](publisher))
           .keepAlive(
             FiniteDuration(1, TimeUnit.SECONDS),
-            () => StatusKeepAlive
+            () => StatusProgress.KeepAlive
           )
 
       sender ! source
@@ -59,33 +59,46 @@ class StatusActor private () extends Actor with ActorLogging {
       dispatchActor.foreach(_ ! ReceiveStatus(publisher))
     }
 
-    case LoadBalancerUpdate(newBalancer) => {
-      publishers.values.flatten.foreach(_ ! convert(newBalancer))
+    case SbtLoadBalancerUpdate(newSbtBalancer) => {
+      publishers.foreach(_ ! convertSbt(newSbtBalancer))
     }
 
-    case LoadBalancerInfo(balancer, requester) => {
-      requester ! convert(balancer)
+    case EnsimeLoadBalancerUpdate(newEnsimeBalancer) => {
+      publishers.foreach(_ ! convertEnsime(newEnsimeBalancer))
+    }
+
+    case LoadBalancerInfo(sbtBalancer, ensimeBalancer, requester) => {
+      requester ! convertSbt(sbtBalancer)
+      requester ! convertEnsime(ensimeBalancer)
     }
 
     case SetDispatcher(dispatchActorReference) => {
       dispatchActor = Some(dispatchActorReference)
     }
-
-    case NotifyUsers(ips, progress) => {
-      ips.foreach(publishers(_).foreach(_ ! progress))
-    }
-
-    case NotifyAllUsers(progress) => {
-      publishers.values.flatten.foreach(_ ! progress)
-    }
   }
 
-  private def convert(
-      newBalancer: LoadBalancer[String, ActorSelection]
-  ): StatusProgress = {
-    StatusRunnersInfo(
-      newBalancer.servers.map(
-        server => Runner(server.mailbox.map(_.taskId))
+  private def convertSbt(newSbtBalancer: SbtBalancer): StatusProgress = {
+    StatusProgress.Sbt(
+      newSbtBalancer.servers.map(
+        server =>
+          SbtRunnerState(
+            config = Some(server.lastConfig),
+            tasks = server.mailbox.map(_.taskId),
+            sbtState = server.state
+        )
+      )
+    )
+  }
+
+  private def convertEnsime(newEnsimeBalancer: EnsimeBalancer): StatusProgress = {
+    StatusProgress.Ensime(
+      newEnsimeBalancer.servers.map(
+        server =>
+          EnsimeRunnerState(
+            config = Some(server.lastConfig),
+            tasks = server.mailbox.map(_.taskId),
+            serverState = server.state
+        )
       )
     )
   }

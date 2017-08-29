@@ -43,6 +43,11 @@ case class Inputs(
 
   val librariesFrom = librariesFromList.toMap
 
+  def needsReload(other: Inputs): Boolean = {
+    sbtConfig != other.sbtConfig ||
+    sbtPluginsConfig != other.sbtPluginsConfig
+  }
+
   override def toString: String = {
     if (this == Inputs.default) {
       "Inputs.default"

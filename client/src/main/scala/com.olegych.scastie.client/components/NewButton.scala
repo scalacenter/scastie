@@ -1,16 +1,19 @@
 package com.olegych.scastie.client
 package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class NewButton(isNewSnippetModalClosed: Boolean,
-                           openNewSnippetModal: Callback,
-                           closeNewSnippetModal: Callback,
-                           newSnippet: Callback) {
+                           openNewSnippetModal: Reusable[Callback],
+                           closeNewSnippetModal: Reusable[Callback],
+                           newSnippet: Reusable[Callback]) {
   @inline def render: VdomElement = NewButton.component(this)
 }
 
 object NewButton {
+  implicit val reusability: Reusability[NewButton] =
+    Reusability.caseClass[NewButton]
+
   def render(props: NewButton): VdomElement = {
 
     li(title := s"New code snippet",
@@ -34,5 +37,6 @@ object NewButton {
     ScalaComponent
       .builder[NewButton]("NewButton")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

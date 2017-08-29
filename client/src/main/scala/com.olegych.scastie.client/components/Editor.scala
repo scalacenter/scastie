@@ -16,8 +16,8 @@ import codemirror.{
 
 import codemirror.CodeMirror.{Pos => CMPosition}
 
-import japgolly.scalajs.react._
-import vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
+
 import extra.{Reusability, StateSnapshot}
 import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
@@ -41,27 +41,59 @@ final case class Editor(isDarkTheme: Boolean,
                         compilationInfos: Set[api.Problem],
                         runtimeError: Option[api.RuntimeError],
                         completions: List[api.Completion],
-                        run: Callback,
-                        saveOrUpdate: Callback,
-                        clear: Callback,
-                        openNewSnippetModal: Callback,
-                        toggleHelp: Callback,
-                        toggleConsole: Callback,
-                        toggleWorksheetMode: Callback,
-                        toggleTheme: Callback,
-                        toggleLineNumbers: Callback,
-                        togglePresentationMode: Callback,
-                        formatCode: Callback,
-                        codeChange: String => Callback,
-                        completeCodeAt: Int => Callback,
-                        requestTypeAt: (String, Int) => Callback,
                         typeAtInfo: Option[api.TypeInfoAt],
-                        clearCompletions: Callback) {
+                        run: Reusable[Callback],
+                        saveOrUpdate: Reusable[Callback],
+                        clear: Reusable[Callback],
+                        openNewSnippetModal: Reusable[Callback],
+                        toggleHelp: Reusable[Callback],
+                        toggleConsole: Reusable[Callback],
+                        toggleWorksheetMode: Reusable[Callback],
+                        toggleTheme: Reusable[Callback],
+                        toggleLineNumbers: Reusable[Callback],
+                        togglePresentationMode: Reusable[Callback],
+                        formatCode: Reusable[Callback],
+                        codeChange: String ~=> Callback,
+                        completeCodeAt: Int ~=> Callback,
+                        requestTypeAt: (String, Int) ~=> Callback,
+                        clearCompletions: Reusable[Callback]) {
   @inline def render: VdomElement = Editor.component(this)
 }
 
 object Editor {
 
+  val editorShouldRefresh: Reusability[Editor] =
+    Reusability.byRef ||
+      (
+        Reusability.by((_: Editor).attachedDoms) &&
+          Reusability.by((_: Editor).instrumentations) &&
+          Reusability.by((_: Editor).compilationInfos) &&
+          Reusability.by((_: Editor).runtimeError) &&
+          Reusability.by((_: Editor).completions)
+      )
+
+  implicit val reusability: Reusability[Editor] =
+    Reusability.caseClass[Editor]
+
+  implicit val problemAnnotationsReuse
+    : Reusability[Map[api.Problem, Annotation]] =
+    Reusability((a, b) => a.keys == b.keys)
+
+  implicit val renderAnnotationsReuse
+    : Reusability[Map[api.Instrumentation, Annotation]] =
+    Reusability((a, b) => a.keys == b.keys)
+
+  implicit val runtimeErrorAnnotationsReuse
+    : Reusability[Map[api.RuntimeError, Annotation]] =
+    Reusability((a, b) => a.keys == b.keys)
+
+  implicit val completionStateReuse: Reusability[CompletionState] =
+    Reusability.byRefOr_==
+
+  implicit val editorStateReuse: Reusability[EditorState] =
+    Reusability.caseClassExcept[EditorState]('editor)
+
+  // For Scala.js bundler
   codemirror.Comment
   codemirror.Dialog
   codemirror.CloseBrackets
@@ -208,11 +240,6 @@ object Editor {
   private[Editor] class EditorBackend(
       scope: BackendScope[Editor, EditorState]
   ) {
-
-    // via editor.onChanges
-    def codeChangeF(event: ReactEventFromInput): Callback = {
-      Callback(())
-    }
 
     def stop(): Callback = {
       scope.modState { s =>
@@ -867,7 +894,7 @@ object Editor {
 
     def refresh(): Unit = {
       val shouldRefresh =
-        current.map(c => !editorReuse.test(c, next)).getOrElse(true)
+        current.map(c => !editorShouldRefresh.test(c, next)).getOrElse(true)
 
       if (shouldRefresh) {
         editor.refresh()
@@ -892,11 +919,12 @@ object Editor {
       .backend(new EditorBackend(_))
       .renderPS {
         case (scope, props, _) =>
-          textarea.ref(codemirrorTextarea = _)(
-            onChange ==> scope.backend.codeChangeF,
-            value := props.code,
-            name := "CodeArea",
-            autoComplete := "off"
+          div(cls := "editor-wrapper")(
+            textarea.ref(codemirrorTextarea = _)(
+              defaultValue := props.code,
+              name := "CodeArea",
+              autoComplete := "off"
+            )
           )
       }
       .componentWillReceiveProps { scope =>
@@ -918,5 +946,6 @@ object Editor {
       }
       .componentDidMount(_.backend.start())
       .componentWillUnmount(_.backend.stop())
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

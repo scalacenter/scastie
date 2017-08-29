@@ -11,7 +11,7 @@ const common = require('./webpack.common.js');
 module.exports = 
   Merge(common.webpackConfig, {
     entry: {
-      clientFastOpt: Path.resolve(__dirname, "client-fastopt.js"),
+      ep: Path.resolve(__dirname, "scalajsbundler-entry-point.js"),
       app: Path.resolve(common.resourcesDir, './dev.js')
     },
     module: {
@@ -29,7 +29,10 @@ module.exports =
     },
     devServer: {
       hot: true,
-      contentBase: devDir,
+      contentBase: [
+        devDir,
+        __dirname
+      ],
       proxy: [{
         context: [
           "/login",

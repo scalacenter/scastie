@@ -1,72 +1,22 @@
-package com.olegych.scastie
-package balancer
+package com.olegych.scastie.balancer
 
 import com.olegych.scastie.api._
 import com.olegych.scastie.balancer.utils.Histogram
 
 import scala.util.Random
 import scala.collection.immutable.Queue
+
+import scala.concurrent.duration.FiniteDuration
+
 import org.slf4j.LoggerFactory
 
 case class Ip(v: String)
 case class Record[C](config: C, ip: Ip)
 
-case class Task[C](config: C, ip: Ip, taskId: TaskId) {
+case class Task[C, T <: TaskId](config: C, ip: Ip, taskId: T) {
   def toRecord: Record[C] = Record(config, ip)
-  def cost: Int = taskId.cost
 }
 
-case class Server[C, S](ref: S, lastConfig: C, mailbox: Queue[Task[C]]) {
-
-  def currentTaskId: Option[TaskId] = mailbox.headOption.map(_.taskId)
-  def currentConfig: C = mailbox.headOption.map(_.config).getOrElse(lastConfig)
-
-  def done: Server[C, S] = {
-    val (task, mailbox0) = mailbox.dequeue
-
-    assert(currentTaskId.contains(task.taskId))
-
-    copy(
-      lastConfig = task.config,
-      mailbox = mailbox0
-    )
-  }
-
-  def add(task: Task[C]): Server[C, S] = {
-    copy(mailbox = mailbox.enqueue(task))
-  }
-
-  def cost: Int = {
-    import Server._
-
-    val reloadsPenalties =
-      mailbox.sliding(2).foldLeft(0) { (acc, slide) =>
-        val reloadPenalty =
-          slide match {
-            case Queue(x, y) =>
-              if (x.config != y.config) averageReloadTime
-              else 0
-            case _ => 0
-          }
-        acc + reloadPenalty
-      }
-
-    reloadsPenalties + mailbox.map(_.cost).sum
-  }
-}
-
-object Server {
-  // time it takes to change a sbt configuration
-  // (found by experimentation)
-  val averageReloadTime = 10 //s
-
-  def apply[C, S](ref: S, config: C): Server[C, S] =
-    Server(
-      ref = ref,
-      lastConfig = config,
-      mailbox = Queue()
-    )
-}
 case class History[C](data: Queue[Record[C]], size: Int) {
   def add(record: Record[C]): History[C] = {
     // the user has changed configuration, we assume he will not go back to the
@@ -83,15 +33,18 @@ case class History[C](data: Queue[Record[C]], size: Int) {
     History(data1, size)
   }
 }
-case class LoadBalancer[C, S](
-    servers: Vector[Server[C, S]],
-    history: History[C]
+case class LoadBalancer[C, T <: TaskId, R, S](
+    servers: Vector[Server[C, T, R, S]],
+    history: History[C],
+    taskCost: FiniteDuration,
+    reloadCost: FiniteDuration,
+    needsReload: (C, C) => Boolean
 ) {
   private val log = LoggerFactory.getLogger(getClass)
 
   private lazy val configs = servers.map(_.currentConfig)
 
-  def done(taskId: TaskId): LoadBalancer[C, S] = {
+  def done(taskId: T): LoadBalancer[C, T, R, S] = {
     log.info(s"Task done: $taskId")
     val serverRunningTask =
       servers.zipWithIndex.find(_._1.currentTaskId.contains(taskId))
@@ -109,17 +62,19 @@ case class LoadBalancer[C, S](
     }
   }
 
-  def addServer(server: Server[C, S]): LoadBalancer[C, S] = {
+  def addServer(server: Server[C, T, R, S]): LoadBalancer[C, T, R, S] = {
     copy(servers = server +: servers)
   }
 
-  def removeServer(ref: S): LoadBalancer[C, S] = {
+  def removeServer(ref: R): LoadBalancer[C, T, R, S] = {
     copy(servers = servers.filterNot(_.ref == ref))
   }
 
-  def getRandomServer: Server[C, S] = random(servers)
+  def getRandomServer: Server[C, T, R, S] = random(servers)
 
-  def add(task: Task[C]): Option[(Server[C, S], LoadBalancer[C, S])] = {
+  def add(
+      task: Task[C, T]
+  ): Option[(Server[C, T, R, S], LoadBalancer[C, T, R, S])] = {
     log.info("Task added: {}", task.taskId)
 
     if (servers.size > 0) {
@@ -132,7 +87,10 @@ case class LoadBalancer[C, S](
         .filter(i => servers(i).currentConfig == task.config)
 
       def overBooked =
-        hits.forall(i => servers(i).cost > Server.averageReloadTime)
+        hits.forall(
+          i => servers(i).cost(taskCost, reloadCost, needsReload) > reloadCost
+        )
+
       def cacheMiss = hits.isEmpty
 
       val selectedServerIndice =
@@ -142,7 +100,7 @@ case class LoadBalancer[C, S](
           randomMin(configs.indices) { i =>
             val config = task.config
             val distance = distanceFromHistory(i, config, historyHistogram)
-            val load = servers(i).cost
+            val load = servers(i).cost(taskCost, reloadCost, needsReload)
             (distance, load)
           }
         } else {
@@ -157,7 +115,10 @@ case class LoadBalancer[C, S](
       Some(
         (
           servers(selectedServerIndice),
-          LoadBalancer(updatedServers, updatedHistory)
+          copy(
+            servers = updatedServers,
+            history = updatedHistory
+          )
         )
       )
     } else {

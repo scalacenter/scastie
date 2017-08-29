@@ -3,7 +3,7 @@ package com.olegych.scastie.client.components
 import com.olegych.scastie.api._
 import com.olegych.scastie.client.{View, RestApiClient}
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 import org.scalajs.dom
 
@@ -13,13 +13,16 @@ final case class EmbeddedMenu(isRunning: Boolean,
                               isStatusOk: Boolean,
                               inputs: Inputs,
                               serverUrl: Option[String],
-                              run: Callback,
-                              save: CallbackTo[Option[SnippetId]],
-                              setView: View => Callback) {
+                              run: Reusable[Callback],
+                              save: Reusable[CallbackTo[Option[SnippetId]]],
+                              setView: View ~=> Callback) {
   @inline def render: VdomElement = EmbeddedMenu.component(this)
 }
 
 object EmbeddedMenu {
+
+  implicit val reusability: Reusability[EmbeddedMenu] =
+    Reusability.caseClass[EmbeddedMenu]
 
   private def render(props: EmbeddedMenu): VdomElement = {
 
@@ -55,5 +58,6 @@ object EmbeddedMenu {
     ScalaComponent
       .builder[EmbeddedMenu]("EmbeddedMenu")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

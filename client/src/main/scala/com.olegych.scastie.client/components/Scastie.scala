@@ -9,9 +9,8 @@ import com.olegych.scastie.client.{
   ScastieState,
   View
 }
-import japgolly.scalajs.react._
-import vdom.all._
-import extra.router._
+import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
+
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
@@ -115,7 +114,11 @@ object Scastie {
       .componentWillMount { current =>
         current.backend.start(current.props) >>
           setTitle(current.state, current.props) >>
-          current.backend.connectStatus
+          current.backend.connectStatus >>
+          current.backend.closeNewSnippetModal
+      }
+      .componentWillUnmount { current =>
+        current.backend.disconnectStatus
       }
       .componentDidUpdate { scope =>
         val state = scope.prevState
@@ -215,5 +218,6 @@ object Scastie {
 
         setTitle(state, scope.nextProps) >> loadSnippet.toCallback
       }
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

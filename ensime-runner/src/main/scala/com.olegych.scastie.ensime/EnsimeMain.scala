@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.Await
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-object RunnerMain {
+object EnsimeMain {
   def main(args: Array[String]): Unit = {
     val log = LoggerFactory.getLogger(getClass)
 
@@ -28,10 +28,10 @@ object RunnerMain {
       log.info(s"Starting ensimeRunner pid: $pid")
     }
 
-    val timeout = {
+    val sbtReloadTimeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(
-        ensimeConfig.getDuration("runTimeout", timeunit),
+        ensimeConfig.getDuration("sbtReloadTimeout", timeunit),
         timeunit
       )
     }
@@ -44,7 +44,7 @@ object RunnerMain {
         actorAkkaPort = ensimeConfig.getInt("akka-port")
       )
 
-    log.info("  timeout: {}", timeout)
+    log.info("  sbtReloadTimeout: {}", sbtReloadTimeout)
     log.info("  isProduction: {}", isProduction)
     log.info("  runner hostname: {}", reconnectInfo.actorHostname)
     log.info("  runner port: {}", reconnectInfo.actorAkkaPort)
@@ -53,10 +53,9 @@ object RunnerMain {
 
     system.actorOf(
       Props(
-        new RunnerActor(
+        new EnsimeActor(
           system = system,
-          runTimeout = timeout,
-          production = isProduction,
+          sbtReloadTimeout = sbtReloadTimeout,
           reconnectInfo = Some(reconnectInfo)
         )
       ),

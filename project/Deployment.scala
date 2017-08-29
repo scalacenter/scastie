@@ -177,7 +177,6 @@ class Deployment(rootFolder: File,
     deployRunners(s"$ensimeDockerNamespace/$ensimeDockerRepository")
   }
 
-
   def deployRunners(image: String): Unit = {
     val sbtScriptDir = Files.createTempDirectory("sbt")
     val sbtScript = sbtScriptDir.resolve("sbt.sh")

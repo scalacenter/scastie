@@ -35,48 +35,22 @@ class EnsimeActorTests()
   }
 
   test("autocomplete after restart") {
-    if (false) {
-      println()
-      println("[] ******* (1) ******** []")
-      println()
-      autocompleteEnd("List(1).")(_.nonEmpty)
-
-      println()
-      println("[] ******* (2) ******** []")
-      println()
-      autocompleteEndFail("List(1).", ScalaTarget.Js.default)
-      println()
-      println("[] ******* (3) ******** []")
-      println()
-      // LOCK HERE
-      blockUntilReady()
-      println()
-      println("[] ******* (4) ******** []")
-      println()
-      autocompleteEnd("List(1).", ScalaTarget.Js.default)(_.nonEmpty)
-
-      println()
-      println("[] ******* (5) ******** []")
-      println()
-      autocompleteEndFail("List(1).")
-      println()
-      println("[] ******* (6) ******** []")
-      println()
-      blockUntilReady()
-      println()
-      println("[] ******* (7) ******** []")
-      println()
-      autocompleteEnd("List(1).")(_.nonEmpty)
-      println()
-      println("[] ******* (8) ******** []")
-      println()
-    }
+    autocompleteEnd("List(1).")(_.nonEmpty)
+    autocompleteEndFail("import org.scalajs.dom.", ScalaTarget.Js.default)
+    blockUntilReady()
+    autocompleteEnd("import org.scalajs.dom.", ScalaTarget.Js.default)(
+      _.nonEmpty
+    )
+    autocompleteEndFail("List(1).")
+    blockUntilReady()
+    autocompleteEnd("List(1).")(_.nonEmpty)
   }
 
   test("typeAt 1") {
     if (false) {
       // https://github.com/scalacenter/scastie/issues/311
       // SymbolInfo(<empty>,<empty>,None,BasicTypeInfo(<empty>,Object,<empty>,List(),List(),None,List()))
+
       typeAt(
         code = "val foobar = List(1)",
         //            ^
@@ -221,16 +195,18 @@ class EnsimeActorTests()
   private val probe = TestProbe()
   private val readyProbe = TestProbe()
 
+  private val timeout = 1.minute
   private val ensimeActor = TestActorRef(
-    new EnsimeActor(
+    new EnsimeRunner(
       system = system,
-      dispatchActor = readyProbe.ref
+      dispatchActor = readyProbe.ref,
+      sbtReloadTimeout = timeout
     )
   )
 
   def blockUntilReady(): Unit = {
     readyProbe.fishForMessage(3.minute) {
-      case StatusEnsimeInfo(EnsimeUp) => {
+      case EnsimeServerState.Ready => {
         println("===============")
         println("==EnsimeReady==")
         println("===============")

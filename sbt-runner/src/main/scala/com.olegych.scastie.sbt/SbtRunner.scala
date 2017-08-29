@@ -1,19 +1,19 @@
 package com.olegych.scastie.sbt
 
+import com.olegych.scastie.SbtTask
 import com.olegych.scastie.instrumentation._
 import com.olegych.scastie.api._
 import com.olegych.scastie.api.ScalaTargetType._
 import com.olegych.scastie.util.ScastieFileUtil.slurp
+import com.olegych.scastie.util.TaskTimeout
 
 import play.api.libs.json._
 
 import scala.meta.parsers.Parsed
+
 import akka.actor.{Actor, ActorRef}
 
 import scala.concurrent.duration._
-import java.util.concurrent.{Callable, FutureTask, TimeUnit, TimeoutException}
-
-import com.olegych.scastie.SbtTask
 
 import scala.util.control.NonFatal
 import org.slf4j.LoggerFactory
@@ -31,7 +31,10 @@ object SbtRunner {
   }
 }
 
-class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
+class SbtRunner(runTimeout: FiniteDuration,
+                sbtReloadTimeout: FiniteDuration,
+                production: Boolean)
+    extends Actor {
 
   private case object SbtWarmUp
 
@@ -40,7 +43,14 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
 
   private val defaultConfig = Inputs.default
 
-  private var sbt = new Sbt(defaultConfig)
+  def startSbt(): Sbt = {
+    new Sbt(
+      defaultConfig,
+      Seq("-Xms512m", "-Xmx1g")
+    )
+  }
+
+  private var sbt = startSbt()
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -99,26 +109,30 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
       snippetActor ! timeoutProgress
 
       sbt.kill()
-      sbt = new Sbt(defaultConfig)
+      sbt = startSbt()
       true
     }
 
-    val sbtReloadTime = 40.seconds
     val reloadError =
       if (sbt.needsReload(inputs)) {
         log.info(s"== updating $snippetId ==")
 
-        withTimeout(sbtReloadTime)(eval("compile", reload = true))(
-          timeout(sbtReloadTime)
+        TaskTimeout(
+          duration = sbtReloadTimeout,
+          task = eval("compile", reload = true),
+          onTimeout = timeout(sbtReloadTimeout)
         )
+
       } else false
 
     if (!reloadError) {
       log.info(s"== running $snippetId ==")
 
-      withTimeout(runTimeout)({
-        eval(inputs.target.sbtRunCommand, reload = false)
-      })(timeout(runTimeout))
+      TaskTimeout(
+        duration = runTimeout,
+        task = eval(inputs.target.sbtRunCommand, reload = false),
+        onTimeout = timeout(runTimeout)
+      )
 
       log.info(s"== done  $snippetId ==")
     } else {
@@ -179,21 +193,6 @@ class SbtRunner(runTimeout: FiniteDuration, production: Boolean) extends Actor {
               signalError(message, Some(pos.start.line + lineOffset))
           }
       }
-  }
-
-  private def withTimeout[T](
-      timeout: Duration
-  )(block: ⇒ T)(onTimeout: => T): T = {
-    val task = new FutureTask(new Callable[T]() { def call: T = block })
-    val thread = new Thread(task)
-    try {
-      thread.start()
-      task.get(timeout.toMillis, TimeUnit.MILLISECONDS)
-    } catch {
-      case _: TimeoutException ⇒ onTimeout
-    } finally {
-      if (thread.isAlive) thread.stop()
-    }
   }
 
   private def getLineOffset(worksheetMode: Boolean): Int =

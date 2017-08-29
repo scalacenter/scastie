@@ -4,7 +4,7 @@ package components
 
 import api._
 
-import japgolly.scalajs.react._, vdom.all._, extra.router.RouterCtl
+import japgolly.scalajs.react._, vdom.all._, extra.router.RouterCtl, extra._
 
 import org.scalajs.dom
 
@@ -14,12 +14,16 @@ import org.scalajs.dom.{window, document}
 final case class ShareModal(router: RouterCtl[Page],
                             snippetId: SnippetId,
                             isClosed: Boolean,
-                            close: Callback) {
+                            close: Reusable[Callback]) {
   @inline def render: VdomElement =
     new ShareModal.ShareModalComponent().build(this)
 }
 
 object ShareModal {
+
+  implicit val reusability: Reusability[ShareModal] =
+    Reusability.caseClass[ShareModal]
+
   private class ShareModalComponent() {
     private var divRef: html.Div = _
 
@@ -68,6 +72,7 @@ object ShareModal {
       ScalaComponent
         .builder[ShareModal]("ShareModal")
         .render_P(render)
+        .configure(Reusability.shouldComponentUpdateWithOverlay)
         .build
 
     def build(props: ShareModal): VdomElement = component(props)

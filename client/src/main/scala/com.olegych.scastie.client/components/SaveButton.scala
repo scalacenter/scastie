@@ -3,20 +3,24 @@ package components
 
 import com.olegych.scastie.api.{SnippetId, User}
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class SaveButton(isSnippetSaved: Boolean,
                             inputsHasChanged: Boolean,
                             user: Option[User],
                             snippetId: Option[SnippetId],
-                            amend: SnippetId => Callback,
-                            update: SnippetId => Callback,
-                            save: Callback,
-                            fork: SnippetId => Callback) {
+                            amend: SnippetId ~=> Callback,
+                            update: SnippetId ~=> Callback,
+                            save: Reusable[Callback],
+                            fork: SnippetId ~=> Callback) {
   @inline def render: VdomElement = SaveButton.component(this)
 }
 
 object SaveButton {
+
+  implicit val reusability: Reusability[SaveButton] =
+    Reusability.caseClass[SaveButton]
+
   def render(props: SaveButton): VdomElement = {
 
     val disabledIfSaved =
@@ -73,5 +77,6 @@ object SaveButton {
     ScalaComponent
       .builder[SaveButton]("SaveButton")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

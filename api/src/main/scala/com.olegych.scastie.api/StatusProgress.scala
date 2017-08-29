@@ -4,33 +4,49 @@ import play.api.libs.json._
 
 import scala.collection.immutable.Queue
 
-object Runner {
-  implicit val formatRunner: OFormat[Runner] =
-    Json.format[Runner]
+object SbtRunnerState {
+  implicit val formatSbtRunnerState: OFormat[SbtRunnerState] =
+    Json.format[SbtRunnerState]
 }
 
-case class Runner(tasks: Queue[TaskId])
+case class SbtRunnerState(
+    config: Option[Inputs],
+    tasks: Queue[SbtRunTaskId],
+    sbtState: SbtState
+)
 
+object EnsimeRunnerState {
+  implicit val formatEnsimeRunnerState: OFormat[EnsimeRunnerState] =
+    Json.format[EnsimeRunnerState]
+}
+
+case class EnsimeRunnerState(
+    config: Option[Inputs],
+    tasks: Queue[EnsimeTaskId],
+    serverState: EnsimeServerState
+)
+
+sealed trait StatusProgress
 object StatusProgress {
   implicit object StatusProgressFormat extends Format[StatusProgress] {
-    private val formatRunnersInfo = Json.format[StatusRunnersInfo]
-    private val formatEnsimeInfo = Json.format[StatusEnsimeInfo]
+    private val formatSbt = Json.format[StatusProgress.Sbt]
+    private val formatEnsime = Json.format[StatusProgress.Ensime]
 
     def writes(status: StatusProgress): JsValue = {
 
       status match {
-        case StatusKeepAlive => {
-          JsObject(Seq("$type" -> JsString("StatusKeepAlive")))
+        case StatusProgress.KeepAlive => {
+          JsObject(Seq("$type" -> JsString("StatusProgress.KeepAlive")))
         }
 
-        case runners: StatusRunnersInfo => {
-          formatRunnersInfo.writes(runners).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("StatusRunnersInfo")))
+        case runners: StatusProgress.Sbt => {
+          formatSbt.writes(runners).asInstanceOf[JsObject] ++
+            JsObject(Seq("$type" -> JsString("StatusProgress.Sbt")))
         }
 
-        case ensime: StatusEnsimeInfo => {
-          formatEnsimeInfo.writes(ensime).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("StatusEnsimeInfo")))
+        case ensime: StatusProgress.Ensime => {
+          formatEnsime.writes(ensime).asInstanceOf[JsObject] ++
+            JsObject(Seq("$type" -> JsString("StatusProgress.Ensime")))
         }
       }
     }
@@ -38,16 +54,18 @@ object StatusProgress {
     def reads(json: JsValue): JsResult[StatusProgress] = {
       json match {
         case obj: JsObject => {
-          val vs = obj.value
-
-          vs.get("$type") match {
+          obj.value.get("$type") match {
             case Some(tpe) => {
               tpe match {
-                case JsString("StatusKeepAlive") => JsSuccess(StatusKeepAlive)
-                case JsString("StatusRunnersInfo") =>
-                  formatRunnersInfo.reads(json)
-                case JsString("StatusEnsimeInfo") =>
-                  formatEnsimeInfo.reads(json)
+                case JsString("StatusProgress.KeepAlive") =>
+                  JsSuccess(StatusProgress.KeepAlive)
+
+                case JsString("StatusProgress.Sbt") =>
+                  formatSbt.reads(json)
+
+                case JsString("StatusProgress.Ensime") =>
+                  formatEnsime.reads(json)
+
                 case _ => JsError(Seq())
               }
             }
@@ -58,9 +76,8 @@ object StatusProgress {
       }
     }
   }
-}
 
-sealed trait StatusProgress
-case object StatusKeepAlive extends StatusProgress
-case class StatusRunnersInfo(runners: Vector[Runner]) extends StatusProgress
-case class StatusEnsimeInfo(ensimeStatus: EnsimeStatus) extends StatusProgress
+  case object KeepAlive extends StatusProgress
+  case class Sbt(runners: Vector[SbtRunnerState]) extends StatusProgress
+  case class Ensime(runners: Vector[EnsimeRunnerState]) extends StatusProgress
+}

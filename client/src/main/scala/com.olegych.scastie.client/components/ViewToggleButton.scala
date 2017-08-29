@@ -2,19 +2,20 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._, vdom.all._, extra.{Reusability, StateSnapshot}
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class ViewToggleButton(currentView: StateSnapshot[View],
                                   forView: View,
                                   buttonTitle: String,
                                   faIcon: String,
-                                  onClick: Callback) {
+                                  onClick: Reusable[Callback]) {
   @inline def render: VdomElement = ViewToggleButton.component(this)
 }
 
 object ViewToggleButton {
+
   implicit val reusability: Reusability[ViewToggleButton] =
-    Reusability.byRef
+    Reusability.caseClass[ViewToggleButton]
 
   private def render(props: ViewToggleButton): VdomElement = {
     li(
@@ -33,6 +34,6 @@ object ViewToggleButton {
     ScalaComponent
       .builder[ViewToggleButton]("ViewToggleButton")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

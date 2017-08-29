@@ -1,20 +1,23 @@
-package com.olegych.scastie
-package client
-package components
+package com.olegych.scastie.client.components
+
+import com.olegych.scastie.client.ConsoleState
 
 import org.scalajs.dom.raw.HTMLPreElement
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class Console(isOpen: Boolean,
                          isRunning: Boolean,
-                         close: Callback,
-                         open: Callback,
-                         content: String) {
+                         content: String,
+                         close: Reusable[Callback],
+                         open: Reusable[Callback]) {
   @inline def render: VdomElement = Console.component(this)
 }
 
 object Console {
+
+  implicit val reusability: Reusability[Console] =
+    Reusability.caseClass[Console]
 
   private var consoleElement: HTMLPreElement = _
 
@@ -63,5 +66,6 @@ object Console {
             consoleElement.scrollTop = consoleElement.scrollHeight.toDouble
           }.when_(scope.prevProps.isRunning)
       )
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

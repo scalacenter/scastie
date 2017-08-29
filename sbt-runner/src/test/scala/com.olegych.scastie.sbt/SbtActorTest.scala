@@ -170,6 +170,7 @@ class SbtActorTest()
     new SbtActor(
       system = system,
       runTimeout = timeout,
+      sbtReloadTimeout = timeout,
       production = false,
       readyRef = None,
       reconnectInfo = None

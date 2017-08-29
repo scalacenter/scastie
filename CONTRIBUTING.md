@@ -5,11 +5,8 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 
 ## How to run locally
 
-requirements: 
-
-* node & yarn (>= 0.28.4) (npm install -g yarn)
-* sbt
-* docker (for deploying)
+* install nix: `curl https://nixos.org/nix/install | sh`
+* nix-shell -A scastie
 
 ### Patch Scala.js Bundler
 
@@ -25,6 +22,14 @@ sbt
 > client/fastOptJS::startWebpackDevServer
 > ~client/fastOptJS
 ```
+
+or
+
+```
+sbt
+> startAll
+```
+
 
 open http://localhost:8080
 
@@ -89,6 +94,8 @@ If you have any questions join us in the [gitter channel](https://gitter.im/scal
 # How to deploy
 
 ## Requirements
+
+0. Install docker
 
 1. To deploy the application to the productions servers (scastie.scala-lang.org) you will need to have ssh access to the following machine:
 

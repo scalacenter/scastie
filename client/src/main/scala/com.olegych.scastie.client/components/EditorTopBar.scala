@@ -4,20 +4,19 @@ package components
 
 import api.{SnippetId, User, ScalaTargetType}
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
-final case class EditorTopBar(amend: SnippetId => Callback,
-                              clear: Callback,
-                              closeNewSnippetModal: Callback,
-                              fork: SnippetId => Callback,
-                              formatCode: Callback,
-                              newSnippet: Callback,
-                              openNewSnippetModal: Callback,
-                              run: Callback,
-                              save: Callback,
-                              setView: View => Callback,
-                              toggleWorksheetMode: Callback,
-                              update: SnippetId => Callback,
+final case class EditorTopBar(amend: SnippetId ~=> Callback,
+                              clear: Reusable[Callback],
+                              closeNewSnippetModal: Reusable[Callback],
+                              fork: SnippetId ~=> Callback,
+                              formatCode: Reusable[Callback],
+                              newSnippet: Reusable[Callback],
+                              openNewSnippetModal: Reusable[Callback],
+                              run: Reusable[Callback],
+                              save: Reusable[Callback],
+                              toggleWorksheetMode: Reusable[Callback],
+                              update: SnippetId ~=> Callback,
                               inputsHasChanged: Boolean,
                               isNewSnippetModalClosed: Boolean,
                               isRunning: Boolean,
@@ -25,7 +24,7 @@ final case class EditorTopBar(amend: SnippetId => Callback,
                               isSnippetSaved: Boolean,
                               snippetId: Option[SnippetId],
                               user: Option[User],
-                              view: View,
+                              view: StateSnapshot[View],
                               worksheetMode: Boolean,
                               targetType: ScalaTargetType) {
   @inline def render: VdomElement = EditorTopBar.component(this)
@@ -33,14 +32,17 @@ final case class EditorTopBar(amend: SnippetId => Callback,
 
 object EditorTopBar {
 
+  implicit val reusability: Reusability[EditorTopBar] =
+    Reusability.caseClass[EditorTopBar]
+
   private def render(props: EditorTopBar): VdomElement = {
-    def isDisabled = (cls := "disabled").when(props.view != View.Editor)
+    def isDisabled = (cls := "disabled").when(props.view.value != View.Editor)
 
     val runButton = RunButton(
       isRunning = props.isRunning,
       isStatusOk = props.isStatusOk,
       run = props.run,
-      setView = props.setView
+      setView = props.view.setState
     ).render
 
     val newButton = NewButton(
@@ -63,7 +65,7 @@ object EditorTopBar {
     val worksheetButton = WorksheetButton(
       props.worksheetMode,
       props.toggleWorksheetMode,
-      props.view
+      props.view.value
     ).render
 
     val saveButton = SaveButton(
@@ -103,5 +105,6 @@ object EditorTopBar {
     ScalaComponent
       .builder[EditorTopBar]("EditorTopBar")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

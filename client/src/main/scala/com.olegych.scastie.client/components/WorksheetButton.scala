@@ -2,15 +2,18 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class WorksheetButton(isWorksheetMode: Boolean,
-                                 toggleWorksheetMode: Callback,
+                                 toggleWorksheetMode: Reusable[Callback],
                                  view: View) {
   @inline def render: VdomElement = WorksheetButton.component(this)
 }
 
 object WorksheetButton {
+
+  implicit val reusability: Reusability[WorksheetButton] =
+    Reusability.caseClass[WorksheetButton]
 
   private def render(props: WorksheetButton): VdomElement = {
     val worksheetModeSelected =
@@ -45,5 +48,6 @@ object WorksheetButton {
     ScalaComponent
       .builder[WorksheetButton]("WorksheetButton")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

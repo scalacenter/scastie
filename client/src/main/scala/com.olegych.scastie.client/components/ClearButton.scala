@@ -1,13 +1,16 @@
 package com.olegych.scastie.client
 package components
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
-final case class ClearButton(clear: Callback) {
+final case class ClearButton(clear: Reusable[Callback]) {
   @inline def render: VdomElement = ClearButton.component(this)
 }
 
 object ClearButton {
+
+  implicit val reusability: Reusability[ClearButton] =
+    Reusability.caseClass[ClearButton]
 
   private def render(props: ClearButton): VdomElement = {
     li(title := "Clear Instrumentations (Esc)",
@@ -25,5 +28,6 @@ object ClearButton {
     ScalaComponent
       .builder[ClearButton]("ClearButton")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

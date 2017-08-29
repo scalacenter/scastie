@@ -5,7 +5,7 @@ import components.Scastie
 import play.api.libs.json.Json
 
 import com.olegych.scastie.api._
-import japgolly.scalajs.react._, vdom.all._, extra.StateSnapshot,
+import japgolly.scalajs.react._, vdom.all._, extra._,
 component.Scala.BackendScope
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -18,108 +18,140 @@ import scala.concurrent.Future
 class ScastieBackend(serverUrl: Option[String],
                      scope: BackendScope[Scastie, ScastieState]) {
 
-  val restApiClient = new RestApiClient(serverUrl)
+  private val restApiClient =
+    new RestApiClient(serverUrl)
 
   // XXX: This should not be global
   Global.subscribe(scope)
 
-  def goHome: Callback = {
-    scope.props.flatMap(
-      props => props.router.fold(Callback.empty)(_.set(Home))
-    ) >>
-      scope.modState(_.setView(View.Editor))
-  }
+  val codeChange: String ~=> Callback =
+    Reusable.fn(code => scope.modState(_.setCode(code)))
 
-  def codeChange(newCode: String) =
-    scope.modState(_.setCode(newCode))
+  val sbtConfigChange: String ~=> Callback =
+    Reusable.fn(newConfig => scope.modState(_.setSbtConfigExtra(newConfig)))
 
-  def sbtConfigChange(newConfig: String) =
-    scope.modState(_.setSbtConfigExtra(newConfig))
+  val resetBuild: Reusable[Callback] =
+    Reusable.always {
+      val setData = scope.modState(
+        state =>
+          state
+            .setInputs(Inputs.default.copy(code = state.inputs.code))
+            .clearOutputs
+            .clearSnippetId
+            .setChangedInputs
+      )
 
-  private def setHome = scope.props.flatMap(
-    _.router
-      .map(_.set(Home))
-      .getOrElse(Callback.empty)
-  )
+      setData >> setHome
+    }
 
-  def resetBuild: Callback = {
-    val setData = scope.modState(
-      state =>
-        state
-          .setInputs(Inputs.default.copy(code = state.inputs.code))
-          .clearOutputs
-          .clearSnippetId
-          .setChangedInputs
-    )
+  val newSnippet: Reusable[Callback] =
+    Reusable.always {
+      val setData = scope.modState(
+        _.setInputs(Inputs.default.copy(code = "")).clearOutputs.clearSnippetId.setChangedInputs
+      )
 
-    setData >> setHome
-  }
+      setData >> setHome
+    }
 
-  def newSnippet: Callback = {
-    val setData = scope.modState(
-      _.setInputs(Inputs.default.copy(code = "")).clearOutputs.clearSnippetId.setChangedInputs
-    )
+  val clear: Reusable[Callback] =
+    Reusable.always(clearOutputs)
 
-    setData >> setHome
-  }
+  private def clearOutputs: Callback =
+    scope.modState(_.clearOutputs)
 
-  def clear: Callback = scope.modState(_.clearOutputs)
+  def clearCode: Callback =
+    scope.modState(_.setCode(""))
 
-  def clearCode: Callback = scope.modState(_.setCode(""))
+  val setViewReused: View ~=> Callback =
+    Reusable.fn(setView _)
 
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))
 
-  val viewSnapshot = StateSnapshot.withReuse.prepare(setView)
+  val viewSnapshot: StateSnapshot.withReuse.FromSetStateFn[View] =
+    StateSnapshot.withReuse.prepare(setView)
 
-  def setTarget(target: ScalaTarget): Callback =
-    scope.modState(_.setTarget(target))
+  val setTarget: ScalaTarget ~=> Callback =
+    Reusable.fn(target => scope.modState(_.setTarget(target)))
 
-  def addScalaDependency(scalaDependency: ScalaDependency,
-                         project: Project): Callback =
-    scope.modState(_.addScalaDependency(scalaDependency, project))
+  val addScalaDependency: (ScalaDependency, Project) ~=> Callback =
+    Reusable.fn {
+      case (scalaDependency, project) =>
+        scope.modState(_.addScalaDependency(scalaDependency, project))
+    }
 
-  def removeScalaDependency(scalaDependency: ScalaDependency): Callback =
-    scope.modState(_.removeScalaDependency(scalaDependency))
+  val removeScalaDependency: ScalaDependency ~=> Callback =
+    Reusable.fn(
+      scalaDependency =>
+        scope.modState(_.removeScalaDependency(scalaDependency))
+    )
 
-  def updateDependencyVersion(scalaDependency: ScalaDependency,
-                              version: String): Callback =
-    scope.modState(_.updateDependencyVersion(scalaDependency, version))
+  val updateDependencyVersion: (ScalaDependency, String) ~=> Callback =
+    Reusable.fn {
+      case (scalaDependency, version) =>
+        scope.modState(_.updateDependencyVersion(scalaDependency, version))
+    }
 
-  def toggleTheme: Callback = scope.modState(_.toggleTheme)
-  def toggleLineNumbers: Callback = scope.modState(_.toggleLineNumbers)
-  def togglePresentationMode: Callback =
-    scope.modState(_.togglePresentationMode)
+  val toggleTheme: Reusable[Callback] =
+    Reusable.always(scope.modState(_.toggleTheme))
 
-  def openConsole: Callback = scope.modState(_.openConsole)
-  def closeConsole: Callback = scope.modState(_.closeConsole)
-  def toggleConsole: Callback = scope.modState(_.toggleConsole)
+  val toggleLineNumbers: Reusable[Callback] =
+    Reusable.always(scope.modState(_.toggleLineNumbers))
 
-  def openResetModal: Callback = scope.modState(_.openResetModal)
-  def closeResetModal: Callback = scope.modState(_.closeResetModal)
+  val togglePresentationMode: Reusable[Callback] =
+    Reusable.always(scope.modState(_.togglePresentationMode))
 
-  def openNewSnippetModal: Callback = scope.modState(_.openNewSnippetModal)
-  def closeNewSnippetModal: Callback = scope.modState(_.closeNewSnippetModal)
+  val openConsole: Reusable[Callback] =
+    Reusable.always(scope.modState(_.openConsole))
 
-  def openHelpModal: Callback = scope.modState(_.openHelpModal)
-  def closeHelpModal: Callback = scope.modState(_.closeHelpModal)
-  def toggleHelpModal: Callback = scope.modState(_.toggleHelpModal)
+  val closeConsole: Reusable[Callback] =
+    Reusable.always(scope.modState(_.closeConsole))
 
-  def openWelcomeModal: Callback = scope.modState(_.openWelcomeModal)
-  def closeWelcomeModal: Callback = scope.modState(_.closeWelcomeModal)
+  val toggleConsole: Reusable[Callback] =
+    Reusable.always(scope.modState(_.toggleConsole))
 
-  def closeShareModal: Callback = scope.modState(_.closeShareModal)
+  val openResetModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.openResetModal))
 
-  def openShareModal(snippetId: Option[SnippetId]): Callback =
-    scope.modState(_.openShareModal(snippetId))
+  val closeResetModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.closeResetModal))
 
-  def openShareModal(snippetId: SnippetId): Callback =
-    scope.modState(_.openShareModal(Some(snippetId)))
+  val openNewSnippetModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.openNewSnippetModal))
 
-  def forceDesktop: Callback = scope.modState(_.forceDesktop)
+  // ok
+  private def closeNewSnippetModal0: Callback =
+    scope.modState(_.closeNewSnippetModal)
 
-  def toggleWorksheetMode: Callback =
-    unlessEmbedded(_.toggleWorksheetMode)
+  val closeNewSnippetModal: Reusable[Callback] =
+    Reusable.always(closeNewSnippetModal0)
+
+  val openHelpModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.openHelpModal))
+
+  val closeHelpModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.toggleHelpModal))
+
+  val toggleHelpModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.toggleHelpModal))
+
+  val closeWelcomeModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.closeWelcomeModal))
+
+  val closeShareModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.closeShareModal))
+
+  val openShareModalOption: Option[SnippetId] ~=> Callback =
+    Reusable.fn(snippetId => scope.modState(_.openShareModal(snippetId)))
+
+  val openShareModal: SnippetId ~=> Callback =
+    Reusable.fn(snippetId => scope.modState(_.openShareModal(Some(snippetId))))
+
+  val forceDesktop: Reusable[Callback] =
+    Reusable.always(scope.modState(_.forceDesktop))
+
+  val toggleWorksheetMode: Reusable[Callback] =
+    Reusable.always(unlessEmbedded(_.toggleWorksheetMode))
 
   private def unlessEmbedded(f: ScastieState => ScastieState): Callback = {
     scope.props
@@ -155,7 +187,7 @@ class ScastieBackend(serverUrl: Option[String],
           )
         }
 
-        def onErrorC(error: String): Callback =
+        def onConnectionError(error: String): Callback =
           scope.modState(_.logSystem(s"Error: $error"))
 
         def onConnected(stream: EventStream[SnippetProgress]): Callback =
@@ -167,52 +199,67 @@ class ScastieBackend(serverUrl: Option[String],
     )
   }
 
+  def disconnectStatus: Callback = {
+    scope.state.map(
+      _.statusStream.foreach(_.close(force = true))
+    )
+  }
+
   def connectStatus: Callback = {
+    val direct = scope.withEffectsImpure
+
     EventStream.connect(
       eventSourceUri = "/api/status-sse",
       websocketUri = "/api/status-ws",
       handler = new EventStreamHandler[StatusProgress] {
-        val direct = scope.withEffectsImpure
-
         def onMessage(status: StatusProgress): Boolean = {
-          direct.modState(_.addStatus(status))
+          status match {
+            case StatusProgress.KeepAlive => this
+            case _                        => direct.modState(_.addStatus(status))
+          }
           false
         }
 
-        def onOpen(): Unit =
-          console.log("connect status open")
+        def onOpen(): Unit = {}
 
-        def onError(error: String): Unit =
-          console.log("connect status error: " + error)
+        def onError(error: String): Unit = {
+          println(s"Status onError: $error")
+        }
 
-        def onClose(reason: Option[String]): Unit =
+        def onClose(reason: Option[String]): Unit = {
+          console.log(s"Connection to status updates closed: $reason")
           direct.modState(_.removeStatus)
+        }
 
-        def onErrorC(error: String): Callback =
+        def onConnectionError(error: String): Callback = {
+          console.log(s"Cannot connect to status updates: $error")
           Callback(onError(error))
+        }
 
-        def onConnected(stream: EventStream[StatusProgress]): Callback =
+        def onConnected(stream: EventStream[StatusProgress]): Callback = {
           scope.modState(
             _.copy(statusStream = Some(stream))
           )
+        }
       }
     )
   }
 
-  def run: Callback = {
-    scope.state.flatMap(
-      state =>
-        if (!state.isScalaJsScriptLoaded || state.inputsHasChanged) {
-          Callback.future(
-            restApiClient
-              .run(state.inputs)
-              .map(connectProgress)
-          )
-        } else {
-          scope.modState(_.setIsReRunningScalaJs(true))
-      }
+  val run: Reusable[Callback] =
+    Reusable.always(
+      scope.state.flatMap(
+        state =>
+          if (!state.isScalaJsScriptLoaded || state.inputsHasChanged) {
+            Callback.future(
+              restApiClient
+                .run(state.inputs)
+                .map(connectProgress)
+            )
+          } else {
+            scope.modState(_.setIsReRunningScalaJs(true))
+        }
+      )
     )
-  }
 
   private def saveCallback(sId: SnippetId): Callback = {
     val setState =
@@ -232,7 +279,10 @@ class ScastieBackend(serverUrl: Option[String],
     setState >> setUrl
   }
 
-  def save: Callback = {
+  val save: Reusable[Callback] =
+    Reusable.always(save0)
+
+  private def save0: Callback = {
     scope.state.flatMap(
       state =>
         Callback.unless(state.isSnippetSaved)(
@@ -245,49 +295,56 @@ class ScastieBackend(serverUrl: Option[String],
     )
   }
 
-  def saveBlocking: CallbackTo[Option[SnippetId]] = {
-    scope.state.map(state => restApiClient.saveBlocking(state.inputs))
-  }
-
-  def saveOrUpdate: Callback = {
-    scope.props.flatMap(
-      props =>
-        scope.state
-          .flatMap(
-            state =>
-              props.snippetId match {
-                case Some(snippetId) => {
-                  if (snippetId.isOwnedBy(state.user)) {
-                    update(snippetId)
-                  } else {
-                    fork(snippetId)
-                  }
-                }
-
-                case None => save
-            }
-          )
-          .unless_(props.isEmbedded)
+  val saveBlocking: Reusable[CallbackTo[Option[SnippetId]]] =
+    Reusable.always(
+      scope.state.map(state => restApiClient.saveBlocking(state.inputs))
     )
-  }
 
-  def amend(snippetId: SnippetId): Callback =
-    scope.state.flatMap(
-      state =>
-        Callback.unless(state.isSnippetSaved)(
-          Callback.future(
-            restApiClient
-              .amend(EditInputs(snippetId, state.inputs))
-              .map(
-                success =>
-                  if (success) saveCallback(snippetId)
-                  else Callback(window.alert("Failed to amend"))
+  val saveOrUpdate: Reusable[Callback] =
+    Reusable.always(
+      scope.props.flatMap(
+        props =>
+          scope.state
+            .flatMap(
+              state =>
+                props.snippetId match {
+                  case Some(snippetId) => {
+                    if (snippetId.isOwnedBy(state.user)) {
+                      update0(snippetId)
+                    } else {
+                      fork0(snippetId)
+                    }
+                  }
+                  case None => save0
+              }
+            )
+            .unless_(props.isEmbedded)
+      )
+    )
+
+  val amend: SnippetId ~=> Callback =
+    Reusable.fn(
+      snippetId =>
+        scope.state.flatMap(
+          state =>
+            Callback.unless(state.isSnippetSaved)(
+              Callback.future(
+                restApiClient
+                  .amend(EditInputs(snippetId, state.inputs))
+                  .map(
+                    success =>
+                      if (success) saveCallback(snippetId)
+                      else Callback(window.alert("Failed to amend"))
+                  )
               )
           )
       )
     )
 
-  def fork(snippetId: SnippetId): Callback =
+  val fork: SnippetId ~=> Callback =
+    Reusable.fn(fork0 _)
+
+  private def fork0(snippetId: SnippetId): Callback =
     scope.state.flatMap(
       state =>
         Callback
@@ -302,7 +359,10 @@ class ScastieBackend(serverUrl: Option[String],
           .when_(state.isSnippetSaved)
     )
 
-  def update(snippetId: SnippetId): Callback =
+  val update: SnippetId ~=> Callback =
+    Reusable.always(update0 _)
+
+  private def update0(snippetId: SnippetId): Callback =
     scope.state.flatMap(
       state =>
         Callback
@@ -317,7 +377,7 @@ class ScastieBackend(serverUrl: Option[String],
           .when_(state.isSnippetSaved)
     )
 
-  def loadOldSnippet(id: Int): Callback = {
+  private def loadOldSnippet(id: Int): Callback = {
     loadSnippetBase(
       restApiClient
         .fetchOld(id)
@@ -332,7 +392,7 @@ class ScastieBackend(serverUrl: Option[String],
     ) >> connectProgress(snippetId)
   }
 
-  def loadSnippetBase(
+  private def loadSnippetBase(
       fetchSnippet: => Future[Option[FetchResult]],
       afterLoading: ScastieState => ScastieState = identity
   ): Callback = {
@@ -344,7 +404,7 @@ class ScastieBackend(serverUrl: Option[String],
               fetchSnippet.map {
                 case Some(FetchResult(inputs, progresses)) => {
                   loadStateFromLocalStorage(isSnippetSaved = true) >>
-                    clear >>
+                    clearOutputs >>
                     scope.modState(
                       state =>
                         afterLoading(
@@ -369,7 +429,7 @@ class ScastieBackend(serverUrl: Option[String],
     )
   }
 
-  def loadStateFromLocalStorage(isSnippetSaved: Boolean): Callback =
+  private def loadStateFromLocalStorage(isSnippetSaved: Boolean): Callback =
     LocalStorage.load
       .map(
         state =>
@@ -421,104 +481,109 @@ class ScastieBackend(serverUrl: Option[String],
         }
       }
 
-    initialState >> updateEnsimeConfig >> loadUser
+    initialState >> updateEnsimeConfig0 >> loadUser
   }
 
-  def formatCode: Callback =
-    scope.state.flatMap(
-      state =>
-        Callback.when(state.inputsHasChanged)(
-          Callback.future(
-            restApiClient
-              .format(
-                FormatRequest(state.inputs.code,
-                              state.inputs.worksheetMode,
-                              state.inputs.target.targetType)
-              )
-              .map {
-                case FormatResponse(Right(formattedCode)) =>
-                  scope.modState { s =>
-                    // avoid overriding user's code if he/she types while it's formatting
-                    if (s.inputs.code == state.inputs.code)
-                      s.clearOutputs.setCode(formattedCode)
-                    else s
-                  }
-                case FormatResponse(Left(fullStackTrace)) =>
-                  scope.modState(
-                    _.clearOutputs
-                      .setRuntimeError(
-                        Some(
-                          RuntimeError(
-                            message = "Formatting Failed",
-                            line = None,
-                            fullStack = fullStackTrace
+  val formatCode: Reusable[Callback] =
+    Reusable.always(
+      scope.state.flatMap(
+        state =>
+          Callback.when(state.inputsHasChanged)(
+            Callback.future(
+              restApiClient
+                .format(
+                  FormatRequest(state.inputs.code,
+                                state.inputs.worksheetMode,
+                                state.inputs.target.targetType)
+                )
+                .map {
+                  case FormatResponse(Right(formattedCode)) =>
+                    scope.modState { s =>
+                      // avoid overriding user's code if he/she types while it's formatting
+                      if (s.inputs.code == state.inputs.code)
+                        s.clearOutputs.setCode(formattedCode)
+                      else s
+                    }
+                  case FormatResponse(Left(fullStackTrace)) =>
+                    scope.modState(
+                      _.clearOutputs
+                        .setRuntimeError(
+                          Some(
+                            RuntimeError(
+                              message = "Formatting Failed",
+                              line = None,
+                              fullStack = fullStackTrace
+                            )
                           )
                         )
-                      )
-                  )
-              }
-          )
+                    )
+                }
+            )
+        )
       )
     )
 
-  def completeCodeAt(pos: Int): Callback = {
-    scope.state.flatMap(
-      state => {
-        Callback
-          .future(
-            restApiClient
-              .autocomplete(
-                AutoCompletionRequest(EnsimeRequestInfo(state.inputs, pos))
+  val completeCodeAt: Int ~=> Callback =
+    Reusable.fn(
+      pos =>
+        scope.state.flatMap(
+          state => {
+            Callback
+              .future(
+                restApiClient
+                  .autocomplete(
+                    AutoCompletionRequest(EnsimeRequestInfo(state.inputs, pos))
+                  )
+                  .map {
+                    case Some(response) =>
+                      scope.modState(_.setCompletions(response.completions))
+                    case _ =>
+                      Callback.empty
+                  }
               )
-              .map {
-                case Some(response) =>
-                  scope.modState(_.setCompletions(response.completions))
-                case _ =>
-                  Callback.empty
-              }
-          )
-      }
+          }
+      )
     )
-  }
 
-  def typeAt(token: String, pos: Int): Callback = {
-    scope.state.flatMap(
-      state => {
-        Callback
-          .future(
-            restApiClient
-              .typeAt(
-                TypeAtPointRequest(EnsimeRequestInfo(state.inputs, pos))
-              )
-              .map {
-                case Some(response) =>
-                  scope.modState(
-                    _.setTypeAtInto(
-                      Some(
-                        TypeInfoAt(
-                          token = token,
-                          typeInfo = response.typeInfo
+  val typeAt: (String, Int) ~=> Callback = {
+    Reusable.fn {
+      case (token, pos) =>
+        scope.state.flatMap(
+          state => {
+            Callback
+              .future(
+                restApiClient
+                  .typeAt(
+                    TypeAtPointRequest(EnsimeRequestInfo(state.inputs, pos))
+                  )
+                  .map {
+                    case Some(response) =>
+                      scope.modState(
+                        _.setTypeAtInto(
+                          Some(
+                            TypeInfoAt(
+                              token = token,
+                              typeInfo = response.typeInfo
+                            )
+                          )
                         )
                       )
-                    )
-                  )
-                case _ =>
-                  Callback.empty
-              }
-          )
-      }
-    )
+                    case _ =>
+                      Callback.empty
+                  }
+              )
+          }
+        )
+    }
   }
 
-  def loadProfile(): Future[List[SnippetSummary]] = {
-    restApiClient.fetchUserSnippets()
-  }
+  val loadProfile: Reusable[Future[List[SnippetSummary]]] =
+    Reusable.always(restApiClient.fetchUserSnippets())
 
-  def deleteSnippet(snippetId: SnippetId): Future[Boolean] = {
-    restApiClient.delete(snippetId)
-  }
+  val deleteSnippet: SnippetId ~=> Future[Boolean] =
+    Reusable.always(snippetId => restApiClient.delete(snippetId))
 
-  def updateEnsimeConfig: Callback = {
+  private def updateEnsimeConfig0: Callback = {
     scope.state.flatMap(
       state => {
         Callback.future(
@@ -532,7 +597,17 @@ class ScastieBackend(serverUrl: Option[String],
     )
   }
 
-  def clearCompletions(): Callback = {
-    scope.modState(_.setCompletions(List.empty))
-  }
+  val updateEnsimeConfig: Reusable[Callback] =
+    Reusable.always(updateEnsimeConfig0)
+
+  val clearCompletions: Reusable[Callback] =
+    Reusable.always(
+      scope.modState(_.setCompletions(List.empty))
+    )
+
+  private def setHome = scope.props.flatMap(
+    _.router
+      .map(_.set(Home))
+      .getOrElse(Callback.empty)
+  )
 }

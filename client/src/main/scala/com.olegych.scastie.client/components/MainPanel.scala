@@ -1,8 +1,8 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.client.{ScastieBackend, ScastieState, View}
-import japgolly.scalajs.react._
-import vdom.all._
+
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class MainPanel(state: ScastieState,
                            backend: ScastieBackend,
@@ -12,6 +12,9 @@ final case class MainPanel(state: ScastieState,
 }
 
 object MainPanel {
+  implicit val reusability: Reusability[MainPanel] =
+    Reusability.caseClass[MainPanel]
+
   def render(in: MainPanel): VdomElement = {
     import in._
 
@@ -19,7 +22,7 @@ object MainPanel {
       if (view == state.view) display.block
       else display.none
 
-    val isStatusOk = state.status.isOk
+    val isStatusOk = state.status.isSbtOk
 
     val embeddedMenu =
       EmbeddedMenu(
@@ -29,7 +32,7 @@ object MainPanel {
         serverUrl = props.serverUrl,
         run = backend.run,
         save = backend.saveBlocking,
-        setView = backend.setView
+        setView = backend.setViewReused
       ).render.when(props.isEmbedded)
 
     val consoleCssForEditor =
@@ -46,7 +49,7 @@ object MainPanel {
               isShareModalClosed = state.modalState.isShareModalClosed,
               closeShareModal = backend.closeShareModal,
               openShareModal = backend.openShareModal,
-              loadProfile = () => backend.loadProfile,
+              loadProfile = backend.loadProfile,
               deleteSnippet = backend.deleteSnippet
             ).render
           )
@@ -65,6 +68,7 @@ object MainPanel {
         compilationInfos = state.outputs.compilationInfos,
         runtimeError = state.outputs.runtimeError,
         completions = state.completions,
+        typeAtInfo = state.typeAtInfo,
         run = backend.run,
         saveOrUpdate = backend.saveOrUpdate,
         clear = backend.clear,
@@ -79,21 +83,26 @@ object MainPanel {
         codeChange = backend.codeChange,
         completeCodeAt = backend.completeCodeAt,
         requestTypeAt = backend.typeAt,
-        typeAtInfo = state.typeAtInfo,
-        clearCompletions = backend.clearCompletions()
+        clearCompletions = backend.clearCompletions
       ).render
 
     val console =
       Console(
         isOpen = state.consoleState.consoleIsOpen,
         isRunning = state.isRunning,
+        content = state.outputs.console,
         close = backend.closeConsole,
-        open = backend.openConsole,
-        content = state.outputs.console
+        open = backend.openConsole
       ).render
 
     val buildSettings =
       BuildSettings(
+        librariesFrom = state.inputs.librariesFrom,
+        isDarkTheme = state.isDarkTheme,
+        isBuildDefault = state.isBuildDefault,
+        isResetModalClosed = state.modalState.isResetModalClosed,
+        scalaTarget = state.inputs.target,
+        sbtConfigExtra = state.inputs.sbtConfigExtra,
         setTarget = backend.setTarget,
         closeResetModal = backend.closeResetModal,
         resetBuild = backend.resetBuild,
@@ -101,13 +110,7 @@ object MainPanel {
         sbtConfigChange = backend.sbtConfigChange,
         removeScalaDependency = backend.removeScalaDependency,
         updateDependencyVersion = backend.updateDependencyVersion,
-        addScalaDependency = backend.addScalaDependency,
-        librariesFrom = state.inputs.librariesFrom,
-        isDarkTheme = state.isDarkTheme,
-        isBuildDefault = state.isBuildDefault,
-        isResetModalClosed = state.modalState.isResetModalClosed,
-        scalaTarget = state.inputs.target,
-        sbtConfigExtra = state.inputs.sbtConfigExtra
+        addScalaDependency = backend.addScalaDependency
       ).render
 
     val mobileBar =
@@ -115,7 +118,7 @@ object MainPanel {
         isRunning = state.isRunning,
         isStatusOk = isStatusOk,
         run = backend.run,
-        setView = backend.setView,
+        setView = backend.setViewReused,
         forceDesktop = backend.forceDesktop
       ).render
 
@@ -136,7 +139,6 @@ object MainPanel {
         openNewSnippetModal = backend.openNewSnippetModal,
         run = backend.run,
         save = backend.save,
-        setView = backend.setView,
         toggleWorksheetMode = backend.toggleWorksheetMode,
         update = backend.update,
         inputsHasChanged = state.inputsHasChanged,
@@ -146,7 +148,7 @@ object MainPanel {
         isSnippetSaved = state.isSnippetSaved,
         snippetId = state.snippetId,
         user = state.user,
-        view = state.view,
+        view = backend.viewSnapshot(state.view),
         worksheetMode = state.inputs.worksheetMode,
         targetType = state.inputs.target.targetType
       ).render.unless(props.isEmbedded || state.isPresentationMode)
@@ -157,7 +159,8 @@ object MainPanel {
           Status(
             state = state.status,
             router = router,
-            isAdmin = state.user.exists(_.isAdmin)
+            isAdmin = state.user.exists(_.isAdmin),
+            inputs = state.inputs
           ).render
         case _ => EmptyVdom
       }
@@ -197,5 +200,6 @@ object MainPanel {
     ScalaComponent
       .builder[MainPanel]("MainPanel")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }

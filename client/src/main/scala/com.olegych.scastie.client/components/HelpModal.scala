@@ -2,13 +2,15 @@ package com.olegych.scastie.client.components
 
 import com.olegych.scastie.buildinfo.BuildInfo.{gitHash, version}
 
-import japgolly.scalajs.react._, vdom.all._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
-final case class HelpModal(isClosed: Boolean, close: Callback) {
+final case class HelpModal(isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = HelpModal.component(this)
 }
 
 object HelpModal {
+  implicit val reusability: Reusability[HelpModal] =
+    Reusability.caseClass[HelpModal]
 
   private def render(props: HelpModal): VdomElement = {
     def generateATag(url: String, text: String) =
@@ -163,5 +165,6 @@ object HelpModal {
     ScalaComponent
       .builder[HelpModal]("HelpModal")
       .render_P(render)
+      .configure(Reusability.shouldComponentUpdateWithOverlay)
       .build
 }
