@@ -105,6 +105,6 @@ object EditorTopBar {
     ScalaComponent
       .builder[EditorTopBar]("EditorTopBar")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

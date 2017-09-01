@@ -182,6 +182,6 @@ object CodeSnippets {
         loadProfile.when_(viewChangedToCodeSnippet)
       }
       .componentWillMount(_.backend.loadProfile0())
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

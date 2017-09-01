@@ -72,7 +72,7 @@ object ShareModal {
       ScalaComponent
         .builder[ShareModal]("ShareModal")
         .render_P(render)
-        .configure(Reusability.shouldComponentUpdateWithOverlay)
+        .configure(Reusability.shouldComponentUpdate)
         .build
 
     def build(props: ShareModal): VdomElement = component(props)

@@ -79,8 +79,8 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
 
   def updateEnsimeConfig(
       request: UpdateEnsimeConfigRequest
-  ): Future[Option[EnsimeConfigUpdated]] =
-    post[EnsimeConfigUpdated].using("/updateEnsimeConfig", request)
+  ): Future[Option[EnsimeConfigUpdate]] =
+    post[EnsimeConfigUpdate].using("/updateEnsimeConfig", request)
 
   def save(inputs: Inputs): Future[SnippetId] =
     post[SnippetId].using("/save", inputs).map(_.get)

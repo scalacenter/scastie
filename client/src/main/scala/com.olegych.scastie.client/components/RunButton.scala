@@ -49,6 +49,6 @@ object RunButton {
     ScalaComponent
       .builder[RunButton]("RunButton")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

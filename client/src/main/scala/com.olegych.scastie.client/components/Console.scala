@@ -66,6 +66,6 @@ object Console {
             consoleElement.scrollTop = consoleElement.scrollHeight.toDouble
           }.when_(scope.prevProps.isRunning)
       )
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

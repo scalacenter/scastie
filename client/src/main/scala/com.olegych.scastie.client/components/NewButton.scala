@@ -37,6 +37,6 @@ object NewButton {
     ScalaComponent
       .builder[NewButton]("NewButton")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

@@ -18,7 +18,7 @@ trait RestApi {
   def typeAt(request: TypeAtPointRequest): Future[Option[TypeAtPointResponse]]
   def updateEnsimeConfig(
       request: UpdateEnsimeConfigRequest
-  ): Future[Option[EnsimeConfigUpdated]]
+  ): Future[Option[EnsimeConfigUpdate]]
 
   def format(request: FormatRequest): Future[FormatResponse]
 

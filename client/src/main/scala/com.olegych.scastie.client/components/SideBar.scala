@@ -76,21 +76,6 @@ object SideBar {
       )
     }
 
-    // val ensimeStatusIcon = {
-    //   val (statusIcon, statusClass, statusLabel) =
-    //     props.status.ensimeStatus match {
-    //       case EnsimeDown => ("fa-times-circle", "status-down", "Ensime's Down")
-    //       case EnsimeRestarting =>
-    //         ("fa-times-circle", "status-unknown", "Ensime's Restarting")
-    //       case EnsimeUp => ("fa-check-circle", "status-up", "Ensime's Up")
-    //     }
-
-    //   li(title := "Show ensime status", cls := s"btn $statusClass")(
-    //     i(cls := s"fa $statusIcon"),
-    //     span(fontSize := "9px", statusLabel)
-    //   )
-    // }
-
     val editorButton = ViewToggleButton(
       currentView = props.view,
       forView = View.Editor,
@@ -130,6 +115,6 @@ object SideBar {
     ScalaComponent
       .builder[SideBar]("SideBar")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

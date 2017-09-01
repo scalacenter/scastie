@@ -66,8 +66,9 @@ class EnsimeRunner(system: ActorSystem,
         }
       }
 
+      dispatchActor ! that
+
       if (state != that) {
-        dispatchActor ! that
         log.info(s"Server State: $state => $that")
       }
       state = that
@@ -301,12 +302,14 @@ class EnsimeRunner(system: ActorSystem,
           log.info("ensimeConfig timeout, Trying again: ${!configFailed}")
 
           if (!configFailed) {
-            startEnsimeServer(withConfig, force, configFailed = true)
+            startEnsimeServer(Inputs.default, force, configFailed = true)
           }
         }
       )
 
       log.info("ensimeConfig Done")
+    } else {
+      startEnsimeServerAfterConfig()
     }
   }
 
@@ -494,10 +497,14 @@ class EnsimeRunner(system: ActorSystem,
 
     case EnsimeTaskRequest(UpdateEnsimeConfigRequest(inputs), taskId) => {
       log.info("UpdateEnsimeConfig request at EnsimeActor")
-      if (needsReload(inputs)) {
+
+      val reloads = needsReload(inputs)
+
+      sender ! EnsimeTaskResponse(Some(EnsimeConfigUpdate(reloads)), taskId)
+
+      if (reloads) {
         restartEnsimeServer(inputs)
       }
-      sender ! EnsimeTaskResponse(Some(EnsimeConfigUpdated()), taskId)
     }
 
     case Heartbeat => {

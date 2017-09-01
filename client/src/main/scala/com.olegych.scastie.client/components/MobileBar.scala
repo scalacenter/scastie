@@ -36,6 +36,6 @@ object MobileBar {
     ScalaComponent
       .builder[MobileBar]("MobileBar")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

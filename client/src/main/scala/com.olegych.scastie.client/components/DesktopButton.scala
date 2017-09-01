@@ -23,6 +23,6 @@ object DesktopButton {
     ScalaComponent
       .builder[DesktopButton]("DesktopButton")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

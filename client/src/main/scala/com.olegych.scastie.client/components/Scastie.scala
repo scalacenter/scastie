@@ -218,6 +218,6 @@ object Scastie {
 
         setTitle(state, scope.nextProps) >> loadSnippet.toCallback
       }
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

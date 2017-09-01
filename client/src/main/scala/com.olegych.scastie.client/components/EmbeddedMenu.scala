@@ -58,6 +58,6 @@ object EmbeddedMenu {
     ScalaComponent
       .builder[EmbeddedMenu]("EmbeddedMenu")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

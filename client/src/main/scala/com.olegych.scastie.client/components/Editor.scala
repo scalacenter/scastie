@@ -946,6 +946,6 @@ object Editor {
       }
       .componentDidMount(_.backend.start())
       .componentWillUnmount(_.backend.stop())
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

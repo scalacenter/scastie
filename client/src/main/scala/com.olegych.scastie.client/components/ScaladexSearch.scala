@@ -460,6 +460,6 @@ object ScaladexSearch {
       .backend(new ScaladexSearchBackend(_))
       .renderPS(render)
       .componentDidMount(_ => Callback(searchInputRef.focus))
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

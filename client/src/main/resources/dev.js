@@ -20,6 +20,16 @@ require("./common.js");
 
 function run(){
   if (window.location.search === "") {
+    window.com = {
+      olegych: {
+        scastie: {
+          client: {
+            ClientMain: function(){ return $e.scastie.ClientMain }
+          }
+        }
+      }
+    }
+
     $e.scastie.ClientMain.main();
   } else {
     var h1 = document.createElement("h1");
