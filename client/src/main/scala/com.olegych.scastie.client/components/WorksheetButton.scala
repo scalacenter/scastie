@@ -48,6 +48,6 @@ object WorksheetButton {
     ScalaComponent
       .builder[WorksheetButton]("WorksheetButton")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

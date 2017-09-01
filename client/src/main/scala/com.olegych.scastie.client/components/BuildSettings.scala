@@ -219,6 +219,6 @@ object BuildSettings {
     ScalaComponent
       .builder[BuildSettings]("BuildSettings")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

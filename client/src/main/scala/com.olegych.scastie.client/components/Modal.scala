@@ -46,6 +46,6 @@ object Modal {
     ScalaComponent
       .builder[Modal]("Modal")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

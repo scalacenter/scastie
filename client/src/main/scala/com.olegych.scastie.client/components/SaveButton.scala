@@ -77,6 +77,6 @@ object SaveButton {
     ScalaComponent
       .builder[SaveButton]("SaveButton")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

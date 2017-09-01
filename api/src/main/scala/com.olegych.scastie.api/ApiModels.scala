@@ -156,23 +156,12 @@ object TypeAtPointResponse {
 
 case class TypeAtPointResponse(typeInfo: String) extends EnsimeResponse
 
-object EnsimeConfigUpdated {
-  implicit object EnsimeConfigUpdatedFormat
-      extends Format[EnsimeConfigUpdated] {
-    def writes(response: EnsimeConfigUpdated): JsValue = {
-      JsString("EnsimeConfigUpdated")
-    }
-
-    def reads(json: JsValue): JsResult[EnsimeConfigUpdated] = {
-      json match {
-        case JsString("EnsimeConfigUpdated") => JsSuccess(EnsimeConfigUpdated())
-        case _                               => JsError(Seq())
-      }
-    }
-  }
+object EnsimeConfigUpdate {
+  implicit val formatEnsimeConfigUpdate: OFormat[EnsimeConfigUpdate] =
+    Json.format[EnsimeConfigUpdate]
 }
 
-case class EnsimeConfigUpdated() extends EnsimeResponse
+case class EnsimeConfigUpdate(ready: Boolean) extends EnsimeResponse
 
 case class EnsimeTaskRequest(request: EnsimeRequest, taskId: EnsimeTaskId)
 case class EnsimeTaskResponse(response: Option[EnsimeResponse],

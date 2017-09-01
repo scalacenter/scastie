@@ -165,6 +165,6 @@ object HelpModal {
     ScalaComponent
       .builder[HelpModal]("HelpModal")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

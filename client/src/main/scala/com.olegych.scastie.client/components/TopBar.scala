@@ -109,6 +109,6 @@ object TopBar {
   private val component = ScalaComponent
     .builder[TopBar]("TopBar")
     .render_P(render)
-    .configure(Reusability.shouldComponentUpdateWithOverlay)
+    .configure(Reusability.shouldComponentUpdate)
     .build
 }

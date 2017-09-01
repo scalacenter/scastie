@@ -21,40 +21,47 @@ object Status {
 
   def render(props: Status): VdomElement = {
     def renderSbtTask(tasks: Queue[SbtRunTaskId]): VdomElement = {
-      if (tasks.isEmpty) {
-        div("No Task Running")
-      } else {
-        ul(
-          tasks.zipWithIndex.map {
-            case (SbtRunTaskId(snippetId), j) =>
-              li(key := snippetId.toString)(
-                props.router.link(Page.fromSnippetId(snippetId))(
-                  s"Task $j"
+      if (props.isAdmin) {
+        if (tasks.isEmpty) {
+          div("No Task Running")
+        } else {
+          ul(
+            tasks.zipWithIndex.map {
+              case (SbtRunTaskId(snippetId), j) =>
+                li(key := snippetId.toString)(
+                  props.router.link(Page.fromSnippetId(snippetId))(
+                    s"Task $j"
+                  )
                 )
-              )
-          }.toTagMod
-        )
+            }.toTagMod
+          )
+        }
+      } else {
+        div()
       }
     }
 
     def needsReload(config: Option[Inputs]): TagMod = {
-      if (config.map(_.needsReload(props.inputs)).getOrElse(true)) {
-        TagMod(cls := "needs-reload")
-      } else {
-        EmptyVdom
-      }
+      val resClass =
+        if (config.map(_.needsReload(props.inputs)).getOrElse(true)) {
+          "needs-reload"
+        } else {
+          "ready"
+        }
+
+      TagMod(cls := resClass + " runner")
     }
 
     val sbtRunnersStatus =
       props.state.sbtRunners match {
-        case Some(sbtRunners) if props.isAdmin =>
+        case Some(sbtRunners) =>
           div(
             h1("Sbt Runners"),
             ul(
               sbtRunners.zipWithIndex.map {
                 case (sbtRunner, i) =>
                   li(key := i)(
-                    span(needsReload(sbtRunner.config))(s"Sbt $i: "),
+                    span(needsReload(sbtRunner.config))(s"Sbt $i "),
                     renderSbtTask(sbtRunner.tasks)
                   )
               }.toTagMod
@@ -65,7 +72,7 @@ object Status {
 
     val ensimeStatus =
       props.state.ensimeRunners match {
-        case Some(ensimeRunners) if props.isAdmin =>
+        case Some(ensimeRunners) =>
           div(
             h1("Ensime Runners"),
             ul(
@@ -73,7 +80,8 @@ object Status {
                 case (ensimeRunner, i) =>
                   li(key := i)(
                     span(needsReload(ensimeRunner.config))(
-                      s"Ensime $i " + ("*" * ensimeRunner.tasks.size)
+                      s"Ensime $i ${ensimeRunner.serverState}" +
+                        ("*" * ensimeRunner.tasks.size)
                     )
                   )
               }.toTagMod
@@ -92,6 +100,6 @@ object Status {
     ScalaComponent
       .builder[Status]("Status")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

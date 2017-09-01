@@ -6,5 +6,22 @@
     height: calc(100% - #{$header-height});
 
     padding: 45px 45px;
+
+    .runner {
+      padding: 10px;
+    }
+
+    .ready {
+      background-color: green;
+      color: white;
+    }
+
+    .needs-reload {
+      background-color: yellow; 
+    }
+
+    * {
+      margin: 20px;
+    }
   }
 }

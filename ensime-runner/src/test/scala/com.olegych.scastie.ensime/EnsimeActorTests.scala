@@ -35,16 +35,43 @@ class EnsimeActorTests()
   }
 
   test("autocomplete after restart") {
-    autocompleteEnd("List(1).")(_.nonEmpty)
-    autocompleteEndFail("import org.scalajs.dom.", ScalaTarget.Js.default)
-    blockUntilReady()
-    autocompleteEnd("import org.scalajs.dom.", ScalaTarget.Js.default)(
-      _.nonEmpty
-    )
-    autocompleteEndFail("List(1).")
-    blockUntilReady()
-    autocompleteEnd("List(1).")(_.nonEmpty)
+    List(
+      () => autocompleteEnd("List(1).")(_.nonEmpty),
+      () =>
+        autocompleteEndFail("import org.scalajs.dom.", ScalaTarget.Js.default),
+      () => blockUntilReady(),
+      () =>
+        autocompleteEnd("import org.scalajs.dom.", ScalaTarget.Js.default)(
+          _.nonEmpty
+      ),
+      () => autocompleteEndFail("List(1)."),
+      () => blockUntilReady(),
+      () => autocompleteEnd("List(1).")(_.nonEmpty)
+    ).zipWithIndex.foreach {
+      case (step, i) =>
+        println(s"--- $i ---")
+        println(step())
+        println(s"----------")
+    }
   }
+
+  // test("invalid config") {
+
+  //   val bogusSbtConfig = "er"
+
+  //   autocompleteBase(
+  //     Inputs.default.copy(
+  //       sbtConfigExtra = bogusSbtConfig,
+  //       code = "1"
+  //     ),
+  //     offset = 0
+  //   )(
+  //     fish = _ => true,
+  //     shouldFail = true
+  //   )
+
+  //   autocompleteEnd("List(1).", )(_.nonEmpty)
+  // }
 
   test("typeAt 1") {
     if (false) {

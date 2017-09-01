@@ -50,6 +50,6 @@ object PromptModal {
     ScalaComponent
       .builder[PromptModal]("PrompModal")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

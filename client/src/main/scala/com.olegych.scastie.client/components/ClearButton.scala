@@ -28,6 +28,6 @@ object ClearButton {
     ScalaComponent
       .builder[ClearButton]("ClearButton")
       .render_P(render)
-      .configure(Reusability.shouldComponentUpdateWithOverlay)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }
