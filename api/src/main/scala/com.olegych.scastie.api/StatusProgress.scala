@@ -10,7 +10,7 @@ object SbtRunnerState {
 }
 
 case class SbtRunnerState(
-    config: Option[Inputs],
+    config: Inputs,
     tasks: Queue[SbtRunTaskId],
     sbtState: SbtState
 )
@@ -21,7 +21,7 @@ object EnsimeRunnerState {
 }
 
 case class EnsimeRunnerState(
-    config: Option[Inputs],
+    config: Inputs,
     tasks: Queue[EnsimeTaskId],
     serverState: EnsimeServerState
 )
