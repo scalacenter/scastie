@@ -426,14 +426,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       statusActor ! statusProgress
 
     case ensimeState: EnsimeServerState => {
-      def cmp[A](v1: A, v2: A): Boolean = v1 == v2
-
-      println("+++++++")
-      println("+++++++")
-      println("Ensime State Update")
-      println("+++++++")
-      println("+++++++")
-
       updateEnsimeBalancer(
         ensimeLoadBalancer.copy(
           servers = ensimeLoadBalancer.servers.map(

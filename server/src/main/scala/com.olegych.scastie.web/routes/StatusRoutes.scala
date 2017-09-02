@@ -66,11 +66,8 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
             // Hide the task Queue for non admin users,
             // they will only see the runner count
             StatusProgress.Sbt(
-              runners.map(_.copy(tasks = Queue(), config = None))
+              runners.map(_.copy(tasks = Queue()))
             )
-
-          case StatusProgress.Ensime(runners) =>
-            StatusProgress.Ensime(runners.map(_.copy(config = None)))
 
           case _ =>
             progress

@@ -41,9 +41,9 @@ object Status {
       }
     }
 
-    def needsReload(config: Option[Inputs]): TagMod = {
+    def needsReload(serverInputs: Inputs): TagMod = {
       val resClass =
-        if (config.map(_.needsReload(props.inputs)).getOrElse(true)) {
+        if (serverInputs.needsReload(props.inputs)) {
           "needs-reload"
         } else {
           "ready"

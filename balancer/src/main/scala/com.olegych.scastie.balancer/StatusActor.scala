@@ -82,7 +82,7 @@ class StatusActor private () extends Actor with ActorLogging {
       newSbtBalancer.servers.map(
         server =>
           SbtRunnerState(
-            config = Some(server.lastConfig),
+            config = server.lastConfig,
             tasks = server.mailbox.map(_.taskId),
             sbtState = server.state
         )
@@ -95,7 +95,7 @@ class StatusActor private () extends Actor with ActorLogging {
       newEnsimeBalancer.servers.map(
         server =>
           EnsimeRunnerState(
-            config = Some(server.lastConfig),
+            config = server.lastConfig,
             tasks = server.mailbox.map(_.taskId),
             serverState = server.state
         )
