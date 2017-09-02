@@ -423,7 +423,13 @@ class EnsimeRunner(system: ActorSystem,
     hbRef.foreach(_.cancel())
     if (serverState.isReady) {
       log.info("Killing Ensime server")
-      ensimeProcess.get.destroyForcibly().waitFor()
+      val pidField = ensimeProcess.get.getClass.getDeclaredField("pid")
+      pidField.setAccessible(true)
+      val pid = pidField.get(process).asInstanceOf[Int]
+      import sys.process._
+      s"pkill -KILL -P $pid".!
+      ()
+
       log.info("Ensime server terminated")
     }
     ensimeProcess = None
