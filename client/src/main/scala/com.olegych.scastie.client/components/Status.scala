@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api.{Inputs, SbtRunTaskId}
+import com.olegych.scastie.api.{Inputs, SbtRunTaskId, EnsimeServerState}
 import com.olegych.scastie.client.{StatusState, Page}
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
@@ -41,15 +41,15 @@ object Status {
       }
     }
 
-    def needsReload(serverInputs: Inputs): TagMod = {
-      val resClass =
+    def renderConfiguration(serverInputs: Inputs): VdomElement = {
+      val (cssConfig, label) = 
         if (serverInputs.needsReload(props.inputs)) {
-          "needs-reload"
+          ("needs-reload", "Different Configuration")
         } else {
-          "ready"
+          ("ready", "Same Configuration")
         }
 
-      TagMod(cls := resClass + " runner")
+      span(cls := "runner " + cssConfig)(label)
     }
 
     val sbtRunnersStatus =
@@ -61,7 +61,7 @@ object Status {
               sbtRunners.zipWithIndex.map {
                 case (sbtRunner, i) =>
                   li(key := i)(
-                    span(needsReload(sbtRunner.config))(s"Sbt $i "),
+                    renderConfiguration(sbtRunner.config),
                     renderSbtTask(sbtRunner.tasks)
                   )
               }.toTagMod
@@ -70,6 +70,28 @@ object Status {
         case _ => div()
       }
 
+    def renderEnsimeState(state: EnsimeServerState): VdomElement = {
+      import EnsimeServerState._
+
+      val label = 
+        state match {
+          case Initializing => "Initializing"
+          case CreatingConfig => "Generating .ensime configuration file"
+          case Connecting => "Connecting to ensime server"
+          case Ready => "Connected"
+        }
+
+      val stateCss =
+        state match {
+          case Initializing => "initializing"
+          case CreatingConfig => "creating-config"
+          case Connecting => "connecting"
+          case Ready => "ready"
+        }
+
+      span(cls := "runner-state " + stateCss)(label)
+    }
+
     val ensimeStatus =
       props.state.ensimeRunners match {
         case Some(ensimeRunners) =>
@@ -77,13 +99,17 @@ object Status {
             h1("Ensime Runners"),
             ul(
               ensimeRunners.zipWithIndex.map {
-                case (ensimeRunner, i) =>
+                case (ensimeRunner, i) => {
                   li(key := i)(
-                    span(needsReload(ensimeRunner.config))(
-                      s"Ensime $i ${ensimeRunner.serverState}" +
-                        ("*" * ensimeRunner.tasks.size)
+                    renderConfiguration(ensimeRunner.config),
+                    renderEnsimeState(ensimeRunner.serverState),
+                    ul(
+                      ensimeRunner.tasks.map(task =>
+                        li(task.toString)
+                      ).toTagMod
                     )
                   )
+                }
               }.toTagMod
             )
           )

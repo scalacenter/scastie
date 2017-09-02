@@ -66,6 +66,8 @@ object Scastie {
       SideBar(
         isDarkTheme = state.isDarkTheme,
         status = state.status,
+        inputs = state.inputs,
+        ensimeConfigurationLoading = state.ensimeConfigurationLoading,
         toggleTheme = scope.backend.toggleTheme,
         view = scope.backend.viewSnapshot(state.view),
         openHelpModal = scope.backend.openHelpModal,

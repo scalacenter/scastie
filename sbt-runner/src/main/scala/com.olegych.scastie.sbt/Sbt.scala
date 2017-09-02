@@ -1,6 +1,7 @@
 package com.olegych.scastie.sbt
 
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
+import com.olegych.scastie.util.ProcessUtils
 import com.olegych.scastie.api._
 
 import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
@@ -140,12 +141,7 @@ class Sbt(defaultInputs: Inputs, javaOptions: Seq[String]) {
   }
 
   def kill(): Unit = {
-    val pidField = process.getClass.getDeclaredField("pid")
-    pidField.setAccessible(true)
-    val pid = pidField.get(process).asInstanceOf[Int]
-    import sys.process._
-    s"pkill -KILL -P $pid".!
-    ()
+    ProcessUtils.kill(process)
   }
 
   def needsReload(inputs: Inputs): Boolean =
