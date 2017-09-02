@@ -405,10 +405,12 @@ class EnsimeRunner(system: ActorSystem,
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        if (!line.contains("ConnectionInfo") &&
-            !line.contains("INFO") &&
-            !line.contains("DEBUG")) {
-          log.info(line)
+        if (!line.contains("ConnectionInfo")) {
+        // if (!line.contains("ConnectionInfo") &&
+        //     !line.contains("INFO") &&
+        //     !line.contains("DEBUG")) {
+          // log.info(line)
+          println(line)
         } else {
           print("*")
         }
@@ -421,17 +423,26 @@ class EnsimeRunner(system: ActorSystem,
 
   private def killEnsimeServer(): Unit = {
     hbRef.foreach(_.cancel())
-    if (serverState.isReady) {
-      log.info("Killing Ensime server")
-      val pidField = ensimeProcess.get.getClass.getDeclaredField("pid")
+    
+    ensimeProcess.foreach{process =>
+      val pidField = process.getClass.getDeclaredField("pid")
       pidField.setAccessible(true)
       val pid = pidField.get(process).asInstanceOf[Int]
+      
+      println("+++++")
+      println("+++++")
+      log.info("Killing Ensime server: " + pid)
+      println("+++++")
+      println("+++++")
+
       import sys.process._
       s"pkill -KILL -P $pid".!
       ()
 
       log.info("Ensime server terminated")
     }
+
+    
     ensimeProcess = None
     ensimeWS = None
     serverState(Initializing)
