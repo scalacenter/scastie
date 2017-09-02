@@ -1,7 +1,7 @@
 package com.olegych.scastie.client
 
 import com.olegych.scastie.api.{
-  SbtRunnerState, 
+  SbtRunnerState,
   EnsimeRunnerState,
   Inputs,
   EnsimeServerState
@@ -17,15 +17,17 @@ object StatusState {
 
 final case class StatusState(sbtRunners: Option[Vector[SbtRunnerState]],
                              ensimeRunners: Option[Vector[EnsimeRunnerState]]) {
-  def ensimeReady(inputs: Inputs): Boolean =  {
-    ensimeRunners.map(
-      _.exists(runner =>
-        !runner.config.needsReload(inputs) && 
-          runner.serverState == EnsimeServerState.Ready
+  def ensimeReady(inputs: Inputs): Boolean = {
+    ensimeRunners
+      .map(
+        _.exists(
+          runner =>
+            !runner.config.needsReload(inputs) &&
+              runner.serverState == EnsimeServerState.Ready
+        )
       )
-    ).getOrElse(false)
+      .getOrElse(false)
   }
-
 
   def sbtRunnerCount: Option[Int] = sbtRunners.map(_.size)
   def isSbtOk: Boolean = sbtRunners.exists(_.nonEmpty)

@@ -117,7 +117,8 @@ object Scastie {
         current.backend.start(current.props) >>
           setTitle(current.state, current.props) >>
           current.backend.connectStatus >>
-          current.backend.closeNewSnippetModal
+          current.backend.closeNewSnippetModal >>
+          current.backend.closeResetModal
       }
       .componentWillUnmount { current =>
         current.backend.disconnectStatus

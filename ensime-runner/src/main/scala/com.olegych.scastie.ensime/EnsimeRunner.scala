@@ -6,7 +6,6 @@ import com.olegych.scastie.util.ScastieFileUtil._
 import com.olegych.scastie.util.ProcessUtils._
 import com.olegych.scastie.util.TaskTimeout
 
-
 import akka.{Done, NotUsed}
 import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable}
 import akka.http.scaladsl.Http
@@ -156,8 +155,9 @@ class EnsimeRunner(system: ActorSystem,
           }
 
           // used as keepalive
-          case _: ConnectionInfo =>
+          case _: ConnectionInfo => {
             ()
+          }
 
           case FalseResponse => {
             emptyReply()
@@ -359,7 +359,6 @@ class EnsimeRunner(system: ActorSystem,
       throw new Exception("process already started")
     }
 
-
     ensimeProcess = Some(
       new ProcessBuilder(
         "java",
@@ -428,15 +427,14 @@ class EnsimeRunner(system: ActorSystem,
 
   private def killEnsimeServer(): Unit = {
     hbRef.foreach(_.cancel())
-    
-    ensimeProcess.foreach{process =>
+
+    ensimeProcess.foreach { process =>
       val pid = getPid(process)
       log.info("Killing Ensime server: " + pid)
       kill(process)
       log.info("Ensime server Killed")
     }
 
-    
     ensimeProcess = None
     ensimeWS = None
     serverState(Initializing)

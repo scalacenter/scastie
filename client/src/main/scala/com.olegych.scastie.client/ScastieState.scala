@@ -465,18 +465,18 @@ case class ScastieState(
         copy(status = status.copy(sbtRunners = Some(sbtRunners)))
       }
       case StatusProgress.Ensime(ensimeRunners) => {
-        val updatedStatus = 
+        val updatedStatus =
           status.copy(ensimeRunners = Some(ensimeRunners))
 
-        val ensimeConfigurationLoading0 = 
+        val ensimeConfigurationLoading0 =
           ensimeConfigurationLoading &&
-          updatedStatus.ensimeReady(inputs)
+            updatedStatus.ensimeReady(inputs)
 
         copy(
-          status = updatedStatus, 
+          status = updatedStatus,
           ensimeConfigurationLoading = ensimeConfigurationLoading0
         )
-        
+
       }
     }
   }

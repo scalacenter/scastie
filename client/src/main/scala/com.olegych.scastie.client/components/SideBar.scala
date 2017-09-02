@@ -62,15 +62,16 @@ object SideBar {
       )
 
     val runnersStatusButton = {
-      val ensimeLoading = 
+      val ensimeLoading =
         !props.status.ensimeReady(props.inputs) &&
-        !props.ensimeConfigurationLoading
+          !props.ensimeConfigurationLoading
 
       val (statusIcon, statusClass, statusLabel) =
         (props.status.sbtRunnerCount, ensimeLoading) match {
-          case (None, _) => ("fa-times-circle", "status-unknown", "Unknown")
+          case (None, _)    => ("fa-times-circle", "status-unknown", "Unknown")
           case (Some(0), _) => ("fa-times-circle", "status-down", "Down")
-          case (Some(_), true) => ("fa-circle-o-notch fa-spin", "status-up", "Loading")
+          case (Some(_), true) =>
+            ("fa-circle-o-notch fa-spin", "status-up", "Loading")
           case (Some(_), false) => ("fa-check-circle", "status-up", "Up")
         }
 

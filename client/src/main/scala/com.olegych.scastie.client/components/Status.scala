@@ -42,7 +42,7 @@ object Status {
     }
 
     def renderConfiguration(serverInputs: Inputs): VdomElement = {
-      val (cssConfig, label) = 
+      val (cssConfig, label) =
         if (serverInputs.needsReload(props.inputs)) {
           ("needs-reload", "Different Configuration")
         } else {
@@ -73,20 +73,20 @@ object Status {
     def renderEnsimeState(state: EnsimeServerState): VdomElement = {
       import EnsimeServerState._
 
-      val label = 
+      val label =
         state match {
-          case Initializing => "Initializing"
+          case Initializing   => "Initializing"
           case CreatingConfig => "Generating .ensime configuration file"
-          case Connecting => "Connecting to ensime server"
-          case Ready => "Connected"
+          case Connecting     => "Connecting to ensime server"
+          case Ready          => "Connected"
         }
 
       val stateCss =
         state match {
-          case Initializing => "initializing"
+          case Initializing   => "initializing"
           case CreatingConfig => "creating-config"
-          case Connecting => "connecting"
-          case Ready => "ready"
+          case Connecting     => "connecting"
+          case Ready          => "ready"
         }
 
       span(cls := "runner-state " + stateCss)(label)
@@ -104,9 +104,7 @@ object Status {
                     renderConfiguration(ensimeRunner.config),
                     renderEnsimeState(ensimeRunner.serverState),
                     ul(
-                      ensimeRunner.tasks.map(task =>
-                        li(task.toString)
-                      ).toTagMod
+                      ensimeRunner.tasks.map(task => li(task.toString)).toTagMod
                     )
                   )
                 }

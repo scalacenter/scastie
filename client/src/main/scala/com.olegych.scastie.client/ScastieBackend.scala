@@ -32,13 +32,14 @@ class ScastieBackend(serverUrl: Option[String],
 
   val resetBuild: Reusable[Callback] =
     Reusable.always {
-      val setData = scope.modState(
-        state =>
+      val setData = scope.state.map(
+        state => {
           state
             .setInputs(Inputs.default.copy(code = state.inputs.code))
             .clearOutputs
             .clearSnippetId
             .setChangedInputs
+        }
       )
 
       setData >> setHome
@@ -46,9 +47,13 @@ class ScastieBackend(serverUrl: Option[String],
 
   val newSnippet: Reusable[Callback] =
     Reusable.always {
-      val setData = scope.modState(
-        _.setInputs(Inputs.default.copy(code = "")).clearOutputs.clearSnippetId.setChangedInputs
-      )
+      val setData = scope.state.map(state => {
+        state
+          .setInputs(Inputs.default.copy(code = ""))
+          .clearOutputs
+          .clearSnippetId
+          .setChangedInputs
+      })
 
       setData >> setHome
     }
@@ -591,10 +596,10 @@ class ScastieBackend(serverUrl: Option[String],
             .updateEnsimeConfig(
               UpdateEnsimeConfigRequest(state.inputs)
             )
-            .map{
+            .map {
               case Some(EnsimeConfigUpdate(ready)) =>
                 scope.modState(_.copy(ensimeConfigurationLoading = !ready))
-              
+
               case _ => Callback.empty
             }
         )
