@@ -39,6 +39,7 @@ object ScastieState {
       showLineNumbers = false,
       consoleState = ConsoleState.default,
       inputsHasChanged = false,
+      ensimeConfigurationLoading = false,
       snippetState = SnippetState(
         snippetId = None,
         isSnippetSaved = false,
@@ -99,6 +100,7 @@ case class ScastieState(
     showLineNumbers: Boolean,
     consoleState: ConsoleState,
     inputsHasChanged: Boolean,
+    ensimeConfigurationLoading: Boolean,
     snippetState: SnippetState,
     user: Option[User],
     attachedDoms: AttachedDoms,
@@ -155,6 +157,7 @@ case class ScastieState(
         showLineNumbers,
         consoleState,
         inputsHasChanged,
+        ensimeConfigurationLoading,
         SnippetState(
           snippetId,
           isSnippetSaved,
@@ -462,7 +465,18 @@ case class ScastieState(
         copy(status = status.copy(sbtRunners = Some(sbtRunners)))
       }
       case StatusProgress.Ensime(ensimeRunners) => {
-        copy(status = status.copy(ensimeRunners = Some(ensimeRunners)))
+        val updatedStatus = 
+          status.copy(ensimeRunners = Some(ensimeRunners))
+
+        val ensimeConfigurationLoading0 = 
+          ensimeConfigurationLoading &&
+          updatedStatus.ensimeReady(inputs)
+
+        copy(
+          status = updatedStatus, 
+          ensimeConfigurationLoading = ensimeConfigurationLoading0
+        )
+        
       }
     }
   }

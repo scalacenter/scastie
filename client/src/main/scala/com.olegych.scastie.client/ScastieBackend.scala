@@ -591,7 +591,12 @@ class ScastieBackend(serverUrl: Option[String],
             .updateEnsimeConfig(
               UpdateEnsimeConfigRequest(state.inputs)
             )
-            .map(_ => Callback.empty)
+            .map{
+              case Some(EnsimeConfigUpdate(ready)) =>
+                scope.modState(_.copy(ensimeConfigurationLoading = !ready))
+              
+              case _ => Callback.empty
+            }
         )
       }
     )

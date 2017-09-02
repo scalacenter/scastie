@@ -3,7 +3,9 @@ package com.olegych.scastie.ensime
 import com.olegych.scastie.api._
 import com.olegych.scastie.sbt.Sbt
 import com.olegych.scastie.util.ScastieFileUtil._
+import com.olegych.scastie.util.ProcessUtils._
 import com.olegych.scastie.util.TaskTimeout
+
 
 import akka.{Done, NotUsed}
 import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable}
@@ -357,6 +359,7 @@ class EnsimeRunner(system: ActorSystem,
       throw new Exception("process already started")
     }
 
+
     ensimeProcess = Some(
       new ProcessBuilder(
         "java",
@@ -370,6 +373,10 @@ class EnsimeRunner(system: ActorSystem,
         "org.ensime.server.Server"
       ).directory(sbtDir.toFile).start()
     )
+
+    val pid = getPid(ensimeProcess.get)
+
+    log.info(s"Starting Ensime server, pid: $pid")
 
     val stdout = ensimeProcess.get.getInputStream
     streamLogger(stdout)
@@ -405,11 +412,9 @@ class EnsimeRunner(system: ActorSystem,
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        if (!line.contains("ConnectionInfo")) {
-        // if (!line.contains("ConnectionInfo") &&
-        //     !line.contains("INFO") &&
-        //     !line.contains("DEBUG")) {
-          // log.info(line)
+        if (!line.contains("ConnectionInfo") &&
+            !line.contains("INFO") &&
+            !line.contains("DEBUG")) {
           println(line)
         } else {
           print("*")
@@ -425,21 +430,10 @@ class EnsimeRunner(system: ActorSystem,
     hbRef.foreach(_.cancel())
     
     ensimeProcess.foreach{process =>
-      val pidField = process.getClass.getDeclaredField("pid")
-      pidField.setAccessible(true)
-      val pid = pidField.get(process).asInstanceOf[Int]
-      
-      println("+++++")
-      println("+++++")
+      val pid = getPid(process)
       log.info("Killing Ensime server: " + pid)
-      println("+++++")
-      println("+++++")
-
-      import sys.process._
-      s"pkill -KILL -P $pid".!
-      ()
-
-      log.info("Ensime server terminated")
+      kill(process)
+      log.info("Ensime server Killed")
     }
 
     
@@ -515,7 +509,7 @@ class EnsimeRunner(system: ActorSystem,
     case EnsimeTaskRequest(UpdateEnsimeConfigRequest(inputs), taskId) => {
       log.info("UpdateEnsimeConfig request at EnsimeActor")
 
-      val reloads = needsReload(inputs)
+      val reloads = inputs.hasEnsimeSupport && needsReload(inputs)
 
       sender ! EnsimeTaskResponse(Some(EnsimeConfigUpdate(reloads)), taskId)
 

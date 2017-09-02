@@ -20,6 +20,8 @@ object Assets {
 
 final case class SideBar(isDarkTheme: Boolean,
                          status: StatusState,
+                         inputs: Inputs,
+                         ensimeConfigurationLoading: Boolean,
                          toggleTheme: Reusable[Callback],
                          view: StateSnapshot[View],
                          openHelpModal: Reusable[Callback],
@@ -60,11 +62,16 @@ object SideBar {
       )
 
     val runnersStatusButton = {
+      val ensimeLoading = 
+        !props.status.ensimeReady(props.inputs) &&
+        !props.ensimeConfigurationLoading
+
       val (statusIcon, statusClass, statusLabel) =
-        props.status.sbtRunnerCount match {
-          case None    => ("fa-times-circle", "status-unknown", "Unknown")
-          case Some(0) => ("fa-times-circle", "status-down", "Down")
-          case Some(_) => ("fa-check-circle", "status-up", "Up")
+        (props.status.sbtRunnerCount, ensimeLoading) match {
+          case (None, _) => ("fa-times-circle", "status-unknown", "Unknown")
+          case (Some(0), _) => ("fa-times-circle", "status-down", "Down")
+          case (Some(_), true) => ("fa-circle-o-notch fa-spin", "status-up", "Loading")
+          case (Some(_), false) => ("fa-check-circle", "status-up", "Up")
         }
 
       li(onClick --> props.view.setState(View.Status),
