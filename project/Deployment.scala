@@ -173,6 +173,8 @@ class Deployment(rootFolder: File,
     val ensimeDockerNamespace = ensimeDockerImage.namespace.get
     val ensimeDockerRepository = ensimeDockerImage.repository
 
+    killRunners()
+
     deployRunners(
       "sbt",
       s"$sbtDockerNamespace/$sbtDockerRepository",
@@ -187,6 +189,47 @@ class Deployment(rootFolder: File,
       ensimeRunnersPortsSize
     )
   }
+
+  def killRunners(): Unit = {
+  // |# kill all docker instances
+  // |
+
+    val killScriptDir = Files.createTempDirectory("kill")
+    val killScript = killScriptDir.resolve("kill.sh")
+
+    logger.info(s"Generate kill script")
+
+    
+    val killScriptContent =
+      s"""|#!/usr/bin/env bash
+          |
+          |docker kill $$(docker ps -q)
+          |""".stripMargin
+
+    Files.write(killScript, killScriptContent.getBytes)
+    Files.setPosixFilePermissions(killScript, executablePermissions)
+    val scriptFileName = killScript.getFileName
+
+    val runnerUri = userName + "@" + runnersHostname
+    val serverUri = userName + "@" + serverHostname
+
+    val proxyScript = killScriptDir.resolve("kill-proxy.sh")
+    val proxyScriptFileName = proxyScript.getFileName
+
+    val proxyScriptContent =
+      s"""|rm kill-proxy.sh
+          |rsync $scriptFileName $runnerUri:$scriptFileName
+          |ssh $runnerUri ./$scriptFileName
+          |rm $scriptFileName""".stripMargin
+
+    Files.write(proxyScript, proxyScriptContent.getBytes)
+    Files.setPosixFilePermissions(proxyScript, executablePermissions)
+
+    rsyncServer(killScript)
+    rsyncServer(proxyScript)
+    Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
+  }
+
 
   def deployRunners(
     runner: String,
@@ -210,8 +253,6 @@ class Deployment(rootFolder: File,
           |
           |whoami
           |
-          |# kill all docker instances
-          |docker kill $$(docker ps -q)
           |
           |docker rmi -f $dockerImagePath
           |
