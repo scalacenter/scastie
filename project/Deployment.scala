@@ -194,7 +194,7 @@ class Deployment(rootFolder: File,
 
     val runnersPortsEnd = runnersPortsStart + runnersPortsSize
 
-    val dockerImagePath = s"$$image:$gitHashNow"
+    val dockerImagePath = s"$image:$gitHashNow"
 
     val sentryDsn = getSentryDsn(getSecretConfig())
 
