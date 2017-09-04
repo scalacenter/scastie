@@ -565,6 +565,8 @@ class EnsimeRunner(system: ActorSystem,
         sendToEnsime(rpcRequestFun(code, pos), sender, Some(taskId))
       }
     } else {
+      sender ! EnsimeTaskResponse(None, taskId)
+      
       log.info(
         s"Not ready to process request $taskId; currently: $serverState"
       )
