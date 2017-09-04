@@ -90,10 +90,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private val sbtPorts = (0 until sbtPortsSize).map(sbtPortsStart + _)
   private val ensimePorts = (0 until ensimePortsSize).map(ensimePortsStart + _)
 
-  private def connectRunner(runnerName: String, actorName: String)(
-      host: String
-  )(port: Int): ((String, Int), ActorSelection) = {
-
+  private def connectRunner(runnerName: String, actorName: String,host: String)(port: Int): ((String, Int), ActorSelection) = {
     val selection =
       context.actorSelection(
         s"akka.tcp://$runnerName@$host:$port/user/$actorName"
@@ -105,10 +102,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   private var remoteSbtSelections =
-    sbtPorts.map(connectRunner("SbtRunner", "SbtActor")(host)).toMap
+    sbtPorts.map(connectRunner("SbtRunner", "SbtActor", host)).toMap
 
   private var remoteEnsimeSelections = ensimePorts
-    .map(connectRunner("EnsimeRunner", "EnsimeActor")(host))
+    .map(connectRunner("EnsimeRunner", "EnsimeActor", host))
     .toMap
 
   val emptyHistory = History(Queue.empty[Record[Inputs]], size = 100)
@@ -398,7 +395,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case EnsimeRunnerConnect(runnerHostname, runnerAkkaPort) => {
       log.info("Connected Ensime Runner {}", runnerAkkaPort)
-      
+
       if (!remoteEnsimeSelections.contains((runnerHostname, runnerAkkaPort))) {
         log.info("Connected Ensime Runner {}", runnerAkkaPort)
 
