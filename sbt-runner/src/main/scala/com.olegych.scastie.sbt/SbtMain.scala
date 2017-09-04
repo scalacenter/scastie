@@ -76,7 +76,7 @@ object SbtMain {
           sbtReloadTimeout = sbtReloadTimeout,
           production = isProduction,
           readyRef = None,
-          reconnectInfo = Some(reconnectInfo)
+          reconnectInfo = None
         )
       ),
       name = "SbtActor"
