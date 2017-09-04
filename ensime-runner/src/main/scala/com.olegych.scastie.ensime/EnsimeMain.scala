@@ -59,7 +59,7 @@ object EnsimeMain {
           reconnectInfo = Some(reconnectInfo)
         )
       ),
-      name = "EnsimeRunnerActor"
+      name = "EnsimeActor"
     )
 
     Await.result(system.whenTerminated, Duration.Inf)

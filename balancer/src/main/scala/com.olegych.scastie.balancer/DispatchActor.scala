@@ -244,9 +244,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
       ensimeLoadBalancer.add(task) match {
         case Some((server, newBalancer)) => {
-          val ensimeRunnerPath = server.ref.anchorPath / "user" / "EnsimeRunnerActor" / "EnsimeActor"
-          log.info(s"Add $ensimeRunnerPath -> $ip")
-
           updateEnsimeBalancer(newBalancer)
 
           implicit val timeout = Timeout(20.seconds)
@@ -378,7 +375,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         log.info("Connected Runner {}", runnerAkkaPort)
 
         val sel =
-          connectRunner("SbtRunner", "SbtActor")(runnerHostname)(runnerAkkaPort)
+          connectRunner("SbtRunner", "SbtActor", runnerHostname)(runnerAkkaPort)
         val (_, ref) = sel
 
         remoteSbtSelections = remoteSbtSelections + sel
@@ -399,9 +396,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       if (!remoteEnsimeSelections.contains((runnerHostname, runnerAkkaPort))) {
         log.info("Connected Ensime Runner {}", runnerAkkaPort)
 
-        val sel = connectRunner("EnsimeRunner", "EnsimeRunnerActor")(
-          runnerHostname
-        )(runnerAkkaPort)
+        val sel = connectRunner("EnsimeRunner", "EnsimeActor",runnerHostname)(runnerAkkaPort)
         val (_, ref) = sel
 
         remoteEnsimeSelections = remoteEnsimeSelections + sel
