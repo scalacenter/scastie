@@ -10,6 +10,7 @@ import akka.util.Timeout
 import akka.http.scaladsl.model.RemoteAddress
 
 import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.duration.DurationInt
 
 class RestApiServer(
     dispatchActor: ActorRef,
@@ -35,12 +36,13 @@ class RestApiServer(
   def autocomplete(
       request: AutoCompletionRequest
   ): Future[Option[AutoCompletionResponse]] = {
-    (dispatchActor ? wrapEnsime(request))
+    
+    dispatchActor.ask(wrapEnsime(request))(20.seconds)
       .mapTo[Option[AutoCompletionResponse]]
   }
 
   def typeAt(request: TypeAtPointRequest): Future[Option[TypeAtPointResponse]] = {
-    (dispatchActor ? wrapEnsime(request))
+    dispatchActor.ask(wrapEnsime(request))(20.seconds)
       .mapTo[Option[TypeAtPointResponse]]
   }
 
