@@ -46,6 +46,8 @@ class EnsimeRunner(system: ActorSystem,
 
   import EnsimeServerState._
 
+  private case object IndexerReady
+
   private object serverState {
     private var state: EnsimeServerState = Initializing
 
@@ -63,8 +65,11 @@ class EnsimeRunner(system: ActorSystem,
               ensimeProcess.get.isAlive
           )
         }
-        case Ready => {
+        case Indexing => {
           assert(state == Connecting && ensimeWS.isDefined)
+        }
+        case Ready => {
+          assert(state == Indexing)
         }
       }
 
@@ -138,7 +143,7 @@ class EnsimeRunner(system: ActorSystem,
             if (!serverState.isReady) {
               println("Got warm up completions")
               response.completions.take(5).foreach(println)
-              serverState(Ready)
+              serverState(Indexing)
             }
 
             reply(response)
@@ -412,6 +417,10 @@ class EnsimeRunner(system: ActorSystem,
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
+        if(line.contains("IndexerReadyEvent")) {
+          self ! IndexerReady
+        }
+
         if (!line.contains("ConnectionInfo") &&
             !line.contains("INFO") &&
             !line.contains("DEBUG")) {
@@ -515,6 +524,10 @@ class EnsimeRunner(system: ActorSystem,
       if (reloads) {
         restartEnsimeServer(inputs)
       }
+    }
+
+    case IndexerReady => {
+      serverState(Ready)
     }
 
     case Heartbeat => {

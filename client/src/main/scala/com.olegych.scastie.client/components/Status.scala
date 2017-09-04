@@ -79,6 +79,7 @@ object Status {
           case Initializing   => "Initializing"
           case CreatingConfig => "Generating .ensime configuration file"
           case Connecting     => "Connecting to ensime server"
+          case Indexing       => "Indexing"
           case Ready          => "Connected"
         }
 
@@ -88,6 +89,7 @@ object Status {
           case Initializing   => "initializing"
           case CreatingConfig => "creating-config"
           case Connecting     => "connecting"
+          case Indexing       => "indexing"
           case Ready          => "ready"
         }
 

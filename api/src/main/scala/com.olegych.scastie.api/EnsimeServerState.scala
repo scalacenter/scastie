@@ -7,15 +7,23 @@ object EnsimeServerState {
   case object Unknown extends EnsimeServerState {
     override def toString: String = "Unknown"
   }
+
   case object Initializing extends EnsimeServerState {
     override def toString: String = "Initializing"
   }
+
   case object CreatingConfig extends EnsimeServerState {
     override def toString: String = "CreatingConfig"
   }
+
   case object Connecting extends EnsimeServerState {
     override def toString: String = "Connecting"
   }
+
+  case object Indexing extends EnsimeServerState {
+    override def toString: String = "Indexing"
+  }
+
   case object Ready extends EnsimeServerState {
     override def toString: String = "Ready"
   }
@@ -31,6 +39,7 @@ object EnsimeServerState {
         Initializing,
         CreatingConfig,
         Connecting,
+        Indexing,
         Ready
       ).map(v => (v.toString, v)).toMap
 
