@@ -173,11 +173,20 @@ class Deployment(rootFolder: File,
     val ensimeDockerNamespace = ensimeDockerImage.namespace.get
     val ensimeDockerRepository = ensimeDockerImage.repository
 
-    deployRunners(s"$sbtDockerNamespace/$sbtDockerRepository")
-    deployRunners(s"$ensimeDockerNamespace/$ensimeDockerRepository")
+    deployRunners(
+      s"$sbtDockerNamespace/$sbtDockerRepository",
+      sbtRunnersPortsStart,
+      sbtRunnersPortsSize
+    )
+
+    deployRunners(
+      s"$ensimeDockerNamespace/$ensimeDockerRepository",
+      ensimeRunnersPortsStart,
+      ensimeRunnersPortsSize
+    )
   }
 
-  def deployRunners(image: String): Unit = {
+  def deployRunners(image: String, runnersPortsStart: Int, runnersPortsSize: Int): Unit = {
     val sbtScriptDir = Files.createTempDirectory("sbt")
     val sbtScript = sbtScriptDir.resolve("sbt.sh")
 
@@ -279,8 +288,12 @@ class Deployment(rootFolder: File,
   private val serverAkkaPort = serverConfig.getInt("akka-port")
 
   private val runnersHostname = balancerConfig.getString("remote-hostname")
-  private val runnersPortsStart = balancerConfig.getInt("remote-ports-start")
-  private val runnersPortsSize = balancerConfig.getInt("remote-ports-size")
+
+  private val sbtRunnersPortsStart = balancerConfig.getInt("remote-sbt-ports-start")
+  private val sbtRunnersPortsSize = balancerConfig.getInt("remote-sbt-ports-size")
+
+  private val ensimeRunnersPortsStart = balancerConfig.getInt("remote-ensime-ports-start")
+  private val ensimeRunnersPortsSize = balancerConfig.getInt("remote-ensime-ports-size")
 
   private val executablePermissions =
     PosixFilePermissions.fromString("rwxr-xr-x")
