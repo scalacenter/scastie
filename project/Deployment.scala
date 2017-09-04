@@ -191,9 +191,6 @@ class Deployment(rootFolder: File,
   }
 
   def killRunners(): Unit = {
-  // |# kill all docker instances
-  // |
-
     val killScriptDir = Files.createTempDirectory("kill")
     val killScript = killScriptDir.resolve("kill.sh")
 
@@ -201,9 +198,15 @@ class Deployment(rootFolder: File,
 
     
     val killScriptContent =
-      s"""|#!/usr/bin/env bash
+       """|#!/usr/bin/env bash
           |
-          |docker kill $$(docker ps -q)
+          |# Delete all containers
+          |docker rm $(docker ps -a -q)
+          |
+          |# Delete all images
+          |docker rmi $(docker images -q)
+          |
+          |docker kill $(docker ps -q)
           |""".stripMargin
 
     Files.write(killScript, killScriptContent.getBytes)

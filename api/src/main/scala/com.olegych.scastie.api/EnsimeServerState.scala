@@ -4,6 +4,9 @@ import play.api.libs.json._
 
 sealed trait EnsimeServerState
 object EnsimeServerState {
+  case object Unknown extends EnsimeServerState {
+    override def toString: String = "Unknown"
+  }
   case object Initializing extends EnsimeServerState {
     override def toString: String = "Initializing"
   }
@@ -24,6 +27,7 @@ object EnsimeServerState {
 
     private val values =
       List(
+        Unknown,
         Initializing,
         CreatingConfig,
         Connecting,

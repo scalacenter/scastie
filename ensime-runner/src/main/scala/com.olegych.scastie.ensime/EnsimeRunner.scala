@@ -53,6 +53,7 @@ class EnsimeRunner(system: ActorSystem,
       println(s"--- $that ---")
 
       that match {
+        case Unknown => ()
         case Initializing   => ()
         case CreatingConfig => ()
         case Connecting => {

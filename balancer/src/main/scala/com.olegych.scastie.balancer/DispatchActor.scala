@@ -108,7 +108,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     sbtPorts.map(connectRunner("SbtRunner", "SbtActor")(host)).toMap
 
   private var remoteEnsimeSelections = ensimePorts
-    .map(connectRunner("EnsimeRunner", "EnsimeRunnerActor")(host))
+    .map(connectRunner("EnsimeRunner", "EnsimeActor")(host))
     .toMap
 
   val emptyHistory = History(Queue.empty[Record[Inputs]], size = 100)
@@ -139,7 +139,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private var ensimeLoadBalancer: EnsimeBalancer = {
     val ensimeServers = remoteEnsimeSelections.to[Vector].map {
       case (_, ref) => {
-        val state: EnsimeServerState = EnsimeServerState.Initializing
+        val state: EnsimeServerState = EnsimeServerState.Unknown
         Server.of[EnsimeTaskId](
           ref,
           Inputs.default,
