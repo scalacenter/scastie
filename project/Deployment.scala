@@ -244,7 +244,7 @@ class Deployment(rootFolder: File,
     val proxyScriptFileName = proxyScript.getFileName
 
     val proxyScriptContent =
-      s"""|rm proxy*.sh
+      s"""|rm ${runner}-proxy.sh
           |rsync $scriptFileName $runnerUri:$scriptFileName
           |ssh $runnerUri ./$scriptFileName
           |rm $scriptFileName""".stripMargin
