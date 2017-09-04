@@ -27,7 +27,7 @@ class ApiRoutes(
 
   import system.dispatcher
   import userDirectives.optionalLogin
-  
+
   import play.api.libs.json._
   implicit val readsInputs = Json.reads[Inputs]
 

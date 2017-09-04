@@ -55,7 +55,7 @@ class EnsimeRunner(system: ActorSystem,
       println(s"--- $that ---")
 
       that match {
-        case Unknown => ()
+        case Unknown        => ()
         case Initializing   => ()
         case CreatingConfig => ()
         case Connecting => {
@@ -417,7 +417,7 @@ class EnsimeRunner(system: ActorSystem,
       val is = new BufferedReader(new InputStreamReader(inputStream))
       var line = is.readLine()
       while (line != null) {
-        if(line.contains("IndexerReadyEvent")) {
+        if (line.contains("IndexerReadyEvent")) {
           self ! IndexerReady
         }
 
@@ -566,7 +566,7 @@ class EnsimeRunner(system: ActorSystem,
       }
     } else {
       sender ! EnsimeTaskResponse(None, taskId)
-      
+
       log.info(
         s"Not ready to process request $taskId; currently: $serverState"
       )

@@ -194,18 +194,17 @@ class Deployment(rootFolder: File,
 
     logger.info(s"Generate kill script")
 
-    
     val killScriptContent =
-       """|#!/usr/bin/env bash
-          |
-          |# Delete all containers
-          |docker rm $(docker ps -a -q)
-          |
-          |# Delete all images
-          |docker rmi $(docker images -q)
-          |
-          |docker kill $(docker ps -q)
-          |""".stripMargin
+      """|#!/usr/bin/env bash
+         |
+         |# Delete all containers
+         |docker rm $(docker ps -a -q)
+         |
+         |# Delete all images
+         |docker rmi $(docker images -q)
+         |
+         |docker kill $(docker ps -q)
+         |""".stripMargin
 
     Files.write(killScript, killScriptContent.getBytes)
     Files.setPosixFilePermissions(killScript, executablePermissions)
@@ -231,12 +230,10 @@ class Deployment(rootFolder: File,
     Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
   }
 
-
-  def deployRunners(
-    runner: String,
-    image: String,
-    runnersPortsStart: Int,
-    runnersPortsSize: Int): Unit = {
+  def deployRunners(runner: String,
+                    image: String,
+                    runnersPortsStart: Int,
+                    runnersPortsSize: Int): Unit = {
 
     val runnerScriptDir = Files.createTempDirectory(runner)
     val runnerScript = runnerScriptDir.resolve(runner + ".sh")
@@ -338,11 +335,15 @@ class Deployment(rootFolder: File,
 
   private val runnersHostname = balancerConfig.getString("remote-hostname")
 
-  private val sbtRunnersPortsStart = balancerConfig.getInt("remote-sbt-ports-start")
-  private val sbtRunnersPortsSize = balancerConfig.getInt("remote-sbt-ports-size")
+  private val sbtRunnersPortsStart =
+    balancerConfig.getInt("remote-sbt-ports-start")
+  private val sbtRunnersPortsSize =
+    balancerConfig.getInt("remote-sbt-ports-size")
 
-  private val ensimeRunnersPortsStart = balancerConfig.getInt("remote-ensime-ports-start")
-  private val ensimeRunnersPortsSize = balancerConfig.getInt("remote-ensime-ports-size")
+  private val ensimeRunnersPortsStart =
+    balancerConfig.getInt("remote-ensime-ports-start")
+  private val ensimeRunnersPortsSize =
+    balancerConfig.getInt("remote-ensime-ports-size")
 
   private val executablePermissions =
     PosixFilePermissions.fromString("rwxr-xr-x")

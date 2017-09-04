@@ -39,7 +39,9 @@ class EnsimeActor(system: ActorSystem,
           s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
         )
 
-        println(s"Try connect: akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor")
+        println(
+          s"Try connect: akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
+        )
 
         dispatchActor = Some(sel)
 
