@@ -245,7 +245,7 @@ class Deployment(rootFolder: File,
 
     logger.info(s"Generate $runner script")
 
-    val runnersPortsEnd = runnersPortsStart + runnersPortsSize
+    val runnersPortsEnd = runnersPortsStart + (runnersPortsSize - 1)
 
     val dockerImagePath = s"$image:$gitHashNow"
 
