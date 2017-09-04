@@ -174,23 +174,30 @@ class Deployment(rootFolder: File,
     val ensimeDockerRepository = ensimeDockerImage.repository
 
     deployRunners(
+      "sbt",
       s"$sbtDockerNamespace/$sbtDockerRepository",
       sbtRunnersPortsStart,
       sbtRunnersPortsSize
     )
 
     deployRunners(
+      "ensime",
       s"$ensimeDockerNamespace/$ensimeDockerRepository",
       ensimeRunnersPortsStart,
       ensimeRunnersPortsSize
     )
   }
 
-  def deployRunners(image: String, runnersPortsStart: Int, runnersPortsSize: Int): Unit = {
-    val sbtScriptDir = Files.createTempDirectory("sbt")
-    val sbtScript = sbtScriptDir.resolve("sbt.sh")
+  def deployRunners(
+    runner: String,
+    image: String,
+    runnersPortsStart: Int,
+    runnersPortsSize: Int): Unit = {
 
-    logger.info("Generate sbt script")
+    val runnerScriptDir = Files.createTempDirectory(runner)
+    val runnerScript = runnerScriptDir.resolve(runner + ".sh")
+
+    logger.info(s"Generate $runner script")
 
     val runnersPortsEnd = runnersPortsStart + runnersPortsSize
 
@@ -198,7 +205,7 @@ class Deployment(rootFolder: File,
 
     val sentryDsn = getSentryDsn(getSecretConfig())
 
-    val sbtScriptContent =
+    val runnerScriptContent =
       s"""|#!/usr/bin/env bash
           |
           |whoami
@@ -226,14 +233,14 @@ class Deployment(rootFolder: File,
           |done
           |""".stripMargin
 
-    Files.write(sbtScript, sbtScriptContent.getBytes)
-    Files.setPosixFilePermissions(sbtScript, executablePermissions)
-    val scriptFileName = sbtScript.getFileName
+    Files.write(runnerScript, runnerScriptContent.getBytes)
+    Files.setPosixFilePermissions(runnerScript, executablePermissions)
+    val scriptFileName = runnerScript.getFileName
 
     val runnerUri = userName + "@" + runnersHostname
     val serverUri = userName + "@" + serverHostname
 
-    val proxyScript = sbtScriptDir.resolve("proxy.sh")
+    val proxyScript = runnerScriptDir.resolve(runner + "-proxy.sh")
     val proxyScriptFileName = proxyScript.getFileName
 
     val proxyScriptContent =
@@ -245,7 +252,7 @@ class Deployment(rootFolder: File,
     Files.write(proxyScript, proxyScriptContent.getBytes)
     Files.setPosixFilePermissions(proxyScript, executablePermissions)
 
-    rsyncServer(sbtScript)
+    rsyncServer(runnerScript)
     rsyncServer(proxyScript)
     Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
   }
