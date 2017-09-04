@@ -397,6 +397,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     }
 
     case EnsimeRunnerConnect(runnerHostname, runnerAkkaPort) => {
+      log.info("Connected Ensime Runner {}", runnerAkkaPort)
+      
       if (!remoteEnsimeSelections.contains((runnerHostname, runnerAkkaPort))) {
         log.info("Connected Ensime Runner {}", runnerAkkaPort)
 

@@ -39,6 +39,8 @@ class EnsimeActor(system: ActorSystem,
           s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
         )
 
+        println("Connect DispatchActor")
+
         dispatchActor = Some(sel)
 
         sel ! EnsimeRunnerConnect(actorHostname, actorAkkaPort)
