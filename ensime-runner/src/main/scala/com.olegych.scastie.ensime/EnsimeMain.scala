@@ -56,7 +56,7 @@ object EnsimeMain {
         new EnsimeActor(
           system = system,
           sbtReloadTimeout = sbtReloadTimeout,
-          reconnectInfo = None
+          reconnectInfo = Some(reconnectInfo)
         )
       ),
       name = "EnsimeRunnerActor"
