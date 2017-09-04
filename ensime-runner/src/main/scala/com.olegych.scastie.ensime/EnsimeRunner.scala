@@ -535,7 +535,7 @@ class EnsimeRunner(system: ActorSystem,
     }
 
     case x => {
-      log.debug(s"Got $x at EnsimeActor")
+      log.info(s"Got $x at EnsimeActor")
     }
   }
 
