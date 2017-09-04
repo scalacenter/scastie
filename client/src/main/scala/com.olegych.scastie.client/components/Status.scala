@@ -75,6 +75,7 @@ object Status {
 
       val label =
         state match {
+          case Unknown        => "Unknown"
           case Initializing   => "Initializing"
           case CreatingConfig => "Generating .ensime configuration file"
           case Connecting     => "Connecting to ensime server"
@@ -83,6 +84,7 @@ object Status {
 
       val stateCss =
         state match {
+          case Unknown        => "unknown"
           case Initializing   => "initializing"
           case CreatingConfig => "creating-config"
           case Connecting     => "connecting"

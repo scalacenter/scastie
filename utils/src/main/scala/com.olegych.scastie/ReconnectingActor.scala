@@ -50,6 +50,8 @@ trait ActorReconnecting extends Actor with ActorLogging {
       onConnected()
 
     case ev: DisassociatedEvent => {
+      println("DisassociatedEvent " + ev)
+
       val isServerHostname =
         reconnectInfo
           .map(info => ev.remoteAddress.host.contains(info.serverHostname))
