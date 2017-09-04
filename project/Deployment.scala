@@ -42,7 +42,6 @@ object Deployment {
       val serverZip = (packageBin in (server, Universal)).value.toPath
 
       deployment.deployServer(serverZip)
-      deployment.deployRunners()
     }
 
   def deployTask(server: Project,
@@ -81,7 +80,6 @@ object Deployment {
         "deployServerQuick will not create the server zip"
       )
       deployment.deployServer(serverZip)
-      deployment.deployRunners()
     }
 
   private def deploymentTask(
