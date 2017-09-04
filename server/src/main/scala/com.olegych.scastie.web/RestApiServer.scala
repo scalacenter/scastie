@@ -16,8 +16,9 @@ class RestApiServer(
     dispatchActor: ActorRef,
     ip: RemoteAddress,
     maybeUser: Option[User]
-)(implicit timeout: Timeout, executionContext: ExecutionContext)
-    extends RestApi {
+)(implicit executionContext: ExecutionContext) extends RestApi {
+
+  implicit val timeout = Timeout(20.seconds)
 
   private def wrap(inputs: Inputs): InputsWithIpAndUser =
     InputsWithIpAndUser(inputs, UserTrace(ip.toString, maybeUser))
@@ -26,41 +27,45 @@ class RestApiServer(
     EnsimeRequestEnvelop(request, UserTrace(ip.toString, maybeUser))
 
   def run(inputs: Inputs): Future[SnippetId] = {
-    (dispatchActor ? RunSnippet(wrap(inputs))).mapTo[SnippetId]
+    dispatchActor.ask(RunSnippet(wrap(inputs)))
+      .mapTo[SnippetId]
   }
 
   def format(formatRequest: FormatRequest): Future[FormatResponse] = {
-    (dispatchActor ? formatRequest).mapTo[FormatResponse]
+    dispatchActor.ask(formatRequest)
+      .mapTo[FormatResponse]
   }
 
   def autocomplete(
       request: AutoCompletionRequest
   ): Future[Option[AutoCompletionResponse]] = {
     
-    dispatchActor.ask(wrapEnsime(request))(20.seconds)
+    dispatchActor.ask(wrapEnsime(request))
       .mapTo[Option[AutoCompletionResponse]]
   }
 
   def typeAt(request: TypeAtPointRequest): Future[Option[TypeAtPointResponse]] = {
-    dispatchActor.ask(wrapEnsime(request))(20.seconds)
+    dispatchActor.ask(wrapEnsime(request))
       .mapTo[Option[TypeAtPointResponse]]
   }
 
   def updateEnsimeConfig(
       updateEnsimeConfigRequest: UpdateEnsimeConfigRequest
   ): Future[Option[EnsimeConfigUpdate]] = {
-    (dispatchActor ? wrapEnsime(updateEnsimeConfigRequest))
+    dispatchActor.ask(wrapEnsime(updateEnsimeConfigRequest))
       .mapTo[Option[EnsimeConfigUpdate]]
   }
 
   def save(inputs: Inputs): Future[SnippetId] = {
-    (dispatchActor ? SaveSnippet(wrap(inputs))).mapTo[SnippetId]
+    dispatchActor.ask(SaveSnippet(wrap(inputs)))
+      .mapTo[SnippetId]
   }
 
   def amend(editInputs: EditInputs): Future[Boolean] = {
     import editInputs._
     if (snippetId.isOwnedBy(maybeUser)) {
-      (dispatchActor ? AmendSnippet(snippetId, wrap(inputs))).mapTo[Boolean]
+      dispatchActor.ask(AmendSnippet(snippetId, wrap(inputs)))
+        .mapTo[Boolean]
     } else {
       Future.successful(false)
     }
@@ -69,7 +74,7 @@ class RestApiServer(
   def update(editInputs: EditInputs): Future[Option[SnippetId]] = {
     import editInputs._
     if (snippetId.isOwnedBy(maybeUser)) {
-      (dispatchActor ? UpdateSnippet(snippetId, wrap(inputs)))
+      dispatchActor.ask(UpdateSnippet(snippetId, wrap(inputs)))
         .mapTo[Option[SnippetId]]
     } else {
       Future.successful(None)
@@ -78,7 +83,8 @@ class RestApiServer(
 
   def delete(snippetId: SnippetId): Future[Boolean] = {
     if (snippetId.isOwnedBy(maybeUser)) {
-      (dispatchActor ? DeleteSnippet(snippetId)).mapTo[Unit].map(_ => true)
+      dispatchActor.ask(DeleteSnippet(snippetId))
+        .mapTo[Unit].map(_ => true)
     } else {
       Future.successful(false)
     }
@@ -86,25 +92,29 @@ class RestApiServer(
 
   def fork(editInputs: EditInputs): Future[Option[SnippetId]] = {
     import editInputs._
-    (dispatchActor ? ForkSnippet(snippetId, wrap(inputs)))
+    dispatchActor.ask(ForkSnippet(snippetId, wrap(inputs)))
       .mapTo[Option[SnippetId]]
   }
 
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]] = {
-    (dispatchActor ? FetchSnippet(snippetId)).mapTo[Option[FetchResult]]
+    dispatchActor.ask(FetchSnippet(snippetId))
+      .mapTo[Option[FetchResult]]
   }
 
   def fetchOld(id: Int): Future[Option[FetchResult]] = {
-    (dispatchActor ? FetchOldSnippet(id)).mapTo[Option[FetchResult]]
+    dispatchActor.ask(FetchOldSnippet(id))
+      .mapTo[Option[FetchResult]]
   }
 
-  def fetchUser(): Future[Option[User]] =
+  def fetchUser(): Future[Option[User]] = {
     Future.successful(maybeUser)
+  }
 
   def fetchUserSnippets(): Future[List[SnippetSummary]] = {
     maybeUser match {
       case Some(user) =>
-        (dispatchActor ? FetchUserSnippets(user)).mapTo[List[SnippetSummary]]
+        dispatchActor.ask(FetchUserSnippets(user))
+          .mapTo[List[SnippetSummary]]
       case _ => Future.successful(Nil)
     }
   }

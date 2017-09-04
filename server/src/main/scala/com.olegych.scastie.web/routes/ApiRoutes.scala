@@ -27,8 +27,7 @@ class ApiRoutes(
 
   import system.dispatcher
   import userDirectives.optionalLogin
-  implicit val timeout = Timeout(5.seconds)
-
+  
   import play.api.libs.json._
   implicit val readsInputs = Json.reads[Inputs]
 
