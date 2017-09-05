@@ -18,18 +18,20 @@ Raven.config('https://0b9ff62cbc2344369cab867af776ae07@sentry.io/171717').instal
 Main.main();
 
 module.exports = {
-  olegych: {
-    scastie: {
-      client: {
-        ClientMain: {
-          signal: function(a, b) {
-            return Main.signal(a, b);
-          },
-          error: function(e){
-            return Main.error(e);
-          },
-          embedded: function(s, o) {
-            return Main.embedded(s, o);
+  com: {
+    olegych: {
+      scastie: {
+        client: {
+          ClientMain: {
+            signal: function(a, b) {
+              return Main.signal(a, b);
+            },
+            error: function(e){
+              return Main.error(e);
+            },
+            embedded: function(s, o) {
+              return Main.embedded(s, o);
+            }
           }
         }
       }
