@@ -30,5 +30,6 @@ final case class StatusState(sbtRunners: Option[Vector[SbtRunnerState]],
   }
 
   def sbtRunnerCount: Option[Int] = sbtRunners.map(_.size)
+  def ensimeRunnersCount: Option[Int] = ensimeRunners.map(_.size)
   def isSbtOk: Boolean = sbtRunners.exists(_.nonEmpty)
 }

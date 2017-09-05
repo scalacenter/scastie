@@ -64,7 +64,8 @@ object SideBar {
     val runnersStatusButton = {
       val ensimeLoading =
         !props.status.ensimeReady(props.inputs) &&
-          !props.ensimeConfigurationLoading
+          !props.ensimeConfigurationLoading &&
+          props.status.ensimeRunnersCount.map(_ > 0).getOrElse(false)
 
       val (statusIcon, statusClass, statusLabel) =
         (props.status.sbtRunnerCount, ensimeLoading) match {
