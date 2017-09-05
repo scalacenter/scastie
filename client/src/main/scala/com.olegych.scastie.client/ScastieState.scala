@@ -36,7 +36,7 @@ object ScastieState {
       isDarkTheme = false,
       isDesktopForced = false,
       isPresentationMode = false,
-      showLineNumbers = false,
+      showLineNumbers = true,
       consoleState = ConsoleState.default,
       inputsHasChanged = false,
       ensimeConfigurationLoading = false,

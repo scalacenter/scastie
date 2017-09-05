@@ -27,6 +27,10 @@ object BraceFold extends js.Object
 @js.native
 object FoldCode extends js.Object
 
+@JSImport("codemirror/addon/fold/foldgutter", JSImport.Namespace)
+@js.native
+object FoldGutter extends js.Object
+
 @JSImport("codemirror/addon/search/search", JSImport.Namespace)
 @js.native
 object Search extends js.Object

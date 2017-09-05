@@ -40,7 +40,7 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
         url = apiBase + "/api" + url,
         headers = Map("Accept" -> "application/json")
       )
-      .map(ret => tryParse[T](ret))
+      .map(tryParse[T] _)
   }
 
   class Post[O: Reads]() {
@@ -56,7 +56,7 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
             "Accept" -> "application/json"
           )
         )
-        .map(ret => tryParse[O](ret))
+        .map(tryParse[O] _)
     }
   }
 
@@ -102,6 +102,7 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
         snippetId = tryParse[SnippetId](req)
       }
     }
+
     req.send(Json.prettyPrint(Json.toJson(inputs)))
 
     snippetId

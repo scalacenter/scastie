@@ -150,7 +150,6 @@ case class EmbeddedOptions(snippetId: Option[SnippetId],
                            inputs: Option[Inputs],
                            serverUrl: Option[String]) {
 
-  def hasCode: Boolean = inputs.map(!_.code.isEmpty).getOrElse(false)
   def setCode(code: String): EmbeddedOptions = {
     val inputs0 = inputs.getOrElse(Inputs.default)
     copy(inputs = Some(inputs0.copy(code = code)))

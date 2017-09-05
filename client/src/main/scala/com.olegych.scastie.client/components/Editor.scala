@@ -100,6 +100,7 @@ object Editor {
   codemirror.MatchBrackets
   codemirror.BraceFold
   codemirror.FoldCode
+  codemirror.FoldGutter
   codemirror.Search
   codemirror.SearchCursor
   codemirror.HardWrap
@@ -292,7 +293,8 @@ object Editor {
           "mode" -> "text/x-scala",
           "autofocus" -> !props.isEmbedded,
           "lineNumbers" -> props.showLineNumbers,
-          "gutters" -> js.Array("CodeMirror-linenumbers"),
+          "foldGutter" -> true,
+          "gutters" -> js.Array("CodeMirror-linenumbers", "CodeMirror-foldgutter"),
           "lineWrapping" -> false,
           "tabSize" -> 2,
           "indentWithTabs" -> false,
@@ -525,8 +527,25 @@ object Editor {
     val nl = '\n'
     val modeScala = "text/x-scala"
 
+
     def setRenderAnnotations() = {
       val doc = editor.getDoc()
+      def fold(startPos: CMPosition,
+               endPos: CMPosition,
+               content: String,
+               process: (HTMLElement => Unit)): Annotation = {
+        val node =
+          dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+        node.className = "fold"
+        node.innerHTML = content
+        process(node)
+        Marked(
+          doc.markText(startPos,
+                       endPos,
+                       js.Dictionary[Any]("replacedWith" -> node)
+                         .asInstanceOf[TextMarkerOptions])
+        )
+      }
       def nextline2(endPos: CMPosition,
                     node: HTMLElement,
                     process: (HTMLElement => Unit),
@@ -547,22 +566,6 @@ object Editor {
         nextline2(endPos, node, process, options)
       }
 
-      def fold(startPos: CMPosition,
-               endPos: CMPosition,
-               content: String,
-               process: (HTMLElement => Unit)): Annotation = {
-        val node =
-          dom.document.createElement("div").asInstanceOf[HTMLDivElement]
-        node.className = "fold"
-        node.innerHTML = content
-        process(node)
-        Marked(
-          doc.markText(startPos,
-                       endPos,
-                       js.Dictionary[Any]("replacedWith" -> node)
-                         .asInstanceOf[TextMarkerOptions])
-        )
-      }
       def inline(startPos: CMPosition,
                  content: String,
                  process: (HTMLElement => Unit)): Annotation = {
@@ -745,20 +748,24 @@ object Editor {
         ) => EditorState => EditorState
     ): Callback = {
 
-      val added = fromState(next) -- current.map(fromState).getOrElse(Set())
-      val toAdd = CallbackTo
-        .sequence(added.map(item => CallbackTo((item, annotate(item)))))
-        .map(_.toMap)
+      val currentAnnotations = current.map(fromState).getOrElse(Set())
 
-      val removed = current.map(fromState).getOrElse(Set()) -- fromState(next)
-      val toRemove = CallbackTo.sequence(
-        fromEditorState(state)
-          .filterKeys(removed.contains)
-          .map {
-            case (item, annot) => CallbackTo({ annot.clear(); item })
-          }
-          .toList
-      )
+      val added = fromState(next) -- currentAnnotations
+      val toAdd = 
+        CallbackTo
+          .sequence(added.map(item => CallbackTo((item, annotate(item)))))
+          .map(_.toMap)
+
+      val removed = currentAnnotations -- fromState(next)
+      val toRemove = 
+        CallbackTo.sequence(
+          fromEditorState(state)
+            .filterKeys(removed.contains)
+            .map {
+              case (item, annot) => CallbackTo({ annot.clear(); item })
+            }
+            .toList
+        )
 
       for {
         added <- toAdd
@@ -892,6 +899,12 @@ object Editor {
       }
     }
 
+    def codeFolding(): Unit = {
+      if (current.map(_.code != next.code).getOrElse(true)) {
+
+      }
+    }
+
     def refresh(): Unit = {
       val shouldRefresh =
         current.map(c => !editorShouldRefresh.test(c, next)).getOrElse(true)
@@ -909,6 +922,7 @@ object Editor {
       setRuntimeError >>
       Callback(setCompletions()) >>
       Callback(setTypeAt()) >>
+      Callback(codeFolding())
       Callback(refresh())
   }
 

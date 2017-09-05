@@ -1,31 +1,36 @@
-package com.olegych.scastie
-package client
+package com.olegych.scastie.client
 
-import components.Scastie
+import com.olegych.scastie.api._
+import com.olegych.scastie.client.components.Scastie
 
 import scala.scalajs.js
+import scala.collection.mutable.{Map => MMap}
+import scala.util.{Try, Failure, Success}
 
 import org.scalajs.dom.raw.HTMLElement
 
-import api._
 import japgolly.scalajs.react._
 
 import play.api.libs.json.Json
 
-// XXX: This should not be global
+import java.util.UUID
+
 object Global {
   type Scope = BackendScope[Scastie, ScastieState]
 
-  private var scope0: Option[Scope] = _
+  private val scopes: MMap[UUID, Scope] = MMap()
 
-  def subscribe(scope: Scope): Unit = {
-    scope0 = Some(scope)
+  def subscribe(scope: Scope, id: UUID): Unit = {
+    scopes(id) = scope
   }
 
-  def error(er: js.Error): Unit = {
-    scope0.foreach { scope =>
-      val direct = scope.withEffectsImpure
-      direct.modState(
+  def unsubscribe(id: UUID): Unit = {
+    scopes -= id
+  }
+
+  def error(er: js.Error, rawId: String): Unit = {
+    withScope(rawId)(
+      _.withEffectsImpure.modState(
         state =>
           state
             .copyAndSave(
@@ -41,28 +46,28 @@ object Global {
             )
             .setRunning(false)
       )
-    }
+    )
   }
 
   def signal(instrumentationsRaw: String,
-             attachedDoms: js.Array[HTMLElement]): Unit = {
-    scope0.foreach { scope =>
-      val direct = scope.withEffectsImpure
+             attachedDoms: js.Array[HTMLElement],
+             rawId: String): Unit = {
 
-      val result =
-        Json
-          .fromJson[ScalaJsResult](
-            Json.parse(instrumentationsRaw)
-          )
-          .asOpt
+    val result =
+      Json
+        .fromJson[ScalaJsResult](
+          Json.parse(instrumentationsRaw)
+        )
+        .asOpt
 
-      val (instr, runtimeError) = result.map(_.in) match {
-        case Some(Left(maybeRuntimeError)) => (Nil, maybeRuntimeError)
-        case Some(Right(instrumentations)) => (instrumentations, None)
-        case _                             => (Nil, None)
-      }
+    val (instr, runtimeError) = result.map(_.in) match {
+      case Some(Left(maybeRuntimeError)) => (Nil, maybeRuntimeError)
+      case Some(Right(instrumentations)) => (instrumentations, None)
+      case _                             => (Nil, None)
+    }
 
-      direct.modState(
+    withScope(rawId)(
+      _.withEffectsImpure.modState(
         state =>
           state
             .copyAndSave(
@@ -78,6 +83,17 @@ object Global {
               )
           )
       )
+    )
+  }
+
+  private def withScope(rawId: String)(body: Scope => Unit): Unit = {
+    Try(UUID.fromString(rawId)) match {
+      case Success(id) => {
+        scopes.get(id).foreach { scope =>
+          body(scope)
+        }
+      }
+      case Failure(e) => e.printStackTrace()
     }
   }
 }

@@ -17,13 +17,16 @@ import org.scalajs.dom.raw.HTMLScriptElement
 
 import scalajs.js.timers
 
-final case class Scastie(router: Option[RouterCtl[Page]],
+import java.util.UUID
+
+final case class Scastie(scastieId: UUID,
+                         router: Option[RouterCtl[Page]],
                          snippetId: Option[SnippetId],
                          oldSnippetId: Option[Int],
                          embedded: Option[EmbeddedOptions],
                          targetType: Option[ScalaTargetType]) {
 
-  @inline def render = Scastie.component(serverUrl)(this)
+  @inline def render = Scastie.component(serverUrl, scastieId)(this)
 
   def serverUrl: Option[String] = embedded.flatMap(_.serverUrl)
   def isEmbedded: Boolean = embedded.isDefined
@@ -32,6 +35,7 @@ final case class Scastie(router: Option[RouterCtl[Page]],
 object Scastie {
   def default(router: RouterCtl[Page]): Scastie =
     Scastie(
+      scastieId = UUID.randomUUID(),
       router = Some(router),
       snippetId = None,
       oldSnippetId = None,
@@ -89,13 +93,14 @@ object Scastie {
     )
   }
 
-  private def component(serverUrl: Option[String]) =
+  private def component(serverUrl: Option[String], scastieId: UUID) =
     ScalaComponent
       .builder[Scastie]("Scastie")
       .initialStateFromProps { props =>
-        val state = LocalStorage.load.getOrElse(
-          ScastieState.default(props.isEmbedded)
-        )
+        val state =
+          LocalStorage.load.getOrElse(
+            ScastieState.default(props.isEmbedded)
+          )
 
         props.targetType match {
           case Some(targetType) => {
@@ -111,7 +116,7 @@ object Scastie {
           case _ => state
         }
       }
-      .backend(new ScastieBackend(serverUrl, _))
+      .backend(new ScastieBackend(scastieId, serverUrl, _))
       .renderPS(render)
       .componentWillMount { current =>
         current.backend.start(current.props) >>
@@ -121,7 +126,9 @@ object Scastie {
           current.backend.closeResetModal
       }
       .componentWillUnmount { current =>
-        current.backend.disconnectStatus
+        current.backend.disconnectStatus >>
+          current.backend.unsubscribeGlobal
+
       }
       .componentDidUpdate { scope =>
         val state = scope.prevState
@@ -145,16 +152,19 @@ object Scastie {
           removeIfExist(scalaJsRunId)
           val scalaJsRunScriptElement = createScript(scalaJsRunId)
           println("== Running Scala.js ==")
-          scalaJsRunScriptElement.innerHTML =
-            """|try {
-               |  var main = new Main();
-               |  com.olegych.scastie.client.ClientMain().signal(
-               |    main.result,
-               |    main.attachedElements
-               |  );
-               |} catch (e) {
-               |  com.olegych.scastie.client.ClientMain().error(e);
-               |}""".stripMargin
+          scalaJsRunScriptElement.innerHTML = s"""|try {
+                                                  |  var main = new Main();
+                                                  |  com.olegych.scastie.client.ClientMain().signal(
+                                                  |    main.result,
+                                                  |    main.attachedElements,
+                                                  |    "$scastieId"
+                                                  |  );
+                                                  |} catch (e) {
+                                                  |  com.olegych.scastie.client.ClientMain().error(
+                                                  |    e,
+                                                  |    "$scastieId"
+                                                  |  );
+                                                  |}""".stripMargin
         }
 
         val executeScalaJs =
