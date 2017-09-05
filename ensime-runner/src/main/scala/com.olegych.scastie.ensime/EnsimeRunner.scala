@@ -59,19 +59,26 @@ class EnsimeRunner(system: ActorSystem,
         case Initializing   => ()
         case CreatingConfig => ()
         case Connecting => {
-          assert(state == CreatingConfig,
-                 s"previous state $state, should be CreatingConfig")
+          assert(
+            state == CreatingConfig,
+            s"previous state $state, should be CreatingConfig"
+          )
+
           assert(ensimeProcess.isDefined, "Ensime process not started")
           assert(ensimeProcess.get.isAlive, "Ensime process not alive")
         }
         case Indexing => {
-          assert(state == Connecting,
-                 s"previous state $state, should be Connecting")
+          assert(
+            state == Connecting,
+            s"previous state $state, should be Connecting"
+          )
           assert(ensimeWS.isDefined, "WebSocket not ready")
         }
         case Ready => {
-          assert(state == Indexing,
-                 s"previous state $state, should be Indexing")
+          assert(
+            state == Indexing || state == Connecting,
+            s"previous state $state, should be Indexing or Connecting"
+          )
         }
       }
 
