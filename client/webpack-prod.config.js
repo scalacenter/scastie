@@ -17,6 +17,7 @@ module.exports = Merge(common.webpackConfig, {
     app: Path.resolve(common.resourcesDir, './prod.js')
   },
   output: {
+    filename: '[name].[hash].js',
     path: Path.resolve(__dirname, publicFolderName),
     publicPath: '/public/'
   },

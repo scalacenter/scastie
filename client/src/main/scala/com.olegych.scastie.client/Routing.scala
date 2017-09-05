@@ -5,6 +5,8 @@ import com.olegych.scastie.client.components._
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._
 
+import java.util.UUID
+
 object Routing {
   val config: RouterConfig[Page] = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
@@ -59,16 +61,22 @@ object Routing {
       .renderWith((page, router) => layout(page, router))
   }
 
-  private def renderScastieDefault(router: RouterCtl[Page]): VdomElement =
+  private def renderScastieDefault(router: RouterCtl[Page]): VdomElement = {
+
     Scastie.default(router).render
+  }
 
   private def renderTargetTypePage(page: TargetTypePage,
-                                   router: RouterCtl[Page]): VdomElement =
+                                   router: RouterCtl[Page]): VdomElement = {
+
     Scastie.default(router).copy(targetType = Some(page.targetType)).render
+  }
 
   private def renderOldSnippetIdPage(page: OldSnippetIdPage,
-                                     router: RouterCtl[Page]): VdomElement =
+                                     router: RouterCtl[Page]): VdomElement = {
+
     Scastie.default(router).copy(oldSnippetId = Some(page.id)).render
+  }
 
   private def renderScastieDefaultEmbedded(
       router: RouterCtl[Page]
@@ -81,28 +89,40 @@ object Routing {
 
     val (embedded, snippetId) =
       page match {
-        case AnonymousResource(uuid) =>
-          (None, SnippetId(uuid, None))
+        case AnonymousResource(uuid) => {
+          val snippetId = SnippetId(uuid, None)
+          (None, snippetId)
+        }
 
-        case UserResource(login, uuid) =>
-          (None, SnippetId(uuid, Some(SnippetUserPart(login))))
+        case UserResource(login, uuid) => {
+          val snippetId = SnippetId(uuid, Some(SnippetUserPart(login)))
+          (None, snippetId)
+        }
 
-        case UserResourceUpdated(login, uuid, update) =>
-          (None, SnippetId(uuid, Some(SnippetUserPart(login, update))))
+        case UserResourceUpdated(login, uuid, update) => {
+          val snippetId = SnippetId(uuid, Some(SnippetUserPart(login, update)))
+          (None, snippetId)
+        }
 
-        case EmbeddedAnonymousResource(uuid) =>
-          (defaultEmbedded, SnippetId(uuid, None))
+        case EmbeddedAnonymousResource(uuid) => {
+          val snippetId = SnippetId(uuid, None)
+          (defaultEmbedded, snippetId)
+        }
 
-        case EmbeddedUserResource(login, uuid) =>
-          (defaultEmbedded, SnippetId(uuid, Some(SnippetUserPart(login))))
+        case EmbeddedUserResource(login, uuid) => {
+          val snippetId = SnippetId(uuid, Some(SnippetUserPart(login)))
+          (defaultEmbedded, snippetId)
+        }
 
-        case EmbeddedUserResourceUpdated(login, uuid, update) =>
-          (defaultEmbedded,
-           SnippetId(uuid, Some(SnippetUserPart(login, update))))
+        case EmbeddedUserResourceUpdated(login, uuid, update) => {
+          val snippetId = SnippetId(uuid, Some(SnippetUserPart(login, update)))
+          (defaultEmbedded, snippetId)
+        }
 
       }
 
     Scastie(
+      scastieId = UUID.randomUUID(),
       router = Some(router),
       snippetId = Some(snippetId),
       oldSnippetId = None,

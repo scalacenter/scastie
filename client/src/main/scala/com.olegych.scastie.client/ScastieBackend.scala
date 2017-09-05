@@ -15,14 +15,21 @@ import org.scalajs.dom._
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
 
-class ScastieBackend(serverUrl: Option[String],
+import java.util.UUID
+
+class ScastieBackend(scastieId: UUID,
+                     serverUrl: Option[String],
                      scope: BackendScope[Scastie, ScastieState]) {
 
   private val restApiClient =
     new RestApiClient(serverUrl)
 
   // XXX: This should not be global
-  Global.subscribe(scope)
+  Global.subscribe(scope, scastieId)
+
+  def unsubscribeGlobal: Callback = {
+    Callback(Global.subscribe(scope, scastieId))
+  }
 
   val codeChange: String ~=> Callback =
     Reusable.fn(code => scope.modState(_.setCode(code)))

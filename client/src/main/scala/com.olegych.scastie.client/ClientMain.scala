@@ -11,6 +11,8 @@ import js.annotation._
 import js.{|, UndefOr, JSApp}
 import js.annotation.JSExport
 
+import java.util.UUID
+
 import japgolly.scalajs.react._, extra.router._
 
 @JSExportTopLevel("scastie.ClientMain")
@@ -32,17 +34,16 @@ object ClientMain {
     ()
   }
 
-  // XXX: This should not be global
   @JSExport
   def signal(instrumentations: String,
-             attachedDoms: js.Array[HTMLElement]): Unit = {
-    Global.signal(instrumentations, attachedDoms)
+             attachedDoms: js.Array[HTMLElement],
+             rawId: String): Unit = {
+    Global.signal(instrumentations, attachedDoms, rawId)
   }
 
-  // XXX: This should not be global
   @JSExport
-  def error(er: js.Error): Unit = {
-    Global.error(er)
+  def error(er: js.Error, rawId: String): Unit = {
+    Global.error(er, rawId)
   }
 
   @JSExport
@@ -70,13 +71,14 @@ object ClientMain {
         container.className = "root embedded"
 
         val embeddedOptions0 =
-          if (node.textContent.isEmpty || embeddedOptions.hasCode) {
+          if (node.textContent.isEmpty) {
             embeddedOptions
           } else {
             embeddedOptions.setCode(node.textContent)
           }
 
         Scastie(
+          scastieId = UUID.randomUUID(),
           router = None,
           snippetId = None,
           oldSnippetId = None,

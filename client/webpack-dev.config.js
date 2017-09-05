@@ -10,9 +10,17 @@ const common = require('./webpack.common.js');
 
 module.exports = 
   Merge(common.webpackConfig, {
+    output: {
+      filename: '[name].js'
+    },
     entry: {
-      ep: Path.resolve(__dirname, "scalajsbundler-entry-point.js"),
-      app: Path.resolve(common.resourcesDir, './dev.js')
+      app: Path.resolve(common.resourcesDir, './dev.js'),
+      embedded: Path.resolve(common.resourcesDir, './dev-embed.js')
+    },
+    resolve: {
+      alias: {
+        "scalajsbundler-entry-point": Path.resolve(__dirname, "scalajsbundler-entry-point.js"),
+      }
     },
     module: {
       rules: [

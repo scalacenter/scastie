@@ -8,7 +8,6 @@ module.exports = {
   resourcesDir: resourcesDir,
   webpackConfig: {
     output: {
-      filename: '[name].[hash].js',
       libraryTarget: 'window'
     },
     resolve: {
