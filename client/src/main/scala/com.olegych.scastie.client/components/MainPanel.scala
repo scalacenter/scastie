@@ -69,6 +69,7 @@ object MainPanel {
         runtimeError = state.outputs.runtimeError,
         completions = state.completions,
         typeAtInfo = state.typeAtInfo,
+        codeFolds = state.codeFolds,
         run = backend.run,
         saveOrUpdate = backend.saveOrUpdate,
         clear = backend.clear,

@@ -42,6 +42,7 @@ final case class Editor(isDarkTheme: Boolean,
                         runtimeError: Option[api.RuntimeError],
                         completions: List[api.Completion],
                         typeAtInfo: Option[api.TypeInfoAt],
+                        codeFolds: Set[RangePosititon],
                         run: Reusable[Callback],
                         saveOrUpdate: Reusable[Callback],
                         clear: Reusable[Callback],
@@ -69,7 +70,8 @@ object Editor {
           Reusability.by((_: Editor).instrumentations) &&
           Reusability.by((_: Editor).compilationInfos) &&
           Reusability.by((_: Editor).runtimeError) &&
-          Reusability.by((_: Editor).completions)
+          Reusability.by((_: Editor).completions) &&
+          Reusability.by((_: Editor).codeFolds)
       )
 
   implicit val reusability: Reusability[Editor] =
@@ -87,6 +89,11 @@ object Editor {
     : Reusability[Map[api.RuntimeError, Annotation]] =
     Reusability((a, b) => a.keys == b.keys)
 
+  implicit val codeFoldsReuse
+    : Reusability[Map[RangePosititon, Annotation]] =
+    Reusability((a, b) => a.keys == b.keys)
+
+
   implicit val completionStateReuse: Reusability[CompletionState] =
     Reusability.byRefOr_==
 
@@ -100,7 +107,6 @@ object Editor {
   codemirror.MatchBrackets
   codemirror.BraceFold
   codemirror.FoldCode
-  codemirror.FoldGutter
   codemirror.Search
   codemirror.SearchCursor
   codemirror.HardWrap
@@ -233,6 +239,7 @@ object Editor {
       problemAnnotations: Map[api.Problem, Annotation] = Map(),
       renderAnnotations: Map[api.Instrumentation, Annotation] = Map(),
       runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map(),
+      codeFoldsAnnotations: Map[RangePosititon, Annotation] = Map(),
       completionState: CompletionState = Idle,
       showTypeButtonPressed: Boolean = false,
       typeAt: Option[api.TypeInfoAt] = None
@@ -293,8 +300,6 @@ object Editor {
           "mode" -> "text/x-scala",
           "autofocus" -> !props.isEmbedded,
           "lineNumbers" -> props.showLineNumbers,
-          "foldGutter" -> true,
-          "gutters" -> js.Array("CodeMirror-linenumbers", "CodeMirror-foldgutter"),
           "lineWrapping" -> false,
           "tabSize" -> 2,
           "indentWithTabs" -> false,
@@ -528,24 +533,26 @@ object Editor {
     val modeScala = "text/x-scala"
 
 
+    val doc = editor.getDoc()
+
+    def fold(startPos: CMPosition,
+             endPos: CMPosition,
+             content: String,
+             process: (HTMLElement => Unit)): Annotation = {
+      val node =
+        dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+      node.className = "fold"
+      node.innerHTML = content
+      process(node)
+      Marked(
+        doc.markText(startPos,
+                     endPos,
+                     js.Dictionary[Any]("replacedWith" -> node)
+                       .asInstanceOf[TextMarkerOptions])
+      )
+    }
+
     def setRenderAnnotations() = {
-      val doc = editor.getDoc()
-      def fold(startPos: CMPosition,
-               endPos: CMPosition,
-               content: String,
-               process: (HTMLElement => Unit)): Annotation = {
-        val node =
-          dom.document.createElement("div").asInstanceOf[HTMLDivElement]
-        node.className = "fold"
-        node.innerHTML = content
-        process(node)
-        Marked(
-          doc.markText(startPos,
-                       endPos,
-                       js.Dictionary[Any]("replacedWith" -> node)
-                         .asInstanceOf[TextMarkerOptions])
-        )
-      }
       def nextline2(endPos: CMPosition,
                     node: HTMLElement,
                     process: (HTMLElement => Unit),
@@ -605,7 +612,8 @@ object Editor {
       }
 
       setAnnotations[api.Instrumentation](
-        _.instrumentations, {
+        (props, _) => props.instrumentations,
+        {
           case api.Instrumentation(api.Position(start, end),
                                    api.Value(value, tpe)) =>
             val startPos = doc.posFromIndex(start)
@@ -654,7 +662,7 @@ object Editor {
           }
         },
         _.renderAnnotations,
-        f => state => state.copy(renderAnnotations = f(state.renderAnnotations))
+        (state, annotations) => state.copy(renderAnnotations = annotations)
       )
 
     }
@@ -662,7 +670,7 @@ object Editor {
     def setProblemAnnotations() = {
       val doc = editor.getDoc()
       setAnnotations[api.Problem](
-        _.compilationInfos,
+        (props, _) => props.compilationInfos,
         info => {
           val line = info.line.getOrElse(0)
 
@@ -699,15 +707,14 @@ object Editor {
           Line(doc.addLineWidget(line - 1, el))
         },
         _.problemAnnotations,
-        f =>
-          state => state.copy(problemAnnotations = f(state.problemAnnotations))
+        (state, annotations) => state.copy(problemAnnotations = annotations)
       )
     }
 
-    def setRuntimeError(): Callback = {
+    def setRuntimeErrorAnnotations(): Callback = {
       val doc = editor.getDoc()
       setAnnotations[api.RuntimeError](
-        _.runtimeError.toSet,
+        (props, _) => props.runtimeError.toSet,
         runtimeError => {
           val line = runtimeError.line.getOrElse(0)
 
@@ -731,46 +738,53 @@ object Editor {
           Line(doc.addLineWidget(line - 1, el))
         },
         _.runtimeErrorAnnotations,
-        f =>
-          state =>
-            state.copy(
-              runtimeErrorAnnotations = f(state.runtimeErrorAnnotations)
-        )
+        (state, annotations) => state.copy(runtimeErrorAnnotations = annotations)
       )
     }
 
     def setAnnotations[T](
-        fromState: Editor => Set[T],
+        fromPropsAndState: (Editor, EditorState) => Set[T],
         annotate: T => Annotation,
-        fromEditorState: EditorState => Map[T, Annotation],
-        updateEditorState: (
-            Map[T, Annotation] => Map[T, Annotation]
-        ) => EditorState => EditorState
+        fromState: EditorState => Map[T, Annotation],
+        updateState: (EditorState, Map[T, Annotation]) => EditorState
     ): Callback = {
 
-      val currentAnnotations = current.map(fromState).getOrElse(Set())
+      val currentAnnotations: Set[T] =
+        current.map(props => 
+          fromPropsAndState(props, state)
+        ).getOrElse(Set())
 
-      val added = fromState(next) -- currentAnnotations
-      val toAdd = 
+      val nextAnnotations: Set[T] =
+        fromPropsAndState(next, state)
+
+      val addedAnnotations: Set[T] =
+        nextAnnotations -- currentAnnotations
+
+      val annotationsToAdd: CallbackTo[Map[T, Annotation]] =
         CallbackTo
-          .sequence(added.map(item => CallbackTo((item, annotate(item)))))
+          .sequence(addedAnnotations.map(item => CallbackTo((item, annotate(item)))))
           .map(_.toMap)
 
-      val removed = currentAnnotations -- fromState(next)
-      val toRemove = 
+      val removedAnnotations: Set[T] =
+        currentAnnotations -- nextAnnotations
+
+      val annotationsToRemove: CallbackTo[Set[T]] =
         CallbackTo.sequence(
-          fromEditorState(state)
-            .filterKeys(removed.contains)
+          fromState(state)
+            .filterKeys(removedAnnotations.contains)
             .map {
               case (item, annot) => CallbackTo({ annot.clear(); item })
             }
-            .toList
+            .toSet
         )
 
       for {
-        added <- toAdd
-        removed <- toRemove
-        _ <- modState(updateEditorState(items => (items ++ added) -- removed))
+        added <- annotationsToAdd
+        removed <- annotationsToRemove
+        _ <- 
+          modState{state =>
+            updateState(state, (fromState(state) ++ added) -- removed)
+          }
       } yield ()
     }
 
@@ -899,10 +913,60 @@ object Editor {
       }
     }
 
-    def codeFolding(): Unit = {
-      if (current.map(_.code != next.code).getOrElse(true)) {
+    def findFolds(code: String): Set[RangePosititon] = {
+      val (folds, _, _) = {
+        val lines = code.split("\n").toList
 
+        lines.foldLeft((Set.empty[RangePosititon], Option.empty[Int], 0)) {
+          case ((folds, open, indexTotal), line) => {
+            val (folds0, open0) = 
+              if (line == "// fold") {
+                if(open.isEmpty) (folds, Some(indexTotal))
+                else (folds, open)
+              } else if (line == "// end-fold") {
+                open match {
+                  case Some(start) => 
+                    (folds + RangePosititon(start, indexTotal + line.length), None)
+
+                  case None => (folds, None)
+                }
+              } else {
+                (folds, open)
+              }
+
+            (folds0, open0, indexTotal + line.length + 1)
+          }
+        }
       }
+
+      folds
+    }
+
+    def setCodeFoldingAnnotations(): Callback = {
+      val codeChanged = //false
+      current.map(_.code != next.code).getOrElse(true)
+
+      setAnnotations[RangePosititon](
+        (props, state) => {
+          if(current.contains(props)) {
+            // code folds are already calculated
+            state.codeFoldsAnnotations.keySet
+          } else {
+            findFolds(props.code)
+          }
+        },
+        range => {
+          val posStart = doc.posFromIndex(range.indexStart)
+          val posEnd = doc.posFromIndex(range.indexEnd)
+
+          val noop: (HTMLElement => Unit) = _ => ()
+
+          fold(posStart, posEnd, "folded", noop)
+        },
+        _.codeFoldsAnnotations,
+        (state, annotations) => state.copy(codeFoldsAnnotations = annotations)
+      ).when_(codeChanged)
+
     }
 
     def refresh(): Unit = {
@@ -919,10 +983,10 @@ object Editor {
       Callback(setLineNumbers()) >>
       setProblemAnnotations() >>
       setRenderAnnotations() >>
-      setRuntimeError >>
+      setRuntimeErrorAnnotations >>
+      setCodeFoldingAnnotations() >>
       Callback(setCompletions()) >>
       Callback(setTypeAt()) >>
-      Callback(codeFolding())
       Callback(refresh())
   }
 

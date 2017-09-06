@@ -56,6 +56,7 @@ object ScastieState {
       status = StatusState.empty,
       completions = List(),
       typeAtInfo = None,
+      codeFolds = Set(),
       isEmbedded = isEmbedded
     )
   }
@@ -109,6 +110,7 @@ case class ScastieState(
     status: StatusState,
     completions: List[Completion],
     typeAtInfo: ScastieState.TypeInfoAtHint,
+    codeFolds: Set[RangePosititon],
     isEmbedded: Boolean = false
 ) {
 
@@ -177,6 +179,7 @@ case class ScastieState(
         status,
         completions,
         typeAtInfo,
+        codeFolds,
         isEmbedded
       )
 
