@@ -84,6 +84,7 @@ trait TextMarkerOptions extends js.Object {
   var collapsed: Boolean = js.native
   var clearOnEnter: Boolean = js.native
   var replacedWith: HTMLElement = js.native
+  var handleMouseEvents: Boolean = js.native
   var readOnly: Boolean = js.native
   var addToHistory: Boolean = js.native
   var startStyle: String = js.native

@@ -62,20 +62,22 @@
   }
 
   @include tablet {
-    .sidebar {
-      width: $sidebar-tablet-width;
+    :not(.presentation-mode) {
+      .sidebar {
+        width: $sidebar-tablet-width;
 
-      li span {
-        display: none;
-      }
+        li span {
+          display: none;
+        }
 
-      .btn {
-        padding-right: 0;
-        text-align: center;
-      }
+        .btn {
+          padding-right: 0;
+          text-align: center;
+        }
 
-      .logo h1 {
-        display: none;
+        .logo h1 {
+          display: none;
+        }
       }
     }
   }

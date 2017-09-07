@@ -1,6 +1,7 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.client.{ScastieBackend, ScastieState, View}
+import com.olegych.scastie.client.components.editor.Editor
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 
@@ -69,7 +70,6 @@ object MainPanel {
         runtimeError = state.outputs.runtimeError,
         completions = state.completions,
         typeAtInfo = state.typeAtInfo,
-        codeFolds = state.codeFolds,
         run = backend.run,
         saveOrUpdate = backend.saveOrUpdate,
         clear = backend.clear,

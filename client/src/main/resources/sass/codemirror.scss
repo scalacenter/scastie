@@ -40,7 +40,7 @@ $margin: 24px;
 .CodeMirror-linewidget .runtime-error,
 .CodeMirror-widget .fold {
   margin-left: -($margin + 4px);
-  width: calc(100% - #{$margin + 4px});
+  width: 120%;
 
   padding: $margin;
   white-space: pre-wrap;
