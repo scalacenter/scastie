@@ -62,21 +62,20 @@ object Editor {
       .builder[Editor]("Editor")
       .initialState(EditorState())
       .renderBackend[EditorBackend]
-      .componentWillReceiveProps { scope =>
-        val current = scope.currentProps
-        val next = scope.nextProps
-        val state = scope.state
+      .componentWillReceiveProps{ scope =>
+        scope.state.editor match {
+          case Some(editor) => 
+            RunDelta(
+              editor = editor,
+              currentProps = Some(scope.currentProps),
+              nextProps = scope.nextProps,
+              state = scope.state,
+              modState = (f => scope.modState(f))
+            )
 
-        state.editor
-          .map(
-            editor =>
-              RunDelta(editor,
-                       (f => scope.modState(f)),
-                       state,
-                       Some(current),
-                       next)
-          )
-          .getOrElse(Callback.empty)
+          case None => 
+            Callback(())
+        }
 
       }
       .configure(Reusability.shouldComponentUpdate)

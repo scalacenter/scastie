@@ -68,7 +68,13 @@ private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
 
       val applyDeltas =
         scope.state.flatMap(
-          state => RunDelta(editor, f => scope.modState(f), state, None, props)
+          state => RunDelta(
+            editor = editor,
+            currentProps = None,
+            nextProps = props,
+            state = state,
+            modState = f => scope.modState(f)
+          )
         )
 
       val delayedRefresh =

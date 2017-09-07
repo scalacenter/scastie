@@ -3,6 +3,9 @@ package com.olegych.scastie.client.components.editor
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
+import codemirror.{Editor => CMEditor}
+import codemirror.CodeMirror.{Pos => CMPosition}
+
 private[editor] class LoadingMessage() {
   private val message = {
     val ul = dom.document
@@ -28,9 +31,7 @@ private[editor] class LoadingMessage() {
     message.style.opacity = "0"
   }
 
-  def show(editor: codemirror.Editor,
-           pos: codemirror.CodeMirror.Position): Unit = {
-
+  def show(editor: CMEditor, pos: CMPosition): Unit = {
     editor.addWidget(pos, message, scrollIntoView = true)
     message.style.opacity = "1"
   }
