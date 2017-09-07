@@ -1,8 +1,6 @@
 package com.olegych.scastie
 package balancer
 
-import api._
-
 import scala.collection.immutable.Queue
 
 class LoadBalancerTest extends LoadBalancerTestUtils {

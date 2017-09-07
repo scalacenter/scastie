@@ -1,32 +1,15 @@
 package com.olegych.scastie.client.components.editor
 
 import com.olegych.scastie.client.components._
-import com.olegych.scastie.api
-import com.olegych.scastie.client.AnsiColorFormatter
 
-import japgolly.scalajs.react.{Callback, CallbackTo}
+import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.Reusability
 
-import codemirror.{
-  Hint,
-  HintConfig,
-  CodeMirror,
-  TextAreaEditor,
-  TextMarkerOptions,
-}
-import codemirror.CodeMirror.{Pos => CMPosition}
-
-import org.scalajs.dom.raw.{HTMLElement, HTMLDivElement, HTMLPreElement}
-import org.scalajs.dom
-import org.scalajs.dom.console
-
-import scala.scalajs.js
+import codemirror.TextAreaEditor
 
 private[editor] object RunDelta {
 
   val editorShouldRefresh: Reusability[Editor] = {
-    import EditorReusability._
-
     Reusability.byRef ||
     (
       Reusability.by((_: Editor).attachedDoms) &&
@@ -43,10 +26,10 @@ private[editor] object RunDelta {
             state: EditorState,
             modState: (EditorState => EditorState) => Callback): Callback = {
     def setTheme: Callback = {
-      val themeChanged = 
+      val themeChanged =
         currentProps.map(_.isDarkTheme) != Some(nextProps.isDarkTheme)
 
-      Callback{
+      Callback {
         val theme =
           if (nextProps.isDarkTheme) "dark"
           else "light"
@@ -55,9 +38,8 @@ private[editor] object RunDelta {
       }.when_(themeChanged)
     }
 
-
     def setCode: Callback = {
-      val codeChanged = 
+      val codeChanged =
         currentProps.map(_.code) != Some(nextProps.code)
 
       Callback {
@@ -79,18 +61,17 @@ private[editor] object RunDelta {
       }.when_(lineNumbersChanged)
     }
 
-
     def setTypeAtInfo: Callback = {
       val typeAtInfoChanged =
         currentProps.map(_.typeAtInfo) != Some(nextProps.typeAtInfo)
 
       if (typeAtInfoChanged) {
         val updateMessage =
-          Callback{
+          Callback {
             state.hoverMessage.updateMessage(nextProps.typeAtInfo.get.typeInfo)
           }.when_(nextProps.typeAtInfo.isDefined)
 
-        updateMessage >> 
+        updateMessage >>
           modState(_.copy(typeAt = nextProps.typeAtInfo))
       } else {
         Callback(())
@@ -99,20 +80,27 @@ private[editor] object RunDelta {
 
     def refresh: Callback = {
       val shouldRefresh =
-        currentProps.map(c => !editorShouldRefresh.test(c, nextProps)).getOrElse(true)
+        currentProps
+          .map(c => !editorShouldRefresh.test(c, nextProps))
+          .getOrElse(true)
 
-      Callback(editor.refresh()).when_(shouldRefresh)
+      println("shouldRefresh: " + shouldRefresh)
+
+      Callback(
+        scalajs.js.timers.setTimeout(10)(
+          editor.refresh()
+        )
+      ).when_(shouldRefresh)
     }
 
     setTheme >>
-    setCode >>
-    setLineNumbers >>
-    setTypeAtInfo >>
-    ProblemAnnotations(editor, currentProps, nextProps, state, modState) >>
-    RenderAnnotations(editor, currentProps, nextProps, state, modState) >>
-    RuntimeErrorAnnotations(editor, currentProps, nextProps, state, modState) >>
-    CodeFoldingAnnotations(editor, currentProps, nextProps, state, modState) >>
-    AutocompletionRender(editor, currentProps, nextProps, state, modState) >>
-    refresh
+      setCode >>
+      setLineNumbers >>
+      setTypeAtInfo >>
+      ProblemAnnotations(editor, currentProps, nextProps, state, modState) >>
+      RenderAnnotations(editor, currentProps, nextProps, state, modState) >>
+      RuntimeErrorAnnotations(editor, currentProps, nextProps, state, modState) >>
+      AutocompletionRender(editor, currentProps, nextProps, state, modState) >>
+      refresh
   }
 }

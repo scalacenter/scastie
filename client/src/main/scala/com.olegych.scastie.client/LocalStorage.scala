@@ -3,8 +3,6 @@ package client
 
 import play.api.libs.json.Json
 
-import scala.util.Try
-
 import org.scalajs.dom.window.localStorage
 
 object LocalStorage {

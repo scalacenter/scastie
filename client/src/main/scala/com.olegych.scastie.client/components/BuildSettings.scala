@@ -18,7 +18,7 @@ final case class BuildSettings(
     sbtConfigChange: String ~=> Callback,
     removeScalaDependency: ScalaDependency ~=> Callback,
     updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
-    addScalaDependency: (ScalaDependency, Project) ~=> Callback,
+    addScalaDependency: (ScalaDependency, Project) ~=> Callback
 ) {
 
   @inline def render: VdomElement = BuildSettings.component(this)
@@ -31,7 +31,7 @@ object BuildSettings {
 
   def renderTarget(props: BuildSettings): TagOf[Div] = {
 
-    val targetTypes: List[ScalaTargetType] = List(
+    val targetTypes = List[ScalaTargetType](
       ScalaTargetType.JVM,
       ScalaTargetType.Dotty,
       ScalaTargetType.Typelevel,

@@ -35,9 +35,9 @@ object ServerMain {
       ScastieFileUtil.writeRunningPid()
     }
 
-    implicit val system = ActorSystem("Web")
+    implicit val system: ActorSystem = ActorSystem("Web")
     import system.dispatcher
-    implicit val materializer = ActorMaterializer()
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     val github = new Github
     val session = new GithubUserSession

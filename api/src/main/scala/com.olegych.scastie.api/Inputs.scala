@@ -8,7 +8,7 @@ import System.{lineSeparator => nl}
 object Inputs {
   val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
 
-  def default = Inputs(
+  def default: Inputs = Inputs(
     worksheetMode = true,
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
@@ -41,7 +41,7 @@ case class Inputs(
     forked: Option[SnippetId] = None
 ) {
 
-  val librariesFrom = librariesFromList.toMap
+  val librariesFrom: Map[ScalaDependency, Project] = librariesFromList.toMap
 
   def needsReload(other: Inputs): Boolean = {
     sbtConfig != other.sbtConfig ||
@@ -94,9 +94,7 @@ case class Inputs(
     )
   }
 
-  def hasEnsimeSupport: Boolean = {
-    isDefault
-  }
+  def hasEnsimeSupport: Boolean = target.hasEnsimeSupport
 
   def sbtConfig: String = {
     val targetConfig = target.sbtConfig

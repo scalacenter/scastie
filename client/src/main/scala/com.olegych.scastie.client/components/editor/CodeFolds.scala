@@ -38,48 +38,28 @@ object CodeFoldingAnnotations {
     folds
   }
 
-  def apply(editor: TextAreaEditor,
-            current: Option[Editor],
-            next: Editor,
-            state: EditorState,
-            modState: (EditorState => EditorState) => Callback): Callback = {
-
-    val codeChanged = current.map(_.code != next.code).getOrElse(true)
-
-    val doc = editor.getDoc()
-
-    AnnotationDiff.setAnnotations[RangePosititon](
-      current,
-      next,
-      state,
-      modState,
-      (props, state) => {
-        if (current.contains(props)) {
-          // code folds are already calculated
-          state.codeFoldsAnnotations.keySet
-        } else {
-          findFolds(props.code) -- state.unfoldedCode
-        }
-      },
-      range => {
+  def apply(editor: TextAreaEditor, props: Editor): Callback = {
+    Callback {
+      val doc = editor.getDoc()
+      findFolds(props.code).foreach { range =>
         val posStart = doc.posFromIndex(range.indexStart)
         val posEnd = doc.posFromIndex(range.indexEnd)
 
+        var boom: Option[Annotation] = None
         val noop: (HTMLElement => Unit) = element => {
           element.onclick = (event: dom.MouseEvent) => {
-            // TODO
-            // direct.modState(state =>
-            //   state.copy(
-            //     unfoldedCode = state.unfoldedCode + range
-            //   )
-            // )
+            boom.foreach(_.clear())
           }
         }
+        val annot = Annotation.fold(editor,
+                                    posStart,
+                                    posEnd,
+                                    "-- Click to unfold --",
+                                    noop)
+        boom = Some(annot)
 
-        Annotation.fold(editor, posStart, posEnd, "", noop)
-      },
-      _.codeFoldsAnnotations,
-      (state, annotations) => state.copy(codeFoldsAnnotations = annotations)
-    ).when_(codeChanged)
+        (range, annot)
+      }
+    }
   }
 }

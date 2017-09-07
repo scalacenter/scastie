@@ -15,7 +15,7 @@ import scala.util.{Try, Success, Failure}
 
 class RestApiClient(serverUrl: Option[String]) extends RestApi {
 
-  val apiBase = serverUrl.getOrElse("")
+  val apiBase: String = serverUrl.getOrElse("")
 
   def tryParse[T: Reads](request: XMLHttpRequest): Option[T] = {
     val rawJson = request.responseText

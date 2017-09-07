@@ -2,7 +2,6 @@ package com.olegych.scastie.client
 
 import play.api.libs.json.{Json, Reads}
 
-import org.scalajs.dom
 import org.scalajs.dom.{
   EventSource,
   WebSocket,
@@ -110,9 +109,10 @@ class WebSocketStream[T: Reads](uri: String, handler: EventStreamHandler[T])
     socket.close()
   }
 
-  val protocol = if (window.location.protocol == "https:") "wss" else "ws"
-  val fullUri = s"$protocol://${window.location.host}${uri}"
-  val socket = new WebSocket(uri)
+  val protocol: String =
+    if (window.location.protocol == "https:") "wss" else "ws"
+  val fullUri: String = s"$protocol://${window.location.host}${uri}"
+  val socket: WebSocket = new WebSocket(uri)
 
   socket.onopen = onOpen _
   socket.onclose = onClose _
@@ -145,7 +145,7 @@ class EventSourceStream[T: Reads](uri: String, handler: EventStreamHandler[T])
     eventSource.close()
   }
 
-  val eventSource = new EventSource(uri)
+  val eventSource: EventSource = new EventSource(uri)
   eventSource.onopen = onOpen _
   eventSource.onmessage = onMessage _
   eventSource.onerror = onError _

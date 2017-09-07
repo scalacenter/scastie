@@ -10,7 +10,6 @@ import org.scalajs.dom.raw.HTMLDivElement
 
 import japgolly.scalajs.react.Callback
 
-
 object ProblemAnnotations {
 
   def apply(editor: TextAreaEditor,
@@ -67,4 +66,3 @@ object ProblemAnnotations {
     )
   }
 }
-

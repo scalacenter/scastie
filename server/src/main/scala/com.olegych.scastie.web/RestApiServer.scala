@@ -19,7 +19,7 @@ class RestApiServer(
 )(implicit executionContext: ExecutionContext)
     extends RestApi {
 
-  implicit val timeout = Timeout(20.seconds)
+  implicit val timeout: Timeout = Timeout(20.seconds)
 
   private def wrap(inputs: Inputs): InputsWithIpAndUser =
     InputsWithIpAndUser(inputs, UserTrace(ip.toString, maybeUser))

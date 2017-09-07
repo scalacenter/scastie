@@ -4,20 +4,14 @@ import com.olegych.scastie.web._
 import com.olegych.scastie.api._
 import com.olegych.scastie.web.oauth2._
 
-import com.olegych.scastie.balancer._
-
-import akka.util.Timeout
 import akka.actor.{ActorRef, ActorSystem}
 
-import akka.http.scaladsl.model.StatusCodes.Created
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives._
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 
-import akka.pattern.ask
-
-import scala.concurrent.duration.DurationInt
+import play.api.libs.json.Reads
 
 class ApiRoutes(
     dispatchActor: ActorRef,
@@ -29,7 +23,7 @@ class ApiRoutes(
   import userDirectives.optionalLogin
 
   import play.api.libs.json._
-  implicit val readsInputs = Json.reads[Inputs]
+  implicit val readsInputs: Reads[Inputs] = Json.reads[Inputs]
 
   val withRestApiServer: Directive1[RestApiServer] =
     (extractClientIP & optionalLogin).tmap {

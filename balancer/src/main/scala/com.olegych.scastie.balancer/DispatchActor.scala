@@ -5,7 +5,7 @@ import com.olegych.scastie.api
 import com.olegych.scastie.api._
 import com.olegych.scastie.storage._
 
-import akka.actor.{Actor, ActorLogging, ActorPath, ActorRef, ActorSelection}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
 import akka.remote.DisassociatedEvent
 import akka.pattern.ask
 import akka.util.Timeout
@@ -19,8 +19,6 @@ import scala.concurrent.duration._
 import java.util.concurrent.{TimeoutException, TimeUnit}
 
 import scala.collection.immutable.Queue
-import scala.util.Random
-import scala.util.control.NonFatal
 
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
@@ -434,7 +432,15 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
               val senderPort = sender.path.address.port
 
               if (serverPort == senderPort) {
-                server.copy(state = ensimeState)
+                // clear tasks if we are switching configuration
+                val mailbox =
+                  if (ensimeState == EnsimeServerState.Ready) Queue()
+                  else server.mailbox
+
+                server.copy(
+                  state = ensimeState,
+                  mailbox = mailbox
+                )
               } else {
                 server
               }

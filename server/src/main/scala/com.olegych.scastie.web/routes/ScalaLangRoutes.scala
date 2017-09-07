@@ -1,6 +1,5 @@
 package com.olegych.scastie.web.routes
 
-import com.olegych.scastie.web._
 import com.olegych.scastie.api._
 import com.olegych.scastie.web.oauth2._
 
@@ -26,7 +25,7 @@ class ScalaLangRoutes(
   import system.dispatcher
   import userDirectives.optionalLogin
 
-  implicit val timeout = Timeout(5.seconds)
+  implicit val timeout: Timeout = Timeout(5.seconds)
 
   // format: off
   val routes: Route =

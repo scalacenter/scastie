@@ -35,7 +35,6 @@ import scala.io.Source._
 import scala.util.{Failure, Success}
 
 case object Heartbeat
-case object EnsimeReady
 
 class EnsimeRunner(system: ActorSystem,
                    dispatchActor: ActorRef,

@@ -17,7 +17,7 @@ object Outputs {
   implicit val formatOutputs: OFormat[Outputs] =
     Json.format[Outputs]
 
-  def default = Outputs(
+  def default: Outputs = Outputs(
     consoleOutputs = Vector(),
     compilationInfos = Set(),
     instrumentations = Set(),

@@ -6,7 +6,7 @@ object ConsoleState {
   implicit val formatConsoleState: OFormat[ConsoleState] =
     Json.format[ConsoleState]
 
-  def default = ConsoleState(
+  def default: ConsoleState = ConsoleState(
     consoleIsOpen = false,
     consoleHasUserOutput = false,
     userOpenedConsole = true

@@ -1,13 +1,11 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
-import com.olegych.scastie.client.{View, RestApiClient}
+import com.olegych.scastie.client.View
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 
 import org.scalajs.dom
-
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 final case class EmbeddedMenu(isRunning: Boolean,
                               isStatusOk: Boolean,

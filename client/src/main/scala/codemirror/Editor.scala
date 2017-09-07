@@ -110,25 +110,27 @@ trait BeforeEditorChange extends EditorChange {
 }
 
 class EditorEventHandler(val editor: Editor) extends AnyVal {
-  def onDelete(f: () => Unit) = editor.on("delete", f)
-  def onBeforeCursorEnter(f: () => Unit) = editor.on("beforeCursorEnter", f)
-  def onHide(f: () => Unit) = editor.on("hide", f)
-  def onUnhide(f: () => Unit) = editor.on("unhide", f)
-  def onRedraw(f: () => Unit) = editor.on("redraw", f)
-  def onCursorActivity(f: Editor => Unit) = editor.on("cursorActivity", f)
-  def onFocus(f: Editor => Unit) = editor.on("focus", f)
-  def onBlur(f: Editor => Unit) = editor.on("blur", f)
-  def onScroll(f: Editor => Unit) = editor.on("scroll", f)
-  def onUpdate(f: Editor => Unit) = editor.on("update", f)
-  def onBeforeChange(f: (Editor, BeforeEditorChange) => Unit) =
+  def onDelete(f: () => Unit): Unit = editor.on("delete", f)
+  def onBeforeCursorEnter(f: () => Unit): Unit =
+    editor.on("beforeCursorEnter", f)
+  def onHide(f: () => Unit): Unit = editor.on("hide", f)
+  def onUnhide(f: () => Unit): Unit = editor.on("unhide", f)
+  def onRedraw(f: () => Unit): Unit = editor.on("redraw", f)
+  def onCursorActivity(f: Editor => Unit): Unit = editor.on("cursorActivity", f)
+  def onFocus(f: Editor => Unit): Unit = editor.on("focus", f)
+  def onBlur(f: Editor => Unit): Unit = editor.on("blur", f)
+  def onScroll(f: Editor => Unit): Unit = editor.on("scroll", f)
+  def onUpdate(f: Editor => Unit): Unit = editor.on("update", f)
+  def onBeforeChange(f: (Editor, BeforeEditorChange) => Unit): Unit =
     editor.on("beforeChange", f)
-  def onChange(f: (Editor, EditorChange) => Unit) = editor.on("change", f)
-  def onChanges(f: (Editor, js.Array[EditorChange]) => Unit) =
+  def onChange(f: (Editor, EditorChange) => Unit): Unit = editor.on("change", f)
+  def onChanges(f: (Editor, js.Array[EditorChange]) => Unit): Unit =
     editor.on("changes", f)
-  def onKeyUp(f: (Editor, dom.KeyboardEvent) => Unit) = editor.on("keyup", f)
-  def onKeyDown(f: (Editor, dom.KeyboardEvent) => Unit) =
+  def onKeyUp(f: (Editor, dom.KeyboardEvent) => Unit): Unit =
+    editor.on("keyup", f)
+  def onKeyDown(f: (Editor, dom.KeyboardEvent) => Unit): Unit =
     editor.on("keydown", f)
-  def onMouseDown(f: (Editor, dom.MouseEvent) => Unit) =
+  def onMouseDown(f: (Editor, dom.MouseEvent) => Unit): Unit =
     editor.on("mousedown", f)
 
 // "clear"                    (from: {line, ch}, to: {line, ch})

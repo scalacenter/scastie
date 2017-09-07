@@ -19,7 +19,7 @@ object ClearButton {
        onClick --> props.clear)(
       div(
         i(cls := "fa fa-eraser"),
-        span("Clear")
+        span("Clear Annotations")
       )
     )
   }

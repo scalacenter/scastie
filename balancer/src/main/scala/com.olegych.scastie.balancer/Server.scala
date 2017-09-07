@@ -31,7 +31,6 @@ case class Server[C, T <: TaskId, R, S](ref: R,
   def cost(taskCost: FiniteDuration,
            reloadCost: FiniteDuration,
            needsReload: (C, C) => Boolean): FiniteDuration = {
-    import Server._
 
     val reloadsPenalties =
       mailbox.sliding(2).foldLeft(0.seconds) { (acc, slide) =>

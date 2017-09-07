@@ -4,10 +4,6 @@ import play.api.libs.json._
 
 import com.olegych.scastie.api._
 
-import scalajs.js.debugger
-
-import org.scalajs.dom.raw.HTMLElement
-
 object SnippetState {
   implicit val formatSnippetState: OFormat[SnippetState] =
     Json.format[SnippetState]
@@ -24,7 +20,7 @@ case class SnippetState(
 )
 
 object ScastieState {
-  def default(isEmbedded: Boolean) = {
+  def default(isEmbedded: Boolean): ScastieState = {
     ScastieState(
       view = View.Editor,
       isRunning = false,

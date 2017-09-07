@@ -36,7 +36,7 @@ object ScaladexSearch {
     Reusability.caseClass[SearchState]
 
   private[ScaladexSearch] object SearchState {
-    def default = SearchState(
+    def default: SearchState = SearchState(
       query = "",
       selectedIndex = 0,
       projects = List.empty,
@@ -226,7 +226,7 @@ object ScaladexSearch {
 
         def updateDependencyVersionBackend =
           scope.props.flatMap(
-            _.updateDependencyVersion(selected.release, version)
+            _.updateDependencyVersion((selected.release, version))
           )
 
         updateDependencyVersionLocal >> updateDependencyVersionBackend
@@ -311,7 +311,7 @@ object ScaladexSearch {
 
               def addScalaDependencyBackend =
                 scope.props
-                  .flatMap(_.addScalaDependency(scalaDependency, project))
+                  .flatMap(_.addScalaDependency((scalaDependency, project)))
 
               addScalaDependencyLocal >> addScalaDependencyBackend
             }

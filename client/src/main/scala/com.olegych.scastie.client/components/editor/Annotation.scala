@@ -1,11 +1,6 @@
 package com.olegych.scastie.client.components.editor
 
-import codemirror.{
-  TextMarker,
-  TextMarkerOptions,
-  LineWidget,
-  TextAreaEditor
-}
+import codemirror.{TextMarker, TextMarkerOptions, LineWidget, TextAreaEditor}
 import codemirror.CodeMirror.{Pos => CMPosition}
 
 import org.scalajs.dom
@@ -96,15 +91,17 @@ object Annotation {
     node.innerHTML = content
     process(node)
     Marked(
-      editor.getDoc().markText(
-        startPos,
-        endPos,
-        js.Dictionary[Any](
-            "replacedWith" -> node,
-            "handleMouseEvents" -> true
-          )
-          .asInstanceOf[TextMarkerOptions]
-      )
+      editor
+        .getDoc()
+        .markText(
+          startPos,
+          endPos,
+          js.Dictionary[Any](
+              "replacedWith" -> node,
+              "handleMouseEvents" -> true
+            )
+            .asInstanceOf[TextMarkerOptions]
+        )
     )
   }
 }

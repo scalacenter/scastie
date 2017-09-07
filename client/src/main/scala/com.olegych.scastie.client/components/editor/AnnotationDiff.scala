@@ -4,21 +4,23 @@ import japgolly.scalajs.react.{Callback, CallbackTo}
 
 object AnnotationDiff {
   def setAnnotations[T](
-        current: Option[Editor],
-        next: Editor,
-        state: EditorState,
-        modState: (EditorState => EditorState) => Callback,
-        fromPropsAndState: (Editor, EditorState) => Set[T],
-        annotate: T => Annotation,
-        fromState: EditorState => Map[T, Annotation],
-        updateState: (EditorState, Map[T, Annotation]) => EditorState
-    ): Callback = {
+      currentProps: Option[Editor],
+      nextProps: Editor,
+      state: EditorState,
+      modState: (EditorState => EditorState) => Callback,
+      fromPropsAndState: (Editor, EditorState) => Set[T],
+      annotate: T => Annotation,
+      fromState: EditorState => Map[T, Annotation],
+      updateState: (EditorState, Map[T, Annotation]) => EditorState
+  ): Callback = {
 
     val currentAnnotations: Set[T] =
-      current.map(props => fromPropsAndState(props, state)).getOrElse(Set())
+      currentProps
+        .map(props => fromPropsAndState(props, state))
+        .getOrElse(Set())
 
     val nextAnnotations: Set[T] =
-      fromPropsAndState(next, state)
+      fromPropsAndState(nextProps, state)
 
     val addedAnnotations: Set[T] =
       nextAnnotations -- currentAnnotations

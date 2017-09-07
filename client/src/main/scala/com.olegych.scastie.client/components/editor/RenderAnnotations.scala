@@ -38,7 +38,8 @@ object RenderAnnotations {
 
           val nl = '\n'
 
-          if (value.contains(nl)) Annotation.nextline(editor, endPos, value, process)
+          if (value.contains(nl))
+            Annotation.nextline(editor, endPos, value, process)
           else Annotation.inline(editor, startPos, value, process)
         }
 

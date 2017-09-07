@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage
 
 package object runtime {
 
-  val Html = api.Html
+  val Html: api.Html.type = api.Html
 
   def image(path: String): Html = Runtime.image(path)
   def toBase64(in: BufferedImage): Html = Runtime.toBase64(in)

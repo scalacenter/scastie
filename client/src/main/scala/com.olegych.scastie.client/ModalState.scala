@@ -9,14 +9,14 @@ import japgolly.scalajs.react.extra._
 object ModalState {
   implicit val formatModalState: OFormat[ModalState] = Json.format[ModalState]
 
-  def allClosed =
+  def allClosed: ModalState =
     ModalState(isWelcomeModalClosed = true,
                isHelpModalClosed = true,
                None,
                isResetModalClosed = true,
                isNewSnippetModalClosed = true)
 
-  def default = ModalState(
+  def default: ModalState = ModalState(
     isHelpModalClosed = true,
     isWelcomeModalClosed = false,
     shareModalSnippetId = None,

@@ -8,7 +8,7 @@ import japgolly.scalajs.react.Callback
 
 package object components {
 
-  val reusableEmpty = Reusable.always(Callback.empty)
+  val reusableEmpty: Reusable[Callback] = Reusable.always(Callback.empty)
 
   implicit val reusabilityInputs: Reusability[Inputs] =
     Reusability.byRefOr_==

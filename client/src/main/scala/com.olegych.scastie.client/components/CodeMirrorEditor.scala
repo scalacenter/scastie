@@ -69,7 +69,7 @@ object CodeMirrorEditor {
         scope.modState(_.copy(editor = Some(editor)))
       }
     }
-    def stop() = {
+    def stop(): CallbackTo[Unit] = {
       scope.modState { s =>
         s.editor.map(_.toTextArea())
         s.copy(editor = None)

@@ -26,7 +26,7 @@ object SbtShared {
   val currentScalaVersion = latest212
 
   val latestScalaJs = "0.6.19"
-  val latestDotty = "0.3.0-RC1"
+  val latestDotty = "0.3.0-RC2"
 
   // sbt-ensime 1.12.14 creates .ensime with 2.0.0-M4 server jar
   val latestSbtEnsime = "1.12.14"
@@ -94,13 +94,29 @@ object SbtShared {
     sources in (Compile, doc) := Seq.empty,
     parallelExecution in Test := false,
     scalaVersion := currentScalaVersion,
-    scalacOptions ++= Seq(
-      "-deprecation",
-      "-encoding",
-      "UTF-8",
-      "-feature",
-      "-unchecked"
-    ),
+    scalacOptions ++= {
+      val scalaV = scalaVersion.value
+
+      val base =
+        Seq(
+          "-deprecation",
+          "-encoding",
+          "UTF-8",
+          "-feature",
+          "-unchecked"
+        )
+
+      if (scalaV == sbt210) base
+      else {
+        base ++
+          Seq(
+            "-Yrangepos",
+            "-Ywarn-unused-import",
+            "-Ywarn-adapted-args"
+          )
+      }
+
+    },
     console := (console in Test).value,
     scalacOptions in (Test, console) -= "-Ywarn-unused-import",
     scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"

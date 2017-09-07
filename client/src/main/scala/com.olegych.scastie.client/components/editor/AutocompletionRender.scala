@@ -4,13 +4,7 @@ import org.scalajs.dom.raw.{HTMLElement, HTMLPreElement}
 
 import com.olegych.scastie.api.Completion
 
-import codemirror.{
-  Hint,
-  HintConfig,
-  CodeMirror,
-  TextAreaEditor,
-  modeScala
-}
+import codemirror.{Hint, HintConfig, CodeMirror, TextAreaEditor, modeScala}
 
 import codemirror.CodeMirror.{Pos => CMPosition}
 
@@ -21,14 +15,13 @@ import org.scalajs.dom
 import scala.scalajs.js
 
 object AutocompletionRender {
-  private def renderSingleAutocompletion(
-    el: HTMLElement, 
-    completion: Completion,
-    nextProps: Editor): Unit = {
+  private def renderSingleAutocompletion(el: HTMLElement,
+                                         completion: Completion,
+                                         nextProps: Editor): Unit = {
 
     val hint = dom.document
-        .createElement("span")
-        .asInstanceOf[HTMLPreElement]
+      .createElement("span")
+      .asInstanceOf[HTMLPreElement]
 
     hint.className = "name cm-def"
     hint.textContent = completion.hint
@@ -39,9 +32,7 @@ object AutocompletionRender {
 
     signature.className = "signature"
 
-    CodeMirror.runMode(completion.signature,
-                       modeScala,
-                       signature)
+    CodeMirror.runMode(completion.signature, modeScala, signature)
 
     val resultType = dom.document
       .createElement("pre")
@@ -49,9 +40,7 @@ object AutocompletionRender {
 
     resultType.className = "result-type"
 
-    CodeMirror.runMode(completion.resultType,
-                       modeScala,
-                       resultType)
+    CodeMirror.runMode(completion.resultType, modeScala, resultType)
 
     el.appendChild(hint)
     el.appendChild(signature)
@@ -81,8 +70,10 @@ object AutocompletionRender {
 
     if (state.completionState == Requested ||
         state.completionState == NeedRender ||
-        currentProps.map(_.completions == nextProps.completions).getOrElse(false)) {
-      
+        !nextProps.completions.equals(
+          currentProps.getOrElse(nextProps).completions
+        )) {
+
       state.loadingMessage.hide()
 
       val doc = editor.getDoc()
@@ -115,8 +106,8 @@ object AutocompletionRender {
         modState(_.copy(completionState = Idle)).runNow()
       } else {
         // autopick single completion only if it's user's first request
-        val completeSingle = 
-          nextProps.completions.length == 1 && 
+        val completeSingle =
+          nextProps.completions.length == 1 &&
             state.completionState == Requested
 
         CodeMirror.showHint(
@@ -129,22 +120,22 @@ object AutocompletionRender {
               "to" -> new CMPosition {
                 line = currLine; ch = to
               },
-              "list" -> 
+              "list" ->
                 nextProps.completions
                   .filter(_.hint.startsWith(filter)) // FIXME: can place not 'important' completions first
-                  .map {
-                    completion =>
-                      HintConfig
-                        .className("autocomplete")
-                        .text(completion.hint)
-                        .render(
-                          (el, _, _) ⇒ renderSingleAutocompletion(el, completion, nextProps)
-                        ): Hint
+                  .map { completion =>
+                    HintConfig
+                      .className("autocomplete")
+                      .text(completion.hint)
+                      .render(
+                        (el, _, _) ⇒
+                          renderSingleAutocompletion(el, completion, nextProps)
+                      ): Hint
                   }
                   .to[js.Array]
             )
           },
-          js.Dictionary(
+          js.Dictionary[Any](
             "container" -> dom.document.querySelector(".CodeMirror"),
             "alignWithWord" -> true,
             "completeSingle" -> completeSingle

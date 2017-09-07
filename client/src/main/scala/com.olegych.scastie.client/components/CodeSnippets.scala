@@ -1,7 +1,7 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
-import com.olegych.scastie.client.{RestApiClient, Page, View}
+import com.olegych.scastie.client.{Page, View}
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
 

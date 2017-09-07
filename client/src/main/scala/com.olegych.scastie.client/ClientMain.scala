@@ -8,7 +8,7 @@ import org.scalajs.dom.ext._
 
 import scala.scalajs.js
 import js.annotation._
-import js.{|, UndefOr, JSApp}
+import js.{|, UndefOr}
 import js.annotation.JSExport
 
 import java.util.UUID

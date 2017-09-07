@@ -3,7 +3,7 @@ package com.olegych.scastie.api
 import play.api.libs.json._
 
 object SnippetProgress {
-  def default =
+  def default: SnippetProgress =
     SnippetProgress(
       snippetId = None,
       userOutput = None,

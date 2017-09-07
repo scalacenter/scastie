@@ -2,8 +2,6 @@ package com.olegych.scastie.client
 
 import components.Scastie
 
-import play.api.libs.json.Json
-
 import com.olegych.scastie.api._
 import japgolly.scalajs.react._, vdom.all._, extra._,
 component.Scala.BackendScope
@@ -12,10 +10,10 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import org.scalajs.dom._
 
-import scala.util.{Failure, Success}
 import scala.concurrent.Future
 
 import java.util.UUID
+import japgolly.scalajs.react.internal.Effect.Id
 
 class ScastieBackend(scastieId: UUID,
                      serverUrl: Option[String],
@@ -176,7 +174,7 @@ class ScastieBackend(scastieId: UUID,
       eventSourceUri = s"/api/progress-sse/${snippetId.url}",
       websocketUri = s"/api/progress-ws/${snippetId.url}",
       handler = new EventStreamHandler[SnippetProgress] {
-        val direct = scope.withEffectsImpure
+        val direct: scope.WithEffect[Id] = scope.withEffectsImpure
 
         def onMessage(progress: SnippetProgress): Boolean = {
           direct.modState(_.addProgress(progress))

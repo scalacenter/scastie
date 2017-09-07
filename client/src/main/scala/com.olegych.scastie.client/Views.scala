@@ -14,8 +14,8 @@ object View {
       JsString(view.toString)
     }
 
-    private val values =
-      List(
+    private val values: Map[String, View] =
+      List[View](
         Editor,
         BuildSettings,
         CodeSnippets,

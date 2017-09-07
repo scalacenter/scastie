@@ -2,7 +2,7 @@ package com.olegych.scastie.client.components.editor
 
 import japgolly.scalajs.react.{BackendScope, Callback}
 
-import codemirror.CodeMirror
+import codemirror.{TextAreaEditor, CodeMirror}
 
 import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
@@ -10,7 +10,7 @@ import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.js
 
-private[editor] trait EnsimeHandler {
+private[editor] object EnsimeHandler {
   private def keyHandler(scope: BackendScope[Editor, EditorState],
                          event: dom.KeyboardEvent): Unit = {
     val terminateKeys = Set(
@@ -20,6 +20,8 @@ private[editor] trait EnsimeHandler {
       KeyCode.Up,
       KeyCode.Down
     )
+
+    val dot = 46
 
     scope
       .modState { state =>
@@ -90,7 +92,7 @@ private[editor] trait EnsimeHandler {
                 // then we request new type information with curr token and show "..."
                 scope.props
                   .runNow()
-                  .requestTypeAt(currToken, editor.getDoc().indexFromPos(pos))
+                  .requestTypeAt((currToken, editor.getDoc().indexFromPos(pos)))
                   .runNow()
                 "..."
               } else {
@@ -103,13 +105,14 @@ private[editor] trait EnsimeHandler {
     }
   }
 
-  def setup(scope: BackendScope[Editor, EditorState]): Callback = {
-    scope.state.map { state =>
-      val editor = state.editor.get
+  def setup(editor: TextAreaEditor,
+            scope: BackendScope[Editor, EditorState]): Callback = {
 
+    scope.state.map { state =>
       CodeMirror.on(editor.getWrapperElement(),
                     "mousemove",
                     setFindTypeTooltips(scope))
+
       editor.onKeyDown((_, event) => keyHandler(scope, event))
     }
   }

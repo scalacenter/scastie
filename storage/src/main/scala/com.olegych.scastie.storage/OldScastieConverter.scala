@@ -63,7 +63,7 @@ object OldScastieConverter {
   }
 
   private object Converter {
-    def nil =
+    def nil: Converter =
       Converter(
         scalaVersion = None,
         targetType = None,

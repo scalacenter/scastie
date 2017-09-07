@@ -17,6 +17,6 @@ package object client {
   def dontSerializeList[T]: Format[List[T]] =
     dontSerialize(List())
 
-  val isMac = window.navigator.userAgent.contains("Mac")
-  val ctrl = if (isMac) "⌘" else "Ctrl"
+  val isMac: Boolean = window.navigator.userAgent.contains("Mac")
+  val ctrl: String = if (isMac) "⌘" else "Ctrl"
 }

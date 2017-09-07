@@ -9,9 +9,8 @@ import akka.NotUsed
 import akka.actor.{Actor, ActorRef, Props}
 import akka.stream.actor.ActorPublisher
 import akka.stream.scaladsl.Source
-import akka.stream.actor.ActorPublisherMessage.Request
 
-import scala.collection.mutable.{Map => MMap, Queue => MQueue}
+import scala.collection.mutable.{Map => MMap}
 
 case class SubscribeProgress(snippetId: SnippetId)
 case class ProgressDone(snippetId: SnippetId)

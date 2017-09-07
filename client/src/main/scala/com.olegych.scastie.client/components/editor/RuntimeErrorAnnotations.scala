@@ -9,7 +9,7 @@ import codemirror.TextAreaEditor
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLDivElement
 
-object RuntimeErrorAnnotations {  
+object RuntimeErrorAnnotations {
   def apply(editor: TextAreaEditor,
             currentProps: Option[Editor],
             nextProps: Editor,
@@ -47,8 +47,7 @@ object RuntimeErrorAnnotations {
         Line(doc.addLineWidget(line - 1, el))
       },
       _.runtimeErrorAnnotations,
-      (state, annotations) =>
-        state.copy(runtimeErrorAnnotations = annotations)
+      (state, annotations) => state.copy(runtimeErrorAnnotations = annotations)
     )
   }
 }

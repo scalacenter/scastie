@@ -6,7 +6,7 @@ import org.scalajs.dom
 
 import codemirror.{Editor => CodeMirrorEditor2}
 
-import japgolly.scalajs.react.{Callback, BackendScope}
+import japgolly.scalajs.react.BackendScope
 
 private[editor] object EditorOptions {
   def apply(props: Editor,
@@ -40,19 +40,16 @@ private[editor] object EditorOptions {
         val doc = editor.getDoc()
         val pos = doc.indexFromPos(doc.getCursor())
 
-        def showLoadingMessage(state: EditorState): Callback = {
-          val isIdle = state.completionState == Idle
-          Callback(state.loadingMessage.show(editor, doc.getCursor()))
-            .when_(isIdle)
+        props.clearCompletions.runNow()
+        props.completeCodeAt(pos).runNow()
+
+        val state = scope.state.runNow()
+
+        if (state.completionState == Idle) {
+          state.loadingMessage.show(editor, doc.getCursor())
         }
 
-        (for {
-          _ <- props.clearCompletions
-          _ <- props.completeCodeAt(pos)
-          state <- scope.state
-          _ <- showLoadingMessage(state)
-          _ <- scope.modState(_.copy(completionState = Requested))
-        } yield ()).runNow()
+        scope.modState(_.copy(completionState = Requested)).runNow()
       }
     }
 

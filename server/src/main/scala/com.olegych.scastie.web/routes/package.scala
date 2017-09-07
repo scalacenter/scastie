@@ -2,15 +2,8 @@ package com.olegych.scastie.web
 
 import com.olegych.scastie.api._
 
-import akka.http.scaladsl._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.StatusCodes.NotFound
-
-import scala.io.Source
-import System.{lineSeparator => nl}
 
 package object routes {
   def snippetId(pathStart: String)(f: SnippetId => Route): Route =

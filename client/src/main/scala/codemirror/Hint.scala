@@ -34,13 +34,17 @@ trait Hint extends js.Object {
 object HintConfig extends HintConfig(noOpts)
 class HintConfig(val dict: OptMap)
     extends JSOptionBuilder[Hint, HintConfig](new HintConfig(_)) {
-  def text(v: String) = jsOpt("text", v)
-  def displayText(v: String) = jsOpt("displayText", v)
-  def className(v: String) = jsOpt("className", v)
-  def render(v: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit]) =
+  def text(v: String): HintConfig = jsOpt("text", v)
+  def displayText(v: String): HintConfig = jsOpt("displayText", v)
+  def className(v: String): HintConfig = jsOpt("className", v)
+  def render(
+      v: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit]
+  ): HintConfig =
     jsOpt("render", v)
-  def hint(v: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit]) =
+  def hint(
+      v: js.Function3[HTMLElement, Hint, js.Array[js.Any], Unit]
+  ): HintConfig =
     jsOpt("hint", v)
-  def from(v: Position) = jsOpt("from", v)
-  def to(v: Position) = jsOpt("to", v)
+  def from(v: Position): HintConfig = jsOpt("from", v)
+  def to(v: Position): HintConfig = jsOpt("to", v)
 }

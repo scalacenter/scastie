@@ -6,8 +6,6 @@ import com.olegych.scastie.client.AttachedDoms
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 
-import codemirror.TextAreaEditor
-
 final case class Editor(isDarkTheme: Boolean,
                         isPresentationMode: Boolean,
                         isEmbedded: Boolean,
@@ -62,22 +60,6 @@ object Editor {
       .builder[Editor]("Editor")
       .initialState(EditorState())
       .renderBackend[EditorBackend]
-      .componentWillReceiveProps{ scope =>
-        scope.state.editor match {
-          case Some(editor) => 
-            RunDelta(
-              editor = editor,
-              currentProps = Some(scope.currentProps),
-              nextProps = scope.nextProps,
-              state = scope.state,
-              modState = (f => scope.modState(f))
-            )
-
-          case None => 
-            Callback(())
-        }
-
-      }
       .configure(Reusability.shouldComponentUpdate)
       .componentDidMount(_.backend.start())
       .componentWillUnmount(_.backend.stop())

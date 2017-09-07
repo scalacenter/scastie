@@ -9,12 +9,10 @@ import akka.actor.{
   PoisonPill,
   Props
 }
-import akka.remote.DisassociatedEvent
 import com.olegych.scastie.api.{
   EnsimeRunnerConnect,
   EnsimeTaskRequest,
   EnsimeTaskResponse,
-  SbtRunnerConnect
 }
 import com.olegych.scastie.{ActorReconnecting, ReconnectInfo}
 

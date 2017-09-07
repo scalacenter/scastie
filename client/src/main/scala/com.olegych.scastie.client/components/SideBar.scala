@@ -15,7 +15,7 @@ import js.annotation._
 object ScastieLogo extends js.Object
 
 object Assets {
-  def logoUrl = ScastieLogo.asInstanceOf[String]
+  def logoUrl: String = ScastieLogo.asInstanceOf[String]
 }
 
 final case class SideBar(isDarkTheme: Boolean,

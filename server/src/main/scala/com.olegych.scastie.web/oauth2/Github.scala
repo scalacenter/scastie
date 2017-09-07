@@ -15,6 +15,7 @@ import com.olegych.scastie.api.User
 
 import scala.concurrent.Future
 import com.typesafe.config.ConfigFactory
+import play.api.libs.json.{OFormat, Reads}
 
 case class AccessToken(access_token: String)
 
@@ -23,8 +24,8 @@ class Github(implicit system: ActorSystem, materializer: ActorMaterializer)
   import system.dispatcher
 
   import play.api.libs.json._
-  implicit val formatUser = Json.format[User]
-  implicit val readAccessToken = Json.reads[AccessToken]
+  implicit val formatUser: OFormat[User] = Json.format[User]
+  implicit val readAccessToken: Reads[AccessToken] = Json.reads[AccessToken]
 
   private val config =
     ConfigFactory.load().getConfig("com.olegych.scastie.web.oauth2")

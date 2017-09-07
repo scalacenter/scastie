@@ -198,6 +198,7 @@ object Scastie {
                       ScalaTarget.Js.targetFilename
                     )
                   }
+                  ()
                 } else {
                   println("empty snippetId")
                 }

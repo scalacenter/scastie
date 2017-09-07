@@ -1,6 +1,6 @@
 package com.olegych.scastie.util
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.Actor
 import akka.stream.actor.ActorPublisher
 import scala.collection.mutable.{Queue => MQueue}
 

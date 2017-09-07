@@ -103,7 +103,8 @@ object ScalaTarget {
   }
 
   object Jvm {
-    def default = ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
+    def default: ScalaTarget =
+      ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
   }
 
   case class Jvm(scalaVersion: String) extends ScalaTarget {
@@ -112,8 +113,10 @@ object ScalaTarget {
       scalaVersion.startsWith("2.11")
     }
 
-    def targetType = ScalaTargetType.JVM
-    def scaladexRequest =
+    def targetType: ScalaTargetType =
+      ScalaTargetType.JVM
+
+    def scaladexRequest: Map[String, String] =
       Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
 
     def renderSbt(lib: ScalaDependency): String =
@@ -133,7 +136,8 @@ object ScalaTarget {
   }
 
   object Typelevel {
-    def default = ScalaTarget.Typelevel(scalaVersion = "2.12.3-bin-typelevel-4")
+    def default: ScalaTarget =
+      ScalaTarget.Typelevel(scalaVersion = "2.12.3-bin-typelevel-4")
   }
 
   case class Typelevel(scalaVersion: String) extends ScalaTarget {
@@ -141,10 +145,10 @@ object ScalaTarget {
     def hasEnsimeSupport: Boolean =
       Jvm(scalaVersion).hasEnsimeSupport
 
-    def targetType =
+    def targetType: ScalaTargetType =
       ScalaTargetType.Typelevel
 
-    def scaladexRequest =
+    def scaladexRequest: Map[String, String] =
       Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
 
     def renderSbt(lib: ScalaDependency): String =
@@ -171,7 +175,7 @@ object ScalaTarget {
     val sourceFilename = "main.scala"
     val sourceUUID = "file:///tmp/LxvjvKARSa2U5ctNis9LIA"
 
-    def default =
+    def default: ScalaTarget =
       ScalaTarget.Js(
         scalaVersion = defaultScalaVersion,
         scalaJsVersion = defaultScalaJsVersion
@@ -184,9 +188,10 @@ object ScalaTarget {
     def hasEnsimeSupport: Boolean =
       Jvm(scalaVersion).hasEnsimeSupport
 
-    def targetType = ScalaTargetType.JS
+    def targetType: ScalaTargetType =
+      ScalaTargetType.JS
 
-    def scaladexRequest = Map(
+    def scaladexRequest: Map[String, String] = Map(
       "target" -> "JS",
       "scalaVersion" -> scalaVersion,
       "scalaJsVersion" -> scalaJsVersion
@@ -218,10 +223,10 @@ object ScalaTarget {
   }
 
   object Native {
-    def default =
+    def default: Native =
       ScalaTarget.Native(
         scalaVersion = "2.11.11",
-        scalaNativeVersion = "0.3.1"
+        scalaNativeVersion = "0.3.3"
       )
   }
 
@@ -231,10 +236,10 @@ object ScalaTarget {
     def hasEnsimeSupport: Boolean =
       Jvm(scalaVersion).hasEnsimeSupport
 
-    def targetType =
+    def targetType: ScalaTargetType =
       ScalaTargetType.Native
 
-    def scaladexRequest =
+    def scaladexRequest: Map[String, String] =
       Map(
         "target" -> "NATIVE",
         "scalaVersion" -> scalaVersion,
@@ -260,9 +265,10 @@ object ScalaTarget {
   }
 
   object Dotty {
-    def default = Dotty(defaultDottyVersion)
+    def default: ScalaTarget =
+      Dotty(defaultDottyVersion)
 
-    def defaultCode =
+    def defaultCode: String =
       """|// You can find more examples here:
          |//   https://github.com/lampepfl/dotty-example-project
          |
@@ -292,10 +298,10 @@ object ScalaTarget {
 
     def hasEnsimeSupport: Boolean = false
 
-    def targetType =
+    def targetType: ScalaTargetType =
       ScalaTargetType.Dotty
 
-    def scaladexRequest =
+    def scaladexRequest: Map[String, String] =
       Map("target" -> "JVM", "scalaVersion" -> "2.11")
 
     def renderSbt(lib: ScalaDependency): String =

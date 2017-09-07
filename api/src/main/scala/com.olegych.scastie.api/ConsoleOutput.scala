@@ -1,6 +1,7 @@
 package com.olegych.scastie.api
 
 import play.api.libs.json._
+import play.api.libs.json.OFormat
 
 sealed trait ConsoleOutput {
   def show: String
@@ -20,7 +21,7 @@ object ConsoleOutput {
   }
 
   implicit object ConsoleOutputFormat extends Format[ConsoleOutput] {
-    val formatSbtOutput = Json.format[SbtOutput]
+    val formatSbtOutput: OFormat[SbtOutput] = Json.format[SbtOutput]
     private val formatUserOutput = Json.format[UserOutput]
     private val formatScastieOutput = Json.format[ScastieOutput]
 

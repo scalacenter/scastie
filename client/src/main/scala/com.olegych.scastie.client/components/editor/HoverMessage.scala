@@ -50,7 +50,7 @@ private[editor] class HoverMessage() {
     }
   }
 
-  def updateMessage(messageString: String) = {
+  def updateMessage(messageString: String): Unit = {
     message.innerHTML = messageString
   }
 

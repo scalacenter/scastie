@@ -9,6 +9,5 @@ unmanagedSourceDirectories in Compile += {
   baseDirectory.value.getParentFile / "sbt-shared"
 }
 
-// addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.0-M6")
-
+// addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.0-RC2")
 addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.8.0-SNAPSHOT")

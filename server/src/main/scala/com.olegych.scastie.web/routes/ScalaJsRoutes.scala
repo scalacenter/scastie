@@ -14,7 +14,7 @@ import scala.concurrent.duration.DurationInt
 class ScalaJsRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
   import system.dispatcher
 
-  implicit val timeout = Timeout(1.seconds)
+  implicit val timeout: Timeout = Timeout(1.seconds)
 
   val routes: Route =
     concat(
