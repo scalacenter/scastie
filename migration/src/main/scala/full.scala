@@ -83,7 +83,7 @@ object ScalaTarget {
       extends ScalaTarget
   case class Native(scalaVersion: String, scalaNativeVersion: String)
       extends ScalaTarget
-  case class Dotty(dottyVersion: String = "0.3.0-RC1") extends ScalaTarget
+  case class Dotty(dottyVersion: String = "0.3.0-RC2") extends ScalaTarget
 }
 
 object ScalaDependency {
