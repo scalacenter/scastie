@@ -15,7 +15,9 @@ case class TestTaskId(id: Int) extends TaskId {
 
 case class TestServerRef(id: Int)
 case class TestConfig(config: String)
-case class TestState(state: String)
+case class TestState(state: String, ready: Boolean = true) extends ServerState {
+  def isReady: Boolean = ready
+}
 
 object TestConfig {
   implicit val ordering: Ordering[TestConfig] = Ordering.by { tc: TestConfig =>

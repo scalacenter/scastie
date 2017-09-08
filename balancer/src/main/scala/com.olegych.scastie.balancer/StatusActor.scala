@@ -1,16 +1,12 @@
 package com.olegych.scastie.balancer
 
-import java.net.InetAddress
-
 import com.olegych.scastie.api._
 import com.olegych.scastie.util.ActorForwarder
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.stream.actor.ActorPublisher
 import akka.stream.scaladsl.Source
 import java.util.concurrent.TimeUnit
-
-import akka.http.scaladsl.model.RemoteAddress
 
 import scala.collection.mutable
 import scala.concurrent.duration._

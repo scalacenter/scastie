@@ -11,7 +11,6 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.StatusCodes.Created
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 
 import akka.pattern.ask
 
@@ -33,30 +32,28 @@ class ScalaLangRoutes(
       extractClientIP(remoteAddress ⇒
         optionalLogin(user ⇒
           path("scala-lang")(
-            cors()(
-              entity(as[String]) { code ⇒
-                val inputs =
-                  InputsWithIpAndUser(
-                    Inputs.default.copy(code = code),
-                    UserTrace(
-                      remoteAddress.toString,
-                      None
+            entity(as[String]) { code ⇒
+              val inputs =
+                InputsWithIpAndUser(
+                  Inputs.default.copy(code = code),
+                  UserTrace(
+                    remoteAddress.toString,
+                    None
+                  )
+                )
+
+              complete(
+                (dispatchActor ? RunSnippet(inputs))
+                  .mapTo[SnippetId]
+                  .map(
+                    snippetId =>
+                      (
+                        Created,
+                        snippetId.url
                     )
                   )
-
-                complete(
-                  (dispatchActor ? RunSnippet(inputs))
-                    .mapTo[SnippetId]
-                    .map(
-                      snippetId =>
-                        (
-                          Created,
-                          snippetId.url
-                      )
-                    )
-                )
-              }
-            )
+              )
+            }
           )
         )
       )

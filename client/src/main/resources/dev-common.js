@@ -1,4 +1,4 @@
-require("./common.js");
+require("./style.js");
 require("scalajsbundler-entry-point");
 
 {
@@ -22,17 +22,32 @@ module.exports = {
     }(document));
 
     function run(){
+
+      const Main = $e.scastie.ClientMain
+
       window.com = {
         olegych: {
           scastie: {
             client: {
-              ClientMain: function(){ return $e.scastie.ClientMain }
+              ClientMain: {
+                signal: function(a, b, c) {
+                  return Main.signal(a, b, c);
+                },
+                error: function(a, b){
+                  return Main.error(a, b);
+                },
+                embedded: function(s, o, u) {
+                  return Main.embedded(s, o, defaultServerUrl);
+                }
+              }
             }
           }
         }
       }
 
-      body();
+      const defaultServerUrl = "";
+
+      body(defaultServerUrl);
     }
   }
 }

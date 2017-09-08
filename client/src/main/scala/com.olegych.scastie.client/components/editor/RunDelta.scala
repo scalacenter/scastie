@@ -84,8 +84,6 @@ private[editor] object RunDelta {
           .map(c => !editorShouldRefresh.test(c, nextProps))
           .getOrElse(true)
 
-      println("shouldRefresh: " + shouldRefresh)
-
       Callback(
         scalajs.js.timers.setTimeout(10)(
           editor.refresh()

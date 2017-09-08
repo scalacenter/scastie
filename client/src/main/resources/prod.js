@@ -1,9 +1,5 @@
-require("./common.js");
-
-const scalajs = require("scalajs");
-const Main = scalajs.scastie.ClientMain;
-
-var Raven = require("node_modules/raven-js");
+const Raven = require("node_modules/raven-js");
+const common = require("./prod-common.js");
 
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -15,26 +11,8 @@ ga('send', 'pageview');
 
 Raven.config('https://0b9ff62cbc2344369cab867af776ae07@sentry.io/171717').install();
 
-Main.main();
+common.Main.main(common.defaultServerUrl);
 
 module.exports = {
-  com: {
-    olegych: {
-      scastie: {
-        client: {
-          ClientMain: {
-            signal: function(a, b) {
-              return Main.signal(a, b);
-            },
-            error: function(e){
-              return Main.error(e);
-            },
-            embedded: function(s, o) {
-              return Main.embedded(s, o);
-            }
-          }
-        }
-      }
-    }
-  }
-}
+  com: common.com
+};

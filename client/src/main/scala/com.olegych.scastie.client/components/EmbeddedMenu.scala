@@ -24,13 +24,15 @@ object EmbeddedMenu {
 
   private def render(props: EmbeddedMenu): VdomElement = {
 
+    val urlBase = props.serverUrl.getOrElse("")
+
     def openScastie: Callback =
       props.save.asCBO.flatMap(
         sid =>
           Callback(
             dom.window
               .open(
-                props.serverUrl.getOrElse("") + "/" + sid.url,
+                urlBase + "/" + sid.url,
                 "_blank"
               )
               .focus()
@@ -45,7 +47,7 @@ object EmbeddedMenu {
         setView = props.setView
       ).render,
       li(cls := "logo")(
-        img(src := Assets.logoUrl),
+        img(src := urlBase + Assets.logoUrl),
         span("to Scastie"),
         onClick --> openScastie
       )

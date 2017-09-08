@@ -5,6 +5,7 @@ const rootDir = Path.resolve(__dirname, '../../../..');
 const resourcesDir = Path.resolve(rootDir, 'src/main/resources');
 
 module.exports = {
+  rootDir: rootDir,
   resourcesDir: resourcesDir,
   webpackConfig: {
     output: {

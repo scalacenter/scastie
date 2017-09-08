@@ -1,12 +1,11 @@
 const Path = require('path');
 
-const rootDir = Path.resolve(__dirname, '../../../..');
-const devDir = Path.resolve(rootDir, 'dev-static');
+const common = require('./webpack.common.js');
+
+const devDir = Path.resolve(common.rootDir, 'dev-static');
 
 const Webpack = require('webpack');
 const Merge = require("webpack-merge");
-
-const common = require('./webpack.common.js');
 
 module.exports = 
   Merge(common.webpackConfig, {

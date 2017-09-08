@@ -143,6 +143,11 @@
 
     & > * {
       cursor: pointer;
+      
+      &.disabled {
+        cursor: not-allowed;
+      }
+
       margin: 10px;
       padding: 10px;
       font-size: 20px;

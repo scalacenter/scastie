@@ -73,6 +73,10 @@ $margin: 24px;
   }
 }
 
+.CodeMirror-widget .fold.code-fold {
+  cursor: pointer;
+}
+
 .CodeMirror {
   font-family: $code-font-family;
   

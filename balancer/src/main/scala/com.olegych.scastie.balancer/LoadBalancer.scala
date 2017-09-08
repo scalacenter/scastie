@@ -33,7 +33,7 @@ case class History[C](data: Queue[Record[C]], size: Int) {
     History(data1, size)
   }
 }
-case class LoadBalancer[C, T <: TaskId, R, S](
+case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
     servers: Vector[Server[C, T, R, S]],
     history: History[C],
     taskCost: FiniteDuration,
@@ -77,18 +77,23 @@ case class LoadBalancer[C, T <: TaskId, R, S](
   ): Option[(Server[C, T, R, S], LoadBalancer[C, T, R, S])] = {
     log.info("Task added: {}", task.taskId)
 
-    if (servers.size > 0) {
+    val (availableServers, unavailableServers) =
+      servers.partition(_.state.isReady)
+
+    if (availableServers.size > 0) {
       val updatedHistory = history.add(task.toRecord)
       lazy val historyHistogram =
         updatedHistory.data.map(_.config).to[Histogram]
 
-      val hits = servers.indices
+      val hits = availableServers.indices
         .to[Vector]
-        .filter(i => servers(i).currentConfig == task.config)
+        .filter(i => availableServers(i).currentConfig == task.config)
 
       def overBooked =
         hits.forall(
-          i => servers(i).cost(taskCost, reloadCost, needsReload) > reloadCost
+          i =>
+            availableServers(i)
+              .cost(taskCost, reloadCost, needsReload) > reloadCost
         )
 
       def cacheMiss = hits.isEmpty
@@ -100,7 +105,8 @@ case class LoadBalancer[C, T <: TaskId, R, S](
           randomMin(configs.indices) { i =>
             val config = task.config
             val distance = distanceFromHistory(i, config, historyHistogram)
-            val load = servers(i).cost(taskCost, reloadCost, needsReload)
+            val load =
+              availableServers(i).cost(taskCost, reloadCost, needsReload)
             (distance, load)
           }
         } else {
@@ -109,21 +115,24 @@ case class LoadBalancer[C, T <: TaskId, R, S](
 
       val updatedServers = {
         val i = selectedServerIndice
-        servers.updated(i, servers(i).add(task))
+        availableServers.updated(i, availableServers(i).add(task))
       }
 
       Some(
         (
-          servers(selectedServerIndice),
+          availableServers(selectedServerIndice),
           copy(
-            servers = updatedServers,
+            servers = updatedServers ++ unavailableServers,
             history = updatedHistory
           )
         )
       )
     } else {
-      val msg = "All instances are down"
-      log.error(msg)
+      if (servers.size == 0) {
+        val msg = "All instances are down"
+        log.error(msg)
+      }
+
       None
     }
   }

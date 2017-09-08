@@ -2,10 +2,11 @@ package com.olegych.scastie.api
 
 import play.api.libs.json._
 
-sealed trait SbtState
+sealed trait SbtState extends ServerState
 object SbtState {
   case object Unknown extends SbtState {
     override def toString: String = "Unknown"
+    def isReady: Boolean = true
   }
 
   implicit object SbtStateFormat extends Format[SbtState] {

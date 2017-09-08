@@ -9,7 +9,6 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives._
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 
 import play.api.libs.json.Reads
 
@@ -32,77 +31,75 @@ class ApiRoutes(
     }
 
   val routes: Route =
-    cors()(
-      withRestApiServer(
-        server =>
-          concat(
-            post(
-              concat(
-                path("run")(
-                  entity(as[Inputs])(inputs => complete(server.run(inputs)))
-                ),
-                path("save")(
-                  entity(as[Inputs])(inputs => complete(server.save(inputs)))
-                ),
-                path("amend")(
-                  entity(as[EditInputs])(
-                    editInputs => complete(server.amend(editInputs))
-                  )
-                ),
-                path("update")(
-                  entity(as[EditInputs])(
-                    editInputs => complete(server.update(editInputs))
-                  )
-                ),
-                path("fork")(
-                  entity(as[EditInputs])(
-                    editInputs => complete(server.fork(editInputs))
-                  )
-                ),
-                path("delete")(
-                  entity(as[SnippetId])(
-                    snippetId => complete(server.delete(snippetId))
-                  )
-                ),
-                path("autocomplete")(
-                  entity(as[AutoCompletionRequest])(
-                    request => complete(server.autocomplete(request))
-                  )
-                ),
-                path("typeAt")(
-                  entity(as[TypeAtPointRequest])(
-                    request => complete(server.typeAt(request))
-                  )
-                ),
-                path("updateEnsimeConfig")(
-                  entity(as[UpdateEnsimeConfigRequest])(
-                    request => complete(server.updateEnsimeConfig(request))
-                  )
-                ),
-                path("format")(
-                  entity(as[FormatRequest])(
-                    request => complete(server.format(request))
-                  )
+    withRestApiServer(
+      server =>
+        concat(
+          post(
+            concat(
+              path("run")(
+                entity(as[Inputs])(inputs => complete(server.run(inputs)))
+              ),
+              path("save")(
+                entity(as[Inputs])(inputs => complete(server.save(inputs)))
+              ),
+              path("amend")(
+                entity(as[EditInputs])(
+                  editInputs => complete(server.amend(editInputs))
                 )
-              )
-            ),
-            get(
-              concat(
-                snippetId("snippets")(
-                  sid => complete(server.fetch(sid))
-                ),
-                path("old-snippets" / IntNumber)(
-                  id => complete(server.fetchOld(id))
-                ),
-                path("user" / "settings")(
-                  complete(server.fetchUser())
-                ),
-                path("user" / "snippets")(
-                  complete(server.fetchUserSnippets())
+              ),
+              path("update")(
+                entity(as[EditInputs])(
+                  editInputs => complete(server.update(editInputs))
+                )
+              ),
+              path("fork")(
+                entity(as[EditInputs])(
+                  editInputs => complete(server.fork(editInputs))
+                )
+              ),
+              path("delete")(
+                entity(as[SnippetId])(
+                  snippetId => complete(server.delete(snippetId))
+                )
+              ),
+              path("autocomplete")(
+                entity(as[AutoCompletionRequest])(
+                  request => complete(server.autocomplete(request))
+                )
+              ),
+              path("typeAt")(
+                entity(as[TypeAtPointRequest])(
+                  request => complete(server.typeAt(request))
+                )
+              ),
+              path("updateEnsimeConfig")(
+                entity(as[UpdateEnsimeConfigRequest])(
+                  request => complete(server.updateEnsimeConfig(request))
+                )
+              ),
+              path("format")(
+                entity(as[FormatRequest])(
+                  request => complete(server.format(request))
                 )
               )
             )
-        )
+          ),
+          get(
+            concat(
+              snippetId("snippets")(
+                sid => complete(server.fetch(sid))
+              ),
+              path("old-snippets" / IntNumber)(
+                id => complete(server.fetchOld(id))
+              ),
+              path("user" / "settings")(
+                complete(server.fetchUser())
+              ),
+              path("user" / "snippets")(
+                complete(server.fetchUserSnippets())
+              )
+            )
+          )
       )
     )
 }

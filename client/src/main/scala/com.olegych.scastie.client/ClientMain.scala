@@ -19,7 +19,7 @@ import japgolly.scalajs.react._, extra.router._
 object ClientMain {
 
   @JSExport
-  def main(): Unit = {
+  def main(defaultServerUrl: String): Unit = {
     dom.document.body.className = "scastie"
 
     val container =
@@ -27,7 +27,9 @@ object ClientMain {
     container.className = "root"
     dom.document.body.appendChild(container)
 
-    Router(BaseUrl.fromWindowOrigin_/, Routing.config)().renderIntoDOM(
+    val routing = new Routing(defaultServerUrl)
+
+    Router(BaseUrl.fromWindowOrigin_/, routing.config)().renderIntoDOM(
       container
     )
 
@@ -48,7 +50,9 @@ object ClientMain {
 
   @JSExport
   def embedded(selector: String | Node,
-               options: UndefOr[EmbeddedOptionsJs]): Unit = {
+               options: UndefOr[EmbeddedOptionsJs],
+               defaultServerUrl: String): Unit = {
+
     val nodes =
       (selector: Any) match {
         case cssSelector: String =>
@@ -59,8 +63,22 @@ object ClientMain {
 
     val embeddedOptions =
       options.toOption
-        .map(EmbeddedOptions.fromJs)
-        .getOrElse(EmbeddedOptions.empty)
+        .map(EmbeddedOptions.fromJs(defaultServerUrl))
+        .getOrElse(EmbeddedOptions.empty(defaultServerUrl))
+
+    if (nodes.nonEmpty) {
+      val baseUrl = embeddedOptions.serverUrl
+
+      val link = dom.document
+        .createElement("link")
+        .asInstanceOf[dom.raw.HTMLLinkElement]
+
+      link.`type` = "text/css"
+      link.rel = "stylesheet"
+      link.href = baseUrl + "/public/app.css"
+
+      dom.document.getElementsByTagName("head")(0).appendChild(link)
+    }
 
     nodes.foreach {
       case node: dom.raw.HTMLElement => {

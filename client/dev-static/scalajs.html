@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html>
-</head>
-</head>
-
 <body>
 
 <pre class="scala">
@@ -37,7 +34,22 @@ img
 </pre>
 
 
-<script src="/embedded.js"></script>
+<script src="http://localhost:9000/embedded.js"></script>
+<!-- <script src="http://localhost:8080/embedded.js"></script> -->
+
+<script>
+window.onload = function() {
+  var Scastie = com.olegych.scastie.client.ClientMain;
+
+  Scastie.embedded(
+    ".scala",
+    {
+      targetType: "js",
+      serverUrl: "http://localhost:9000"
+    }
+  );
+}
+</script>
 
 </body>
 </html>

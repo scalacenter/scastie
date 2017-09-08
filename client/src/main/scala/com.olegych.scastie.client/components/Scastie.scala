@@ -28,7 +28,7 @@ final case class Scastie(scastieId: UUID,
 
   @inline def render = Scastie.component(serverUrl, scastieId)(this)
 
-  def serverUrl: Option[String] = embedded.flatMap(_.serverUrl)
+  def serverUrl: Option[String] = embedded.map(_.serverUrl)
   def isEmbedded: Boolean = embedded.isDefined
 }
 
@@ -72,6 +72,7 @@ object Scastie {
         status = state.status,
         inputs = state.inputs,
         ensimeConfigurationLoading = state.ensimeConfigurationLoading,
+        serverUrl = props.serverUrl,
         toggleTheme = scope.backend.toggleTheme,
         view = scope.backend.viewSnapshot(state.view),
         openHelpModal = scope.backend.openHelpModal,
@@ -152,19 +153,23 @@ object Scastie {
           removeIfExist(scalaJsRunId)
           val scalaJsRunScriptElement = createScript(scalaJsRunId)
           println("== Running Scala.js ==")
-          scalaJsRunScriptElement.innerHTML = s"""|try {
-                                                  |  var main = new Main();
-                                                  |  com.olegych.scastie.client.ClientMain().signal(
-                                                  |    main.result,
-                                                  |    main.attachedElements,
-                                                  |    "$scastieId"
-                                                  |  );
-                                                  |} catch (e) {
-                                                  |  com.olegych.scastie.client.ClientMain().error(
-                                                  |    e,
-                                                  |    "$scastieId"
-                                                  |  );
-                                                  |}""".stripMargin
+
+          val scalaJsScript =
+            s"""|try {
+                |  var main = new Main();
+                |  com.olegych.scastie.client.ClientMain.signal(
+                |    main.result,
+                |    main.attachedElements,
+                |    "$scastieId"
+                |  );
+                |} catch (e) {
+                |  com.olegych.scastie.client.ClientMain.error(
+                |    e,
+                |    "$scastieId"
+                |  );
+                |}""".stripMargin
+
+          scalaJsRunScriptElement.innerHTML = scalaJsScript
         }
 
         val executeScalaJs =
@@ -194,9 +199,15 @@ object Scastie {
                 }
                 if (state.snippetId.nonEmpty) {
                   timers.setTimeout(500) {
-                    scalaJsScriptElement.src = state.snippetId.get.scalaJsUrl(
-                      ScalaTarget.Js.targetFilename
-                    )
+                    
+                    val apiBase = scope.currentProps.serverUrl.getOrElse("")
+
+                    val snippetUrl =
+                      apiBase + state.snippetId.get.scalaJsUrl(
+                        ScalaTarget.Js.targetFilename
+                      )
+
+                    scalaJsScriptElement.src = snippetUrl
                   }
                   ()
                 } else {

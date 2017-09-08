@@ -1,7 +1,7 @@
 import common from "./dev-common.js"
 
-common.load(function(){
+common.load(function(defaultServerUrl){
   setTimeout(function(){
-    $e.scastie.ClientMain.main();
+    $e.scastie.ClientMain.main(defaultServerUrl);
   }, 0);
 });
