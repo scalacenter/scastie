@@ -10,6 +10,10 @@
     & > * {
       background-color: $sidebar-background;
       color: $editor-button-color;
+
+      &.disabled {
+        color: grey;
+      }
     }
   }
 

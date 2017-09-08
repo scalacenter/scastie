@@ -2,30 +2,36 @@ package com.olegych.scastie.api
 
 import play.api.libs.json._
 
-sealed trait EnsimeServerState
+sealed trait EnsimeServerState extends ServerState
 object EnsimeServerState {
   case object Unknown extends EnsimeServerState {
     override def toString: String = "Unknown"
+    def isReady: Boolean = false
   }
 
   case object Initializing extends EnsimeServerState {
     override def toString: String = "Initializing"
+    def isReady: Boolean = false
   }
 
   case object CreatingConfig extends EnsimeServerState {
     override def toString: String = "CreatingConfig"
+    def isReady: Boolean = false
   }
 
   case object Connecting extends EnsimeServerState {
     override def toString: String = "Connecting"
+    def isReady: Boolean = false
   }
 
   case object Indexing extends EnsimeServerState {
     override def toString: String = "Indexing"
+    def isReady: Boolean = false
   }
 
   case object Ready extends EnsimeServerState {
     override def toString: String = "Ready"
+    def isReady: Boolean = true
   }
 
   implicit object EnsimeServerStateFormat extends Format[EnsimeServerState] {

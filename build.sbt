@@ -255,25 +255,35 @@ lazy val storage = project
   )
   .dependsOn(apiJVM, utils, instrumentation)
 
+val webpackDir = Def.setting {
+  (baseDirectory in ThisProject).value / "webpack"
+}
+
+val webpackDevConf = Def.setting {
+  Some(webpackDir.value / "webpack-dev.config.js")
+}
+
+val webpackProdConf = Def.setting {
+  Some(webpackDir.value / "webpack-prod.config.js")
+}
+
 lazy val client = project
   .settings(baseSettings)
   .settings(
-    test := {},
     version in webpack := "3.5.5",
     version in installWebpackDevServer := "2.7.1",
-    webpackConfigFile in startWebpackDevServer :=
-      Some(baseDirectory.value / "webpack-dev.config.js"),
-    webpackConfigFile in webpackReload :=
-      Some(baseDirectory.value / "webpack-dev.config.js"),
-    webpackConfigFile in fastOptJS :=
-      Some(baseDirectory.value / "webpack-dev.config.js"),
-    webpackConfigFile in fullOptJS :=
-      Some(baseDirectory.value / "webpack-prod.config.js"),
+    webpackConfigFile in startWebpackDevServer := webpackDevConf.value,
+    webpackConfigFile in webpackReload := webpackDevConf.value,
+    webpackConfigFile in fastOptJS := webpackDevConf.value,
+    webpackConfigFile in fullOptJS := webpackProdConf.value,
     webpackMonitoredDirectories += (resourceDirectory in Compile).value,
+    webpackResources := webpackDir.value * "*.js",
     includeFilter in webpackMonitoredFiles := "*",
     useYarn := true,
     enableReloadWorkflow := true,
-    emitSourceMaps := false,
+    emitSourceMaps in fastOptJS := false,
+    emitSourceMaps in fullOptJS := true,
+    test := {},
     npmDependencies in Compile ++= Seq(
       "bourbon" -> "4.3.4",
       "bourbon-neat" -> "1.9.0",

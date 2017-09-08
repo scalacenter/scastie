@@ -222,4 +222,15 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
     assert(emptyBalancer.add(task).isEmpty)
   }
+
+  // test("unavailable servers") {
+  //   val s1 = server("c1")
+  //   val s2 = server("c2")
+  //   val s2NotReady = s2.copy(state = s2.state.copy(ready = false))
+  //   val balancer = TestLoadBalancer(
+  //     servers = Vector(s1, s2NotReady),
+  //     history = History(Queue(), size = 1)
+  //   )
+  //   balancer
+  // }
 }

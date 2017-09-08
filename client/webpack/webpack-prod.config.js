@@ -7,17 +7,18 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const common = require('./webpack.common.js');
 
 const extractSass = new ExtractTextPlugin({
-  filename: "[name].[contenthash].css"
+  filename: "[name].css"
 });
 
 const publicFolderName = "out/public"
 
 module.exports = Merge(common.webpackConfig, {
   entry: {
-    app: Path.resolve(common.resourcesDir, './prod.js')
+    app: Path.resolve(common.resourcesDir, './prod.js'),
+    embedded: Path.resolve(common.resourcesDir, './prod-embed.js')
   },
   output: {
-    filename: '[name].[hash].js',
+    filename: '[name].js',
     path: Path.resolve(__dirname, publicFolderName),
     publicPath: '/public/'
   },

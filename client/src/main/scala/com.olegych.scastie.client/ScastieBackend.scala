@@ -170,9 +170,11 @@ class ScastieBackend(scastieId: UUID,
   }
 
   private def connectProgress(snippetId: SnippetId): Callback = {
+    val apiBase = serverUrl.getOrElse("")
+
     EventStream.connect(
-      eventSourceUri = s"/api/progress-sse/${snippetId.url}",
-      websocketUri = s"/api/progress-ws/${snippetId.url}",
+      eventSourceUri = s"$apiBase/api/progress-sse/${snippetId.url}",
+      websocketUri = s"$apiBase/api/progress-ws/${snippetId.url}",
       handler = new EventStreamHandler[SnippetProgress] {
         val direct: scope.WithEffect[Id] = scope.withEffectsImpure
 
@@ -218,9 +220,11 @@ class ScastieBackend(scastieId: UUID,
   def connectStatus: Callback = {
     val direct = scope.withEffectsImpure
 
+    val apiBase = serverUrl.getOrElse("")
+
     EventStream.connect(
-      eventSourceUri = "/api/status-sse",
-      websocketUri = "/api/status-ws",
+      eventSourceUri = s"$apiBase/api/status-sse",
+      websocketUri = s"$apiBase/api/status-ws",
       handler = new EventStreamHandler[StatusProgress] {
         def onMessage(status: StatusProgress): Boolean = {
           status match {

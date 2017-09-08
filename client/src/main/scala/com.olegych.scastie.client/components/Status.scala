@@ -80,7 +80,7 @@ object Status {
           case CreatingConfig => "Generating .ensime configuration file"
           case Connecting     => "Connecting to ensime server"
           case Indexing       => "Indexing"
-          case Ready          => "Connected"
+          case Ready          => "Ready"
         }
 
       val stateCss =

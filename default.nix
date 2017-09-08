@@ -6,7 +6,7 @@ let
   fetchurl = pkgs.fetchurl;
 in rec {
   scastie = stdenv.mkDerivation rec {
-
+    SBT_OPTS = "-Xms512m -Xmx1024M";
     name = "sbt-env";
     shellHook = ''
     alias cls=clear
@@ -22,7 +22,7 @@ in rec {
   sbt = stdenv.mkDerivation rec {
     name = "sbt-${version}";
     version = "0.13.16";
-
+ 
     src = fetchurl {
       url = "https://cocl.us/sbt01316tgz";
       sha256 = "033nvklclvbirhpsiy28d3ccmbm26zcs9vb7j8jndsc1ln09awi2";

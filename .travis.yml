@@ -18,10 +18,10 @@ script:
   - pushd scalajs-bundler
   - git checkout dev-server-fix
   - sbt publishLocal
-  - nix-shell -A scastie --command "sbt publishLocal"
+  - nix-shell ../default.nix -A scastie --command "sbt publishLocal"
   - popd
 
-  - nix-shell -A scastie --command "sbt ensimeRunner/test"
+  - nix-shell -A scastie --command "sbt test"
 
 before_cache:
   # Cleanup the cached directories to avoid unnecessary cache updates

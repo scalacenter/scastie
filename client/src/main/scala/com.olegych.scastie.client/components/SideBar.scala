@@ -22,6 +22,7 @@ final case class SideBar(isDarkTheme: Boolean,
                          status: StatusState,
                          inputs: Inputs,
                          ensimeConfigurationLoading: Boolean,
+                         serverUrl: Option[String],
                          toggleTheme: Reusable[Callback],
                          view: StateSnapshot[View],
                          openHelpModal: Reusable[Callback],
@@ -35,6 +36,8 @@ object SideBar {
     Reusability.caseClass[SideBar]
 
   private def render(props: SideBar): VdomElement = {
+    val urlBase = props.serverUrl.getOrElse("")
+
     val toggleThemeLabel =
       if (props.isDarkTheme) "Light"
       else "Dark"
@@ -110,7 +113,7 @@ object SideBar {
     nav(cls := "sidebar")(
       div(cls := "actions-container")(
         div(cls := "logo")(
-          img(src := Assets.logoUrl),
+          img(src := urlBase + Assets.logoUrl),
           h1("Scastie")
         ),
         ul(cls := "actions-top")(

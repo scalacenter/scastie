@@ -153,8 +153,8 @@ object DockerHelper {
 
       entryPoint(
         "java",
-        "-Xmx256M",
-        "-Xms256M",
+        "-Xmx512M",
+        "-Xms512M",
         s"-Dlogback.configurationFile=$logbackConfDestination",
         "-jar",
         artifactTargetPath

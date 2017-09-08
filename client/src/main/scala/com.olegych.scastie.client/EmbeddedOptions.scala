@@ -36,9 +36,13 @@ trait EmbeddedOptionsJs extends js.Object {
 }
 
 object EmbeddedOptions {
-  def empty: EmbeddedOptions = EmbeddedOptions(None, None, None)
+  def empty(defaultServerUrl: String): EmbeddedOptions = {
+    EmbeddedOptions(None, None, defaultServerUrl)
+  }
 
-  def fromJs(options: EmbeddedOptionsJs): EmbeddedOptions = {
+  def fromJs(
+      defaultServerUrl: String
+  )(options: EmbeddedOptionsJs): EmbeddedOptions = {
     import options._
 
     val scalaTarget =
@@ -141,14 +145,14 @@ object EmbeddedOptions {
     EmbeddedOptions(
       inputs = inputs,
       snippetId = snippetId,
-      serverUrl = serverUrl.toOption
+      serverUrl = serverUrl.toOption.getOrElse(defaultServerUrl)
     )
   }
 }
 
 case class EmbeddedOptions(snippetId: Option[SnippetId],
                            inputs: Option[Inputs],
-                           serverUrl: Option[String]) {
+                           serverUrl: String) {
 
   def setCode(code: String): EmbeddedOptions = {
     val inputs0 = inputs.getOrElse(Inputs.default)

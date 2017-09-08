@@ -7,7 +7,7 @@ import japgolly.scalajs.react._, vdom.all._, extra.router._
 
 import java.util.UUID
 
-object Routing {
+class Routing(defaultServerUrl: String) {
   val config: RouterConfig[Page] = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
 
@@ -81,11 +81,14 @@ object Routing {
   private def renderScastieDefaultEmbedded(
       router: RouterCtl[Page]
   ): VdomElement =
-    Scastie.default(router).copy(embedded = Some(EmbeddedOptions.empty)).render
+    Scastie
+      .default(router)
+      .copy(embedded = Some(EmbeddedOptions.empty(defaultServerUrl)))
+      .render
 
   private def renderPage(page: ResourcePage,
                          router: RouterCtl[Page]): VdomElement = {
-    val defaultEmbedded = Some(EmbeddedOptions.empty)
+    val defaultEmbedded = Some(EmbeddedOptions.empty(defaultServerUrl))
 
     val (embedded, snippetId) =
       page match {

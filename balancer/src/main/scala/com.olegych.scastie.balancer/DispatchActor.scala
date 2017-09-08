@@ -260,8 +260,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         }
         case None => {
           sender ! None
-          // XXX
-          // statusActor !
         }
       }
 

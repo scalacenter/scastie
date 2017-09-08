@@ -3,13 +3,17 @@ package com.olegych.scastie.web
 import com.olegych.scastie.web.routes._
 import com.olegych.scastie.web.oauth2._
 import com.olegych.scastie.balancer._
+import com.olegych.scastie.util.ScastieFileUtil
+
 import akka.http.scaladsl._
 import server.Directives._
+
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
-import com.olegych.scastie.util.ScastieFileUtil
 
 import scala.concurrent.duration._
 import scala.concurrent.Await
@@ -62,18 +66,24 @@ object ServerMain {
       )
 
     val routes = concat(
-      pathPrefix("api")(
-        concat(
-          new ApiRoutes(dispatchActor, userDirectives).routes,
-          new ProgressRoutes(progressActor).routes,
-          new DownloadRoutes(dispatchActor).routes,
-          new StatusRoutes(statusActor, userDirectives).routes,
-          new ScalaJsRoutes(dispatchActor).routes
+      cors()(
+        pathPrefix("api")(
+          concat(
+            new ApiRoutes(dispatchActor, userDirectives).routes,
+            new ProgressRoutes(progressActor).routes,
+            new DownloadRoutes(dispatchActor).routes,
+            new StatusRoutes(statusActor, userDirectives).routes,
+            new ScalaJsRoutes(dispatchActor).routes
+          )
         )
       ),
       new OAuth2Routes(github, session).routes,
-      new ScalaLangRoutes(dispatchActor, userDirectives).routes,
-      new FrontPageRoutes(production).routes
+      cors()(
+        concat(
+          new ScalaLangRoutes(dispatchActor, userDirectives).routes,
+          new FrontPageRoutes(production).routes
+        )
+      )
     )
 
     Await.result(Http().bindAndHandle(routes, "0.0.0.0", port), 1.seconds)

@@ -63,5 +63,20 @@ object Editor {
       .configure(Reusability.shouldComponentUpdate)
       .componentDidMount(_.backend.start())
       .componentWillUnmount(_.backend.stop())
+      .componentWillReceiveProps { scope =>
+        scope.state.editor
+          .map(
+            editor =>
+              RunDelta(
+                editor = editor,
+                currentProps = Some(scope.currentProps),
+                nextProps = scope.nextProps,
+                state = scope.state,
+                modState = (f => scope.modState(f))
+            )
+          )
+          .getOrElse(Callback.empty)
+
+      }
       .build
 }
