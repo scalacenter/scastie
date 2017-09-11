@@ -20,6 +20,7 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
 
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+def akkaHttpTestkit = "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
 
 addCommandAlias(
   "startAll",
@@ -232,7 +233,8 @@ lazy val server = project
       "de.heikoseeberger" %% "akka-sse" % "3.0.0",
       akkaHttp,
       akka("remote"),
-      akka("slf4j")
+      akka("slf4j"),
+      akkaHttpTestkit % Test
     )
   )
   .enablePlugins(JavaServerAppPackaging)

@@ -86,7 +86,7 @@ class ApiRoutes(
           ),
           get(
             concat(
-              snippetId("snippets")(
+              snippetIdStart("snippets")(
                 sid => complete(server.fetch(sid))
               ),
               path("old-snippets" / IntNumber)(
