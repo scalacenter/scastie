@@ -51,7 +51,7 @@ object ClientMain {
 
   @JSExport
   def embeddedRessource(options: UndefOr[EmbeddedRessourceOptionsJs],
-                        defaultServerUrl: String): Unit = {  
+                        defaultServerUrl: String): Unit = {
     val embeddedOptions =
       options.toOption
         .map(EmbeddedOptions.fromJsRessource(defaultServerUrl))
@@ -104,7 +104,7 @@ object ClientMain {
         case None => List()
       }
 
-    if(nodes.nonEmpty) {
+    if (nodes.nonEmpty) {
       addStylesheet(embeddedOptions.serverUrl)
     }
 

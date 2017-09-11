@@ -23,7 +23,7 @@ class FrontPageRoutes(production: Boolean) {
 
     val id = "id-" + Base64UUID.create
 
-    val embeddedUrlBase = 
+    val embeddedUrlBase =
       if (production) "https://scastie.scala-lang.org"
       else "http://localhost:9000"
 

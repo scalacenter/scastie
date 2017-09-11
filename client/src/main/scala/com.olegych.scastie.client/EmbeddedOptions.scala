@@ -42,6 +42,17 @@ trait EmbeddedOptionsJs extends js.Object {
   val scalaNativeVersion: UndefOr[String]
 }
 
+case class EmbeddedOptions(snippetId: Option[SnippetId],
+                           injectId: Option[String],
+                           inputs: Option[Inputs],
+                           serverUrl: String) {
+
+  def setCode(code: String): EmbeddedOptions = {
+    val inputs0 = inputs.getOrElse(Inputs.default)
+    copy(inputs = Some(inputs0.copy(code = code)))
+  }
+}
+
 object EmbeddedOptions {
   def empty(defaultServerUrl: String): EmbeddedOptions = {
     EmbeddedOptions(
@@ -175,16 +186,5 @@ object EmbeddedOptions {
       inputs = inputs,
       serverUrl = serverUrl.toOption.getOrElse(defaultServerUrl)
     )
-  }
-}
-
-case class EmbeddedOptions(snippetId: Option[SnippetId],
-                           injectId: Option[String],
-                           inputs: Option[Inputs],
-                           serverUrl: String) {
-
-  def setCode(code: String): EmbeddedOptions = {
-    val inputs0 = inputs.getOrElse(Inputs.default)
-    copy(inputs = Some(inputs0.copy(code = code)))
   }
 }
