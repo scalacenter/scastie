@@ -286,8 +286,8 @@ lazy val client = project
     enableReloadWorkflow := true,
     emitSourceMaps in fastOptJS := false,
     webpackEmitSourceMaps in (Compile, fullOptJS) := true,
-    webpackEmitSourceMaps := true
-      test := {},
+    webpackEmitSourceMaps := true,
+    test := {},
     npmDependencies in Compile ++= Seq(
       "bourbon" -> "4.3.4",
       "bourbon-neat" -> "1.9.0",

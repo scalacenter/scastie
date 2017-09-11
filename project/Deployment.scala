@@ -139,6 +139,7 @@ class Deployment(rootFolder: File,
           |mv server/*/* server/
           |
           |nohup server/bin/server \\
+          |  -J-Xmx1G \\
           |  -Dconfig.file=/home/$userName/$applicationRootConfig \\
           |  -Dlogback.configurationFile=/home/$userName/$logbackConfigFileName \\
           |  -Dsentry.dsn=$sentryDsn \\
