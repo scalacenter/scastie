@@ -13,7 +13,7 @@ object FrontPageRoutes {
   private val index = getFromResource("public/index.html")
 
   private def embeddedRessource(snippetId: SnippetId): String = {
-    val user = 
+    val user =
       snippetId.user match {
         case Some(SnippetUserPart(login, update)) => {
           s"user: '$login', update: $update,"
@@ -49,9 +49,7 @@ object FrontPageRoutes {
         concat(
           pathSingleSlash(index),
           snippetId(_ => index),
-          snippetIdExtension(".js")(sid =>
-            complete(embeddedRessource(sid))   
-          )
+          snippetIdExtension(".js")(sid => complete(embeddedRessource(sid)))
         )
       )
     )

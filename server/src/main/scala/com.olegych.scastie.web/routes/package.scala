@@ -39,7 +39,7 @@ package object routes {
         (String, String, Option[Int])
       ]
   )(f: SnippetId => Route): Route = {
-    
+
     concat(
       path(fp1(uuidMatcher) ~ Slash.?)(uuid ⇒ f(SnippetId(uuid, None))),
       path(fp2(Segment / uuidMatcher ~ (Slash ~ IntNumber).?) ~ Slash.?)(
