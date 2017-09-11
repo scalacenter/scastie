@@ -22,9 +22,10 @@ module.exports = Merge(common.webpackConfig, {
     path: Path.resolve(__dirname, publicFolderName),
     publicPath: '/public/'
   },
+  devtool: "source-map",
   resolve: {
     alias: {
-      'scalajs': Path.resolve(__dirname, "client-opt.js"),
+      'scalajs': Path.resolve(__dirname, "client-opt.js")
     }
   },
   module: {

@@ -13,15 +13,21 @@ import scala.scalajs.js.annotation.ScalaJSDefined
 import scala.scalajs.js.UndefOr
 
 @ScalaJSDefined
-trait EmbeddedOptionsJs extends js.Object {
-  // General
-  val serverUrl: UndefOr[String]
-
+trait EmbeddedRessourceOptionsJs extends js.Object {
   // SnippetId
   val base64UUID: UndefOr[String]
   val user: UndefOr[String]
   val update: UndefOr[Int]
   val injectId: UndefOr[String]
+
+  // General
+  val serverUrl: UndefOr[String]
+}
+
+@ScalaJSDefined
+trait EmbeddedOptionsJs extends js.Object {
+  // General
+  val serverUrl: UndefOr[String]
 
   // Inputs
   val code: UndefOr[String]
@@ -43,6 +49,35 @@ object EmbeddedOptions {
       injectId = None,
       inputs = None,
       serverUrl = defaultServerUrl
+    )
+  }
+
+  def fromJsRessource(
+      defaultServerUrl: String
+  )(options: EmbeddedRessourceOptionsJs): EmbeddedOptions = {
+    import options._
+
+    val snippetId =
+      base64UUID.toOption.map(
+        uuid =>
+          SnippetId(
+            uuid,
+            user.toOption
+              .map(u => SnippetUserPart(u, update.toOption.getOrElse(0)))
+        )
+      )
+
+    if (snippetId.isDefined && injectId.isEmpty) {
+      sys.error(
+        "injectId is not defined, we don't know where to inject the embedding"
+      )
+    }
+
+    EmbeddedOptions(
+      snippetId = snippetId,
+      injectId = injectId.toOption,
+      inputs = None,
+      serverUrl = serverUrl.toOption.getOrElse(defaultServerUrl)
     )
   }
 
@@ -134,29 +169,9 @@ object EmbeddedOptions {
         None
       }
 
-    val snippetId =
-      base64UUID.toOption.map(
-        uuid =>
-          SnippetId(
-            uuid,
-            user.toOption
-              .map(u => SnippetUserPart(u, update.toOption.getOrElse(0)))
-        )
-      )
-
-    if (snippetId.isDefined && inputs.isDefined) {
-      sys.error("You cannot define both snippetId & inputs")
-    }
-
-    if (snippetId.isDefined && injectId.isEmpty) {
-      sys.error(
-        "injectId is not defined, we don't know where to inject the embedding"
-      )
-    }
-
     EmbeddedOptions(
-      snippetId = snippetId,
-      injectId = injectId.toOption,
+      snippetId = None,
+      injectId = None,
       inputs = inputs,
       serverUrl = serverUrl.toOption.getOrElse(defaultServerUrl)
     )

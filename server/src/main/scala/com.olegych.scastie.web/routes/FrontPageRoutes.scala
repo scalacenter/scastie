@@ -1,14 +1,14 @@
 package com.olegych.scastie.web.routes
 
+import com.olegych.scastie.util.Base64UUID
 import com.olegych.scastie.api.{SnippetId, SnippetUserPart}
 
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 
-import java.util.UUID
 import System.{lineSeparator => nl}
 
-object FrontPageRoutes {
+class FrontPageRoutes(production: Boolean) {
 
   private val index = getFromResource("public/index.html")
 
@@ -21,16 +21,24 @@ object FrontPageRoutes {
         case None => ""
       }
 
-    val id = UUID.randomUUID().toString
+    val id = "id-" + Base64UUID.create
+
+    val embeddedUrlBase = 
+      if (production) "https://scastie.scala-lang.org"
+      else "http://localhost:9000"
 
     s"""|document.write("
         |<div id='$id'></div>
+        |<script src='$embeddedUrlBase/embedded.js'></script>
         |<script>
-        |  com.olegych.scastie.client.ClientMain.embedded({
+        |window.addEventListener('load', function(event) {
+        |  com.olegych.scastie.client.ClientMain.embeddedRessource({
         |    base64UUID: '${snippetId.base64UUID}',
         |    $user
-        |    injectId: '$id'
+        |    injectId: '$id',
+        |    serverUrl: '$embeddedUrlBase'
         |  });
+        |});
         |</script>
         |");""".stripMargin.split(nl).map(_.trim).mkString("")
   }

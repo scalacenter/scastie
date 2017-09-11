@@ -81,7 +81,7 @@ object ServerMain {
       cors()(
         concat(
           new ScalaLangRoutes(dispatchActor, userDirectives).routes,
-          FrontPageRoutes.routes
+          new FrontPageRoutes(production).routes
         )
       )
     )
