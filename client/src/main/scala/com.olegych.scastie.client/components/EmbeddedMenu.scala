@@ -10,6 +10,8 @@ import org.scalajs.dom
 final case class EmbeddedMenu(isRunning: Boolean,
                               isStatusOk: Boolean,
                               inputs: Inputs,
+                              inputsHasChanged: Boolean,
+                              embeddedSnippetId: Option[SnippetId],
                               serverUrl: Option[String],
                               run: Reusable[Callback],
                               save: Reusable[CallbackTo[Option[SnippetId]]],
@@ -26,18 +28,34 @@ object EmbeddedMenu {
 
     val urlBase = props.serverUrl.getOrElse("")
 
-    def openScastie: Callback =
-      props.save.asCBO.flatMap(
-        sid =>
-          Callback(
-            dom.window
-              .open(
-                urlBase + "/" + sid.url,
-                "_blank"
-              )
-              .focus()
+    def openScastie: Callback = {
+
+      def open(snippetId: SnippetId): Callback = {
+        Callback(
+          dom.window
+            .open(
+              urlBase + "/" + snippetId.url,
+              "_blank"
+            )
+            .focus()
         )
-      )
+
+      }
+
+      println("props.embeddedSnippetId: " + props.embeddedSnippetId)
+      println("props.inputsHasChanged: " + props.inputsHasChanged)
+
+      props.embeddedSnippetId match {
+        case Some(snippetId) if !props.inputsHasChanged => {
+          open(snippetId)
+        }
+
+        case _ => {
+          props.save.asCBO.flatMap(open)
+        }
+      }
+
+    }
 
     ul(cls := "embedded-menu")(
       RunButton(

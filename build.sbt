@@ -287,7 +287,7 @@ lazy val client = project
     emitSourceMaps in fastOptJS := false,
     webpackEmitSourceMaps in (Compile, fullOptJS) := true,
     webpackEmitSourceMaps := true
-    test := {},
+      test := {},
     npmDependencies in Compile ++= Seq(
       "bourbon" -> "4.3.4",
       "bourbon-neat" -> "1.9.0",

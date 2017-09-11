@@ -321,11 +321,17 @@ case class ScastieState(
   def setUser(user: Option[User]): ScastieState =
     copyAndSave(user = user)
 
-  def setCode(code: String): ScastieState =
-    copyAndSave(
-      inputs = inputs.copy(code = code),
-      inputsHasChanged = true
-    )
+  def setCode(code: String): ScastieState = {
+    if (inputs.code != code) {
+      println("setCode")
+      copyAndSave(
+        inputs = inputs.copy(code = code),
+        inputsHasChanged = true
+      )
+    } else {
+      this
+    }
+  }
 
   def setInputs(inputs: Inputs): ScastieState =
     copyAndSave(

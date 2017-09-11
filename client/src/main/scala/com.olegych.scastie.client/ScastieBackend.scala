@@ -435,8 +435,10 @@ class ScastieBackend(scastieId: UUID,
             )
           loadStateFromApi >>
             setView(View.Editor) >>
-            scope.modState(_.clearOutputs.closeModals)
-
+            scope.modState(
+              _.clearOutputs.closeModals
+                .copy(inputsHasChanged = false)
+            )
         } else {
           scope.modState(_.setLoadSnippet(true))
       }
