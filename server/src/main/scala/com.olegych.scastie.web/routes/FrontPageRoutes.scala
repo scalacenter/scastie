@@ -3,8 +3,6 @@ package com.olegych.scastie.web.routes
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-
 class FrontPageRoutes(production: Boolean) {
 
   private val index = getFromResource("public/index.html")
@@ -21,10 +19,15 @@ class FrontPageRoutes(production: Boolean) {
       ),
       get(
         concat(
-          pathSingleSlash(index),
-          path(Segment ~ Slash.?)(_ => index),
-          path(Segment / Segment ~ Slash.?)((_, _) => index),
-          path(Segment / Segment / Segment ~ Slash.?)((_, _, _) => index)
+          pathSingleSlash(complete("pathSingleSlash")),
+          snippetId(snippetId => complete("snippetId: " + snippetId))
+
+          // pathSingleSlash(index),
+          // snippetId( _ => index)
+
+          // path(Segment ~ Slash.?)(_ => index),
+          // path(Segment / Segment ~ Slash.?)((_, _) => index),
+          // path(Segment / Segment / Segment ~ Slash.?)((_, _, _) => index)
         )
       )
     )

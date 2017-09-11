@@ -28,7 +28,7 @@ class ProgressRoutes(progressActor: ActorRef) {
 
   val routes: Route =
     concat(
-      snippetId("progress-sse")(
+      snippetIdStart("progress-sse")(
         sid ⇒
           complete(
             progressSource(sid)
@@ -38,7 +38,7 @@ class ProgressRoutes(progressActor: ActorRef) {
               )
         )
       ),
-      snippetId("progress-websocket")(
+      snippetIdStart("progress-websocket")(
         sid => handleWebSocketMessages(webSocket(sid))
       )
     )
