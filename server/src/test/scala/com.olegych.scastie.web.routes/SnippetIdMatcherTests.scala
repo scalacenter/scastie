@@ -17,9 +17,9 @@ class SnippetIdMatcherTests extends FunSuite with ScalatestRouteTest {
                 f2: String => String,
                 checkEnd: Boolean = true): Unit = {
 
-    val expectedBase = 
+    val expectedBase =
       SnippetId(
-        "GIbgJuUFSKaVzLDGK4kxdw", 
+        "GIbgJuUFSKaVzLDGK4kxdw",
         None
       )
 
@@ -36,9 +36,9 @@ class SnippetIdMatcherTests extends FunSuite with ScalatestRouteTest {
       }
     }
 
-    val expectedUser = 
+    val expectedUser =
       SnippetId(
-        "GIbgJuUFSKaVzLDGK4kxdw", 
+        "GIbgJuUFSKaVzLDGK4kxdw",
         Some(SnippetUserPart("MasseGuillaume", 0))
       )
 
@@ -54,9 +54,9 @@ class SnippetIdMatcherTests extends FunSuite with ScalatestRouteTest {
       }
     }
 
-    val expectedFull = 
+    val expectedFull =
       SnippetId(
-        "GIbgJuUFSKaVzLDGK4kxdw", 
+        "GIbgJuUFSKaVzLDGK4kxdw",
         Some(SnippetUserPart("MasseGuillaume", 2))
       )
 
@@ -76,9 +76,7 @@ class SnippetIdMatcherTests extends FunSuite with ScalatestRouteTest {
   test("snippetId") {
     val snippetIdRoute =
       get(
-        snippetId(sid =>
-          complete(sid)
-        )
+        snippetId(sid => complete(sid))
       )
 
     testRoute(
@@ -87,15 +85,13 @@ class SnippetIdMatcherTests extends FunSuite with ScalatestRouteTest {
       x => x
     )
   }
-  
+
   test("snippetIdStart") {
     val start = "snippets"
 
     val snippetIdRoute =
       get(
-        snippetIdStart(start)(sid =>
-          complete(sid)
-        )
+        snippetIdStart(start)(sid => complete(sid))
       )
 
     testRoute(
@@ -104,16 +100,14 @@ class SnippetIdMatcherTests extends FunSuite with ScalatestRouteTest {
       "/" + start + _
     )
   }
-  
+
   test("snippetIdEnd") {
     val start = "api"
     val end = "foo"
 
     val snippetIdRoute =
       get(
-        snippetIdEnd(start, end)(sid =>
-          complete(sid)
-        )
+        snippetIdEnd(start, end)(sid => complete(sid))
       )
 
     testRoute(
@@ -122,15 +116,13 @@ class SnippetIdMatcherTests extends FunSuite with ScalatestRouteTest {
       "/" + start + _ + end
     )
   }
-  
+
   test("snippetIdExtension") {
     val extension = ".js"
 
     val snippetIdRoute =
       get(
-        snippetIdExtension(extension)(sid =>
-          complete(sid)
-        )
+        snippetIdExtension(extension)(sid => complete(sid))
       )
 
     testRoute(

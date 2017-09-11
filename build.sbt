@@ -20,7 +20,8 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
 
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
-def akkaHttpTestkit = "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
+def akkaHttpTestkit =
+  "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
 
 addCommandAlias(
   "startAll",

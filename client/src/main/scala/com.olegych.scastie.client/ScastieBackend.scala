@@ -495,7 +495,7 @@ class ScastieBackend(scastieId: UUID,
         }
       }
 
-    initialState >> 
+    initialState >>
       updateEnsimeConfig0.when_(!props.isEmbedded) >>
       loadUser
   }

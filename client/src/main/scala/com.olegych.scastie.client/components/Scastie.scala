@@ -199,7 +199,7 @@ object Scastie {
                 }
                 if (state.snippetId.nonEmpty) {
                   timers.setTimeout(500) {
-                    
+
                     val apiBase = scope.currentProps.serverUrl.getOrElse("")
 
                     val snippetUrl =

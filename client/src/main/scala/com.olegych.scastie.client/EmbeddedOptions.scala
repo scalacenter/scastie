@@ -148,8 +148,10 @@ object EmbeddedOptions {
       sys.error("You cannot define both snippetId & inputs")
     }
 
-    if(snippetId.isDefined && injectId.isEmpty) {
-      sys.error("injectId is not defined, we don't know where to inject the embedding")
+    if (snippetId.isDefined && injectId.isEmpty) {
+      sys.error(
+        "injectId is not defined, we don't know where to inject the embedding"
+      )
     }
 
     EmbeddedOptions(

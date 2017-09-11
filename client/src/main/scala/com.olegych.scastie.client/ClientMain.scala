@@ -72,7 +72,6 @@ object ClientMain {
         case None => List()
       }
 
-
     if (embeddedOptions.snippetId.nonEmpty || nodes.nonEmpty) {
       val baseUrl = embeddedOptions.serverUrl
 
@@ -87,9 +86,8 @@ object ClientMain {
       dom.document.getElementsByTagName("head")(0).appendChild(link)
     }
 
-
     if (embeddedOptions.snippetId.nonEmpty) {
-      val container = 
+      val container =
         renderScastie(
           embeddedOptions = embeddedOptions,
           snippetId = embeddedOptions.snippetId
@@ -126,7 +124,7 @@ object ClientMain {
           )
 
           node.parentNode.insertBefore(container, node.nextSibling)
-          node.style.display = "none"      
+          node.style.display = "none"
         }
       }
     }
@@ -150,6 +148,6 @@ object ClientMain {
       targetType = None
     ).render.renderIntoDOM(container)
 
-    container    
+    container
   }
 }
