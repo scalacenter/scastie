@@ -50,6 +50,38 @@ object ClientMain {
   }
 
   @JSExport
+  def embeddedRessource(options: UndefOr[EmbeddedRessourceOptionsJs],
+                        defaultServerUrl: String): Unit = {  
+    val embeddedOptions =
+      options.toOption
+        .map(EmbeddedOptions.fromJsRessource(defaultServerUrl))
+        .getOrElse(EmbeddedOptions.empty(defaultServerUrl))
+
+    val container =
+      renderScastie(
+        embeddedOptions = embeddedOptions,
+        snippetId = embeddedOptions.snippetId
+      )
+
+    embeddedOptions.injectId match {
+      case Some(id) => {
+        Option(dom.document.querySelector("#" + id)) match {
+          case Some(element) => {
+            addStylesheet(embeddedOptions.serverUrl)
+            element.parentNode.replaceChild(container, element)
+          }
+          case None => {
+            sys.error("cannot find injectId: " + id)
+          }
+        }
+      }
+      case None => {
+        sys.error("injectId is not defined")
+      }
+    }
+  }
+
+  @JSExport
   def embedded(selector: UndefOr[String | Node],
                options: UndefOr[EmbeddedOptionsJs],
                defaultServerUrl: String): Unit = {
@@ -59,7 +91,7 @@ object ClientMain {
         .map(EmbeddedOptions.fromJs(defaultServerUrl))
         .getOrElse(EmbeddedOptions.empty(defaultServerUrl))
 
-    lazy val nodes =
+    val nodes =
       selector.toOption match {
         case Some(sel) => {
           (sel: Any) match {
@@ -72,62 +104,40 @@ object ClientMain {
         case None => List()
       }
 
-    if (embeddedOptions.snippetId.nonEmpty || nodes.nonEmpty) {
-      val baseUrl = embeddedOptions.serverUrl
-
-      val link = dom.document
-        .createElement("link")
-        .asInstanceOf[dom.raw.HTMLLinkElement]
-
-      link.`type` = "text/css"
-      link.rel = "stylesheet"
-      link.href = baseUrl + "/public/app.css"
-
-      dom.document.getElementsByTagName("head")(0).appendChild(link)
+    if(nodes.nonEmpty) {
+      addStylesheet(embeddedOptions.serverUrl)
     }
 
-    if (embeddedOptions.snippetId.nonEmpty) {
-      val container =
-        renderScastie(
-          embeddedOptions = embeddedOptions,
-          snippetId = embeddedOptions.snippetId
+    nodes.foreach {
+      case node: dom.raw.HTMLElement => {
+        val embeddedOptions0 =
+          if (node.textContent.isEmpty) {
+            embeddedOptions
+          } else {
+            embeddedOptions.setCode(node.textContent)
+          }
+
+        val container = renderScastie(
+          embeddedOptions = embeddedOptions0,
+          snippetId = None
         )
 
-      embeddedOptions.injectId match {
-        case Some(id) => {
-          Option(dom.document.querySelector("#" + id)) match {
-            case Some(element) => {
-              element.parentNode.replaceChild(container, element)
-            }
-            case None => {
-              sys.error("cannot find injectId: " + id)
-            }
-          }
-        }
-        case None => {
-          sys.error("injectId is not defined")
-        }
-      }
-    } else {
-      nodes.foreach {
-        case node: dom.raw.HTMLElement => {
-          val embeddedOptions0 =
-            if (node.textContent.isEmpty) {
-              embeddedOptions
-            } else {
-              embeddedOptions.setCode(node.textContent)
-            }
-
-          val container = renderScastie(
-            embeddedOptions = embeddedOptions0,
-            snippetId = None
-          )
-
-          node.parentNode.insertBefore(container, node.nextSibling)
-          node.style.display = "none"
-        }
+        node.parentNode.insertBefore(container, node.nextSibling)
+        node.style.display = "none"
       }
     }
+  }
+
+  private def addStylesheet(baseUrl: String): Unit = {
+    val link = dom.document
+      .createElement("link")
+      .asInstanceOf[dom.raw.HTMLLinkElement]
+
+    link.`type` = "text/css"
+    link.rel = "stylesheet"
+    link.href = baseUrl + "/public/app.css"
+
+    dom.document.getElementsByTagName("head")(0).appendChild(link)
   }
 
   private def renderScastie(embeddedOptions: EmbeddedOptions,

@@ -38,6 +38,9 @@ module.exports = {
                 },
                 embedded: function(s, o, u) {
                   return Main.embedded(s, o, defaultServerUrl);
+                },
+                embeddedRessource: function(o) {
+                  return Main.embeddedRessource(o, defaultServerUrl);
                 }
               }
             }

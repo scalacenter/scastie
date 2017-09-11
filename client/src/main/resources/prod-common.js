@@ -19,8 +19,11 @@ module.exports = {
             error: function(a, b){
               return Main.error(a, b);
             },
-            embedded: function(s, o, u) {
+            embedded: function(s, o) {
               return Main.embedded(s, o, defaultServerUrl);
+            },
+            embeddedRessource: function(o) {
+              return Main.embeddedRessource(o, defaultServerUrl);
             }
           }
         }
