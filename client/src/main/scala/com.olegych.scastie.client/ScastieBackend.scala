@@ -484,10 +484,10 @@ class ScastieBackend(scastieId: UUID,
         }
         case Some(embededOptions) => {
           embededOptions match {
-            case EmbeddedOptions(Some(snippetId), _, _) =>
+            case EmbeddedOptions(Some(snippetId), _, _, _) =>
               loadSnippet(snippetId)
 
-            case EmbeddedOptions(_, Some(inputs), _) =>
+            case EmbeddedOptions(_, _, Some(inputs), _) =>
               scope.modState(_.setInputs(inputs))
 
             case _ => Callback.empty
@@ -495,7 +495,9 @@ class ScastieBackend(scastieId: UUID,
         }
       }
 
-    initialState >> updateEnsimeConfig0 >> loadUser
+    initialState >> 
+      updateEnsimeConfig0.when_(!props.isEmbedded) >>
+      loadUser
   }
 
   val formatCode: Reusable[Callback] =
