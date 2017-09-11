@@ -1,6 +1,7 @@
 package com.olegych.scastie.client
 
-import components._
+import com.olegych.scastie.api.SnippetId
+import com.olegych.scastie.client.components._
 
 import org.scalajs.dom
 import org.scalajs.dom.raw.{HTMLElement, Node}
@@ -49,24 +50,30 @@ object ClientMain {
   }
 
   @JSExport
-  def embedded(selector: String | Node,
+  def embedded(selector: UndefOr[String | Node],
                options: UndefOr[EmbeddedOptionsJs],
                defaultServerUrl: String): Unit = {
-
-    val nodes =
-      (selector: Any) match {
-        case cssSelector: String =>
-          dom.document.querySelectorAll(cssSelector).toList
-        case node: Node =>
-          List(node)
-      }
 
     val embeddedOptions =
       options.toOption
         .map(EmbeddedOptions.fromJs(defaultServerUrl))
         .getOrElse(EmbeddedOptions.empty(defaultServerUrl))
 
-    if (nodes.nonEmpty) {
+    lazy val nodes =
+      selector.toOption match {
+        case Some(sel) => {
+          (sel: Any) match {
+            case cssSelector: String =>
+              dom.document.querySelectorAll(cssSelector).toList
+            case node: Node =>
+              List(node)
+          }
+        }
+        case None => List()
+      }
+
+
+    if (embeddedOptions.snippetId.nonEmpty || nodes.nonEmpty) {
       val baseUrl = embeddedOptions.serverUrl
 
       val link = dom.document
@@ -80,33 +87,69 @@ object ClientMain {
       dom.document.getElementsByTagName("head")(0).appendChild(link)
     }
 
-    nodes.foreach {
-      case node: dom.raw.HTMLElement => {
-        val container = dom.document
-          .createElement("div")
-          .asInstanceOf[dom.raw.HTMLDivElement]
 
-        container.className = "root embedded"
+    if (embeddedOptions.snippetId.nonEmpty) {
+      val container = 
+        renderScastie(
+          embeddedOptions = embeddedOptions,
+          snippetId = embeddedOptions.snippetId
+        )
 
-        val embeddedOptions0 =
-          if (node.textContent.isEmpty) {
-            embeddedOptions
-          } else {
-            embeddedOptions.setCode(node.textContent)
+      embeddedOptions.injectId match {
+        case Some(id) => {
+          Option(dom.document.querySelector("#" + id)) match {
+            case Some(element) => {
+              element.parentNode.replaceChild(container, element)
+            }
+            case None => {
+              sys.error("cannot find injectId: " + id)
+            }
           }
+        }
+        case None => {
+          sys.error("injectId is not defined")
+        }
+      }
+    } else {
+      nodes.foreach {
+        case node: dom.raw.HTMLElement => {
+          val embeddedOptions0 =
+            if (node.textContent.isEmpty) {
+              embeddedOptions
+            } else {
+              embeddedOptions.setCode(node.textContent)
+            }
 
-        Scastie(
-          scastieId = UUID.randomUUID(),
-          router = None,
-          snippetId = None,
-          oldSnippetId = None,
-          embedded = Some(embeddedOptions0),
-          targetType = None
-        ).render.renderIntoDOM(container)
+          val container = renderScastie(
+            embeddedOptions = embeddedOptions0,
+            snippetId = None
+          )
 
-        node.parentNode.insertBefore(container, node.nextSibling)
-        node.style.display = "none"
+          node.parentNode.insertBefore(container, node.nextSibling)
+          node.style.display = "none"      
+        }
       }
     }
+  }
+
+  private def renderScastie(embeddedOptions: EmbeddedOptions,
+                            snippetId: Option[SnippetId]): HTMLElement = {
+
+    val container = dom.document
+      .createElement("div")
+      .asInstanceOf[dom.raw.HTMLDivElement]
+
+    container.className = "root embedded"
+
+    Scastie(
+      scastieId = UUID.randomUUID(),
+      router = None,
+      snippetId = None,
+      oldSnippetId = None,
+      embedded = Some(embeddedOptions),
+      targetType = None
+    ).render.renderIntoDOM(container)
+
+    container    
   }
 }

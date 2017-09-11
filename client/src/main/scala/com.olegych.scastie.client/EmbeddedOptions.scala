@@ -21,6 +21,7 @@ trait EmbeddedOptionsJs extends js.Object {
   val base64UUID: UndefOr[String]
   val user: UndefOr[String]
   val update: UndefOr[Int]
+  val injectId: UndefOr[String]
 
   // Inputs
   val code: UndefOr[String]
@@ -37,7 +38,12 @@ trait EmbeddedOptionsJs extends js.Object {
 
 object EmbeddedOptions {
   def empty(defaultServerUrl: String): EmbeddedOptions = {
-    EmbeddedOptions(None, None, defaultServerUrl)
+    EmbeddedOptions(
+      snippetId = None,
+      injectId = None,
+      inputs = None,
+      serverUrl = defaultServerUrl
+    )
   }
 
   def fromJs(
@@ -142,15 +148,21 @@ object EmbeddedOptions {
       sys.error("You cannot define both snippetId & inputs")
     }
 
+    if(snippetId.isDefined && injectId.isEmpty) {
+      sys.error("injectId is not defined, we don't know where to inject the embedding")
+    }
+
     EmbeddedOptions(
-      inputs = inputs,
       snippetId = snippetId,
+      injectId = injectId.toOption,
+      inputs = inputs,
       serverUrl = serverUrl.toOption.getOrElse(defaultServerUrl)
     )
   }
 }
 
 case class EmbeddedOptions(snippetId: Option[SnippetId],
+                           injectId: Option[String],
                            inputs: Option[Inputs],
                            serverUrl: String) {
 
