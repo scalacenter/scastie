@@ -1,4 +1,5 @@
 const Path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const common = require('./webpack.common.js');
 
@@ -51,6 +52,12 @@ module.exports =
       }]
     },
     plugins: [
-      new Webpack.HotModuleReplacementPlugin()
+      new Webpack.HotModuleReplacementPlugin(),
+      new HtmlWebpackPlugin({
+        filename: "embed.html",
+        chunks: ["embedded"],
+        template: Path.resolve(common.resourcesDir, './embed.html'),
+        favicon: Path.resolve(common.resourcesDir, './images/favicon.ico')
+      })
     ]
   });

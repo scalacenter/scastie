@@ -6,17 +6,6 @@
     box-shadow: inset 0 -2px 0 0 $console-border-color;
   }
 
-  .embedded-menu {
-    & > * {
-      background-color: $sidebar-background;
-      color: $editor-button-color;
-
-      &.disabled {
-        color: grey;
-      }
-    }
-  }
-
   .workSheetIndicator {
     color: $topbar-background;
     &.enabled {
@@ -33,7 +22,7 @@
       }
 
       &.disabled {
-        color: #586e75;
+        color: grey;
       }
     }
   }

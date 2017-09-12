@@ -1,3 +1,5 @@
+require("./app-style.js");
+
 import common from "./dev-common.js"
 
 common.load(function(defaultServerUrl){

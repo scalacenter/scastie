@@ -1,4 +1,2 @@
 @import "light";
-
-@import "codemirror";
-@include styles('light');
+@include sharedStyles('light');

@@ -6,7 +6,7 @@
   }
 
   .editor-topbar {
-    overflow: auto;
+    overflow-x: auto;
     width: 100%;
     height: $editor-topbar-height;
   }
@@ -30,6 +30,8 @@
       }
     }
     .editor-buttons {
+      white-space: nowrap;
+
       li {
         display: inline-block;
       }
@@ -45,7 +47,7 @@
 
         &.disabled {
           text-decoration: none;
-          cursor: default;
+          cursor: not-allowed;
         }
       }
     }
@@ -128,37 +130,6 @@
         &.console-open{
           height: calc(100% - #{$header-height + $editor-topbar-height + $console-height});
         }
-      }
-    }
-  }
-
-
-  .embedded-menu {
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 3;
-
-    margin: 20px;
-
-    & > * {
-      cursor: pointer;
-      
-      &.disabled {
-        cursor: not-allowed;
-      }
-
-      margin: 10px;
-      padding: 10px;
-      font-size: 20px;
-    }
-
-    .logo {
-      img {
-        display: inline-block;
-        width: 20px;
-        margin: 0 5px 0 5px;
-        vertical-align: middle;
       }
     }
   }
