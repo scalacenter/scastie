@@ -48,10 +48,11 @@ object CodeFoldingAnnotations {
         var annotRef: Option[Annotation] = None
         val noop: (HTMLElement => Unit) = { element =>
           {
+            def clear(event: dom.Event): Unit = annotRef.foreach(_.clear())
+
             element.className = element.className + " code-fold"
-            element.onclick = (event: dom.MouseEvent) => {
-              annotRef.foreach(_.clear())
-            }
+            element.addEventListener("touchstart", clear)
+            element.addEventListener("click", clear)
           }
         }
         val annot = Annotation.fold(
