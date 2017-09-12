@@ -1,4 +1,3 @@
-require("./style.js");
 require("scalajsbundler-entry-point");
 
 {

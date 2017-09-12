@@ -1,4 +1,2 @@
 @import "dark";
-
-@import "codemirror";
-@include styles('dark');
+@include sharedStyles('dark');

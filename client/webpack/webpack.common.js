@@ -30,6 +30,7 @@ module.exports = {
     },
     plugins: [
       new HtmlWebpackPlugin({
+        filename: "index.html",
         chunks: ["app"],
         template: Path.resolve(resourcesDir, './index.html'),
         favicon: Path.resolve(resourcesDir, './images/favicon.ico')

@@ -1,3 +1,6 @@
+@import "shared";
+@import "commonvars";
+
 @import "reset";
 
 @import "sidebar";
@@ -9,19 +12,11 @@
 @import "topbar";
 @import "topbar-theme";
 
-@import "editor";
-@import "editor-theme";
-
-@import "modal";
-
 @import "build-settings";
 @import "build-settings-theme";
 
 @import "status";
 @import "status-theme";
-
-@import "solarized";
-@import "commonvars";
 
 body {
   font-family: $font-family;
@@ -78,15 +73,12 @@ h1 {
 }
 
 @include sidebar();
-@include editor();
 @include snippet();
 @include buildSettings();
 @include status();
-@include solarized();
-@include modal();
 @include topbar();
 
-@mixin styles($class) {
+@mixin appStyles($class) {
   body {
     .app.#{$class} {
 
@@ -106,10 +98,12 @@ h1 {
 
       @include topbarTheme($class);
       @include sidebarTheme($class);
-      @include editorTheme($class);
       @include snippetTheme($class);
       @include buildSettingsTheme($class);
       @include statusTheme($class);
     }
   }
 }
+
+@import "dark-app";
+@import "light-app";
