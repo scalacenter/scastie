@@ -323,7 +323,6 @@ case class ScastieState(
 
   def setCode(code: String): ScastieState = {
     if (inputs.code != code) {
-      println("setCode")
       copyAndSave(
         inputs = inputs.copy(code = code),
         inputsHasChanged = true
