@@ -274,19 +274,15 @@ lazy val client = project
   .settings(baseSettings)
   .settings(
     version in webpack := "3.5.5",
-    version in installWebpackDevServer := "2.7.1",
-    webpackConfigFile in startWebpackDevServer := webpackDevConf.value,
-    webpackConfigFile in webpackReload := webpackDevConf.value,
+    version in startWebpackDevServer := "2.7.1",
     webpackConfigFile in fastOptJS := webpackDevConf.value,
     webpackConfigFile in fullOptJS := webpackProdConf.value,
     webpackMonitoredDirectories += (resourceDirectory in Compile).value,
     webpackResources := webpackDir.value * "*.js",
     includeFilter in webpackMonitoredFiles := "*",
     useYarn := true,
-    enableReloadWorkflow := true,
-    emitSourceMaps in fastOptJS := false,
-    webpackEmitSourceMaps in (Compile, fullOptJS) := true,
-    webpackEmitSourceMaps := true,
+    webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),
+    webpackBundlingMode in fullOptJS := BundlingMode.Application,
     test := {},
     npmDependencies in Compile ++= Seq(
       "codemirror" -> "5.28.0",
@@ -360,7 +356,6 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
       moduleName := projectName,
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "shared" / "src" / "main" / "scala"
     )
-    .jsSettings(remapSourceMap)
     .jsSettings(
       test := {},
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "js" / "src" / "main" / "scala"

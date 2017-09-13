@@ -20,19 +20,9 @@ object ScalaJSHelper {
 
     Seq(
       watchSources ++= (watchSources in client).value,
-      mappings in (Compile, packageBin) := {
-        val webpackOut = webpackOutputDir.value.toPath
-
-        val runIt = (webpack in (client, Compile, fullOptJS)).value
-
-        val optimized =
-          (webpackOut.toFile.***.get)
-            .map(path => (path, webpackOut.relativize(path.toPath).toString))
-            .toSeq
-
-        (mappings in (Compile, packageBin)).value ++
-          optimized
-      }
+      products in Compile += Def.task {
+        webpackOutputDir.value
+      }.dependsOn(webpack in (client, Compile, fullOptJS)).value
     )
   }
 }

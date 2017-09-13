@@ -1,31 +1,31 @@
 const Path = require('path');
-const Webpack = require('webpack');
 const Merge = require("webpack-merge");
+
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-const common = require('./webpack.common.js');
+const Common = require('./webpack.common.js');
+const publicFolderName = "out/public"
 
 const extractSass = new ExtractTextPlugin({
   filename: "[name].css"
 });
 
-const publicFolderName = "out/public"
-
-module.exports = Merge(common.webpackConfig, {
+const Web = Merge(Common.Web, {
   entry: {
-    app: Path.resolve(common.resourcesDir, './prod.js'),
-    embedded: Path.resolve(common.resourcesDir, './prod-embed.js')
+    app: Path.resolve(Common.resourcesDir, './prod.js'),
+    embedded: Path.resolve(Common.resourcesDir, './prod-embed.js')
   },
   output: {
     filename: '[name].js',
     path: Path.resolve(__dirname, publicFolderName),
-    publicPath: '/public/'
+    publicPath: '/public/',
+    libraryTarget: 'window'
   },
-  devtool: "source-map",
   resolve: {
     alias: {
-      'scalajs': Path.resolve(__dirname, "client-opt.js")
+      'scalajs': Path.resolve(__dirname)
     }
   },
   module: {
@@ -44,7 +44,18 @@ module.exports = Merge(common.webpackConfig, {
     ]
   },
   plugins: [
+    new HtmlWebpackPlugin({
+      filename: "index.html",
+      chunks: ["app"],
+      template: Path.resolve(Common.resourcesDir, './prod.html'),
+      favicon: Path.resolve(Common.resourcesDir, './images/favicon.ico')
+    }),
     new CleanWebpackPlugin([publicFolderName], {verbose: false}),
     extractSass
   ]
 });
+
+module.exports = [
+  Common.ScalaJs,
+  Web
+]

@@ -1,9 +1,6 @@
 require("./app-style.js");
 
-import common from "./dev-common.js"
+const common = require("./dev-common.js");
+window.com = common.com
 
-common.load(function(defaultServerUrl){
-  setTimeout(function(){
-    $e.scastie.ClientMain.main(defaultServerUrl);
-  }, 0);
-});
+com.olegych.scastie.client.ScastieMain.main();

@@ -16,7 +16,7 @@ script:
 
   - git clone git://github.com/MasseGuillaume/scalajs-bundler.git
   - pushd scalajs-bundler
-  - git checkout dev-server-fix
+  - git checkout scastie
   - sbt publishLocal
   - nix-shell ../default.nix -A scastie --command "sbt publishLocal"
   - popd

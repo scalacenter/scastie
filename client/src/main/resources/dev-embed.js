@@ -1,14 +1,17 @@
 require("./embed-style.js");
 
-import common from "./dev-common.js"
+const common = require("./dev-common.js");
+window.com = common.com
 
-common.load(function(){
-  const Scastie = window.exports.scastie.ClientMain
+// com.olegych.scastie.client.ClientMain
 
-  // Scastie.embedded(
-  //   ".scala",
-  //   {
-  //     targetType: "js"
-  //   }
-  // );
-});
+// common.load(function(){
+//   const Scastie = window.exports.scastie.ClientMain
+
+//   // Scastie.embedded(
+//   //   ".scala",
+//   //   {
+//   //     targetType: "js"
+//   //   }
+//   // );
+// });
