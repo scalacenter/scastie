@@ -2,7 +2,7 @@
 <html>
 <body>
 
-<pre class="scala">
+<pre class="Scala-js">
 
 /*
 
@@ -21,7 +21,7 @@ img.src = "http://static5.businessinsider.com/image/52b2df16eab8ea421ff15454-500
 img
 </pre>
 
-<pre class="scala">
+<pre class="Scala-js">
 // fold
 import org.scalajs.dom.raw.HTMLImageElement
 import org.scalajs.dom
@@ -33,6 +33,10 @@ img.src = "http://dogecoin.com/imgs/dogecoin-300.png"
 img
 </pre>
 
+<pre class="Scala-jvm">
+List(1, 2, 3).reverse
+</pre>
+
 
 <script src="http://localhost:8080/embedded.js"></script>
 
@@ -41,9 +45,16 @@ window.onload = function() {
   var Scastie = com.olegych.scastie.client.ClientMain;
 
   Scastie.embedded(
-    ".scala",
+    ".Scala-js",
     {
       targetType: "js",
+      serverUrl: "http://localhost:9000"
+    }
+  );
+
+  Scastie.embedded(
+    ".Scala-jvm",
+    {
       serverUrl: "http://localhost:9000"
     }
   );
