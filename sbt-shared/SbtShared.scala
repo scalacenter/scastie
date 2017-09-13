@@ -73,19 +73,6 @@ object SbtShared {
   val playJson =
     libraryDependencies += "com.typesafe.play" %%% "play-json" % playJsonVersion
 
-  lazy val remapSourceMap =
-    scalacOptions ++= {
-      val ver = version.value
-      val fromScastie = (baseDirectory in LocalRootProject).value.toURI.toString
-      val toScastie =
-        s"https://raw.githubusercontent.com/scalacenter/scastie/$gitHashNow"
-
-      Map(fromScastie -> toScastie).map {
-        case (from, to) =>
-          s"-P:scalajs:mapSourceURI:$from->$to"
-      }.toList
-    }
-
   lazy val baseSettings = Seq(
     // skip scaladoc
     publishArtifact in (Compile, packageDoc) := false,
@@ -213,7 +200,6 @@ object SbtShared {
         test := {},
         libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion
       )
-      .jsSettings(remapSourceMap)
       .enablePlugins(BuildInfoPlugin)
   }
 }

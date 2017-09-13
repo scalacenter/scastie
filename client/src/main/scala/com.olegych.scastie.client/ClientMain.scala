@@ -16,11 +16,10 @@ import java.util.UUID
 
 import japgolly.scalajs.react._, extra.router._
 
-@JSExportTopLevel("scastie.ClientMain")
-object ClientMain {
-
+@JSExportTopLevel("scastie.ScastieMain")
+class ScastieMain(defaultServerUrl: String) {
   @JSExport
-  def main(defaultServerUrl: String): Unit = {
+  def main(): Unit = {
     dom.document.body.className = "scastie"
 
     val container =
@@ -38,20 +37,7 @@ object ClientMain {
   }
 
   @JSExport
-  def signal(instrumentations: String,
-             attachedDoms: js.Array[HTMLElement],
-             rawId: String): Unit = {
-    Global.signal(instrumentations, attachedDoms, rawId)
-  }
-
-  @JSExport
-  def error(er: js.Error, rawId: String): Unit = {
-    Global.error(er, rawId)
-  }
-
-  @JSExport
-  def embeddedRessource(options: UndefOr[EmbeddedRessourceOptionsJs],
-                        defaultServerUrl: String): Unit = {
+  def embeddedRessource(options: UndefOr[EmbeddedRessourceOptionsJs]): Unit = {
     val embeddedOptions =
       options.toOption
         .map(EmbeddedOptions.fromJsRessource(defaultServerUrl))
@@ -83,8 +69,7 @@ object ClientMain {
 
   @JSExport
   def embedded(selector: UndefOr[String | Node],
-               options: UndefOr[EmbeddedOptionsJs],
-               defaultServerUrl: String): Unit = {
+               options: UndefOr[EmbeddedOptionsJs]): Unit = {
 
     val embeddedOptions =
       options.toOption
@@ -159,5 +144,21 @@ object ClientMain {
     ).render.renderIntoDOM(container)
 
     container
+  }
+}
+
+@JSExportTopLevel("scastie.ClientMain")
+object ClientMain {
+
+  @JSExport
+  def signal(instrumentations: String,
+             attachedDoms: js.Array[HTMLElement],
+             rawId: String): Unit = {
+    Global.signal(instrumentations, attachedDoms, rawId)
+  }
+
+  @JSExport
+  def error(er: js.Error, rawId: String): Unit = {
+    Global.error(er, rawId)
   }
 }

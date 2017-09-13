@@ -10,4 +10,4 @@ unmanagedSourceDirectories in Compile += {
 }
 
 // addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.0-RC2")
-addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.8.0-SNAPSHOT")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.9.0-SNAPSHOT")

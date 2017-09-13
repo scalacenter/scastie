@@ -11,7 +11,7 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 ### Patch Scala.js Bundler
 
 git clone git@github.com:MasseGuillaume/scalajs-bundler.git
-git checkout dev-server-fix
+git checkout scastie
 sbt publishLocal
 
 ```

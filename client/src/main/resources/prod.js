@@ -11,7 +11,7 @@ ga('send', 'pageview');
 
 Raven.config('https://0b9ff62cbc2344369cab867af776ae07@sentry.io/171717').install();
 
-common.Main.main(common.defaultServerUrl);
+common.com.olegych.scastie.client.ScastieMain.main();
 
 module.exports = {
   com: common.com

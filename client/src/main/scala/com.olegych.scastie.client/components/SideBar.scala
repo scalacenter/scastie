@@ -10,6 +10,7 @@ import extra._
 
 import scala.scalajs.js
 import js.annotation._
+
 @JSImport("resources/images/icon-scastie.png", JSImport.Namespace)
 @js.native
 object ScastieLogo extends js.Object

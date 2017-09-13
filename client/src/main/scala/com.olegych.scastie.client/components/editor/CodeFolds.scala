@@ -46,21 +46,31 @@ object CodeFoldingAnnotations {
         val posEnd = doc.posFromIndex(range.indexEnd)
 
         var annotRef: Option[Annotation] = None
-        val noop: (HTMLElement => Unit) = { element =>
-          {
-            def clear(event: dom.Event): Unit = annotRef.foreach(_.clear())
+        val unfold: (HTMLElement => Unit) = { element =>
+          
+          println("unfold")
 
-            element.className = element.className + " code-fold"
-            element.addEventListener("touchstart", clear)
-            element.addEventListener("click", clear)
+          def clear(event: dom.Event): Unit = {
+            println("clear fold")
+            annotRef.foreach(_.clear())
           }
+
+          element.className = element.className + " code-fold"
+          element.addEventListener("touchstart", clear)
+          element.addEventListener("click", clear)
+
+          element.onclick = (event: dom.MouseEvent) => {
+            println("onclick")
+            println(event)
+          }
+          
         }
         val annot = Annotation.fold(
           editor,
           posStart,
           posEnd,
           "-- Click to unfold --",
-          noop
+          unfold
         )
 
         annotRef = Some(annot)

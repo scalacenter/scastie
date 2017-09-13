@@ -9,6 +9,7 @@ object SnippetState {
     Json.format[SnippetState]
 }
 
+
 case class SnippetState(
     snippetId: Option[SnippetId],
     isSnippetSaved: Boolean,
