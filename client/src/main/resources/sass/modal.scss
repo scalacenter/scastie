@@ -63,7 +63,7 @@
       }
       .modal-fade-screen {
           // overlay
-          @include position(fixed, 0px 0px 0px 0px);
+          @include position(fixed, 0px, 0px, 0px, 0px);
           background-color: rgba(#000, 0.55);
           opacity: 1;
           text-align: left;
@@ -71,7 +71,7 @@
           visibility: visible;
           z-index: 99999999999;
           .modal-bg {
-              @include position(absolute, 0px 0px 0px 0px);
+              @include position(absolute, 0px, 0px, 0px, 0px);
               cursor: pointer;
           }
           .modal-reset {
@@ -106,12 +106,12 @@
           top: ($modal-padding/2);
           right: ($modal-padding /2);
           position: absolute;
-          @include size(1.5em);
+          @include size(1.5em, 1.5em);
           background: $modal-background;
           cursor: pointer;
           &::after, &::before {
-              @include position(absolute, 3px 3px 0 50%);
-              @include size(0.15em 1.5em);
+              @include position(absolute, 3px, 3px, 0, 50%);
+              @include size(0.15em, 1.5em);
               background: $modal-close-color;
               content: "";
               display: block;

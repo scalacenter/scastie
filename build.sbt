@@ -289,8 +289,6 @@ lazy val client = project
     webpackEmitSourceMaps := true,
     test := {},
     npmDependencies in Compile ++= Seq(
-      "bourbon" -> "4.3.4",
-      "bourbon-neat" -> "1.9.0",
       "codemirror" -> "5.28.0",
       "firacode" -> "1.205.0",
       "font-awesome" -> "4.7.0",

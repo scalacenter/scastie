@@ -66,7 +66,7 @@
     height: 100%;
   }
 
-  .root.embedded {
+  .scastie.embedded {
     width: 800px;
     margin: 100px auto;
     
@@ -93,7 +93,7 @@
     }
   }
 
-  .root:not(.embedded) {
+  .scastie:not(.embedded) {
     .main-panel {
       position: absolute;
       top: 0;
@@ -122,7 +122,7 @@
     }
   }
 
-  .root:not(.embedded) {
+  .scastie:not(.embedded) {
     .editor-container {
       .code {
         height: calc(100% - #{$header-height + $editor-topbar-height + $console-handle-height});
@@ -184,7 +184,7 @@
 
   }
 
-  .root:not(.embedded) {
+  .scastie:not(.embedded) {
     @include phone {
       .main-panel {
         left: 0;
@@ -267,7 +267,7 @@
     }
   }
 
-  .root:not(.embedded) {
+  .scastie:not(.embedded) {
     @include tablet {
       .force-desktop {
         .main-panel {

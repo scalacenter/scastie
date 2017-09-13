@@ -98,10 +98,20 @@ object Scastie {
     ScalaComponent
       .builder[Scastie]("Scastie")
       .initialStateFromProps { props =>
-        val state =
-          LocalStorage.load.getOrElse(
-            ScastieState.default(props.isEmbedded)
-          )
+        val state = {
+          val loadedState = 
+            LocalStorage.load.getOrElse(
+              ScastieState.default(props.isEmbedded)
+            )
+
+          if (!props.isEmbedded) {
+            loadedState
+          } else {
+            loadedState
+              .setCleanInputs
+              .clearOutputs
+          }
+        }
 
         props.targetType match {
           case Some(targetType) => {

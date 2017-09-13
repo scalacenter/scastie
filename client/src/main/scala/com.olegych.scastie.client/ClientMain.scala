@@ -25,7 +25,7 @@ object ClientMain {
 
     val container =
       dom.document.createElement("div").asInstanceOf[dom.raw.HTMLDivElement]
-    container.className = "root"
+    container.className = "scastie"
     dom.document.body.appendChild(container)
 
     val routing = new Routing(defaultServerUrl)
@@ -147,7 +147,7 @@ object ClientMain {
       .createElement("div")
       .asInstanceOf[dom.raw.HTMLDivElement]
 
-    container.className = "root embedded"
+    container.className = "scastie embedded"
 
     Scastie(
       scastieId = UUID.randomUUID(),

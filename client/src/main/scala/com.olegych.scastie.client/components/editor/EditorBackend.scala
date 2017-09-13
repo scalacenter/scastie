@@ -45,8 +45,10 @@ private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
           scope
             .modState { state =>
               state.loadingMessage.hide()
+              editor.refresh()
 
               state.copy(completionState = Idle)
+
             }
             .runNow()
         }
