@@ -1,6 +1,10 @@
 @import "commonvars";
 
-// .scastie {
+.scastie {
+  .CodeMirror-cursor {
+    border-left-width: 2px;
+  }
+
   .CodeMirror, .CodeMirror-scroll {
     height: 100%;
   }
@@ -283,4 +287,4 @@
     -o-transition: opacity .6s;
     -ms-transition: opacity .6s;
   }
-// }
+}
