@@ -141,12 +141,10 @@
               padding: 30px;
               position: relative;
               height: 90px;
-              width: 100%;
               border-radius: $base-border-radius;
           }
 
           .modal-inner {
-              width: 100%;
               height: calc(100% - 90px);
               padding: 0 30px 10px 30px;
               p {
