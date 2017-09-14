@@ -33,25 +33,8 @@ private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
           EditorOptions(props, scope)
         )
 
-      editor.onFocus(_.refresh())
-
       editor.onChanges(
         (e, _) => props.codeChange(e.getDoc().getValue()).runNow()
-      )
-
-      // don't show completions if cursor moves to some other place
-      editor.onMouseDown(
-        (_, _) => {
-          scope
-            .modState { state =>
-              state.loadingMessage.hide()
-              editor.refresh()
-
-              state.copy(completionState = Idle)
-
-            }
-            .runNow()
-        }
       )
 
       editor.onKeyUp((_, e) => {
