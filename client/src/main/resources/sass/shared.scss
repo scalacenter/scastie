@@ -11,7 +11,7 @@
 @include editor();
 
 @mixin sharedStyles($class) {
-  body {
+  .scastie {
     .app.#{$class} {
       @include editorTheme($class);
     }

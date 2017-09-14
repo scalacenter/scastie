@@ -9,7 +9,7 @@ const Common = require('./webpack.common.js');
 const publicFolderName = "out/public"
 
 const extractSass = new ExtractTextPlugin({
-  filename: "[name].css"
+  filename: "[name].[hash].css"
 });
 
 const Web = Merge(Common.Web, {

@@ -60,38 +60,42 @@ $cm-gutters-border-color: #eee8d5;
 $cm-gutters-linenumber-color: #657b83;
 $cm-active-hint-background: #7dc8e5;
 $cm-active-hint-text: #002b36;
+$cm-cursor: #00acdb;
 
-.light {
-  .main-panel {
-    background-color: $cm-background-color;
-  }
-}
-
-.code, .configuration {
-  .cm-s-solarized.cm-s-light {
-    color: $cm-color;
-    background-color: $cm-background-color;
-
-    .CodeMirror-simplescroll-vertical div,
-    .CodeMirror-simplescroll-horizontal div,
-
-    .CodeMirror-hints {
-      background: $snippet-background-color;
-    }
-    li.CodeMirror-hint-active {
-      background: $cm-active-hint-background;
-      color: $cm-active-hint-text;
-    }
-
-    .CodeMirror-gutters {
-      border-right: 1px solid $cm-gutters-border-color;
-      background-color: $snippet-background-color;
-    }
-    .CodeMirror-linenumber {
-      color: $cm-gutters-linenumber-color;
+.scastie {
+  .light {
+    .main-panel {
+      background-color: $cm-background-color;
     }
   }
+
+  .code, .configuration {
+    .cm-s-solarized.cm-s-light {
+      color: $cm-color;
+      background-color: $cm-background-color;
+
+      .CodeMirror-cursor {
+        border-left-color: $cm-cursor;
+      }
+
+      .CodeMirror-simplescroll-vertical div,
+      .CodeMirror-simplescroll-horizontal div,
+
+      .CodeMirror-hints {
+        background: $snippet-background-color;
+      }
+      li.CodeMirror-hint-active {
+        background: $cm-active-hint-background;
+        color: $cm-active-hint-text;
+      }
+
+      .CodeMirror-gutters {
+        border-right: 1px solid $cm-gutters-border-color;
+        background-color: $snippet-background-color;
+      }
+      .CodeMirror-linenumber {
+        color: $cm-gutters-linenumber-color;
+      }
+    }
+  }
 }
-
-
-
