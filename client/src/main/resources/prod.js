@@ -1,3 +1,5 @@
+require("./app-style.js");
+
 const Raven = require("node_modules/raven-js");
 const common = require("./prod-common.js");
 

@@ -6,14 +6,20 @@ const Merge = require("webpack-merge");
 const Common = require('./webpack.common.js');
 const devDir = Path.resolve(Common.rootDir, 'dev-static');
 
+const ScalaJs = Merge(Common.ScalaJs, {
+  output: {
+    publicPath: '/'
+  }
+});
+
 const Web = Merge(Common.Web, {
+  output: {
+    publicPath: '/'
+  },
   entry: {
     app: Path.resolve(Common.resourcesDir, './dev.js'),
     embedded: Path.resolve(Common.resourcesDir, './dev-embed.js')
   },
-  // output: {
-  //   filename: '[name].js'
-  // },
   module: {
     rules: [
       {
@@ -62,6 +68,6 @@ const Web = Merge(Common.Web, {
 });
 
 module.exports = Merge(
-  Common.ScalaJs,
+  ScalaJs,
   Web
 );

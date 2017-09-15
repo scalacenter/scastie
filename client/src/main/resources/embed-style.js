@@ -1,2 +1,2 @@
-require("./sass/libs.scss");
-require("./sass/embed.scss");
+require("resources/sass/libs.scss");
+require("resources/sass/embed.scss");

@@ -25,28 +25,34 @@ $force-desktop-width: 1920px;
 
 @mixin tablet {
   @media (min-width: #{$mobile-width}) and (max-width: #{$tablet-width}) {
-    .app:not(.force-desktop) {
-      @content;
+    .scastie {
+      .app:not(.force-desktop) {
+        @content;
+      }
     }
   }
 }
 
 @mixin phone {
   @media only screen and (max-width: #{$mobile-width}) {
-    .app:not(.force-desktop) {
-      @content;
+    .scastie {
+      .app:not(.force-desktop) {
+        @content;
+      }
     }
   }
 }
 
 @include phone {
-  .app.force-desktop {
-    min-height: $force-desktop-height;
-    min-width: $force-desktop-width;
-    position: relative;
+  .scastie {
+    .app.force-desktop {
+      min-height: $force-desktop-height;
+      min-width: $force-desktop-width;
+      position: relative;
 
-    .editor-mobile {
-      display: none;
+      .editor-mobile {
+        display: none;
+      }
     }
   }
 }
