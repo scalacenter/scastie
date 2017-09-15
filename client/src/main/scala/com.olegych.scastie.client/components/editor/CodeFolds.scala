@@ -61,7 +61,7 @@ object CodeFoldingAnnotations {
           editor,
           posStart,
           posEnd,
-          "-- Click to unfold --" + java.util.UUID.randomUUID(),
+          "-- Click to unfold --",
           unfold
         )
 
