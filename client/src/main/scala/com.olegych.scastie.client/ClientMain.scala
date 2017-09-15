@@ -120,7 +120,7 @@ class ScastieMain(defaultServerUrl: String) {
 
     link.`type` = "text/css"
     link.rel = "stylesheet"
-    link.href = baseUrl + "/public/app.css"
+    link.href = baseUrl + "/public/embedded.css"
 
     dom.document.getElementsByTagName("head")(0).appendChild(link)
   }

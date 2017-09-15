@@ -79,9 +79,8 @@ h1 {
 @include topbar();
 
 @mixin appStyles($class) {
-  body {
+  .scastie {
     .app.#{$class} {
-
       color: $text-color;
       background: $background-color;
 

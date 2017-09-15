@@ -1,5 +1,3 @@
-require("./app-style.js");
-
 const clientOpt = require("scalajs/client-opt.js");
 const defaultServerUrl = "https://scastie.scala-lang.org";
 

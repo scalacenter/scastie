@@ -1,37 +1,55 @@
 @import "shared";
 
-@import "embedded-menu-theme";
-@import "dark-embedded";
-@import "light-embedded";
+.scastie {
+  .embedded-menu {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 3;
 
-.embedded-menu {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 3;
+    margin: 20px;
 
-  margin: 20px;
+    list-style: none;
 
-  list-style: none;
+    & > * {
+      cursor: pointer;
+      
+      &.disabled {
+        cursor: not-allowed;
+      }
 
-  & > * {
-    cursor: pointer;
-    
-    &.disabled {
-      cursor: not-allowed;
+      margin: 10px;
+      padding: 10px;
+      font-size: 20px;
     }
 
-    margin: 10px;
-    padding: 10px;
-    font-size: 20px;
-  }
-
-  .logo {
-    img {
-      display: inline-block;
-      width: 20px;
-      margin: 0 5px 0 5px;
-      vertical-align: middle;
+    .logo {
+      img {
+        display: inline-block;
+        width: 20px;
+        margin: 0 5px 0 5px;
+        vertical-align: middle;
+      }
     }
   }
 }
+
+@mixin embeddedMenuStyle($class) {
+  .scastie {
+    .app.#{$class} {
+      .embedded-menu {
+        & > * {
+          background-color: $sidebar-background;
+          color: $editor-button-color;
+
+          &.disabled {
+            color: grey;
+          }
+        }
+      }
+    }
+  }
+}
+
+@import "dark-embedded";
+@import "light-embedded";
