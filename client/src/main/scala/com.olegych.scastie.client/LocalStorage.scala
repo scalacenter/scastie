@@ -3,6 +3,7 @@ package client
 
 import play.api.libs.json.Json
 
+import org.scalajs.dom
 import org.scalajs.dom.window.localStorage
 
 object LocalStorage {
@@ -12,7 +13,15 @@ object LocalStorage {
     localStorage.setItem(stateKey, Json.stringify(Json.toJson(state)))
   }
 
-  def load: Option[ScastieState] =
-    Option(localStorage.getItem(stateKey))
-      .flatMap(raw => Json.fromJson[ScastieState](Json.parse(raw)).asOpt)
+  def load: Option[ScastieState] = {
+    try {
+      Option(localStorage.getItem(stateKey))
+        .flatMap(raw => Json.fromJson[ScastieState](Json.parse(raw)).asOpt)
+    } catch {
+      case e: Exception => {
+        dom.console.log(e.toString)
+        None
+      }
+    }
+  }
 }
