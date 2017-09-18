@@ -8,13 +8,20 @@ import scala.collection.immutable.Seq
 import scala.meta._
 import scala.meta.inputs.Position
 import scala.meta.parsers.Parsed
+import scala.util.control.NonFatal
 
 sealed trait InstrumentationFailure
-case object HasMainMethod extends InstrumentationFailure
-case object UnsupportedDialect extends InstrumentationFailure
-case class ParsingError(error: Parsed.Error) extends InstrumentationFailure
+
+object InstrumentationFailure {
+  case object HasMainMethod extends InstrumentationFailure
+  case object UnsupportedDialect extends InstrumentationFailure
+  case class ParsingError(error: Parsed.Error) extends InstrumentationFailure
+  case class InternalError(exception: Throwable) extends InstrumentationFailure  
+}
 
 object Instrument {
+  import InstrumentationFailure._
+
   private val instrumentedClass = "Playground"
   private val instrumentationMethod = "instrumentations$"
   private val instrumentationMap = "instrumentationMap$"
@@ -210,12 +217,18 @@ object Instrument {
       case Some(dialect) =>
         implicit val selectedDialect: Dialect = dialect
 
-        code0.parse[Source] match {
-          case Parsed.Success(source) =>
-            if (!hasMainMethod(source))
-              Right(instrument(source, prelude.length + 1, isScalaJs))
-            else Left(HasMainMethod)
-          case e: Parsed.Error => Left(ParsingError(e))
+        try {
+          code0.parse[Source] match {
+            case Parsed.Success(source) =>
+              if (!hasMainMethod(source))
+                Right(instrument(source, prelude.length + 1, isScalaJs))
+              else Left(HasMainMethod)
+            case e: Parsed.Error => Left(ParsingError(e))
+          }
+        } catch {
+          case NonFatal(e) => {
+            Left(InternalError(e))
+          }
         }
       case None => Left(UnsupportedDialect)
     }

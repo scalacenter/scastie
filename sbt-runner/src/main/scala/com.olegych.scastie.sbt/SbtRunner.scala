@@ -3,8 +3,6 @@ package com.olegych.scastie.sbt
 import com.olegych.scastie.SbtTask
 import com.olegych.scastie.instrumentation._
 import com.olegych.scastie.api._
-import com.olegych.scastie.api.ScalaTargetType._
-import com.olegych.scastie.util.ScastieFileUtil.slurp
 import com.olegych.scastie.util.TaskTimeout
 
 import play.api.libs.json._
@@ -173,7 +171,7 @@ class SbtRunner(runTimeout: FiniteDuration,
           }
 
           error match {
-            case HasMainMethod =>
+            case InstrumentationFailure.HasMainMethod => {
               run(snippetId,
                   inputs.copy(worksheetMode = false),
                   ip,
@@ -181,16 +179,23 @@ class SbtRunner(runTimeout: FiniteDuration,
                   progressActor,
                   sender,
                   forcedProgramMode = true)
-            case UnsupportedDialect =>
+            }
+
+            case InstrumentationFailure.UnsupportedDialect => {
               signalError(
                 "The worksheet mode does not support this Scala target",
                 None
               )
+            }
 
-            case ParsingError(Parsed.Error(pos, message, _)) =>
+            case InstrumentationFailure.ParsingError(Parsed.Error(pos, message, _)) => {
               val lineOffset = getLineOffset(worksheetMode = true)
-
               signalError(message, Some(pos.start.line + lineOffset))
+            }
+
+            case InstrumentationFailure.InternalError(exception) => {
+              signalError(exception.getMessage, None)
+            }
           }
       }
   }
