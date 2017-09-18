@@ -485,15 +485,25 @@ class ScastieBackend(scastieId: UUID,
           }
         }
         case Some(embededOptions) => {
-          embededOptions match {
-            case EmbeddedOptions(Some(snippetId), _, _, _) =>
-              loadSnippet(snippetId)
+          val setInputs = 
+            (embededOptions.snippetId, embededOptions.inputs) match {
+              case (Some(snippetId), _) =>
+                loadSnippet(snippetId)
 
-            case EmbeddedOptions(_, _, Some(inputs), _) =>
-              scope.modState(_.setInputs(inputs))
+              case (_, Some(inputs)) =>
+                scope.modState(_.setInputs(inputs))
 
-            case _ => Callback.empty
-          }
+              case _ => Callback.empty
+            }
+
+          val setTheme =
+            embededOptions.theme match {
+              case Some("dark") => scope.modState(_.setTheme(dark = true))
+              case Some("light") => scope.modState(_.setTheme(dark = false))
+              case _ => Callback(())
+            }
+
+          setInputs >> setTheme
         }
       }
 

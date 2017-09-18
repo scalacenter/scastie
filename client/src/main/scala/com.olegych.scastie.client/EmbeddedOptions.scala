@@ -13,22 +13,22 @@ import scala.scalajs.js.annotation.ScalaJSDefined
 import scala.scalajs.js.UndefOr
 
 @ScalaJSDefined
-trait EmbeddedRessourceOptionsJs extends js.Object {
+trait SharedEmbeddedOptions extends js.Object {
+  val serverUrl: UndefOr[String]
+  val theme: UndefOr[String]
+}
+
+@ScalaJSDefined
+trait EmbeddedRessourceOptionsJs extends js.Object with SharedEmbeddedOptions {
   // SnippetId
   val base64UUID: UndefOr[String]
   val user: UndefOr[String]
   val update: UndefOr[Int]
   val injectId: UndefOr[String]
-
-  // General
-  val serverUrl: UndefOr[String]
 }
 
 @ScalaJSDefined
-trait EmbeddedOptionsJs extends js.Object {
-  // General
-  val serverUrl: UndefOr[String]
-
+trait EmbeddedOptionsJs extends js.Object with SharedEmbeddedOptions {
   // Inputs
   val code: UndefOr[String]
   val worksheetMode: UndefOr[Boolean]
@@ -45,6 +45,7 @@ trait EmbeddedOptionsJs extends js.Object {
 case class EmbeddedOptions(snippetId: Option[SnippetId],
                            injectId: Option[String],
                            inputs: Option[Inputs],
+                           theme: Option[String],
                            serverUrl: String) {
 
   def setCode(code: String): EmbeddedOptions = {
@@ -59,6 +60,7 @@ object EmbeddedOptions {
       snippetId = None,
       injectId = None,
       inputs = None,
+      theme = None,
       serverUrl = defaultServerUrl
     )
   }
@@ -88,6 +90,7 @@ object EmbeddedOptions {
       snippetId = snippetId,
       injectId = injectId.toOption,
       inputs = None,
+      theme = theme.toOption,
       serverUrl = serverUrl.toOption.getOrElse(defaultServerUrl)
     )
   }
@@ -184,6 +187,7 @@ object EmbeddedOptions {
       snippetId = None,
       injectId = None,
       inputs = inputs,
+      theme = theme.toOption,
       serverUrl = serverUrl.toOption.getOrElse(defaultServerUrl)
     )
   }
