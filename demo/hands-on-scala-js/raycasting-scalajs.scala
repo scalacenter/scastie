@@ -1,3 +1,6 @@
+// see: https://scastie.scala-lang.org/9ZgBIUCQQ6u8bRaJFLI0Yg
+// Author: https://github.com/lihaoyi
+
 import org.scalajs.dom.html.{Canvas => JsCanvas}
 import org.scalajs.dom
 val canvas = dom.document.createElement("canvas").asInstanceOf[JsCanvas]
@@ -13,7 +16,6 @@ canvas
  *
  * Half the lines of code
  *
- * Author: https://github.com/lihaoyi
  */
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import math._
