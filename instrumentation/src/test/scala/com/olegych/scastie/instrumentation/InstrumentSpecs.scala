@@ -11,6 +11,8 @@ import scala.collection.JavaConverters._
 
 class InstrumentSpecs extends FunSuite {
 
+  import InstrumentationFailure._
+
   private val testFiles = {
     val path = Paths.get("instrumentation", "src", "test", "resources")
     val s = Files.newDirectoryStream(path)
