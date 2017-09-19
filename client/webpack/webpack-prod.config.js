@@ -36,9 +36,9 @@ function Web(extractSass){
           test: /\.scss$/,
            use: extractSass.extract({
             use: [
-              { loader: "css-loader" },
-              { loader: "resolve-url-loader"},
-              { loader: "sass-loader?sourceMap" }
+              { loader: "css-loader", options: {sourceMap: true} },
+              { loader: "resolve-url-loader", options: {sourceMap: true} },
+              { loader: "sass-loader", options: {sourceMap: true} }
             ],
             fallback: "style-loader"
           })

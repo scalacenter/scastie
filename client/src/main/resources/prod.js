@@ -1,7 +1,7 @@
-require("./app-style.js");
+require("./sass/app-main.scss");
 
-const Raven = require("node_modules/raven-js");
-const common = require("./prod-common.js");
+var Raven = require("node_modules/raven-js");
+var common = require("./prod-common.js");
 
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
