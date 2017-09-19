@@ -166,7 +166,7 @@ object Scastie {
 
           val scalaJsScript =
             s"""|try {
-                |  var main = new Main();
+                |  var main = new ScastiePlaygroundMain();
                 |  com.olegych.scastie.client.ClientMain.signal(
                 |    main.result,
                 |    main.attachedElements,
