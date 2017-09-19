@@ -1,7 +1,9 @@
-const clientOpt = require("scalajs/client-opt.js");
-const defaultServerUrl = "https://scastie.scala-lang.org";
+var clientOpt = require("scalajs/client-opt.js");
+var defaultServerUrl = "https://scastie.scala-lang.org";
 
 module.exports = {
+  defaultServerUrl: defaultServerUrl,  
+  clientOpt: clientOpt,
   com: {
     olegych: {
       scastie: {

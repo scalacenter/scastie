@@ -1,6 +1,6 @@
-require("./app-style.js");
+require("./sass/app-main.scss");
 
-const common = require("./dev-common.js");
+var common = require("./dev-common.js");
 window.com = common.com
 
 com.olegych.scastie.client.ScastieMain.main();

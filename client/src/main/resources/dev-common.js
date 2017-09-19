@@ -1,4 +1,4 @@
-const defaultServerUrl = "";
+var defaultServerUrl = "";
 
 module.exports = {
   com: {
