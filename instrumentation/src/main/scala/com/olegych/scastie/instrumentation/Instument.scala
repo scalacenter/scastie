@@ -16,7 +16,7 @@ object InstrumentationFailure {
   case object HasMainMethod extends InstrumentationFailure
   case object UnsupportedDialect extends InstrumentationFailure
   case class ParsingError(error: Parsed.Error) extends InstrumentationFailure
-  case class InternalError(exception: Throwable) extends InstrumentationFailure  
+  case class InternalError(exception: Throwable) extends InstrumentationFailure
 }
 
 object Instrument {

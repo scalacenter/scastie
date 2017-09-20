@@ -99,7 +99,7 @@ object Scastie {
       .builder[Scastie]("Scastie")
       .initialStateFromProps { props =>
         val state = {
-          val loadedState = 
+          val loadedState =
             LocalStorage.load.getOrElse(
               ScastieState.default(props.isEmbedded)
             )
@@ -107,9 +107,7 @@ object Scastie {
           if (!props.isEmbedded) {
             loadedState
           } else {
-            loadedState
-              .setCleanInputs
-              .clearOutputs
+            loadedState.setCleanInputs.clearOutputs
           }
         }
 

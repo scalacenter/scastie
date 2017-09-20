@@ -47,7 +47,6 @@ object CodeFoldingAnnotations {
 
         var annotRef: Option[Annotation] = None
         val unfold: (HTMLElement => Unit) = { element =>
-
           def clear(event: dom.Event): Unit = {
             annotRef.foreach(_.clear())
           }
@@ -55,7 +54,7 @@ object CodeFoldingAnnotations {
           element.className = element.className + " code-fold"
           element.addEventListener("touchstart", clear _, false)
           element.addEventListener("dblclick", clear _, false)
-          element.addEventListener("click", clear _, false)          
+          element.addEventListener("click", clear _, false)
         }
         val annot = Annotation.fold(
           editor,
