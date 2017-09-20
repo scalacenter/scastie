@@ -17,9 +17,11 @@ import org.scalajs.dom
 
 val img = dom.document.createElement("img").asInstanceOf[HTMLImageElement]
 img.alt = "such dog" 
-img.src = "http://static5.businessinsider.com/image/52b2df16eab8ea421ff15454-500-379/doge.jpg"
+img.src = "https://goo.gl/a3Xr41"
 img
 </pre>
+
+<script src="http://localhost:9000/MasseGuillaume/akkD1GviSKufXp1HMCHJAA.js"></script>
 
 <pre class="scala">
 // fold
@@ -27,26 +29,20 @@ import org.scalajs.dom.raw.HTMLImageElement
 import org.scalajs.dom
 // end-fold
 
-val img = dom.document.createElement("img").asInstanceOf[HTMLImageElement]
-img.alt = "such dog" 
-img.src = "http://dogecoin.com/imgs/dogecoin-300.png"
-img
+val pre = dom.document.createElement("pre").asInstanceOf[HTMLPreElement]
+pre.innerHTML = "1+1"
+pre
 </pre>
 
 
 <script src="http://localhost:9000/embedded.js"></script>
 <script>
-window.onload = function() {
-  var Scastie = com.olegych.scastie.client.ScastieEmbedded;
-
-  Scastie.embedded(
-    ".scala",
-    {
-      targetType: "js",
-      serverUrl: "http://localhost:9000"
-    }
-  );
-}
+window.addEventListener('load', function() {
+  scastie.Embedded(".scala",{
+    targetType: "js",
+    serverUrl: "http://localhost:9000"
+  });
+});
 </script>
 
 </body>
