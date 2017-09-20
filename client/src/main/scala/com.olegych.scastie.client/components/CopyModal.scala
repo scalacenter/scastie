@@ -2,39 +2,31 @@ package com.olegych.scastie
 package client
 package components
 
-import api._
-
-import japgolly.scalajs.react._, vdom.all._, extra.router.RouterCtl, extra._
+import japgolly.scalajs.react._, vdom.all._, extra._
 
 import org.scalajs.dom
 
 import org.scalajs.dom.html
 import org.scalajs.dom.{window, document}
 
-final case class ShareModal(router: RouterCtl[Page],
-                            snippetId: SnippetId,
-                            isClosed: Boolean,
-                            close: Reusable[Callback]) {
+final case class CopyModal(title: String,
+                           subtitle: String,
+                           content: String,
+                           isClosed: Boolean,
+                           close: Reusable[Callback]) {
   @inline def render: VdomElement =
-    new ShareModal.ShareModalComponent().build(this)
+    new CopyModal.ShareModalComponent().build(this)
 }
 
-object ShareModal {
+object CopyModal {
 
-  implicit val reusability: Reusability[ShareModal] =
-    Reusability.caseClass[ShareModal]
+  implicit val reusability: Reusability[CopyModal] =
+    Reusability.caseClass[CopyModal]
 
   private class ShareModalComponent() {
     private var divRef: html.Div = _
 
-    private def render(props: ShareModal): VdomElement = {
-      val snippetUrl =
-        props.router
-          .urlFor(
-            Page.fromSnippetId(props.snippetId)
-          )
-          .value
-
+    private def render(props: CopyModal): VdomElement = {
       def copyLink: Callback = Callback {
         val range = dom.document.createRange()
         val selection = dom.window.getSelection()
@@ -46,17 +38,17 @@ object ShareModal {
       }
 
       Modal(
-        "Share your Code Snippet",
+        props.title,
         props.isClosed,
         props.close,
         TagMod(cls := "modal-share"),
         TagMod(
           p(cls := "modal-intro")(
-            "Copy and share your code snippet's URL:"
+            props.subtitle
           ),
           div(cls := "snippet-link")(
             div.ref(divRef = _)(cls := "link-to-copy")(
-              snippetUrl
+              props.content
             ),
             li(onClick --> copyLink,
                title := "Copy to Clipboard",
@@ -70,11 +62,11 @@ object ShareModal {
 
     private val component =
       ScalaComponent
-        .builder[ShareModal]("ShareModal")
+        .builder[CopyModal]("CopyModal")
         .render_P(render)
         .configure(Reusability.shouldComponentUpdate)
         .build
 
-    def build(props: ShareModal): VdomElement = component(props)
+    def build(props: CopyModal): VdomElement = component(props)
   }
 }
