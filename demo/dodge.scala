@@ -3,7 +3,7 @@ import org.scalajs.dom
 
 val img = dom.document.createElement("img").asInstanceOf[HTMLImageElement]
 img.alt = "such dog" 
-img.src = "https://rter.info/image.php?iso=DOGE&name=5-9de30fe3a7c1285418cffee986bf9054"
+img.src = "https://goo.gl/a3Xr41"
 img
 
 import org.scalajs.dom.raw.HTMLPreElement

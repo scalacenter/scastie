@@ -32,7 +32,7 @@ class FrontPageRoutes(production: Boolean) {
         |<script src='$embeddedUrlBase/embedded.js'></script>
         |<script>
         |window.addEventListener('load', function(event) {
-        |  com.olegych.scastie.client.ScastieMain.embeddedRessource({
+        |  com.olegych.scastie.client.ScastieEmbedded.embeddedRessource({
         |    base64UUID: '${snippetId.base64UUID}',
         |    $user
         |    injectId: '$id',

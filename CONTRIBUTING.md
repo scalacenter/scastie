@@ -5,8 +5,14 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 
 ## How to run locally
 
+### How to install via nix
+
 * install nix: `curl https://nixos.org/nix/install | sh`
 * nix-shell -A scastie
+
+### How to install on Mac
+ 
+brew install openjdk sbt nodejs yarn
 
 ### Patch Scala.js Bundler
 
