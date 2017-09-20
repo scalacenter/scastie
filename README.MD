@@ -16,7 +16,7 @@ Scastie is sbt in your browser. You can:
 
 * Use any version of Scala
 * Use an alternate backends such as Dotty, Scala.js, Scala Native, and Typelevel Scala.
-* Use any library published on Maven.
+* Use any publicly available library
 * Share Scala programs with anybody
 * Embed Scastie into your own website or library user guide.
 
@@ -28,11 +28,11 @@ We integrated a scaladex interface to allow you to search the Scala ecosystem
 and include any published Scala library in your project. You don’t need to
 remember what the latest version number of a specific library is anymore!
 
-The output will be streamed back to the user. A specific protocol will allow
+The output is streamed back to the user. A specific protocol will allow
 the client to interpret different events such as compiler errors,
 runtime exceptions, instrumentation, console output, etc.
 
-We also enable a worksheet mode, which feels much like a worksheet in an IDE.
+We also support a worksheet mode, which feels much like a worksheet in an IDE.
 This lets a user write code as top-level expressions, without having to put
 code inside of a class or object with a main method. Worksheet mode gives you
 two ways to interleave your results; on the one hand, when an expression
@@ -44,26 +44,28 @@ such as iPython notebooks.
 
 ## How do I embed Scastie ?
 
-You can embed a snippet with two different way. You can embed a ressource that
+You can embed a snippet with two different ways. You can embed a resource that
 was previously saved or you can convert code to a snippet.
 
-### Embedded Ressources
+### Embedded Resources
 
-Any ressource saved can be embed via a script tag by appending ".js".
+Any saved resource can be embed via a script tag by appending ".js" to it's URL.
 
 ```html
 
-<!-- Annonymous Ressource -->
+<!-- Annonymous Resource -->
 <script src="https://scastie.scala-lang.org/xbrvky6fTjysG32zK6kzRQ.js"></script>
 
-<!-- User's Ressource -->
+<!-- User's Resource -->
 <script src="https://scastie.scala-lang.org/MasseGuillaume/CpO2s8v2Q1qGdO3vROYjfg.js"></script>
 <script src="https://scastie.scala-lang.org/MasseGuillaume/CpO2s8v2Q1qGdO3vROYjfg/1.js"></script>
 ```
 
+The embedding will be patched at the location of the script tag.
+
 ### Converting Code Into Snippets
 
-It's also possible to convert code into a snippet. The preffered way is to embed
+It's also possible to convert code into a snippet. The prefered way is to embed
 a snippet since it's output is cached. This mode will compile and run the snippet
 every time it's accessed.
 
