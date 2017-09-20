@@ -67,9 +67,10 @@ object CodeSnippets {
     val update = summary.snippetId.user.map(_.update.toString).getOrElse("")
 
     div(cls := "snippet")(
-      ShareModal(
-        router = props.router,
-        snippetId = summary.snippetId,
+      CopyModal(
+        title = "Share your Code Snippet",
+        subtitle = "Copy and share your code snippet's URL:",
+        content = props.router.urlFor(Page.fromSnippetId(summary.snippetId)).value,
         isClosed = props.isShareModalClosed(summary.snippetId),
         close = props.closeShareModal
       ).render,
