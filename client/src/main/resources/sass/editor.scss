@@ -128,7 +128,7 @@
           height: calc(100% - #{$header-height + $editor-topbar-height + $console-handle-height});
 
           &.console-open{
-            height: calc(100% - #{$header-height + $editor-topbar-height + $console-height});
+            height: calc(100% - #{$header-height + $editor-topbar-height + $header-height + $console-height - $console-handle-height + 5px});
           }
         }
       }
@@ -207,7 +207,7 @@
 
         .editor-container {
           .code {
-            height: calc(100% - #{$editor-mobile-height + $console-handle-height});
+            // height: calc(100% - #{$editor-mobile-height + $console-handle-height});
             &.console-open{
               height: calc(100% - #{$editor-mobile-height + $console-height});
             }

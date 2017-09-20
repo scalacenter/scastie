@@ -93,7 +93,7 @@ object MainPanel {
       Console(
         isOpen = state.consoleState.consoleIsOpen,
         isRunning = state.isRunning,
-        content = state.outputs.console,
+        consoleOutputs = state.outputs.consoleOutputs,
         close = backend.closeConsole,
         open = backend.openConsole
       ).render

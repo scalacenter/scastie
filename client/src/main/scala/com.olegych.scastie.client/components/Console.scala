@@ -1,14 +1,15 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.client.ConsoleState
+import com.olegych.scastie.api.ConsoleOutput
+import com.olegych.scastie.client.{ConsoleState, AnsiColorFormatter}
 
-import org.scalajs.dom.raw.HTMLPreElement
+import org.scalajs.dom.raw.HTMLDivElement
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class Console(isOpen: Boolean,
                          isRunning: Boolean,
-                         content: String,
+                         consoleOutputs: Vector[ConsoleOutput],
                          close: Reusable[Callback],
                          open: Reusable[Callback]) {
   @inline def render: VdomElement = Console.component(this)
@@ -19,7 +20,7 @@ object Console {
   implicit val reusability: Reusability[Console] =
     Reusability.caseClass[Console]
 
-  private var consoleElement: HTMLPreElement = _
+  private var consoleElement: HTMLDivElement = _
 
   def render(props: Console): VdomElement = {
     val (displayConsole, displaySwitcher) =
@@ -30,6 +31,17 @@ object Console {
       if (props.isOpen)
         TagMod(cls := "console-open")
       else EmptyVdom
+
+    def renderConsoleOutputs: String = {
+      val out = 
+        props.consoleOutputs.map(output =>
+          s"<li>${AnsiColorFormatter.formatToHtml(output.show)}</li>"
+        ).mkString("\n  ")
+
+      s"""|<ol>
+          |$out
+          |</ol>""".stripMargin
+    }
 
     div(cls := "console-container", consoleCss)(
       div(cls := "console", displayConsole)(
@@ -42,8 +54,9 @@ object Console {
           "Console",
           i(cls := "fa fa-caret-down")
         ),
-        pre.ref(consoleElement = _)(cls := "output-console")(
-          props.content
+        div.ref(consoleElement = _)(
+          cls := "output-console",
+          dangerouslySetInnerHtml := renderConsoleOutputs
         )
       ),
       div(cls := "switcher-show", role := "button", onClick --> props.open)(

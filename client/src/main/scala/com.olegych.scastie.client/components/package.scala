@@ -59,6 +59,9 @@ package object components {
   implicit val completionsReuse: Reusability[List[Completion]] =
     Reusability.byRefOr_==
 
+  implicit val consoleOutputsReuse: Reusability[Vector[ConsoleOutput]] =
+    Reusability.byRefOr_==
+
   implicit val typeInfoAtReuse: Reusability[TypeInfoAt] =
     Reusability.byRefOr_==
 
