@@ -83,44 +83,31 @@ img.src = "https://goo.gl/a3Xr41"
 img
 </pre>
 
-<pre class="full">
-
-</pre>
-
+<pre class="full"></pre>
 
 <!-- Embedding Script -->
 <script src="https://scastie.scala-lang.org/embedded.js"></script>
 
 <script>
 window.addEventListener('load', function() {
-  var Scastie = com.olegych.scastie.client.ScastieEmbedded;
-
   // DOM selector without build options
-  Scastie.embedded(".simple");
-
+  scastie.Embedded('.simple');
 
   // with some options
-  Scastie.embedded(".scala-js", { targetType: "js" });
+  scastie.Embedded('.scala-js', { targetType: 'js' });
 
   // all option
-  Scastie.embedded(".full", {
-    // General
-      theme: "light", // (dark, light)
-
-    // Inputs
-      // if not set, it will use the code available in the selected dom element
-      code: "1 + 1",
-      worksheetMode: true,
-
-      // you can add anything here that sbt supports (libraryDependencies, scalacOption, etc)
-      sbtConfig: 'libraryDependencies += "org.json4s" %% "json4s-native" % "3.5.2"',
-
-      // Scala-Native is not yet supported: https://github.com/scalacenter/scastie/issues/50
-      targetType: "jvm",  // jvm, dotty, typelevel, js
-      
-      scalaVersion: "2.12.3"
-      // setting Scala.js version is not yet supported: https://github.com/scalacenter/scastie/issues/228
+  scastie.Embedded('.full', {
+    theme: 'light', // (dark, light)
+    code: '1 + 1', // default: DOM node content
+    worksheetMode: true,
+    sbtConfig: 'libraryDependencies += "org.json4s" %% "json4s-native" % "3.5.2"',
+    targetType: 'jvm',  // jvm, dotty, typelevel, js
+    scalaVersion: '2.12.3'
   });
+
+  // Setting Scala-Native targetType is not yet supported: https://github.com/scalacenter/scastie/issues/50
+  // Setting Scala.js version is not yet supported: https://github.com/scalacenter/scastie/issues/228
 });
 </script>
 ```
