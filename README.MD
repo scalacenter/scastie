@@ -61,7 +61,7 @@ Any ressource saved can be embed via a script tag by appending ".js".
 <script src="https://scastie.scala-lang.org/MasseGuillaume/CpO2s8v2Q1qGdO3vROYjfg/1.js"></script>
 ```
 
-### Converting Code
+### Converting Code Into Snippets
 
 It's also possible to convert code into a snippet. The preffered way is to embed
 a snippet since it's output is cached. This mode will compile and run the snippet

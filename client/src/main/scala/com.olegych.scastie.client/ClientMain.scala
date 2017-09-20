@@ -16,6 +16,9 @@ import java.util.UUID
 
 import japgolly.scalajs.react._, extra.router._
 
+/* Entry point for the website
+ */
+
 @JSExportTopLevel("scastie.ScastieMain")
 class ScastieMain(defaultServerUrl: String) {
   @JSExport
@@ -37,6 +40,26 @@ class ScastieMain(defaultServerUrl: String) {
   }
 }
 
+/* Entry point for Scala.js runtime
+ */
+@JSExportTopLevel("scastie.ClientMain")
+object ClientMain {
+
+  @JSExport
+  def signal(instrumentations: String,
+             attachedDoms: js.Array[HTMLElement],
+             rawId: String): Unit = {
+    Global.signal(instrumentations, attachedDoms, rawId)
+  }
+
+  @JSExport
+  def error(er: js.Error, rawId: String): Unit = {
+    Global.error(er, rawId)
+  }
+}
+
+/* Entry point for ressource embedding and code embedding
+ */
 @JSExportTopLevel("scastie.ScastieEmbedded")
 class ScastieEmbedded(defaultServerUrl: String, embeddedStylesheetUrl: String) {
 
@@ -148,21 +171,5 @@ class ScastieEmbedded(defaultServerUrl: String, embeddedStylesheetUrl: String) {
     ).render.renderIntoDOM(container)
 
     container
-  }
-}
-
-@JSExportTopLevel("scastie.ClientMain")
-object ClientMain {
-
-  @JSExport
-  def signal(instrumentations: String,
-             attachedDoms: js.Array[HTMLElement],
-             rawId: String): Unit = {
-    Global.signal(instrumentations, attachedDoms, rawId)
-  }
-
-  @JSExport
-  def error(er: js.Error, rawId: String): Unit = {
-    Global.error(er, rawId)
   }
 }
