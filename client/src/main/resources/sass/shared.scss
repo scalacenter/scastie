@@ -5,6 +5,7 @@
 @import "modal";
 @import "editor";
 @import "editor-theme";
+@import "ansi";
 
 @include modal();
 @include solarized();

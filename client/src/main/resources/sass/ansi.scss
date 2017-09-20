@@ -1,0 +1,63 @@
+.scastie {
+  .ansi-color-black {
+    color: black;
+  }
+  .ansi-color-red {
+    color: red;
+  }
+  .ansi-color-green {
+    color: green;
+  }
+  .ansi-color-yellow {
+    color: yellow;
+  }
+  .ansi-color-blue {
+    color: blue;
+  }
+  .ansi-color-magenta {
+    color: magenta;
+  }
+  .ansi-color-cyan {
+    color: cyan;
+  }
+  .ansi-color-white {
+    color: white;
+  }
+  .ansi-bg-color-black {
+    background-color: black;
+  }
+  .ansi-bg-color-red {
+    background-color: red;
+  }
+  .ansi-bg-color-green {
+    background-color: green;
+  }
+  .ansi-bg-color-yellow {
+    background-color: yellow;
+  }
+  .ansi-bg-color-blue {
+    background-color: blue;
+  }
+  .ansi-bg-color-magenta {
+    background-color: magenta;
+  }
+  .ansi-bg-color-cyan {
+    background-color: cyan;
+  }
+  .ansi-bg-color-white {
+    background-color: white;
+  }
+  .ansi-blink {
+    animation: blinker 1s linear infinite;
+  }
+  .ansi-bold {
+    font-weight: bold;
+  }
+  .ansi-reversed {
+    unicode-bidi:bidi-override;
+    direction:rtl;
+  }
+  .ansi-invisible {
+    display: none;
+  }
+}
