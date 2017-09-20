@@ -188,7 +188,9 @@ class SbtRunner(runTimeout: FiniteDuration,
               )
             }
 
-            case InstrumentationFailure.ParsingError(Parsed.Error(pos, message, _)) => {
+            case InstrumentationFailure.ParsingError(
+                Parsed.Error(pos, message, _)
+                ) => {
               val lineOffset = getLineOffset(worksheetMode = true)
               signalError(message, Some(pos.start.line + lineOffset))
             }

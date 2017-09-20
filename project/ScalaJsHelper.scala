@@ -20,9 +20,12 @@ object ScalaJSHelper {
 
     Seq(
       watchSources ++= (watchSources in client).value,
-      products in Compile += Def.task {
-        webpackOutputDir.value
-      }.dependsOn(webpack in (client, Compile, fullOptJS)).value
+      products in Compile += Def
+        .task {
+          webpackOutputDir.value
+        }
+        .dependsOn(webpack in (client, Compile, fullOptJS))
+        .value
     )
   }
 }

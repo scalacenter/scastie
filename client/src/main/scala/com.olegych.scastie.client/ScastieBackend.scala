@@ -485,7 +485,7 @@ class ScastieBackend(scastieId: UUID,
           }
         }
         case Some(embededOptions) => {
-          val setInputs = 
+          val setInputs =
             (embededOptions.snippetId, embededOptions.inputs) match {
               case (Some(snippetId), _) =>
                 loadSnippet(snippetId)
@@ -498,9 +498,9 @@ class ScastieBackend(scastieId: UUID,
 
           val setTheme =
             embededOptions.theme match {
-              case Some("dark") => scope.modState(_.setTheme(dark = true))
+              case Some("dark")  => scope.modState(_.setTheme(dark = true))
               case Some("light") => scope.modState(_.setTheme(dark = false))
-              case _ => Callback(())
+              case _             => Callback(())
             }
 
           setInputs >> setTheme
