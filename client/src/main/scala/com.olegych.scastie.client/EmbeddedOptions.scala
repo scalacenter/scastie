@@ -103,8 +103,8 @@ object EmbeddedOptions {
     val scalaTarget =
       (targetType.toOption,
        scalaVersion.toOption,
-       None, // scalaJsVersion.toOption,
-       None, // scalaNativeVersion.toOption
+       None: Option[String], // scalaJsVersion.toOption,
+       None: Option[String] // scalaNativeVersion.toOption
       ) match {
 
         case (Some("jvm"), _, None, None) => {

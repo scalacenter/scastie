@@ -1,6 +1,6 @@
 require("./sass/app-main.scss");
 
 var common = require("./dev-common.js");
-window.com = common.com
+window.scastie = common.scastie
 
-com.olegych.scastie.client.ScastieMain.main();
+scastie.ScastieMain();

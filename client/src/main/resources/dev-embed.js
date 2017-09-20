@@ -2,9 +2,12 @@ require("./sass/embed-main.scss");
 var common = require("./dev-common.js");
 
 // TODO: find a way to refer to embed-main.scss
-var styleUrl = "/public/embedded.css"
+var embeddedStylesheetUrl = "/public/embedded.css";
 
-common.com.olegych.scastie.client.ScastieEmbedded = 
-  new common.clientOpt.scastie.ScastieEmbedded(common.defaultServerUrl, styleUrl)
+common.scastie.ScastieEmbedded =
+  new $e.scastie.ScastieEmbedded(
+    defaultServerUrl,
+    embeddedStylesheetUrl
+  );
 
-window.com = common.com
+window.scastie = common.scastie;

@@ -167,13 +167,13 @@ object Scastie {
           val scalaJsScript =
             s"""|try {
                 |  var main = new ScastiePlaygroundMain();
-                |  com.olegych.scastie.client.ClientMain.signal(
+                |  scastie.ClientMain.signal(
                 |    main.result,
                 |    main.attachedElements,
                 |    "$scastieId"
                 |  );
                 |} catch (e) {
-                |  com.olegych.scastie.client.ClientMain.error(
+                |  scastie.ClientMain.error(
                 |    e,
                 |    "$scastieId"
                 |  );
