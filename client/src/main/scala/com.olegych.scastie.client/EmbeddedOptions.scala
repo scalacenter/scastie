@@ -38,8 +38,8 @@ trait EmbeddedOptionsJs extends js.Object with SharedEmbeddedOptions {
   //  target
   val targetType: UndefOr[String]
   val scalaVersion: UndefOr[String]
-  val scalaJsVersion: UndefOr[String]
-  val scalaNativeVersion: UndefOr[String]
+  // val scalaJsVersion: UndefOr[String] not yet supported
+  // val scalaNativeVersion: UndefOr[String] not yet supported
 }
 
 case class EmbeddedOptions(snippetId: Option[SnippetId],
@@ -103,8 +103,9 @@ object EmbeddedOptions {
     val scalaTarget =
       (targetType.toOption,
        scalaVersion.toOption,
-       scalaJsVersion.toOption,
-       scalaNativeVersion.toOption) match {
+       None, // scalaJsVersion.toOption,
+       None, // scalaNativeVersion.toOption
+      ) match {
 
         case (Some("jvm"), _, None, None) => {
           Some(
