@@ -1,18 +1,15 @@
 require("./sass/embed-main.scss");
 var common = require("./prod-common.js");
 
-// TODO: find a way to refer to embed-main.scss
-var styleUrl = "/public/embedded.css"
+var ScastieEmbedded =
+  new common.clientOpt.scastie.ScastieEmbedded(
+    common.defaultServerUrl
+  );
 
-var Embedded =
-  new common.clientOpt.scastie.Embedded(
-    common.defaultServerUrl, 
-    styleUrl
-  ) 
+common.scastie.Embedded = ScastieEmbedded.embedded;
+
+common.scastie.EmbeddedRessource = ScastieEmbedded.embeddedRessource;
 
 module.exports = {
-  scastie: {
-    Embedded: Embedded.embedded,
-    EmbeddedRessource: Embedded.embeddedRessource
-  }
+  scastie: common.scastie
 };

@@ -1,13 +1,13 @@
 require("./sass/embed-main.scss");
 var common = require("./dev-common.js");
 
-// TODO: find a way to refer to embed-main.scss
-var embeddedStylesheetUrl = "/public/embedded.css";
-
-common.scastie.ScastieEmbedded =
+var ScastieEmbedded =
   new $e.scastie.ScastieEmbedded(
-    defaultServerUrl,
-    embeddedStylesheetUrl
+    common.defaultServerUrl
   );
 
-window.scastie = common.scastie;
+scastie.Embedded = ScastieEmbedded.embedded;
+scastie.EmbeddedRessource = ScastieEmbedded.embeddedRessource;
+
+window.scastie = scastie;
+
