@@ -74,6 +74,7 @@ private[editor] object EditorOptions {
           ctrl + "-Enter" -> command(props.run.runNow()),
           ctrl + "-S" -> command(props.saveOrUpdate.runNow()),
           ctrl + "-M" -> command(props.openNewSnippetModal.runNow()),
+          ctrl + "-E" -> command(props.openEmbeddedModal.runNow()),
           "Ctrl" + "-Space" -> commandE { editor =>
             autocomplete(editor)
           },

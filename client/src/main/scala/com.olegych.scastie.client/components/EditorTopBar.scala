@@ -4,11 +4,13 @@ package components
 
 import api.{SnippetId, User, ScalaTargetType}
 
-import japgolly.scalajs.react._, vdom.all._, extra._
+import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
 
 final case class EditorTopBar(amend: SnippetId ~=> Callback,
                               clear: Reusable[Callback],
                               closeNewSnippetModal: Reusable[Callback],
+                              closeEmbeddedModal: Reusable[Callback],
+                              openEmbeddedModal: Reusable[Callback],
                               fork: SnippetId ~=> Callback,
                               formatCode: Reusable[Callback],
                               newSnippet: Reusable[Callback],
@@ -17,8 +19,10 @@ final case class EditorTopBar(amend: SnippetId ~=> Callback,
                               save: Reusable[Callback],
                               toggleWorksheetMode: Reusable[Callback],
                               update: SnippetId ~=> Callback,
+                              router: Option[RouterCtl[Page]],
                               inputsHasChanged: Boolean,
                               isNewSnippetModalClosed: Boolean,
+                              isEmbeddedModalClosed: Boolean,
                               isRunning: Boolean,
                               isStatusOk: Boolean,
                               isSnippetSaved: Boolean,
@@ -88,6 +92,36 @@ object EditorTopBar {
           EmptyVdom
       }
 
+    val embeddedModalButton =
+      (props.snippetId, props.router) match {
+        case (Some(sid), Some(router)) if props.isSnippetSaved => {
+
+        val url = router.urlFor(Page.fromSnippetId(sid)).value
+
+        val content = 
+          s"""<script src="$url.js"></script>""".stripMargin
+
+        val embeddedModal =
+          CopyModal(
+            title = "Share your Code Snippet",
+            subtitle = "Copy and embed your code snippet",
+            content = content,
+            isClosed = props.isEmbeddedModalClosed,
+            close = props.closeEmbeddedModal
+          ).render
+
+          li(title := s"Embed ($ctrl + E)",
+             role := "button",
+             cls := "btn",
+             onClick --> props.openEmbeddedModal)(
+            i(cls := "fa fa-code"),
+            span("Embed"),
+            embeddedModal
+          )
+        }
+        case _ => EmptyVdom
+      }
+
     nav(cls := "editor-topbar", isDisabled)(
       ul(cls := "editor-buttons")(
         runButton,
@@ -96,7 +130,8 @@ object EditorTopBar {
         clearButton,
         worksheetButton.when(props.targetType != ScalaTargetType.Dotty),
         downloadButton,
-        saveButton
+        saveButton,
+        embeddedModalButton
       )
     )
   }

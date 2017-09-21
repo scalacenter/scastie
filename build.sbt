@@ -23,16 +23,21 @@ def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 def akkaHttpTestkit =
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
 
-addCommandAlias(
-  "startAll",
-  List(
-    "sbtRunner/reStart",
-    "ensimeRunner/reStart",
-    "server/reStart",
-    "client/fastOptJS::startWebpackDevServer",
-    "client/fastOptJS"
-  ).mkString(";", ";", "")
+val startAll2Commands = List(
+  "sbtRunner/reStart",
+  "server/reStart",
+  "client/fastOptJS::startWebpackDevServer",
+  "client/fastOptJS"
 )
+
+val startAllCommands = 
+  "ensimeRunner/reStart" :: startAll2Commands
+
+def startAll(commands: List[String], suffix: String = "") =
+  addCommandAlias("startAll" + suffix, commands.mkString(";", ";", ""))
+
+startAll(startAllCommands)
+startAll(startAll2Commands, "2")
 
 lazy val scastie = project
   .in(file("."))
