@@ -4,23 +4,22 @@
   .modal { 
     .modal-fade-screen {
       .modal-share {
-        margin-top: 10em;
-        height: 300px;
+        max-width: 80%;
         .modal-inner {
           overflow: hidden;
           p {
-              margin: 30px 0 10px 0;
+              margin: 10px 0 10px 0;
           }
         }
         .snippet-link {
           height: 48px;
           border: 1px solid #5d7c83;
           margin-top: 34px;
+          padding: 10px;
 
           .link-to-copy {
             border: 0px;
             width: calc(100% - 46px);
-            padding-left: 15px;
             font: inherit;
             font-size: 18px;
             display: inline-block;
@@ -31,7 +30,6 @@
             display: inline-block;
             width: 46px;
             height: 100%;
-            padding: 12px;
             cursor: pointer;
             font-size: 22px;
             vertical-align: middle;

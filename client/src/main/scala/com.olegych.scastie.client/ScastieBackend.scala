@@ -64,7 +64,7 @@ class ScastieBackend(scastieId: UUID,
     }
 
   val clear: Reusable[Callback] =
-    Reusable.always(clearOutputs)
+    Reusable.always(clearOutputs >> scope.modState(_.closeModals))
 
   private def clearOutputs: Callback =
     scope.modState(_.clearOutputs)
@@ -156,6 +156,12 @@ class ScastieBackend(scastieId: UUID,
 
   val openShareModal: SnippetId ~=> Callback =
     Reusable.fn(snippetId => scope.modState(_.openShareModal(Some(snippetId))))
+
+  val openEmbeddedModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.openEmbeddedModal))
+
+  val closeEmbeddedModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.closeEmbeddedModal))
 
   val forceDesktop: Reusable[Callback] =
     Reusable.always(scope.modState(_.forceDesktop))

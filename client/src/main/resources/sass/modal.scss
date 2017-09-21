@@ -130,27 +130,25 @@
           transform: translate(-50%, -50%);  
           max-width: 60%;
           max-height: 80%;
+          padding-bottom: 10px;
 
           background: $modal-background;
           border-radius: $base-border-radius;
           transition: opacity 0.25s ease;
-          padding-bottom: 10px;
 
           .modal-header {
               background: $modal-background;
-              padding: 30px;
+              padding: 30px 30px 5px 30px; 
               position: relative;
-              height: 90px;
               border-radius: $base-border-radius;
           }
 
           .modal-inner {
-              height: calc(100% - 90px);
-              padding: 0 30px 10px 30px;
+              padding: 0 10px 10px 30px;
               p {
                   color: $base-font-color;
                   line-height: $base-line-height;
-                  margin: 10px 0 20px 0;
+                  margin: 10px 0 10px 0;
                   &.normal {
                       font-family: Lato;
                       font-size: 16px;

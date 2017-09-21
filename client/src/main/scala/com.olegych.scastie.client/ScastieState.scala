@@ -265,6 +265,12 @@ case class ScastieState(
   def closeShareModal: ScastieState =
     copyAndSave(modalState = modalState.copy(shareModalSnippetId = None))
 
+  def openEmbeddedModal: ScastieState =
+    copyAndSave(modalState = modalState.copy(isEmbeddedClosed = false))
+
+  def closeEmbeddedModal: ScastieState =
+    copyAndSave(modalState = modalState.copy(isEmbeddedClosed = true))
+
   def forceDesktop: ScastieState = copyAndSave(isDesktopForced = true)
 
   def openConsole: ScastieState = {
