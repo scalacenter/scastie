@@ -12,6 +12,7 @@ import org.scalajs.dom.{window, document}
 final case class CopyModal(title: String,
                            subtitle: String,
                            content: String,
+                           modalId: String,
                            isClosed: Boolean,
                            close: Reusable[Callback]) {
   @inline def render: VdomElement =
@@ -38,11 +39,12 @@ object CopyModal {
       }
 
       Modal(
-        props.title,
-        props.isClosed,
-        props.close,
-        TagMod(cls := "modal-share"),
-        TagMod(
+        title = props.title,
+        isClosed = props.isClosed,
+        close = props.close,
+        modalCss = TagMod(cls := "modal-share"),
+        modalId = props.modalId,
+        content = TagMod(
           p(cls := "modal-intro")(
             props.subtitle
           ),

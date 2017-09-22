@@ -15,11 +15,12 @@ object WelcomeModal {
 
   private def render(props: WelcomeModal): VdomElement = {
     Modal(
-      "Welcome to Scastie!",
-      props.isClosed,
-      props.close,
-      TagMod(),
-      TagMod(
+      title = "Welcome to Scastie!",
+      isClosed = props.isClosed,
+      close = props.close,
+      modalCss = TagMod(),
+      modalId = "welcome-modal",
+      content = TagMod(
         p(cls := "modal-intro",
           "Scastie is an interactive playground for Scala."),
         h2("Run / Edit"),

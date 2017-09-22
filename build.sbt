@@ -52,6 +52,7 @@ lazy val scastie = project
     apiJVM,
     balancer,
     client,
+    e2e,
     ensimeRunner,
     instrumentation,
     runtimeScala210JS,
@@ -71,13 +72,19 @@ lazy val scastie = project
   .settings(baseSettings)
   .settings(Deployment.settings(server, sbtRunner, ensimeRunner))
 
-lazy val loggingAndTest =
-  libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.1.7",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-    "com.getsentry.raven" % "raven-logback" % "8.0.3",
-    "org.scalatest" %% "scalatest" % scalaTestVersion % Test
+lazy val testSettings =
+  Seq(
+    libraryDependencies += "org.scalatest" %% "scalatest" % scalaTestVersion % Test
   )
+
+lazy val loggingAndTest =
+  Seq(
+    libraryDependencies ++= Seq(
+      "ch.qos.logback" % "logback-classic" % "1.1.7",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+      "com.getsentry.raven" % "raven-logback" % "8.0.3"
+    )
+  ) ++ testSettings
 
 lazy val utils = project
   .in(file("utils"))
@@ -409,4 +416,12 @@ lazy val migration = project
       "com.lihaoyi" %% "upickle" % "0.4.4",
       "com.typesafe.play" %% "play-json" % "2.6.2"
     )
+  )
+
+lazy val e2e = project
+  .in(file("end-to-end"))
+  .settings(baseSettings)
+  .settings(testSettings)
+  .settings(
+    libraryDependencies += "org.seleniumhq.selenium" % "selenium-java" % "3.5.3"
   )

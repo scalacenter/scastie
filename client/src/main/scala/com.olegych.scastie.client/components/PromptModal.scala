@@ -5,6 +5,7 @@ package components
 import japgolly.scalajs.react._, vdom.all._, extra._
 
 final case class PromptModal(modalText: String,
+                             modalId: String,
                              isClosed: Boolean,
                              close: Reusable[Callback],
                              actionText: String,
@@ -21,11 +22,12 @@ object PromptModal {
 
   private def render(props: PromptModal): VdomElement = {
     Modal(
-      props.modalText,
-      props.isClosed,
-      props.close,
-      TagMod(cls := "modal-reset"),
-      TagMod(
+      title = props.modalText,
+      isClosed = props.isClosed,
+      close = props.close,
+      modalCss = TagMod(cls := "modal-reset"),
+      modalId = props.modalId,
+      content = TagMod(
         p(
           cls := "modal-intro",
           props.actionText
