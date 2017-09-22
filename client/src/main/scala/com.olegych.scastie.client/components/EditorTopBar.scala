@@ -105,6 +105,7 @@ object EditorTopBar {
           CopyModal(
             title = "Share your Code Snippet",
             subtitle = "Copy and embed your code snippet",
+            modalId = "embed-modal",
             content = content,
             isClosed = props.isEmbeddedModalClosed,
             close = props.closeEmbeddedModal

@@ -165,6 +165,7 @@ object BuildSettings {
       TagMod(
         PromptModal(
           modalText = "Reset Build",
+          modalId = "reset-build-modal",
           isClosed = props.isResetModalClosed,
           close = props.closeResetModal,
           actionText = "Are you sure you want to reset the build ?",

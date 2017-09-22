@@ -33,11 +33,12 @@ object HelpModal {
       generateATag("https://github.com/OlegYch/scastie", "GitHub")
 
     Modal(
-      "Help about Scastie",
-      props.isClosed,
-      props.close,
-      TagMod(),
-      TagMod(
+      title = "Help about Scastie",
+      isClosed = props.isClosed,
+      close = props.close,
+      modalCss = TagMod(),
+      modalId = "long-help",
+      content = TagMod(
         p(cls := "normal", "Scastie is an interactive playground for Scala."),
         h2("Run / Edit"),
         p(cls := "normal",

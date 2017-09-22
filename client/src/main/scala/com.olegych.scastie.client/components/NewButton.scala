@@ -24,6 +24,7 @@ object NewButton {
       span("New"),
       PromptModal(
         modalText = "New Snippet",
+        modalId = "new-snippet-modal",
         isClosed = props.isNewSnippetModalClosed,
         close = props.closeNewSnippetModal,
         actionText = "Are you sure you want to create a new snippet ?",

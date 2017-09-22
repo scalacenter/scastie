@@ -5,7 +5,8 @@ import japgolly.scalajs.react._, vdom.all._, extra._
 final case class Modal(title: String,
                        isClosed: Boolean,
                        close: Reusable[Callback],
-                       modalcls: TagMod,
+                       modalCss: TagMod,
+                       modalId: String,
                        content: TagMod) {
   @inline def render: VdomElement = Modal.component(this)
 }
@@ -20,11 +21,11 @@ object Modal {
       if (props.isClosed) TagMod(display.none)
       else TagMod(display.block)
 
-    div(cls := "modal", modalStyle)(
+    div(cls := "modal", id := props.modalId, modalStyle)(
       div(cls := "modal-fade-screen",
           onClick ==> (e => e.stopPropagationCB >> props.close))(
         div(cls := "modal-window",
-            props.modalcls,
+            props.modalCss,
             onClick ==> (e => e.stopPropagationCB))(
           div(cls := "modal-header")(
             div(cls := "modal-close",
