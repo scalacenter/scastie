@@ -47,10 +47,24 @@ class FrontPageRoutes(production: Boolean) {
     concat(
       get(
         concat(
+          path("public" / "app.css")(
+            getFromResource("public/app.css.gz")
+          ),
+          path("public" / "app.js")(
+            getFromResource("public/app.js.gz")
+          ),
+          path("public" / "embedded.css")(
+            getFromResource("public/embedded.css.gz")
+          ),
+          path("embedded.js")(
+            getFromResource("public/embedded.js.gz")
+          ),
+          path("embedded.js.map")(
+            getFromResource("public/embedded.js.map")
+          ),
           path("public" / Remaining)(
             path ⇒ getFromResource("public/" + path)
-          ),
-          path("embedded.js")(getFromResource("public/embedded.js"))
+          )
         )
       ),
       get(
@@ -62,3 +76,7 @@ class FrontPageRoutes(production: Boolean) {
       )
     )
 }
+
+
+
+

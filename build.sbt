@@ -299,6 +299,7 @@ lazy val client = project
       "typeface-roboto-slab" -> "0.0.35"
     ),
     npmDevDependencies in Compile ++= Seq(
+      "compression-webpack-plugin" -> "1.0.0",
       "clean-webpack-plugin" -> "0.1.16",
       "css-loader" -> "0.28.5",
       "extract-text-webpack-plugin" -> "3.0.0",
@@ -308,6 +309,7 @@ lazy val client = project
       "resolve-url-loader" -> "2.1.0",
       "sass-loader" -> "6.0.6",
       "style-loader" -> "0.18.2",
+      "uglifyjs-webpack-plugin" -> "0.4.6",
       "webpack-merge" -> "4.1.0"
     ),
     libraryDependencies ++= Seq(

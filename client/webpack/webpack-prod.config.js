@@ -4,6 +4,8 @@ const Merge = require("webpack-merge");
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 const Common = require('./webpack.common.js');
 const publicFolderName = "out/public"
@@ -46,7 +48,17 @@ function Web(extractSass){
       ]
     },
     plugins: [
-      extractSass
+      extractSass,
+      new UglifyJSPlugin({
+        sourceMap: true
+      }),
+      new CompressionPlugin({
+        asset: "[path].gz[query]",
+        algorithm: "gzip",
+        test: /\.js$|\.css$|\.html$/,
+        threshold: 10240,
+        minRatio: 0.8
+      })
     ]
   });
 }
@@ -62,7 +74,7 @@ const WebApp = Merge(Web(extractSassApp), {
       template: Path.resolve(Common.resourcesDir, './prod.html'),
       favicon: Path.resolve(Common.resourcesDir, './images/favicon.ico')
     }),
-    new CleanWebpackPlugin([publicFolderName], {verbose: false})
+    new CleanWebpackPlugin([publicFolderName], {verbose: false}),
   ]
 });
 
