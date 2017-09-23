@@ -6,6 +6,7 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const Webpack = require('webpack');
 
 const Common = require('./webpack.common.js');
 const publicFolderName = "out/public"
@@ -75,6 +76,11 @@ const WebApp = Merge(Web(extractSassApp), {
       favicon: Path.resolve(Common.resourcesDir, './images/favicon.ico')
     }),
     new CleanWebpackPlugin([publicFolderName], {verbose: false}),
+    new Webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: JSON.stringify('production')
+      }
+    }),
   ]
 });
 
