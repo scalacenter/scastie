@@ -62,6 +62,8 @@ Any saved resource can be embedded via a script tag by appending ".js" to its UR
 
 The embedding will be patched at the location of the script tag.
 
+Take a look at: https://codepen.io/MasseGuillaume/pen/oeKoee
+
 ### Converting Code Into Snippets
 
 It's also possible to convert code into a snippet. The preferred way is to embed
@@ -112,3 +114,5 @@ window.addEventListener('load', function() {
 });
 </script>
 ```
+
+Take a look at: https://codepen.io/MasseGuillaume/pen/OxbVzm
