@@ -8,6 +8,13 @@ const CompressionPlugin = require('compression-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const Webpack = require('webpack');
 
+const ProdConfig = 
+  new Webpack.DefinePlugin({
+    'process.env': {
+      NODE_ENV: JSON.stringify('production')
+    }
+  })
+
 const Common = require('./webpack.common.js');
 const publicFolderName = "out/public"
 
@@ -45,10 +52,16 @@ function Web(extractSass){
             ],
             fallback: "style-loader"
           })
+        },
+        {
+          test: /\.js$/,
+          use: ["source-map-loader"],
+          enforce: "pre"
         }
       ]
     },
     plugins: [
+      ProdConfig,
       extractSass,
       new UglifyJSPlugin({
         sourceMap: true
@@ -76,11 +89,6 @@ const WebApp = Merge(Web(extractSassApp), {
       favicon: Path.resolve(Common.resourcesDir, './images/favicon.ico')
     }),
     new CleanWebpackPlugin([publicFolderName], {verbose: false}),
-    new Webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: JSON.stringify('production')
-      }
-    }),
   ]
 });
 
@@ -90,9 +98,15 @@ const WebEmbed = Merge(Web(extractSassEmbed), {
   }
 });
 
+const ScalaJs = Merge(Common.ScalaJs,{
+  plugins: [
+    ProdConfig
+  ]
+});
+
 
 module.exports = [
-  Common.ScalaJs,
+  ScalaJs,
   WebApp,
   WebEmbed
 ]
