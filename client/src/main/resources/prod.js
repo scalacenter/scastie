@@ -13,6 +13,6 @@ ga('send', 'pageview');
 
 Raven.config('https://0b9ff62cbc2344369cab867af776ae07@sentry.io/171717').install();
 
-common.scastie.ScastieMain.main();
-
 module.exports = common;
+
+common.scastie.ScastieMain.main();
