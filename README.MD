@@ -48,6 +48,8 @@ was previously saved or you can convert code to a snippet.
 
 ### Embedded Resources
 
+#### Via HTML
+
 Any saved resource can be embedded via a script tag by appending ".js" to its URL.
 
 ```html
@@ -63,6 +65,40 @@ Any saved resource can be embedded via a script tag by appending ".js" to its UR
 The embedding will be patched at the location of the script tag.
 
 Take a look at: https://codepen.io/MasseGuillaume/pen/oeKoee
+
+#### Via Javascript
+
+```html
+
+<!-- Embedding Script -->
+<div id="resource-1"></div>
+<div id="resource-2"></div>
+<div id="resource-3"></div>
+
+<script src="https://scastie.scala-lang.org/embedded.js"></script>
+
+<script>
+window.addEventListener('load', function() {
+  scastie.Embedded('#resource-1', { 
+    base64UUID: "CJ8KTL98QAiWvoVUPI3kXg"
+  });
+
+  scastie.Embedded('#resource-2', {
+    user: "MasseGuillaume",
+    base64UUID: "33D4P3ysQCq2em2MRiv5sQ"
+  });
+
+
+  scastie.Embedded('#resource-3', {
+    user: "MasseGuillaume",
+    base64UUID: "33D4P3ysQCq2em2MRiv5sQ",
+    update: 1
+  });
+});
+</script>
+```
+
+Take a look at: https://codepen.io/MasseGuillaume/pen/aLpzvW
 
 ### Converting Code Into Snippets
 

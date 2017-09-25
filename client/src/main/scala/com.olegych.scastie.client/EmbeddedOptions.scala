@@ -16,14 +16,15 @@ import scala.scalajs.js.UndefOr
 trait SharedEmbeddedOptions extends js.Object {
   val serverUrl: UndefOr[String]
   val theme: UndefOr[String]
-}
 
-@ScalaJSDefined
-trait EmbeddedRessourceOptionsJs extends js.Object with SharedEmbeddedOptions {
   // SnippetId
   val base64UUID: UndefOr[String]
   val user: UndefOr[String]
   val update: UndefOr[Int]
+}
+
+@ScalaJSDefined
+trait EmbeddedRessourceOptionsJs extends js.Object with SharedEmbeddedOptions {
   val injectId: UndefOr[String]
 }
 
@@ -65,21 +66,27 @@ object EmbeddedOptions {
     )
   }
 
+  private def extractSnippetId(options: SharedEmbeddedOptions): Option[SnippetId] = {
+    import options._
+
+    base64UUID.toOption.map(
+      uuid =>
+        SnippetId(
+          uuid,
+          user.toOption
+            .map(u => SnippetUserPart(u, update.toOption.getOrElse(0)))
+      )
+    )
+  }
+
   def fromJsRessource(
       defaultServerUrl: String
   )(options: EmbeddedRessourceOptionsJs): EmbeddedOptions = {
+
     import options._
 
-    val snippetId =
-      base64UUID.toOption.map(
-        uuid =>
-          SnippetId(
-            uuid,
-            user.toOption
-              .map(u => SnippetUserPart(u, update.toOption.getOrElse(0)))
-        )
-      )
-
+    val snippetId = extractSnippetId(options)
+    
     if (snippetId.isDefined && injectId.isEmpty) {
       sys.error(
         "injectId is not defined, we don't know where to inject the embedding"
@@ -184,8 +191,16 @@ object EmbeddedOptions {
         None
       }
 
+    val snippetId = extractSnippetId(options)
+
+    if (snippetId.isDefined && inputs.isDefined) {
+      sys.error(
+        "you cannot use both snippetId (base64UUID, user, update) & inputs (code, scalaTarget, etc)"
+      )
+    }
+
     EmbeddedOptions(
-      snippetId = None,
+      snippetId = snippetId,
       injectId = None,
       inputs = inputs,
       theme = theme.toOption,
