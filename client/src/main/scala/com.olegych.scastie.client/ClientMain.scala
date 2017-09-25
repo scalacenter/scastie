@@ -17,7 +17,7 @@ import java.util.UUID
 import japgolly.scalajs.react._, extra.router._
 
 @js.native
-@JSGlobal("scastie.Settings")
+@JSGlobal("ScastieSettings")
 object Settings extends js.Object {
   val defaultServerUrl: String = js.native
 }

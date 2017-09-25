@@ -1,4 +1,4 @@
-$e.scastie.Settings = {
+$e.ScastieSettings = {
   defaultServerUrl: ""
 };
 

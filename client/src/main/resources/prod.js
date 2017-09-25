@@ -15,4 +15,8 @@ Raven.config('https://0b9ff62cbc2344369cab867af776ae07@sentry.io/171717').instal
 
 module.exports = common;
 
+window.ScastieSettings = {
+  defaultServerUrl: "https://scastie.scala-lang.org"
+};
+
 common.scastie.ScastieMain.main();
