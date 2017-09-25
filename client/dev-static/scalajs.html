@@ -2,13 +2,7 @@
 <html>
 <body>
 
-<pre class="scala">
-
-/*
-
-foo
-
-*/
+<pre class="scala-js">
 
 // fold
 import org.scalajs.dom.raw.HTMLImageElement
@@ -21,9 +15,11 @@ img.src = "https://goo.gl/a3Xr41"
 img
 </pre>
 
-<script src="http://localhost:9000/MasseGuillaume/akkD1GviSKufXp1HMCHJAA.js"></script>
+<pre class="scala-jvm">
+List(1, 2, 3).reverse
+</pre>
 
-<pre class="scala">
+<pre class="scala-js">
 // fold
 import org.scalajs.dom.raw.HTMLImageElement
 import org.scalajs.dom
@@ -38,10 +34,8 @@ pre
 <script src="http://localhost:9000/embedded.js"></script>
 <script>
 window.addEventListener('load', function() {
-  scastie.Embedded(".scala",{
-    targetType: "js",
-    serverUrl: "http://localhost:9000"
-  });
+  scastie.Embedded(".scala-js", {targetType: "js"});
+  scastie.Embedded(".scala-jvm");
 });
 </script>
 

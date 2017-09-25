@@ -16,11 +16,16 @@ import java.util.UUID
 
 import japgolly.scalajs.react._, extra.router._
 
+@js.native
+@JSGlobal("scastie.Settings")
+object Settings extends js.Object {
+  val defaultServerUrl: String = js.native
+}
+
 /* Entry point for the website
  */
-
 @JSExportTopLevel("scastie.ScastieMain")
-class ScastieMain(defaultServerUrl: String) {
+object ScastieMain {
   @JSExport
   def main(): Unit = {
     dom.document.body.className = "scastie"
@@ -30,7 +35,7 @@ class ScastieMain(defaultServerUrl: String) {
     container.className = "scastie"
     dom.document.body.appendChild(container)
 
-    val routing = new Routing(defaultServerUrl)
+    val routing = new Routing(Settings.defaultServerUrl)
 
     Router(BaseUrl.fromWindowOrigin_/, routing.config)().renderIntoDOM(
       container
@@ -60,54 +65,18 @@ object ClientMain {
 
 /* Entry point for ressource embedding and code embedding
  */
-@JSExportTopLevel("scastie.ScastieEmbedded")
-class ScastieEmbedded(defaultServerUrl: String) {
+object ScastieEmbedded {
 
-  @JSExport
-  def embeddedRessource(options: UndefOr[EmbeddedRessourceOptionsJs]): Unit = {
-    val embeddedOptions =
-      options.toOption
-        .map(EmbeddedOptions.fromJsRessource(defaultServerUrl))
-        .getOrElse(EmbeddedOptions.empty(defaultServerUrl))
-
-    println("embeddedRessource defaultServerUrl: " + defaultServerUrl)
-    println("embeddedRessource options: " + options)
-    println("embeddedRessource embeddedOptions: " + embeddedOptions)
-
-    val container =
-      renderScastie(
-        embeddedOptions = embeddedOptions,
-        snippetId = embeddedOptions.snippetId
-      )
-
-    embeddedOptions.injectId match {
-      case Some(id) => {
-        Option(dom.document.querySelector("#" + id)) match {
-          case Some(element) => {
-            addStylesheet(embeddedOptions.serverUrl)
-            element.parentNode.replaceChild(container, element)
-          }
-          case None => {
-            sys.error("cannot find injectId: " + id)
-          }
-        }
-      }
-      case None => {
-        sys.error("injectId is not defined")
-      }
-    }
-  }
-
-  @JSExport
+  @JSExportTopLevel("scastie.Embedded")
   def embedded(selector: UndefOr[String | Node],
                options: UndefOr[EmbeddedOptionsJs]): Unit = {
 
     val embeddedOptions =
       options.toOption
-        .map(EmbeddedOptions.fromJs(defaultServerUrl))
-        .getOrElse(EmbeddedOptions.empty(defaultServerUrl))
+        .map(EmbeddedOptions.fromJs(Settings.defaultServerUrl))
+        .getOrElse(EmbeddedOptions.empty(Settings.defaultServerUrl))
 
-    println("embedded defaultServerUrl: " + defaultServerUrl)
+    println("embedded defaultServerUrl: " + Settings.defaultServerUrl)
     println("embedded options: " + options)
     println("embedded embeddedOptions: " + embeddedOptions)
 
@@ -148,7 +117,41 @@ class ScastieEmbedded(defaultServerUrl: String) {
     }
   }
 
-  private def addStylesheet(baseUrl: String): Unit = {
+  @JSExportTopLevel("scastie.EmbeddedRessource")
+  def embeddedRessource(options: UndefOr[EmbeddedRessourceOptionsJs]): Unit = {
+    val embeddedOptions =
+      options.toOption
+        .map(EmbeddedOptions.fromJsRessource(Settings.defaultServerUrl))
+        .getOrElse(EmbeddedOptions.empty(Settings.defaultServerUrl))
+
+    println("embeddedRessource defaultServerUrl: " + Settings.defaultServerUrl)
+    println("embeddedRessource options: " + options)
+    println("embeddedRessource embeddedOptions: " + embeddedOptions)
+
+    val container =
+      renderScastie(
+        embeddedOptions = embeddedOptions,
+        snippetId = embeddedOptions.snippetId
+      )
+
+    embeddedOptions.injectId match {
+      case Some(id) => {
+        Option(dom.document.querySelector("#" + id)) match {
+          case Some(element) => {
+            addStylesheet(embeddedOptions.serverUrl)
+            element.parentNode.replaceChild(container, element)
+          }
+          case None => {
+            sys.error("cannot find injectId: " + id)
+          }
+        }
+      }
+      case None => {
+        sys.error("injectId is not defined")
+      }
+    }
+  }
+  def addStylesheet(baseUrl: String): Unit = {
     val link = dom.document
       .createElement("link")
       .asInstanceOf[dom.raw.HTMLLinkElement]
@@ -160,7 +163,7 @@ class ScastieEmbedded(defaultServerUrl: String) {
     dom.document.getElementsByTagName("head")(0).appendChild(link)
   }
 
-  private def renderScastie(embeddedOptions: EmbeddedOptions,
+  def renderScastie(embeddedOptions: EmbeddedOptions,
                             snippetId: Option[SnippetId]): HTMLElement = {
 
     val container = dom.document

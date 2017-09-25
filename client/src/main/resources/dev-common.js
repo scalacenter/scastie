@@ -1,9 +1,5 @@
-var defaultServerUrl = "";
+$e.scastie.Settings = {
+  defaultServerUrl: ""
+};
 
-module.exports = {
-  defaultServerUrl: defaultServerUrl,
-  scastie: {
-    ScastieMain: new $e.scastie.ScastieMain(defaultServerUrl),
-    ClientMain: $e.scastie.ClientMain
-  }
-}
+module.exports = $e.scastie;
