@@ -33,10 +33,13 @@ object Console {
       else EmptyVdom
 
     def renderConsoleOutputs: String = {
-      val out = 
-        props.consoleOutputs.map(output =>
-          s"<li>${AnsiColorFormatter.formatToHtml(output.show)}</li>"
-        ).mkString("\n  ")
+      val out =
+        props.consoleOutputs
+          .map(
+            output =>
+              s"<li>${AnsiColorFormatter.formatToHtml(output.show)}</li>"
+          )
+          .mkString("\n  ")
 
       s"""|<ol>
           |$out

@@ -66,7 +66,9 @@ object EmbeddedOptions {
     )
   }
 
-  private def extractSnippetId(options: SharedEmbeddedOptions): Option[SnippetId] = {
+  private def extractSnippetId(
+      options: SharedEmbeddedOptions
+  ): Option[SnippetId] = {
     import options._
 
     base64UUID.toOption.map(
@@ -86,7 +88,7 @@ object EmbeddedOptions {
     import options._
 
     val snippetId = extractSnippetId(options)
-    
+
     if (snippetId.isDefined && injectId.isEmpty) {
       sys.error(
         "injectId is not defined, we don't know where to inject the embedding"

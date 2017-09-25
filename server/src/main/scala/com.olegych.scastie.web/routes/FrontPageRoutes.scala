@@ -76,7 +76,3 @@ class FrontPageRoutes(production: Boolean) {
       )
     )
 }
-
-
-
-

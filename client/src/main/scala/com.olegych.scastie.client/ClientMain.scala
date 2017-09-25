@@ -166,7 +166,7 @@ object ScastieEmbedded {
   }
 
   def renderScastie(embeddedOptions: EmbeddedOptions,
-                            snippetId: Option[SnippetId]): HTMLElement = {
+                    snippetId: Option[SnippetId]): HTMLElement = {
 
     val container = dom.document
       .createElement("div")

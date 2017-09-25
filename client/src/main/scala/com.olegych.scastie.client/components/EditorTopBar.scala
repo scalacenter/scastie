@@ -96,20 +96,20 @@ object EditorTopBar {
       (props.snippetId, props.router) match {
         case (Some(sid), Some(router)) if props.isSnippetSaved => {
 
-        val url = router.urlFor(Page.fromSnippetId(sid)).value
+          val url = router.urlFor(Page.fromSnippetId(sid)).value
 
-        val content = 
-          s"""<script src="$url.js"></script>""".stripMargin
+          val content =
+            s"""<script src="$url.js"></script>""".stripMargin
 
-        val embeddedModal =
-          CopyModal(
-            title = "Share your Code Snippet",
-            subtitle = "Copy and embed your code snippet",
-            modalId = "embed-modal",
-            content = content,
-            isClosed = props.isEmbeddedModalClosed,
-            close = props.closeEmbeddedModal
-          ).render
+          val embeddedModal =
+            CopyModal(
+              title = "Share your Code Snippet",
+              subtitle = "Copy and embed your code snippet",
+              modalId = "embed-modal",
+              content = content,
+              isClosed = props.isEmbeddedModalClosed,
+              close = props.closeEmbeddedModal
+            ).render
 
           li(title := s"Embed ($ctrl + E)",
              role := "button",

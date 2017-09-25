@@ -30,7 +30,7 @@ val startAll2Commands = List(
   "client/fastOptJS"
 )
 
-val startAllCommands = 
+val startAllCommands =
   "ensimeRunner/reStart" :: startAll2Commands
 
 def startAll(commands: List[String], suffix: String = "") =

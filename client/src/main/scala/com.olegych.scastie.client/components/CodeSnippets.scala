@@ -66,13 +66,15 @@ object CodeSnippets {
     val page = Page.fromSnippetId(summary.snippetId)
     val update = summary.snippetId.user.map(_.update.toString).getOrElse("")
 
-    val snippetUrl = props.router.urlFor(Page.fromSnippetId(summary.snippetId)).value
+    val snippetUrl =
+      props.router.urlFor(Page.fromSnippetId(summary.snippetId)).value
 
     div(cls := "snippet")(
       CopyModal(
         title = "Share your Code Snippet",
         subtitle = "Copy and share your code snippet's URL:",
-        modalId = "share-modal-" + summary.snippetId.url.replaceAllLiterally(".", "-"),
+        modalId = "share-modal-" + summary.snippetId.url
+          .replaceAllLiterally(".", "-"),
         content = snippetUrl,
         isClosed = props.isShareModalClosed(summary.snippetId),
         close = props.closeShareModal
