@@ -2,7 +2,7 @@ package com.olegych.scastie.api
 
 object ScalaVersions {
   val allVersions: List[String] = List(
-    "2.13.0-M1",
+    "2.13.0-M2",
     "2.12.3",
     "2.12.1",
     "2.12.0",

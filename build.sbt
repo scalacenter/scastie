@@ -42,12 +42,8 @@ startAll(startAll2Commands, "2")
 lazy val scastie = project
   .in(file("."))
   .aggregate(
-    api210JS,
     api210JVM,
-    api211JS,
     api211JVM,
-    api213JS,
-    api213JVM,
     apiJS,
     apiJVM,
     balancer,
@@ -55,12 +51,9 @@ lazy val scastie = project
     e2e,
     ensimeRunner,
     instrumentation,
-    runtimeScala210JS,
     runtimeScala210JVM,
-    runtimeScala211JS,
     runtimeScala211JVM,
-    runtimeScala213JS,
-    runtimeScala213JVM,
+    // runtimeScala213JVM,
     runtimeScalaJS,
     runtimeScalaJVM,
     sbtRunner,
@@ -101,22 +94,15 @@ lazy val utils = project
   .dependsOn(apiJVM)
 
 lazy val runnerRuntimeDependencies = Seq(
-  api210JS,
   api210JVM,
-  api211JS,
   api211JVM,
   apiJS,
   apiJVM,
-  api213JS,
-  api213JVM,
-  runtimeScala210JS,
   runtimeScala210JVM,
-  runtimeScala211JS,
   runtimeScala211JVM,
   runtimeScalaJS,
   runtimeScalaJVM,
-  runtimeScala213JS,
-  runtimeScala213JVM,
+  // runtimeScala213JVM,
   sbtScastie
 ).map(publishLocal in _)
 
@@ -284,6 +270,7 @@ val webpackProdConf = Def.setting {
 
 lazy val client = project
   .settings(baseSettings)
+  .settings(baseJsSettings)
   .settings(
     version in webpack := "3.5.5",
     version in startWebpackDevServer := "2.7.1",
@@ -341,16 +328,13 @@ lazy val instrumentation = project
 val api210 = apiProject(sbt210)
 val api211 = apiProject(latest211)
 val apiCurrent = apiProject(currentScalaVersion)
-val api213 = apiProject(latest213)
+// val api213 = apiProject(latest213)
 
-lazy val api210JS = api210.js
 lazy val api210JVM = api210.jvm
-lazy val api211JS = api211.js
 lazy val api211JVM = api211.jvm
 lazy val apiJS = apiCurrent.js
 lazy val apiJVM = apiCurrent.jvm
-lazy val api213JS = api213.js
-lazy val api213JVM = api213.jvm
+// lazy val api213JVM = api213.jvm
 
 /* runtime* pretty print values and type */
 def runtimeScala(scalaV: String, apiProject: CrossProject) = {
@@ -370,6 +354,7 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
       moduleName := projectName,
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "shared" / "src" / "main" / "scala"
     )
+    .jsSettings(baseJsSettings)
     .jsSettings(
       test := {},
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "js" / "src" / "main" / "scala"
@@ -383,16 +368,13 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
 val runtimeScala210 = runtimeScala(sbt210, api210)
 val runtimeScala211 = runtimeScala(latest211, api211)
 val runtimeScalaCurrent = runtimeScala(currentScalaVersion, apiCurrent)
-val runtimeScala213 = runtimeScala(latest213, api213)
+// val runtimeScala213 = runtimeScala(latest213, api213)
 
-lazy val runtimeScala210JS = runtimeScala210.js
 lazy val runtimeScala210JVM = runtimeScala210.jvm
-lazy val runtimeScala211JS = runtimeScala211.js
 lazy val runtimeScala211JVM = runtimeScala211.jvm
 lazy val runtimeScalaJS = runtimeScalaCurrent.js
 lazy val runtimeScalaJVM = runtimeScalaCurrent.jvm
-lazy val runtimeScala213JS = runtimeScala213.js
-lazy val runtimeScala213JVM = runtimeScala213.jvm
+// lazy val runtimeScala213JVM = runtimeScala213.jvm
 
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))

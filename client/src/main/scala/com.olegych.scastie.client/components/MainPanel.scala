@@ -158,7 +158,7 @@ object MainPanel {
         user = state.user,
         view = backend.viewSnapshot(state.view),
         worksheetMode = state.inputs.worksheetMode,
-        targetType = state.inputs.target.targetType
+        scalaTarget = state.inputs.target
       ).render.unless(props.isEmbedded || state.isPresentationMode)
 
     val statusView =

@@ -55,20 +55,16 @@ trait ShowHintOptions extends js.Object {
   var container: Element = js.native
 }
 
-@ScalaJSDefined
 trait KeyMaps extends js.Object {
   val sublime: js.Dictionary[String]
 }
 
-@ScalaJSDefined
 trait LineHandle extends js.Object
 
-@ScalaJSDefined
 trait LineWidget extends js.Object {
   def clear(): Unit
 }
 
-@ScalaJSDefined
 trait TextMarker extends js.Object {
   def clear(): Unit
   def find(): CodeMirror.Position
@@ -92,7 +88,6 @@ trait TextMarkerOptions extends js.Object {
   var shared: Boolean = js.native
 }
 
-@ScalaJSDefined
 trait Options extends js.Object {
   val value: UndefOr[String | Document]
   val mode: UndefOr[String | js.Object]

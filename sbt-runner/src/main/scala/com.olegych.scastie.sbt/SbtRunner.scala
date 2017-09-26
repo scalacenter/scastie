@@ -20,8 +20,7 @@ object SbtRunner {
   def instrument(
       inputs: Inputs
   ): Either[InstrumentationFailure, Inputs] = {
-    if (inputs.worksheetMode &&
-        inputs.target.targetType != ScalaTargetType.Dotty) {
+    if (inputs.worksheetMode && inputs.target.hasWorksheetMode) {
 
       Instrument(inputs.code, inputs.target)
         .map(instrumented => inputs.copy(code = instrumented))

@@ -2,8 +2,6 @@ package com.olegych.scastie
 package balancer
 package utils
 
-import System.{lineSeparator => nl}
-
 import scala.collection.generic._
 import scala.collection.mutable.Builder
 

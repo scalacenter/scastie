@@ -6,17 +6,14 @@ import scala.scalajs.js
 import org.scalajs.dom
 
 import js.{UndefOr, |}
-import js.annotation._
 import scala.language.implicitConversions
 
-@ScalaJSDefined
 trait TextAreaEditor extends Editor {
   def save(): Unit
   def toTextArea(): Unit
   def getTextArea: HTMLTextAreaElement
 }
 
-@ScalaJSDefined
 trait ScrollInfo extends js.Object {
   val left: Double
   val top: Double
@@ -26,7 +23,6 @@ trait ScrollInfo extends js.Object {
   val clientHeight: Double
 }
 
-@ScalaJSDefined
 trait Editor extends js.Object {
   // def replaceSelection(spaces)
   def hasFocus(): Boolean
@@ -88,12 +84,10 @@ trait Editor extends js.Object {
   def getGutterElement(): Element
 }
 
-@ScalaJSDefined
 trait Token extends js.Object {
   val string: String
 }
 
-@ScalaJSDefined
 trait EditorChange extends js.Object {
   val from: Position
   val to: Position
@@ -102,7 +96,6 @@ trait EditorChange extends js.Object {
   val origin: String
 }
 
-@ScalaJSDefined
 trait BeforeEditorChange extends EditorChange {
   val canceled: Boolean
   def cancel(): Unit
@@ -168,7 +161,6 @@ class EditorEventHandler(val editor: Editor) extends AnyVal {
   // "drop"
 }
 
-@ScalaJSDefined
 trait CursorCoords extends js.Object {
   val left: Double
   val top: Double

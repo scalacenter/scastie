@@ -15,6 +15,7 @@ sealed trait ScalaTarget {
   def sbtRunCommand: String
   def runtimeDependency: Option[ScalaDependency]
   def hasEnsimeSupport: Boolean
+  def hasWorksheetMode: Boolean
 
   protected def sbtConfigScalaVersion(scalaVersion: String): String =
     s"""scalaVersion := "$scalaVersion""""
@@ -113,6 +114,12 @@ object ScalaTarget {
       scalaVersion.startsWith("2.11")
     }
 
+    def hasWorksheetMode: Boolean = {
+      scalaVersion.startsWith("2.12") ||
+      scalaVersion.startsWith("2.11") ||
+      scalaVersion.startsWith("2.10")
+    }
+
     def targetType: ScalaTargetType =
       ScalaTargetType.JVM
 
@@ -144,6 +151,9 @@ object ScalaTarget {
 
     def hasEnsimeSupport: Boolean =
       Jvm(scalaVersion).hasEnsimeSupport
+
+    def hasWorksheetMode: Boolean =
+      Jvm(scalaVersion).hasWorksheetMode
 
     def targetType: ScalaTargetType =
       ScalaTargetType.Typelevel
@@ -187,6 +197,9 @@ object ScalaTarget {
 
     def hasEnsimeSupport: Boolean =
       Jvm(scalaVersion).hasEnsimeSupport
+
+    def hasWorksheetMode: Boolean =
+      Jvm(scalaVersion).hasWorksheetMode
 
     def targetType: ScalaTargetType =
       ScalaTargetType.JS
@@ -235,6 +248,9 @@ object ScalaTarget {
 
     def hasEnsimeSupport: Boolean =
       Jvm(scalaVersion).hasEnsimeSupport
+
+    def hasWorksheetMode: Boolean =
+      Jvm(scalaVersion).hasWorksheetMode
 
     def targetType: ScalaTargetType =
       ScalaTargetType.Native
@@ -297,6 +313,8 @@ object ScalaTarget {
   case class Dotty(dottyVersion: String) extends ScalaTarget {
 
     def hasEnsimeSupport: Boolean = false
+
+    def hasWorksheetMode: Boolean = false
 
     def targetType: ScalaTargetType =
       ScalaTargetType.Dotty

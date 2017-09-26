@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory
 
 import java.io.File._
 import java.io._
-import java.nio.file.{Files, Path, Paths, StandardOpenOption}
+import java.nio.file.{Files, Path}
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -193,7 +193,7 @@ class EnsimeRunner(system: ActorSystem,
                    sender: ActorRef,
                    taskId: Option[EnsimeTaskId] = None): Unit = {
 
-    requests += (nextId -> (sender, taskId))
+    requests += ((nextId, (sender, taskId)))
     val env = RpcRequestEnvelope(rpcRequest, nextId)
     nextId += 1
 

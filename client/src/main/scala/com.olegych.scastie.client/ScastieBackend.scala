@@ -528,7 +528,7 @@ class ScastieBackend(scastieId: UUID,
                 .format(
                   FormatRequest(state.inputs.code,
                                 state.inputs.worksheetMode,
-                                state.inputs.target.targetType)
+                                state.inputs.target)
                 )
                 .map {
                   case FormatResponse(Right(formattedCode)) =>

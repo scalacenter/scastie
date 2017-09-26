@@ -9,10 +9,8 @@ import com.olegych.scastie.api.{
 }
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.ScalaJSDefined
 import scala.scalajs.js.UndefOr
 
-@ScalaJSDefined
 trait SharedEmbeddedOptions extends js.Object {
   val serverUrl: UndefOr[String]
   val theme: UndefOr[String]
@@ -23,12 +21,10 @@ trait SharedEmbeddedOptions extends js.Object {
   val update: UndefOr[Int]
 }
 
-@ScalaJSDefined
 trait EmbeddedRessourceOptionsJs extends js.Object with SharedEmbeddedOptions {
   val injectId: UndefOr[String]
 }
 
-@ScalaJSDefined
 trait EmbeddedOptionsJs extends js.Object with SharedEmbeddedOptions {
   // Inputs
   val code: UndefOr[String]

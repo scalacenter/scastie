@@ -28,7 +28,7 @@ object FormatRequest {
 case class FormatRequest(
     code: String,
     worksheetMode: Boolean,
-    targetType: ScalaTargetType
+    scalaTarget: ScalaTarget
 )
 
 object FormatResponse {
