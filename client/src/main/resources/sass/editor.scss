@@ -66,16 +66,32 @@
       height: 100%;
     }
 
+    .console li {
+      list-style: none;
+      white-space: pre;
+    }
+
     &.embedded {
       width: 800px;
-      margin: 100px auto;
+      margin: 10px auto;
+      padding: 10px 0;
       
       .main-panel {
         position: relative;
       }
 
+      .console .switcher-show {
+        position: absolute;
+        width: 100%;
+        position: absolute;
+        bottom: -33px;
+        z-index: 10;
+      }
+
       .editor-container {
         .code {
+          overflow: auto; 
+
           $min-height: 400px;
 
           .CodeMirror-scroll {

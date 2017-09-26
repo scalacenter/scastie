@@ -81,11 +81,14 @@ $cm-active-hint-text: #002b36;
       }
 
       .CodeMirror-simplescroll-vertical div,
-      .CodeMirror-simplescroll-horizontal div,
-
+      .CodeMirror-simplescroll-horizontal div {
+        background: $submenu-background-color
+      }
+      
       .CodeMirror-hints {
         background: $snippet-background-color;
       }
+
       li.CodeMirror-hint-active {
         background: $cm-active-hint-background;
         color: $cm-active-hint-text;
