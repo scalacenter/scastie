@@ -40,15 +40,28 @@ const Web = Merge(Common.Web, {
       __dirname,
       Common.rootDir
     ],
-    proxy: [{
-      context: [
-        "/login",
-        "/logout",
-        "/callback",
-        "/api"
-      ],
-      target: "http://localhost:9000",
-    }]
+    proxy: {
+      "/***": {
+        target: "http://localhost:9000",
+        bypass: function(req, res, proxyOptions) {
+          // regex matching snippet ids
+          var homepage = /(\/[A-Za-z0-9]{22}|\/[A-Za-z0-9]{22}\/([A-Za-z0-9])*[/(0-9)*])/;
+          var backendUrls = /(\/api\/|\/login|\/logout)/;
+
+          if(!backendUrls.test(req.url)) {
+            if (homepage.test(req.url)) {
+              console.log("index: " + req.url);
+              return "/";
+            } else {
+              console.log("other: " + req.url);
+              return req.url;
+            }
+          } else {
+            console.log("proxied: " + req.url);
+          }
+        }
+      }
+    }
   },
   plugins: [
     new Webpack.HotModuleReplacementPlugin(),
