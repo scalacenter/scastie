@@ -64,6 +64,14 @@ Any saved resource can be embedded via a script tag by appending ".js" to its UR
 
 The embedding will be patched at the location of the script tag.
 
+It's also possible to adjust the theme via the GET parameter theme. For example:
+
+```html
+<script src="https://scastie.scala-lang.org/xbrvky6fTjysG32zK6kzRQ.js?theme=dark"></script>
+```
+
+The theme can be `dark` or `light`. The default value is `light`. It's also possible to customize the css.
+
 Take a look at: https://codepen.io/MasseGuillaume/pen/oeKoee
 
 #### Via Javascript
@@ -137,7 +145,7 @@ window.addEventListener('load', function() {
 
   // all option
   scastie.Embedded('.full', {
-    theme: 'light', // (dark, light)
+    theme: 'light', // default: 'light'; ('dark' or 'light')
     code: '1 + 1', // default: DOM node content
     worksheetMode: true,
     sbtConfig: 'libraryDependencies += "org.json4s" %% "json4s-native" % "3.5.2"',

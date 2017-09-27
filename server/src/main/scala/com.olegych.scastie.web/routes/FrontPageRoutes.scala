@@ -12,12 +12,18 @@ class FrontPageRoutes(production: Boolean) {
 
   private val index = getFromResource("public/index.html")
 
-  private def embeddedRessource(snippetId: SnippetId): String = {
+  private def embeddedRessource(snippetId: SnippetId, theme: Option[String]): String = {
     val user =
       snippetId.user match {
         case Some(SnippetUserPart(login, update)) => {
           s"user: '$login', update: $update,"
         }
+        case None => ""
+      }
+
+    val themePart =
+      theme match {
+        case Some(t) => s"theme: '$t',"
         case None => ""
       }
 
@@ -33,6 +39,7 @@ class FrontPageRoutes(production: Boolean) {
         |<script>
         |window.addEventListener('load', function(event) {
         |  scastie.EmbeddedRessource({
+        |    $themePart
         |    base64UUID: '${snippetId.base64UUID}',
         |    $user
         |    injectId: '$id',
@@ -71,7 +78,11 @@ class FrontPageRoutes(production: Boolean) {
         concat(
           pathSingleSlash(index),
           snippetId(_ => index),
-          snippetIdExtension(".js")(sid => complete(embeddedRessource(sid)))
+          parameter('theme.?) { theme =>
+            snippetIdExtension(".js")(sid => 
+              complete(embeddedRessource(sid, theme))
+            )
+          }
         )
       )
     )
