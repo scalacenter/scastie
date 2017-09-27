@@ -4,7 +4,7 @@ import com.olegych.scastie.client.isMac
 import scala.scalajs.js
 import org.scalajs.dom
 
-import codemirror.{Editor => CodeMirrorEditor2}
+import codemirror.{Editor => CodeMirrorEditor2, CodeMirror => CM}
 
 import japgolly.scalajs.react.BackendScope
 
@@ -74,6 +74,7 @@ private[editor] object EditorOptions {
           ctrl + "-Enter" -> command(props.run.runNow()),
           ctrl + "-S" -> command(props.saveOrUpdate.runNow()),
           ctrl + "-M" -> command(props.openNewSnippetModal.runNow()),
+          ctrl + "-L" -> CM.Pass,
           ctrl + "-E" -> command(props.openEmbeddedModal.runNow()),
           "Ctrl" + "-Space" -> commandE { editor =>
             autocomplete(editor)

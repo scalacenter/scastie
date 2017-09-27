@@ -18,6 +18,8 @@ object CodeMirror extends js.Object {
 
   type Position = Pos
 
+  val Pass: js.Dynamic = js.native
+
   var commands: js.Dynamic = js.native
   var keyMap: KeyMaps = js.native
   val Init: js.Object = js.native
