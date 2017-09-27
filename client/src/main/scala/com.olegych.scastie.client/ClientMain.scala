@@ -76,11 +76,6 @@ object ScastieEmbedded {
         .map(EmbeddedOptions.fromJs(Settings.defaultServerUrl))
         .getOrElse(EmbeddedOptions.empty(Settings.defaultServerUrl))
 
-    println("embedded defaultServerUrl: " + Settings.defaultServerUrl)
-    println("embeddedRessource options:")
-    dom.console.log(options)
-    println("embedded embeddedOptions: " + embeddedOptions)
-
     val nodes =
       selector.toOption match {
         case Some(sel) => {
@@ -124,11 +119,6 @@ object ScastieEmbedded {
       options.toOption
         .map(EmbeddedOptions.fromJsRessource(Settings.defaultServerUrl))
         .getOrElse(EmbeddedOptions.empty(Settings.defaultServerUrl))
-
-    println("embeddedRessource defaultServerUrl: " + Settings.defaultServerUrl)
-    println("embeddedRessource options:")
-    dom.console.log(options)
-    println("embeddedRessource embeddedOptions: " + embeddedOptions)
 
     val container =
       renderScastie(
