@@ -399,22 +399,22 @@ class ScastieBackend(scastieId: UUID,
 
   private def loadOldSnippet(id: Int): Callback = {
     loadSnippetBase(
-      restApiClient
-        .fetchOld(id)
+      restApiClient.fetchOld(id)
     )
   }
 
   def loadSnippet(snippetId: SnippetId): Callback = {
     loadSnippetBase(
-      restApiClient
-        .fetch(snippetId),
-      afterLoading = _.setSnippetId(snippetId)
-    ) >> connectProgress(snippetId)
+      restApiClient.fetch(snippetId),
+      afterLoading = _.setSnippetId(snippetId),
+      snippetId = Some(snippetId)
+    )
   }
 
   private def loadSnippetBase(
       fetchSnippet: => Future[Option[FetchResult]],
-      afterLoading: ScastieState => ScastieState = identity
+      afterLoading: ScastieState => ScastieState = identity,
+      snippetId: Option[SnippetId] = None
   ): Callback = {
     scope.state.flatMap(
       state =>
@@ -423,6 +423,13 @@ class ScastieBackend(scastieId: UUID,
             Callback.future(
               fetchSnippet.map {
                 case Some(FetchResult(inputs, progresses)) => {
+                  val isDone = progresses.exists(_.done)
+                  val connect =
+                    snippetId match {
+                      case Some(sid) if !isDone => connectProgress(sid)
+                      case _ => Callback(())
+                    }
+                  
                   loadStateFromLocalStorage(isSnippetSaved = true) >>
                     clearOutputs >>
                     scope.modState(
@@ -433,12 +440,14 @@ class ScastieBackend(scastieId: UUID,
                             .setProgresses(progresses)
                             .setCleanInputs
                       )
-                    )
+                    ) >> connect
+                    
                 }
                 case _ =>
                   scope.modState(_.setCode(s"//snippet not found"))
               }
             )
+
           loadStateFromApi >>
             setView(View.Editor) >>
             scope.modState(
