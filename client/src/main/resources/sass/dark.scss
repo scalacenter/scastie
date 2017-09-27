@@ -82,7 +82,7 @@ $cm-active-hint-text: #002b36;
 
       .CodeMirror-simplescroll-vertical div,
       .CodeMirror-simplescroll-horizontal div {
-        background: $submenu-background-color
+        background: $hover-option-color;
       }
       
       .CodeMirror-hints {
