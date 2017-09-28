@@ -32,9 +32,18 @@ object Console {
         TagMod(cls := "console-open")
       else EmptyVdom
 
+    val (users, systems) = props.consoleOutputs.partition{
+      case u: ConsoleOutput.UserOutput => true
+      case _ => false
+    }
+
+    val toShow = 
+      if(users.isEmpty) props.consoleOutputs
+      else users
+
     def renderConsoleOutputs: String = {
       val out =
-        props.consoleOutputs
+        toShow
           .map(
             output =>
               s"<li>${AnsiColorFormatter.formatToHtml(output.show)}</li>"
