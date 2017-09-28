@@ -130,12 +130,12 @@ object Scastie {
       .componentWillMount { current =>
         current.backend.start(current.props) >>
           setTitle(current.state, current.props) >>
-          current.backend.connectStatus >>
           current.backend.closeNewSnippetModal >>
-          current.backend.closeResetModal
+          current.backend.closeResetModal >>
+          current.backend.connectStatus.when_(!current.props.isEmbedded)
       }
       .componentWillUnmount { current =>
-        current.backend.disconnectStatus >>
+        current.backend.disconnectStatus.when_(!current.props.isEmbedded) >>
           current.backend.unsubscribeGlobal
 
       }
@@ -226,13 +226,7 @@ object Scastie {
             setLoaded >> loadJs
           }
 
-        val reRunScalaJs =
-          Callback.when(state.isReRunningScalaJs)(
-            Callback(runScalaJs()) >> scope
-              .modState(_.setIsReRunningScalaJs(false))
-          )
-
-        setTitle(state, scope.currentProps) >> executeScalaJs >> reRunScalaJs
+        setTitle(state, scope.currentProps) >> executeScalaJs
       }
       .componentWillReceiveProps { scope =>
         val next = scope.nextProps.snippetId

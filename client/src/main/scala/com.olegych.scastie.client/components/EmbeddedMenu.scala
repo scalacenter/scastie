@@ -8,7 +8,6 @@ import japgolly.scalajs.react._, vdom.all._, extra._
 import org.scalajs.dom
 
 final case class EmbeddedMenu(isRunning: Boolean,
-                              isStatusOk: Boolean,
                               inputs: Inputs,
                               inputsHasChanged: Boolean,
                               embeddedSnippetId: Option[SnippetId],
@@ -60,7 +59,7 @@ object EmbeddedMenu {
     ul(cls := "embedded-menu")(
       RunButton(
         isRunning = props.isRunning,
-        isStatusOk = props.isStatusOk,
+        isStatusOk = true,
         run = props.run,
         setView = props.setView
       ).render,

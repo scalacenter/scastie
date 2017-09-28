@@ -15,8 +15,7 @@ case class SnippetState(
     loadSnippet: Boolean,
     loadScalaJsScript: Boolean,
     isScalaJsScriptLoaded: Boolean,
-    snippetIdIsScalaJS: Boolean,
-    isReRunningScalaJs: Boolean
+    snippetIdIsScalaJS: Boolean
 )
 
 object ScastieState {
@@ -42,8 +41,7 @@ object ScastieState {
         loadSnippet = true,
         loadScalaJsScript = false,
         isScalaJsScriptLoaded = false,
-        snippetIdIsScalaJS = false,
-        isReRunningScalaJs = false
+        snippetIdIsScalaJS = false
       ),
       user = None,
       attachedDoms = AttachedDoms(Map()),
@@ -114,7 +112,6 @@ case class ScastieState(
   def loadScalaJsScript: Boolean = snippetState.loadScalaJsScript
   def isScalaJsScriptLoaded: Boolean = snippetState.isScalaJsScriptLoaded
   def snippetIdIsScalaJS: Boolean = snippetState.snippetIdIsScalaJS
-  def isReRunningScalaJs: Boolean = snippetState.isReRunningScalaJs
 
   def copyAndSave(
       view: View = view,
@@ -160,8 +157,7 @@ case class ScastieState(
           loadSnippet,
           loadScalaJsScript,
           isScalaJsScriptLoaded0,
-          snippetIdIsScalaJS,
-          isReRunningScalaJs
+          snippetIdIsScalaJS
         ),
         user,
         attachedDoms,
@@ -202,9 +198,6 @@ case class ScastieState(
 
     copyAndSave(isRunning = isRunning).setConsoleAuto(openConsole)
   }
-
-  def setIsReRunningScalaJs(value: Boolean): ScastieState =
-    copy(snippetState = snippetState.copy(isReRunningScalaJs = value))
 
   def setSnippetSaved(value: Boolean): ScastieState = {
     copy(snippetState = snippetState.copy(isSnippetSaved = value),
@@ -318,8 +311,9 @@ case class ScastieState(
     )
   }
 
-  def setUserOutput: ScastieState =
+  def setUserOutput: ScastieState = {
     copyAndSave(consoleState = consoleState.copy(consoleHasUserOutput = true))
+  }
 
   def setLoadSnippet(value: Boolean): ScastieState =
     copy(snippetState = snippetState.copy(loadSnippet = value))
@@ -406,7 +400,7 @@ case class ScastieState(
       )
     )
 
-  def clearOutputs: ScastieState =
+  def clearOutputs: ScastieState = {
     copyAndSave(
       outputs = Outputs.default,
       consoleState = consoleState.copy(
@@ -414,6 +408,7 @@ case class ScastieState(
         consoleHasUserOutput = false
       )
     )
+  }
 
   def closeModals: ScastieState =
     copyAndSave(modalState = ModalState.allClosed)

@@ -269,15 +269,11 @@ class ScastieBackend(scastieId: UUID,
     Reusable.always(
       scope.state.flatMap(
         state =>
-          if (!state.isScalaJsScriptLoaded || state.inputsHasChanged) {
             Callback.future(
               restApiClient
                 .run(state.inputs)
                 .map(connectProgress)
             )
-          } else {
-            scope.modState(_.setIsReRunningScalaJs(true))
-        }
       )
     )
 

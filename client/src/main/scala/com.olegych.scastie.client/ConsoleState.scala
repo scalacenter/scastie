@@ -9,12 +9,12 @@ object ConsoleState {
   def default: ConsoleState = ConsoleState(
     consoleIsOpen = false,
     consoleHasUserOutput = false,
-    userOpenedConsole = true
+    userOpenedConsole = false
   )
 }
 
 case class ConsoleState(
     consoleIsOpen: Boolean,
     consoleHasUserOutput: Boolean,
-    userOpenedConsole: Boolean = false
+    userOpenedConsole: Boolean
 )
