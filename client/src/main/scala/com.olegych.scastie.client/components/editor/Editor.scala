@@ -40,6 +40,7 @@ final case class Editor(isDarkTheme: Boolean,
 object Editor {
   import EditorReusability._
 
+  codemirror.AutoRefresh
   codemirror.Comment
   codemirror.Dialog
   codemirror.CloseBrackets

@@ -54,11 +54,13 @@ private[editor] object EditorOptions {
     }
 
     js.Dictionary[Any](
+        "autoRefresh" -> props.isEmbedded,
         "mode" -> "text/x-scala",
         "autofocus" -> !props.isEmbedded,
         "lineNumbers" -> props.showLineNumbers,
         "lineWrapping" -> false,
         "tabSize" -> 2,
+        "tabindex" -> 1,
         "indentWithTabs" -> false,
         "theme" -> s"solarized $theme",
         "smartIndent" -> true,

@@ -11,6 +11,10 @@ object Comment extends js.Object
 @js.native
 object Dialog extends js.Object
 
+@JSImport("codemirror/addon/display/autorefresh", JSImport.Namespace)
+@js.native
+object AutoRefresh extends js.Object
+
 @JSImport("codemirror/addon/edit/closebrackets", JSImport.Namespace)
 @js.native
 object CloseBrackets extends js.Object
