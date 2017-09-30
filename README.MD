@@ -160,3 +160,7 @@ window.addEventListener('load', function() {
 ```
 
 Take a look at: https://codepen.io/MasseGuillaume/pen/OxbVzm
+
+# Sponsors
+
+[![Browser Stack Logo](http://www.diogonunes.com/blog/wp-content/uploads/2016/07/browserstack-logo.png)](https://browserstack.com)
