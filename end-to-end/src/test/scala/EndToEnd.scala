@@ -1,3 +1,4 @@
+/*
 import org.scalatest._
 
 // import collection.JavaConverters._
@@ -22,3 +23,4 @@ class EndToEnd extends FunSuite with BrowserSetup with BoundingBoxHelpers {
     driver.quit
   }
 }
+*/
