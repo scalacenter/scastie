@@ -181,12 +181,12 @@ class Deployment(rootFolder: File,
       sbtRunnersPortsSize
     )
 
-    deployRunners(
-      "ensime",
-      s"$ensimeDockerNamespace/$ensimeDockerRepository",
-      ensimeRunnersPortsStart,
-      ensimeRunnersPortsSize
-    )
+    // deployRunners(
+    //   "ensime",
+    //   s"$ensimeDockerNamespace/$ensimeDockerRepository",
+    //   ensimeRunnersPortsStart,
+    //   ensimeRunnersPortsSize
+    // )
   }
 
   def killRunners(): Unit = {

@@ -14,10 +14,10 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
  
 brew install openjdk sbt nodejs yarn
 
-### Patch Scala.js Bundler
+### Get latest Scala.js Bundler
 
-git clone git@github.com:MasseGuillaume/scalajs-bundler.git
-git checkout scastie
+git clone git@github.com:scalacenter/scalajs-bundler.git
+git checkout master
 sbt publishLocal
 
 ```
