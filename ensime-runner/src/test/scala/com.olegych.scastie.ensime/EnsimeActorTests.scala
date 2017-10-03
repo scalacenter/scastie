@@ -1,3 +1,5 @@
+/*
+
 package com.olegych.scastie.ensime
 
 import akka.actor.ActorSystem
@@ -252,3 +254,5 @@ class EnsimeActorTests()
     TestKit.shutdownActorSystem(system)
   }
 }
+
+*/

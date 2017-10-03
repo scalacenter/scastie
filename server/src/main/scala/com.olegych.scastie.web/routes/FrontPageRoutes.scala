@@ -12,7 +12,8 @@ class FrontPageRoutes(production: Boolean) {
 
   private val index = getFromResource("public/index.html")
 
-  private def embeddedRessource(snippetId: SnippetId, theme: Option[String]): String = {
+  private def embeddedRessource(snippetId: SnippetId,
+                                theme: Option[String]): String = {
     val user =
       snippetId.user match {
         case Some(SnippetUserPart(login, update)) => {
@@ -24,7 +25,7 @@ class FrontPageRoutes(production: Boolean) {
     val themePart =
       theme match {
         case Some(t) => s"theme: '$t',"
-        case None => ""
+        case None    => ""
       }
 
     val id = "id-" + Base64UUID.create
@@ -79,8 +80,8 @@ class FrontPageRoutes(production: Boolean) {
           pathSingleSlash(index),
           snippetId(_ => index),
           parameter('theme.?) { theme =>
-            snippetIdExtension(".js")(sid => 
-              complete(embeddedRessource(sid, theme))
+            snippetIdExtension(".js")(
+              sid => complete(embeddedRessource(sid, theme))
             )
           }
         )

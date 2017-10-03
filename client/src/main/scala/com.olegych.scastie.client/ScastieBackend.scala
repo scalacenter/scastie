@@ -269,11 +269,11 @@ class ScastieBackend(scastieId: UUID,
     Reusable.always(
       scope.state.flatMap(
         state =>
-            Callback.future(
-              restApiClient
-                .run(state.inputs)
-                .map(connectProgress)
-            )
+          Callback.future(
+            restApiClient
+              .run(state.inputs)
+              .map(connectProgress)
+        )
       )
     )
 
@@ -423,9 +423,9 @@ class ScastieBackend(scastieId: UUID,
                   val connect =
                     snippetId match {
                       case Some(sid) if !isDone => connectProgress(sid)
-                      case _ => Callback(())
+                      case _                    => Callback(())
                     }
-                  
+
                   loadStateFromLocalStorage(isSnippetSaved = true) >>
                     clearOutputs >>
                     scope.modState(
@@ -437,7 +437,7 @@ class ScastieBackend(scastieId: UUID,
                             .setCleanInputs
                       )
                     ) >> connect
-                    
+
                 }
                 case _ =>
                   scope.modState(_.setCode(s"//snippet not found"))
