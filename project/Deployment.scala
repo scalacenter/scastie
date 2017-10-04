@@ -128,6 +128,8 @@ class Deployment(rootFolder: File,
     val secretConfig = getSecretConfig()
     val sentryDsn = getSentryDsn(secretConfig)
 
+    val homeDir = s"/home/$userName"
+
     val content =
       s"""|#!/usr/bin/env bash
           |
@@ -135,13 +137,13 @@ class Deployment(rootFolder: File,
           |
           |kill -9 `cat RUNNING_PID`
           |
-          |unzip -d server $serverZipFileName
-          |mv server/*/* server/
+          |unzip -d $homeDir/server $homeDir/$serverZipFileName
+          |mv $homeDir/server/*/* $homeDir/server/
           |
-          |nohup server/bin/server \\
+          |nohup $homeDir/server/bin/server \\
           |  -J-Xmx1G \\
-          |  -Dconfig.file=/home/$userName/$applicationRootConfig \\
-          |  -Dlogback.configurationFile=/home/$userName/$logbackConfigFileName \\
+          |  -Dconfig.file=$homeDir/$applicationRootConfig \\
+          |  -Dlogback.configurationFile=$homeDir/$logbackConfigFileName \\
           |  -Dsentry.dsn=$sentryDsn \\
           |  -Dsentry.release=$version \\
           |  &>/dev/null &

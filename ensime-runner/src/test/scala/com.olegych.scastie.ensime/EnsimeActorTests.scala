@@ -1,5 +1,3 @@
-/*
-
 package com.olegych.scastie.ensime
 
 import akka.actor.ActorSystem
@@ -15,47 +13,61 @@ class EnsimeActorTests()
     with FunSuiteLike
     with BeforeAndAfterAll {
 
-  test("autocomplete") {
-    autocompleteEnd("List(1).ma")(
-      autocompletions =>
-        autocompletions.exists(
-          completion =>
-            completion.hint == "max" &&
-              completion.signature == "(Ordering[B]) => Int" &&
-              completion.resultType == "Int"
-      )
+  // test("autocomplete") {
+  //   autocompleteEnd("List(1).ma")(
+  //     autocompletions =>
+  //       autocompletions.exists(
+  //         completion =>
+  //           completion.hint == "max" &&
+  //             completion.signature == "(Ordering[B]) => Int" &&
+  //             completion.resultType == "Int"
+  //     )
+  //   )
+  // }
+
+  // test("autocomplete failure") {
+  //   autocomplete("L", 100)(_.isEmpty)
+  // }
+
+  // test("autocompletion should fail when the code does not compile") {
+  //   // https://github.com/ensime/ensime-server/issues/1850
+  //   pending
+  // }
+
+  test("reload") {
+    autocompleteEndFail("import org.scalajs.dom.", ScalaTarget.Js.default)
+    blockUntilReady()
+    autocompleteEnd("import org.scalajs.dom.", ScalaTarget.Js.default)(
+      _.nonEmpty
     )
   }
 
-  test("autocomplete failure") {
-    autocomplete("L", 100)(_.isEmpty)
-  }
+  // test("autocomplete after restart") {
+  //   List(
+  //     () =>
+  //       autocompleteEnd("List(1).")(_.nonEmpty),
+  //     () =>
+  //       autocompleteEndFail("import org.scalajs.dom.", ScalaTarget.Js.default),
+  //     () =>
+  //       blockUntilReady(),
+  //     () =>
+  //       autocompleteEnd("import org.scalajs.dom.", ScalaTarget.Js.default)(
+  //         _.nonEmpty
+  //     ),
+  //     () =>
+  //       autocompleteEndFail("List(1)."),
+  //     () =>
+  //       blockUntilReady(),
+  //     () =>
+  //       autocompleteEnd("List(1).")(_.nonEmpty)
 
-  test("autocompletion should fail when the code does not compile") {
-    // https://github.com/ensime/ensime-server/issues/1850
-    pending
-  }
-
-  test("autocomplete after restart") {
-    List(
-      () => autocompleteEnd("List(1).")(_.nonEmpty),
-      () =>
-        autocompleteEndFail("import org.scalajs.dom.", ScalaTarget.Js.default),
-      () => blockUntilReady(),
-      () =>
-        autocompleteEnd("import org.scalajs.dom.", ScalaTarget.Js.default)(
-          _.nonEmpty
-      ),
-      () => autocompleteEndFail("List(1)."),
-      () => blockUntilReady(),
-      () => autocompleteEnd("List(1).")(_.nonEmpty)
-    ).zipWithIndex.foreach {
-      case (step, i) =>
-        println(s"--- $i ---")
-        println(step())
-        println(s"----------")
-    }
-  }
+  //   ).zipWithIndex.foreach {
+  //     case (step, i) =>
+  //       println(s"--- $i ---")
+  //       println(step())
+  //       println(s"----------")
+  //   }
+  // }
 
   // test("invalid config") {
 
@@ -72,37 +84,39 @@ class EnsimeActorTests()
   //     shouldFail = true
   //   )
 
-  //   autocompleteEnd("List(1).", )(_.nonEmpty)
+  //   blockUntilReady()
+
+  //   autocompleteEnd("List(1).")(_.nonEmpty)
   // }
 
-  test("typeAt 1") {
-    if (false) {
-      // https://github.com/scalacenter/scastie/issues/311
-      // SymbolInfo(<empty>,<empty>,None,BasicTypeInfo(<empty>,Object,<empty>,List(),List(),None,List()))
+  // test("typeAt 1") {
+  //   if (false) {
+  //     // https://github.com/scalacenter/scastie/issues/311
+  //     // SymbolInfo(<empty>,<empty>,None,BasicTypeInfo(<empty>,Object,<empty>,List(),List(),None,List()))
 
-      typeAt(
-        code = "val foobar = List(1)",
-        //            ^
-        offset = 7
-      )(_ == "List[Int]")
-    }
+  //     typeAt(
+  //       code = "val foobar = List(1)",
+  //       //            ^
+  //       offset = 7
+  //     )(_ == "List[Int]")
+  //   }
 
-    pending
-  }
+  //   pending
+  // }
 
-  test("typeAt 2") {
-    if (false) {
-      // https://github.com/scalacenter/scastie/issues/311
-      // SymbolInfo(<empty>,<empty>,None,BasicTypeInfo(<empty>,Object,<empty>,List(),List(),None,List()))
-      typeAt(
-        code = "val foobar = 42",
-        //            ^
-        offset = 7
-      )(_ == "List[Int]")
-    }
+  // test("typeAt 2") {
+  //   if (false) {
+  //     // https://github.com/scalacenter/scastie/issues/311
+  //     // SymbolInfo(<empty>,<empty>,None,BasicTypeInfo(<empty>,Object,<empty>,List(),List(),None,List()))
+  //     typeAt(
+  //       code = "val foobar = 42",
+  //       //            ^
+  //       offset = 7
+  //     )(_ == "List[Int]")
+  //   }
 
-    pending
-  }
+  //   pending
+  // }
 
   private def autocomplete(inputs: Inputs, offset: Int)(
       fish: List[Completion] => Boolean
@@ -125,7 +139,7 @@ class EnsimeActorTests()
       probe.ref
     )
 
-    probe.fishForMessage(20.seconds) {
+    probe.fishForMessage(60.seconds) {
       case EnsimeTaskResponse(Some(AutoCompletionResponse(completions)),
                               taskId0) => {
         if (!shouldFail) {
@@ -236,9 +250,14 @@ class EnsimeActorTests()
   def blockUntilReady(): Unit = {
     readyProbe.fishForMessage(3.minute) {
       case EnsimeServerState.Ready => {
+        println()
+        println()
         println("===============")
         println("==EnsimeReady==")
         println("===============")
+        println()
+        println()
+        Thread.sleep(100)
         true
       }
       case other => {
@@ -254,5 +273,3 @@ class EnsimeActorTests()
     TestKit.shutdownActorSystem(system)
   }
 }
-
-*/

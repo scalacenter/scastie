@@ -8,12 +8,12 @@ sealed trait ConsoleOutput {
 }
 
 object ConsoleOutput {
-  case class SbtOutput(line: String) extends ConsoleOutput {
-    def show: String = s"sbt: $line"
+  case class SbtOutput(output: ProcessOutput) extends ConsoleOutput {
+    def show: String = s"sbt: ${output.line}"
   }
 
-  case class UserOutput(line: String) extends ConsoleOutput {
-    def show: String = line
+  case class UserOutput(output: ProcessOutput) extends ConsoleOutput {
+    def show: String = output.line
   }
 
   case class ScastieOutput(line: String) extends ConsoleOutput {

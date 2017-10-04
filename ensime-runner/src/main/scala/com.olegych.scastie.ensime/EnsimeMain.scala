@@ -1,15 +1,17 @@
 package com.olegych.scastie.ensime
 
 import com.olegych.scastie.util.ScastieFileUtil.writeRunningPid
-import java.util.concurrent.TimeUnit
+import com.olegych.scastie.util.ReconnectInfo
 
 import akka.actor.{ActorSystem, Props}
-import com.olegych.scastie.ReconnectInfo
+
 import com.typesafe.config.ConfigFactory
+
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import java.util.concurrent.TimeUnit
 
 object EnsimeMain {
   def main(args: Array[String]): Unit = {

@@ -28,7 +28,7 @@ trait EmbeddedRessourceOptionsJs extends js.Object with SharedEmbeddedOptions {
 trait EmbeddedOptionsJs extends js.Object with SharedEmbeddedOptions {
   // Inputs
   val code: UndefOr[String]
-  val worksheetMode: UndefOr[Boolean]
+  val isWorksheetMode: UndefOr[Boolean]
   val sbtConfig: UndefOr[String]
   // val sbtPluginsConfigExtra: UndefOr[String] not yet supported
 
@@ -179,7 +179,7 @@ object EmbeddedOptions {
 
         val inputs0 =
           default.copy(
-            worksheetMode = worksheetMode.getOrElse(default.worksheetMode),
+            isWorksheetMode = isWorksheetMode.getOrElse(default.isWorksheetMode),
             code = code.getOrElse(defaultCode),
             target = scalaTarget.getOrElse(default.target),
             sbtConfigExtra = sbtConfig.getOrElse(default.sbtConfigExtra)

@@ -37,7 +37,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
   }
 
   def save(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
-    create(inputs.copy(showInUserProfile = true), user)
+    create(inputs.copy(isShowingInUserProfile = true), user)
   }
 
   def fork(snippetId: SnippetId,
@@ -45,8 +45,10 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
            user: Option[UserLogin]): Option[SnippetId] = {
     if (readInputs(snippetId).isDefined) {
       Some(
-        create(inputs.copy(forked = Some(snippetId), showInUserProfile = true),
-               user)
+        create(
+          inputs.copy(forked = Some(snippetId), isShowingInUserProfile = true),
+          user
+        )
       )
     } else None
   }
@@ -66,7 +68,9 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
           )
         write(
           inputsFile(nextSnippetId),
-          Json.prettyPrint(Json.toJson(inputs.copy(showInUserProfile = true)))
+          Json.prettyPrint(
+            Json.toJson(inputs.copy(isShowingInUserProfile = true))
+          )
         )
 
         Some(nextSnippetId)
@@ -94,7 +98,9 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     if (delete(snippetId)) {
       write(
         inputsFile(snippetId),
-        Json.prettyPrint(Json.toJson(inputs.copy(showInUserProfile = true)))
+        Json.prettyPrint(
+          Json.toJson(inputs.copy(isShowingInUserProfile = true))
+        )
       )
       true
     } else false
@@ -223,7 +229,7 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
             SnippetId(uuid, Some(SnippetUserPart(user.login, update)))
           readInputs(snippetId) match {
             case Some(inputs) =>
-              if (inputs.showInUserProfile) {
+              if (inputs.isShowingInUserProfile) {
                 List(
                   SnippetSummary(
                     snippetId,
@@ -266,8 +272,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     )
   }
 
-  private val inputFileName = "input2.json"
-  private val outputFileName = "output2.json"
+  private val inputFileName = "input3.json"
+  private val outputFileName = "output3.json"
   private val scalaJsFileName = ScalaTarget.Js.targetFilename
   private val scalaJsSourceMapFileName = ScalaTarget.Js.sourceMapFilename
 

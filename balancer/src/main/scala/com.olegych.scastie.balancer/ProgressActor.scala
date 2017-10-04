@@ -47,7 +47,7 @@ class ProgressActor extends Actor {
 
     def doneCallback(snippetProgress: SnippetProgress,
                      noDemmand: Boolean): Unit = {
-      if (snippetProgress.done && noDemmand) {
+      if (snippetProgress.isDone && noDemmand) {
         snippetProgress.snippetId.foreach { snippetId =>
           self ! ProgressDone
         }

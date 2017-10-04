@@ -162,7 +162,7 @@ case class ScastieState(
         user,
         attachedDoms,
         inputs.copy(
-          showInUserProfile = false,
+          isShowingInUserProfile = false,
           forked = None
         ),
         outputs,
@@ -218,7 +218,7 @@ case class ScastieState(
 
   def toggleWorksheetMode: ScastieState =
     copyAndSave(
-      inputs = inputs.copy(worksheetMode = !inputs.worksheetMode),
+      inputs = inputs.copy(isWorksheetMode = !inputs.isWorksheetMode),
       inputsHasChanged = true
     )
 
@@ -420,8 +420,8 @@ case class ScastieState(
   def setSbtError(err: Boolean): ScastieState =
     copyAndSave(outputs = outputs.copy(sbtError = err))
 
-  def logOutput(line: Option[String],
-                wrap: String => ConsoleOutput): ScastieState = {
+  def logOutput(line: Option[ProcessOutput],
+                wrap: ProcessOutput => ConsoleOutput): ScastieState = {
     line match {
       case Some(l) =>
         copyAndSave(
@@ -446,13 +446,13 @@ case class ScastieState(
   def addProgress(progress: SnippetProgress): ScastieState = {
     val state =
       addOutputs(progress.compilationInfos, progress.instrumentations)
-        .logOutput(progress.userOutput, ConsoleOutput.UserOutput)
-        .logOutput(progress.sbtOutput, ConsoleOutput.SbtOutput)
-        .setForcedProgramMode(progress.forcedProgramMode)
-        .setLoadScalaJsScript(loadScalaJsScript | progress.done)
+        .logOutput(progress.userOutput, ConsoleOutput.UserOutput.apply _)
+        .logOutput(progress.sbtOutput, ConsoleOutput.SbtOutput.apply _)
+        .setForcedProgramMode(progress.isForcedProgramMode)
+        .setLoadScalaJsScript(loadScalaJsScript | progress.isDone)
         .setRuntimeError(progress.runtimeError)
-        .setSbtError(progress.sbtError)
-        .setRunning(!progress.done)
+        .setSbtError(progress.isSbtError)
+        .setRunning(!progress.isDone)
 
     if (progress.userOutput.isDefined) state.setUserOutput
     else state

@@ -16,13 +16,13 @@ class FormatActor() extends Actor {
   private val log = LoggerFactory.getLogger(getClass)
 
   private def format(code: String,
-                     worksheetMode: Boolean,
+                     isWorksheetMode: Boolean,
                      scalaTarget: ScalaTarget): Either[String, String] = {
-    log.info(s"format (worksheetMode: $worksheetMode)")
+    log.info(s"format (isWorksheetMode: $isWorksheetMode)")
     log.info(code)
 
     val config =
-      if (worksheetMode && scalaTarget.hasWorksheetMode)
+      if (isWorksheetMode && scalaTarget.hasWorksheetMode)
         ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
       else
         ScalafmtConfig.default
@@ -38,7 +38,7 @@ class FormatActor() extends Actor {
   }
 
   override def receive: Receive = {
-    case FormatRequest(code, worksheetMode, scalaTarget) =>
-      sender ! FormatResponse(format(code, worksheetMode, scalaTarget))
+    case FormatRequest(code, isWorksheetMode, scalaTarget) =>
+      sender ! FormatResponse(format(code, isWorksheetMode, scalaTarget))
   }
 }

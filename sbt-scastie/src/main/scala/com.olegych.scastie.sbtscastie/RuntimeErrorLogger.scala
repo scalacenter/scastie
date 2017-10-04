@@ -1,6 +1,12 @@
 package com.olegych.scastie.sbtscastie
 
-import com.olegych.scastie.api.{ConsoleOutput, RuntimeError, RuntimeErrorWrap}
+import com.olegych.scastie.api.{
+  ConsoleOutput,
+  ProcessOutputType,
+  ProcessOutput,
+  RuntimeError,
+  RuntimeErrorWrap
+}
 
 import sbt._
 import Keys._
@@ -13,7 +19,14 @@ object RuntimeErrorLogger {
   private object NoOp {
     def apply(): NoOp = {
       def out(in: String): Unit = {
-        println(Json.stringify(Json.toJson(ConsoleOutput.SbtOutput(in.trim))))
+        println(
+          Json.stringify(
+            Json.toJson(
+              ConsoleOutput
+                .SbtOutput(ProcessOutput(in.trim, ProcessOutputType.StdOut))
+            )
+          )
+        )
       }
 
       new NoOp(new OutputStream {

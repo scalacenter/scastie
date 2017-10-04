@@ -14,9 +14,9 @@ import scalajsbundler.util.JSON
 import scala.util.Try
 
 val scalaTestVersion = "3.0.1"
-val akkaHttpVersion = "10.0.9"
+val akkaHttpVersion = "10.0.10"
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.2"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.6"
 
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
@@ -51,6 +51,7 @@ lazy val scastie = project
     e2e,
     ensimeRunner,
     instrumentation,
+    migration,
     runtimeScala210JVM,
     runtimeScala211JVM,
     // runtimeScala213JVM,
@@ -84,11 +85,15 @@ lazy val utils = project
   .settings(baseSettings)
   .settings(loggingAndTest)
   .settings(
+    resolvers += Resolver.typesafeRepo("releases"),
     libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-contrib-extra" % "4.1.3",
+      // "com.zaxxer"     % "nuprocess" % "1.1.2" % Test
       akka("stream"),
       akka("actor"),
       akka("remote"),
-      akka("slf4j")
+      akka("slf4j"),
+      akka("testkit") % Test
     )
   )
   .dependsOn(apiJVM)
@@ -102,7 +107,6 @@ lazy val runnerRuntimeDependencies = Seq(
   runtimeScala211JVM,
   runtimeScalaJS,
   runtimeScalaJVM,
-  // runtimeScala213JVM,
   sbtScastie
 ).map(publishLocal in _)
 
@@ -116,6 +120,26 @@ lazy val runnerRuntimeDependenciesInTest = Seq(
     .evaluated,
   testQuick in Test := (testQuick in Test)
     .dependsOn(runnerRuntimeDependencies: _*)
+    .evaluated
+)
+
+lazy val smallRunnerRuntimeDependencies = Seq(
+  api210JVM,
+  apiJVM,
+  runtimeScalaJVM,
+  sbtScastie
+).map(publishLocal in _)
+
+lazy val smallRunnerRuntimeDependenciesInTest = Seq(
+  test in assembly := {},
+  test in Test := (test in Test)
+    .dependsOn(smallRunnerRuntimeDependencies: _*)
+    .value,
+  testOnly in Test := (testOnly in Test)
+    .dependsOn(smallRunnerRuntimeDependencies: _*)
+    .evaluated,
+  testQuick in Test := (testQuick in Test)
+    .dependsOn(smallRunnerRuntimeDependencies: _*)
     .evaluated
 )
 
@@ -185,7 +209,7 @@ lazy val sbtRunner = project
       akka("remote"),
       akka("slf4j"),
       akkaHttp,
-      "com.geirsson" %% "scalafmt-core" % "1.2.0"
+      "com.geirsson" %% "scalafmt-core" % "1.3.0"
     ),
     imageNames in docker := Seq(
       ImageName(
@@ -242,7 +266,11 @@ lazy val server = project
 lazy val balancer = project
   .settings(baseSettings)
   .settings(loggingAndTest)
-  .dependsOn(apiJVM, utils, storage)
+  .settings(smallRunnerRuntimeDependenciesInTest)
+  .settings(
+    libraryDependencies += akka("testkit")
+  )
+  .dependsOn(apiJVM, utils, storage, sbtRunner % Test)
 
 lazy val storage = project
   .settings(baseSettings)
@@ -319,7 +347,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "1.8.0",
+      "org.scalameta" %% "scalameta" % "1.7.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
@@ -392,13 +420,8 @@ lazy val sbtScastie = project
 // java -jar migration.jar snippets
 lazy val migration = project
   .settings(baseSettings)
-  .settings(
-    moduleName := "sbt-scastie",
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "upickle" % "0.4.4",
-      "com.typesafe.play" %% "play-json" % "2.6.2"
-    )
-  )
+  .settings(playJson)
+  .dependsOn(apiJVM)
 
 lazy val e2e = project
   .in(file("end-to-end"))

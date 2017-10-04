@@ -1,6 +1,8 @@
 package com.olegych.scastie.sbt
 
 import com.olegych.scastie.util.ScastieFileUtil.writeRunningPid
+import com.olegych.scastie.util.ReconnectInfo
+
 import akka.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 
@@ -8,7 +10,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.util.concurrent.TimeUnit
 
-import com.olegych.scastie.ReconnectInfo
 import org.slf4j.LoggerFactory
 
 object SbtMain {
@@ -74,7 +75,7 @@ object SbtMain {
           system = system,
           runTimeout = runTimeout,
           sbtReloadTimeout = sbtReloadTimeout,
-          production = isProduction,
+          isProduction = isProduction,
           readyRef = None,
           reconnectInfo = Some(reconnectInfo)
         )

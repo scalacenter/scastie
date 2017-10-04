@@ -1,4 +1,4 @@
-package com.olegych.scastie
+package com.olegych.scastie.util
 
 import akka.actor.{Actor, ActorLogging, Cancellable}
 import akka.remote.DisassociatedEvent

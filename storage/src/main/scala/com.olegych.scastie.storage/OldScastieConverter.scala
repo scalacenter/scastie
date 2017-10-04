@@ -32,7 +32,10 @@ object OldScastieConverter {
       .split(nl)
       .map(
         line =>
-          SnippetProgress.default.copy(userOutput = Some(line), done = true)
+          SnippetProgress.default.copy(
+            userOutput = Some(ProcessOutput(line, ProcessOutputType.StdOut)),
+            isDone = true
+        )
       )
       .toList
   }
@@ -106,7 +109,7 @@ object OldScastieConverter {
       inputs.copy(
         target = scalaTarget,
         sbtConfigExtra = sbtExtra.trim,
-        worksheetMode = false
+        isWorksheetMode = false
       )
     }
   }

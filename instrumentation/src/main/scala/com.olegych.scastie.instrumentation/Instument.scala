@@ -1,5 +1,4 @@
-package com.olegych.scastie
-package instrumentation
+package com.olegych.scastie.instrumentation
 
 import com.olegych.scastie.api.ScalaTarget._
 import com.olegych.scastie.api.{ScalaTarget, ScalaTargetType}
@@ -20,6 +19,11 @@ object InstrumentationFailure {
 }
 
 object Instrument {
+  def getLineOffset(isWorksheetMode: Boolean): Int = {
+    if (isWorksheetMode) -2
+    else 0
+  }
+
   import InstrumentationFailure._
 
   private val instrumentedClass = "Playground"

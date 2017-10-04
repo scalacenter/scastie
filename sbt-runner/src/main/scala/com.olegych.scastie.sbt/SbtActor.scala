@@ -1,34 +1,56 @@
-package com.olegych.scastie
-package sbt
+package com.olegych.scastie.sbt
 
-import api._
-import akka.actor.{Actor, ActorSystem, Props, ActorRef, ActorLogging}
+import com.olegych.scastie.api._
+import com.olegych.scastie.util._
+
+import akka.actor.{
+  Actor,
+  ActorSystem,
+  Props,
+  ActorRef,
+  ActorSelection,
+  ActorLogging
+}
 
 import scala.concurrent.duration._
+
+case object SbtActorReady
 
 class SbtActor(system: ActorSystem,
                runTimeout: FiniteDuration,
                sbtReloadTimeout: FiniteDuration,
-               production: Boolean,
+               isProduction: Boolean,
                readyRef: Option[ActorRef],
                override val reconnectInfo: Option[ReconnectInfo])
     extends Actor
     with ActorLogging
     with ActorReconnecting {
 
+  def balancer(info: ReconnectInfo): ActorSelection = {
+    import info._
+    context.actorSelection(
+      s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
+    )
+  }
+
   override def tryConnect(): Unit = {
-    reconnectInfo match {
-      case Some(info) => {
-        import info._
-
-        val sel = context.actorSelection(
-          s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
-        )
-
-        sel ! SbtRunnerConnect(actorHostname, actorAkkaPort)
-      }
-      case _ => ()
+    reconnectInfo.foreach { info =>
+      import info._
+      balancer(info) ! SbtRunnerConnect(actorHostname, actorAkkaPort)
     }
+  }
+
+  override def preStart(): Unit = {
+    log.info("*** SbtRunner preStart ***")
+
+    readyRef.foreach(_ ! SbtActorReady)
+    super.preStart()
+  }
+
+  override def postStop(): Unit = {
+    log.info("*** SbtRunner postStop ***")
+
+    super.postStop()
   }
 
   private val formatActor =
@@ -36,18 +58,44 @@ class SbtActor(system: ActorSystem,
 
   private val sbtRunner =
     context.actorOf(
-      Props(new SbtRunner(runTimeout, sbtReloadTimeout, production)),
+      Props(
+        new SbtProcess(
+          runTimeout,
+          sbtReloadTimeout,
+          isProduction,
+          javaOptions = Seq("-Xms512m", "-Xmx1g")
+        )
+      ),
       name = "SbtRunner"
     )
 
   override def receive: Receive = reconnectBehavior orElse [Any, Unit] {
-    case SbtPing =>
+    case SbtPing => {
       sender ! SbtPong
+    }
 
-    case format: FormatRequest =>
+    case format: FormatRequest => {
       formatActor.forward(format)
+    }
 
-    case task: SbtTask =>
+    case task: SbtTask => {
       sbtRunner.forward(task)
+    }
+
+    case SbtUp => {
+      log.info("SbtUp")
+      reconnectInfo.foreach { info =>
+        log.info("SbtUp sent")
+        balancer(info) ! SbtUp
+      }
+    }
+
+    case replay: Replay => {
+      log.info("Replay")
+      reconnectInfo.foreach { info =>
+        log.info("Replay sent")
+        balancer(info) ! replay
+      }
+    }
   }
 }

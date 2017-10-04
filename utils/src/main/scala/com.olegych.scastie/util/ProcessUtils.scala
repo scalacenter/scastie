@@ -7,7 +7,7 @@ object ProcessUtils {
     pidField.get(process).asInstanceOf[Int]
   }
 
-  def kill(process: Process): Unit = {
+  def pkill(process: Process): Unit = {
     val pid = getPid(process)
 
     import sys.process._

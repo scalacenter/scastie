@@ -9,7 +9,7 @@ object Inputs {
   val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
 
   def default: Inputs = Inputs(
-    worksheetMode = true,
+    isWorksheetMode = true,
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
@@ -21,7 +21,7 @@ object Inputs {
                         |  "-unchecked"
                         |)""".stripMargin,
     sbtPluginsConfigExtra = "",
-    showInUserProfile = false,
+    isShowingInUserProfile = false,
     forked = None
   )
 
@@ -30,14 +30,14 @@ object Inputs {
 }
 
 case class Inputs(
-    worksheetMode: Boolean = false,
+    isWorksheetMode: Boolean,
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
-    librariesFromList: List[(ScalaDependency, Project)] = List(),
+    librariesFromList: List[(ScalaDependency, Project)],
     sbtConfigExtra: String,
     sbtPluginsConfigExtra: String,
-    showInUserProfile: Boolean = false,
+    isShowingInUserProfile: Boolean,
     forked: Option[SnippetId] = None
 ) {
 
@@ -60,7 +60,7 @@ case class Inputs(
         if (sbtConfigExtra == Inputs.default.sbtConfigExtra) "default"
         else sbtConfigExtra
 
-      s"""|worksheetMode = $worksheetMode
+      s"""|isWorksheetMode = $isWorksheetMode
           |target = $target
           |libraries
           |${libraries.mkString(nl)}
@@ -100,7 +100,7 @@ case class Inputs(
     val targetConfig = target.sbtConfig
 
     val optionalTargetDependency =
-      if (worksheetMode) target.runtimeDependency
+      if (isWorksheetMode) target.runtimeDependency
       else None
 
     val allLibraries =

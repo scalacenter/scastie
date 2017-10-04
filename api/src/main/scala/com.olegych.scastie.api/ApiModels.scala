@@ -27,7 +27,7 @@ object FormatRequest {
 
 case class FormatRequest(
     code: String,
-    worksheetMode: Boolean,
+    isWorksheetMode: Boolean,
     scalaTarget: ScalaTarget
 )
 
@@ -206,8 +206,8 @@ object Project {
 case class Project(
     organization: String,
     repository: String,
-    logo: Option[List[String]] = None,
-    artifacts: List[String] = Nil
+    logo: Option[String],
+    artifacts: List[String]
 )
 
 // Keep websocket connection

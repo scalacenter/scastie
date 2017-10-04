@@ -31,7 +31,7 @@ class OldScastieConverterTest extends FunSuite {
         code = """|object Main extends App {
                   |  println("Hello, World!")
                   |}""".stripMargin,
-        worksheetMode = false
+        isWorksheetMode = false
       )
 
     assert(obtained == expected)
@@ -46,7 +46,7 @@ class OldScastieConverterTest extends FunSuite {
         sbtConfigExtra = slurp(path.resolve("config.sbt")).get,
         target = ScalaTarget.Typelevel("2.11.8"),
         code = slurp(path.resolve("code.scala")).get,
-        worksheetMode = false
+        isWorksheetMode = false
       )
 
     val obtained = OldScastieConverter.convertOldInput(original)
