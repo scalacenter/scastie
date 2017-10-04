@@ -40,11 +40,12 @@ class SnippetsContainerTest extends FunSuite {
 
   test("fork") {
     val container = testContainer
-    val inputs = Inputs.default.copy(code = "source", showInUserProfile = true)
+    val inputs =
+      Inputs.default.copy(code = "source", isShowingInUserProfile = true)
     val snippetId = container.save(inputs, user = None)
 
     val forkedInputs =
-      Inputs.default.copy(code = "forked", showInUserProfile = true)
+      Inputs.default.copy(code = "forked", isShowingInUserProfile = true)
     val forkedSnippetId =
       container.fork(snippetId, forkedInputs, user = None).get
 
@@ -58,12 +59,12 @@ class SnippetsContainerTest extends FunSuite {
     val container = testContainer
     val user = UserLogin("github-user")
     val inputs1 =
-      Inputs.default.copy(code = "inputs1").copy(showInUserProfile = true)
+      Inputs.default.copy(code = "inputs1").copy(isShowingInUserProfile = true)
     val snippetId1 = container.save(inputs1, Some(user))
     assert(snippetId1.user.get.update == 0)
 
     val inputs2 =
-      Inputs.default.copy(code = "inputs2").copy(showInUserProfile = true)
+      Inputs.default.copy(code = "inputs2").copy(isShowingInUserProfile = true)
     val snippetId2 = container.update(snippetId1, inputs2).get
     assert(snippetId2.user.get.update == 1, "we get a new update id")
 
@@ -90,7 +91,7 @@ class SnippetsContainerTest extends FunSuite {
     val readInputs1bis = container.readSnippet(snippetId1).get.inputs
 
     assert(readInputs1bis != inputs1, "we mutate previous input")
-    assert(readInputs1bis.copy(showInUserProfile = false) == inputs2)
+    assert(readInputs1bis.copy(isShowingInUserProfile = false) == inputs2)
   }
 
   test("listSnippets") {

@@ -147,7 +147,7 @@ window.addEventListener('load', function() {
   scastie.Embedded('.full', {
     theme: 'light', // default: 'light'; ('dark' or 'light')
     code: '1 + 1', // default: DOM node content
-    worksheetMode: true,
+    isWorksheetMode: true,
     sbtConfig: 'libraryDependencies += "org.json4s" %% "json4s-native" % "3.5.2"',
     targetType: 'jvm',  // jvm, dotty, typelevel, js
     scalaVersion: '2.12.3'

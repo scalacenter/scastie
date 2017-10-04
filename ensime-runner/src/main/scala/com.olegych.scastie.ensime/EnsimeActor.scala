@@ -14,7 +14,7 @@ import com.olegych.scastie.api.{
   EnsimeTaskRequest,
   EnsimeTaskResponse,
 }
-import com.olegych.scastie.{ActorReconnecting, ReconnectInfo}
+import com.olegych.scastie.util.{ActorReconnecting, ReconnectInfo}
 
 import scala.concurrent.duration._
 

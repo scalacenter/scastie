@@ -29,7 +29,7 @@ final case class EditorTopBar(amend: SnippetId ~=> Callback,
                               snippetId: Option[SnippetId],
                               user: Option[User],
                               view: StateSnapshot[View],
-                              worksheetMode: Boolean,
+                              isWorksheetMode: Boolean,
                               scalaTarget: ScalaTarget) {
   @inline def render: VdomElement = EditorTopBar.component(this)
 }
@@ -67,7 +67,7 @@ object EditorTopBar {
     ).render
 
     val worksheetButton = WorksheetButton(
-      props.worksheetMode,
+      props.isWorksheetMode,
       props.toggleWorksheetMode,
       props.view.value
     ).render

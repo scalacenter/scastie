@@ -1,8 +1,8 @@
 package com.olegych.scastie.sbt
 
-import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import com.olegych.scastie.SbtTask
+import akka.actor.{ActorSystem, Props}
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import com.olegych.scastie.util.SbtTask
 import com.olegych.scastie.api._
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
@@ -14,28 +14,31 @@ class SbtActorTest()
     with FunSuiteLike
     with BeforeAndAfterAll {
 
-  test("Simple Instrumentation") {
-    run("1 + 1")(_.instrumentations.nonEmpty)
-  }
+  print("\033c")
 
-  test("timeout") {
-    run("while(true){}")(_.timeout)
-  }
+  (1 to 4).foreach { i =>
+    test(s"[$i] timeout") {
+      run("while(true){}")(progress => {
+        // println(progress)
+        progress.isTimeout
+      })
+    }
 
-  test("after a timeout the sbt instance is ready to be used") {
-    run("1 + 1")(progress => {
-      val gotInstrumentation = progress.instrumentations.nonEmpty
+    test(s"[$i] after a timeout the sbt instance is ready to be used") {
+      run("1 + 1")(progress => {
+        val gotInstrumentation = progress.instrumentations.nonEmpty
 
-      if (gotInstrumentation) {
-        assert(
-          progress.instrumentations == List(
-            Instrumentation(Position(0, 5), Value("2", "Int"))
+        if (gotInstrumentation) {
+          assert(
+            progress.instrumentations == List(
+              Instrumentation(Position(0, 5), Value("2", "Int"))
+            )
           )
-        )
-      }
+        }
 
-      gotInstrumentation
-    })
+        gotInstrumentation
+      })
+    }
   }
 
   test("capture runtime errors") {
@@ -56,12 +59,9 @@ class SbtActorTest()
 
   test("capture user output separately from sbt output") {
     val message = "Hello"
-    run(s"""println("$message")""")(progress => {
-      // we should only receive an hello message
-      val gotHelloMessage = progress.userOutput.contains(message)
-      if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
-      gotHelloMessage
-    })
+    run(s"""println("$message")""")(
+      assertUserOutput(message)
+    )
   }
 
   test("force program mode when an entry point is present") {
@@ -69,21 +69,9 @@ class SbtActorTest()
     run(
       s"""object Main { def main(args: Array[String]): Unit = println("$message") }"""
     ) { progress =>
-      assert(progress.forcedProgramMode)
-
-      val gotHelloMessage = progress.userOutput.contains(message)
-      if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
-
-      gotHelloMessage
+      assert(progress.isForcedProgramMode)
+      assertUserOutput(message)(progress)
     }
-  }
-
-  test("report unsupported dialects") {
-    run("1+1", ScalaTarget.Jvm("10.10.10"))(assertCompilationInfo { info =>
-      assert(
-        info.message == "The worksheet mode does not support this Scala target"
-      )
-    })
   }
 
   test("report parsing error") {
@@ -93,42 +81,46 @@ class SbtActorTest()
     })
   }
 
+  test("report compilation error") {
+    run("err")(assertCompilationInfo { info =>
+      assert(info.message == "not found: value err")
+      assert(info.line.contains(1))
+    })
+  }
+
   test("Regression #55: Dotty fails to resolve") {
+    val message = "Hello, Dotty!"
     val dotty = Inputs.default.copy(
-      code = """|object Main {
-                |  def main(args: Array[String]): Unit = {
-                |    println("Hello, Dotty!")
-                |  }
-                |}
-                |""".stripMargin,
+      code = s"""|object Main {
+                 |  def main(args: Array[String]): Unit = {
+                 |    println("$message")
+                 |  }
+                 |}
+                 |""".stripMargin,
       target = ScalaTarget.Dotty.default,
-      worksheetMode = false
+      isWorksheetMode = false
     )
-    run(dotty)(_.userOutput.contains("Hello, Dotty!"))
+    run(dotty)(assertUserOutput("Hello, Dotty!"))
   }
 
   test("Encoding issues #100") {
-    run("""println("€")""") { progress =>
-      val gotHelloMessage = progress.userOutput.contains("€")
-      if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
-      gotHelloMessage
-    }
+    val message = "€"
+    run(s"""println("$message")""")(
+      assertUserOutput(message)
+    )
   }
 
   test("Scala.js support") {
     val scalaJs =
       Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Js.default)
-    run(scalaJs)(_.done)
+    run(scalaJs)(_.isDone)
   }
 
   test("Capture System.err #284") {
     val message = "Failure"
-    run(s"""System.err.println("$message")""")(progress => {
-      // we should only aeive an hello message
-      val gotHelloMessage = progress.userOutput == Some(message)
-      if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
-      gotHelloMessage
-    })
+    run(s"""System.err.println("$message")""")(
+      assertUserOutput(message, ProcessOutputType.StdErr)
+    )
   }
 
   test("#258 instrumentation with variable t") {
@@ -144,7 +136,7 @@ class SbtActorTest()
            |new A {
            |  override val a = ("2")
            |  println(b)
-           |}""".stripMargin)(_.done)
+           |}""".stripMargin)(_.isDone)
   }
 
   def assertCompilationInfo(
@@ -165,17 +157,21 @@ class SbtActorTest()
     TestKit.shutdownActorSystem(system)
   }
 
-  private val timeout = 1.minute
-  private val sbtActor = TestActorRef(
-    new SbtActor(
-      system = system,
-      runTimeout = timeout,
-      sbtReloadTimeout = timeout,
-      production = false,
-      readyRef = None,
-      reconnectInfo = None
+  private val timeout = 20.seconds
+
+  // SbtProcess uses Stash and it's not compatible with TestActorRef
+  // https://stackoverflow.com/questions/18335127/testing-akka-actors-that-mixin-stash-with-testactorref
+  private val sbtActor = system.actorOf(
+    Props(
+      new SbtProcess(
+        runTimeout = timeout,
+        reloadTimeout = timeout,
+        isProduction = false,
+        javaOptions = Seq("-Xms512m", "-Xmx1g")
+      )
     )
   )
+
   private var currentId = 0
   private def snippetId = {
     val t = currentId
@@ -190,13 +186,13 @@ class SbtActorTest()
     sbtActor ! SbtTask(snippetId, inputs, ip, None, progressActor.ref)
 
     val totalTimeout =
-      if (firstRun) timeout + 20.second
+      if (firstRun) timeout + 10.second
       else timeout
 
-    progressActor.fishForMessage(totalTimeout + 5.seconds) {
+    progressActor.fishForMessage(totalTimeout + 10.seconds) {
       case progress: SnippetProgress =>
         val fishResult = fish(progress)
-        if (progress.done && !fishResult)
+        if (progress.isDone && !fishResult)
           throw new Exception("Fail to meet expectation")
         else fishResult
     }
@@ -206,6 +202,21 @@ class SbtActorTest()
   private def run(code: String, target: ScalaTarget = ScalaTarget.Jvm.default)(
       fish: SnippetProgress => Boolean
   ): Unit = {
+    println("Run: " + code)
     run(Inputs.default.copy(code = code, target = target))(fish)
   }
+
+  private def assertUserOutput(
+      message: String,
+      outputType: ProcessOutputType = ProcessOutputType.StdOut
+  )(progress: SnippetProgress): Boolean = {
+
+    val gotHelloMessage =
+      progress.userOutput ==
+        Some(ProcessOutput(message, outputType))
+    if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
+
+    gotHelloMessage
+  }
+
 }

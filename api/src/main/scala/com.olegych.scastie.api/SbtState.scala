@@ -9,6 +9,11 @@ object SbtState {
     def isReady: Boolean = true
   }
 
+  case object Disconnected extends SbtState {
+    override def toString: String = "Disconnected"
+    def isReady: Boolean = false
+  }
+
   implicit object SbtStateFormat extends Format[SbtState] {
     def writes(state: SbtState): JsValue = {
       JsString(state.toString)
@@ -16,7 +21,8 @@ object SbtState {
 
     private val values =
       List(
-        Unknown
+        Unknown,
+        Disconnected
       ).map(v => (v.toString, v)).toMap
 
     def reads(json: JsValue): JsResult[SbtState] = {

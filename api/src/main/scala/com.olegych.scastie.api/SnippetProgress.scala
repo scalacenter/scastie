@@ -13,10 +13,10 @@ object SnippetProgress {
       runtimeError = None,
       scalaJsContent = None,
       scalaJsSourceMapContent = None,
-      done = true,
-      timeout = false,
-      sbtError = false,
-      forcedProgramMode = false
+      isDone = true,
+      isTimeout = false,
+      isSbtError = false,
+      isForcedProgramMode = false
     )
 
   implicit val formatSnippetProgress: OFormat[SnippetProgress] =
@@ -25,15 +25,15 @@ object SnippetProgress {
 
 case class SnippetProgress(
     snippetId: Option[SnippetId],
-    userOutput: Option[String],
-    sbtOutput: Option[String],
+    userOutput: Option[ProcessOutput],
+    sbtOutput: Option[ProcessOutput],
     compilationInfos: List[Problem],
     instrumentations: List[Instrumentation],
     runtimeError: Option[RuntimeError],
-    scalaJsContent: Option[String] = None,
-    scalaJsSourceMapContent: Option[String] = None,
-    done: Boolean,
-    timeout: Boolean,
-    sbtError: Boolean = false,
-    forcedProgramMode: Boolean
+    scalaJsContent: Option[String],
+    scalaJsSourceMapContent: Option[String],
+    isDone: Boolean,
+    isTimeout: Boolean,
+    isSbtError: Boolean,
+    isForcedProgramMode: Boolean
 )

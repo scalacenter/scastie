@@ -16,7 +16,7 @@ object WorksheetButton {
     Reusability.caseClass[WorksheetButton]
 
   private def render(props: WorksheetButton): VdomElement = {
-    val worksheetModeSelected =
+    val isWorksheetModeSelected =
       if (props.isWorksheetMode)
         if (props.view != View.Editor)
           TagMod(cls := "enabled alpha")
@@ -25,13 +25,13 @@ object WorksheetButton {
       else
         EmptyVdom
 
-    val worksheetModeToggleLabel =
+    val isWorksheetModeToggleLabel =
       if (props.isWorksheetMode) "OFF"
       else "ON"
 
     li(
-      title := s"Turn Worksheet Mode $worksheetModeToggleLabel (F4)",
-      worksheetModeSelected,
+      title := s"Turn Worksheet Mode $isWorksheetModeToggleLabel (F4)",
+      isWorksheetModeSelected,
       role := "button",
       cls := "btn editor",
       onClick --> props.toggleWorksheetMode
@@ -40,7 +40,7 @@ object WorksheetButton {
       span("Worksheet"),
       i(cls := "workSheetIndicator",
         cls := "fa fa-circle",
-        worksheetModeSelected)
+        isWorksheetModeSelected)
     )
   }
 

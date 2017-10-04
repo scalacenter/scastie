@@ -186,7 +186,7 @@ class ScastieBackend(scastieId: UUID,
 
         def onMessage(progress: SnippetProgress): Boolean = {
           direct.modState(_.addProgress(progress))
-          progress.done
+          progress.isDone
         }
 
         def onOpen(): Unit =
@@ -419,7 +419,7 @@ class ScastieBackend(scastieId: UUID,
             Callback.future(
               fetchSnippet.map {
                 case Some(FetchResult(inputs, progresses)) => {
-                  val isDone = progresses.exists(_.done)
+                  val isDone = progresses.exists(_.isDone)
                   val connect =
                     snippetId match {
                       case Some(sid) if !isDone => connectProgress(sid)
@@ -532,7 +532,7 @@ class ScastieBackend(scastieId: UUID,
               restApiClient
                 .format(
                   FormatRequest(state.inputs.code,
-                                state.inputs.worksheetMode,
+                                state.inputs.isWorksheetMode,
                                 state.inputs.target)
                 )
                 .map {

@@ -17,7 +17,6 @@ brew install openjdk sbt nodejs yarn
 ### Get latest Scala.js Bundler
 
 git clone git@github.com:scalacenter/scalajs-bundler.git
-git checkout master
 sbt publishLocal
 
 ```

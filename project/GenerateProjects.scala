@@ -6,6 +6,8 @@ import java.nio.file._
 import com.olegych.scastie.api._
 import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
 
+import System.{lineSeparator => nl}
+
 import SbtShared._
 
 class GenerateProjects(sbtTargetDir: Path) {
@@ -23,16 +25,25 @@ class GenerateProjects(sbtTargetDir: Path) {
     val default =
       Inputs.default.copy(
         code = helloWorld,
-        worksheetMode = false
+        isWorksheetMode = false
       )
 
-    def scala(version: String): Inputs =
-      default.copy(target = ScalaTarget.Jvm(version))
+    def scala(version: String, withoutPlayJson: Boolean = false): Inputs = {
+      val playJson =
+        if (!withoutPlayJson)
+          s"""libraryDependencies += "com.typesafe.play" %% "play-json" % "$playJsonVersion""""
+        else ""
+
+      default.copy(
+        target = ScalaTarget.Jvm(version),
+        sbtConfigExtra = default.sbtConfigExtra + nl + nl + playJson
+      )
+    }
 
     val scala210 = scala(sbt210)
     val scala211 = scala(latest211)
     val scala212 = scala(latest212)
-    val scala213 = scala(latest213)
+    val scala213 = scala(latest213, withoutPlayJson = true)
 
     val dotty =
       default.copy(
@@ -46,7 +57,10 @@ class GenerateProjects(sbtTargetDir: Path) {
 
     val scalaJs =
       default.copy(
-        target = ScalaTarget.Js.default
+        target = ScalaTarget.Js.default,
+        sbtConfigExtra =
+          default.sbtConfigExtra + nl + nl +
+            s"""libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "$scalajsDomVersion""""
       )
 
     List(

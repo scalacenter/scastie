@@ -1,8 +1,8 @@
 package com.olegych.scastie.balancer
 
-import com.olegych.scastie.SbtTask
 import com.olegych.scastie.api
 import com.olegych.scastie.api._
+import com.olegych.scastie.util._
 import com.olegych.scastie.storage._
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
@@ -44,17 +44,17 @@ case class FetchUserSnippets(user: User)
 case class ReceiveStatus(requester: ActorRef)
 
 class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
+// extends PersistentActor with AtLeastOnceDelivery
     extends Actor
     with ActorLogging {
-  private val configuration =
-    ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
 
-  private val host = configuration.getString("remote-hostname")
-  private val sbtPortsStart = configuration.getInt("remote-sbt-ports-start")
-  private val sbtPortsSize = configuration.getInt("remote-sbt-ports-size")
-  private val ensimePortsStart =
-    configuration.getInt("remote-ensime-ports-start")
-  private val ensimePortsSize = configuration.getInt("remote-ensime-ports-size")
+  private val config =
+    ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
+  private val host = config.getString("remote-hostname")
+  private val sbtPortsStart = config.getInt("remote-sbt-ports-start")
+  private val sbtPortsSize = config.getInt("remote-sbt-ports-size")
+  private val ensimePortsStart = config.getInt("remote-ensime-ports-start")
+  private val ensimePortsSize = config.getInt("remote-ensime-ports-size")
 
   val ensimeConfig =
     ConfigFactory.load().getConfig("com.olegych.scastie.ensime")
@@ -188,8 +188,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   private val container = new SnippetsContainer(
-    Paths.get(configuration.getString("snippets-dir")),
-    Paths.get(configuration.getString("old-snippets-dir"))
+    Paths.get(config.getString("snippets-dir")),
+    Paths.get(config.getString("old-snippets-dir"))
   )
 
   private val portsInfo = sbtPorts.mkString("\nsbt: [", ", ", "]") + ensimePorts
@@ -236,7 +236,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   def receive: Receive = {
 
-    case EnsimeRequestEnvelop(request, UserTrace(ip0, user)) =>
+    case EnsimeRequestEnvelop(request, UserTrace(ip0, user)) => {
       val taskId = EnsimeTaskId.create
       log.info("id: {}, ip: {} task: {}", taskId, ip0, request)
 
@@ -262,6 +262,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
           sender ! None
         }
       }
+    }
 
     case EnsimeTaskResponse(response, taskId) => {
       updateEnsimeBalancer(ensimeLoadBalancer.done(taskId))
@@ -269,32 +270,36 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case SbtPong => ()
 
-    case format: FormatRequest =>
+    case format: FormatRequest => {
       val server = sbtLoadBalancer.getRandomServer
       server.ref.tell(format, sender)
       ()
+    }
 
-    case RunSnippet(inputsWithIpAndUser) =>
+    case RunSnippet(inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val snippetId =
         container.create(inputs, user.map(u => UserLogin(u.login)))
       run(inputsWithIpAndUser, snippetId)
       sender ! snippetId
+    }
 
-    case SaveSnippet(inputsWithIpAndUser) =>
+    case SaveSnippet(inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val snippetId = container.save(inputs, user.map(u => UserLogin(u.login)))
       run(inputsWithIpAndUser, snippetId)
       sender ! snippetId
+    }
 
-    case AmendSnippet(snippetId, inputsWithIpAndUser) =>
+    case AmendSnippet(snippetId, inputsWithIpAndUser) => {
       val amendSuccess = container.amend(snippetId, inputsWithIpAndUser.inputs)
       if (amendSuccess) {
         run(inputsWithIpAndUser, snippetId)
       }
       sender ! amendSuccess
+    }
 
-    case UpdateSnippet(snippetId, inputsWithIpAndUser) =>
+    case UpdateSnippet(snippetId, inputsWithIpAndUser) => {
       val updatedSnippetId =
         container.update(snippetId, inputsWithIpAndUser.inputs)
 
@@ -303,8 +308,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       )
 
       sender ! updatedSnippetId
+    }
 
-    case ForkSnippet(snippetId, inputsWithIpAndUser) =>
+    case ForkSnippet(snippetId, inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
 
       container
@@ -314,41 +320,51 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
           run(inputsWithIpAndUser, forkedSnippetId)
         case None => sender ! None
       }
+    }
 
-    case DeleteSnippet(snippetId) =>
+    case DeleteSnippet(snippetId) => {
       container.delete(snippetId)
       sender ! (())
+    }
 
-    case DownloadSnippet(snippetId) =>
+    case DownloadSnippet(snippetId) => {
       sender ! container.downloadSnippet(snippetId)
+    }
 
-    case FetchSnippet(snippetId) =>
+    case FetchSnippet(snippetId) => {
       sender ! container.readSnippet(snippetId)
+    }
 
-    case FetchOldSnippet(id) =>
+    case FetchOldSnippet(id) => {
       sender ! container.readOldSnippet(id)
+    }
 
-    case FetchUserSnippets(user) =>
+    case FetchUserSnippets(user) => {
       sender ! container.listSnippets(UserLogin(user.login))
+    }
 
-    case FetchScalaJs(snippetId) =>
+    case FetchScalaJs(snippetId) => {
       sender ! container.readScalaJs(snippetId)
+    }
 
-    case FetchScalaSource(snippetId) =>
+    case FetchScalaSource(snippetId) => {
       sender ! container.readScalaSource(snippetId)
+    }
 
-    case FetchScalaJsSourceMap(snippetId) =>
+    case FetchScalaJsSourceMap(snippetId) => {
       sender ! container.readScalaJsSourceMap(snippetId)
+    }
 
-    case progress: api.SnippetProgress =>
-      if (progress.done) {
+    case progress: api.SnippetProgress => {
+      if (progress.isDone) {
         progress.snippetId.foreach(
           sid => updateSbtBalancer(sbtLoadBalancer.done(SbtRunTaskId(sid)))
         )
       }
       container.appendOutput(progress)
+    }
 
-    case event: DisassociatedEvent =>
+    case event: DisassociatedEvent => {
       for {
         host <- event.remoteAddress.host
         port <- event.remoteAddress.port
@@ -369,6 +385,15 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
           updateEnsimeBalancer(ensimeLoadBalancer.removeServer(ref))
         }
       }
+    }
+
+    case SbtUp => {
+      log.info("SbtUp")
+    }
+
+    case Replay(SbtRun(snippetId, inputs, progressActor, snippetActor)) => {
+      log.info("Replay: " + inputs.code)
+    }
 
     case SbtRunnerConnect(runnerHostname, runnerAkkaPort) => {
       if (!remoteSbtSelections.contains((runnerHostname, runnerAkkaPort))) {
@@ -418,8 +443,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       sender ! LoadBalancerInfo(sbtLoadBalancer, ensimeLoadBalancer, requester)
     }
 
-    case statusProgress: StatusProgress =>
+    case statusProgress: StatusProgress => {
       statusActor ! statusProgress
+    }
 
     case ensimeState: EnsimeServerState => {
       updateEnsimeBalancer(
