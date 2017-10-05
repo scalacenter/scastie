@@ -161,6 +161,12 @@ window.addEventListener('load', function() {
 
 Take a look at: https://codepen.io/MasseGuillaume/pen/OxbVzm
 
-# Sponsors
+# Supports
+
+Scastie is supported by the Scala Center
+
+[![Scala Center Logo](https://i.imgur.com/kvoAElp.jpg)](https://scala.epfl.ch/)
+
+with the help of Browser Stack for end-to-end testing
 
 [![Browser Stack Logo](http://www.diogonunes.com/blog/wp-content/uploads/2016/07/browserstack-logo.png)](https://browserstack.com)
