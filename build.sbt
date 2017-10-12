@@ -88,7 +88,6 @@ lazy val utils = project
     resolvers += Resolver.typesafeRepo("releases"),
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-contrib-extra" % "4.1.3",
-      // "com.zaxxer"     % "nuprocess" % "1.1.2" % Test
       akka("stream"),
       akka("actor"),
       akka("remote"),
