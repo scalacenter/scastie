@@ -6,6 +6,7 @@ import SbtShared.gitHashNow
 import java.io.File
 import java.nio.file._
 import java.nio.file.attribute._
+import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
 import com.typesafe.config.ConfigFactory
 import com.typesafe.sbt.SbtNativePackager.Universal
@@ -19,12 +20,15 @@ object Deployment {
     deploy := deployTask(server, sbtRunner, ensimeRunner).value,
     deployServer := deployServerTask(server, sbtRunner, ensimeRunner).value,
     deployQuick := deployQuickTask(server, sbtRunner, ensimeRunner).value,
-    deployServerQuick := deployServerQuickTask(server, sbtRunner, ensimeRunner).value
+    deployServerQuick := deployServerQuickTask(server, sbtRunner, ensimeRunner).value,
+    deployLocal := deployLocalTask(server, sbtRunner, ensimeRunner).value
   )
 
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
 
   lazy val deployServer = taskKey[Unit]("Deploy server")
+
+  lazy val deployLocal = taskKey[Unit]("Deploy locally")
 
   lazy val deployQuick = taskKey[Unit](
     "Deploy server and sbt instances without building server " +
@@ -42,6 +46,18 @@ object Deployment {
       val serverZip = (packageBin in (server, Universal)).value.toPath
 
       deployment.deployServer(serverZip)
+    }
+
+  def deployLocalTask(server: Project,
+                      sbtRunner: Project,
+                      ensimeRunner: Project): Def.Initialize[Task[Unit]] =
+    Def.task {
+      val deployment = deploymentTask(sbtRunner, ensimeRunner).value
+      val serverZip = (packageBin in (server, Universal)).value.toPath
+      val imageIdSbt = (docker in sbtRunner).value
+      val imageIdEnsime = (docker in ensimeRunner).value
+
+      deployment.deployLocal(serverZip)
     }
 
   def deployTask(server: Project,
@@ -115,20 +131,100 @@ class Deployment(rootFolder: File,
     deployServer(serverZip)
   }
 
+  def deployLocal(serverZip: Path): Unit = {
+    val sbtDockerNamespace = sbtDockerImage.namespace.get
+    val sbtDockerRepository = sbtDockerImage.repository
+
+    val destination = rootFolder.toPath.resolve("local")
+
+    if (!Files.exists(destination)) {
+      Files.createDirectory(destination)
+    }
+
+    val snippetsFolder = destination.resolve("snippets")
+
+    if (!Files.exists(snippetsFolder)) {
+      Files.createDirectory(snippetsFolder)
+    }
+
+    val deploymentFiles =
+      deployServerFiles(serverZip, destination, local = true)
+
+    deploymentFiles.files.foreach(
+      file =>
+        Files
+          .copy(file, destination.resolve(file.getFileName), REPLACE_EXISTING)
+    )
+
+    val runnerScriptContent =
+      s"""|#!/usr/bin/env bash
+          |
+          |docker run \\
+          |  --network=host \\
+          |  -e RUNNER_PORT=5150 \\
+          |  -e RUNNER_HOSTNAME=127.0.0.1 \\
+          |  -e RUNNER_RECONNECT=false \\
+          |  -e RUNNER_PRODUCTION=true \\
+          |  $sbtDockerNamespace/$sbtDockerRepository:$gitHashNow
+          |
+          |""".stripMargin
+
+    val runnerScript = destination.resolve("sbt.sh")
+
+    Files.write(runnerScript, runnerScriptContent.getBytes)
+    Files.setPosixFilePermissions(runnerScript, executablePermissions)
+  }
+
   def deployServer(serverZip: Path): Unit = {
+    val serverScriptDir = Files.createTempDirectory("server")
+
+    val deploymentFiles =
+      deployServerFiles(serverZip, serverScriptDir, local = false)
+
+    deploymentFiles.files.foreach(rsyncServer)
+
+    val scriptFileName = deploymentFiles.serverScript.getFileName
+    val uri = userName + "@" + serverHostname
+    Process(s"ssh $uri ./$scriptFileName") ! logger
+  }
+
+  case class DeploymentFiles(
+      secretConfig: Path,
+      serverZip: Path,
+      serverScript: Path,
+      productionConfig: Path,
+      logbackConfig: Path
+  ) {
+    def files: List[Path] = List(
+      secretConfig,
+      serverZip,
+      serverScript,
+      productionConfig,
+      logbackConfig
+    )
+  }
+
+  private def deployServerFiles(serverZip: Path,
+                                destination: Path,
+                                local: Boolean): DeploymentFiles = {
     logger.info("Generate server script")
 
-    val serverScriptDir = Files.createTempDirectory("server")
-    val serverScript = serverScriptDir.resolve("server.sh")
+    val serverScript = destination.resolve("server.sh")
 
-    val productionConfigFileName = productionConfig.getFileName
+    val config =
+      if (local) localConfig
+      else productionConfig
+
+    val configFileName = config.getFileName
     val logbackConfigFileName = logbackConfig.getFileName
     val serverZipFileName = serverZip.getFileName
 
     val secretConfig = getSecretConfig()
     val sentryDsn = getSentryDsn(secretConfig)
 
-    val homeDir = s"/home/$userName"
+    val baseDir =
+      if (!local) s"/home/$userName/"
+      else ""
 
     val content =
       s"""|#!/usr/bin/env bash
@@ -137,13 +233,13 @@ class Deployment(rootFolder: File,
           |
           |kill -9 `cat RUNNING_PID`
           |
-          |unzip -d $homeDir/server $homeDir/$serverZipFileName
-          |mv $homeDir/server/*/* $homeDir/server/
+          |unzip -d ${baseDir}server ${baseDir}${serverZipFileName}
+          |mv ${baseDir}server/*/* ${baseDir}server/
           |
-          |nohup $homeDir/server/bin/server \\
+          |nohup ${baseDir}server/bin/server \\
           |  -J-Xmx1G \\
-          |  -Dconfig.file=$homeDir/$applicationRootConfig \\
-          |  -Dlogback.configurationFile=$homeDir/$logbackConfigFileName \\
+          |  -Dconfig.file=${baseDir}${configFileName} \\
+          |  -Dlogback.configurationFile=${baseDir}${logbackConfigFileName} \\
           |  -Dsentry.dsn=$sentryDsn \\
           |  -Dsentry.release=$version \\
           |  &>/dev/null &
@@ -154,17 +250,13 @@ class Deployment(rootFolder: File,
 
     logger.info("Deploy servers")
 
-    Process("rm -rf server*.sh") ! logger
-
-    rsyncServer(secretConfig)
-    rsyncServer(serverZip)
-    rsyncServer(serverScript)
-    rsyncServer(productionConfig)
-    rsyncServer(logbackConfig)
-
-    val scriptFileName = serverScript.getFileName
-    val uri = userName + "@" + serverHostname
-    Process(s"ssh $uri ./$scriptFileName") ! logger
+    DeploymentFiles(
+      secretConfig,
+      serverZip,
+      serverScript,
+      config,
+      logbackConfig
+    )
   }
 
   def deployRunners(): Unit = {
@@ -299,8 +391,6 @@ class Deployment(rootFolder: File,
     Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
   }
 
-  private val applicationRootConfig = "application.conf"
-
   private def getSecretConfig(): Path = {
     val scastieSecrets = "scastie-secrets"
     val secretFolder = rootFolder / ".." / scastieSecrets
@@ -311,7 +401,7 @@ class Deployment(rootFolder: File,
       Process(s"git clone git@github.com:scalacenter/$scastieSecrets.git")
     }
 
-    (secretFolder / applicationRootConfig).toPath
+    (secretFolder / "secrets.conf").toPath
   }
 
   private def getSentryDsn(secretConfig: Path): String = {
@@ -325,6 +415,8 @@ class Deployment(rootFolder: File,
   private val deploymentFolder = rootFolder / "deployment"
 
   private val productionConfig = (deploymentFolder / "production.conf").toPath
+  private val localConfig = (deploymentFolder / "local.conf").toPath
+
   private val logbackConfig = (deploymentFolder / "logback.xml").toPath
 
   private val config =

@@ -16,3 +16,4 @@ bin/.scalafmt
 bin/scalafmt_ng
 bin/.coursier
 bin/drone
+local/

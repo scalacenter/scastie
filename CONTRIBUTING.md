@@ -14,11 +14,6 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
  
 brew install openjdk sbt nodejs yarn
 
-### Get latest Scala.js Bundler
-
-git clone git@github.com:scalacenter/scalajs-bundler.git
-sbt publishLocal
-
 ```
 sbt
 > sbtRunner/reStart
@@ -151,7 +146,7 @@ sbt ";ensimeRunner/docker;sbtRunner/docker"
 docker run \
   --network=host \
   -e RUNNER_PORT=5150 \
-  -e RUNNER_HOSTNAME=localhost \
+  -e RUNNER_HOSTNAME=127.0.0.1 \
   -e RUNNER_RECONNECT=false \
   -e RUNNER_PRODUCTION=true \
   scalacenter/scastie-sbt-runner:`git rev-parse --verify HEAD`
@@ -159,7 +154,7 @@ docker run \
 docker run \
   --network=host \
   -e RUNNER_PORT=6150 \
-  -e RUNNER_HOSTNAME=localhost \
+  -e RUNNER_HOSTNAME=127.0.0.1 \
   -e RUNNER_RECONNECT=false \
   -e RUNNER_PRODUCTION=true \
   scalacenter/scastie-ensime-runner:`git rev-parse --verify HEAD`

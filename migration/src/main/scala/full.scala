@@ -101,10 +101,6 @@ case class SnippetIdV1(base64UUID: String, user: Option[SnippetUserPartV1])
 
 object Main {
   def main(args: Array[String]): Unit = {
-    run(Array("/home/gui/snippets"))
-  }
-
-  def run(args: Array[String]) = {
     val dir = Paths.get(args.head)
     assert(Files.isDirectory(dir))
 
