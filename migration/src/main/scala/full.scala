@@ -137,7 +137,7 @@ object Main {
       }
     }
 
-    val ignored = Set(".snapshot", ".gitignore", "_anonymous_")
+    val ignored = Set(".snapshot", ".gitignore")
 
     val ds = Files.newDirectoryStream(dir)
     ds.asScala.foreach { user =>
