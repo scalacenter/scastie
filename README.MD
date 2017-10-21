@@ -150,7 +150,7 @@ window.addEventListener('load', function() {
     isWorksheetMode: true,
     sbtConfig: 'libraryDependencies += "org.json4s" %% "json4s-native" % "3.5.2"',
     targetType: 'jvm',  // jvm, dotty, typelevel, js
-    scalaVersion: '2.12.3'
+    scalaVersion: '2.12.4'
   });
 
   // Setting Scala-Native targetType is not yet supported: https://github.com/scalacenter/scastie/issues/50
