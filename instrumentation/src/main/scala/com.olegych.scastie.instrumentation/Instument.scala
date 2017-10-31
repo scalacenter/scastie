@@ -76,7 +76,7 @@ object Instrument {
 
     val replacement =
       Seq(
-        "locally {",
+        "scala.Predef.locally {",
         treeQuote + "; ",
         s"$instrumentationMap(${posToApi(term.pos, offset)}) = $renderCall",
         "$t}"
@@ -118,7 +118,7 @@ object Instrument {
         s"""|object Main {
             |  val playground = new $instrumentedClass
             |  def main(args: Array[String]): Unit = {
-            |    println($runtimeT.write(playground.$instrumentationMethod))
+            |    scala.Predef.println($runtimeT.write(playground.$instrumentationMethod))
             |  }
             |}
             |""".stripMargin
