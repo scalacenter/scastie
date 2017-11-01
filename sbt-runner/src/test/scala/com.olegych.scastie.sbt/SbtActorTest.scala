@@ -114,7 +114,7 @@ class SbtActorTest()
     val message = "No Predef!"
     val input = Inputs.default.copy(
       sbtConfigExtra = "scalacOptions += \"-Yno-predef\" ",
-      code = s"""println("$message")""""
+      code = s"""scala.Predef.println("$message")""""
     )
     run(input)(assertUserOutput(message))
   }
