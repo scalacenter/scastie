@@ -14,7 +14,7 @@ class SbtActorTest()
     with FunSuiteLike
     with BeforeAndAfterAll {
 
-  print("\033c")
+  print("\u001b")
 
   (1 to 4).foreach { i =>
     test(s"[$i] timeout") {
@@ -108,6 +108,15 @@ class SbtActorTest()
     run(s"""println("$message")""")(
       assertUserOutput(message)
     )
+  }
+
+  test("Disable Predef #357") {
+    val message = "No Predef!"
+    val input = Inputs.default.copy(
+      sbtConfigExtra = "scalacOptions += \"-Yno-predef\" ",
+      code = s"""println("$message")""""
+    )
+    run(input)(assertUserOutput(message))
   }
 
   test("Scala.js support") {
