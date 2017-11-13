@@ -5,14 +5,23 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 
 ## How to run locally
 
-### How to install via nix
+### How to install prerequisits via nix
 
 * install nix: `curl https://nixos.org/nix/install | sh`
 * nix-shell -A scastie
 
-### How to install on Mac
+### How to install prerequisits on Mac
  
 brew install openjdk sbt nodejs yarn
+
+### How to install prerequisits on Windows
+
+choco install nvm yarn sbt jdk8 python3
+nvm install 8.9.1
+nvm use 8.9.1
+(npm >= 9.0.0 may have issues finding/using python)
+
+### How to run the sbt build
 
 ```
 sbt
