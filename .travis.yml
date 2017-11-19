@@ -9,19 +9,11 @@ env:
 
 before_install:
   - mkdir -p /home/travis/.sbt/0.13/plugins
-  - echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC11")' >> /home/travis/.sbt/0.13/plugins/build.sbt
+  - echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC13")' >> /home/travis/.sbt/0.13/plugins/build.sbt
 
 script:
   - bin/scalafmt --test
-
-  - git clone git://github.com/MasseGuillaume/scalajs-bundler.git
-  - pushd scalajs-bundler
-  - git checkout scastie
-  - sbt publishLocal
-  - nix-shell ../default.nix -A scastie --command "sbt publishLocal"
-  - popd
-
-  - nix-shell -A scastie --command "sbt test"
+  - nix-shell -A scastie --command "sbt ci"
 
 before_cache:
   # Cleanup the cached directories to avoid unnecessary cache updates

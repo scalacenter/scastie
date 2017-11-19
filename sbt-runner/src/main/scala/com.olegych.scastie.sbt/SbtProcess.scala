@@ -248,8 +248,6 @@ class SbtProcess(runTimeout: FiniteDuration,
 
   when(Reloading) {
     case Event(output: ProcessOutput, sbtRun: SbtRun) => {
-      println(output.line)
-
       val progress = extractor(output, sbtRun, isReloading = true)
 
       if (progress.isSbtError) {
@@ -266,8 +264,6 @@ class SbtProcess(runTimeout: FiniteDuration,
 
   when(Running) {
     case Event(output: ProcessOutput, sbtRun: SbtRun) => {
-      println(output.line)
-
       extractor(output, sbtRun, isReloading = false)
 
       if (isPrompt(output.line)) {

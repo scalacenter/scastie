@@ -33,8 +33,33 @@ val startAll2Commands = List(
 val startAllCommands =
   "ensimeRunner/reStart" :: startAll2Commands
 
+def sbtJoinTask(commands: List[String]): String =
+  commands.mkString(";", ";", "")
+
 def startAll(commands: List[String], suffix: String = "") =
-  addCommandAlias("startAll" + suffix, commands.mkString(";", ";", ""))
+  addCommandAlias("startAll" + suffix, sbtJoinTask(commands))
+
+lazy val ciAlias =
+  addCommandAlias(
+    "ci",
+    sbtJoinTask(
+      List(
+        "test:compile",
+        "instrumentation/test",
+        "server/test",
+        "storage/test"
+        // https://github.com/scalacenter/scastie/issues/105
+        // "e2e/test",
+
+        // https://github.com/scalacenter/scastie/issues/363
+        // "utils/test"
+        // "balancer/test",
+        // "sbtRunner/test"
+        
+        // "ensimeRunner/test"
+      )
+    )
+  )
 
 startAll(startAllCommands)
 startAll(startAll2Commands, "2")
@@ -64,6 +89,7 @@ lazy val scastie = project
     utils
   )
   .settings(baseSettings)
+  .settings(ciAlias)
   .settings(Deployment.settings(server, sbtRunner, ensimeRunner))
 
 lazy val testSettings =

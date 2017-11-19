@@ -19,19 +19,19 @@ to generate the docker image for the different
 configuration matrix
  */
 object SbtShared {
-  val sbt210 = "2.10.6"
-  val latest211 = "2.11.11"
+  val sbt210 = "2.10.7"
+  val latest211 = "2.11.12"
   val latest212 = "2.12.4"
   val latest213 = "2.13.0-M2"
   val currentScalaVersion = latest212
 
-  val latestScalaJs = "0.6.20"
+  val latestScalaJs = "0.6.21"
   val latestDotty = "0.5.0-RC1"
 
   // sbt-ensime 1.12.14 creates .ensime with 2.0.0-M4 server jar
   val latestSbtEnsime = "1.12.14"
   val latestEnsime = "2.0.0-M4"
-  val latestCoursier = "1.0.0-RC11"
+  val latestCoursier = "1.0.0-RC13"
 
   val sbtVersion = "0.13.16"
 
