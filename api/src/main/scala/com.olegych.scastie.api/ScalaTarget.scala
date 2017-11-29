@@ -329,7 +329,7 @@ object ScalaTarget {
       sbtConfigScalaVersion(dottyVersion)
 
     def sbtPluginsConfig: String =
-      """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.6")"""
+      """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.1.7")"""
 
     def sbtRunCommand: String = "run"
 
