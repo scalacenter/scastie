@@ -79,7 +79,7 @@ object BuildSettings {
     val suggestedVersions = List(
       "2.13.0-M2",
       "2.12.4",
-      "2.11.11"
+      "2.11.12"
     )
 
     def setScalaVersion(
