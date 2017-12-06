@@ -39,9 +39,9 @@ sbt
 > startAll
 ```
 
-open http://localhost:8080
+open http://localhost:9000
 
-you can also open http://localhost:8080/embed.html to edit the embedded style
+you can also open http://localhost:9000/embed.html to edit the embedded style
 
 ## Scalafmt
 
