@@ -17,8 +17,10 @@ object ScalaVersions {
     "2.12.0-M1",
     "2.11.12",
     "2.11.11",
+    /* Those two versions were withdrawn.
     "2.11.10",
     "2.11.9",
+     */
     "2.11.8",
     "2.11.7",
     "2.11.6",
