@@ -55,7 +55,7 @@ lazy val ciAlias =
         // "utils/test"
         // "balancer/test",
         // "sbtRunner/test"
-        
+
         // "ensimeRunner/test"
       )
     )
