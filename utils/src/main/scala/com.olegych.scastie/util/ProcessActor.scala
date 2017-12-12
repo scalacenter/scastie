@@ -8,10 +8,13 @@ import akka.contrib.process._
 
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.stream.OverflowStrategy
+import akka.stream.ThrottleMode
 import akka.stream.scaladsl.Framing
 import akka.stream.scaladsl.{Sink, Source, Flow}
 
 import akka.util.ByteString
+
+import scala.concurrent.duration._
 
 import java.nio.file._
 
@@ -86,6 +89,7 @@ class ProcessActor(command: List[String],
           lines(stderr)
             .map(line => ProcessOutput(line, ProcessOutputType.StdErr))
         )
+        .throttle(100, 1.second, 100, ThrottleMode.Enforcing)
         .runWith(Sink.foreach(context.parent ! _))
 
       val stdin2: Source[ByteString, ActorRef] =
