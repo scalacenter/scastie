@@ -9,7 +9,11 @@ import com.softwaremill.session._
 import SessionDirectives._
 import SessionOptions._
 
-class UserDirectives(session: GithubUserSession) {
+import scala.concurrent.ExecutionContext
+
+class UserDirectives(
+    session: GithubUserSession
+)(implicit val executionContext: ExecutionContext) {
   import session._
 
   def optionalLogin: Directive1[Option[User]] =
