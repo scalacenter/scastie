@@ -44,7 +44,7 @@ object ServerMain {
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     val github = new Github
-    val session = new GithubUserSession
+    val session = new GithubUserSession(system)
     val userDirectives = new UserDirectives(session)
 
     val progressActor =

@@ -8,19 +8,19 @@ import com.softwaremill.session._
 import com.typesafe.config.ConfigFactory
 
 import scala.collection.parallel.mutable.ParTrieMap
-import scala.concurrent.ExecutionContext
 import com.typesafe.scalalogging.Logger
 
 import scala.util.Try
 import java.util.UUID
 import java.nio.file._
 
+import akka.actor.ActorSystem
+
 import scala.collection.JavaConverters._
 
 import System.{lineSeparator => nl}
 
-class GithubUserSession()(implicit val executionContext: ExecutionContext) {
-
+class GithubUserSession(system: ActorSystem) {
   val logger = Logger("GithubUserSession")
 
   private val configuration =
@@ -49,11 +49,7 @@ class GithubUserSession()(implicit val executionContext: ExecutionContext) {
       (id: String) => Try { UUID.fromString(id) }
     )
   implicit val sessionManager = new SessionManager[UUID](sessionConfig)
-  implicit val refreshTokenStorage = new InMemoryRefreshTokenStorage[UUID] {
-    def log(msg: String): Unit =
-      if (msg.startsWith("Looking up token for selector")) () // boring
-      else logger.info(msg)
-  }
+  implicit val refreshTokenStorage = new ActorRefreshTokenStorage(system)
 
   private def readSessionsFile(): Array[(UUID, User)] = {
     if (Files.exists(usersSessions)) {
