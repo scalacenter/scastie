@@ -58,10 +58,19 @@ object DockerHelper {
     Files.createDirectories(globalPlugins.getParent)
 
     val plugins =
-      s"""|addSbtPlugin("io.get-coursier" % "sbt-coursier" % "$latestCoursier")
-          |addSbtPlugin("org.ensime" % "sbt-ensime" % "$latestSbtEnsime")""".stripMargin
+      s"""|addSbtPlugin("io.get-coursier" % "sbt-coursier" % "$latestCoursier")""".stripMargin
 
     Files.write(globalPlugins, plugins.getBytes)
+
+    val repositories = sbtGlobal.resolve("repositories")
+
+    val repositoriesConfig =
+      s"""|[repositories]
+          |local
+          |my-ivy-proxy-releases: http://scala-webapps.epfl.ch:8081/artifactory/scastie-ivy/, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+          |my-maven-proxy-releases: http://scala-webapps.epfl.ch:8081/artifactory/scastie-maven/""".stripMargin
+
+    Files.write(repositories, repositoriesConfig.getBytes)
 
     new Dockerfile {
       from("openjdk:8u131-jdk-alpine")
