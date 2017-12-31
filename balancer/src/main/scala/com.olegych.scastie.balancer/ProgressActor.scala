@@ -117,8 +117,7 @@ class ProgressActor extends Actor {
         queuedMessages += (snippetId -> queue)
     }
 
-  private def sendQueuedMessages(snippetId: SnippetId,
-                                     self: ActorRef): Unit =
+  private def sendQueuedMessages(snippetId: SnippetId, self: ActorRef): Unit =
     for {
       messageQueue <- queuedMessages.get(snippetId).toSeq
       (_, Some(graphStageForwarderActor)) <- subscribers.get(snippetId).toSeq
