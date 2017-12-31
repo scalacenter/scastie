@@ -1,71 +1,135 @@
 package com.olegych.scastie
 package balancer
 
-import api._
-
-import util.ActorForwarder
-
 import akka.NotUsed
-import akka.actor.{Actor, ActorRef, Props}
-import akka.stream.actor.ActorPublisher
+import akka.actor.{Actor, ActorRef}
 import akka.stream.scaladsl.Source
+import com.olegych.scastie.api._
 
-import scala.collection.mutable.{Map => MMap}
+import scala.collection.mutable.{Map => MMap, Queue => MQueue}
+import com.olegych.scastie.api._
+import com.olegych.scastie.util.GraphStageForwarder
 
 case class SubscribeProgress(snippetId: SnippetId)
 case class ProgressDone(snippetId: SnippetId)
+
+trait QueuedMessage
+case class SnippetProgressMessage(content: SnippetProgress)
+    extends QueuedMessage
+case object SignalProgressIsDone extends QueuedMessage
 
 class ProgressActor extends Actor {
   type ProgressSource = Source[SnippetProgress, NotUsed]
 
   private val subscribers =
-    MMap.empty[SnippetId, (ProgressSource, ActorRef)]
+    MMap.empty[SnippetId, (ProgressSource, Option[ActorRef])]
+
+  private val queuedMessages =
+    MMap.empty[SnippetId, MQueue[QueuedMessage]]
 
   override def receive: Receive = {
+
     case SubscribeProgress(snippetId) => {
-      val (source, _) = getOrCreatePublisher(snippetId, self)
+      val (source, _) = getOrCreateNewSubscriberInfo(snippetId, self)
       sender ! source
     }
 
     case snippetProgress: SnippetProgress => {
-      snippetProgress.snippetId.foreach { snippetId =>
-        val (_, publisher) = getOrCreatePublisher(snippetId, self)
-        publisher ! snippetProgress
-      }
+      processSnippedProgress(snippetProgress, self)
     }
 
-    case ProgressDone(snippetId) => {
+    case (snippedId: SnippetId, graphStageForwarderActor: ActorRef) =>
+      updateGraphStageForwarderActor(snippedId, graphStageForwarderActor)
+      sendQueuedMessages(snippedId, self)
+
+    case ProgressDone(snippetId) =>
       subscribers.remove(snippetId)
-      ()
-    }
+      queuedMessages.remove(snippetId)
   }
 
-  private def getOrCreatePublisher(
+  private def getOrCreateNewSubscriberInfo(
       snippetId: SnippetId,
       self: ActorRef
-  ): (ProgressSource, ActorRef) = {
+  ): (ProgressSource, Option[ActorRef]) = {
 
-    def doneCallback(snippetProgress: SnippetProgress,
-                     noDemmand: Boolean): Unit = {
-      if (snippetProgress.isDone && noDemmand) {
-        snippetProgress.snippetId.foreach { snippetId =>
-          self ! ProgressDone
-        }
-      }
-    }
+    def createNewSubscriberInfo(
+        snippetId: SnippetId,
+        self: ActorRef
+    ): (ProgressSource, Option[ActorRef]) = {
 
-    def createPublisher() = {
-      val ref = context.actorOf(
-        Props(
-          new ActorForwarder[SnippetProgress](doneCallback _)
-        )
+      val outletName = "outlet-graph-" + snippetId
+      val graphStageForwarder = new GraphStageForwarder(
+        outletName,
+        self,
+        snippetId
       )
-      val source = Source.fromPublisher(ActorPublisher[SnippetProgress](ref))
-      val sourceAndPublisher = (source, ref)
-
-      sourceAndPublisher
+      val source: ProgressSource = Source.fromGraph(graphStageForwarder)
+      (source, None)
     }
 
-    subscribers.getOrElseUpdate(snippetId, createPublisher())
+    subscribers.getOrElseUpdate(
+      snippetId,
+      createNewSubscriberInfo(snippetId, self)
+    )
   }
+
+  private def updateGraphStageForwarderActor(
+      snippetId: SnippetId,
+      graphStageForwarderActor: ActorRef
+  ): Unit =
+    for {
+      (source, _) <- subscribers.get(snippetId)
+    } yield
+      subscribers.update(snippetId, (source, Some(graphStageForwarderActor)))
+
+  private def processSnippedProgress(snippetProgress: SnippetProgress,
+                                     self: ActorRef): Unit = {
+
+    def ifSnippedIdNotEmpty(stuffToDo: (SnippetId => Unit)*): Unit =
+      for {
+        snippetId <- snippetProgress.snippetId.toSeq
+        process <- stuffToDo
+      } yield process(snippetId)
+
+    def maybeProgressIsDone(snippetId: SnippetId) =
+      if (snippetProgress.isDone)
+        addSnippetProgressToQueuedMessages(snippetId, SignalProgressIsDone)
+
+    ifSnippedIdNotEmpty(
+      getOrCreateNewSubscriberInfo(_, self),
+      addSnippetProgressToQueuedMessages(
+        _,
+        SnippetProgressMessage(snippetProgress)
+      ),
+      maybeProgressIsDone(_),
+      sendQueuedMessages(_, self)
+    )
+  }
+
+  private def addSnippetProgressToQueuedMessages(
+      snippetId: SnippetId,
+      messageToQueue: QueuedMessage
+  ): Unit =
+    queuedMessages.get(snippetId) match {
+      case Some(queue) => queue.enqueue(messageToQueue)
+      case None =>
+        val queue = MQueue(messageToQueue)
+        queuedMessages += (snippetId -> queue)
+    }
+
+  private def sendQueuedMessages(snippetId: SnippetId,
+                                     self: ActorRef): Unit =
+    for {
+      messageQueue <- queuedMessages.get(snippetId).toSeq
+      (_, Some(graphStageForwarderActor)) <- subscribers.get(snippetId).toSeq
+      message: QueuedMessage <- messageQueue.dequeueAll(_ => true)
+    } yield
+      message match {
+        case SnippetProgressMessage(content) => {
+          graphStageForwarderActor ! content
+
+        }
+        case SignalProgressIsDone =>
+          self ! ProgressDone(snippetId)
+      }
 }
