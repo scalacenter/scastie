@@ -9,9 +9,9 @@ import scala.util.Try
 import scala.reflect.runtime.universe._
 
 class GraphStageLogicForwarder[T: TypeTag, U: TypeTag](out: Outlet[T],
-                                                         shape: SourceShape[T],
-                                                         coordinator: ActorRef,
-                                                         graphId: U)
+                                                       shape: SourceShape[T],
+                                                       coordinator: ActorRef,
+                                                       graphId: U)
     extends GraphStageLogic(shape) {
 
   setHandler(
