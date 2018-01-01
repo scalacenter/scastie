@@ -1,15 +1,15 @@
 package com.olegych.scastie.balancer
 
 import com.olegych.scastie.api._
-import com.olegych.scastie.util.ActorForwarder
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.stream.actor.ActorPublisher
 import akka.stream.scaladsl.Source
 import java.util.concurrent.TimeUnit
 
 import scala.collection.mutable
 import scala.concurrent.duration._
+
+import com.olegych.scastie.util.GraphStageForwarder
 
 case object SubscribeStatus
 
@@ -35,23 +35,22 @@ class StatusActor private () extends Actor with ActorLogging {
   override def receive: Receive = {
     case SubscribeStatus => {
 
-      def noop(snippetProgress: StatusProgress, noDemmand: Boolean): Unit = {}
-
-      val publisher =
-        context.actorOf(Props(new ActorForwarder[StatusProgress](noop _)))
-
-      publishers += publisher
+      val publisherGraphStage =
+        new GraphStageForwarder("StatusActor-GraphStageForwarder", self, None)
 
       val source =
         Source
-          .fromPublisher(ActorPublisher[StatusProgress](publisher))
+          .fromGraph(publisherGraphStage)
           .keepAlive(
             FiniteDuration(1, TimeUnit.SECONDS),
             () => StatusProgress.KeepAlive
           )
 
       sender ! source
+    }
 
+    case (None, publisher: ActorRef) => {
+      publishers += publisher
       dispatchActor.foreach(_ ! ReceiveStatus(publisher))
     }
 
@@ -86,7 +85,9 @@ class StatusActor private () extends Actor with ActorLogging {
     )
   }
 
-  private def convertEnsime(newEnsimeBalancer: EnsimeBalancer): StatusProgress = {
+  private def convertEnsime(
+      newEnsimeBalancer: EnsimeBalancer
+  ): StatusProgress = {
     StatusProgress.Ensime(
       newEnsimeBalancer.servers.map(
         server =>
