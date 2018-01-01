@@ -30,7 +30,7 @@ import scala.collection.immutable.Queue
 
 class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
 
-  implicit val timeout = Timeout(1.seconds)
+  implicit val timeout = Timeout(2.seconds)
 
   val isAdminUser: Directive1[Boolean] =
     userDirectives.optionalLogin.map(
@@ -78,7 +78,7 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
       .result(
         (statusActor ? SubscribeStatus)
           .mapTo[Source[StatusProgress, NotUsed]],
-        1.second
+        2.second
       )
       .map(hideTask)
   }
