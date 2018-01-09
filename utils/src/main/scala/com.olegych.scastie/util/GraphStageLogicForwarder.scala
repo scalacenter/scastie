@@ -5,7 +5,6 @@ import akka.stream.{Outlet, SourceShape}
 import akka.stream.stage.{GraphStageLogic, OutHandler}
 
 import scala.collection.mutable.{Queue => MQueue}
-import scala.util.Try
 import scala.reflect.runtime.universe._
 
 class GraphStageLogicForwarder[T: TypeTag, U: TypeTag](out: Outlet[T],
@@ -30,11 +29,9 @@ class GraphStageLogicForwarder[T: TypeTag, U: TypeTag](out: Outlet[T],
 
   private val buffer = MQueue.empty[T]
 
-  private def deliver(): Unit = if (isAvailable(out)) {
-    Try(buffer.dequeue).foreach { element =>
-      push[T](out, element)
-    }
-  }
+  private def deliver(): Unit =
+    if (isAvailable(out) && !buffer.isEmpty)
+      push[T](out, buffer.dequeue)
 
   private def bufferElement(receive: (ActorRef, Any)): Unit =
     receive match {
