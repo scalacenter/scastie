@@ -85,25 +85,17 @@ class ProgressActor extends Actor {
   private def processSnippedProgress(snippetProgress: SnippetProgress,
                                      self: ActorRef): Unit = {
 
-    def ifSnippedIdNotEmpty(stuffToDo: (SnippetId => Unit)*): Unit =
-      for {
-        snippetId <- snippetProgress.snippetId.toSeq
-        process <- stuffToDo
-      } yield process(snippetId)
-
-    def maybeProgressIsDone(snippetId: SnippetId) =
+    snippetProgress.snippetId.foreach { snippetId =>
+      getOrCreateNewSubscriberInfo(snippetId, self)
+      addSnippetProgressToQueuedMessages(
+        snippetId,
+        SnippetProgressMessage(snippetProgress)
+      )
       if (snippetProgress.isDone)
         addSnippetProgressToQueuedMessages(snippetId, SignalProgressIsDone)
+      sendQueuedMessages(snippetId, self)
 
-    ifSnippedIdNotEmpty(
-      getOrCreateNewSubscriberInfo(_, self),
-      addSnippetProgressToQueuedMessages(
-        _,
-        SnippetProgressMessage(snippetProgress)
-      ),
-      maybeProgressIsDone(_),
-      sendQueuedMessages(_, self)
-    )
+    }
   }
 
   private def addSnippetProgressToQueuedMessages(
