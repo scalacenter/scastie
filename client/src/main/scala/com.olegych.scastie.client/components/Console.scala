@@ -1,11 +1,11 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api.ConsoleOutput
-import com.olegych.scastie.client.{ConsoleState, AnsiColorFormatter}
-
+import com.olegych.scastie.client.{ConsoleState, HTMLFormatter}
 import org.scalajs.dom.raw.HTMLDivElement
-
-import japgolly.scalajs.react._, vdom.all._, extra._
+import japgolly.scalajs.react._
+import vdom.all._
+import extra._
 
 final case class Console(isOpen: Boolean,
                          isRunning: Boolean,
@@ -45,8 +45,7 @@ object Console {
       val out =
         toShow
           .map(
-            output =>
-              s"<li>${AnsiColorFormatter.formatToHtml(output.show)}</li>"
+            output => s"<li>${HTMLFormatter.format(output.show)}</li>"
           )
           .mkString("\n  ")
 
