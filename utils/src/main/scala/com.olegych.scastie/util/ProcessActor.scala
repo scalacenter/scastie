@@ -2,7 +2,6 @@ package com.olegych.scastie.util
 
 import com.olegych.scastie.api.{ProcessOutputType, ProcessOutput}
 
-import akka.NotUsed
 import akka.actor.{Actor, ActorRef, Props, Stash}
 import akka.contrib.process._
 
@@ -51,20 +50,27 @@ class ProcessActor(command: List[String],
 
   private val log = LoggerFactory.getLogger(getClass)
 
+  // private val props =
+  //   NonBlockingProcessPkill.props(
+  //     command = command,
+  //     workingDir = workingDir.toFile,
+  //     environment = environment
+  //   )
+  // import NonBlockingProcess._
+
   private val props =
-    NonBlockingProcessPkill.props(
+    BlockingProcess.props(
       command = command,
-      workingDir = workingDir,
+      workingDir = workingDir.toFile,
       environment = environment
     )
-
-  import NonBlockingProcess._
+  import BlockingProcess._
 
   private val process = context.actorOf(props, name = "process")
 
   private case object FlowComplete
 
-  private def lines(std: Source[ByteString, NotUsed]): Source[String, NotUsed] = {
+  private def lines(std: Source[ByteString, _]): Source[String, _] = {
     std
       .via(
         Framing.delimiter(
@@ -102,15 +108,19 @@ class ProcessActor(command: List[String],
           .to(stdin)
           .runWith(stdin2)
 
-      context.become(active(ref, pid))
+      context.become(active(ref))
+
       unstashAll()
     }
 
-    case input: Input => stash()
+    case input: Input =>
+      stash()
   }
 
-  private def active(stdin: ActorRef, pid: Long): Receive = {
-    case input: Input => stdin ! input
+  private def active(stdin: ActorRef): Receive = {
+    case input: Input => {
+      stdin ! input
+    }
 
     case Exited(exitValue) => {
       if (killOnExit) {

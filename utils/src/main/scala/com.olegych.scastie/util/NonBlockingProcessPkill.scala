@@ -2,15 +2,16 @@ package com.olegych.scastie.util
 
 import akka.contrib.process.NonBlockingProcess
 import java.nio.file.{Path, Paths}
+import java.io.File
 import scala.collection.immutable
 
 import akka.actor.Props
 
 object NonBlockingProcessPkill {
   def props(command: immutable.Seq[String],
-            workingDir: Path = Paths.get(System.getProperty("user.dir")),
+            workingDir: File = Paths.get(System.getProperty("user.dir")).toFile,
             environment: Map[String, String] = Map.empty) =
-    Props(new NonBlockingProcessPkill(command, workingDir, environment))
+    Props(new NonBlockingProcessPkill(command, workingDir.toPath, environment))
 }
 
 class NonBlockingProcessPkill(command: immutable.Seq[String],
