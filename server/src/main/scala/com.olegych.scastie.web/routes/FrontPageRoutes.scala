@@ -83,7 +83,8 @@ class FrontPageRoutes(production: Boolean) {
             snippetIdExtension(".js")(
               sid => complete(embeddedRessource(sid, theme))
             )
-          }
+          },
+          index,
         )
       )
     )
