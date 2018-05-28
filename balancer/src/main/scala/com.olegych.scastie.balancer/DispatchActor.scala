@@ -4,19 +4,16 @@ import com.olegych.scastie.api
 import com.olegych.scastie.api._
 import com.olegych.scastie.util._
 import com.olegych.scastie.storage._
-
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
 import akka.remote.DisassociatedEvent
 import akka.pattern.ask
 import akka.util.Timeout
-
 import com.typesafe.config.ConfigFactory
-
 import java.nio.file._
 
 import scala.concurrent._
 import scala.concurrent.duration._
-import java.util.concurrent.{TimeoutException, TimeUnit}
+import java.util.concurrent.{Executors, TimeUnit, TimeoutException}
 
 import scala.collection.immutable.Queue
 
@@ -42,6 +39,8 @@ case class FetchOldSnippet(id: Int)
 case class FetchUserSnippets(user: User)
 
 case class ReceiveStatus(requester: ActorRef)
+
+case class Run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId)
 
 class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 // extends PersistentActor with AtLeastOnceDelivery
@@ -187,9 +186,18 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     super.preStart()
   }
 
+  override def postStop(): Unit = {
+    super.postStop()
+    container.es.shutdown()
+  }
+
   private val container = new SnippetsContainer(
     Paths.get(config.getString("snippets-dir")),
     Paths.get(config.getString("old-snippets-dir"))
+  )(
+    ExecutionContext.fromExecutorService(
+      Executors.newCachedThreadPool()
+    )
   )
 
   private val portsInfo = sbtPorts.mkString("\nsbt: [", ", ", "]") + ensimePorts
@@ -212,8 +220,14 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     ()
   }
 
+  //can be called from future
   private def run(inputsWithIpAndUser: InputsWithIpAndUser,
                   snippetId: SnippetId): Unit = {
+    self ! Run(inputsWithIpAndUser, snippetId)
+  }
+  //cannot be called from future
+  private def run0(inputsWithIpAndUser: InputsWithIpAndUser,
+                   snippetId: SnippetId): Unit = {
 
     val InputsWithIpAndUser(inputs, UserTrace(ip, user)) = inputsWithIpAndUser
 
@@ -278,81 +292,97 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case RunSnippet(inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
-      val snippetId =
-        container.create(inputs, user.map(u => UserLogin(u.login)))
-      run(inputsWithIpAndUser, snippetId)
-      sender ! snippetId
+      val sender = this.sender
+      container.create(inputs, user.map(u => UserLogin(u.login))).map {
+        snippetId =>
+          run(inputsWithIpAndUser, snippetId)
+          sender ! snippetId
+      }
     }
 
     case SaveSnippet(inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
-      val snippetId = container.save(inputs, user.map(u => UserLogin(u.login)))
-      run(inputsWithIpAndUser, snippetId)
-      sender ! snippetId
+      val sender = this.sender
+      container.save(inputs, user.map(u => UserLogin(u.login))).map {
+        snippetId =>
+          run(inputsWithIpAndUser, snippetId)
+          sender ! snippetId
+      }
     }
 
     case AmendSnippet(snippetId, inputsWithIpAndUser) => {
-      val amendSuccess = container.amend(snippetId, inputsWithIpAndUser.inputs)
-      if (amendSuccess) {
-        run(inputsWithIpAndUser, snippetId)
+      val sender = this.sender
+      container.amend(snippetId, inputsWithIpAndUser.inputs).map {
+        amendSuccess =>
+          if (amendSuccess) {
+            run(inputsWithIpAndUser, snippetId)
+          }
+          sender ! amendSuccess
       }
-      sender ! amendSuccess
     }
 
     case UpdateSnippet(snippetId, inputsWithIpAndUser) => {
-      val updatedSnippetId =
-        container.update(snippetId, inputsWithIpAndUser.inputs)
-
-      updatedSnippetId.foreach(
-        snippetIdU => run(inputsWithIpAndUser, snippetIdU)
-      )
-
-      sender ! updatedSnippetId
+      val sender = this.sender
+      container.update(snippetId, inputsWithIpAndUser.inputs).map {
+        updatedSnippetId =>
+          updatedSnippetId.foreach(
+            snippetIdU => run(inputsWithIpAndUser, snippetIdU)
+          )
+          sender ! updatedSnippetId
+      }
     }
 
     case ForkSnippet(snippetId, inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
-
+      val sender = this.sender
       container
-        .fork(snippetId, inputs, user.map(u => UserLogin(u.login))) match {
-        case Some(forkedSnippetId) =>
-          sender ! Some(forkedSnippetId)
-          run(inputsWithIpAndUser, forkedSnippetId)
-        case None => sender ! None
-      }
+        .fork(snippetId, inputs, user.map(u => UserLogin(u.login)))
+        .map {
+          case Some(forkedSnippetId) =>
+            sender ! Some(forkedSnippetId)
+            run(inputsWithIpAndUser, forkedSnippetId)
+          case None => sender ! None
+        }
     }
 
     case DeleteSnippet(snippetId) => {
-      container.delete(snippetId)
-      sender ! (())
+      val sender = this.sender
+      container.delete(snippetId).map(_ => sender ! (()))
     }
 
     case DownloadSnippet(snippetId) => {
-      sender ! container.downloadSnippet(snippetId)
+      val sender = this.sender
+      container.downloadSnippet(snippetId).map(sender ! _)
     }
 
     case FetchSnippet(snippetId) => {
-      sender ! container.readSnippet(snippetId)
+      val sender = this.sender
+      container.readSnippet(snippetId).map(sender ! _)
     }
 
     case FetchOldSnippet(id) => {
-      sender ! container.readOldSnippet(id)
+      val sender = this.sender
+      container.readOldSnippet(id).map(sender ! _)
     }
 
     case FetchUserSnippets(user) => {
-      sender ! container.listSnippets(UserLogin(user.login))
+      val sender = this.sender
+      container.listSnippets(UserLogin(user.login)).map(sender ! _)
     }
 
     case FetchScalaJs(snippetId) => {
-      sender ! container.readScalaJs(snippetId)
+      val sender = this.sender
+      container.readScalaJs(snippetId).map(sender ! _)
     }
 
     case FetchScalaSource(snippetId) => {
-      sender ! container.readScalaSource(snippetId)
+      val sender = this.sender
+      container.readScalaSource(snippetId).map(sender ! _)
     }
 
     case FetchScalaJsSourceMap(snippetId) => {
-      sender ! container.readScalaJsSourceMap(snippetId)
+      val sender = this.sender
+      container.readScalaJsSourceMap(snippetId).map(sender ! _)
     }
 
     case progress: api.SnippetProgress => {
@@ -445,6 +475,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case statusProgress: StatusProgress => {
       statusActor ! statusProgress
+    }
+
+    case run: Run => {
+      run0(run.inputsWithIpAndUser, run.snippetId)
     }
 
     case ensimeState: EnsimeServerState => {

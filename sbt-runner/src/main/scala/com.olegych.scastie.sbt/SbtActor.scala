@@ -2,14 +2,14 @@ package com.olegych.scastie.sbt
 
 import com.olegych.scastie.api._
 import com.olegych.scastie.util._
-
 import akka.actor.{
   Actor,
-  ActorSystem,
-  Props,
+  ActorContext,
+  ActorLogging,
   ActorRef,
   ActorSelection,
-  ActorLogging
+  ActorSystem,
+  Props
 }
 
 import scala.concurrent.duration._
@@ -26,17 +26,17 @@ class SbtActor(system: ActorSystem,
     with ActorLogging
     with ActorReconnecting {
 
-  def balancer(info: ReconnectInfo): ActorSelection = {
+  def balancer(context: ActorContext, info: ReconnectInfo): ActorSelection = {
     import info._
     context.actorSelection(
       s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
     )
   }
 
-  override def tryConnect(): Unit = {
+  override def tryConnect(context: ActorContext): Unit = {
     reconnectInfo.foreach { info =>
       import info._
-      balancer(info) ! SbtRunnerConnect(actorHostname, actorAkkaPort)
+      balancer(context, info) ! SbtRunnerConnect(actorHostname, actorAkkaPort)
     }
   }
 
@@ -86,7 +86,7 @@ class SbtActor(system: ActorSystem,
       log.info("SbtUp")
       reconnectInfo.foreach { info =>
         log.info("SbtUp sent")
-        balancer(info) ! SbtUp
+        balancer(context, info) ! SbtUp
       }
     }
 
@@ -94,7 +94,7 @@ class SbtActor(system: ActorSystem,
       log.info("Replay")
       reconnectInfo.foreach { info =>
         log.info("Replay sent")
-        balancer(info) ! replay
+        balancer(context, info) ! replay
       }
     }
   }

@@ -2,6 +2,7 @@ package com.olegych.scastie.ensime
 
 import akka.actor.{
   Actor,
+  ActorContext,
   ActorLogging,
   ActorRef,
   ActorSelection,
@@ -12,7 +13,7 @@ import akka.actor.{
 import com.olegych.scastie.api.{
   EnsimeRunnerConnect,
   EnsimeTaskRequest,
-  EnsimeTaskResponse,
+  EnsimeTaskResponse
 }
 import com.olegych.scastie.util.{ActorReconnecting, ReconnectInfo}
 
@@ -28,7 +29,7 @@ class EnsimeActor(system: ActorSystem,
   private var dispatchActor: Option[ActorSelection] = None
   private var ensimeActor: Option[ActorRef] = None
 
-  override def tryConnect(): Unit = {
+  override def tryConnect(context: ActorContext): Unit = {
     reconnectInfo match {
       case Some(info) => {
         import info._

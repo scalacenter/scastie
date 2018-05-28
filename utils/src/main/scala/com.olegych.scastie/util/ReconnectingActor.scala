@@ -1,6 +1,6 @@
 package com.olegych.scastie.util
 
-import akka.actor.{Actor, ActorLogging, Cancellable}
+import akka.actor.{Actor, ActorContext, ActorLogging, Cancellable}
 import akka.remote.DisassociatedEvent
 import com.olegych.scastie.api.ActorConnected
 
@@ -16,21 +16,21 @@ trait ActorReconnecting extends Actor with ActorLogging {
 
   private var tryReconnectCallback: Option[Cancellable] = None
 
-  val reconnectInfo: Option[ReconnectInfo]
+  def reconnectInfo: Option[ReconnectInfo]
 
-  def tryConnect(): Unit
+  def tryConnect(context: ActorContext): Unit
 
   def onConnected(): Unit = {}
 
   def onDisconnected(): Unit = {}
 
-  private def setupReconnectCallback(): Unit = {
+  private def setupReconnectCallback(context: ActorContext): Unit = {
     if (reconnectInfo.isDefined) {
       tryReconnectCallback.foreach(_.cancel())
       tryReconnectCallback = Some(
         context.system.scheduler.schedule(0.seconds, 10.seconds) {
           log.info("Reconnecting to server")
-          tryConnect()
+          tryConnect(context)
         }
       )
     }
@@ -39,7 +39,7 @@ trait ActorReconnecting extends Actor with ActorLogging {
   override def preStart(): Unit =
     try {
       context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
-      setupReconnectCallback()
+      setupReconnectCallback(context)
     } finally super.preStart()
 
   val reconnectBehavior: Receive = {
@@ -65,7 +65,7 @@ trait ActorReconnecting extends Actor with ActorLogging {
       if (isServerHostname && isServerAkkaPort && ev.inbound) {
         log.warning("Disconnected from server")
         onDisconnected()
-        setupReconnectCallback()
+        setupReconnectCallback(context)
       }
     }
   }

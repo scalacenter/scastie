@@ -3,19 +3,18 @@ package com.olegych.scastie.storage
 import com.olegych.scastie.util.Base64UUID
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.api._
-
 import play.api.libs.json.Json
-
 import java.io.IOException
-
 import java.nio.file._
 import FileVisitResult.CONTINUE
-
 import System.{lineSeparator => nl}
+import java.util.concurrent.ExecutorService
 
 import com.olegych.scastie.instrumentation.Instrument
 import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.ZipParameters
+
+import scala.concurrent.{ExecutionContext, Future}
 
 case class UserLogin(login: String)
 
@@ -26,9 +25,13 @@ object SnippetsContainer {
   }
 }
 
-class SnippetsContainer(root: Path, oldRoot: Path) {
+class SnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService) {
+  private implicit val ec: ExecutionContext =
+    ExecutionContext.fromExecutorService(es)
 
-  def create(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
+  def create(inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] =
+    Future(create0(inputs, user))
+  private def create0(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
     val uuid = Base64UUID.create
     val snippetId =
       SnippetId(uuid, user.map(u => SnippetUserPart(u.login)))
@@ -36,16 +39,22 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     snippetId
   }
 
-  def save(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
-    create(inputs.copy(isShowingInUserProfile = true), user)
+  def save(inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] =
+    Future(save0(inputs, user))
+  private def save0(inputs: Inputs, user: Option[UserLogin]): SnippetId = {
+    create0(inputs.copy(isShowingInUserProfile = true), user)
   }
 
   def fork(snippetId: SnippetId,
            inputs: Inputs,
-           user: Option[UserLogin]): Option[SnippetId] = {
+           user: Option[UserLogin]): Future[Option[SnippetId]] =
+    Future(fork0(snippetId, inputs, user))
+  private def fork0(snippetId: SnippetId,
+                    inputs: Inputs,
+                    user: Option[UserLogin]): Option[SnippetId] = {
     if (readInputs(snippetId).isDefined) {
       Some(
-        create(
+        create0(
           inputs.copy(forked = Some(snippetId), isShowingInUserProfile = true),
           user
         )
@@ -53,7 +62,10 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     } else None
   }
 
-  def update(snippetId: SnippetId, inputs: Inputs): Option[SnippetId] = {
+  def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] =
+    Future(update0(snippetId, inputs))
+  private def update0(snippetId: SnippetId,
+                      inputs: Inputs): Option[SnippetId] = {
     snippetId.user match {
       case Some(SnippetUserPart(login, _)) =>
         val nextSnippetId =
@@ -78,7 +90,8 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     }
   }
 
-  def delete(snippetId: SnippetId): Boolean = {
+  def delete(snippetId: SnippetId): Future[Boolean] = Future(delete0(snippetId))
+  private def delete0(snippetId: SnippetId): Boolean = {
     val in = inputsFile(snippetId)
     if (Files.exists(in)) {
       Files.delete(in)
@@ -94,8 +107,10 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     } else false
   }
 
-  def amend(snippetId: SnippetId, inputs: Inputs): Boolean = {
-    if (delete(snippetId)) {
+  def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean] =
+    Future(amend0(snippetId, inputs))
+  private def amend0(snippetId: SnippetId, inputs: Inputs): Boolean = {
+    if (delete0(snippetId)) {
       write(
         inputsFile(snippetId),
         Json.prettyPrint(
@@ -106,7 +121,9 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     } else false
   }
 
-  def appendOutput(progress: SnippetProgress): Unit = {
+  def appendOutput(progress: SnippetProgress): Future[Unit] =
+    Future(appendOutput0(progress))
+  private def appendOutput0(progress: SnippetProgress): Unit = {
     (progress.scalaJsContent,
      progress.scalaJsSourceMapContent,
      progress.snippetId) match {
@@ -124,8 +141,10 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     )
   }
 
-  def downloadSnippet(snippetId: SnippetId): Option[Path] = {
-    readSnippet(snippetId) match {
+  def downloadSnippet(snippetId: SnippetId): Future[Option[Path]] =
+    Future(downloadSnippet0(snippetId))
+  private def downloadSnippet0(snippetId: SnippetId): Option[Path] = {
+    readSnippet0(snippetId) match {
       case Some(FetchResult(inputs, _)) => Some(zipSnippet(snippetId, inputs))
       case None                         => None
     }
@@ -158,46 +177,62 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     zippedProjectDir
   }
 
-  def readSnippet(snippetId: SnippetId): Option[FetchResult] = {
+  def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]] =
+    Future(readSnippet0(snippetId))
+  private def readSnippet0(snippetId: SnippetId): Option[FetchResult] = {
     readInputs(snippetId).map(
       inputs => FetchResult(inputs, readOutputs(snippetId).getOrElse(Nil))
     )
   }
 
-  def readOldSnippet(id: Int): Option[FetchResult] = {
+  def readOldSnippet(id: Int): Future[Option[FetchResult]] =
+    Future(readOldSnippet0(id))
+  private def readOldSnippet0(id: Int): Option[FetchResult] = {
     readOldInputs(id).map(
       inputs => FetchResult(inputs, readOldOutputs(id).getOrElse(Nil))
     )
   }
 
-  def oldPath(id: Int): Path =
+  private def oldPath(id: Int): Path =
     oldRoot
       .resolve("paste%20d".format(id).replaceAll(" ", "0"))
       .resolve("src/main/scala/")
 
-  def readOldInputs(id: Int): Option[Inputs] = {
+  private def readOldInputs(id: Int): Option[Inputs] = {
     slurp(oldPath(id).resolve("test.scala"))
       .map(OldScastieConverter.convertOldInput)
   }
 
-  def readOldOutputs(id: Int): Option[List[SnippetProgress]] = {
+  private def readOldOutputs(id: Int): Option[List[SnippetProgress]] = {
     slurp(oldPath(id).resolve("output.txt"))
       .map(OldScastieConverter.convertOldOutput)
   }
 
-  def readScalaJs(snippetId: SnippetId): Option[FetchResultScalaJs] = {
+  def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] =
+    Future(readScalaJs0(snippetId))
+  private def readScalaJs0(snippetId: SnippetId): Option[FetchResultScalaJs] = {
     slurp(scalaJsFile(snippetId)).map(content => FetchResultScalaJs(content))
   }
 
   def readScalaJsSourceMap(
+      snippetId: SnippetId
+  ): Future[Option[FetchResultScalaJsSourceMap]] =
+    Future(readScalaJsSourceMap0(snippetId))
+  private def readScalaJsSourceMap0(
       snippetId: SnippetId
   ): Option[FetchResultScalaJsSourceMap] = {
     slurp(scalaJsSourceMapFile(snippetId))
       .map(content => FetchResultScalaJsSourceMap(content))
   }
 
-  def readScalaSource(snippetId: SnippetId): Option[FetchResultScalaSource] = {
-    readSnippet(snippetId).flatMap(
+  def readScalaSource(
+      snippetId: SnippetId
+  ): Future[Option[FetchResultScalaSource]] =
+    Future(readScalaSource0(snippetId))
+  private def readScalaSource0(
+      snippetId: SnippetId
+  ): Option[FetchResultScalaSource] = {
+    readSnippet0(snippetId).flatMap(
       snippet =>
         Instrument(snippet.inputs.code, snippet.inputs.target) match {
           case Right(instrumented) =>
@@ -207,7 +242,10 @@ class SnippetsContainer(root: Path, oldRoot: Path) {
     )
   }
 
-  def listSnippets(user: UserLogin): List[SnippetSummary] = {
+  def listSnippets(user: UserLogin): Future[List[SnippetSummary]] =
+    Future(listSnippets0(user))
+  private def listSnippets0(user: UserLogin): List[SnippetSummary] = {
+    Thread.sleep(5000)
     import scala.collection.JavaConverters._
     val dir = root.resolve(user.login)
     if (Files.exists(dir)) {
