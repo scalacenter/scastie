@@ -1,26 +1,33 @@
 /**
  * Copyright (C) 2009-2014 Typesafe Inc. <http://www.typesafe.com>
  */
-
 package akka.contrib.process
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, NoSerializationVerificationNeeded, Props, SupervisorStrategy, Terminated }
-import akka.stream.{ ActorAttributes, IOResult }
-import akka.stream.scaladsl.{ Sink, Source, StreamConverters }
-import akka.util.{ ByteString, Helpers }
+import akka.actor.{
+  Actor,
+  ActorLogging,
+  ActorRef,
+  NoSerializationVerificationNeeded,
+  Props,
+  SupervisorStrategy,
+  Terminated
+}
+import akka.stream.{ActorAttributes, IOResult}
+import akka.stream.scaladsl.{Sink, Source, StreamConverters}
+import akka.util.{ByteString, Helpers}
 import java.io.File
-import java.lang.{ Process => JavaProcess, ProcessBuilder => JavaProcessBuilder }
+import java.lang.{Process => JavaProcess, ProcessBuilder => JavaProcessBuilder}
 import java.util.concurrent.TimeUnit
 
 import scala.collection.JavaConverters
 import scala.collection.immutable
-import scala.concurrent.{ Future, blocking }
+import scala.concurrent.{Future, blocking}
 import scala.concurrent.duration.Duration
 
 object BlockingProcess {
 
   def getPid(process: JavaProcess): Option[Int] = {
-    if(Helpers.isWindows) {
+    if (Helpers.isWindows) {
       None
     } else {
       val pidField = process.getClass.getDeclaredField("pid")
@@ -32,7 +39,8 @@ object BlockingProcess {
   /**
    * The configuration key to use in order to override the dispatcher used for blocking IO.
    */
-  final val BlockingIODispatcherId = "akka.process.blocking-process.blocking-io-dispatcher-id"
+  final val BlockingIODispatcherId =
+    "akka.process.blocking-process.blocking-io-dispatcher-id"
 
   /**
    * Sent to the receiver on startup - specifies the streams used for managing input, output and error respectively.
@@ -43,8 +51,11 @@ object BlockingProcess {
    * @param stdout a `akka.stream.scaladsl.Source[ByteString, Future[IOResult]]` for the standard output stream of the process
    * @param stderr a `akka.stream.scaladsl.Source[ByteString, Future[IOResult]]` for the standard error stream of the process
    */
-  case class Started(pid: Option[Int], stdin: Sink[ByteString, Future[IOResult]], stdout: Source[ByteString, Future[IOResult]], stderr: Source[ByteString, Future[IOResult]])
-    extends NoSerializationVerificationNeeded
+  case class Started(pid: Option[Int],
+                     stdin: Sink[ByteString, Future[IOResult]],
+                     stdout: Source[ByteString, Future[IOResult]],
+                     stderr: Source[ByteString, Future[IOResult]])
+      extends NoSerializationVerificationNeeded
 
   /**
    * Sent to the receiver after the process has exited.
@@ -89,12 +100,15 @@ object BlockingProcess {
    * @param stdioTimeout the amount of time to tolerate waiting for a process to communicate back to this actor
    * @return Props for a [[BlockingProcess]] actor
    */
-  def props(
-    command: immutable.Seq[String],
-    workingDir: File = new File(System.getProperty("user.dir")),
-    environment: Map[String, String] = Map.empty,
-    stdioTimeout: Duration = Duration.Undefined) =
+  def props(command: immutable.Seq[String],
+            workingDir: File = new File(System.getProperty("user.dir")),
+            environment: Map[String, String] = Map.empty,
+            stdioTimeout: Duration = Duration.Undefined) =
     Props(new BlockingProcess(command, workingDir, environment, stdioTimeout))
+
+  private def prepareCommand(command: Seq[String]) =
+    if (Helpers.isWindows) List("cmd", "/c") ++ (command map winQuote)
+    else command
 
   /**
    * This quoting functionality is as recommended per http://bugs.java.com/view_bug.do?bug_id=6511002
@@ -107,9 +121,13 @@ object BlockingProcess {
    */
   private def winQuote(s: String): String = {
     def needsQuoting(s: String) =
-      s.isEmpty || (s exists (c => c == ' ' || c == '\t' || c == '\\' || c == '"'))
+      s.isEmpty || (s exists (
+          c => c == ' ' || c == '\t' || c == '\\' || c == '"'
+      ))
     if (needsQuoting(s)) {
-      val quoted = s.replaceAll("""([\\]*)"""", """$1$1\\"""").replaceAll("""([\\]*)\z""", "$1$1")
+      val quoted = s
+        .replaceAll("""([\\]*)"""", """$1$1\\"""")
+        .replaceAll("""([\\]*)\z""", "$1$1")
       s""""$quoted""""
     } else
       s
@@ -129,12 +147,12 @@ object BlockingProcess {
  * A dispatcher as indicated by the "akka.process.blocking-process.blocking-io-dispatcher-id" setting is used
  * internally by the actor as various JDK calls are made which can block.
  */
-class BlockingProcess(
-  command: immutable.Seq[String],
-  directory: File,
-  environment: Map[String, String],
-  stdioTimeout: Duration)
-    extends Actor with ActorLogging {
+class BlockingProcess(command: immutable.Seq[String],
+                      directory: File,
+                      environment: Map[String, String],
+                      stdioTimeout: Duration)
+    extends Actor
+    with ActorLogging {
 
   import BlockingProcess._
   import context.dispatcher
@@ -146,39 +164,50 @@ class BlockingProcess(
     println("preStart")
     val process: JavaProcess = {
       import JavaConverters._
-      val preparedCommand = if (Helpers.isWindows) command map winQuote else command
+      val preparedCommand = prepareCommand(command)
       val pb = new JavaProcessBuilder(preparedCommand.asJava)
       pb.environment().putAll(environment.asJava)
       pb.directory(directory)
       pb.start()
     }
 
-    val blockingIODispatcherId = context.system.settings.config.getString(BlockingIODispatcherId)
+    val blockingIODispatcherId =
+      context.system.settings.config.getString(BlockingIODispatcherId)
 
     try {
-      val selfDispatcherAttribute = ActorAttributes.dispatcher(blockingIODispatcherId)
+      val selfDispatcherAttribute =
+        ActorAttributes.dispatcher(blockingIODispatcherId)
 
-      val stdin = StreamConverters.fromOutputStream(() => process.getOutputStream(), autoFlush = true)
+      val stdin = StreamConverters
+        .fromOutputStream(() => process.getOutputStream(), autoFlush = true)
         .withAttributes(selfDispatcherAttribute)
         .mapMaterializedValue(_.andThen { case _ => self ! StdinTerminated })
 
-      val stdout = StreamConverters.fromInputStream(() => process.getInputStream())
+      val stdout = StreamConverters
+        .fromInputStream(() => process.getInputStream())
         .withAttributes(selfDispatcherAttribute)
         .mapMaterializedValue(_.andThen { case _ => self ! StdoutTerminated })
 
-      val stderr = StreamConverters.fromInputStream(() => process.getErrorStream())
+      val stderr = StreamConverters
+        .fromInputStream(() => process.getErrorStream())
         .withAttributes(selfDispatcherAttribute)
         .mapMaterializedValue(_.andThen { case _ => self ! StderrTerminated })
 
       context.parent ! Started(getPid(process), stdin, stdout, stderr)
 
-      log.debug(s"Blocking process started with dispatcher: $blockingIODispatcherId")
+      log.debug(
+        s"Blocking process started with dispatcher: $blockingIODispatcherId"
+      )
 
     } finally {
-      context.watch(context.actorOf(
-        ProcessDestroyer.props(process, context.parent).withDispatcher(blockingIODispatcherId),
-        "process-destroyer"
-      ))
+      context.watch(
+        context.actorOf(
+          ProcessDestroyer
+            .props(process, context.parent)
+            .withDispatcher(blockingIODispatcherId),
+          "process-destroyer"
+        )
+      )
     }
   }
 
@@ -202,14 +231,17 @@ class BlockingProcess(
       tellDestroyer(ProcessDestroyer.Inspect)
   }
 
-  private def tellDestroyer(msg: Any) = context.child("process-destroyer").foreach(_ ! msg)
+  private def tellDestroyer(msg: Any) =
+    context.child("process-destroyer").foreach(_ ! msg)
 }
 
 private object ProcessDestroyer {
+
   /**
    * The configuration key to use for the inspection interval.
    */
-  final val InspectionInterval = "akka.process.blocking-process.inspection-interval"
+  final val InspectionInterval =
+    "akka.process.blocking-process.inspection-interval"
 
   /**
    * Inspect the Process to ensure it is still alive. This is necessary because
@@ -233,18 +265,27 @@ private object ProcessDestroyer {
     Props(new ProcessDestroyer(process, exitValueReceiver))
 }
 
-private class ProcessDestroyer(process: JavaProcess, exitValueReceiver: ActorRef) extends Actor with ActorLogging {
+private class ProcessDestroyer(process: JavaProcess,
+                               exitValueReceiver: ActorRef)
+    extends Actor
+    with ActorLogging {
   import ProcessDestroyer._
   import context.dispatcher
 
   private val inspectionInterval =
-    Duration(context.system.settings.config.getDuration(InspectionInterval).toMillis, TimeUnit.MILLISECONDS)
+    Duration(
+      context.system.settings.config.getDuration(InspectionInterval).toMillis,
+      TimeUnit.MILLISECONDS
+    )
 
   private val inspectionTick =
-    context.system.scheduler.schedule(inspectionInterval, inspectionInterval, self, Inspect)
+    context.system.scheduler.schedule(inspectionInterval,
+                                      inspectionInterval,
+                                      self,
+                                      Inspect)
 
   def pkill(): Unit = {
-    if(Helpers.isWindows) {
+    if (Helpers.isWindows) {
       process.destroy()
     } else {
       val pid = BlockingProcess.getPid(process).get
