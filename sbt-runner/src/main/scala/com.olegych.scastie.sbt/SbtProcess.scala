@@ -14,7 +14,6 @@ import scala.concurrent.duration._
 import scala.util.Random
 
 import java.nio.file._
-import System.{lineSeparator => nl}
 
 object SbtProcess {
   sealed trait SbtState
@@ -318,10 +317,11 @@ class SbtProcess(runTimeout: FiniteDuration,
 
     println(s"setInputs $inputs")
 
-    val prompt = s"""shellPrompt := (_ => "$promptUniqueId\\n")"""
+    val prompt =
+      s"""shellPrompt := (_ => "$promptUniqueId" + System.lineSeparator)"""
 
-    writeFile(pluginFile, inputs.sbtPluginsConfig + nl)
-    writeFile(buildFile, prompt + nl + inputs.sbtConfig)
+    writeFile(pluginFile, inputs.sbtPluginsConfig + ProcessActor.lineSeparator)
+    writeFile(buildFile, prompt + ProcessActor.lineSeparator + inputs.sbtConfig)
     write(codeFile, inputs.code, truncate = true)
   }
 

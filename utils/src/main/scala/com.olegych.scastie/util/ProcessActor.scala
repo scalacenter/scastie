@@ -18,7 +18,6 @@ import scala.concurrent.duration._
 import java.nio.file._
 
 import org.slf4j.LoggerFactory
-import System.{lineSeparator => nl}
 
 object ProcessActor {
   case class Input(line: String)
@@ -31,6 +30,8 @@ object ProcessActor {
             killOnExit: Boolean = false): Props = {
     Props(new ProcessActor(command, workingDir, environment, killOnExit))
   }
+
+  val lineSeparator = System.lineSeparator
 }
 
 /*
@@ -74,7 +75,7 @@ class ProcessActor(command: List[String],
     std
       .via(
         Framing.delimiter(
-          ByteString(System.lineSeparator),
+          ByteString(lineSeparator),
           maximumFrameLength = 54000,
           allowTruncation = true
         )
@@ -101,7 +102,7 @@ class ProcessActor(command: List[String],
       val stdin2: Source[ByteString, ActorRef] =
         Source
           .actorRef[Input](Int.MaxValue, OverflowStrategy.fail)
-          .map { case Input(line) => ByteString(line + nl) }
+          .map { case Input(line) => ByteString(line + lineSeparator) }
 
       val ref: ActorRef =
         Flow[ByteString]
