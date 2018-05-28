@@ -245,7 +245,6 @@ class SnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService) {
   def listSnippets(user: UserLogin): Future[List[SnippetSummary]] =
     Future(listSnippets0(user))
   private def listSnippets0(user: UserLogin): List[SnippetSummary] = {
-    Thread.sleep(5000)
     import scala.collection.JavaConverters._
     val dir = root.resolve(user.login)
     if (Files.exists(dir)) {
