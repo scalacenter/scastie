@@ -1,18 +1,16 @@
 package com.olegych.scastie.instrumentation
 
-import java.lang.System.{lineSeparator => nl}
-
 case class DiffFailure(title: String,
                        expected: String,
                        obtained: String,
                        diff: String)
-    extends Exception(title + nl + Diff.error2message(obtained, expected))
+    extends Exception(title + "\n" + Diff.error2message(obtained, expected))
 
 object Diff {
   def error2message(obtained: String, expected: String): String = {
     val sb = new StringBuilder
 
-    sb.append(nl)
+    sb.append("\n")
 
     sb.append(s"""
        ## Obtained
@@ -40,13 +38,15 @@ object Diff {
     }
   }
 
-  def trailingSpace(str: String): String = str.replaceAll(" \n", "∙\n")
+  private def trailingSpace(str: String): String = str.replaceAll(" \n", "∙\n")
 
   def compareContents(original: String, revised: String): String = {
-    compareContents(original.trim.split(nl), revised.trim.split(nl))
+    compareContents(original.replaceAllLiterally("\r\n", "\n").trim.split("\n"),
+                    revised.replaceAllLiterally("\r\n", "\n").trim.split("\n"))
   }
 
-  def compareContents(original: Seq[String], revised: Seq[String]): String = {
+  private def compareContents(original: Seq[String],
+                              revised: Seq[String]): String = {
     import collection.JavaConverters._
     val diff = difflib.DiffUtils.diff(original.asJava, revised.asJava)
     if (diff.getDeltas.isEmpty) ""
@@ -61,6 +61,6 @@ object Diff {
         )
         .asScala
         .drop(3)
-        .mkString(nl)
+        .mkString("\n")
   }
 }

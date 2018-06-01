@@ -2,8 +2,6 @@ package com.olegych.scastie.storage
 
 import com.olegych.scastie.api._
 
-import System.{lineSeparator => nl}
-
 object OldScastieConverter {
   private def convertLine(line: String): Converter => Converter = { converter =>
     val sv = "scalaVersion := \""
@@ -29,7 +27,7 @@ object OldScastieConverter {
 
   def convertOldOutput(content: String): List[SnippetProgress] = {
     content
-      .split(nl)
+      .split("\n")
       .map(
         line =>
           SnippetProgress.default.copy(
@@ -54,7 +52,7 @@ object OldScastieConverter {
       val code = content.drop(blockEndPos + blockEnd.length)
 
       val converterFn =
-        sbtConfig.split(nl).foldLeft(Converter.nil) {
+        sbtConfig.split("\n").foldLeft(Converter.nil) {
           case (converter, line) =>
             convertLine(line)(converter)
         }
@@ -80,7 +78,7 @@ object OldScastieConverter {
       sbtExtra: String
   ) {
     def appendSbt(in: String): Converter =
-      copy(sbtExtra = sbtExtra + nl + in)
+      copy(sbtExtra = sbtExtra + "\n" + in)
 
     def setTargetType(targetType0: ScalaTargetType): Converter =
       copy(targetType = Some(targetType0))

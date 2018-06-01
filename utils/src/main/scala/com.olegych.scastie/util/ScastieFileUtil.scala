@@ -3,11 +3,10 @@ package com.olegych.scastie.util
 import java.nio.file._
 import java.lang.management.ManagementFactory
 import java.nio.charset.StandardCharsets
-import System.{lineSeparator => nl}
 
 object ScastieFileUtil {
   def slurp(src: Path): Option[String] = {
-    if (Files.exists(src)) Some(Files.readAllLines(src).toArray.mkString(nl))
+    if (Files.exists(src)) Some(Files.readAllLines(src).toArray.mkString("\n"))
     else None
   }
 
