@@ -64,8 +64,7 @@ class SnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService) {
 
   def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] =
     Future(update0(snippetId, inputs))
-  private def update0(snippetId: SnippetId,
-                      inputs: Inputs): Option[SnippetId] = {
+  private def update0(snippetId: SnippetId, inputs: Inputs): Option[SnippetId] = {
     snippetId.user match {
       case Some(SnippetUserPart(login, _)) =>
         val nextSnippetId =
