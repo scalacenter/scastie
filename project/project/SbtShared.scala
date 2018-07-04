@@ -31,7 +31,7 @@ object SbtShared {
   // sbt-ensime 1.12.14 creates .ensime with 2.0.0-M4 server jar
   val latestSbtEnsime = "1.12.14"
   val latestEnsime = "2.0.0-M4"
-  val latestCoursier = "1.0.0-RC14"
+  val latestCoursier = "1.0.0"
 
   val sbtVersion = "0.13.16"
 
