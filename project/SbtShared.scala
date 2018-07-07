@@ -33,7 +33,7 @@ object SbtShared {
   val latestEnsime = "2.0.0-M4"
   val latestCoursier = "1.0.0"
 
-  val sbtVersion = "0.13.17"
+  val sbtVersion = "0.13.16"
 
   val runtimeProjectName = "runtime-scala"
 
