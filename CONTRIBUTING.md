@@ -118,6 +118,7 @@ These people have access:
 * [@julienrf](https://github.com/julienrf)
 * [@jvican](https://github.com/jvican)
 * [@olafurpg](https://github.com/olafurpg)
+* [@OlegYch](https://github.com/OlegYch)
 * [@dimart](https://github.com/dimart)
 * [@rorygraves](https://github.com/rorygraves)
 
