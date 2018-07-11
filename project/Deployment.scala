@@ -172,7 +172,7 @@ class Deployment(rootFolder: File,
     val runnerScript = destination.resolve("sbt.sh")
 
     Files.write(runnerScript, runnerScriptContent.getBytes)
-    Files.setPosixFilePermissions(runnerScript, executablePermissions)
+    setPosixFilePermissions(runnerScript, executablePermissions)
   }
 
   def deployServer(serverZip: Path): Unit = {
@@ -246,7 +246,7 @@ class Deployment(rootFolder: File,
           |""".stripMargin
 
     Files.write(serverScript, content.getBytes)
-    Files.setPosixFilePermissions(serverScript, executablePermissions)
+    setPosixFilePermissions(serverScript, executablePermissions)
 
     logger.info("Deploy servers")
 
@@ -302,7 +302,7 @@ class Deployment(rootFolder: File,
          |""".stripMargin
 
     Files.write(killScript, killScriptContent.getBytes)
-    Files.setPosixFilePermissions(killScript, executablePermissions)
+    setPosixFilePermissions(killScript, executablePermissions)
     val scriptFileName = killScript.getFileName
 
     val runnerUri = userName + "@" + runnersHostname
@@ -318,7 +318,7 @@ class Deployment(rootFolder: File,
           |rm $scriptFileName""".stripMargin
 
     Files.write(proxyScript, proxyScriptContent.getBytes)
-    Files.setPosixFilePermissions(proxyScript, executablePermissions)
+    setPosixFilePermissions(proxyScript, executablePermissions)
 
     rsyncServer(killScript)
     rsyncServer(proxyScript)
@@ -368,7 +368,7 @@ class Deployment(rootFolder: File,
           |""".stripMargin
 
     Files.write(runnerScript, runnerScriptContent.getBytes)
-    Files.setPosixFilePermissions(runnerScript, executablePermissions)
+    setPosixFilePermissions(runnerScript, executablePermissions)
     val scriptFileName = runnerScript.getFileName
 
     val runnerUri = userName + "@" + runnersHostname
@@ -384,7 +384,7 @@ class Deployment(rootFolder: File,
           |rm $scriptFileName""".stripMargin
 
     Files.write(proxyScript, proxyScriptContent.getBytes)
-    Files.setPosixFilePermissions(proxyScript, executablePermissions)
+    setPosixFilePermissions(proxyScript, executablePermissions)
 
     rsyncServer(runnerScript)
     rsyncServer(proxyScript)
@@ -454,4 +454,14 @@ class Deployment(rootFolder: File,
 
   private def rsyncServer(file: Path) =
     rsync(file, userName, serverHostname, logger)
+
+  private def setPosixFilePermissions(
+      path: Path,
+      perms: java.util.Set[PosixFilePermission]
+  ): Path = {
+    try Files.setPosixFilePermissions(path, perms)
+    catch {
+      case e: Exception => path
+    }
+  }
 }
