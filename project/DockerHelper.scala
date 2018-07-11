@@ -61,17 +61,17 @@ object DockerHelper {
     Files.write(globalPlugins, plugins.getBytes)
 
     val repositories = sbtGlobal.resolve("repositories")
-
-    val repositoriesConfig =
-      s"""|[repositories]
-          |local
-          |my-ivy-proxy-releases: http://scala-webapps.epfl.ch:8081/artifactory/scastie-ivy/, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
-          |my-maven-proxy-releases: http://scala-webapps.epfl.ch:8081/artifactory/scastie-maven/""".stripMargin
-
-    Files.write(repositories, repositoriesConfig.getBytes)
+    Files.deleteIfExists(repositories)
+//    val repositoriesConfig =
+//      s"""|[repositories]
+//          |local
+//          |my-ivy-proxy-releases: http://scala-webapps.epfl.ch:8081/artifactory/scastie-ivy/, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+//          |my-maven-proxy-releases: http://scala-webapps.epfl.ch:8081/artifactory/scastie-maven/""".stripMargin
+//
+//    Files.write(repositories, repositoriesConfig.getBytes)
 
     new Dockerfile {
-      from("openjdk:8u131-jdk-alpine")
+      from("openjdk:8u171-jdk-alpine")
 
       // Install ca-certificates for wget https
       runRaw("apk update")
@@ -110,7 +110,7 @@ object DockerHelper {
       runRaw("mkdir -p /app/sbt")
 
       runRaw(
-        s"wget https://piccolo.link/sbt-${sbtVersion}tgz -O /tmp/sbt-${sbtVersion}.tgz"
+        s"wget https://piccolo.link/sbt-${sbtVersion}.tgz -O /tmp/sbt-${sbtVersion}.tgz"
       )
       runRaw(s"tar -xzvf /tmp/sbt-$sbtVersion.tgz -C /app/sbt")
 
