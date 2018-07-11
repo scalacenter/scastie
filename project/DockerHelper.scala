@@ -145,9 +145,9 @@ object DockerHelper {
 
 //      runRaw("sbt scalaVersion")
 
-      generatedProjects.projects.foreach(
-        generatedProject => runRaw(generatedProject.runCmd(dest))
-      )
+//      generatedProjects.projects.foreach(
+//        generatedProject => runRaw(generatedProject.runCmd(dest))
+//      )
 
       add(ivyLocalTemp.toFile, s"$userHome/.ivy2/local/$organization")
 
