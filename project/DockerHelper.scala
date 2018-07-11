@@ -14,8 +14,6 @@ object DockerHelper {
             organization: String,
             artifact: Path): Dockerfile = {
 
-    val sbtVersionFlat = sbtVersion.replaceAllLiterally(".", "")
-
     val artifactTargetPath = s"/app/${artifact.getFileName()}"
     val generatedProjects = new GenerateProjects(sbtTargetDir)
     generatedProjects.generateSbtProjects()
@@ -112,7 +110,7 @@ object DockerHelper {
       runRaw("mkdir -p /app/sbt")
 
       runRaw(
-        s"wget https://cocl.us/sbt${sbtVersionFlat}tgz -O /tmp/sbt-${sbtVersion}.tgz"
+        s"wget https://piccolo.link/sbt-${sbtVersion}tgz -O /tmp/sbt-${sbtVersion}.tgz"
       )
       runRaw(s"tar -xzvf /tmp/sbt-$sbtVersion.tgz -C /app/sbt")
 

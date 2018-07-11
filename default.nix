@@ -24,7 +24,7 @@ in rec {
     version = "0.13.16";
  
     src = fetchurl {
-      url = "https://cocl.us/sbt01316tgz";
+      url = "https://piccolo.link/sbt-0.13.16.tgz";
       sha256 = "033nvklclvbirhpsiy28d3ccmbm26zcs9vb7j8jndsc1ln09awi2";
       name = "sbt0.13.16.tgz";
     };
