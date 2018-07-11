@@ -62,13 +62,13 @@ object DockerHelper {
 
     val repositories = sbtGlobal.resolve("repositories")
     Files.deleteIfExists(repositories)
-//    val repositoriesConfig =
-//      s"""|[repositories]
-//          |local
-//          |my-ivy-proxy-releases: http://scala-webapps.epfl.ch:8081/artifactory/scastie-ivy/, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
-//          |my-maven-proxy-releases: http://scala-webapps.epfl.ch:8081/artifactory/scastie-maven/""".stripMargin
-//
-//    Files.write(repositories, repositoriesConfig.getBytes)
+    val repositoriesConfig =
+      s"""|[repositories]
+          |local
+          |my-ivy-proxy-releases: http://scala-webapps.epfl.ch:8081/artifactory/scastie-ivy/, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+          |my-maven-proxy-releases: http://scala-webapps.epfl.ch:8081/artifactory/scastie-maven/""".stripMargin
+
+    Files.write(repositories, repositoriesConfig.getBytes)
 
     new Dockerfile {
       from("openjdk:8u171-jdk-alpine")
@@ -137,13 +137,13 @@ object DockerHelper {
       env("LANG", "en_US.UTF-8")
       env("HOME", userHome)
 
-      runRaw("sbt scalaVersion")
+//      runRaw("sbt scalaVersion")
 
       val dest = s"$userHome/projects"
       add(generatedProjects.projectTarget.toFile, dest)
       chown("projects")
 
-      runRaw("sbt scalaVersion")
+//      runRaw("sbt scalaVersion")
 
       generatedProjects.projects.foreach(
         generatedProject => runRaw(generatedProject.runCmd(dest))
