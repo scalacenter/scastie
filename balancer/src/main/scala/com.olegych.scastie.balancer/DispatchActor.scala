@@ -15,6 +15,8 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import java.util.concurrent.{Executors, TimeUnit, TimeoutException}
 
+import akka.event
+
 import scala.collection.immutable.Queue
 
 case class Address(host: String, port: Int)
@@ -248,7 +250,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     }
   }
 
-  def receive: Receive = {
+  def receive: Receive = event.LoggingReceive(event.Logging.InfoLevel) {
 
     case EnsimeRequestEnvelop(request, UserTrace(ip0, user)) => {
       val taskId = EnsimeTaskId.create
@@ -268,7 +270,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
           (server.ref ? EnsimeTaskRequest(request, taskId))
             .mapTo[EnsimeTaskResponse]
             .map { taskResponse =>
-              updateEnsimeBalancer(ensimeLoadBalancer.done(taskResponse.taskId))
+              updateEnsimeBalancer(
+                ensimeLoadBalancer.done(taskResponse.taskId)
+              )
               senderRef ! taskResponse.response
             }
         }
@@ -290,12 +294,14 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       ()
     }
 
-    case RunSnippet(inputsWithIpAndUser) => {
+    case x @ RunSnippet(inputsWithIpAndUser) => {
+      log.info(s"starting ${x}")
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val sender = this.sender
       container.create(inputs, user.map(u => UserLogin(u.login))).map {
         snippetId =>
           run(inputsWithIpAndUser, snippetId)
+          log.info(s"finished ${x}")
           sender ! snippetId
       }
     }
@@ -333,7 +339,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     }
 
     case ForkSnippet(snippetId, inputsWithIpAndUser) => {
-      val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
+      val InputsWithIpAndUser(inputs, UserTrace(_, user)) =
+        inputsWithIpAndUser
       val sender = this.sender
       container
         .fork(snippetId, inputs, user.map(u => UserLogin(u.login)))
@@ -429,8 +436,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       if (!remoteSbtSelections.contains((runnerHostname, runnerAkkaPort))) {
         log.info("Connected Runner {}", runnerAkkaPort)
 
-        val sel =
-          connectRunner("SbtRunner", "SbtActor", runnerHostname)(runnerAkkaPort)
+        val sel = connectRunner("SbtRunner", "SbtActor", runnerHostname)(
+          runnerAkkaPort
+        )
         val (_, ref) = sel
 
         remoteSbtSelections = remoteSbtSelections + sel
@@ -451,9 +459,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       if (!remoteEnsimeSelections.contains((runnerHostname, runnerAkkaPort))) {
         log.info("Connected Ensime Runner {}", runnerAkkaPort)
 
-        val sel = connectRunner("EnsimeRunner", "EnsimeActor", runnerHostname)(
-          runnerAkkaPort
-        )
+        val sel =
+          connectRunner("EnsimeRunner", "EnsimeActor", runnerHostname)(
+            runnerAkkaPort
+          )
         val (_, ref) = sel
 
         remoteEnsimeSelections = remoteEnsimeSelections + sel
