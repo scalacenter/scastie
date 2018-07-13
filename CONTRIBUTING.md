@@ -124,7 +124,7 @@ cd ~/scastie-secrets
 git pull
 cd ~/scastie
 git pull
-./proot_5.1.1_x86_64_rc2--no-seccomp  -b ~/.nix:/nix
+~/proot_5.1.1_x86_64_rc2--no-seccomp  -b ~/.nix:/nix
 bash
 . /home/scastie/.nix-profile/etc/profile.d/nix.sh
 nix-shell -A scastie
@@ -133,7 +133,7 @@ sbt deploy
 
 ## Check logs
 ```
-ssh scastie@scastie-sbt.scala-lang.org
+ssh scastie@scastie.scala-lang.org
 tail -F -n1000 output.log 
 ssh scastie@scastie-sbt.scala-lang.org 
 ~/log.sh
