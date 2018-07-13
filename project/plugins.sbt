@@ -5,10 +5,6 @@ addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.1")
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.6.1")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.20")
 
-unmanagedSourceDirectories in Compile += {
-  baseDirectory.value.getParentFile / "sbt-shared"
-}
-
 // addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.0-RC2")
 
 addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.9.0")
