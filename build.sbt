@@ -23,15 +23,15 @@ def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 def akkaHttpTestkit =
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
 
-val startAll2Commands = List(
+val startAllCommands = List(
   "sbtRunner/reStart",
   "server/reStart",
   "client/fastOptJS::startWebpackDevServer",
   "client/fastOptJS"
 )
 
-val startAllCommands =
-  "ensimeRunner/reStart" :: startAll2Commands
+val startAll2Commands =
+  "ensimeRunner/reStart" :: startAllCommands
 
 def sbtJoinTask(commands: List[String]): String =
   commands.mkString(";", ";", "")
