@@ -5,21 +5,32 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 
 ## How to run locally
 
-### How to install prerequisits via nix
+### How to install prerequisites via nix
 
-* install nix: `curl https://nixos.org/nix/install | sh`
-* nix-shell -A scastie
+```
+curl https://nixos.org/nix/install | sh
+nix-shell -A scastie
+```
 
 ### How to install prerequisits on Mac
- 
+```
 brew install openjdk sbt nodejs yarn
+```
 
 ### How to install prerequisits on Windows
 
+Assuming you use Git for Windows >= 2.16.2.1 (note this will erase uncommitted changes):
+```
+git config --add core.symlinks true
+git reset --hard HEAD
+```
+```
 choco install nvm yarn sbt jdk8 python3
 nvm install 8.9.1
 nvm use 8.9.1
+```
 (npm >= 9.0.0 may have issues finding/using python)
+
 
 ### How to run the sbt build
 
@@ -103,17 +114,37 @@ If you have any questions join us in the [gitter channel](https://gitter.im/scal
 
 # How to deploy
 
-## Requirements
+## Quick
 
-0. Install docker
+```
+ssh scastie@scastie.scala-lang.org
+ssh scastie@scastie-sbt.scala-lang.org
+docker login
+cd ~/scastie-secrets
+git pull
+cd ~/scastie
+git pull
+./proot_5.1.1_x86_64_rc2--no-seccomp  -b ~/.nix:/nix
+bash
+. /home/scastie/.nix-profile/etc/profile.d/nix.sh
+nix-shell -A scastie
+sbt deploy 
+```
 
-1. To deploy the application to the productions servers (scastie.scala-lang.org) you will need to have ssh access to the following machine:
+## Check logs
+```
+ssh scastie@scastie-sbt.scala-lang.org
+tail -F -n1000 output.log 
+ssh scastie@scastie-sbt.scala-lang.org 
+~/log.sh
+```
 
-* `scastie@scastie.scala-lang.org`
+## Full
+
+0. You need access to `scastie@scastie.scala-lang.org`, `https://github.com/scalacenter/scastie-secrets`, `http://scala-webapps.epfl.ch:8081` and be a member of `https://hub.docker.com/u/scalacenter/`   
 
 These people have access:
 
-* [@MasseGuillaume](https://github.com/MasseGuillaume)
 * [@heathermiller](https://github.com/heathermiller)
 * [@julienrf](https://github.com/julienrf)
 * [@jvican](https://github.com/jvican)
@@ -122,7 +153,7 @@ These people have access:
 * [@dimart](https://github.com/dimart)
 * [@rorygraves](https://github.com/rorygraves)
 
-2. You need to be a member of the scalacenter on dockerhub: https://hub.docker.com/u/scalacenter 
+0. Install docker (note that Windows is not recommended due to networking issues)
 
 3. do`docker login`
 
