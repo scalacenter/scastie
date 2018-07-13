@@ -9,7 +9,7 @@ env:
 
 before_install:
   - mkdir -p /home/travis/.sbt/0.13/plugins
-  - echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC13")' >> /home/travis/.sbt/0.13/plugins/build.sbt
+  - echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0")' >> /home/travis/.sbt/0.13/plugins/build.sbt
 
 script:
   - bin/scalafmt --test
