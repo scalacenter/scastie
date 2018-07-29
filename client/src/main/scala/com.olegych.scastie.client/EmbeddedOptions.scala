@@ -179,7 +179,8 @@ object EmbeddedOptions {
 
         val inputs0 =
           default.copy(
-            isWorksheetMode = isWorksheetMode.getOrElse(default.isWorksheetMode),
+            _isWorksheetMode =
+              isWorksheetMode.getOrElse(default.isWorksheetMode),
             code = code.getOrElse(defaultCode),
             target = scalaTarget.getOrElse(default.target),
             sbtConfigExtra = sbtConfig.getOrElse(default.sbtConfigExtra)

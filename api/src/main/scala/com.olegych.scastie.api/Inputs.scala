@@ -9,7 +9,7 @@ object Inputs {
   val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
 
   def default: Inputs = Inputs(
-    isWorksheetMode = true,
+    _isWorksheetMode = true,
     code = defaultCode,
     target = ScalaTarget.Jvm.default,
     libraries = Set(),
@@ -30,7 +30,7 @@ object Inputs {
 }
 
 case class Inputs(
-    isWorksheetMode: Boolean,
+    _isWorksheetMode: Boolean,
     code: String,
     target: ScalaTarget,
     libraries: Set[ScalaDependency],
@@ -40,7 +40,7 @@ case class Inputs(
     isShowingInUserProfile: Boolean,
     forked: Option[SnippetId] = None
 ) {
-
+  val isWorksheetMode = _isWorksheetMode && target.hasWorksheetMode
   val librariesFrom: Map[ScalaDependency, Project] = librariesFromList.toMap
 
   def needsReload(other: Inputs): Boolean = {

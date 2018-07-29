@@ -306,7 +306,7 @@ object Main {
     import inputs._
 
     Inputs(
-      isWorksheetMode = worksheetMode,
+      _isWorksheetMode = worksheetMode,
       code = code,
       target = target,
       libraries = libraries,

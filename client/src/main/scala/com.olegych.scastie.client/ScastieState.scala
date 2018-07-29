@@ -218,7 +218,7 @@ case class ScastieState(
 
   def toggleWorksheetMode: ScastieState =
     copyAndSave(
-      inputs = inputs.copy(isWorksheetMode = !inputs.isWorksheetMode),
+      inputs = inputs.copy(_isWorksheetMode = !inputs.isWorksheetMode),
       inputsHasChanged = true
     )
 
@@ -536,7 +536,7 @@ case class ScastieState(
     }
 
     val useWorksheetModeTip =
-      if (compilationInfos.exists(ci => topDef(ci)))
+      if (compilationInfos.exists(ci => topDef(ci)) && inputs.target.hasWorksheetMode)
         Set(
           info(
             """|It seems you're writing code without an enclosing class/object.

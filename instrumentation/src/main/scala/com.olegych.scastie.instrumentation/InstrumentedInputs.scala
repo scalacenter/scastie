@@ -36,7 +36,7 @@ object InstrumentedInputs {
             case HasMainMethod => {
               Right(
                 InstrumentedInputs(
-                  inputs0.copy(isWorksheetMode = false),
+                  inputs0.copy(_isWorksheetMode = false),
                   isForcedProgramMode = true
                 )
               )

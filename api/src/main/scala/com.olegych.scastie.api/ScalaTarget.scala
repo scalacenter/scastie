@@ -110,8 +110,9 @@ object ScalaTarget {
 
   case class Jvm(scalaVersion: String) extends ScalaTarget {
     def hasEnsimeSupport: Boolean = {
-      scalaVersion.startsWith("2.12") ||
-      scalaVersion.startsWith("2.11")
+//      scalaVersion.startsWith("2.12") ||
+//      scalaVersion.startsWith("2.11")
+      false
     }
 
     def hasWorksheetMode: Boolean = {

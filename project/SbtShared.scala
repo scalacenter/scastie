@@ -6,8 +6,6 @@ import org.scalajs.sbtplugin.cross.CrossProject
 import sbtbuildinfo.BuildInfoPlugin
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
 
-import System.{lineSeparator => nl}
-
 import java.util.Properties
 import java.nio.file._
 import java.io.FileInputStream
@@ -21,11 +19,11 @@ configuration matrix
 object SbtShared {
   val sbt210 = "2.10.7"
   val latest211 = "2.11.12"
-  val latest212 = "2.12.4"
-  val latest213 = "2.13.0-M2"
+  val latest212 = "2.12.6"
+  val latest213 = "2.13.0-M4"
   val currentScalaVersion = latest212
 
-  val latestScalaJs = "0.6.21"
+  val latestScalaJs = "0.6.24"
   val latestDotty = "0.7.0-RC1"
 
   // sbt-ensime 1.12.14 creates .ensime with 2.0.0-M4 server jar
@@ -71,7 +69,7 @@ object SbtShared {
   val scalajsDomVersion = "0.9.3"
 
   val playJson =
-    libraryDependencies += "com.typesafe.play" %%% "play-json" % playJsonVersion
+    libraryDependencies += toScalaJSGroupID("com.typesafe.play") %%% "play-json" % playJsonVersion
 
   lazy val baseSettings = Seq(
     // skip scaladoc
@@ -203,7 +201,7 @@ object SbtShared {
       .jsSettings(baseJsSettings)
       .jsSettings(
         test := {},
-        libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion
+        libraryDependencies += toScalaJSGroupID("org.scala-js") %%% "scalajs-dom" % scalajsDomVersion
       )
       .enablePlugins(BuildInfoPlugin)
   }

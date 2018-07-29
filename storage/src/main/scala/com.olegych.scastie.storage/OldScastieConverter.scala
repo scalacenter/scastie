@@ -107,7 +107,7 @@ object OldScastieConverter {
       inputs.copy(
         target = scalaTarget,
         sbtConfigExtra = sbtExtra.trim,
-        isWorksheetMode = false
+        _isWorksheetMode = false
       )
     }
   }
