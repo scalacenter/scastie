@@ -25,7 +25,7 @@ class GenerateProjects(sbtTargetDir: Path) {
     val default =
       Inputs.default.copy(
         code = helloWorld,
-        isWorksheetMode = false
+        _isWorksheetMode = false
       )
 
     def scala(version: String, withoutPlayJson: Boolean = false): Inputs = {
