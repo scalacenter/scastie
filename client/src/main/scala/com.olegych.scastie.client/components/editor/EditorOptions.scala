@@ -36,7 +36,9 @@ private[editor] object EditorOptions {
     }
 
     def autocomplete(editor: CodeMirrorEditor2): Unit = {
-      if (!props.isEmbedded) {
+      //todo get from inputs
+      val hasEnsimeSupport = false
+      if (!props.isEmbedded && hasEnsimeSupport) {
         val doc = editor.getDoc()
         val pos = doc.indexFromPos(doc.getCursor())
 
