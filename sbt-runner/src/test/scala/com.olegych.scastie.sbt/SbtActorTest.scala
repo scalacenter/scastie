@@ -98,7 +98,7 @@ class SbtActorTest()
                  |}
                  |""".stripMargin,
       target = ScalaTarget.Dotty.default,
-      isWorksheetMode = false
+      _isWorksheetMode = false
     )
     run(dotty)(assertUserOutput("Hello, Dotty!"))
   }
