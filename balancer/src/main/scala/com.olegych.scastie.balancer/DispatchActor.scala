@@ -4,7 +4,14 @@ import com.olegych.scastie.api
 import com.olegych.scastie.api._
 import com.olegych.scastie.util._
 import com.olegych.scastie.storage._
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
+import akka.actor.{
+  Actor,
+  ActorLogging,
+  ActorRef,
+  ActorSelection,
+  OneForOneStrategy,
+  SupervisorStrategy
+}
 import akka.remote.DisassociatedEvent
 import akka.pattern.ask
 import akka.util.Timeout
@@ -48,6 +55,12 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 // extends PersistentActor with AtLeastOnceDelivery
     extends Actor
     with ActorLogging {
+
+  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {
+    case e =>
+      log.error(e, "failure")
+      SupervisorStrategy.resume
+  }
 
   private val config =
     ConfigFactory.load().getConfig("com.olegych.scastie.balancer")

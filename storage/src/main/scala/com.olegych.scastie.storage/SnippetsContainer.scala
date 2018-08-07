@@ -64,7 +64,8 @@ class SnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService) {
 
   def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] =
     Future(update0(snippetId, inputs))
-  private def update0(snippetId: SnippetId, inputs: Inputs): Option[SnippetId] = {
+  private def update0(snippetId: SnippetId,
+                      inputs: Inputs): Option[SnippetId] = {
     snippetId.user match {
       case Some(SnippetUserPart(login, _)) =>
         val nextSnippetId =
@@ -297,7 +298,8 @@ class SnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService) {
         content =>
           Json
             .fromJson[Inputs](Json.parse(content))
-            .fold(e => sys.error(e.toString + s"for ${snippetId}"), identity)
+            .fold(e => sys.error(e.toString + s" for ${snippetId} $content"),
+                  identity)
       )
   }
 
@@ -310,7 +312,8 @@ class SnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService) {
         .map { line =>
           Json
             .fromJson[SnippetProgress](Json.parse(line))
-            .fold(e => sys.error(e.toString + s"for ${snippetId}"), identity)
+            .fold(e => sys.error(e.toString + s" for ${snippetId} $line"),
+                  identity)
         }
         .toList
     }

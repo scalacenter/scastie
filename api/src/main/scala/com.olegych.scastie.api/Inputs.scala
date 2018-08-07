@@ -33,7 +33,9 @@ object Inputs {
           v.asOpt[JsObject]
             .fold(Json.obj())(
               _ ++ Json.obj(
-                "_isWorksheetMode" -> (v \ "isWorksheetMode").as[JsValue]
+                "_isWorksheetMode" -> (v \ "isWorksheetMode")
+                  .asOpt[Boolean]
+                  .orElse((v \ "_isWorksheetMode").asOpt[Boolean])
               )
             )
         )
