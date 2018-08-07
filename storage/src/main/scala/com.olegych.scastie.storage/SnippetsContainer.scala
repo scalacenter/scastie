@@ -293,19 +293,27 @@ class SnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService) {
 
   private def readInputs(snippetId: SnippetId): Option[Inputs] = {
     slurp(inputsFile(snippetId))
-      .flatMap(content => Json.fromJson[Inputs](Json.parse(content)).asOpt)
+      .map(
+        content =>
+          Json
+            .fromJson[Inputs](Json.parse(content))
+            .fold(e => sys.error(e.toString + s"for ${snippetId}"), identity)
+      )
   }
 
   private def readOutputs(
       snippetId: SnippetId
   ): Option[List[SnippetProgress]] = {
-    slurp(outputsFile(snippetId)).map(
+    slurp(outputsFile(snippetId)).map {
       _.lines
         .filter(_.nonEmpty)
-        .map(line => Json.fromJson[SnippetProgress](Json.parse(line)).asOpt)
-        .flatten
+        .map { line =>
+          Json
+            .fromJson[SnippetProgress](Json.parse(line))
+            .fold(e => sys.error(e.toString + s"for ${snippetId}"), identity)
+        }
         .toList
-    )
+    }
   }
 
   private val inputFileName = "input3.json"

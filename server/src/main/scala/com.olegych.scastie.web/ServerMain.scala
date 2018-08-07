@@ -89,6 +89,8 @@ object ServerMain {
     Await.result(Http().bindAndHandle(routes, "0.0.0.0", port), 1.seconds)
     logger.info(s"Scastie started (port: $port)")
 
+//    scala.io.StdIn.readLine("press enter to stop server")
+//    system.terminate()
     Await.result(system.whenTerminated, Duration.Inf)
 
     ()

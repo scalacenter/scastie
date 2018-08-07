@@ -25,8 +25,22 @@ object Inputs {
     forked = None
   )
 
-  implicit val formatInputs: OFormat[Inputs] =
-    Json.format[Inputs]
+  implicit val formatInputs: OFormat[Inputs] = {
+    val f = Json.format[Inputs]
+    OFormat(
+      Reads { v =>
+        f.reads(
+          v.asOpt[JsObject]
+            .fold(Json.obj())(
+              _ ++ Json.obj(
+                "_isWorksheetMode" -> (v \ "isWorksheetMode").as[JsValue]
+              )
+            )
+        )
+      },
+      f
+    )
+  }
 }
 
 case class Inputs(
