@@ -60,7 +60,6 @@ object Diff {
           1
         )
         .asScala
-        .drop(3)
         .mkString("\n")
   }
 }

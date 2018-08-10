@@ -16,11 +16,11 @@ import akka.remote.DisassociatedEvent
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import java.nio.file._
 
 import scala.concurrent._
 import scala.concurrent.duration._
-import java.util.concurrent.{Executors, TimeUnit, TimeoutException}
+import java.util.concurrent.{TimeUnit, TimeoutException, Executors}
+import java.nio.file.Paths
 
 import akka.event
 
@@ -82,6 +82,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   val sbtConfig = ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
+
+  val isProduction = {
+    val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
+    config.getBoolean("production")
+  }
 
   val sbtRunTimeout = {
     val timeunit = TimeUnit.SECONDS
@@ -176,22 +181,24 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   import context._
 
-  system.scheduler.schedule(0.seconds, 30.seconds) {
-    implicit val timeout: Timeout = Timeout(10.seconds)
-    try {
-      Await.result(
-        Future.sequence(sbtLoadBalancer.servers.map(_.ref ? SbtPing)),
-        15.seconds
-      )
+  if (isProduction) {
+    system.scheduler.schedule(0.seconds, 30.seconds) {
+      implicit val timeout: Timeout = Timeout(10.seconds)
+      try {
+        Await.result(
+          Future.sequence(sbtLoadBalancer.servers.map(_.ref ? SbtPing)),
+          15.seconds
+        )
 
-      Await.result(
-        Future.sequence(ensimeLoadBalancer.servers.map(_.ref ? SbtPing)),
-        10.seconds
-      )
+        Await.result(
+          Future.sequence(ensimeLoadBalancer.servers.map(_.ref ? SbtPing)),
+          10.seconds
+        )
 
-      ()
-    } catch {
-      case e: TimeoutException => ()
+        ()
+      } catch {
+        case e: TimeoutException => ()
+      }
     }
   }
 
@@ -203,17 +210,29 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   override def postStop(): Unit = {
     super.postStop()
-    container.es.shutdown()
   }
 
-  private val container = new SnippetsContainer(
-    Paths.get(config.getString("snippets-dir")),
-    Paths.get(config.getString("old-snippets-dir"))
-  )(
-    ExecutionContext.fromExecutorService(
-      Executors.newCachedThreadPool()
-    )
-  )
+  val containerType = config.getString("snippets-container")
+
+  private val container =
+    containerType match {
+      case "memory" => new InMemorySnippetsContainer
+      case "mongo"  => new MongoDBSnippetsContainer
+      case "files" => {
+        new FilesSnippetsContainer(
+          Paths.get(config.getString("snippets-dir")),
+          Paths.get(config.getString("old-snippets-dir"))
+        )(
+          ExecutionContext.fromExecutorService(
+            Executors.newCachedThreadPool()
+          )
+        )
+      }
+      case _ => {
+        println("fallback to mongodb container")
+        new MongoDBSnippetsContainer
+      }
+    }
 
   private val portsInfo = sbtPorts.mkString("\nsbt: [", ", ", "]") + ensimePorts
     .mkString("\nensime: [", ", ", "]")
@@ -357,11 +376,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       val sender = this.sender
       container
         .fork(snippetId, inputs, user.map(u => UserLogin(u.login)))
-        .map {
-          case Some(forkedSnippetId) =>
-            sender ! Some(forkedSnippetId)
-            run(inputsWithIpAndUser, forkedSnippetId)
-          case None => sender ! None
+        .map { forkedSnippetId =>
+          sender ! Some(forkedSnippetId)
+          run(inputsWithIpAndUser, forkedSnippetId)
         }
     }
 

@@ -7,10 +7,6 @@ env:
   global:
     - TRAVIS_NODE_VERSION="8"
 
-before_install:
-  - mkdir -p /home/travis/.sbt/0.13/plugins
-  - echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0")' >> /home/travis/.sbt/0.13/plugins/build.sbt
-
 script:
   - bin/scalafmt --test
   - nix-shell -A scastie --command "sbt ci"
@@ -19,10 +15,9 @@ before_cache:
   # Cleanup the cached directories to avoid unnecessary cache updates
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
   - find $HOME/.sbt        -name "*.lock"               -print -delete
-  
+
 cache:
   yarn: true
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot/
-    - $HOME/.coursier/cache

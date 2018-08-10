@@ -63,30 +63,26 @@ object ScastieState {
   implicit val dontSerializeStatusState: Format[StatusState] =
     dontSerialize[StatusState](StatusState.empty)
 
-  type TypeInfoAtHint = Option[TypeInfoAt]
-
-  implicit val dontSerializeTypeInfoAt: Format[TypeInfoAtHint] =
+  implicit val dontSerializeTypeInfoAt: Format[TypeInfoAt] =
     dontSerializeOption[TypeInfoAt]
 
-  type StatusProgressHint = Option[EventStream[StatusProgress]]
-
-  implicit val dontSerializeStatusStream: Format[StatusProgressHint] =
+  implicit val dontSerializeEventStream: Format[EventStream[StatusProgress]] =
     dontSerializeOption[EventStream[StatusProgress]]
 
-  type SnippetProgressHint = Option[EventStream[SnippetProgress]]
-
-  implicit val dontSerializeProgressStream: Format[SnippetProgressHint] =
+  implicit val dontSerializeProgressStream
+    : Format[EventStream[SnippetProgress]] =
     dontSerializeOption[EventStream[SnippetProgress]]
 
   implicit val formatScastieState: OFormat[ScastieState] =
     Json.format[ScastieState]
+
 }
 
 case class ScastieState(
     view: View,
     isRunning: Boolean,
-    statusStream: ScastieState.StatusProgressHint,
-    progressStream: ScastieState.SnippetProgressHint,
+    statusStream: Option[EventStream[StatusProgress]],
+    progressStream: Option[EventStream[SnippetProgress]],
     modalState: ModalState,
     isDarkTheme: Boolean,
     isDesktopForced: Boolean,
@@ -102,7 +98,7 @@ case class ScastieState(
     outputs: Outputs,
     status: StatusState,
     completions: List[Completion],
-    typeAtInfo: ScastieState.TypeInfoAtHint,
+    typeAtInfo: Option[TypeInfoAt],
     isEmbedded: Boolean = false
 ) {
 

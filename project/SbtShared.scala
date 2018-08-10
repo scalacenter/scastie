@@ -29,7 +29,7 @@ object SbtShared {
   // sbt-ensime 1.12.14 creates .ensime with 2.0.0-M4 server jar
   val latestSbtEnsime = "1.12.14"
   val latestEnsime = "2.0.0-M4"
-  val latestCoursier = "1.0.0"
+  val latestCoursier = "1.0.3"
 
   val sbtVersion = "0.13.16"
 
@@ -64,7 +64,7 @@ object SbtShared {
     }
   }
 
-  val playJsonVersion = "2.6.2"
+  val playJsonVersion = "2.6.9"
 
   val scalajsDomVersion = "0.9.3"
 

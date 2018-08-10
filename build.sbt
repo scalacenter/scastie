@@ -14,14 +14,21 @@ import scalajsbundler.util.JSON
 import scala.util.Try
 
 val scalaTestVersion = "3.0.1"
-val akkaHttpVersion = "10.0.10"
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.6"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.13"
 
+val akkaHttpVersion = "10.1.3"
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 def akkaHttpTestkit =
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
+
+def akkaHttpCors = "ch.megard" %% "akka-http-cors" % "0.3.0"
+def akkaHttpSession = "com.softwaremill.akka-http-session" %% "core" % "0.5.5"
+
+def reactiveMongo = "org.reactivemongo" %% "reactivemongo" % "0.16.0"
+def reactiveMongoJson =
+  "org.reactivemongo" %% "reactivemongo-play-json" % "0.16.0-play26"
 
 val startAllCommands = List(
   "sbtRunner/reStart",
@@ -113,7 +120,6 @@ lazy val utils = project
   .settings(
     resolvers += Resolver.typesafeRepo("releases"),
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-contrib-extra" % "4.1.3",
       akka("stream"),
       akka("actor"),
       akka("remote"),
@@ -276,10 +282,9 @@ lazy val server = project
     javaOptions in reStart += "-Xmx512m",
     libraryDependencies ++= Seq(
       "org.json4s" %% "json4s-native" % "3.5.2",
-      "ch.megard" %% "akka-http-cors" % "0.2.1",
-      "com.softwaremill.akka-http-session" %% "core" % "0.4.0",
-      "de.heikoseeberger" %% "akka-sse" % "3.0.0",
       akkaHttp,
+      akkaHttpSession,
+      akkaHttpCors,
       akka("remote"),
       akka("slf4j"),
       akkaHttpTestkit % Test
@@ -304,7 +309,9 @@ lazy val storage = project
     libraryDependencies ++= Seq(
       akka("remote"),
       akkaHttpCore,
-      "net.lingala.zip4j" % "zip4j" % "1.3.1"
+      "net.lingala.zip4j" % "zip4j" % "1.3.1",
+      reactiveMongo,
+      reactiveMongoJson
     )
   )
   .dependsOn(apiJVM, utils, instrumentation)
@@ -439,14 +446,16 @@ lazy val sbtScastie = project
   )
   .dependsOn(api210JVM)
 
-// migration from upickle to play-json
+// migration from file containers to mongodb
 // sbt migration/assembly
-// scp ./migration/target/scala-2.12/migration-assembly-0.25.0-SNAPSHOT.jar scastie@scastie.scala-lang.org:migration.jar
-// java -jar migration.jar snippets
+// scp ./migration/target/scala-2.12/migration.jar scastie@scastie.scala-lang.org:migration.jar
+// java -jar migration.jar snippets snippets-snap old-snippets
 lazy val migration = project
   .settings(baseSettings)
-  .settings(playJson)
-  .dependsOn(apiJVM)
+  .settings(
+    assemblyJarName in assembly := "migration.jar"
+  )
+  .dependsOn(apiJVM, storage)
 
 lazy val e2e = project
   .in(file("end-to-end"))
