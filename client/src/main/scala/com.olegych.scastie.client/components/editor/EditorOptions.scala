@@ -80,14 +80,14 @@ private[editor] object EditorOptions {
           ctrl + "-M" -> command(props.openNewSnippetModal.runNow()),
           ctrl + "-L" -> CM.Pass,
           ctrl + "-E" -> command(props.openEmbeddedModal.runNow()),
-          "Ctrl" + "-Space" -> commandE { editor =>
-            autocomplete(editor)
-          },
-          "." -> commandE { editor =>
-            editor.getDoc().replaceSelection(".")
-            props.codeChange(editor.getDoc().getValue()).runNow()
-            autocomplete(editor)
-          },
+          // "Ctrl" + "-Space" -> commandE { editor =>
+          //   autocomplete(editor)
+          // },
+          // "." -> commandE { editor =>
+          //   editor.getDoc().replaceSelection(".")
+          //   props.codeChange(editor.getDoc().getValue()).runNow()
+          //   autocomplete(editor)
+          // },
           "Esc" -> command(props.clear.runNow()),
           "F1" -> command(props.toggleHelp.runNow()),
           "F2" -> command(props.toggleTheme.runNow()),

@@ -6,8 +6,8 @@ import com.olegych.scastie.web.oauth2.UserDirectives
 
 import play.api.libs.json.Json
 
-import de.heikoseeberger.akkasse.scaladsl.model.ServerSentEvent
-import de.heikoseeberger.akkasse.scaladsl.marshalling.EventStreamMarshalling._
+import akka.http.scaladsl.model.sse.ServerSentEvent
+import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
 
 import akka.util.Timeout
 import akka.NotUsed

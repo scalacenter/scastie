@@ -11,8 +11,10 @@ package object client {
     def reads(json: JsValue): JsResult[T] = JsSuccess(fallback)
   }
 
-  def dontSerializeOption[T]: Format[Option[T]] =
-    dontSerialize(None)
+  def dontSerializeOption[T]: Format[T] = new Format[T] {
+    def writes(v: T): JsValue = JsNull
+    def reads(json: JsValue): JsResult[T] = JsSuccess(null.asInstanceOf[T])
+  }
 
   def dontSerializeList[T]: Format[List[T]] =
     dontSerialize(List())

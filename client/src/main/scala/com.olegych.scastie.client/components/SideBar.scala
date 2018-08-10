@@ -66,10 +66,10 @@ object SideBar {
       )
 
     val runnersStatusButton = {
-      val ensimeLoading =
-        !props.status.ensimeReady(props.inputs) &&
-          !props.ensimeConfigurationLoading &&
-          props.status.ensimeRunnersCount.map(_ > 0).getOrElse(false)
+      val ensimeLoading = false
+      // !props.status.ensimeReady(props.inputs) &&
+      //   !props.ensimeConfigurationLoading &&
+      //   props.status.ensimeRunnersCount.map(_ > 0).getOrElse(false)
 
       val (statusIcon, statusClass, statusLabel) =
         (props.status.sbtRunnerCount, ensimeLoading) match {
@@ -100,7 +100,8 @@ object SideBar {
       forView = View.Editor,
       buttonTitle = "Editor",
       faIcon = "fa-edit",
-      onClick = props.updateEnsimeConfig
+      // onClick = props.updateEnsimeConfig
+      onClick = reusableEmpty
     ).render
 
     val buildSettingsButton = ViewToggleButton(

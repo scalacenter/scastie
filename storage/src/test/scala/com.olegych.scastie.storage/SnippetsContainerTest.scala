@@ -1,24 +1,52 @@
 package com.olegych.scastie.storage
 
-import java.nio.file._
+import java.io.IOException
+import java.nio.file.{Files, Path, FileVisitResult, SimpleFileVisitor}
+import java.nio.file.attribute.BasicFileAttributes
+
 import java.util.concurrent.Executors
 
 import com.olegych.scastie.api._
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-class SnippetsContainerTest extends FunSuite {
+class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
+
+  val root = Files.createTempDirectory("test")
+  val oldRoot = Files.createTempDirectory("old-test")
 
   private def testContainer =
-    new SnippetsContainer(
-      Files.createTempDirectory("test"),
-      Files.createTempDirectory("old-test")
-    )(Executors.newSingleThreadExecutor())
+    new FilesSnippetsContainer(root, oldRoot)(
+      Executors.newSingleThreadExecutor()
+    )
+
+  override protected def afterAll(): Unit = {
+    deleteRecursively(root)
+    deleteRecursively(oldRoot)
+  }
 
   private implicit class FAwait[T](f: Future[T]) {
     def await = Await.result(f, Duration.Inf)
+  }
+
+  def deleteRecursively(base: Path): Unit = {
+    Files.walkFileTree(
+      base,
+      new SimpleFileVisitor[Path] {
+        override def postVisitDirectory(dir: Path,
+                                        ex: IOException): FileVisitResult = {
+          Files.delete(dir)
+          FileVisitResult.CONTINUE
+        }
+        override def visitFile(file: Path,
+                               attrs: BasicFileAttributes): FileVisitResult = {
+          Files.delete(file)
+          FileVisitResult.CONTINUE
+        }
+      }
+    )
   }
 
   test("create snippet with logged in user") {
@@ -54,7 +82,7 @@ class SnippetsContainerTest extends FunSuite {
     val forkedInputs =
       Inputs.default.copy(code = "forked", isShowingInUserProfile = true)
     val forkedSnippetId =
-      container.fork(snippetId, forkedInputs, user = None).await.get
+      container.fork(snippetId, forkedInputs, user = None).await
 
     val forkedBis = container.readSnippet(forkedSnippetId).await.get
 
@@ -64,7 +92,7 @@ class SnippetsContainerTest extends FunSuite {
 
   test("update") {
     val container = testContainer
-    val user = UserLogin("github-user")
+    val user = UserLogin("github-user-update")
     val inputs1 =
       Inputs.default.copy(code = "inputs1").copy(isShowingInUserProfile = true)
     val snippetId1 = container.save(inputs1, Some(user)).await
@@ -104,7 +132,7 @@ class SnippetsContainerTest extends FunSuite {
 
   test("listSnippets") {
     val container = testContainer
-    val user = UserLogin("github-user")
+    val user = UserLogin("github-user-list")
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     container.save(inputs1, Some(user)).await
@@ -125,7 +153,7 @@ class SnippetsContainerTest extends FunSuite {
 
   test("delete") {
     val container = testContainer
-    val user = UserLogin("github-user")
+    val user = UserLogin("github-user-delete")
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     val snippetId1 = container.save(inputs1, Some(user)).await
@@ -139,14 +167,14 @@ class SnippetsContainerTest extends FunSuite {
     val inputs2U = Inputs.default.copy(code = "inputs2 updated")
     val snippetId2U = container.update(snippetId2, inputs2U).await.get
 
-    assert(container.listSnippets(user).await.size == 4)
+    assert(container.listSnippets(user).await.size == 2)
 
     container.delete(snippetId2U).await
 
-    assert(container.listSnippets(user).await.size == 3)
+    assert(container.listSnippets(user).await.size == 2)
 
     container.delete(snippetId2).await
 
-    assert(container.listSnippets(user).await.size == 2)
+    assert(container.listSnippets(user).await.size == 1)
   }
 }

@@ -34,9 +34,11 @@ class SbtActor(system: ActorSystem,
   }
 
   override def tryConnect(context: ActorContext): Unit = {
-    reconnectInfo.foreach { info =>
-      import info._
-      balancer(context, info) ! SbtRunnerConnect(actorHostname, actorAkkaPort)
+    if (isProduction) {
+      reconnectInfo.foreach { info =>
+        import info._
+        balancer(context, info) ! SbtRunnerConnect(actorHostname, actorAkkaPort)
+      }
     }
   }
 

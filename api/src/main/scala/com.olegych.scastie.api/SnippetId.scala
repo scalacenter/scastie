@@ -5,15 +5,12 @@ import play.api.libs.json._
 object User {
   // low tech solution
   val admins: Set[String] = Set(
-    "dimart",
     "Duhemm",
     "heathermiller",
     "julienrf",
     "jvican",
     "MasseGuillaume",
-    "olafurpg",
-    "rorygraves",
-    "travissarles"
+    "olafurpg"
   )
   implicit val formatUser: OFormat[User] =
     Json.format[User]

@@ -3,7 +3,7 @@ package instrumentation
 
 import java.nio.file._
 
-import com.olegych.scastie.util.ScastieFileUtil.slurp
+import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.api.ScalaTarget
 import org.scalatest.FunSuite
 
@@ -34,7 +34,7 @@ class InstrumentSpecs extends FunSuite {
 
       val Right(obtained) = Instrument(original, target)
 
-      Diff.assertNoDiff(obtained, expected)
+      Diff.assertNoDiff(obtained.trim, expected.trim)
     }
   }
 
