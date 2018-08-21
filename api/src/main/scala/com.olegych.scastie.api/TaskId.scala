@@ -11,4 +11,6 @@ object SbtRunTaskId {
     Json.format[SbtRunTaskId]
 }
 
-case class SbtRunTaskId(snippetId: SnippetId) extends TaskId
+case class SbtRunTaskId(snippetId: SnippetId) extends TaskId {
+  override def toString: String = snippetId.toString
+}
