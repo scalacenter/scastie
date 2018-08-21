@@ -1,17 +1,17 @@
 package com.olegych.scastie.storage
 
 import java.nio.file._
+import java.nio.file.attribute.BasicFileAttributes
 
 import com.olegych.scastie.api._
 
 import play.api.libs.json._
+import reactivemongo.play.json._
 import reactivemongo.play.json.collection._
 
 import reactivemongo.api._
 import reactivemongo.api.indexes._
-
-import java.nio.file.Files
-import java.nio.file.attribute.BasicFileAttributes
+import reactivemongo.bson._
 
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
@@ -46,6 +46,20 @@ object ImportToMongoDB {
     } yield ()
   }
 
+  def findLast(collection: JSONCollection): Future[Long] = {
+    collection
+      .find(Json.obj())
+      .options(QueryOpts().batchSize(1))
+      .sort(Json.obj("time" -> -1))
+      .one[BSONDocument]
+      .map(
+        _.flatMap(
+          doc =>
+            doc.getAs[Long]("time") orElse doc.getAs[Int]("time").map(_.toLong)
+        ).getOrElse(0L)
+      )
+  }
+
   def dirSize(path: Path): Int = {
     val d = Files.newDirectoryStream(path)
     val s = d.asScala.size
@@ -57,23 +71,31 @@ object ImportToMongoDB {
 
     Await.result(createIndex(), Duration.Inf)
 
+    val lastTime = Await.result(snippets.flatMap(findLast), Duration.Inf)
+
+    println("last migration: " + lastTime)
+
     val List(dirPath, dirPath2, oldDirPath) =
       if (args.isEmpty)
         List(
           "/home/gui/scastie-dump2/snippets",
           "/home/gui/scastie-dump2/snippets-snap",
-          "/home/gui/scastie-dump2/old-snippets",
+          "/home/gui/scastie-dump2/old-snippets"
         )
       else args.toList
 
-    println(s"---- $dirPath -----")
-    runNew(dirPath)
+    if (lastTime == 0L) {
+      println(s"---- $dirPath -----")
+      runNew(dirPath, lastTime)
+    }
 
     println(s"---- $dirPath2 -----")
-    runNew(dirPath2)
+    runNew(dirPath2, lastTime)
 
-    println(s"---- $oldDirPath -----")
-    runOld(oldDirPath)
+    if (lastTime == 0L) {
+      println(s"---- $oldDirPath -----")
+      runOld(oldDirPath)
+    }
 
     println("-------")
     println("closing")
@@ -82,7 +104,7 @@ object ImportToMongoDB {
     system.terminate()
   }
 
-  def runNew(dirPath: String): Unit = {
+  def runNew(dirPath: String, lastTime: Long): Unit = {
     val dir = Paths.get(dirPath)
 
     val anonDirName = "_anonymous_"
@@ -95,7 +117,7 @@ object ImportToMongoDB {
       val toInsert =
         ds.asScala.iterator
           .filter(_.getFileName.toString != anonDirName)
-          .flatMap(doUser)
+          .flatMap(doUser(lastTime))
 
       var total = 0
       toInsert.foreach { elem =>
@@ -111,7 +133,7 @@ object ImportToMongoDB {
       val anon = dir.resolve(anonDirName)
       if (Files.exists(anon)) {
         println("*** STEP 2: convert annon snippets ***")
-        doAnon(anon)
+        doAnon(anon, lastTime)
       }
     }
   }
@@ -139,9 +161,9 @@ object ImportToMongoDB {
   }
 
   // level 1: /snippets/_anonymous_
-  def doAnon(anonDir: Path): Unit = {
+  def doAnon(anonDir: Path, lastTime: Long): Unit = {
     val ds = Files.newDirectoryStream(anonDir)
-    val toInsert = ds.asScala.iterator.flatMap(doBase64Anon)
+    val toInsert = ds.asScala.iterator.flatMap(doBase64Anon(lastTime))
     var total = 0
     toInsert.foreach { elem =>
       Await.result(insertOne(elem), Duration.Inf)
@@ -154,24 +176,24 @@ object ImportToMongoDB {
   }
 
   // level 2: /snippets/_anonymous_/fYC3KzfuTvSgejKtMcNYrQ
-  def doBase64Anon(base64Dir: Path): Option[MongoSnippet] = {
+  def doBase64Anon(lastTime: Long)(base64Dir: Path): Option[MongoSnippet] = {
     val snippetId = SnippetId(base64Dir.getFileName.toString, None)
-    toMongoSnippet(snippetId, base64Dir)
+    toMongoSnippet(snippetId, base64Dir, lastTime)
   }
 
   // level 1: /snippets/MasseGuillaume
-  def doUser(userDir: Path): List[MongoSnippet] = {
+  def doUser(lastTime: Long)(userDir: Path): List[MongoSnippet] = {
     val ds = Files.newDirectoryStream(userDir)
-    val out = ds.asScala.toList.flatMap(doBase64)
+    val out = ds.asScala.toList.flatMap(doBase64(lastTime))
     ds.close()
     out
   }
 
   // level 2: /snippets/MasseGuillaume/fYC3KzfuTvSgejKtMcNYrQ
-  def doBase64(base64Dir: Path): List[MongoSnippet] = {
+  def doBase64(lastTime: Long)(base64Dir: Path): List[MongoSnippet] = {
     if (isDir(base64Dir)) {
       val ds = Files.newDirectoryStream(base64Dir)
-      val out = ds.asScala.flatMap(doUpdate).toList
+      val out = ds.asScala.flatMap(doUpdate(lastTime)).toList
       ds.close()
       out
     } else {
@@ -180,7 +202,7 @@ object ImportToMongoDB {
   }
 
   // level 3: /snippets/MasseGuillaume/fYC3KzfuTvSgejKtMcNYrQ/0
-  def doUpdate(updateDir: Path): Option[MongoSnippet] = {
+  def doUpdate(lastTime: Long)(updateDir: Path): Option[MongoSnippet] = {
     val count = updateDir.getNameCount
     val user = updateDir.getName(count - 3).toString
     val base64 = updateDir.getName(count - 2).toString
@@ -189,7 +211,7 @@ object ImportToMongoDB {
     try {
       val snippetId =
         SnippetId(base64, Some(SnippetUserPart(user, update.toInt)))
-      toMongoSnippet(snippetId, updateDir)
+      toMongoSnippet(snippetId, updateDir, lastTime)
     } catch {
       case _: java.lang.NumberFormatException => None
     }
@@ -238,8 +260,10 @@ object ImportToMongoDB {
 
   }
 
-  def toMongoSnippet(snippetId: SnippetId, dir: Path): Option[MongoSnippet] = {
-    getInputs(dir).flatMap(
+  def toMongoSnippet(snippetId: SnippetId,
+                     dir: Path,
+                     lastTime: Long): Option[MongoSnippet] = {
+    getInputs(dir, lastTime).flatMap(
       in =>
         if (in.isShowingInUserProfile) {
           Some(
@@ -265,15 +289,17 @@ object ImportToMongoDB {
     else None
 
   def inputFile(dir: Path): Path = dir.resolve("input3.json")
-  def getInputs(dir: Path): Option[Inputs] = {
-    slurp(inputFile(dir)).flatMap(
-      json =>
+  def getInputs(dir: Path, lastTime: Long): Option[Inputs] = {
+    slurp(inputFile(dir)).flatMap { json =>
+      val time = getTime(dir)
+      if (time > lastTime) {
         try {
           Json.fromJson[Inputs](Json.parse(json)).asOpt
         } catch {
           case NonFatal(e) => None
-      }
-    )
+        }
+      } else None
+    }
   }
   def getTime(dir: Path): Long = getFileTimestamp(inputFile(dir))
 
