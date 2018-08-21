@@ -24,9 +24,6 @@ class RestApiServer(
   private def wrap(inputs: Inputs): InputsWithIpAndUser =
     InputsWithIpAndUser(inputs, UserTrace(ip.toString, maybeUser))
 
-  private def wrapEnsime(request: EnsimeRequest): EnsimeRequestEnvelop =
-    EnsimeRequestEnvelop(request, UserTrace(ip.toString, maybeUser))
-
   def run(inputs: Inputs): Future[SnippetId] = {
     dispatchActor
       .ask(RunSnippet(wrap(inputs)))
@@ -37,29 +34,6 @@ class RestApiServer(
     dispatchActor
       .ask(formatRequest)
       .mapTo[FormatResponse]
-  }
-
-  def autocomplete(
-      request: AutoCompletionRequest
-  ): Future[Option[AutoCompletionResponse]] = {
-
-    dispatchActor
-      .ask(wrapEnsime(request))
-      .mapTo[Option[AutoCompletionResponse]]
-  }
-
-  def typeAt(request: TypeAtPointRequest): Future[Option[TypeAtPointResponse]] = {
-    dispatchActor
-      .ask(wrapEnsime(request))
-      .mapTo[Option[TypeAtPointResponse]]
-  }
-
-  def updateEnsimeConfig(
-      updateEnsimeConfigRequest: UpdateEnsimeConfigRequest
-  ): Future[Option[EnsimeConfigUpdate]] = {
-    dispatchActor
-      .ask(wrapEnsime(updateEnsimeConfigRequest))
-      .mapTo[Option[EnsimeConfigUpdate]]
   }
 
   def save(inputs: Inputs): Future[SnippetId] = {

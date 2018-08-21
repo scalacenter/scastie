@@ -15,11 +15,6 @@ case class SbtRun(snippetId: SnippetId,
                   progressActor: ActorRef,
                   snippetActor: ActorRef)
 
-case class EnsimeConfigTask(inputs: Inputs)
-
-case object EnsimeConfigReady
-case object EnsimeConfigTimeout
-
 case class Replay(run: SbtRun)
 
 case object SbtUp

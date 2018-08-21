@@ -56,13 +56,7 @@ package object components {
   implicit val runtimeErrorReuse: Reusability[Option[RuntimeError]] =
     Reusability.byRefOr_==
 
-  implicit val completionsReuse: Reusability[List[Completion]] =
-    Reusability.byRefOr_==
-
   implicit val consoleOutputsReuse: Reusability[Vector[ConsoleOutput]] =
-    Reusability.byRefOr_==
-
-  implicit val typeInfoAtReuse: Reusability[TypeInfoAt] =
     Reusability.byRefOr_==
 
   implicit val snippetSummaryReuse: Reusability[List[SnippetSummary]] =
@@ -88,10 +82,6 @@ package object components {
 
   implicit val sbtRunnerStateReuse
     : Reusability[Option[Vector[SbtRunnerState]]] =
-    Reusability.byRefOr_==
-
-  implicit val cnsimeRunnerStateReuse
-    : Reusability[Option[Vector[EnsimeRunnerState]]] =
     Reusability.byRefOr_==
 
   implicit val statusStateReuse: Reusability[StatusState] =

@@ -14,7 +14,6 @@ sealed trait ScalaTarget {
   def sbtPluginsConfig: String
   def sbtRunCommand: String
   def runtimeDependency: Option[ScalaDependency]
-  def hasEnsimeSupport: Boolean
   def hasWorksheetMode: Boolean
 
   protected def sbtConfigScalaVersion(scalaVersion: String): String =
@@ -109,12 +108,6 @@ object ScalaTarget {
   }
 
   case class Jvm(scalaVersion: String) extends ScalaTarget {
-    def hasEnsimeSupport: Boolean = {
-//      scalaVersion.startsWith("2.12") ||
-//      scalaVersion.startsWith("2.11")
-      false
-    }
-
     def hasWorksheetMode: Boolean = {
       scalaVersion.startsWith("2.12") ||
       scalaVersion.startsWith("2.11") ||
@@ -149,9 +142,6 @@ object ScalaTarget {
   }
 
   case class Typelevel(scalaVersion: String) extends ScalaTarget {
-
-    def hasEnsimeSupport: Boolean =
-      Jvm(scalaVersion).hasEnsimeSupport
 
     def hasWorksheetMode: Boolean =
       Jvm(scalaVersion).hasWorksheetMode
@@ -195,9 +185,6 @@ object ScalaTarget {
 
   case class Js(scalaVersion: String, scalaJsVersion: String)
       extends ScalaTarget {
-
-    def hasEnsimeSupport: Boolean =
-      Jvm(scalaVersion).hasEnsimeSupport
 
     def hasWorksheetMode: Boolean =
       Jvm(scalaVersion).hasWorksheetMode
@@ -246,9 +233,6 @@ object ScalaTarget {
 
   case class Native(scalaVersion: String, scalaNativeVersion: String)
       extends ScalaTarget {
-
-    def hasEnsimeSupport: Boolean =
-      Jvm(scalaVersion).hasEnsimeSupport
 
     def hasWorksheetMode: Boolean =
       Jvm(scalaVersion).hasWorksheetMode
@@ -302,7 +286,7 @@ object ScalaTarget {
          |}
          |
          |object Main {
-         |  def main(args: Array[String]): Unit = { 
+         |  def main(args: Array[String]): Unit = {
          |    5 match {
          |      case Nat(n) => println(s"$n is a natural number")
          |      case _      => ()
@@ -312,8 +296,6 @@ object ScalaTarget {
   }
 
   case class Dotty(dottyVersion: String) extends ScalaTarget {
-
-    def hasEnsimeSupport: Boolean = false
 
     def hasWorksheetMode: Boolean = false
 

@@ -62,21 +62,6 @@ class ApiRoutes(
                   snippetId => complete(server.delete(snippetId))
                 )
               ),
-              path("autocomplete")(
-                entity(as[AutoCompletionRequest])(
-                  request => complete(server.autocomplete(request))
-                )
-              ),
-              path("typeAt")(
-                entity(as[TypeAtPointRequest])(
-                  request => complete(server.typeAt(request))
-                )
-              ),
-              path("updateEnsimeConfig")(
-                entity(as[UpdateEnsimeConfigRequest])(
-                  request => complete(server.updateEnsimeConfig(request))
-                )
-              ),
               path("format")(
                 entity(as[FormatRequest])(
                   request => complete(server.format(request))

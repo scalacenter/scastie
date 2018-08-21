@@ -15,8 +15,7 @@ private[editor] object RunDelta {
       Reusability.by((_: Editor).attachedDoms) &&
       Reusability.by((_: Editor).instrumentations) &&
       Reusability.by((_: Editor).compilationInfos) &&
-      Reusability.by((_: Editor).runtimeError) &&
-      Reusability.by((_: Editor).completions)
+      Reusability.by((_: Editor).runtimeError)
     )
   }
 
@@ -61,23 +60,6 @@ private[editor] object RunDelta {
       }.when_(lineNumbersChanged)
     }
 
-    def setTypeAtInfo: Callback = {
-      val typeAtInfoChanged =
-        currentProps.map(_.typeAtInfo) != Some(nextProps.typeAtInfo)
-
-      if (typeAtInfoChanged) {
-        val updateMessage =
-          Callback {
-            state.hoverMessage.updateMessage(nextProps.typeAtInfo.get.typeInfo)
-          }.when_(nextProps.typeAtInfo.isDefined)
-
-        updateMessage >>
-          modState(_.copy(typeAt = nextProps.typeAtInfo))
-      } else {
-        Callback(())
-      }
-    }
-
     def refresh: Callback = {
       val shouldRefresh =
         currentProps
@@ -94,11 +76,9 @@ private[editor] object RunDelta {
     setTheme >>
       setCode >>
       setLineNumbers >>
-      setTypeAtInfo >>
       ProblemAnnotations(editor, currentProps, nextProps, state, modState) >>
       RenderAnnotations(editor, currentProps, nextProps, state, modState) >>
       RuntimeErrorAnnotations(editor, currentProps, nextProps, state, modState) >>
-      AutocompletionRender(editor, currentProps, nextProps, state, modState) >>
       refresh
   }
 }

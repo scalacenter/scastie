@@ -69,8 +69,6 @@ object MainPanel {
         instrumentations = state.outputs.instrumentations,
         compilationInfos = state.outputs.compilationInfos,
         runtimeError = state.outputs.runtimeError,
-        completions = state.completions,
-        typeAtInfo = state.typeAtInfo,
         run = backend.run,
         saveOrUpdate = backend.saveOrUpdate,
         clear = backend.clear,
@@ -83,10 +81,7 @@ object MainPanel {
         toggleLineNumbers = backend.toggleLineNumbers,
         togglePresentationMode = backend.togglePresentationMode,
         formatCode = backend.formatCode,
-        codeChange = backend.codeChange,
-        completeCodeAt = backend.completeCodeAt,
-        requestTypeAt = backend.typeAt,
-        clearCompletions = backend.clearCompletions
+        codeChange = backend.codeChange
       ).render
 
     val console =

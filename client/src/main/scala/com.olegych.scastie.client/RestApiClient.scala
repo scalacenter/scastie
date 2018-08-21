@@ -68,20 +68,6 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
   def format(request: FormatRequest): Future[FormatResponse] =
     post[FormatResponse].using("/format", request).map(_.get)
 
-  def autocomplete(
-      request: AutoCompletionRequest
-  ): Future[Option[AutoCompletionResponse]] =
-    post[AutoCompletionResponse]
-      .using("/autocomplete", request)
-
-  def typeAt(request: TypeAtPointRequest): Future[Option[TypeAtPointResponse]] =
-    post[TypeAtPointResponse].using("/typeAt", request)
-
-  def updateEnsimeConfig(
-      request: UpdateEnsimeConfigRequest
-  ): Future[Option[EnsimeConfigUpdate]] =
-    post[EnsimeConfigUpdate].using("/updateEnsimeConfig", request)
-
   def save(inputs: Inputs): Future[SnippetId] =
     post[SnippetId].using("/save", inputs).map(_.get)
 

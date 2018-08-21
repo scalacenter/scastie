@@ -71,12 +71,10 @@ object Scastie {
         isDarkTheme = state.isDarkTheme,
         status = state.status,
         inputs = state.inputs,
-        ensimeConfigurationLoading = state.ensimeConfigurationLoading,
         serverUrl = props.serverUrl,
         toggleTheme = scope.backend.toggleTheme,
         view = scope.backend.viewSnapshot(state.view),
-        openHelpModal = scope.backend.openHelpModal,
-        updateEnsimeConfig = scope.backend.updateEnsimeConfig
+        openHelpModal = scope.backend.openHelpModal
       ).render.unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(
         state,

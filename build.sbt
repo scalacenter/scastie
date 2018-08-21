@@ -37,9 +37,6 @@ val startAllCommands = List(
   "client/fastOptJS"
 )
 
-val startAll2Commands =
-  "ensimeRunner/reStart" :: startAllCommands
-
 def sbtJoinTask(commands: List[String]): String =
   commands.mkString(";", ";", "")
 
@@ -62,14 +59,11 @@ lazy val ciAlias =
         // "utils/test"
         // "balancer/test",
         // "sbtRunner/test"
-
-        // "ensimeRunner/test"
       )
     )
   )
 
 startAll(startAllCommands)
-startAll(startAll2Commands, "2")
 
 lazy val scastie = project
   .in(file("."))
@@ -81,7 +75,6 @@ lazy val scastie = project
     balancer,
     client,
     e2e,
-    ensimeRunner,
     instrumentation,
     migration,
     runtimeScala210JVM,
@@ -97,7 +90,7 @@ lazy val scastie = project
   )
   .settings(baseSettings)
   .settings(ciAlias)
-  .settings(Deployment.settings(server, sbtRunner, ensimeRunner))
+  .settings(Deployment.settings(server, sbtRunner))
 
 lazy val testSettings =
   Seq(
@@ -175,54 +168,6 @@ lazy val smallRunnerRuntimeDependenciesInTest = Seq(
 )
 
 lazy val dockerOrg = "scalacenter"
-
-lazy val ensimeRunner = project
-  .in(file("ensime-runner"))
-  .settings(baseSettings)
-  .settings(loggingAndTest)
-  .settings(runnerRuntimeDependenciesInTest)
-  .settings(
-    reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
-    resolvers += Resolver.sonatypeRepo("public"),
-    libraryDependencies ++= Seq(
-      akka("actor"),
-      akka("remote"),
-      akka("testkit") % Test,
-      akka("slf4j"),
-      akkaHttp,
-      "org.ensime" %% "jerky" % latestEnsime,
-      "org.ensime" %% "s-express" % latestEnsime
-    ),
-    assemblyMergeStrategy in assembly := {
-      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-      case in @ PathList("reference.conf", xs @ _*) =>
-        val old = (assemblyMergeStrategy in assembly).value
-        old(in)
-      case x => MergeStrategy.first
-    },
-    imageNames in docker := Seq(
-      ImageName(
-        namespace = Some(dockerOrg),
-        repository = "scastie-ensime-runner",
-        tag = Some(gitHash())
-      )
-    ),
-    dockerfile in docker := Def
-      .task {
-        DockerHelper(
-          baseDirectory = (baseDirectory in ThisBuild).value.toPath,
-          sbtTargetDir = target.value.toPath,
-          ivyHome = ivyPaths.value.ivyHome.get.toPath,
-          organization = organization.value,
-          artifact = assembly.value.toPath,
-          sbtScastie = (moduleName in sbtScastie).value
-        )
-      }
-      .dependsOn(runnerRuntimeDependencies: _*)
-      .value
-  )
-  .dependsOn(apiJVM, utils, sbtRunner)
-  .enablePlugins(sbtdocker.DockerPlugin)
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))

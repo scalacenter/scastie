@@ -32,7 +32,6 @@ case class SbtConfig(config: String)
 case class UserTrace(ip: String, user: Option[User])
 
 case class InputsWithIpAndUser(inputs: Inputs, user: UserTrace)
-case class EnsimeRequestEnvelop(request: EnsimeRequest, user: UserTrace)
 
 case class RunSnippet(inputs: InputsWithIpAndUser)
 case class SaveSnippet(inputs: InputsWithIpAndUser)
@@ -67,19 +66,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private val host = config.getString("remote-hostname")
   private val sbtPortsStart = config.getInt("remote-sbt-ports-start")
   private val sbtPortsSize = config.getInt("remote-sbt-ports-size")
-  private val ensimePortsStart = config.getInt("remote-ensime-ports-start")
-  private val ensimePortsSize = config.getInt("remote-ensime-ports-size")
-
-  val ensimeConfig =
-    ConfigFactory.load().getConfig("com.olegych.scastie.ensime")
-
-  val ensimeSbtReloadTimeout = {
-    val timeunit = TimeUnit.SECONDS
-    FiniteDuration(
-      ensimeConfig.getDuration("sbtReloadTimeout", timeunit),
-      timeunit
-    )
-  }
 
   val sbtConfig = ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
 
@@ -105,7 +91,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   private val sbtPorts = (0 until sbtPortsSize).map(sbtPortsStart + _)
-  private val ensimePorts = (0 until ensimePortsSize).map(ensimePortsStart + _)
 
   private def connectRunner(
       runnerName: String,
@@ -124,10 +109,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   private var remoteSbtSelections =
     sbtPorts.map(connectRunner("SbtRunner", "SbtActor", host)).toMap
-
-  private var remoteEnsimeSelections = ensimePorts
-    .map(connectRunner("EnsimeRunner", "EnsimeActor", host))
-    .toMap
 
   val emptyHistory = History(Queue.empty[Record[Inputs]], size = 100)
 
@@ -154,31 +135,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   updateSbtBalancer(sbtLoadBalancer)
 
-  private var ensimeLoadBalancer: EnsimeBalancer = {
-    val ensimeServers = remoteEnsimeSelections.to[Vector].map {
-      case (_, ref) => {
-        val state: EnsimeServerState = EnsimeServerState.Unknown
-        Server.of[EnsimeTaskId](
-          ref,
-          Inputs.default,
-          state
-        )
-      }
-    }
-
-    val ensimeTaskCost = 3.seconds
-
-    LoadBalancer(
-      servers = ensimeServers,
-      history = emptyHistory,
-      taskCost = ensimeTaskCost,
-      reloadCost = ensimeSbtReloadTimeout,
-      needsReload = needsReload
-    )
-  }
-
-  updateEnsimeBalancer(ensimeLoadBalancer)
-
   import context._
 
   if (isProduction) {
@@ -188,11 +144,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         Await.result(
           Future.sequence(sbtLoadBalancer.servers.map(_.ref ? SbtPing)),
           15.seconds
-        )
-
-        Await.result(
-          Future.sequence(ensimeLoadBalancer.servers.map(_.ref ? SbtPing)),
-          10.seconds
         )
 
         ()
@@ -234,23 +185,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       }
     }
 
-  private val portsInfo = sbtPorts.mkString("\nsbt: [", ", ", "]") + ensimePorts
-    .mkString("\nensime: [", ", ", "]")
-  log.info(s"connecting to: $host $portsInfo")
-
   private def updateSbtBalancer(newSbtBalancer: SbtBalancer): Unit = {
     if (sbtLoadBalancer != newSbtBalancer) {
       statusActor ! SbtLoadBalancerUpdate(newSbtBalancer)
     }
     sbtLoadBalancer = newSbtBalancer
-    ()
-  }
-
-  private def updateEnsimeBalancer(newEnsimeBalancer: EnsimeBalancer): Unit = {
-    if (ensimeLoadBalancer != newEnsimeBalancer) {
-      statusActor ! EnsimeLoadBalancerUpdate(newEnsimeBalancer)
-    }
-    ensimeLoadBalancer = newEnsimeBalancer
     ()
   }
 
@@ -283,41 +222,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   def receive: Receive = event.LoggingReceive(event.Logging.InfoLevel) {
-
-    case EnsimeRequestEnvelop(request, UserTrace(ip0, user)) => {
-      val taskId = EnsimeTaskId.create
-      log.info("id: {}, ip: {} task: {}", taskId, ip0, request)
-
-      val ip = Ip(ip0)
-
-      val task = Task(request.inputs, ip, taskId)
-
-      ensimeLoadBalancer.add(task) match {
-        case Some((server, newBalancer)) => {
-          updateEnsimeBalancer(newBalancer)
-
-          implicit val timeout = Timeout(20.seconds)
-          val senderRef = sender()
-
-          (server.ref ? EnsimeTaskRequest(request, taskId))
-            .mapTo[EnsimeTaskResponse]
-            .map { taskResponse =>
-              updateEnsimeBalancer(
-                ensimeLoadBalancer.done(taskResponse.taskId)
-              )
-              senderRef ! taskResponse.response
-            }
-        }
-        case None => {
-          sender ! None
-        }
-      }
-    }
-
-    case EnsimeTaskResponse(response, taskId) => {
-      updateEnsimeBalancer(ensimeLoadBalancer.done(taskId))
-    }
-
     case SbtPong => ()
 
     case format: FormatRequest => {
@@ -435,21 +339,13 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       for {
         host <- event.remoteAddress.host
         port <- event.remoteAddress.port
-        ref <- remoteSbtSelections
-          .get((host, port))
-          .orElse(remoteEnsimeSelections.get((host, port)))
+        ref <- remoteSbtSelections.get((host, port))
       } {
         log.warning("removing disconnected: {}", ref)
         val previousRemoteSbtSelections = remoteSbtSelections
         remoteSbtSelections = remoteSbtSelections - ((host, port))
         if (previousRemoteSbtSelections != remoteSbtSelections) {
           updateSbtBalancer(sbtLoadBalancer.removeServer(ref))
-        }
-
-        val previousRemoteEnsimeSelections = remoteEnsimeSelections
-        remoteEnsimeSelections = remoteEnsimeSelections - ((host, port))
-        if (previousRemoteEnsimeSelections != remoteEnsimeSelections) {
-          updateEnsimeBalancer(ensimeLoadBalancer.removeServer(ref))
         }
       }
     }
@@ -483,33 +379,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       }
     }
 
-    case EnsimeRunnerConnect(runnerHostname, runnerAkkaPort) => {
-      log.info("Connected Ensime Runner {}", runnerAkkaPort)
-
-      if (!remoteEnsimeSelections.contains((runnerHostname, runnerAkkaPort))) {
-        log.info("Connected Ensime Runner {}", runnerAkkaPort)
-
-        val sel =
-          connectRunner("EnsimeRunner", "EnsimeActor", runnerHostname)(
-            runnerAkkaPort
-          )
-        val (_, ref) = sel
-
-        remoteEnsimeSelections = remoteEnsimeSelections + sel
-
-        val state: EnsimeServerState = EnsimeServerState.Initializing
-
-        updateEnsimeBalancer(
-          ensimeLoadBalancer.addServer(
-            Server.of[EnsimeTaskId](ref, Inputs.default, state)
-          )
-        )
-
-      }
-    }
-
     case ReceiveStatus(requester) => {
-      sender ! LoadBalancerInfo(sbtLoadBalancer, ensimeLoadBalancer, requester)
+      sender ! LoadBalancerInfo(sbtLoadBalancer, requester)
     }
 
     case statusProgress: StatusProgress => {
@@ -518,33 +389,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case run: Run => {
       run0(run.inputsWithIpAndUser, run.snippetId)
-    }
-
-    case ensimeState: EnsimeServerState => {
-      updateEnsimeBalancer(
-        ensimeLoadBalancer.copy(
-          servers = ensimeLoadBalancer.servers.map(
-            server => {
-              val serverPort = server.ref.anchorPath.address.port
-              val senderPort = sender.path.address.port
-
-              if (serverPort == senderPort) {
-                // clear tasks if we are switching configuration
-                val mailbox =
-                  if (ensimeState == EnsimeServerState.Ready) Queue()
-                  else server.mailbox
-
-                server.copy(
-                  state = ensimeState,
-                  mailbox = mailbox
-                )
-              } else {
-                server
-              }
-            }
-          )
-        )
-      )
     }
   }
 }
