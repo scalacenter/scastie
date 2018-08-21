@@ -15,13 +15,12 @@ import sbtdocker.ImageName
 
 object Deployment {
   def settings(server: Project,
-               sbtRunner: Project,
-               ensimeRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
-    deploy := deployTask(server, sbtRunner, ensimeRunner).value,
-    deployServer := deployServerTask(server, sbtRunner, ensimeRunner).value,
-    deployQuick := deployQuickTask(server, sbtRunner, ensimeRunner).value,
-    deployServerQuick := deployServerQuickTask(server, sbtRunner, ensimeRunner).value,
-    deployLocal := deployLocalTask(server, sbtRunner, ensimeRunner).value
+               sbtRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
+    deploy := deployTask(server, sbtRunner).value,
+    deployServer := deployServerTask(server, sbtRunner).value,
+    deployQuick := deployQuickTask(server, sbtRunner).value,
+    deployServerQuick := deployServerQuickTask(server, sbtRunner).value,
+    deployLocal := deployLocalTask(server, sbtRunner).value
   )
 
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
@@ -39,44 +38,38 @@ object Deployment {
     taskKey[Unit]("Deploy server without building server zip")
 
   def deployServerTask(server: Project,
-                       sbtRunner: Project,
-                       ensimeRunner: Project): Def.Initialize[Task[Unit]] =
+                       sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, ensimeRunner).value
+      val deployment = deploymentTask(sbtRunner).value
       val serverZip = (packageBin in (server, Universal)).value.toPath
 
       deployment.deployServer(serverZip)
     }
 
   def deployLocalTask(server: Project,
-                      sbtRunner: Project,
-                      ensimeRunner: Project): Def.Initialize[Task[Unit]] =
+                      sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, ensimeRunner).value
+      val deployment = deploymentTask(sbtRunner).value
       val serverZip = (packageBin in (server, Universal)).value.toPath
       val imageIdSbt = (docker in sbtRunner).value
-      val imageIdEnsime = (docker in ensimeRunner).value
 
       deployment.deployLocal(serverZip)
     }
 
   def deployTask(server: Project,
-                 sbtRunner: Project,
-                 ensimeRunner: Project): Def.Initialize[Task[Unit]] =
+                 sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, ensimeRunner).value
+      val deployment = deploymentTask(sbtRunner).value
       val serverZip = (packageBin in (server, Universal)).value.toPath
       val imageIdSbt = (dockerBuildAndPush in sbtRunner).value
-      val imageIdEnsime = (dockerBuildAndPush in ensimeRunner).value
 
       deployment.deploy(serverZip)
     }
 
   def deployQuickTask(server: Project,
-                      sbtRunner: Project,
-                      ensimeRunner: Project): Def.Initialize[Task[Unit]] =
+                      sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, ensimeRunner).value
+      val deployment = deploymentTask(sbtRunner).value
       val serverZip = serverZipTask(server).value
 
       deployment.logger.warn(
@@ -86,10 +79,9 @@ object Deployment {
     }
 
   def deployServerQuickTask(server: Project,
-                            sbtRunner: Project,
-                            ensimeRunner: Project): Def.Initialize[Task[Unit]] =
+                            sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, ensimeRunner).value
+      val deployment = deploymentTask(sbtRunner).value
       val serverZip = serverZipTask(server).value
 
       deployment.logger.warn(
@@ -99,15 +91,13 @@ object Deployment {
     }
 
   private def deploymentTask(
-      sbtRunner: Project,
-      ensimeRunner: Project
+      sbtRunner: Project
   ): Def.Initialize[Task[Deployment]] =
     Def.task {
       new Deployment(
         rootFolder = (baseDirectory in ThisBuild).value,
         version = version.value,
         sbtDockerImage = (imageNames in (sbtRunner, docker)).value.head,
-        ensimeDockerImage = (imageNames in (ensimeRunner, docker)).value.head,
         logger = streams.value.log
       )
     }
@@ -124,7 +114,6 @@ object Deployment {
 class Deployment(rootFolder: File,
                  version: String,
                  sbtDockerImage: ImageName,
-                 ensimeDockerImage: ImageName,
                  val logger: Logger) {
   def deploy(serverZip: Path): Unit = {
     deployRunners()
@@ -263,9 +252,6 @@ class Deployment(rootFolder: File,
     val sbtDockerNamespace = sbtDockerImage.namespace.get
     val sbtDockerRepository = sbtDockerImage.repository
 
-    val ensimeDockerNamespace = ensimeDockerImage.namespace.get
-    val ensimeDockerRepository = ensimeDockerImage.repository
-
     killRunners()
 
     deployRunners(
@@ -274,13 +260,6 @@ class Deployment(rootFolder: File,
       sbtRunnersPortsStart,
       sbtRunnersPortsSize
     )
-
-    // deployRunners(
-    //   "ensime",
-    //   s"$ensimeDockerNamespace/$ensimeDockerRepository",
-    //   ensimeRunnersPortsStart,
-    //   ensimeRunnersPortsSize
-    // )
   }
 
   def killRunners(): Unit = {
@@ -434,11 +413,6 @@ class Deployment(rootFolder: File,
     balancerConfig.getInt("remote-sbt-ports-start")
   private val sbtRunnersPortsSize =
     balancerConfig.getInt("remote-sbt-ports-size")
-
-  private val ensimeRunnersPortsStart =
-    balancerConfig.getInt("remote-ensime-ports-start")
-  private val ensimeRunnersPortsSize =
-    balancerConfig.getInt("remote-ensime-ports-size")
 
   private val executablePermissions =
     PosixFilePermissions.fromString("rwxr-xr-x")

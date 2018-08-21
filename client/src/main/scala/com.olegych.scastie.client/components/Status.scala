@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api.{Inputs, SbtRunTaskId, EnsimeServerState}
+import com.olegych.scastie.api.{Inputs, SbtRunTaskId}
 import com.olegych.scastie.client.{StatusState, Page}
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
@@ -70,58 +70,7 @@ object Status {
         case _ => div()
       }
 
-    def renderEnsimeState(state: EnsimeServerState): VdomElement = {
-      import EnsimeServerState._
-
-      val label =
-        state match {
-          case Unknown        => "Unknown"
-          case Initializing   => "Initializing"
-          case CreatingConfig => "Generating .ensime configuration file"
-          case Connecting     => "Connecting to ensime server"
-          case Indexing       => "Indexing"
-          case Ready          => "Ready"
-        }
-
-      val stateCss =
-        state match {
-          case Unknown        => "unknown"
-          case Initializing   => "initializing"
-          case CreatingConfig => "creating-config"
-          case Connecting     => "connecting"
-          case Indexing       => "indexing"
-          case Ready          => "ready"
-        }
-
-      span(cls := "runner-state " + stateCss)(label)
-    }
-
-    val ensimeStatus =
-      props.state.ensimeRunners match {
-        case Some(ensimeRunners) =>
-          div(
-            h1("Ensime Runners"),
-            ul(
-              ensimeRunners.zipWithIndex.map {
-                case (ensimeRunner, i) => {
-                  li(key := i)(
-                    renderConfiguration(ensimeRunner.config),
-                    renderEnsimeState(ensimeRunner.serverState),
-                    ul(
-                      ensimeRunner.tasks.map(task => li(task.toString)).toTagMod
-                    )
-                  )
-                }
-              }.toTagMod
-            )
-          )
-        case _ => div()
-      }
-
-    div(
-      sbtRunnersStatus,
-      ensimeStatus
-    )
+    div(sbtRunnersStatus)
   }
 
   private val component =

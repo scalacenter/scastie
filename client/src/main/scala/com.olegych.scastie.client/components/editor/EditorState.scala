@@ -10,10 +10,6 @@ private[editor] case class EditorState(
     renderAnnotations: Map[api.Instrumentation, Annotation] = Map(),
     runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map(),
     codeFoldsAnnotations: Map[RangePosititon, Annotation] = Map(),
-    completionState: CompletionState = Idle,
-    hoverMessage: HoverMessage = new HoverMessage(),
-    loadingMessage: LoadingMessage = new LoadingMessage(),
     showTypeButtonPressed: Boolean = false,
-    typeAt: Option[api.TypeInfoAt] = None,
     unfoldedCode: Set[RangePosititon] = Set()
 )

@@ -34,7 +34,6 @@ object ScastieState {
       showLineNumbers = false,
       consoleState = ConsoleState.default,
       inputsHasChanged = false,
-      ensimeConfigurationLoading = false,
       snippetState = SnippetState(
         snippetId = None,
         isSnippetSaved = false,
@@ -48,23 +47,15 @@ object ScastieState {
       inputs = Inputs.default,
       outputs = Outputs.default,
       status = StatusState.empty,
-      completions = List(),
-      typeAtInfo = None,
       isEmbedded = isEmbedded
     )
   }
-
-  implicit val dontSerializeCompletions: Format[List[Completion]] =
-    dontSerializeList[Completion]
 
   implicit val dontSerializeAttachedDoms: Format[AttachedDoms] =
     dontSerialize[AttachedDoms](AttachedDoms(Map()))
 
   implicit val dontSerializeStatusState: Format[StatusState] =
     dontSerialize[StatusState](StatusState.empty)
-
-  implicit val dontSerializeTypeInfoAt: Format[TypeInfoAt] =
-    dontSerializeOption[TypeInfoAt]
 
   implicit val dontSerializeEventStream: Format[EventStream[StatusProgress]] =
     dontSerializeOption[EventStream[StatusProgress]]
@@ -90,15 +81,12 @@ case class ScastieState(
     showLineNumbers: Boolean,
     consoleState: ConsoleState,
     inputsHasChanged: Boolean,
-    ensimeConfigurationLoading: Boolean,
     snippetState: SnippetState,
     user: Option[User],
     attachedDoms: AttachedDoms,
     inputs: Inputs,
     outputs: Outputs,
     status: StatusState,
-    completions: List[Completion],
-    typeAtInfo: Option[TypeInfoAt],
     isEmbedded: Boolean = false
 ) {
 
@@ -146,7 +134,6 @@ case class ScastieState(
         showLineNumbers,
         consoleState,
         inputsHasChanged,
-        ensimeConfigurationLoading,
         SnippetState(
           snippetId,
           isSnippetSaved,
@@ -163,8 +150,6 @@ case class ScastieState(
         ),
         outputs,
         status,
-        completions,
-        typeAtInfo,
         isEmbedded
       )
 
@@ -333,12 +318,6 @@ case class ScastieState(
       inputs = inputs
     )
 
-  def setCompletions(completions: List[Completion]): ScastieState =
-    copy(completions = completions)
-
-  def setTypeAtInto(typeAtInfoAt: Option[TypeInfoAt]): ScastieState =
-    copy(typeAtInfo = typeAtInfoAt)
-
   def setSbtConfigExtra(config: String): ScastieState =
     copyAndSave(
       inputs = inputs.copy(sbtConfigExtra = config),
@@ -461,20 +440,6 @@ case class ScastieState(
       }
       case StatusProgress.Sbt(sbtRunners) => {
         copy(status = status.copy(sbtRunners = Some(sbtRunners)))
-      }
-      case StatusProgress.Ensime(ensimeRunners) => {
-        val updatedStatus =
-          status.copy(ensimeRunners = Some(ensimeRunners))
-
-        val ensimeConfigurationLoading0 =
-          ensimeConfigurationLoading &&
-            updatedStatus.ensimeReady(inputs)
-
-        copy(
-          status = updatedStatus,
-          ensimeConfigurationLoading = ensimeConfigurationLoading0
-        )
-
       }
     }
   }

@@ -15,8 +15,6 @@ final case class Editor(isDarkTheme: Boolean,
                         instrumentations: Set[api.Instrumentation],
                         compilationInfos: Set[api.Problem],
                         runtimeError: Option[api.RuntimeError],
-                        completions: List[api.Completion],
-                        typeAtInfo: Option[api.TypeInfoAt],
                         run: Reusable[Callback],
                         saveOrUpdate: Reusable[Callback],
                         clear: Reusable[Callback],
@@ -29,10 +27,7 @@ final case class Editor(isDarkTheme: Boolean,
                         toggleLineNumbers: Reusable[Callback],
                         togglePresentationMode: Reusable[Callback],
                         formatCode: Reusable[Callback],
-                        codeChange: String ~=> Callback,
-                        completeCodeAt: Int ~=> Callback,
-                        requestTypeAt: (String, Int) ~=> Callback,
-                        clearCompletions: Reusable[Callback]) {
+                        codeChange: String ~=> Callback) {
 
   @inline def render: VdomElement = Editor.component(this)
 }

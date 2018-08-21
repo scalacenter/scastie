@@ -35,26 +35,6 @@ private[editor] object EditorOptions {
       ((editor: CodeMirrorEditor2) => f(editor))
     }
 
-    def autocomplete(editor: CodeMirrorEditor2): Unit = {
-      //todo get from inputs
-      val hasEnsimeSupport = false
-      if (!props.isEmbedded && hasEnsimeSupport) {
-        val doc = editor.getDoc()
-        val pos = doc.indexFromPos(doc.getCursor())
-
-        props.clearCompletions.runNow()
-        props.completeCodeAt(pos).runNow()
-
-        val state = scope.state.runNow()
-
-        if (state.completionState == Idle) {
-          state.loadingMessage.show(editor, doc.getCursor())
-        }
-
-        scope.modState(_.copy(completionState = Requested)).runNow()
-      }
-    }
-
     js.Dictionary[Any](
         "autoRefresh" -> props.isEmbedded,
         "mode" -> "text/x-scala",
@@ -80,14 +60,6 @@ private[editor] object EditorOptions {
           ctrl + "-M" -> command(props.openNewSnippetModal.runNow()),
           ctrl + "-L" -> CM.Pass,
           ctrl + "-E" -> command(props.openEmbeddedModal.runNow()),
-          // "Ctrl" + "-Space" -> commandE { editor =>
-          //   autocomplete(editor)
-          // },
-          // "." -> commandE { editor =>
-          //   editor.getDoc().replaceSelection(".")
-          //   props.codeChange(editor.getDoc().getValue()).runNow()
-          //   autocomplete(editor)
-          // },
           "Esc" -> command(props.clear.runNow()),
           "F1" -> command(props.toggleHelp.runNow()),
           "F2" -> command(props.toggleTheme.runNow()),

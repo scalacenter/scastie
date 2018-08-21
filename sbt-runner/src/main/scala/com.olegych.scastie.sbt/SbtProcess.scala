@@ -21,7 +21,6 @@ object SbtProcess {
   case object Ready extends SbtState
   case object Reloading extends SbtState
   case object Running extends SbtState
-  case object EnsimeGeneratingConfig extends SbtState
 
   sealed trait Data
   case class SbtData(currentInputs: Inputs) extends Data
@@ -33,10 +32,6 @@ object SbtProcess {
       snippetActor: ActorRef,
       timeoutEvent: Option[Cancellable]
   ) extends Data
-  case class EnsimeRun(inputs: Inputs,
-                       timeoutEvent: Cancellable,
-                       replyTo: ActorRef)
-      extends Data
 
   case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
     def message: String = {
@@ -141,21 +136,12 @@ class SbtProcess(runTimeout: FiniteDuration,
       stash()
       stay
     }
-    case Event(_: EnsimeConfigTask, _) => {
-      stash()
-      stay
-    }
     case Event(timeout: SbtStateTimeout, run: SbtRun) => {
       println("*** timeout ***")
 
       val progress = timeout.toProgress(run.snippetId)
       run.progressActor ! progress
       throw new Exception(timeout.message)
-    }
-
-    case Event(EnsimeConfigTimeout, run: EnsimeRun) => {
-      run.replyTo ! EnsimeConfigTimeout
-      throw new Exception("ensime generate config timeout")
     }
   }
 
@@ -187,23 +173,6 @@ class SbtProcess(runTimeout: FiniteDuration,
   }
 
   when(Ready) {
-    case Event(EnsimeConfigTask(taskInputs), _) => {
-      setInputs(taskInputs)
-
-      val timeout =
-        context.system.scheduler.scheduleOnce(
-          reloadTimeout,
-          self,
-          EnsimeConfigTimeout
-        )
-
-      process ! Input("ensimeConfig")
-
-      goto(EnsimeGeneratingConfig).using(
-        EnsimeRun(taskInputs, timeout, sender)
-      )
-    }
-
     case Event(task @ SbtTask(snippetId, taskInputs, ip, login, progressActor),
                SbtData(stateInputs)) => {
       println(s"Running: (login: $login, ip: $ip) \n $taskInputs")
@@ -268,18 +237,6 @@ class SbtProcess(runTimeout: FiniteDuration,
       if (isPrompt(output.line)) {
         sbtRun.timeoutEvent.foreach(_.cancel())
         goto(Ready).using(SbtData(sbtRun.inputs))
-      } else {
-        stay
-      }
-    }
-  }
-
-  when(EnsimeGeneratingConfig) {
-    case Event(output: ProcessOutput, ensimeRun: EnsimeRun) => {
-      if (isPrompt(output.line)) {
-        ensimeRun.timeoutEvent.cancel()
-        ensimeRun.replyTo ! EnsimeConfigReady
-        goto(Ready).using(SbtData(ensimeRun.inputs))
       } else {
         stay
       }

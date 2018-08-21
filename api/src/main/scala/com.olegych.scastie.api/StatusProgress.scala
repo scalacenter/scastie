@@ -14,23 +14,10 @@ case class SbtRunnerState(
     tasks: Queue[SbtRunTaskId],
     sbtState: SbtState
 )
-
-object EnsimeRunnerState {
-  implicit val formatEnsimeRunnerState: OFormat[EnsimeRunnerState] =
-    Json.format[EnsimeRunnerState]
-}
-
-case class EnsimeRunnerState(
-    config: Inputs,
-    tasks: Queue[EnsimeTaskId],
-    serverState: EnsimeServerState
-)
-
 sealed trait StatusProgress
 object StatusProgress {
   implicit object StatusProgressFormat extends Format[StatusProgress] {
     private val formatSbt = Json.format[StatusProgress.Sbt]
-    private val formatEnsime = Json.format[StatusProgress.Ensime]
 
     def writes(status: StatusProgress): JsValue = {
 
@@ -42,11 +29,6 @@ object StatusProgress {
         case runners: StatusProgress.Sbt => {
           formatSbt.writes(runners).asInstanceOf[JsObject] ++
             JsObject(Seq("$type" -> JsString("StatusProgress.Sbt")))
-        }
-
-        case ensime: StatusProgress.Ensime => {
-          formatEnsime.writes(ensime).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("StatusProgress.Ensime")))
         }
       }
     }
@@ -63,9 +45,6 @@ object StatusProgress {
                 case JsString("StatusProgress.Sbt") =>
                   formatSbt.reads(json)
 
-                case JsString("StatusProgress.Ensime") =>
-                  formatEnsime.reads(json)
-
                 case _ => JsError(Seq())
               }
             }
@@ -79,5 +58,4 @@ object StatusProgress {
 
   case object KeepAlive extends StatusProgress
   case class Sbt(runners: Vector[SbtRunnerState]) extends StatusProgress
-  case class Ensime(runners: Vector[EnsimeRunnerState]) extends StatusProgress
 }

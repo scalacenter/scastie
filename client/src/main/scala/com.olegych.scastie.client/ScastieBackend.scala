@@ -518,9 +518,7 @@ class ScastieBackend(scastieId: UUID,
         }
       }
 
-    initialState >>
-      updateEnsimeConfig0.when_(!props.isEmbedded) >>
-      loadUser
+    initialState >> loadUser
   }
 
   val formatCode: Reusable[Callback] =
@@ -562,92 +560,11 @@ class ScastieBackend(scastieId: UUID,
       )
     )
 
-  val completeCodeAt: Int ~=> Callback =
-    Reusable.fn(
-      pos =>
-        scope.state.flatMap(
-          state => {
-            Callback
-              .future(
-                restApiClient
-                  .autocomplete(
-                    AutoCompletionRequest(EnsimeRequestInfo(state.inputs, pos))
-                  )
-                  .map {
-                    case Some(response) =>
-                      scope.modState(_.setCompletions(response.completions))
-                    case _ =>
-                      Callback.empty
-                  }
-              )
-          }
-      )
-    )
-
-  val typeAt: (String, Int) ~=> Callback = {
-    Reusable.fn {
-      case (token, pos) =>
-        scope.state.flatMap(
-          state => {
-            Callback
-              .future(
-                restApiClient
-                  .typeAt(
-                    TypeAtPointRequest(EnsimeRequestInfo(state.inputs, pos))
-                  )
-                  .map {
-                    case Some(response) =>
-                      scope.modState(
-                        _.setTypeAtInto(
-                          Some(
-                            TypeInfoAt(
-                              token = token,
-                              typeInfo = response.typeInfo
-                            )
-                          )
-                        )
-                      )
-                    case _ =>
-                      Callback.empty
-                  }
-              )
-          }
-        )
-    }
-  }
-
   val loadProfile: Reusable[Future[List[SnippetSummary]]] =
     Reusable.always(restApiClient.fetchUserSnippets())
 
   val deleteSnippet: SnippetId ~=> Future[Boolean] =
     Reusable.always(snippetId => restApiClient.delete(snippetId))
-
-  private def updateEnsimeConfig0: Callback = {
-    scope.state.flatMap(
-      state => {
-        Callback.future(
-          restApiClient
-            .updateEnsimeConfig(
-              UpdateEnsimeConfigRequest(state.inputs)
-            )
-            .map {
-              case Some(EnsimeConfigUpdate(ready)) =>
-                scope.modState(_.copy(ensimeConfigurationLoading = !ready))
-
-              case _ => Callback.empty
-            }
-        )
-      }
-    )
-  }
-
-  val updateEnsimeConfig: Reusable[Callback] =
-    Reusable.always(updateEnsimeConfig0)
-
-  val clearCompletions: Reusable[Callback] =
-    Reusable.always(
-      scope.modState(_.setCompletions(List.empty))
-    )
 
   private def setHome = scope.props.flatMap(
     _.router

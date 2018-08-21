@@ -22,12 +22,10 @@ object Assets {
 final case class SideBar(isDarkTheme: Boolean,
                          status: StatusState,
                          inputs: Inputs,
-                         ensimeConfigurationLoading: Boolean,
                          serverUrl: Option[String],
                          toggleTheme: Reusable[Callback],
                          view: StateSnapshot[View],
-                         openHelpModal: Reusable[Callback],
-                         updateEnsimeConfig: Reusable[Callback]) {
+                         openHelpModal: Reusable[Callback]) {
   @inline def render: VdomElement = SideBar.component(this)
 }
 
@@ -66,23 +64,15 @@ object SideBar {
       )
 
     val runnersStatusButton = {
-      val ensimeLoading = false
-      // !props.status.ensimeReady(props.inputs) &&
-      //   !props.ensimeConfigurationLoading &&
-      //   props.status.ensimeRunnersCount.map(_ > 0).getOrElse(false)
-
       val (statusIcon, statusClass, statusLabel) =
-        (props.status.sbtRunnerCount, ensimeLoading) match {
-          case (None, _) =>
+        props.status.sbtRunnerCount match {
+          case None =>
             ("fa-times-circle", "status-unknown", "Unknown")
 
-          case (Some(0), _) =>
+          case Some(0) =>
             ("fa-times-circle", "status-down", "Down")
 
-          case (Some(_), true) =>
-            ("fa-circle-o-notch fa-spin", "status-up", "Loading")
-
-          case (Some(_), false) =>
+          case Some(_) =>
             ("fa-check-circle", "status-up", "Up")
         }
 
@@ -100,7 +90,6 @@ object SideBar {
       forView = View.Editor,
       buttonTitle = "Editor",
       faIcon = "fa-edit",
-      // onClick = props.updateEnsimeConfig
       onClick = reusableEmpty
     ).render
 

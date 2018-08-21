@@ -26,9 +26,6 @@ object SbtShared {
   val latestScalaJs = "0.6.24"
   val latestDotty = "0.7.0-RC1"
 
-  // sbt-ensime 1.12.14 creates .ensime with 2.0.0-M4 server jar
-  val latestSbtEnsime = "1.12.14"
-  val latestEnsime = "2.0.0-M4"
   val latestCoursier = "1.0.3"
 
   val sbtVersion = "0.13.16"
@@ -185,7 +182,6 @@ object SbtShared {
           "defaultScalaJsVersion" -> latestScalaJs,
           "defaultDottyVersion" -> latestDotty,
           "latestCoursier" -> latestCoursier,
-          "latestSbtEnsime" -> latestSbtEnsime,
           "sbtVersion" -> readSbtVersion(
             (baseDirectory in ThisBuild).value.toPath
           ),

@@ -12,14 +12,6 @@ trait RestApi {
 
   def delete(snippetId: SnippetId): Future[Boolean]
 
-  def autocomplete(
-      request: AutoCompletionRequest
-  ): Future[Option[AutoCompletionResponse]]
-  def typeAt(request: TypeAtPointRequest): Future[Option[TypeAtPointResponse]]
-  def updateEnsimeConfig(
-      request: UpdateEnsimeConfigRequest
-  ): Future[Option[EnsimeConfigUpdate]]
-
   def format(request: FormatRequest): Future[FormatResponse]
 
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]]

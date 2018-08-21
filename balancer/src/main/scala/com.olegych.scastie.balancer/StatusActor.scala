@@ -14,13 +14,7 @@ import com.olegych.scastie.util.GraphStageForwarder
 case object SubscribeStatus
 
 case class SbtLoadBalancerUpdate(newSbtBalancer: SbtBalancer)
-case class EnsimeLoadBalancerUpdate(newEnsimeBalancer: EnsimeBalancer)
-
-case class LoadBalancerInfo(
-    sbtBalancer: SbtBalancer,
-    ensimeBalancer: EnsimeBalancer,
-    requester: ActorRef
-)
+case class LoadBalancerInfo(sbtBalancer: SbtBalancer, requester: ActorRef)
 
 case class SetDispatcher(dispatchActor: ActorRef)
 
@@ -58,13 +52,8 @@ class StatusActor private () extends Actor with ActorLogging {
       publishers.foreach(_ ! convertSbt(newSbtBalancer))
     }
 
-    case EnsimeLoadBalancerUpdate(newEnsimeBalancer) => {
-      publishers.foreach(_ ! convertEnsime(newEnsimeBalancer))
-    }
-
-    case LoadBalancerInfo(sbtBalancer, ensimeBalancer, requester) => {
+    case LoadBalancerInfo(sbtBalancer, requester) => {
       requester ! convertSbt(sbtBalancer)
-      requester ! convertEnsime(ensimeBalancer)
     }
 
     case SetDispatcher(dispatchActorReference) => {
@@ -80,21 +69,6 @@ class StatusActor private () extends Actor with ActorLogging {
             config = server.lastConfig,
             tasks = server.mailbox.map(_.taskId),
             sbtState = server.state
-        )
-      )
-    )
-  }
-
-  private def convertEnsime(
-      newEnsimeBalancer: EnsimeBalancer
-  ): StatusProgress = {
-    StatusProgress.Ensime(
-      newEnsimeBalancer.servers.map(
-        server =>
-          EnsimeRunnerState(
-            config = server.lastConfig,
-            tasks = server.mailbox.map(_.taskId),
-            serverState = server.state
         )
       )
     )

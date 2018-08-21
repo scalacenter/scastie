@@ -24,15 +24,6 @@ object EditorReusability {
   implicit val codeFoldsReuse: Reusability[Map[RangePosititon, Annotation]] =
     Reusability((a, b) => a.keys == b.keys)
 
-  implicit val completionStateReuse: Reusability[CompletionState] =
-    Reusability.byRefOr_==
-
-  implicit val loadingMessageReuse: Reusability[LoadingMessage] =
-    Reusability.by((_: LoadingMessage).isVisible)
-
-  implicit val hoverMessageReuse: Reusability[HoverMessage] =
-    Reusability.by((_: HoverMessage).getMessage)
-
   implicit val editorStateReuse: Reusability[EditorState] =
     Reusability.caseClassExcept[EditorState]('editor)
 }

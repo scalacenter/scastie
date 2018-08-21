@@ -37,7 +37,6 @@ nvm use 8.9.1
 ```
 sbt
 > sbtRunner/reStart
-> ensimeRunner/reStart
 > server/reStart
 > client/fastOptJS::startWebpackDevServer
 > ~client/fastOptJS
@@ -69,7 +68,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
 ├── balancer            | distribute load based on sbt configuration
 ├── bin                 | scalfmt runner
 ├── build.sbt           | build definition
-├── client              | Scala.js & scalajs-react code for the frontend 
+├── client              | Scala.js & scalajs-react code for the frontend
 ├── demo                | cool examples to try in scastie
 ├── deployment          | production configurations
 ├── docker              | Dockerfile for sbt images
@@ -78,7 +77,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
 ├── runtime-dotty       | see `runtime-scala`
 ├── runtime-scala       | methods exposed inside scastie
 ├── sbt-runner          | remote actor communicating with sbt instance over I/O streams
-├── sbt-scastie         | sbt plugin to report errors and console output with the `sbt-api` model 
+├── sbt-scastie         | sbt plugin to report errors and console output with the `sbt-api` model
 ├── server              | web server
 └── utils               | read/writte files
 ```
@@ -94,16 +93,16 @@ Scala.js Client     run/save/format                                           +-
 |      |        | |                   | +------------+      |             | |   +----------+             +-----------+  |||
 |      |        | |                   |                     |             +---> |          |  <----->    |sbt|scastie|  ||+
 |      |        | |                   |                     |               |   +----+-----+ I/O Stream  +-----------+  |+
-|      |        | |                   | +------------+      | akka+remote   +-------------------------------------------+
-|      |        | |                   | |LoadBalancer|<-------------------+
-|      |        | |                   | +------------+      |             |   +-------------------------------------------+
-|      |        | |                   |                     |             |  +-------------------------------------------+|
-|      |        | |                   | SnippetContainer(DB)|             | +-------------------------------------------+||
-|      |        | |                   |                     |             | |    EnsimeActor               Ensime       |||
-|      |        | | <-----------------+ oauth               |             | |   +----+-----+  <----->    +-----------+  |||
-|      +--------+ |  SnippetProgress  | static ressources   |             +---> |          |   Jerky     |           |  ||+
-+-----------------+  (sse/websocket)  +---------------------+               |   +----------+ (websocket) +-----------+  |+
-                                                                            +-------------------------------------------+
+|      |        | |                   |                     |               +-------------------------------------------+
+|      |        | |                   |                     |
+|      |        | |                   |                     |
+|      |        | |                   |                     |
+|      |        | |                   | SnippetContainer(DB)|
+|      |        | |                   |                     |
+|      |        | | <-----------------+ oauth               |
+|      +--------+ |  SnippetProgress  | static ressources   |
++-----------------+  (sse/websocket)  +---------------------+
+
 
 Editor: http://asciiflow.com/
 ```
@@ -128,20 +127,20 @@ git pull
 bash
 . /home/scastie/.nix-profile/etc/profile.d/nix.sh
 nix-shell -A scastie
-sbt deploy 
+sbt deploy
 ```
 
 ## Check logs
 ```
 ssh scastie@scastie.scala-lang.org
-tail -F -n1000 output.log 
-ssh scastie@scastie-sbt.scala-lang.org 
+tail -F -n1000 output.log
+ssh scastie@scastie-sbt.scala-lang.org
 ~/log.sh
 ```
 
 ## Full
 
-0. You need access to `scastie@scastie.scala-lang.org`, `https://github.com/scalacenter/scastie-secrets`, `http://scala-webapps.epfl.ch:8081` and be a member of `https://hub.docker.com/u/scalacenter/`   
+0. You need access to `scastie@scastie.scala-lang.org`, `https://github.com/scalacenter/scastie-secrets`, `http://scala-webapps.epfl.ch:8081` and be a member of `https://hub.docker.com/u/scalacenter/`
 
 These people have access:
 
@@ -182,7 +181,7 @@ exit
 ```
 git commit
 
-sbt ";ensimeRunner/docker;sbtRunner/docker"
+sbt "sbtRunner/docker"
 
 docker run \
   --network=host \
@@ -191,12 +190,4 @@ docker run \
   -e RUNNER_RECONNECT=false \
   -e RUNNER_PRODUCTION=true \
   scalacenter/scastie-sbt-runner:`git rev-parse --verify HEAD`
-
-docker run \
-  --network=host \
-  -e RUNNER_PORT=6150 \
-  -e RUNNER_HOSTNAME=127.0.0.1 \
-  -e RUNNER_RECONNECT=false \
-  -e RUNNER_PRODUCTION=true \
-  scalacenter/scastie-ensime-runner:`git rev-parse --verify HEAD`
 ```

@@ -17,7 +17,7 @@ class GenerateProjects(sbtTargetDir: Path) {
     val helloWorld =
       """|object Main {
          |  def main(args: Array[String]): Unit = {
-         |    println("Hello, World!") 
+         |    println("Hello, World!")
          |  }
          |}
          |""".stripMargin
@@ -108,10 +108,6 @@ class GeneratedProject(inputs: Inputs, sbtDir: Path) {
   def runCmd(dest: String): String = {
     val dir = sbtDir.getFileName
 
-    val ensimeCmd =
-      if (inputs.hasEnsimeSupport) ";ensimeConfig"
-      else ""
-
-    s"""cd $dest/$dir && sbt "$ensimeCmd;${inputs.target.sbtRunCommand}""""
+    s"""cd $dest/$dir && sbt "${inputs.target.sbtRunCommand}""""
   }
 }

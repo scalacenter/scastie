@@ -14,11 +14,3 @@ docker run \
   -e RUNNER_RECONNECT=false \
   -e RUNNER_PRODUCTION=true \
   scalacenter/scastie-sbt-runner:$HASH
-
-docker run \
-  --network=host \
-  -e RUNNER_PORT=6150 \
-  -e RUNNER_HOSTNAME=localhost \
-  -e RUNNER_RECONNECT=false \
-  -e RUNNER_PRODUCTION=true \
-  scalacenter/scastie-ensime-runner:$HASH

@@ -48,9 +48,6 @@ private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
           .runNow()
       })
 
-      // val setEnsimeHandler =
-      //   EnsimeHandler.setup(editor, scope)
-
       val setEditor =
         scope.modState(_.copy(editor = Some(editor)))
 
@@ -80,7 +77,6 @@ private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
         )
 
       setEditor >>
-        // setEnsimeHandler >>
         applyDeltas >>
         foldCode >>
         delayedRefresh
