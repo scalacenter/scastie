@@ -72,7 +72,6 @@ object ImportToMongoDB {
     Await.result(createIndex(), Duration.Inf)
 
     val lastTime = Await.result(snippets.flatMap(findLast), Duration.Inf)
-
     println("last migration: " + lastTime)
 
     val List(dirPath, dirPath2, oldDirPath) =
@@ -312,7 +311,16 @@ object ImportToMongoDB {
           .filter(_.nonEmpty)
           .toList
           .takeRight(maxProgress)
-          .map(line => Json.fromJson[SnippetProgress](Json.parse(line)).asOpt)
+          .map(
+            line =>
+              try {
+                Json.fromJson[SnippetProgress](Json.parse(line)).asOpt
+              } catch {
+                case NonFatal(e) =>
+                  e.printStackTrace()
+                  None
+            }
+          )
           .flatten
       )
       .getOrElse(Nil)

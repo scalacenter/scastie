@@ -449,6 +449,7 @@ lazy val sbtScastie = project
 // migration from file containers to mongodb
 // sbt migration/assembly
 // scp ./migration/target/scala-2.12/migration.jar scastie@scastie.scala-lang.org:migration.jar
+// ssh scastie@scastie.scala-lang.org
 // java -jar migration.jar snippets snippets-snap old-snippets
 lazy val migration = project
   .settings(baseSettings)
