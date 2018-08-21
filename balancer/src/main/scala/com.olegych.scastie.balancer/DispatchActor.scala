@@ -51,10 +51,8 @@ case class ReceiveStatus(requester: ActorRef)
 case class Run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId)
 
 class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
-// extends PersistentActor with AtLeastOnceDelivery
     extends Actor
     with ActorLogging {
-
   override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {
     case e =>
       log.error(e, "failure")
@@ -180,7 +178,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         )
       }
       case _ => {
-        println("fallback to mongodb container")
+        log.warning("fallback to mongodb container")
         new MongoDBSnippetsContainer
       }
     }
@@ -221,6 +219,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     }
   }
 
+  private def wait(f: Future[Unit]): Unit =
+    Await.result(f, Duration.Inf)
+
   def receive: Receive = event.LoggingReceive(event.Logging.InfoLevel) {
     case SbtPong => ()
 
@@ -234,56 +235,57 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       log.info(s"starting ${x}")
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val sender = this.sender
-      container.create(inputs, user.map(u => UserLogin(u.login))).map {
+      wait(container.create(inputs, user.map(u => UserLogin(u.login))).map {
         snippetId =>
           run(inputsWithIpAndUser, snippetId)
-          log.info(s"finished ${x}")
           sender ! snippetId
-      }
+      })
     }
 
     case SaveSnippet(inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val sender = this.sender
-      container.save(inputs, user.map(u => UserLogin(u.login))).map {
+      wait(container.save(inputs, user.map(u => UserLogin(u.login))).map {
         snippetId =>
           run(inputsWithIpAndUser, snippetId)
           sender ! snippetId
-      }
+      })
     }
 
     case AmendSnippet(snippetId, inputsWithIpAndUser) => {
       val sender = this.sender
-      container.amend(snippetId, inputsWithIpAndUser.inputs).map {
+      wait(container.amend(snippetId, inputsWithIpAndUser.inputs).map {
         amendSuccess =>
           if (amendSuccess) {
             run(inputsWithIpAndUser, snippetId)
           }
           sender ! amendSuccess
-      }
+      })
     }
 
     case UpdateSnippet(snippetId, inputsWithIpAndUser) => {
       val sender = this.sender
-      container.update(snippetId, inputsWithIpAndUser.inputs).map {
+      wait(container.update(snippetId, inputsWithIpAndUser.inputs).map {
         updatedSnippetId =>
           updatedSnippetId.foreach(
             snippetIdU => run(inputsWithIpAndUser, snippetIdU)
           )
           sender ! updatedSnippetId
-      }
+      })
     }
 
     case ForkSnippet(snippetId, inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) =
         inputsWithIpAndUser
       val sender = this.sender
-      container
-        .fork(snippetId, inputs, user.map(u => UserLogin(u.login)))
-        .map { forkedSnippetId =>
-          sender ! Some(forkedSnippetId)
-          run(inputsWithIpAndUser, forkedSnippetId)
-        }
+      wait(
+        container
+          .fork(snippetId, inputs, user.map(u => UserLogin(u.login)))
+          .map { forkedSnippetId =>
+            sender ! Some(forkedSnippetId)
+            run(inputsWithIpAndUser, forkedSnippetId)
+          }
+      )
     }
 
     case DeleteSnippet(snippetId) => {
