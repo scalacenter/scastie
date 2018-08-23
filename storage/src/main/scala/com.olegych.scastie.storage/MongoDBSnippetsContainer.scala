@@ -1,20 +1,17 @@
 package com.olegych.scastie.storage
 
 import com.olegych.scastie.api._
-
 import play.api.libs.json._
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection._
-
 import reactivemongo.api._
 import reactivemongo.bson._
 import reactivemongo.api.commands.WriteResult
 
-import reactivemongo.play.json.BSONFormats
-
 import scala.concurrent.{ExecutionContext, Future}
-
 import System.{lineSeparator => nl}
+
+import reactivemongo.api.indexes.{Index, IndexType}
 
 case class MongoSnippet(
     simpleSnippetId: String,
@@ -44,8 +41,34 @@ class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext)
 
   val futureConnection = Future.fromTry(connection)
   val fdb = futureConnection.flatMap(_.database("snippets"))
-  val snippets = fdb.map(_.collection("snippets"))
-  val oldSnippets = fdb.map(_.collection("old-snippets"))
+  val snippets = {
+    val snippetIdIndex = Index(key = Seq(("simpleSnippetId", IndexType.Hashed)),
+                               name = Some("snippets-id"))
+    val oldSnippetIdIndex = Index(key = Seq(("oldId", IndexType.Hashed)),
+                                  name = Some("snippets-old-id"))
+    val userIndex =
+      Index(key = Seq(("user", IndexType.Hashed)), name = Some("user"))
+    val snippetUserId = Index(key =
+                                Seq(("snippetId.user.login", IndexType.Hashed)),
+                              name = Some("snippetId.user.login"))
+    val isShowingInUserProfile = Index(
+      key = Seq(("inputs.isShowingInUserProfile", IndexType.Hashed)),
+      name = Some("inputs.isShowingInUserProfile")
+    )
+    for {
+      fdb <- fdb
+      coll = fdb.collection("snippets")
+      _ <- Future.traverse(
+        List(snippetIdIndex,
+             oldSnippetIdIndex,
+             userIndex,
+             snippetUserId,
+             isShowingInUserProfile)
+      ) { i =>
+        coll.indexesManager.ensure(i)
+      }
+    } yield coll
+  }
 
   def toMongoSnippet(snippetId: SnippetId, inputs: Inputs): MongoSnippet =
     MongoSnippet(
@@ -119,7 +142,14 @@ class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext)
     readMongoSnippet(snippetId).map(_.map(_.toFetchResult))
 
   def listSnippets(user: UserLogin): Future[List[SnippetSummary]] = {
-    val userSnippets = BSONDocument("user" -> user.login)
+    val userSnippets = Json.obj(
+      "$and" -> List(
+        Json.obj(
+          "snippetId.user.login" -> user.login,
+          "inputs.isShowingInUserProfile" -> true,
+        )
+      )
+    )
 
     val mongoSnippets =
       snippets.flatMap(

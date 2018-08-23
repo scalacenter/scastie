@@ -1,30 +1,39 @@
 package com.olegych.scastie.storage
 
 import java.io.IOException
-import java.nio.file.{Files, Path, FileVisitResult, SimpleFileVisitor}
+import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 import java.nio.file.attribute.BasicFileAttributes
-
 import java.util.concurrent.Executors
 
 import com.olegych.scastie.api._
-import org.scalatest.{FunSuite, BeforeAndAfterAll}
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
+import scala.util.Random
 
 class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
-
+  val mongo = false
   val root = Files.createTempDirectory("test")
   val oldRoot = Files.createTempDirectory("old-test")
 
-  private def testContainer =
-    new FilesSnippetsContainer(root, oldRoot)(
-      Executors.newSingleThreadExecutor()
-    )
+  private lazy val mongoContainer = new MongoDBSnippetsContainer()(
+    scala.concurrent.ExecutionContext.Implicits.global
+  )
+  private val testContainer: SnippetsContainer = {
+    if (mongo)
+      mongoContainer
+    else {
+      new FilesSnippetsContainer(root, oldRoot)(
+        Executors.newSingleThreadExecutor()
+      )
+    }
+  }
 
   override protected def afterAll(): Unit = {
     deleteRecursively(root)
     deleteRecursively(oldRoot)
+    if (mongo) mongoContainer.driver.close()
   }
 
   private implicit class FAwait[T](f: Future[T]) {
@@ -92,7 +101,7 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
 
   test("update") {
     val container = testContainer
-    val user = UserLogin("github-user-update")
+    val user = UserLogin("github-user-update" + Random.nextString(10))
     val inputs1 =
       Inputs.default.copy(code = "inputs1").copy(isShowingInUserProfile = true)
     val snippetId1 = container.save(inputs1, Some(user)).await
@@ -118,7 +127,9 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     val snippetId1 =
-      container.save(inputs1, Some(UserLogin("github-user"))).await
+      container
+        .save(inputs1, Some(UserLogin("github-user" + Random.nextString(10))))
+        .await
 
     val inputs2 = inputs1.copy(code = "inputs2")
     val amendSuccess = container.amend(snippetId1, inputs2).await
@@ -132,7 +143,8 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
 
   test("listSnippets") {
     val container = testContainer
-    val user = UserLogin("github-user-list")
+    val user = UserLogin("github-user-list" + Random.nextString(10))
+    val user2 = UserLogin("github-user-list2" + Random.nextString(10))
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     container.save(inputs1, Some(user)).await
@@ -142,6 +154,13 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
 
     val inputs3 = Inputs.default.copy(code = "inputs3")
     container.save(inputs3, Some(user)).await
+
+    val user2inputs = Inputs.default.copy(code = "inputs3")
+    container.save(user2inputs, Some(user2)).await
+
+    val inputs4 =
+      Inputs.default.copy(code = "inputs4", isShowingInUserProfile = false)
+    container.create(inputs4, Some(user)).await
 
     val snippets = container.listSnippets(user).await
 
@@ -153,7 +172,7 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
 
   test("delete") {
     val container = testContainer
-    val user = UserLogin("github-user-delete")
+    val user = UserLogin("github-user-delete" + Random.nextString(10))
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     val snippetId1 = container.save(inputs1, Some(user)).await
