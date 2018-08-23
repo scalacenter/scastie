@@ -191,4 +191,6 @@ class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext)
     snippets.flatMap(
       _.find(select(id)).one[MongoSnippet].map(_.map(_.toFetchResult))
     )
+
+  override def close(): Unit = driver.close()
 }

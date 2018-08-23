@@ -35,7 +35,8 @@ trait SnippetsContainer {
       _ <- insert0(snippetId, inputs) if (deleted)
     } yield deleted
 
-  final def create(inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] = {
+  final def create(inputs: Inputs,
+                   user: Option[UserLogin]): Future[SnippetId] = {
     insert0(newSnippetId(user), inputs)
   }
 
@@ -75,7 +76,9 @@ trait SnippetsContainer {
     SnippetId(uuid, user.map(u => SnippetUserPart(u.login)))
   }
 
-  protected final def updateSnippetId(snippetId: SnippetId): Option[SnippetId] = {
+  protected final def updateSnippetId(
+      snippetId: SnippetId
+  ): Option[SnippetId] = {
     snippetId.user match {
       case Some(SnippetUserPart(login, lastUpdateId)) => {
         Some(
@@ -127,4 +130,6 @@ trait SnippetsContainer {
 
   private def insert0(snippetId: SnippetId, inputs: Inputs): Future[SnippetId] =
     insert(snippetId, inputs).map(_ => snippetId)
+
+  def close(): Unit = ()
 }

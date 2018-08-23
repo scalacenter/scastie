@@ -161,6 +161,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   override def postStop(): Unit = {
     super.postStop()
+    container.close()
   }
 
   val containerType = config.getString("snippets-container")
