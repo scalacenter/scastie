@@ -154,6 +154,7 @@ class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext)
     val mongoSnippets =
       snippets.flatMap(
         _.find(userSnippets)
+          .sort(Json.obj("time" -> -1))
           .cursor[MongoSnippet]()
           .collect[List](maxDocs = 1000,
                          Cursor.FailOnError[List[MongoSnippet]]())

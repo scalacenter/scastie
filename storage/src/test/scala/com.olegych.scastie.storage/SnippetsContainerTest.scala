@@ -163,10 +163,8 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
     container.create(inputs4, Some(user)).await
 
     val snippets = container.listSnippets(user).await
-
-    assert(snippets.size == 3)
     assert(
-      snippets.map(_.summary).toSet == Set("inputs1", "inputs2", "inputs3")
+      snippets.map(_.summary) == List("inputs3", "inputs2", "inputs1")
     )
   }
 

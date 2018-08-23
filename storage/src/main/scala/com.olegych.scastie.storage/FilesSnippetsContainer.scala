@@ -104,27 +104,31 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
             ds.close()
           }
 
-        uuids.flatMap { uuid =>
-          val updates = updateIdS(user.login, uuid)
+        uuids
+          .flatMap { uuid =>
+            val updates = updateIdS(user.login, uuid)
 
-          updates.flatMap { update =>
-            val snippetId =
-              SnippetId(uuid, Some(SnippetUserPart(user.login, update)))
-            readInputs(snippetId) match {
-              case Some(inputs) =>
-                if (inputs.isShowingInUserProfile) {
-                  List(
-                    SnippetSummary(
-                      snippetId,
-                      inputs.code.split(nl).take(3).mkString(nl),
-                      getFileTimestamp(snippetId)
-                    )
-                  )
-                } else Nil
-              case None => Nil
-            }
+            updates
+              .flatMap { update =>
+                val snippetId =
+                  SnippetId(uuid, Some(SnippetUserPart(user.login, update)))
+                readInputs(snippetId) match {
+                  case Some(inputs) =>
+                    if (inputs.isShowingInUserProfile) {
+                      List(
+                        SnippetSummary(
+                          snippetId,
+                          inputs.code.split(nl).take(3).mkString(nl),
+                          getFileTimestamp(snippetId)
+                        )
+                      )
+                    } else Nil
+                  case None => Nil
+                }
+              }
           }
-        }.toList
+          .toList
+          .sortBy(-_.time)
       } else Nil
     }
   }
