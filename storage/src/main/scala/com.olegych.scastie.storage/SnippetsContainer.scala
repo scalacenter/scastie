@@ -35,8 +35,7 @@ trait SnippetsContainer {
       _ <- insert0(snippetId, inputs) if (deleted)
     } yield deleted
 
-  final def create(inputs: Inputs,
-                   user: Option[UserLogin]): Future[SnippetId] = {
+  final def create(inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] = {
     insert0(newSnippetId(user), inputs)
   }
 
