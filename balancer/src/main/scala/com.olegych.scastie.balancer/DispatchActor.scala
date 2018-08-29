@@ -50,6 +50,8 @@ case class ReceiveStatus(requester: ActorRef)
 
 case class Run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId)
 
+case object Ping
+
 class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 // extends PersistentActor with AtLeastOnceDelivery
     extends Actor
@@ -133,24 +135,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     )
   }
 
-  updateSbtBalancer(sbtLoadBalancer)
-
   import context._
 
-  if (isProduction) {
-    system.scheduler.schedule(0.seconds, 30.seconds) {
-      implicit val timeout: Timeout = Timeout(10.seconds)
-      try {
-        Await.result(
-          Future.sequence(sbtLoadBalancer.servers.map(_.ref ? SbtPing)),
-          15.seconds
-        )
-
-        ()
-      } catch {
-        case e: TimeoutException => ()
-      }
-    }
+  system.scheduler.schedule(0.seconds, 30.seconds) {
+    self ! Ping
   }
 
   override def preStart(): Unit = {
@@ -390,6 +378,20 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case run: Run => {
       run0(run.inputsWithIpAndUser, run.snippetId)
+    }
+    case ping: Ping.type => {
+      implicit val timeout: Timeout = Timeout(10.seconds)
+      Future.sequence {
+        sbtLoadBalancer.servers.map { s =>
+          (s.ref ? SbtPing)
+            .map { _ =>
+              log.info(s"pinged ${s} server")
+            }
+            .recover {
+              case e => log.error(e, s"couldn't ping ${s} server")
+            }
+        }
+      }
     }
   }
 }
