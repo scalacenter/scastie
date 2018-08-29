@@ -56,9 +56,10 @@ case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
         val serversTaskIds =
           servers.flatMap(_.currentTaskId).mkString("[", ", ", "]")
 
-        throw new Exception(
+        log.error(
           s"""cannot find taskId: $taskId from servers task ids $serversTaskIds"""
         )
+        this
     }
   }
 
