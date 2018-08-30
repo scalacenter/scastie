@@ -45,14 +45,15 @@ case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
   private lazy val configs = servers.map(_.currentConfig)
 
   def done(taskId: T): Option[LoadBalancer[C, T, R, S]] = {
-    log.info(s"Task done: $taskId")
     val serverRunningTask =
       servers.zipWithIndex.find(_._1.currentTaskId.contains(taskId))
 
     serverRunningTask match {
       case Some((server, index)) =>
+        log.info(s"Task done: $taskId")
         Some(copy(servers = servers.updated(index, server.done)))
       case None =>
+        log.info(s"Task not found: $taskId")
         None
     }
   }

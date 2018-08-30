@@ -326,12 +326,12 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
             updateSbtBalancer(newBalancer)
           case None =>
             if (done.retries >= 0) {
-              system.scheduler.scheduleOnce(100.millis) {
+              system.scheduler.scheduleOnce(1.second) {
                 self ! done.copy(retries = done.retries - 1)
               }
             } else {
               log.error(
-                s"stopped retrying to update $sbtLoadBalancer with ${done}"
+                s"stopped retrying to update ${sbtLoadBalancer.servers.flatMap(_.mailbox.map(_.taskId)} with ${done}"
               )
             }
         }
