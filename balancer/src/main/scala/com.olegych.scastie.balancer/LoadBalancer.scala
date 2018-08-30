@@ -53,12 +53,6 @@ case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
       case Some((server, index)) =>
         Some(copy(servers = servers.updated(index, server.done)))
       case None =>
-        val serversTaskIds =
-          servers.flatMap(_.currentTaskId).mkString("[", ", ", "]")
-
-        log.error(
-          s"""cannot find taskId: $taskId from servers task ids $serversTaskIds"""
-        )
         None
     }
   }
