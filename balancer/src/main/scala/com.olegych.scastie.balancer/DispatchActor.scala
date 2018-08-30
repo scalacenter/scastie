@@ -330,9 +330,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
                 self ! done.copy(retries = done.retries - 1)
               }
             } else {
-              log.error(
-                s"stopped retrying to update ${sbtLoadBalancer.servers.flatMap(_.mailbox.map(_.taskId)} with ${done}"
-              )
+              val taskIds =
+                sbtLoadBalancer.servers.flatMap(_.mailbox.map(_.taskId))
+              log.error(s"stopped retrying to update ${taskIds} with ${done}")
             }
         }
       }
