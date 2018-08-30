@@ -385,7 +385,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         sbtLoadBalancer.servers.map { s =>
           (s.ref ? SbtPing)
             .map { _ =>
-              log.info(s"pinged ${s} server")
+              log.info(s"pinged ${s.ref} server")
             }
             .recover {
               case e => log.error(e, s"couldn't ping ${s} server")
