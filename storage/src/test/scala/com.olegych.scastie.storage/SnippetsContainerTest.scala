@@ -148,15 +148,19 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     container.save(inputs1, Some(user)).await
+    Thread.sleep(100)
 
     val inputs2 = Inputs.default.copy(code = "inputs2")
     container.save(inputs2, Some(user)).await
+    Thread.sleep(100)
 
     val inputs3 = Inputs.default.copy(code = "inputs3")
     container.save(inputs3, Some(user)).await
+    Thread.sleep(100)
 
     val user2inputs = Inputs.default.copy(code = "inputs3")
     container.save(user2inputs, Some(user2)).await
+    Thread.sleep(100)
 
     val inputs4 =
       Inputs.default.copy(code = "inputs4", isShowingInUserProfile = false)

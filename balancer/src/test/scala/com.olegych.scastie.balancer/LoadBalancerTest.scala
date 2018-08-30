@@ -157,7 +157,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(assigned.ref == server.ref)
     assert(balancer0.servers.head.mailbox.size == 1)
 
-    val balancer1 = balancer0.done(taskId)
+    val balancer1 = balancer0.done(taskId).get
     assert(balancer1.servers.head.mailbox.isEmpty)
   }
 
@@ -190,12 +190,12 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server1.mailbox.size == 2)
     assert(server1.currentTaskId.contains(taskId1))
 
-    val balancer2 = balancer1.done(taskId1)
+    val balancer2 = balancer1.done(taskId1).get
     val server2 = balancer2.servers.head
     assert(server2.mailbox.size == 1)
     assert(server2.currentTaskId.contains(taskId2))
 
-    val balancer3 = balancer2.done(taskId2)
+    val balancer3 = balancer2.done(taskId2).get
     val server3 = balancer3.servers.head
     assert(server3.mailbox.isEmpty)
     assert(server3.currentTaskId.isEmpty)

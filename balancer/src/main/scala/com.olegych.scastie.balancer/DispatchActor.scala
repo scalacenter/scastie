@@ -1,9 +1,8 @@
 package com.olegych.scastie.balancer
 
-import com.olegych.scastie.api
-import com.olegych.scastie.api._
-import com.olegych.scastie.util._
-import com.olegych.scastie.storage._
+import java.nio.file.Paths
+import java.util.concurrent.{Executors, TimeUnit}
+
 import akka.actor.{
   Actor,
   ActorLogging,
@@ -12,19 +11,19 @@ import akka.actor.{
   OneForOneStrategy,
   SupervisorStrategy
 }
-import akka.remote.DisassociatedEvent
+import akka.event
 import akka.pattern.ask
+import akka.remote.DisassociatedEvent
 import akka.util.Timeout
+import com.olegych.scastie.api
+import com.olegych.scastie.api._
+import com.olegych.scastie.storage._
+import com.olegych.scastie.util._
 import com.typesafe.config.ConfigFactory
 
+import scala.collection.immutable.Queue
 import scala.concurrent._
 import scala.concurrent.duration._
-import java.util.concurrent.{TimeUnit, TimeoutException, Executors}
-import java.nio.file.Paths
-
-import akka.event
-
-import scala.collection.immutable.Queue
 
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
@@ -50,6 +49,8 @@ case class ReceiveStatus(requester: ActorRef)
 
 case class Run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId)
 
+case class Done(progress: api.SnippetProgress, retries: Int)
+
 case object Ping
 
 class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
@@ -70,11 +71,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private val sbtPortsSize = config.getInt("remote-sbt-ports-size")
 
   val sbtConfig = ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
-
-  val isProduction = {
-    val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
-    config.getBoolean("production")
-  }
 
   val sbtRunTimeout = {
     val timeunit = TimeUnit.SECONDS
@@ -317,12 +313,25 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case progress: api.SnippetProgress => {
       if (progress.isDone) {
-        progress.snippetId.foreach(
-          sid => updateSbtBalancer(sbtLoadBalancer.done(SbtRunTaskId(sid)))
-        )
+        self ! Done(progress, retries = 100)
       }
       container.appendOutput(progress)
     }
+
+    case done: Done =>
+      done.progress.snippetId.foreach { sid =>
+        val newBalancer = sbtLoadBalancer.done(SbtRunTaskId(sid))
+        newBalancer match {
+          case Some(newBalancer) =>
+            updateSbtBalancer(newBalancer)
+          case None =>
+            if (done.retries >= 0) {
+              self ! done.copy(retries = done.retries - 1)
+            } else {
+              log.error(s"stopped retrying ${done}")
+            }
+        }
+      }
 
     case event: DisassociatedEvent => {
       for {
