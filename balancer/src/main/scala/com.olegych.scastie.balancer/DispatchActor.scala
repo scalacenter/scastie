@@ -3,14 +3,7 @@ package com.olegych.scastie.balancer
 import java.nio.file.Paths
 import java.util.concurrent.{Executors, TimeUnit}
 
-import akka.actor.{
-  Actor,
-  ActorLogging,
-  ActorRef,
-  ActorSelection,
-  OneForOneStrategy,
-  SupervisorStrategy
-}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, OneForOneStrategy, SupervisorStrategy}
 import akka.event
 import akka.pattern.ask
 import akka.remote.DisassociatedEvent
@@ -179,13 +172,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   //can be called from future
-  private def run(inputsWithIpAndUser: InputsWithIpAndUser,
-                  snippetId: SnippetId): Unit = {
+  private def run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId): Unit = {
     self ! Run(inputsWithIpAndUser, snippetId)
   }
   //cannot be called from future
-  private def run0(inputsWithIpAndUser: InputsWithIpAndUser,
-                   snippetId: SnippetId): Unit = {
+  private def run0(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId): Unit = {
 
     val InputsWithIpAndUser(inputs, UserTrace(ip, user)) = inputsWithIpAndUser
 
@@ -219,43 +210,39 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       log.info(s"starting ${x}")
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val sender = this.sender
-      container.create(inputs, user.map(u => UserLogin(u.login))).map {
-        snippetId =>
-          run(inputsWithIpAndUser, snippetId)
-          log.info(s"finished ${x}")
-          sender ! snippetId
+      container.create(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
+        run(inputsWithIpAndUser, snippetId)
+        log.info(s"finished ${x}")
+        sender ! snippetId
       }
     }
 
     case SaveSnippet(inputsWithIpAndUser) => {
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val sender = this.sender
-      container.save(inputs, user.map(u => UserLogin(u.login))).map {
-        snippetId =>
-          run(inputsWithIpAndUser, snippetId)
-          sender ! snippetId
+      container.save(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
+        run(inputsWithIpAndUser, snippetId)
+        sender ! snippetId
       }
     }
 
     case AmendSnippet(snippetId, inputsWithIpAndUser) => {
       val sender = this.sender
-      container.amend(snippetId, inputsWithIpAndUser.inputs).map {
-        amendSuccess =>
-          if (amendSuccess) {
-            run(inputsWithIpAndUser, snippetId)
-          }
-          sender ! amendSuccess
+      container.amend(snippetId, inputsWithIpAndUser.inputs).map { amendSuccess =>
+        if (amendSuccess) {
+          run(inputsWithIpAndUser, snippetId)
+        }
+        sender ! amendSuccess
       }
     }
 
     case UpdateSnippet(snippetId, inputsWithIpAndUser) => {
       val sender = this.sender
-      container.update(snippetId, inputsWithIpAndUser.inputs).map {
-        updatedSnippetId =>
-          updatedSnippetId.foreach(
-            snippetIdU => run(inputsWithIpAndUser, snippetIdU)
-          )
-          sender ! updatedSnippetId
+      container.update(snippetId, inputsWithIpAndUser.inputs).map { updatedSnippetId =>
+        updatedSnippetId.foreach(
+          snippetIdU => run(inputsWithIpAndUser, snippetIdU)
+        )
+        sender ! updatedSnippetId
       }
     }
 

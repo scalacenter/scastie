@@ -32,8 +32,7 @@ trait Hint extends js.Object {
 }
 
 object HintConfig extends HintConfig(noOpts)
-class HintConfig(val dict: OptMap)
-    extends JSOptionBuilder[Hint, HintConfig](new HintConfig(_)) {
+class HintConfig(val dict: OptMap) extends JSOptionBuilder[Hint, HintConfig](new HintConfig(_)) {
   def text(v: String): HintConfig = jsOpt("text", v)
   def displayText(v: String): HintConfig = jsOpt("displayText", v)
   def className(v: String): HintConfig = jsOpt("className", v)

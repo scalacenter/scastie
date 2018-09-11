@@ -18,22 +18,17 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
 
   private val log = LoggerFactory.getLogger(getClass)
 
-  def apply(output: ProcessOutput,
-            sbtRun: SbtRun,
-            isReloading: Boolean): SnippetProgress = {
+  def apply(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
 
     val progress = extractProgress(output, sbtRun, isReloading)
 
-    sbtRun.progressActor ! progress.copy(scalaJsContent = None,
-                                         scalaJsSourceMapContent = None)
+    sbtRun.progressActor ! progress.copy(scalaJsContent = None, scalaJsSourceMapContent = None)
     sbtRun.snippetActor ! progress
 
     progress
   }
 
-  def extractProgress(output: ProcessOutput,
-                      sbtRun: SbtRun,
-                      isReloading: Boolean): SnippetProgress = {
+  def extractProgress(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
     import sbtRun._
 
     val lineOffset = Instrument.getLineOffset(inputs.isWorksheetMode)
@@ -165,8 +160,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     else problemsWithOffset
   }
 
-  private def extractRuntimeError(line: String,
-                                  lineOffset: Int): Option[RuntimeError] = {
+  private def extractRuntimeError(line: String, lineOffset: Int): Option[RuntimeError] = {
     extract[RuntimeErrorWrap](line).flatMap(
       _.error.map(error => error.copy(line = error.line.map(_ + lineOffset)))
     )

@@ -82,10 +82,7 @@ object CodeMirrorEditor {
     }
   }
 
-  private def runDelta(editor: TextAreaEditor,
-                       state: State,
-                       current: CodeMirrorEditor,
-                       next: CodeMirrorEditor): Callback = {
+  private def runDelta(editor: TextAreaEditor, state: State, current: CodeMirrorEditor, next: CodeMirrorEditor): Callback = {
 
     def setCode(): Unit = {
       if (current.value != next.value) {

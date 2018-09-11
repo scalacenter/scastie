@@ -12,8 +12,7 @@ class FrontPageRoutes(production: Boolean) {
 
   private val index = getFromResource("public/index.html")
 
-  private def embeddedRessource(snippetId: SnippetId,
-                                theme: Option[String]): String = {
+  private def embeddedRessource(snippetId: SnippetId, theme: Option[String]): String = {
     val user =
       snippetId.user match {
         case Some(SnippetUserPart(login, update)) => {
@@ -71,7 +70,7 @@ class FrontPageRoutes(production: Boolean) {
             getFromResource("public/embedded.js.map")
           ),
           path("public" / Remaining)(
-            path ⇒ getFromResource("public/" + path)
+            path ? getFromResource("public/" + path)
           )
         )
       ),

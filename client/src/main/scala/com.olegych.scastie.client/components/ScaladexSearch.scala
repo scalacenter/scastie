@@ -84,17 +84,14 @@ object ScaladexSearch {
           project => project.artifacts.map(artifact => (project, artifact))
         )
         .filter(
-          projectAndArtifact =>
-            !selectedProjectsArtifacts.contains(projectAndArtifact)
+          projectAndArtifact => !selectedProjectsArtifacts.contains(projectAndArtifact)
         )
 
     def removeSelected(selected: Selected): SearchState = {
       copy(selecteds = selecteds.filterNot(_ == selected))
     }
 
-    def addDependency(project: Project,
-                      scalaDependency: ScalaDependency,
-                      options: ReleaseOptions): SearchState = {
+    def addDependency(project: Project, scalaDependency: ScalaDependency, options: ReleaseOptions): SearchState = {
       copy(
         selecteds = Selected(project, scalaDependency, options) :: selecteds
       )
@@ -241,8 +238,7 @@ object ScaladexSearch {
 
     def setQuery(e: ReactEventFromInput): Callback = {
       e.extract(_.target.value) { value =>
-        scope.modState(_.copy(query = value, selectedIndex = 0),
-                       fetchProjects())
+        scope.modState(_.copy(query = value, selectedIndex = 0), fetchProjects())
       }
     }
 
@@ -277,9 +273,7 @@ object ScaladexSearch {
     private def toQuery(in: Map[String, String]): String =
       in.map { case (k, v) => s"$k=$v" }.mkString("?", "&", "")
 
-    private def fetchReleaseOptions(project: Project,
-                                    artifact: String,
-                                    target: ScalaTarget): Callback = {
+    private def fetchReleaseOptions(project: Project, artifact: String, target: ScalaTarget): Callback = {
       val query =
         toQuery(
           Map(
@@ -292,8 +286,7 @@ object ScaladexSearch {
         Ajax
           .get(scaladexApiUrl + "/project" + query)
           .map(
-            ret =>
-              Json.fromJson[ReleaseOptions](Json.parse(ret.responseText)).asOpt
+            ret => Json.fromJson[ReleaseOptions](Json.parse(ret.responseText)).asOpt
           )
           .map {
             case Some(options) => {
@@ -360,16 +353,11 @@ object ScaladexSearch {
           logo
             .flatMap(
               _.map(
-                url =>
-                  img(src := url + "&s=40",
-                      common,
-                      alt := s"$organization logo or avatar")
+                url => img(src := url + "&s=40", common, alt := s"$organization logo or avatar")
               ).headOption
             )
             .getOrElse(
-              img(src := "/assets/public/placeholder.svg",
-                  common,
-                  alt := s"placeholder for $organization")
+              img(src := "/assets/public/placeholder.svg", common, alt := s"placeholder for $organization")
             ),
           span(cls := "artifact")(label)
         ),
@@ -379,8 +367,7 @@ object ScaladexSearch {
 
     def renderOptions(selected: Selected) = {
       div(cls := "select-wrapper")(
-        select(value := selected.release.version,
-               onChange ==> scope.backend.updateVersion(selected))(
+        select(value := selected.release.version, onChange ==> scope.backend.updateVersion(selected))(
           selected.options.versions.reverse
             .map(v => option(value := v)(v))
             .toTagMod

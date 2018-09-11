@@ -95,10 +95,7 @@ class GithubUserSession(system: ActorSystem) {
       else Seq()
 
     if (!lines.contains(login)) {
-      Files.write(usersFile,
-                  (login + nl).getBytes,
-                  StandardOpenOption.APPEND,
-                  StandardOpenOption.CREATE)
+      Files.write(usersFile, (login + nl).getBytes, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
       ()
     }
   }

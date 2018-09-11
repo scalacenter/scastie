@@ -7,10 +7,7 @@ import com.olegych.scastie.api.ActorConnected
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-case class ReconnectInfo(serverHostname: String,
-                         serverAkkaPort: Int,
-                         actorHostname: String,
-                         actorAkkaPort: Int)
+case class ReconnectInfo(serverHostname: String, serverAkkaPort: Int, actorHostname: String, actorAkkaPort: Int)
 
 trait ActorReconnecting extends Actor with ActorLogging {
 

@@ -12,10 +12,7 @@ import akka.http.scaladsl.server.Route
 class SnippetIdMatcherTests extends FunSuite with ScalatestRouteTest {
   import PlayJsonSupport._
 
-  def testRoute(snippetIdRoute: Route,
-                f1: String => String,
-                f2: String => String,
-                checkEnd: Boolean = true): Unit = {
+  def testRoute(snippetIdRoute: Route, f1: String => String, f2: String => String, checkEnd: Boolean = true): Unit = {
 
     val expectedBase =
       SnippetId(

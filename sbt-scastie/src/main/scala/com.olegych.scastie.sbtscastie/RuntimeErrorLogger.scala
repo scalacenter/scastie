@@ -1,12 +1,6 @@
 package com.olegych.scastie.sbtscastie
 
-import com.olegych.scastie.api.{
-  ConsoleOutput,
-  ProcessOutputType,
-  ProcessOutput,
-  RuntimeError,
-  RuntimeErrorWrap
-}
+import com.olegych.scastie.api.{ConsoleOutput, ProcessOutputType, ProcessOutput, RuntimeError, RuntimeErrorWrap}
 
 import sbt._
 import Keys._

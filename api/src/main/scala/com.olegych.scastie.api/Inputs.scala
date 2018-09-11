@@ -95,8 +95,7 @@ case class Inputs(
 
   def isDefault: Boolean = copy(code = "") == Inputs.default.copy(code = "")
 
-  def addScalaDependency(scalaDependency: ScalaDependency,
-                         project: Project): Inputs = {
+  def addScalaDependency(scalaDependency: ScalaDependency, project: Project): Inputs = {
     copy(
       libraries = libraries + scalaDependency,
       librariesFromList = (librariesFrom + (scalaDependency -> project)).toList

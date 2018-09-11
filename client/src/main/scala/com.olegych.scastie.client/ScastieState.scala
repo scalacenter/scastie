@@ -60,8 +60,7 @@ object ScastieState {
   implicit val dontSerializeEventStream: Format[EventStream[StatusProgress]] =
     dontSerializeOption[EventStream[StatusProgress]]
 
-  implicit val dontSerializeProgressStream
-    : Format[EventStream[SnippetProgress]] =
+  implicit val dontSerializeProgressStream: Format[EventStream[SnippetProgress]] =
     dontSerializeOption[EventStream[SnippetProgress]]
 
   implicit val formatScastieState: OFormat[ScastieState] =
@@ -181,8 +180,7 @@ case class ScastieState(
   }
 
   def setSnippetSaved(value: Boolean): ScastieState = {
-    copy(snippetState = snippetState.copy(isSnippetSaved = value),
-         inputsHasChanged = false)
+    copy(snippetState = snippetState.copy(isSnippetSaved = value), inputsHasChanged = false)
   }
 
   def toggleTheme: ScastieState =
@@ -211,8 +209,7 @@ case class ScastieState(
 
   def toggleHelpModal: ScastieState =
     copyAndSave(
-      modalState =
-        modalState.copy(isHelpModalClosed = !modalState.isHelpModalClosed)
+      modalState = modalState.copy(isHelpModalClosed = !modalState.isHelpModalClosed)
     )
 
   def openHelpModal: ScastieState =
@@ -339,8 +336,7 @@ case class ScastieState(
       inputsHasChanged = true
     )
 
-  def addScalaDependency(scalaDependency: ScalaDependency,
-                         project: Project): ScastieState =
+  def addScalaDependency(scalaDependency: ScalaDependency, project: Project): ScastieState =
     copyAndSave(
       inputs = inputs.addScalaDependency(scalaDependency, project),
       inputsHasChanged = true
@@ -352,8 +348,7 @@ case class ScastieState(
       inputsHasChanged = true
     )
 
-  def updateDependencyVersion(scalaDependency: ScalaDependency,
-                              version: String): ScastieState = {
+  def updateDependencyVersion(scalaDependency: ScalaDependency, version: String): ScastieState = {
     val newScalaDependency = scalaDependency.copy(version = version)
     copyAndSave(
       inputs = inputs.copy(
@@ -395,8 +390,7 @@ case class ScastieState(
   def setSbtError(err: Boolean): ScastieState =
     copyAndSave(outputs = outputs.copy(sbtError = err))
 
-  def logOutput(line: Option[ProcessOutput],
-                wrap: ProcessOutput => ConsoleOutput): ScastieState = {
+  def logOutput(line: Option[ProcessOutput], wrap: ProcessOutput => ConsoleOutput): ScastieState = {
     line match {
       case Some(l) =>
         copyAndSave(
@@ -488,8 +482,7 @@ case class ScastieState(
     copy(snippetState = snippetState.copy(loadScalaJsScript = value))
   }
 
-  def addOutputs(compilationInfos: List[Problem],
-                 instrumentations: List[Instrumentation]): ScastieState = {
+  def addOutputs(compilationInfos: List[Problem], instrumentations: List[Instrumentation]): ScastieState = {
 
     def topDef(problem: Problem): Boolean = {
       problem.severity == Error &&

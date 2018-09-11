@@ -43,9 +43,7 @@ object TopBar {
         case Some(user) =>
           li(
             cls := "btn dropdown",
-            img(src := user.avatar_url + "&s=30",
-                alt := "Your Github Avatar",
-                cls := "avatar"),
+            img(src := user.avatar_url + "&s=30", alt := "Your Github Avatar", cls := "avatar"),
             span(user.login),
             i(cls := "fa fa-caret-down"),
             ul(
@@ -60,20 +58,12 @@ object TopBar {
                 i(cls := "fa fa-code"),
                 "Snippets"
               ),
-              li(role := "link",
-                 onClick --> logout,
-                 cls := "btn",
-                 i(cls := "fa fa-sign-out"),
-                 "Logout")
+              li(role := "link", onClick --> logout, cls := "btn", i(cls := "fa fa-sign-out"), "Logout")
             )
           )
 
         case None =>
-          li(role := "link",
-             onClick --> login,
-             cls := "btn",
-             i(cls := "fa fa-sign-in"),
-             "Login")
+          li(role := "link", onClick --> login, cls := "btn", i(cls := "fa fa-sign-in"), "Login")
       }
 
     nav(

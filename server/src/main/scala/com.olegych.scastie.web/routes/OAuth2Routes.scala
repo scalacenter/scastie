@@ -63,22 +63,21 @@ class OAuth2Routes(github: Github, session: GithubUserSession)(
         },
         pathPrefix("callback") {
           pathEnd {
-            parameters(('code, 'state.?)) {
-              (code, state) =>
-                onSuccess(github.getUserWithOauth2(code)) { user =>
-                  setSession(refreshable, usingCookies, session.addUser(user)) {
-                    setNewCsrfToken(checkHeader) { ctx =>
-                      ctx.complete(
-                        HttpResponse(
-                          status = TemporaryRedirect,
-                          headers = headers
-                            .Location(Uri(state.getOrElse("/"))) :: Nil,
-                          entity = HttpEntity.Empty
-                        )
+            parameters(('code, 'state.?)) { (code, state) =>
+              onSuccess(github.getUserWithOauth2(code)) { user =>
+                setSession(refreshable, usingCookies, session.addUser(user)) {
+                  setNewCsrfToken(checkHeader) { ctx =>
+                    ctx.complete(
+                      HttpResponse(
+                        status = TemporaryRedirect,
+                        headers = headers
+                          .Location(Uri(state.getOrElse("/"))) :: Nil,
+                        entity = HttpEntity.Empty
                       )
-                    }
+                    )
                   }
                 }
+              }
             }
           }
         }

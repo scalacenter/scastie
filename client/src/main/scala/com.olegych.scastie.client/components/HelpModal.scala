@@ -17,8 +17,7 @@ object HelpModal {
       a(href := url, target := "_blank", rel := "nofollow", text)
 
     val scastieGithub =
-      generateATag("https://github.com/scalacenter/scastie",
-                   "scalacenter/scastie")
+      generateATag("https://github.com/scalacenter/scastie", "scalacenter/scastie")
 
     val sublime = generateATag(
       "https://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html",
@@ -26,8 +25,7 @@ object HelpModal {
     )
 
     val scalafmtConfiguration =
-      generateATag("https://olafurpg.github.io/scalafmt/#Configuration",
-                   "configuration section")
+      generateATag("https://olafurpg.github.io/scalafmt/#Configuration", "configuration section")
 
     val originalScastie =
       generateATag("https://github.com/OlegYch/scastie", "GitHub")
@@ -41,8 +39,7 @@ object HelpModal {
       content = TagMod(
         p(cls := "normal", "Scastie is an interactive playground for Scala."),
         h2("Run / Edit"),
-        p(cls := "normal",
-          "The code editor where you can write and run your code."),
+        p(cls := "normal", "The code editor where you can write and run your code."),
         div(cls := "indent")(
           h3("Clear"),
           p(
@@ -65,7 +62,7 @@ object HelpModal {
           h3("Save"),
           p(
             cls := "normal",
-            "You can save your code fragments just clicking this button. (You need to be logged in with your Github account for this to work) Once theyâ€™re saved, youâ€™ll be able to Update, Fork or Share them."
+            "You can save your code fragments just clicking this button. (You need to be logged in with your Github account for this to work) Once they’re saved, you’ll be able to Update, Fork or Share them."
           )
         ),
         h2("Build Settings"),
@@ -76,12 +73,12 @@ object HelpModal {
         h2("User's Code Snippets"),
         p(
           cls := "normal",
-          "Your saved code fragments will appear here and youâ€™ll be able to edit or share them."
+          "Your saved code fragments will appear here and you’ll be able to edit or share them."
         ),
         h2("Console"),
         p(
           cls := "normal",
-          "You can see your codeâ€™s output in the Scastieâ€™s console."
+          "You can see your code’s output in the Scastie’s console."
         ),
         h2("Feedback"),
         p(cls := "normal", "You can join our Gitter channel and send issues."),
@@ -95,7 +92,7 @@ object HelpModal {
                   "Run"
                 ),
                 td(
-                  span("âŒ˜"),
+                  span("?"),
                   "+",
                   span("Enter")
                 )
@@ -109,7 +106,7 @@ object HelpModal {
               tr(
                 th("Save"),
                 td(
-                  span("âŒ˜"),
+                  span("?"),
                   "+",
                   span("S")
                 )

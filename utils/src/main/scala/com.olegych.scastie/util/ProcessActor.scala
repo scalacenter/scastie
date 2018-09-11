@@ -40,10 +40,7 @@ object ProcessActor {
   ! Exit
  */
 
-class ProcessActor(command: List[String],
-                   workingDir: Path,
-                   environment: Map[String, String],
-                   killOnExit: Boolean)
+class ProcessActor(command: List[String], workingDir: Path, environment: Map[String, String], killOnExit: Boolean)
     extends Actor
     with Stash {
 

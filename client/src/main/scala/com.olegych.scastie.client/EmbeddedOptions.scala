@@ -1,12 +1,6 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.{
-  Inputs,
-  SnippetId,
-  SnippetUserPart,
-  ScalaTarget,
-  ScalaTargetType
-}
+import com.olegych.scastie.api.{Inputs, SnippetId, SnippetUserPart, ScalaTarget, ScalaTargetType}
 
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
@@ -140,8 +134,7 @@ object EmbeddedOptions {
           Some(ScalaTarget.Js.default)
         }
 
-        case (tpe, Some(scalaV), Some(jsV), None)
-            if (tpe.contains("js") || tpe.isEmpty) => {
+        case (tpe, Some(scalaV), Some(jsV), None) if (tpe.contains("js") || tpe.isEmpty) => {
 
           Some(ScalaTarget.Js(scalaV, jsV))
         }
@@ -150,8 +143,7 @@ object EmbeddedOptions {
           Some(ScalaTarget.Native.default)
         }
 
-        case (tpe, Some(scalaV), None, Some(nativeV))
-            if (tpe.contains("native") || tpe.isEmpty) => {
+        case (tpe, Some(scalaV), None, Some(nativeV)) if (tpe.contains("native") || tpe.isEmpty) => {
           Some(ScalaTarget.Native(scalaV, nativeV))
         }
 
@@ -179,8 +171,7 @@ object EmbeddedOptions {
 
         val inputs0 =
           default.copy(
-            _isWorksheetMode =
-              isWorksheetMode.getOrElse(default.isWorksheetMode),
+            _isWorksheetMode = isWorksheetMode.getOrElse(default.isWorksheetMode),
             code = code.getOrElse(defaultCode),
             target = scalaTarget.getOrElse(default.target),
             sbtConfigExtra = sbtConfig.getOrElse(default.sbtConfigExtra)

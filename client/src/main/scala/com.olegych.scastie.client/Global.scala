@@ -49,9 +49,7 @@ object Global {
     )
   }
 
-  def signal(instrumentationsRaw: String,
-             attachedDoms: js.Array[HTMLElement],
-             rawId: String): Unit = {
+  def signal(instrumentationsRaw: String, attachedDoms: js.Array[HTMLElement], rawId: String): Unit = {
 
     val result =
       Json

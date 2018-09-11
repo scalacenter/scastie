@@ -3,8 +3,7 @@ package com.olegych.scastie.client
 import components.Scastie
 
 import com.olegych.scastie.api._
-import japgolly.scalajs.react._, vdom.all._, extra._,
-component.Scala.BackendScope
+import japgolly.scalajs.react._, vdom.all._, extra._, component.Scala.BackendScope
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -15,9 +14,7 @@ import scala.concurrent.Future
 import java.util.UUID
 import japgolly.scalajs.react.internal.Effect.Id
 
-class ScastieBackend(scastieId: UUID,
-                     serverUrl: Option[String],
-                     scope: BackendScope[Scastie, ScastieState]) {
+class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendScope[Scastie, ScastieState]) {
 
   private val restApiClient =
     new RestApiClient(serverUrl)
@@ -92,8 +89,7 @@ class ScastieBackend(scastieId: UUID,
 
   val removeScalaDependency: ScalaDependency ~=> Callback =
     Reusable.fn(
-      scalaDependency =>
-        scope.modState(_.removeScalaDependency(scalaDependency))
+      scalaDependency => scope.modState(_.removeScalaDependency(scalaDependency))
     )
 
   val updateDependencyVersion: (ScalaDependency, String) ~=> Callback =
@@ -529,9 +525,7 @@ class ScastieBackend(scastieId: UUID,
             Callback.future(
               restApiClient
                 .format(
-                  FormatRequest(state.inputs.code,
-                                state.inputs.isWorksheetMode,
-                                state.inputs.target)
+                  FormatRequest(state.inputs.code, state.inputs.isWorksheetMode, state.inputs.target)
                 )
                 .map {
                   case FormatResponse(Right(formattedCode)) =>

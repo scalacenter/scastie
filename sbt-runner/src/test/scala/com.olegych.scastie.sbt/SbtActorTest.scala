@@ -8,11 +8,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
 
-class SbtActorTest()
-    extends TestKit(ActorSystem("SbtActorTest"))
-    with ImplicitSender
-    with FunSuiteLike
-    with BeforeAndAfterAll {
+class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
 
   print("\u001b")
 
@@ -104,7 +100,7 @@ class SbtActorTest()
   }
 
   test("Encoding issues #100") {
-    val message = "â‚¬"
+    val message = "ˆ"
     run(s"""println("$message")""")(
       assertUserOutput(message)
     )

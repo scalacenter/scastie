@@ -51,9 +51,7 @@ object ScastieMain {
 object ClientMain {
 
   @JSExport
-  def signal(instrumentations: String,
-             attachedDoms: js.Array[HTMLElement],
-             rawId: String): Unit = {
+  def signal(instrumentations: String, attachedDoms: js.Array[HTMLElement], rawId: String): Unit = {
     Global.signal(instrumentations, attachedDoms, rawId)
   }
 
@@ -68,8 +66,7 @@ object ClientMain {
 object ScastieEmbedded {
 
   @JSExportTopLevel("scastie.Embedded")
-  def embedded(selector: UndefOr[String | Node],
-               options: UndefOr[EmbeddedOptionsJs]): Unit = {
+  def embedded(selector: UndefOr[String | Node], options: UndefOr[EmbeddedOptionsJs]): Unit = {
 
     val embeddedOptions =
       options.toOption
@@ -155,8 +152,7 @@ object ScastieEmbedded {
     dom.document.getElementsByTagName("head")(0).appendChild(link)
   }
 
-  def renderScastie(embeddedOptions: EmbeddedOptions,
-                    snippetId: Option[SnippetId]): HTMLElement = {
+  def renderScastie(embeddedOptions: EmbeddedOptions, snippetId: Option[SnippetId]): HTMLElement = {
 
     val container = dom.document
       .createElement("div")

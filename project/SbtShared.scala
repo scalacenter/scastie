@@ -169,9 +169,7 @@ object SbtShared {
       res
     }
 
-    CrossProject(id = projectId,
-                 base = crossDir(projectId),
-                 crossType = CrossType.Pure)
+    CrossProject(id = projectId, base = crossDir(projectId), crossType = CrossType.Pure)
       .settings(baseSettings)
       .settings(
         buildInfoKeys := Seq[BuildInfoKey](

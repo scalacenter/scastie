@@ -44,9 +44,7 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
   }
 
   class Post[O: Reads]() {
-    def using[I: Writes](url: String,
-                         data: I,
-                         async: Boolean = true): Future[Option[O]] = {
+    def using[I: Writes](url: String, data: I, async: Boolean = true): Future[Option[O]] = {
       Ajax
         .post(
           url = apiBase + "/api" + url,

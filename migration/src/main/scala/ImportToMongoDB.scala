@@ -34,10 +34,8 @@ object ImportToMongoDB {
   val snippets = fdb.map(_.collection("snippets"))
 
   def createIndex(): Future[Unit] = {
-    val snippetIdIndex = Index(key = Seq(("simpleSnippetId", IndexType.Hashed)),
-                               name = Some("snippets-id"))
-    val oldSnippetIdIndex = Index(key = Seq(("oldId", IndexType.Hashed)),
-                                  name = Some("snippets-old-id"))
+    val snippetIdIndex = Index(key = Seq(("simpleSnippetId", IndexType.Hashed)), name = Some("snippets-id"))
+    val oldSnippetIdIndex = Index(key = Seq(("oldId", IndexType.Hashed)), name = Some("snippets-old-id"))
 
     for {
       col <- snippets
@@ -54,8 +52,7 @@ object ImportToMongoDB {
       .one[BSONDocument]
       .map(
         _.flatMap(
-          doc =>
-            doc.getAs[Long]("time") orElse doc.getAs[Int]("time").map(_.toLong)
+          doc => doc.getAs[Long]("time") orElse doc.getAs[Int]("time").map(_.toLong)
         ).getOrElse(0L)
       )
   }
@@ -259,9 +256,7 @@ object ImportToMongoDB {
 
   }
 
-  def toMongoSnippet(snippetId: SnippetId,
-                     dir: Path,
-                     lastTime: Long): Option[MongoSnippet] = {
+  def toMongoSnippet(snippetId: SnippetId, dir: Path, lastTime: Long): Option[MongoSnippet] = {
     getInputs(dir, lastTime).flatMap(
       in =>
         if (in.isShowingInUserProfile) {

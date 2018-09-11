@@ -12,16 +12,13 @@ import java.io.IOException
 
 import play.api.libs.json.Json
 
-class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
-    extends SnippetsContainer {
+class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService) extends SnippetsContainer {
 
   implicit protected val ec: ExecutionContext =
     ExecutionContext.fromExecutorService(es)
 
   def appendOutput(progress: SnippetProgress): Future[Unit] = Future {
-    (progress.scalaJsContent,
-     progress.scalaJsSourceMapContent,
-     progress.snippetId) match {
+    (progress.scalaJsContent, progress.scalaJsSourceMapContent, progress.snippetId) match {
       case (Some(scalaJsContent), Some(scalaJsSourceMapContent), Some(sid)) =>
         write(scalaJsFile(sid), scalaJsContent)
         write(scalaJsSourceMapFile(sid), scalaJsSourceMapContent)
@@ -29,10 +26,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
     }
 
     progress.snippetId.foreach(
-      sid =>
-        write(outputsFile(sid),
-              Json.stringify(Json.toJson(progress)) + nl,
-              append = true)
+      sid => write(outputsFile(sid), Json.stringify(Json.toJson(progress)) + nl, append = true)
     )
   }
 
@@ -236,8 +230,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
         content =>
           Json
             .fromJson[Inputs](Json.parse(content))
-            .fold(e => sys.error(e.toString + s" for ${snippetId} $content"),
-                  identity)
+            .fold(e => sys.error(e.toString + s" for ${snippetId} $content"), identity)
       )
   }
 
@@ -250,16 +243,13 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
         .map { line =>
           Json
             .fromJson[SnippetProgress](Json.parse(line))
-            .fold(e => sys.error(e.toString + s" for ${snippetId} $line"),
-                  identity)
+            .fold(e => sys.error(e.toString + s" for ${snippetId} $line"), identity)
         }
         .toList
     }
   }
 
-  private def write(path: Path,
-                    content: String,
-                    append: Boolean = false): Unit = {
+  private def write(path: Path, content: String, append: Boolean = false): Unit = {
     if (!Files.exists(path)) {
       Files.write(path, content.getBytes, StandardOpenOption.CREATE_NEW)
       ()
@@ -285,8 +275,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
     Files.walkFileTree(
       base,
       new SimpleFileVisitor[Path] {
-        override def postVisitDirectory(path: Path,
-                                        ex: IOException): FileVisitResult = {
+        override def postVisitDirectory(path: Path, ex: IOException): FileVisitResult = {
           if (dirIsEmpty(path)) {
             Files.delete(path)
           }

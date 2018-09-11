@@ -10,8 +10,7 @@ trait BrowserSetup {
   sys.env
     .get("CHROME_DRIVER")
     .foreach(
-      chromeDriverPath =>
-        System.setProperty("webdriver.chrome.driver", chromeDriverPath)
+      chromeDriverPath => System.setProperty("webdriver.chrome.driver", chromeDriverPath)
     )
 
   private val chromeOptions = new ChromeOptions()

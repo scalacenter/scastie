@@ -14,8 +14,7 @@ import sbtdocker.DockerKeys.{docker, dockerBuildAndPush, imageNames}
 import sbtdocker.ImageName
 
 object Deployment {
-  def settings(server: Project,
-               sbtRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
+  def settings(server: Project, sbtRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
     deploy := deployTask(server, sbtRunner).value,
     deployServer := deployServerTask(server, sbtRunner).value,
     deployQuick := deployQuickTask(server, sbtRunner).value,
@@ -37,8 +36,7 @@ object Deployment {
   lazy val deployServerQuick =
     taskKey[Unit]("Deploy server without building server zip")
 
-  def deployServerTask(server: Project,
-                       sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployServerTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = (packageBin in (server, Universal)).value.toPath
@@ -46,8 +44,7 @@ object Deployment {
       deployment.deployServer(serverZip)
     }
 
-  def deployLocalTask(server: Project,
-                      sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployLocalTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = (packageBin in (server, Universal)).value.toPath
@@ -56,8 +53,7 @@ object Deployment {
       deployment.deployLocal(serverZip)
     }
 
-  def deployTask(server: Project,
-                 sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = (packageBin in (server, Universal)).value.toPath
@@ -66,8 +62,7 @@ object Deployment {
       deployment.deploy(serverZip)
     }
 
-  def deployQuickTask(server: Project,
-                      sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = serverZipTask(server).value
@@ -78,8 +73,7 @@ object Deployment {
       deployment.deploy(serverZip)
     }
 
-  def deployServerQuickTask(server: Project,
-                            sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployServerQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = serverZipTask(server).value
@@ -111,10 +105,7 @@ object Deployment {
     }
 }
 
-class Deployment(rootFolder: File,
-                 version: String,
-                 sbtDockerImage: ImageName,
-                 val logger: Logger) {
+class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, val logger: Logger) {
   def deploy(serverZip: Path): Unit = {
     deployRunners()
     deployServer(serverZip)
@@ -193,9 +184,7 @@ class Deployment(rootFolder: File,
     )
   }
 
-  private def deployServerFiles(serverZip: Path,
-                                destination: Path,
-                                local: Boolean): DeploymentFiles = {
+  private def deployServerFiles(serverZip: Path, destination: Path, local: Boolean): DeploymentFiles = {
     logger.info("Generate server script")
 
     val serverScript = destination.resolve("server.sh")
@@ -304,10 +293,7 @@ class Deployment(rootFolder: File,
     Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
   }
 
-  def deployRunners(runner: String,
-                    image: String,
-                    runnersPortsStart: Int,
-                    runnersPortsSize: Int): Unit = {
+  def deployRunners(runner: String, image: String, runnersPortsStart: Int, runnersPortsSize: Int): Unit = {
 
     val runnerScriptDir = Files.createTempDirectory(runner)
     val runnerScript = runnerScriptDir.resolve(runner + ".sh")
@@ -417,10 +403,7 @@ class Deployment(rootFolder: File,
   private val executablePermissions =
     PosixFilePermissions.fromString("rwxr-xr-x")
 
-  private def rsync(file: Path,
-                    userName: String,
-                    hostname: String,
-                    logger: Logger): Unit = {
+  private def rsync(file: Path, userName: String, hostname: String, logger: Logger): Unit = {
     val uri = userName + "@" + hostname
     val fileName = file.getFileName
     Process(s"rsync $file $uri:$fileName") ! logger

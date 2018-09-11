@@ -9,8 +9,7 @@ import codemirror.{Editor => CodeMirrorEditor2, CodeMirror => CM}
 import japgolly.scalajs.react.BackendScope
 
 private[editor] object EditorOptions {
-  def apply(props: Editor,
-            scope: BackendScope[Editor, EditorState]): codemirror.Options = {
+  def apply(props: Editor, scope: BackendScope[Editor, EditorState]): codemirror.Options = {
     val theme =
       if (props.isDarkTheme) "dark"
       else "light"
@@ -24,15 +23,12 @@ private[editor] object EditorOptions {
         "showToken" -> js.Dynamic.global.RegExp("\\w")
       )
 
-    def command(f: => Unit): js.Function1[CodeMirrorEditor2, Unit] = {
-      ((editor: CodeMirrorEditor2) => f)
+    def command(f: => Unit): js.Function1[CodeMirrorEditor2, Unit] = { ((editor: CodeMirrorEditor2) => f)
     }
 
     def commandE(
         f: CodeMirrorEditor2 => Unit
-    )
-      : js.Function1[CodeMirrorEditor2, Unit] = {
-      ((editor: CodeMirrorEditor2) => f(editor))
+    ): js.Function1[CodeMirrorEditor2, Unit] = { ((editor: CodeMirrorEditor2) => f(editor))
     }
 
     js.Dictionary[Any](

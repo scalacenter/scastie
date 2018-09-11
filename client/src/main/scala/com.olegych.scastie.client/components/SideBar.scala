@@ -46,19 +46,13 @@ object SideBar {
       else "fa fa-moon-o"
 
     val themeButton =
-      li(onClick --> props.toggleTheme,
-         role := "button",
-         title := s"Select $toggleThemeLabel Theme (F2)",
-         cls := "btn")(
+      li(onClick --> props.toggleTheme, role := "button", title := s"Select $toggleThemeLabel Theme (F2)", cls := "btn")(
         i(cls := s"fa $selectedIcon"),
         span(toggleThemeLabel)
       )
 
     val helpButton =
-      li(onClick --> props.openHelpModal,
-         role := "button",
-         title := "Show help Menu",
-         cls := "btn")(
+      li(onClick --> props.openHelpModal, role := "button", title := "Show help Menu", cls := "btn")(
         i(cls := "fa fa-question-circle"),
         span("Help")
       )
@@ -76,10 +70,7 @@ object SideBar {
             ("fa-check-circle", "status-up", "Up")
         }
 
-      li(onClick --> props.view.setState(View.Status),
-         role := "button",
-         title := "Show runners status",
-         cls := s"btn $statusClass")(
+      li(onClick --> props.view.setState(View.Status), role := "button", title := "Show runners status", cls := s"btn $statusClass")(
         i(cls := s"fa $statusIcon"),
         span(statusLabel)
       )

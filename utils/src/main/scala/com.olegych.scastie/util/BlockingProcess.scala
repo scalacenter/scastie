@@ -3,15 +3,7 @@
  */
 package akka.contrib.process
 
-import akka.actor.{
-  Actor,
-  ActorLogging,
-  ActorRef,
-  NoSerializationVerificationNeeded,
-  Props,
-  SupervisorStrategy,
-  Terminated
-}
+import akka.actor.{Actor, ActorLogging, ActorRef, NoSerializationVerificationNeeded, Props, SupervisorStrategy, Terminated}
 import akka.stream.{ActorAttributes, IOResult}
 import akka.stream.scaladsl.{Sink, Source, StreamConverters}
 import akka.util.{ByteString, Helpers}
@@ -147,10 +139,7 @@ object BlockingProcess {
  * A dispatcher as indicated by the "akka.process.blocking-process.blocking-io-dispatcher-id" setting is used
  * internally by the actor as various JDK calls are made which can block.
  */
-class BlockingProcess(command: immutable.Seq[String],
-                      directory: File,
-                      environment: Map[String, String],
-                      stdioTimeout: Duration)
+class BlockingProcess(command: immutable.Seq[String], directory: File, environment: Map[String, String], stdioTimeout: Duration)
     extends Actor
     with ActorLogging {
 
@@ -265,10 +254,7 @@ private object ProcessDestroyer {
     Props(new ProcessDestroyer(process, exitValueReceiver))
 }
 
-private class ProcessDestroyer(process: JavaProcess,
-                               exitValueReceiver: ActorRef)
-    extends Actor
-    with ActorLogging {
+private class ProcessDestroyer(process: JavaProcess, exitValueReceiver: ActorRef) extends Actor with ActorLogging {
   import ProcessDestroyer._
   import context.dispatcher
 
@@ -279,10 +265,7 @@ private class ProcessDestroyer(process: JavaProcess,
     )
 
   private val inspectionTick =
-    context.system.scheduler.schedule(inspectionInterval,
-                                      inspectionInterval,
-                                      self,
-                                      Inspect)
+    context.system.scheduler.schedule(inspectionInterval, inspectionInterval, self, Inspect)
 
   def pkill(): Unit = {
     if (Helpers.isWindows) {

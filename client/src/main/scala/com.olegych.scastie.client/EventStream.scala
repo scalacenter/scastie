@@ -2,15 +2,7 @@ package com.olegych.scastie.client
 
 import play.api.libs.json.{Json, Reads}
 
-import org.scalajs.dom.{
-  EventSource,
-  WebSocket,
-  window,
-  CloseEvent,
-  Event,
-  MessageEvent,
-  ErrorEvent
-}
+import org.scalajs.dom.{EventSource, WebSocket, window, CloseEvent, Event, MessageEvent, ErrorEvent}
 
 import japgolly.scalajs.react.{Callback, CallbackTo}
 
@@ -52,9 +44,7 @@ trait EventStreamHandler[T] {
 }
 
 object EventStream {
-  def connect[T: Reads](eventSourceUri: String,
-                        websocketUri: String,
-                        handler: EventStreamHandler[T]): Callback = {
+  def connect[T: Reads](eventSourceUri: String, websocketUri: String, handler: EventStreamHandler[T]): Callback = {
 
     def connectEventSource =
       CallbackTo[EventStream[T]](
@@ -85,8 +75,7 @@ object EventStream {
   }
 }
 
-class WebSocketStream[T: Reads](uri: String, handler: EventStreamHandler[T])
-    extends EventStream[T](handler) {
+class WebSocketStream[T: Reads](uri: String, handler: EventStreamHandler[T]) extends EventStream[T](handler) {
 
   private def onOpen(e: Event): Unit = {
     onOpen()
@@ -120,8 +109,7 @@ class WebSocketStream[T: Reads](uri: String, handler: EventStreamHandler[T])
   socket.onerror = onError _
 }
 
-class EventSourceStream[T: Reads](uri: String, handler: EventStreamHandler[T])
-    extends EventStream[T](handler) {
+class EventSourceStream[T: Reads](uri: String, handler: EventStreamHandler[T]) extends EventStream[T](handler) {
 
   private def onOpen(e: Event): Unit = {
     onOpen()

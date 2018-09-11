@@ -5,9 +5,7 @@ import com.olegych.scastie.client.components.editor.Editor
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 
-final case class MainPanel(state: ScastieState,
-                           backend: ScastieBackend,
-                           props: Scastie) {
+final case class MainPanel(state: ScastieState, backend: ScastieBackend, props: Scastie) {
 
   @inline def render: VdomElement = MainPanel.component(this)
 }
@@ -184,8 +182,7 @@ object MainPanel {
           ),
           console
         ),
-        div(cls := "settings-container inner-container",
-            show(View.BuildSettings))(
+        div(cls := "settings-container inner-container", show(View.BuildSettings))(
           buildSettings
         ),
         div(cls := "status-container inner-container", show(View.Status))(

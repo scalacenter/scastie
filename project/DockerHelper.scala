@@ -7,12 +7,7 @@ import java.nio.file.{Path, Files}
 import scala.sys.process._
 
 object DockerHelper {
-  def apply(baseDirectory: Path,
-            sbtTargetDir: Path,
-            sbtScastie: String,
-            ivyHome: Path,
-            organization: String,
-            artifact: Path): Dockerfile = {
+  def apply(baseDirectory: Path, sbtTargetDir: Path, sbtScastie: String, ivyHome: Path, organization: String, artifact: Path): Dockerfile = {
 
     val artifactTargetPath = s"/app/${artifact.getFileName()}"
     val generatedProjects = new GenerateProjects(sbtTargetDir)

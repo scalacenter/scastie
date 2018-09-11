@@ -350,9 +350,7 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
       s"$projectName-${dash(scalaV)}"
     } else projectName
 
-  CrossProject(id = projectId,
-               base = crossDir(projectId),
-               crossType = CrossType.Full)
+  CrossProject(id = projectId, base = crossDir(projectId), crossType = CrossType.Full)
     .settings(baseSettings)
     .settings(
       scalaVersion := scalaV,

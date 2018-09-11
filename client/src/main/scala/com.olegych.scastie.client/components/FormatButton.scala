@@ -2,9 +2,7 @@ package com.olegych.scastie.client.components
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 
-final case class FormatButton(inputsHasChanged: Boolean,
-                              isStatusOk: Boolean,
-                              formatCode: Reusable[Callback]) {
+final case class FormatButton(inputsHasChanged: Boolean, isStatusOk: Boolean, formatCode: Reusable[Callback]) {
   @inline def render: VdomElement = FormatButton.component(this)
 }
 
@@ -21,11 +19,7 @@ object FormatButton {
       if (!isDisabled) props.formatCode
       else reusableEmpty
 
-    li(title := "Format Code (F6)",
-       role := "button",
-       (cls := "disabled").when(isDisabled),
-       cls := "btn",
-       onClick --> formatCode)(
+    li(title := "Format Code (F6)", role := "button", (cls := "disabled").when(isDisabled), cls := "btn", onClick --> formatCode)(
       i(cls := "fa fa-align-left"),
       span("Format")
     )

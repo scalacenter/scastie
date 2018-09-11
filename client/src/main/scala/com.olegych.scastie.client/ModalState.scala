@@ -38,8 +38,7 @@ case class ModalState(
 ) {
   val isShareModalClosed: SnippetId ~=> Boolean =
     Reusable.fn(
-      shareModalSnippetId2 =>
-        !shareModalSnippetId.contains(shareModalSnippetId2)
+      shareModalSnippetId2 => !shareModalSnippetId.contains(shareModalSnippetId2)
     )
 
 }

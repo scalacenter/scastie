@@ -43,15 +43,11 @@ trait Editor extends js.Object {
   // def off(type: String, func: (...args)): Unit
   def getDoc(): Document
   def swapDoc(document: Document): Document
-  def setGutterMarker(line: Int | LineHandle,
-                      gutterID: String,
-                      value: Element): LineHandle
+  def setGutterMarker(line: Int | LineHandle, gutterID: String, value: Element): LineHandle
   def clearGutter(gutterID: String): Unit
   def lineInfo(line: Int | LineHandle): js.Object
   def addWidget(pos: Position, node: Element, scrollIntoView: Boolean): Unit
-  def addLineWidget(line: Int,
-                    node: HTMLElement,
-                    options: UndefOr[js.Any]): LineWidget
+  def addLineWidget(line: Int, node: HTMLElement, options: UndefOr[js.Any]): LineWidget
   def setSize(width: Int | String, height: Int | String): Unit
   def scrollTo(x: Double, y: Double): Unit
   def getScrollInfo(): ScrollInfo

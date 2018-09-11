@@ -4,9 +4,7 @@ package components
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 
-final case class WorksheetButton(isWorksheetMode: Boolean,
-                                 toggleWorksheetMode: Reusable[Callback],
-                                 view: View) {
+final case class WorksheetButton(isWorksheetMode: Boolean, toggleWorksheetMode: Reusable[Callback], view: View) {
   @inline def render: VdomElement = WorksheetButton.component(this)
 }
 
@@ -38,9 +36,7 @@ object WorksheetButton {
     )(
       i(cls := "fa fa-calendar"),
       span("Worksheet"),
-      i(cls := "workSheetIndicator",
-        cls := "fa fa-circle",
-        isWorksheetModeSelected)
+      i(cls := "workSheetIndicator", cls := "fa fa-circle", isWorksheetModeSelected)
     )
   }
 

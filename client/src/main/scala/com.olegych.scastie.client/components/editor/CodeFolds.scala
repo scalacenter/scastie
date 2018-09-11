@@ -21,8 +21,7 @@ object CodeFoldingAnnotations {
             } else if (line == "// end-fold") {
               open match {
                 case Some(start) =>
-                  (folds + RangePosititon(start, indexTotal + line.length),
-                   None)
+                  (folds + RangePosititon(start, indexTotal + line.length), None)
 
                 case None => (folds, None)
               }

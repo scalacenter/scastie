@@ -183,8 +183,7 @@ object ScalaTarget {
       )
   }
 
-  case class Js(scalaVersion: String, scalaJsVersion: String)
-      extends ScalaTarget {
+  case class Js(scalaVersion: String, scalaJsVersion: String) extends ScalaTarget {
 
     def hasWorksheetMode: Boolean =
       Jvm(scalaVersion).hasWorksheetMode
@@ -231,8 +230,7 @@ object ScalaTarget {
       )
   }
 
-  case class Native(scalaVersion: String, scalaNativeVersion: String)
-      extends ScalaTarget {
+  case class Native(scalaVersion: String, scalaNativeVersion: String) extends ScalaTarget {
 
     def hasWorksheetMode: Boolean =
       Jvm(scalaVersion).hasWorksheetMode

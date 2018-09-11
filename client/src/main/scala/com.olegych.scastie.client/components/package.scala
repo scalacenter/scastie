@@ -80,8 +80,7 @@ package object components {
   implicit val outputsReuse: Reusability[Outputs] =
     Reusability.caseClass[Outputs]
 
-  implicit val sbtRunnerStateReuse
-    : Reusability[Option[Vector[SbtRunnerState]]] =
+  implicit val sbtRunnerStateReuse: Reusability[Option[Vector[SbtRunnerState]]] =
     Reusability.byRefOr_==
 
   implicit val statusStateReuse: Reusability[StatusState] =

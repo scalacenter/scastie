@@ -15,9 +15,7 @@ import java.io.{PrintWriter, StringWriter}
 class FormatActor() extends Actor {
   private val log = LoggerFactory.getLogger(getClass)
 
-  private def format(code: String,
-                     isWorksheetMode: Boolean,
-                     scalaTarget: ScalaTarget): Either[String, String] = {
+  private def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
     log.info(s"format (isWorksheetMode: $isWorksheetMode)")
     log.info(code)
 

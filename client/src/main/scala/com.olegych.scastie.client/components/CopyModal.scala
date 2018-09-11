@@ -9,12 +9,7 @@ import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.{window, document}
 
-final case class CopyModal(title: String,
-                           subtitle: String,
-                           content: String,
-                           modalId: String,
-                           isClosed: Boolean,
-                           close: Reusable[Callback]) {
+final case class CopyModal(title: String, subtitle: String, content: String, modalId: String, isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement =
     new CopyModal.ShareModalComponent().build(this)
 }
@@ -52,9 +47,7 @@ object CopyModal {
             div.ref(divRef = _)(cls := "link-to-copy")(
               props.content
             ),
-            li(onClick --> copyLink,
-               title := "Copy to Clipboard",
-               cls := "snippet-clip clipboard-copy")(
+            li(onClick --> copyLink, title := "Copy to Clipboard", cls := "snippet-clip clipboard-copy")(
               i(cls := "fa fa-clipboard")
             )
           )

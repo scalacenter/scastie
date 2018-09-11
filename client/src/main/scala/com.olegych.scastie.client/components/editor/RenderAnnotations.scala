@@ -24,8 +24,7 @@ object RenderAnnotations {
       state,
       modState,
       (props, _) => props.instrumentations, {
-        case api.Instrumentation(api.Position(start, end),
-                                 api.Value(value, tpe)) => {
+        case api.Instrumentation(api.Position(start, end), api.Value(value, tpe)) => {
 
           val startPos = doc.posFromIndex(start)
           val endPos = doc.posFromIndex(end)
@@ -43,8 +42,7 @@ object RenderAnnotations {
           else Annotation.inline(editor, startPos, value, process)
         }
 
-        case api.Instrumentation(api.Position(start, end),
-                                 api.Html(content, folded)) => {
+        case api.Instrumentation(api.Position(start, end), api.Html(content, folded)) => {
 
           val startPos = doc.posFromIndex(start)
           val endPos = doc.posFromIndex(end)

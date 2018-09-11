@@ -19,8 +19,7 @@ import play.api.libs.json.{OFormat, Reads}
 
 case class AccessToken(access_token: String)
 
-class Github(implicit system: ActorSystem, materializer: ActorMaterializer)
-    extends PlayJsonSupport {
+class Github(implicit system: ActorSystem, materializer: ActorMaterializer) extends PlayJsonSupport {
   import system.dispatcher
 
   import play.api.libs.json._

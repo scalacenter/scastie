@@ -18,8 +18,7 @@ package object routes {
       p => p
     )(f)
 
-  def snippetIdEnd(matcherStart: String,
-                   matcherEnd: String)(f: SnippetId => Route): Route =
+  def snippetIdEnd(matcherStart: String, matcherEnd: String)(f: SnippetId => Route): Route =
     snippetIdBase(
       matcherStart / _ / matcherEnd,
       matcherStart / _ / matcherEnd
@@ -41,10 +40,9 @@ package object routes {
   )(f: SnippetId => Route): Route = {
 
     concat(
-      path(fp1(uuidMatcher) ~ Slash.?)(uuid ⇒ f(SnippetId(uuid, None))),
+      path(fp1(uuidMatcher) ~ Slash.?)(uuid ? f(SnippetId(uuid, None))),
       path(fp2(Segment / uuidMatcher ~ (Slash ~ IntNumber).?) ~ Slash.?)(
-        (user, uuid, update) ⇒
-          f(SnippetId(uuid, Some(SnippetUserPart(user, update.getOrElse(0)))))
+        (user, uuid, update) ? f(SnippetId(uuid, Some(SnippetUserPart(user, update.getOrElse(0)))))
       )
     )
   }

@@ -39,8 +39,7 @@ object PromptModal {
              cls := "btn")(
             props.actionLabel
           ),
-          li(onClick ==> (e => e.stopPropagationCB >> props.close),
-             cls := "btn")(
+          li(onClick ==> (e => e.stopPropagationCB >> props.close), cls := "btn")(
             "Cancel"
           )
         )

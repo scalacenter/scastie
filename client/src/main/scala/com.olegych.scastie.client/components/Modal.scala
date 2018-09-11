@@ -2,12 +2,7 @@ package com.olegych.scastie.client.components
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 
-final case class Modal(title: String,
-                       isClosed: Boolean,
-                       close: Reusable[Callback],
-                       modalCss: TagMod,
-                       modalId: String,
-                       content: TagMod) {
+final case class Modal(title: String, isClosed: Boolean, close: Reusable[Callback], modalCss: TagMod, modalId: String, content: TagMod) {
   @inline def render: VdomElement = Modal.component(this)
 }
 
@@ -22,16 +17,10 @@ object Modal {
       else TagMod(display.block)
 
     div(cls := "modal", id := props.modalId, modalStyle)(
-      div(cls := "modal-fade-screen",
-          onClick ==> (e => e.stopPropagationCB >> props.close))(
-        div(cls := "modal-window",
-            props.modalCss,
-            onClick ==> (e => e.stopPropagationCB))(
+      div(cls := "modal-fade-screen", onClick ==> (e => e.stopPropagationCB >> props.close))(
+        div(cls := "modal-window", props.modalCss, onClick ==> (e => e.stopPropagationCB))(
           div(cls := "modal-header")(
-            div(cls := "modal-close",
-                onClick ==> (e => e.stopPropagationCB >> props.close),
-                role := "button",
-                title := "close help modal")
+            div(cls := "modal-close", onClick ==> (e => e.stopPropagationCB >> props.close), role := "button", title := "close help modal")
           )(
             h1(props.title)
           ),

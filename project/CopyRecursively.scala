@@ -2,9 +2,7 @@ import java.nio.file.{Path, Files, SimpleFileVisitor, FileVisitResult}
 import java.nio.file.attribute.BasicFileAttributes
 
 object CopyRecursively {
-  def apply(source: Path,
-            destination: Path,
-            directoryFilter: (Path, Int) => Boolean): Unit = {
+  def apply(source: Path, destination: Path, directoryFilter: (Path, Int) => Boolean): Unit = {
 
     Files.walkFileTree(
       source,
@@ -13,10 +11,7 @@ object CopyRecursively {
   }
 }
 
-class CopyVisitor(source: Path,
-                  destination: Path,
-                  directoryFilter: (Path, Int) => Boolean)
-    extends SimpleFileVisitor[Path] {
+class CopyVisitor(source: Path, destination: Path, directoryFilter: (Path, Int) => Boolean) extends SimpleFileVisitor[Path] {
 
   private def relative(subPath: Path): Path =
     destination.resolve(source.relativize(subPath))
@@ -44,8 +39,7 @@ class CopyVisitor(source: Path,
     }
   }
 
-  override def visitFile(file: Path,
-                         attrs: BasicFileAttributes): FileVisitResult = {
+  override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
     Files.copy(file, relative(file))
     FileVisitResult.CONTINUE
   }

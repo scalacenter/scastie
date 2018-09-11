@@ -66,14 +66,12 @@ class Routing(defaultServerUrl: String) {
     Scastie.default(router).render
   }
 
-  private def renderTargetTypePage(page: TargetTypePage,
-                                   router: RouterCtl[Page]): VdomElement = {
+  private def renderTargetTypePage(page: TargetTypePage, router: RouterCtl[Page]): VdomElement = {
 
     Scastie.default(router).copy(targetType = Some(page.targetType)).render
   }
 
-  private def renderOldSnippetIdPage(page: OldSnippetIdPage,
-                                     router: RouterCtl[Page]): VdomElement = {
+  private def renderOldSnippetIdPage(page: OldSnippetIdPage, router: RouterCtl[Page]): VdomElement = {
 
     Scastie.default(router).copy(oldSnippetId = Some(page.id)).render
   }
@@ -86,8 +84,7 @@ class Routing(defaultServerUrl: String) {
       .copy(embedded = Some(EmbeddedOptions.empty(defaultServerUrl)))
       .render
 
-  private def renderPage(page: ResourcePage,
-                         router: RouterCtl[Page]): VdomElement = {
+  private def renderPage(page: ResourcePage, router: RouterCtl[Page]): VdomElement = {
     val defaultEmbedded = Some(EmbeddedOptions.empty(defaultServerUrl))
 
     val (embedded, snippetId) =

@@ -39,19 +39,15 @@ trait SnippetsContainer {
     insert0(newSnippetId(user), inputs)
   }
 
-  final def update(snippetId: SnippetId,
-                   inputs: Inputs): Future[Option[SnippetId]] = {
+  final def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
     updateSnippetId(snippetId) match {
       case Some(nextSnippetId) => insert0(nextSnippetId, inputs).map(Some(_))
       case _                   => Future.successful(None)
     }
   }
 
-  final def fork(snippetId: SnippetId,
-                 inputs: Inputs,
-                 user: Option[UserLogin]): Future[SnippetId] =
-    create(inputs.copy(forked = Some(snippetId), isShowingInUserProfile = true),
-           user)
+  final def fork(snippetId: SnippetId, inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] =
+    create(inputs.copy(forked = Some(snippetId), isShowingInUserProfile = true), user)
 
   final def readScalaSource(
       snippetId: SnippetId

@@ -39,10 +39,7 @@ object Annotation {
     Line(editor.addLineWidget(endPos.line, node, options))
   }
 
-  def inline(editor: TextAreaEditor,
-             startPos: CMPosition,
-             content: String,
-             process: (HTMLElement => Unit)): Annotation = {
+  def inline(editor: TextAreaEditor, startPos: CMPosition, content: String, process: (HTMLElement => Unit)): Annotation = {
 
     // inspired by blink/devtools WebInspector.JavaScriptSourceFrame::_renderDecorations
 
@@ -79,11 +76,7 @@ object Annotation {
     Line(editor.addLineWidget(startPos.line, node, null))
   }
 
-  def fold(editor: TextAreaEditor,
-           startPos: CMPosition,
-           endPos: CMPosition,
-           content: String,
-           process: (HTMLElement => Unit)): Annotation = {
+  def fold(editor: TextAreaEditor, startPos: CMPosition, endPos: CMPosition, content: String, process: (HTMLElement => Unit)): Annotation = {
 
     val node =
       dom.document.createElement("div").asInstanceOf[HTMLDivElement]

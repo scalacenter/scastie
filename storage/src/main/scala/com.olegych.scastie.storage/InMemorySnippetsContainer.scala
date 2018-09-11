@@ -6,8 +6,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.collection.mutable
 import System.{lineSeparator => nl}
 
-class InMemorySnippetsContainer(implicit protected val ec: ExecutionContext)
-    extends SnippetsContainer {
+class InMemorySnippetsContainer(implicit protected val ec: ExecutionContext) extends SnippetsContainer {
 
   private val snippets = mutable.Map[SnippetId, Storage]()
 

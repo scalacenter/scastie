@@ -14,8 +14,7 @@ case class SubscribeProgress(snippetId: SnippetId)
 case class ProgressDone(snippetId: SnippetId)
 
 trait QueuedMessage
-case class SnippetProgressMessage(content: SnippetProgress)
-    extends QueuedMessage
+case class SnippetProgressMessage(content: SnippetProgress) extends QueuedMessage
 case object SignalProgressIsDone extends QueuedMessage
 
 class ProgressActor extends Actor {
@@ -79,11 +78,9 @@ class ProgressActor extends Actor {
   ): Unit =
     for {
       (source, _) <- subscribers.get(snippetId)
-    } yield
-      subscribers.update(snippetId, (source, Some(graphStageForwarderActor)))
+    } yield subscribers.update(snippetId, (source, Some(graphStageForwarderActor)))
 
-  private def processSnippedProgress(snippetProgress: SnippetProgress,
-                                     self: ActorRef): Unit = {
+  private def processSnippedProgress(snippetProgress: SnippetProgress, self: ActorRef): Unit = {
 
     snippetProgress.snippetId.foreach { snippetId =>
       getOrCreateNewSubscriberInfo(snippetId, self)

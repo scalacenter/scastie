@@ -9,16 +9,13 @@ object EditorReusability {
   implicit val reusability: Reusability[Editor] =
     Reusability.caseClass[Editor]
 
-  implicit val problemAnnotationsReuse
-    : Reusability[Map[api.Problem, Annotation]] =
+  implicit val problemAnnotationsReuse: Reusability[Map[api.Problem, Annotation]] =
     Reusability((a, b) => a.keys == b.keys)
 
-  implicit val renderAnnotationsReuse
-    : Reusability[Map[api.Instrumentation, Annotation]] =
+  implicit val renderAnnotationsReuse: Reusability[Map[api.Instrumentation, Annotation]] =
     Reusability((a, b) => a.keys == b.keys)
 
-  implicit val runtimeErrorAnnotationsReuse
-    : Reusability[Map[api.RuntimeError, Annotation]] =
+  implicit val runtimeErrorAnnotationsReuse: Reusability[Map[api.RuntimeError, Annotation]] =
     Reusability((a, b) => a.keys == b.keys)
 
   implicit val codeFoldsReuse: Reusability[Map[RangePosititon, Annotation]] =

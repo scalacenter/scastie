@@ -133,9 +133,7 @@ case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
     }
   }
 
-  private def distanceFromHistory(targetServerIndex: Int,
-                                  config: C,
-                                  historyHistogram: Histogram[C]): Double = {
+  private def distanceFromHistory(targetServerIndex: Int, config: C, historyHistogram: Histogram[C]): Double = {
     val i = targetServerIndex
     val newConfigs = configs.updated(i, config)
     val newConfigsHistogram = newConfigs.to[Histogram]

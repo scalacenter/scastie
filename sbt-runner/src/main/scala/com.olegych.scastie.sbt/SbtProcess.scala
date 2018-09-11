@@ -146,7 +146,7 @@ class SbtProcess(runTimeout: FiniteDuration,
   }
 
   onTransition {
-    case _ -> Ready ⇒ {
+    case _ -> Ready ? {
       println("-- Ready --")
       unstashAll()
     }
@@ -173,8 +173,7 @@ class SbtProcess(runTimeout: FiniteDuration,
   }
 
   when(Ready) {
-    case Event(task @ SbtTask(snippetId, taskInputs, ip, login, progressActor),
-               SbtData(stateInputs)) => {
+    case Event(task @ SbtTask(snippetId, taskInputs, ip, login, progressActor), SbtData(stateInputs)) => {
       println(s"Running: (login: $login, ip: $ip) \n $taskInputs")
 
       InstrumentedInputs(taskInputs) match {
@@ -243,9 +242,7 @@ class SbtProcess(runTimeout: FiniteDuration,
     }
   }
 
-  private def gotoWithTimeout(sbtRun: SbtRun,
-                              nextState: SbtState,
-                              duration: FiniteDuration): this.State = {
+  private def gotoWithTimeout(sbtRun: SbtRun, nextState: SbtState, duration: FiniteDuration): this.State = {
 
     sbtRun.timeoutEvent.foreach(_.cancel())
 

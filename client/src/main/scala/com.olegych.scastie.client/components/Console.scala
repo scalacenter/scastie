@@ -57,10 +57,7 @@ object Console {
     div(cls := "console-container", consoleCss)(
       div(cls := "console", displayConsole)(
         div(cls := "handler"),
-        div(cls := "switcher-hide",
-            displayConsole,
-            role := "button",
-            onClick --> props.close)(
+        div(cls := "switcher-hide", displayConsole, role := "button", onClick --> props.close)(
           i(cls := "fa fa-terminal"),
           "Console",
           i(cls := "fa fa-caret-down")

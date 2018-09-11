@@ -14,11 +14,7 @@ import java.io.File
 
 import scala.concurrent.duration._
 
-class ProcessActorTest()
-    extends TestKit(ActorSystem("ProcessActorTest"))
-    with ImplicitSender
-    with FunSuiteLike
-    with BeforeAndAfterAll {
+class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
 
   print("\033c")
 

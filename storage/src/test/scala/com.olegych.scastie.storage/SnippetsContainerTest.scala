@@ -44,13 +44,11 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
     Files.walkFileTree(
       base,
       new SimpleFileVisitor[Path] {
-        override def postVisitDirectory(dir: Path,
-                                        ex: IOException): FileVisitResult = {
+        override def postVisitDirectory(dir: Path, ex: IOException): FileVisitResult = {
           Files.delete(dir)
           FileVisitResult.CONTINUE
         }
-        override def visitFile(file: Path,
-                               attrs: BasicFileAttributes): FileVisitResult = {
+        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
           Files.delete(file)
           FileVisitResult.CONTINUE
         }

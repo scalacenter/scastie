@@ -65,10 +65,7 @@ object BuildSettings {
               onChange --> props.setTarget(targetType.defaultScalaTarget),
               selected(targetType)
             ),
-            label(`for` := targetLabel,
-                  role := "button",
-                  cls := "radio",
-                  targetLabel)
+            label(`for` := targetLabel, role := "button", cls := "radio", targetLabel)
           )
         }.toTagMod
       )
@@ -89,8 +86,7 @@ object BuildSettings {
 
     val notSupported = div("Not supported")
 
-    def versionSelector(scalaVersion: String,
-                        targetFun: String => ScalaTarget) = {
+    def versionSelector(scalaVersion: String, targetFun: String => ScalaTarget) = {
       def handler(scalaVersion: String) =
         TagMod(onChange --> props.setTarget(targetFun(scalaVersion)))
 
@@ -107,23 +103,14 @@ object BuildSettings {
                     name := "scalaV",
                     handler(suggestedVersion),
                     selected(suggestedVersion)),
-              label(`for` := s"scala-$suggestedVersion",
-                    cls := "radio",
-                    role := "button",
-                    suggestedVersion)
+              label(`for` := s"scala-$suggestedVersion", cls := "radio", role := "button", suggestedVersion)
             )
           }.toTagMod,
           li(
-            input(`type` := "radio",
-                  id := scalaVersion,
-                  value := scalaVersion,
-                  name := "scalaV",
-                  handler(scalaVersion)),
+            input(`type` := "radio", id := scalaVersion, value := scalaVersion, name := "scalaV", handler(scalaVersion)),
             label(
               div(cls := "select-wrapper")(
-                select(name := "scalaVersion",
-                       value := scalaVersion.toString,
-                       onChange ==> setScalaVersion(targetFun))(
+                select(name := "scalaVersion", value := scalaVersion.toString, onChange ==> setScalaVersion(targetFun))(
                   ScalaVersions.allVersions
                     .map(version => option(version))
                     .toTagMod
@@ -172,10 +159,7 @@ object BuildSettings {
           actionLabel = "Reset",
           action = props.resetBuild
         ).render,
-        div(title := "Reset your configuration",
-            onClick --> props.openResetModal,
-            role := "button",
-            cls := "btn")(
+        div(title := "Reset your configuration", onClick --> props.openResetModal, role := "button", cls := "btn")(
           "Reset"
         )
       ).when(!props.isBuildDefault)

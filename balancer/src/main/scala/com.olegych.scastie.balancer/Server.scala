@@ -5,10 +5,7 @@ import com.olegych.scastie.api._
 import scala.concurrent.duration.{FiniteDuration, DurationInt}
 import scala.collection.immutable.Queue
 
-case class Server[C, T <: TaskId, R, S](ref: R,
-                                        lastConfig: C,
-                                        mailbox: Queue[Task[C, T]],
-                                        state: S) {
+case class Server[C, T <: TaskId, R, S](ref: R, lastConfig: C, mailbox: Queue[Task[C, T]], state: S) {
 
   def currentTaskId: Option[T] = mailbox.headOption.map(_.taskId)
   def currentConfig: C = mailbox.headOption.map(_.config).getOrElse(lastConfig)
@@ -28,9 +25,7 @@ case class Server[C, T <: TaskId, R, S](ref: R,
     copy(mailbox = mailbox.enqueue(task))
   }
 
-  def cost(taskCost: FiniteDuration,
-           reloadCost: FiniteDuration,
-           needsReload: (C, C) => Boolean): FiniteDuration = {
+  def cost(taskCost: FiniteDuration, reloadCost: FiniteDuration, needsReload: (C, C) => Boolean): FiniteDuration = {
 
     val reloadsPenalties =
       mailbox.sliding(2).foldLeft(0.seconds) { (acc, slide) =>

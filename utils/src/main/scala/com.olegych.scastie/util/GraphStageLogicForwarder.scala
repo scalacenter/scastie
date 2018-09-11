@@ -7,10 +7,7 @@ import akka.stream.stage.{GraphStageLogic, OutHandler}
 import scala.collection.mutable.{Queue => MQueue}
 import scala.reflect.runtime.universe._
 
-class GraphStageLogicForwarder[T: TypeTag, U: TypeTag](out: Outlet[T],
-                                                       shape: SourceShape[T],
-                                                       coordinator: ActorRef,
-                                                       graphId: U)
+class GraphStageLogicForwarder[T: TypeTag, U: TypeTag](out: Outlet[T], shape: SourceShape[T], coordinator: ActorRef, graphId: U)
     extends GraphStageLogic(shape) {
 
   setHandler(

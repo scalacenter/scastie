@@ -7,10 +7,7 @@ import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
 
 import scala.collection.immutable.Queue
 
-final case class Status(state: StatusState,
-                        router: RouterCtl[Page],
-                        isAdmin: Boolean,
-                        inputs: Inputs) {
+final case class Status(state: StatusState, router: RouterCtl[Page], isAdmin: Boolean, inputs: Inputs) {
   @inline def render: VdomElement = Status.component(this)
 }
 

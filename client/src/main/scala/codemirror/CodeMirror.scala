@@ -25,13 +25,10 @@ object CodeMirror extends js.Object {
   val Init: js.Object = js.native
 
   def apply(element: Element, options: UndefOr[Options]): Editor = js.native
-  def fromTextArea(textarea: HTMLTextAreaElement,
-                   options: Options): TextAreaEditor = js.native
+  def fromTextArea(textarea: HTMLTextAreaElement, options: Options): TextAreaEditor = js.native
   def runMode(value: String, mode: String, destination: HTMLElement): Editor =
     js.native
-  def showHint(editor: Editor,
-               func: js.Function2[Editor, ShowHintOptions, js.Any],
-               options: js.Any): Unit = js.native
+  def showHint(editor: Editor, func: js.Function2[Editor, ShowHintOptions, js.Any], options: js.Any): Unit = js.native
 
   def defineExtension(name: String, value: js.Any): Unit = js.native
   def defineOption(

@@ -10,10 +10,7 @@ object ScastieFileUtil {
     else None
   }
 
-  def write(dst: Path,
-            content: String,
-            truncate: Boolean = false,
-            append: Boolean = false): Unit = {
+  def write(dst: Path, content: String, truncate: Boolean = false, append: Boolean = false): Unit = {
     if (!Files.exists(dst)) {
       Files.write(dst, content.getBytes, StandardOpenOption.CREATE_NEW)
       ()

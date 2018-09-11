@@ -59,10 +59,7 @@ object Instrument {
     Term.Apply(Term.Name(positionT), lits)
   }
 
-  def instrumentOne(term: Term,
-                    tpeTree: Option[Type],
-                    offset: Int,
-                    isScalaJs: Boolean): Patch = {
+  def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int, isScalaJs: Boolean): Patch = {
 
     val treeQuote =
       tpeTree match {
@@ -85,9 +82,7 @@ object Instrument {
     Patch(term.tokens.head, term.tokens.last, replacement)
   }
 
-  private def instrument(source: Source,
-                         offset: Int,
-                         isScalaJs: Boolean): String = {
+  private def instrument(source: Source, offset: Int, isScalaJs: Boolean): String = {
     val instrumentedCodePatches =
       source.stats.collect {
         case c: Defn.Class
@@ -154,8 +149,7 @@ object Instrument {
       templ.parents.exists(_.syntax == "App")
 
     source.stats.exists {
-      case c: Defn.Class
-          if c.name.value == instrumentedClass && c.templ.stats.nonEmpty =>
+      case c: Defn.Class if c.name.value == instrumentedClass && c.templ.stats.nonEmpty =>
         c.templ.stats.get.exists {
           case c: Defn.Class  => hasMain(c.templ) || hasApp(c.templ)
           case t: Defn.Trait  => hasMain(t.templ) || hasApp(t.templ)

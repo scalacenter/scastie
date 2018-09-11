@@ -51,8 +51,7 @@ object CodeSnippets {
             props
               .deleteSnippet(summary.snippetId)
               .map(
-                deleted =>
-                  scope.modState(_.filterNot(_ == summary)).when_(deleted)
+                deleted => scope.modState(_.filterNot(_ == summary)).when_(deleted)
               )
         )
       )
@@ -84,10 +83,7 @@ object CodeSnippets {
         div(cls := "clear-mobile"),
         span(cls := "update", "Update: " + update),
         div(cls := "actions")(
-          li(onClick --> props.openShareModal(summary.snippetId),
-             cls := "btn",
-             title := "Share",
-             role := "button")(
+          li(onClick --> props.openShareModal(summary.snippetId), cls := "btn", title := "Share", role := "button")(
             i(cls := "fa fa-share-alt")
           ),
           li(
@@ -100,9 +96,7 @@ object CodeSnippets {
           )
         )
       ),
-      div(cls := "codesnippet",
-          role := "button",
-          props.router.setOnClick(page))(
+      div(cls := "codesnippet", role := "button", props.router.setOnClick(page))(
         props.router.link(page)(
           pre(cls := "code")(summary.summary)
         )
@@ -123,9 +117,7 @@ object CodeSnippets {
 
     val userAvatar =
       div(cls := "avatar")(
-        img(src := props.user.avatar_url + "&s=70",
-            alt := "Your Github Avatar",
-            cls := "image-button avatar")
+        img(src := props.user.avatar_url + "&s=70", alt := "Your Github Avatar", cls := "image-button avatar")
       )
 
     val userName = props.user.name.getOrElse("")

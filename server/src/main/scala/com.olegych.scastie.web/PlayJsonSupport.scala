@@ -68,8 +68,7 @@ trait PlayJsonSupport {
         .reads(json)
         .recoverTotal { e =>
           throw RejectionError(
-            ValidationRejection(JsError.toJson(e).toString,
-                                Some(PlayJsonError(e)))
+            ValidationRejection(JsError.toJson(e).toString, Some(PlayJsonError(e)))
           )
         }
     jsonStringUnmarshaller.map(data => read(Json.parse(data)))

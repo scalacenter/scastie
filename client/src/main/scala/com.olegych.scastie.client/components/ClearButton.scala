@@ -13,10 +13,7 @@ object ClearButton {
     Reusability.caseClass[ClearButton]
 
   private def render(props: ClearButton): VdomElement = {
-    li(title := "Clear Instrumentations (Esc)",
-       role := "button",
-       cls := "btn",
-       onClick --> props.clear)(
+    li(title := "Clear Instrumentations (Esc)", role := "button", cls := "btn", onClick --> props.clear)(
       div(
         i(cls := "fa fa-eraser"),
         span("Clear Annotations")
