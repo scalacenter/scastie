@@ -31,7 +31,7 @@ object RuntimeError {
               trace.getFileName == "main.scala" && trace.getLineNumber != -1
             else true
         )
-        .map(v ? (e, Some(v.getLineNumber)))
+        .map(v => (e, Some(v.getLineNumber)))
     }
     def loop(e: Throwable): Option[(Throwable, Option[Int])] = {
       val s = search(e)
@@ -42,7 +42,7 @@ object RuntimeError {
     }
 
     loop(t).map {
-      case (err, line) ?
+      case (err, line) =>
         val errors = new StringWriter()
         t.printStackTrace(new PrintWriter(errors))
         val fullStack = errors.toString

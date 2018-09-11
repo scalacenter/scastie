@@ -146,7 +146,7 @@ class SbtProcess(runTimeout: FiniteDuration,
   }
 
   onTransition {
-    case _ -> Ready ? {
+    case _ -> Ready => {
       println("-- Ready --")
       unstashAll()
     }

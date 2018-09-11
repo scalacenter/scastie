@@ -29,7 +29,7 @@ class ProgressRoutes(progressActor: ActorRef) {
   val routes: Route =
     concat(
       snippetIdStart("progress-sse")(
-        sid ?
+        sid =>
           complete(
             progressSource(sid)
               .map(
@@ -62,12 +62,12 @@ class ProgressRoutes(progressActor: ActorRef) {
 
     Flow[ws.Message]
       .mapAsync(1) {
-        case Strict(c) ? Future.successful(c)
-        case e => Future.failed(new Exception(e.toString))
+        case Strict(c) => Future.successful(c)
+        case e         => Future.failed(new Exception(e.toString))
       }
       .via(flow)
       .map(
-        progress ? ws.TextMessage.Strict(Json.stringify(Json.toJson(progress)))
+        progress => ws.TextMessage.Strict(Json.stringify(Json.toJson(progress)))
       )
   }
 }

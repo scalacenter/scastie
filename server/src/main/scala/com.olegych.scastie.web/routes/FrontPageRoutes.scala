@@ -70,7 +70,7 @@ class FrontPageRoutes(production: Boolean) {
             getFromResource("public/embedded.js.map")
           ),
           path("public" / Remaining)(
-            path ? getFromResource("public/" + path)
+            path => getFromResource("public/" + path)
           )
         )
       ),
