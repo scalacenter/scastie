@@ -62,7 +62,7 @@ object HelpModal {
           h3("Save"),
           p(
             cls := "normal",
-            "You can save your code fragments just clicking this button. (You need to be logged in with your Github account for this to work) Once they’re saved, you’ll be able to Update, Fork or Share them."
+            "You can save your code fragments just clicking this button. (You need to be logged in with your Github account for this to work) Once they're saved, you'll be able to Update, Fork or Share them."
           )
         ),
         h2("Build Settings"),
@@ -73,12 +73,12 @@ object HelpModal {
         h2("User's Code Snippets"),
         p(
           cls := "normal",
-          "Your saved code fragments will appear here and you’ll be able to edit or share them."
+          "Your saved code fragments will appear here and you'll be able to edit or share them."
         ),
         h2("Console"),
         p(
           cls := "normal",
-          "You can see your code’s output in the Scastie’s console."
+          "You can see your code's output in the Scastie's console."
         ),
         h2("Feedback"),
         p(cls := "normal", "You can join our Gitter channel and send issues."),

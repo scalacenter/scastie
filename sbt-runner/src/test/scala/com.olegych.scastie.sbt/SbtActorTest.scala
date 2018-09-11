@@ -100,7 +100,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("Encoding issues #100") {
-    val message = "ˆ"
+    val message = "â‚¬"
     run(s"""println("$message")""")(
       assertUserOutput(message)
     )

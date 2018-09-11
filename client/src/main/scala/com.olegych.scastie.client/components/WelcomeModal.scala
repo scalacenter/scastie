@@ -33,12 +33,12 @@ object WelcomeModal {
         h2("User's Code Snippets"),
         p(
           cls := "modal-intro",
-          "Your saved code fragments will appear here and you’ll be able to edit or share them."
+          "Your saved code fragments will appear here and you'll be able to edit or share them."
         ),
         h2("Console"),
         p(
           cls := "modal-intro",
-          "You can see your code’s output in the Scastie’s console."
+          "You can see your code's output in the Scastie's console."
         ),
         h2("Feedback"),
         p(cls := "modal-intro", "You can join our Gitter channel and send issues.")
