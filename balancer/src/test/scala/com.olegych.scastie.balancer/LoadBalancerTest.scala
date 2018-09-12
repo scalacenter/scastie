@@ -158,7 +158,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(balancer0.servers.head.mailbox.size == 1)
 
     val balancer1 = balancer0.done(taskId).get
-    assert(balancer1.servers.head.mailbox.isEmpty)
+    assert(balancer1.servers.head.mailbox == Queue())
   }
 
   test("run two tasks") {

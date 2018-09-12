@@ -10,14 +10,11 @@ case class Server[C, T <: TaskId, R, S](ref: R, lastConfig: C, mailbox: Queue[Ta
   def currentTaskId: Option[T] = mailbox.headOption.map(_.taskId)
   def currentConfig: C = mailbox.headOption.map(_.config).getOrElse(lastConfig)
 
-  def done: Server[C, T, R, S] = {
-    val (task, mailbox0) = mailbox.dequeue
-
-    assert(currentTaskId.contains(task.taskId))
-
+  def done(taskId: T): Server[C, T, R, S] = {
+    val (newMailbox, done) = mailbox.partition(_.taskId != taskId)
     copy(
-      lastConfig = task.config,
-      mailbox = mailbox0
+      lastConfig = done.headOption.map(_.config).getOrElse(lastConfig),
+      mailbox = newMailbox,
     )
   }
 
