@@ -37,10 +37,6 @@ case class Server[C, T <: TaskId, R, S](ref: R, lastConfig: C, mailbox: Queue[Ta
         acc + reloadPenalty
       }
 
-    def sum(durations: Queue[FiniteDuration]): FiniteDuration = {
-      durations.foldLeft(0.seconds)(_ + _)
-    }
-
     reloadsPenalties + (mailbox.size * taskCost)
   }
 }

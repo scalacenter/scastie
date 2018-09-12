@@ -68,31 +68,25 @@ case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
 
   def getRandomServer: Server[C, T, R, S] = random(servers)
 
-  def add(
-      task: Task[C, T]
-  ): Option[(Server[C, T, R, S], LoadBalancer[C, T, R, S])] = {
+  def add(task: Task[C, T]): Option[(Server[C, T, R, S], LoadBalancer[C, T, R, S])] = {
     log.info("Task added: {}", task.taskId)
 
     val (availableServers, unavailableServers) =
       servers.partition(_.state.isReady)
 
-    if (availableServers.size > 0) {
+    if (availableServers.nonEmpty) {
       val updatedHistory = history.add(task.toRecord)
-      lazy val historyHistogram =
-        updatedHistory.data.map(_.config).to[Histogram]
+      lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
 
       val hits = availableServers.indices
         .to[Vector]
         .filter(i => availableServers(i).currentConfig == task.config)
 
-      def overBooked =
-        hits.forall(
-          i =>
-            availableServers(i)
-              .cost(taskCost, reloadCost, needsReload) > reloadCost
-        )
+      val overBooked = hits.forall { i =>
+        availableServers(i).cost(taskCost, reloadCost, needsReload) > reloadCost
+      }
 
-      def cacheMiss = hits.isEmpty
+      val cacheMiss = hits.isEmpty
 
       val selectedServerIndice =
         if (cacheMiss || overBooked) {
@@ -101,8 +95,7 @@ case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
           randomMin(configs.indices) { i =>
             val config = task.config
             val distance = distanceFromHistory(i, config, historyHistogram)
-            val load =
-              availableServers(i).cost(taskCost, reloadCost, needsReload)
+            val load = availableServers(i).cost(taskCost, reloadCost, needsReload)
             (distance, load)
           }
         } else {
@@ -124,7 +117,7 @@ case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
         )
       )
     } else {
-      if (servers.size == 0) {
+      if (servers.isEmpty) {
         val msg = "All instances are down"
         log.error(msg)
       }

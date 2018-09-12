@@ -113,7 +113,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       }
     }
 
-    val sbtTaskCost = sbtRunTimeout / 2
+    val sbtTaskCost = 2.seconds
 
     LoadBalancer(
       servers = sbtServers,
