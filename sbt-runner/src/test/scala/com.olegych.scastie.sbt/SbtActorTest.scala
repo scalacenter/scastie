@@ -14,7 +14,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   (1 to 4).foreach { i =>
     test(s"[$i] timeout") {
-      run("while(true){}")(progress => {
+      run(s"Thread.sleep(${timeout.toMillis + 1000})")(progress => {
         // println(progress)
         progress.isTimeout
       })
