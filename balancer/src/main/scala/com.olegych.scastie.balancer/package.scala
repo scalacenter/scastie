@@ -1,10 +1,8 @@
 package com.olegych.scastie
 
-import com.olegych.scastie.api.{Inputs, SbtRunTaskId, SbtState}
-
 import akka.actor.ActorSelection
+import com.olegych.scastie.api.{SbtRunTaskId, SbtState}
 
 package object balancer {
-  type SbtBalancer =
-    LoadBalancer[Inputs, SbtRunTaskId, ActorSelection, SbtState]
+  type SbtBalancer = LoadBalancer[SbtRunTaskId, ActorSelection, SbtState]
 }

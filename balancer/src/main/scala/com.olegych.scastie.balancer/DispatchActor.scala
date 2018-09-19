@@ -101,9 +101,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private var remoteSbtSelections =
     sbtPorts.map(connectRunner("SbtRunner", "SbtActor", host)).toMap
 
-  val emptyHistory = History(Queue.empty[Record[Inputs]], size = 100)
-
-  private val needsReload = (from: Inputs, to: Inputs) => from.needsReload(to)
+  val emptyHistory = History(Queue.empty[Record], size = 100)
 
   private var sbtLoadBalancer: SbtBalancer = {
     val sbtServers = remoteSbtSelections.to[Vector].map {
@@ -120,7 +118,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       history = emptyHistory,
       taskCost = sbtTaskCost,
       reloadCost = sbtReloadTimeout,
-      needsReload = needsReload
     )
   }
 

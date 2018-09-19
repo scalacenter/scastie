@@ -15,9 +15,8 @@ object Histogram {
   }
   def empty[T]: Histogram[T] = new Histogram[T](Map())
   def fromSeq[T](xs: Seq[T]): Histogram[T] = {
-    val data =
-      xs.groupBy(x => x).mapValues(v => (v.size.toDouble / xs.size.toDouble))
-    new Histogram(data)
+    val size = xs.size.toDouble
+    new Histogram(xs.groupBy(identity).transform { case (_, v) => v.size.toDouble / size })
   }
   def apply[T](xs: T*): Histogram[T] = fromSeq(xs)
 }
@@ -32,7 +31,7 @@ class Histogram[T](protected val data: Map[T, Double]) {
 
     val missingM1 = (km2 -- km1).map(k => m2(k)).sum
     val missingM2 = (km1 -- km2).map(k => m1(k)).sum
-    val intersect = (km1.intersect(km2)).map(k => Math.abs(m1(k) - m2(k))).sum
+    val intersect = km1.intersect(km2).map(k => Math.abs(m1(k) - m2(k))).sum
 
     missingM1 + missingM2 + intersect
   }

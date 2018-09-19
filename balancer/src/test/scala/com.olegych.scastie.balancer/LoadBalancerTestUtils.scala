@@ -1,12 +1,9 @@
 package com.olegych.scastie.balancer
 
 import com.olegych.scastie.api._
-import com.olegych.scastie.balancer.utils._
-
-import org.scalatest.{FunSuite, Assertion}
+import org.scalatest.{Assertion, FunSuite}
 
 import scala.collection.immutable.Queue
-
 import scala.concurrent.duration._
 
 case class TestTaskId(id: Int) extends TaskId {
@@ -14,78 +11,57 @@ case class TestTaskId(id: Int) extends TaskId {
 }
 
 case class TestServerRef(id: Int)
-case class TestConfig(config: String)
 case class TestState(state: String, ready: Boolean = true) extends ServerState {
   def isReady: Boolean = ready
 }
 
-object TestConfig {
-  implicit val ordering: Ordering[TestConfig] = Ordering.by { tc: TestConfig =>
-    tc.config
-  }
-}
-
 trait LoadBalancerTestUtils extends FunSuite with TestUtils {
-  type TestServer0 = Server[TestConfig, TestTaskId, TestServerRef, TestState]
+  type TestServer0 = Server[TestTaskId, TestServerRef, TestState]
 
   object TestLoadBalancer {
     def apply(
         servers: Vector[TestServer0],
-        history: History[TestConfig]
+        history: History,
     ): TestLoadBalancer0 = {
       LoadBalancer(
         servers = servers,
         history = history,
-        taskCost = 1.second,
-        reloadCost = 2.seconds,
-        needsReload = (a, b) => a == b
+        taskCost = 2.seconds,
+        reloadCost = 100.seconds,
       )
     }
   }
   type TestLoadBalancer0 =
-    LoadBalancer[TestConfig, TestTaskId, TestServerRef, TestState]
+    LoadBalancer[TestTaskId, TestServerRef, TestState]
 
   object TestServer {
     def apply(
         ref: TestServerRef,
-        lastConfig: TestConfig,
-        mailbox: Queue[Task[TestConfig, TestTaskId]] = Queue(),
+        lastConfig: Inputs,
+        mailbox: Queue[Task[TestTaskId]] = Queue(),
         state: TestState = TestState("default-state")
     ): TestServer0 = {
       Server(ref, lastConfig, mailbox, state)
     }
   }
 
-  private var taskId = 1000
-  def add(balancer: TestLoadBalancer0, config: TestConfig): TestLoadBalancer0 = {
-    val (_, balancer0) =
-      balancer
-        .add(
-          Task(config, nextIp, TestTaskId(taskId))
-        )
-        .get
+  @transient private var taskId = 1000
+  def add(balancer: TestLoadBalancer0, config: Inputs): TestLoadBalancer0 = synchronized {
+    val (_, balancer0) = balancer.add(Task(config, nextIp, TestTaskId(taskId))).get
     taskId += 1
     balancer0
   }
 
-  def assertConfigs(
-      balancer: TestLoadBalancer0
-  )(columns: Seq[String]*): Assertion = {
-    assertMultiset(
-      balancer.servers.map(_.currentConfig),
-      columns.flatten.map(i => TestConfig(i))
-    )
+  def assertConfigs(balancer: TestLoadBalancer0)(columns: Seq[String]*): Assertion = {
+    assert(balancer.servers.map(_.currentConfig).toSet == columns.flatten.map(i => Inputs.default.copy(code = i.toString)).toSet)
   }
 
-  def assertMultiset[T: Ordering](xs: Seq[T], ys: Seq[T]): Assertion =
-    assert(Multiset(xs) == Multiset(ys))
-
-  private var serverId = 0
+  @transient private var serverId = 0
   def server(
       c: String,
-      mailbox: Queue[Task[TestConfig, TestTaskId]] = Queue(),
+      mailbox: Queue[Task[TestTaskId]] = Queue(),
       state: TestState = TestState("default-state")
-  ): TestServer0 = {
+  ): TestServer0 = synchronized {
     val t = Server(TestServerRef(serverId), config(c), mailbox, state)
     serverId += 1
     t
@@ -95,8 +71,8 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
     columns.to[Vector].flatten.map(c => server(c))
   }
 
-  private var currentIp = 0
-  def nextIp: Ip = {
+  @transient private var currentIp = 0
+  def nextIp: Ip = synchronized {
     val t = Ip("ip" + currentIp)
     currentIp += 1
     t
@@ -104,11 +80,12 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
 
   def server(v: Int): TestServerRef = TestServerRef(v)
 
-  def config(v: String): TestConfig = TestConfig(v)
+  def config(code: String) = Inputs.default.copy(code = code)
+  def sbtConfig(sbtConfig: String) = Inputs.default.copy(sbtConfigExtra = sbtConfig)
 
-  def history(columns: Seq[String]*): History[TestConfig] = {
+  def history(columns: Seq[String]*): History = {
     val records =
-      columns.to[Vector].flatten.map(i => Record(TestConfig(i), nextIp)).reverse
+      columns.to[Vector].flatten.map(i => Record(Inputs.default.copy(code = i.toString), nextIp)).reverse
 
     History(Queue(records: _*), size = 20)
   }

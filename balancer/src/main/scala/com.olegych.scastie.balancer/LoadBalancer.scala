@@ -11,14 +11,14 @@ import scala.concurrent.duration.FiniteDuration
 import org.slf4j.LoggerFactory
 
 case class Ip(v: String)
-case class Record[C](config: C, ip: Ip)
+case class Record(config: Inputs, ip: Ip)
 
-case class Task[C, T <: TaskId](config: C, ip: Ip, taskId: T) {
-  def toRecord: Record[C] = Record(config, ip)
+case class Task[T <: TaskId](config: Inputs, ip: Ip, taskId: T) {
+  def toRecord: Record = Record(config, ip)
 }
 
-case class History[C](data: Queue[Record[C]], size: Int) {
-  def add(record: Record[C]): History[C] = {
+case class History(data: Queue[Record], size: Int) {
+  def add(record: Record): History = {
     // the user has changed configuration, we assume he will not go back to the
     // previous configuration
 
@@ -33,32 +33,31 @@ case class History[C](data: Queue[Record[C]], size: Int) {
     History(data1, size)
   }
 }
-case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
-    servers: Vector[Server[C, T, R, S]],
-    history: History[C],
+case class LoadBalancer[T <: TaskId, R, S <: ServerState](
+    servers: Vector[Server[T, R, S]],
+    history: History,
     taskCost: FiniteDuration,
     reloadCost: FiniteDuration,
-    needsReload: (C, C) => Boolean
 ) {
   private val log = LoggerFactory.getLogger(getClass)
 
   private lazy val configs = servers.map(_.currentConfig)
 
-  def done(taskId: T): Option[LoadBalancer[C, T, R, S]] = {
+  def done(taskId: T): Option[LoadBalancer[T, R, S]] = {
     Some(copy(servers = servers.map(_.done(taskId))))
   }
 
-  def addServer(server: Server[C, T, R, S]): LoadBalancer[C, T, R, S] = {
+  def addServer(server: Server[T, R, S]): LoadBalancer[T, R, S] = {
     copy(servers = server +: servers)
   }
 
-  def removeServer(ref: R): LoadBalancer[C, T, R, S] = {
+  def removeServer(ref: R): LoadBalancer[T, R, S] = {
     copy(servers = servers.filterNot(_.ref == ref))
   }
 
-  def getRandomServer: Server[C, T, R, S] = random(servers)
+  def getRandomServer: Server[T, R, S] = random(servers)
 
-  def add(task: Task[C, T]): Option[(Server[C, T, R, S], LoadBalancer[C, T, R, S])] = {
+  def add(task: Task[T]): Option[(Server[T, R, S], LoadBalancer[T, R, S])] = {
     log.info("Task added: {}", task.taskId)
 
     val (availableServers, unavailableServers) =
@@ -73,7 +72,7 @@ case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
         .filter(i => availableServers(i).currentConfig == task.config)
 
       val overBooked = hits.forall { i =>
-        availableServers(i).cost(taskCost, reloadCost, needsReload) > reloadCost
+        availableServers(i).cost(taskCost, reloadCost) > reloadCost
       }
 
       val cacheMiss = hits.isEmpty
@@ -85,7 +84,7 @@ case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
           randomMin(configs.indices) { i =>
             val config = task.config
             val distance = distanceFromHistory(i, config, historyHistogram)
-            val load = availableServers(i).cost(taskCost, reloadCost, needsReload)
+            val load = availableServers(i).cost(taskCost, reloadCost)
             (distance, load)
           }
         } else {
@@ -116,13 +115,9 @@ case class LoadBalancer[C, T <: TaskId, R, S <: ServerState](
     }
   }
 
-  private def distanceFromHistory(targetServerIndex: Int, config: C, historyHistogram: Histogram[C]): Double = {
-    val i = targetServerIndex
-    val newConfigs = configs.updated(i, config)
-    val newConfigsHistogram = newConfigs.to[Histogram]
-    val distance = historyHistogram.distance(newConfigsHistogram)
-
-    distance
+  private def distanceFromHistory(targetServerIndex: Int, config: Inputs, historyHistogram: Histogram[Inputs]): Double = {
+    val newConfigsHistogram = configs.updated(targetServerIndex, config).to[Histogram]
+    historyHistogram.distance(newConfigsHistogram)
   }
 
   // find min by f, select one min at random
