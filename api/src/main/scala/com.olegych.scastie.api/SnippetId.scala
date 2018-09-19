@@ -10,7 +10,8 @@ object User {
     "julienrf",
     "jvican",
     "MasseGuillaume",
-    "olafurpg"
+    "olafurpg",
+    "OlegYch"
   )
   implicit val formatUser: OFormat[User] =
     Json.format[User]
