@@ -1,36 +1,25 @@
 package com.olegych.scastie.web.routes
 
+import akka.NotUsed
+import akka.actor.ActorRef
+import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.sse.ServerSentEvent
+import akka.http.scaladsl.model.ws.TextMessage._
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{Route, _}
+import akka.pattern.ask
+import akka.stream.scaladsl._
 import com.olegych.scastie.api._
 import com.olegych.scastie.balancer._
 import com.olegych.scastie.web.oauth2.UserDirectives
-
 import play.api.libs.json.Json
 
-import akka.http.scaladsl.model.sse.ServerSentEvent
-import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
-
-import akka.util.Timeout
-import akka.NotUsed
-import akka.actor.ActorRef
-import akka.pattern.ask
-
-import akka.http.scaladsl.server._
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.Directives._
-
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.ws.TextMessage._
-
-import akka.stream.scaladsl._
-
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration.DurationInt
-
 import scala.collection.immutable.Queue
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{ExecutionContext, Future}
 
-class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
-
-  implicit val timeout = Timeout(2.seconds)
+class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives)(implicit ec: ExecutionContext) {
 
   val isAdminUser: Directive1[Boolean] =
     userDirectives.optionalLogin.map(
@@ -38,24 +27,22 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
     )
 
   val routes: Route =
-    isAdminUser(
-      isAdmin =>
-        concat(
-          path("status-sse")(
-            complete(
-              statusSource(isAdmin).map(
-                progress =>
-                  ServerSentEvent(
-                    Json.stringify(Json.toJson(progress))
-                )
+    isAdminUser { isAdmin =>
+      concat(
+        path("status-sse")(
+          complete(
+            statusSource(isAdmin).map { progress =>
+              ServerSentEvent(
+                Json.stringify(Json.toJson(progress))
               )
-            )
-          ),
-          path("status-ws")(
-            handleWebSocketMessages(webSocketProgress(isAdmin))
+            }
           )
+        ),
+        path("status-ws")(
+          handleWebSocketMessages(webSocketProgress(isAdmin))
+        )
       )
-    )
+    }
 
   private def statusSource(isAdmin: Boolean) = {
     def hideTask(progress: StatusProgress): StatusProgress =
@@ -72,15 +59,9 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives) {
           case _ =>
             progress
         }
-
-    // TODO find a way to flatten Source[Source[T]]
-    Await
-      .result(
-        (statusActor ? SubscribeStatus)
-          .mapTo[Source[StatusProgress, NotUsed]],
-        2.second
-      )
-      .map(hideTask)
+    Source
+      .fromFuture((statusActor ? SubscribeStatus)(2.seconds).mapTo[Source[StatusProgress, NotUsed]])
+      .flatMapConcat(s => s.map(hideTask))
   }
 
   private def webSocketProgress(
