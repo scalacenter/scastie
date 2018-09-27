@@ -351,11 +351,7 @@ object ScaladexSearch {
         remove,
         span(
           logo
-            .flatMap(
-              _.map(
-                url => img(src := url + "&s=40", common, alt := s"$organization logo or avatar")
-              ).headOption
-            )
+            .map(url => img(src := (url + "&s=40"), common, alt := s"$organization logo or avatar"))
             .getOrElse(
               img(src := "/assets/public/placeholder.svg", common, alt := s"placeholder for $organization")
             ),
