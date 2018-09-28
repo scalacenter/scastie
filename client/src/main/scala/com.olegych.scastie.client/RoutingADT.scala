@@ -1,6 +1,6 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.{SnippetId, SnippetUserPart, ScalaTargetType}
+import com.olegych.scastie.api.{SnippetId, SnippetUserPart, ScalaTargetType, ScalaDependency}
 
 object Page {
   def fromSnippetId(snippetId: SnippetId): ResourcePage = {
@@ -22,6 +22,8 @@ case object Home extends Page
 case object Embedded extends Page
 
 case class TargetTypePage(targetType: ScalaTargetType) extends Page
+
+case class TryLibraryPage(dependency: ScalaDependency) extends Page
 
 case class OldSnippetIdPage(id: Int) extends Page
 

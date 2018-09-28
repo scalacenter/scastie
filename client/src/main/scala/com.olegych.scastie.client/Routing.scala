@@ -1,6 +1,6 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.{SnippetId, SnippetUserPart, ScalaTargetType}
+import com.olegych.scastie.api.{SnippetId, SnippetUserPart, ScalaTarget, ScalaTargetType, ScalaDependency}
 import com.olegych.scastie.client.components._
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._
@@ -19,6 +19,69 @@ class Routing(defaultServerUrl: String) {
       in => ScalaTargetType.parse(in.toUpperCase)
     )(_.toString)
 
+    def parseTryLibrary(params: String): Option[ScalaDependency] = {
+
+      val map =
+        params
+          .split("&")
+          .toList
+          .map(_.split("=").toList)
+          .map {
+            case List(k, v) => (k, v)
+          }
+          .toMap
+
+      (
+        map.get("g"),
+        map.get("a"),
+        map.get("v"),
+      ) match {
+        case (Some(g), Some(a), Some(v)) =>
+          val target =
+            map.get("t").flatMap(ScalaTargetType.parse) match {
+              case Some(ScalaTargetType.JVM) =>
+                map.get("sv").map(ScalaTarget.Jvm(_))
+
+              case Some(ScalaTargetType.JS) =>
+                (map.get("sv"), map.get("sjsv")) match {
+                  case (Some(sv), Some(sjsv)) => Some(ScalaTarget.Js(sv, sjsv))
+                  case _                      => None
+                }
+
+              case _ => None
+            }
+
+          target.map(t => ScalaDependency(g, a, t, v))
+        case _ => None
+      }
+    }
+
+    def renderTryLibrary(dep: ScalaDependency): String = {
+      import dep._
+
+      val tm: Map[String, String] =
+        target match {
+          case ScalaTarget.Jvm(sv)      => Map("sv" -> sv)
+          case ScalaTarget.Js(sv, sjsv) => Map("sv" -> sv, "sjsv" -> sjsv)
+          case _                        => Map()
+        }
+
+      val gav: Map[String, String] =
+        Map(
+          "g" -> groupId,
+          "a" -> artifact,
+          "v" -> version
+        )
+
+      (gav ++ tm)
+        .map {
+          case (k, v) => k + "=" + v
+        }
+        .mkString("?", "&", "")
+    }
+
+    val tryLibrary = "?" ~ remainingPath.pmap(parseTryLibrary)(renderTryLibrary)
+
     val anon = alpha
     val user = alpha / alpha
     val userUpdate = alpha / alpha / int
@@ -31,6 +94,9 @@ class Routing(defaultServerUrl: String) {
 
         | dynamicRouteCT(targetType.caseClass[TargetTypePage]) ~>
           dynRenderR((page, router) => renderTargetTypePage(page, router))
+
+        | dynamicRouteCT("try" ~ tryLibrary.caseClass[TryLibraryPage]) ~>
+          dynRenderR((page, router) => renderTryLibraryPage(page, router))
 
         | dynamicRouteCT(oldId.caseClass[OldSnippetIdPage]) ~>
           dynRenderR((page, router) => renderOldSnippetIdPage(page, router))
@@ -69,6 +135,11 @@ class Routing(defaultServerUrl: String) {
   private def renderTargetTypePage(page: TargetTypePage, router: RouterCtl[Page]): VdomElement = {
 
     Scastie.default(router).copy(targetType = Some(page.targetType)).render
+  }
+
+  private def renderTryLibraryPage(page: TryLibraryPage, router: RouterCtl[Page]): VdomElement = {
+
+    Scastie.default(router).copy(tryLibrary = Some(page.dependency)).render
   }
 
   private def renderOldSnippetIdPage(page: OldSnippetIdPage, router: RouterCtl[Page]): VdomElement = {
@@ -127,7 +198,8 @@ class Routing(defaultServerUrl: String) {
       snippetId = Some(snippetId),
       oldSnippetId = None,
       embedded = embedded,
-      targetType = None
+      targetType = None,
+      tryLibrary = None
     ).render
   }
 

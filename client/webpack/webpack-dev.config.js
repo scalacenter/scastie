@@ -53,8 +53,12 @@ const Web = Merge(Common.Web, {
               console.log("index: " + req.url);
               return "/";
             } else {
-              console.log("other: " + req.url);
-              return req.url;
+              if (req.url.startsWith("/try")) {
+                return "/";
+              } else {
+                console.log("other: " + req.url);
+                return req.url;
+              }
             }
           } else {
             console.log("proxied: " + req.url);
