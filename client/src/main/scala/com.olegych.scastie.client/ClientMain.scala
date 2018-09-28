@@ -166,7 +166,8 @@ object ScastieEmbedded {
       snippetId = None,
       oldSnippetId = None,
       embedded = Some(embeddedOptions),
-      targetType = None
+      targetType = None,
+      tryLibrary = None
     ).render.renderIntoDOM(container)
 
     container

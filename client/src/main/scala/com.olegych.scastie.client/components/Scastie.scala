@@ -17,7 +17,8 @@ final case class Scastie(scastieId: UUID,
                          snippetId: Option[SnippetId],
                          oldSnippetId: Option[Int],
                          embedded: Option[EmbeddedOptions],
-                         targetType: Option[ScalaTargetType]) {
+                         targetType: Option[ScalaTargetType],
+                         tryLibrary: Option[ScalaDependency]) {
 
   @inline def render = Scastie.component(serverUrl, scastieId)(this)
 
@@ -33,7 +34,8 @@ object Scastie {
       snippetId = None,
       oldSnippetId = None,
       embedded = None,
-      targetType = None
+      targetType = None,
+      tryLibrary = None
     )
 
   private def setTitle(state: ScastieState, props: Scastie) =
@@ -102,18 +104,28 @@ object Scastie {
           }
         }
 
-        props.targetType match {
-          case Some(targetType) => {
-            val state0 =
-              state.setTarget(targetType.defaultScalaTarget)
+        val state1 =
+          props.targetType match {
+            case Some(targetType) => {
+              val state0 =
+                state.setTarget(targetType.defaultScalaTarget)
 
-            if (targetType == ScalaTargetType.Dotty) {
-              state0.setCode(ScalaTarget.Dotty.defaultCode)
-            } else {
-              state0
+              if (targetType == ScalaTargetType.Dotty) {
+                state0.setCode(ScalaTarget.Dotty.defaultCode)
+              } else {
+                state0
+              }
             }
+            case _ => state
           }
-          case _ => state
+
+        props.tryLibrary match {
+          case Some(dependency) => {
+            state1
+              .setTarget(dependency.target)
+              .addScalaDependency(dependency, Project("", "", None, Nil))
+          }
+          case _ => state1
         }
       }
       .backend(new ScastieBackend(scastieId, serverUrl, _))
