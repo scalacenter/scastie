@@ -173,9 +173,7 @@ case class ScastieState(
   }
 
   def setRunning(isRunning: Boolean): ScastieState = {
-    val openConsole =
-      isRunning || consoleState.consoleHasUserOutput || outputs.sbtError
-
+    val openConsole = consoleState.consoleHasUserOutput || outputs.sbtError
     copyAndSave(isRunning = isRunning).setConsoleAuto(openConsole)
   }
 
