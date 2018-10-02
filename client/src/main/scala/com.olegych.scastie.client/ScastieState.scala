@@ -1,8 +1,7 @@
 package com.olegych.scastie.client
 
-import play.api.libs.json._
-
 import com.olegych.scastie.api._
+import play.api.libs.json._
 
 object SnippetState {
   implicit val formatSnippetState: OFormat[SnippetState] =
@@ -174,7 +173,7 @@ case class ScastieState(
 
   def setRunning(isRunning: Boolean): ScastieState = {
     val openConsole = consoleState.consoleHasUserOutput || outputs.sbtError
-    copyAndSave(isRunning = isRunning).setConsoleAuto(openConsole)
+    copyAndSave(isRunning = isRunning).autoOpen(openConsole)
   }
 
   def setSnippetSaved(value: Boolean): ScastieState = {
@@ -260,15 +259,12 @@ case class ScastieState(
     )
   }
 
-  def setConsoleAuto(isOpen: Boolean): ScastieState = {
-    if (!isOpen && consoleState.userOpenedConsole)
-      this
-    else
-      copyAndSave(
-        consoleState = consoleState.copy(
-          consoleIsOpen = isOpen
-        )
+  def autoOpen(isOpen: Boolean): ScastieState = {
+    copyAndSave(
+      consoleState = consoleState.copy(
+        consoleIsOpen = isOpen || consoleState.consoleIsOpen
       )
+    )
   }
 
   def toggleConsole: ScastieState = {
@@ -372,7 +368,6 @@ case class ScastieState(
     copyAndSave(
       outputs = Outputs.default,
       consoleState = consoleState.copy(
-        consoleIsOpen = false,
         consoleHasUserOutput = false
       )
     )
