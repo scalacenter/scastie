@@ -18,13 +18,9 @@ object RunButton {
         if (props.isStatusOk)
           s"Run Code ($ctrl + Enter)"
         else
-          "Something is wrong check the status"
+          s"Run Code ($ctrl + Enter) - warning: unknown status"
 
-      val run =
-        if (props.isStatusOk) props.run
-        else reusableEmpty
-
-      li(onClick --> run, role := "button", title := runTitle, (cls := "disabled").when(!props.isStatusOk), cls := "btn run-button")(
+      li(onClick --> props.run, role := "button", title := runTitle, cls := "btn run-button")(
         i(cls := "fa fa-play"),
         span("Run")
       )
