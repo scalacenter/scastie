@@ -2,19 +2,19 @@ package com.olegych.scastie.client
 
 import com.olegych.scastie.api.SnippetId
 import com.olegych.scastie.client.components._
-
 import org.scalajs.dom
 import org.scalajs.dom.raw.{HTMLElement, Node}
 import org.scalajs.dom.ext._
 
 import scala.scalajs.js
 import js.annotation._
-import js.{|, UndefOr}
+import js.{UndefOr, |}
 import js.annotation.JSExport
-
 import java.util.UUID
 
-import japgolly.scalajs.react._, extra.router._
+import japgolly.scalajs.react._
+import extra.router._
+import japgolly.scalajs.react.component.Generic
 
 @js.native
 @JSGlobal("ScastieSettings")
@@ -37,7 +37,8 @@ object ScastieMain {
 
     val routing = new Routing(Settings.defaultServerUrl)
 
-    Router(BaseUrl.fromWindowOrigin_/, routing.config)().renderIntoDOM(
+    val router = Router(BaseUrl.fromWindowOrigin_/, routing.config)
+    Generic.toComponentCtor(router).apply().renderIntoDOM(
       container
     )
 
