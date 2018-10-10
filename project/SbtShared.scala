@@ -23,7 +23,7 @@ object SbtShared {
   val latest213 = "2.13.0-M5"
   val currentScalaVersion = latest212
 
-  val latestScalaJs = "0.6.24"
+  val latestScalaJs = "0.6.25"
   val latestDotty = "0.7.0-RC1"
 
   val latestCoursier = "1.0.3"
