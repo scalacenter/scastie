@@ -1,18 +1,17 @@
 package com.olegych.scastie.client
 
-import components.Scastie
+import java.util.UUID
 
 import com.olegych.scastie.api._
-import japgolly.scalajs.react._, vdom.all._, extra._, component.Scala.BackendScope
-
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
-
+import com.olegych.scastie.client.components.Scastie
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.Scala.BackendScope
+import japgolly.scalajs.react.extra._
+import japgolly.scalajs.react.internal.Effect.Id
 import org.scalajs.dom._
 
 import scala.concurrent.Future
-
-import java.util.UUID
-import japgolly.scalajs.react.internal.Effect.Id
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendScope[Scastie, ScastieState]) {
 
@@ -532,21 +531,20 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
                     scope.modState { s =>
                       // avoid overriding user's code if he/she types while it's formatting
                       if (s.inputs.code == state.inputs.code)
-                        s.clearOutputs.setCode(formattedCode)
+                        s.setCode(formattedCode)
                       else s
                     }
                   case FormatResponse(Left(fullStackTrace)) =>
                     scope.modState(
-                      _.clearOutputs
-                        .setRuntimeError(
-                          Some(
-                            RuntimeError(
-                              message = "Formatting Failed",
-                              line = None,
-                              fullStack = fullStackTrace
-                            )
+                      _.setRuntimeError(
+                        Some(
+                          RuntimeError(
+                            message = "Formatting Failed",
+                            line = None,
+                            fullStack = fullStackTrace
                           )
                         )
+                      )
                     )
                 }
             )
