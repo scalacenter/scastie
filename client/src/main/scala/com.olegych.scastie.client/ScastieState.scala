@@ -373,6 +373,12 @@ case class ScastieState(
     )
   }
 
+  def clearOutputsPreserveConsole: ScastieState = {
+    copyAndSave(
+      outputs = Outputs.default.copy(consoleOutputs = outputs.consoleOutputs),
+    )
+  }
+
   def closeModals: ScastieState =
     copyAndSave(modalState = ModalState.allClosed)
 

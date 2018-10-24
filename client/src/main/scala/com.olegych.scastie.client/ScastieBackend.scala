@@ -531,7 +531,7 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
                     scope.modState { s =>
                       // avoid overriding user's code if he/she types while it's formatting
                       if (s.inputs.code == state.inputs.code)
-                        s.setCode(formattedCode)
+                        s.clearOutputsPreserveConsole.setCode(formattedCode)
                       else s
                     }
                   case FormatResponse(Left(fullStackTrace)) =>
