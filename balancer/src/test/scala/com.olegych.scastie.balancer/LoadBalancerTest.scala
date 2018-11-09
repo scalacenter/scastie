@@ -26,9 +26,10 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
         )
       )
 
-    assertConfigs(add(balancer, config("c8")))(
-      2 * "c1",
+    assertConfigs(add(balancer, sbtConfig("c8")))(
+      1 * "c1",
       1 * "c2",
+      1 * "c3",
       1 * "c4",
       1 * "c8"
     )
@@ -45,7 +46,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
         )
       )
 
-    assertConfigs(add(balancer, config("c1")))(
+    assertConfigs(add(balancer, sbtConfig("c1")))(
       5 * "c1"
     )
   }
@@ -60,7 +61,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
           20 * "c1"
         )
       )
-    assertConfigs(add(balancer, config("c2")))(
+    assertConfigs(add(balancer, sbtConfig("c2")))(
       4 * "c1",
       1 * "c2"
     )
@@ -68,7 +69,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
   test("reconfigure busy configuration") {
     val tasks = (1 to 500).map { i =>
-      Task(config("c1"), Ip(i.toString), TestTaskId(i))
+      Task(sbtConfig("c1"), Ip(i.toString), TestTaskId(i))
     }
 
     val s1Tasks = Queue(tasks: _*)
@@ -93,18 +94,18 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
         )
       )
 
-    assertConfigs(add(balancer, config("c1")))(
-      1 * "c1",
+    assertConfigs(add(balancer, sbtConfig("c6")))(
       1 * "c1",
       1 * "c2",
-      1 * "c4",
+      1 * "c3",
+      1 * "c6",
       1 * "c5"
     )
   }
 
   test("do not reconfigure if some configuration is not busy") {
     val tasks = (1 to 5).map(
-      i => Task(config("c1"), Ip(i.toString), TestTaskId(i))
+      i => Task(sbtConfig("c1"), Ip(i.toString), TestTaskId(i))
     )
     val s1Tasks = Queue(tasks: _*)
 
@@ -112,7 +113,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
       TestLoadBalancer(
         Vector(
           server("c1", s1Tasks),
-          server("c1"),
+          server("c1", s1Tasks),
           server("c2"),
           server("c3"),
           server("c4")
@@ -128,7 +129,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
         )
       )
 
-    assertConfigs(add(balancer, config("c1")))(
+    assertConfigs(add(balancer, sbtConfig("c1")))(
       1 * "c1",
       1 * "c1",
       1 * "c2",
@@ -147,7 +148,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val server = balancer.servers.head
     assert(server.mailbox.isEmpty)
 
-    val c1 = config("c1")
+    val c1 = sbtConfig("c1")
     val taskId = TestTaskId(1)
 
     val (assigned, balancer0) = balancer.add(Task(c1, nextIp, taskId)).get
@@ -172,7 +173,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
     val taskId1 = TestTaskId(1)
     val (assigned0, balancer0) =
-      balancer.add(Task(config("c1"), nextIp, taskId1)).get
+      balancer.add(Task(sbtConfig("c1"), nextIp, taskId1)).get
 
     val server0 = balancer0.servers.head
 
@@ -182,7 +183,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
     val taskId2 = TestTaskId(2)
     val (assigned1, balancer1) =
-      balancer0.add(Task(config("c2"), nextIp, taskId2)).get
+      balancer0.add(Task(sbtConfig("c2"), nextIp, taskId2)).get
 
     val server1 = balancer1.servers.head
     assert(server1.mailbox.size == 2)
@@ -203,7 +204,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val ref = TestServerRef(1)
 
     val balancer = TestLoadBalancer(
-      Vector(TestServer(ref, config("c1"))),
+      Vector(TestServer(ref, sbtConfig("c1"))),
       History(Queue(), size = 1)
     )
     assert(balancer.removeServer(ref).servers.isEmpty)
@@ -216,7 +217,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
       history = History(Queue(), size = 1)
     )
 
-    val task = Task(config("c1"), nextIp, TestTaskId(1))
+    val task = Task(code("c1"), nextIp, TestTaskId(1))
 
     assert(emptyBalancer.add(task).isEmpty)
   }

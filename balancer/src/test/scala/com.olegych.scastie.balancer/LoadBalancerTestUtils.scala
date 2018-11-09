@@ -52,8 +52,27 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
     balancer0
   }
 
+  // Ordering only for debug purposes
+  object Multiset {
+    def apply[T: Ordering](xs: Seq[T]): Multiset[T] =
+      Multiset(xs.groupBy(x => x).map { case (k, vs) => (k, vs.size) })
+  }
+  case class Multiset[T: Ordering](inner: Map[T, Int]) {
+    override def toString: String = {
+      val size = inner.values.sum
+
+      inner.toList
+        .sortBy { case (k, v) => (v, k) }
+        .reverse
+        .map {
+          case (k, v) => s"$k($v)"
+        }
+        .mkString("Multiset(", ", ", s") {$size}")
+    }
+  }
+
   def assertConfigs(balancer: TestLoadBalancer0)(columns: Seq[String]*): Assertion = {
-    assert(balancer.servers.map(_.currentConfig).toSet == columns.flatten.map(i => Inputs.default.copy(code = i.toString)).toSet)
+    assert(Multiset(balancer.servers.map(_.currentConfig.sbtConfigExtra)) == Multiset(columns.flatten.map(i => sbtConfig(i.toString).sbtConfigExtra)))
   }
 
   @transient private var serverId = 0
@@ -62,7 +81,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
       mailbox: Queue[Task[TestTaskId]] = Queue(),
       state: TestState = TestState("default-state")
   ): TestServer0 = synchronized {
-    val t = Server(TestServerRef(serverId), config(c), mailbox, state)
+    val t = Server(TestServerRef(serverId), sbtConfig(c), mailbox, state)
     serverId += 1
     t
   }
@@ -80,7 +99,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
 
   def server(v: Int): TestServerRef = TestServerRef(v)
 
-  def config(code: String) = Inputs.default.copy(code = code)
+  def code(code: String) = Inputs.default.copy(code = code)
   def sbtConfig(sbtConfig: String) = Inputs.default.copy(sbtConfigExtra = sbtConfig)
 
   def history(columns: Seq[String]*): History = {

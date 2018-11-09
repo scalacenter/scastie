@@ -69,7 +69,7 @@ case class LoadBalancer[T <: TaskId, R, S <: ServerState](
 
       val hits = availableServers.indices
         .to[Vector]
-        .filter(i => availableServers(i).currentConfig == task.config)
+        .filterNot(i => availableServers(i).currentConfig.needsReload(task.config))
 
       val overBooked = hits.forall { i =>
         availableServers(i).cost(taskCost, reloadCost) > reloadCost

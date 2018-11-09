@@ -59,9 +59,10 @@ case class Inputs(
   val isWorksheetMode = _isWorksheetMode && target.hasWorksheetMode
   val librariesFrom: Map[ScalaDependency, Project] = librariesFromList.toMap
 
+  lazy val sbtInputs: (String, String) = (sbtConfig, sbtPluginsConfig)
+
   def needsReload(other: Inputs): Boolean = {
-    sbtConfig != other.sbtConfig ||
-    sbtPluginsConfig != other.sbtPluginsConfig
+    sbtInputs != other.sbtInputs
   }
 
   override def toString: String = {
@@ -93,7 +94,7 @@ case class Inputs(
     }
   }
 
-  def isDefault: Boolean = copy(code = "") == Inputs.default.copy(code = "")
+  lazy val isDefault: Boolean = copy(code = "") == Inputs.default.copy(code = "")
 
   def addScalaDependency(scalaDependency: ScalaDependency, project: Project): Inputs = {
     copy(
@@ -109,7 +110,7 @@ case class Inputs(
     )
   }
 
-  def sbtConfig: String = {
+  lazy val sbtConfig: String = {
     val targetConfig = target.sbtConfig
 
     val optionalTargetDependency =
@@ -144,11 +145,11 @@ case class Inputs(
         |""".stripMargin
   }
 
-  def sbtPluginsConfig: String = {
+  lazy val sbtPluginsConfig: String = {
     sbtPluginsConfig0(withSbtScasite = true)
   }
 
-  def sbtPluginsConfigWithoutSbtScastie: String = {
+  lazy val sbtPluginsConfigWithoutSbtScastie: String = {
     sbtPluginsConfig0(withSbtScasite = false)
   }
 
