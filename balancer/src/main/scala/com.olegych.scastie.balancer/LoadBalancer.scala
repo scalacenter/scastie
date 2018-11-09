@@ -2,11 +2,11 @@ package com.olegych.scastie.balancer
 
 import com.olegych.scastie.api._
 import com.olegych.scastie.balancer.utils.Histogram
+import org.slf4j.LoggerFactory
 
-import scala.util.Random
 import scala.collection.immutable.Queue
 import scala.concurrent.duration.{DurationLong, FiniteDuration}
-import org.slf4j.LoggerFactory
+import scala.util.Random
 
 case class Ip(v: String)
 case class Record(config: Inputs, ip: Ip)
@@ -17,11 +17,8 @@ case class Task(config: Inputs, ip: Ip, taskId: TaskId) {
 
 case class History(data: Queue[Record], size: Int) {
   def add(record: Record): History = {
-    // the user has changed configuration, we assume he will not go back to the
-    // previous configuration
-
+    // the user has changed configuration, we assume he will not go back to the previous configuration
     val data0 = data.filterNot(_.ip == record.ip).enqueue(record)
-
     val data1 =
       if (data0.size > size) {
         val (_, q) = data0.dequeue
@@ -38,8 +35,6 @@ case class LoadBalancer[R, S <: ServerState](
     reloadCost: FiniteDuration = 20.seconds,
 ) {
   private val log = LoggerFactory.getLogger(getClass)
-
-  private lazy val configs = servers.map(_.currentConfig)
 
   def done(taskId: TaskId): Option[LoadBalancer[R, S]] = {
     Some(copy(servers = servers.map(_.done(taskId))))
@@ -63,40 +58,28 @@ case class LoadBalancer[R, S <: ServerState](
 
     if (availableServers.nonEmpty) {
       val updatedHistory = history.add(task.toRecord)
-      lazy val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
-
-      val hits = availableServers.indices
-        .to[Vector]
-        .filterNot(i => availableServers(i).currentConfig.needsReload(task.config))
-
-      val overBooked = hits.forall { i =>
-        availableServers(i).cost(taskCost, reloadCost) > reloadCost
+      val hits = availableServers.filterNot(s => s.currentConfig.needsReload(task.config))
+      val overBooked = hits.forall { s =>
+        s.cost(taskCost, reloadCost) > reloadCost
       }
-
       val cacheMiss = hits.isEmpty
-
-      val selectedServerIndice =
-        if (cacheMiss || overBooked) {
-          // we try to find a new configuration to minimize the distance with
-          // the historical data
-          randomMin(configs.indices) { i =>
-            val config = task.config
-            val distance = distanceFromHistory(i, config, historyHistogram)
-            val load = availableServers(i).cost(taskCost, reloadCost)
-            (distance, load)
-          }
-        } else {
-          random(hits)
+      val selectedServer = if (cacheMiss || overBooked) {
+        // we try to find a new configuration to minimize the distance with the historical data
+        val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
+        randomMin(availableServers) { s =>
+          val config = task.config
+          val newConfigsHistogram = availableServers.map(olds => if (olds.id == s.id) config else olds.currentConfig).to[Histogram]
+          val distance = historyHistogram.distance(newConfigsHistogram)
+          val load = s.cost(taskCost, reloadCost)
+          (distance, load)
         }
-
-      val updatedServers = {
-        val i = selectedServerIndice
-        availableServers.updated(i, availableServers(i).add(task))
+      } else {
+        random(hits)
       }
-
+      val updatedServers = availableServers.map(olds => if (olds.id == selectedServer.id) olds.add(task) else olds)
       Some(
         (
-          availableServers(selectedServerIndice),
+          selectedServer,
           copy(
             servers = updatedServers ++ unavailableServers,
             history = updatedHistory
@@ -111,11 +94,6 @@ case class LoadBalancer[R, S <: ServerState](
 
       None
     }
-  }
-
-  private def distanceFromHistory(targetServerIndex: Int, config: Inputs, historyHistogram: Histogram[Inputs]): Double = {
-    val newConfigsHistogram = configs.updated(targetServerIndex, config).to[Histogram]
-    historyHistogram.distance(newConfigsHistogram)
   }
 
   // find min by f, select one min at random

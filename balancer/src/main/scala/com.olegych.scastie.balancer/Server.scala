@@ -2,10 +2,11 @@ package com.olegych.scastie.balancer
 
 import com.olegych.scastie.api._
 
-import scala.concurrent.duration.{FiniteDuration, DurationInt}
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.collection.immutable.Queue
+import scala.util.Random
 
-case class Server[R, S](ref: R, lastConfig: Inputs, mailbox: Queue[Task], state: S) {
+case class Server[R, S](ref: R, lastConfig: Inputs, mailbox: Queue[Task], state: S, id: Int = Random.nextInt()) {
 
   def currentTaskId: Option[TaskId] = mailbox.headOption.map(_.taskId)
   def currentConfig: Inputs = mailbox.headOption.map(_.config).getOrElse(lastConfig)

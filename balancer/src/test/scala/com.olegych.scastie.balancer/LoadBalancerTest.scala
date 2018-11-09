@@ -97,7 +97,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assertConfigs(add(balancer, sbtConfig("c6")))(
       1 * "c1",
       1 * "c2",
-      1 * "c3",
+      1 * "c4",
       1 * "c6",
       1 * "c5"
     )
