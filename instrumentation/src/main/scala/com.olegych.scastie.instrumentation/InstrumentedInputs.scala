@@ -18,7 +18,7 @@ object InstrumentedInputs {
   def apply(
       inputs0: Inputs
   ): Either[InstrumentationFailureReport, InstrumentedInputs] = {
-    if (inputs0.isWorksheetMode && inputs0.target.hasWorksheetMode) {
+    if (inputs0.isWorksheetMode) {
       val instrumented =
         Instrument(inputs0.code, inputs0.target).map(
           instrumentedCode => inputs0.copy(code = instrumentedCode)

@@ -1,15 +1,12 @@
 package com.olegych.scastie.sbt
 
-import SbtProcess._
-
 import com.olegych.scastie.api._
 import com.olegych.scastie.instrumentation.Instrument
-
+import com.olegych.scastie.sbt.SbtProcess._
+import org.slf4j.LoggerFactory
 import play.api.libs.json._
 
 import scala.util.control.NonFatal
-
-import org.slf4j.LoggerFactory
 
 class OutputExtractor(getScalaJsContent: () => Option[String],
                       getScalaJsSourceMapContent: () => Option[String],
@@ -17,16 +14,6 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
                       promptUniqueId: String) {
 
   private val log = LoggerFactory.getLogger(getClass)
-
-  def apply(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
-
-    val progress = extractProgress(output, sbtRun, isReloading)
-
-    sbtRun.progressActor ! progress.copy(scalaJsContent = None, scalaJsSourceMapContent = None)
-    sbtRun.snippetActor ! progress
-
-    progress
-  }
 
   def extractProgress(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
     import sbtRun._

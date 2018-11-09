@@ -1,19 +1,16 @@
 package com.olegych.scastie.sbt
 
+import java.nio.file._
+
+import akka.actor.{ActorRef, Cancellable, FSM, Stash}
 import com.olegych.scastie.api._
-
-import com.olegych.scastie.util._
-import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
-import com.olegych.scastie.instrumentation.InstrumentedInputs
-
 import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
-
-import akka.actor.{ActorRef, Stash, FSM, Cancellable}
+import com.olegych.scastie.instrumentation.InstrumentedInputs
+import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
+import com.olegych.scastie.util._
 
 import scala.concurrent.duration._
 import scala.util.Random
-
-import java.nio.file._
 
 object SbtProcess {
   sealed trait SbtState
@@ -31,7 +28,12 @@ object SbtProcess {
       progressActor: ActorRef,
       snippetActor: ActorRef,
       timeoutEvent: Option[Cancellable]
-  ) extends Data
+  ) extends Data {
+    def sendProgress(p: SnippetProgress): Unit = {
+      progressActor ! p.copy(scalaJsContent = None, scalaJsSourceMapContent = None)
+      snippetActor ! p
+    }
+  }
 
   case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
     def message: String = {
@@ -70,11 +72,9 @@ class SbtProcess(runTimeout: FiniteDuration,
     extends FSM[SbtProcess.SbtState, SbtProcess.Data]
     with Stash {
 
-  import SbtProcess._
-
-  import context.dispatcher
-
   import ProcessActor._
+  import SbtProcess._
+  import context.dispatcher
 
   // private val log = LoggerFactory.getLogger(getClass)
 
@@ -102,11 +102,10 @@ class SbtProcess(runTimeout: FiniteDuration,
   startWith(
     Initializing, {
       InstrumentedInputs(Inputs.default) match {
-        case Right(instrumented) => {
+        case Right(instrumented) =>
           val inputs = instrumented.inputs
           setInputs(inputs)
           SbtData(inputs)
-        }
         case e => sys.error("failed to instrument default input: " + e)
       }
     }
@@ -132,61 +131,55 @@ class SbtProcess(runTimeout: FiniteDuration,
   }
 
   whenUnhandled {
-    case Event(_: SbtTask, _) => {
+    case Event(_: SbtTask, _) =>
       stash()
       stay
-    }
-    case Event(timeout: SbtStateTimeout, run: SbtRun) => {
+    case Event(timeout: SbtStateTimeout, run: SbtRun) =>
       println("*** timeout ***")
 
       val progress = timeout.toProgress(run.snippetId)
-      run.progressActor ! progress
+      run.sendProgress(progress)
       throw new Exception(timeout.message)
-    }
   }
 
   onTransition {
-    case _ -> Ready => {
+    case _ -> Ready =>
       println("-- Ready --")
       unstashAll()
-    }
-    case _ -> Initializing => {
+    case _ -> Initializing =>
       println("-- Initializing --")
-    }
-    case _ -> Reloading => {
+    case _ -> Reloading =>
       println("-- Reloading --")
-    }
-    case _ -> Running => {
+    case _ -> Running =>
       println("-- Running --")
-    }
   }
 
   when(Initializing) {
-    case Event(ProcessOutput(line, _), _) => {
+    case Event(ProcessOutput(line, _), _) =>
       println(line)
       if (isPrompt(line)) {
         goto(Ready)
       } else {
         stay
       }
-    }
   }
 
   when(Ready) {
-    case Event(task @ SbtTask(snippetId, taskInputs, ip, login, progressActor), SbtData(stateInputs)) => {
+    case Event(task @ SbtTask(snippetId, taskInputs, ip, login, progressActor), SbtData(stateInputs)) =>
       println(s"Running: (login: $login, ip: $ip) \n $taskInputs")
 
-      InstrumentedInputs(taskInputs) match {
-        case Right(instrumented) => {
-          val sbtRun = SbtRun(
-            snippetId = snippetId,
-            inputs = instrumented.inputs,
-            isForcedProgramMode = instrumented.isForcedProgramMode,
-            progressActor = progressActor,
-            snippetActor = sender,
-            timeoutEvent = None
-          )
+      val _sbtRun = SbtRun(
+        snippetId = snippetId,
+        inputs = taskInputs,
+        isForcedProgramMode = false,
+        progressActor = progressActor,
+        snippetActor = sender,
+        timeoutEvent = None
+      )
 
+      InstrumentedInputs(taskInputs) match {
+        case Right(instrumented) =>
+          val sbtRun = _sbtRun.copy(inputs = instrumented.inputs, isForcedProgramMode = instrumented.isForcedProgramMode)
           val isReloading = stateInputs.needsReload(sbtRun.inputs)
           setInputs(sbtRun.inputs)
 
@@ -196,14 +189,13 @@ class SbtProcess(runTimeout: FiniteDuration,
           } else {
             gotoRunning(sbtRun)
           }
-        }
 
-        case Left(report) => {
-          progressActor ! report.toProgress(snippetId)
+        case Left(report) =>
+          val sbtRun = _sbtRun
+          setInputs(sbtRun.inputs)
+          sbtRun.sendProgress(report.toProgress(snippetId))
           goto(Ready)
-        }
       }
-    }
   }
 
   val extractor = new OutputExtractor(
@@ -214,8 +206,9 @@ class SbtProcess(runTimeout: FiniteDuration,
   )
 
   when(Reloading) {
-    case Event(output: ProcessOutput, sbtRun: SbtRun) => {
-      val progress = extractor(output, sbtRun, isReloading = true)
+    case Event(output: ProcessOutput, sbtRun: SbtRun) =>
+      val progress = extractor.extractProgress(output, sbtRun, isReloading = true)
+      sbtRun.sendProgress(progress)
 
       if (progress.isSbtError) {
         throw new Exception("sbt error: " + output.line)
@@ -226,12 +219,12 @@ class SbtProcess(runTimeout: FiniteDuration,
       } else {
         stay
       }
-    }
   }
 
   when(Running) {
-    case Event(output: ProcessOutput, sbtRun: SbtRun) => {
-      extractor(output, sbtRun, isReloading = false)
+    case Event(output: ProcessOutput, sbtRun: SbtRun) =>
+      val progress = extractor.extractProgress(output, sbtRun, isReloading = false)
+      sbtRun.sendProgress(progress)
 
       if (isPrompt(output.line)) {
         sbtRun.timeoutEvent.foreach(_.cancel())
@@ -239,7 +232,6 @@ class SbtProcess(runTimeout: FiniteDuration,
       } else {
         stay
       }
-    }
   }
 
   private def gotoWithTimeout(sbtRun: SbtRun, nextState: SbtState, duration: FiniteDuration): this.State = {
