@@ -4,11 +4,9 @@ import play.api.libs.json._
 
 import play.api.libs.json.OFormat
 
-trait TaskId
-
-object SbtRunTaskId {
-  implicit val formatSbtRunTaskId: OFormat[SbtRunTaskId] =
-    Json.format[SbtRunTaskId]
+object TaskId {
+  implicit val formatSbtRunTaskId: OFormat[TaskId] =
+    Json.format[TaskId]
 }
 
-case class SbtRunTaskId(snippetId: SnippetId) extends TaskId
+case class TaskId(snippetId: SnippetId)

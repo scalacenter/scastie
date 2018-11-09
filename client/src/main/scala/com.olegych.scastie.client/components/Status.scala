@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api.{Inputs, SbtRunTaskId}
+import com.olegych.scastie.api.{Inputs, TaskId}
 import com.olegych.scastie.client.{StatusState, Page}
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
@@ -17,14 +17,14 @@ object Status {
     Reusability.caseClass[Status]
 
   def render(props: Status): VdomElement = {
-    def renderSbtTask(tasks: Queue[SbtRunTaskId]): VdomElement = {
+    def renderSbtTask(tasks: Queue[TaskId]): VdomElement = {
       if (props.isAdmin) {
         if (tasks.isEmpty) {
           div("No Task Running")
         } else {
           ul(
             tasks.zipWithIndex.map {
-              case (SbtRunTaskId(snippetId), j) =>
+              case (TaskId(snippetId), j) =>
                 li(key := snippetId.toString)(
                   props.router.link(Page.fromSnippetId(snippetId))(
                     s"Task $j"

@@ -89,7 +89,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     val sbtServers = remoteSbtSelections.to[Vector].map {
       case (_, ref) =>
         val state: SbtState = SbtState.Unknown
-        Server.of[SbtRunTaskId](ref, Inputs.default, state)
+        Server(ref, Inputs.default, Queue.empty, state)
     }
 
     LoadBalancer(
@@ -156,7 +156,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     log.info("id: {}, ip: {} run inputs: {}", snippetId, ip, inputs)
 
-    val task = Task(inputs, Ip(ip), SbtRunTaskId(snippetId))
+    val task = Task(inputs, Ip(ip), TaskId(snippetId))
 
     sbtLoadBalancer.add(task) match {
       case Some((server, newBalancer)) => {
@@ -281,7 +281,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case done: Done =>
       done.progress.snippetId.foreach { sid =>
-        val newBalancer = sbtLoadBalancer.done(SbtRunTaskId(sid))
+        val newBalancer = sbtLoadBalancer.done(TaskId(sid))
         newBalancer match {
           case Some(newBalancer) =>
             updateSbtBalancer(newBalancer)
@@ -336,7 +336,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
         updateSbtBalancer(
           sbtLoadBalancer.addServer(
-            Server.of[SbtRunTaskId](ref, Inputs.default, state)
+            Server(ref, Inputs.default, Queue.empty, state)
           )
         )
       }

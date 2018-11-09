@@ -4,10 +4,9 @@ import com.olegych.scastie.api._
 import org.scalatest.{Assertion, FunSuite}
 
 import scala.collection.immutable.Queue
-import scala.concurrent.duration._
 
-case class TestTaskId(id: Int) extends TaskId {
-  def cost: Int = 1
+object TestTaskId {
+  def apply(i: Int) = TaskId(SnippetId(i.toString, None))
 }
 
 case class TestServerRef(id: Int)
@@ -16,7 +15,7 @@ case class TestState(state: String, ready: Boolean = true) extends ServerState {
 }
 
 trait LoadBalancerTestUtils extends FunSuite with TestUtils {
-  type TestServer0 = Server[TestTaskId, TestServerRef, TestState]
+  type TestServer0 = Server[TestServerRef, TestState]
 
   object TestLoadBalancer {
     def apply(
@@ -29,14 +28,13 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
       )
     }
   }
-  type TestLoadBalancer0 =
-    LoadBalancer[TestTaskId, TestServerRef, TestState]
+  type TestLoadBalancer0 = LoadBalancer[TestServerRef, TestState]
 
   object TestServer {
     def apply(
         ref: TestServerRef,
         lastConfig: Inputs,
-        mailbox: Queue[Task[TestTaskId]] = Queue(),
+        mailbox: Queue[Task] = Queue(),
         state: TestState = TestState("default-state")
     ): TestServer0 = {
       Server(ref, lastConfig, mailbox, state)
@@ -80,7 +78,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   @transient private var serverId = 0
   def server(
       c: String,
-      mailbox: Queue[Task[TestTaskId]] = Queue(),
+      mailbox: Queue[Task] = Queue(),
       state: TestState = TestState("default-state")
   ): TestServer0 = synchronized {
     val t = Server(TestServerRef(serverId), sbtConfig(c), mailbox, state)

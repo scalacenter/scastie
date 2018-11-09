@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 case class Ip(v: String)
 case class Record(config: Inputs, ip: Ip)
 
-case class Task[T <: TaskId](config: Inputs, ip: Ip, taskId: T) {
+case class Task(config: Inputs, ip: Ip, taskId: TaskId) {
   def toRecord: Record = Record(config, ip)
 }
 
@@ -31,8 +31,8 @@ case class History(data: Queue[Record], size: Int) {
     History(data1, size)
   }
 }
-case class LoadBalancer[T <: TaskId, R, S <: ServerState](
-    servers: Vector[Server[T, R, S]],
+case class LoadBalancer[R, S <: ServerState](
+    servers: Vector[Server[R, S]],
     history: History,
     taskCost: FiniteDuration = 2.seconds,
     reloadCost: FiniteDuration = 20.seconds,
@@ -41,21 +41,21 @@ case class LoadBalancer[T <: TaskId, R, S <: ServerState](
 
   private lazy val configs = servers.map(_.currentConfig)
 
-  def done(taskId: T): Option[LoadBalancer[T, R, S]] = {
+  def done(taskId: TaskId): Option[LoadBalancer[R, S]] = {
     Some(copy(servers = servers.map(_.done(taskId))))
   }
 
-  def addServer(server: Server[T, R, S]): LoadBalancer[T, R, S] = {
+  def addServer(server: Server[R, S]): LoadBalancer[R, S] = {
     copy(servers = server +: servers)
   }
 
-  def removeServer(ref: R): LoadBalancer[T, R, S] = {
+  def removeServer(ref: R): LoadBalancer[R, S] = {
     copy(servers = servers.filterNot(_.ref == ref))
   }
 
-  def getRandomServer: Server[T, R, S] = random(servers)
+  def getRandomServer: Server[R, S] = random(servers)
 
-  def add(task: Task[T]): Option[(Server[T, R, S], LoadBalancer[T, R, S])] = {
+  def add(task: Task): Option[(Server[R, S], LoadBalancer[R, S])] = {
     log.info("Task added: {}", task.taskId)
 
     val (availableServers, unavailableServers) =

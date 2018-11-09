@@ -11,7 +11,7 @@ object SbtRunnerState {
 
 case class SbtRunnerState(
     config: Inputs,
-    tasks: Queue[SbtRunTaskId],
+    tasks: Queue[TaskId],
     sbtState: SbtState
 )
 sealed trait StatusProgress
