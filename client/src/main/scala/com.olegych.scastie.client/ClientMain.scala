@@ -38,9 +38,12 @@ object ScastieMain {
     val routing = new Routing(Settings.defaultServerUrl)
 
     val router = Router(BaseUrl.fromWindowOrigin_/, routing.config)
-    Generic.toComponentCtor(router).apply().renderIntoDOM(
-      container
-    )
+    Generic
+      .toComponentCtor(router)
+      .apply()
+      .renderIntoDOM(
+        container
+      )
 
     ()
   }

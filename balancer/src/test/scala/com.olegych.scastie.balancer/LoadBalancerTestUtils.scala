@@ -72,7 +72,11 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   }
 
   def assertConfigs(balancer: TestLoadBalancer0)(columns: Seq[String]*): Assertion = {
-    assert(Multiset(balancer.servers.map(_.currentConfig.sbtConfigExtra)) == Multiset(columns.flatten.map(i => sbtConfig(i.toString).sbtConfigExtra)))
+    assert(
+      Multiset(balancer.servers.map(_.currentConfig.sbtConfigExtra)) == Multiset(
+        columns.flatten.map(i => sbtConfig(i.toString).sbtConfigExtra)
+      )
+    )
   }
 
   @transient private var serverId = 0

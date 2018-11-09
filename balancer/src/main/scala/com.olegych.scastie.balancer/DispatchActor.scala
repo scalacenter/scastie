@@ -63,24 +63,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private val sbtPortsStart = config.getInt("remote-sbt-ports-start")
   private val sbtPortsSize = config.getInt("remote-sbt-ports-size")
 
-  val sbtConfig = ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
-
-  val sbtRunTimeout = {
-    val timeunit = TimeUnit.SECONDS
-    FiniteDuration(
-      sbtConfig.getDuration("runTimeout", timeunit),
-      timeunit
-    )
-  }
-
-  val sbtReloadTimeout = {
-    val timeunit = TimeUnit.SECONDS
-    FiniteDuration(
-      sbtConfig.getDuration("sbtReloadTimeout", timeunit),
-      timeunit
-    )
-  }
-
   private val sbtPorts = (0 until sbtPortsSize).map(sbtPortsStart + _)
 
   private def connectRunner(
@@ -105,19 +87,16 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   private var sbtLoadBalancer: SbtBalancer = {
     val sbtServers = remoteSbtSelections.to[Vector].map {
-      case (_, ref) => {
+      case (_, ref) =>
         val state: SbtState = SbtState.Unknown
         Server.of[SbtRunTaskId](ref, Inputs.default, state)
-      }
     }
-
-    val sbtTaskCost = 2.seconds
 
     LoadBalancer(
       servers = sbtServers,
       history = emptyHistory,
-      taskCost = sbtTaskCost,
-      reloadCost = sbtReloadTimeout,
+      taskCost = 2.seconds,
+      reloadCost = 20.seconds,
     )
   }
 
