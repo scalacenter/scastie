@@ -5,9 +5,7 @@ import com.olegych.scastie.balancer.utils.Histogram
 
 import scala.util.Random
 import scala.collection.immutable.Queue
-
-import scala.concurrent.duration.FiniteDuration
-
+import scala.concurrent.duration.{DurationLong, FiniteDuration}
 import org.slf4j.LoggerFactory
 
 case class Ip(v: String)
@@ -36,8 +34,8 @@ case class History(data: Queue[Record], size: Int) {
 case class LoadBalancer[T <: TaskId, R, S <: ServerState](
     servers: Vector[Server[T, R, S]],
     history: History,
-    taskCost: FiniteDuration,
-    reloadCost: FiniteDuration,
+    taskCost: FiniteDuration = 2.seconds,
+    reloadCost: FiniteDuration = 20.seconds,
 ) {
   private val log = LoggerFactory.getLogger(getClass)
 

@@ -26,8 +26,6 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
       LoadBalancer(
         servers = servers,
         history = history,
-        taskCost = 2.seconds,
-        reloadCost = 100.seconds,
       )
     }
   }

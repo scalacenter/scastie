@@ -1,7 +1,7 @@
 package com.olegych.scastie.balancer
 
 import java.nio.file.Paths
-import java.util.concurrent.{Executors, TimeUnit}
+import java.util.concurrent.Executors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, OneForOneStrategy, SupervisorStrategy}
 import akka.event
@@ -95,8 +95,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     LoadBalancer(
       servers = sbtServers,
       history = emptyHistory,
-      taskCost = 2.seconds,
-      reloadCost = 20.seconds,
     )
   }
 
