@@ -19,11 +19,11 @@ configuration matrix
 object SbtShared {
   val sbt210 = "2.10.7"
   val latest211 = "2.11.12"
-  val latest212 = "2.12.7"
+  val latest212 = "2.12.8"
   val latest213 = "2.13.0-M5"
   val currentScalaVersion = latest212
 
-  val latestScalaJs = "0.6.25"
+  val latestScalaJs = "0.6.26"
   val latestDotty = "0.7.0-RC1"
 
   val latestCoursier = "1.0.3"
