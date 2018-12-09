@@ -278,7 +278,6 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
         _.setSnippetSaved(true)
           .setSnippetId(sId)
           .setLoadSnippet(false)
-          .clearOutputs
       )
 
     val page = Page.fromSnippetId(sId)
@@ -287,7 +286,7 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
         _.router.map(_.set(page)).getOrElse(Callback.empty)
       )
 
-    setState >> setUrl
+    setState >> setUrl >> connectProgress(sId)
   }
 
   val save: Reusable[Callback] =
