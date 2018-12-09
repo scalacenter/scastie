@@ -8,8 +8,6 @@ import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
 
-import scalajs.js.timers
-
 import java.util.UUID
 
 final case class Scastie(scastieId: UUID,
@@ -209,18 +207,12 @@ object Scastie {
                   runScalaJs()
                 }
                 if (state.snippetId.nonEmpty) {
-                  timers.setTimeout(500) {
-
-                    val apiBase = scope.currentProps.serverUrl.getOrElse("")
-
-                    val snippetUrl =
-                      apiBase + state.snippetId.get.scalaJsUrl(
-                        ScalaTarget.Js.targetFilename
-                      )
-
-                    scalaJsScriptElement.src = snippetUrl
-                  }
-                  ()
+                  val apiBase = scope.currentProps.serverUrl.getOrElse("")
+                  val snippetUrl =
+                    apiBase + state.snippetId.get.scalaJsUrl(
+                      ScalaTarget.Js.targetFilename
+                    )
+                  scalaJsScriptElement.src = snippetUrl
                 } else {
                   println("empty snippetId")
                 }

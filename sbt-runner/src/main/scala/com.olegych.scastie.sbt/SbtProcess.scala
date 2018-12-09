@@ -3,12 +3,15 @@ package com.olegych.scastie.sbt
 import java.nio.file._
 
 import akka.actor.{ActorRef, Cancellable, FSM, Stash}
+import akka.pattern.ask
+import akka.util.Timeout
 import com.olegych.scastie.api._
 import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
 import com.olegych.scastie.instrumentation.InstrumentedInputs
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.util._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -29,9 +32,9 @@ object SbtProcess {
       snippetActor: ActorRef,
       timeoutEvent: Option[Cancellable]
   ) extends Data {
-    def sendProgress(p: SnippetProgress): Unit = {
-      progressActor ! p.copy(scalaJsContent = None, scalaJsSourceMapContent = None)
-      snippetActor ! p
+    def sendProgress(p: SnippetProgress)(implicit ec: ExecutionContext): Unit = {
+      implicit val tm = Timeout(10.seconds)
+      (snippetActor ? p).map(_ => progressActor ! p)
     }
   }
 

@@ -273,10 +273,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     }
 
     case progress: api.SnippetProgress => {
+      val sender = this.sender
       if (progress.isDone) {
         self ! Done(progress, retries = 100)
       }
-      container.appendOutput(progress)
+      container.appendOutput(progress).map(sender ! _)
     }
 
     case done: Done =>
