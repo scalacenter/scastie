@@ -39,7 +39,7 @@ object SbtProcess {
       (snippetActor ? p)
         .recover {
           case e =>
-          log.error(s"error while saving progress $p", e)
+            log.error(s"error while saving progress $p", e)
         }
         .map(_ => progressActor ! p)
     }

@@ -28,15 +28,13 @@ class ProgressActor extends Actor {
 
   override def receive: Receive = {
 
-    case SubscribeProgress(snippetId) => {
+    case SubscribeProgress(snippetId) =>
       val (source, _) = getOrCreateNewSubscriberInfo(snippetId, self)
       sender ! source
-    }
 
-    case snippetProgress: SnippetProgress => {
+    case snippetProgress: SnippetProgress =>
       //scala js content is delivered via script tag at client\src\main\scala\com.olegych.scastie.client\components\Scastie.scala:217
       processSnippedProgress(snippetProgress.copy(scalaJsContent = None, scalaJsSourceMapContent = None), self)
-    }
 
     case (snippedId: SnippetId, graphStageForwarderActor: ActorRef) =>
       updateGraphStageForwarderActor(snippedId, graphStageForwarderActor)
@@ -111,13 +109,11 @@ class ProgressActor extends Actor {
     for {
       messageQueue <- queuedMessages.get(snippetId).toSeq
       (_, Some(graphStageForwarderActor)) <- subscribers.get(snippetId).toSeq
-      message: QueuedMessage <- messageQueue.dequeueAll(_ => true)
+      message <- messageQueue.dequeueAll(_ => true)
     } yield
       message match {
-        case SnippetProgressMessage(content) => {
+        case SnippetProgressMessage(content) =>
           graphStageForwarderActor ! content
-
-        }
         case SignalProgressIsDone =>
           self ! ProgressDone(snippetId)
       }
