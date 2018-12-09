@@ -24,7 +24,7 @@ object StatusActor {
 class StatusActor private () extends Actor with ActorLogging {
   private var publishers = mutable.Buffer.empty[ActorRef]
 
-  private var dispatchActor: Option[ActorRef] = _
+  private var dispatchActor: Option[ActorRef] = None
 
   override def receive: Receive = {
     case SubscribeStatus => {
