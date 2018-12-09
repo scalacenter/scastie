@@ -27,30 +27,21 @@ object ConsoleOutput {
 
     def writes(output: ConsoleOutput): JsValue = {
       output match {
-        case sbtOutput: SbtOutput => {
-          formatSbtOutput.writes(sbtOutput).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("SbtOutput")))
-        }
-
-        case userOutput: UserOutput => {
-          formatUserOutput.writes(userOutput).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("UserOutput")))
-        }
-
-        case scastieOutput: ScastieOutput => {
-          formatScastieOutput.writes(scastieOutput).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("ScastieOutput")))
-        }
+        case sbtOutput: SbtOutput =>
+          formatSbtOutput.writes(sbtOutput) ++ JsObject(Seq("tpe" -> JsString("SbtOutput")))
+        case userOutput: UserOutput =>
+          formatUserOutput.writes(userOutput) ++ JsObject(Seq("tpe" -> JsString("UserOutput")))
+        case scastieOutput: ScastieOutput =>
+          formatScastieOutput.writes(scastieOutput) ++ JsObject(Seq("tpe" -> JsString("ScastieOutput")))
       }
     }
 
     def reads(json: JsValue): JsResult[ConsoleOutput] = {
       json match {
-        case obj: JsObject => {
+        case obj: JsObject =>
           val vs = obj.value
-
-          vs.get("$type") match {
-            case Some(tpe) => {
+          vs.get("tpe").orElse(vs.get("$type")) match {
+            case Some(tpe) =>
               tpe match {
                 case JsString("SbtOutput")  => formatSbtOutput.reads(json)
                 case JsString("UserOutput") => formatUserOutput.reads(json)
@@ -58,10 +49,8 @@ object ConsoleOutput {
                   formatScastieOutput.reads(json)
                 case _ => JsError(Seq())
               }
-            }
             case None => JsError(Seq())
           }
-        }
         case _ => JsError(Seq())
       }
     }

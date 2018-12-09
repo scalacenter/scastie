@@ -277,7 +277,14 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       if (progress.isDone) {
         self ! Done(progress, retries = 100)
       }
-      container.appendOutput(progress).map(sender ! _)
+      container
+        .appendOutput(progress)
+        .recover {
+          case e =>
+            log.error(e, s"failed to save $progress from $sender")
+            e
+        }
+        .map(sender ! _)
     }
 
     case done: Done =>

@@ -10,6 +10,7 @@ import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
 import com.olegych.scastie.instrumentation.InstrumentedInputs
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.util._
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -32,9 +33,15 @@ object SbtProcess {
       snippetActor: ActorRef,
       timeoutEvent: Option[Cancellable]
   ) extends Data {
+    private val log = LoggerFactory.getLogger(getClass)
     def sendProgress(p: SnippetProgress)(implicit ec: ExecutionContext): Unit = {
       implicit val tm = Timeout(10.seconds)
-      (snippetActor ? p).map(_ => progressActor ! p)
+      (snippetActor ? p)
+        .recover {
+          case e =>
+          log.error(s"error while saving progress $p", e)
+        }
+        .map(_ => progressActor ! p)
     }
   }
 

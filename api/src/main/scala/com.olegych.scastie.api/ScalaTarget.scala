@@ -42,36 +42,25 @@ object ScalaTarget {
 
     def writes(target: ScalaTarget): JsValue = {
       target match {
-        case jvm: Jvm => {
-          formatJvm.writes(jvm).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("Jvm")))
-        }
-        case js: Js => {
-          formatJs.writes(js).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("Js")))
-        }
-        case typelevel: Typelevel => {
-          formatTypelevel.writes(typelevel).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("Typelevel")))
-        }
-        case native: Native => {
-          formatNative.writes(native).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("Native")))
-        }
-        case dotty: Dotty => {
-          formatDotty.writes(dotty).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("Dotty")))
-        }
+        case jvm: Jvm =>
+          formatJvm.writes(jvm) ++ JsObject(Seq("tpe" -> JsString("Jvm")))
+        case js: Js =>
+          formatJs.writes(js) ++ JsObject(Seq("tpe" -> JsString("Js")))
+        case typelevel: Typelevel =>
+          formatTypelevel.writes(typelevel) ++ JsObject(Seq("tpe" -> JsString("Typelevel")))
+        case native: Native =>
+          formatNative.writes(native) ++ JsObject(Seq("tpe" -> JsString("Native")))
+        case dotty: Dotty =>
+          formatDotty.writes(dotty) ++ JsObject(Seq("tpe" -> JsString("Dotty")))
       }
     }
 
     def reads(json: JsValue): JsResult[ScalaTarget] = {
       json match {
-        case obj: JsObject => {
+        case obj: JsObject =>
           val vs = obj.value
-
-          vs.get("$type") match {
-            case Some(JsString(tpe)) => {
+          vs.get("tpe").orElse(vs.get("$type")) match {
+            case Some(JsString(tpe)) =>
               tpe match {
                 case "Jvm"       => formatJvm.reads(json)
                 case "Js"        => formatJs.reads(json)
@@ -80,10 +69,8 @@ object ScalaTarget {
                 case "Dotty"     => formatDotty.reads(json)
                 case _           => JsError(Seq())
               }
-            }
             case _ => JsError(Seq())
           }
-        }
         case _ => JsError(Seq())
       }
     }

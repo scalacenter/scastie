@@ -22,22 +22,18 @@ object StatusProgress {
     def writes(status: StatusProgress): JsValue = {
 
       status match {
-        case StatusProgress.KeepAlive => {
-          JsObject(Seq("$type" -> JsString("StatusProgress.KeepAlive")))
-        }
-
-        case runners: StatusProgress.Sbt => {
-          formatSbt.writes(runners).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("StatusProgress.Sbt")))
-        }
+        case StatusProgress.KeepAlive =>
+          JsObject(Seq("tpe" -> JsString("StatusProgress.KeepAlive")))
+        case runners: StatusProgress.Sbt =>
+          formatSbt.writes(runners) ++ JsObject(Seq("tpe" -> JsString("StatusProgress.Sbt")))
       }
     }
 
     def reads(json: JsValue): JsResult[StatusProgress] = {
       json match {
-        case obj: JsObject => {
-          obj.value.get("$type") match {
-            case Some(tpe) => {
+        case obj: JsObject =>
+          obj.value.get("tpe").orElse(obj.value.get("$type")) match {
+            case Some(tpe) =>
               tpe match {
                 case JsString("StatusProgress.KeepAlive") =>
                   JsSuccess(StatusProgress.KeepAlive)
@@ -47,10 +43,8 @@ object StatusProgress {
 
                 case _ => JsError(Seq())
               }
-            }
             case None => JsError(Seq())
           }
-        }
         case _ => JsError(Seq())
       }
     }

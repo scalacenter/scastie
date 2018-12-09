@@ -9,42 +9,30 @@ object Render {
     private val formatAttachedDom = Json.format[AttachedDom]
 
     def writes(render: Render): JsValue = {
-
       render match {
-        case v: Value => {
-          formatValue.writes(v).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("Value")))
-        }
-
-        case h: Html => {
-          formatHtml.writes(h).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("Html")))
-        }
-
-        case a: AttachedDom => {
-          formatAttachedDom.writes(a).asInstanceOf[JsObject] ++
-            JsObject(Seq("$type" -> JsString("AttachedDom")))
-        }
+        case v: Value =>
+          formatValue.writes(v) ++ JsObject(Seq("tpe" -> JsString("Value")))
+        case h: Html =>
+          formatHtml.writes(h) ++ JsObject(Seq("tpe" -> JsString("Html")))
+        case a: AttachedDom =>
+          formatAttachedDom.writes(a) ++ JsObject(Seq("tpe" -> JsString("AttachedDom")))
       }
     }
 
     def reads(json: JsValue): JsResult[Render] = {
       json match {
-        case obj: JsObject => {
+        case obj: JsObject =>
           val vs = obj.value
-
-          vs.get("$type") match {
-            case Some(tpe) => {
+          vs.get("tpe").orElse(vs.get("$type")) match {
+            case Some(tpe) =>
               tpe match {
                 case JsString("Value")       => formatValue.reads(json)
                 case JsString("Html")        => formatHtml.reads(json)
                 case JsString("AttachedDom") => formatAttachedDom.reads(json)
                 case _                       => JsError(Seq())
               }
-            }
             case None => JsError(Seq())
           }
-        }
         case _ => JsError(Seq())
       }
     }
