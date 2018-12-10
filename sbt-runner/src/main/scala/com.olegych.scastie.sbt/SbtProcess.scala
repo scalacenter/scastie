@@ -12,7 +12,7 @@ import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.util._
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -36,12 +36,15 @@ object SbtProcess {
     private val log = LoggerFactory.getLogger(getClass)
     def sendProgress(p: SnippetProgress)(implicit ec: ExecutionContext): Unit = {
       implicit val tm = Timeout(10.seconds)
-      (snippetActor ? p)
+      val f = (snippetActor ? p)
         .recover {
           case e =>
             log.error(s"error while saving progress $p", e)
         }
         .map(_ => progressActor ! p)
+      //todo remove blocking
+      //not sure how though since we need progress updates delivered in order, but waiting for save introduces random delays
+      Await.result(f, tm.duration)
     }
   }
 
