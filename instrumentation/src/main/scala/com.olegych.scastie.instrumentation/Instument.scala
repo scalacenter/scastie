@@ -144,9 +144,9 @@ object Instrument {
         case _ => false
       }
     }
-
+    val apps = Set("App", "IOApp")
     def hasApp(templ: Template): Boolean =
-      templ.parents.exists(_.syntax == "App")
+      templ.parents.exists(p => apps(p.syntax))
 
     source.stats.exists {
       case c: Defn.Class if c.name.value == instrumentedClass && c.templ.stats.nonEmpty =>
