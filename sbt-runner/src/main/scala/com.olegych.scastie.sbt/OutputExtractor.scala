@@ -60,9 +60,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
         (None, None)
       }
 
-    val isSbtError =
-      output.line == "[error] Type error in expression" &&
-        output.tpe == ProcessOutputType.StdErr
+    val isSbtError = output.line.startsWith("[error]") && isReloading
 
     val isReallyDone = (isDone && !isReloading) || isSbtError
 
