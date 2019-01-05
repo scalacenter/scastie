@@ -121,7 +121,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     containerType match {
       case "memory" => new InMemorySnippetsContainer
       case "mongo"  => new MongoDBSnippetsContainer
-      case "files" => {
+      case "files" =>
         new FilesSnippetsContainer(
           Paths.get(config.getString("snippets-dir")),
           Paths.get(config.getString("old-snippets-dir"))
@@ -130,11 +130,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
             Executors.newCachedThreadPool()
           )
         )
-      }
-      case _ => {
+      case _ =>
         println("fallback to mongodb container")
         new MongoDBSnippetsContainer
-      }
     }
 
   private def updateSbtBalancer(newSbtBalancer: SbtBalancer): Unit = {
@@ -159,133 +157,127 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     val task = Task(inputs, Ip(ip), TaskId(snippetId))
 
     sbtLoadBalancer.add(task) match {
-      case Some((server, newBalancer)) => {
+      case Some((server, newBalancer)) =>
         updateSbtBalancer(newBalancer)
 
         server.ref.tell(
           SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
           self
         )
-      }
       case _ => ()
+    }
+  }
+
+  private def logError[T](f: Future[T]) = {
+    f.recover {
+      case e => log.error(e, "failed future")
     }
   }
 
   def receive: Receive = event.LoggingReceive(event.Logging.InfoLevel) {
     case SbtPong => ()
 
-    case format: FormatRequest => {
+    case format: FormatRequest =>
       val server = sbtLoadBalancer.getRandomServer
       server.ref.tell(format, sender)
       ()
-    }
 
-    case x @ RunSnippet(inputsWithIpAndUser) => {
+    case x @ RunSnippet(inputsWithIpAndUser) =>
       log.info(s"starting ${x}")
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val sender = this.sender
-      container.create(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
+      logError(container.create(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
         run(inputsWithIpAndUser, snippetId)
         log.info(s"finished ${x}")
         sender ! snippetId
-      }
-    }
+      })
 
-    case SaveSnippet(inputsWithIpAndUser) => {
+    case SaveSnippet(inputsWithIpAndUser) =>
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val sender = this.sender
-      container.save(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
+      logError(container.save(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
         run(inputsWithIpAndUser, snippetId)
         sender ! snippetId
-      }
-    }
+      })
 
-    case AmendSnippet(snippetId, inputsWithIpAndUser) => {
+    case AmendSnippet(snippetId, inputsWithIpAndUser) =>
       val sender = this.sender
-      container.amend(snippetId, inputsWithIpAndUser.inputs).map { amendSuccess =>
+      logError(container.amend(snippetId, inputsWithIpAndUser.inputs).map { amendSuccess =>
         if (amendSuccess) {
           run(inputsWithIpAndUser, snippetId)
         }
         sender ! amendSuccess
-      }
-    }
+      })
 
-    case UpdateSnippet(snippetId, inputsWithIpAndUser) => {
+    case UpdateSnippet(snippetId, inputsWithIpAndUser) =>
       val sender = this.sender
-      container.update(snippetId, inputsWithIpAndUser.inputs).map { updatedSnippetId =>
+      logError(container.update(snippetId, inputsWithIpAndUser.inputs).map { updatedSnippetId =>
         updatedSnippetId.foreach(
           snippetIdU => run(inputsWithIpAndUser, snippetIdU)
         )
         sender ! updatedSnippetId
-      }
-    }
+      })
 
-    case ForkSnippet(snippetId, inputsWithIpAndUser) => {
+    case ForkSnippet(snippetId, inputsWithIpAndUser) =>
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) =
         inputsWithIpAndUser
       val sender = this.sender
-      container
-        .fork(snippetId, inputs, user.map(u => UserLogin(u.login)))
-        .map { forkedSnippetId =>
-          sender ! Some(forkedSnippetId)
-          run(inputsWithIpAndUser, forkedSnippetId)
-        }
-    }
+      logError(
+        container
+          .fork(snippetId, inputs, user.map(u => UserLogin(u.login)))
+          .map { forkedSnippetId =>
+            sender ! Some(forkedSnippetId)
+            run(inputsWithIpAndUser, forkedSnippetId)
+          }
+      )
 
-    case DeleteSnippet(snippetId) => {
+    case DeleteSnippet(snippetId) =>
       val sender = this.sender
-      container.delete(snippetId).map(_ => sender ! (()))
-    }
+      logError(container.delete(snippetId).map(_ => sender ! ()))
 
-    case DownloadSnippet(snippetId) => {
+    case DownloadSnippet(snippetId) =>
       val sender = this.sender
-      container.downloadSnippet(snippetId).map(sender ! _)
-    }
+      logError(container.downloadSnippet(snippetId).map(sender ! _))
 
-    case FetchSnippet(snippetId) => {
+    case FetchSnippet(snippetId) =>
       val sender = this.sender
-      container.readSnippet(snippetId).map(sender ! _)
-    }
+      logError(container.readSnippet(snippetId).map(sender ! _))
 
-    case FetchOldSnippet(id) => {
+    case FetchOldSnippet(id) =>
       val sender = this.sender
-      container.readOldSnippet(id).map(sender ! _)
-    }
+      logError(container.readOldSnippet(id).map(sender ! _))
 
-    case FetchUserSnippets(user) => {
+    case FetchUserSnippets(user) =>
       val sender = this.sender
-      container.listSnippets(UserLogin(user.login)).map(sender ! _)
-    }
+      logError(container.listSnippets(UserLogin(user.login)).map(sender ! _))
 
-    case FetchScalaJs(snippetId) => {
+    case FetchScalaJs(snippetId) =>
       val sender = this.sender
-      container.readScalaJs(snippetId).map(sender ! _)
-    }
+      logError(container.readScalaJs(snippetId).map(sender ! _))
 
-    case FetchScalaSource(snippetId) => {
+    case FetchScalaSource(snippetId) =>
       val sender = this.sender
-      container.readScalaSource(snippetId).map(sender ! _)
-    }
+      logError(container.readScalaSource(snippetId).map(sender ! _))
 
-    case FetchScalaJsSourceMap(snippetId) => {
+    case FetchScalaJsSourceMap(snippetId) =>
       val sender = this.sender
-      container.readScalaJsSourceMap(snippetId).map(sender ! _)
-    }
+      logError(container.readScalaJsSourceMap(snippetId).map(sender ! _))
 
-    case progress: api.SnippetProgress => {
+    case progress: api.SnippetProgress =>
       val sender = this.sender
       if (progress.isDone) {
         self ! Done(progress, retries = 100)
       }
-      container
-        .appendOutput(progress)
-        .recover {
-          case e =>
-            log.error(e, s"failed to save $progress from $sender")
-            e
-        }
-        .map(sender ! _)
-    }
+      logError(
+        container
+          .appendOutput(progress)
+          .recover {
+            case e =>
+              log.error(e, s"failed to save $progress from $sender")
+              e
+          }
+          .map(sender ! _)
+      )
 
     case done: Done =>
       done.progress.snippetId.foreach { sid =>
@@ -306,7 +298,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         }
       }
 
-    case event: DisassociatedEvent => {
+    case event: DisassociatedEvent =>
       for {
         host <- event.remoteAddress.host
         port <- event.remoteAddress.port
@@ -319,17 +311,14 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
           updateSbtBalancer(sbtLoadBalancer.removeServer(ref))
         }
       }
-    }
 
-    case SbtUp => {
+    case SbtUp =>
       log.info("SbtUp")
-    }
 
-    case Replay(SbtRun(snippetId, inputs, progressActor, snippetActor)) => {
+    case Replay(SbtRun(snippetId, inputs, progressActor, snippetActor)) =>
       log.info("Replay: " + inputs.code)
-    }
 
-    case SbtRunnerConnect(runnerHostname, runnerAkkaPort) => {
+    case SbtRunnerConnect(runnerHostname, runnerAkkaPort) =>
       if (!remoteSbtSelections.contains((runnerHostname, runnerAkkaPort))) {
         log.info("Connected Runner {}", runnerAkkaPort)
 
@@ -348,22 +337,18 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
           )
         )
       }
-    }
 
-    case ReceiveStatus(requester) => {
+    case ReceiveStatus(requester) =>
       sender ! LoadBalancerInfo(sbtLoadBalancer, requester)
-    }
 
-    case statusProgress: StatusProgress => {
+    case statusProgress: StatusProgress =>
       statusActor ! statusProgress
-    }
 
-    case run: Run => {
+    case run: Run =>
       run0(run.inputsWithIpAndUser, run.snippetId)
-    }
-    case ping: Ping.type => {
+    case ping: Ping.type =>
       implicit val timeout: Timeout = Timeout(10.seconds)
-      Future.sequence {
+      logError(Future.sequence {
         sbtLoadBalancer.servers.map { s =>
           (s.ref ? SbtPing)
             .map { _ =>
@@ -373,7 +358,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
               case e => log.error(e, s"couldn't ping ${s} server")
             }
         }
-      }
-    }
+      })
   }
 }
