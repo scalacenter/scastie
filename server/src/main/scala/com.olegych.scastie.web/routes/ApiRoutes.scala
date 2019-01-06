@@ -1,16 +1,12 @@
 package com.olegych.scastie.web.routes
 
-import com.olegych.scastie.web._
-import com.olegych.scastie.api._
-import com.olegych.scastie.web.oauth2._
-
 import akka.actor.{ActorRef, ActorSystem}
-
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.Directive1
+import akka.http.scaladsl.coding.Gzip
 import akka.http.scaladsl.server.Directives._
-
-import play.api.libs.json.Reads
+import akka.http.scaladsl.server.{Directive1, Route}
+import com.olegych.scastie.api._
+import com.olegych.scastie.web._
+import com.olegych.scastie.web.oauth2._
 
 class ApiRoutes(
     dispatchActor: ActorRef,
@@ -18,10 +14,9 @@ class ApiRoutes(
 )(implicit system: ActorSystem)
     extends PlayJsonSupport {
 
+  import play.api.libs.json._
   import system.dispatcher
   import userDirectives.optionalLogin
-
-  import play.api.libs.json._
   implicit val readsInputs: Reads[Inputs] = Json.reads[Inputs]
 
   val withRestApiServer: Directive1[RestApiServer] =
@@ -69,19 +64,21 @@ class ApiRoutes(
               )
             )
           ),
-          get(
-            concat(
-              snippetIdStart("snippets")(
-                sid => complete(server.fetch(sid))
-              ),
-              path("old-snippets" / IntNumber)(
-                id => complete(server.fetchOld(id))
-              ),
-              path("user" / "settings")(
-                complete(server.fetchUser())
-              ),
-              path("user" / "snippets")(
-                complete(server.fetchUserSnippets())
+          encodeResponseWith(Gzip)(
+            get(
+              concat(
+                snippetIdStart("snippets")(
+                  sid => complete(server.fetch(sid))
+                ),
+                path("old-snippets" / IntNumber)(
+                  id => complete(server.fetchOld(id))
+                ),
+                path("user" / "settings")(
+                  complete(server.fetchUser())
+                ),
+                path("user" / "snippets")(
+                  complete(server.fetchUserSnippets())
+                )
               )
             )
           )

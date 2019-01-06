@@ -12,6 +12,7 @@ import akka.http.scaladsl.coding.Gzip
 
 import scala.concurrent.duration.DurationInt
 
+//not used anymore
 class ScalaJsRoutes(dispatchActor: ActorRef)(implicit system: ActorSystem) {
   import system.dispatcher
 

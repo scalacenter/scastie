@@ -286,7 +286,7 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
         _.router.map(_.set(page)).getOrElse(Callback.empty)
       )
 
-    setState >> setUrl >> connectProgress(sId)
+    connectProgress(sId) >> setState >> setUrl
   }
 
   val save: Reusable[Callback] =

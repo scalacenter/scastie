@@ -146,7 +146,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
 
     Future {
       readOldInputs(id).map(
-        inputs => FetchResult(inputs, readOldOutputs(id).getOrElse(Nil))
+        inputs => FetchResult.create(inputs, readOldOutputs(id).getOrElse(Nil))
       )
     }
   }
@@ -165,7 +165,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
 
   def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]] = Future {
     readInputs(snippetId).map(
-      inputs => FetchResult(inputs, readOutputs(snippetId).getOrElse(Nil))
+      inputs => FetchResult.create(inputs, readOutputs(snippetId).getOrElse(Nil))
     )
   }
 

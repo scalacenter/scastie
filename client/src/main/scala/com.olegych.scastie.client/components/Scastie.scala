@@ -1,14 +1,16 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api._
-import com.olegych.scastie.client.{EmbeddedOptions, LocalStorage, Page, ScastieBackend, ScastieState, View}
-import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
+import java.util.UUID
 
+import com.olegych.scastie.api._
+import com.olegych.scastie.client._
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
+import japgolly.scalajs.react.extra._
+import japgolly.scalajs.react.extra.router._
+import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
-
-import java.util.UUID
 
 final case class Scastie(scastieId: UUID,
                          router: Option[RouterCtl[Page]],
@@ -189,35 +191,17 @@ object Scastie {
               state.snippetId.nonEmpty &&
               !state.isRunning
           ) {
-
-            val setLoaded =
-              scope.modState(
-                _.setLoadScalaJsScript(false).scalaJsScriptLoaded
-                  .setRunning(true)
-              )
-
-            val loadJs =
-              Callback {
-                val scalaJsId = "scastie-scalajs-playground-target"
-                println("== Loading Scala.js ==")
-
-                removeIfExist(scalaJsId)
-                val scalaJsScriptElement = createScript(scalaJsId)
-                scalaJsScriptElement.onload = { (e: dom.Event) =>
-                  runScalaJs()
-                }
-                if (state.snippetId.nonEmpty) {
-                  val apiBase = scope.currentProps.serverUrl.getOrElse("")
-                  val snippetUrl =
-                    apiBase + state.snippetId.get.scalaJsUrl(
-                      ScalaTarget.Js.targetFilename
-                    )
-                  scalaJsScriptElement.src = snippetUrl
-                } else {
-                  println("empty snippetId")
-                }
+            val setLoaded = scope.modState(_.setLoadScalaJsScript(false).scalaJsScriptLoaded.setRunning(true))
+            val loadJs = Callback {
+              val scalaJsId = "scastie-scalajs-playground-target"
+              println("== Loading Scala.js! ==")
+              removeIfExist(scalaJsId)
+              val scalaJsScriptElement = createScript(scalaJsId)
+              state.snippetState.scalaJsContent.foreach { content =>
+                scalaJsScriptElement.innerHTML = content
+                runScalaJs()
               }
-
+            }
             setLoaded >> loadJs
           }
 

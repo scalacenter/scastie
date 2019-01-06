@@ -24,7 +24,7 @@ case class MongoSnippet(
     scalaJsSourceMapContent: String,
     time: Long
 ) {
-  def toFetchResult: FetchResult = FetchResult(inputs, progresses)
+  def toFetchResult: FetchResult = FetchResult.create(inputs, progresses)
 }
 object MongoSnippet {
   implicit val formatMongoSnippet: OFormat[MongoSnippet] =

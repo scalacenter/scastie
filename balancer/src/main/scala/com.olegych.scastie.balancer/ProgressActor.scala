@@ -33,8 +33,7 @@ class ProgressActor extends Actor {
       sender ! source
 
     case snippetProgress: SnippetProgress =>
-      //scala js content is delivered via script tag at client\src\main\scala\com.olegych.scastie.client\components\Scastie.scala:217
-      processSnippedProgress(snippetProgress.copy(scalaJsContent = None, scalaJsSourceMapContent = None), self)
+      processSnippedProgress(snippetProgress, self)
 
     case (snippedId: SnippetId, graphStageForwarderActor: ActorRef) =>
       updateGraphStageForwarderActor(snippedId, graphStageForwarderActor)

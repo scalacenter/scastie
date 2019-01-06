@@ -1,5 +1,7 @@
 package com.olegych.scastie.sbt
 
+import java.time.Instant
+
 import com.olegych.scastie.api._
 import com.olegych.scastie.instrumentation.Instrument
 import com.olegych.scastie.sbt.SbtProcess._
@@ -69,6 +71,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
       else sbtOutput.map(_.output)
 
     SnippetProgress(
+      ts = Some(Instant.now.toEpochMilli),
+      id = None,
       snippetId = Some(snippetId),
       userOutput = userOutput,
       sbtOutput = sbtProcessOutput,

@@ -5,6 +5,8 @@ import play.api.libs.json._
 object SnippetProgress {
   def default: SnippetProgress =
     SnippetProgress(
+      ts = None,
+      id = None,
       snippetId = None,
       userOutput = None,
       sbtOutput = None,
@@ -19,11 +21,12 @@ object SnippetProgress {
       isForcedProgramMode = false
     )
 
-  implicit val formatSnippetProgress: OFormat[SnippetProgress] =
-    Json.format[SnippetProgress]
+  implicit val formatSnippetProgress: OFormat[SnippetProgress] = Json.format[SnippetProgress]
 }
 
 case class SnippetProgress(
+    ts: Option[Long],
+    id: Option[Long],
     snippetId: Option[SnippetId],
     userOutput: Option[ProcessOutput],
     sbtOutput: Option[ProcessOutput],

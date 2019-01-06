@@ -1,6 +1,7 @@
 package com.olegych.scastie.sbt
 
 import java.nio.file._
+import java.time.Instant
 
 import akka.actor.{ActorRef, Cancellable, FSM, Stash}
 import akka.pattern.ask
@@ -10,9 +11,7 @@ import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
 import com.olegych.scastie.instrumentation.InstrumentedInputs
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.util._
-import org.slf4j.LoggerFactory
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -32,22 +31,7 @@ object SbtProcess {
       progressActor: ActorRef,
       snippetActor: ActorRef,
       timeoutEvent: Option[Cancellable]
-  ) extends Data {
-    private val log = LoggerFactory.getLogger(getClass)
-    def sendProgress(p: SnippetProgress)(implicit ec: ExecutionContext): Unit = {
-      implicit val tm = Timeout(10.seconds)
-      val f = (snippetActor ? p)
-        .recover {
-          case e =>
-            log.error(s"error while saving progress $p", e)
-        }
-        .map(_ => progressActor ! p)
-      //todo remove blocking
-      //not sure how though since we need progress updates delivered in order, but waiting for save introduces random delays
-      Await.result(f, tm.duration)
-    }
-  }
-
+  ) extends Data
   case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
     def message: String = {
       val stateMsg =
@@ -62,6 +46,7 @@ object SbtProcess {
 
     def toProgress(snippetId: SnippetId): SnippetProgress = {
       SnippetProgress.default.copy(
+        ts = Some(Instant.now.toEpochMilli),
         snippetId = Some(snippetId),
         isTimeout = true,
         isDone = true,
@@ -84,12 +69,23 @@ class SbtProcess(runTimeout: FiniteDuration,
                  customSbtDir: Option[Path] = None)
     extends FSM[SbtProcess.SbtState, SbtProcess.Data]
     with Stash {
-
   import ProcessActor._
   import SbtProcess._
   import context.dispatcher
 
-  // private val log = LoggerFactory.getLogger(getClass)
+  private var progressId = 0L
+
+  def sendProgress(run: SbtRun, _p: SnippetProgress): Unit = {
+    progressId += 1
+    val p = _p.copy(id = Some(progressId))
+    run.progressActor ! p
+    implicit val tm = Timeout(10.seconds)
+    (run.snippetActor ? p)
+      .recover {
+        case e =>
+          log.error(e,s"error while saving progress $p")
+      }
+  }
 
   private val sbtDir: Path =
     customSbtDir.getOrElse(Files.createTempDirectory("scastie"))
@@ -144,14 +140,14 @@ class SbtProcess(runTimeout: FiniteDuration,
   }
 
   whenUnhandled {
-    case Event(_: SbtTask, _) =>
+    case Event(_: SbtTask | _:ProcessOutput, _) =>
       stash()
       stay
     case Event(timeout: SbtStateTimeout, run: SbtRun) =>
       println("*** timeout ***")
 
       val progress = timeout.toProgress(run.snippetId)
-      run.sendProgress(progress)
+      sendProgress(run, progress)
       throw new Exception(timeout.message)
   }
 
@@ -206,7 +202,7 @@ class SbtProcess(runTimeout: FiniteDuration,
         case Left(report) =>
           val sbtRun = _sbtRun
           setInputs(sbtRun.inputs)
-          sbtRun.sendProgress(report.toProgress(snippetId))
+          sendProgress(sbtRun, report.toProgress(snippetId))
           goto(Ready)
       }
   }
@@ -221,7 +217,7 @@ class SbtProcess(runTimeout: FiniteDuration,
   when(Reloading) {
     case Event(output: ProcessOutput, sbtRun: SbtRun) =>
       val progress = extractor.extractProgress(output, sbtRun, isReloading = true)
-      sbtRun.sendProgress(progress)
+      sendProgress(sbtRun, progress)
 
       if (progress.isSbtError) {
         throw new Exception("sbt error: " + output.line)
@@ -237,7 +233,7 @@ class SbtProcess(runTimeout: FiniteDuration,
   when(Running) {
     case Event(output: ProcessOutput, sbtRun: SbtRun) =>
       val progress = extractor.extractProgress(output, sbtRun, isReloading = false)
-      sbtRun.sendProgress(progress)
+      sendProgress(sbtRun, progress)
 
       if (isPrompt(output.line)) {
         sbtRun.timeoutEvent.foreach(_.cancel())

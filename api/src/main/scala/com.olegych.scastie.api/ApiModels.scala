@@ -75,11 +75,11 @@ case class FormatResponse(
 )
 
 object FetchResult {
-  implicit val formatFetchResult: OFormat[FetchResult] =
-    Json.format[FetchResult]
+  implicit val formatFetchResult: OFormat[FetchResult] = Json.format[FetchResult]
+  def create(inputs: Inputs, progresses: List[SnippetProgress]) = FetchResult(inputs, progresses.sortBy(p => (p.id, p.ts)))
 }
 
-case class FetchResult(inputs: Inputs, progresses: List[SnippetProgress])
+case class FetchResult private (inputs: Inputs, progresses: List[SnippetProgress])
 
 case class FetchScalaJs(snippetId: SnippetId)
 case class FetchResultScalaJs(content: String)

@@ -2,6 +2,7 @@ package com.olegych.scastie.web.routes
 
 import akka.NotUsed
 import akka.actor.ActorRef
+import akka.http.scaladsl.coding.Gzip
 import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.sse.ServerSentEvent
@@ -18,7 +19,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
 class ProgressRoutes(progressActor: ActorRef) {
-  val routes: Route =
+  val routes: Route = encodeResponseWith(Gzip)(
     concat(
       snippetIdStart("progress-sse") { sid =>
         complete {
@@ -27,10 +28,11 @@ class ProgressRoutes(progressActor: ActorRef) {
           }
         }
       },
-      snippetIdStart("progress-websocket")(
+      snippetIdStart("progress-ws")(
         sid => handleWebSocketMessages(webSocket(sid))
       )
     )
+  )
 
   private def progressSource(
       snippetId: SnippetId

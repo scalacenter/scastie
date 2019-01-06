@@ -59,7 +59,7 @@ class InMemorySnippetsContainer(implicit protected val ec: ExecutionContext) ext
   }
 
   def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]] = Future {
-    snippets.get(snippetId).map(m => FetchResult(m.inputs, m.progresses.toList))
+    snippets.get(snippetId).map(m => FetchResult.create(m.inputs, m.progresses.toList))
   }
 
   def readOldSnippet(id: Int): Future[Option[FetchResult]] = Future(None)

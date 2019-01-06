@@ -1,13 +1,16 @@
 package com.olegych.scastie.instrumentation
 
 import com.olegych.scastie.api._
+
 import scala.meta.parsers.Parsed
 import java.io.{PrintWriter, StringWriter}
+import java.time.Instant
 
 case class InstrumentationFailureReport(message: String, line: Option[Int]) {
   def toProgress(snippetId: SnippetId): SnippetProgress = {
     SnippetProgress.default
       .copy(
+        ts = Some(Instant.now.toEpochMilli),
         snippetId = Some(snippetId),
         compilationInfos = List(Problem(Error, line, message))
       )

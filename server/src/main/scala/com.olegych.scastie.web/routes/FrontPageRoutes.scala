@@ -1,12 +1,12 @@
 package com.olegych.scastie.web.routes
 
-import com.olegych.scastie.util.Base64UUID
-import com.olegych.scastie.api.{SnippetId, SnippetUserPart}
+import java.lang.System.{lineSeparator => nl}
 
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.coding.Gzip
 import akka.http.scaladsl.server.Directives._
-
-import System.{lineSeparator => nl}
+import akka.http.scaladsl.server.Route
+import com.olegych.scastie.api.{SnippetId, SnippetUserPart}
+import com.olegych.scastie.util.Base64UUID
 
 class FrontPageRoutes(production: Boolean) {
 
@@ -50,7 +50,7 @@ class FrontPageRoutes(production: Boolean) {
         |");""".stripMargin.split(nl).map(_.trim).mkString("")
   }
 
-  val routes: Route =
+  val routes: Route = encodeResponseWith(Gzip)(
     concat(
       get(
         concat(
@@ -87,4 +87,5 @@ class FrontPageRoutes(production: Boolean) {
         )
       )
     )
+  )
 }
