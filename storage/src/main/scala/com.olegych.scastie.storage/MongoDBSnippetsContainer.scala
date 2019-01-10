@@ -54,7 +54,7 @@ class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext) exte
       fdb <- fdb
       coll = fdb.collection("snippets")
       _ <- Future.traverse(
-        List(snippetIdIndex, oldSnippetIdIndex, userIndex, snippetUserId, isShowingInUserProfile)
+        List(snippetIdIndex, oldSnippetIdIndex, userIndex, snippetUserId, isShowingInUserProfile, timeIndex)
       ) { i =>
         coll.indexesManager.ensure(i)
       }
