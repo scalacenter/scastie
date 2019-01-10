@@ -337,16 +337,14 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
       snippetId =>
         scope.state.flatMap(
           state =>
-            Callback.unless(state.isSnippetSaved)(
-              Callback.future(
-                restApiClient
-                  .amend(EditInputs(snippetId, state.inputs))
-                  .map(
-                    success =>
-                      if (success) saveCallback(snippetId)
-                      else Callback(window.alert("Failed to amend"))
-                  )
-              )
+            Callback.future(
+              restApiClient
+                .amend(EditInputs(snippetId, state.inputs))
+                .map(
+                  success =>
+                    if (success) saveCallback(snippetId)
+                    else Callback(window.alert("Failed to amend"))
+                )
           )
       )
     )
