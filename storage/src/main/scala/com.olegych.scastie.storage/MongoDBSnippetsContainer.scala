@@ -50,13 +50,11 @@ class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext) exte
       name = Some("inputs.isShowingInUserProfile")
     )
     val timeIndex = Index(key = Seq(("time", IndexType.Hashed)), name = Some("time"))
-    val listUserSnippetsIndex =
-      Index(key = List(snippetIdIndex, isShowingInUserProfileIndex, timeIndex).flatMap(_.key), name = Some("listUserSnippetsIndex"))
     for {
       fdb <- fdb
       coll = fdb.collection("snippets")
       _ <- Future.traverse(
-        List(snippetIdIndex, oldSnippetIdIndex, userIndex, snippetUserId, isShowingInUserProfileIndex, timeIndex, listUserSnippetsIndex)
+        List(snippetIdIndex, oldSnippetIdIndex, userIndex, snippetUserId, isShowingInUserProfileIndex, timeIndex)
       ) { i =>
         coll.indexesManager.ensure(i)
       }
@@ -147,13 +145,12 @@ class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext) exte
     val mongoSnippets =
       snippets.flatMap(
         _.find(userSnippets)
-          .sort(Json.obj("time" -> -1))
           .cursor[MongoSnippet]()
           .collect[List](maxDocs = 1000, Cursor.FailOnError[List[MongoSnippet]]())
       )
 
     mongoSnippets.map(
-      _.map(
+      _.sortBy(-_.time).map(
         m =>
           SnippetSummary(
             m.snippetId,
