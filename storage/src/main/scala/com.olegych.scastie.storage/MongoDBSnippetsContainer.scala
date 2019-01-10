@@ -45,16 +45,18 @@ class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext) exte
     val oldSnippetIdIndex = Index(key = Seq(("oldId", IndexType.Hashed)), name = Some("snippets-old-id"))
     val userIndex = Index(key = Seq(("user", IndexType.Hashed)), name = Some("user"))
     val snippetUserId = Index(key = Seq(("snippetId.user.login", IndexType.Hashed)), name = Some("snippetId.user.login"))
-    val isShowingInUserProfile = Index(
+    val isShowingInUserProfileIndex = Index(
       key = Seq(("inputs.isShowingInUserProfile", IndexType.Hashed)),
       name = Some("inputs.isShowingInUserProfile")
     )
     val timeIndex = Index(key = Seq(("time", IndexType.Hashed)), name = Some("time"))
+    val listUserSnippetsIndex =
+      Index(key = List(snippetIdIndex, isShowingInUserProfileIndex, timeIndex).flatMap(_.key), name = Some(listUserSnippetsIndex))
     for {
       fdb <- fdb
       coll = fdb.collection("snippets")
       _ <- Future.traverse(
-        List(snippetIdIndex, oldSnippetIdIndex, userIndex, snippetUserId, isShowingInUserProfile, timeIndex)
+        List(snippetIdIndex, oldSnippetIdIndex, userIndex, snippetUserId, isShowingInUserProfileIndex, timeIndex, listUserSnippetsIndex)
       ) { i =>
         coll.indexesManager.ensure(i)
       }
