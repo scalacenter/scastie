@@ -43,13 +43,13 @@ class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext) exte
   val snippets = {
     val snippetIdIndex = Index(key = Seq(("simpleSnippetId", IndexType.Hashed)), name = Some("snippets-id"))
     val oldSnippetIdIndex = Index(key = Seq(("oldId", IndexType.Hashed)), name = Some("snippets-old-id"))
-    val userIndex =
-      Index(key = Seq(("user", IndexType.Hashed)), name = Some("user"))
+    val userIndex = Index(key = Seq(("user", IndexType.Hashed)), name = Some("user"))
     val snippetUserId = Index(key = Seq(("snippetId.user.login", IndexType.Hashed)), name = Some("snippetId.user.login"))
     val isShowingInUserProfile = Index(
       key = Seq(("inputs.isShowingInUserProfile", IndexType.Hashed)),
       name = Some("inputs.isShowingInUserProfile")
     )
+    val timeIndex = Index(key = Seq(("time", IndexType.Hashed)), name = Some("time"))
     for {
       fdb <- fdb
       coll = fdb.collection("snippets")
