@@ -31,11 +31,11 @@ object SaveButton {
 
     def userFunctions(sid: SnippetId): TagMod =
       TagMod(
-        li(title := "Amend this code snippet", cls := "btn", disabledIfSaved, onClick --> props.amend(sid))(
+        li(title := "Amend this code snippet", cls := "btn", disabledIfInputsHasNotChanged, onClick --> props.amend(sid))(
           i(cls := "fa fa-pencil-square-o"),
           span("Amend")
         ),
-        li(title := s"Save as a new updated version ($ctrl + S)", cls := "btn", disabledIfSaved, onClick --> props.update(sid))(
+        li(title := s"Save as a new updated version ($ctrl + S)", cls := "btn", disabledIfInputsHasNotChanged, onClick --> props.update(sid))(
           i(cls := "fa fa-download"),
           span("Update")
         )
