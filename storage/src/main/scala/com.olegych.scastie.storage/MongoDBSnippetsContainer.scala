@@ -51,7 +51,7 @@ class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext) exte
     )
     val timeIndex = Index(key = Seq(("time", IndexType.Hashed)), name = Some("time"))
     val listUserSnippetsIndex =
-      Index(key = List(snippetIdIndex, isShowingInUserProfileIndex, timeIndex).flatMap(_.key), name = Some(listUserSnippetsIndex))
+      Index(key = List(snippetIdIndex, isShowingInUserProfileIndex, timeIndex).flatMap(_.key), name = Some("listUserSnippetsIndex"))
     for {
       fdb <- fdb
       coll = fdb.collection("snippets")
