@@ -8,7 +8,7 @@ env:
     - TRAVIS_NODE_VERSION="8"
 
 script:
-  - bin/scalafmt --test
+#  - bin/scalafmt --test
   - nix-shell -A scastie --command "sbt ci"
 
 before_cache:
