@@ -47,9 +47,10 @@ or
 ```
 sbt
 > startAll
+> ~client/fastOptJS 
 ```
 
-open `http://localhost:9000`
+open `http://localhost:8080`
 
 you can also open `http://localhost:9000/embed.html` to edit the embedded style
 
