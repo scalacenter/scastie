@@ -3,8 +3,8 @@ package instrumentation
 
 import java.nio.file._
 
-import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.api.ScalaTarget
+import com.olegych.scastie.util.ScastieFileUtil.slurp
 import org.scalatest.FunSuite
 
 import scala.collection.JavaConverters._
