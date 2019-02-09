@@ -99,21 +99,21 @@ case class Inputs(
   def clearDependencies: Inputs = {
     copy(
       libraries = Set(),
-      librariesFromList = Nil,
+      librariesFromList = Nil
     )
   }
 
   def addScalaDependency(scalaDependency: ScalaDependency, project: Project): Inputs = {
     copy(
       libraries = libraries + scalaDependency,
-      librariesFromList = (librariesFrom + (scalaDependency -> project)).toList,
+      librariesFromList = (librariesFrom + (scalaDependency -> project)).toList
     )
   }
 
   def removeScalaDependency(scalaDependency: ScalaDependency): Inputs = {
     copy(
       libraries = libraries.filterNot(_.matches(scalaDependency)),
-      librariesFromList = librariesFrom.filterNot(_._1.matches(scalaDependency)).toList,
+      librariesFromList = librariesFrom.filterNot(_._1.matches(scalaDependency)).toList
     )
   }
 
@@ -127,7 +127,7 @@ case class Inputs(
     }
     copy(
       libraries = newLibraries,
-      librariesFromList = newLibrariesFromList,
+      librariesFromList = newLibrariesFromList
     )
   }
 
