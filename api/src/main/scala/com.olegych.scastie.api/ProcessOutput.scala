@@ -39,5 +39,6 @@ object ProcessOutput {
 
 case class ProcessOutput(
     line: String,
-    tpe: ProcessOutputType
+    tpe: ProcessOutputType,
+    id: Long
 )

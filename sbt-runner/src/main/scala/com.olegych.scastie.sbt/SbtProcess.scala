@@ -83,7 +83,7 @@ class SbtProcess(runTimeout: FiniteDuration,
     (run.snippetActor ? p)
       .recover {
         case e =>
-          log.error(e,s"error while saving progress $p")
+          log.error(e, s"error while saving progress $p")
       }
   }
 
@@ -114,13 +114,15 @@ class SbtProcess(runTimeout: FiniteDuration,
         case Right(instrumented) =>
           val inputs = instrumented.inputs
           setInputs(inputs)
+          val p = process
+          log.info(s"started process ${p}")
           SbtData(inputs)
         case e => sys.error("failed to instrument default input: " + e)
       }
     }
   )
 
-  private val process = {
+  private lazy val process = {
     val sbtOpts =
       (javaOptions ++ Seq(
         "-Djline.terminal=jline.UnsupportedTerminal",
@@ -140,7 +142,7 @@ class SbtProcess(runTimeout: FiniteDuration,
   }
 
   whenUnhandled {
-    case Event(_: SbtTask | _:ProcessOutput, _) =>
+    case Event(_: SbtTask | _: ProcessOutput, _) =>
       stash()
       stay
     case Event(timeout: SbtStateTimeout, run: SbtRun) =>
@@ -164,9 +166,8 @@ class SbtProcess(runTimeout: FiniteDuration,
   }
 
   when(Initializing) {
-    case Event(ProcessOutput(line, _), _) =>
-      println(line)
-      if (isPrompt(line)) {
+    case Event(out: ProcessOutput, _) =>
+      if (isPrompt(out.line)) {
         goto(Ready)
       } else {
         stay
@@ -175,7 +176,7 @@ class SbtProcess(runTimeout: FiniteDuration,
 
   when(Ready) {
     case Event(task @ SbtTask(snippetId, taskInputs, ip, login, progressActor), SbtData(stateInputs)) =>
-      println(s"Running: (login: $login, ip: $ip) \n $taskInputs")
+      println(s"Running: (login: $login, ip: $ip) \n ${taskInputs.code.take(30)}")
 
       val _sbtRun = SbtRun(
         snippetId = snippetId,
@@ -235,7 +236,7 @@ class SbtProcess(runTimeout: FiniteDuration,
       val progress = extractor.extractProgress(output, sbtRun, isReloading = false)
       sendProgress(sbtRun, progress)
 
-      if (isPrompt(output.line)) {
+      if (progress.isDone) {
         sbtRun.timeoutEvent.foreach(_.cancel())
         goto(Ready).using(SbtData(sbtRun.inputs))
       } else {
@@ -263,20 +264,17 @@ class SbtProcess(runTimeout: FiniteDuration,
   }
 
   private def isPrompt(line: String): Boolean = {
-    line.endsWith(promptUniqueId)
+    line == promptUniqueId
   }
 
   // Sbt files setup
 
   private def setInputs(inputs: Inputs): Unit = {
-
-    println(s"setInputs $inputs")
-
     val prompt =
-      s"""shellPrompt := (_ => "$promptUniqueId" + System.lineSeparator)"""
+      s"""shellPrompt := (_ => "$promptUniqueId" + "\\n")"""
 
-    writeFile(pluginFile, inputs.sbtPluginsConfig + ProcessActor.lineSeparator)
-    writeFile(buildFile, prompt + ProcessActor.lineSeparator + inputs.sbtConfig)
+    writeFile(pluginFile, inputs.sbtPluginsConfig + "\n")
+    writeFile(buildFile, prompt + "\n" + inputs.sbtConfig)
     write(codeFile, inputs.code, truncate = true)
   }
 

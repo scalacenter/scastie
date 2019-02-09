@@ -1,18 +1,24 @@
 package com.olegych.scastie.sbt
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.testkit.TestActor.AutoPilot
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import com.olegych.scastie.util.SbtTask
 import com.olegych.scastie.api._
+import com.olegych.scastie.util.SbtTask
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
 
 class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
-
+  setAutoPilot(new AutoPilot {
+    def run(sender: ActorRef, msg: Any): AutoPilot = {
+      sender ! s"reply to $msg"
+      this
+    }
+  })
   print("\u001b")
 
-  (1 to 4).foreach { i =>
+  (1 to 2).foreach { i =>
     test(s"[$i] timeout") {
       run(s"Thread.sleep(${timeout.toMillis + 1000})")(progress => {
         // println(progress)
@@ -110,8 +116,10 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val message = "No Predef!"
     val input = Inputs.default.copy(
       sbtConfigExtra = "scalacOptions += \"-Yno-predef\" ",
-      code = s"""scala.Predef.println("$message")""""
+      code = s"""scala.Predef.println("$message")"""
     )
+//    run(input)(_ => true)
+//    run(input.copy(sbtConfigExtra = input.sbtConfigExtra + "\nname := \"aaa\" "))(_ => true)
     run(input)(assertUserOutput(message))
   }
 
@@ -162,7 +170,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     TestKit.shutdownActorSystem(system)
   }
 
-  private val timeout = 20.seconds
+  private val timeout = 10.seconds
 
   // SbtProcess uses Stash and it's not compatible with TestActorRef
   // https://stackoverflow.com/questions/18335127/testing-akka-actors-that-mixin-stash-with-testactorref
@@ -170,9 +178,9 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     Props(
       new SbtProcess(
         runTimeout = timeout,
-        reloadTimeout = timeout,
+        reloadTimeout = 20.seconds,
         isProduction = false,
-        javaOptions = Seq("-Xms512m", "-Xmx1g")
+        javaOptions = Seq("-Xms51m", "-Xmx550m")
       )
     )
   )
@@ -194,7 +202,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       if (firstRun) timeout + 10.second
       else timeout
 
-    progressActor.fishForMessage(totalTimeout + 10.seconds) {
+    progressActor.fishForMessage(totalTimeout + 100.seconds) {
       case progress: SnippetProgress =>
         val fishResult = fish(progress)
         if (progress.isDone && !fishResult)
@@ -207,7 +215,6 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   private def run(code: String, target: ScalaTarget = ScalaTarget.Jvm.default)(
       fish: SnippetProgress => Boolean
   ): Unit = {
-    println("Run: " + code)
     run(Inputs.default.copy(code = code, target = target))(fish)
   }
 
@@ -215,12 +222,8 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       message: String,
       outputType: ProcessOutputType = ProcessOutputType.StdOut
   )(progress: SnippetProgress): Boolean = {
-
-    val gotHelloMessage =
-      progress.userOutput ==
-        Some(ProcessOutput(message, outputType))
+    val gotHelloMessage = progress.userOutput.exists(out => out.line == message && out.tpe == outputType)
     if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
-
     gotHelloMessage
   }
 

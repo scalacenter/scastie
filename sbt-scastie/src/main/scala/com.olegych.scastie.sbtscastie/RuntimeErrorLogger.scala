@@ -16,8 +16,7 @@ object RuntimeErrorLogger {
         println(
           Json.stringify(
             Json.toJson(
-              ConsoleOutput
-                .SbtOutput(ProcessOutput(in.trim, ProcessOutputType.StdOut))
+              ConsoleOutput.SbtOutput(ProcessOutput(in.trim, ProcessOutputType.StdOut, 0))
             )
           )
         )

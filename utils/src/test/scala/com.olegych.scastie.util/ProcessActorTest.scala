@@ -1,16 +1,14 @@
 package com.olegych.scastie.util
 
-import ProcessActor._
-
-import com.olegych.scastie.api.{ProcessOutput, ProcessOutputType}
-import ProcessOutputType._
-
-import akka.actor.{ActorSystem, Actor, ActorRef}
-
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
-
 import java.io.File
+import java.nio.file.{Files, StandardCopyOption}
+
+import akka.actor.{Actor, ActorRef, ActorSystem}
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import com.olegych.scastie.api.ProcessOutput
+import com.olegych.scastie.api.ProcessOutputType._
+import com.olegych.scastie.util.ProcessActor._
+import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
 
@@ -19,16 +17,17 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
   print("\033c")
 
   test("do it") {
-    (1 to 100).foreach { i =>
+    (1 to 10).foreach { i =>
       println(s"--- Run $i ---")
 
-      val command = getClass.getResource("/echo.sh").getFile
-      new File(command).setExecutable(true)
+      val command = new File("target", "echo.sh")
+      Files.copy(getClass.getResourceAsStream("/echo.sh"), command.toPath, StandardCopyOption.REPLACE_EXISTING)
+      command.setExecutable(true)
 
       val probe = TestProbe()
 
       val processActor = TestActorRef(
-        new ProcessReceiver(command, probe.ref)
+        new ProcessReceiver(command.getPath, probe.ref)
       )
 
       processActor ! Input("abcd")
@@ -37,8 +36,10 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
 
       def expected(msg0: String): Unit = {
         probe.expectMsgPF(400.milliseconds) {
-          case ProcessOutput(msg1, StdOut) if msg0 == msg1 => true
-          case _                                           => false
+          case ProcessOutput(msg1, StdOut, _) if msg0.trim == msg1.trim => true
+          case ProcessOutput(msg1, StdOut, _) =>
+            println(s""""$msg1" != "$msg0"""")
+            false
         }
       }
 
@@ -54,7 +55,7 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
 
 class ProcessReceiver(command: String, probe: ActorRef) extends Actor {
   private val props =
-    ProcessActor.props(command = List(command), killOnExit = false)
+    ProcessActor.props(command = List("bash -c " + command.replaceAllLiterally("\\", "/")), killOnExit = false)
   private val process = context.actorOf(props, name = "process-receiver")
 
   override def receive: Receive = {

@@ -1,23 +1,17 @@
 package com.olegych.scastie.util
 
-import com.olegych.scastie.api.{ProcessOutputType, ProcessOutput}
+import java.nio.file._
+import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, ActorRef, Props, Stash}
 import akka.contrib.process._
-
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
-import akka.stream.OverflowStrategy
-import akka.stream.ThrottleMode
-import akka.stream.scaladsl.Framing
-import akka.stream.scaladsl.{Sink, Source, Flow}
-
+import akka.stream.scaladsl.{Flow, Framing, Sink, Source}
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, ThrottleMode}
 import akka.util.ByteString
+import com.olegych.scastie.api.{ProcessOutput, ProcessOutputType}
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
-
-import java.nio.file._
-
-import org.slf4j.LoggerFactory
 
 object ProcessActor {
   case class Input(line: String)
@@ -30,8 +24,6 @@ object ProcessActor {
             killOnExit: Boolean = false): Props = {
     Props(new ProcessActor(command, workingDir, environment, killOnExit))
   }
-
-  val lineSeparator = System.lineSeparator
 }
 
 /*
@@ -66,13 +58,11 @@ class ProcessActor(command: List[String], workingDir: Path, environment: Map[Str
 
   private val process = context.actorOf(props, name = "process")
 
-  private case object FlowComplete
-
   private def lines(std: Source[ByteString, _]): Source[String, _] = {
     std
       .via(
         Framing.delimiter(
-          ByteString(lineSeparator),
+          ByteString("\n"),
           maximumFrameLength = 54000,
           allowTruncation = true
         )
@@ -80,26 +70,34 @@ class ProcessActor(command: List[String], workingDir: Path, environment: Map[Str
       .map(_.utf8String)
   }
 
-  final implicit val materializer = ActorMaterializer(
+  private implicit val materializer = ActorMaterializer(
     ActorMaterializerSettings(context.system)
   )
 
+  private val outputId = new AtomicLong(0)
   override def receive: Receive = {
-    case Started(pid, stdin, stdout, stderr) => {
+    case Started(pid, stdin, stdout, stderr) =>
       println("process started: " + pid)
       lines(stdout)
-        .map(line => ProcessOutput(line, ProcessOutputType.StdOut))
+        .map { line =>
+          ProcessOutput(line.trim, ProcessOutputType.StdOut, outputId.incrementAndGet())
+        }
         .merge(
           lines(stderr)
-            .map(line => ProcessOutput(line, ProcessOutputType.StdErr))
+            .map { line =>
+              ProcessOutput(line.trim, ProcessOutputType.StdErr, outputId.incrementAndGet())
+            }
         )
-        .throttle(100, 1.second, 100, ThrottleMode.Enforcing)
-        .runWith(Sink.foreach(context.parent ! _))
+        .throttle(100, 1.second, 100, ThrottleMode.Shaping)
+        .runWith(Sink.foreach { output =>
+          println(s"> ${output.id}: ${output.line}")
+          context.parent ! output
+        })
 
       val stdin2: Source[ByteString, ActorRef] =
         Source
           .actorRef[Input](Int.MaxValue, OverflowStrategy.fail)
-          .map { case Input(line) => ByteString(line + lineSeparator) }
+          .map { case Input(line) => ByteString(line + "\n") }
 
       val ref: ActorRef =
         Flow[ByteString]
@@ -109,21 +107,19 @@ class ProcessActor(command: List[String], workingDir: Path, environment: Map[Str
       context.become(active(ref))
 
       unstashAll()
-    }
 
     case input: Input =>
       stash()
   }
 
   private def active(stdin: ActorRef): Receive = {
-    case input: Input => {
+    case input: Input =>
+      println(s"< ${outputId.incrementAndGet()}: $input")
       stdin ! input
-    }
 
-    case Exited(exitValue) => {
+    case Exited(exitValue) =>
       if (killOnExit) {
         throw new Exception("process exited: " + exitValue)
       }
-    }
   }
 }

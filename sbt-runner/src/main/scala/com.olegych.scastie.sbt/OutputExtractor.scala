@@ -41,7 +41,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     val isSbtMessage =
       initializationMessages.exists(message => output.line.startsWith(message))
 
-    val isDone = output.line.endsWith(promptUniqueId)
+    val isDone = output.line == promptUniqueId
 
     val isScalaJs = inputs.target.targetType == ScalaTargetType.JS
 
