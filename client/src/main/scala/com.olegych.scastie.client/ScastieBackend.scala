@@ -450,16 +450,14 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
 
   private def loadStateFromLocalStorage(isSnippetSaved: Boolean): Callback =
     LocalStorage.load
-      .map(
-        state =>
-          scope.modState(
-            _ =>
-              state
-                .setRunning(false)
-                .setSnippetSaved(isSnippetSaved)
-                .resetScalajs
-        )
-      )
+      .map { state =>
+        scope.modState { _ =>
+          (if (isSnippetSaved) state.clearDependencies else state)
+            .setRunning(false)
+            .setSnippetSaved(isSnippetSaved)
+            .resetScalajs
+        }
+      }
       .getOrElse(Callback.empty)
 
   def start(props: Scastie): Callback = {

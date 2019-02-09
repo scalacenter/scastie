@@ -96,17 +96,38 @@ case class Inputs(
 
   lazy val isDefault: Boolean = copy(code = "") == Inputs.default.copy(code = "")
 
+  def clearDependencies: Inputs = {
+    copy(
+      libraries = Set(),
+      librariesFromList = Nil,
+    )
+  }
+
   def addScalaDependency(scalaDependency: ScalaDependency, project: Project): Inputs = {
     copy(
       libraries = libraries + scalaDependency,
-      librariesFromList = (librariesFrom + (scalaDependency -> project)).toList
+      librariesFromList = (librariesFrom + (scalaDependency -> project)).toList,
     )
   }
 
   def removeScalaDependency(scalaDependency: ScalaDependency): Inputs = {
     copy(
-      libraries = libraries - scalaDependency,
-      librariesFromList = (librariesFrom - scalaDependency).toList
+      libraries = libraries.filterNot(_.matches(scalaDependency)),
+      librariesFromList = librariesFrom.filterNot(_._1.matches(scalaDependency)).toList,
+    )
+  }
+
+  def updateScalaDependency(scalaDependency: ScalaDependency, version: String): Inputs = {
+    val newScalaDependency = scalaDependency.copy(version = version)
+    val newLibraries = libraries.filterNot(_.matches(scalaDependency)) + newScalaDependency
+    val newLibrariesFromList = librariesFromList.collect {
+      case (l, p) if l.matches(scalaDependency) =>
+        newScalaDependency -> p
+      case (l, p) => l -> p
+    }
+    copy(
+      libraries = newLibraries,
+      librariesFromList = newLibrariesFromList,
     )
   }
 

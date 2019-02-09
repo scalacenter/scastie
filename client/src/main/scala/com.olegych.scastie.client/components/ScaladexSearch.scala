@@ -42,23 +42,6 @@ object ScaladexSearch {
       projects = List.empty,
       selecteds = List.empty
     )
-
-    def fromProps(props: ScaladexSearch): SearchState = {
-      SearchState.default.copy(
-        selecteds = props.librariesFrom.toList.map {
-          case (scalaDependency, project) =>
-            Selected(
-              project,
-              scalaDependency,
-              ReleaseOptions(
-                scalaDependency.groupId,
-                List(scalaDependency.version),
-                scalaDependency.version
-              )
-            )
-        }
-      )
-    }
   }
 
   private[ScaladexSearch] case class Selected(
@@ -75,36 +58,32 @@ object ScaladexSearch {
   ) {
 
     private val selectedProjectsArtifacts = selecteds
-      .map(selected => (selected.project, selected.release.artifact))
+      .map(selected => (selected.project, selected.release.artifact, None))
       .toSet
 
-    val search: List[(Project, String)] =
+    val search: List[(Project, String, Option[String])] =
       projects
         .flatMap(
-          project => project.artifacts.map(artifact => (project, artifact))
+          project => project.artifacts.map(artifact => (project, artifact, None))
         )
         .filter(
           projectAndArtifact => !selectedProjectsArtifacts.contains(projectAndArtifact)
         )
 
     def removeSelected(selected: Selected): SearchState = {
-      copy(selecteds = selecteds.filterNot(_ == selected))
+      copy(selecteds = selecteds.filterNot(_.release.matches(selected.release)))
     }
 
-    def addDependency(project: Project, scalaDependency: ScalaDependency, options: ReleaseOptions): SearchState = {
+    def addSelected(selected: Selected): SearchState = {
       copy(
-        selecteds = Selected(project, scalaDependency, options) :: selecteds
+        selecteds = selected :: selecteds
       )
     }
 
     def updateVersion(selected: Selected, version: String): SearchState = {
-      val updatedRelease = selected.release.copy(version = version)
+      val updated = selected.copy(release = selected.release.copy(version = version), options = selected.options.copy(version = version))
       copy(
-        selecteds = selecteds.map(
-          s =>
-            if (s == selected) s.copy(release = updatedRelease)
-            else s
-        )
+        selecteds = selecteds.filterNot(_.release.matches(updated.release)) :+ updated
       )
     }
 
@@ -198,11 +177,23 @@ object ScaladexSearch {
       }
     }
 
-    def addArtifact(projectAndArtifact: (Project, String)): Callback = {
-      val (project, artifact) = projectAndArtifact
-      scope.props.flatMap(
-        props => fetchReleaseOptions(project, artifact, props.scalaTarget)
-      )
+    def addArtifact(projectAndArtifact: (Project, String, Option[String])): Callback = {
+      val (project, artifact, version) = projectAndArtifact
+      scope.props.flatMap { props =>
+        Callback.future(
+          fetchSelected(project, artifact, props.scalaTarget, version).map {
+            case Some(selected) =>
+              def addScalaDependencyLocal =
+                scope.modState(_.addSelected(selected))
+
+              def addScalaDependencyBackend =
+                scope.props.flatMap(_.addScalaDependency((selected.release, selected.project)))
+
+              addScalaDependencyBackend >> addScalaDependencyLocal
+            case None => Callback(())
+          }
+        )
+      }
     }
 
     def removeSelected(selected: Selected): Callback = {
@@ -213,21 +204,20 @@ object ScaladexSearch {
       def removeDependecyBackend =
         scope.props.flatMap(_.removeScalaDependency(selected.release))
 
-      removeDependencyLocal >> removeDependecyBackend
+      removeDependecyBackend >> removeDependencyLocal
     }
 
     def updateVersion(selected: Selected)(e: ReactEventFromInput): Callback = {
-      e.extract(_.target.value) { version =>
-        def updateDependencyVersionLocal =
-          scope.modState(_.updateVersion(selected, version))
+      val version = e.target.value
+      def updateDependencyVersionLocal =
+        scope.modState(_.updateVersion(selected, version))
 
-        def updateDependencyVersionBackend =
-          scope.props.flatMap(
-            _.updateDependencyVersion((selected.release, version))
-          )
+      def updateDependencyVersionBackend =
+        scope.props.flatMap(
+          _.updateDependencyVersion((selected.release, version))
+        )
 
-        updateDependencyVersionLocal >> updateDependencyVersionBackend
-      }
+      updateDependencyVersionBackend >> updateDependencyVersionLocal
     }
 
     def selectIndex(index: Int): Callback =
@@ -273,45 +263,32 @@ object ScaladexSearch {
     private def toQuery(in: Map[String, String]): String =
       in.map { case (k, v) => s"$k=$v" }.mkString("?", "&", "")
 
-    private def fetchReleaseOptions(project: Project, artifact: String, target: ScalaTarget): Callback = {
-      val query =
-        toQuery(
-          Map(
-            "organization" -> project.organization,
-            "repository" -> project.repository
-          ) ++ target.scaladexRequest
-        )
-
-      Callback.future(
-        Ajax
-          .get(scaladexApiUrl + "/project" + query)
-          .map(
-            ret => Json.fromJson[ReleaseOptions](Json.parse(ret.responseText)).asOpt
-          )
-          .map {
-            case Some(options) => {
-              val scalaDependency =
-                ScalaDependency(
-                  options.groupId,
-                  artifact,
-                  target,
-                  options.version
-                )
-
-              def addScalaDependencyLocal =
-                scope
-                  .modState(_.addDependency(project, scalaDependency, options))
-
-              def addScalaDependencyBackend =
-                scope.props
-                  .flatMap(_.addScalaDependency((scalaDependency, project)))
-
-              addScalaDependencyLocal >> addScalaDependencyBackend
-            }
-            case None => Callback(())
-          }
+    private def fetchSelected(project: Project, artifact: String, target: ScalaTarget, version: Option[String]) = {
+      val query = toQuery(
+        Map(
+          "organization" -> project.organization,
+          "repository" -> project.repository
+        ) ++ target.scaladexRequest
       )
+      Ajax
+        .get(scaladexApiUrl + "/project" + query)
+        .map(
+          ret =>
+            Json.fromJson[ReleaseOptions](Json.parse(ret.responseText)).asOpt.map { options =>
+              Selected(
+                project = project,
+                release = ScalaDependency(
+                  groupId = options.groupId,
+                  artifact = artifact,
+                  target = target,
+                  version = version.getOrElse(options.version),
+                ),
+                options = options,
+              )
+          }
+        )
     }
+
   }
 
   private def render(
@@ -363,10 +340,10 @@ object ScaladexSearch {
 
     def renderOptions(selected: Selected) = {
       div(cls := "select-wrapper")(
-        select(value := selected.release.version, onChange ==> scope.backend.updateVersion(selected))(
-          selected.options.versions.reverse
-            .map(v => option(value := v)(v))
-            .toTagMod
+        select(
+          selected.options.versions.reverse.map(v => option(value := v)(v)).toTagMod,
+          value := selected.release.version,
+          onChange ==> scope.backend.updateVersion(selected),
         )
       )
     }
@@ -420,14 +397,13 @@ object ScaladexSearch {
       ),
       div.ref(projectListRef = _)(cls := "results", displayResults)(
         searchState.search.zipWithIndex.map {
-          case ((project, artifact), index) =>
+          case ((project, artifact, version), index) =>
             renderProject(
               project,
               artifact,
               selected = selectedIndex(index, searchState.selectedIndex),
               handlers = TagMod(
-                onClick --> scope.backend
-                  .addArtifact((project, artifact)),
+                onClick --> scope.backend.addArtifact((project, artifact, version)),
                 onMouseOver --> scope.backend.selectIndex(index)
               )
             )
@@ -439,10 +415,14 @@ object ScaladexSearch {
   private val component =
     ScalaComponent
       .builder[ScaladexSearch]("Scaladex Search")
-      .initialStateFromProps(SearchState.fromProps)
+      .initialState(SearchState.default)
       .backend(new ScaladexSearchBackend(_))
       .renderPS(render)
-      .componentDidMount(_ => Callback(searchInputRef.focus))
+      .componentDidMount { x =>
+        Callback.traverse(x.props.librariesFrom) { lib =>
+          x.backend.addArtifact((lib._2, lib._1.artifact, Some(lib._1.version)))
+        } >> Callback(searchInputRef.focus)
+      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 }

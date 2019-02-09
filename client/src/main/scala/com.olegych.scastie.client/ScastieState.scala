@@ -339,6 +339,12 @@ case class ScastieState(
       inputsHasChanged = true
     )
 
+  def clearDependencies: ScastieState =
+    copyAndSave(
+      inputs = inputs.clearDependencies,
+      inputsHasChanged = true
+    )
+
   def addScalaDependency(scalaDependency: ScalaDependency, project: Project): ScastieState =
     copyAndSave(
       inputs = inputs.addScalaDependency(scalaDependency, project),
@@ -352,11 +358,8 @@ case class ScastieState(
     )
 
   def updateDependencyVersion(scalaDependency: ScalaDependency, version: String): ScastieState = {
-    val newScalaDependency = scalaDependency.copy(version = version)
     copyAndSave(
-      inputs = inputs.copy(
-        libraries = (inputs.libraries - scalaDependency) + newScalaDependency
-      ),
+      inputs = inputs.updateScalaDependency(scalaDependency, version),
       inputsHasChanged = true
     )
   }
