@@ -151,17 +151,19 @@ These people have access:
 * [@dimart](https://github.com/dimart)
 * [@rorygraves](https://github.com/rorygraves)
 
+0. see `production.conf` file for current production configuration, notably it uses mongodb instead of local file storage 
+
 0. Install docker (note that Windows is not recommended due to networking issues)
 
-3. do`docker login`
+0. do`docker login`
 
-4. bump the version in build.sbt
+0. bump the version in build.sbt
 
-5. tag and commit the new version
+0. tag and commit the new version
 
-6. Run this command locally: `sbt deploy`
+0. Run this command locally: `sbt deploy`
 
-7. Make sure everything went well: https://scastie.scala-lang.org
+0. Make sure everything went well: https://scastie.scala-lang.org
 
 ## Restarting
 
