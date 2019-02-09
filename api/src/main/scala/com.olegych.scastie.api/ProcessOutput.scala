@@ -33,12 +33,11 @@ object ProcessOutputType {
 }
 
 object ProcessOutput {
-  implicit val formatProcessOutput: OFormat[ProcessOutput] =
-    Json.format[ProcessOutput]
+  implicit val formatProcessOutput: OFormat[ProcessOutput] = Json.format[ProcessOutput]
 }
 
 case class ProcessOutput(
     line: String,
     tpe: ProcessOutputType,
-    id: Long
+    id: Option[Long]
 )

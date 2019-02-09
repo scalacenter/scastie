@@ -31,7 +31,7 @@ object OldScastieConverter {
       .map(
         line =>
           SnippetProgress.default.copy(
-            userOutput = Some(ProcessOutput(line, ProcessOutputType.StdOut, 0)),
+            userOutput = Some(ProcessOutput(line, ProcessOutputType.StdOut, None)),
             isDone = true
         )
       )
