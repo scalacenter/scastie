@@ -84,8 +84,6 @@ object BuildSettings {
     )(event: ReactEventFromInput): Callback =
       props.setTarget(targetFun(event.target.value))
 
-    val notSupported = div("Not supported")
-
     def versionSelector(scalaVersion: String, targetFun: String => ScalaTarget) = {
       def handler(scalaVersion: String) =
         TagMod(onChange --> props.setTarget(targetFun(scalaVersion)))
@@ -130,14 +128,14 @@ object BuildSettings {
         case ScalaTarget.Typelevel(scalaVersion) =>
           versionSelector(scalaVersion, ScalaTarget.Typelevel.apply)
 
-        case ScalaTarget.Dotty(_) =>
-          notSupported
+        case d: ScalaTarget.Dotty =>
+          div(d.dottyVersion)
 
-        case ScalaTarget.Js(_, _) =>
-          notSupported
+        case js: ScalaTarget.Js =>
+          div(s"${js.scalaJsVersion} on Scala ${js.scalaVersion}")
 
-        case ScalaTarget.Native(_, _) =>
-          notSupported
+        case n: ScalaTarget.Native =>
+          div(s"${n.scalaNativeVersion} on Scala ${n.scalaVersion}")
       }
 
     versionSelectors
