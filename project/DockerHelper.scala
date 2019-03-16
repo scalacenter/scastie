@@ -75,6 +75,7 @@ object DockerHelper {
       runRaw("update-ca-certificates")
       runRaw("apk add openssl")
       runRaw("apk add nss")
+      runRaw("apk add bash")
 
 
       runRaw("mkdir -p /app/sbt")
