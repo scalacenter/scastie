@@ -20,14 +20,14 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   (1 to 2).foreach { i =>
     test(s"[$i] timeout") {
-      run(s"Thread.sleep(${timeout.toMillis + 1000})")(progress => {
+      runCode(s"Thread.sleep(${timeout.toMillis + 1000})", allowFailure = true)(progress => {
         // println(progress)
         progress.isTimeout
       })
     }
 
     test(s"[$i] after a timeout the sbt instance is ready to be used") {
-      run("1 + 1")(progress => {
+      runCode("1 + 1")(progress => {
         val gotInstrumentation = progress.instrumentations.nonEmpty
 
         if (gotInstrumentation) {
@@ -44,7 +44,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("capture runtime errors") {
-    run("1/0")(
+    runCode("1/0", allowFailure = true)(
       progress => {
         val gotRuntimeError = progress.runtimeError.nonEmpty
 
@@ -61,14 +61,14 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("capture user output separately from sbt output") {
     val message = "Hello"
-    run(s"""println("$message")""")(
+    runCode(s"""println("$message")""")(
       assertUserOutput(message)
     )
   }
 
   test("force program mode when an entry point is present") {
     val message = "Hello"
-    run(
+    runCode(
       s"""object Main { def main(args: Array[String]): Unit = println("$message") }"""
     ) { progress =>
       assert(progress.isForcedProgramMode)
@@ -77,14 +77,14 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("report parsing error") {
-    run("{")(assertCompilationInfo { info =>
+    runCode("{", allowFailure = true)(assertCompilationInfo { info =>
       assert(info.message == "} expected but end of file found")
       assert(info.line.contains(1))
     })
   }
 
   test("report compilation error") {
-    run("err")(assertCompilationInfo { info =>
+    runCode("err", allowFailure = true)(assertCompilationInfo { info =>
       assert(info.message == "not found: value err")
       assert(info.line.contains(1))
     })
@@ -107,7 +107,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("Encoding issues #100") {
     val message = "€"
-    run(s"""println("$message")""")(
+    runCode(s"""println("$message")""")(
       assertUserOutput(message)
     )
   }
@@ -129,19 +129,43 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     run(scalaJs)(_.isDone)
   }
 
+  test("Scala 2.10 support") {
+    val scalaJs =
+      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.10.7"))
+    run(scalaJs)(assertUserOutput("2"))
+  }
+
+  test("Scala 2.11 support") {
+    val scalaJs =
+      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.11.12"))
+    run(scalaJs)(assertUserOutput("2"))
+  }
+
+  test("Scala 2.12 support") {
+    val scalaJs =
+      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.12.8"))
+    run(scalaJs)(assertUserOutput("2"))
+  }
+
+  test("Scala 2.13 support") {
+    val scalaJs =
+      Inputs.default.copy(code = "object Main extends App { println(1 + 1) }", target = ScalaTarget.Jvm("2.13.0-M5"))
+    run(scalaJs)(assertUserOutput("2"))
+  }
+
   test("Capture System.err #284") {
     val message = "Failure"
-    run(s"""System.err.println("$message")""")(
+    runCode(s"""System.err.println("$message")""")(
       assertUserOutput(message, ProcessOutputType.StdErr)
     )
   }
 
   test("#258 instrumentation with variable t") {
-    run("val t = 1; t")(_.instrumentations.nonEmpty)
+    runCode("val t = 1; t")(_.instrumentations.nonEmpty)
   }
 
   test("#304 null pointer") {
-    run("""|trait A {
+    runCode("""|trait A {
            |  val a = "1"
            |  val b = a
            |}
@@ -149,7 +173,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
            |new A {
            |  override val a = ("2")
            |  println(b)
-           |}""".stripMargin)(_.isDone)
+           |}""".stripMargin, allowFailure = true)(_.isDone)
   }
 
   def assertCompilationInfo(
@@ -170,7 +194,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     TestKit.shutdownActorSystem(system)
   }
 
-  private val timeout = 10.seconds
+  private val timeout = 20.seconds
 
   // SbtProcess uses Stash and it's not compatible with TestActorRef
   // https://stackoverflow.com/questions/18335127/testing-akka-actors-that-mixin-stash-with-testactorref
@@ -192,7 +216,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     SnippetId(t.toString, None)
   }
   private var firstRun = true
-  private def run(inputs: Inputs)(fish: SnippetProgress => Boolean): Unit = {
+  private def run(inputs: Inputs, allowFailure: Boolean = false)(fish: SnippetProgress => Boolean): Unit = {
     val ip = "my-ip"
     val progressActor = TestProbe()
 
@@ -205,17 +229,18 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     progressActor.fishForMessage(totalTimeout + 100.seconds) {
       case progress: SnippetProgress =>
         val fishResult = fish(progress)
-        if (progress.isDone && !fishResult)
-          throw new Exception("Fail to meet expectation")
+//        println(progress -> fishResult)
+        if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
+          throw new Exception(s"Fail to meet expectation at ${progress}")
         else fishResult
     }
 
     firstRun = false
   }
-  private def run(code: String, target: ScalaTarget = ScalaTarget.Jvm.default)(
+  private def runCode(code: String, target: ScalaTarget = ScalaTarget.Jvm.default, allowFailure: Boolean = false)(
       fish: SnippetProgress => Boolean
   ): Unit = {
-    run(Inputs.default.copy(code = code, target = target))(fish)
+    run(Inputs.default.copy(code = code, target = target), allowFailure)(fish)
   }
 
   private def assertUserOutput(
@@ -223,7 +248,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       outputType: ProcessOutputType = ProcessOutputType.StdOut
   )(progress: SnippetProgress): Boolean = {
     val gotHelloMessage = progress.userOutput.exists(out => out.line == message && out.tpe == outputType)
-    if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
+//    if (!gotHelloMessage) assert(progress.userOutput.isEmpty)
     gotHelloMessage
   }
 

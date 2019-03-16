@@ -94,6 +94,20 @@ object ScalaTarget {
       ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
   }
 
+  private def partialUnificationSbtPlugin = """addSbtPlugin("org.lyranthe.sbt" % "partial-unification" % "1.1.2")"""
+  private def hktScalacOptions = """
+scalacOptions += "-language:higherKinds"
+
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9")
+
+libraryDependencies ++= (scalaBinaryVersion.value match {
+  case "2.10" =>
+    compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full) :: Nil
+  case _ =>
+    Nil
+})
+  """
+
   case class Jvm(scalaVersion: String) extends ScalaTarget {
     def hasWorksheetMode: Boolean = {
       scalaVersion.startsWith("2.12") ||
@@ -111,9 +125,9 @@ object ScalaTarget {
       renderSbtDouble(lib)
 
     def sbtConfig: String =
-      sbtConfigScalaVersion(scalaVersion)
+      sbtConfigScalaVersion(scalaVersion) + "\n" + hktScalacOptions
 
-    def sbtPluginsConfig: String = ""
+    def sbtPluginsConfig: String = partialUnificationSbtPlugin
 
     def sbtRunCommand: String = "run"
 
@@ -189,6 +203,7 @@ object ScalaTarget {
 
     def sbtConfig: String = {
       s"""|${sbtConfigScalaVersion(scalaVersion)}
+          |${hktScalacOptions}
           |enablePlugins(ScalaJSPlugin)
           |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "${ScalaTarget.Js.targetFilename}"
           |scalacOptions += {
@@ -199,7 +214,7 @@ object ScalaTarget {
     }
 
     def sbtPluginsConfig: String =
-      s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
+      s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")""" + "\n" + partialUnificationSbtPlugin
 
     def sbtRunCommand: String = "fastOptJS"
 

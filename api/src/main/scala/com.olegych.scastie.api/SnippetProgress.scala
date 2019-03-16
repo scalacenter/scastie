@@ -39,4 +39,8 @@ case class SnippetProgress(
     isTimeout: Boolean,
     isSbtError: Boolean,
     isForcedProgramMode: Boolean
-)
+) {
+  def isFailure: Boolean = isTimeout || isSbtError || runtimeError.nonEmpty || compilationInfos.exists(_.severity == Error)
+
+  override def toString: String = Json.toJsObject(this).toString()
+}
