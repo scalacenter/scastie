@@ -74,33 +74,8 @@ object DockerHelper {
       runRaw("apk add ca-certificates")
       runRaw("update-ca-certificates")
       runRaw("apk add openssl")
+      runRaw("apk add libnss3")
 
-      // Misc tools
-      runRaw("apk add bash")
-      runRaw("apk add ncurses")
-      runRaw("apk add nodejs")
-      runRaw("apk add curl")
-      runRaw("apk add graphviz")
-      runRaw("apk add nano")
-
-      // fonts for ref-tree
-      runRaw("apk add ttf-dejavu")
-      runRaw("apk add font-adobe-100dpi")
-      runRaw("apk add git")
-      runRaw("apk add procps")
-      runRaw(
-        """|git clone --depth 1 --branch release https://github.com/adobe-fonts/source-code-pro.git /usr/share/fonts/source-code-pro && \
-           |rm -rf /usr/share/fonts/source-code-pro/.git && \
-           |fc-cache -f -v /usr/share/fonts/source-code-pro""".stripMargin
-      )
-
-      runRaw(
-        """|apk update && apk add --no-cache fontconfig && \
-           |mkdir -p /usr/share && \
-           |cd /usr/share && \
-           |curl -L https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/2.11/phantomjs-alpine-x86_64.tar.bz2 | tar xj && \
-           |ln -s /usr/share/phantomjs/phantomjs /usr/bin/phantomjs""".stripMargin
-      )
 
       runRaw("mkdir -p /app/sbt")
 
