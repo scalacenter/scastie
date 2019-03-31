@@ -187,35 +187,35 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val sender = this.sender
       logError(container.create(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
+        sender ! snippetId
         run(inputsWithIpAndUser, snippetId)
         log.info(s"finished ${x}")
-        sender ! snippetId
       })
 
     case SaveSnippet(inputsWithIpAndUser) =>
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val sender = this.sender
       logError(container.save(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
-        run(inputsWithIpAndUser, snippetId)
         sender ! snippetId
+        run(inputsWithIpAndUser, snippetId)
       })
 
     case AmendSnippet(snippetId, inputsWithIpAndUser) =>
       val sender = this.sender
       logError(container.amend(snippetId, inputsWithIpAndUser.inputs).map { amendSuccess =>
+        sender ! amendSuccess
         if (amendSuccess) {
           run(inputsWithIpAndUser, snippetId)
         }
-        sender ! amendSuccess
       })
 
     case UpdateSnippet(snippetId, inputsWithIpAndUser) =>
       val sender = this.sender
       logError(container.update(snippetId, inputsWithIpAndUser.inputs).map { updatedSnippetId =>
+        sender ! updatedSnippetId
         updatedSnippetId.foreach(
           snippetIdU => run(inputsWithIpAndUser, snippetIdU)
         )
-        sender ! updatedSnippetId
       })
 
     case ForkSnippet(snippetId, inputsWithIpAndUser) =>

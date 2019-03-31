@@ -22,7 +22,7 @@ object MobileBar {
         RunButton(
           isRunning = props.isRunning,
           isStatusOk = props.isStatusOk,
-          run = props.run,
+          save = props.run,
           setView = props.setView
         ).render,
         DesktopButton(

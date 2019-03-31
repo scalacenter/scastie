@@ -60,7 +60,7 @@ object EmbeddedMenu {
       RunButton(
         isRunning = props.isRunning,
         isStatusOk = true,
-        run = props.run,
+        save = props.run,
         setView = props.setView
       ).render,
       li(cls := "logo")(

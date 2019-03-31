@@ -71,11 +71,9 @@ trait SnippetsContainer {
     SnippetId(uuid, user.map(u => SnippetUserPart(u.login)))
   }
 
-  protected final def updateSnippetId(
-      snippetId: SnippetId
-  ): Option[SnippetId] = {
+  protected final def updateSnippetId(snippetId: SnippetId): Option[SnippetId] = {
     snippetId.user match {
-      case Some(SnippetUserPart(login, lastUpdateId)) => {
+      case Some(SnippetUserPart(login, lastUpdateId)) =>
         Some(
           SnippetId(
             snippetId.base64UUID,
@@ -87,7 +85,6 @@ trait SnippetsContainer {
             )
           )
         )
-      }
       case None => None
     }
   }

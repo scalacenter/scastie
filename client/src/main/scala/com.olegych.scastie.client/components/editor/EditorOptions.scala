@@ -51,7 +51,7 @@ private[editor] object EditorOptions {
         "highlightSelectionMatches" -> highlightSelectionMatches,
         "extraKeys" -> js.Dictionary(
           "Tab" -> "defaultTab",
-          ctrl + "-Enter" -> command(props.run.runNow()),
+          ctrl + "-Enter" -> command(props.saveOrUpdate.runNow()),
           ctrl + "-S" -> command(props.saveOrUpdate.runNow()),
           ctrl + "-M" -> command(props.openNewSnippetModal.runNow()),
           ctrl + "-L" -> CM.Pass,

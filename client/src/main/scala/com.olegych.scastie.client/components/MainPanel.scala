@@ -67,7 +67,6 @@ object MainPanel {
         instrumentations = state.outputs.instrumentations,
         compilationInfos = state.outputs.compilationInfos,
         runtimeError = state.outputs.runtimeError,
-        run = backend.run,
         saveOrUpdate = backend.saveOrUpdate,
         clear = backend.clear,
         openNewSnippetModal = backend.openNewSnippetModal,
@@ -126,19 +125,15 @@ object MainPanel {
 
     val editorTopBar =
       EditorTopBar(
-        amend = backend.amend,
         clear = backend.clear,
         closeNewSnippetModal = backend.closeNewSnippetModal,
         closeEmbeddedModal = backend.closeEmbeddedModal,
         openEmbeddedModal = backend.openEmbeddedModal,
-        fork = backend.fork,
         formatCode = backend.formatCode,
         newSnippet = backend.newSnippet,
         openNewSnippetModal = backend.openNewSnippetModal,
-        run = backend.run,
-        save = backend.save,
+        save = backend.saveOrUpdate,
         toggleWorksheetMode = backend.toggleWorksheetMode,
-        update = backend.update,
         router = props.router,
         inputsHasChanged = state.inputsHasChanged,
         isNewSnippetModalClosed = state.modalState.isNewSnippetModalClosed,

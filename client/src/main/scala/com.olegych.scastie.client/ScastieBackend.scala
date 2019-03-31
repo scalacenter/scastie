@@ -289,9 +289,6 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
     connectProgress(sId) >> setState >> setUrl
   }
 
-  val save: Reusable[Callback] =
-    Reusable.always(save0)
-
   private def save0: Callback = {
     scope.state.flatMap(
       state =>
@@ -312,45 +309,22 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
 
   val saveOrUpdate: Reusable[Callback] =
     Reusable.always(
-      scope.props.flatMap(
-        props =>
-          scope.state
-            .flatMap(
-              state =>
-                props.snippetId match {
-                  case Some(snippetId) => {
-                    if (snippetId.isOwnedBy(state.user)) {
-                      update0(snippetId)
-                    } else {
-                      fork0(snippetId)
-                    }
-                  }
-                  case None => save0
-              }
-            )
-            .unless_(props.isEmbedded)
-      )
+      scope.props.flatMap { props =>
+        scope.state
+          .flatMap { state =>
+            props.snippetId match {
+              case Some(snippetId) =>
+                if (snippetId.isOwnedBy(state.user)) {
+                  update0(snippetId)
+                } else {
+                  fork0(snippetId)
+                }
+              case None => save0
+            }
+          }
+          .unless_(props.isEmbedded)
+      }
     )
-
-  val amend: SnippetId ~=> Callback =
-    Reusable.fn(
-      snippetId =>
-        scope.state.flatMap(
-          state =>
-            Callback.future(
-              restApiClient
-                .amend(EditInputs(snippetId, state.inputs))
-                .map(
-                  success =>
-                    if (success) saveCallback(snippetId)
-                    else Callback(window.alert("Failed to amend"))
-                )
-          )
-      )
-    )
-
-  val fork: SnippetId ~=> Callback =
-    Reusable.fn(fork0 _)
 
   private def fork0(snippetId: SnippetId): Callback =
     scope.state.flatMap(
@@ -366,9 +340,6 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
           )
           .when_(state.isSnippetSaved)
     )
-
-  val update: SnippetId ~=> Callback =
-    Reusable.always(update0 _)
 
   private def update0(snippetId: SnippetId): Callback =
     scope.state.flatMap(

@@ -6,19 +6,15 @@ import api.{SnippetId, User, ScalaTarget}
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
 
-final case class EditorTopBar(amend: SnippetId ~=> Callback,
-                              clear: Reusable[Callback],
+final case class EditorTopBar(clear: Reusable[Callback],
                               closeNewSnippetModal: Reusable[Callback],
                               closeEmbeddedModal: Reusable[Callback],
                               openEmbeddedModal: Reusable[Callback],
-                              fork: SnippetId ~=> Callback,
                               formatCode: Reusable[Callback],
                               newSnippet: Reusable[Callback],
                               openNewSnippetModal: Reusable[Callback],
-                              run: Reusable[Callback],
                               save: Reusable[Callback],
                               toggleWorksheetMode: Reusable[Callback],
-                              update: SnippetId ~=> Callback,
                               router: Option[RouterCtl[Page]],
                               inputsHasChanged: Boolean,
                               isNewSnippetModalClosed: Boolean,
@@ -45,7 +41,7 @@ object EditorTopBar {
     val runButton = RunButton(
       isRunning = props.isRunning,
       isStatusOk = props.isStatusOk,
-      run = props.run,
+      save = props.save,
       setView = props.view.setState
     ).render
 
@@ -70,17 +66,6 @@ object EditorTopBar {
       props.isWorksheetMode,
       props.toggleWorksheetMode,
       props.view.value
-    ).render
-
-    val saveButton = SaveButton(
-      isSnippetSaved = props.isSnippetSaved,
-      inputsHasChanged = props.inputsHasChanged,
-      user = props.user,
-      snippetId = props.snippetId,
-      amend = props.amend,
-      update = props.update,
-      save = props.save,
-      fork = props.fork
     ).render
 
     val downloadButton =
@@ -128,7 +113,6 @@ object EditorTopBar {
         clearButton,
         worksheetButton.when(props.scalaTarget.hasWorksheetMode),
         downloadButton,
-        saveButton,
         embeddedModalButton
       )
     )
