@@ -1,30 +1,20 @@
 import ScalaJSHelper._
-import Deployment._
 import SbtShared._
 
-import org.scalajs.sbtplugin.JSModuleID
 import org.scalajs.sbtplugin.cross.CrossProject
-import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport.{jsEnv, scalaJSStage}
-
-import scala.util.Try
-import java.io.FileNotFoundException
-
-import scalajsbundler.util.JSON
-
-import scala.util.Try
 
 val scalaTestVersion = "3.0.1"
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.13"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.21"
 
-val akkaHttpVersion = "10.1.3"
+val akkaHttpVersion = "10.1.8"
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 def akkaHttpTestkit =
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
 
-def akkaHttpCors = "ch.megard" %% "akka-http-cors" % "0.3.0"
-def akkaHttpSession = "com.softwaremill.akka-http-session" %% "core" % "0.5.5"
+def akkaHttpCors = "ch.megard" %% "akka-http-cors" % "0.4.0"
+def akkaHttpSession = "com.softwaremill.akka-http-session" %% "core" % "0.5.6"
 
 def reactiveMongo = "org.reactivemongo" %% "reactivemongo" % "0.16.0"
 def reactiveMongoJson =
