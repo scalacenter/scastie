@@ -233,7 +233,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case DeleteSnippet(snippetId) =>
       val sender = this.sender
-      logError(container.delete(snippetId).map(_ => sender ! ()))
+      logError(container.delete(snippetId).map(_ => sender ! (())))
 
     case DownloadSnippet(snippetId) =>
       val sender = this.sender
