@@ -5,13 +5,14 @@ import akka.NotUsed
 import akka.actor.{Actor, ActorRef}
 import akka.stream.scaladsl.Source
 import com.olegych.scastie.api._
+import com.olegych.scastie.util.GraphStageForwarder
 
 import scala.collection.mutable.{Map => MMap, Queue => MQueue}
-import com.olegych.scastie.api._
-import com.olegych.scastie.util.GraphStageForwarder
+import scala.concurrent.duration.DurationLong
 
 case class SubscribeProgress(snippetId: SnippetId)
 case class ProgressDone(snippetId: SnippetId)
+case class Cleanup(snippetId: SnippetId)
 
 trait QueuedMessage
 case class SnippetProgressMessage(content: SnippetProgress) extends QueuedMessage
@@ -40,6 +41,9 @@ class ProgressActor extends Actor {
       sendQueuedMessages(snippedId, self)
 
     case ProgressDone(snippetId) =>
+      context.system.scheduler.scheduleOnce(3.seconds, self, Cleanup(snippetId))(context.dispatcher)
+
+    case Cleanup(snippetId) =>
       subscribers.remove(snippetId)
       queuedMessages.remove(snippetId)
   }
