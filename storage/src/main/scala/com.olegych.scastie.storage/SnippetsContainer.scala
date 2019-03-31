@@ -40,7 +40,7 @@ trait SnippetsContainer {
   }
 
   final def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
-    updateSnippetId(snippetId) match {
+    updateSnippetId(snippetId).flatMap {
       case Some(nextSnippetId) => insert0(nextSnippetId, inputs).map(Some(_))
       case _                   => Future.successful(None)
     }
@@ -71,21 +71,23 @@ trait SnippetsContainer {
     SnippetId(uuid, user.map(u => SnippetUserPart(u.login)))
   }
 
-  protected final def updateSnippetId(snippetId: SnippetId): Option[SnippetId] = {
+  protected final def updateSnippetId(snippetId: SnippetId): Future[Option[SnippetId]] = {
     snippetId.user match {
       case Some(SnippetUserPart(login, lastUpdateId)) =>
-        Some(
-          SnippetId(
-            snippetId.base64UUID,
-            Some(
-              SnippetUserPart(
-                login,
-                lastUpdateId + 1
-              )
+        val nextSnippetId = SnippetId(
+          snippetId.base64UUID,
+          Some(
+            SnippetUserPart(
+              login,
+              lastUpdateId + 1
             )
           )
         )
-      case None => None
+        readSnippet(nextSnippetId).flatMap {
+          case Some(_) => updateSnippetId(nextSnippetId)
+          case None    => Future.successful(Some(nextSnippetId))
+        }
+      case None => Future.successful(None)
     }
   }
 
