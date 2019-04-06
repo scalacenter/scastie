@@ -98,7 +98,7 @@ object ScalaTarget {
   private def hktScalacOptions = """
 scalacOptions += "-language:higherKinds"
 
-addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9")
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 
 libraryDependencies ++= (scalaBinaryVersion.value match {
   case "2.10" =>
