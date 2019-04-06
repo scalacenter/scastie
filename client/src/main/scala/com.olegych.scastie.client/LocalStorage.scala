@@ -18,10 +18,9 @@ object LocalStorage {
       Option(localStorage.getItem(stateKey))
         .flatMap(raw => Json.fromJson[ScastieState](Json.parse(raw)).asOpt)
     } catch {
-      case e: Exception => {
+      case e: Exception =>
         dom.console.log(e.toString)
         None
-      }
     }
   }
 }

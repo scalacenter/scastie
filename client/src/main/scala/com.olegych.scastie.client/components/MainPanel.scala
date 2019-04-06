@@ -140,7 +140,6 @@ object MainPanel {
         isEmbeddedModalClosed = state.modalState.isEmbeddedClosed,
         isRunning = state.isRunning,
         isStatusOk = isStatusOk,
-        isSnippetSaved = state.isSnippetSaved,
         snippetId = state.snippetId,
         user = state.user,
         view = backend.viewSnapshot(state.view),

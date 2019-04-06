@@ -273,33 +273,20 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
     )
 
   private def saveCallback(sId: SnippetId): Callback = {
-    val setState =
-      scope.modState(
-        _.setSnippetSaved(true)
-          .setSnippetId(sId)
-          .setLoadSnippet(false)
-      )
+    val setState = scope.modState(_.setCleanInputs.setSnippetId(sId).setLoadSnippet(false))
 
     val page = Page.fromSnippetId(sId)
-    val setUrl =
-      scope.props.flatMap(
-        _.router.map(_.set(page)).getOrElse(Callback.empty)
-      )
+    val setUrl = scope.props.map {
+      _.router.foreach(r => org.scalajs.dom.window.history.pushState("", "", r.urlFor(page).value))
+    }
 
     connectProgress(sId) >> setState >> setUrl
   }
 
   private def save0: Callback = {
-    scope.state.flatMap(
-      state =>
-        Callback.unless(state.isSnippetSaved)(
-          Callback.future(
-            restApiClient
-              .save(state.inputs)
-              .map(saveCallback)
-          )
-      )
-    )
+    scope.state.flatMap { state =>
+      Callback.future(restApiClient.save(state.inputs).map(saveCallback))
+    }
   }
 
   val saveBlocking: Reusable[CallbackTo[Option[SnippetId]]] =
@@ -312,6 +299,7 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
       scope.props.flatMap { props =>
         scope.state
           .flatMap { state =>
+//            println(s"saving ${play.api.libs.json.Json.toJson(state)}")
             props.snippetId match {
               case Some(snippetId) =>
                 if (snippetId.isOwnedBy(state.user)) {
@@ -327,34 +315,28 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
     )
 
   private def fork0(snippetId: SnippetId): Callback =
-    scope.state.flatMap(
-      state =>
-        Callback
-          .future(
-            restApiClient
-              .fork(EditInputs(snippetId, state.inputs))
-              .map {
-                case Some(sId) => saveCallback(sId)
-                case None      => Callback(window.alert("Failed to fork"))
-              }
-          )
-          .when_(state.isSnippetSaved)
-    )
+    scope.state.flatMap { state =>
+      Callback.future(
+        restApiClient
+          .fork(EditInputs(snippetId, state.inputs))
+          .map {
+            case Some(sId) => saveCallback(sId)
+            case None      => Callback(window.alert("Failed to fork"))
+          }
+      )
+    }
 
   private def update0(snippetId: SnippetId): Callback =
-    scope.state.flatMap(
-      state =>
-        Callback
-          .future(
-            restApiClient
-              .update(EditInputs(snippetId, state.inputs))
-              .map {
-                case Some(sId) => saveCallback(sId)
-                case None      => Callback(window.alert("Failed to update"))
-              }
-          )
-          .when_(state.isSnippetSaved)
-    )
+    scope.state.flatMap { state =>
+      Callback.future(
+        restApiClient
+          .update(EditInputs(snippetId, state.inputs))
+          .map {
+            case Some(sId) => saveCallback(sId)
+            case None      => Callback(window.alert("Failed to update"))
+          }
+      )
+    }
 
   private def loadOldSnippet(id: Int): Callback = {
     loadSnippetBase(
@@ -375,57 +357,49 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
       afterLoading: ScastieState => ScastieState = identity,
       snippetId: Option[SnippetId] = None
   ): Callback = {
-    scope.state.flatMap(
-      state =>
-        if (state.loadSnippet) {
-          val loadStateFromApi =
-            Callback.future(
-              fetchSnippet.map {
-                case Some(FetchResult(inputs, progresses)) => {
-                  val isDone = progresses.exists(_.isDone)
-                  val connect =
-                    snippetId match {
-                      case Some(sid) if !isDone => connectProgress(sid)
-                      case _                    => Callback(())
-                    }
+    scope.state.flatMap { state =>
+      if (state.loadSnippet) {
+        val loadStateFromApi =
+          Callback.future(
+            fetchSnippet.map {
+              case Some(FetchResult(inputs, progresses)) =>
+                val isDone = progresses.exists(_.isDone)
+                val connect =
+                  snippetId match {
+                    case Some(sid) if !isDone => connectProgress(sid)
+                    case _                    => Callback(())
+                  }
+                clearOutputs >> scope.modState { state =>
+                  afterLoading(
+                    state
+                      .setInputs(inputs)
+                      .setProgresses(progresses)
+                      .setCleanInputs
+                  )
+                } >> connect
+              case _ =>
+                scope.modState(_.setCode(s"//snippet not found"))
+            }
+          )
 
-                  loadStateFromLocalStorage(isSnippetSaved = true) >>
-                    clearOutputs >>
-                    scope.modState(
-                      state =>
-                        afterLoading(
-                          state
-                            .setInputs(inputs)
-                            .setProgresses(progresses)
-                            .setCleanInputs
-                      )
-                    ) >> connect
-
-                }
-                case _ =>
-                  scope.modState(_.setCode(s"//snippet not found"))
-              }
-            )
-
-          loadStateFromApi >>
-            setView(View.Editor) >>
-            scope.modState(
-              _.clearOutputs.closeModals
-                .copy(inputsHasChanged = false)
-            )
-        } else {
-          scope.modState(_.setLoadSnippet(true))
+        loadStateFromApi >>
+          setView(View.Editor) >>
+          scope.modState(
+            _.clearOutputs.closeModals.copy(inputsHasChanged = false)
+          )
+      } else {
+        scope.modState(_.setLoadSnippet(true))
       }
-    )
+    }
   }
 
-  private def loadStateFromLocalStorage(isSnippetSaved: Boolean): Callback =
+  private def loadStateFromLocalStorage: Callback =
     LocalStorage.load
       .map { state =>
         scope.modState { _ =>
-          (if (isSnippetSaved) state.clearDependencies else state)
+          state
             .setRunning(false)
-            .setSnippetSaved(isSnippetSaved)
+            .setCleanInputs
             .resetScalajs
         }
       }
@@ -452,7 +426,7 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
                   loadOldSnippet(id)
 
                 case None =>
-                  loadStateFromLocalStorage(isSnippetSaved = false)
+                  loadStateFromLocalStorage
               }
           }
         }

@@ -10,7 +10,6 @@ object SnippetState {
 
 case class SnippetState(
     snippetId: Option[SnippetId],
-    isSnippetSaved: Boolean,
     loadSnippet: Boolean,
     loadScalaJsScript: Boolean,
     isScalaJsScriptLoaded: Boolean,
@@ -36,7 +35,6 @@ object ScastieState {
       inputsHasChanged = false,
       snippetState = SnippetState(
         snippetId = None,
-        isSnippetSaved = false,
         loadSnippet = true,
         loadScalaJsScript = false,
         isScalaJsScriptLoaded = false,
@@ -89,9 +87,7 @@ case class ScastieState(
     status: StatusState,
     isEmbedded: Boolean = false,
 ) {
-
   def snippetId: Option[SnippetId] = snippetState.snippetId
-  def isSnippetSaved: Boolean = snippetState.isSnippetSaved
   def loadSnippet: Boolean = snippetState.loadSnippet
   def loadScalaJsScript: Boolean = snippetState.loadScalaJsScript
   def isScalaJsScriptLoaded: Boolean = snippetState.isScalaJsScriptLoaded
@@ -112,7 +108,6 @@ case class ScastieState(
       inputsHasChanged: Boolean = inputsHasChanged,
       snippetId: Option[SnippetId] = snippetId,
       snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
-      isSnippetSaved: Boolean = isSnippetSaved,
       loadSnippet: Boolean = loadSnippet,
       isScalaJsScriptLoaded: Boolean = isScalaJsScriptLoaded,
       loadScalaJsScript: Boolean = loadScalaJsScript,
@@ -142,7 +137,6 @@ case class ScastieState(
         inputsHasChanged = inputsHasChanged,
         snippetState = SnippetState(
           snippetId = snippetId,
-          isSnippetSaved = isSnippetSaved,
           loadSnippet = loadSnippet,
           loadScalaJsScript = loadScalaJsScript,
           isScalaJsScriptLoaded = isScalaJsScriptLoaded0,
@@ -183,10 +177,6 @@ case class ScastieState(
   def setRunning(isRunning: Boolean): ScastieState = {
     val openConsole = consoleState.consoleHasUserOutput || outputs.sbtError
     copyAndSave(isRunning = isRunning).autoOpen(openConsole)
-  }
-
-  def setSnippetSaved(value: Boolean): ScastieState = {
-    copyAndSave(isSnippetSaved = value, inputsHasChanged = false)
   }
 
   def toggleTheme: ScastieState =
@@ -469,7 +459,7 @@ case class ScastieState(
     copyAndSave(
       snippetId = None,
       snippetIdIsScalaJS = false
-    ).setSnippetSaved(false)
+    )
   }
 
   private def info(message: String) = Problem(Info, None, message)
