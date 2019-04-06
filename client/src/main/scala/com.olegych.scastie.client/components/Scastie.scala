@@ -92,9 +92,7 @@ object Scastie {
       .builder[Scastie]("Scastie")
       .initialStateFromProps { props =>
         val state = {
-          val loadedState = ScastieState
-            .default(props.isEmbedded)
-            .copy(inputs = Inputs.default.copy(code = LocalStorage.load.map(_.inputs.code).getOrElse("")))
+          val loadedState = ScastieState.default(props.isEmbedded).copy(inputs = Inputs.default.copy(code = ""))
           if (!props.isEmbedded) {
             loadedState
           } else {
