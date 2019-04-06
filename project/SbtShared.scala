@@ -28,7 +28,7 @@ object SbtShared {
 
   val latestCoursier = "1.0.3"
 
-  val sbtVersion = "0.13.16"
+  val sbtVersion = "0.13.18"
 
   val runtimeProjectName = "runtime-scala"
 
