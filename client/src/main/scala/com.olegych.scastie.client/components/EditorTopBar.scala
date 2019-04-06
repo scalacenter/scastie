@@ -21,7 +21,6 @@ final case class EditorTopBar(clear: Reusable[Callback],
                               isEmbeddedModalClosed: Boolean,
                               isRunning: Boolean,
                               isStatusOk: Boolean,
-                              isSnippetSaved: Boolean,
                               snippetId: Option[SnippetId],
                               user: Option[User],
                               view: StateSnapshot[View],
@@ -70,17 +69,15 @@ object EditorTopBar {
 
     val downloadButton =
       props.snippetId match {
-        case Some(sid) if props.isSnippetSaved =>
+        case Some(sid) =>
           DownloadButton(snippetId = sid).render
-
         case _ =>
           EmptyVdom
       }
 
     val embeddedModalButton =
       (props.snippetId, props.router) match {
-        case (Some(sid), Some(router)) if props.isSnippetSaved => {
-
+        case (Some(sid), Some(router)) =>
           val url = router.urlFor(Page.fromSnippetId(sid)).value
 
           val content =
@@ -101,7 +98,6 @@ object EditorTopBar {
             span("Embed"),
             embeddedModal
           )
-        }
         case _ => EmptyVdom
       }
 
