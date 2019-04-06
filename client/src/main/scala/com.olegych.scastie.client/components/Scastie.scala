@@ -26,9 +26,14 @@ final case class Scastie(
 
   def serverUrl: Option[String] = embedded.map(_.serverUrl)
   def isEmbedded: Boolean = embedded.isDefined
+  //todo not sure how is it different from regular snippet id
+  def embeddedSnippetId: Option[SnippetId] = embedded.flatMap(_.snippetId)
 }
 
 object Scastie {
+  implicit val scastieReuse: Reusability[Scastie] =
+    Reusability.caseClass[Scastie]
+
   def default(router: RouterCtl[Page]): Scastie =
     Scastie(
       scastieId = UUID.randomUUID(),
@@ -89,6 +94,57 @@ object Scastie {
     )
   }
 
+  private def start(props: Scastie, backend: ScastieBackend): Callback = {
+    val initialState =
+      props.embedded match {
+        case None => {
+          props.snippetId match {
+            case Some(snippetId) =>
+              backend.loadSnippet(snippetId)
+
+            case None =>
+              props.oldSnippetId match {
+                case Some(id) =>
+                  backend.loadOldSnippet(id)
+
+                case None =>
+                  Callback.traverseOption(LocalStorage.load) { state =>
+                    backend.scope.modState { _ =>
+                      state
+                        .setRunning(false)
+                        .setCleanInputs
+                        .resetScalajs
+                    }
+                  }
+              }
+          }
+        }
+        case Some(embededOptions) => {
+          val setInputs =
+            (embededOptions.snippetId, embededOptions.inputs) match {
+              case (Some(snippetId), _) =>
+                backend.loadSnippet(snippetId)
+
+              case (_, Some(inputs)) =>
+                backend.scope.modState(_.setInputs(inputs))
+
+              case _ => Callback.empty
+            }
+
+          val setTheme =
+            embededOptions.theme match {
+              case Some("dark")  => backend.scope.modState(_.setTheme(dark = true))
+              case Some("light") => backend.scope.modState(_.setTheme(dark = false))
+              case _             => Callback(())
+            }
+
+          setInputs >> setTheme
+        }
+      }
+
+    initialState >> backend.loadUser
+  }
+
   private def component(serverUrl: Option[String], scastieId: UUID) =
     ScalaComponent
       .builder[Scastie]("Scastie")
@@ -129,7 +185,7 @@ object Scastie {
       .backend(new ScastieBackend(scastieId, serverUrl, _))
       .renderPS(render)
       .componentWillMount { current =>
-        current.backend.start(current.props) >>
+        start(current.props, current.backend) >>
           setTitle(current.state, current.props) >>
           current.backend.closeNewSnippetModal >>
           current.backend.closeResetModal >>

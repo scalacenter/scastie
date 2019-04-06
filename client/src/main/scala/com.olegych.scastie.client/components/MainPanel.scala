@@ -28,7 +28,7 @@ object MainPanel {
         isRunning = state.isRunning,
         inputs = state.inputs,
         inputsHasChanged = state.inputsHasChanged,
-        embeddedSnippetId = props.embedded.flatMap(_.snippetId),
+        embeddedSnippetId = props.embeddedSnippetId,
         serverUrl = props.serverUrl,
         run = backend.run,
         save = backend.saveBlocking,

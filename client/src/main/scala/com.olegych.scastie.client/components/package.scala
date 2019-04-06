@@ -89,9 +89,6 @@ package object components {
   implicit val embeddedOptionsReuse: Reusability[EmbeddedOptions] =
     Reusability.caseClass[EmbeddedOptions]
 
-  implicit val scastieReuse: Reusability[Scastie] =
-    Reusability.caseClass[Scastie]
-
   implicit val scastieStateReuse: Reusability[ScastieState] =
     Reusability.caseClass[ScastieState]
 

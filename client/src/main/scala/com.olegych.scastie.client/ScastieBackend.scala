@@ -13,7 +13,7 @@ import org.scalajs.dom._
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendScope[Scastie, ScastieState]) {
+case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendScope[Scastie, ScastieState]) {
 
   private val restApiClient =
     new RestApiClient(serverUrl)
@@ -336,7 +336,7 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
       )
     }
 
-  private def loadOldSnippet(id: Int): Callback = {
+  def loadOldSnippet(id: Int): Callback = {
     loadSnippetBase(
       restApiClient.fetchOld(id)
     )
@@ -391,68 +391,12 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
     }
   }
 
-  private def loadStateFromLocalStorage: Callback =
-    LocalStorage.load
-      .map { state =>
-        scope.modState { _ =>
-          state
-            .setRunning(false)
-            .setCleanInputs
-            .resetScalajs
-        }
-      }
-      .getOrElse(Callback.empty)
-
-  def start(props: Scastie): Callback = {
-    def loadUser: Callback =
-      Callback.future(
-        restApiClient
-          .fetchUser()
-          .map(result => scope.modState(_.setUser(result)))
-      )
-
-    val initialState =
-      props.embedded match {
-        case None => {
-          props.snippetId match {
-            case Some(snippetId) =>
-              loadSnippet(snippetId)
-
-            case None =>
-              props.oldSnippetId match {
-                case Some(id) =>
-                  loadOldSnippet(id)
-
-                case None =>
-                  loadStateFromLocalStorage
-              }
-          }
-        }
-        case Some(embededOptions) => {
-          val setInputs =
-            (embededOptions.snippetId, embededOptions.inputs) match {
-              case (Some(snippetId), _) =>
-                loadSnippet(snippetId)
-
-              case (_, Some(inputs)) =>
-                scope.modState(_.setInputs(inputs))
-
-              case _ => Callback.empty
-            }
-
-          val setTheme =
-            embededOptions.theme match {
-              case Some("dark")  => scope.modState(_.setTheme(dark = true))
-              case Some("light") => scope.modState(_.setTheme(dark = false))
-              case _             => Callback(())
-            }
-
-          setInputs >> setTheme
-        }
-      }
-
-    initialState >> loadUser
-  }
+  def loadUser: Callback =
+    Callback.future(
+      restApiClient
+        .fetchUser()
+        .map(result => scope.modState(_.setUser(result)))
+    )
 
   val formatCode: Reusable[Callback] =
     Reusable.always(
