@@ -274,12 +274,10 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
 
   private def saveCallback(sId: SnippetId): Callback = {
     val setState = scope.modState(_.setCleanInputs.setSnippetId(sId).setLoadSnippet(false))
-
     val page = Page.fromSnippetId(sId)
     val setUrl = scope.props.map {
       _.router.foreach(r => org.scalajs.dom.window.history.pushState("", "", r.urlFor(page).value))
     }
-
     connectProgress(sId) >> setState >> setUrl
   }
 
@@ -300,7 +298,7 @@ class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendS
         scope.state
           .flatMap { state =>
 //            println(s"saving ${play.api.libs.json.Json.toJson(state)}")
-            props.snippetId match {
+            state.snippetId match {
               case Some(snippetId) =>
                 if (snippetId.isOwnedBy(state.user)) {
                   update0(snippetId)

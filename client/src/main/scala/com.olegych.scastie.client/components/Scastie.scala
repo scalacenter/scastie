@@ -12,13 +12,15 @@ import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
 
-final case class Scastie(scastieId: UUID,
-                         router: Option[RouterCtl[Page]],
-                         snippetId: Option[SnippetId],
-                         oldSnippetId: Option[Int],
-                         embedded: Option[EmbeddedOptions],
-                         targetType: Option[ScalaTargetType],
-                         tryLibrary: Option[ScalaDependency]) {
+final case class Scastie(
+    router: Option[RouterCtl[Page]],
+    private val scastieId: UUID,
+    private val snippetId: Option[SnippetId],
+    private val oldSnippetId: Option[Int],
+    private val embedded: Option[EmbeddedOptions],
+    private val targetType: Option[ScalaTargetType],
+    private val tryLibrary: Option[ScalaDependency]
+) {
 
   @inline def render = Scastie.component(serverUrl, scastieId)(this)
 
