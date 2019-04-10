@@ -80,7 +80,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
     else throw new Exception(writeResult.toString)
 
   protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] = {
-    snippets.flatMap(_.insert(toMongoSnippet(snippetId, inputs))).map(isSuccess)
+    snippets.flatMap(_.insert.one(toMongoSnippet(snippetId, inputs))).map(isSuccess)
   }
 
   private def select(snippetId: SnippetId): BSONDocument =
@@ -105,7 +105,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
               )
             )
 
-          snippets.flatMap(_.update(selection, update).map(isSuccess))
+          snippets.flatMap(_.update.one(selection, update).map(isSuccess))
         }
 
         val setScalaJsOutput =
@@ -117,7 +117,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
                   "scalaJsSourceMapContent" -> scalaJsSourceMapContent
                 )
               )
-              snippets.flatMap(_.update(selection, updateJs).map(isSuccess))
+              snippets.flatMap(_.update.one(selection, updateJs).map(isSuccess))
             case _ => Future(())
           }
 
@@ -128,7 +128,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
   }
 
   def readMongoSnippet(snippetId: SnippetId): Future[Option[MongoSnippet]] =
-    snippets.flatMap(_.find(select(snippetId)).one[MongoSnippet])
+    snippets.flatMap(_.find(select(snippetId), Some(Json.obj())).one[MongoSnippet])
 
   def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]] =
     readMongoSnippet(snippetId).map(_.map(_.toFetchResult))
@@ -145,7 +145,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
 
     val mongoSnippets =
       snippets.flatMap(
-        _.find(userSnippets)
+        _.find(userSnippets, Some(Json.obj()))
           .cursor[MongoSnippet]()
           .collect[List](maxDocs = 1000, Cursor.FailOnError[List[MongoSnippet]]())
       )
@@ -179,7 +179,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
 
   def readOldSnippet(id: Int): Future[Option[FetchResult]] =
     snippets.flatMap(
-      _.find(select(id)).one[MongoSnippet].map(_.map(_.toFetchResult))
+      _.find(select(id), Some(Json.obj())).one[MongoSnippet].map(_.map(_.toFetchResult))
     )
 
   override def close(): Unit = driver.close()
