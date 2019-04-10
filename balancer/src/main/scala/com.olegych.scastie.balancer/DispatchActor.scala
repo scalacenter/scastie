@@ -27,7 +27,6 @@ case class InputsWithIpAndUser(inputs: Inputs, user: UserTrace)
 
 case class RunSnippet(inputs: InputsWithIpAndUser)
 case class SaveSnippet(inputs: InputsWithIpAndUser)
-case class AmendSnippet(snippetId: SnippetId, inputs: InputsWithIpAndUser)
 case class UpdateSnippet(snippetId: SnippetId, inputs: InputsWithIpAndUser)
 case class DeleteSnippet(snippetId: SnippetId)
 case class DownloadSnippet(snippetId: SnippetId)
@@ -200,15 +199,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         run(inputsWithIpAndUser, snippetId)
       })
 
-    case AmendSnippet(snippetId, inputsWithIpAndUser) =>
-      val sender = this.sender
-      logError(container.amend(snippetId, inputsWithIpAndUser.inputs).map { amendSuccess =>
-        sender ! amendSuccess
-        if (amendSuccess) {
-          run(inputsWithIpAndUser, snippetId)
-        }
-      })
-
     case UpdateSnippet(snippetId, inputsWithIpAndUser) =>
       val sender = this.sender
       logError(container.update(snippetId, inputsWithIpAndUser.inputs).map { updatedSnippetId =>
@@ -233,7 +223,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case DeleteSnippet(snippetId) =>
       val sender = this.sender
-      logError(container.delete(snippetId).map(_ => sender ! (())))
+      logError(container.deleteAll(snippetId).map(_ => sender ! (())))
 
     case DownloadSnippet(snippetId) =>
       val sender = this.sender

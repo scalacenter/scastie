@@ -16,7 +16,24 @@ trait SnippetsContainer {
   protected implicit val ec: ExecutionContext
 
   def appendOutput(progress: SnippetProgress): Future[Unit]
-  def delete(snippetId: SnippetId): Future[Boolean]
+  def deleteAll(snippetId: SnippetId): Future[Boolean] = {
+    def deleteUpdate(update: Int): Future[Boolean] = {
+      val updateSnippetId = snippetId.copy(user = snippetId.user.map(_.copy(update = update)))
+      for {
+        read <- readSnippet(updateSnippetId)
+        result <- read match {
+          case Some(read) =>
+            for {
+              result <- delete(updateSnippetId)
+              resultNext <- deleteUpdate(update + 1)
+            } yield result || resultNext
+          case None => Future.successful(false)
+        }
+      } yield result
+    }
+    deleteUpdate(0)
+  }
+  protected def delete(snippetId: SnippetId): Future[Boolean]
   def listSnippets(user: UserLogin): Future[List[SnippetSummary]]
   def readOldSnippet(id: Int): Future[Option[FetchResult]]
   def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]]
@@ -25,24 +42,26 @@ trait SnippetsContainer {
   ): Future[Option[FetchResultScalaJsSourceMap]]
   def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]]
   protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit]
+  protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit]
 
-  final def save(inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] =
-    create(inputs.copy(isShowingInUserProfile = true), user)
-
-  final def amend(snippetId: SnippetId, inputs: Inputs): Future[Boolean] =
-    for {
-      deleted <- delete(snippetId)
-      _ <- insert0(snippetId, inputs) if (deleted)
-    } yield deleted
+  private def insert0(snippetId: SnippetId, inputs: Inputs): Future[SnippetId] =
+    insert(snippetId, inputs).map(_ => snippetId)
 
   final def create(inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] = {
     insert0(newSnippetId(user), inputs)
   }
 
+  final def save(inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] =
+    create(inputs.copy(isShowingInUserProfile = true), user)
+
   final def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
     updateSnippetId(snippetId).flatMap {
-      case Some(nextSnippetId) => insert0(nextSnippetId, inputs).map(Some(_))
-      case _                   => Future.successful(None)
+      case Some(nextSnippetId) =>
+        for {
+          r <- insert0(nextSnippetId, inputs.copy(forked = Some(snippetId), isShowingInUserProfile = true))
+          _ <- hideFromUserProfile(snippetId)
+        } yield Some(r)
+      case _ => Future.successful(None)
     }
   }
 
@@ -121,9 +140,6 @@ trait SnippetsContainer {
 
     zippedProjectDir
   }
-
-  private def insert0(snippetId: SnippetId, inputs: Inputs): Future[SnippetId] =
-    insert(snippetId, inputs).map(_ => snippetId)
 
   def close(): Unit = ()
 }

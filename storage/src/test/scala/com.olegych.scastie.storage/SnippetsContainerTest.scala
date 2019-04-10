@@ -112,30 +112,11 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
     val readInputs1 = container.readSnippet(snippetId1).await.get.inputs
     val readInputs2 = container.readSnippet(snippetId2).await.get.inputs
 
-    assert(readInputs1 == inputs1, "we don't mutate previous input")
-    assert(readInputs2 == inputs2)
+    assert(readInputs1 == inputs1.copy(isShowingInUserProfile = false), "we don't mutate previous input")
+    assert(readInputs2 == inputs2.copy(forked = Some(snippetId1)), "we update forked")
 
     val snippets = container.listSnippets(user).await
-    assert(snippets.size == 2)
-  }
-
-  test("amend") {
-    val container = testContainer
-
-    val inputs1 = Inputs.default.copy(code = "inputs1")
-    val snippetId1 =
-      container
-        .save(inputs1, Some(UserLogin("github-user" + Random.nextInt)))
-        .await
-
-    val inputs2 = inputs1.copy(code = "inputs2")
-    val amendSuccess = container.amend(snippetId1, inputs2).await
-    assert(amendSuccess)
-
-    val readInputs1bis = container.readSnippet(snippetId1).await.get.inputs
-
-    assert(readInputs1bis != inputs1, "we mutate previous input")
-    assert(readInputs1bis.copy(isShowingInUserProfile = false) == inputs2)
+    assert(snippets.size == 1 && snippets.head.snippetId == snippetId2, "we hide old version")
   }
 
   test("listSnippets") {
@@ -187,11 +168,10 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
 
     assert(container.listSnippets(user).await.size == 2)
 
-    container.delete(snippetId2U).await
+    container.deleteAll(snippetId2U).await
 
-    assert(container.listSnippets(user).await.size == 2)
-
-    container.delete(snippetId2).await
+    assert(container.readSnippet(snippetId2U).await == None)
+    assert(container.readSnippet(snippetId2).await == None)
 
     assert(container.listSnippets(user).await.size == 1)
   }

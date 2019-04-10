@@ -92,9 +92,6 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
     snippetId
   }
 
-  def amend(editInputs: EditInputs): Future[Boolean] =
-    post[Boolean].using("/amend", editInputs).map(_.getOrElse(false))
-
   def update(editInputs: EditInputs): Future[Option[SnippetId]] =
     post[SnippetId].using("/update", editInputs)
 

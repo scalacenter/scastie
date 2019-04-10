@@ -99,6 +99,18 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
     snippets.flatMap(_.insert.one(toMongoSnippet(snippetId, inputs))).map(isSuccess)
   }
 
+  override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] =
+    snippets.flatMap(
+      _.update
+        .one(select(snippetId),
+             BSONDocument(
+               op("set") -> BSONDocument(
+                 "inputs.isShowingInUserProfile" -> false,
+               )
+             ))
+        .map(_ => ())
+    )
+
   private def select(snippetId: SnippetId): BSONDocument =
     BSONDocument("simpleSnippetId" -> snippetId.url)
 

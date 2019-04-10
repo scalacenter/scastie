@@ -6,7 +6,6 @@ trait RestApi {
   def run(inputs: Inputs): Future[SnippetId]
   def save(inputs: Inputs): Future[SnippetId]
 
-  def amend(editInputs: EditInputs): Future[Boolean]
   def update(editInputs: EditInputs): Future[Option[SnippetId]]
   def fork(editInputs: EditInputs): Future[Option[SnippetId]]
 

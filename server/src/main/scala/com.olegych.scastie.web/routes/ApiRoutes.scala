@@ -37,11 +37,6 @@ class ApiRoutes(
               path("save")(
                 entity(as[Inputs])(inputs => complete(server.save(inputs)))
               ),
-              path("amend")(
-                entity(as[EditInputs])(
-                  editInputs => complete(server.amend(editInputs))
-                )
-              ),
               path("update")(
                 entity(as[EditInputs])(
                   editInputs => complete(server.update(editInputs))

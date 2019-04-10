@@ -26,7 +26,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
     }
 
     progress.snippetId.foreach(
-      sid => write(outputsFile(sid), Json.stringify(Json.toJson(progress)) + nl, append = true)
+      sid => append(outputsFile(sid), Json.stringify(Json.toJson(progress)) + nl)
     )
   }
 
@@ -174,6 +174,14 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
       write(inputsFile(snippetId), Json.prettyPrint(Json.toJson(inputs)))
     }
 
+  override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] =
+    for {
+      old <- readSnippet(snippetId)
+      _ <- Future.traverse(old.toList) { old =>
+        insert(snippetId, old.inputs.copy(isShowingInUserProfile = false))
+      }
+    } yield ()
+
   private val anonFolder = "_anonymous_"
   private val inputFileName = "input3.json"
   private val outputFileName = "output3.json"
@@ -249,14 +257,12 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
     }
   }
 
-  private def write(path: Path, content: String, append: Boolean = false): Unit = {
-    if (!Files.exists(path)) {
-      Files.write(path, content.getBytes, StandardOpenOption.CREATE_NEW)
-      ()
-    } else if (append) {
-      Files.write(path, content.getBytes, StandardOpenOption.APPEND)
-      ()
-    }
+  private def write(path: Path, content: String): Unit = {
+    Files.write(path, content.getBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+  }
+
+  private def append(path: Path, content: String): Unit = {
+    Files.write(path, content.getBytes, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
   }
 
   def slurp(src: Path): Option[String] = {

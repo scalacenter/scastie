@@ -46,7 +46,7 @@ object ImportToMongoDB {
 
   def findLast(collection: JSONCollection): Future[Long] = {
     collection
-      .find(Json.obj())
+      .find(Json.obj(), Some(Json.obj()))
       .options(QueryOpts().batchSize(1))
       .sort(Json.obj("time" -> -1))
       .one[BSONDocument]

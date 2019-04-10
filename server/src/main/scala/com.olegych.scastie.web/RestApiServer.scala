@@ -42,17 +42,6 @@ class RestApiServer(
       .mapTo[SnippetId]
   }
 
-  def amend(editInputs: EditInputs): Future[Boolean] = {
-    import editInputs._
-    if (snippetId.isOwnedBy(maybeUser)) {
-      dispatchActor
-        .ask(AmendSnippet(snippetId, wrap(inputs)))
-        .mapTo[Boolean]
-    } else {
-      Future.successful(false)
-    }
-  }
-
   def update(editInputs: EditInputs): Future[Option[SnippetId]] = {
     import editInputs._
     if (snippetId.isOwnedBy(maybeUser)) {
