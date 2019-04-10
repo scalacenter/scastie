@@ -120,7 +120,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private val container =
     containerType match {
       case "memory" => new InMemorySnippetsContainer
-      case "mongo"  => new MongoDBSnippetsContainer
+      case "mongo"  => new MongoDBSnippetsContainer(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
       case "files" =>
         new FilesSnippetsContainer(
           Paths.get(config.getString("snippets-dir")),
@@ -131,8 +131,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
           )
         )
       case _ =>
-        println("fallback to mongodb container")
-        new MongoDBSnippetsContainer
+        println("fallback to in-memory container")
+        new InMemorySnippetsContainer
     }
 
   private def updateSbtBalancer(newSbtBalancer: SbtBalancer): Unit = {

@@ -13,13 +13,12 @@ import scala.concurrent.{Await, Future}
 import scala.util.Random
 
 class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
+//  val mongo = true
   val mongo = false
   val root = Files.createTempDirectory("test")
   val oldRoot = Files.createTempDirectory("old-test")
 
-  private lazy val mongoContainer = new MongoDBSnippetsContainer()(
-    scala.concurrent.ExecutionContext.Implicits.global
-  )
+  private lazy val mongoContainer = new MongoDBSnippetsContainer(scala.concurrent.ExecutionContext.Implicits.global)
   private val testContainer: SnippetsContainer = {
     if (mongo)
       mongoContainer

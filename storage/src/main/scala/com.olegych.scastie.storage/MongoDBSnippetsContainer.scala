@@ -31,7 +31,8 @@ object MongoSnippet {
     Json.format[MongoSnippet]
 }
 
-class MongoDBSnippetsContainer(implicit protected val ec: ExecutionContext) extends SnippetsContainer {
+class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer {
+  protected implicit val ec: ExecutionContext = _ec
 
   val mongoUri = "mongodb://localhost:27017/snippets"
   val driver = MongoDriver()
