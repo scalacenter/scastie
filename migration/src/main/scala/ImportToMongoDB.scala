@@ -338,7 +338,7 @@ object ImportToMongoDB {
 
   def insertOne(snippetsToInsert: MongoSnippet): Future[Unit] = {
     snippets
-      .flatMap(_.insert[MongoSnippet](ordered = false).one(snippetsToInsert))
+      .flatMap(_.insert.one(snippetsToInsert))
       .map(
         wr =>
           if (!wr.ok) {

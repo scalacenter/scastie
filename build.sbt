@@ -16,9 +16,9 @@ def akkaHttpTestkit =
 def akkaHttpCors = "ch.megard" %% "akka-http-cors" % "0.4.0"
 def akkaHttpSession = "com.softwaremill.akka-http-session" %% "core" % "0.5.6"
 
-def reactiveMongo = "org.reactivemongo" %% "reactivemongo" % "0.16.0"
+def reactiveMongo = "org.reactivemongo" %% "reactivemongo" % "0.16.5"
 def reactiveMongoJson =
-  "org.reactivemongo" %% "reactivemongo-play-json" % "0.16.0-play26"
+  "org.reactivemongo" %% "reactivemongo-play-json" % "0.16.5-play26"
 
 val startAllCommands = List(
   "sbtRunner/reStart",
