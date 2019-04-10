@@ -5,6 +5,17 @@ import com.olegych.scastie.buildinfo.BuildInfo
 
 import System.{lineSeparator => nl}
 
+sealed trait BaseInputs {
+  def code: String
+  def target: ScalaTarget
+}
+
+case class ShortInputs(code: String, target: ScalaTarget) extends BaseInputs
+
+object ShortInputs {
+  implicit val formatShortInputs: OFormat[ShortInputs] = Json.format[ShortInputs]
+}
+
 object Inputs {
   val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
 
@@ -55,7 +66,7 @@ case class Inputs(
     sbtPluginsConfigExtra: String,
     isShowingInUserProfile: Boolean,
     forked: Option[SnippetId] = None
-) {
+) extends BaseInputs {
   val isWorksheetMode = _isWorksheetMode && target.hasWorksheetMode
   val librariesFrom: Map[ScalaDependency, Project] = librariesFromList.toMap
 

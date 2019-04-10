@@ -13,6 +13,22 @@ import System.{lineSeparator => nl}
 
 import reactivemongo.api.indexes.{Index, IndexType}
 
+sealed trait BaseMongoSnippet {
+  def snippetId: SnippetId
+  def inputs: BaseInputs
+  def time: Long
+}
+
+case class ShortMongoSnippet(
+    snippetId: SnippetId,
+    inputs: ShortInputs,
+    time: Long
+) extends BaseMongoSnippet
+
+object ShortMongoSnippet {
+  implicit val formatShortMongoSnippet: OFormat[ShortMongoSnippet] = Json.format[ShortMongoSnippet]
+}
+
 case class MongoSnippet(
     simpleSnippetId: String,
     user: Option[String],
@@ -23,12 +39,12 @@ case class MongoSnippet(
     scalaJsContent: String,
     scalaJsSourceMapContent: String,
     time: Long
-) {
+) extends BaseMongoSnippet {
   def toFetchResult: FetchResult = FetchResult.create(inputs, progresses)
 }
+
 object MongoSnippet {
-  implicit val formatMongoSnippet: OFormat[MongoSnippet] =
-    Json.format[MongoSnippet]
+  implicit val formatMongoSnippet: OFormat[MongoSnippet] = Json.format[MongoSnippet]
 }
 
 class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer {
@@ -145,9 +161,17 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
 
     val mongoSnippets =
       snippets.flatMap(
-        _.find(userSnippets, Some(Json.obj()))
-          .cursor[MongoSnippet]()
-          .collect[List](maxDocs = 1000, Cursor.FailOnError[List[MongoSnippet]]())
+        _.find(userSnippets,
+               Some(
+                 Json.obj(
+                   "snippetId" -> 1,
+                   "inputs.code" -> 1,
+                   "inputs.target" -> 1,
+                   "time" -> 1
+                 )
+               ))
+          .cursor[ShortMongoSnippet]()
+          .collect[List](maxDocs = 1000, Cursor.FailOnError[List[ShortMongoSnippet]]())
       )
 
     mongoSnippets.map(
