@@ -17,8 +17,9 @@ object MainPanel {
   def render(in: MainPanel): VdomElement = {
     import in._
 
+    def visible(view: View) = view == state.view
     def show(view: View) =
-      if (view == state.view) display.block
+      if (visible(view)) display.block
       else display.none
 
     val isStatusOk = state.status.isSbtOk
@@ -58,6 +59,7 @@ object MainPanel {
 
     val editor =
       Editor(
+        visible = visible(View.Editor),
         isDarkTheme = state.isDarkTheme,
         isPresentationMode = state.isPresentationMode,
         isEmbedded = props.isEmbedded,
@@ -92,6 +94,7 @@ object MainPanel {
 
     val buildSettings =
       BuildSettings(
+        visible = visible(View.BuildSettings),
         librariesFrom = state.inputs.librariesFrom,
         isDarkTheme = state.isDarkTheme,
         isBuildDefault = state.isBuildDefault,

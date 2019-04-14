@@ -5,6 +5,7 @@ import japgolly.scalajs.react._, vdom.TagOf, vdom.all._, extra._
 import org.scalajs.dom.html.Div
 
 final case class BuildSettings(
+    visible: Boolean,
     librariesFrom: Map[ScalaDependency, Project],
     isDarkTheme: Boolean,
     isBuildDefault: Boolean,

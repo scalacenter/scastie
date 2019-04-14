@@ -6,7 +6,8 @@ import com.olegych.scastie.client.AttachedDoms
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 
-final case class Editor(isDarkTheme: Boolean,
+final case class Editor(visible: Boolean,
+                        isDarkTheme: Boolean,
                         isPresentationMode: Boolean,
                         isEmbedded: Boolean,
                         showLineNumbers: Boolean,
@@ -58,6 +59,7 @@ object Editor {
       .renderBackend[EditorBackend]
       .configure(Reusability.shouldComponentUpdate)
       .componentDidMount(_.backend.start())
+      .componentDidUpdate(u => Callback.traverseOption(u.currentState.editor)(e => Callback(e.focus())))
       .componentWillUnmount(_.backend.stop())
       .componentWillReceiveProps { scope =>
         scope.state.editor

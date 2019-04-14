@@ -129,8 +129,7 @@ object CodeMirrorEditor {
           .getOrElse(Callback.empty)
       }
       .componentDidMount(_.backend.start())
+      .componentDidUpdate(u => Callback.traverseOption(u.currentState.editor)(e => Callback(e.focus())))
       .componentWillUnmount(_.backend.stop())
       .build
-
-  def apply(props: CodeMirrorEditor) = component(props)
 }
