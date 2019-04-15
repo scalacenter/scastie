@@ -15,7 +15,6 @@ import com.olegych.scastie.balancer._
 import com.olegych.scastie.web.oauth2.UserDirectives
 import play.api.libs.json.Json
 
-import scala.collection.immutable.Queue
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
