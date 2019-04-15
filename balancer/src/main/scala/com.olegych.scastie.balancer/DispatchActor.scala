@@ -15,7 +15,6 @@ import com.olegych.scastie.storage._
 import com.olegych.scastie.util._
 import com.typesafe.config.ConfigFactory
 
-import scala.collection.immutable.Queue
 import scala.concurrent._
 import scala.concurrent.duration._
 
@@ -83,19 +82,14 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private var remoteSbtSelections =
     sbtPorts.map(connectRunner("SbtRunner", "SbtActor", host)).toMap
 
-  val emptyHistory = History(Queue.empty, size = 100)
-
   private var sbtLoadBalancer: SbtBalancer = {
     val sbtServers = remoteSbtSelections.to[Vector].map {
       case (_, ref) =>
         val state: SbtState = SbtState.Unknown
-        Server(ref, Inputs.default, Queue.empty, state)
+        Server(ref, Inputs.default, state)
     }
 
-    LoadBalancer(
-      servers = sbtServers,
-      history = emptyHistory,
-    )
+    LoadBalancer(servers = sbtServers)
   }
 
   import context._
@@ -324,7 +318,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
         updateSbtBalancer(
           sbtLoadBalancer.addServer(
-            Server(ref, Inputs.default, Queue.empty, state)
+            Server(ref, Inputs.default, state)
           )
         )
       }

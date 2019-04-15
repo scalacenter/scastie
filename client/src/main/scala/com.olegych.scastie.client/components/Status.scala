@@ -17,7 +17,7 @@ object Status {
     Reusability.caseClass[Status]
 
   def render(props: Status): VdomElement = {
-    def renderSbtTask(tasks: Queue[TaskId]): VdomElement = {
+    def renderSbtTask(tasks: Vector[TaskId]): VdomElement = {
       if (props.isAdmin) {
         if (tasks.isEmpty) {
           div("No Task Running")

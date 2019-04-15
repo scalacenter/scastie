@@ -2,8 +2,6 @@ package com.olegych.scastie.api
 
 import play.api.libs.json._
 
-import scala.collection.immutable.Queue
-
 object SbtRunnerState {
   implicit val formatSbtRunnerState: OFormat[SbtRunnerState] =
     Json.format[SbtRunnerState]
@@ -11,7 +9,7 @@ object SbtRunnerState {
 
 case class SbtRunnerState(
     config: Inputs,
-    tasks: Queue[TaskId],
+    tasks: Vector[TaskId],
     sbtState: SbtState
 )
 sealed trait StatusProgress

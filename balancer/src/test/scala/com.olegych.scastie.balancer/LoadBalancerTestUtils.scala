@@ -5,8 +5,6 @@ import java.time.Instant
 import com.olegych.scastie.api._
 import org.scalatest.{Assertion, FunSuite}
 
-import scala.collection.immutable.Queue
-
 object TestTaskId {
   def apply(i: Int) = TaskId(SnippetId(i.toString, None))
 }
@@ -19,29 +17,7 @@ case class TestState(state: String, ready: Boolean = true) extends ServerState {
 trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   type TestServer0 = Server[TestServerRef, TestState]
 
-  object TestLoadBalancer {
-    def apply(
-        servers: Vector[TestServer0],
-        history: History,
-    ): TestLoadBalancer0 = {
-      LoadBalancer(
-        servers = servers,
-        history = history,
-      )
-    }
-  }
   type TestLoadBalancer0 = LoadBalancer[TestServerRef, TestState]
-
-  object TestServer {
-    def apply(
-        ref: TestServerRef,
-        lastConfig: Inputs,
-        mailbox: Queue[Task] = Queue(),
-        state: TestState = TestState("default-state")
-    ): TestServer0 = {
-      Server(ref, lastConfig, mailbox, state)
-    }
-  }
 
   @transient private var taskId = 1000
   def add(balancer: TestLoadBalancer0, config: Inputs): TestLoadBalancer0 = synchronized {
@@ -60,8 +36,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
       val size = inner.values.sum
 
       inner.toList
-        .sortBy { case (k, v) => (v, k) }
-        .reverse
+        .sortBy { case (k, v) => (-v, k) }
         .map {
           case (k, v) => s"$k($v)"
         }
@@ -80,10 +55,10 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   @transient private var serverId = 0
   def server(
       c: String,
-      mailbox: Queue[Task] = Queue(),
+      mailbox: Vector[Task] = Vector(),
       state: TestState = TestState("default-state")
   ): TestServer0 = synchronized {
-    val t = Server(TestServerRef(serverId), sbtConfig(c), mailbox, state)
+    val t = Server(TestServerRef(serverId), sbtConfig(c), state, mailbox)
     serverId += 1
     t
   }
@@ -104,10 +79,10 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   def code(code: String) = Inputs.default.copy(code = code)
   def sbtConfig(sbtConfig: String) = Inputs.default.copy(sbtConfigExtra = sbtConfig)
 
-  def history(columns: Seq[String]*): History = {
+  def history(columns: Seq[String]*): TaskHistory = {
     val records =
       columns.to[Vector].flatten.map(i => Task(Inputs.default.copy(code = i.toString), nextIp, TestTaskId(1), Instant.now)).reverse
 
-    History(Queue(records: _*), size = 20)
+    TaskHistory(Vector(records: _*), maxSize = 20)
   }
 }
