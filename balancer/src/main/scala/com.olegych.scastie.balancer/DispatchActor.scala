@@ -1,6 +1,7 @@
 package com.olegych.scastie.balancer
 
 import java.nio.file.Paths
+import java.time.Instant
 import java.util.concurrent.Executors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, OneForOneStrategy, SupervisorStrategy}
@@ -82,7 +83,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   private var remoteSbtSelections =
     sbtPorts.map(connectRunner("SbtRunner", "SbtActor", host)).toMap
 
-  val emptyHistory = History(Queue.empty[Record], size = 100)
+  val emptyHistory = History(Queue.empty, size = 100)
 
   private var sbtLoadBalancer: SbtBalancer = {
     val sbtServers = remoteSbtSelections.to[Vector].map {
@@ -153,7 +154,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     log.info("id: {}, ip: {} run inputs: {}", snippetId, ip, inputs)
 
-    val task = Task(inputs, Ip(ip), TaskId(snippetId))
+    val task = Task(inputs, Ip(ip), TaskId(snippetId), Instant.now)
 
     sbtLoadBalancer.add(task) match {
       case Some((server, newBalancer)) =>

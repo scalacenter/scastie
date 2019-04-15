@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package balancer
 
+import java.time.Instant
+
 import scala.collection.immutable.Queue
 
 class LoadBalancerTest extends LoadBalancerTestUtils {
@@ -69,7 +71,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
   test("reconfigure busy configuration") {
     val tasks = (1 to 500).map { i =>
-      Task(sbtConfig("c1"), Ip(i.toString), TestTaskId(i))
+      Task(sbtConfig("c1"), Ip(i.toString), TestTaskId(i), Instant.now)
     }
 
     val s1Tasks = Queue(tasks: _*)
@@ -105,7 +107,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
   test("do not reconfigure if some configuration is not busy") {
     val tasks = (1 to 5).map(
-      i => Task(sbtConfig("c1"), Ip(i.toString), TestTaskId(i))
+      i => Task(sbtConfig("c1"), Ip(i.toString), TestTaskId(i), Instant.now)
     )
     val s1Tasks = Queue(tasks: _*)
 
@@ -151,7 +153,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val c1 = sbtConfig("c1")
     val taskId = TestTaskId(1)
 
-    val (assigned, balancer0) = balancer.add(Task(c1, nextIp, taskId)).get
+    val (assigned, balancer0) = balancer.add(Task(c1, nextIp, taskId, Instant.now)).get
 
     assert(assigned.ref == server.ref)
     assert(balancer0.servers.head.mailbox.size == 1)
@@ -173,7 +175,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
     val taskId1 = TestTaskId(1)
     val (assigned0, balancer0) =
-      balancer.add(Task(sbtConfig("c1"), nextIp, taskId1)).get
+      balancer.add(Task(sbtConfig("c1"), nextIp, taskId1, Instant.now)).get
 
     val server0 = balancer0.servers.head
 
@@ -183,7 +185,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
     val taskId2 = TestTaskId(2)
     val (assigned1, balancer1) =
-      balancer0.add(Task(sbtConfig("c2"), nextIp, taskId2)).get
+      balancer0.add(Task(sbtConfig("c2"), nextIp, taskId2, Instant.now)).get
 
     val server1 = balancer1.servers.head
     assert(server1.mailbox.size == 2)
@@ -217,7 +219,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
       history = History(Queue(), size = 1)
     )
 
-    val task = Task(code("c1"), nextIp, TestTaskId(1))
+    val task = Task(code("c1"), nextIp, TestTaskId(1), Instant.now)
 
     assert(emptyBalancer.add(task).isEmpty)
   }

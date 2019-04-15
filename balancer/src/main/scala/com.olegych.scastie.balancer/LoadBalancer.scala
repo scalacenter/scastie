@@ -1,5 +1,7 @@
 package com.olegych.scastie.balancer
 
+import java.time.Instant
+
 import com.olegych.scastie.api._
 import com.olegych.scastie.balancer.utils.Histogram
 import org.slf4j.LoggerFactory
@@ -9,16 +11,13 @@ import scala.concurrent.duration.{DurationLong, FiniteDuration}
 import scala.util.Random
 
 case class Ip(v: String)
-case class Record(config: Inputs, ip: Ip)
 
-case class Task(config: Inputs, ip: Ip, taskId: TaskId) {
-  def toRecord: Record = Record(config, ip)
-}
+case class Task(config: Inputs, ip: Ip, taskId: TaskId, ts: Instant)
 
-case class History(data: Queue[Record], size: Int) {
-  def add(record: Record): History = {
+case class History(data: Queue[Task], size: Int) {
+  def add(task: Task): History = {
     // the user has changed configuration, we assume he will not go back to the previous configuration
-    val data0 = data.filterNot(_.ip == record.ip).enqueue(record)
+    val data0 = data.filterNot(_.ip == task.ip).enqueue(task)
     val data1 =
       if (data0.size > size) {
         val (_, q) = data0.dequeue
@@ -57,7 +56,7 @@ case class LoadBalancer[R, S <: ServerState](
       servers.partition(_.state.isReady)
 
     if (availableServers.nonEmpty) {
-      val updatedHistory = history.add(task.toRecord)
+      val updatedHistory = history.add(task)
       val hits = availableServers.filterNot(s => s.currentConfig.needsReload(task.config))
       val overBooked = hits.forall { s =>
         s.cost(taskCost, reloadCost) > reloadCost
@@ -65,10 +64,10 @@ case class LoadBalancer[R, S <: ServerState](
       val cacheMiss = hits.isEmpty
       val selectedServer = if (cacheMiss || overBooked) {
         // we try to find a new configuration to minimize the distance with the historical data
-        val historyHistogram = updatedHistory.data.map(_.config).to[Histogram]
+        val historyHistogram = updatedHistory.data.map(_.config.sbtInputs).to[Histogram]
         randomMin(availableServers) { s =>
           val config = task.config
-          val newConfigsHistogram = availableServers.map(olds => if (olds.id == s.id) config else olds.currentConfig).to[Histogram]
+          val newConfigsHistogram = availableServers.map(olds => if (olds.id == s.id) config.sbtInputs else olds.currentConfig.sbtInputs).to[Histogram]
           val distance = historyHistogram.distance(newConfigsHistogram)
           val load = s.cost(taskCost, reloadCost)
           (distance, load)
@@ -101,9 +100,9 @@ case class LoadBalancer[R, S <: ServerState](
     val evals = xs.map(x => (x, f(x)))
     val min = evals.minBy(_._2)._2
     val ranking = evals.filter { case (_, e) => e == min }
-    ranking(Random.nextInt(ranking.size))._1
+    random(ranking)._1
   }
 
   // select one at random
-  private def random[T](xs: Vector[T]): T = xs(Random.nextInt(xs.size))
+  private def random[T](xs: Seq[T]): T = xs(Random.nextInt(xs.size))
 }
