@@ -48,6 +48,7 @@ case class LoadBalancer[R, S <: ServerState](servers: Vector[Server[R, S]]) {
     if (availableServers.nonEmpty) {
       val selectedServer = availableServers.maxBy { s =>
         (
+          s.mailbox.length < 3, //allow reload if server gets busy
           !s.currentConfig.needsReload(task.config), //pick those without need for reload
           -s.mailbox.length, //then those least busy
           (s.mailbox ++ s.history.data).exists(!_.config.needsReload(task.config)), //then those which use(d) this config
