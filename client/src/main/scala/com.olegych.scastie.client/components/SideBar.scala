@@ -15,8 +15,13 @@ import js.annotation._
 @js.native
 object ScastieLogo extends js.Object
 
+@JSImport("resources/images/placeholder.svg", JSImport.Namespace)
+@js.native
+object Placeholder extends js.Object
+
 object Assets {
   def logoUrl: String = ScastieLogo.asInstanceOf[String]
+  def placeholderUrl: String = Placeholder.asInstanceOf[String]
 }
 
 final case class SideBar(isDarkTheme: Boolean,

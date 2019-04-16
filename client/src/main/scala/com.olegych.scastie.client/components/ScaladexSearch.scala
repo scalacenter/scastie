@@ -330,7 +330,7 @@ object ScaladexSearch {
           logo
             .map(url => img(src := (url + "&s=40"), common, alt := s"$organization logo or avatar"))
             .getOrElse(
-              img(src := "/assets/public/placeholder.svg", common, alt := s"placeholder for $organization")
+              img(src := Assets.placeholderUrl, common, alt := s"placeholder logo for $organization")
             ),
           span(cls := "artifact")(label)
         ),
