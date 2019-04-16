@@ -62,6 +62,7 @@ object EditorTopBar {
     ).render
 
     val worksheetButton = WorksheetButton(
+      props.scalaTarget.hasWorksheetMode,
       props.isWorksheetMode,
       props.toggleWorksheetMode,
       props.view.value
@@ -107,7 +108,7 @@ object EditorTopBar {
         newButton,
         formatButton,
         clearButton,
-        worksheetButton.when(props.scalaTarget.hasWorksheetMode),
+        worksheetButton,
         downloadButton,
         embeddedModalButton
       )
