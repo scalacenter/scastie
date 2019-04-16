@@ -1,10 +1,10 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.{SnippetId, SnippetUserPart, ScalaTarget, ScalaTargetType, ScalaDependency}
+import com.olegych.scastie.api.{Project, ScalaDependency, ScalaTarget, ScalaTargetType, SnippetId, SnippetUserPart}
 import com.olegych.scastie.client.components._
-
-import japgolly.scalajs.react._, vdom.all._, extra.router._
-
+import japgolly.scalajs.react._
+import vdom.all._
+import extra.router._
 import java.util.UUID
 
 class Routing(defaultServerUrl: String) {
@@ -19,7 +19,7 @@ class Routing(defaultServerUrl: String) {
       in => ScalaTargetType.parse(in.toUpperCase)
     )(_.toString)
 
-    def parseTryLibrary(params: String): Option[ScalaDependency] = {
+    def parseTryLibrary(params: String) = {
 
       val map =
         params
@@ -35,8 +35,10 @@ class Routing(defaultServerUrl: String) {
         map.get("g"),
         map.get("a"),
         map.get("v"),
+        map.get("o"),
+        map.get("r"),
       ) match {
-        case (Some(g), Some(a), Some(v)) =>
+        case (Some(g), Some(a), Some(v), o, r) =>
           val target =
             map.get("t").flatMap(ScalaTargetType.parse) match {
               case Some(ScalaTargetType.JVM) =>
@@ -51,13 +53,17 @@ class Routing(defaultServerUrl: String) {
               case _ => None
             }
 
-          target.map(t => ScalaDependency(g, a, t, v))
+          val project = (r, o) match {
+            case (Some(r), Some(o)) => Project(organization = o, repository = r, None, Nil)
+            case _                  => Project("", "", None, Nil)
+          }
+          target.map(t => (ScalaDependency(g, a, t, v), project))
         case _ => None
       }
     }
 
-    def renderTryLibrary(dep: ScalaDependency): String = {
-      import dep._
+    def renderTryLibrary(dep: (ScalaDependency, Project)): String = {
+      import dep._1._
 
       val tm: Map[String, String] =
         target match {
@@ -66,14 +72,16 @@ class Routing(defaultServerUrl: String) {
           case _                        => Map()
         }
 
-      val gav: Map[String, String] =
+      val gavro: Map[String, String] =
         Map(
           "g" -> groupId,
           "a" -> artifact,
-          "v" -> version
+          "v" -> version,
+          "r" -> dep._2.repository,
+          "o" -> dep._2.organization
         )
 
-      (gav ++ tm)
+      (gavro ++ tm)
         .map {
           case (k, v) => k + "=" + v
         }

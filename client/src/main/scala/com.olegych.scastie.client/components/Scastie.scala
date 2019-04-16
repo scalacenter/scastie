@@ -19,7 +19,7 @@ final case class Scastie(
     private val oldSnippetId: Option[Int],
     private val embedded: Option[EmbeddedOptions],
     private val targetType: Option[ScalaTargetType],
-    private val tryLibrary: Option[ScalaDependency]
+    private val tryLibrary: Option[(ScalaDependency, Project)]
 ) {
 
   @inline def render = Scastie.component(serverUrl, scastieId)(this)
@@ -174,15 +174,14 @@ object Scastie {
           }
 
         props.tryLibrary match {
-          case Some(dependency) => {
+          case Some(dependency) =>
             state1
-              .setTarget(dependency.target)
-              .addScalaDependency(dependency, Project("", "", None, Nil))
-          }
+              .setTarget(dependency._1.target)
+              .addScalaDependency(dependency._1, dependency._2)
           case _ => state1
         }
       }
-      .backend(new ScastieBackend(scastieId, serverUrl, _))
+      .backend(ScastieBackend(scastieId, serverUrl, _))
       .renderPS(render)
       .componentWillMount { current =>
         start(current.props, current.backend) >>
