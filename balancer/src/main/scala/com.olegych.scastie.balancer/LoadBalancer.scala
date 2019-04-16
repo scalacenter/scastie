@@ -1,6 +1,7 @@
 package com.olegych.scastie.balancer
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 import com.olegych.scastie.api._
 import org.slf4j.LoggerFactory
@@ -43,7 +44,8 @@ case class LoadBalancer[R, S <: ServerState](servers: Vector[Server[R, S]]) {
     val (availableServers, unavailableServers) =
       servers.partition(_.state.isReady)
 
-    def lastWithIp(v: Vector[Task]) = v.filter(_.ip == task.ip).lastOption
+    def lastTenMinutes(v: Vector[Task]) = v.filter(_.ts.isAfter(Instant.now.minus(10, ChronoUnit.MINUTES)))
+    def lastWithIp(v: Vector[Task]) = lastTenMinutes(v.filter(_.ip == task.ip)).lastOption
 
     if (availableServers.nonEmpty) {
       val selectedServer = availableServers.maxBy { s =>
@@ -51,7 +53,7 @@ case class LoadBalancer[R, S <: ServerState](servers: Vector[Server[R, S]]) {
           s.mailbox.length < 3, //allow reload if server gets busy
           !s.currentConfig.needsReload(task.config), //pick those without need for reload
           -s.mailbox.length, //then those least busy
-          (s.mailbox ++ s.history.data).exists(!_.config.needsReload(task.config)), //then those which use(d) this config
+          lastTenMinutes(s.mailbox ++ s.history.data).exists(!_.config.needsReload(task.config)), //then those which use(d) this config
           lastWithIp(s.mailbox).orElse(lastWithIp(s.history.data)).map(_.ts.toEpochMilli), //then one most recently used by this ip, if any
           s.mailbox.lastOption.orElse(s.history.data.lastOption).map(-_.ts.toEpochMilli).getOrElse(0L) //then one least recently used
         )
