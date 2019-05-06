@@ -177,6 +177,7 @@ lazy val sbtRunner = project
       akkaHttp,
       "com.geirsson" %% "scalafmt-core" % "1.3.0"
     ),
+    maintainer in docker := "scalacenter",
     imageNames in docker := Seq(
       ImageName(
         namespace = Some(dockerOrg),
