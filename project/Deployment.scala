@@ -12,6 +12,7 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.sbt.SbtNativePackager.Universal
 import sbtdocker.DockerKeys.{docker, dockerBuildAndPush, imageNames}
 import sbtdocker.ImageName
+import sys.process._
 
 object Deployment {
   def settings(server: Project, sbtRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(

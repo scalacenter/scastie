@@ -133,7 +133,7 @@ class LoadBalancerRecoveryTest()
       f: SnippetProgress => Boolean
   ): Unit = {
 
-    progressActor.fishForMessage(30.seconds) {
+    progressActor.fishForMessage(50.seconds) {
       case progress: SnippetProgress => {
         if (progress.snippetId.get != sid) {
           println()

@@ -374,10 +374,9 @@ lazy val sbtScastie = project
   .settings(orgSettings)
   .settings(
     moduleName := "sbt-scastie",
-    scalaVersion := sbt210,
     sbtPlugin := true
   )
-  .dependsOn(api210JVM)
+  .dependsOn(apiJVM)
 
 // migration from file containers to mongodb
 // sbt migration/assembly

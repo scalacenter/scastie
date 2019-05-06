@@ -23,17 +23,19 @@ object SbtShared {
   val latest213 = "2.13.0-RC1"
   val currentScalaVersion = latest212
 
-  val latestScalaJs = "0.6.26"
-  val latestDotty = "0.7.0-RC1"
+  val latestScalaJs = "0.6.27"
+  //todo allow choosing dotty version and merge com.olegych.scastie.api.ScalaTarget.sbtConfig with com.olegych.scastie.api.Inputs.sbtConfigExtra
+  val latestDotty = "0.15.0-bin-20190504-61ea245-NIGHTLY"
 
-  val latestCoursier = "1.0.3"
+  val latestCoursier = "1.1.0-M14-1"
 
-  val sbtVersion = "0.13.18"
+  val sbtVersion = "1.2.8"
 
   val runtimeProjectName = "runtime-scala"
 
   def gitIsDirty(): Boolean = {
-    Process("git diff-files --quiet").! == 1
+    import sys.process._
+    "git diff-files --quiet".! == 1
   }
 
   def gitHash(): String = {
@@ -44,7 +46,7 @@ object SbtShared {
         if (gitIsDirty()) "-dirty"
         else ""
 
-      Process("git rev-parse --verify HEAD").lines.mkString("") + indexState
+      Process("git rev-parse --verify HEAD").lineStream.mkString("") + indexState
     } else "CI"
   }
 
@@ -52,7 +54,7 @@ object SbtShared {
   val gitIsDirtyNow = gitIsDirty()
 
   val versionNow = {
-    val base = "0.27.0"
+    val base = "0.28.0"
     if (gitIsDirtyNow)
       base + "-SNAPSHOT"
     else {
@@ -63,10 +65,13 @@ object SbtShared {
 
   val playJsonVersion = "2.6.9"
 
-  val scalajsDomVersion = "0.9.3"
+  val scalajsDomVersion = "0.9.7"
 
   val playJson =
     libraryDependencies += toScalaJSGroupID("com.typesafe.play") %%% "play-json" % playJsonVersion
+  //silence eviction warning
+  val playJsonOverrides =
+    dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-annotations" % "2.8.9"
 
   lazy val baseSettings = Seq(
     // skip scaladoc
@@ -192,6 +197,7 @@ object SbtShared {
         unmanagedSourceDirectories in Test += src("test").value
       )
       .settings(playJson)
+      .jvmSettings(playJsonOverrides)
       .jsSettings(baseJsSettings)
       .jsSettings(
         test := {},

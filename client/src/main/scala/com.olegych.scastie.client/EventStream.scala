@@ -85,7 +85,7 @@ class WebSocketStream[T: Reads](uri: String, handler: EventStreamHandler[T]) ext
     onMessage(e.data.toString)
   }
 
-  private def onError(e: ErrorEvent): Unit = {
+  private def onError2(e: ErrorEvent): Unit = {
     onError(e.message)
   }
 
@@ -106,7 +106,7 @@ class WebSocketStream[T: Reads](uri: String, handler: EventStreamHandler[T]) ext
   socket.onopen = onOpen _
   socket.onclose = onClose _
   socket.onmessage = onMessage _
-  socket.onerror = onError _
+//  socket.onerror = onError2 _
 }
 
 class EventSourceStream[T: Reads](uri: String, handler: EventStreamHandler[T]) extends EventStream[T](handler) {

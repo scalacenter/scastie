@@ -1,13 +1,20 @@
 package com.olegych.scastie.sbtscastie
 
+import java.io.{OutputStream, PrintWriter}
+
 import com.olegych.scastie.api.{ConsoleOutput, ProcessOutputType, ProcessOutput, RuntimeError, RuntimeErrorWrap}
 
-import sbt._
-import Keys._
-
+import org.apache.logging.log4j.core.appender.AbstractAppender
+import org.apache.logging.log4j.core.async.RingBufferLogEvent
+import org.apache.logging.log4j.core.layout.PatternLayout
+import org.apache.logging.log4j.core.LogEvent
+import org.apache.logging.log4j.message.ObjectMessage
 import play.api.libs.json.Json
-
-import java.io.{PrintWriter, OutputStream, StringWriter}
+import sbt.Keys._
+import sbt._
+import sbt.internal.LogManager.suppressedMessage
+import sbt.internal.util.MainAppender.defaultScreen
+import sbt.internal.util.{ObjectEvent, TraceEvent}
 
 object RuntimeErrorLogger {
   private object NoOp {
@@ -35,39 +42,37 @@ object RuntimeErrorLogger {
   }
   private class NoOp(os: OutputStream) extends PrintWriter(os)
 
-  val settings: Seq[sbt.Def.Setting[_]] = Seq(
-    extraLoggers := {
-      val clientLogger = FullLogger {
-        new Logger {
-          def log(level: Level.Value, message: => String): Unit = ()
-
-          def success(message: => String): Unit = () // << this is never called
-
-          def trace(t: => Throwable): Unit = {
-
-            // Nonzero exit code: 1
-            val sbtTrap =
-              t.isInstanceOf[RuntimeException] &&
-                t.getMessage == "Nonzero exit code: 1" &&
-                !t.getStackTrace.exists(
-                  e => e.getClassName == "sbt.Run" && e.getMethodName == "invokeMain"
-                )
-
-            if (!sbtTrap) {
-              val error = RuntimeErrorWrap(RuntimeError.fromThrowable(t))
-              println(Json.stringify(Json.toJson(error)))
-            }
-          }
-        }
+  private val clientLogger = new AbstractAppender("sbt-scastie-appender", null, PatternLayout.createDefaultLayout()) {
+    def append(event: LogEvent): Unit = {
+      //daaamn
+      val throwable = Option(event.getThrown).orElse {
+        for {
+          e <- Option(event.getMessage).collect {
+                case e: ObjectMessage => e
+              }
+          e <- Option(e.getParameter).collect {
+                case e: ObjectEvent[_] => e
+              }
+          e <- Option(e.message).collect {
+                case e: TraceEvent => e
+              }
+        } yield e.message
       }
-      // val currentFunction = extraLoggers.value
-      (key: ScopedKey[_]) =>
-        Seq(clientLogger)
+      throwable.foreach { throwable =>
+        val error = RuntimeErrorWrap(RuntimeError.fromThrowable(throwable))
+        println(Json.stringify(Json.toJson(error)))
+      }
+    }
+    start()
+  }
+
+  val settings: Seq[sbt.Def.Setting[_]] = Seq(
+    extraLoggers := { (key: ScopedKey[_]) =>
+      Seq(clientLogger)
     },
     showSuccess := false,
-    logManager := LogManager.defaults(
-      extraLoggers.value,
-      ConsoleOut.printWriterOut(NoOp())
-    )
+    logManager := sbt.internal.LogManager.withLoggers(
+      (task, state) => defaultScreen(ConsoleOut.printWriterOut(NoOp()), suppressedMessage(task, state)),
+      relay = _ => clientLogger)
   )
 }

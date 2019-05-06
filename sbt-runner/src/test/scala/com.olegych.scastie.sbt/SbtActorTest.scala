@@ -44,19 +44,23 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("capture runtime errors") {
-    runCode("1/0", allowFailure = true)(
-      progress => {
-        val gotRuntimeError = progress.runtimeError.nonEmpty
+    runCode("1/0", allowFailure = true) { progress =>
+      val gotRuntimeError = progress.runtimeError.nonEmpty
 
-        if (gotRuntimeError) {
-          val error = progress.runtimeError.get
-          assert(error.message == "java.lang.ArithmeticException: / by zero")
-          assert(error.line.contains(1))
-          assert(error.fullStack.nonEmpty)
-        }
-        gotRuntimeError
+      if (gotRuntimeError) {
+        val error = progress.runtimeError.get
+        assert(error.message contains "java.lang.ArithmeticException: / by zero")
+        assert(error.line.contains(1))
+        assert(error.fullStack.nonEmpty)
       }
-    )
+      gotRuntimeError
+    }
+  }
+
+  test("trap sys.exit") {
+    runCode("sys.exit(-2)", allowFailure = false) { progress =>
+      progress.sbtOutput.exists(_.line.contains("Nonzero exit code: -2"))
+    }
   }
 
   test("capture user output separately from sbt output") {
@@ -88,21 +92,6 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       assert(info.message == "not found: value err")
       assert(info.line.contains(1))
     })
-  }
-
-  test("Regression #55: Dotty fails to resolve") {
-    val message = "Hello, Dotty!"
-    val dotty = Inputs.default.copy(
-      code = s"""|object Main {
-                 |  def main(args: Array[String]): Unit = {
-                 |    println("$message")
-                 |  }
-                 |}
-                 |""".stripMargin,
-      target = ScalaTarget.Dotty.default,
-      _isWorksheetMode = false
-    )
-    run(dotty)(assertUserOutput("Hello, Dotty!"))
   }
 
   test("Encoding issues #100") {
@@ -151,6 +140,21 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val scalaJs =
       Inputs.default.copy(code = "object Main extends App { println(1 + 1) }", target = ScalaTarget.Jvm("2.13.0-RC1"))
     run(scalaJs)(assertUserOutput("2"))
+  }
+
+  test("Dotty support") {
+    val message = "Hello, Dotty!"
+    val dotty = Inputs.default.copy(
+      code = s"""|object Main {
+                 |  def main(args: Array[String]): Unit = {
+                 |    println("$message")
+                 |  }
+                 |}
+                 |""".stripMargin,
+      target = ScalaTarget.Dotty.default,
+      _isWorksheetMode = false
+    )
+    run(dotty)(assertUserOutput("Hello, Dotty!"))
   }
 
   test("Capture System.err #284") {
@@ -226,17 +230,16 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       if (firstRun) timeout + 10.second
       else timeout
 
-    progressActor.fishForMessage(totalTimeout + 100.seconds) {
-      case progress: SnippetProgress =>
-        val fishResult = fish(progress)
-//        println(progress -> fishResult)
-        if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
-          throw new Exception(s"Fail to meet expectation at ${progress}")
-        else fishResult
+    progressActor.fishForMessage(totalTimeout + 100.seconds) { case progress: SnippetProgress =>
+      val fishResult = fish(progress)
+      //        println(progress -> fishResult)
+      if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
+        throw new Exception(s"Fail to meet expectation at ${progress}")
+      else fishResult
     }
-
     firstRun = false
   }
+
   private def runCode(code: String, target: ScalaTarget = ScalaTarget.Jvm.default, allowFailure: Boolean = false)(
       fish: SnippetProgress => Boolean
   ): Unit = {
