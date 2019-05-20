@@ -96,11 +96,14 @@ object ScalaTarget {
 
   private def partialUnificationSbtPlugin = """addSbtPlugin("org.lyranthe.sbt" % "partial-unification" % "1.1.2")"""
   private def hktScalacOptions(scalaVersion: String) = {
-    val kpVersion = if (scalaVersion == "2.13.0-M5") "0.9.9" else "0.9.10"
+    val (kpOrg, kpVersion) =
+      if (scalaVersion == "2.13.0-M5") ("org.spire-math", "0.9.9")
+      else if (scalaVersion == "2.13.0-RC1") ("org.spire-math", "0.9.10")
+      else ("org.typelevel", "0.10.1")
     s"""
     scalacOptions += "-language:higherKinds"
     
-    addCompilerPlugin("org.spire-math" %% "kind-projector" % "${kpVersion}")
+    addCompilerPlugin("${kpOrg}" %% "kind-projector" % "${kpVersion}")
     
     libraryDependencies ++= (scalaBinaryVersion.value match {
       case "2.10" =>
