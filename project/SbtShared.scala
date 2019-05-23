@@ -25,7 +25,7 @@ object SbtShared {
 
   val latestScalaJs = "0.6.27"
   //todo allow choosing dotty version and merge com.olegych.scastie.api.ScalaTarget.sbtConfig with com.olegych.scastie.api.Inputs.sbtConfigExtra
-  val latestDotty = "0.15.0-bin-20190517-fb6667b-NIGHTLY"
+  val latestDotty = "0.15.0-RC1"
 
   val latestCoursier = "1.1.0-M14-1"
 
