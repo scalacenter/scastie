@@ -33,8 +33,8 @@ object WorksheetButton {
       else "ON"
 
     li(
-      title := (if (props.hasWorksheetMode) s"Turn Worksheet Mode $isWorksheetModeToggleLabel (F4)"
-                else "This configuration does not support worksheet mode"),
+      title := (if (props.hasWorksheetMode) s"Turn Worksheet mode $isWorksheetModeToggleLabel (evaluate and print each top level expression)"
+                else "This configuration does not support Worksheet mode"),
       isWorksheetModeSelected,
       role := "button",
       cls := "btn editor",

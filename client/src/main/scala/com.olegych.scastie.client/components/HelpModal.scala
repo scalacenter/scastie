@@ -1,8 +1,10 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.buildinfo.BuildInfo.{gitHash, version}
-
-import japgolly.scalajs.react._, vdom.all._, extra._
+import com.olegych.scastie.client.components.editor.EditorOptions
+import japgolly.scalajs.react._
+import vdom.all._
+import extra._
 
 final case class HelpModal(isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = HelpModal.component(this)
@@ -21,14 +23,17 @@ object HelpModal {
 
     val sublime = generateATag(
       "https://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html",
-      "Sublime Text Keyboard Shortcuts are also supported"
+      "keyboard shortcuts."
     )
 
     val scalafmtConfiguration =
       generateATag("https://olafurpg.github.io/scalafmt/#Configuration", "configuration section")
 
     val originalScastie =
-      generateATag("https://github.com/OlegYch/scastie", "GitHub")
+      generateATag("https://github.com/OlegYch/scastie_old", "GitHub")
+
+    val gitter =
+      generateATag("https://gitter.im/scalacenter/scastie", "Gitter")
 
     Modal(
       title = "Help about Scastie",
@@ -37,33 +42,50 @@ object HelpModal {
       modalCss = TagMod(),
       modalId = "long-help",
       content = TagMod(
-        p(cls := "normal", "Scastie is an interactive playground for Scala."),
-        h2("Run / Edit"),
-        p(cls := "normal", "The code editor where you can write and run your code."),
-        div(cls := "indent")(
-          h3("Clear"),
-          p(
-            cls := "normal",
-            "Removes all your code lines from the current editor instance."
-          ),
-          h3("Format"),
-          p(cls := "normal",
-            "The code formatting is done by scalafmt. You can configure the formatting with comments in your code. Read the ",
-            scalafmtConfiguration),
-          h3("Worksheet"),
-          p(
-            cls := "normal",
-            """Enabled by default, the Worksheet Mode gives the value and the type of each line of your program. You can also add HTML blocks such as: html "<h1>Hello</h1>".fold to break down your program into various sections."""
-          ),
-          p(
-            cls := "normal",
-            "In Worksheet Mode you cannot use package or value classes. If you want to use those features, turn off the Mode and add a main method and println statements."
-          ),
-          h3("Save"),
-          p(
-            cls := "normal",
-            "You can save your code fragments just clicking this button. (You need to be logged in with your Github account for this to work) Once they're saved, you'll be able to Update, Fork or Share them."
-          )
+        p(cls := "normal", "Scastie is an interactive playground for Scala with support for sbt configuration."),
+        p(cls := "normal", "Scastie editor supports Sublime Text ", sublime),
+        h2(s"Save (${EditorOptions.Keys.saveOrUpdate})"),
+        p(
+          cls := "normal",
+          "Run and save your code."
+        ),
+        h2(s"New (${EditorOptions.Keys.openNew})"),
+        p(
+          cls := "normal",
+          "Removes all your code lines from the current editor instance and resets sbt configuration."
+        ),
+        h2(s"Clear Messages (${EditorOptions.Keys.clear})"),
+        p(
+          cls := "normal",
+          "Removes all messages from the current editor instance."
+        ),
+        h2(s"Format (${EditorOptions.Keys.format})"),
+        p(cls := "normal",
+          "The code formatting is done by scalafmt. You can configure the formatting with comments in your code. Read the ",
+          scalafmtConfiguration),
+        h2(s"Worksheet"),
+        p(
+          cls := "normal",
+          """Enabled by default, the Worksheet Mode gives the value and the type of each line of your program. You can also add HTML blocks such as: html "<h1>Hello</h1>".fold to break down your program into various sections."""
+        ),
+        p(
+          cls := "normal",
+          "In Worksheet Mode you cannot use package or value classes. If you want to use those features, turn off the Mode and add a main method and println statements."
+        ),
+        h2("Download"),
+        p(
+          cls := "normal",
+          "Create a zip package with sbt configuration for current snippet."
+        ),
+        h2("Embed"),
+        p(
+          cls := "normal",
+          "Create an url embeddable in external web pages."
+        ),
+        h2(s"Console (${EditorOptions.Keys.console})"),
+        p(
+          cls := "normal",
+          "You can see your code's output in the Scastie's console."
         ),
         h2("Build Settings"),
         p(
@@ -73,72 +95,10 @@ object HelpModal {
         h2("User's Code Snippets"),
         p(
           cls := "normal",
-          "Your saved code fragments will appear here and you'll be able to edit or share them."
-        ),
-        h2("Console"),
-        p(
-          cls := "normal",
-          "You can see your code's output in the Scastie's console."
+          "Your saved code fragments will appear here and you'll be able to delete or share them."
         ),
         h2("Feedback"),
-        p(cls := "normal", "You can join our Gitter channel and send issues."),
-        h2("Keyboard shortcut"),
-        div(cls := "shortcuts")(
-          table(
-            tbody(
-              tr(
-                th("Editor view")(
-                  br,
-                  "Run"
-                ),
-                td(
-                  span("?"),
-                  "+",
-                  span("Enter")
-                )
-              ),
-              tr(
-                th("Clear annotations, Close console"),
-                td(
-                  span("Esc")
-                )
-              ),
-              tr(
-                th("Save"),
-                td(
-                  span("?"),
-                  "+",
-                  span("S")
-                )
-              ),
-              tr(
-                th("Format Code"),
-                td(
-                  span("F6")
-                )
-              ),
-              tr(
-                th("Toggle Console"),
-                td(
-                  span("F3")
-                )
-              ),
-              tr(
-                th("Toggle Theme"),
-                td(
-                  span("F2")
-                )
-              ),
-              tr(
-                th("Toggle Worksheet Mode"),
-                td(
-                  span("F4")
-                )
-              )
-            )
-          )
-        ),
-        p(cls := "normal")(sublime),
+        p(cls := "normal", "You can join our ", gitter, " channel and send issues."),
         h2("BuildInfo"),
         p(cls := "normal", "It's available on Github at ")(
           scastieGithub,

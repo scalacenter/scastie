@@ -490,13 +490,21 @@ case class ScastieState(
     }
 
     val useWorksheetModeTip =
-      if (compilationInfos.exists(ci => topDef(ci)) && inputs.target.hasWorksheetMode)
-        Set(
-          info(
-            """|It seems you're writing code without an enclosing class/object.
-               |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin
+      if (compilationInfos.exists(ci => topDef(ci)))
+        if (inputs.target.hasWorksheetMode)
+          Set(
+            info(
+              """|It seems you're writing code without an enclosing class/object.
+                 |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin
+            )
           )
-        )
+        else
+          Set(
+            info(
+              """|It seems you're writing code without an enclosing class/object.
+                 |This configuration does not support Worksheet mode.""".stripMargin
+            )
+          )
       else Set()
 
     copyAndSave(

@@ -20,5 +20,4 @@ package object client {
     dontSerialize(List())
 
   val isMac: Boolean = window.navigator.userAgent.contains("Mac")
-  val ctrl: String = if (isMac) "⌘" else "Ctrl"
 }

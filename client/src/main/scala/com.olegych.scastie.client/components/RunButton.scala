@@ -1,7 +1,10 @@
 package com.olegych.scastie.client
 package components
 
-import japgolly.scalajs.react._, vdom.all._, extra._
+import com.olegych.scastie.client.components.editor.EditorOptions
+import japgolly.scalajs.react._
+import vdom.all._
+import extra._
 
 final case class RunButton(isRunning: Boolean, isStatusOk: Boolean, save: Reusable[Callback], setView: View ~=> Callback) {
   @inline def render: VdomElement = RunButton.component(this)
@@ -16,9 +19,9 @@ object RunButton {
     if (!props.isRunning) {
       val runTitle =
         if (props.isStatusOk)
-          s"Save ($ctrl + Enter)"
+          s"Save (${EditorOptions.Keys.saveOrUpdate})"
         else
-          s"Save ($ctrl + Enter) - warning: unknown status"
+          s"Save (${EditorOptions.Keys.saveOrUpdate}) - warning: unknown status"
 
       li(onClick --> props.save, role := "button", title := runTitle, cls := "btn run-button")(
         i(cls := "fa fa-play"),

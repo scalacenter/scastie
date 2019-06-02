@@ -59,7 +59,7 @@ object Console {
         div(cls := "handler"),
         div(cls := "switcher-hide", displayConsole, role := "button", onClick --> props.close)(
           i(cls := "fa fa-terminal"),
-          "Console",
+          "Console (F3)",
           i(cls := "fa fa-caret-down")
         ),
         div.ref(consoleElement = _)(
@@ -70,7 +70,7 @@ object Console {
       div(cls := "switcher-show", role := "button", onClick --> props.open)(
         displaySwitcher,
         i(cls := "fa fa-terminal"),
-        "Console",
+        "Console (F3)",
         i(cls := "fa fa-caret-up")
       )
     )

@@ -94,7 +94,7 @@ object EditorTopBar {
               close = props.closeEmbeddedModal
             ).render
 
-          li(title := s"Embed ($ctrl + E)", role := "button", cls := "btn", onClick --> props.openEmbeddedModal)(
+          li(title := s"Embed", role := "button", cls := "btn", onClick --> props.openEmbeddedModal)(
             i(cls := "fa fa-code"),
             span("Embed"),
             embeddedModal

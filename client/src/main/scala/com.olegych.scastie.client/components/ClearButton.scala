@@ -1,7 +1,10 @@
 package com.olegych.scastie.client
 package components
 
-import japgolly.scalajs.react._, vdom.all._, extra._
+import com.olegych.scastie.client.components.editor.EditorOptions
+import japgolly.scalajs.react._
+import vdom.all._
+import extra._
 
 final case class ClearButton(clear: Reusable[Callback]) {
   @inline def render: VdomElement = ClearButton.component(this)
@@ -13,7 +16,7 @@ object ClearButton {
     Reusability.caseClass[ClearButton]
 
   private def render(props: ClearButton): VdomElement = {
-    li(title := "Clear Instrumentations (Esc)", role := "button", cls := "btn", onClick --> props.clear)(
+    li(title := s"Clear Messages (${EditorOptions.Keys.clear})", role := "button", cls := "btn", onClick --> props.clear)(
       div(
         i(cls := "fa fa-eraser"),
         span("Clear Annotations")

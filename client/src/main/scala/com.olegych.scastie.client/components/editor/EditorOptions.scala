@@ -8,15 +8,24 @@ import codemirror.{Editor => CodeMirrorEditor2, CodeMirror => CM}
 
 import japgolly.scalajs.react.BackendScope
 
-private[editor] object EditorOptions {
+object EditorOptions {
+  object Keys {
+    val ctrl = if (isMac) "Cmd" else "Ctrl"
+
+    val saveOrUpdate = ctrl + "-Enter"
+    val openNew = ctrl + "-M"
+    val clear = "Esc"
+    val help = "F1"
+    val console = "F3"
+    val format = "F6"
+    val lineNumbers = "F7"
+    val presentation = "F8"
+  }
+
   def apply(props: Editor, scope: BackendScope[Editor, EditorState]): codemirror.Options = {
     val theme =
       if (props.isDarkTheme) "dark"
       else "light"
-
-    val ctrl =
-      if (isMac) "Cmd"
-      else "Ctrl"
 
     val highlightSelectionMatches =
       js.Dictionary(
@@ -31,6 +40,7 @@ private[editor] object EditorOptions {
     ): js.Function1[CodeMirrorEditor2, Unit] = { ((editor: CodeMirrorEditor2) => f(editor))
     }
 
+    import Keys._
     js.Dictionary[Any](
         "autoRefresh" -> props.isEmbedded,
         "mode" -> "text/x-scala",
@@ -51,19 +61,16 @@ private[editor] object EditorOptions {
         "highlightSelectionMatches" -> highlightSelectionMatches,
         "extraKeys" -> js.Dictionary(
           "Tab" -> "defaultTab",
-          ctrl + "-Enter" -> command(props.saveOrUpdate.runNow()),
+          saveOrUpdate -> command(props.saveOrUpdate.runNow()),
           ctrl + "-S" -> command(props.saveOrUpdate.runNow()),
-          ctrl + "-M" -> command(props.openNewSnippetModal.runNow()),
+          openNew -> command(props.openNewSnippetModal.runNow()),
           ctrl + "-L" -> CM.Pass,
-          ctrl + "-E" -> command(props.openEmbeddedModal.runNow()),
-          "Esc" -> command(props.clear.runNow()),
-          "F1" -> command(props.toggleHelp.runNow()),
-          "F2" -> command(props.toggleTheme.runNow()),
-          "F3" -> command(props.toggleConsole.runNow()),
-          "F4" -> command(props.toggleWorksheetMode.runNow()),
-          "F6" -> command(props.formatCode.runNow()),
-          "F7" -> command(props.toggleLineNumbers.runNow()),
-          "F8" -> command {
+          clear -> command(props.clear.runNow()),
+          help -> command(props.toggleHelp.runNow()),
+          console -> command(props.toggleConsole.runNow()),
+          format -> command(props.formatCode.runNow()),
+          lineNumbers -> command(props.toggleLineNumbers.runNow()),
+          presentation -> command {
             if (!props.isEmbedded) {
               props.togglePresentationMode.runNow()
               if (!props.isPresentationMode) {

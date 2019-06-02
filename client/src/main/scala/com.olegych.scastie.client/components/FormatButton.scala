@@ -1,5 +1,6 @@
 package com.olegych.scastie.client.components
 
+import com.olegych.scastie.client.components.editor.EditorOptions
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.vdom.all._
@@ -19,7 +20,11 @@ object FormatButton {
       if (!isDisabled) props.formatCode
       else reusableEmpty
 
-    li(title := "Format Code (F6)", role := "button", (cls := "disabled").when(isDisabled), cls := "btn", onClick --> formatCode)(
+    li(title := s"Format Code (${EditorOptions.Keys.format})",
+       role := "button",
+       (cls := "disabled").when(isDisabled),
+       cls := "btn",
+       onClick --> formatCode)(
       i(cls := "fa fa-align-left"),
       span("Format")
     )
