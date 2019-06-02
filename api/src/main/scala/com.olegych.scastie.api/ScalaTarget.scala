@@ -99,7 +99,8 @@ object ScalaTarget {
     val (kpOrg, kpVersion) =
       if (scalaVersion == "2.13.0-M5") ("org.spire-math", "0.9.9")
       else if (scalaVersion == "2.13.0-RC1") ("org.spire-math", "0.9.10")
-      else ("org.typelevel", "0.10.1")
+      else if (scalaVersion == "2.13.0-RC2") ("org.typelevel", "0.10.1")
+      else ("org.typelevel", "0.10.2")
     s"""
     scalacOptions += "-language:higherKinds"
     
