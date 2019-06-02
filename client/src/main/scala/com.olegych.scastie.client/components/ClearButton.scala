@@ -19,7 +19,7 @@ object ClearButton {
     li(title := s"Clear Messages (${EditorOptions.Keys.clear})", role := "button", cls := "btn", onClick --> props.clear)(
       div(
         i(cls := "fa fa-eraser"),
-        span("Clear Annotations")
+        span("Clear Messages")
       )
     )
   }
