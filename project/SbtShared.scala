@@ -182,6 +182,7 @@ object SbtShared {
           organization,
           version,
           "runtimeProjectName" -> runtimeProjectName,
+          "latest212" -> latest212,
           "defaultScalaVersion" -> latest213,
           "defaultScalaJsVersion" -> latestScalaJs,
           "defaultDottyVersion" -> latestDotty,
