@@ -3,6 +3,7 @@ package com.olegych.scastie.api
 import com.olegych.scastie.buildinfo.BuildInfo
 
 import BuildInfo.defaultScalaVersion
+import BuildInfo.latest212
 import BuildInfo.defaultScalaJsVersion
 import BuildInfo.defaultDottyVersion
 
@@ -188,7 +189,7 @@ object ScalaTarget {
 
     def default: ScalaTarget =
       ScalaTarget.Js(
-        scalaVersion = defaultScalaVersion,
+        scalaVersion = latest212,
         scalaJsVersion = defaultScalaJsVersion
       )
   }
