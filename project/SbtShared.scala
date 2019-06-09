@@ -64,13 +64,14 @@ object SbtShared {
   }
 
   val playJsonVersion = "2.6.9"
+  val playJsonVersion213 = "2.8.0-M1"
 
   val scalajsDomVersion = "0.9.7"
 
   val playJson = libraryDependencies += {
     scalaVersion.value match {
       case v if v.startsWith("2.13") =>
-        "com.typesafe.play" % "play-json_2.13.0-RC2" % "2.8.0-M1"
+        "com.typesafe.play" % "play-json_2.13.0-RC2" % playJsonVersion213
       case _ =>
         toScalaJSGroupID("com.typesafe.play") %%% "play-json" % playJsonVersion
     }

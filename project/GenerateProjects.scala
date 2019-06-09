@@ -28,12 +28,13 @@ class GenerateProjects(sbtTargetDir: Path) {
         _isWorksheetMode = false
       )
 
-    def scala(version: String, withoutPlayJson: Boolean = false): Inputs = {
-      val playJson =
-        if (!withoutPlayJson)
-          s"""libraryDependencies += "com.typesafe.play" %% "play-json" % "$playJsonVersion""""
-        else ""
-
+    def scala(version: String): Inputs = {
+      val playJson = version match {
+        case v if v.startsWith("2.13") =>
+          s"""libraryDependencies += "com.typesafe.play" % "play-json_2.13.0-RC2" % "$playJsonVersion213" """
+        case _ =>
+          s"""libraryDependencies += "com.typesafe.play" %% "play-json" % "$playJsonVersion" """
+      }
       default.copy(
         target = ScalaTarget.Jvm(version),
         sbtConfigExtra = default.sbtConfigExtra + nl + nl + playJson
@@ -43,7 +44,7 @@ class GenerateProjects(sbtTargetDir: Path) {
     val scala210 = scala(sbt210)
     val scala211 = scala(latest211)
     val scala212 = scala(latest212)
-    val scala213 = scala(latest213, withoutPlayJson = true)
+    val scala213 = scala(latest213)
 
     val dotty =
       default.copy(
