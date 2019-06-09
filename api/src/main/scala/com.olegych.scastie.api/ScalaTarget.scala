@@ -100,7 +100,8 @@ object ScalaTarget {
       if (scalaVersion == "2.13.0-M5") ("org.spire-math", "0.9.9")
       else if (scalaVersion == "2.13.0-RC1") ("org.spire-math", "0.9.10")
       else if (scalaVersion == "2.13.0-RC2") ("org.typelevel", "0.10.1")
-      else ("org.typelevel", "0.10.2")
+      else if (scalaVersion == "2.13.0-RC3") ("org.typelevel", "0.10.2")
+      else ("org.typelevel", "0.10.3")
     s"""
     scalacOptions += "-language:higherKinds"
     
@@ -117,6 +118,7 @@ object ScalaTarget {
 
   case class Jvm(scalaVersion: String) extends ScalaTarget {
     def hasWorksheetMode: Boolean = {
+      scalaVersion.startsWith("2.13") ||
       scalaVersion.startsWith("2.12") ||
       scalaVersion.startsWith("2.11") ||
       scalaVersion.startsWith("2.10")

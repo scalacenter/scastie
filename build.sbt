@@ -60,6 +60,7 @@ lazy val scastie = project
   .aggregate(
     api210JVM,
     api211JVM,
+    api213JVM,
     apiJS,
     apiJVM,
     balancer,
@@ -69,7 +70,7 @@ lazy val scastie = project
     migration,
     runtimeScala210JVM,
     runtimeScala211JVM,
-    // runtimeScala213JVM,
+    runtimeScala213JVM,
     runtimeScalaJS,
     runtimeScalaJVM,
     sbtRunner,
@@ -115,10 +116,12 @@ lazy val utils = project
 lazy val runnerRuntimeDependencies = Seq(
   api210JVM,
   api211JVM,
+  api213JVM,
   apiJS,
   apiJVM,
   runtimeScala210JVM,
   runtimeScala211JVM,
+  runtimeScala213JVM,
   runtimeScalaJS,
   runtimeScalaJVM,
   sbtScastie
@@ -138,7 +141,6 @@ lazy val runnerRuntimeDependenciesInTest = Seq(
 )
 
 lazy val smallRunnerRuntimeDependencies = Seq(
-  api210JVM,
   apiJVM,
   runtimeScalaJVM,
   sbtScastie
@@ -323,14 +325,14 @@ lazy val instrumentation = project
 
 val api210 = apiProject(sbt210)
 val api211 = apiProject(latest211)
+val api213 = apiProject(latest213)
 val apiCurrent = apiProject(currentScalaVersion)
-// val api213 = apiProject(latest213)
 
 lazy val api210JVM = api210.jvm
 lazy val api211JVM = api211.jvm
+lazy val api213JVM = api213.jvm
 lazy val apiJS = apiCurrent.js
 lazy val apiJVM = apiCurrent.jvm
-// lazy val api213JVM = api213.jvm
 
 /* runtime* pretty print values and type */
 def runtimeScala(scalaV: String, apiProject: CrossProject) = {
@@ -361,14 +363,14 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
 
 val runtimeScala210 = runtimeScala(sbt210, api210)
 val runtimeScala211 = runtimeScala(latest211, api211)
+val runtimeScala213 = runtimeScala(latest213, api213)
 val runtimeScalaCurrent = runtimeScala(currentScalaVersion, apiCurrent)
-// val runtimeScala213 = runtimeScala(latest213, api213)
 
 lazy val runtimeScala210JVM = runtimeScala210.jvm
 lazy val runtimeScala211JVM = runtimeScala211.jvm
 lazy val runtimeScalaJS = runtimeScalaCurrent.js
 lazy val runtimeScalaJVM = runtimeScalaCurrent.jvm
-// lazy val runtimeScala213JVM = runtimeScala213.jvm
+lazy val runtimeScala213JVM = runtimeScala213.jvm
 
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))

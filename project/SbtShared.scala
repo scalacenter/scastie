@@ -20,7 +20,7 @@ object SbtShared {
   val sbt210 = "2.10.7"
   val latest211 = "2.11.12"
   val latest212 = "2.12.8"
-  val latest213 = "2.13.0-RC3"
+  val latest213 = "2.13.0"
   val currentScalaVersion = latest212
 
   val latestScalaJs = "0.6.28"
@@ -54,7 +54,7 @@ object SbtShared {
   val gitIsDirtyNow = gitIsDirty()
 
   val versionNow = {
-    val base = "0.28.0"
+    val base = "0.29.0"
     if (gitIsDirtyNow)
       base + "-SNAPSHOT"
     else {
@@ -67,11 +67,14 @@ object SbtShared {
 
   val scalajsDomVersion = "0.9.7"
 
-  val playJson =
-    libraryDependencies += toScalaJSGroupID("com.typesafe.play") %%% "play-json" % playJsonVersion
-  //silence eviction warning
-  val playJsonOverrides =
-    dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-annotations" % "2.8.9"
+  val playJson = libraryDependencies += {
+    scalaVersion.value match {
+      case v if v.startsWith("2.13") =>
+        "com.typesafe.play" % "play-json_2.13.0-RC2" % "2.8.0-M1"
+      case _ =>
+        toScalaJSGroupID("com.typesafe.play") %%% "play-json" % playJsonVersion
+    }
+  }
 
   lazy val baseSettings = Seq(
     // skip scaladoc
@@ -95,12 +98,9 @@ object SbtShared {
 
       if (scalaV == sbt210) base
       else {
-        base ++
-          Seq(
-            "-Yrangepos",
-            "-Ywarn-unused-import",
-            "-Ywarn-adapted-args"
-          )
+        base ++ Seq(
+          "-Yrangepos",
+        )
       }
 
     },
@@ -181,7 +181,7 @@ object SbtShared {
           organization,
           version,
           "runtimeProjectName" -> runtimeProjectName,
-          "defaultScalaVersion" -> latest212,
+          "defaultScalaVersion" -> latest213,
           "defaultScalaJsVersion" -> latestScalaJs,
           "defaultDottyVersion" -> latestDotty,
           "latestCoursier" -> latestCoursier,
@@ -197,7 +197,6 @@ object SbtShared {
         unmanagedSourceDirectories in Test += src("test").value
       )
       .settings(playJson)
-      .jvmSettings(playJsonOverrides)
       .jsSettings(baseJsSettings)
       .jsSettings(
         test := {},
