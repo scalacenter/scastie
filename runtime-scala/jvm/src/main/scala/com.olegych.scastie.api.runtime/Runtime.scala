@@ -2,15 +2,15 @@ package com.olegych.scastie.api
 package runtime
 
 import javax.imageio.ImageIO
-import java.io.{File, ByteArrayOutputStream}
+import java.io.{ByteArrayOutputStream, File}
 import java.util.Base64
 import java.awt.image.BufferedImage
 
-import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
 
 object Runtime extends SharedRuntime {
-  override def render[T: ClassTag](a: T): Render = {
-    super.render(a)
+  def render[T](a: T)(implicit tt: TypeTag[T]): Render = {
+    super.render(a, tt.tpe.toString)
   }
 
   def image(path: String): Html = {

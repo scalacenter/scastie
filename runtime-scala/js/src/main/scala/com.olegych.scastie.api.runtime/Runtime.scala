@@ -15,13 +15,13 @@ object Runtime extends SharedRuntime {
   def write(in: Either[Option[RuntimeError], List[Instrumentation]]): String = {
     Json.stringify(Json.toJson(ScalaJsResult(in)))
   }
-  def render[T: ClassTag](a: T, attach: HTMLElement => UUID): Render = {
+  def render[T](a: T, attach: HTMLElement => UUID)(implicit ct: ClassTag[T]): Render = {
     a match {
       case element: HTMLElement => {
         val uuid = attach(element)
         AttachedDom(uuid.toString)
       }
-      case _ => super.render(a)
+      case _ => super.render(a, ct.toString)
     }
   }
 
