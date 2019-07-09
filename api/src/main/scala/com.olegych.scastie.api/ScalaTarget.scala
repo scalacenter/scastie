@@ -139,7 +139,7 @@ object ScalaTarget {
 
     def sbtPluginsConfig: String = partialUnificationSbtPlugin
 
-    def sbtRunCommand: String = "run"
+    def sbtRunCommand: String = "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
@@ -173,7 +173,7 @@ object ScalaTarget {
 
     def sbtPluginsConfig: String = ""
 
-    def sbtRunCommand: String = "run"
+    def sbtRunCommand: String = "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
@@ -324,7 +324,7 @@ object ScalaTarget {
     def sbtPluginsConfig: String =
       """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.3.1")"""
 
-    def sbtRunCommand: String = "run"
+    def sbtRunCommand: String = "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
       None
