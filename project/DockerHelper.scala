@@ -100,19 +100,15 @@ object DockerHelper {
       env("LANG", "en_US.UTF-8")
       env("HOME", userHome)
 
-      runRaw("sbt scalaVersion")
-
       val dest = s"$userHome/projects"
       add(generatedProjects.projectTarget.toFile, dest)
       chown("projects")
 
-      runRaw("sbt scalaVersion")
+      add(ivyLocalTemp.toFile, s"$userHome/.ivy2/local/$organization")
 
       generatedProjects.projects.foreach(
         generatedProject => runRaw(generatedProject.runCmd(dest))
       )
-
-      add(ivyLocalTemp.toFile, s"$userHome/.ivy2/local/$organization")
 
       add(artifact.toFile, artifactTargetPath)
 
