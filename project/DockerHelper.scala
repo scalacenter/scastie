@@ -47,6 +47,7 @@ object DockerHelper {
     val containerUsername = "scastie"
 
     val sbtGlobal = sbtTargetDir.resolve(".sbt")
+    sbtGlobal.toFile.mkdirs()
     val repositories = sbtGlobal.resolve("repositories")
     Files.deleteIfExists(repositories)
     val repositoriesConfig =
