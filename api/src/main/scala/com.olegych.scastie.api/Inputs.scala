@@ -173,28 +173,26 @@ case class Inputs(
         |
         |$librariesConfig
         |
+        |turbo := true
+        |useSuperShell := false
+        |
         |$sbtConfigExtra
         |""".stripMargin
   }
 
   lazy val sbtPluginsConfig: String = {
-    sbtPluginsConfig0(withSbtScasite = true)
+    sbtPluginsConfig0(withSbtScastie = true)
   }
 
-  lazy val sbtPluginsConfigWithoutSbtScastie: String = {
-    sbtPluginsConfig0(withSbtScasite = false)
-  }
-
-  private def sbtPluginsConfig0(withSbtScasite: Boolean): String = {
+  private def sbtPluginsConfig0(withSbtScastie: Boolean): String = {
     val targetConfig = target.sbtPluginsConfig
 
     val sbtScastie =
-      if (withSbtScasite)
+      if (withSbtScastie)
         s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.version}")"""
       else ""
 
     s"""|$targetConfig
-        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "${BuildInfo.latestCoursier}")
         |$sbtScastie
         |$sbtPluginsConfigExtra
         |""".stripMargin

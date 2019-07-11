@@ -1,6 +1,7 @@
 package com.olegych.scastie.util
 
 import java.nio.file._
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, ActorRef, Props, Stash}
@@ -89,9 +90,12 @@ class ProcessActor(command: List[String], workingDir: Path, environment: Map[Str
             }
         )
         .throttle(100, 1.second, 100, ThrottleMode.Shaping)
-        .runWith(Sink.foreach { output =>
-          println(s"> ${output.id.getOrElse(0)}: ${output.line}")
-          context.parent ! output
+        .runWith(Sink.fold(Instant.now) {
+          case (ts, output) =>
+            val now = Instant.now
+            println(s"> ${output.id.getOrElse(0)} ${now.toEpochMilli - ts.toEpochMilli}ms: ${output.line}")
+            context.parent ! output
+            now
         })
 
       val stdin2: Source[ByteString, ActorRef] =

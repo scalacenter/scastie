@@ -100,7 +100,7 @@ class GeneratedProject(inputs: Inputs, sbtDir: Path) {
     )
 
     Files.write(buildFile, inputs.sbtConfig.getBytes)
-    Files.write(pluginFile, inputs.sbtPluginsConfigWithoutSbtScastie.getBytes)
+    Files.write(pluginFile, inputs.sbtPluginsConfig.getBytes)
 
     Files.createDirectories(codeFile.getParent)
     Files.write(codeFile, inputs.code.getBytes)

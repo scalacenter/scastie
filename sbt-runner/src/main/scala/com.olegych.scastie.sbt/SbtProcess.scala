@@ -126,7 +126,8 @@ class SbtProcess(runTimeout: FiniteDuration,
     val sbtOpts =
       (javaOptions ++ Seq(
         "-Djline.terminal=jline.UnsupportedTerminal",
-        "-Dsbt.log.noformat=true"
+        "-Dsbt.log.noformat=true",
+        "-Dsbt.banner=false",
       )).mkString(" ")
 
     val props =

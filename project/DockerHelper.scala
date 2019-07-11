@@ -47,14 +47,6 @@ object DockerHelper {
     val containerUsername = "scastie"
 
     val sbtGlobal = sbtTargetDir.resolve(".sbt")
-    val globalPlugins = sbtGlobal.resolve("0.13/plugins/plugins.sbt")
-    Files.createDirectories(globalPlugins.getParent)
-
-    val plugins =
-      s"""|addSbtPlugin("io.get-coursier" % "sbt-coursier" % "$latestCoursier")""".stripMargin
-
-    Files.write(globalPlugins, plugins.getBytes)
-
     val repositories = sbtGlobal.resolve("repositories")
     Files.deleteIfExists(repositories)
     val repositoriesConfig =
@@ -81,9 +73,9 @@ object DockerHelper {
       runRaw("mkdir -p /app/sbt")
 
       runRaw(
-        s"wget https://piccolo.link/sbt-${sbtVersion}.tgz -O /tmp/sbt-${sbtVersion}.tgz"
+        s"wget https://piccolo.link/sbt-${distSbtVersion}.tgz -O /tmp/sbt-${distSbtVersion}.tgz"
       )
-      runRaw(s"tar -xzvf /tmp/sbt-$sbtVersion.tgz -C /app/sbt")
+      runRaw(s"tar -xzvf /tmp/sbt-$distSbtVersion.tgz -C /app/sbt")
 
       runRaw("ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt")
 
