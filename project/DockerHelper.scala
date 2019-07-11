@@ -44,7 +44,7 @@ object DockerHelper {
       }
     )
 
-    val containerUsername = "scastie"
+    val containerUsername = "sbtRunnerContainer"
 
     val sbtGlobal = sbtTargetDir.resolve(".sbt")
     sbtGlobal.toFile.mkdirs()
@@ -106,6 +106,7 @@ object DockerHelper {
       chown("projects")
 
       add(ivyLocalTemp.toFile, s"$userHome/.ivy2/local/$organization")
+      chown(".ivy2")
 
       generatedProjects.projects.foreach(
         generatedProject => runRaw(generatedProject.runCmd(dest))
