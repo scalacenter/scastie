@@ -166,7 +166,7 @@ case class Inputs(
     val targetConfig = target.sbtConfig
 
     val optionalTargetDependency =
-      if (isWorksheetMode) target.runtimeDependency
+      if (target.hasWorksheetMode) target.runtimeDependency
       else None
 
     val allLibraries =

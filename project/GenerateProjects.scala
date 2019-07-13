@@ -1,14 +1,8 @@
-import sbt._
-import java.io._
-
 import java.nio.file._
 
+import SbtShared._
 import com.olegych.scastie.api._
 import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
-
-import System.{lineSeparator => nl}
-
-import SbtShared._
 
 class GenerateProjects(sbtTargetDir: Path) {
   val projectTarget: Path = sbtTargetDir.resolve("projects")
@@ -25,52 +19,27 @@ class GenerateProjects(sbtTargetDir: Path) {
     val default =
       Inputs.default.copy(
         code = helloWorld,
-        _isWorksheetMode = false
       )
 
-    def scala(version: String): Inputs = {
-      val playJson = version match {
-        case v if v.startsWith("2.13") =>
-          s"""libraryDependencies += "com.typesafe.play" % "play-json_2.13.0-RC2" % "$playJsonVersion213" """
-        case _ =>
-          s"""libraryDependencies += "com.typesafe.play" %% "play-json" % "$playJsonVersion" """
-      }
-      default.copy(
-        target = ScalaTarget.Jvm(version),
-        sbtConfigExtra = default.sbtConfigExtra + nl + nl + playJson
-      )
-    }
+    def scala(version: String): Inputs = default.copy(
+      target = ScalaTarget.Jvm(version),
+    )
 
-    val scala210 = scala(sbt210)
-    val scala211 = scala(latest211)
     val scala212 = scala(latest212)
     val scala213 = scala(latest213)
 
-    val dotty =
-      default.copy(
-        target = ScalaTarget.Dotty.default
-      )
+    val dotty = default.copy(
+      target = ScalaTarget.Dotty.default
+    )
 
-    val typelevel =
-      default.copy(
-        target = ScalaTarget.Typelevel.default
-      )
-
-    val scalaJs =
-      default.copy(
-        target = ScalaTarget.Js.default,
-        sbtConfigExtra =
-          default.sbtConfigExtra + nl + nl +
-            s"""libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "$scalajsDomVersion""""
-      )
+    val scalaJs = default.copy(
+      target = ScalaTarget.Js.default,
+    )
 
     List(
-      (scala210, "scala210"),
-      (scala211, "scala211"),
       (scala212, "scala212"),
       (scala213, "scala213"),
       (dotty, "dotty"),
-      (typelevel, "typelevel"),
       (scalaJs, "scalaJs")
     ).map {
       case (inputs, name) =>
