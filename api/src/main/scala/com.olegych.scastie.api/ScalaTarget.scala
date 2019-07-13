@@ -85,7 +85,7 @@ object ScalaTarget {
         BuildInfo.organization,
         BuildInfo.runtimeProjectName,
         target,
-        "latest.integration"
+        "1.0.0-SNAPSHOT"
       )
     )
   }

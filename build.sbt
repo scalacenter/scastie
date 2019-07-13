@@ -345,6 +345,7 @@ def runtimeScala(scalaV: String, apiProject: CrossProject) = {
 
   CrossProject(id = projectId, base = crossDir(projectId), crossType = CrossType.Full)
     .settings(baseSettings)
+    .settings(version := "1.0.0-SNAPSHOT")
     .settings(
       scalaVersion := scalaV,
       moduleName := projectName,
@@ -379,6 +380,7 @@ lazy val sbtScastie = project
     moduleName := "sbt-scastie",
     sbtPlugin := true
   )
+  .settings(version := "1.0.0-SNAPSHOT")
   .dependsOn(apiJVM)
 
 // migration from file containers to mongodb
