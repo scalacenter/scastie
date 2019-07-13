@@ -120,6 +120,9 @@ trait SnippetsContainer {
     if (!Files.exists(projectDir)) {
       Files.createDirectories(projectDir)
 
+      val buildPropsFile = projectDir.resolve("project/build.properties")
+      Files.write(buildPropsFile, s"sbt.version=${com.olegych.scastie.buildinfo.BuildInfo.sbtVersion}".getBytes)
+
       val buildFile = projectDir.resolve("build.sbt")
       Files.write(buildFile, inputs.sbtConfig.getBytes)
 
