@@ -96,7 +96,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
     else throw new Exception(writeResult.toString)
 
   protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] = {
-    snippets.flatMap(_.insert.one(toMongoSnippet(snippetId, inputs))).map(isSuccess)
+    snippets.flatMap(_.insert.one(toMongoSnippet(snippetId, inputs.withSavedConfig))).map(isSuccess)
   }
 
   override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] =
@@ -122,7 +122,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
 
   def appendOutput(progress: SnippetProgress): Future[Unit] = {
     progress.snippetId match {
-      case Some(snippetId) => {
+      case Some(snippetId) =>
         val selection = select(snippetId)
 
         val appendOutputLogs = {
@@ -150,7 +150,6 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
           }
 
         appendOutputLogs.zip(setScalaJsOutput).map(_ => ())
-      }
       case None => Future(())
     }
   }

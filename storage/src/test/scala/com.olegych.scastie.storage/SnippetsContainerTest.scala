@@ -76,7 +76,7 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
     val result = container.readSnippet(snippetId).await
 
     assert(result.isDefined)
-    assert(result.get.inputs == inputs)
+    assert(result.get.inputs == inputs.withSavedConfig)
   }
 
   test("fork") {
@@ -112,8 +112,8 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
     val readInputs1 = container.readSnippet(snippetId1).await.get.inputs
     val readInputs2 = container.readSnippet(snippetId2).await.get.inputs
 
-    assert(readInputs1 == inputs1.copy(isShowingInUserProfile = false), "we don't mutate previous input")
-    assert(readInputs2 == inputs2.copy(forked = Some(snippetId1)), "we update forked")
+    assert(readInputs1 == inputs1.copy(isShowingInUserProfile = false).withSavedConfig, "we don't mutate previous input")
+    assert(readInputs2 == inputs2.copy(forked = Some(snippetId1)).withSavedConfig, "we update forked")
 
     val snippets = container.listSnippets(user).await
     assert(snippets.size == 1 && snippets.head.snippetId == snippetId2, "we hide old version")

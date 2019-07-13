@@ -171,7 +171,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
 
   protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] =
     Future {
-      write(inputsFile(snippetId), Json.prettyPrint(Json.toJson(inputs)))
+      write(inputsFile(snippetId), Json.prettyPrint(Json.toJson(inputs.withSavedConfig)))
     }
 
   override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] =

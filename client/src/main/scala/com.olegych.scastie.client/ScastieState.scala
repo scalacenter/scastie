@@ -325,7 +325,7 @@ case class ScastieState(
 
   def setTarget(target: ScalaTarget): ScastieState =
     copyAndSave(
-      inputs = inputs.copy(target = target),
+      inputs = inputs.modifyConfig(_.copy(target = target)),
       inputsHasChanged = true
     )
 
@@ -429,12 +429,10 @@ case class ScastieState(
 
   def addStatus(statusUpdate: StatusProgress): ScastieState = {
     statusUpdate match {
-      case StatusProgress.KeepAlive => {
+      case StatusProgress.KeepAlive =>
         this
-      }
-      case StatusProgress.Sbt(sbtRunners) => {
+      case StatusProgress.Sbt(sbtRunners) =>
         copyAndSave(status = status.copy(sbtRunners = Some(sbtRunners)))
-      }
     }
   }
 

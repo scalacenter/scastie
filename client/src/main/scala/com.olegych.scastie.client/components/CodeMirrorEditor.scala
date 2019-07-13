@@ -129,7 +129,14 @@ object CodeMirrorEditor {
           .getOrElse(Callback.empty)
       }
       .componentDidMount(_.backend.start())
-      .componentDidUpdate(u => Callback.traverseOption(u.currentState.editor)(e => Callback(e.focus())))
+      .componentDidUpdate { u =>
+        Callback.traverseOption(u.currentState.editor) { e =>
+          Callback(
+            if (u.currentProps.readOnly) ()
+            else e.focus()
+          )
+        }
+      }
       .componentWillUnmount(_.backend.stop())
       .build
 }

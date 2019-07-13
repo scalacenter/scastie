@@ -12,6 +12,8 @@ final case class BuildSettings(
     isResetModalClosed: Boolean,
     scalaTarget: ScalaTarget,
     sbtConfigExtra: String,
+    sbtConfig: String,
+    sbtPluginsConfig: String,
     setTarget: ScalaTarget ~=> Callback,
     closeResetModal: Reusable[Callback],
     resetBuild: Reusable[Callback],
@@ -186,7 +188,7 @@ object BuildSettings {
       ),
       scaladexSearch,
       h2(
-        span("Sbt Configuration")
+        span("Extra Sbt Configuration")
       ),
       pre(cls := "configuration")(
         CodeMirrorEditor(
@@ -194,6 +196,28 @@ object BuildSettings {
           theme = s"solarized $theme",
           readOnly = false,
           onChange = props.sbtConfigChange
+        ).render
+      ),
+      h2(
+        span("Base Sbt Configuration (readonly)")
+      ),
+      pre(cls := "configuration")(
+        CodeMirrorEditor(
+          value = props.sbtConfig,
+          theme = s"solarized $theme",
+          readOnly = true,
+          onChange = Reusable.always(_ => Callback.empty)
+        ).render
+      ),
+      h2(
+        span("Base Sbt Plugins Configuration (readonly)")
+      ),
+      pre(cls := "configuration")(
+        CodeMirrorEditor(
+          value = props.sbtPluginsConfig,
+          theme = s"solarized $theme",
+          readOnly = true,
+          onChange = Reusable.always(_ => Callback.empty)
         ).render
       )
     )

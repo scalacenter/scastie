@@ -31,7 +31,9 @@ object Inputs {
                         |  "-feature",
                         |  "-unchecked"
                         |)""".stripMargin,
+    sbtConfigSaved = None,
     sbtPluginsConfigExtra = "",
+    sbtPluginsConfigSaved = None,
     isShowingInUserProfile = false,
     forked = None
   )
@@ -63,14 +65,16 @@ case class Inputs(
     libraries: Set[ScalaDependency],
     librariesFromList: List[(ScalaDependency, Project)],
     sbtConfigExtra: String,
+    sbtConfigSaved: Option[String],
     sbtPluginsConfigExtra: String,
+    sbtPluginsConfigSaved: Option[String],
     isShowingInUserProfile: Boolean,
     forked: Option[SnippetId] = None
 ) extends BaseInputs {
   val isWorksheetMode = _isWorksheetMode && target.hasWorksheetMode
   val librariesFrom: Map[ScalaDependency, Project] = librariesFromList.toMap
 
-  lazy val sbtInputs: (String, String) = (sbtConfig, sbtPluginsConfig)
+  private lazy val sbtInputs: (String, String) = (sbtConfig, sbtPluginsConfig)
 
   def needsReload(other: Inputs): Boolean = {
     sbtInputs != other.sbtInputs
@@ -105,27 +109,37 @@ case class Inputs(
     }
   }
 
-  lazy val isDefault: Boolean = copy(code = "") == Inputs.default.copy(code = "")
+  lazy val isDefault: Boolean = copy(code = "").withSavedConfig == Inputs.default.copy(code = "").withSavedConfig
+
+  def modifyConfig(inputs: Inputs => Inputs): Inputs = inputs(this).copy(sbtConfigSaved = None, sbtPluginsConfigSaved = None)
+
+  def withSavedConfig: Inputs = copy(sbtConfigSaved = Some(sbtConfigGenerated), sbtPluginsConfigSaved = Some(sbtPluginsConfigGenerated))
 
   def clearDependencies: Inputs = {
-    copy(
-      libraries = Set(),
-      librariesFromList = Nil
-    )
+    modifyConfig {
+      _.copy(
+        libraries = Set(),
+        librariesFromList = Nil
+      )
+    }
   }
 
   def addScalaDependency(scalaDependency: ScalaDependency, project: Project): Inputs = {
-    copy(
-      libraries = libraries + scalaDependency,
-      librariesFromList = (librariesFrom + (scalaDependency -> project)).toList
-    )
+    modifyConfig {
+      _.copy(
+        libraries = libraries + scalaDependency,
+        librariesFromList = (librariesFrom + (scalaDependency -> project)).toList
+      )
+    }
   }
 
   def removeScalaDependency(scalaDependency: ScalaDependency): Inputs = {
-    copy(
-      libraries = libraries.filterNot(_.matches(scalaDependency)),
-      librariesFromList = librariesFrom.filterNot(_._1.matches(scalaDependency)).toList
-    )
+    modifyConfig {
+      _.copy(
+        libraries = libraries.filterNot(_.matches(scalaDependency)),
+        librariesFromList = librariesFrom.filterNot(_._1.matches(scalaDependency)).toList
+      )
+    }
   }
 
   def updateScalaDependency(scalaDependency: ScalaDependency, version: String): Inputs = {
@@ -136,13 +150,19 @@ case class Inputs(
         newScalaDependency -> p
       case (l, p) => l -> p
     }
-    copy(
-      libraries = newLibraries,
-      librariesFromList = newLibrariesFromList
-    )
+    modifyConfig {
+      _.copy(
+        libraries = newLibraries,
+        librariesFromList = newLibrariesFromList
+      )
+    }
   }
 
-  lazy val sbtConfig: String = {
+  lazy val sbtConfig: String =
+    s"""|$sbtConfigGenerated
+        |$sbtConfigExtra""".stripMargin
+
+  lazy val sbtConfigGenerated: String = sbtConfigSaved.getOrElse {
     val targetConfig = target.sbtConfig
 
     val optionalTargetDependency =
@@ -170,17 +190,16 @@ case class Inputs(
       }
 
     s"""|$targetConfig
-        |
         |$librariesConfig
-        |
         |turbo := true
-        |useSuperShell := false
-        |
-        |$sbtConfigExtra
-        |""".stripMargin
+        |useSuperShell := false""".stripMargin
   }
 
-  lazy val sbtPluginsConfig: String = {
+  lazy val sbtPluginsConfig: String =
+    s"""|$sbtPluginsConfigGenerated
+        |$sbtPluginsConfigExtra""".stripMargin
+
+  lazy val sbtPluginsConfigGenerated: String = sbtPluginsConfigSaved.getOrElse {
     sbtPluginsConfig0(withSbtScastie = true)
   }
 
@@ -189,14 +208,11 @@ case class Inputs(
 
     val sbtScastie =
       if (withSbtScastie)
-        s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.version}")"""
+        s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "latest.integration")"""
       else ""
 
     s"""|$targetConfig
-        |$sbtScastie
-        |$sbtPluginsConfigExtra
-        |""".stripMargin
-
+        |$sbtScastie""".stripMargin
   }
 }
 

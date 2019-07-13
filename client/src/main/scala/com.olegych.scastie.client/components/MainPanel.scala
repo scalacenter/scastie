@@ -98,6 +98,8 @@ object MainPanel {
         isResetModalClosed = state.modalState.isResetModalClosed,
         scalaTarget = state.inputs.target,
         sbtConfigExtra = state.inputs.sbtConfigExtra,
+        sbtConfig = state.inputs.sbtConfigGenerated,
+        sbtPluginsConfig = state.inputs.sbtPluginsConfigGenerated,
         setTarget = backend.setTarget,
         closeResetModal = backend.closeResetModal,
         resetBuild = backend.resetBuild,

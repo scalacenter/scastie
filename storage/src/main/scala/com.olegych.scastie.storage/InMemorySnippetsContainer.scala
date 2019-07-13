@@ -66,7 +66,7 @@ class InMemorySnippetsContainer(implicit protected val ec: ExecutionContext) ext
 
   protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] =
     Future {
-      snippets.update(snippetId, Storage(snippetId, inputs))
+      snippets.update(snippetId, Storage(snippetId, inputs.withSavedConfig))
     }
 
   override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] = Future {
