@@ -10,4 +10,4 @@
 #but not too much
 -J-XX:MaxHeapFreeRatio=20
 #should be enough to compile this project
--J-Xmx1g
+-J-Xmx2g
