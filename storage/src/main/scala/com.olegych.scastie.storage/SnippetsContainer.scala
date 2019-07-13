@@ -120,9 +120,6 @@ trait SnippetsContainer {
     if (!Files.exists(projectDir)) {
       Files.createDirectories(projectDir)
 
-      val buildPropsFile = projectDir.resolve("project/build.properties")
-      Files.write(buildPropsFile, s"sbt.version=${com.olegych.scastie.buildinfo.BuildInfo.sbtVersion}".getBytes)
-
       val buildFile = projectDir.resolve("build.sbt")
       Files.write(buildFile, inputs.sbtConfig.getBytes)
 
@@ -133,6 +130,8 @@ trait SnippetsContainer {
       val codeFile = projectDir.resolve("src/main/scala/main.scala")
       Files.createDirectories(codeFile.getParent)
       Files.write(codeFile, inputs.code.getBytes)
+      val buildPropsFile = projectDir.resolve("project/build.properties")
+      Files.write(buildPropsFile, s"sbt.version=${com.olegych.scastie.buildinfo.BuildInfo.sbtVersion}".getBytes)
     }
 
     val zippedProjectDir = Paths.get(s"$projectDir.zip")
