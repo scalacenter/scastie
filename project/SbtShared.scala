@@ -61,6 +61,7 @@ object SbtShared {
       s"$base+$hash"
     }
   }
+  val versionRuntime = "1.0.0-SNAPSHOT"
 
   val playJsonVersion = "2.6.9"
   val playJsonVersion213 = "2.8.0-M1"
@@ -181,6 +182,7 @@ object SbtShared {
           organization,
           version,
           "runtimeProjectName" -> runtimeProjectName,
+          "versionRuntime" -> versionRuntime,
           "latest212" -> latest212,
           "defaultScalaVersion" -> latest213,
           "defaultScalaJsVersion" -> latestScalaJs,

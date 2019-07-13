@@ -208,7 +208,7 @@ case class Inputs(
 
     val sbtScastie =
       if (withSbtScastie)
-        s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "1.0.0-SNAPSHOT")"""
+        s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.versionRuntime}")"""
       else ""
 
     s"""|$targetConfig

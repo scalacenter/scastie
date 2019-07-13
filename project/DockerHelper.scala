@@ -34,10 +34,9 @@ object DockerHelper {
         lazy val dirName = dir.getFileName.toString
 
         if (depth == 1) {
-          dirName == versionNow ||
-          isSbtScastiePath
+          dirName == versionNow || dirName == versionRuntime || isSbtScastiePath
         } else if (depth == 3 && isSbtScastiePath) {
-          dirName == versionNow
+          dirName == versionNow || dirName == versionRuntime
         } else {
           true
         }
