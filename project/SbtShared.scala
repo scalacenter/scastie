@@ -28,7 +28,7 @@ object SbtShared {
   val latestDotty = "0.17.0-RC1"
 
   val distSbtVersion = "1.2.8" //todo until 1.3.0 is released as there is no rc dist
-  val sbtVersion = "1.3.0-RC2"
+  val sbtVersion = "1.3.0-RC3"
 
   val runtimeProjectName = "runtime-scala"
 

@@ -177,9 +177,9 @@ lazy val sbtRunner = project
       akka("remote"),
       akka("slf4j"),
       akkaHttp,
-      "com.geirsson" %% "scalafmt-core" % "1.3.0"
+      "org.scalameta" %% "scalafmt-core" % "2.0.0"
     ),
-    maintainer in docker := "scalacenter",
+    maintainer := "scalacenter",
     imageNames in docker := Seq(
       ImageName(
         namespace = Some(dockerOrg),
@@ -317,7 +317,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "1.7.0",
+      "org.scalameta" %% "scalameta" % "4.2.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

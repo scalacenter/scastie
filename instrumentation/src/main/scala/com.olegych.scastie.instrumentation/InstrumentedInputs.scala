@@ -59,7 +59,7 @@ object InstrumentedInputs {
               Left(
                 InstrumentationFailureReport(
                   message,
-                  Some(pos.start.line + lineOffset)
+                  Some(pos.startLine + lineOffset)
                 )
               )
             }

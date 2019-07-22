@@ -47,16 +47,12 @@ object Instrument {
     "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
 
   private def posToApi(position: Position, offset: Int) = {
-    def tuple2(v1: Int, v2: Int) = Seq(Lit.Int(v1), Lit.Int(v2))
-
-    val lits =
-      position match {
-        case Position.None => tuple2(0, 0)
-        case Position.Range(_, start, end) =>
-          tuple2(start.offset - offset, end.offset - offset)
-      }
-
-    Term.Apply(Term.Name(positionT), lits)
+    val (x, y) = position match {
+      case Position.None => (0, 0)
+      case Position.Range(_, start, end) =>
+        (start - offset, end - offset)
+    }
+    s"$positionT($x, $y)"
   }
 
   def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int, isScalaJs: Boolean): Patch = {
@@ -101,7 +97,7 @@ object Instrument {
             Patch(openCurlyBrace, openCurlyBrace, instrumentationMapCode)
 
           instrumentationMapPatch +:
-            c.templ.stats.get.collect {
+            c.templ.stats.collect {
             case term: Term => instrumentOne(term, None, offset, isScalaJs)
           }
       }.flatten
@@ -135,22 +131,18 @@ object Instrument {
 
   private def hasMainMethod(source: Source): Boolean = {
     def hasMain(templ: Template): Boolean = {
-      templ.stats match {
-        case Some(ss) =>
-          ss.exists {
-            case q"def main(args: Array[String]): $_ = $_" => true
-            case _                                         => false
-          }
-        case _ => false
+      templ.stats.exists {
+        case q"def main(args: Array[String]): $_ = $_" => true
+        case _                                         => false
       }
     }
     val apps = Set("App", "IOApp")
     def hasApp(templ: Template): Boolean =
-      templ.parents.exists(p => apps(p.syntax))
+      templ.inits.exists(p => apps(p.syntax))
 
     source.stats.exists {
-      case c: Defn.Class if c.name.value == instrumentedClass && c.templ.stats.nonEmpty =>
-        c.templ.stats.get.exists {
+      case c: Defn.Class if c.name.value == instrumentedClass =>
+        c.templ.stats.exists {
           case c: Defn.Class  => hasMain(c.templ) || hasApp(c.templ)
           case t: Defn.Trait  => hasMain(t.templ) || hasApp(t.templ)
           case o: Defn.Object => hasMain(o.templ) || hasApp(o.templ)
@@ -181,12 +173,6 @@ object Instrument {
           |$code 
           |}""".stripMargin
 
-    // TODO:
-    // dialects.Paradise211
-    // dialects.Paradise212
-    // dialects.ParadiseTypelevel211
-    // dialects.ParadiseTypelevel212
-
     def typelevel(scalaVersion: String): Option[Dialect] = {
       if (scalaVersion.startsWith("2.12")) Some(dialects.Typelevel212)
       else if (scalaVersion.startsWith("2.11")) Some(dialects.Typelevel211)
@@ -194,7 +180,7 @@ object Instrument {
     }
 
     def scala(scalaVersion: String): Option[Dialect] = {
-      if (scalaVersion.startsWith("2.13")) Some(dialects.Scala212)
+      if (scalaVersion.startsWith("2.13")) Some(dialects.Scala213)
       else if (scalaVersion.startsWith("2.12")) Some(dialects.Scala212)
       else if (scalaVersion.startsWith("2.11")) Some(dialects.Scala211)
       else if (scalaVersion.startsWith("2.10")) Some(dialects.Scala210)
@@ -224,9 +210,8 @@ object Instrument {
             case e: Parsed.Error => Left(ParsingError(e))
           }
         } catch {
-          case NonFatal(e) => {
+          case NonFatal(e) =>
             Left(InternalError(e))
-          }
         }
       case None => Left(UnsupportedDialect)
     }
