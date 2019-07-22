@@ -179,7 +179,6 @@ lazy val sbtRunner = project
       akkaHttp,
       "org.scalameta" %% "scalafmt-core" % "2.0.0"
     ),
-    maintainer in Global := "scalacenter",
     imageNames in docker := Seq(
       ImageName(
         namespace = Some(dockerOrg),
@@ -218,6 +217,7 @@ lazy val server = project
   .settings(packageScalaJS(client))
   .settings(
     javaOptions in reStart += "-Xmx512m",
+    maintainer := "scalacenter",
     libraryDependencies ++= Seq(
       "org.json4s" %% "json4s-native" % "3.5.2",
       akkaHttp,
