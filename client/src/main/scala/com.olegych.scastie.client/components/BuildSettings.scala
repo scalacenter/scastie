@@ -149,21 +149,26 @@ object BuildSettings {
       if (props.isDarkTheme) "dark"
       else "light"
 
-    val resetButton =
-      TagMod(
-        PromptModal(
-          modalText = "Reset Build",
-          modalId = "reset-build-modal",
-          isClosed = props.isResetModalClosed,
-          close = props.closeResetModal,
-          actionText = "Are you sure you want to reset the build ?",
-          actionLabel = "Reset",
-          action = props.resetBuild
-        ).render,
-        div(title := "Reset your configuration", onClick --> props.openResetModal, role := "button", cls := "btn")(
-          "Reset"
-        )
-      ).when(!props.isBuildDefault)
+    val resetButton = TagMod(
+      PromptModal(
+        modalText = "Reset Build",
+        modalId = "reset-build-modal",
+        isClosed = props.isResetModalClosed,
+        close = props.closeResetModal,
+        actionText = "Are you sure you want to reset the build ?",
+        actionLabel = "Reset",
+        action = props.resetBuild
+      ).render,
+      div(
+        title := "Reset your configuration",
+        onClick --> props.openResetModal,
+        role := "button",
+        cls := "btn",
+        if (props.isBuildDefault) visibility.collapse else visibility.visible
+      )(
+        "Reset"
+      )
+    )
 
     val scaladexSearch = ScaladexSearch(
       removeScalaDependency = props.removeScalaDependency,
@@ -176,7 +181,7 @@ object BuildSettings {
     div(cls := "build-settings-container")(
       resetButton,
       h2(
-        span("Target")
+        span("Target"),
       ),
       renderTarget(props),
       h2(

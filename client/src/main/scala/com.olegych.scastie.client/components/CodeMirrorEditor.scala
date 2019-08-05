@@ -2,9 +2,10 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._, vdom.all._, extra._
-
 import codemirror.TextAreaEditor
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra._
+import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom.raw.HTMLTextAreaElement
 
 import scala.scalajs._
@@ -22,15 +23,20 @@ object CodeMirrorEditor {
   implicit val reusability: Reusability[CodeMirrorEditor] =
     Reusability.caseClass[CodeMirrorEditor]
 
-  private var textareaRef: HTMLTextAreaElement = _
-
   private[CodeMirrorEditor] case class State(
       editor: Option[TextAreaEditor] = None
   )
 
-  private[CodeMirrorEditor] class CodeMirrorEditorBackend(
-      scope: BackendScope[CodeMirrorEditor, State]
-  ) {
+  private[CodeMirrorEditor] class CodeMirrorEditorBackend(scope: BackendScope[CodeMirrorEditor, State]) {
+    private var textareaRef: Option[HTMLTextAreaElement] = None
+
+    def render(props: CodeMirrorEditor): VdomElement = {
+      textarea.ref(ref => textareaRef = Some(ref))(
+        value := props.value,
+        autoComplete := "off"
+      )
+    }
+
     def start(): Callback = {
       scope.props.flatMap { props =>
         val options = js
@@ -58,14 +64,11 @@ object CodeMirrorEditor {
           .asInstanceOf[codemirror.Options]
 
         val editor =
-          codemirror.CodeMirror.fromTextArea(textareaRef, options)
-
+          codemirror.CodeMirror.fromTextArea(textareaRef.getOrElse(sys.error("no textarea")), options)
         editor.getDoc().setValue(props.value)
-
         editor.onChanges(
           (e, _) => props.onChange(e.getDoc().getValue()).runNow
         )
-
         scope.modState(_.copy(editor = Some(editor)))
       }
     }
@@ -74,11 +77,6 @@ object CodeMirrorEditor {
         s.editor.map(_.toTextArea())
         s.copy(editor = None)
       }
-    }
-
-    // via editor.onChanges
-    def onChangeF(event: ReactEventFromInput): Callback = {
-      Callback(())
     }
   }
 
@@ -110,15 +108,7 @@ object CodeMirrorEditor {
     ScalaComponent
       .builder[CodeMirrorEditor]("CodeMirrorEditor")
       .initialState(State())
-      .backend(new CodeMirrorEditorBackend(_))
-      .renderPS {
-        case (scope, props, _) =>
-          textarea.ref(textareaRef = _)(
-            value := props.value,
-            onChange ==> scope.backend.onChangeF,
-            autoComplete := "off"
-          )
-      }
+      .renderBackend[CodeMirrorEditorBackend]
       .componentWillReceiveProps { scope =>
         val current = scope.currentProps
         val next = scope.nextProps
