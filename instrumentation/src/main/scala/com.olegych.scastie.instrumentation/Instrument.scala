@@ -1,7 +1,7 @@
 package com.olegych.scastie.instrumentation
 
 import com.olegych.scastie.api.ScalaTarget._
-import com.olegych.scastie.api.{ScalaTarget, ScalaTargetType}
+import com.olegych.scastie.api.{Inputs, ScalaTarget, ScalaTargetType}
 
 import scala.collection.immutable.Seq
 import scala.meta._
@@ -19,9 +19,24 @@ object InstrumentationFailure {
 }
 
 object Instrument {
-  def getLineOffset(isWorksheetMode: Boolean): Int = {
-    if (isWorksheetMode) -2
-    else 0
+  def getParsingLineOffset(inputs: Inputs): Int = {
+    if (inputs.isWorksheetMode) -1 else 0
+  }
+  def getExceptionLineOffset(inputs: Inputs): Int = {
+    if (inputs.isWorksheetMode) -2
+    else
+      inputs.target match {
+        case _: Dotty => 0
+        case _        => 0
+      }
+  }
+  def getMessageLineOffset(inputs: Inputs): Int = {
+    if (inputs.isWorksheetMode) -2
+    else
+      inputs.target match {
+        case _: Dotty => 1
+        case _        => 0
+      }
   }
 
   import InstrumentationFailure._

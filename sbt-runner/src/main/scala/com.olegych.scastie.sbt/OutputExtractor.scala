@@ -20,12 +20,9 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   def extractProgress(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
     import sbtRun._
 
-    val lineOffset = Instrument.getLineOffset(inputs.isWorksheetMode)
-
-    val problems =
-      extractProblems(output.line, lineOffset, inputs.isWorksheetMode)
+    val problems = extractProblems(output.line, Instrument.getMessageLineOffset(inputs), inputs.isWorksheetMode)
     val instrumentations = extract[List[Instrumentation]](output.line)
-    val runtimeError = extractRuntimeError(output.line, lineOffset)
+    val runtimeError = extractRuntimeError(output.line, Instrument.getExceptionLineOffset(inputs))
     val sbtOutput = extract[ConsoleOutput.SbtOutput](output.line)
     // sbt plugin is not loaded at this stage. we need to drop those messages
     val initializationMessages = List(
@@ -135,10 +132,9 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   ): Option[List[Problem]] = {
     val problems = extract[List[Problem]](line)
 
-    val problemsWithOffset =
-      problems.map(
-        _.map(problem => problem.copy(line = problem.line.map(_ + lineOffset)))
-      )
+    val problemsWithOffset = problems.map {
+      _.map(problem => problem.copy(line = problem.line.map(_ + lineOffset)))
+    }
 
     def annoying(in: Problem): Boolean = {
       in.severity == Warning &&
@@ -150,9 +146,9 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   }
 
   private def extractRuntimeError(line: String, lineOffset: Int): Option[RuntimeError] = {
-    extract[RuntimeErrorWrap](line).flatMap(
+    extract[RuntimeErrorWrap](line).flatMap {
       _.error.map(error => error.copy(line = error.line.map(_ + lineOffset)))
-    )
+    }
   }
 
   private def extract[T: Reads](line: String): Option[T] = {
