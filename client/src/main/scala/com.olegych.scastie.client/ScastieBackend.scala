@@ -398,41 +398,27 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
         .map(result => scope.modState(_.setUser(result)))
     )
 
-  val formatCode: Reusable[Callback] =
-    Reusable.always(
-      scope.state.flatMap(
-        state =>
-          Callback.when(state.inputsHasChanged)(
-            Callback.future(
-              restApiClient
-                .format(
-                  FormatRequest(state.inputs.code, state.inputs.isWorksheetMode, state.inputs.target)
-                )
-                .map {
-                  case FormatResponse(Right(formattedCode)) =>
-                    scope.modState { s =>
-                      // avoid overriding user's code if he/she types while it's formatting
-                      if (s.inputs.code == state.inputs.code)
-                        s.clearOutputsPreserveConsole.setCode(formattedCode)
-                      else s
-                    }
-                  case FormatResponse(Left(fullStackTrace)) =>
-                    scope.modState(
-                      _.setRuntimeError(
-                        Some(
-                          RuntimeError(
-                            message = "Formatting Failed",
-                            line = None,
-                            fullStack = fullStackTrace
-                          )
-                        )
-                      )
-                    )
-                }
-            )
-        )
-      )
-    )
+  val formatCode: Reusable[Callback] = Reusable.always {
+    scope.state.flatMap { state =>
+      Callback.future {
+        restApiClient
+          .format(FormatRequest(state.inputs.code, state.inputs.isWorksheetMode, state.inputs.target))
+          .map {
+            case FormatResponse(Right(formattedCode)) =>
+              scope.modState { s =>
+                // avoid overriding user's code if he/she types while it's formatting
+                if (s.inputs.code == state.inputs.code)
+                  s.clearOutputsPreserveConsole.setCode(formattedCode)
+                else s
+              }
+            case FormatResponse(Left(fullStackTrace)) =>
+              scope.modState {
+                _.setRuntimeError(Some(RuntimeError(message = "Formatting Failed", line = None, fullStack = fullStackTrace)))
+              }
+          }
+      }
+    }
+  }
 
   val loadProfile: Reusable[Future[List[SnippetSummary]]] =
     Reusable.always(restApiClient.fetchUserSnippets())

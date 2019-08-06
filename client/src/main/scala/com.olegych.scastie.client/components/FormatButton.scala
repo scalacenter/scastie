@@ -10,21 +10,15 @@ final case class FormatButton(inputsHasChanged: Boolean, isStatusOk: Boolean, fo
 }
 
 object FormatButton {
-  implicit val reusability: Reusability[FormatButton] =
-    Reusability.caseClass[FormatButton]
+  implicit val reusability: Reusability[FormatButton] = Reusability.caseClass[FormatButton]
 
   private def render(props: FormatButton): VdomElement = {
-    val isDisabled = false
-
-    val formatCode =
-      if (!isDisabled) props.formatCode
-      else reusableEmpty
-
-    li(title := s"Format Code (${EditorOptions.Keys.format})",
-       role := "button",
-       (cls := "disabled").when(isDisabled),
-       cls := "btn",
-       onClick --> formatCode)(
+    li(
+      title := s"Format Code (${EditorOptions.Keys.format})",
+      role := "button",
+      cls := "btn",
+      onClick --> props.formatCode,
+    )(
       i(cls := "fa fa-align-left"),
       span("Format")
     )
