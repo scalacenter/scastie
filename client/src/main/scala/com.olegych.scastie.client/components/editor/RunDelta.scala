@@ -66,11 +66,7 @@ private[editor] object RunDelta {
           .map(c => !editorShouldRefresh.test(c, nextProps))
           .getOrElse(true)
 
-      Callback(
-        scalajs.js.timers.setTimeout(10)(
-          editor.refresh()
-        )
-      ).when_(shouldRefresh)
+      Callback(editor.refresh()).when_(shouldRefresh)
     }
 
     setTheme >>

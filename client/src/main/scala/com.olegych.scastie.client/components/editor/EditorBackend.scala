@@ -25,61 +25,48 @@ private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
     }
   }
 
-  def start(): Callback = {
-    scope.props.flatMap { props =>
-      val editor =
-        codemirror.CodeMirror.fromTextArea(
-          codemirrorTextarea,
-          EditorOptions(props, scope)
-        )
+  def start(): Callback = scope.props.flatMap { props =>
+    val editor = codemirror.CodeMirror.fromTextArea(
+      codemirrorTextarea,
+      EditorOptions(props, scope)
+    )
 
-      editor.onChanges(
-        (e, _) => props.codeChange(e.getDoc().getValue()).runNow()
-      )
-
-      editor.onKeyUp((_, e) => {
-        scope
-          .modState(
-            s =>
-              s.copy(
-                showTypeButtonPressed = s.showTypeButtonPressed && e.keyCode != KeyCode.Ctrl
-            )
-          )
-          .runNow()
-      })
-
-      val setEditor =
-        scope.modState(_.copy(editor = Some(editor)))
-
-      val applyDeltas =
-        scope.state.flatMap(
-          state =>
-            RunDelta(
-              editor = editor,
-              currentProps = None,
-              nextProps = props,
-              state = state,
-              modState = f => scope.modState(f)
-          )
-        )
-
-      val foldCode =
-        CodeFoldingAnnotations(
-          editor = editor,
-          props = props
-        )
-
-      val delayedRefresh =
-        Callback(
-          scalajs.js.timers.setTimeout(0)(
-            editor.refresh()
-          )
-        )
-
-      setEditor >>
-        applyDeltas >>
-        foldCode >>
-        delayedRefresh
+    editor.onChanges { (e, _) =>
+      props.codeChange(e.getDoc().getValue()).runNow()
     }
+
+    editor.onKeyUp { (_, e) =>
+      scope
+        .modState { s =>
+          s.copy(
+            showTypeButtonPressed = s.showTypeButtonPressed && e.keyCode != KeyCode.Ctrl
+          )
+        }
+        .runNow()
+    }
+
+    val setEditor = scope.modState(_.copy(editor = Some(editor)))
+
+    val applyDeltas = scope.state.flatMap { state =>
+      RunDelta(
+        editor = editor,
+        currentProps = None,
+        nextProps = props,
+        state = state,
+        modState = f => scope.modState(f)
+      )
+    }
+
+    val foldCode = CodeFoldingAnnotations(
+      editor = editor,
+      props = props
+    )
+
+    val refresh = Callback(editor.refresh())
+
+    setEditor >>
+      applyDeltas >>
+      foldCode >>
+      refresh
   }
 }
