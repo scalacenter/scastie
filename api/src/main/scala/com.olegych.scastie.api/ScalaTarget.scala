@@ -2,11 +2,6 @@ package com.olegych.scastie.api
 
 import com.olegych.scastie.buildinfo.BuildInfo
 
-import BuildInfo.defaultScalaVersion
-import BuildInfo.latest212
-import BuildInfo.defaultScalaJsVersion
-import BuildInfo.defaultDottyVersion
-
 sealed trait ScalaTarget {
   def targetType: ScalaTargetType
   def scaladexRequest: Map[String, String]
@@ -77,22 +72,17 @@ object ScalaTarget {
     }
   }
 
-  private def runtimeDependencyFrom(
-      target: ScalaTarget
-  ): Option[ScalaDependency] = {
-    Some(
-      ScalaDependency(
-        BuildInfo.organization,
-        BuildInfo.runtimeProjectName,
-        target,
-        BuildInfo.versionRuntime
-      )
+  private def runtimeDependencyFrom(target: ScalaTarget): Option[ScalaDependency] = Some(
+    ScalaDependency(
+      BuildInfo.organization,
+      BuildInfo.runtimeProjectName,
+      target,
+      BuildInfo.versionRuntime
     )
-  }
+  )
 
   object Jvm {
-    def default: ScalaTarget =
-      ScalaTarget.Jvm(scalaVersion = defaultScalaVersion)
+    def default: ScalaTarget = ScalaTarget.Jvm(scalaVersion = BuildInfo.latest213)
   }
 
   private def partialUnificationSbtPlugin = """addSbtPlugin("org.lyranthe.sbt" % "partial-unification" % "1.1.2")"""
@@ -184,8 +174,8 @@ object ScalaTarget {
 
     def default: ScalaTarget =
       ScalaTarget.Js(
-        scalaVersion = latest212,
-        scalaJsVersion = defaultScalaJsVersion
+        scalaVersion = BuildInfo.jsScalaVersion,
+        scalaJsVersion = BuildInfo.defaultScalaJsVersion
       )
   }
 
@@ -271,8 +261,7 @@ object ScalaTarget {
   }
 
   object Dotty {
-    def default: ScalaTarget =
-      Dotty(defaultDottyVersion)
+    def default: ScalaTarget = Dotty(BuildInfo.latestDotty)
 
     def defaultCode: String =
       """|// You can find more examples here:

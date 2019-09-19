@@ -1,7 +1,6 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
-import com.olegych.scastie.buildinfo.BuildInfo
 import japgolly.scalajs.react._
 import vdom.TagOf
 import vdom.all._
@@ -80,11 +79,6 @@ object BuildSettings {
   }
 
   def renderVersions(props: BuildSettings): TagMod = {
-    val suggestedVersions = List(
-      BuildInfo.defaultScalaVersion,
-      BuildInfo.latest212,
-    )
-
     def setScalaVersion(
         targetFun: String => ScalaTarget
     )(event: ReactEventFromInput): Callback =
@@ -99,7 +93,7 @@ object BuildSettings {
 
       TagMod(
         ul(cls := "suggestedVersions")(
-          suggestedVersions.map { suggestedVersion =>
+          ScalaVersions.suggestedScalaVersions.map { suggestedVersion =>
             li(
               input(`type` := "radio",
                     id := s"scala-$suggestedVersion",

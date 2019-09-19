@@ -2,7 +2,7 @@ import sbt._
 import Keys._
 
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-import org.scalajs.sbtplugin.cross.CrossProject
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import sbtbuildinfo.BuildInfoPlugin
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
 
@@ -17,15 +17,19 @@ to generate the docker image for the different
 configuration matrix
  */
 object SbtShared {
-  val sbt210 = "2.10.7"
-  val latest211 = "2.11.12"
-  val latest212 = "2.12.9"
-  val latest213 = "2.13.1"
-  val currentScalaVersion = latest212
+  object ScalaVersions {
+    val latest210 = "2.10.7"
+    val latest211 = "2.11.12"
+    val latest212 = "2.12.9"
+    val latest213 = "2.13.1"
+    val latestDotty = "0.18.1-RC1"
+    val js = latest212
+    val sbt = latest212
+    val jvm = latest212
+    val cross = List(latest210, latest211, latest212, latest213, js, sbt, jvm).distinct
+  }
 
   val latestScalaJs = "0.6.29"
-  //todo allow choosing dotty version and merge com.olegych.scastie.api.ScalaTarget.sbtConfig with com.olegych.scastie.api.Inputs.sbtConfigExtra
-  val latestDotty = "0.18.1-RC1"
 
   val sbtVersion = "1.3.0"
   val distSbtVersion = sbtVersion
@@ -63,15 +67,6 @@ object SbtShared {
   }
   val versionRuntime = "1.0.0-SNAPSHOT"
 
-  val playJson = libraryDependencies += {
-    scalaVersion.value match {
-      case v if v.startsWith("2.10") =>
-        toScalaJSGroupID("com.typesafe.play") %%% "play-json" % "2.6.9"
-      case _ =>
-        toScalaJSGroupID("com.typesafe.play") %%% "play-json" % "2.7.4"
-    }
-  }
-
   lazy val baseSettings = Seq(
     // skip scaladoc
     publishArtifact in (Compile, packageDoc) := false,
@@ -79,7 +74,7 @@ object SbtShared {
     publishArtifact in packageSrc := false,
     sources in (Compile, doc) := Seq.empty,
     parallelExecution in Test := false,
-    scalaVersion := currentScalaVersion,
+    scalaVersion := ScalaVersions.jvm,
     scalacOptions ++= {
       val scalaV = scalaVersion.value
 
@@ -92,7 +87,7 @@ object SbtShared {
           "-unchecked"
         )
 
-      if (scalaV == sbt210) base
+      if (scalaV == ScalaVersions.latest210) base
       else {
         base ++ Seq(
           "-Yrangepos",
@@ -111,94 +106,90 @@ object SbtShared {
   )
 
   val baseJsSettings = Seq(
-    scalacOptions += "-P:scalajs:sjsDefinedByDefault"
+    scalacOptions += "-P:scalajs:sjsDefinedByDefault",
+    test := {},
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.7",
   )
 
-  def crossDir(projectId: String) = file(".cross/" + projectId)
-  def dash(name: String) = name.replaceAllLiterally(".", "-")
+  private def readSbtVersion(base: Path): String = {
+    val sbtPropertiesFileName = "build.properties"
+    val projectFolder = "project"
+    val to = Paths.get(projectFolder, sbtPropertiesFileName)
+    val guess1 = base.resolve(to)
+    val guess2 = base.getParent.resolve(to)
+    val sbtPropertiesFile =
+      if (Files.isRegularFile(guess1)) guess1
+      else if (Files.isRegularFile(guess2)) guess2
+      else {
+        sys.error(
+          s"cannot find $sbtPropertiesFileName in $guess1 and $guess2"
+        )
+      }
+    val prop = new Properties() {
+      new FileInputStream(sbtPropertiesFile.toFile) {
+        load(this)
+        close()
+      }
+    }
+    val res = prop.getProperty("sbt.version")
+    assert(res != null)
+    res
+  }
 
   /* api is for the communication between sbt <=> server <=> frontend */
-  def apiProject(scalaV: String, fromSbt: Boolean = false) = {
-    val projectName = "api"
-    val projectId0 =
-      if (scalaV != currentScalaVersion) {
-        s"$projectName-${dash(scalaV)}"
-      } else projectName
+  lazy val apiProject: ProjectMatrix = ProjectMatrix(id = "api", base = file("api"))
+    .settings(apiSettings)
+    .jvmPlatform(ScalaVersions.cross)
+    .jsPlatform(List(ScalaVersions.js), baseJsSettings)
+    .enablePlugins(BuildInfoPlugin)
 
-    val extra =
-      if (fromSbt) "-sbt"
-      else ""
+  lazy val sbtApiProject: Project = Project(id = "api-sbt", base = file("api-sbt"))
+    .settings(sourceDirectory := sourceDirectory.value / ".." / ".." / ".." / "api" / "src")
+    .settings(apiSettings)
+    .enablePlugins(BuildInfoPlugin)
 
-    val projectId = projectId0 + extra
-
-    def src(config: String): Def.Initialize[File] = Def.setting {
-      val base0 = (baseDirectory in ThisBuild).value
-
-      val base =
-        if (fromSbt) base0.getParentFile
-        else base0
-
-      base / projectName / "src" / config / "scala"
-    }
-
-    def readSbtVersion(base: Path): String = {
-      val sbtPropertiesFileName = "build.properties"
-      val projectFolder = "project"
-
-      val to = Paths.get(projectFolder, sbtPropertiesFileName)
-
-      val guess1 = base.resolve(to)
-      val guess2 = base.getParent.resolve(to)
-
-      val sbtPropertiesFile =
-        if (Files.isRegularFile(guess1)) guess1
-        else if (Files.isRegularFile(guess2)) guess2
-        else {
-          sys.error(
-            s"cannot find $sbtPropertiesFileName in $guess1 and $guess2"
-          )
+  private def apiSettings = {
+    baseSettings ++ List(
+      name := "api",
+      libraryDependencies += {
+        scalaVersion.value match {
+          case v if v.startsWith("2.10") =>
+            "com.typesafe.play" %%% "play-json" % "2.6.9"
+          case _ =>
+            "com.typesafe.play" %%% "play-json" % "2.7.4"
         }
-
-      val prop = new Properties()
-      val input = new FileInputStream(sbtPropertiesFile.toFile)
-      prop.load(input)
-      input.close()
-
-      val res = prop.getProperty("sbt.version")
-      assert(res != null)
-
-      res
-    }
-
-    CrossProject(id = projectId, base = crossDir(projectId), crossType = CrossType.Pure)
-      .settings(baseSettings)
-      .settings(
-        buildInfoKeys := Seq[BuildInfoKey](
-          organization,
-          version,
-          "runtimeProjectName" -> runtimeProjectName,
-          "versionRuntime" -> versionRuntime,
-          "latest212" -> latest212,
-          "defaultScalaVersion" -> latest213,
-          "defaultScalaJsVersion" -> latestScalaJs,
-          "defaultDottyVersion" -> latestDotty,
-          "sbtVersion" -> readSbtVersion(
-            (baseDirectory in ThisBuild).value.toPath
-          ),
-          BuildInfoKey.action("gitHash") { gitHashNow }
-        ),
-        buildInfoPackage := "com.olegych.scastie.buildinfo",
-        scalaVersion := scalaV,
-        moduleName := projectName,
-        unmanagedSourceDirectories in Compile += src("main").value,
-        unmanagedSourceDirectories in Test += src("test").value
-      )
-      .settings(playJson)
-      .jsSettings(baseJsSettings)
-      .jsSettings(
-        test := {},
-        libraryDependencies += toScalaJSGroupID("org.scala-js") %%% "scalajs-dom" % "0.9.7"
-      )
-      .enablePlugins(BuildInfoPlugin)
+      },
+      buildInfoKeys := Seq[BuildInfoKey](
+        organization,
+        version,
+        "runtimeProjectName" -> runtimeProjectName,
+        "versionRuntime" -> versionRuntime,
+        "latest210" -> ScalaVersions.latest210,
+        "latest211" -> ScalaVersions.latest211,
+        "latest212" -> ScalaVersions.latest212,
+        "latest213" -> ScalaVersions.latest213,
+        "latestDotty" -> ScalaVersions.latestDotty,
+        "jsScalaVersion" -> ScalaVersions.js,
+        "defaultScalaJsVersion" -> latestScalaJs,
+        "sbtVersion" -> readSbtVersion((baseDirectory in ThisBuild).value.toPath),
+        BuildInfoKey.action("gitHash") { gitHashNow }
+      ),
+      buildInfoPackage := "com.olegych.scastie.buildinfo",
+    )
   }
+
+  /* runtime* pretty print values and type */
+  lazy val runtimeScalaProject = {
+    import sbtprojectmatrix.ProjectMatrixPlugin.autoImport._
+    ProjectMatrix(id = runtimeProjectName, base = file(runtimeProjectName))
+      .settings(
+        baseSettings,
+        version := versionRuntime,
+        name := runtimeProjectName,
+      )
+      .jvmPlatform(ScalaVersions.cross)
+      .jsPlatform(List(ScalaVersions.js), baseJsSettings)
+      .dependsOn(apiProject)
+  }
+
 }

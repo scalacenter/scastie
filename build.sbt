@@ -16,9 +16,9 @@ def akkaHttpTestkit =
 def akkaHttpCors = "ch.megard" %% "akka-http-cors" % "0.4.0"
 def akkaHttpSession = "com.softwaremill.akka-http-session" %% "core" % "0.5.6"
 
-def reactiveMongo = "org.reactivemongo" %% "reactivemongo" % "0.16.5"
+def reactiveMongo = "org.reactivemongo" %% "reactivemongo" % "0.18.6"
 def reactiveMongoJson =
-  "org.reactivemongo" %% "reactivemongo-play-json" % "0.16.5-play26"
+  "org.reactivemongo" %% "reactivemongo-play-json" % "0.18.6-play27"
 
 val startAllCommands = List(
   "sbtRunner/reStart",
@@ -58,26 +58,18 @@ startAll(startAllCommands)
 lazy val scastie = project
   .in(file("."))
   .aggregate(
-    api210JVM,
-    api211JVM,
-    api213JVM,
-    apiJS,
-    apiJVM,
-    balancer,
-    client,
-    e2e,
-    instrumentation,
-    migration,
-    runtimeScala210JVM,
-    runtimeScala211JVM,
-    runtimeScala213JVM,
-    runtimeScalaJS,
-    runtimeScalaJVM,
-    sbtRunner,
-    sbtScastie,
-    server,
-    storage,
-    utils
+    (api.projectRefs ++ runtimeScala.projectRefs ++ List(
+      balancer,
+      client,
+      e2e,
+      instrumentation,
+      migration,
+      sbtRunner,
+      sbtScastie,
+      server,
+      storage,
+      utils,
+    ).map(_.project)):_*
   )
   .settings(baseSettings)
   .settings(ciAlias)
@@ -111,53 +103,36 @@ lazy val utils = project
       akka("testkit") % Test
     )
   )
-  .dependsOn(apiJVM)
+  .dependsOn(api.jvm(ScalaVersions.jvm))
 
-lazy val runnerRuntimeDependencies = Seq(
-  api210JVM,
-  api211JVM,
-  api213JVM,
-  apiJS,
-  apiJVM,
-  runtimeScala210JVM,
-  runtimeScala211JVM,
-  runtimeScala213JVM,
-  runtimeScalaJS,
-  runtimeScalaJVM,
-  sbtScastie
-).map(publishLocal in _)
+lazy val runnerRuntimeDependencies = {
+  val v = (api.projectRefs ++ runtimeScala.projectRefs ++ Seq(
+    sbtScastie.project
+  )).map(publishLocal in _)
+  println(v)
+  v
+}
 
 lazy val runnerRuntimeDependenciesInTest = Seq(
   test in assembly := {},
-  test in Test := (test in Test)
-    .dependsOn(runnerRuntimeDependencies: _*)
-    .value,
-  testOnly in Test := (testOnly in Test)
-    .dependsOn(runnerRuntimeDependencies: _*)
-    .evaluated,
-  testQuick in Test := (testQuick in Test)
-    .dependsOn(runnerRuntimeDependencies: _*)
-    .evaluated
+  test in Test := (test in Test).dependsOn(runnerRuntimeDependencies: _*).value,
+  testOnly in Test := (testOnly in Test).dependsOn(runnerRuntimeDependencies: _*).evaluated,
+  testQuick in Test := (testQuick in Test).dependsOn(runnerRuntimeDependencies: _*).evaluated
 )
 
-lazy val smallRunnerRuntimeDependencies = Seq(
-  apiJVM,
-  runtimeScalaJVM,
-  sbtScastie
-).map(publishLocal in _)
-
-lazy val smallRunnerRuntimeDependenciesInTest = Seq(
-  test in assembly := {},
-  test in Test := (test in Test)
-    .dependsOn(smallRunnerRuntimeDependencies: _*)
-    .value,
-  testOnly in Test := (testOnly in Test)
-    .dependsOn(smallRunnerRuntimeDependencies: _*)
-    .evaluated,
-  testQuick in Test := (testQuick in Test)
-    .dependsOn(smallRunnerRuntimeDependencies: _*)
-    .evaluated
-)
+lazy val smallRunnerRuntimeDependenciesInTest = {
+  lazy val smallRunnerRuntimeDependencies = Seq(
+    api.jvm(ScalaVersions.jvm),
+    runtimeScala.jvm(ScalaVersions.jvm),
+    sbtScastie
+  ).map(publishLocal in _)
+  Seq(
+    test in assembly := {},
+    test in Test := (test in Test).dependsOn(smallRunnerRuntimeDependencies: _*).value,
+    testOnly in Test := (testOnly in Test).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated,
+    testQuick in Test := (testQuick in Test).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated
+  )
+}
 
 lazy val dockerOrg = "scalacenter"
 
@@ -208,7 +183,7 @@ lazy val sbtRunner = project
       case x => MergeStrategy.first
     }
   )
-  .dependsOn(apiJVM, instrumentation, utils)
+  .dependsOn(api.jvm(ScalaVersions.jvm), instrumentation, utils)
   .enablePlugins(sbtdocker.DockerPlugin, BuildInfoPlugin)
 
 lazy val server = project
@@ -229,7 +204,7 @@ lazy val server = project
     )
   )
   .enablePlugins(JavaServerAppPackaging)
-  .dependsOn(apiJVM, utils, balancer)
+  .dependsOn(api.jvm(ScalaVersions.jvm), utils, balancer)
 
 lazy val balancer = project
   .settings(baseSettings)
@@ -238,7 +213,7 @@ lazy val balancer = project
   .settings(
     libraryDependencies += akka("testkit")
   )
-  .dependsOn(apiJVM, utils, storage, sbtRunner % Test)
+  .dependsOn(api.jvm(ScalaVersions.jvm), utils, storage, sbtRunner % Test)
 
 lazy val storage = project
   .settings(baseSettings)
@@ -252,7 +227,7 @@ lazy val storage = project
       reactiveMongoJson
     )
   )
-  .dependsOn(apiJVM, utils, instrumentation)
+  .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
 
 val webpackDir = Def.setting {
   (baseDirectory in ThisProject).value / "webpack"
@@ -310,7 +285,7 @@ lazy val client = project
     )
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
-  .dependsOn(apiJS)
+  .dependsOn(api.js(ScalaVersions.js))
 
 lazy val instrumentation = project
   .settings(baseSettings)
@@ -321,57 +296,10 @@ lazy val instrumentation = project
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
-  .dependsOn(apiJVM, utils)
+  .dependsOn(api.jvm(ScalaVersions.jvm), utils)
 
-val api210 = apiProject(sbt210)
-val api211 = apiProject(latest211)
-val api213 = apiProject(latest213)
-val apiCurrent = apiProject(currentScalaVersion)
-
-lazy val api210JVM = api210.jvm
-lazy val api211JVM = api211.jvm
-lazy val api213JVM = api213.jvm
-lazy val apiJS = apiCurrent.js
-lazy val apiJVM = apiCurrent.jvm
-
-/* runtime* pretty print values and type */
-def runtimeScala(scalaV: String, apiProject: CrossProject) = {
-  val projectName = runtimeProjectName
-
-  val projectId =
-    if (scalaV != currentScalaVersion) {
-      s"$projectName-${dash(scalaV)}"
-    } else projectName
-
-  CrossProject(id = projectId, base = crossDir(projectId), crossType = CrossType.Full)
-    .settings(baseSettings)
-    .settings(version := versionRuntime)
-    .settings(
-      scalaVersion := scalaV,
-      moduleName := projectName,
-      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "shared" / "src" / "main" / "scala"
-    )
-    .jsSettings(baseJsSettings)
-    .jsSettings(
-      test := {},
-      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "js" / "src" / "main" / "scala"
-    )
-    .jvmSettings(
-      unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "jvm" / "src" / "main" / "scala"
-    )
-    .dependsOn(apiProject)
-}
-
-val runtimeScala210 = runtimeScala(sbt210, api210)
-val runtimeScala211 = runtimeScala(latest211, api211)
-val runtimeScala213 = runtimeScala(latest213, api213)
-val runtimeScalaCurrent = runtimeScala(currentScalaVersion, apiCurrent)
-
-lazy val runtimeScala210JVM = runtimeScala210.jvm
-lazy val runtimeScala211JVM = runtimeScala211.jvm
-lazy val runtimeScalaJS = runtimeScalaCurrent.js
-lazy val runtimeScalaJVM = runtimeScalaCurrent.jvm
-lazy val runtimeScala213JVM = runtimeScala213.jvm
+lazy val api = apiProject
+lazy val runtimeScala = runtimeScalaProject
 
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))
@@ -381,7 +309,7 @@ lazy val sbtScastie = project
     sbtPlugin := true
   )
   .settings(version := versionRuntime)
-  .dependsOn(apiJVM)
+  .dependsOn(api.jvm(ScalaVersions.jvm))
 
 // migration from file containers to mongodb
 // sbt migration/assembly
@@ -393,7 +321,7 @@ lazy val migration = project
   .settings(
     assemblyJarName in assembly := "migration.jar"
   )
-  .dependsOn(apiJVM, storage)
+  .dependsOn(api.jvm(ScalaVersions.jvm), storage)
 
 lazy val e2e = project
   .in(file("end-to-end"))

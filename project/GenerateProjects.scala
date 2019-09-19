@@ -1,8 +1,7 @@
 import java.nio.file._
 
-import SbtShared._
 import com.olegych.scastie.api._
-import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
+import com.olegych.scastie.buildinfo.BuildInfo
 
 class GenerateProjects(sbtTargetDir: Path) {
   val projectTarget: Path = sbtTargetDir.resolve("projects")
@@ -16,8 +15,7 @@ class GenerateProjects(sbtTargetDir: Path) {
          |}
          |""".stripMargin
 
-    val default =
-      Inputs.default.copy(
+    val default = Inputs.default.copy(
         code = helloWorld,
       )
 
@@ -25,8 +23,8 @@ class GenerateProjects(sbtTargetDir: Path) {
       target = ScalaTarget.Jvm(version),
     )
 
-    val scala212 = scala(latest212)
-    val scala213 = scala(latest213)
+    val scala212 = scala(BuildInfo.latest212)
+    val scala213 = scala(BuildInfo.latest213)
 
     val dotty = default.copy(
       target = ScalaTarget.Dotty.default
@@ -65,7 +63,7 @@ class GeneratedProject(inputs: Inputs, sbtDir: Path) {
 
     Files.write(
       projectDir.resolve("build.properties"),
-      s"sbt.version = $sbtVersion".getBytes
+      s"sbt.version = ${BuildInfo.sbtVersion}".getBytes
     )
 
     Files.write(buildFile, inputs.sbtConfig.getBytes)

@@ -1,10 +1,14 @@
 package com.olegych.scastie.api
 
+import com.olegych.scastie.buildinfo.BuildInfo
+
 object ScalaVersions {
+  val suggestedScalaVersions = List(BuildInfo.latest213, BuildInfo.latest212)
+
   val allVersions: List[String] = List(
-    "2.13.1",
+    BuildInfo.latest213,
     "2.13.0",
-    "2.12.9",
+    BuildInfo.latest212,
     "2.12.8",
     "2.12.7",
     "2.12.6",
@@ -14,7 +18,7 @@ object ScalaVersions {
     "2.12.2",
     "2.12.1",
     "2.12.0",
-    "2.11.12",
+    BuildInfo.latest211,
     "2.11.11",
     /* Those two versions were withdrawn.
     "2.11.10",
@@ -29,7 +33,7 @@ object ScalaVersions {
     "2.11.2",
     "2.11.1",
     "2.11.0",
-    "2.10.7",
+    BuildInfo.latest210,
     "2.10.6"
   )
 }
