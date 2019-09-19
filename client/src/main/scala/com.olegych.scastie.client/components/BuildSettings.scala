@@ -1,7 +1,11 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
-import japgolly.scalajs.react._, vdom.TagOf, vdom.all._, extra._
+import com.olegych.scastie.buildinfo.BuildInfo
+import japgolly.scalajs.react._
+import vdom.TagOf
+import vdom.all._
+import extra._
 import org.scalajs.dom.html.Div
 
 final case class BuildSettings(
@@ -77,9 +81,8 @@ object BuildSettings {
 
   def renderVersions(props: BuildSettings): TagMod = {
     val suggestedVersions = List(
-      "2.13.0",
-      "2.12.8",
-      "2.11.12"
+      BuildInfo.defaultScalaVersion,
+      BuildInfo.latest212,
     )
 
     def setScalaVersion(
