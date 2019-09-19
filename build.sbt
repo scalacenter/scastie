@@ -1,8 +1,6 @@
 import ScalaJSHelper._
 import SbtShared._
 
-import org.scalajs.sbtplugin.cross.CrossProject
-
 val scalaTestVersion = "3.0.1"
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.21"
@@ -105,13 +103,9 @@ lazy val utils = project
   )
   .dependsOn(api.jvm(ScalaVersions.jvm))
 
-lazy val runnerRuntimeDependencies = {
-  val v = (api.projectRefs ++ runtimeScala.projectRefs ++ Seq(
+lazy val runnerRuntimeDependencies = (api.projectRefs ++ runtimeScala.projectRefs ++ Seq(
     sbtScastie.project
   )).map(publishLocal in _)
-  println(v)
-  v
-}
 
 lazy val runnerRuntimeDependenciesInTest = Seq(
   test in assembly := {},

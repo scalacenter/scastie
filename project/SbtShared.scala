@@ -74,7 +74,6 @@ object SbtShared {
     publishArtifact in packageSrc := false,
     sources in (Compile, doc) := Seq.empty,
     parallelExecution in Test := false,
-    scalaVersion := ScalaVersions.jvm,
     scalacOptions ++= {
       val scalaV = scalaVersion.value
 
