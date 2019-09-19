@@ -19,16 +19,16 @@ configuration matrix
 object SbtShared {
   val sbt210 = "2.10.7"
   val latest211 = "2.11.12"
-  val latest212 = "2.12.8"
-  val latest213 = "2.13.0"
+  val latest212 = "2.12.9"
+  val latest213 = "2.13.1"
   val currentScalaVersion = latest212
 
-  val latestScalaJs = "0.6.28"
+  val latestScalaJs = "0.6.29"
   //todo allow choosing dotty version and merge com.olegych.scastie.api.ScalaTarget.sbtConfig with com.olegych.scastie.api.Inputs.sbtConfigExtra
   val latestDotty = "0.18.1-RC1"
 
-  val distSbtVersion = "1.2.8" //todo until 1.3.0 is released as there is no rc dist
-  val sbtVersion = "1.3.0-RC3"
+  val sbtVersion = "1.3.0"
+  val distSbtVersion = sbtVersion
 
   val runtimeProjectName = "runtime-scala"
 
