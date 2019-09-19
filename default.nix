@@ -21,12 +21,12 @@ in rec {
 
   sbt = stdenv.mkDerivation rec {
     name = "sbt-${version}";
-    version = "1.2.8";
+    version = "1.3.0";
  
     src = fetchurl {
-      url = "https://piccolo.link/sbt-1.2.8.tgz";
-      sha256 = "9bb9212541176d6fcce7bd12e4cf8a9c9649f5b63f88b3aff474e0b02c7cfe58";
-      name = "sbt1.2.8.tgz";
+      url = "https://piccolo.link/sbt-1.3.0.tgz";
+      sha256 = "c9bc6bcbbe7a65773f4526ad5613d93f220ce21bd2456c3cf35363c4cdd52648";
+      name = "sbt1.3.0.tgz";
     };
 
     patchPhase = ''
