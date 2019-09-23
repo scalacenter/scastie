@@ -142,7 +142,7 @@ object SbtShared {
     .enablePlugins(BuildInfoPlugin)
 
   lazy val sbtApiProject: Project = Project(id = "api-sbt", base = file("api-sbt"))
-    .settings(sourceDirectory := sourceDirectory.value / ".." / ".." / ".." / "api" / "src")
+    .settings(sourceDirectory := baseDirectory.value / ".." / ".." / "api" / "src")
     .settings(apiSettings)
     .enablePlugins(BuildInfoPlugin)
 
