@@ -9,6 +9,7 @@ object ScalaVersions {
     BuildInfo.latest213,
     "2.13.0",
     BuildInfo.latest212,
+    "2.12.9",
     "2.12.8",
     "2.12.7",
     "2.12.6",

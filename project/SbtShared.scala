@@ -1,7 +1,6 @@
 import sbt._
 import Keys._
 
-import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import sbtbuildinfo.BuildInfoPlugin
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
@@ -20,9 +19,9 @@ object SbtShared {
   object ScalaVersions {
     val latest210 = "2.10.7"
     val latest211 = "2.11.12"
-    val latest212 = "2.12.9"
+    val latest212 = "2.12.10"
     val latest213 = "2.13.1"
-    val latestDotty = "0.18.1-RC1"
+    val latestDotty = "0.19.0-RC1"
     val js = latest212
     val sbt = latest212
     val jvm = latest212
@@ -31,7 +30,7 @@ object SbtShared {
 
   val latestScalaJs = "0.6.29"
 
-  val sbtVersion = "1.3.0"
+  val sbtVersion = "1.3.2"
   val distSbtVersion = sbtVersion
 
   val runtimeProjectName = "runtime-scala"
