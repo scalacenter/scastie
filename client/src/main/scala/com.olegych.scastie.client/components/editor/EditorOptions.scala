@@ -41,6 +41,7 @@ object EditorOptions {
     }
 
     import Keys._
+    val indentWithTabs = false
     js.Dictionary[Any](
         "autoRefresh" -> props.isEmbedded,
         "mode" -> "text/x-scala",
@@ -49,7 +50,7 @@ object EditorOptions {
         "lineWrapping" -> false,
         "tabSize" -> 2,
         "tabindex" -> 1,
-        "indentWithTabs" -> false,
+        "indentWithTabs" -> indentWithTabs,
         "theme" -> s"solarized $theme",
         "smartIndent" -> true,
         "keyMap" -> "sublime",
@@ -60,7 +61,10 @@ object EditorOptions {
         "showCursorWhenSelecting" -> true,
         "highlightSelectionMatches" -> highlightSelectionMatches,
         "extraKeys" -> js.Dictionary(
-          "Tab" -> "defaultTab",
+          "Tab" -> commandE { e =>
+            if (e.somethingSelected()) e.indentSelection("add")
+            else e.execCommand(if (indentWithTabs) "insertTab" else "insertSoftTab")
+          },
           saveOrUpdate -> command(props.saveOrUpdate.runNow()),
           ctrl + "-S" -> command(props.saveOrUpdate.runNow()),
           openNew -> command(props.openNewSnippetModal.runNow()),

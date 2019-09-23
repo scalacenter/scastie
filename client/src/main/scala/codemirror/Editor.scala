@@ -70,6 +70,7 @@ trait Editor extends js.Object {
   // def getStateAfter(?line: Int, ?precise: Boolean): js.Object
   // def operation(func: ():any): any
   def indentLine(line: Int, dir: UndefOr[String | Int]): Unit
+  def indentSelection(command: String): Unit
   def toggleOverwrite(value: UndefOr[Boolean]): Unit
   def isReadOnly(): Boolean
   def execCommand(name: String): Unit
@@ -78,6 +79,7 @@ trait Editor extends js.Object {
   def getWrapperElement(): Element
   def getScrollerElement(): Element
   def getGutterElement(): Element
+  def somethingSelected(): Boolean
 }
 
 trait Token extends js.Object {
