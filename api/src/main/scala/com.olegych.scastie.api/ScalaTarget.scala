@@ -124,7 +124,7 @@ object ScalaTarget {
 
     def sbtPluginsConfig: String = partialUnificationSbtPlugin
 
-    def sbtRunCommand: String = "run"
+    def sbtRunCommand: String = "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
@@ -158,7 +158,7 @@ object ScalaTarget {
 
     def sbtPluginsConfig: String = ""
 
-    def sbtRunCommand: String = "run"
+    def sbtRunCommand: String = "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
@@ -251,7 +251,7 @@ object ScalaTarget {
     def sbtPluginsConfig: String =
       s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
 
-    def sbtRunCommand: String = "run"
+    def sbtRunCommand: String = "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
