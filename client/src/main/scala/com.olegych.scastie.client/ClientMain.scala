@@ -1,20 +1,18 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.SnippetId
-import com.olegych.scastie.client.components._
-import org.scalajs.dom
-import org.scalajs.dom.raw.{HTMLElement, Node}
-import org.scalajs.dom.ext._
-
-import scala.scalajs.js
-import js.annotation._
-import js.{UndefOr, |}
-import js.annotation.JSExport
 import java.util.UUID
 
-import japgolly.scalajs.react._
-import extra.router._
+import com.olegych.scastie.api.SnippetId
+import com.olegych.scastie.client.components._
 import japgolly.scalajs.react.component.Generic
+import japgolly.scalajs.react.extra.router._
+import org.scalajs.dom
+import org.scalajs.dom.ext._
+import org.scalajs.dom.raw.{HTMLElement, Node}
+
+import scala.scalajs.js
+import scala.scalajs.js.annotation.{JSExport, _}
+import scala.scalajs.js.{UndefOr, |}
 
 @js.native
 @JSGlobal("ScastieSettings")
@@ -22,9 +20,19 @@ object Settings extends js.Object {
   val defaultServerUrl: String = js.native
 }
 
+@JSExportTopLevel("scastie")
+object Exports {
+  @JSExport
+  val ScastieMain = com.olegych.scastie.client.ScastieMain
+  @JSExport
+  val ClientMain = com.olegych.scastie.client.ScastieClientMain
+  @JSExport
+  def Embedded(selector: UndefOr[String | Node], options: UndefOr[EmbeddedOptionsJs]) = ScastieEmbedded.embedded(selector, options)
+  @JSExport
+  def EmbeddedResource(options: UndefOr[EmbeddedResourceOptionsJs]) = ScastieEmbedded.embeddedResource(options)
+}
 /* Entry point for the website
  */
-@JSExportTopLevel("scastie.ScastieMain")
 object ScastieMain {
   @JSExport
   def main(): Unit = {
@@ -51,9 +59,7 @@ object ScastieMain {
 
 /* Entry point for Scala.js runtime
  */
-@JSExportTopLevel("scastie.ClientMain")
-object ClientMain {
-
+object ScastieClientMain {
   @JSExport
   def signal(instrumentations: String, attachedDoms: js.Array[HTMLElement], rawId: String): Unit = {
     Global.signal(instrumentations, attachedDoms, rawId)
@@ -68,8 +74,6 @@ object ClientMain {
 /* Entry point for ressource embedding and code embedding
  */
 object ScastieEmbedded {
-
-  @JSExportTopLevel("scastie.Embedded")
   def embedded(selector: UndefOr[String | Node], options: UndefOr[EmbeddedOptionsJs]): Unit = {
 
     val embeddedOptions =
@@ -114,8 +118,7 @@ object ScastieEmbedded {
     }
   }
 
-  @JSExportTopLevel("scastie.EmbeddedRessource")
-  def embeddedRessource(options: UndefOr[EmbeddedRessourceOptionsJs]): Unit = {
+  def embeddedResource(options: UndefOr[EmbeddedResourceOptionsJs]): Unit = {
     val embeddedOptions =
       options.toOption
         .map(EmbeddedOptions.fromJsRessource(Settings.defaultServerUrl))
