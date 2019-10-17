@@ -15,7 +15,7 @@ trait SharedEmbeddedOptions extends js.Object {
   val update: UndefOr[Int]
 }
 
-trait EmbeddedRessourceOptionsJs extends js.Object with SharedEmbeddedOptions {
+trait EmbeddedResourceOptionsJs extends js.Object with SharedEmbeddedOptions {
   val injectId: UndefOr[String]
 }
 
@@ -73,7 +73,7 @@ object EmbeddedOptions {
 
   def fromJsRessource(
       defaultServerUrl: String
-  )(options: EmbeddedRessourceOptionsJs): EmbeddedOptions = {
+  )(options: EmbeddedResourceOptionsJs): EmbeddedOptions = {
 
     import options._
 

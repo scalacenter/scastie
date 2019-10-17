@@ -12,12 +12,12 @@ curl https://nixos.org/nix/install | sh
 nix-shell -A scastie
 ```
 
-### How to install prerequisits on Mac
+### How to install prerequisites on Mac
 ```
 brew install openjdk sbt nodejs yarn
 ```
 
-### How to install prerequisits on Windows
+### How to install prerequisites on Windows
 
 Assuming you use Git for Windows >= 2.16.2.1 (note this will erase uncommitted changes):
 ```
@@ -52,7 +52,7 @@ sbt
 
 open `http://localhost:8080`
 
-you can also open `http://localhost:9000/embed.html` to edit the embedded style
+you can also open `http://localhost:8080/embed.html` to edit the embedded style
 
 ## Scalafmt
 

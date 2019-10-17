@@ -1,8 +1,6 @@
 package com.olegych.scastie.web.routes
 
-import java.lang.System.{lineSeparator => nl}
-
-import akka.http.scaladsl.coding.Gzip
+import akka.http.scaladsl.coding.{Gzip, NoCoding}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import com.olegych.scastie.api.{SnippetId, SnippetUserPart}
@@ -12,20 +10,17 @@ class FrontPageRoutes(production: Boolean) {
 
   private val index = getFromResource("public/index.html")
 
-  private def embeddedRessource(snippetId: SnippetId, theme: Option[String]): String = {
-    val user =
-      snippetId.user match {
-        case Some(SnippetUserPart(login, update)) => {
-          s"user: '$login', update: $update,"
-        }
-        case None => ""
-      }
+  private def embeddedResource(snippetId: SnippetId, theme: Option[String]): String = {
+    val user = snippetId.user match {
+      case Some(SnippetUserPart(login, update)) =>
+        s"user: '$login', update: $update,"
+      case None => ""
+    }
 
-    val themePart =
-      theme match {
-        case Some(t) => s"theme: '$t',"
-        case None    => ""
-      }
+    val themePart = theme match {
+      case Some(t) => s"theme: '$t',"
+      case None    => ""
+    }
 
     val id = "id-" + Base64UUID.create
 
@@ -38,7 +33,7 @@ class FrontPageRoutes(production: Boolean) {
         |<script src='$embeddedUrlBase/embedded.js'></script>
         |<script>
         |window.addEventListener('load', function(event) {
-        |  scastie.EmbeddedRessource({
+        |  scastie.EmbeddedResource({
         |    $themePart
         |    base64UUID: '${snippetId.base64UUID}',
         |    $user
@@ -47,10 +42,10 @@ class FrontPageRoutes(production: Boolean) {
         |  });
         |});
         |</script>
-        |");""".stripMargin.split(nl).map(_.trim).mkString("")
+        |");""".stripMargin.split("\n").map(_.trim).mkString("")
   }
 
-  val routes: Route = encodeResponseWith(Gzip)(
+  val routes: Route = encodeResponseWith(Gzip, NoCoding)(
     concat(
       get(
         concat(
@@ -79,9 +74,9 @@ class FrontPageRoutes(production: Boolean) {
           pathSingleSlash(index),
           snippetId(_ => index),
           parameter('theme.?) { theme =>
-            snippetIdExtension(".js")(
-              sid => complete(embeddedRessource(sid, theme))
-            )
+            snippetIdExtension(".js") { sid =>
+              complete(embeddedResource(sid, theme))
+            }
           },
           index,
         )
