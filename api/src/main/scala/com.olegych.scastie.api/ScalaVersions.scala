@@ -37,4 +37,6 @@ object ScalaVersions {
     BuildInfo.latest210,
     "2.10.6"
   )
+
+  def find(sv: String): String = allVersions.find(_.startsWith(sv)).getOrElse(sv)
 }

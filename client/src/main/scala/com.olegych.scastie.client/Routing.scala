@@ -1,6 +1,6 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.{Project, ScalaDependency, ScalaTarget, ScalaTargetType, SnippetId, SnippetUserPart}
+import com.olegych.scastie.api.{Project, ScalaDependency, ScalaTarget, ScalaTargetType, ScalaVersions, SnippetId, SnippetUserPart}
 import com.olegych.scastie.client.components._
 import japgolly.scalajs.react._
 import vdom.all._
@@ -42,12 +42,13 @@ class Routing(defaultServerUrl: String) {
           val target =
             map.get("t").flatMap(ScalaTargetType.parse) match {
               case Some(ScalaTargetType.JVM) =>
-                map.get("sv").map(ScalaTarget.Jvm(_))
+                map.get("sv").map(sv => ScalaTarget.Jvm(ScalaVersions.find(sv)))
 
               case Some(ScalaTargetType.JS) =>
                 (map.get("sv"), map.get("sjsv")) match {
-                  case (Some(sv), Some(sjsv)) => Some(ScalaTarget.Js(sv, sjsv))
-                  case _                      => None
+                  case (Some(sv), sjsv) =>
+                    Some(ScalaTarget.Js(ScalaVersions.find(sv), sjsv.getOrElse(ScalaTarget.Js.default.scalaJsVersion)))
+                  case _ => None
                 }
 
               case _ => None

@@ -172,11 +172,10 @@ object ScalaTarget {
     val sourceFilename = "main.scala"
     val sourceUUID = "file:///tmp/LxvjvKARSa2U5ctNis9LIA"
 
-    def default: ScalaTarget =
-      ScalaTarget.Js(
-        scalaVersion = BuildInfo.jsScalaVersion,
-        scalaJsVersion = BuildInfo.defaultScalaJsVersion
-      )
+    def default = ScalaTarget.Js(
+      scalaVersion = BuildInfo.jsScalaVersion,
+      scalaJsVersion = BuildInfo.defaultScalaJsVersion
+    )
   }
 
   case class Js(scalaVersion: String, scalaJsVersion: String) extends ScalaTarget {
