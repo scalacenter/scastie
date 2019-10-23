@@ -86,6 +86,7 @@ case class ScastieState(
     outputs: Outputs,
     status: StatusState,
     isEmbedded: Boolean = false,
+    transient: Boolean = false,
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean = snippetState.loadSnippet
@@ -116,6 +117,7 @@ case class ScastieState(
       inputs: Inputs = inputs,
       outputs: Outputs = outputs,
       status: StatusState = status,
+      transient: Boolean = transient,
   ): ScastieState = {
 
     val isScalaJsScriptLoaded0 =
@@ -152,9 +154,10 @@ case class ScastieState(
         outputs = outputs,
         status = status,
         isEmbedded = isEmbedded,
+        transient = transient,
       )
 
-    if (!isEmbedded) {
+    if (!isEmbedded && !transient) {
       LocalStorage.save(state0)
     }
 
@@ -441,9 +444,11 @@ case class ScastieState(
   }
 
   def setProgresses(progresses: List[SnippetProgress]): ScastieState = {
-    progresses.foldLeft(this) {
-      case (state, progress) => state.addProgress(progress)
-    }
+    progresses
+      .foldLeft(this.copy(transient = true)) {
+        case (state, progress) => state.addProgress(progress)
+      }
+      .copyAndSave(transient = false)
   }
 
   def setSnippetId(snippetId: SnippetId): ScastieState = {
