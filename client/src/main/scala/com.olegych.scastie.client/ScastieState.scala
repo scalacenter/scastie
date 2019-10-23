@@ -164,6 +164,10 @@ case class ScastieState(
     state0
   }
 
+  private def coalesceUpdates(update: ScastieState => ScastieState) = {
+    if (transient) update(this) else update(this.copy(transient = true)).copyAndSave(transient = false)
+  }
+
   def isBuildDefault: Boolean = inputs.isDefault
 
   def isClearable: Boolean =
@@ -414,17 +418,17 @@ case class ScastieState(
     )
   }
 
-  def addProgress(progress: SnippetProgress): ScastieState = {
-    val state =
-      addOutputs(progress.compilationInfos, progress.instrumentations)
-        .logOutput(progress.userOutput, ConsoleOutput.UserOutput.apply _)
-        .logOutput(progress.sbtOutput, ConsoleOutput.SbtOutput.apply _)
-        .setForcedProgramMode(progress.isForcedProgramMode)
-        .setLoadScalaJsScript(loadScalaJsScript | progress.isDone)
-        .setRuntimeError(progress.runtimeError)
-        .setSbtError(progress.isSbtError)
-        .setRunning(!progress.isDone)
-        .copyAndSave(scalaJsContent = progress.scalaJsContent.orElse(snippetState.scalaJsContent))
+  def addProgress(progress: SnippetProgress): ScastieState = coalesceUpdates { self =>
+    val state = self
+      .addOutputs(progress.compilationInfos, progress.instrumentations)
+      .logOutput(progress.userOutput, ConsoleOutput.UserOutput.apply _)
+      .logOutput(progress.sbtOutput, ConsoleOutput.SbtOutput.apply _)
+      .setForcedProgramMode(progress.isForcedProgramMode)
+      .setLoadScalaJsScript(self.loadScalaJsScript | progress.isDone)
+      .setRuntimeError(progress.runtimeError)
+      .setSbtError(progress.isSbtError)
+      .setRunning(!progress.isDone)
+      .copyAndSave(scalaJsContent = progress.scalaJsContent.orElse(self.snippetState.scalaJsContent))
 
     if (progress.userOutput.isDefined) state.setUserOutput
     else state
@@ -443,12 +447,10 @@ case class ScastieState(
     copyAndSave(status = StatusState.empty)
   }
 
-  def setProgresses(progresses: List[SnippetProgress]): ScastieState = {
-    progresses
-      .foldLeft(this.copy(transient = true)) {
-        case (state, progress) => state.addProgress(progress)
-      }
-      .copyAndSave(transient = false)
+  def setProgresses(progresses: List[SnippetProgress]): ScastieState = coalesceUpdates { self =>
+    progresses.foldLeft(self) {
+      case (state, progress) => state.addProgress(progress)
+    }
   }
 
   def setSnippetId(snippetId: SnippetId): ScastieState = {
