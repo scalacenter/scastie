@@ -1,10 +1,13 @@
 package com.olegych.scastie.instrumentation
 
+import com.olegych.scastie.util.ScastieFileUtil
+
 case class DiffFailure(title: String, expected: String, obtained: String, diff: String)
     extends Exception(title + "\n" + Diff.error2message(obtained, expected))
 
 object Diff {
   def error2message(obtained: String, expected: String): String = {
+    ScastieFileUtil.write(new java.io.File("target/obtained.scala").toPath, obtained, truncate = true)
     val sb = new StringBuilder
 
     sb.append("\n")

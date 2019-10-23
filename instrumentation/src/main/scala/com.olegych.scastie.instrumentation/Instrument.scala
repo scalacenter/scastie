@@ -96,9 +96,7 @@ object Instrument {
   private def instrument(source: Source, offset: Int, isScalaJs: Boolean): String = {
     val instrumentedCodePatches =
       source.stats.collect {
-        case c: Defn.Class
-            if c.name.value == instrumentedClass &&
-              c.templ.stats.nonEmpty =>
+        case c: Defn.Class if c.name.value == instrumentedClass =>
           val openCurlyBrace =
             if (!isScalaJs) c.templ.tokens.head
             else c.templ.tokens.find(_.toString == "{").get
