@@ -87,18 +87,18 @@ object ScalaTarget {
 
   private def partialUnificationSbtPlugin = """addSbtPlugin("org.lyranthe.sbt" % "partial-unification" % "1.1.2")"""
   private def hktScalacOptions(scalaVersion: String) = {
-    val (kpOrg, kpVersion) =
-      if (scalaVersion == "2.13.0-M5") ("org.spire-math", "0.9.9")
-      else if (scalaVersion == "2.13.0-RC1") ("org.spire-math", "0.9.10")
-      else if (scalaVersion == "2.13.0-RC2") ("org.typelevel", "0.10.1")
-      else if (scalaVersion == "2.13.0-RC3") ("org.typelevel", "0.10.2")
-      else ("org.typelevel", "0.10.3")
+    val (kpOrg, kpVersion, kpCross) =
+      if (scalaVersion == "2.13.0-M5") ("org.spire-math", "0.9.9", "binary")
+      else if (scalaVersion == "2.13.0-RC1") ("org.spire-math", "0.9.10", "binary")
+      else if (scalaVersion == "2.13.0-RC2") ("org.typelevel", "0.10.1", "binary")
+      else if (scalaVersion == "2.13.0-RC3") ("org.typelevel", "0.10.2", "binary")
+      else ("org.typelevel", "0.11.0", "full")
     val paradise =
       if (scalaVersion.startsWith("2.10"))
         """libraryDependencies += compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)"""
       else ""
     s"""|scalacOptions += "-language:higherKinds"
-        |addCompilerPlugin("${kpOrg}" %% "kind-projector" % "${kpVersion}")
+        |addCompilerPlugin("${kpOrg}" %% "kind-projector" % "${kpVersion}" cross CrossVersion.${kpCross})
         |$paradise""".stripMargin
   }
 
