@@ -48,7 +48,9 @@ object ScaladexSearch {
       project: Project,
       release: ScalaDependency,
       options: ReleaseOptions
-  )
+  ) {
+    def matches(p: Project, artifact: String) = p == project && release.artifact == artifact
+  }
 
   private[ScaladexSearch] case class SearchState(
       query: String,
@@ -76,7 +78,7 @@ object ScaladexSearch {
 
     def addSelected(selected: Selected): SearchState = {
       copy(
-        selecteds = selected :: selecteds
+        selecteds = selected :: selecteds.filterNot(_.release.matches(selected.release))
       )
     }
 
@@ -163,13 +165,14 @@ object ScaladexSearch {
       } else if (e.keyCode == KeyCode.Enter) {
 
         def addArtifactIfInRange =
-          scope.state.flatMap(
-            s =>
-              if (0 <= s.selectedIndex && s.selectedIndex < s.search.size)
-                addArtifact(s.search(s.selectedIndex))
-              else
-                Callback.empty
-          )
+          for {
+            state <- scope.state
+            props <- scope.props
+            _ <- if (0 <= state.selectedIndex && state.selectedIndex < state.search.size)
+              addArtifact(state.search(state.selectedIndex), props.scalaTarget, state)
+            else
+              Callback.empty
+          } yield ()
 
         addArtifactIfInRange >> Callback(searchInputRef.focus)
       } else {
@@ -177,23 +180,26 @@ object ScaladexSearch {
       }
     }
 
-    def addArtifact(projectAndArtifact: (Project, String, Option[String])): Callback = {
+    def addArtifact(projectAndArtifact: (Project, String, Option[String]),
+                    target: ScalaTarget,
+                    state: SearchState,
+                    localOnly: Boolean = false): Callback = {
       val (project, artifact, version) = projectAndArtifact
-      scope.props.flatMap { props =>
-        Callback.future(
-          fetchSelected(project, artifact, props.scalaTarget, version).map {
-            case Some(selected) =>
+      if (state.selecteds.exists(_.matches(project, artifact))) Callback(())
+      else
+        Callback.future {
+          fetchSelected(project, artifact, target, version).map {
+            case Some(selected) if !state.selecteds.exists(_.release.matches(selected.release)) =>
               def addScalaDependencyLocal =
                 scope.modState(_.addSelected(selected))
 
               def addScalaDependencyBackend =
-                scope.props.flatMap(_.addScalaDependency((selected.release, selected.project)))
+                if (localOnly) Callback(()) else scope.props.flatMap(_.addScalaDependency((selected.release, selected.project)))
 
               addScalaDependencyBackend >> addScalaDependencyLocal
-            case None => Callback(())
+            case _ => Callback(())
           }
-        )
-      }
+        }
     }
 
     def removeSelected(selected: Selected): Callback = {
@@ -270,23 +276,20 @@ object ScaladexSearch {
           "repository" -> project.repository
         ) ++ target.scaladexRequest
       )
-      Ajax
-        .get(scaladexApiUrl + "/project" + query)
-        .map(
-          ret =>
-            Json.fromJson[ReleaseOptions](Json.parse(ret.responseText)).asOpt.map { options =>
-              Selected(
-                project = project,
-                release = ScalaDependency(
-                  groupId = options.groupId,
-                  artifact = artifact,
-                  target = target,
-                  version = version.getOrElse(options.version),
-                ),
-                options = options,
-              )
-          }
-        )
+      Ajax.get(scaladexApiUrl + "/project" + query).map { ret =>
+        Json.fromJson[ReleaseOptions](Json.parse(ret.responseText)).asOpt.map { options =>
+          Selected(
+            project = project,
+            release = ScalaDependency(
+              groupId = options.groupId,
+              artifact = artifact,
+              target = target,
+              version = version.getOrElse(options.version),
+            ),
+            options = options,
+          )
+        }
+      }
     }
 
   }
@@ -354,20 +357,17 @@ object ScaladexSearch {
         else EmptyVdom
 
       div(cls := "added", hideAdded)(
-        searchState.selecteds.sorted
-          .map(
-            selected =>
-              renderProject(
-                selected.project,
-                selected.release.artifact,
-                i(cls := "fa fa-close")(
-                  onClick --> scope.backend.removeSelected(selected),
-                  cls := "remove"
-                ),
-                options = renderOptions(selected)
-            )
+        searchState.selecteds.sorted.map { selected =>
+          renderProject(
+            selected.project,
+            selected.release.artifact,
+            i(cls := "fa fa-close")(
+              onClick --> scope.backend.removeSelected(selected),
+              cls := "remove"
+            ),
+            options = renderOptions(selected)
           )
-          .toTagMod
+        }.toTagMod
       )
     }
 
@@ -403,7 +403,7 @@ object ScaladexSearch {
               artifact,
               selected = selectedIndex(index, searchState.selectedIndex),
               handlers = TagMod(
-                onClick --> scope.backend.addArtifact((project, artifact, version)),
+                onClick --> scope.backend.addArtifact((project, artifact, version), props.scalaTarget, scope.state),
                 onMouseOver --> scope.backend.selectIndex(index)
               )
             )
@@ -418,10 +418,10 @@ object ScaladexSearch {
       .initialState(SearchState.default)
       .backend(new ScaladexSearchBackend(_))
       .renderPS(render)
-      .componentDidMount { x =>
-        Callback.traverse(x.props.librariesFrom) { lib =>
-          x.backend.addArtifact((lib._2, lib._1.artifact, Some(lib._1.version)))
-        } >> Callback(searchInputRef.focus)
+      .componentWillReceiveProps { x =>
+        Callback.traverse(x.nextProps.librariesFrom.toList.sortBy(_._1.artifact)) { lib =>
+          x.backend.addArtifact((lib._2, lib._1.artifact, Some(lib._1.version)), x.nextProps.scalaTarget, x.state, localOnly = true)
+        }
       }
       .configure(Reusability.shouldComponentUpdate)
       .build
