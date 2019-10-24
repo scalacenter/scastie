@@ -1,4 +1,3 @@
-import ScalaJSHelper._
 import SbtShared._
 
 val scalaTestVersion = "3.0.1"
@@ -22,7 +21,6 @@ val startAllCommands = List(
   "sbtRunner/reStart",
   "server/reStart",
   "client/fastOptJS::startWebpackDevServer",
-  "client/fastOptJS"
 )
 
 def sbtJoinTask(commands: List[String]): String =
@@ -183,7 +181,7 @@ lazy val sbtRunner = project
 lazy val server = project
   .settings(baseSettings)
   .settings(loggingAndTest)
-  .settings(packageScalaJS(client))
+  .settings(ScalaJsHelper.packageScalaJS(client))
   .settings(
     javaOptions in reStart += "-Xmx512m",
     maintainer := "scalacenter",

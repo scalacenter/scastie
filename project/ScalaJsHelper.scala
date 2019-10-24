@@ -1,31 +1,18 @@
-import sbt._
-import Keys._
+import com.typesafe.sbt.SbtNativePackager.Universal
 import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport._
-import org.scalajs.sbtplugin.cross.CrossType
-
+import sbt.Keys._
+import sbt._
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
-
 import spray.revolver.RevolverPlugin.autoImport._
 
-object ScalaJSHelper {
+object ScalaJsHelper {
 
-  def packageScalaJS(client: Project) = {
-    def webpackOutputDir = Def.task {
-      webpackDir.value / "out"
-    }
-
-    def webpackDir = Def.task {
-      ((crossTarget in (client, Compile, npmUpdate)).value)
-    }
-
+  def packageScalaJS(client: Project): Seq[Setting[_]] = {
     Seq(
       watchSources ++= (watchSources in client).value,
-      products in Compile += Def
-        .task {
-          webpackOutputDir.value
-        }
-        .dependsOn(webpack in (client, Compile, fullOptJS))
-        .value
+      products in Compile += ((crossTarget in (client, Compile, npmUpdate)).value / "out"),
+      reStart := reStart.dependsOn(webpack in (client, Compile, fastOptJS)).evaluated,
+      packageBin in Universal := (packageBin in Universal).dependsOn(webpack in (client, Compile, fullOptJS)).value,
     )
   }
 }
