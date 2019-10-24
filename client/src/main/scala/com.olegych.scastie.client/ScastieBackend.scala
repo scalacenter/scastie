@@ -60,7 +60,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     }
 
   val clear: Reusable[Callback] =
-    Reusable.always(clearOutputs >> scope.modState(_.closeModals))
+    Reusable.always(scope.modState(_.clearOutputsPreserveConsole) >> scope.modState(_.closeModals))
 
   private def clearOutputs: Callback =
     scope.modState(_.clearOutputs)
