@@ -36,21 +36,12 @@ nvm use 8.9.1
 
 ```
 sbt
-> sbtRunner/reStart
-> server/reStart
-> client/fastOptJS::startWebpackDevServer
-> ~client/fastOptJS
-```
-
-or
-
-```
-sbt
 > startAll
-> ~client/fastOptJS 
 ```
 
 open `http://localhost:8080`
+
+then run `~client/fastOptJS` if you work on client part or `~sbtRunner/reStart;server/reStart` if you work on server part. 
 
 you can also open `http://localhost:8080/embed.html` to edit the embedded style
 
