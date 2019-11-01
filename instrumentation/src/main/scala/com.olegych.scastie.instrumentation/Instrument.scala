@@ -122,7 +122,7 @@ object Instrument {
         s"""|object Main {
             |  val playground = new $instrumentedClass
             |  def main(args: Array[String]): Unit = {
-            |    scala.Predef.println($runtimeT.write(playground.$instrumentationMethod))
+            |    scala.Predef.println("\\n" + $runtimeT.write(playground.$instrumentationMethod))
             |  }
             |}
             |""".stripMargin

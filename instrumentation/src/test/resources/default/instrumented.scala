@@ -8,6 +8,6 @@ scala.Predef.locally {val $t = 1 +
 object Main {
   val playground = new Playground
   def main(args: Array[String]): Unit = {
-    scala.Predef.println(_root_.com.olegych.scastie.api.runtime.Runtime.write(playground.instrumentations$))
+    scala.Predef.println("\n" + _root_.com.olegych.scastie.api.runtime.Runtime.write(playground.instrumentations$))
   }
 }

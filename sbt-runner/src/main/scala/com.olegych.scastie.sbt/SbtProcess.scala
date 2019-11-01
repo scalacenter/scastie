@@ -272,7 +272,7 @@ class SbtProcess(runTimeout: FiniteDuration,
 
   private def setInputs(inputs: Inputs): Unit = {
     val prompt =
-      s"""shellPrompt := (_ => "$promptUniqueId" + "\\n")"""
+      s"""shellPrompt := {_ => println(""); "$promptUniqueId" + "\\n"}"""
 
     writeFile(pluginFile, inputs.sbtPluginsConfig + "\n")
     writeFile(buildFile, prompt + "\n" + inputs.sbtConfig)

@@ -432,7 +432,7 @@ case class ScastieState(
       .setRunning(!progress.isDone)
       .copyAndSave(scalaJsContent = progress.scalaJsContent.orElse(self.snippetState.scalaJsContent))
 
-    if (progress.userOutput.isDefined) state.setUserOutput
+    if (progress.userOutput.exists(_.line.nonEmpty)) state.setUserOutput
     else state
   }
 
