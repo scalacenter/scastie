@@ -35,6 +35,7 @@ const Web = Merge(Common.Web, {
   },
   devServer: {
     hot: true,
+    host: "0.0.0.0",
     contentBase: [
       devDir,
       __dirname,
