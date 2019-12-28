@@ -1,9 +1,9 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.client.{ScastieBackend, ScastieState, View}
 import com.olegych.scastie.client.components.editor.Editor
-
-import japgolly.scalajs.react._, vdom.all._, extra._
+import com.olegych.scastie.client.{ScastieBackend, ScastieState, View}
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
 
 final case class MainPanel(state: ScastieState, backend: ScastieBackend, props: Scastie) {
 
@@ -114,8 +114,12 @@ object MainPanel {
       MobileBar(
         isRunning = state.isRunning,
         isStatusOk = isStatusOk,
-        run = backend.run,
+        save = backend.saveOrUpdate,
         setView = backend.setViewReused,
+        isNewSnippetModalClosed = state.modalState.isNewSnippetModalClosed,
+        openNewSnippetModal = backend.openNewSnippetModal,
+        closeNewSnippetModal = backend.closeNewSnippetModal,
+        newSnippet = backend.newSnippet,
         forceDesktop = backend.forceDesktop
       ).render
 

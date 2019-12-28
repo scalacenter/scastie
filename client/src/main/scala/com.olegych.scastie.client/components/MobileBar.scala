@@ -1,13 +1,17 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.client.View
-
-import japgolly.scalajs.react._, vdom.all._, extra._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
 
 final case class MobileBar(isRunning: Boolean,
                            isStatusOk: Boolean,
-                           run: Reusable[Callback],
+                           save: Reusable[Callback],
                            setView: View ~=> Callback,
+                           isNewSnippetModalClosed: Boolean,
+                           openNewSnippetModal: Reusable[Callback],
+                           closeNewSnippetModal: Reusable[Callback],
+                           newSnippet: Reusable[Callback],
                            forceDesktop: Reusable[Callback]) {
   @inline def render: VdomElement = MobileBar.component(this)
 }
@@ -22,12 +26,19 @@ object MobileBar {
         RunButton(
           isRunning = props.isRunning,
           isStatusOk = props.isStatusOk,
-          save = props.run,
+          save = props.save,
           setView = props.setView
         ).render,
-        DesktopButton(
-          forceDesktop = props.forceDesktop
-        ).render
+        NewButton(
+          isNewSnippetModalClosed = props.isNewSnippetModalClosed,
+          openNewSnippetModal = props.openNewSnippetModal,
+          closeNewSnippetModal = props.closeNewSnippetModal,
+          newSnippet = props.newSnippet
+        ).render,
+        //this doesn't work too well, better use browsers 'request desktop site'
+//        DesktopButton(
+//          forceDesktop = props.forceDesktop
+//        ).render
       )
     )
   }

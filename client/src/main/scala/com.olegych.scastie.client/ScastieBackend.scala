@@ -50,6 +50,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     Reusable.always {
       val setData = scope.state.map(state => {
         state
+          .copy(isDesktopForced = false)
           .setInputs(Inputs.default.copy(code = ""))
           .clearOutputs
           .clearSnippetId
