@@ -4,7 +4,7 @@ import com.olegych.scastie.api.SnippetId
 
 import play.api.libs.json._
 
-import japgolly.scalajs.react.extra._
+import japgolly.scalajs.react._
 
 object ModalState {
   implicit val formatModalState: OFormat[ModalState] = Json.format[ModalState]

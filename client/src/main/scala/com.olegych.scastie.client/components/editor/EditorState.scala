@@ -10,6 +10,5 @@ private[editor] case class EditorState(
     renderAnnotations: Map[api.Instrumentation, Annotation] = Map(),
     runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map(),
     codeFoldsAnnotations: Map[RangePosititon, Annotation] = Map(),
-    showTypeButtonPressed: Boolean = false,
     unfoldedCode: Set[RangePosititon] = Set()
 )

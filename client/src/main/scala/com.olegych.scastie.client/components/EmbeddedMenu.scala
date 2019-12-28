@@ -21,7 +21,7 @@ final case class EmbeddedMenu(isRunning: Boolean,
 object EmbeddedMenu {
 
   implicit val reusability: Reusability[EmbeddedMenu] =
-    Reusability.caseClass[EmbeddedMenu]
+    Reusability.derive[EmbeddedMenu]
 
   private def render(props: EmbeddedMenu): VdomElement = {
 

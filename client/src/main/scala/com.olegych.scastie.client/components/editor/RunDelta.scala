@@ -3,7 +3,7 @@ package com.olegych.scastie.client.components.editor
 import com.olegych.scastie.client.components._
 
 import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.extra.Reusability
+import japgolly.scalajs.react.Reusability
 
 import codemirror.TextAreaEditor
 

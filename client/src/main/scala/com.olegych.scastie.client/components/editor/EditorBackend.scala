@@ -6,11 +6,11 @@ import org.scalajs.dom.raw.HTMLTextAreaElement
 import org.scalajs.dom.ext.KeyCode
 
 private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
-  private var codemirrorTextarea: HTMLTextAreaElement = _
+  private val codemirrorTextarea = Ref[HTMLTextAreaElement]
 
   def render(props: Editor): VdomElement = {
     div(cls := "editor-wrapper")(
-      textarea.ref(codemirrorTextarea = _)(
+      textarea.withRef(codemirrorTextarea)(
         defaultValue := props.code,
         name := "CodeArea",
         autoComplete := "off"
@@ -20,29 +20,19 @@ private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
 
   def stop(): Callback = {
     scope.modState { s =>
-      s.editor.map(_.toTextArea())
+      s.editor.foreach(_.toTextArea())
       s.copy(editor = None)
     }
   }
 
   def start(): Callback = scope.props.flatMap { props =>
     val editor = codemirror.CodeMirror.fromTextArea(
-      codemirrorTextarea,
+      codemirrorTextarea.unsafeGet(),
       EditorOptions(props, scope)
     )
 
     editor.onChanges { (e, _) =>
       props.codeChange(e.getDoc().getValue()).runNow()
-    }
-
-    editor.onKeyUp { (_, e) =>
-      scope
-        .modState { s =>
-          s.copy(
-            showTypeButtonPressed = s.showTypeButtonPressed && e.keyCode != KeyCode.Ctrl
-          )
-        }
-        .runNow()
     }
 
     val setEditor = scope.modState(_.copy(editor = Some(editor)))

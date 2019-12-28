@@ -37,7 +37,7 @@ final case class SideBar(isDarkTheme: Boolean,
 object SideBar {
 
   implicit val reusability: Reusability[SideBar] =
-    Reusability.caseClass[SideBar]
+    Reusability.derive[SideBar]
 
   private def render(props: SideBar): VdomElement = {
     val urlBase = props.serverUrl.getOrElse("")

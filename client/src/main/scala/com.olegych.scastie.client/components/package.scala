@@ -2,8 +2,8 @@ package com.olegych.scastie.client
 
 import com.olegych.scastie.api._
 
-import japgolly.scalajs.react.extra.Reusability
-import japgolly.scalajs.react.extra.Reusable
+import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react.Reusable
 import japgolly.scalajs.react.Callback
 
 package object components {
@@ -14,7 +14,7 @@ package object components {
     Reusability.byRefOr_==
 
   implicit val reusabilityUser: Reusability[User] =
-    Reusability.byRef || Reusability.caseClass[User]
+    Reusability.byRef || Reusability.derive[User]
 
   implicit val snippetIdReuse: Reusability[SnippetId] =
     Reusability.byRefOr_==
@@ -69,28 +69,28 @@ package object components {
     Reusability.always
 
   implicit val modalStateReuse: Reusability[ModalState] =
-    Reusability.caseClass[ModalState]
+    Reusability.derive[ModalState]
 
   implicit val snippetStateReuse: Reusability[SnippetState] =
-    Reusability.caseClass[SnippetState]
+    Reusability.derive[SnippetState]
 
   implicit val consoleOutputReuse: Reusability[ConsoleOutput] =
     Reusability.byRefOr_==
 
   implicit val outputsReuse: Reusability[Outputs] =
-    Reusability.caseClass[Outputs]
+    Reusability.derive[Outputs]
 
   implicit val sbtRunnerStateReuse: Reusability[Option[Vector[SbtRunnerState]]] =
     Reusability.byRefOr_==
 
   implicit val statusStateReuse: Reusability[StatusState] =
-    Reusability.caseClass[StatusState]
+    Reusability.derive[StatusState]
 
   implicit val embeddedOptionsReuse: Reusability[EmbeddedOptions] =
-    Reusability.caseClass[EmbeddedOptions]
+    Reusability.derive[EmbeddedOptions]
 
   implicit val scastieStateReuse: Reusability[ScastieState] =
-    Reusability.caseClass[ScastieState]
+    Reusability.derive[ScastieState]
 
   implicit val scastieBackendReuse: Reusability[ScastieBackend] =
     Reusability.byRefOr_==

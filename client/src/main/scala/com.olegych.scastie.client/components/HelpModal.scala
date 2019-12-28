@@ -12,7 +12,7 @@ final case class HelpModal(isClosed: Boolean, close: Reusable[Callback]) {
 
 object HelpModal {
   implicit val reusability: Reusability[HelpModal] =
-    Reusability.caseClass[HelpModal]
+    Reusability.derive[HelpModal]
 
   private def render(props: HelpModal): VdomElement = {
     def generateATag(url: String, text: String) =

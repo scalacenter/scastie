@@ -253,8 +253,8 @@ lazy val client = project
       "firacode" -> "1.205.0",
       "font-awesome" -> "4.7.0",
       "raven-js" -> "3.11.0",
-      "react" -> "15.6.1",
-      "react-dom" -> "15.6.1",
+      "react" -> "16.7.0",
+      "react-dom" -> "16.7.0",
       "typeface-roboto-slab" -> "0.0.35"
     ),
     npmDevDependencies in Compile ++= Seq(
@@ -272,7 +272,7 @@ lazy val client = project
       "webpack-merge" -> "4.1.0"
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.0",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.4.2",
       "org.querki" %%% "querki-jsext" % "0.8"
     )
   )

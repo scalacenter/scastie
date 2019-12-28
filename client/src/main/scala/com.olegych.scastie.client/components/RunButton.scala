@@ -13,7 +13,7 @@ final case class RunButton(isRunning: Boolean, isStatusOk: Boolean, save: Reusab
 object RunButton {
 
   implicit val reusability: Reusability[RunButton] =
-    Reusability.caseClass[RunButton]
+    Reusability.derive[RunButton]
 
   def render(props: RunButton): VdomElement = {
     if (!props.isRunning) {

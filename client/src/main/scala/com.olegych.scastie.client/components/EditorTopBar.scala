@@ -32,7 +32,7 @@ final case class EditorTopBar(clear: Reusable[Callback],
 object EditorTopBar {
 
   implicit val reusability: Reusability[EditorTopBar] =
-    Reusability.caseClass[EditorTopBar]
+    Reusability.derive[EditorTopBar]
 
   private def render(props: EditorTopBar): VdomElement = {
     def isDisabled = (cls := "disabled").when(props.view.value != View.Editor)
@@ -41,7 +41,7 @@ object EditorTopBar {
       isRunning = props.isRunning,
       isStatusOk = props.isStatusOk,
       save = props.save,
-      setView = props.view.setState
+      setView = Reusable.fn(view => props.view.setState(view))
     ).render
 
     val newButton = NewButton(

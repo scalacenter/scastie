@@ -12,7 +12,7 @@ final case class Status(state: StatusState, router: RouterCtl[Page], isAdmin: Bo
 object Status {
 
   implicit val reusability: Reusability[Status] =
-    Reusability.caseClass[Status]
+    Reusability.derive[Status]
 
   def render(props: Status): VdomElement = {
     def renderSbtTask(tasks: Vector[TaskId]): VdomElement = {

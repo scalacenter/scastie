@@ -18,9 +18,9 @@ final case class Console(isOpen: Boolean,
 object Console {
 
   implicit val reusability: Reusability[Console] =
-    Reusability.caseClass[Console]
+    Reusability.derive[Console]
 
-  private var consoleElement: HTMLDivElement = _
+  private val consoleElement = Ref[HTMLDivElement]
 
   def render(props: Console): VdomElement = {
     val (displayConsole, displaySwitcher) =
@@ -62,7 +62,7 @@ object Console {
           "Console (F3)",
           i(cls := "fa fa-caret-down")
         ),
-        div.ref(consoleElement = _)(
+        div.withRef(consoleElement)(
           cls := "output-console",
           dangerouslySetInnerHtml := renderConsoleOutputs
         )
@@ -84,7 +84,7 @@ object Console {
       .componentDidUpdate(
         scope =>
           Callback {
-            consoleElement.scrollTop = consoleElement.scrollHeight.toDouble
+            consoleElement.unsafeGet().scrollTop = consoleElement.unsafeGet().scrollHeight.toDouble
           }.when_(scope.prevProps.isRunning)
       )
       .configure(Reusability.shouldComponentUpdate)

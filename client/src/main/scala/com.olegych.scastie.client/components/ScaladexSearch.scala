@@ -27,13 +27,13 @@ final case class ScaladexSearch(
 object ScaladexSearch {
 
   implicit val propsReusability: Reusability[ScaladexSearch] =
-    Reusability.caseClass[ScaladexSearch]
+    Reusability.derive[ScaladexSearch]
 
   implicit val selectedReusability: Reusability[Selected] =
-    Reusability.caseClass[Selected]
+    Reusability.derive[Selected]
 
   implicit val stateReusability: Reusability[SearchState] =
-    Reusability.caseClass[SearchState]
+    Reusability.derive[SearchState]
 
   private[ScaladexSearch] object SearchState {
     def default: SearchState = SearchState(
@@ -117,8 +117,8 @@ object ScaladexSearch {
       (selected.project, selected.release)
     }
 
-  private var projectListRef: HTMLElement = _
-  private var searchInputRef: HTMLInputElement = _
+  private val projectListRef = Ref[HTMLElement]
+  private val searchInputRef = Ref[HTMLInputElement]
 
   private[ScaladexSearch] class ScaladexSearchBackend(
       scope: BackendScope[ScaladexSearch, SearchState]
@@ -140,8 +140,8 @@ object ScaladexSearch {
         }
 
         def scrollToSelected(selected: Int, total: Int) = {
-          projectListRef.scrollTop = Math.abs(
-            interpolate(projectListRef.scrollHeight, total, selected + diff)
+          projectListRef.unsafeGet().scrollTop = Math.abs(
+            interpolate(projectListRef.unsafeGet().scrollHeight, total, selected + diff)
           )
         }
 
@@ -174,7 +174,7 @@ object ScaladexSearch {
               Callback.empty
           } yield ()
 
-        addArtifactIfInRange >> Callback(searchInputRef.focus)
+        addArtifactIfInRange >> Callback(searchInputRef.unsafeGet().focus)
       } else {
         Callback.empty
       }
@@ -382,7 +382,7 @@ object ScaladexSearch {
     div(cls := "search", cls := "library")(
       added,
       div(cls := "search-input")(
-        input.search.ref(searchInputRef = _)(
+        input.search.withRef(searchInputRef)(
           cls := "search-query",
           placeholder := "Search for 'cats'",
           value := searchState.query,
@@ -395,7 +395,7 @@ object ScaladexSearch {
           )
         )
       ),
-      div.ref(projectListRef = _)(cls := "results", displayResults)(
+      div.withRef(projectListRef)(cls := "results", displayResults)(
         searchState.search.zipWithIndex.map {
           case ((project, artifact, version), index) =>
             renderProject(

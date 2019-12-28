@@ -10,7 +10,7 @@ final case class FormatButton(inputsHasChanged: Boolean, isStatusOk: Boolean, fo
 }
 
 object FormatButton {
-  implicit val reusability: Reusability[FormatButton] = Reusability.caseClass[FormatButton]
+  implicit val reusability: Reusability[FormatButton] = Reusability.derive[FormatButton]
 
   private def render(props: FormatButton): VdomElement = {
     li(

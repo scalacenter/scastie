@@ -33,7 +33,7 @@ final case class BuildSettings(
 object BuildSettings {
 
   implicit val reusability: Reusability[BuildSettings] =
-    Reusability.caseClass[BuildSettings]
+    Reusability.derive[BuildSettings]
 
   def renderTarget(props: BuildSettings): TagOf[Div] = {
 

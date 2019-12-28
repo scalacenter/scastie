@@ -15,7 +15,7 @@ final case class NewButton(isNewSnippetModalClosed: Boolean,
 
 object NewButton {
   implicit val reusability: Reusability[NewButton] =
-    Reusability.caseClass[NewButton]
+    Reusability.derive[NewButton]
 
   def render(props: NewButton): VdomElement = {
 

@@ -10,7 +10,7 @@ final case class DesktopButton(forceDesktop: Reusable[Callback]) {
 
 object DesktopButton {
   implicit val reusability: Reusability[DesktopButton] =
-    Reusability.caseClass[DesktopButton]
+    Reusability.derive[DesktopButton]
 
   private def render(props: DesktopButton): VdomElement = {
     li(title := "Go to desktop", cls := "btn", onClick --> props.forceDesktop)(

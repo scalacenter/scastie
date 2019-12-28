@@ -14,7 +14,7 @@ final case class MobileBar(isRunning: Boolean,
 
 object MobileBar {
   implicit val reusability: Reusability[MobileBar] =
-    Reusability.caseClass[MobileBar]
+    Reusability.derive[MobileBar]
 
   private def render(props: MobileBar): VdomElement = {
     nav(cls := "editor-mobile")(

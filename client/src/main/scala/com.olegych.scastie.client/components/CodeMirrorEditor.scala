@@ -4,7 +4,6 @@ package components
 
 import codemirror.TextAreaEditor
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom.raw.HTMLTextAreaElement
 
@@ -21,18 +20,19 @@ final case class CodeMirrorEditor(
 
 object CodeMirrorEditor {
   implicit val reusability: Reusability[CodeMirrorEditor] =
-    Reusability.caseClass[CodeMirrorEditor]
+    Reusability.derive[CodeMirrorEditor]
 
   private[CodeMirrorEditor] case class State(
       editor: Option[TextAreaEditor] = None
   )
 
   private[CodeMirrorEditor] class CodeMirrorEditorBackend(scope: BackendScope[CodeMirrorEditor, State]) {
-    private var textareaRef: Option[HTMLTextAreaElement] = None
+    private val textareaRef = Ref[HTMLTextAreaElement]
 
     def render(props: CodeMirrorEditor): VdomElement = {
-      textarea.ref(ref => textareaRef = Some(ref))(
-        value := props.value,
+      textarea.withRef(textareaRef)(
+        if (props.readOnly) value := props.value else defaultValue := props.value,
+        readOnly := props.readOnly,
         autoComplete := "off"
       )
     }
@@ -64,7 +64,7 @@ object CodeMirrorEditor {
           .asInstanceOf[codemirror.Options]
 
         val editor =
-          codemirror.CodeMirror.fromTextArea(textareaRef.getOrElse(sys.error("no textarea")), options)
+          codemirror.CodeMirror.fromTextArea(textareaRef.unsafeGet(), options)
         editor.getDoc().setValue(props.value)
         editor.onChanges(
           (e, _) => props.onChange(e.getDoc().getValue()).runNow
@@ -74,7 +74,7 @@ object CodeMirrorEditor {
     }
     def stop(): CallbackTo[Unit] = {
       scope.modState { s =>
-        s.editor.map(_.toTextArea())
+        s.editor.foreach(_.toTextArea())
         s.copy(editor = None)
       }
     }
@@ -122,7 +122,7 @@ object CodeMirrorEditor {
       .componentDidUpdate { u =>
         Callback.traverseOption(u.currentState.editor) { e =>
           Callback(
-            if (u.currentProps.readOnly) ()
+            if (u.currentProps.readOnly) e.refresh()
             else e.focus()
           )
         }

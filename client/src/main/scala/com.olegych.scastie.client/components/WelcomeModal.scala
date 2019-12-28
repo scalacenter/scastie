@@ -11,7 +11,7 @@ final case class WelcomeModal(isClosed: Boolean, close: Reusable[Callback]) {
 object WelcomeModal {
 
   implicit val reusability: Reusability[WelcomeModal] =
-    Reusability.caseClass[WelcomeModal]
+    Reusability.derive[WelcomeModal]
 
   private def render(props: WelcomeModal): VdomElement = {
     Modal(

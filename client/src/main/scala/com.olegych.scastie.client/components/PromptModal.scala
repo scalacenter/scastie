@@ -18,7 +18,7 @@ final case class PromptModal(modalText: String,
 object PromptModal {
 
   implicit val reusability: Reusability[PromptModal] =
-    Reusability.caseClass[PromptModal]
+    Reusability.derive[PromptModal]
 
   private def render(props: PromptModal): VdomElement = {
     Modal(

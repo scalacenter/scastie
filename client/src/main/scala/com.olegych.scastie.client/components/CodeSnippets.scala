@@ -27,7 +27,7 @@ final case class CodeSnippets(
 
 object CodeSnippets {
   implicit val reusability: Reusability[CodeSnippets] =
-    Reusability.caseClass[CodeSnippets]
+    Reusability.derive[CodeSnippets]
 
   private[CodeSnippets] class CodeSnippetsBackend(
       scope: BackendScope[CodeSnippets, List[SnippetSummary]]

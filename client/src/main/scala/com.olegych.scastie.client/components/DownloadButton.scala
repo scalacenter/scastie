@@ -11,7 +11,7 @@ final case class DownloadButton(snippetId: SnippetId) {
 
 object DownloadButton {
   implicit val reusability: Reusability[DownloadButton] =
-    Reusability.caseClass[DownloadButton]
+    Reusability.derive[DownloadButton]
 
   def render(props: DownloadButton): VdomElement = {
     val url = props.snippetId.url

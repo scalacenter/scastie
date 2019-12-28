@@ -15,7 +15,7 @@ final case class ViewToggleButton(currentView: StateSnapshot[View],
 object ViewToggleButton {
 
   implicit val reusability: Reusability[ViewToggleButton] =
-    Reusability.caseClass[ViewToggleButton]
+    Reusability.derive[ViewToggleButton]
 
   private def render(props: ViewToggleButton): VdomElement = {
     li(

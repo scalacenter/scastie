@@ -12,7 +12,7 @@ final case class MainPanel(state: ScastieState, backend: ScastieBackend, props: 
 
 object MainPanel {
   implicit val reusability: Reusability[MainPanel] =
-    Reusability.caseClass[MainPanel]
+    Reusability.derive[MainPanel]
 
   def render(in: MainPanel): VdomElement = {
     import in._

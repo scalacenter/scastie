@@ -16,7 +16,7 @@ final case class WorksheetButton(
 object WorksheetButton {
 
   implicit val reusability: Reusability[WorksheetButton] =
-    Reusability.caseClass[WorksheetButton]
+    Reusability.derive[WorksheetButton]
 
   private def render(props: WorksheetButton): VdomElement = {
     val isWorksheetModeSelected =

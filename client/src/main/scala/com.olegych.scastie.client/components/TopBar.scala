@@ -15,7 +15,7 @@ final case class TopBar(view: StateSnapshot[View], user: Option[User]) {
 object TopBar {
 
   implicit val reusability: Reusability[TopBar] =
-    Reusability.caseClass[TopBar]
+    Reusability.derive[TopBar]
 
   private def render(props: TopBar): VdomElement = {
     def openInNewTab(link: String): Callback =

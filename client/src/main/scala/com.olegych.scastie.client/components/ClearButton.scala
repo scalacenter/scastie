@@ -13,7 +13,7 @@ final case class ClearButton(clear: Reusable[Callback]) {
 object ClearButton {
 
   implicit val reusability: Reusability[ClearButton] =
-    Reusability.caseClass[ClearButton]
+    Reusability.derive[ClearButton]
 
   private def render(props: ClearButton): VdomElement = {
     li(title := s"Clear Messages (${EditorOptions.Keys.clear})", role := "button", cls := "btn", onClick --> props.clear)(

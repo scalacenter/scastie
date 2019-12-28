@@ -17,13 +17,13 @@ final case class CopyModal(title: String, subtitle: String, content: String, mod
 object CopyModal {
 
   implicit val reusability: Reusability[CopyModal] =
-    Reusability.caseClass[CopyModal]
+    Reusability.derive[CopyModal]
 
   private class ShareModalComponent() {
-    private var divRef: html.Div = _
+    private val divRef = Ref[html.Div]
 
     private def render(props: CopyModal): VdomElement = {
-      def copyLink: Callback = Callback {
+      def copyLink: Callback = divRef.get.map { divRef =>
         val range = dom.document.createRange()
         val selection = dom.window.getSelection()
         range.selectNodeContents(divRef)
@@ -44,10 +44,10 @@ object CopyModal {
             props.subtitle
           ),
           div(cls := "snippet-link")(
-            div.ref(divRef = _)(cls := "link-to-copy")(
+            div.withRef(divRef)(cls := "link-to-copy", onClick --> copyLink)(
               props.content
             ),
-            li(onClick --> copyLink, title := "Copy to Clipboard", cls := "snippet-clip clipboard-copy")(
+            div(onClick --> copyLink, title := "Copy to Clipboard", cls := "snippet-clip clipboard-copy")(
               i(cls := "fa fa-clipboard")
             )
           )

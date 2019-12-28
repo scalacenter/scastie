@@ -75,7 +75,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     scope.modState(_.setView(newView))
 
   val viewSnapshot: StateSnapshot.withReuse.FromSetStateFn[View] =
-    StateSnapshot.withReuse.prepare(setView)
+    StateSnapshot.withReuse.prepare((opts, c) => opts.fold(c)(setView))
 
   val setTarget: ScalaTarget ~=> Callback =
     Reusable.fn(target => scope.modState(_.setTarget(target)))

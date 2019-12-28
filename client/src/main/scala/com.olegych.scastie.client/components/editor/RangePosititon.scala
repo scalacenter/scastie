@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components.editor
 
-import japgolly.scalajs.react.extra.Reusability
+import japgolly.scalajs.react.Reusability
 
 private[editor] case class RangePosititon(indexStart: Int, indexEnd: Int)
 

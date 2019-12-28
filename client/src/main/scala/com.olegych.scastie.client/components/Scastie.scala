@@ -32,7 +32,7 @@ final case class Scastie(
 
 object Scastie {
   implicit val scastieReuse: Reusability[Scastie] =
-    Reusability.caseClass[Scastie]
+    Reusability.derive[Scastie]
 
   def default(router: RouterCtl[Page]): Scastie =
     Scastie(
