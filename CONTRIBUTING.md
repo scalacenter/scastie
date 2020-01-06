@@ -111,7 +111,7 @@ If you have any questions join us in the [gitter channel](https://gitter.im/scal
 ssh scastie@scastie.scala-lang.org
 ssh scastie@scastie-sbt.scala-lang.org
 docker login
-cd ~/scastie-secrets && git pull
+cd ~/scastie-secrets && git pull #optional
 cd ~/scastie && git pull && ~/proot_5.1.1_x86_64_rc2--no-seccomp  -b ~/.nix:/nix
 bash 
 . /home/scastie/.nix-profile/etc/profile.d/nix.sh
