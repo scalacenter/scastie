@@ -32,7 +32,7 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
   override protected def afterAll(): Unit = {
     deleteRecursively(root)
     deleteRecursively(oldRoot)
-    if (mongo) mongoContainer.driver.close(10.seconds)(scala.concurrent.ExecutionContext.Implicits.global)
+    if (mongo) mongoContainer.close()
   }
 
   private implicit class FAwait[T](f: Future[T]) {

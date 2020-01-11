@@ -49,12 +49,18 @@ object MongoSnippet {
 class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer {
   protected implicit val ec: ExecutionContext = _ec
 
-  val mongoUri = "mongodb://localhost:27017/snippets"
-  val driver = AsyncDriver()
-  val parsedUri = MongoConnection.fromString(mongoUri)
-  val connection = parsedUri.flatMap(driver.connect)
-  val fdb = connection.flatMap(_.database("snippets"))
-  val snippets = {
+  private val mongoUri = "mongodb://localhost:27017/snippets"
+  private val driver = AsyncDriver()
+  private val connection = for {
+    parsedUri <- MongoConnection.fromString(mongoUri)
+    connection <- driver.connect(parsedUri)
+  } yield connection
+  private def snippets =
+    for {
+      connection <- connection
+      database <- connection.database("snippets")
+    } yield database.collection[BSONCollection]("snippets")
+  private val initDatabase = {
     val snippetIdIndex = Index(key = Seq(("simpleSnippetId", IndexType.Hashed)), name = Some("snippets-id"))
     val oldSnippetIdIndex = Index(key = Seq(("oldId", IndexType.Hashed)), name = Some("snippets-old-id"))
     val userIndex = Index(key = Seq(("user", IndexType.Hashed)), name = Some("user"))
@@ -65,14 +71,13 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
     )
     val timeIndex = Index(key = Seq(("time", IndexType.Hashed)), name = Some("time"))
     for {
-      fdb <- fdb
-      coll = fdb.collection[BSONCollection]("snippets")
+      coll <- snippets
       _ <- Future.traverse(
         List(snippetIdIndex, oldSnippetIdIndex, userIndex, snippetUserId, isShowingInUserProfileIndex, timeIndex)
       ) { i =>
         coll.indexesManager.ensure(i)
       }
-    } yield coll
+    } yield ()
   }
 
   def toMongoSnippet(snippetId: SnippetId, inputs: Inputs): MongoSnippet =
