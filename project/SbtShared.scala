@@ -153,8 +153,10 @@ object SbtShared {
         scalaVersion.value match {
           case v if v.startsWith("2.10") =>
             "com.typesafe.play" %%% "play-json" % "2.6.9"
-          case _ =>
+          case v if v.startsWith("2.11") =>
             "com.typesafe.play" %%% "play-json" % "2.7.4"
+          case _ =>
+            "com.typesafe.play" %%% "play-json" % "2.8.1"
         }
       },
       buildInfoKeys := Seq[BuildInfoKey](

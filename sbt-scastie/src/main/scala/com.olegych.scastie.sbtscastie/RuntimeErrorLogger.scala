@@ -20,7 +20,7 @@ object RuntimeErrorLogger {
       def out(in: String): Unit = {
         println(
           Json.stringify(
-            Json.toJson(
+            Json.toJson[ConsoleOutput](
               ConsoleOutput.SbtOutput(ProcessOutput(in.trim, ProcessOutputType.StdOut, None))
             )
           )
