@@ -2,9 +2,9 @@ import SbtShared._
 
 val scalaTestVersion = "3.0.1"
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.21"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.26"
 
-val akkaHttpVersion = "10.1.8"
+val akkaHttpVersion = "10.1.11"
 def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 def akkaHttpTestkit =
@@ -12,10 +12,6 @@ def akkaHttpTestkit =
 
 def akkaHttpCors = "ch.megard" %% "akka-http-cors" % "0.4.0"
 def akkaHttpSession = "com.softwaremill.akka-http-session" %% "core" % "0.5.6"
-
-def reactiveMongo = "org.reactivemongo" %% "reactivemongo" % "0.18.6"
-def reactiveMongoJson =
-  "org.reactivemongo" %% "reactivemongo-play-json" % "0.18.6-play27"
 
 val startAllCommands = List(
   "sbtRunner/reStart",
@@ -92,6 +88,7 @@ lazy val utils = project
   .settings(
     resolvers += Resolver.typesafeRepo("releases"),
     libraryDependencies ++= Seq(
+      akka("protobuf"),
       akka("stream"),
       akka("actor"),
       akka("remote"),
@@ -215,8 +212,9 @@ lazy val storage = project
       akka("remote"),
       akkaHttpCore,
       "net.lingala.zip4j" % "zip4j" % "1.3.1",
-      reactiveMongo,
-      reactiveMongoJson
+      "org.reactivemongo" %% "reactivemongo" % "0.20.1",
+      "org.reactivemongo" %% "reactivemongo-play-json" % "0.20.1-play28",
+      "org.reactivemongo" %% "reactivemongo-play-json-compat" % "0.20.1-play28",
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
