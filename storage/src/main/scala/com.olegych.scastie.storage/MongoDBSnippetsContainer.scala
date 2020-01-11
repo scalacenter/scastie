@@ -150,7 +150,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
   }
 
   def readMongoSnippet(snippetId: SnippetId): Future[Option[MongoSnippet]] =
-    snippets.flatMap(_.find(select(snippetId), Some(Json.obj())).one[JsValue].map{v => println(v); ???})
+    snippets.flatMap(_.find(select(snippetId), Some(Json.obj())).one[MongoSnippet])
 
   def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]] =
     readMongoSnippet(snippetId).map(_.map(_.toFetchResult))
