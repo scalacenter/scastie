@@ -8,7 +8,7 @@ import java.util.concurrent.Executors
 import com.olegych.scastie.api._
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.util.Random
 
@@ -32,7 +32,7 @@ class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
   override protected def afterAll(): Unit = {
     deleteRecursively(root)
     deleteRecursively(oldRoot)
-    if (mongo) mongoContainer.driver.close(10.seconds)(scala.concurrent.ExecutionContext.Implicits.global)
+    if (mongo) mongoContainer.driver.close()
   }
 
   private implicit class FAwait[T](f: Future[T]) {

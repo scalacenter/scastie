@@ -35,7 +35,7 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
       processActor ! Input("quit")
 
       def expected(msg0: String): Unit = {
-        probe.expectMsgPF(4000.milliseconds) {
+        probe.expectMsgPF(400.milliseconds) {
           case ProcessOutput(msg1, StdOut, _) if msg0.trim == msg1.trim => true
           case ProcessOutput(msg1, StdOut, _) =>
             println(s""""$msg1" != "$msg0"""")
