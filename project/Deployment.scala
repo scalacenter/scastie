@@ -215,8 +215,8 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
           |kill -9 `cat ${baseDir}RUNNING_PID`
           |
           |unzip -o -d ${baseDir}server ${baseDir}$$serverZipFileName
-          |mv ${baseDir}server/$$serverZipFileName/* ${baseDir}server/
-          |rm ${baseDir}server/$$serverZipFileName
+          |mv ${baseDir}server/*/* ${baseDir}server/
+          |rm -rf ${baseDir}server/$$serverZipFileName
           |
           |nohup ${baseDir}server/bin/server \\
           |  -J-Xmx1G \\
