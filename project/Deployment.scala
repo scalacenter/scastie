@@ -196,7 +196,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     val configFileName = config.getFileName
     val logbackConfigFileName = logbackConfig.getFileName
-    val serverZipFileName = serverZip.getFileName
+    val serverZipFileName = serverZip.getFileName.toString.replaceAllLiterally(".zip", "")
 
     val secretConfig = getSecretConfig()
     val sentryDsn = getSentryDsn(secretConfig)
@@ -210,10 +210,13 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
           |
           |whoami
           |
-          |kill -9 `cat RUNNING_PID`
+          |serverZipFileName=$serverZipFileName
           |
-          |unzip -d ${baseDir}server ${baseDir}${serverZipFileName}
-          |mv ${baseDir}server/*/* ${baseDir}server/
+          |kill -9 `cat ${baseDir}RUNNING_PID`
+          |
+          |unzip -o -d ${baseDir}server ${baseDir}$$serverZipFileName
+          |mv ${baseDir}server/$$serverZipFileName/* ${baseDir}server/
+          |rm ${baseDir}server/$$serverZipFileName
           |
           |nohup ${baseDir}server/bin/server \\
           |  -J-Xmx1G \\
