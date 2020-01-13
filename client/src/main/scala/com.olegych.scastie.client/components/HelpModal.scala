@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.buildinfo.BuildInfo.{gitHash, version}
+import com.olegych.scastie.buildinfo.BuildInfo.version
 import com.olegych.scastie.client.components.editor.EditorOptions
 import japgolly.scalajs.react._
 import vdom.all._
@@ -106,8 +106,6 @@ object HelpModal {
           " License: Apache 2",
           br,
           s"Version: $version",
-          br,
-          s"Git: $gitHash"
         ),
         p(
           cls := "normal",

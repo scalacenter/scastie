@@ -172,7 +172,6 @@ object SbtShared {
         "jsScalaVersion" -> ScalaVersions.js,
         "defaultScalaJsVersion" -> latestScalaJs,
         "sbtVersion" -> readSbtVersion((baseDirectory in ThisBuild).value.toPath),
-        BuildInfoKey.action("gitHash") { gitHashNow }
       ),
       buildInfoPackage := "com.olegych.scastie.buildinfo",
     )
