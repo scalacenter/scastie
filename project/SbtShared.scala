@@ -30,7 +30,7 @@ object SbtShared {
 
   val latestScalaJs = "0.6.29"
 
-  val sbtVersion = "1.3.6"
+  val sbtVersion = "1.3.7"
   val distSbtVersion = sbtVersion
 
   val runtimeProjectName = "runtime-scala"
@@ -161,7 +161,6 @@ object SbtShared {
       },
       buildInfoKeys := Seq[BuildInfoKey](
         organization,
-        version,
         "runtimeProjectName" -> runtimeProjectName,
         "versionRuntime" -> versionRuntime,
         "latest210" -> ScalaVersions.latest210,

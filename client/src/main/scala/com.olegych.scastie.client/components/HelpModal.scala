@@ -1,10 +1,8 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.buildinfo.BuildInfo.version
 import com.olegych.scastie.client.components.editor.EditorOptions
 import japgolly.scalajs.react._
 import vdom.all._
-import extra._
 
 final case class HelpModal(isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = HelpModal.component(this)
@@ -104,8 +102,6 @@ object HelpModal {
           scastieGithub,
           br,
           " License: Apache 2",
-          br,
-          s"Version: $version",
         ),
         p(
           cls := "normal",
