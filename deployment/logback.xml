@@ -1,18 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
+<configuration
+    xmlns="http://ch.qos.logback/xml/ns/logback"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://ch.qos.logback/xml/ns/logback https://raw.githubusercontent.com/enricopulatzo/logback-XSD/master/src/main/xsd/logback.xsd">
+
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-      <target>System.out</target>
-      <encoder>
-        <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36}:%line | %msg%n</pattern>
-      </encoder>
+    <target>System.out</target>
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36}:%line | %msg%n</pattern>
+    </encoder>
   </appender>
 
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-      <file>output.log</file>
-      <append>true</append>
-      <encoder>
-        <pattern>%date{ISO8601} %-5level %logger{36}:%line %X{sourceThread} - %msg%n</pattern>
-      </encoder>
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>output.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- daily rollover -->
+      <fileNamePattern>output.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>1GB</totalSizeCap>
+    </rollingPolicy>
+    <append>true</append>
+    <encoder>
+      <pattern>%date{ISO8601} %-5level %logger{36}:%line %X{sourceThread} - %msg%n</pattern>
+    </encoder>
   </appender>
 
   <appender name="SENTRY" class="com.getsentry.raven.logback.SentryAppender">
@@ -21,11 +31,11 @@
     </filter>
   </appender>
 
-  <logger name="akka" level="INFO" />
-  
+  <logger name="akka" level="INFO"/>
+
   <root level="INFO">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="FILE"/>
-      <appender-ref ref="SENTRY"/>
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="FILE"/>
+    <appender-ref ref="SENTRY"/>
   </root>
 </configuration>
