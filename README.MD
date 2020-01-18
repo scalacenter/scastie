@@ -6,8 +6,8 @@
 
 # [Scastie](https://scastie.scala-lang.org)
 
-<a href="https://scastie.scala-lang.org/OlegYch/vmt4UzCpSXuD3A2L068OvA/4">
-  <img alt="raycasting demo" src="https://raw.githubusercontent.com/scalacenter/scastie/master/demo/raycasting.png" style="width: 400px;">
+<a href="https://scastie.scala-lang.org/OlegYch/JLIURSHjS3ScQo6ndhV07w">
+  <img alt="Demo" src="https://raw.githubusercontent.com/scalacenter/scastie/master/demo/demo.png" style="width: 400px;">
 </a>
 
 ## What is Scastie?
