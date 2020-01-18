@@ -1,15 +1,13 @@
 package com.olegych.scastie.web.routes
 
-import com.olegych.scastie.api.{SnippetId, SnippetUserPart}
-import com.olegych.scastie.web.PlayJsonSupport
-
-import org.scalatest.FunSuite
-
-import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import com.olegych.scastie.api.{SnippetId, SnippetUserPart}
+import com.olegych.scastie.web.PlayJsonSupport
+import org.scalatest.funsuite.AnyFunSuite
 
-class SnippetIdMatcherTests extends FunSuite with ScalatestRouteTest {
+class SnippetIdMatcherTests extends AnyFunSuite with ScalatestRouteTest {
   import PlayJsonSupport._
 
   def testRoute(snippetIdRoute: Route, f1: String => String, f2: String => String, checkEnd: Boolean = true): Unit = {

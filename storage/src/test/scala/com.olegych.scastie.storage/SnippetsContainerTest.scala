@@ -1,18 +1,19 @@
 package com.olegych.scastie.storage
 
 import java.io.IOException
-import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 import java.util.concurrent.Executors
 
 import com.olegych.scastie.api._
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Random
 
-class SnippetsContainerTest extends FunSuite with BeforeAndAfterAll {
+class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
 //  val mongo = true
   val mongo = false
   val root = Files.createTempDirectory("test")

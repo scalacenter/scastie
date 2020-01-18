@@ -60,7 +60,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
     def updateIdS(login: String, base64UUID: String): List[Int] = {
       val dir = root.resolve(Paths.get(login, base64UUID))
       if (Files.isDirectory(dir)) {
-        import scala.collection.JavaConverters._
+        import scala.jdk.CollectionConverters._
         val ds = Files.newDirectoryStream(dir)
         try {
           ds.asScala.map(_.getFileName.toString.toInt).toList
@@ -85,7 +85,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
     }
 
     Future {
-      import scala.collection.JavaConverters._
+      import scala.jdk.CollectionConverters._
       val dir = root.resolve(user.login)
       if (Files.exists(dir)) {
         val ds = Files.newDirectoryStream(dir)
@@ -246,7 +246,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
       snippetId: SnippetId
   ): Option[List[SnippetProgress]] = {
     slurp(outputsFile(snippetId)).map {
-      _.lines
+      _.linesIterator
         .filter(_.nonEmpty)
         .map { line =>
           Json

@@ -39,11 +39,11 @@ object Diff {
   private def trailingSpace(str: String): String = str.replaceAll(" \n", "?\n")
 
   def compareContents(original: String, revised: String): String = {
-    compareContents(original.replaceAllLiterally("\r\n", "\n").trim.split("\n"), revised.replaceAllLiterally("\r\n", "\n").trim.split("\n"))
+    compareContents(original.replaceAllLiterally("\r\n", "\n").trim.split("\n").toList, revised.replaceAllLiterally("\r\n", "\n").trim.split("\n").toList)
   }
 
   private def compareContents(original: Seq[String], revised: Seq[String]): String = {
-    import collection.JavaConverters._
+    import scala.jdk.CollectionConverters._
     val diff = difflib.DiffUtils.diff(original.asJava, revised.asJava)
     if (diff.getDeltas.isEmpty) ""
     else

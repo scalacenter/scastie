@@ -1,26 +1,25 @@
 package com.olegych.scastie.balancer
 
-import com.olegych.scastie.sbt._
+import akka.actor.{ActorSystem, Props}
+import akka.pattern.ask
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.util.Timeout
 import com.olegych.scastie.api._
+import com.olegych.scastie.sbt._
 import com.olegych.scastie.util.ReconnectInfo
+import com.typesafe.config.{Config, ConfigFactory}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuiteLike
 
 import scala.concurrent._
 import scala.concurrent.duration._
-
-import akka.pattern.ask
-import akka.util.Timeout
-import akka.actor.{ActorSystem, Props}
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
-
-import com.typesafe.config.{ConfigFactory, Config}
 
 class LoadBalancerRecoveryTest()
     extends TestKit(
       ActorSystem("LoadBalancerRecoveryTest", RemotePortConfig(0))
     )
     with ImplicitSender
-    with FunSuiteLike
+    with AnyFunSuiteLike
     with BeforeAndAfterAll {
 
   // import system.dispatcher

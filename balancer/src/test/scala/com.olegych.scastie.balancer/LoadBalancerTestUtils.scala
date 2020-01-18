@@ -3,7 +3,8 @@ package com.olegych.scastie.balancer
 import java.time.Instant
 
 import com.olegych.scastie.api._
-import org.scalatest.{Assertion, FunSuite}
+import org.scalatest.Assertion
+import org.scalatest.funsuite.AnyFunSuite
 
 object TestTaskId {
   def apply(i: Int) = TaskId(SnippetId(i.toString, None))
@@ -14,7 +15,7 @@ case class TestState(state: String, ready: Boolean = true) extends ServerState {
   def isReady: Boolean = ready
 }
 
-trait LoadBalancerTestUtils extends FunSuite with TestUtils {
+trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
   type TestServer0 = Server[TestServerRef, TestState]
 
   type TestLoadBalancer0 = LoadBalancer[TestServerRef, TestState]
@@ -64,7 +65,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
   }
 
   def servers(columns: Seq[String]*): Vector[TestServer0] = {
-    columns.to[Vector].flatten.map(c => server(c))
+    columns.to(Vector).flatten.map(c => server(c))
   }
 
   @transient private var currentIp = 0
@@ -81,7 +82,7 @@ trait LoadBalancerTestUtils extends FunSuite with TestUtils {
 
   def history(columns: Seq[String]*): TaskHistory = {
     val records =
-      columns.to[Vector].flatten.map(i => Task(Inputs.default.copy(code = i.toString), nextIp, TestTaskId(1), Instant.now)).reverse
+      columns.to(Vector).flatten.map(i => Task(Inputs.default.copy(code = i.toString), nextIp, TestTaskId(1), Instant.now)).reverse
 
     TaskHistory(Vector(records: _*), maxSize = 20)
   }

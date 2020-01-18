@@ -22,13 +22,13 @@ object SbtShared {
     val latest212 = "2.12.10"
     val latest213 = "2.13.1"
     val latestDotty = "0.21.0-RC1"
-    val js = latest212
+    val js = latest213
     val sbt = latest212
-    val jvm = latest212
+    val jvm = latest213
     val cross = List(latest210, latest211, latest212, latest213, js, sbt, jvm).distinct
   }
 
-  val latestScalaJs = "0.6.29"
+  val latestScalaJs = "0.6.31"
 
   val sbtVersion = "1.3.7"
   val distSbtVersion = sbtVersion
@@ -56,7 +56,7 @@ object SbtShared {
   val gitIsDirtyNow = gitIsDirty()
 
   val versionNow = {
-    val base = "0.29.0"
+    val base = "0.30.0"
     if (gitIsDirtyNow)
       base + "-SNAPSHOT"
     else {
@@ -64,7 +64,12 @@ object SbtShared {
       s"$base+$hash"
     }
   }
-  val versionRuntime = "1.0.0-SNAPSHOT"
+  lazy val versionRuntime = "1.0.0-SNAPSHOT"
+
+  lazy val orgSettings = Seq(
+    organization := "org.scastie",
+    version := versionNow,
+  )
 
   lazy val baseSettings = Seq(
     // skip scaladoc
@@ -98,15 +103,14 @@ object SbtShared {
     scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"
   ) ++ orgSettings
 
-  lazy val orgSettings = Seq(
-    organization := "org.scastie",
-    version := versionNow
+  lazy val baseNoCrossSettings = baseSettings ++ Seq(
+    scalaVersion := ScalaVersions.jvm,
   )
 
-  val baseJsSettings = Seq(
+  lazy val baseJsSettings = Seq(
     scalacOptions += "-P:scalajs:sjsDefinedByDefault",
     test := {},
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.7",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.8",
   )
 
   private def readSbtVersion(base: Path): String = {
@@ -144,6 +148,7 @@ object SbtShared {
   lazy val sbtApiProject: Project = Project(id = "api-sbt", base = file("api-sbt"))
     .settings(sourceDirectory := baseDirectory.value / ".." / ".." / "api" / "src")
     .settings(apiSettings)
+    .settings(scalaVersion := ScalaVersions.sbt)
     .enablePlugins(BuildInfoPlugin)
 
   private def apiSettings = {

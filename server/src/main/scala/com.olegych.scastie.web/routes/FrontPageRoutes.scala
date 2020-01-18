@@ -73,7 +73,7 @@ class FrontPageRoutes(production: Boolean) {
         concat(
           pathSingleSlash(index),
           snippetId(_ => index),
-          parameter('theme.?) { theme =>
+          parameter("theme".?) { theme =>
             snippetIdExtension(".js") { sid =>
               complete(embeddedResource(sid, theme))
             }

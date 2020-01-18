@@ -5,11 +5,11 @@ import java.nio.file._
 
 import com.olegych.scastie.api.ScalaTarget
 import com.olegych.scastie.util.ScastieFileUtil.slurp
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
-class InstrumentSpecs extends FunSuite {
+class InstrumentSpecs extends AnyFunSuite {
 
   import InstrumentationFailure._
 

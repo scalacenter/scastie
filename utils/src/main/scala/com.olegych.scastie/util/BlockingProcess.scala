@@ -11,7 +11,6 @@ import java.io.File
 import java.lang.{Process => JavaProcess, ProcessBuilder => JavaProcessBuilder}
 import java.util.concurrent.TimeUnit
 
-import scala.collection.JavaConverters
 import scala.collection.immutable
 import scala.concurrent.{Future, blocking}
 import scala.concurrent.duration.Duration
@@ -152,7 +151,7 @@ class BlockingProcess(command: immutable.Seq[String], directory: File, environme
   override def preStart(): Unit = {
     println("preStart")
     val process: JavaProcess = {
-      import JavaConverters._
+      import scala.jdk.CollectionConverters._
       val preparedCommand = prepareCommand(command)
       val pb = new JavaProcessBuilder(preparedCommand.asJava)
       pb.environment().putAll(environment.asJava)

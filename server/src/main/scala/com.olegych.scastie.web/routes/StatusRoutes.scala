@@ -74,12 +74,12 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives)(implic
 
     Flow[ws.Message]
       .mapAsync(1) {
-        case Strict(c) ⇒ Future.successful(c)
+        case Strict(c) => Future.successful(c)
         case e => Future.failed(new Exception(e.toString))
       }
       .via(flow)
       .map(
-        progress ⇒ ws.TextMessage.Strict(Json.stringify(Json.toJson(progress)))
+        progress => ws.TextMessage.Strict(Json.stringify(Json.toJson(progress)))
       )
   }
 }

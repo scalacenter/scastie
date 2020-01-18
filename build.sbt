@@ -1,17 +1,8 @@
 import SbtShared._
 
-val scalaTestVersion = "3.0.1"
-
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.26"
 
 val akkaHttpVersion = "10.1.11"
-def akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
-def akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
-def akkaHttpTestkit =
-  "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
-
-def akkaHttpCors = "ch.megard" %% "akka-http-cors" % "0.4.0"
-def akkaHttpSession = "com.softwaremill.akka-http-session" %% "core" % "0.5.6"
 
 val startAllCommands = List(
   "sbtRunner/reStart",
@@ -53,9 +44,7 @@ lazy val scastie = project
     (api.projectRefs ++ runtimeScala.projectRefs ++ List(
       balancer,
       client,
-      e2e,
       instrumentation,
-      migration,
       sbtRunner,
       sbtScastie,
       server,
@@ -69,21 +58,21 @@ lazy val scastie = project
 
 lazy val testSettings =
   Seq(
-    libraryDependencies += "org.scalatest" %% "scalatest" % scalaTestVersion % Test
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
   )
 
 lazy val loggingAndTest =
   Seq(
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % "1.1.7",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
       "com.getsentry.raven" % "raven-logback" % "8.0.3"
     )
   ) ++ testSettings
 
 lazy val utils = project
   .in(file("utils"))
-  .settings(baseSettings)
+  .settings(baseNoCrossSettings)
   .settings(loggingAndTest)
   .settings(
     resolvers += Resolver.typesafeRepo("releases"),
@@ -127,7 +116,7 @@ lazy val dockerOrg = "scalacenter"
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
-  .settings(baseSettings)
+  .settings(baseNoCrossSettings)
   .settings(loggingAndTest)
   .settings(runnerRuntimeDependenciesInTest)
   .settings(
@@ -140,8 +129,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("remote"),
       akka("slf4j"),
-      akkaHttp,
-      "org.scalameta" %% "scalafmt-core" % "2.0.0"
+      "org.scalameta" %% "scalafmt-core" % "2.3.2"
     ),
     imageNames in docker := Seq(
       ImageName(
@@ -176,41 +164,39 @@ lazy val sbtRunner = project
   .enablePlugins(sbtdocker.DockerPlugin, BuildInfoPlugin)
 
 lazy val server = project
-  .settings(baseSettings)
+  .settings(baseNoCrossSettings)
   .settings(loggingAndTest)
   .settings(ScalaJsHelper.packageScalaJS(client))
   .settings(
     javaOptions in reStart += "-Xmx512m",
     maintainer := "scalacenter",
     libraryDependencies ++= Seq(
-      "org.json4s" %% "json4s-native" % "3.5.2",
-      akkaHttp,
-      akkaHttpSession,
-      akkaHttpCors,
+      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+      "com.softwaremill.akka-http-session" %% "core" % "0.5.10",
+      "ch.megard" %% "akka-http-cors" % "0.4.2",
       akka("remote"),
       akka("slf4j"),
-      akkaHttpTestkit % Test
+      akka("testkit") % Test,
+      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
     )
   )
   .enablePlugins(JavaServerAppPackaging)
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, balancer)
 
 lazy val balancer = project
-  .settings(baseSettings)
+  .settings(baseNoCrossSettings)
   .settings(loggingAndTest)
   .settings(smallRunnerRuntimeDependenciesInTest)
   .settings(
-    libraryDependencies += akka("testkit")
+    libraryDependencies += akka("testkit") % Test
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, storage, sbtRunner % Test)
 
 lazy val storage = project
-  .settings(baseSettings)
+  .settings(baseNoCrossSettings)
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      akka("remote"),
-      akkaHttpCore,
       "net.lingala.zip4j" % "zip4j" % "1.3.1",
       "org.reactivemongo" %% "reactivemongo" % "0.20.1",
       "org.reactivemongo" %% "reactivemongo-play-json" % "0.20.1-play28",
@@ -232,7 +218,7 @@ val webpackProdConf = Def.setting {
 }
 
 lazy val client = project
-  .settings(baseSettings)
+  .settings(baseNoCrossSettings)
   .settings(baseJsSettings)
   .settings(
     version in webpack := "3.5.5",
@@ -246,6 +232,7 @@ lazy val client = project
     webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),
     webpackBundlingMode in fullOptJS := BundlingMode.Application,
     test := {},
+    Test / loadedTestFrameworks := Map(),
     npmDependencies in Compile ++= Seq(
       "codemirror" -> "5.50.0",
       "firacode" -> "1.205.0",
@@ -270,19 +257,18 @@ lazy val client = project
       "webpack-merge" -> "4.1.0"
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.4.2",
-      "org.querki" %%% "querki-jsext" % "0.8"
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.5.0",
     )
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
   .dependsOn(api.js(ScalaVersions.js))
 
 lazy val instrumentation = project
-  .settings(baseSettings)
+  .settings(baseNoCrossSettings)
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "4.2.0",
+      "org.scalameta" %% "scalameta" % "4.3.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
@@ -299,24 +285,5 @@ lazy val sbtScastie = project
     sbtPlugin := true
   )
   .settings(version := versionRuntime)
-  .dependsOn(api.jvm(ScalaVersions.jvm))
+  .dependsOn(api.jvm(ScalaVersions.sbt))
 
-// migration from file containers to mongodb
-// sbt migration/assembly
-// scp ./migration/target/scala-2.12/migration.jar scastie@scastie.scala-lang.org:migration.jar
-// ssh scastie@scastie.scala-lang.org
-// java -jar migration.jar snippets snippets-snap old-snippets
-lazy val migration = project
-  .settings(baseSettings)
-  .settings(
-    assemblyJarName in assembly := "migration.jar"
-  )
-  .dependsOn(api.jvm(ScalaVersions.jvm), storage)
-
-lazy val e2e = project
-  .in(file("end-to-end"))
-  .settings(baseSettings)
-  .settings(testSettings)
-  .settings(
-    libraryDependencies += "org.seleniumhq.selenium" % "selenium-java" % "3.5.3"
-  )

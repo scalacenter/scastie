@@ -31,17 +31,16 @@ class InMemorySnippetsContainer(implicit protected val ec: ExecutionContext) ext
   }
 
   def listSnippets(user: UserLogin): Future[List[SnippetSummary]] = Future {
-    snippets
+    snippets.view
       .filterKeys(_.user == Some(user.login))
       .values
-      .map(
-        m =>
-          SnippetSummary(
-            m.snippetId,
-            m.inputs.code.split(nl).take(3).mkString(nl),
-            m.time
+      .map { m =>
+        SnippetSummary(
+          m.snippetId,
+          m.inputs.code.split(nl).take(3).mkString(nl),
+          m.time
         )
-      )
+      }
       .toList
   }
 

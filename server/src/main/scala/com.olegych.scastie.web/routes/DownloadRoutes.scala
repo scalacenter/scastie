@@ -19,7 +19,7 @@ class DownloadRoutes(dispatchActor: ActorRef) {
   val routes: Route =
     get {
       snippetIdStart("download")(
-        sid ⇒
+        sid =>
           onSuccess((dispatchActor ? DownloadSnippet(sid)).mapTo[Option[Path]]) {
             case Some(path) =>
               getFromFile(path.toFile)

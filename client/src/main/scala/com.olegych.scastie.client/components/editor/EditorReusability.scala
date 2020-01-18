@@ -22,5 +22,5 @@ object EditorReusability {
     Reusability((a, b) => a.keys == b.keys)
 
   implicit val editorStateReuse: Reusability[EditorState] =
-    Reusability.caseClassExcept[EditorState]('editor)
+    Reusability.caseClassExcept[EditorState](Symbol("editor"))
 }

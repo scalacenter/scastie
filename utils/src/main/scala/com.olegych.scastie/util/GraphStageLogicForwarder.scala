@@ -27,12 +27,12 @@ class GraphStageLogicForwarder[T: TypeTag, U: TypeTag](out: Outlet[T], shape: So
   private val buffer = MQueue.empty[T]
 
   private def deliver(): Unit =
-    if (isAvailable(out) && !buffer.isEmpty)
+    if (isAvailable(out) && buffer.nonEmpty)
       push[T](out, buffer.dequeue)
 
   private def bufferElement(receive: (ActorRef, Any)): Unit =
     receive match {
-      case (_, element: T) =>
+      case (_, element: T @unchecked) =>
         buffer.enqueue(element)
         deliver()
     }

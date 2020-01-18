@@ -29,10 +29,10 @@ class ScalaLangRoutes(
   // format: off
   val routes: Route =
     post(
-      extractClientIP(remoteAddress ⇒
-        optionalLogin(user ⇒
+      extractClientIP(remoteAddress =>
+        optionalLogin(user =>
           path("scala-lang")(
-            entity(as[String]) { code ⇒
+            entity(as[String]) { code =>
               val inputs =
                 InputsWithIpAndUser(
                   Inputs.default.copy(code = code),

@@ -61,7 +61,7 @@ object Annotation {
           val mode = "local"
           val base = editor2.cursorCoords(basePos, mode)
           val offset = editor2.cursorCoords(offsetPos, mode)
-          node.style.left = (offset.left - base.left) + "px"
+          node.style.left = (offset.left - base.left).toString + "px"
         case _ =>
           // the line was deleted
           node.innerHTML = null

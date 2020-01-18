@@ -8,13 +8,12 @@ import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import com.olegych.scastie.api.ProcessOutput
 import com.olegych.scastie.api.ProcessOutputType._
 import com.olegych.scastie.util.ProcessActor._
-import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuiteLike
 
 import scala.concurrent.duration._
 
-class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
-
-  print("\033c")
+class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
 
   test("do it") {
     (1 to 10).foreach { i =>

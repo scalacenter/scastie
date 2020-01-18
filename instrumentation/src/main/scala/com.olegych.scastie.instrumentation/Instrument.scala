@@ -129,7 +129,7 @@ object Instrument {
       } else {
         s"""|@$jsExportTopLevelT("ScastiePlaygroundMain") class ScastiePlaygroundMain {
             |  val playground = $runtimeErrorT.wrap(new $instrumentedClass)
-            |  @$jsExportT def result = $runtimeT.write(playground.right.map(_.$instrumentationMethod))
+            |  @$jsExportT def result = $runtimeT.write(playground.map(_.$instrumentationMethod))
             |  @$jsExportT def attachedElements: $elemArrayT =
             |    playground match {
             |      case Right(p) => p.attachedElements

@@ -1,13 +1,9 @@
 package com.olegych.scastie.web.oauth2
 
 import com.olegych.scastie.api.User
-
 import play.api.libs.json.Json
-
 import com.softwaremill.session._
 import com.typesafe.config.ConfigFactory
-
-import scala.collection.parallel.mutable.ParTrieMap
 import com.typesafe.scalalogging.Logger
 
 import scala.util.Try
@@ -16,9 +12,10 @@ import java.nio.file._
 
 import akka.actor.ActorSystem
 
-import scala.collection.JavaConverters._
-
+import scala.jdk.CollectionConverters._
 import System.{lineSeparator => nl}
+
+import scala.collection.concurrent.TrieMap
 
 class GithubUserSession(system: ActorSystem) {
   val logger = Logger("GithubUserSession")
@@ -34,12 +31,8 @@ class GithubUserSession(system: ActorSystem) {
     SessionConfig.default(configuration.getString("session-secret"))
 
   private lazy val users = {
-    val trie = ParTrieMap[UUID, User]()
-    readSessionsFile().map {
-      case (uuid, user) =>
-        val pair = uuid -> user
-        trie += pair
-    }
+    val trie = TrieMap[UUID, User]()
+    trie ++= readSessionsFile()
     trie
   }
 

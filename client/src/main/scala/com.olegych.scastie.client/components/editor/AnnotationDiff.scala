@@ -37,7 +37,7 @@ object AnnotationDiff {
 
     val annotationsToRemove: CallbackTo[Set[T]] =
       CallbackTo.sequence(
-        fromState(state)
+        fromState(state).view
           .filterKeys(removedAnnotations.contains)
           .map {
             case (item, annot) => CallbackTo({ annot.clear(); item })

@@ -5,11 +5,12 @@ import akka.testkit.TestActor.AutoPilot
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.olegych.scastie.api._
 import com.olegych.scastie.util.SbtTask
-import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuiteLike
 
 import scala.concurrent.duration._
 
-class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
+class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
   setAutoPilot(new AutoPilot {
     def run(sender: ActorRef, msg: Any): AutoPilot = {
       sender ! s"reply to $msg"
