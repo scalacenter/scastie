@@ -13,7 +13,8 @@ class Routing(defaultServerUrl: String) {
 
     val embedded = "embedded"
 
-    val alpha = string("[a-zA-Z0-9-]*")
+    val alpha = string("[a-zA-Z0-9-]+")
+    val snippetId = string("[a-zA-Z0-9-]{22}")
 
     val targetType = "?target=" ~ alpha.pmap(
       in => ScalaTargetType.parse(in.toUpperCase)
@@ -91,9 +92,9 @@ class Routing(defaultServerUrl: String) {
 
     val tryLibrary = "?" ~ remainingPath.pmap(parseTryLibrary)(renderTryLibrary)
 
-    val anon = alpha
-    val user = alpha / alpha
-    val userUpdate = alpha / alpha / int
+    val anon = snippetId
+    val user = alpha / snippetId
+    val userUpdate = alpha / snippetId / int
     val oldId = int
 
     (

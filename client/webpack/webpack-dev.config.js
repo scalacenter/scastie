@@ -46,11 +46,12 @@ const Web = Merge(Common.Web, {
         target: "http://localhost:9000",
         bypass: function(req, res, proxyOptions) {
           // regex matching snippet ids
-          var homepage = /(\/[A-Za-z0-9]{22}|\/[A-Za-z0-9]{22}\/([A-Za-z0-9])*[/(0-9)*])/;
+          var snippet = /(\/[A-Za-z0-9]{22}|\/[A-Za-z0-9]{22}\/([A-Za-z0-9])*[/(0-9)*])/;
+          var snippetOld = /(\/[0-9]+)/;
           var backendUrls = /(\/api\/|\/login|\/logout)/;
 
           if(!backendUrls.test(req.url)) {
-            if (homepage.test(req.url)) {
+            if (snippet.test(req.url) || snippetOld.test(req.url)) {
               console.log("index: " + req.url);
               return "/";
             } else {
