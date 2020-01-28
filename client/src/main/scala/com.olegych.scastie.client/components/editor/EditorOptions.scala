@@ -1,6 +1,7 @@
 package com.olegych.scastie.client.components.editor
 
 import com.olegych.scastie.client.isMac
+import com.olegych.scastie.client.isMobile
 import scala.scalajs.js
 import org.scalajs.dom
 
@@ -28,9 +29,12 @@ object EditorOptions {
       else "light"
 
     val highlightSelectionMatches =
-      js.Dictionary(
-        "showToken" -> js.Dynamic.global.RegExp("\\w")
-      )
+      if (isMobile) false
+      else
+        js.Dictionary(
+          //messes up input on mobile browsers
+          "showToken" -> js.Dynamic.global.RegExp("\\w")
+        )
 
     def command(f: => Unit): js.Function1[CodeMirrorEditor2, Unit] = { ((editor: CodeMirrorEditor2) => f)
     }

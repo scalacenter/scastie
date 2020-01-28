@@ -14,7 +14,7 @@
     $medium-screen: 40em !default;
     $large-screen: 53.75em !default;
     $base-font-color: $dark-gray !default;
-    $modal-padding: 3em;
+    $modal-padding: 2em;
     $modal-background: $base-background-color;
     $modal-close-color: #5d7c83;
     $modal-image-height: 135px;
@@ -32,21 +32,21 @@
           color: #073642;
           font-family: 'Roboto Slab', serif;
           font-weight: normal;
-          font-size: 32px;
-          line-height: 32px;
+          font-size: 24px;
+          line-height: 24px;
           display: inline-block;
       }
       h2 {
           font-family: 'Roboto Slab', serif;
-          font-size: 24px;
-          line-height: 32px;
+          font-size: 20px;
+          line-height: 20px;
           color: #073642;
           font-weight: normal;
       }
       h3 {
           font-family: 'Roboto Slab', serif;
-          font-size: 20px;
-          line-height: 32px;
+          font-size: 16px;
+          line-height: 16px;
           color: #073642;
           font-weight: normal;
       }
@@ -75,13 +75,9 @@
               cursor: pointer;
           }
           .modal-reset {
-              height: 300px;
-              width: 500px;
+              width: 400px;
               .modal-inner {
                   overflow: hidden;
-                  p {
-                      margin: 30px 0 10px 0;
-                  }
                   ul {
                       width: 100%;
                   }
@@ -90,20 +86,19 @@
                       display:inline-block;
                       cursor: pointer;
                       background-color: #f4f3f3;
-                      width: 120px;
-                      padding: 10px;
+                      width: 100px;
                       align-content: center;
                       text-align: center;
-                      margin-left: 50px;
-                      margin-right: 50px;
-                      margin-top: 30px;
+                      margin-left: 10px;
+                      margin-right: 10px;
+                      margin-top: 10px;
                   }
               }
 
           }
       }
       .modal-close {
-          top: ($modal-padding/2);
+          top: ($modal-padding/1.5);
           right: ($modal-padding /2);
           position: absolute;
           @include size(1.5em, 1.5em);
@@ -111,7 +106,7 @@
           cursor: pointer;
           &::after, &::before {
               @include position(absolute, 3px, 3px, 0, 50%);
-              @include size(0.15em, 1.5em);
+              @include size(0.1em, 1em);
               background: $modal-close-color;
               content: "";
               display: block;
@@ -138,13 +133,13 @@
 
           .modal-header {
               background: $modal-background;
-              padding: 30px 30px 5px 30px; 
+              padding: 20px 20px 0px 20px;
               position: relative;
               border-radius: $base-border-radius;
           }
 
           .modal-inner {
-              padding: 0 10px 10px 30px;
+              padding: 0 10px 10px 20px;
               p {
                   color: $base-font-color;
                   line-height: $base-line-height;
@@ -173,7 +168,7 @@
                   }
               }
               .indent {
-                  padding-left: 40px;
+                  padding-left: 20px;
               }
               .shortcuts {
                   margin-bottom: 25px;
@@ -227,7 +222,6 @@
       .modal {
         .modal-window {
           width:90%;
-          height:90%;
         }
       }
     }

@@ -223,7 +223,7 @@
 
         .editor-container {
           .code {
-            // height: calc(100% - #{$editor-mobile-height + $console-handle-height});
+             height: calc(100% - #{$editor-mobile-height + $console-handle-height});
             &.console-open{
               height: calc(100% - #{$editor-mobile-height + $console-height});
             }
@@ -264,7 +264,7 @@
 
           .btn {
             text-align: center;
-            width: 50%;
+            width: 33.3%;
             line-height: 48px !important;
             font-size: 20px;
             display: inline-block !important;

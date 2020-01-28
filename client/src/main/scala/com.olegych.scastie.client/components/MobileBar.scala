@@ -9,6 +9,7 @@ final case class MobileBar(isRunning: Boolean,
                            save: Reusable[Callback],
                            setView: View ~=> Callback,
                            isNewSnippetModalClosed: Boolean,
+                           clear: Reusable[Callback],
                            openNewSnippetModal: Reusable[Callback],
                            closeNewSnippetModal: Reusable[Callback],
                            newSnippet: Reusable[Callback],
@@ -34,6 +35,9 @@ object MobileBar {
           openNewSnippetModal = props.openNewSnippetModal,
           closeNewSnippetModal = props.closeNewSnippetModal,
           newSnippet = props.newSnippet
+        ).render,
+        ClearButton(
+          clear = props.clear,
         ).render,
         //this doesn't work too well, better use browsers 'request desktop site'
 //        DesktopButton(

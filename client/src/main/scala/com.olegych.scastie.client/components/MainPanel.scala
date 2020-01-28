@@ -116,6 +116,7 @@ object MainPanel {
         isStatusOk = isStatusOk,
         save = backend.saveOrUpdate,
         setView = backend.setViewReused,
+        clear = backend.clear,
         isNewSnippetModalClosed = state.modalState.isNewSnippetModalClosed,
         openNewSnippetModal = backend.openNewSnippetModal,
         closeNewSnippetModal = backend.closeNewSnippetModal,

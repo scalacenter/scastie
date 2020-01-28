@@ -20,4 +20,6 @@ package object client {
     dontSerialize(List())
 
   val isMac: Boolean = window.navigator.userAgent.contains("Mac")
+  val isMobile: Boolean = "Android|webOS|Mobi|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Samsung".r.unanchored
+    .matches(window.navigator.userAgent)
 }
