@@ -133,13 +133,19 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("Scala 2.12 support") {
     val scalaJs =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.12.8"))
+      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.12.10"))
     run(scalaJs)(assertUserOutput("2"))
   }
 
   test("Scala 2.13 support") {
     val scalaJs =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.13.0"))
+      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.13.1"))
+    run(scalaJs)(assertUserOutput("2"))
+  }
+
+  test("no warnings by default") {
+    val scalaJs =
+      Inputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""")
     run(scalaJs)(assertUserOutput("2"))
   }
 

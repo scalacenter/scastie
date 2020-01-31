@@ -120,6 +120,7 @@ object Instrument {
     val entryPoint =
       if (!isScalaJs) {
         s"""|object Main {
+            |  {val _ = Html}
             |  val playground = new $instrumentedClass
             |  def main(args: Array[String]): Unit = {
             |    scala.Predef.println("\\n" + $runtimeT.write(playground.$instrumentationMethod))
@@ -128,6 +129,7 @@ object Instrument {
             |""".stripMargin
       } else {
         s"""|@$jsExportTopLevelT("ScastiePlaygroundMain") class ScastiePlaygroundMain {
+            |  {val _ = Html}
             |  val playground = $runtimeErrorT.wrap(new $instrumentedClass)
             |  @$jsExportT def result = $runtimeT.write(playground.map(_.$instrumentationMethod))
             |  @$jsExportT def attachedElements: $elemArrayT =

@@ -3,6 +3,7 @@ class Playground { private val instrumentationMap$ = _root_.scala.collection.mut
  
 }
 object Main {
+  {val _ = Html}
   val playground = new Playground
   def main(args: Array[String]): Unit = {
     scala.Predef.println("\n" + _root_.com.olegych.scastie.api.runtime.Runtime.write(playground.instrumentations$))
