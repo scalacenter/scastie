@@ -173,7 +173,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case format: FormatRequest =>
       val server = sbtLoadBalancer.getRandomServer
-      server.ref.tell(format, sender)
+      server.foreach(_.ref.tell(format, sender))
       ()
 
     case x @ RunSnippet(inputsWithIpAndUser) =>

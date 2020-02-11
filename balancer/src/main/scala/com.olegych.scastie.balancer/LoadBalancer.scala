@@ -33,8 +33,8 @@ case class LoadBalancer[R, S <: ServerState](servers: Vector[Server[R, S]]) {
     copy(servers = servers.filterNot(_.ref == ref))
   }
 
-  def getRandomServer: Server[R, S] = {
-    def random[T](xs: Seq[T]): T = xs(Random.nextInt(xs.size))
+  def getRandomServer: Option[Server[R, S]] = {
+    def random[T](xs: Seq[T]) = if (xs.nonEmpty) Some(xs(Random.nextInt(xs.size))) else None
     random(servers.filter(_.state.isReady))
   }
 
