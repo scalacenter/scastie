@@ -6,7 +6,7 @@ scala.Predef.locally {val $t = 1 +
   a; instrumentationMap$(_root_.com.olegych.scastie.api.Position(7, 14)) = _root_.com.olegych.scastie.api.runtime.Runtime.render($t);$t} 
 }
 object Main {
-  {val _ = Html}
+  def suppressUnusedWarnsScastie = Html
   val playground = new Playground
   def main(args: Array[String]): Unit = {
     scala.Predef.println("\n" + _root_.com.olegych.scastie.api.runtime.Runtime.write(playground.instrumentations$))

@@ -6,7 +6,7 @@ import org.scalajs.dom.html.Canvas
 scala.Predef.locally {val $t = dom.document.createElement("canvas").asInstanceOf[Canvas]; instrumentationMap$(_root_.com.olegych.scastie.api.Position(59, 116)) = _root_.com.olegych.scastie.api.runtime.Runtime.render($t, attach _);$t} 
 }
 @_root_.scala.scalajs.js.annotation.JSExportTopLevel("ScastiePlaygroundMain") class ScastiePlaygroundMain {
-  {val _ = Html}
+  def suppressUnusedWarnsScastie = Html
   val playground = _root_.com.olegych.scastie.api.RuntimeError.wrap(new Playground)
   @_root_.scala.scalajs.js.annotation.JSExport def result = _root_.com.olegych.scastie.api.runtime.Runtime.write(playground.map(_.instrumentations$))
   @_root_.scala.scalajs.js.annotation.JSExport def attachedElements: _root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement] =

@@ -120,33 +120,39 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("Scala 2.10 support") {
-    val scalaJs =
+    val scala =
       Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.10.7"))
-    run(scalaJs)(assertUserOutput("2"))
+    run(scala)(assertUserOutput("2"))
   }
 
   test("Scala 2.11 support") {
-    val scalaJs =
+    val scala =
       Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.11.12"))
-    run(scalaJs)(assertUserOutput("2"))
+    run(scala)(assertUserOutput("2"))
   }
 
   test("Scala 2.12 support") {
-    val scalaJs =
+    val scala =
       Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.12.10"))
-    run(scalaJs)(assertUserOutput("2"))
+    run(scala)(assertUserOutput("2"))
   }
 
   test("Scala 2.13 support") {
-    val scalaJs =
+    val scala =
       Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.13.1"))
-    run(scalaJs)(assertUserOutput("2"))
+    run(scala)(assertUserOutput("2"))
   }
 
   test("no warnings by default") {
-    val scalaJs =
+    val scala =
       Inputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""")
-    run(scalaJs)(assertUserOutput("2"))
+    run(scala)(assertUserOutput("2"))
+  }
+
+  test("no warnings on 2.12") {
+    val scala =
+      Inputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""", target = ScalaTarget.Jvm("2.12.10"))
+    run(scala)(assertUserOutput("2"))
   }
 
   test("Dotty support") {
