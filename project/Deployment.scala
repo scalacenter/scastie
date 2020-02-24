@@ -325,6 +325,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
           |  echo "Starting Runner: Port $$i"
           |  docker run \\
           |    --network=host \\
+          |    --restart=always \\
           |    -d \\
           |    -e RUNNER_PRODUCTION=true \\
           |    -e RUNNER_PORT=$$i \\
