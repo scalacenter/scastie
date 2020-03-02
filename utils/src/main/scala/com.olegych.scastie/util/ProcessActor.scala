@@ -81,12 +81,12 @@ class ProcessActor(command: List[String], workingDir: Path, environment: Map[Str
       println("process started: " + pid)
       lines(stdout)
         .map { line =>
-          ProcessOutput(line.trim, ProcessOutputType.StdOut, Some(outputId.incrementAndGet()))
+          ProcessOutput(line.stripLineEnd, ProcessOutputType.StdOut, Some(outputId.incrementAndGet()))
         }
         .merge(
           lines(stderr)
             .map { line =>
-              ProcessOutput(line.trim, ProcessOutputType.StdErr, Some(outputId.incrementAndGet()))
+              ProcessOutput(line.stripLineEnd, ProcessOutputType.StdErr, Some(outputId.incrementAndGet()))
             }
         )
         .throttle(100, 1.second, 100, ThrottleMode.Shaping)
