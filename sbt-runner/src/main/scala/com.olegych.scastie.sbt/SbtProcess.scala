@@ -187,6 +187,7 @@ class SbtProcess(runTimeout: FiniteDuration,
         snippetActor = sender,
         timeoutEvent = None
       )
+      sendProgress(_sbtRun, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snippetId)))
 
       InstrumentedInputs(taskInputs) match {
         case Right(instrumented) =>
