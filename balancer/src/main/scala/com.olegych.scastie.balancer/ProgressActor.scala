@@ -11,113 +11,50 @@ import scala.collection.mutable.{Map => MMap, Queue => MQueue}
 import scala.concurrent.duration.DurationLong
 
 case class SubscribeProgress(snippetId: SnippetId)
-case class ProgressDone(snippetId: SnippetId)
-case class Cleanup(snippetId: SnippetId)
-
-trait QueuedMessage
-case class SnippetProgressMessage(content: SnippetProgress) extends QueuedMessage
-case object SignalProgressIsDone extends QueuedMessage
+private case class Cleanup(snippetId: SnippetId)
 
 class ProgressActor extends Actor {
   type ProgressSource = Source[SnippetProgress, NotUsed]
 
-  private val subscribers =
-    MMap.empty[SnippetId, (ProgressSource, Option[ActorRef])]
+  private val subscribers = MMap.empty[SnippetId, (ProgressSource, Option[ActorRef])]
 
-  private val queuedMessages =
-    MMap.empty[SnippetId, MQueue[QueuedMessage]]
+  private val queuedMessages = MMap.empty[SnippetId, MQueue[SnippetProgress]]
 
   override def receive: Receive = {
-
     case SubscribeProgress(snippetId) =>
       val (source, _) = getOrCreateNewSubscriberInfo(snippetId, self)
       sender ! source
 
     case snippetProgress: SnippetProgress =>
-      processSnippedProgress(snippetProgress, self)
+      snippetProgress.snippetId.foreach { snippetId =>
+        getOrCreateNewSubscriberInfo(snippetId, self)
+        queuedMessages.getOrElseUpdate(snippetId, MQueue()).enqueue(snippetProgress)
+        sendQueuedMessages(snippetId, self)
+      }
 
     case (snippedId: SnippetId, graphStageForwarderActor: ActorRef) =>
-      updateGraphStageForwarderActor(snippedId, graphStageForwarderActor)
+      subscribers.get(snippedId).foreach(s => subscribers.update(snippedId, s.copy(_2 = Some(graphStageForwarderActor))))
       sendQueuedMessages(snippedId, self)
-
-    case ProgressDone(snippetId) =>
-      context.system.scheduler.scheduleOnce(3.seconds, self, Cleanup(snippetId))(context.dispatcher)
 
     case Cleanup(snippetId) =>
       subscribers.remove(snippetId)
       queuedMessages.remove(snippetId)
   }
 
-  private def getOrCreateNewSubscriberInfo(
-      snippetId: SnippetId,
-      self: ActorRef
-  ): (ProgressSource, Option[ActorRef]) = {
-
-    def createNewSubscriberInfo(
-        snippetId: SnippetId,
-        self: ActorRef
-    ): (ProgressSource, Option[ActorRef]) = {
-
-      val outletName = "outlet-graph-" + snippetId
-      val graphStageForwarder = new GraphStageForwarder(
-        outletName,
-        self,
-        snippetId
-      )
-      val source: ProgressSource = Source.fromGraph(graphStageForwarder)
-      (source, None)
-    }
-
+  private def getOrCreateNewSubscriberInfo(snippetId: SnippetId, self: ActorRef): (ProgressSource, Option[ActorRef]) = {
     subscribers.getOrElseUpdate(
       snippetId,
-      createNewSubscriberInfo(snippetId, self)
+      Source.fromGraph(new GraphStageForwarder("outlet-graph-" + snippetId, self, snippetId)) -> None
     )
   }
-
-  private def updateGraphStageForwarderActor(
-      snippetId: SnippetId,
-      graphStageForwarderActor: ActorRef
-  ): Unit =
-    for {
-      (source, _) <- subscribers.get(snippetId)
-    } yield subscribers.update(snippetId, (source, Some(graphStageForwarderActor)))
-
-  private def processSnippedProgress(snippetProgress: SnippetProgress, self: ActorRef): Unit = {
-
-    snippetProgress.snippetId.foreach { snippetId =>
-      getOrCreateNewSubscriberInfo(snippetId, self)
-      addSnippetProgressToQueuedMessages(
-        snippetId,
-        SnippetProgressMessage(snippetProgress)
-      )
-      if (snippetProgress.isDone)
-        addSnippetProgressToQueuedMessages(snippetId, SignalProgressIsDone)
-      sendQueuedMessages(snippetId, self)
-
-    }
-  }
-
-  private def addSnippetProgressToQueuedMessages(
-      snippetId: SnippetId,
-      messageToQueue: QueuedMessage
-  ): Unit =
-    queuedMessages.get(snippetId) match {
-      case Some(queue) => queue.enqueue(messageToQueue)
-      case None =>
-        val queue = MQueue(messageToQueue)
-        queuedMessages += (snippetId -> queue)
-    }
 
   private def sendQueuedMessages(snippetId: SnippetId, self: ActorRef): Unit =
     for {
       messageQueue <- queuedMessages.get(snippetId).toSeq
       (_, Some(graphStageForwarderActor)) <- subscribers.get(snippetId).toSeq
       message <- messageQueue.dequeueAll(_ => true)
-    } yield
-      message match {
-        case SnippetProgressMessage(content) =>
-          graphStageForwarderActor ! content
-        case SignalProgressIsDone =>
-          self ! ProgressDone(snippetId)
-      }
+    } yield {
+      graphStageForwarderActor ! message
+      if (message.isDone) context.system.scheduler.scheduleOnce(3.seconds, self, Cleanup(snippetId))(context.dispatcher)
+    }
 }
