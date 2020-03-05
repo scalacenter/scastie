@@ -138,6 +138,15 @@ lazy val sbtRunner = project
         tag = Some(gitHashNow)
       )
     ),
+    docker := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val buildOptions = (DockerKeys.buildOptions in docker).value
+      val stageDir = (target in docker).value
+      val dockerfile = (DockerKeys.dockerfile in docker).value
+      val imageNames = (DockerKeys.imageNames in docker).value
+      sbtdocker.DockerBuildFixed(dockerfile, sbtdocker.staging.DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
+    },
     dockerfile in docker := Def
       .task {
         DockerHelper(

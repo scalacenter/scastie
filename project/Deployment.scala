@@ -311,6 +311,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     val sentryDsn = getSentryDsn(getSecretConfig())
 
+    //jenkins.scala-sbt.org points to 127.0.0.1 to workaround https://github.com/sbt/sbt/issues/5458 and https://github.com/sbt/sbt/issues/5456
     val runnerScriptContent =
       s"""|#!/usr/bin/env bash
           |
@@ -324,6 +325,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
           |do
           |  echo "Starting Runner: Port $$i"
           |  docker run \\
+          |    --add-host jenkins.scala-sbt.org:127.0.0.1 \\
           |    --network=host \\
           |    --restart=always \\
           |    -d \\

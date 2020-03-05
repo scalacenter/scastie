@@ -2,9 +2,7 @@ import SbtShared._
 
 import sbtdocker.DockerPlugin.autoImport._
 
-import java.nio.file.{Path, Files}
-
-import scala.sys.process._
+import java.nio.file.Path
 
 object DockerHelper {
   def apply(baseDirectory: Path, sbtTargetDir: Path, sbtScastie: String, ivyHome: Path, organization: String, artifact: Path): Dockerfile = {
@@ -69,9 +67,6 @@ object DockerHelper {
       runRaw(s"tar -xzvf /tmp/sbt-$distSbtVersion.tgz -C /app/sbt")
 
       runRaw("ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt")
-
-      //workaround https://github.com/sbt/sbt/issues/5458 and https://github.com/sbt/sbt/issues/5456
-      runRaw("echo \"127.0.0.1 jenkins.scala-sbt.org\" >>/etc/hosts")
 
       val userHome = s"/home/$containerUsername"
 
