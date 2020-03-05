@@ -70,6 +70,9 @@ object DockerHelper {
 
       runRaw("ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt")
 
+      //workaround https://github.com/sbt/sbt/issues/5458 and https://github.com/sbt/sbt/issues/5456
+      runRaw("echo \"127.0.0.1 jenkins.scala-sbt.org\" >>/etc/hosts")
+
       val userHome = s"/home/$containerUsername"
 
       runRaw(s"addgroup -g 433 $containerUsername")
