@@ -6,11 +6,13 @@ import java.io.{ByteArrayOutputStream, File}
 import java.util.Base64
 import java.awt.image.BufferedImage
 
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
 object Runtime extends SharedRuntime {
-  def render[T](a: T)(implicit tt: TypeTag[T]): Render = {
-    super.render(a, tt.tpe.toString)
+  def render[T](a: T)(implicit ct: ClassTag[T], _tt: TypeTag[T] = null): Render = {
+    val tt = Option(_tt)
+    super.render(a, tt.map(_.tpe.toString).getOrElse(ct.toString))
   }
 
   def image(path: String): Html = {
