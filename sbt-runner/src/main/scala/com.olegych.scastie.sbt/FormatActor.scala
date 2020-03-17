@@ -28,10 +28,7 @@ class FormatActor() extends Actor {
     Scalafmt.format(code, style = config) match {
       case Formatted.Success(formattedCode) => Right(formattedCode)
       case Formatted.Failure(failure) =>
-        val errors = new StringWriter()
-        failure.printStackTrace(new PrintWriter(errors))
-        val fullStack = errors.toString
-        Left(fullStack)
+        Left(failure.toString)
     }
   }
 

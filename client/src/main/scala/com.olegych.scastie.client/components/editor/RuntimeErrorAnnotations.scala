@@ -37,9 +37,7 @@ object RuntimeErrorAnnotations {
         el.className = "runtime-error"
 
         val msg = dom.document.createElement("pre")
-        msg.textContent = s"""|${runtimeError.message}
-                              |
-                              |${runtimeError.fullStack}""".stripMargin
+        msg.textContent = if (runtimeError.fullStack.nonEmpty) runtimeError.fullStack else runtimeError.message
 
         el.appendChild(icon)
         el.appendChild(msg)

@@ -412,9 +412,9 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
                   s.clearOutputsPreserveConsole.setCode(formattedCode)
                 else s
               }
-            case FormatResponse(Left(fullStackTrace)) =>
+            case FormatResponse(Left(error)) =>
               scope.modState {
-                _.setRuntimeError(Some(RuntimeError(message = "Formatting Failed", line = None, fullStack = fullStackTrace)))
+                _.setRuntimeError(Some(RuntimeError(message = "Formatting failed: " + error, line = None, fullStack = "")))
               }
           }
       }

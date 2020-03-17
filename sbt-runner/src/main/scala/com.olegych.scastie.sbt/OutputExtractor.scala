@@ -132,7 +132,15 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   ): Option[List[Problem]] = {
     val problems = extract[List[Problem]](line)
 
-    val problemsWithOffset = problems.map {
+    val worksheetProblems =
+      if (isWorksheetMode) problems.map(_.map { p =>
+        if (p.message.contains("may not be a member of another class"))
+          p.copy(message = p.message + " (Scastie: try to turn off Worksheet mode)")
+        else p
+      })
+      else problems
+
+    val problemsWithOffset = worksheetProblems.map {
       _.map(problem => problem.copy(line = problem.line.map(_ + lineOffset)))
     }
 
@@ -147,7 +155,11 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
 
   private def extractRuntimeError(line: String, lineOffset: Int): Option[RuntimeError] = {
     extract[RuntimeErrorWrap](line).flatMap {
-      _.error.map(error => error.copy(line = error.line.map(_ + lineOffset)))
+      _.error.map { error =>
+        val noStackTraceError = if (error.message.contains("No main class detected.")) error.copy(fullStack = "") else error
+        val errorWithOffset = noStackTraceError.copy(line = noStackTraceError.line.map(_ + lineOffset))
+        errorWithOffset
+      }
     }
   }
 
