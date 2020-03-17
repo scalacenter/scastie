@@ -16,6 +16,7 @@ in rec {
       sbt
       pkgs.nodejs
       pkgs.yarn
+      pkgs.bash
     ];
   };
 
