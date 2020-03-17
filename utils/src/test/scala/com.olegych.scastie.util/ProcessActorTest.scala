@@ -25,9 +25,7 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
 
       val probe = TestProbe()
 
-      val processActor = TestActorRef(
-        new ProcessReceiver(command.getPath, probe.ref)
-      )
+      val processActor = TestActorRef(new ProcessReceiver(command.getAbsolutePath, probe.ref))
 
       processActor ! Input("abcd")
       processActor ! Input("1234")
