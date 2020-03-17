@@ -1,6 +1,5 @@
 language: nix
 dist: trusty
-sudo: false
 os:
   - linux
 env:
@@ -10,10 +9,17 @@ env:
 script:
   - nix-shell -A scastie --command "sbt test"
 
+before_install:
+  - sudo mkdir -p /etc/nix
+  - echo "substituters = https://cache.nixos.org/ file://$HOME/nix.store" | sudo tee -a /etc/nix/nix.conf > /dev/null
+  - echo 'require-sigs = false' | sudo tee -a /etc/nix/nix.conf > /dev/null
+
 before_cache:
   - rm -fv $HOME/.ivy2/.sbt.ivy.lock
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
   - find $HOME/.sbt        -name "*.lock"               -print -delete
+  - mkdir -p $HOME/nix.store
+  - nix copy --to file://$HOME/nix.store -f default.nix buildInputs
 
 cache:
   yarn: true
@@ -21,3 +27,4 @@ cache:
     - $HOME/.cache/coursier
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot/
+    - $HOME/nix.store
