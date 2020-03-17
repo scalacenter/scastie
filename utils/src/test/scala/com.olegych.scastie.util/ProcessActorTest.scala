@@ -25,7 +25,7 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
 
       val probe = TestProbe()
 
-      val processActor = TestActorRef(new ProcessReceiver(command.getAbsolutePath, probe.ref))
+      val processActor = TestActorRef(new ProcessReceiver(command.getPath, probe.ref))
 
       processActor ! Input("abcd")
       processActor ! Input("1234")
@@ -52,7 +52,7 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
 
 class ProcessReceiver(command: String, probe: ActorRef) extends Actor {
   private val props =
-    ProcessActor.props(command = List("bash -c " + command.replaceAllLiterally("\\", "/")), killOnExit = false)
+    ProcessActor.props(command = List("bash",  "-c", command.replaceAllLiterally("\\", "/")), killOnExit = false)
   private val process = context.actorOf(props, name = "process-receiver")
 
   override def receive: Receive = {
