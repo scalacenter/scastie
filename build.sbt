@@ -4,39 +4,14 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.26"
 
 val akkaHttpVersion = "10.1.11"
 
-val startAllCommands = List(
-  "sbtRunner/reStart",
-  "server/reStart",
-  "client/fastOptJS::startWebpackDevServer",
-)
-
-def sbtJoinTask(commands: List[String]): String =
-  commands.mkString(";", ";", "")
-
-def startAll(commands: List[String], suffix: String = "") =
-  addCommandAlias("startAll" + suffix, sbtJoinTask(commands))
-
-lazy val ciAlias =
-  addCommandAlias(
-    "ci",
-    sbtJoinTask(
-      List(
-        "test:compile",
-        "instrumentation/test",
-        "server/test",
-        "storage/test"
-        // https://github.com/scalacenter/scastie/issues/105
-        // "e2e/test",
-
-        // https://github.com/scalacenter/scastie/issues/363
-        // "utils/test"
-        // "balancer/test",
-        // "sbtRunner/test"
-      )
-    )
+{
+  val startAllCommands = List(
+    "sbtRunner/reStart",
+    "server/reStart",
+    "client/fastOptJS::startWebpackDevServer",
   )
-
-startAll(startAllCommands)
+  addCommandAlias("startAll", startAllCommands.mkString(";", ";", ""))
+}
 
 lazy val scastie = project
   .in(file("."))
@@ -53,7 +28,6 @@ lazy val scastie = project
     ).map(_.project)):_*
   )
   .settings(baseSettings)
-  .settings(ciAlias)
   .settings(Deployment.settings(server, sbtRunner))
 
 lazy val testSettings =

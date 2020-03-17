@@ -8,16 +8,16 @@ env:
     - TRAVIS_NODE_VERSION="8"
 
 script:
-#  - bin/scalafmt --test
-  - nix-shell -A scastie --command "sbt ci"
+  - nix-shell -A scastie --command "sbt test"
 
 before_cache:
-  # Cleanup the cached directories to avoid unnecessary cache updates
+  - rm -fv $HOME/.ivy2/.sbt.ivy.lock
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
   - find $HOME/.sbt        -name "*.lock"               -print -delete
 
 cache:
   yarn: true
   directories:
+    - $HOME/.cache/coursier
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot/
