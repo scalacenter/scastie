@@ -30,7 +30,9 @@ class LoadBalancerRecoveryTest()
       """|val f = classOf[sun.misc.Unsafe].getDeclaredField("theUnsafe")
          |f.setAccessible(true)
          |val unsafe = f.get(null).asInstanceOf[sun.misc.Unsafe]
-         |unsafe.putLong(0, 0)""".stripMargin
+         |println("TRYING TO CRASH JVM")
+         |unsafe.putLong(0, 0)
+         |println("SHOULD HAVE CRASHED!")""".stripMargin
 
     val code1 = "println(1)"
     val code3 = "println(2)"
