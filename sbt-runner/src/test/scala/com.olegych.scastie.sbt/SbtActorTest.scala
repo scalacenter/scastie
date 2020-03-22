@@ -121,7 +121,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("Scala 2.10 support") {
     val scala =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm("2.10.7"))
+      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest210))
     run(scala)(assertUserOutput("2"))
   }
 
