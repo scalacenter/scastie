@@ -196,7 +196,7 @@ class SbtProcess(runTimeout: FiniteDuration,
           setInputs(sbtRun.inputs)
 
           if (isReloading) {
-            process ! Input("reload")
+            process ! Input("reload;compile/compileInputs")
             gotoWithTimeout(sbtRun, Reloading, reloadTimeout)
           } else {
             gotoRunning(sbtRun)
