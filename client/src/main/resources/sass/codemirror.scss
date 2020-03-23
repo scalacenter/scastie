@@ -31,7 +31,7 @@
     overflow: auto;
   }
 
-  $margin: 24px;
+  $margin: 0px;
   .CodeMirror-lines {
     line-height: initial;
     padding: $margin;
@@ -75,7 +75,7 @@
     pre {
       width: 100vw;
       white-space: pre-wrap;
-      padding: 10px 0px 10px $margin/2;
+      padding: 0px;
       display: inline-block;
     }
   }
