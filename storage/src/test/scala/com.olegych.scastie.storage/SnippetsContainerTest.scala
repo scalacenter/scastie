@@ -14,8 +14,8 @@ import scala.concurrent.{Await, Future}
 import scala.util.Random
 
 class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
-//  val mongo = true
-  val mongo = false
+  val mongo = sys.props.get("SnippetsContainerTest.mongo").flatMap(_.toBooleanOption).contains(true)
+  println(s"SnippetsContainerTest using mongodb: $mongo")
   val root = Files.createTempDirectory("test")
   val oldRoot = Files.createTempDirectory("old-test")
 

@@ -6,11 +6,15 @@ env:
   global:
     - TRAVIS_NODE_VERSION="8"
 
+services: mongodb
+
 script:
   - glibcLocales=$(nix-build --no-out-link "<nixpkgs>" -A glibcLocales)
   - echo $glibcLocales
   - export LOCALE_ARCHIVE_2_27="${glibcLocales}/lib/locale/locale-archive"
-  - nix-shell -A scastie --command "sbt test"
+  - git checkout .
+  - git clean -f
+  - nix-shell -A scastie --command "sbt -DSnippetsContainerTest.mongo=true ciTest"
 
 before_install:
   - sudo mkdir -p /etc/nix
@@ -23,6 +27,10 @@ before_cache:
   - find $HOME/.sbt        -name "*.lock"               -print -delete
   - mkdir -p $HOME/nix.store
   - nix copy --to file://$HOME/nix.store -f default.nix scastie.buildInputs
+  - rm -rf ./.git
+  - rm -rf ./project/target
+  - rm -rf ./project/project/target
+  - rm -rf ./project/project/project/target
 
 cache:
   yarn: true
@@ -31,3 +39,4 @@ cache:
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot/
     - $HOME/nix.store
+    - ./

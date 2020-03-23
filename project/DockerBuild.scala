@@ -83,7 +83,7 @@ object DockerBuildFixed {
     val command = dockerPath :: "build" :: flags ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
-    val processOutput = Process(command, stageDir).lines(processLogger)
+    val processOutput = Process(command, stageDir).lineStream(processLogger)
     processOutput.foreach { line =>
       log.info(line)
     }
