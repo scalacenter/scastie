@@ -14,9 +14,6 @@ val akkaHttpVersion = "10.1.11"
   addCommandAlias("startAll", startAllCommands.mkString(";", ";", ""))
 }
 
-lazy val ciFullTest = taskKey[Unit]("clean, test, package")
-lazy val ciQuickTest = taskKey[Unit]("testQuick with no params")
-
 lazy val scastie = project
   .in(file("."))
   .aggregate(
@@ -33,29 +30,10 @@ lazy val scastie = project
   )
   .settings(baseSettings)
   .settings(
-    ciFullTest := {
-      val __ = (Test / test).all(ScopeFilter(inAnyProject)).value
-      val ____ = (sbtRunner / docker / dockerfile).value
-      val _____ = (server / Universal / packageBin).value
-    },
-    ciFullTest := ciFullTest.dependsOn(clean.all(ScopeFilter(inAnyProject))).value,
-    ciQuickTest := {
-      val _ = (testQuick in Test).toTask("").all(ScopeFilter(inAnyProject)).value
-    },
-    commands += Command.command("ciTest"){ _state =>
-      val extracted = Project.extract(_state)
-      import extracted._
-      val token = file("./target/.lastCiTest")
-      val quick = token.exists() && token.lastModified() > (System.currentTimeMillis() - 24L * 60 * 60 * 1000)
-      val (state, _) = if (quick) {
-        runTask(ciQuickTest, _state)
-      } else {
-        val r = runTask(ciFullTest, _state)
-        token.delete()
-        token.createNewFile()
-        r
-      }
-      state
+    cachedCiTestFull := {
+      val _ = cachedCiTestFull.value
+      val __ = (sbtRunner / docker / dockerfile).value
+      val ___ = (server / Universal / packageBin).value
     },
   )
   .settings(Deployment.settings(server, sbtRunner))
