@@ -277,6 +277,8 @@ class SbtProcess(runTimeout: FiniteDuration,
 
     writeFile(pluginFile, inputs.sbtPluginsConfig + "\n")
     writeFile(buildFile, prompt + "\n" + inputs.sbtConfig)
+    Files.deleteIfExists(sbtDir.resolve(ScalaTarget.Js.targetFilename))
+    Files.deleteIfExists(sbtDir.resolve(ScalaTarget.Js.sourceMapFilename))
     write(codeFile, inputs.code, truncate = true)
   }
 

@@ -11,9 +11,6 @@ object SnippetState {
 case class SnippetState(
     snippetId: Option[SnippetId],
     loadSnippet: Boolean,
-    loadScalaJsScript: Boolean,
-    isScalaJsScriptLoaded: Boolean,
-    snippetIdIsScalaJS: Boolean,
     scalaJsContent: Option[String],
 )
 
@@ -36,9 +33,6 @@ object ScastieState {
       snippetState = SnippetState(
         snippetId = None,
         loadSnippet = true,
-        loadScalaJsScript = false,
-        isScalaJsScriptLoaded = false,
-        snippetIdIsScalaJS = false,
         scalaJsContent = None,
       ),
       user = None,
@@ -90,9 +84,6 @@ case class ScastieState(
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean = snippetState.loadSnippet
-  def loadScalaJsScript: Boolean = snippetState.loadScalaJsScript
-  def isScalaJsScriptLoaded: Boolean = snippetState.isScalaJsScriptLoaded
-  def snippetIdIsScalaJS: Boolean = snippetState.snippetIdIsScalaJS
 
   def copyAndSave(
       attachedDoms: AttachedDoms = attachedDoms,
@@ -108,10 +99,7 @@ case class ScastieState(
       consoleState: ConsoleState = consoleState,
       inputsHasChanged: Boolean = inputsHasChanged,
       snippetId: Option[SnippetId] = snippetId,
-      snippetIdIsScalaJS: Boolean = snippetIdIsScalaJS,
       loadSnippet: Boolean = loadSnippet,
-      isScalaJsScriptLoaded: Boolean = isScalaJsScriptLoaded,
-      loadScalaJsScript: Boolean = loadScalaJsScript,
       scalaJsContent: Option[String] = snippetState.scalaJsContent,
       user: Option[User] = user,
       inputs: Inputs = inputs,
@@ -119,11 +107,6 @@ case class ScastieState(
       status: StatusState = status,
       transient: Boolean = transient,
   ): ScastieState = {
-
-    val isScalaJsScriptLoaded0 =
-      if (inputsHasChanged) false
-      else isScalaJsScriptLoaded
-
     val state0 =
       copy(
         view = view,
@@ -140,9 +123,6 @@ case class ScastieState(
         snippetState = SnippetState(
           snippetId = snippetId,
           loadSnippet = loadSnippet,
-          loadScalaJsScript = loadScalaJsScript,
-          isScalaJsScriptLoaded = isScalaJsScriptLoaded0,
-          snippetIdIsScalaJS = snippetIdIsScalaJS,
           scalaJsContent = scalaJsContent,
         ),
         user = user,
@@ -363,15 +343,9 @@ case class ScastieState(
     )
   }
 
-  def scalaJsScriptLoaded: ScastieState =
-    copyAndSave(isScalaJsScriptLoaded = true, scalaJsContent = None)
+  def scalaJsScriptLoaded: ScastieState = copyAndSave(scalaJsContent = None)
 
-  def resetScalajs: ScastieState =
-    copyAndSave(
-      attachedDoms = AttachedDoms(Map()),
-      isScalaJsScriptLoaded = false,
-      loadScalaJsScript = true,
-    )
+  def resetScalajs: ScastieState = copyAndSave(attachedDoms = AttachedDoms(Map()))
 
   def clearOutputs: ScastieState = {
     copyAndSave(
@@ -426,7 +400,6 @@ case class ScastieState(
       .logOutput(progress.userOutput, ConsoleOutput.UserOutput.apply _)
       .logOutput(progress.sbtOutput, ConsoleOutput.SbtOutput.apply _)
       .setForcedProgramMode(progress.isForcedProgramMode)
-      .setLoadScalaJsScript(self.loadScalaJsScript | progress.isDone)
       .setRuntimeError(progress.runtimeError)
       .setSbtError(progress.isSbtError)
       .setRunning(!progress.isDone)
@@ -455,19 +428,9 @@ case class ScastieState(
     }
   }
 
-  def setSnippetId(snippetId: SnippetId): ScastieState = {
-    copyAndSave(
-      snippetId = Some(snippetId),
-      snippetIdIsScalaJS = inputs.target.targetType == ScalaTargetType.JS
-    )
-  }
+  def setSnippetId(snippetId: SnippetId): ScastieState = copyAndSave(snippetId = Some(snippetId))
 
-  def clearSnippetId: ScastieState = {
-    copyAndSave(
-      snippetId = None,
-      snippetIdIsScalaJS = false
-    )
-  }
+  def clearSnippetId: ScastieState = copyAndSave(snippetId = None)
 
   private def info(message: String) = Problem(Info, None, message)
 
@@ -483,10 +446,6 @@ case class ScastieState(
         )
       )
     }
-  }
-
-  def setLoadScalaJsScript(value: Boolean): ScastieState = {
-    copyAndSave(loadScalaJsScript = value)
   }
 
   def addOutputs(compilationInfos: List[Problem], instrumentations: List[Instrumentation]): ScastieState = {
@@ -521,4 +480,6 @@ case class ScastieState(
       )
     )
   }
+
+  override def toString: String = Json.toJson(this).toString()
 }
