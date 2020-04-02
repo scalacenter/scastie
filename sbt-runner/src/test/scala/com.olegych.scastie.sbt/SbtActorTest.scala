@@ -50,9 +50,10 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
       if (gotRuntimeError) {
         val error = progress.runtimeError.get
-        assert(error.message contains "java.lang.ArithmeticException: / by zero")
-        assert(error.line.contains(1))
+        println(error.fullStack)
         assert(error.fullStack.nonEmpty)
+        assert(error.line.contains(1))
+        assert(error.message contains "java.lang.ArithmeticException: / by zero")
       }
       gotRuntimeError
     }
@@ -179,6 +180,10 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("#258 instrumentation with variable t") {
     runCode("val t = 1; t")(_.instrumentations.nonEmpty)
+  }
+
+  test("hide Playground from types") {
+    runCode("case class A(i:Int) extends AnyVal; A(1)")(_.instrumentations.headOption.exists(_.render == Value("A(1)", "A")))
   }
 
   test("#304 null pointer") {

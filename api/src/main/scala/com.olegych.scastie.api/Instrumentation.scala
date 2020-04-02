@@ -50,6 +50,7 @@ case class AttachedDom(uuid: String, folded: Boolean = false) extends Render {
 }
 
 object Instrumentation {
+  val instrumentedObject = "Playground"
   implicit val formatInstrumentation: OFormat[Instrumentation] =
     Json.format[Instrumentation]
 }

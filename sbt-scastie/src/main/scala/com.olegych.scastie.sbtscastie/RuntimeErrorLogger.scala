@@ -54,7 +54,15 @@ object RuntimeErrorLogger {
           e <- Option(e.message).collect {
             case e: TraceEvent => e
           }
-        } yield e.message
+          //since worksheet wraps the code in object we unwrap it to display clearer message
+          e <- Option(e.message).collect {
+            case e: ExceptionInInitializerError if e.getCause != null && e.getCause.getStackTrace.headOption.exists { e =>
+                  e.getClassName == Instrumentation.instrumentedObject + "$" && e.getMethodName == "<clinit>"
+                } =>
+              e.getCause
+            case e => e
+          }
+        } yield e
       }
       throwable.foreach { throwable =>
         val error = RuntimeErrorWrap(RuntimeError.fromThrowable(throwable))

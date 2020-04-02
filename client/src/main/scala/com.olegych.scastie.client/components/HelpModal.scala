@@ -68,7 +68,7 @@ object HelpModal {
         ),
         p(
           cls := "normal",
-          "In Worksheet Mode you cannot use package or value classes. If you want to use those features, turn off the Mode and add a main method and println statements."
+          "In Worksheet Mode you cannot use packages. If you want to use it, turn off the Mode and add a main method and println statements."
         ),
         h2("Download"),
         p(

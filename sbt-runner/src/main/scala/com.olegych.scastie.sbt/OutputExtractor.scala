@@ -132,15 +132,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   ): Option[List[Problem]] = {
     val problems = extract[List[Problem]](line)
 
-    val worksheetProblems =
-      if (isWorksheetMode) problems.map(_.map { p =>
-        if (p.message.contains("may not be a member of another class"))
-          p.copy(message = p.message + " (Scastie: try to turn off Worksheet mode)")
-        else p
-      })
-      else problems
-
-    val problemsWithOffset = worksheetProblems.map {
+    val problemsWithOffset = problems.map {
       _.map(problem => problem.copy(line = problem.line.map(_ + lineOffset)))
     }
 

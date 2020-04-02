@@ -1,7 +1,7 @@
 package com.olegych.scastie.instrumentation
 
 import com.olegych.scastie.api.ScalaTarget._
-import com.olegych.scastie.api.{Inputs, ScalaTarget, ScalaTargetType}
+import com.olegych.scastie.api.{Inputs, ScalaTarget, ScalaTargetType, Instrumentation}
 
 import scala.collection.immutable.Seq
 import scala.meta._
@@ -41,7 +41,7 @@ object Instrument {
 
   import InstrumentationFailure._
 
-  private val instrumentedClass = "Playground"
+  private val instrumentedObject = Instrumentation.instrumentedObject
   private val instrumentationMethod = "instrumentations$"
   private val instrumentationMap = "instrumentationMap$"
 
@@ -96,7 +96,7 @@ object Instrument {
   private def instrument(source: Source, offset: Int, isScalaJs: Boolean): String = {
     val instrumentedCodePatches =
       source.stats.collect {
-        case c: Defn.Class if c.name.value == instrumentedClass =>
+        case c: Defn.Object if c.name.value == instrumentedObject =>
           val openCurlyBrace =
             if (!isScalaJs) c.templ.tokens.head
             else c.templ.tokens.find(_.toString == "{").get
@@ -121,7 +121,7 @@ object Instrument {
       if (!isScalaJs) {
         s"""|object Main {
             |  def suppressUnusedWarnsScastie = Html
-            |  val playground = new $instrumentedClass
+            |  val playground = $instrumentedObject
             |  def main(args: Array[String]): Unit = {
             |    scala.Predef.println("\\n" + $runtimeT.write(playground.$instrumentationMethod))
             |  }
@@ -130,7 +130,7 @@ object Instrument {
       } else {
         s"""|@$jsExportTopLevelT("ScastiePlaygroundMain") class ScastiePlaygroundMain {
             |  def suppressUnusedWarnsScastie = Html
-            |  val playground = $runtimeErrorT.wrap(new $instrumentedClass)
+            |  val playground = $runtimeErrorT.wrap($instrumentedObject)
             |  @$jsExportT def result = $runtimeT.write(playground.map(_.$instrumentationMethod))
             |  @$jsExportT def attachedElements: $elemArrayT =
             |    playground match {
@@ -156,7 +156,7 @@ object Instrument {
       templ.inits.exists(p => apps(p.syntax))
 
     source.stats.exists {
-      case c: Defn.Class if c.name.value == instrumentedClass =>
+      case c: Defn.Object if c.name.value == instrumentedObject =>
         c.templ.stats.exists {
           case c: Defn.Class  => hasMain(c.templ) || hasApp(c.templ)
           case t: Defn.Trait  => hasMain(t.templ) || hasApp(t.templ)
@@ -176,8 +176,8 @@ object Instrument {
     val isScalaJs = target.targetType == ScalaTargetType.JS
 
     val classBegin =
-      if (!isScalaJs) s"class $instrumentedClass {"
-      else s"class $instrumentedClass extends $domhookT {"
+      if (!isScalaJs) s"object $instrumentedObject {"
+      else s"object $instrumentedObject extends $domhookT {"
 
     val prelude =
       s"""|$runtimeImport

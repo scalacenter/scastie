@@ -19,7 +19,7 @@ protected[runtime] trait SharedRuntime {
           if (vs.size > maxValueLength) vs.take(maxValueLength) + "..."
           else vs
 
-        Value(out, typeName)
+        Value(out, typeName.replaceAllLiterally(Instrumentation.instrumentedObject + ".", ""))
     }
   }
 }
