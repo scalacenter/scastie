@@ -194,7 +194,7 @@ object ScalaTarget {
     def scaladexRequest: Map[String, String] = Map(
       "target" -> "JS",
       "scalaVersion" -> binaryScalaVersion(scalaVersion),
-      "scalaJsVersion" -> binaryScalaVersion(scalaJsVersion),
+      "scalaJsVersion" -> binaryScalaVersion(scalaJsVersion)
     )
 
     def renderSbt(lib: ScalaDependency): String =
