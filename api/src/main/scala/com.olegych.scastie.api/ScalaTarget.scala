@@ -24,6 +24,10 @@ sealed trait ScalaTarget {
     import lib._
     s""""$groupId" %%% "$artifact" % "$version""""
   }
+
+  protected def binaryScalaVersion(scalaVersion: String): String = {
+    scalaVersion.split('.').init.mkString(".")
+  }
 }
 
 object ScalaTarget {
@@ -115,7 +119,7 @@ object ScalaTarget {
       ScalaTargetType.JVM
 
     def scaladexRequest: Map[String, String] =
-      Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
+      Map("target" -> "JVM", "scalaVersion" -> binaryScalaVersion(scalaVersion))
 
     def renderSbt(lib: ScalaDependency): String =
       renderSbtDouble(lib)
@@ -189,8 +193,8 @@ object ScalaTarget {
 
     def scaladexRequest: Map[String, String] = Map(
       "target" -> "JS",
-      "scalaVersion" -> scalaVersion,
-      "scalaJsVersion" -> scalaJsVersion
+      "scalaVersion" -> binaryScalaVersion(scalaVersion),
+      "scalaJsVersion" -> binaryScalaVersion(scalaJsVersion),
     )
 
     def renderSbt(lib: ScalaDependency): String =
@@ -238,7 +242,7 @@ object ScalaTarget {
     def scaladexRequest: Map[String, String] =
       Map(
         "target" -> "NATIVE",
-        "scalaVersion" -> scalaVersion,
+        "scalaVersion" -> binaryScalaVersion(scalaVersion),
         "scalaNativeVersion" -> scalaNativeVersion
       )
 
@@ -297,7 +301,7 @@ object ScalaTarget {
       ScalaTargetType.Dotty
 
     def scaladexRequest: Map[String, String] =
-      Map("target" -> "JVM", "scalaVersion" -> "2.11")
+      Map("target" -> "JVM", "scalaVersion" -> "2.13")
 
     def renderSbt(lib: ScalaDependency): String =
       renderSbtDouble(lib)
