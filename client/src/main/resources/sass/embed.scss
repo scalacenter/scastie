@@ -35,6 +35,11 @@
       }
     }
   }
+  .CodeMirror .CodeMirror-linewidget {
+    .runtime-error pre, .compilation-info pre {
+      padding-left: 1rem;
+    }
+  }
 }
 
 @mixin embeddedMenuStyle($class) {
