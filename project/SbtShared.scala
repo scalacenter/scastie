@@ -28,7 +28,7 @@ object SbtShared {
     val cross = List(latest210, latest211, latest212, latest213, js, sbt, jvm).distinct
   }
 
-  val latestScalaJs = "0.6.31"
+  val latestScalaJs = "0.6.32"
 
   val sbtVersion = "1.3.10"
   val distSbtVersion = sbtVersion
