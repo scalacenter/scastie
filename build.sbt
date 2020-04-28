@@ -265,8 +265,8 @@ lazy val instrumentation = project
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils)
 
-lazy val api = apiProject
-lazy val runtimeScala = runtimeScalaProject
+lazy val api = SbtShared.api
+lazy val runtimeScala = SbtShared.`runtime-scala`
 
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))

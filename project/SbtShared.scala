@@ -4,6 +4,7 @@ import Keys._
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import sbtbuildinfo.BuildInfoPlugin
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
+import sbtprojectmatrix.ProjectMatrixPlugin.autoImport._
 
 import java.util.Properties
 import java.nio.file._
@@ -139,7 +140,8 @@ object SbtShared {
   }
 
   /* api is for the communication between sbt <=> server <=> frontend */
-  lazy val apiProject: ProjectMatrix = ProjectMatrix(id = "api", base = file("api"))
+  lazy val api = projectMatrix
+    .in(file("api"))
     .settings(apiSettings)
     .jvmPlatform(ScalaVersions.cross)
     .jsPlatform(List(ScalaVersions.js), baseJsSettings)
@@ -182,17 +184,14 @@ object SbtShared {
   }
 
   /* runtime* pretty print values and type */
-  lazy val runtimeScalaProject = {
-    import sbtprojectmatrix.ProjectMatrixPlugin.autoImport._
-    ProjectMatrix(id = runtimeProjectName, base = file(runtimeProjectName))
-      .settings(
-        baseSettings,
-        version := versionRuntime,
-        name := runtimeProjectName,
-      )
-      .jvmPlatform(ScalaVersions.cross)
-      .jsPlatform(List(ScalaVersions.js), baseJsSettings)
-      .dependsOn(apiProject)
-  }
+  lazy val `runtime-scala` = (projectMatrix in file(runtimeProjectName))
+    .settings(
+      baseSettings,
+      version := versionRuntime,
+      name := runtimeProjectName,
+    )
+    .jvmPlatform(ScalaVersions.cross)
+    .jsPlatform(List(ScalaVersions.js), baseJsSettings)
+    .dependsOn(api)
 
 }
