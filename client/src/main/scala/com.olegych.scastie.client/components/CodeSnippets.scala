@@ -72,8 +72,7 @@ object CodeSnippets {
       CopyModal(
         title = "Share your Code Snippet",
         subtitle = "Copy and share your code snippet's URL:",
-        modalId = "share-modal-" + summary.snippetId.url
-          .replaceAllLiterally(".", "-"),
+        modalId = "share-modal-" + summary.snippetId.url.replace(".", "-"),
         content = snippetUrl,
         isClosed = props.isShareModalClosed(summary.snippetId),
         close = props.closeShareModal

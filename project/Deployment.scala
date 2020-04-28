@@ -196,7 +196,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     val configFileName = config.getFileName
     val logbackConfigFileName = logbackConfig.getFileName
-    val serverZipFileName = serverZip.getFileName.toString.replaceAllLiterally(".zip", "")
+    val serverZipFileName = serverZip.getFileName.toString.replace(".zip", "")
 
     val secretConfig = getSecretConfig()
     val sentryDsn = getSentryDsn(secretConfig)

@@ -313,8 +313,8 @@ object ScaladexSearch {
       val common = TagMod(title := organization, cls := "logo")
       val artifact2 =
         artifact
-          .replaceAllLiterally(project.repository + "-", "")
-          .replaceAllLiterally(project.repository, "")
+          .replace(project.repository + "-", "")
+          .replace(project.repository, "")
 
       val label =
         if (project.repository != artifact)
