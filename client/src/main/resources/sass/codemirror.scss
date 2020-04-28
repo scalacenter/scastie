@@ -99,6 +99,9 @@
 
     .CodeMirror-linewidget {
       overflow: visible !important;
+      .runtime-error pre, .compilation-info pre {
+        padding-left: 1rem;
+      }
 
       .runtime-error i,
       .compilation-info.error i {
