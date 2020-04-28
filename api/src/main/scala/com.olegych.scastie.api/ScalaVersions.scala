@@ -7,6 +7,7 @@ object ScalaVersions {
 
   val allVersions: List[String] = List(
     BuildInfo.latest213,
+    "2.13.1",
     "2.13.0",
     BuildInfo.latest212,
     "2.12.10",
