@@ -1,21 +1,20 @@
 package com.olegych.scastie.web.oauth2
 
+import java.lang.System.{lineSeparator => nl}
+import java.nio.file._
+import java.util.UUID
+
+import akka.actor.ActorSystem
 import com.olegych.scastie.api.User
-import play.api.libs.json.Json
 import com.softwaremill.session._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
-
-import scala.util.Try
-import java.util.UUID
-import java.nio.file._
-
-import akka.actor.ActorSystem
-
-import scala.jdk.CollectionConverters._
-import System.{lineSeparator => nl}
+import play.api.libs.json.Json
 
 import scala.collection.concurrent.TrieMap
+import scala.jdk.CollectionConverters._
+import scala.util.Try
+import scala.util.control.NonFatal
 
 class GithubUserSession(system: ActorSystem) {
   val logger = Logger("GithubUserSession")
@@ -44,19 +43,25 @@ class GithubUserSession(system: ActorSystem) {
   implicit val sessionManager = new SessionManager[UUID](sessionConfig)
   implicit val refreshTokenStorage = new ActorRefreshTokenStorage(system)
 
-  private def readSessionsFile(): Array[(UUID, User)] = {
+  private def readSessionsFile(): Vector[(UUID, User)] = {
     if (Files.exists(usersSessions)) {
       val content = Files.readAllLines(usersSessions).toArray.mkString(nl)
-      Json
-        .fromJson[Array[(UUID, User)]](Json.parse(content))
-        .asOpt
-        .getOrElse(Array())
+      try {
+        Json
+          .fromJson[Vector[(UUID, User)]](Json.parse(content))
+          .asOpt
+          .getOrElse(Vector())
+      } catch {
+        case NonFatal(e) =>
+          logger.error("failed to read sessions", e)
+          Vector()
+      }
     } else {
-      Array()
+      Vector()
     }
   }
 
-  def appendSessionsFile(uuid: UUID, user: User): Unit = {
+  private def appendSessionsFile(uuid: UUID, user: User): Unit = synchronized {
     val pair = uuid -> user
     users += pair
     val sessions = readSessionsFile()
