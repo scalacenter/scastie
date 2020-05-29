@@ -157,8 +157,11 @@ lazy val sbtRunner = project
 lazy val server = project
   .settings(baseNoCrossSettings)
   .settings(loggingAndTest)
-  .settings(ScalaJsHelper.packageScalaJS(client))
   .settings(
+    watchSources ++= (watchSources in client).value,
+    products in Compile += ((crossTarget in (client, Compile, npmUpdate)).value / "out"),
+    reStart := reStart.dependsOn(webpack in (client, Compile, fastOptJS)).evaluated,
+    packageBin in Universal := (packageBin in Universal).dependsOn(webpack in (client, Compile, fullOptJS)).value,
     javaOptions in reStart += "-Xmx512m",
     maintainer := "scalacenter",
     libraryDependencies ++= Seq(
@@ -220,7 +223,7 @@ lazy val client = project
     webpackResources := webpackDir.value * "*.js",
     includeFilter in webpackMonitoredFiles := "*",
     useYarn := true,
-    webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),
+    webpackBundlingMode in fastOptJS := BundlingMode.LibraryAndApplication(),
     webpackBundlingMode in fullOptJS := BundlingMode.Application,
     test := {},
     Test / loadedTestFrameworks := Map(),
@@ -248,7 +251,7 @@ lazy val client = project
       "webpack-merge" -> "4.1.0"
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.5.0",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.0",
     )
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)

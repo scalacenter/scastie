@@ -29,7 +29,12 @@ object SbtShared {
     val cross = List(latest210, latest211, latest212, latest213, js, sbt, jvm).distinct
   }
 
-  val latestScalaJs = "0.6.32"
+  object ScalaJSVersions {
+    val latest0 = "0.6.33"
+    val latest1 = "1.1.0"
+    val scalajs0 = sys.env.contains("SCALAJS0")
+    val current = if (scalajs0) latest0 else latest1
+  }
 
   val sbtVersion = "1.3.10"
   val distSbtVersion = sbtVersion
@@ -109,9 +114,9 @@ object SbtShared {
   )
 
   lazy val baseJsSettings = Seq(
-    scalacOptions += "-P:scalajs:sjsDefinedByDefault",
+    scalacOptions ++= Option("-P:scalajs:sjsDefinedByDefault").filter(_ => ScalaJSVersions.scalajs0),
     test := {},
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.8",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
   )
 
   private def readSbtVersion(base: Path): String = {
@@ -163,7 +168,7 @@ object SbtShared {
           case v if v.startsWith("2.11") =>
             "com.typesafe.play" %%% "play-json" % "2.7.4"
           case _ =>
-            "com.typesafe.play" %%% "play-json" % "2.8.1"
+            "com.typesafe.play" %%% "play-json" % (if (ScalaJSVersions.scalajs0) "2.8.1" else "2.9.0")
         }
       },
       buildInfoKeys := Seq[BuildInfoKey](
@@ -176,7 +181,7 @@ object SbtShared {
         "latest213" -> ScalaVersions.latest213,
         "latestDotty" -> ScalaVersions.latestDotty,
         "jsScalaVersion" -> ScalaVersions.js,
-        "defaultScalaJsVersion" -> latestScalaJs,
+        "defaultScalaJsVersion" -> ScalaJSVersions.latest1,
         "sbtVersion" -> readSbtVersion((baseDirectory in ThisBuild).value.toPath),
       ),
       buildInfoPackage := "com.olegych.scastie.buildinfo",
