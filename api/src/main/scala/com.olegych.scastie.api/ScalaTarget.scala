@@ -124,8 +124,12 @@ object ScalaTarget {
     def renderSbt(lib: ScalaDependency): String =
       renderSbtDouble(lib)
 
-    def sbtConfig: String =
-      sbtConfigScalaVersion(scalaVersion) + "\n" + hktScalacOptions(scalaVersion)
+    def sbtConfig: String = {
+      val base = sbtConfigScalaVersion(scalaVersion) + "\n" + hktScalacOptions(scalaVersion)
+      if (scalaVersion.startsWith("2.13") || scalaVersion.startsWith("2.12"))
+        base + "\n" + "scalacOptions += \"-Ydelambdafy:inline\"" //workaround https://github.com/scala/bug/issues/10782
+      else base
+    }
 
     def sbtPluginsConfig: String = partialUnificationSbtPlugin
 

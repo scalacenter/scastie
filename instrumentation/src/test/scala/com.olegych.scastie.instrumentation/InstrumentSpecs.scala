@@ -34,6 +34,7 @@ class InstrumentSpecs extends AnyFunSuite {
 
       val Right(obtained) = Instrument(original, target)
 
+//      Files.write(path.resolve("obtained.scala"), obtained.getBytes(java.nio.charset.StandardCharsets.UTF_8))
       Diff.assertNoDiff(obtained.trim, expected.trim)
     }
   }
