@@ -6,7 +6,7 @@
 
 # [Scastie](https://scastie.scala-lang.org)
 
-<a href="https://scastie.scala-lang.org/OlegYch/JLIURSHjS3ScQo6ndhV07w/2">
+<a href="https://scastie.scala-lang.org/OlegYch/fpDs19tOQYiqILyVmkNC5g">
   <img alt="Demo" src="https://raw.githubusercontent.com/scalacenter/scastie/master/demo/demo.png" style="width: 400px;">
 </a>
 
