@@ -1,4 +1,5 @@
 language: nix
+nix: 2.2
 dist: xenial
 os:
   - linux
