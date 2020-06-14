@@ -3,7 +3,7 @@ package com.olegych.scastie.api
 import com.olegych.scastie.buildinfo.BuildInfo
 
 object ScalaVersions {
-  val suggestedScalaVersions = List(BuildInfo.latest213, BuildInfo.latest212)
+  val suggestedScalaVersions: List[String] = List(BuildInfo.latest213, BuildInfo.latest212)
 
   val allVersions: List[String] = List(
     BuildInfo.latest213,

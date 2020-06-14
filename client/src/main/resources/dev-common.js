@@ -1,5 +1,5 @@
-$e.ScastieSettings = {
+ScastieSettings = {
   defaultServerUrl: ""
 };
 
-module.exports = $e.scastie;
+module.exports = scastie;
