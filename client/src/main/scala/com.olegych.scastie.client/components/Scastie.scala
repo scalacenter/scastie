@@ -5,9 +5,7 @@ import java.util.UUID
 import com.olegych.scastie.api._
 import com.olegych.scastie.client._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.component.builder.Lifecycle
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
-import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
@@ -159,8 +157,9 @@ object Scastie {
     }
 
     def removeIfExist(id: String): Unit = {
-      Option(dom.document.getElementById(id))
-        .foreach(element => element.parentNode.removeChild(element))
+      Option(dom.document.getElementById(id)).foreach { element =>
+        element.parentNode.removeChild(element)
+      }
     }
 
     def runScalaJs(): Unit = {
@@ -193,7 +192,7 @@ object Scastie {
         state.snippetState.scalaJsContent.foreach { content =>
           println("== Loading Scala.js! ==")
           val scalaJsScriptElement = createScript(scalaJsId)
-          scalaJsScriptElement.innerHTML = content
+          scalaJsScriptElement.innerHTML = content.replace("let ScastiePlaygroundMain;", "var ScastiePlaygroundMain;")
           runScalaJs()
         }
       }
@@ -249,11 +248,10 @@ object Scastie {
         current.backend.disconnectStatus.when_(!current.props.isEmbedded) >>
           current.backend.unsubscribeGlobal
       }
-      .componentWillUpdate { scope =>
-        executeScalaJs(scastieId, scope.currentState)
-      }
       .componentDidUpdate { scope =>
-        setTitle(scope.prevState, scope.currentProps) >> scope.modState(_.scalaJsScriptLoaded)
+        setTitle(scope.prevState, scope.currentProps) >>
+          scope.modState(_.scalaJsScriptLoaded) >>
+          executeScalaJs(scastieId, scope.currentState)
       }
       .componentWillReceiveProps { scope =>
         val next = scope.nextProps.snippetId
