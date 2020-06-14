@@ -8,8 +8,8 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % SbtShared.ScalaJSVersions.current)
 
 // addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.0-RC2")
 
-addSbtPlugin("ch.epfl.scala" % (if (SbtShared.ScalaJSVersions.scalajs0) "sbt-scalajs-bundler-sjs06" else "sbt-scalajs-bundler") % "0.18.0")
-addSbtPlugin("org.olegych" %% "sbt-cached-ci" % "1.0.3")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.18.0")
+addSbtPlugin("org.olegych" %% "sbt-cached-ci" % "1.0.4")
 
 //workaround https://github.com/sbt/sbt/issues/5374
 allExcludeDependencies ++= List(
