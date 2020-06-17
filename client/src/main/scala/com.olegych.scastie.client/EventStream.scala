@@ -116,7 +116,11 @@ class EventSourceStream[T: Reads](uri: String, handler: EventStreamHandler[T]) e
   }
 
   private def onMessage(e: MessageEvent): Unit = {
-    onMessage(e.data.toString)
+    try {
+      onMessage(e.data.toString)
+    } catch {
+      case e: Throwable => e.printStackTrace()
+    }
   }
 
   private def onError(e: Event): Unit = {
