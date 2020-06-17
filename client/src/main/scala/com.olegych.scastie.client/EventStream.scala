@@ -119,7 +119,10 @@ class EventSourceStream[T: Reads](uri: String, handler: EventStreamHandler[T]) e
     try {
       onMessage(e.data.toString)
     } catch {
-      case e: Throwable => e.printStackTrace()
+      case error: Throwable =>
+        error.printStackTrace()
+        println(e)
+        println(e.data)
     }
   }
 
