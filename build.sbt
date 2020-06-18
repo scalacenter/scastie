@@ -10,6 +10,7 @@ val akkaHttpVersion = "10.1.11"
     "sbtRunner/reStart",
     "server/reStart",
     "client/fastOptJS::startWebpackDevServer",
+//    "client/fullOptJS::startWebpackDevServer",
   )
   addCommandAlias("startAll", startAllCommands.mkString(";", ";", ""))
 }
@@ -234,7 +235,8 @@ lazy val client = project
       "raven-js" -> "3.11.0",
       "react" -> "16.7.0",
       "react-dom" -> "16.7.0",
-      "typeface-roboto-slab" -> "0.0.35"
+      "typeface-roboto-slab" -> "0.0.35",
+      "sourcemapped-stacktrace" -> "1.1.11",
     ),
     npmDevDependencies in Compile ++= Seq(
       "compression-webpack-plugin" -> "1.0.0",
@@ -248,7 +250,7 @@ lazy val client = project
       "sass-loader" -> "6.0.6",
       "style-loader" -> "0.18.2",
       "uglifyjs-webpack-plugin" -> "1.0.0",
-      "webpack-merge" -> "4.1.0"
+      "webpack-merge" -> "4.1.0",
     ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.0",

@@ -1,6 +1,7 @@
 require("./sass/app-main.scss");
 
 var Raven = require("node_modules/raven-js");
+var MappedStacktrace = require("node_modules/sourcemapped-stacktrace");
 var common = require("./prod-common.js");
 
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -13,7 +14,7 @@ ga('send', 'pageview');
 
 Raven.config('https://0b9ff62cbc2344369cab867af776ae07@sentry.io/171717').install();
 
-module.exports = common;
+module.exports = [common, MappedStacktrace];
 
 window.ScastieSettings = {
   defaultServerUrl: "https://scastie.scala-lang.org"
