@@ -33,7 +33,7 @@ object SbtShared {
     val current = "1.1.0"
   }
 
-  val sbtVersion = "1.3.10"
+  val sbtVersion = "1.3.12"
   val distSbtVersion = sbtVersion
 
   val runtimeProjectName = "runtime-scala"

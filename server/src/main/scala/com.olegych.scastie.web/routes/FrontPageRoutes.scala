@@ -8,7 +8,7 @@ import com.olegych.scastie.util.Base64UUID
 
 class FrontPageRoutes(production: Boolean) {
 
-  private val index = getFromResource("public/index.html")
+  private def index = getFromResource("public/index.html")
 
   private def embeddedResource(snippetId: SnippetId, theme: Option[String]): String = {
     val user = snippetId.user match {
