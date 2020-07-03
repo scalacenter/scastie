@@ -49,7 +49,7 @@ object ServerMain {
 
     val progressActor =
       system.actorOf(
-        Props[ProgressActor],
+        Props[ProgressActor](),
         name = "ProgressActor"
       )
 

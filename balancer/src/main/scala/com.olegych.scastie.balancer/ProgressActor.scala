@@ -23,7 +23,7 @@ class ProgressActor extends Actor {
   override def receive: Receive = {
     case SubscribeProgress(snippetId) =>
       val (source, _) = getOrCreateNewSubscriberInfo(snippetId, self)
-      sender ! source
+      sender() ! source
 
     case snippetProgress: SnippetProgress =>
       snippetProgress.snippetId.foreach { snippetId =>

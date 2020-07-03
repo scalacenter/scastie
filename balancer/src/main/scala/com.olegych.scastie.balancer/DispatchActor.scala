@@ -170,13 +170,13 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case format: FormatRequest =>
       val server = sbtLoadBalancer.getRandomServer
-      server.foreach(_.ref.tell(format, sender))
+      server.foreach(_.ref.tell(format, sender()))
       ()
 
     case x @ RunSnippet(inputsWithIpAndUser) =>
       log.info(s"starting ${x}")
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.create(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
         sender ! snippetId
         run(inputsWithIpAndUser, snippetId)
@@ -185,14 +185,14 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case SaveSnippet(inputsWithIpAndUser) =>
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.save(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
         sender ! snippetId
         run(inputsWithIpAndUser, snippetId)
       })
 
     case UpdateSnippet(snippetId, inputsWithIpAndUser) =>
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.update(snippetId, inputsWithIpAndUser.inputs).map { updatedSnippetId =>
         sender ! updatedSnippetId
         updatedSnippetId.foreach(
@@ -203,7 +203,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case ForkSnippet(snippetId, inputsWithIpAndUser) =>
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) =
         inputsWithIpAndUser
-      val sender = this.sender
+      val sender = this.sender()
       logError(
         container
           .fork(snippetId, inputs, user.map(u => UserLogin(u.login)))
@@ -214,39 +214,39 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       )
 
     case DeleteSnippet(snippetId) =>
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.deleteAll(snippetId).map(_ => sender ! (())))
 
     case DownloadSnippet(snippetId) =>
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.downloadSnippet(snippetId).map(sender ! _))
 
     case FetchSnippet(snippetId) =>
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.readSnippet(snippetId).map(sender ! _))
 
     case FetchOldSnippet(id) =>
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.readOldSnippet(id).map(sender ! _))
 
     case FetchUserSnippets(user) =>
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.listSnippets(UserLogin(user.login)).map(sender ! _))
 
     case FetchScalaJs(snippetId) =>
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.readScalaJs(snippetId).map(sender ! _))
 
     case FetchScalaSource(snippetId) =>
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.readScalaSource(snippetId).map(sender ! _))
 
     case FetchScalaJsSourceMap(snippetId) =>
-      val sender = this.sender
+      val sender = this.sender()
       logError(container.readScalaJsSourceMap(snippetId).map(sender ! _))
 
     case progress: api.SnippetProgress =>
-      val sender = this.sender
+      val sender = this.sender()
       if (progress.isDone) {
         self ! Done(progress, retries = 100)
       }

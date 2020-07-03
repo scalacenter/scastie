@@ -51,7 +51,7 @@ class ActorRefreshTokenStorageImpl() extends Actor {
           .map(
             s => RefreshTokenLookupResult(s.tokenHash, s.expires, () => s.session)
           )
-      sender ! lookupResult
+      sender() ! lookupResult
     case Store(data) =>
       storage.put(data.selector, SessionStorage(data.forSession, data.tokenHash, data.expires))
     case Remove(selector) =>

@@ -5,7 +5,7 @@ import java.util.{Base64, UUID}
 
 object Base64UUID {
   // example output: GGdknrcEQVu3elXyboKcYQ
-  def create(): String = {
+  def create: String = {
     def toBase64(uuid: UUID): String = {
       val (high, low) =
         (uuid.getMostSignificantBits, uuid.getLeastSignificantBits)

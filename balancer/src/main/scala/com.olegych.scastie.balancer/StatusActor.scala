@@ -40,7 +40,7 @@ class StatusActor private () extends Actor with ActorLogging {
             () => StatusProgress.KeepAlive
           )
 
-      sender ! source
+      sender() ! source
     }
 
     case (None, publisher: ActorRef) => {
