@@ -5,15 +5,8 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.26"
 
 val akkaHttpVersion = "10.1.11"
 
-{
-  val startAllCommands = List(
-    "sbtRunner/reStart",
-    "server/reStart",
-    "client/fastOptJS::startWebpackDevServer",
-//    "client/fullOptJS::startWebpackDevServer",
-  )
-  addCommandAlias("startAll", startAllCommands.mkString(";", ";", ""))
-}
+addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
+addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart;client/fullOptJS/startWebpackDevServer")
 
 lazy val scastie = project
   .in(file("."))
@@ -159,11 +152,12 @@ lazy val server = project
   .settings(baseNoCrossSettings)
   .settings(loggingAndTest)
   .settings(
-    watchSources ++= (watchSources in client).value,
-    products in Compile += ((crossTarget in (client, Compile, npmUpdate)).value / "out"),
-    reStart := reStart.dependsOn(webpack in (client, Compile, fastOptJS)).evaluated,
-    packageBin in Universal := (packageBin in Universal).dependsOn(webpack in (client, Compile, fullOptJS)).value,
-    javaOptions in reStart += "-Xmx512m",
+    watchSources ++= (client / watchSources).value,
+    Compile / products += (client / Compile / npmUpdate / crossTarget).value / "out",
+    reStart := reStart.dependsOn(client / Compile / fastOptJS / webpack).evaluated,
+    fullOptJS / reStart := reStart.dependsOn(client / Compile / fullOptJS / webpack).evaluated,
+    Universal / packageBin := (Universal / packageBin).dependsOn(client / Compile / fullOptJS / webpack).value,
+    reStart / javaOptions += "-Xmx512m",
     maintainer := "scalacenter",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
