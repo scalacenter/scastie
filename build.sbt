@@ -6,7 +6,7 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.26"
 val akkaHttpVersion = "10.1.11"
 
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
-addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart;client/fullOptJS/startWebpackDevServer")
+addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
 
 lazy val scastie = project
   .in(file("."))
