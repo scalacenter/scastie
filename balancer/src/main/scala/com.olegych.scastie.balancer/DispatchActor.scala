@@ -321,7 +321,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       }
 
     case ReceiveStatus(requester) =>
-      sender ! LoadBalancerInfo(sbtLoadBalancer, requester)
+      sender() ! LoadBalancerInfo(sbtLoadBalancer, requester)
 
     case statusProgress: StatusProgress =>
       statusActor ! statusProgress
