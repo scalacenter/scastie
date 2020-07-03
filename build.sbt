@@ -77,7 +77,9 @@ lazy val runnerRuntimeDependenciesInTest = Seq(
 lazy val smallRunnerRuntimeDependenciesInTest = {
   lazy val smallRunnerRuntimeDependencies = Seq(
     api.jvm(ScalaVersions.jvm),
+    api.jvm(ScalaVersions.sbt),
     runtimeScala.jvm(ScalaVersions.jvm),
+    runtimeScala.jvm(ScalaVersions.sbt),
     sbtScastie
   ).map(publishLocal in _)
   Seq(
