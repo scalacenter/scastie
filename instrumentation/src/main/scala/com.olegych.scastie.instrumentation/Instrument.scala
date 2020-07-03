@@ -140,8 +140,7 @@ object Instrument {
             |}""".stripMargin
       }
 
-    s"""|$instrumentedCode
-        |$entryPoint""".stripMargin
+    s"""$instrumentedCode\n$entryPoint"""
   }
 
   private def hasMainMethod(source: Source): Boolean = {
@@ -178,15 +177,8 @@ object Instrument {
     val classBegin =
       if (!isScalaJs) s"object $instrumentedObject {"
       else s"object $instrumentedObject extends $domhookT {"
-
-    val prelude =
-      s"""|$runtimeImport
-          |$classBegin""".stripMargin
-
-    val code0 =
-      s"""|$prelude
-          |$code 
-          |}""".stripMargin
+    val prelude = s"""$runtimeImport\n$classBegin"""
+    val code0 = s"""$prelude\n$code\n}"""
 
     def typelevel(scalaVersion: String): Option[Dialect] = {
       if (scalaVersion.startsWith("2.12")) Some(dialects.Typelevel212)

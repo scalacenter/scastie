@@ -36,22 +36,25 @@ object Diff {
     }
   }
 
-  private def trailingSpace(str: String): String = str.replaceAll(" \n", "?\n")
+  private def trailingSpace(str: String): String = str.replaceAll(" \n", "<trailing space>\n")
 
-  def compareContents(original: String, revised: String): String = {
-    compareContents(original.replace("\r\n", "\n").trim.split("\n").toList, revised.replace("\r\n", "\n").trim.split("\n").toList)
+  def compareContents(obtained: String, expected: String): String = {
+    compareContents(
+      expected = expected.replace("\r\n", "\n").trim.split("\n").toList,
+      obtained = obtained.replace("\r\n", "\n").trim.split("\n").toList,
+    )
   }
 
-  private def compareContents(original: Seq[String], revised: Seq[String]): String = {
+  private def compareContents(expected: Seq[String], obtained: Seq[String]): String = {
     import scala.jdk.CollectionConverters._
-    val diff = difflib.DiffUtils.diff(original.asJava, revised.asJava)
+    val diff = difflib.DiffUtils.diff(expected.asJava, obtained.asJava)
     if (diff.getDeltas.isEmpty) ""
     else
       difflib.DiffUtils
         .generateUnifiedDiff(
-          "original",
-          "revised",
-          original.asJava,
+          "expected",
+          "obtained",
+          expected.asJava,
           diff,
           1
         )

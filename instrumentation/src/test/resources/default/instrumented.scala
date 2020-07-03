@@ -3,7 +3,7 @@ object Playground { private val instrumentationMap$ = _root_.scala.collection.mu
 scala.Predef.locally {val $t = 1 + 1; instrumentationMap$(_root_.com.olegych.scastie.api.Position(0, 5)) = _root_.com.olegych.scastie.api.runtime.Runtime.render($t);$t}
 
 scala.Predef.locally {val $t = 1 +
-  a; instrumentationMap$(_root_.com.olegych.scastie.api.Position(7, 14)) = _root_.com.olegych.scastie.api.runtime.Runtime.render($t);$t} 
+  a; instrumentationMap$(_root_.com.olegych.scastie.api.Position(7, 14)) = _root_.com.olegych.scastie.api.runtime.Runtime.render($t);$t}
 }
 object Main {
   def suppressUnusedWarnsScastie = Html
