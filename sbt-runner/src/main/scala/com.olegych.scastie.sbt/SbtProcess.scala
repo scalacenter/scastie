@@ -145,7 +145,7 @@ class SbtProcess(runTimeout: FiniteDuration,
   whenUnhandled {
     case Event(_: SbtTask | _: ProcessOutput, _) =>
       stash()
-      stay
+      stay()
     case Event(timeout: SbtStateTimeout, run: SbtRun) =>
       println("*** timeout ***")
 
@@ -171,7 +171,7 @@ class SbtProcess(runTimeout: FiniteDuration,
       if (isPrompt(out.line)) {
         goto(Ready)
       } else {
-        stay
+        stay()
       }
   }
 
@@ -184,7 +184,7 @@ class SbtProcess(runTimeout: FiniteDuration,
         inputs = taskInputs,
         isForcedProgramMode = false,
         progressActor = progressActor,
-        snippetActor = sender,
+        snippetActor = sender(),
         timeoutEvent = None
       )
       sendProgress(_sbtRun, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snippetId)))
@@ -229,7 +229,7 @@ class SbtProcess(runTimeout: FiniteDuration,
       if (isPrompt(output.line)) {
         gotoRunning(sbtRun)
       } else {
-        stay
+        stay()
       }
   }
 
@@ -242,7 +242,7 @@ class SbtProcess(runTimeout: FiniteDuration,
         sbtRun.timeoutEvent.foreach(_.cancel())
         goto(Ready).using(SbtData(sbtRun.inputs))
       } else {
-        stay
+        stay()
       }
   }
 

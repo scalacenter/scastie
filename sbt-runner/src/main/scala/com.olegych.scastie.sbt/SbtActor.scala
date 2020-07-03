@@ -65,7 +65,7 @@ class SbtActor(system: ActorSystem,
 
   override def receive: Receive = reconnectBehavior orElse [Any, Unit] {
     case SbtPing => {
-      sender ! SbtPong
+      sender() ! SbtPong
     }
 
     case format: FormatRequest => {

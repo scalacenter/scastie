@@ -34,6 +34,6 @@ class FormatActor() extends Actor {
 
   override def receive: Receive = {
     case FormatRequest(code, isWorksheetMode, scalaTarget) =>
-      sender ! FormatResponse(format(code, isWorksheetMode, scalaTarget))
+      sender() ! FormatResponse(format(code, isWorksheetMode, scalaTarget))
   }
 }
