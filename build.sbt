@@ -230,7 +230,6 @@ lazy val client = project
       "react" -> "16.7.0",
       "react-dom" -> "16.7.0",
       "typeface-roboto-slab" -> "0.0.35",
-      "sourcemapped-stacktrace" -> "1.1.11",
     ),
     npmDevDependencies in Compile ++= Seq(
       "compression-webpack-plugin" -> "1.0.0",
