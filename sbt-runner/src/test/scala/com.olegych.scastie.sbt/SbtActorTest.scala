@@ -138,6 +138,12 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     run(scala)(assertUserOutput("2"))
   }
 
+  test("avoid https://github.com/scala/bug/issues/8119") {
+    val scala =
+      Inputs.default.copy(code = "val n = 0; val m = List(1).par.foreach(_ => n); println(1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest212))
+    run(scala)(assertUserOutput("1"))
+  }
+
   test("Scala 2.13 support") {
     val scala =
       Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest213))
@@ -212,7 +218,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     gotCompilationError
   }
 
-  override def afterAll: Unit = {
+  override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
   }
 

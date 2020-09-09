@@ -261,7 +261,7 @@ class SbtProcess(runTimeout: FiniteDuration,
   }
 
   private def gotoRunning(sbtRun: SbtRun): this.State = {
-    process ! Input(sbtRun.inputs.target.sbtRunCommand)
+    process ! Input(sbtRun.inputs.target.sbtRunCommand(sbtRun.inputs.isWorksheetMode))
     gotoWithTimeout(sbtRun, Running, runTimeout)
   }
 

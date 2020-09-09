@@ -97,9 +97,7 @@ object Instrument {
     val instrumentedCodePatches =
       source.stats.collect {
         case c: Defn.Object if c.name.value == instrumentedObject =>
-          val openCurlyBrace =
-            if (!isScalaJs) c.templ.tokens.head
-            else c.templ.tokens.find(_.toString == "{").get
+          val openCurlyBrace = c.templ.tokens.find(_.toString == "{").get
 
           val instrumentationMapCode = Seq(
             s"{ private val $instrumentationMap = $emptyMapT[$positionT, $renderT]",
@@ -123,6 +121,7 @@ object Instrument {
             |  def suppressUnusedWarnsScastie = Html
             |  val playground = $instrumentedObject
             |  def main(args: Array[String]): Unit = {
+            |    playground.main(Array())
             |    scala.Predef.println("\\n" + $runtimeT.write(playground.$instrumentationMethod))
             |  }
             |}
@@ -131,7 +130,7 @@ object Instrument {
         s"""|@$jsExportTopLevelT("ScastiePlaygroundMain") class ScastiePlaygroundMain {
             |  def suppressUnusedWarnsScastie = Html
             |  val playground = $runtimeErrorT.wrap($instrumentedObject)
-            |  @$jsExportT def result = $runtimeT.write(playground.map(_.$instrumentationMethod))
+            |  @$jsExportT def result = $runtimeT.write(playground.map{ playground => playground.main(Array()); playground.$instrumentationMethod })
             |  @$jsExportT def attachedElements: $elemArrayT =
             |    playground match {
             |      case Right(p) => p.attachedElements
@@ -175,8 +174,8 @@ object Instrument {
     val isScalaJs = target.targetType == ScalaTargetType.JS
 
     val classBegin =
-      if (!isScalaJs) s"object $instrumentedObject {"
-      else s"object $instrumentedObject extends $domhookT {"
+      if (!isScalaJs) s"object $instrumentedObject extends ScastieApp {"
+      else s"object $instrumentedObject extends ScastieApp with $domhookT {"
     val prelude = s"""$runtimeImport\n$classBegin"""
     val code0 = s"""$prelude\n$code\n}"""
 

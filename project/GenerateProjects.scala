@@ -76,6 +76,6 @@ class GeneratedProject(inputs: Inputs, sbtDir: Path) {
   def runCmd(dest: String): String = {
     val dir = sbtDir.getFileName
 
-    s"""cd $dest/$dir && sbt "${inputs.target.sbtRunCommand}""""
+    s"""cd $dest/$dir && sbt "${inputs.target.sbtRunCommand(true)}""""
   }
 }

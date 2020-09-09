@@ -14,4 +14,6 @@ package object runtime {
     def html(args: Any*) = Html(sc.s(args: _*))
     def htmlRaw(args: Any*) = Html(sc.raw(args: _*))
   }
+
+  trait ScastieApp extends App
 }

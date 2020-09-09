@@ -8,7 +8,7 @@ sealed trait ScalaTarget {
   def renderSbt(lib: ScalaDependency): String
   def sbtConfig: String
   def sbtPluginsConfig: String
-  def sbtRunCommand: String
+  def sbtRunCommand(worksheetMode: Boolean): String
   def runtimeDependency: Option[ScalaDependency]
   def hasWorksheetMode: Boolean
 
@@ -133,7 +133,7 @@ object ScalaTarget {
 
     def sbtPluginsConfig: String = partialUnificationSbtPlugin
 
-    def sbtRunCommand: String = "fgRun"
+    def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
@@ -167,7 +167,7 @@ object ScalaTarget {
 
     def sbtPluginsConfig: String = ""
 
-    def sbtRunCommand: String = "fgRun"
+    def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
@@ -219,7 +219,7 @@ object ScalaTarget {
     def sbtPluginsConfig: String =
       s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")""" + "\n" + partialUnificationSbtPlugin
 
-    def sbtRunCommand: String = "fastOptJS"
+    def sbtRunCommand(worksheetMode: Boolean): String = "fastOptJS"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
@@ -259,7 +259,7 @@ object ScalaTarget {
     def sbtPluginsConfig: String =
       s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
 
-    def sbtRunCommand: String = "fgRun"
+    def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
       runtimeDependencyFrom(this)
@@ -316,7 +316,7 @@ object ScalaTarget {
     def sbtPluginsConfig: String =
       """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.4.2")"""
 
-    def sbtRunCommand: String = "fgRun"
+    def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
       None
