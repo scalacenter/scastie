@@ -31,12 +31,7 @@ object Instrument {
       }
   }
   def getMessageLineOffset(inputs: Inputs): Int = {
-    if (inputs.isWorksheetMode) -2
-    else
-      inputs.target match {
-        case _: Dotty => 1
-        case _        => 0
-      }
+    if (inputs.isWorksheetMode) -2 else 0
   }
 
   import InstrumentationFailure._
