@@ -298,18 +298,20 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       scope.props.flatMap { props =>
         scope.state
           .flatMap { state =>
-//            println(s"saving ${play.api.libs.json.Json.toJson(state)}")
-            state.snippetId match {
-              case Some(snippetId) =>
-                if (snippetId.isOwnedBy(state.user)) {
-                  update0(snippetId)
-                } else {
-                  fork0(snippetId)
-                }
-              case None => save0
+            if (props.isEmbedded) {
+              run
+            } else {
+              state.snippetId match {
+                case Some(snippetId) =>
+                  if (snippetId.isOwnedBy(state.user)) {
+                    update0(snippetId)
+                  } else {
+                    fork0(snippetId)
+                  }
+                case None => save0
+              }
             }
           }
-          .unless_(props.isEmbedded)
       }
     )
 
