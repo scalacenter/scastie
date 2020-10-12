@@ -62,7 +62,7 @@ object DockerHelper {
       runRaw("mkdir -p /app/sbt")
 
       runRaw(
-        s"wget https://piccolo.link/sbt-${distSbtVersion}.tgz -O /tmp/sbt-${distSbtVersion}.tgz"
+        s"wget https://github.com/sbt/sbt/releases/download/v${distSbtVersion}/sbt-${distSbtVersion}.tgz -O /tmp/sbt-${distSbtVersion}.tgz"
       )
       runRaw(s"tar -xzvf /tmp/sbt-$distSbtVersion.tgz -C /app/sbt")
 

@@ -30,7 +30,7 @@ in rec {
     version = "1.3.13";
  
     src = fetchurl {
-      url = "https://piccolo.link/sbt-1.3.13.tgz";
+      url = "https://github.com/sbt/sbt/releases/download/v1.3.13/sbt-1.3.13.tgz";
       sha256 = "854154de27a7d8c13b5a0f9a297cd1f254cc13b44588dae507e5d4fb2741bd22";
       name = "sbt.tgz";
     };
