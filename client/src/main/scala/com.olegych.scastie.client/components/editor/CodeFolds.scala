@@ -1,24 +1,23 @@
 package com.olegych.scastie.client.components.editor
 
 import codemirror.TextAreaEditor
-
 import japgolly.scalajs.react.Callback
-
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
-object CodeFoldingAnnotations {
+object CodeFolds {
   private def findFolds(code: String): Set[RangePosititon] = {
     val (folds, _, _) = {
       val lines = code.split("\n").toList
 
       lines.foldLeft((Set.empty[RangePosititon], Option.empty[Int], 0)) {
-        case ((folds, open, indexTotal), line) => {
+        case ((folds, open, indexTotal), _line) =>
+          val line = _line.trim
           val (folds0, open0) =
-            if (line == "// fold") {
+            if (line matches """\/\/(\s*)fold""") {
               if (open.isEmpty) (folds, Some(indexTotal))
               else (folds, open)
-            } else if (line == "// end-fold") {
+            } else if (line matches """\/\/(\s*)end-fold""") {
               open match {
                 case Some(start) =>
                   (folds + RangePosititon(start, indexTotal + line.length), None)
@@ -30,17 +29,17 @@ object CodeFoldingAnnotations {
             }
 
           (folds0, open0, indexTotal + line.length + 1)
-        }
       }
     }
 
     folds
   }
 
-  def apply(editor: TextAreaEditor, props: Editor): Callback = {
-    Callback {
+  def fold(editor: TextAreaEditor, props: Editor, modState: (EditorState => EditorState) => Callback): Callback = {
+    val folds = findFolds(props.code)
+    modState { state =>
       val doc = editor.getDoc()
-      findFolds(props.code).foreach { range =>
+      (folds -- state.folds).foreach { range =>
         val posStart = doc.posFromIndex(range.indexStart)
         val posEnd = doc.posFromIndex(range.indexEnd)
 
@@ -62,11 +61,10 @@ object CodeFoldingAnnotations {
           "-- Click to unfold --",
           unfold
         )
-
         annotRef = Some(annot)
-
         (range, annot)
       }
+      state.copy(folds = folds)
     }
   }
 }

@@ -77,7 +77,7 @@ object MainPanel {
         toggleLineNumbers = backend.toggleLineNumbers,
         togglePresentationMode = backend.togglePresentationMode,
         formatCode = backend.formatCode,
-        codeChange = backend.codeChange
+        codeChange = backend.codeChange,
       ).render
 
     val console =

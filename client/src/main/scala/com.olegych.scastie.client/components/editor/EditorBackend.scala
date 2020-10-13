@@ -1,11 +1,12 @@
 package com.olegych.scastie.client.components.editor
 
-import japgolly.scalajs.react._, vdom.all._
-
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.builder.Lifecycle
+import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom.raw.HTMLTextAreaElement
-import org.scalajs.dom.ext.KeyCode
 
 private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
+
   private val codemirrorTextarea = Ref[HTMLTextAreaElement]
 
   def render(props: Editor): VdomElement = {
@@ -47,16 +48,28 @@ private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
       )
     }
 
-    val foldCode = CodeFoldingAnnotations(
-      editor = editor,
-      props = props
-    )
-
     val refresh = Callback(editor.refresh())
 
     setEditor >>
       applyDeltas >>
-      foldCode >>
       refresh
+  }
+
+  def update(scope: Lifecycle.ComponentWillReceiveProps[Editor, EditorState, EditorBackend]): Callback = {
+    scope.state.editor
+      .map { editor =>
+        RunDelta(
+          editor = editor,
+          currentProps = Some(scope.currentProps),
+          nextProps = scope.nextProps,
+          state = scope.state,
+          modState = f => scope.modState(f)
+        ) >> CodeFolds.fold(
+          editor = editor,
+          props = scope.nextProps,
+          modState = f => scope.modState(f)
+        )
+      }
+      .getOrElse(Callback.empty)
   }
 }

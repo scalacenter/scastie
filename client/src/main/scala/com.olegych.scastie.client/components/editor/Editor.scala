@@ -1,10 +1,9 @@
 package com.olegych.scastie.client.components.editor
 
 import com.olegych.scastie.api
-
 import com.olegych.scastie.client.AttachedDoms
-
-import japgolly.scalajs.react._, vdom.all._, extra._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
 
 final case class Editor(visible: Boolean,
                         isDarkTheme: Boolean,
@@ -24,7 +23,8 @@ final case class Editor(visible: Boolean,
                         toggleLineNumbers: Reusable[Callback],
                         togglePresentationMode: Reusable[Callback],
                         formatCode: Reusable[Callback],
-                        codeChange: String ~=> Callback) {
+                        codeChange: String ~=> Callback,
+) {
 
   @inline def render: VdomElement = Editor.component(this)
 }
@@ -58,20 +58,6 @@ object Editor {
       .componentDidMount(_.backend.start())
       .componentDidUpdate(u => Callback.traverseOption(u.currentState.editor)(e => Callback(e.focus())))
       .componentWillUnmount(_.backend.stop())
-      .componentWillReceiveProps { scope =>
-        scope.state.editor
-          .map(
-            editor =>
-              RunDelta(
-                editor = editor,
-                currentProps = Some(scope.currentProps),
-                nextProps = scope.nextProps,
-                state = scope.state,
-                modState = (f => scope.modState(f))
-            )
-          )
-          .getOrElse(Callback.empty)
-
-      }
+      .componentWillReceiveProps(scope => scope.backend.update(scope))
       .build
 }
