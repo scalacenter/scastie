@@ -68,6 +68,10 @@ private[editor] class EditorBackend(scope: BackendScope[Editor, EditorState]) {
           editor = editor,
           props = scope.nextProps,
           modState = f => scope.modState(f)
+        ) >> CodeReadOnly.markReadOnly(
+          editor = editor,
+          props = scope.nextProps,
+          modState = f => scope.modState(f)
         )
       }
       .getOrElse(Callback.empty)
