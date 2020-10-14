@@ -11,13 +11,12 @@ object CodeFolds {
       val lines = code.split("\n").toList
 
       lines.foldLeft((Set.empty[RangePosititon], Option.empty[Int], 0)) {
-        case ((folds, open, indexTotal), _line) =>
-          val line = _line.trim
+        case ((folds, open, indexTotal), line) =>
           val (folds0, open0) =
-            if (line matches """\/\/(\s*)fold""") {
+            if (line.trim matches """\/\/(\s*)fold""") {
               if (open.isEmpty) (folds, Some(indexTotal))
               else (folds, open)
-            } else if (line matches """\/\/(\s*)end-fold""") {
+            } else if (line.trim matches """\/\/(\s*)end-fold""") {
               open match {
                 case Some(start) =>
                   (folds + RangePosititon(start, indexTotal + line.length), None)
