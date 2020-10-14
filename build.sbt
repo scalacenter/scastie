@@ -240,7 +240,7 @@ lazy val client = project
       "extract-text-webpack-plugin" -> "3.0.0",
       "file-loader" -> "0.11.2",
       "html-webpack-plugin" -> "2.30.1",
-      "node-sass" -> "4.5.3",
+      "node-sass" -> "4.14.1",
       "resolve-url-loader" -> "2.1.0",
       "sass-loader" -> "6.0.6",
       "style-loader" -> "0.18.2",
