@@ -35,35 +35,34 @@ object CodeFolds {
   }
 
   def fold(editor: TextAreaEditor, props: Editor, modState: (EditorState => EditorState) => Callback): Callback = {
-    val folds = findFolds(props.code)
     modState { state =>
       val doc = editor.getDoc()
-      (folds -- state.folds).foreach { range =>
-        val posStart = doc.posFromIndex(range.indexStart)
-        val posEnd = doc.posFromIndex(range.indexEnd)
+      if (!state.folded && props.code.nonEmpty) {
+        findFolds(props.code).foreach { range =>
+          val posStart = doc.posFromIndex(range.indexStart)
+          val posEnd = doc.posFromIndex(range.indexEnd)
+          var annotRef: Option[Annotation] = None
+          val unfold: (HTMLElement => Unit) = { element =>
+            def clear(event: dom.Event): Unit = {
+              annotRef.foreach(_.clear())
+            }
 
-        var annotRef: Option[Annotation] = None
-        val unfold: (HTMLElement => Unit) = { element =>
-          def clear(event: dom.Event): Unit = {
-            annotRef.foreach(_.clear())
+            element.className = element.className + " code-fold"
+            element.addEventListener("touchstart", clear _, false)
+            element.addEventListener("dblclick", clear _, false)
+            element.addEventListener("click", clear _, false)
           }
-
-          element.className = element.className + " code-fold"
-          element.addEventListener("touchstart", clear _, false)
-          element.addEventListener("dblclick", clear _, false)
-          element.addEventListener("click", clear _, false)
+          val annot = Annotation.fold(
+            editor,
+            posStart,
+            posEnd,
+            "-- Click to unfold --",
+            unfold
+          )
+          annotRef = Some(annot)
         }
-        val annot = Annotation.fold(
-          editor,
-          posStart,
-          posEnd,
-          "-- Click to unfold --",
-          unfold
-        )
-        annotRef = Some(annot)
-        (range, annot)
-      }
-      state.copy(folds = folds)
+        state.copy(folded = true)
+      } else state
     }
   }
 }

@@ -8,5 +8,5 @@ private[editor] case class EditorState(
     problemAnnotations: Map[api.Problem, Annotation] = Map(),
     renderAnnotations: Map[api.Instrumentation, Annotation] = Map(),
     runtimeErrorAnnotations: Map[api.RuntimeError, Annotation] = Map(),
-    folds: Set[RangePosititon] = Set(),
+    folded: Boolean = false,
 )
