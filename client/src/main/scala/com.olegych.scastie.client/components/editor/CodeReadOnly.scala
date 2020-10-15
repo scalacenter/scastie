@@ -22,14 +22,12 @@ object CodeReadOnly {
       lines.foldLeft((Set.empty[RangePosititon], Option.empty[Int], 0)) {
         case ((readOnlyPositions, open, indexTotal), line) =>
           val (readOnlyPositions0, open0) =
-            if (line matches """(\s*)\/\/(\s*)read-only""") {
+            if (line.trim matches """\/\/(\s*)read-only""") {
               if (open.isEmpty) (readOnlyPositions, Some(indexTotal))
               else (readOnlyPositions, open)
-            } else if (line matches """(\s*)\/\/(\s*)end-read-only""") {
+            } else if (line.trim matches """\/\/(\s*)end-read-only""") {
               open match {
-                case Some(start) =>
-                  (readOnlyPositions + RangePosititon(start, indexTotal + line.length), None)
-
+                case Some(start) => (readOnlyPositions + RangePosititon(start, indexTotal + line.length), None)
                 case None => (readOnlyPositions, None)
               }
             } else {
@@ -44,22 +42,22 @@ object CodeReadOnly {
   }
 
   def markReadOnly(editor: TextAreaEditor, props: Editor, modState: (EditorState => EditorState) => Callback): Callback = {
-    val readOnlyPositions = findReadonlyComments(props.code)
     modState { state =>
-      val doc = editor.getDoc()
-      (readOnlyPositions -- state.readOnlys).foreach { range =>
-        println(range)
-        val posStart = doc.posFromIndex(range.indexStart)
-        val posEnd = doc.posFromIndex(range.indexEnd)
+      if (!state.readOnly && props.code.nonEmpty) {
+        val doc = editor.getDoc()
+        findReadonlyComments(props.code).foreach { range =>
+          val posStart = doc.posFromIndex(range.indexStart)
+          val posEnd = doc.posFromIndex(range.indexEnd)
 
-        val options = js.Dictionary[Any](
-          "readOnly" -> true,
-          "className" -> "readOnly"
-        ).asInstanceOf[TextMarkerOptions]
+          val options = js.Dictionary[Any](
+            "readOnly" -> true,
+            "className" -> "readOnly"
+          ).asInstanceOf[TextMarkerOptions]
 
-        doc.markText(posStart, posEnd, options)
-      }
-      state.copy(readOnlys = readOnlyPositions)
+          doc.markText(posStart, posEnd, options)
+        }
+        state.copy(readOnly = true)
+      } else state
     }
   }
 
