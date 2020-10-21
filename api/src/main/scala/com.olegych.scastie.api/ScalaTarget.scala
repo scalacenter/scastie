@@ -1,5 +1,7 @@
 package com.olegych.scastie.api
 
+import com.olegych.scastie.buildinfo.BuildInfo
+
 sealed trait ScalaTarget {
   def targetType: ScalaTargetType
   def scaladexRequest: Map[String, String]
