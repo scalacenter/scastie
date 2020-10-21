@@ -1,7 +1,5 @@
 package com.olegych.scastie.api
 
-import com.olegych.scastie.buildinfo.BuildInfo
-
 sealed trait ScalaTarget {
   def targetType: ScalaTargetType
   def scaladexRequest: Map[String, String]
@@ -27,6 +25,9 @@ sealed trait ScalaTarget {
 
   protected def binaryScalaVersion(scalaVersion: String): String = {
     scalaVersion.split('.').init.mkString(".")
+  }
+  protected def newBinaryScalaVersion(scalaVersion: String): String = {
+    scalaVersion.split('.').head
   }
 }
 
@@ -198,7 +199,8 @@ object ScalaTarget {
     def scaladexRequest: Map[String, String] = Map(
       "target" -> "JS",
       "scalaVersion" -> binaryScalaVersion(scalaVersion),
-      "scalaJsVersion" -> binaryScalaVersion(scalaJsVersion)
+      "scalaJsVersion" -> (if (scalaJsVersion.startsWith("0.")) binaryScalaVersion(scalaJsVersion)
+                           else newBinaryScalaVersion(scalaJsVersion))
     )
 
     def renderSbt(lib: ScalaDependency): String =
