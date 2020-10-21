@@ -29,6 +29,10 @@ object SbtShared {
     val cross = List(latest210, latest211, latest212, latest213, js, sbt, jvm).distinct
   }
 
+  object ScalaJSVersions {
+    val current = "1.1.1"
+  }
+
   val distSbtVersion = "1.3.13"
 
   val runtimeProjectName = "runtime-scala"
@@ -172,7 +176,7 @@ object SbtShared {
         "latest213" -> ScalaVersions.latest213,
         "latestDotty" -> ScalaVersions.latestDotty,
         "jsScalaVersion" -> ScalaVersions.js,
-        "defaultScalaJsVersion" -> "1.3.0",
+        "defaultScalaJsVersion" -> ScalaJSVersions.current,
         "sbtVersion" -> readSbtVersion((baseDirectory in ThisBuild).value.toPath),
       ),
       buildInfoPackage := "com.olegych.scastie.buildinfo",

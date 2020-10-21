@@ -4,7 +4,7 @@ addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.0")
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.5.0")
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.9.0")
 addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.5.2")
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.1.1")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % SbtShared.ScalaJSVersions.current)
 
 // addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.0-RC2")
 
