@@ -25,7 +25,7 @@ object CodeReadOnly {
             if (line.trim matches """\/\/(\s*)read-only""") {
               if (open.isEmpty) (readOnlyPositions, Some(indexTotal))
               else (readOnlyPositions, open)
-            } else if (line.trim matches """\/\/(\s*)end-read-only""") {
+            } else if (line.trim matches """\/\/(\s*)end-read-only(.*)""") {
               open match {
                 case Some(start) => (readOnlyPositions + RangePosititon(start, indexTotal + line.length), None)
                 case None => (readOnlyPositions, None)
