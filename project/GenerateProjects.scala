@@ -7,9 +7,6 @@ class GenerateProjects(sbtTargetDir: Path) {
   val projectTarget: Path = sbtTargetDir.resolve("projects")
 
   val projects: List[GeneratedProject] = {
-    val defaultWithNoMain = Inputs.default.copy(
-      code = """class Test""".stripMargin
-    )
     val defaultWithMain = Inputs.default.copy(
       code = """|object Main {
                 |  def main(args: Array[String]): Unit = {
@@ -30,7 +27,8 @@ class GenerateProjects(sbtTargetDir: Path) {
       target = ScalaTarget.Dotty.default
     )
 
-    val scalaJs = defaultWithNoMain.copy(
+    val scalaJs = Inputs.default.copy(
+      code = """@_root_.scala.scalajs.js.annotation.JSExportTopLevel("ScastiePlaygroundMain") class Test""".stripMargin,
       target = ScalaTarget.Js.default,
     )
 
