@@ -8,9 +8,7 @@ class GenerateProjects(sbtTargetDir: Path) {
 
   val projects: List[GeneratedProject] = {
     val defaultWithNoMain = Inputs.default.copy(
-      code = """|object Main {
-                |}
-                |""".stripMargin
+      code = """class Test""".stripMargin
     )
     val defaultWithMain = Inputs.default.copy(
       code = """|object Main {
