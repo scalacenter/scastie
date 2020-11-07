@@ -7,13 +7,7 @@ class GenerateProjects(sbtTargetDir: Path) {
   val projectTarget: Path = sbtTargetDir.resolve("projects")
 
   val projects: List[GeneratedProject] = {
-    val helloWorld =
-      """|object Main {
-         |  def main(args: Array[String]): Unit = {
-         |    println("Hello, World!")
-         |  }
-         |}
-         |""".stripMargin
+    val helloWorld = """println("Hello, World!")"""
 
     val default = Inputs.default.copy(
         code = helloWorld,
