@@ -7,25 +7,32 @@ class GenerateProjects(sbtTargetDir: Path) {
   val projectTarget: Path = sbtTargetDir.resolve("projects")
 
   val projects: List[GeneratedProject] = {
-    val helloWorld = """println("Hello, World!")"""
+    val defaultWithNoMain = Inputs.default.copy(
+      code = """|object Main {
+                |}
+                |""".stripMargin
+    )
+    val defaultWithMain = Inputs.default.copy(
+      code = """|object Main {
+                |  def main(args: Array[String]): Unit = {
+                |    println("Hello, World!")
+                |  }
+                |}
+                |""".stripMargin
+    )
 
-    val default = Inputs.default.copy(
-        code = helloWorld,
-      )
-
-    def scala(version: String): Inputs = default.copy(
+    def scala(version: String): Inputs = defaultWithMain.copy(
       target = ScalaTarget.Jvm(version),
     )
 
     val scala212 = scala(BuildInfo.latest212)
     val scala213 = scala(BuildInfo.latest213)
 
-    val dotty = default.copy(
-      target = ScalaTarget.Dotty.default,
-      code = "@main def main = " + default.code,
+    val dotty = defaultWithMain.copy(
+      target = ScalaTarget.Dotty.default
     )
 
-    val scalaJs = default.copy(
+    val scalaJs = defaultWithNoMain.copy(
       target = ScalaTarget.Js.default,
     )
 
