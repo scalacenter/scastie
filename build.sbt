@@ -248,7 +248,7 @@ lazy val client = project
       "webpack-merge" -> "4.1.0",
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.0",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.6",
     )
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
