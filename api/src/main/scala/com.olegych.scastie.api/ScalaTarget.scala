@@ -278,27 +278,8 @@ object ScalaTarget {
     def defaultCode: String =
       """|// You can find more examples here:
          |//   https://github.com/lampepfl/dotty-example-project
-         |
-         |// Name Based Pattern
-         |// http://dotty.epfl.ch/docs/reference/changed/pattern-matching.html#name-based-pattern
-         |
-         |class Nat(val x: Int) {
-         |  def get: Int = x
-         |  def isEmpty = x < 0
-         |}
-         |
-         |object Nat {
-         |  def unapply(x: Int): Nat = new Nat(x)
-         |}
-         |
-         |object Main {
-         |  def main(args: Array[String]): Unit = {
-         |    5 match {
-         |      case Nat(n) => println(s"$n is a natural number")
-         |      case _      => ()
-         |    }
-         |  }
-         |}""".stripMargin
+         |@main def main = println("Hi Scala 3!")
+         |""".stripMargin
   }
 
   case class Dotty(dottyVersion: String) extends ScalaTarget {
@@ -318,7 +299,7 @@ object ScalaTarget {
       sbtConfigScalaVersion(dottyVersion)
 
     def sbtPluginsConfig: String =
-      """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.4.2")"""
+      """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.4.5")"""
 
     def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
