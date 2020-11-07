@@ -1,16 +1,12 @@
 package com.olegych.scastie
 package sbt
 
-import api.{FormatRequest, FormatResponse, ScalaTarget}
-
 import akka.actor.Actor
-
-import org.scalafmt.{Scalafmt, Formatted}
+import com.olegych.scastie.api.{FormatRequest, FormatResponse, ScalaTarget}
+import org.scalafmt.config.ScalafmtRunner.Dialect
 import org.scalafmt.config.{ScalafmtConfig, ScalafmtRunner}
-
+import org.scalafmt.{Formatted, Scalafmt}
 import org.slf4j.LoggerFactory
-
-import java.io.{PrintWriter, StringWriter}
 
 class FormatActor() extends Actor {
   private val log = LoggerFactory.getLogger(getClass)
@@ -19,11 +15,14 @@ class FormatActor() extends Actor {
     log.info(s"format (isWorksheetMode: $isWorksheetMode)")
     log.info(code)
 
-    val config =
-      if (isWorksheetMode && scalaTarget.hasWorksheetMode)
+    val config = scalaTarget match {
+      case scalaTarget if isWorksheetMode && scalaTarget.hasWorksheetMode =>
         ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
-      else
+      case dotty: ScalaTarget.Dotty =>
+        ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
+      case _ =>
         ScalafmtConfig.default
+    }
 
     Scalafmt.format(code, style = config) match {
       case Formatted.Success(formattedCode) => Right(formattedCode)
