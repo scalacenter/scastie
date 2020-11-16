@@ -30,7 +30,7 @@ object SbtShared {
   }
 
   object ScalaJSVersions {
-    val current = "1.3.0"
+    val current = "1.3.1"
   }
 
   val distSbtVersion = "1.3.13"
