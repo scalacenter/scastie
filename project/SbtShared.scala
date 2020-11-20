@@ -21,7 +21,7 @@ object SbtShared {
     val latest210 = "2.10.7"
     val latest211 = "2.11.12"
     val latest212 = "2.12.12"
-    val latest213 = "2.13.3"
+    val latest213 = "2.13.4"
     val latestDotty = "3.0.0-M1"
     val js = latest213
     val sbt = latest212
