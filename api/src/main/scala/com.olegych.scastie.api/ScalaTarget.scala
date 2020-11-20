@@ -99,7 +99,7 @@ object ScalaTarget {
       else if (scalaVersion == "2.13.0-RC1") ("org.spire-math", "0.9.10", "binary")
       else if (scalaVersion == "2.13.0-RC2") ("org.typelevel", "0.10.1", "binary")
       else if (scalaVersion == "2.13.0-RC3") ("org.typelevel", "0.10.2", "binary")
-      else if (scalaVersion >= "2.13.0") ("org.typelevel", "0.11.0", "full")
+      else if (scalaVersion >= "2.13.0") ("org.typelevel", "0.11.1", "full")
       else ("org.typelevel", "0.10.3", "binary")
     val paradise =
       if (scalaVersion.startsWith("2.10"))
