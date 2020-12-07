@@ -278,7 +278,7 @@ object ScalaTarget {
     def defaultCode: String =
       """|// You can find more examples here:
          |//   https://github.com/lampepfl/dotty-example-project
-         |@main def main = println("Hi Scala 3!")
+         |@main def hello = println("Hi Scala 3!")
          |""".stripMargin
   }
 
