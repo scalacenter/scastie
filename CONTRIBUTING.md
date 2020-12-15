@@ -108,7 +108,8 @@ If you have any questions join us in the [gitter channel](https://gitter.im/scal
 ## Quick
 
 ```
-ssh scastie@scastie.scala-lang.org
+ssh scastie@alaska.epfl.ch
+ssh icvm0042
 ssh scastie@scastie-sbt.scala-lang.org
 docker login
 cd ~/scastie-secrets && git pull #optional
