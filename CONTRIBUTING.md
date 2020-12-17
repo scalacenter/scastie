@@ -109,7 +109,7 @@ If you have any questions join us in the [gitter channel](https://gitter.im/scal
 
 ```
 ssh scastie@alaska.epfl.ch
-ssh icvm0042
+ssh scastie@scastie.scala-lang.org
 ssh scastie@scastie-sbt.scala-lang.org
 docker login
 cd ~/scastie-secrets && git pull #optional
@@ -123,6 +123,7 @@ deploy
 
 ## Check logs
 ```
+ssh scastie@alaska.epfl.ch
 ssh scastie@scastie.scala-lang.org
 tail -F -n1000 output.log
 ssh scastie@scastie-sbt.scala-lang.org
@@ -131,7 +132,7 @@ ssh scastie@scastie-sbt.scala-lang.org
 
 ## Full
 
-0. You need access to `scastie@scastie.scala-lang.org`, `https://github.com/scalacenter/scastie-secrets`, `http://scala-webapps.epfl.ch:8081` and be a member of `https://hub.docker.com/u/scalacenter/`
+0. You need access to `scastie@alaska.epfl.ch`, `https://github.com/scalacenter/scastie-secrets`, `http://scala-webapps.epfl.ch:8081` and be a member of `https://hub.docker.com/u/scalacenter/`
 
 These people have access:
 
@@ -147,7 +148,7 @@ These people have access:
 
 0. Install docker (note that Windows is not recommended due to networking issues)
 
-0. do`docker login`
+0. do `docker login`
 
 0. bump the version in build.sbt
 
@@ -162,6 +163,7 @@ These people have access:
 In case anything goes wrong:
 
 ```
+ssh scastie@alaska.epfl.ch
 ssh scastie@scastie.scala-lang.org
 ssh scastie@scastie-sbt.scala-lang.org
 ./sbt.sh
