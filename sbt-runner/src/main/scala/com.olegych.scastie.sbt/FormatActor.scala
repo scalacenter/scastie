@@ -18,7 +18,7 @@ class FormatActor() extends Actor {
     val config = scalaTarget match {
       case scalaTarget if isWorksheetMode && scalaTarget.hasWorksheetMode =>
         ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
-      case dotty: ScalaTarget.Dotty =>
+      case dotty: ScalaTarget.Scala3 =>
         ScalafmtConfig.default.withDialect(scala.meta.dialects.Dotty)
       case _ =>
         ScalafmtConfig.default

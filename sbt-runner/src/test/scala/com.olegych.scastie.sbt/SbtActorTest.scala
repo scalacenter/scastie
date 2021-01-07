@@ -162,8 +162,8 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     run(scala)(assertUserOutput("2"))
   }
 
-  test("Dotty support") {
-    val message = "Hello, Dotty!"
+  test("Scala 3 support") {
+    val message = "Hello, Scala 3!"
     val dotty = Inputs.default.copy(
       code = s"""|object Main {
                  |  def main(args: Array[String]): Unit = {
@@ -171,10 +171,10 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
                  |  }
                  |}
                  |""".stripMargin,
-      target = ScalaTarget.Dotty.default,
+      target = ScalaTarget.Scala3.default,
       _isWorksheetMode = false
     )
-    run(dotty)(assertUserOutput("Hello, Dotty!"))
+    run(dotty)(assertUserOutput("Hello, Scala 3!"))
   }
 
   test("Capture System.err #284") {

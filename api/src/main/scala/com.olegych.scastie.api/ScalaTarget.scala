@@ -41,7 +41,7 @@ object ScalaTarget {
     private val formatJs = Json.format[Js]
     private val formatTypelevel = Json.format[Typelevel]
     private val formatNative = Json.format[Native]
-    private val formatDotty = Json.format[Dotty]
+    private val formatScala3 = Json.format[Scala3]
 
     def writes(target: ScalaTarget): JsValue = {
       target match {
@@ -53,8 +53,8 @@ object ScalaTarget {
           formatTypelevel.writes(typelevel) ++ JsObject(Seq("tpe" -> JsString("Typelevel")))
         case native: Native =>
           formatNative.writes(native) ++ JsObject(Seq("tpe" -> JsString("Native")))
-        case dotty: Dotty =>
-          formatDotty.writes(dotty) ++ JsObject(Seq("tpe" -> JsString("Dotty")))
+        case dotty: Scala3 =>
+          formatScala3.writes(dotty) ++ JsObject(Seq("tpe" -> JsString("Scala 3")))
       }
     }
 
@@ -65,12 +65,12 @@ object ScalaTarget {
           vs.get("tpe").orElse(vs.get("$type")) match {
             case Some(JsString(tpe)) =>
               tpe match {
-                case "Jvm"       => formatJvm.reads(json)
-                case "Js"        => formatJs.reads(json)
-                case "Typelevel" => formatTypelevel.reads(json)
-                case "Native"    => formatNative.reads(json)
-                case "Dotty"     => formatDotty.reads(json)
-                case _           => JsError(Seq())
+                case "Jvm"              => formatJvm.reads(json)
+                case "Js"               => formatJs.reads(json)
+                case "Typelevel"        => formatTypelevel.reads(json)
+                case "Native"           => formatNative.reads(json)
+                case "Scala3" | "Dotty" => formatScala3.reads(json)
+                case _                  => JsError(Seq())
               }
             case _ => JsError(Seq())
           }
@@ -119,7 +119,7 @@ object ScalaTarget {
     }
 
     def targetType: ScalaTargetType =
-      ScalaTargetType.JVM
+      ScalaTargetType.Scala2
 
     def scaladexRequest: Map[String, String] =
       Map("target" -> "JVM", "scalaVersion" -> binaryScalaVersion(scalaVersion))
@@ -272,8 +272,8 @@ object ScalaTarget {
       s"Scala-Native $scalaVersion $scalaNativeVersion"
   }
 
-  object Dotty {
-    def default: ScalaTarget = Dotty(BuildInfo.latestDotty)
+  object Scala3 {
+    def default: ScalaTarget = Scala3(BuildInfo.latest3)
 
     def defaultCode: String =
       """|// You can find more examples here:
@@ -282,12 +282,12 @@ object ScalaTarget {
          |""".stripMargin
   }
 
-  case class Dotty(dottyVersion: String) extends ScalaTarget {
+  case class Scala3(dottyVersion: String) extends ScalaTarget {
 
     def hasWorksheetMode: Boolean = false
 
     def targetType: ScalaTargetType =
-      ScalaTargetType.Dotty
+      ScalaTargetType.Scala3
 
     def scaladexRequest: Map[String, String] =
       Map("target" -> "JVM", "scalaVersion" -> "2.13")
@@ -307,6 +307,6 @@ object ScalaTarget {
       None
 
     override def toString: String =
-      s"Dotty $dottyVersion"
+      s"Scala $dottyVersion"
   }
 }

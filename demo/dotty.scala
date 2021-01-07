@@ -5,11 +5,11 @@ class A extends Base {
   def message: String = "Hello"
 }
 class B extends Base {
-  def message: String = "Dotty!"
+  def message: String = "Scala 3!"
 }
 
-def helloDotty(msgs: (A | B)*): String = msgs.map(_.message).mkString(", ")
+def helloScala3(msgs: (A | B)*): String = msgs.map(_.message).mkString(", ")
 
-helloDotty(new A, new B)
+helloScala3(new A, new B)
 
 1 + 1

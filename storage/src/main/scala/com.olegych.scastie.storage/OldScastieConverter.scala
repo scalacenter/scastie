@@ -11,7 +11,7 @@ object OldScastieConverter {
     } else {
       line match {
         case "com.felixmulder.dotty.plugin.DottyPlugin.projectSettings" =>
-          converter.setTargetType(ScalaTargetType.Dotty)
+          converter.setTargetType(ScalaTargetType.Scala3)
 
         case """scalaOrganization in ThisBuild := "org.typelevel"""" =>
           converter.setTargetType(ScalaTargetType.Typelevel)
@@ -86,8 +86,8 @@ object OldScastieConverter {
     def apply(inputs: Inputs): Inputs = {
       val scalaTarget =
         targetType match {
-          case Some(ScalaTargetType.Dotty) =>
-            ScalaTarget.Dotty.default
+          case Some(ScalaTargetType.Scala3) =>
+            ScalaTarget.Scala3.default
 
           case Some(ScalaTargetType.Typelevel) =>
             scalaVersion

@@ -38,8 +38,8 @@ object BuildSettings {
   def renderTarget(props: BuildSettings): TagOf[Div] = {
 
     val targetTypes = List[ScalaTargetType](
-      ScalaTargetType.JVM,
-      ScalaTargetType.Dotty,
+      ScalaTargetType.Scala2,
+      ScalaTargetType.Scala3,
       ScalaTargetType.Typelevel,
       ScalaTargetType.JS //,
       // ScalaTargetType.Native
@@ -47,9 +47,9 @@ object BuildSettings {
 
     def labelFor(targetType: ScalaTargetType) = {
       targetType match {
-        case ScalaTargetType.JVM       => "Scalac"
+        case ScalaTargetType.Scala2    => "Scala 2"
         case ScalaTargetType.JS        => "Scala.js"
-        case ScalaTargetType.Dotty     => "Dotty"
+        case ScalaTargetType.Scala3    => "Scala 3"
         case ScalaTargetType.Native    => "Native"
         case ScalaTargetType.Typelevel => "Typelevel"
       }
@@ -128,7 +128,7 @@ object BuildSettings {
         case ScalaTarget.Typelevel(scalaVersion) =>
           versionSelector(scalaVersion, ScalaTarget.Typelevel.apply)
 
-        case d: ScalaTarget.Dotty =>
+        case d: ScalaTarget.Scala3 =>
           div(d.dottyVersion)
 
         case js: ScalaTarget.Js =>

@@ -24,7 +24,7 @@ class GenerateProjects(sbtTargetDir: Path) {
     val scala213 = scala(BuildInfo.latest213)
 
     val dotty = defaultWithMain.copy(
-      target = ScalaTarget.Dotty.default
+      target = ScalaTarget.Scala3.default
     )
 
     val scalaJs = Inputs.default.copy(
