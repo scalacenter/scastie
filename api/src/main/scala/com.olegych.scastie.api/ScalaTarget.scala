@@ -54,7 +54,7 @@ object ScalaTarget {
         case native: Native =>
           formatNative.writes(native) ++ JsObject(Seq("tpe" -> JsString("Native")))
         case dotty: Scala3 =>
-          formatScala3.writes(dotty) ++ JsObject(Seq("tpe" -> JsString("Scala 3")))
+          formatScala3.writes(dotty) ++ JsObject(Seq("tpe" -> JsString("Scala3")))
       }
     }
 
