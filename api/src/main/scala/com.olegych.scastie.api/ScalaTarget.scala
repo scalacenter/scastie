@@ -65,12 +65,12 @@ object ScalaTarget {
           vs.get("tpe").orElse(vs.get("$type")) match {
             case Some(JsString(tpe)) =>
               tpe match {
-                case "Jvm"       => formatJvm.reads(json)
-                case "Js"        => formatJs.reads(json)
-                case "Typelevel" => formatTypelevel.reads(json)
-                case "Native"    => formatNative.reads(json)
-                case "Scala3"    => formatScala3.reads(json)
-                case _           => JsError(Seq())
+                case "Jvm"              => formatJvm.reads(json)
+                case "Js"               => formatJs.reads(json)
+                case "Typelevel"        => formatTypelevel.reads(json)
+                case "Native"           => formatNative.reads(json)
+                case "Scala3" | "Dotty" => formatScala3.reads(json)
+                case _                  => JsError(Seq())
               }
             case _ => JsError(Seq())
           }
@@ -307,6 +307,6 @@ object ScalaTarget {
       None
 
     override def toString: String =
-      s"Scala 3 $dottyVersion"
+      s"Scala $dottyVersion"
   }
 }
