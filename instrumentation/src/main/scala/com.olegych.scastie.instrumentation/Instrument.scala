@@ -26,7 +26,7 @@ object Instrument {
     if (inputs.isWorksheetMode) -2
     else
       inputs.target match {
-        case _: Dotty => 0
+        case _: Scala3 => 0
         case _        => 0
       }
   }
@@ -193,7 +193,7 @@ object Instrument {
         case Jvm(scalaVersion)       => scala(scalaVersion)
         case Js(scalaVersion, _)     => scala(scalaVersion)
         case Native(scalaVersion, _) => scala(scalaVersion)
-        case Dotty(_)                => Some(dialects.Dotty)
+        case Scala3(_)                => Some(dialects.Dotty)
         case Typelevel(scalaVersion) => typelevel(scalaVersion)
         case _                       => None
       }

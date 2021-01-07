@@ -10,8 +10,8 @@ object ScalaTargetType {
 
   def parse(targetType: String): Option[ScalaTargetType] = {
     targetType match {
-      case "JVM"       => Some(JVM)
-      case "DOTTY"     => Some(Dotty)
+      case "JVM"       => Some(Scala2)
+      case "DOTTY"     => Some(Scala3)
       case "JS"        => Some(JS)
       case "NATIVE"    => Some(Native)
       case "TYPELEVEL" => Some(Typelevel)
@@ -26,8 +26,8 @@ object ScalaTargetType {
 
     private val values =
       List(
-        JVM,
-        Dotty,
+        Scala2,
+        Scala3,
         JS,
         Native,
         Typelevel
@@ -46,12 +46,12 @@ object ScalaTargetType {
     }
   }
 
-  case object JVM extends ScalaTargetType {
+  case object Scala2 extends ScalaTargetType {
     def defaultScalaTarget: ScalaTarget = ScalaTarget.Jvm.default
   }
 
-  case object Dotty extends ScalaTargetType {
-    def defaultScalaTarget: ScalaTarget = ScalaTarget.Dotty.default
+  case object Scala3 extends ScalaTargetType {
+    def defaultScalaTarget: ScalaTarget = ScalaTarget.Scala3.default
   }
 
   case object JS extends ScalaTargetType {

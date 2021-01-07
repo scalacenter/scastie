@@ -117,8 +117,8 @@ object EmbeddedOptions {
         case (Some("dotty"), _, None, None) => {
           Some(
             scalaVersion
-              .map(version => ScalaTarget.Dotty(version))
-              .getOrElse(ScalaTarget.Dotty.default)
+              .map(version => ScalaTarget.Scala3(version))
+              .getOrElse(ScalaTarget.Scala3.default)
           )
         }
 
@@ -160,13 +160,13 @@ object EmbeddedOptions {
       if (scalaTarget.isDefined || code.isDefined) {
         val default = Inputs.default
 
-        val isDotty =
+        val isScala3 =
           scalaTarget
-            .map(_.targetType == ScalaTargetType.Dotty)
+            .map(_.targetType == ScalaTargetType.Scala3)
             .getOrElse(false)
 
         val defaultCode =
-          if (isDotty) ScalaTarget.Dotty.defaultCode
+          if (isScala3) ScalaTarget.Scala3.defaultCode
           else default.code
 
         val inputs0 =

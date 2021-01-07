@@ -218,8 +218,8 @@ object Scastie {
               val state0 =
                 state.setTarget(targetType.defaultScalaTarget)
 
-              if (targetType == ScalaTargetType.Dotty) {
-                state0.setCode(ScalaTarget.Dotty.defaultCode)
+              if (targetType == ScalaTargetType.Scala3) {
+                state0.setCode(ScalaTarget.Scala3.defaultCode)
               } else {
                 state0
               }

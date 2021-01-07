@@ -42,7 +42,7 @@ class Routing(defaultServerUrl: String) {
         case (Some(g), Some(a), Some(v), o, r) =>
           val target =
             map.get("t").flatMap(ScalaTargetType.parse) match {
-              case Some(ScalaTargetType.JVM) =>
+              case Some(ScalaTargetType.Scala2) =>
                 map.get("sv").map(sv => ScalaTarget.Jvm(ScalaVersions.find(sv)))
 
               case Some(ScalaTargetType.JS) =>
