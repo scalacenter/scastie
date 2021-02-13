@@ -1,13 +1,11 @@
 package com.olegych.scastie.client.components.editor
 
 import com.olegych.scastie.api
-
 import japgolly.scalajs.react.Callback
-
-import codemirror.{TextAreaEditor, CodeMirror, modeScala}
-
+import codemirror.{CodeMirror, TextAreaEditor, modeScala}
+import com.olegych.scastie.client.AnsiColorFormatter
 import org.scalajs.dom
-import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.raw.{HTMLElement, HTMLPreElement}
 
 object RenderAnnotations {
   def apply(editor: TextAreaEditor,
@@ -25,21 +23,19 @@ object RenderAnnotations {
       modState,
       (props, _) => props.instrumentations, {
         case api.Instrumentation(api.Position(start, end), api.Value(value, tpe)) => {
-
           val startPos = doc.posFromIndex(start)
           val endPos = doc.posFromIndex(end)
-
+          val isString = tpe == "String"
+          val htmlValue = if (isString) AnsiColorFormatter.formatToHtml(value) else value
           val process = (node: HTMLElement) => {
-            CodeMirror.runMode(s"$value: $tpe", modeScala, node)
+            if (!isString) CodeMirror.runMode(s"$value: $tpe", modeScala, node)
             node.title = tpe
             ()
           }
-
           val nl = '\n'
-
           if (value.contains(nl))
-            Annotation.nextline(editor, endPos, value, process)
-          else Annotation.inline(editor, startPos, value, process)
+            Annotation.nextline(editor, endPos, htmlValue, process)
+          else Annotation.inline(editor, startPos, htmlValue, process)
         }
 
         case api.Instrumentation(api.Position(start, end), api.Html(content, folded)) => {

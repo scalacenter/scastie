@@ -29,7 +29,6 @@ object AnsiColorFormatter extends AnsiColor {
   )
 
   def formatToHtml(unformatted: String): String = {
-
     colors.foldLeft(unformatted) {
       case (message, (ansiCode, replacement)) =>
         ansiCode match {
