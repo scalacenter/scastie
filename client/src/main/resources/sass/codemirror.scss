@@ -46,7 +46,7 @@
   .CodeMirror-linewidget .compilation-info,
   .CodeMirror-linewidget .runtime-error,
   .CodeMirror-widget .fold {
-    margin-left: -($margin + 4px);
+    margin-left: -($margin) + 4px;
     width: 120%;
 
     padding: $margin;
