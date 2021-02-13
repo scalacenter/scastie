@@ -8,9 +8,9 @@ object HTMLFormatter {
     text.iterator
       .foldLeft(new StringBuilder()) { (s, c) =>
         escapeMap.get(c) match {
-          case Some(str)                             => s ++= str
-          case _ if c >= ' ' || "\n\r\t".contains(c) => s += c
-          case _                                     => s // noop
+          case Some(str)                                   => s ++= str
+          case _ if c >= ' ' || "\n\r\t\u001b".contains(c) => s += c
+          case _                                           => s // noop
         }
       }
       .toString
