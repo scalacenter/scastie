@@ -29,13 +29,17 @@ object AnsiColorFormatter extends AnsiColor {
   )
 
   def formatToHtml(unformatted: String): String = {
-    colors.foldLeft(unformatted) {
-      case (message, (ansiCode, replacement)) =>
-        ansiCode match {
-          case RESET => message.replace(ansiCode, "</span>")
-          case _ =>
-            message.replace(ansiCode, s"""<span class="$replacement">""")
-        }
-    }
+    unformatted
+      .foldLeft("" -> 0) {
+        case ((_r, d), c) =>
+          val r = _r + c
+          val replaced = colors.collectFirst {
+            case (ansiCode, replacement) if r.endsWith(ansiCode) =>
+              if (ansiCode == RESET) r.replace(ansiCode, "</span>" * d) -> 0
+              else r.replace(ansiCode, s"""<span class="$replacement">""") -> (d + 1)
+          }
+          replaced.getOrElse(r -> d)
+      }
+      ._1
   }
 }

@@ -42,16 +42,7 @@ object Console {
       else users
 
     def renderConsoleOutputs: String = {
-      val out =
-        toShow
-          .map(
-            output => s"<li>${HTMLFormatter.format(output.show)}</li>"
-          )
-          .mkString("\n  ")
-
-      s"""|<ol>
-          |$out
-          |</ol>""".stripMargin
+      s"<pre>${HTMLFormatter.format(toShow.map(_.show).mkString("\n"))}</pre>"
     }
 
     div(cls := "console-container", consoleCss)(
