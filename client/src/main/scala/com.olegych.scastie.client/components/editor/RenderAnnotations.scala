@@ -1,11 +1,11 @@
 package com.olegych.scastie.client.components.editor
 
-import com.olegych.scastie.api
-import japgolly.scalajs.react.Callback
 import codemirror.{CodeMirror, TextAreaEditor, modeScala}
-import com.olegych.scastie.client.AnsiColorFormatter
+import com.olegych.scastie.api
+import com.olegych.scastie.client.HTMLFormatter
+import japgolly.scalajs.react.Callback
 import org.scalajs.dom
-import org.scalajs.dom.raw.{HTMLElement, HTMLPreElement}
+import org.scalajs.dom.raw.HTMLElement
 
 object RenderAnnotations {
   def apply(editor: TextAreaEditor,
@@ -26,7 +26,7 @@ object RenderAnnotations {
           val startPos = doc.posFromIndex(start)
           val endPos = doc.posFromIndex(end)
           val isString = tpe == "String"
-          val htmlValue = if (isString) AnsiColorFormatter.formatToHtml(value) else value
+          val htmlValue = if (isString) HTMLFormatter.format(value) else value
           val process = (node: HTMLElement) => {
             if (!isString) CodeMirror.runMode(s"$value: $tpe", modeScala, node)
             node.title = tpe

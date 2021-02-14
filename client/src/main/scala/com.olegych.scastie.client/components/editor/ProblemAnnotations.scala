@@ -1,14 +1,11 @@
 package com.olegych.scastie.client.components.editor
 
-import com.olegych.scastie.api
-import com.olegych.scastie.client.AnsiColorFormatter
-
 import codemirror.TextAreaEditor
-
+import com.olegych.scastie.api
+import com.olegych.scastie.client.HTMLFormatter
+import japgolly.scalajs.react.Callback
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLDivElement
-
-import japgolly.scalajs.react.Callback
 
 object ProblemAnnotations {
 
@@ -54,7 +51,7 @@ object ProblemAnnotations {
 
         val msg = dom.document.createElement("pre")
 
-        msg.innerHTML = AnsiColorFormatter.formatToHtml(info.message)
+        msg.innerHTML = HTMLFormatter.format(info.message)
 
         el.appendChild(icon)
         el.appendChild(msg)
