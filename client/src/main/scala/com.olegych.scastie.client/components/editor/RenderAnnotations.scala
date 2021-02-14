@@ -22,7 +22,7 @@ object RenderAnnotations {
       state,
       modState,
       (props, _) => props.instrumentations, {
-        case api.Instrumentation(api.Position(start, end), api.Value(value, tpe)) => {
+        case api.Instrumentation(api.Position(start, end), api.Value(value, tpe)) =>
           val startPos = doc.posFromIndex(start)
           val endPos = doc.posFromIndex(end)
           val isString = tpe == "String"
@@ -32,34 +32,29 @@ object RenderAnnotations {
             node.title = tpe
             ()
           }
-          val nl = '\n'
-          if (value.contains(nl))
+          if (value.contains('\n'))
             Annotation.nextline(editor, endPos, htmlValue, process)
           else Annotation.inline(editor, startPos, htmlValue, process)
-        }
 
-        case api.Instrumentation(api.Position(start, end), api.Html(content, folded)) => {
-
+        case api.Instrumentation(api.Position(start, end), api.Html(content, folded)) =>
           val startPos = doc.posFromIndex(start)
           val endPos = doc.posFromIndex(end)
 
-          val process: (HTMLElement => Unit) = _.innerHTML = content
+          val process: HTMLElement => Unit = _.innerHTML = content
           if (!folded) Annotation.nextline(editor, endPos, content, process)
           else Annotation.fold(editor, startPos, endPos, content, process)
-        }
 
         case instrumentation @ api.Instrumentation(
               api.Position(start, end),
               api.AttachedDom(uuid, folded)
-            ) => {
-
+            ) =>
           val startPos = doc.posFromIndex(start)
           val endPos = doc.posFromIndex(end)
 
           val domNode = nextProps.attachedDoms.get(uuid)
 
-          if (!domNode.isEmpty) {
-            val process: (HTMLElement => Unit) = element => {
+          if (domNode.isDefined) {
+            val process: HTMLElement => Unit = element => {
               domNode.foreach(element.appendChild)
               ()
             }
@@ -71,7 +66,6 @@ object RenderAnnotations {
             dom.console.log("cannot find dom element uuid: " + uuid)
             Empty
           }
-        }
 
       },
       _.renderAnnotations,
