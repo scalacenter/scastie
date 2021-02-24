@@ -27,7 +27,7 @@ class Routing(defaultServerUrl: String) {
           .split("&")
           .toList
           .map(_.split("=").toList)
-          .map {
+          .collect {
             case List(k, v) => (k, v)
           }
           .toMap

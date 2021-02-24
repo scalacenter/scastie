@@ -174,7 +174,7 @@ object ScaladexSearch {
               Callback.empty
           } yield ()
 
-        addArtifactIfInRange >> Callback(searchInputRef.unsafeGet().focus)
+        addArtifactIfInRange >> Callback(searchInputRef.unsafeGet().focus())
       } else {
         Callback.empty
       }
@@ -229,7 +229,7 @@ object ScaladexSearch {
     def selectIndex(index: Int): Callback =
       scope.modState(s => s.copy(selectedIndex = index))
 
-    def resetQuery(): Callback =
+    def resetQuery: Callback =
       scope.modState(s => s.copy(query = "", projects = Nil))
 
     def setQuery(e: ReactEventFromInput): Callback = {

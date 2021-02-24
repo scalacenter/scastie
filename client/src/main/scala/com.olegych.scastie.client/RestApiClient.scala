@@ -58,7 +58,7 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
     }
   }
 
-  def post[O: Reads](): Post[O] = new Post[O]
+  def post[O: Reads]: Post[O] = new Post[O]
 
   def run(inputs: Inputs): Future[SnippetId] =
     post[SnippetId].using("/run", inputs).map(_.get)

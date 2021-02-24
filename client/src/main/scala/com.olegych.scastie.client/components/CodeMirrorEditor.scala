@@ -67,7 +67,7 @@ object CodeMirrorEditor {
           codemirror.CodeMirror.fromTextArea(textareaRef.unsafeGet(), options)
         editor.getDoc().setValue(props.value)
         editor.onChanges(
-          (e, _) => props.onChange(e.getDoc().getValue()).runNow
+          (e, _) => props.onChange(e.getDoc().getValue()).runNow()
         )
         scope.modState(_.copy(editor = Some(editor)))
       }
