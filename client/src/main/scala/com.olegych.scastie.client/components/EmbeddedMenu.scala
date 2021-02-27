@@ -61,7 +61,8 @@ object EmbeddedMenu {
         isRunning = props.isRunning,
         isStatusOk = true,
         save = props.run,
-        setView = props.setView
+        setView = props.setView,
+        embedded = true,
       ).render,
       li(cls := "logo")(
         img(src := urlBase + Assets.logoUrl),

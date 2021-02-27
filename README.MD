@@ -72,7 +72,7 @@ It's also possible to adjust the theme via the GET parameter theme. For example:
 
 The theme can be `dark` or `light`. The default value is `light`. It's also possible to customize the css.
 
-Take a look at: https://codepen.io/MasseGuillaume/pen/oeKoee
+Take a look at: https://codepen.io/olegych/pen/OJXVYoR
 
 #### Via Javascript
 

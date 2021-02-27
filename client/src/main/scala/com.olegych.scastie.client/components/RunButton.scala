@@ -6,7 +6,7 @@ import japgolly.scalajs.react._
 import vdom.all._
 import extra._
 
-final case class RunButton(isRunning: Boolean, isStatusOk: Boolean, save: Reusable[Callback], setView: View ~=> Callback) {
+final case class RunButton(isRunning: Boolean, isStatusOk: Boolean, save: Reusable[Callback], setView: View ~=> Callback, embedded: Boolean) {
   @inline def render: VdomElement = RunButton.component(this)
 }
 
@@ -18,19 +18,21 @@ object RunButton {
   def render(props: RunButton): VdomElement = {
     if (!props.isRunning) {
       val runTitle =
-        if (props.isStatusOk)
+        if (props.embedded)
+          s"Run (${EditorOptions.Keys.saveOrUpdate})"
+        else if (props.isStatusOk)
           s"Save (${EditorOptions.Keys.saveOrUpdate})"
         else
           s"Save (${EditorOptions.Keys.saveOrUpdate}) - warning: unknown status"
 
       li(onClick --> props.save, role := "button", title := runTitle, cls := "btn run-button")(
         i(cls := "fa fa-play"),
-        span("Save")
+        span(if (props.embedded) "Run" else "Save")
       )
     } else {
       li(onClick --> props.setView(View.Editor), title := "Saving your Code...", cls := "btn run-button")(
         i(cls := "fa fa-spinner fa-spin"),
-        span("Saving")
+        span(if (props.embedded) "Running" else "Saving")
       )
     }
   }

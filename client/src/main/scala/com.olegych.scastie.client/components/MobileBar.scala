@@ -28,7 +28,8 @@ object MobileBar {
           isRunning = props.isRunning,
           isStatusOk = props.isStatusOk,
           save = props.save,
-          setView = props.setView
+          setView = props.setView,
+          embedded = false,
         ).render,
         NewButton(
           isNewSnippetModalClosed = props.isNewSnippetModalClosed,

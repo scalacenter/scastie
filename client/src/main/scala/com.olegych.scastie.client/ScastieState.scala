@@ -157,7 +157,6 @@ case class ScastieState(
     clearOutputs.resetScalajs
       .setRunning(true)
       .logSystem("Sending task to the server.")
-      .copyAndSave(inputsHasChanged = false)
       .setSnippetId(snippetId)
   }
 

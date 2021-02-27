@@ -41,7 +41,8 @@ object EditorTopBar {
       isRunning = props.isRunning,
       isStatusOk = props.isStatusOk,
       save = props.save,
-      setView = Reusable.fn(view => props.view.setState(view))
+      setView = Reusable.fn(view => props.view.setState(view)),
+      embedded = false,
     ).render
 
     val newButton = NewButton(
