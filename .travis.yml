@@ -24,7 +24,7 @@ before_install:
 
 before_cache:
   - rm -fv $HOME/.ivy2/.sbt.ivy.lock
-  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete || echo "empty ivy cache"
   - find $HOME/.sbt        -name "*.lock"               -print -delete
   - mkdir -p $HOME/nix.store
   - nix copy --to file://$HOME/nix.store -f default.nix scastie.buildInputs
