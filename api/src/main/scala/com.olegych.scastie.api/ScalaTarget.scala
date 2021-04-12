@@ -299,7 +299,7 @@ object ScalaTarget {
       sbtConfigScalaVersion(dottyVersion)
 
     def sbtPluginsConfig: String =
-      """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.4.6")"""
+      """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.5.4")"""
 
     def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
