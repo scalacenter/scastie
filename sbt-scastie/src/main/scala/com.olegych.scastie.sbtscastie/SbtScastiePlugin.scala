@@ -20,7 +20,8 @@ object SbtScastiePlugin extends AutoPlugin {
           val r = compilers.value
           //compile bridge to init everything on reload
           r.scalac() match {
-            case c: AnalyzingCompiler => c.force(streams.value.log)
+            case c: AnalyzingCompiler =>
+              c.provider.fetchCompiledBridge(c.scalaInstance , streams.value.log)
             case _                    => ()
           }
           r

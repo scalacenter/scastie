@@ -79,7 +79,6 @@ object RuntimeErrorLogger {
     showSuccess := false,
     logManager := sbt.internal.LogManager.withLoggers(
       (task, state) => defaultScreen(ConsoleOut.printWriterOut(NoOp()), suppressedMessage(task, state)),
-      relay = _ => clientLogger
     )
   )
 }
