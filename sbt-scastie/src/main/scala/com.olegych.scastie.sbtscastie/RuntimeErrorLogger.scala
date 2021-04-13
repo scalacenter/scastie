@@ -40,6 +40,11 @@ object RuntimeErrorLogger {
   }
   private class NoOp(os: OutputStream) extends PrintWriter(os)
 
+  private def logThrowable(throwable: Throwable): Unit = {
+    val error = RuntimeErrorWrap(RuntimeError.fromThrowable(throwable))
+    println(Json.stringify(Json.toJson(error)))
+  }
+
   private val clientLogger = new AbstractAppender("sbt-scastie-appender", null, PatternLayout.createDefaultLayout(), true, Array()) {
     def append(event: LogEvent): Unit = {
       //daaamn
@@ -64,21 +69,21 @@ object RuntimeErrorLogger {
           }
         } yield e
       }
-      throwable.foreach { throwable =>
-        val error = RuntimeErrorWrap(RuntimeError.fromThrowable(throwable))
-        println(Json.stringify(Json.toJson(error)))
-      }
+      throwable.foreach(logThrowable)
     }
     start()
   }
 
+  private val clientAppender = new sbt.internal.RelayAppender("sbt-scastie-appender") {
+    override def trace(t: => Throwable, traceLevel: Int): Unit =
+      logThrowable(t)
+  }
+
   val settings: Seq[sbt.Def.Setting[_]] = Seq(
-    extraLoggers := { (key: ScopedKey[_]) =>
-      Seq(clientLogger)
-    },
     showSuccess := false,
     logManager := sbt.internal.LogManager.withLoggers(
       (task, state) => defaultScreen(ConsoleOut.printWriterOut(NoOp()), suppressedMessage(task, state)),
+      relay = _ => clientAppender
     )
   )
 }
