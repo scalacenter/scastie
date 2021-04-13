@@ -77,6 +77,12 @@ object RuntimeErrorLogger {
   private val clientAppender = new sbt.internal.RelayAppender("sbt-scastie-appender") {
     override def trace(t: => Throwable, traceLevel: Int): Unit =
       logThrowable(t)
+
+    override def control(event: sbt.util.ControlEvent.Value, message: => String): Unit =
+      logThrowable(new Throwable(message))
+
+    override def appendLog(level: util.Level.Value, message: => String): Unit = 
+      logThrowable(new Throwable(message))
   }
 
   val settings: Seq[sbt.Def.Setting[_]] = Seq(
