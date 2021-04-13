@@ -165,7 +165,7 @@ object ScalaTarget {
 
     def sbtConfig: String = {
       s"""|${sbtConfigScalaVersion(scalaVersion)}
-          |scalaOrganization in ThisBuild := "org.typelevel"""".stripMargin
+          |ThisBuild / scalaOrganization := "org.typelevel"""".stripMargin
     }
 
     def sbtPluginsConfig: String = ""
@@ -212,9 +212,9 @@ object ScalaTarget {
       s"""|${sbtConfigScalaVersion(scalaVersion)}
           |${hktScalacOptions(scalaVersion)}
           |enablePlugins(ScalaJSPlugin)
-          |artifactPath in (Compile, fastOptJS) := baseDirectory.value / "${ScalaTarget.Js.targetFilename}"
+          |Compile / fastOptJS / artifactPath := baseDirectory.value / "${ScalaTarget.Js.targetFilename}"
           |scalacOptions += {
-          |  val from = (baseDirectory in LocalRootProject).value.toURI.toString
+          |  val from = (LocalRootProject / baseDirectory).value.toURI.toString
           |  val to = "${ScalaTarget.Js.sourceUUID}/"
           |  "-P:scalajs:mapSourceURI:" + from + "->" + to
           |}""".stripMargin
@@ -298,8 +298,7 @@ object ScalaTarget {
     def sbtConfig: String =
       sbtConfigScalaVersion(dottyVersion)
 
-    def sbtPluginsConfig: String =
-      """addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.5.4")"""
+    def sbtPluginsConfig: String = ""
 
     def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 

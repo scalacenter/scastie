@@ -73,13 +73,10 @@ object RuntimeErrorLogger {
   }
 
   val settings: Seq[sbt.Def.Setting[_]] = Seq(
-    extraLoggers := { (key: ScopedKey[_]) =>
-      Seq(clientLogger)
-    },
     showSuccess := false,
     logManager := sbt.internal.LogManager.withLoggers(
       (task, state) => defaultScreen(ConsoleOut.printWriterOut(NoOp()), suppressedMessage(task, state)),
-      relay = _ => clientLogger
+//      relay = _ => clientLogger, //todo
     )
   )
 }

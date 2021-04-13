@@ -33,7 +33,7 @@ object SbtShared {
     val current = "1.5.0"
   }
 
-  val distSbtVersion = "1.3.13"
+  val distSbtVersion = "1.5.0"
 
   val runtimeProjectName = "runtime-scala"
 
@@ -75,11 +75,10 @@ object SbtShared {
 
   lazy val baseSettings = Seq(
     // skip scaladoc
-    publishArtifact in (Compile, packageDoc) := false,
-    publishArtifact in packageDoc := false,
-    publishArtifact in packageSrc := false,
-    sources in (Compile, doc) := Seq.empty,
-    parallelExecution in Test := false,
+    Compile / packageDoc / publishArtifact := false,
+    packageSrc / publishArtifact := false,
+    Compile / doc / sources := Seq.empty,
+    Test / parallelExecution := false,
     scalacOptions ++= {
       val scalaV = scalaVersion.value
 
@@ -100,9 +99,9 @@ object SbtShared {
       }
 
     },
-    console := (console in Test).value,
-    scalacOptions in (Test, console) -= "-Ywarn-unused-import",
-    scalacOptions in (Compile, consoleQuick) -= "-Ywarn-unused-import"
+    console := (Test / console).value,
+    Test / console / scalacOptions -= "-Ywarn-unused-import",
+    Compile / consoleQuick / scalacOptions -= "-Ywarn-unused-import"
   ) ++ orgSettings
 
   lazy val baseNoCrossSettings = baseSettings ++ Seq(
@@ -177,7 +176,7 @@ object SbtShared {
         "latest3"   -> ScalaVersions.latest3,
         "jsScalaVersion" -> ScalaVersions.js,
         "defaultScalaJsVersion" -> ScalaJSVersions.current,
-        "sbtVersion" -> readSbtVersion((baseDirectory in ThisBuild).value.toPath),
+        "sbtVersion" -> readSbtVersion((ThisBuild / baseDirectory).value.toPath),
       ),
       buildInfoPackage := "com.olegych.scastie.buildinfo",
     )

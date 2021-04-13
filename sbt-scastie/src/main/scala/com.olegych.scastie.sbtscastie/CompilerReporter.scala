@@ -22,7 +22,7 @@ object CompilerReporter {
   )
 
   val setting: sbt.Def.Setting[_] =
-    compilerReporter in (Compile, compile) := new xsbti.Reporter {
+    Compile / compile / compilerReporter := new xsbti.Reporter {
       private val buffer       = collection.mutable.ArrayBuffer.empty[Problem]
       def reset(): Unit        = buffer.clear()
       def hasErrors: Boolean   = buffer.exists(_.severity == Severity.Error)
