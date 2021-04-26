@@ -7,7 +7,6 @@ import akka.actor.{ActorRef, Cancellable, FSM, Stash}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.olegych.scastie.api._
-import com.olegych.scastie.buildinfo.BuildInfo.sbtVersion
 import com.olegych.scastie.instrumentation.InstrumentedInputs
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.util._
@@ -95,7 +94,7 @@ class SbtProcess(runTimeout: FiniteDuration,
   private val projectDir = sbtDir.resolve("project")
   Files.createDirectories(projectDir)
   // log.info(s"sbtVersion: $sbtVersion")
-  write(projectDir.resolve("build.properties"), s"sbt.version = $sbtVersion")
+  write(projectDir.resolve("build.properties"), s"sbt.version = ${com.olegych.scastie.buildinfo.BuildInfo.sbtVersion}")
   private val pluginFile = projectDir.resolve("plugins.sbt")
   private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
   Files.createDirectories(codeFile.getParent)
@@ -273,7 +272,7 @@ class SbtProcess(runTimeout: FiniteDuration,
 
   private def setInputs(inputs: Inputs): Unit = {
     val prompt =
-      s"""shellPrompt := {_ => println(""); "$promptUniqueId" + "\\n"}"""
+      s"""shellPrompt := {_ => println(""); "$promptUniqueId" + "\\n "}"""
 
     writeFile(pluginFile, inputs.sbtPluginsConfig + "\n")
     writeFile(buildFile, prompt + "\n" + inputs.sbtConfig)
