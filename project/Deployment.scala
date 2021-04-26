@@ -40,7 +40,7 @@ object Deployment {
   def deployServerTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
-      val serverZip = (packageBin in (server, Universal)).value.toPath
+      val serverZip = (server / Universal / packageBin).value.toPath
 
       deployment.deployServer(serverZip)
     }
@@ -48,8 +48,8 @@ object Deployment {
   def deployLocalTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
-      val serverZip = (packageBin in (server, Universal)).value.toPath
-      val imageIdSbt = (docker in sbtRunner).value
+      val serverZip = (server / Universal / packageBin).value.toPath
+      val imageIdSbt = (sbtRunner / docker).value
 
       deployment.deployLocal(serverZip)
     }
@@ -57,8 +57,8 @@ object Deployment {
   def deployTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
-      val serverZip = (packageBin in (server, Universal)).value.toPath
-      val imageIdSbt = (dockerBuildAndPush in sbtRunner).value
+      val serverZip = (server / Universal / packageBin).value.toPath
+      val imageIdSbt = (sbtRunner / dockerBuildAndPush).value
 
       deployment.deploy(serverZip)
     }
@@ -90,18 +90,18 @@ object Deployment {
   ): Def.Initialize[Task[Deployment]] =
     Def.task {
       new Deployment(
-        rootFolder = (baseDirectory in ThisBuild).value,
+        rootFolder = (ThisBuild / baseDirectory).value,
         version = version.value,
-        sbtDockerImage = (imageNames in (sbtRunner, docker)).value.head,
+        sbtDockerImage = (sbtRunner / docker / imageNames).value.head,
         logger = streams.value.log
       )
     }
 
   private def serverZipTask(server: Project): Def.Initialize[Task[Path]] =
     Def.task {
-      val universalTarget = (target in (server, Universal)).value
-      val universalName = (name in (server, Universal)).value
-      val serverVersion = (version in server).value
+      val universalTarget = (server / Universal / target).value
+      val universalName = (server / Universal / name).value
+      val serverVersion = (server / version).value
       (universalTarget / (universalName + "-" + serverVersion + ".zip")).toPath
     }
 }

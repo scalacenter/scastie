@@ -81,7 +81,7 @@ object RuntimeErrorLogger {
     override def control(event: sbt.util.ControlEvent.Value, message: => String): Unit =
       logThrowable(new Throwable(message))
 
-    override def appendLog(level: util.Level.Value, message: => String): Unit = 
+    override def appendLog(level: util.Level.Value, message: => String): Unit =
       logThrowable(new Throwable(message))
   }
 

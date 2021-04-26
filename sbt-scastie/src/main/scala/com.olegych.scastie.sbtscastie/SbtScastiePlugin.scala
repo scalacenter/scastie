@@ -15,6 +15,7 @@ object SbtScastiePlugin extends AutoPlugin {
       Seq(
         //workaround https://github.com/sbt/sbt/issues/5482
         Global / nio.Keys.onChangedBuildSource := nio.Keys.IgnoreSourceChanges,
+        Global / excludeLintKeys := Set(useSuperShell, shellPrompt),
         autoStartServer := false,
         compilers := {
           val r = compilers.value

@@ -65,13 +65,13 @@ lazy val utils = project
 
 lazy val runnerRuntimeDependencies = (api.projectRefs ++ runtimeScala.projectRefs ++ Seq(
     sbtScastie.project
-  )).map(publishLocal in _)
+  )).map(_ / publishLocal)
 
 lazy val runnerRuntimeDependenciesInTest = Seq(
-  test in assembly := {},
-  test in Test := (test in Test).dependsOn(runnerRuntimeDependencies: _*).value,
-  testOnly in Test := (testOnly in Test).dependsOn(runnerRuntimeDependencies: _*).evaluated,
-  testQuick in Test := (testQuick in Test).dependsOn(runnerRuntimeDependencies: _*).evaluated
+  assembly / test := {},
+  Test / test := (Test / test).dependsOn(runnerRuntimeDependencies: _*).value,
+  Test / testOnly := (Test / testOnly).dependsOn(runnerRuntimeDependencies: _*).evaluated,
+  Test / testQuick := (Test / testQuick).dependsOn(runnerRuntimeDependencies: _*).evaluated
 )
 
 lazy val smallRunnerRuntimeDependenciesInTest = {
@@ -81,12 +81,12 @@ lazy val smallRunnerRuntimeDependenciesInTest = {
     runtimeScala.jvm(ScalaVersions.jvm),
     runtimeScala.jvm(ScalaVersions.sbt),
     sbtScastie
-  ).map(publishLocal in _)
+  ).map(_ / publishLocal)
   Seq(
-    test in assembly := {},
-    test in Test := (test in Test).dependsOn(smallRunnerRuntimeDependencies: _*).value,
-    testOnly in Test := (testOnly in Test).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated,
-    testQuick in Test := (testQuick in Test).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated
+    assembly / test := {},
+    Test / test := (Test / test).dependsOn(smallRunnerRuntimeDependencies: _*).value,
+    Test / testOnly := (Test / testOnly).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated,
+    Test / testQuick := (Test / testQuick).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated
   )
 }
 
@@ -98,8 +98,8 @@ lazy val sbtRunner = project
   .settings(loggingAndTest)
   .settings(runnerRuntimeDependenciesInTest)
   .settings(
-    javaOptions in reStart += "-Xmx256m",
-    parallelExecution in Test := false,
+    reStart / javaOptions += "-Xmx256m",
+    Test / parallelExecution := false,
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     resolvers += Resolver.sonatypeRepo("public"),
     libraryDependencies ++= Seq(
@@ -109,7 +109,7 @@ lazy val sbtRunner = project
       akka("slf4j"),
       "org.scalameta" %% "scalafmt-core" % "2.7.5"
     ),
-    imageNames in docker := Seq(
+    docker / imageNames := Seq(
       ImageName(
         namespace = Some(dockerOrg),
         repository = "scastie-sbt-runner",
@@ -118,30 +118,30 @@ lazy val sbtRunner = project
     ),
     docker := {
       val log = Keys.streams.value.log
-      val dockerPath = (DockerKeys.dockerPath in docker).value
-      val buildOptions = (DockerKeys.buildOptions in docker).value
-      val stageDir = (target in docker).value
-      val dockerfile = (DockerKeys.dockerfile in docker).value
-      val imageNames = (DockerKeys.imageNames in docker).value
+      val dockerPath = (docker / DockerKeys.dockerPath).value
+      val buildOptions = (docker / DockerKeys.buildOptions).value
+      val stageDir = (docker / target).value
+      val dockerfile = (docker / DockerKeys.dockerfile).value
+      val imageNames = (docker / DockerKeys.imageNames).value
       sbtdocker.DockerBuildFixed(dockerfile, sbtdocker.staging.DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
     },
-    dockerfile in docker := Def
+    docker / dockerfile := Def
       .task {
         DockerHelper(
-          baseDirectory = (baseDirectory in ThisBuild).value.toPath,
+          baseDirectory = (ThisBuild / baseDirectory).value.toPath,
           sbtTargetDir = target.value.toPath,
           ivyHome = ivyPaths.value.ivyHome.get.toPath,
           organization = organization.value,
           artifact = assembly.value.toPath,
-          sbtScastie = (moduleName in sbtScastie).value
+          sbtScastie = (sbtScastie / moduleName).value
         )
       }
       .dependsOn(runnerRuntimeDependencies: _*)
       .value,
-    assemblyMergeStrategy in assembly := {
+    assembly / assemblyMergeStrategy := {
       case PathList("META-INF", xs @ _*) => MergeStrategy.discard
       case in @ PathList("reference.conf", xs @ _*) => {
-        val old = (assemblyMergeStrategy in assembly).value
+        val old = (assembly / assemblyMergeStrategy).value
         old(in)
       }
       case x => MergeStrategy.first
@@ -197,7 +197,7 @@ lazy val storage = project
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
 
 val webpackDir = Def.setting {
-  (baseDirectory in ThisProject).value / "webpack"
+  (ThisProject / baseDirectory).value / "webpack"
 }
 
 val webpackDevConf = Def.setting {
@@ -212,19 +212,19 @@ lazy val client = project
   .settings(baseNoCrossSettings)
   .settings(baseJsSettings)
   .settings(
-    version in webpack := "3.5.5",
-    version in startWebpackDevServer := "2.7.1",
-    webpackConfigFile in fastOptJS := webpackDevConf.value,
-    webpackConfigFile in fullOptJS := webpackProdConf.value,
-    webpackMonitoredDirectories += (resourceDirectory in Compile).value,
+    webpack / version := "3.5.5",
+    startWebpackDevServer / version := "2.7.1",
+    fastOptJS / webpackConfigFile := webpackDevConf.value,
+    fullOptJS / webpackConfigFile := webpackProdConf.value,
+    webpackMonitoredDirectories += (Compile / resourceDirectory).value,
     webpackResources := webpackDir.value * "*.js",
-    includeFilter in webpackMonitoredFiles := "*",
+    webpackMonitoredFiles / includeFilter := "*",
     useYarn := true,
-    webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),
-    webpackBundlingMode in fullOptJS := BundlingMode.Application,
+    fastOptJS / webpackBundlingMode := BundlingMode.LibraryOnly(),
+    fullOptJS / webpackBundlingMode := BundlingMode.Application,
     test := {},
     Test / loadedTestFrameworks := Map(),
-    npmDependencies in Compile ++= Seq(
+    Compile / npmDependencies ++= Seq(
       "codemirror" -> "5.50.0",
       "firacode" -> "1.205.0",
       "font-awesome" -> "4.7.0",
@@ -233,7 +233,7 @@ lazy val client = project
       "react-dom" -> "16.7.0",
       "typeface-roboto-slab" -> "0.0.35",
     ),
-    npmDevDependencies in Compile ++= Seq(
+    Compile / npmDevDependencies ++= Seq(
       "compression-webpack-plugin" -> "1.0.0",
       "clean-webpack-plugin" -> "0.1.16",
       "css-loader" -> "0.28.5",

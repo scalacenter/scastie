@@ -30,8 +30,8 @@ in rec {
     version = "1.5.0";
  
     src = fetchurl {
-      url = "https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.tgz";
-      sha256 = "aadf110a48ea77c02ce63a9cc033d9fcd02b634e89e8f22dfe13ed21592042b6";
+      url = "https://github.com/sbt/sbt/releases/download/v1.3.13/sbt-1.3.13.tgz";
+      sha256 = "854154de27a7d8c13b5a0f9a297cd1f254cc13b44588dae507e5d4fb2741bd22";
       name = "sbt.tgz";
     };
 
