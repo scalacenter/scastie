@@ -190,9 +190,7 @@ case class Inputs(
       }
 
     s"""|$targetConfig
-        |$librariesConfig
-        |turbo := true
-        |useSuperShell := false""".stripMargin
+        |$librariesConfig""".stripMargin
   }
 
   lazy val sbtPluginsConfig: String =
