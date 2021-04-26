@@ -1,95 +1,96 @@
-package com.olegych.scastie.sbtscastie
-
-import java.io.{OutputStream, PrintWriter}
+package sbt.internal.util.com.olegych.scastie.sbtscastie
 
 import com.olegych.scastie.api._
-import org.apache.logging.log4j.core.LogEvent
-import org.apache.logging.log4j.core.appender.AbstractAppender
-import org.apache.logging.log4j.core.layout.PatternLayout
+import org.apache.logging.log4j.core.{Appender => XAppender, LogEvent => XLogEvent}
 import org.apache.logging.log4j.message.ObjectMessage
 import play.api.libs.json.Json
 import sbt.Keys._
 import sbt._
-import sbt.internal.LogManager.suppressedMessage
-import sbt.internal.util.MainAppender.defaultScreen
-import sbt.internal.util.{ObjectEvent, TraceEvent}
+import sbt.internal.util.ConsoleAppender.Properties
+import sbt.internal.util.{ConsoleAppender, Log4JConsoleAppender, ObjectEvent, TraceEvent}
+
+import java.io.{OutputStream, PrintWriter}
+import java.nio.channels.ClosedChannelException
+import java.util.concurrent.atomic.AtomicReference
 
 object RuntimeErrorLogger {
-  private object NoOp {
-    def apply(): NoOp = {
-      def out(in: String): Unit = {
-        println(
-          Json.stringify(
-            Json.toJson[ConsoleOutput](
-              ConsoleOutput.SbtOutput(ProcessOutput(in.trim, ProcessOutputType.StdOut, None))
-            )
+  private val scastieOut = new PrintWriter(new OutputStream {
+    def out(in: String): Unit = {
+      println(
+        Json.stringify(
+          Json.toJson[ConsoleOutput](
+            ConsoleOutput.SbtOutput(ProcessOutput(in.trim, ProcessOutputType.StdOut, None))
           )
         )
-      }
+      )
+    }
+    override def write(b: Int): Unit = ()
+    override def write(b: Array[Byte]): Unit = out(new String(b))
+    override def write(b: Array[Byte], off: Int, len: Int): Unit = out(new String(b, off, len))
+    override def close(): Unit = ()
+    override def flush(): Unit = ()
+  })
 
-      new NoOp(new OutputStream {
-        override def close(): Unit = ()
-        override def flush(): Unit = ()
-        override def write(b: Array[Byte]): Unit =
-          out(new String(b))
-        override def write(b: Array[Byte], off: Int, len: Int): Unit =
-          out(new String(b, off, len))
-        override def write(b: Int): Unit = ()
-      })
+  private def findThrowable(event: XLogEvent) = {
+    //daaamn
+    Option(event.getThrown).orElse {
+      for {
+        e <- Option(event.getMessage).collect {
+          case e: ObjectMessage => e
+        }
+        e <- Option(e.getParameter).collect {
+          case e: ObjectEvent[_] => e
+        }
+        e <- Option(e.message).collect {
+          case e: TraceEvent => e
+        }
+        //since worksheet wraps the code in object we unwrap it to display clearer message
+        e <- Option(e.message).collect {
+          case e: ExceptionInInitializerError if e.getCause != null && e.getCause.getStackTrace.headOption.exists { e =>
+                e.getClassName == Instrumentation.instrumentedObject + "$" && e.getMethodName == "<clinit>"
+              } =>
+            e.getCause
+          case e => e
+        }
+      } yield e
     }
   }
-  private class NoOp(os: OutputStream) extends PrintWriter(os)
-
   private def logThrowable(throwable: Throwable): Unit = {
     val error = RuntimeErrorWrap(RuntimeError.fromThrowable(throwable))
     println(Json.stringify(Json.toJson(error)))
   }
 
-  private val clientLogger = new AbstractAppender("sbt-scastie-appender", null, PatternLayout.createDefaultLayout(), true, Array()) {
-    def append(event: LogEvent): Unit = {
-      //daaamn
-      val throwable = Option(event.getThrown).orElse {
-        for {
-          e <- Option(event.getMessage).collect {
-            case e: ObjectMessage => e
-          }
-          e <- Option(e.getParameter).collect {
-            case e: ObjectEvent[_] => e
-          }
-          e <- Option(e.message).collect {
-            case e: TraceEvent => e
-          }
-          //since worksheet wraps the code in object we unwrap it to display clearer message
-          e <- Option(e.message).collect {
-            case e: ExceptionInInitializerError if e.getCause != null && e.getCause.getStackTrace.headOption.exists { e =>
-                  e.getClassName == Instrumentation.instrumentedObject + "$" && e.getMethodName == "<clinit>"
-                } =>
-              e.getCause
-            case e => e
-          }
-        } yield e
-      }
-      throwable.foreach(logThrowable)
-    }
-    start()
-  }
-
-  private val clientAppender = new sbt.internal.RelayAppender("sbt-scastie-appender") {
-    override def trace(t: => Throwable, traceLevel: Int): Unit =
-      logThrowable(t)
-
-    override def control(event: sbt.util.ControlEvent.Value, message: => String): Unit =
-      logThrowable(new Throwable(message))
-
-    override def appendLog(level: util.Level.Value, message: => String): Unit =
-      logThrowable(new Throwable(message))
-  }
-
   val settings: Seq[sbt.Def.Setting[_]] = Seq(
     showSuccess := false,
+    useLog4J := true,
     logManager := sbt.internal.LogManager.withLoggers(
-      (task, state) => defaultScreen(ConsoleOut.printWriterOut(NoOp()), suppressedMessage(task, state)),
-      relay = _ => clientAppender
-    )
+      (_, _) =>
+        new ConsoleAppender(ConsoleAppender.generateName, Properties.from(ConsoleOut.printWriterOut(scastieOut), true, false), _ => None) {
+          override def trace(t: => Throwable, traceLevel: Int): Unit = logThrowable(t)
+          private[this] val log4j = new AtomicReference[XAppender](null)
+          private[sbt] override lazy val toLog4J = log4j.get match {
+            case null =>
+              log4j.synchronized {
+                log4j.get match {
+                  case null =>
+                    val l = new Log4JConsoleAppender(
+                      name,
+                      properties,
+                      suppressedMessage, { event =>
+                        val level = ConsoleAppender.toLevel(event.getLevel)
+                        val message = event.getMessage
+                        findThrowable(event).foreach(logThrowable)
+                        try appendMessage(level, message)
+                        catch { case _: ClosedChannelException => }
+                      }
+                    )
+                    log4j.set(l)
+                    l
+                  case l => l
+                }
+              }
+          }
+      }
+    ),
   )
 }

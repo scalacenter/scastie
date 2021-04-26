@@ -11,7 +11,7 @@ object SbtScastiePlugin extends AutoPlugin {
   override def trigger = allRequirements
 
   override lazy val projectSettings: Seq[sbt.Def.Setting[_]] =
-    (CompilerReporter.setting +: RuntimeErrorLogger.settings) ++
+    (CompilerReporter.setting +: sbt.internal.util.com.olegych.scastie.sbtscastie.RuntimeErrorLogger.settings) ++
       Seq(
         //workaround https://github.com/sbt/sbt/issues/5482
         Global / nio.Keys.onChangedBuildSource := nio.Keys.IgnoreSourceChanges,
