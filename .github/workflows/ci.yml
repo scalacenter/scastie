@@ -1,0 +1,15 @@
+name: "CI"
+on:
+  pull_request:
+  push:
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Start mongodb
+      uses: supercharge/mongodb-github-action@1.6.0
+    - uses: nixbuild/nix-quick-install-action@v5
+    - name: Run tests
+      run: |
+        nix-shell -A scastie --command  "sbt -DSnippetsContainerTest.mongo=true cachedCiTest"
