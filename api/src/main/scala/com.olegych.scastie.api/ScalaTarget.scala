@@ -273,7 +273,7 @@ object ScalaTarget {
   }
 
   object Scala3 {
-    def default: ScalaTarget = Scala3(BuildInfo.latest3)
+    def default: ScalaTarget = Scala3(BuildInfo.stable3)
 
     def defaultCode: String =
       """|// You can find more examples here:
