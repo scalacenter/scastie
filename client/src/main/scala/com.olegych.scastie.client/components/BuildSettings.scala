@@ -93,7 +93,7 @@ object BuildSettings {
 
       TagMod(
         ul(cls := "suggestedVersions")(
-          ScalaVersions.suggestedScalaVersions.map { suggestedVersion =>
+          ScalaVersions.suggestedScalaVersions(props.scalaTarget.targetType).map { suggestedVersion =>
             li(
               input(`type` := "radio",
                     id := s"scala-$suggestedVersion",
@@ -109,7 +109,7 @@ object BuildSettings {
             label(
               div(cls := "select-wrapper")(
                 select(name := "scalaVersion", value := scalaVersion.toString, onChange ==> setScalaVersion(targetFun))(
-                  ScalaVersions.allVersions
+                  ScalaVersions.allVersions(props.scalaTarget.targetType)
                     .map(version => option(version))
                     .toTagMod
                 )
@@ -129,7 +129,7 @@ object BuildSettings {
           versionSelector(scalaVersion, ScalaTarget.Typelevel.apply)
 
         case d: ScalaTarget.Scala3 =>
-          div(d.dottyVersion)
+          versionSelector(d.dottyVersion, ScalaTarget.Scala3.apply)
 
         case js: ScalaTarget.Js =>
           div(s"${js.scalaJsVersion} on Scala ${js.scalaVersion}")
