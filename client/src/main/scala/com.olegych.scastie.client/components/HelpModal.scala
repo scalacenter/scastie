@@ -25,7 +25,7 @@ object HelpModal {
     )
 
     val scalafmtConfiguration =
-      generateATag("https://olafurpg.github.io/scalafmt/#Configuration", "configuration section")
+      generateATag("https://scalameta.org/scalafmt/docs/configuration.html#disabling-or-customizing-formatting", "configuration section")
 
     val originalScastie =
       generateATag("https://github.com/OlegYch/scastie_old", "GitHub")
