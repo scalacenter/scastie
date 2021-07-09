@@ -107,7 +107,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val message = "No Predef!"
     val input = Inputs.default.copy(
       sbtConfigExtra = "scalacOptions += \"-Yno-predef\" ",
-      code = s"""scala.Predef.println("$message")"""
+      code = s"""@main def Test = scala.Predef.println("$message")"""
     )
 //    run(input)(_ => true)
 //    run(input.copy(sbtConfigExtra = input.sbtConfigExtra + "\nname := \"aaa\" "))(_ => true)
@@ -152,7 +152,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("no warnings by default") {
     val scala =
-      Inputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""")
+      Inputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Xfatal-warnings")""")
     run(scala)(assertUserOutput("2"))
   }
 

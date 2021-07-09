@@ -22,7 +22,7 @@ object Inputs {
   def default: Inputs = Inputs(
     _isWorksheetMode = true,
     code = defaultCode,
-    target = ScalaTarget.Jvm.default,
+    target = ScalaTarget.Scala3.default,
     libraries = Set(),
     librariesFromList = List(),
     sbtConfigExtra = """|scalacOptions ++= Seq(
