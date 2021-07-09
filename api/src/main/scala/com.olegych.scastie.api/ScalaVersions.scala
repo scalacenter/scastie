@@ -11,7 +11,8 @@ object ScalaVersions {
   def allVersions(tpe: ScalaTargetType): List[String] = tpe match {
     case ScalaTargetType.Scala3 => List(
       BuildInfo.stable3,
-      BuildInfo.latest3,
+      "3.0.1-RC2",
+      "3.0.1-RC1",
       "3.0.0-RC3",
       "3.0.0-RC2",
       "3.0.0-RC1",
