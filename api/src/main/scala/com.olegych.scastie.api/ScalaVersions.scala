@@ -19,6 +19,7 @@ object ScalaVersions {
           BuildInfo.latest3,
           "3.0.1-RC2",
           "3.0.1-RC1",
+          "3.0.0",
           "3.0.0-RC3",
           "3.0.0-RC2",
           "3.0.0-RC1",
