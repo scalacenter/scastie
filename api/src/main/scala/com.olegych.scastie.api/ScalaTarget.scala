@@ -9,7 +9,10 @@ sealed trait ScalaTarget {
   def sbtConfig: String
   def sbtPluginsConfig: String
   def sbtRunCommand(worksheetMode: Boolean): String
-  def runtimeDependency: Option[ScalaDependency]
+
+  def runtimeDependency: Option[ScalaDependency] =
+    ScalaTarget.runtimeDependencyFrom(this)
+
   def hasWorksheetMode: Boolean = true
 
   protected def sbtConfigScalaVersion(scalaVersion: String): String =
@@ -132,9 +135,6 @@ object ScalaTarget {
 
     def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
-    def runtimeDependency: Option[ScalaDependency] =
-      runtimeDependencyFrom(this)
-
     override def toString: String = s"Scala $scalaVersion"
   }
 
@@ -162,9 +162,6 @@ object ScalaTarget {
     def sbtPluginsConfig: String = ""
 
     def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
-
-    def runtimeDependency: Option[ScalaDependency] =
-      runtimeDependencyFrom(this)
 
     override def toString: String = s"Typelevel $scalaVersion"
   }
@@ -213,9 +210,6 @@ object ScalaTarget {
 
     def sbtRunCommand(worksheetMode: Boolean): String = "fastOptJS"
 
-    def runtimeDependency: Option[ScalaDependency] =
-      runtimeDependencyFrom(this)
-
     override def toString: String = s"Scala.Js $scalaVersion $scalaJsVersion"
   }
 
@@ -250,9 +244,6 @@ object ScalaTarget {
 
     def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
-    def runtimeDependency: Option[ScalaDependency] =
-      runtimeDependencyFrom(this)
-
     override def toString: String =
       s"Scala-Native $scalaVersion $scalaNativeVersion"
   }
@@ -283,9 +274,6 @@ object ScalaTarget {
     def sbtPluginsConfig: String = ""
 
     def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
-
-    def runtimeDependency: Option[ScalaDependency] =
-      runtimeDependencyFrom(this)
 
     override def toString: String =
       s"Scala $dottyVersion"
