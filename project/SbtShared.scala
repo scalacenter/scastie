@@ -27,7 +27,7 @@ object SbtShared {
     val js = latest213
     val sbt = latest212
     val jvm = latest213
-    val cross = List(latest210, latest211, latest212, latest213, js, sbt, jvm).distinct
+    val cross = List(latest210, latest211, latest212, latest213, latest3, js, sbt, jvm).distinct
   }
 
   object ScalaJSVersions {
@@ -92,7 +92,7 @@ object SbtShared {
           "-unchecked"
         )
 
-      if (scalaV == ScalaVersions.latest210) base
+      if (scalaV == ScalaVersions.latest210 || scalaV.startsWith("3.")) base
       else {
         base ++ Seq(
           "-Yrangepos",
@@ -162,6 +162,8 @@ object SbtShared {
             "com.typesafe.play" %%% "play-json" % "2.6.9"
           case v if v.startsWith("2.11") =>
             "com.typesafe.play" %%% "play-json" % "2.7.4"
+          case v if v.startsWith("3.0") =>
+            "com.typesafe.play" %%% "play-json" % "2.10.0-RC5"
           case _ =>
             "com.typesafe.play" %%% "play-json" % "2.9.0"
         }
@@ -193,6 +195,30 @@ object SbtShared {
     )
     .jvmPlatform(ScalaVersions.cross)
     .jsPlatform(List(ScalaVersions.js), baseJsSettings)
+    .settings(
+      inConfig(Compile)(
+        unmanagedSourceDirectories ++= scala2MajorSourceDirs(scalaSource.value, virtualAxes.value),
+      )
+    )
     .dependsOn(api)
 
+  /**
+   * A sub project in projectMatrix, ex with scala 2.13.x,
+   * is already configured with unmanagedSourceDirectories:
+   *  src/main/{java, scala, scala-2, scala-2.13, scalajvm, scalajvm-2.13}
+   * We need add src/main/scala{jvm|js}-2 for sources shared in all scala 2 sub projects in jvm|js platform.
+   * @return Additional source directory names for scala 2.
+   * @note scalajvm-3 is already configured by sbt-projectmatrix for scala 3 sub projects
+   */
+  private def scala2MajorSourceDirs(scalaSource: File, axisValues: Seq[VirtualAxis]): Seq[File] = {
+    val platform = (axisValues collect {
+      case pv: VirtualAxis.PlatformAxis => pv.directorySuffix
+    }).head
+
+    val svMajors = (axisValues collect {
+      case sv: VirtualAxis.ScalaVersionAxis => sv.value.head
+    }).filter(_ == '2')
+
+    svMajors.map(v => scalaSource.getParentFile / s"scala$platform-$v")
+  }
 }

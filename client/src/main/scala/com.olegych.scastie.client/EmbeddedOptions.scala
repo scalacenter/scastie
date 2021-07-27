@@ -114,7 +114,7 @@ object EmbeddedOptions {
           )
         }
 
-        case (Some("dotty"), _, None, None) => {
+        case (Some("dotty" | "scala3"), _, None, None) => {
           Some(
             scalaVersion
               .map(version => ScalaTarget.Scala3(version))

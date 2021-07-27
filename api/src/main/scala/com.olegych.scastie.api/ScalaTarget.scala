@@ -10,7 +10,7 @@ sealed trait ScalaTarget {
   def sbtPluginsConfig: String
   def sbtRunCommand(worksheetMode: Boolean): String
   def runtimeDependency: Option[ScalaDependency]
-  def hasWorksheetMode: Boolean
+  def hasWorksheetMode: Boolean = true
 
   protected def sbtConfigScalaVersion(scalaVersion: String): String =
     s"""scalaVersion := "$scalaVersion""""
@@ -111,12 +111,6 @@ object ScalaTarget {
   }
 
   case class Jvm(scalaVersion: String) extends ScalaTarget {
-    def hasWorksheetMode: Boolean = {
-      scalaVersion.startsWith("2.13") ||
-      scalaVersion.startsWith("2.12") ||
-      scalaVersion.startsWith("2.11") ||
-      scalaVersion.startsWith("2.10")
-    }
 
     def targetType: ScalaTargetType =
       ScalaTargetType.Scala2
@@ -150,9 +144,6 @@ object ScalaTarget {
   }
 
   case class Typelevel(scalaVersion: String) extends ScalaTarget {
-
-    def hasWorksheetMode: Boolean =
-      Jvm(scalaVersion).hasWorksheetMode
 
     def targetType: ScalaTargetType =
       ScalaTargetType.Typelevel
@@ -191,9 +182,6 @@ object ScalaTarget {
   }
 
   case class Js(scalaVersion: String, scalaJsVersion: String) extends ScalaTarget {
-
-    def hasWorksheetMode: Boolean =
-      Jvm(scalaVersion).hasWorksheetMode
 
     def targetType: ScalaTargetType =
       ScalaTargetType.JS
@@ -241,9 +229,6 @@ object ScalaTarget {
 
   case class Native(scalaVersion: String, scalaNativeVersion: String) extends ScalaTarget {
 
-    def hasWorksheetMode: Boolean =
-      Jvm(scalaVersion).hasWorksheetMode
-
     def targetType: ScalaTargetType =
       ScalaTargetType.Native
 
@@ -283,9 +268,6 @@ object ScalaTarget {
   }
 
   case class Scala3(dottyVersion: String) extends ScalaTarget {
-
-    def hasWorksheetMode: Boolean = false
-
     def targetType: ScalaTargetType =
       ScalaTargetType.Scala3
 
@@ -303,7 +285,7 @@ object ScalaTarget {
     def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
     def runtimeDependency: Option[ScalaDependency] =
-      None
+      runtimeDependencyFrom(this)
 
     override def toString: String =
       s"Scala $dottyVersion"
