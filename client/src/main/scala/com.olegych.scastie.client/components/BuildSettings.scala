@@ -38,8 +38,8 @@ object BuildSettings {
   def renderTarget(props: BuildSettings): TagOf[Div] = {
 
     val targetTypes = List[ScalaTargetType](
-      ScalaTargetType.Scala2,
       ScalaTargetType.Scala3,
+      ScalaTargetType.Scala2,
       ScalaTargetType.Typelevel,
       ScalaTargetType.JS //,
       // ScalaTargetType.Native
