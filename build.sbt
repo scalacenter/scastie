@@ -1,5 +1,6 @@
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
+import DockerHelper.{serverDockerfile, runnerDockerfile}
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % (
   if(module.startsWith("http")) "10.2.5" else "2.6.15"
@@ -68,7 +69,6 @@ lazy val runnerRuntimeDependencies = (api.projectRefs ++ runtimeScala.projectRef
   )).map(_ / publishLocal)
 
 lazy val runnerRuntimeDependenciesInTest = Seq(
-  assembly / test := {},
   Test / test := (Test / test).dependsOn(runnerRuntimeDependencies: _*).value,
   Test / testOnly := (Test / testOnly).dependsOn(runnerRuntimeDependencies: _*).evaluated,
   Test / testQuick := (Test / testQuick).dependsOn(runnerRuntimeDependencies: _*).evaluated
@@ -83,14 +83,11 @@ lazy val smallRunnerRuntimeDependenciesInTest = {
     sbtScastie
   ).map(_ / publishLocal)
   Seq(
-    assembly / test := {},
     Test / test := (Test / test).dependsOn(smallRunnerRuntimeDependencies: _*).value,
     Test / testOnly := (Test / testOnly).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated,
     Test / testQuick := (Test / testQuick).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated
   )
 }
-
-lazy val dockerOrg = "scalacenter"
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
@@ -106,37 +103,11 @@ lazy val sbtRunner = project
       akka("actor-testkit-typed") % Test,
       "org.scalameta" %% "scalafmt-core" % "3.0.0-RC6"
     ),
-    docker / imageNames := Seq(
-      ImageName(
-        namespace = Some(dockerOrg),
-        repository = "scastie-sbt-runner",
-        tag = Some(gitHashNow)
-      )
-    ),
-    docker / dockerfile := Def
-      .task {
-        DockerHelper(
-          baseDirectory = (ThisBuild / baseDirectory).value.toPath,
-          sbtTargetDir = target.value.toPath,
-          ivyHome = ivyPaths.value.ivyHome.get.toPath,
-          organization = organization.value,
-          artifact = assembly.value.toPath,
-          sbtScastie = (sbtScastie / moduleName).value
-        )
-      }
-      .dependsOn(runnerRuntimeDependencies: _*)
-      .value,
-    assembly / assemblyMergeStrategy := {
-      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-      case in @ PathList("reference.conf", xs @ _*) => {
-        val old = (assembly / assemblyMergeStrategy).value
-        old(in)
-      }
-      case x => MergeStrategy.first
-    }
+    dockerImageName := "scastie-sbt-runner",
+    docker / dockerfile := runnerDockerfile(sbtScastie).dependsOn(runnerRuntimeDependencies: _*).value,
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), instrumentation, utils)
-  .enablePlugins(sbtdocker.DockerPlugin, BuildInfoPlugin)
+  .enablePlugins(sbtdocker.DockerPlugin, JavaServerAppPackaging, BuildInfoPlugin)
 
 lazy val server = project
   .settings(baseNoCrossSettings)
@@ -155,9 +126,11 @@ lazy val server = project
       "ch.megard" %% "akka-http-cors" % "0.4.2",
       akka("actor-testkit-typed") % Test,
       akka("http-testkit") % Test
-    )
+    ),
+    dockerImageName := "scastie-server",
+    docker / dockerfile := serverDockerfile().value,
   )
-  .enablePlugins(JavaServerAppPackaging)
+  .enablePlugins(sbtdocker.DockerPlugin, JavaServerAppPackaging)
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, balancer)
 
 lazy val balancer = project
