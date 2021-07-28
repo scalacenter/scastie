@@ -1,432 +1,430 @@
 import sbt._
 import Keys._
 
-import SbtShared.gitHashNow
-
 import java.io.File
 import java.nio.file._
 import java.nio.file.attribute._
-import java.nio.file.StandardCopyOption.REPLACE_EXISTING
-
 import com.typesafe.config.ConfigFactory
-import com.typesafe.sbt.SbtNativePackager.Universal
-import sbtdocker.DockerKeys.{docker, dockerBuildAndPush, imageNames}
+import sbtdocker.DockerKeys.{docker, imageNames}
+import com.typesafe.sslconfig.util.{ConfigLoader, EnrichedConfig}
+import com.typesafe.sslconfig.util.ConfigLoader.playConfigLoader
 import sbtdocker.ImageName
+import scala.collection.immutable.Seq
+import scala.language.implicitConversions
 import sys.process._
 
 object Deployment {
-  def settings(server: Project, sbtRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
-    deploy := deployTask(server, sbtRunner).value,
-    deployServer := deployServerTask(server, sbtRunner).value,
-    deployQuick := deployQuickTask(server, sbtRunner).value,
+  def settings(server: Project, sbtRunner: Project): Seq[Def.Setting[_]] = Seq(
+    deployRunnersQuick := deployRunnersQuickTask(server, sbtRunner).value,
     deployServerQuick := deployServerQuickTask(server, sbtRunner).value,
-    deployLocal := deployLocalTask(server, sbtRunner).value
+    deployLocalQuick := deployLocalQuickTask(server, sbtRunner).value,
+    dockerCompose := dockerComposeTask(server, sbtRunner).value,
   )
 
-  lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
-
-  lazy val deployServer = taskKey[Unit]("Deploy server")
-
-  lazy val deployLocal = taskKey[Unit]("Deploy locally")
-
-  lazy val deployQuick = taskKey[Unit](
-    "Deploy server and sbt instances without building server " +
-      "zip and pushing docker images"
+  lazy val deployRunnersQuick = taskKey[Unit]("Deploy sbt runners")
+  lazy val deployServerQuick = taskKey[Unit]("Deploy server without building server zip")
+  lazy val deployLocalQuick = taskKey[Unit]("Deploy locally")
+  lazy val dockerCompose = taskKey[Unit](
+    "Create docker-compose.yml (alternative way to deploy locally)"
   )
 
-  lazy val deployServerQuick =
-    taskKey[Unit]("Deploy server without building server zip")
-
-  def deployServerTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  /**
+   *  @note The generated docker-compose.yml file contains all options to run scastie:
+   *  - Don't mount secrets.conf and local.conf file to container
+   *  - Don't set -Dsentry.dsn, -Dconfig.file `docker run` options
+   */
+  private def dockerComposeTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner).value
-      val serverZip = (server / Universal / packageBin).value.toPath
+      val log = streams.value.log
+      val baseDir = (ThisBuild / baseDirectory).value
 
-      deployment.deployServer(serverZip)
+      Deployer.Local(baseDir, log).write("docker-compose.yml",
+        s"""
+          |# https://www.cloudsavvyit.com/10765/how-to-simplify-docker-compose-files-with-yaml-anchors-and-extensions/
+          |x-runner: &runner
+          |  image: ${ (sbtRunner / docker / imageNames).value.head }
+          |  environment:
+          |    JAVA_OPTS: >-
+          |      -Dsentry.release=${ version.value }
+          |      -Dcom.olegych.scastie.sbt.production=true
+          |      -Dakka.cluster.seed-nodes.0=akka://sys@server:15000
+          |      -Dakka.cluster.seed-nodes.1=akka://sys@sbt-runner-1:5150
+          |  restart: unless-stopped
+          |services:
+          |  server:
+          |    image: ${ (server / docker / imageNames).value.head }
+          |    ports:
+          |      - "9000:9000"
+          |    environment:
+          |      JAVA_OPTS: >-
+          |        -Xmx1G
+          |        -Dsentry.release=${ version.value }
+          |        -Dcom.olegych.scastie.web.production=true
+          |        -Dakka.remote.artery.canonical.hostname=server
+          |        -Dakka.remote.artery.canonical.port=15000
+          |        -Dakka.cluster.seed-nodes.0=akka://sys@server:15000
+          |        -Dakka.cluster.seed-nodes.1=akka://sys@sbt-runner-1:5150
+          |    volumes:
+          |      # /app/data = value of DATA_DIR env variable defined in DockerHelper
+          |      - ./target:/app/data
+          |    restart: unless-stopped
+          |  sbt-runner-1:
+          |    <<: *runner
+          |    command:
+          |      - -Dakka.remote.artery.canonical.hostname=sbt-runner-1
+          |      - -Dakka.remote.artery.canonical.port=5150
+          |""".stripMargin)
+
+      log.info("Created docker-compose.yml. `docker-compose up` to start scastie.")
     }
 
-  def deployLocalTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  /** @param rmi if true then delete all $label images
+   *         rmi = false when `deployLocal`, true when `deploy` */
+  private def dockerClean(label: String, rmi: Boolean = true): String = {
+    val rmiComment = if (rmi) "# " else ""
+
+    s"""|#!/bin/bash -x
+        |
+        |# kill and delete all $label containers
+        |docker kill $$(docker ps -q -f label=$label)
+        |
+        |docker rm $$(docker ps -a -q -f label=$label)
+        |
+        |${rmiComment}docker rmi $$(docker images -q -f label=$label)
+        |""".stripMargin
+  }
+
+  private def serverScript(
+    image: ImageName,
+    version: String,
+    sentryDsn: String,
+    c: DeployConf,
+    mounts: Seq[String],
+  ) =
+    s"""|#!/bin/bash -x
+        |
+        |whoami
+        |
+        |docker run \\
+        |  --name scastie-server \\
+        |  --network=${ c.network } \\
+        |  --publish ${ c.server.webPort }:${ c.server.webPort } \\
+        |  --restart=always \\
+        |  -d \\
+        |  -v ${ mounts.mkString(" \\\n  -v ") } \\
+        |  $image \\
+        |    -J-Xmx1G \\
+        |    -Dsentry.release=$version \\
+        |    -Dsentry.dsn=$sentryDsn \\
+        |    -Dakka.cluster.seed-nodes.0=${ c.server.akkaUri } \\
+        |    -Dakka.cluster.seed-nodes.1=${ c.sbtRunners.firstNodeAkkaUri }
+        |""".stripMargin
+
+  // jenkins.scala-sbt.org points to 127.0.0.1 to workaround
+  // https://github.com/sbt/sbt/issues/5458 and https://github.com/sbt/sbt/issues/5456
+  private def runnersScript(image: ImageName, version: String, sentryDsn: String, c: DeployConf) = {
+    import c.sbtRunners.{portsStart, portsEnd}
+    val arteryHostnameOpts =
+      if (c.network == "host")
+        s"-Dakka.remote.artery.canonical.hostname=${ c.sbtRunners.host }"
+      else """|-Dakka.remote.artery.canonical.hostname=scastie-runner-$idx \
+        |      -Dakka.remote.artery.bind.hostname=0.0.0.0""".stripMargin
+
+    s"""|#!/bin/bash -x
+        |
+        |whoami
+        |
+        |# Run all instances
+        |for i in `seq $portsStart $portsEnd`;
+        |do
+        |  idx=$$(( i - $portsStart + 1 ))
+        |  echo "Starting scastie-runner-$$idx at port $$i"
+        |  docker run \\
+        |    --add-host jenkins.scala-sbt.org:127.0.0.1 \\
+        |    --name scastie-runner-$$idx \\
+        |    --network=${ c.network } \\
+        |    --restart=always \\
+        |    -d \\
+        |    $image \\
+        |      -Dakka.remote.artery.canonical.port=$$i \\
+        |      $arteryHostnameOpts \\
+        |      -Dcom.olegych.scastie.sbt.production=true \\
+        |      -Dsentry.release=$version \\
+        |      -Dsentry.dsn=$sentryDsn \\
+        |      -Dakka.cluster.seed-nodes.0=${ c.server.akkaUri } \\
+        |      -Dakka.cluster.seed-nodes.1=${ c.sbtRunners.firstNodeAkkaUri }
+        |done
+        |""".stripMargin
+  }
+
+  import SecretsFile.sentryDsn
+  private def deployLocalQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner).value
-      val serverZip = (server / Universal / packageBin).value.toPath
-      val imageIdSbt = (sbtRunner / docker).value
+      val baseDir = (ThisBuild / baseDirectory).value
+      val secretsFile = SecretsFile.local(baseDir)
+      val configFile = baseDir / "deployment" / "local.conf"
 
-      deployment.deployLocal(serverZip)
-    }
-
-  def deployTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
-    Def.task {
-      val deployment = deploymentTask(sbtRunner).value
-      val serverZip = (server / Universal / packageBin).value.toPath
-      val imageIdSbt = (sbtRunner / dockerBuildAndPush).value
-
-      deployment.deploy(serverZip)
-    }
-
-  def deployQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
-    Def.task {
-      val deployment = deploymentTask(sbtRunner).value
-      val serverZip = serverZipTask(server).value
-
-      deployment.logger.warn(
-        "deployQuick will not push the sbt-runner docker image nor create the server zip"
+      val deployConf = DeployConf(configFile)
+      val deployer = Deployer.Local(baseDir / "local", streams.value.log)
+      deployer.sync(
+        configFile -> "application.conf",
+        secretsFile -> "secrets.conf"
       )
-      deployment.deploy(serverZip)
-    }
 
-  def deployServerQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
-    Def.task {
-      val deployment = deploymentTask(sbtRunner).value
-      val serverZip = serverZipTask(server).value
+      s"docker network ls -qf name=${ deployConf.network }".!! match {
+        case "" => s"docker network create --driver bridge ${ deployConf.network }".!!
+        case _  => // network created. Nothing to do
+      }
 
-      deployment.logger.warn(
-        "deployServerQuick will not create the server zip"
+      deployer.run("clean.sh", dockerClean("scastie"))
+
+      deployer.run("server.sh",
+        serverScript(
+          (server / docker / imageNames).value.head,
+          version.value,
+          sentryDsn(secretsFile),
+          deployConf,
+          deployConf.server.mounts(deployer.rootDir.getAbsolutePath),
+        )
       )
-      deployment.deployServer(serverZip)
-    }
 
-  private def deploymentTask(
-      sbtRunner: Project
-  ): Def.Initialize[Task[Deployment]] =
-    Def.task {
-      new Deployment(
-        rootFolder = (ThisBuild / baseDirectory).value,
-        version = version.value,
-        sbtDockerImage = (sbtRunner / docker / imageNames).value.head,
-        logger = streams.value.log
+      deployer.run("sbt.sh",
+        runnersScript(
+          (sbtRunner / docker / imageNames).value.head,
+          version.value,
+          sentryDsn(secretsFile),
+          deployConf
+        )
       )
     }
 
-  private def serverZipTask(server: Project): Def.Initialize[Task[Path]] =
+  private def deployServerQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val universalTarget = (server / Universal / target).value
-      val universalName = (server / Universal / name).value
-      val serverVersion = (server / version).value
-      (universalTarget / (universalName + "-" + serverVersion + ".zip")).toPath
-    }
-}
+      val log = streams.value.log
+      log.warn("deployServerQuick will not build and push the server docker image")
 
-class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, val logger: Logger) {
-  def deploy(serverZip: Path): Unit = {
-    deployRunners()
-    deployServer(serverZip)
+      val baseDir = (ThisBuild / baseDirectory).value
+      val secretsFile = SecretsFile(baseDir)
+      val configFile = baseDir / "deployment" / "production.conf"
+
+      val deployConf = DeployConf(configFile)
+      val deployer = Deployer.Remote(
+        deployConf.server.host,
+        deployConf.server.user,
+        log,
+        (server / target).value / "remote-deployer.tmp"
+      )
+
+      deployer.sync(
+        configFile -> "application.conf",
+        secretsFile -> "secrets.conf"
+      )
+
+      deployer.run("clean-server.sh", dockerClean("scastie=server"))
+      //TODO remove RUNNING_PID
+      deployer.run("server.sh",
+        serverScript(
+          (server / docker / imageNames).value.head,
+          version.value,
+          sentryDsn(secretsFile),
+          deployConf,
+          deployConf.server.mounts(deployer.home),
+        )
+      )
+    }
+
+  private def deployRunnersQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+    Def.task {
+      val log = streams.value.log
+      log.warn("deployServerQuick will not build and push the sbt-runner docker image")
+
+      val baseDir = (ThisBuild / baseDirectory).value
+      val secretsFile = SecretsFile(baseDir)
+      val deployConf = DeployConf(baseDir / "deployment" / "production.conf")
+
+      val deployer = Deployer.Remote(
+        deployConf.server.host,
+        deployConf.server.user,
+        log,
+        (server / target).value / "remote-deployer.tmp"
+      )
+
+      import deployConf.sbtRunners.{host, user}
+      deployer.proxyRun(host, user, "clean-sbt.sh", dockerClean("scastie=runner"))
+      deployer.proxyRun(host, user, "sbt.sh",
+        runnersScript(
+          (sbtRunner / docker / imageNames).value.head,
+          version.value,
+          sentryDsn(secretsFile),
+          deployConf
+        )
+      )
+    }
+
+  private object SecretsFile {
+    def sentryDsn(secretsFile: File): String =
+      ConfigFactory
+        .parseFile(secretsFile)
+        .getString("com.olegych.scastie.sentry.dsn")
+
+    def apply(baseDir: File): File = {
+      val f = baseDir.getParentFile / "scastie-secrets" / "secrets.conf"
+      if (! f.exists()) {
+        Process(
+          s"git clone git@github.com:scalacenter/scastie-secrets.git",
+          cwd = baseDir.getParentFile
+        ).!
+      } else {
+        // Please pull manually
+        // Process("git pull origin master", cwd).!
+      }
+      f
+    }
+
+    def local(baseDir: File): File = {
+      val f = baseDir / "secrets.conf"
+      if (!f.exists()) {
+        IO.write(f,
+          """|# Please register at sentry.io
+             |com.olegych.scastie.sentry.dsn="http://127.0.0.1"
+             |""".stripMargin)
+      }
+      f
+    }
   }
 
-  def deployLocal(serverZip: Path): Unit = {
-    val sbtDockerNamespace = sbtDockerImage.namespace.get
-    val sbtDockerRepository = sbtDockerImage.repository
+  import DeployConf._
+  private case class DeployConf(
+    network: String,
+    sbtRunners: RunnerConf,
+    server: ServerConf,
+  )
 
-    val destination = rootFolder.toPath.resolve("local")
-
-    if (!Files.exists(destination)) {
-      Files.createDirectory(destination)
+  private object DeployConf {
+    case class RunnerConf(user: String, host: String, portsStart: Int, portsSize: Int) {
+      def portsEnd: Int = portsStart + portsSize - 1
+      def firstNodeAkkaUri = s"akka://sys@$host:$portsStart"
+    }
+    object RunnerConf {
+      implicit val loader: ConfigLoader[RunnerConf] = (c: EnrichedConfig) => RunnerConf(
+        c.getOptional[String]("user").getOrElse("scastie"),
+        c.get[String]("host"),
+        c.get[Int]("ports-start"),
+        c.get[Int]("ports-size"),
+      )
     }
 
-    val snippetsFolder = destination.resolve("snippets")
+    case class ServerConf(user: String, host: String, port: Int, webPort: Int, dataMounts: Seq[String]) {
+      def akkaUri = s"akka://sys@$host:$port"
 
-    if (!Files.exists(snippetsFolder)) {
-      Files.createDirectory(snippetsFolder)
+      def mounts(workDir: String): Seq[String] = Seq(
+        s"$workDir/application.conf:/app/conf/application.conf",
+        s"$workDir/secrets.conf:/app/conf/secrets.conf",
+      ) ++ dataMounts.map {
+        case s if s.charAt(0) == '/' => s
+        case s => s"$workDir/$s"
+      }
+    }
+    object ServerConf {
+      implicit val loader: ConfigLoader[ServerConf] = (c: EnrichedConfig) => ServerConf(
+        c.getOptional[String]("user").getOrElse("scastie"),
+        c.get[String]("host"),
+        c.get[Int]("port"),
+        c.getOptional[Int]("com.olegych.scastie.web.bind.port").getOrElse(9000),
+        c.get[Seq[String]]("data-mounts"),
+      )
     }
 
-    val deploymentFiles =
-      deployServerFiles(serverZip, destination, local = true)
-
-    deploymentFiles.files.foreach(
-      file =>
-        Files
-          .copy(file, destination.resolve(file.getFileName), REPLACE_EXISTING)
+    implicit val loader: ConfigLoader[DeployConf] = (c: EnrichedConfig) => DeployConf(
+      c.get[String]("network"),
+      c.get[RunnerConf]("sbt-runners"),
+      c.get[ServerConf]("server")
     )
 
-    val runnerScriptContent =
-      s"""|#!/usr/bin/env bash
-          |
-          |docker run \\
-          |  --network=host \\
-          |  -e RUNNER_PORT=5150 \\
-          |  -e RUNNER_HOSTNAME=127.0.0.1 \\
-          |  -e RUNNER_RECONNECT=false \\
-          |  -e RUNNER_PRODUCTION=true \\
-          |  $sbtDockerNamespace/$sbtDockerRepository:$gitHashNow
-          |
-          |""".stripMargin
+    def apply(f: File): DeployConf = EnrichedConfig(
+      ConfigFactory.parseFile(f).resolve()
+    ).get[DeployConf]("com.olegych.scastie.deploy-config")
 
-    val runnerScript = destination.resolve("sbt.sh")
-
-    Files.write(runnerScript, runnerScriptContent.getBytes)
-    setPosixFilePermissions(runnerScript, executablePermissions)
+    implicit def toConfigLoader[A](f: EnrichedConfig => A): ConfigLoader[A] = playConfigLoader.map(f)
   }
 
-  def deployServer(serverZip: Path): Unit = {
-    val serverScriptDir = Files.createTempDirectory("server")
+  private sealed trait Deployer {
+    def write(path: String, content: String, executable: Boolean = false): Unit
+    def sync(f: File, newName: String): Unit
+    def run(scriptName: String, scriptContent: String): Unit
 
-    val deploymentFiles =
-      deployServerFiles(serverZip, serverScriptDir, local = false)
-
-    deploymentFiles.files.foreach(rsyncServer)
-
-    val scriptFileName = deploymentFiles.serverScript.getFileName
-    val uri = userName + "@" + serverHostname
-    Process(s"ssh $uri ./$scriptFileName") ! logger
-  }
-
-  case class DeploymentFiles(
-      secretConfig: Path,
-      serverZip: Path,
-      serverScript: Path,
-      productionConfig: Path,
-      logbackConfig: Path
-  ) {
-    def files: List[Path] = List(
-      secretConfig,
-      serverZip,
-      serverScript,
-      productionConfig,
-      logbackConfig
-    )
-  }
-
-  private def deployServerFiles(serverZip: Path, destination: Path, local: Boolean): DeploymentFiles = {
-    logger.info("Generate server script")
-
-    val serverScript = destination.resolve("server.sh")
-
-    val config =
-      if (local) localConfig
-      else productionConfig
-
-    val configFileName = config.getFileName
-    val logbackConfigFileName = logbackConfig.getFileName
-    val serverZipFileName = serverZip.getFileName.toString.replace(".zip", "")
-
-    val secretConfig = getSecretConfig()
-    val sentryDsn = getSentryDsn(secretConfig)
-
-    val baseDir =
-      if (!local) s"/home/$userName/"
-      else ""
-
-    val content =
-      s"""|#!/usr/bin/env bash
-          |
-          |whoami
-          |
-          |serverZipFileName=$serverZipFileName
-          |
-          |kill -9 `cat ${baseDir}RUNNING_PID`
-          |
-          |rm -rf ${baseDir}server/*
-          |unzip -o -d ${baseDir}server ${baseDir}$$serverZipFileName
-          |mv ${baseDir}server/$$serverZipFileName/* ${baseDir}server/
-          |rm -rf ${baseDir}server/$$serverZipFileName
-          |
-          |nohup ${baseDir}server/bin/server \\
-          |  -J-Xmx1G \\
-          |  -Dconfig.file=${baseDir}${configFileName} \\
-          |  -Dlogback.configurationFile=${baseDir}${logbackConfigFileName} \\
-          |  -Dsentry.dsn=$sentryDsn \\
-          |  -Dsentry.release=$version \\
-          |  &>/dev/null &
-          |""".stripMargin
-
-    Files.write(serverScript, content.getBytes)
-    setPosixFilePermissions(serverScript, executablePermissions)
-
-    logger.info("Deploy servers")
-
-    DeploymentFiles(
-      secretConfig,
-      serverZip,
-      serverScript,
-      config,
-      logbackConfig
-    )
-  }
-
-  def deployRunners(): Unit = {
-    val sbtDockerNamespace = sbtDockerImage.namespace.get
-    val sbtDockerRepository = sbtDockerImage.repository
-
-    killRunners()
-
-    deployRunners(
-      "sbt",
-      s"$sbtDockerNamespace/$sbtDockerRepository",
-      sbtRunnersPortsStart,
-      sbtRunnersPortsSize
-    )
-  }
-
-  def killRunners(): Unit = {
-    val killScriptDir = Files.createTempDirectory("kill")
-    val killScript = killScriptDir.resolve("kill.sh")
-
-    logger.info(s"Generate kill script")
-
-    val killScriptContent =
-      """|#!/usr/bin/env bash
-         |
-         |# Delete all containers
-         |docker rm $(docker ps -a -q)
-         |
-         |# Delete all images
-         |docker rmi $(docker images -q)
-         |
-         |docker kill $(docker ps -q)
-         |""".stripMargin
-
-    Files.write(killScript, killScriptContent.getBytes)
-    setPosixFilePermissions(killScript, executablePermissions)
-    val scriptFileName = killScript.getFileName
-
-    val runnerUri = userName + "@" + runnersHostname
-    val serverUri = userName + "@" + serverHostname
-
-    val proxyScript = killScriptDir.resolve("kill-proxy.sh")
-    val proxyScriptFileName = proxyScript.getFileName
-
-    val proxyScriptContent =
-      s"""|rm kill-proxy.sh
-          |rsync $scriptFileName $runnerUri:$scriptFileName
-          |ssh $runnerUri ./$scriptFileName
-          |rm $scriptFileName""".stripMargin
-
-    Files.write(proxyScript, proxyScriptContent.getBytes)
-    setPosixFilePermissions(proxyScript, executablePermissions)
-
-    rsyncServer(killScript)
-    rsyncServer(proxyScript)
-    Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
-  }
-
-  def deployRunners(runner: String, image: String, runnersPortsStart: Int, runnersPortsSize: Int): Unit = {
-
-    val runnerScriptDir = Files.createTempDirectory(runner)
-    val runnerScript = runnerScriptDir.resolve(runner + ".sh")
-
-    logger.info(s"Generate $runner script")
-
-    val runnersPortsEnd = runnersPortsStart + (runnersPortsSize - 1)
-
-    val dockerImagePath = s"$image:$gitHashNow"
-
-    val sentryDsn = getSentryDsn(getSecretConfig())
-
-    //jenkins.scala-sbt.org points to 127.0.0.1 to workaround https://github.com/sbt/sbt/issues/5458 and https://github.com/sbt/sbt/issues/5456
-    val runnerScriptContent =
-      s"""|#!/usr/bin/env bash
-          |
-          |whoami
-          |
-          |
-          |docker rmi -f $dockerImagePath
-          |
-          |# Run all instances
-          |for i in `seq $runnersPortsStart $runnersPortsEnd`;
-          |do
-          |  echo "Starting Runner: Port $$i"
-          |  docker run \\
-          |    --add-host jenkins.scala-sbt.org:127.0.0.1 \\
-          |    --network=host \\
-          |    --restart=always \\
-          |    -d \\
-          |    -e RUNNER_PRODUCTION=true \\
-          |    -e RUNNER_PORT=$$i \\
-          |    -e SERVER_HOSTNAME=$serverHostname \\
-          |    -e SERVER_AKKA_PORT=$serverAkkaPort \\
-          |    -e RUNNER_HOSTNAME=$runnersHostname \\
-          |    -e SENTRY_DSN=$sentryDsn \\
-          |    -e SENTRY_RELEASE=$version \\
-          |    $dockerImagePath
-          |done
-          |""".stripMargin
-
-    Files.write(runnerScript, runnerScriptContent.getBytes)
-    setPosixFilePermissions(runnerScript, executablePermissions)
-    val scriptFileName = runnerScript.getFileName
-
-    val runnerUri = userName + "@" + runnersHostname
-    val serverUri = userName + "@" + serverHostname
-
-    val proxyScript = runnerScriptDir.resolve(runner + "-proxy.sh")
-    val proxyScriptFileName = proxyScript.getFileName
-
-    val proxyScriptContent =
-      s"""|rm ${runner}-proxy.sh
-          |rsync $scriptFileName $runnerUri:$scriptFileName
-          |ssh $runnerUri ./$scriptFileName
-          |rm $scriptFileName""".stripMargin
-
-    Files.write(proxyScript, proxyScriptContent.getBytes)
-    setPosixFilePermissions(proxyScript, executablePermissions)
-
-    rsyncServer(runnerScript)
-    rsyncServer(proxyScript)
-    Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
-  }
-
-  private def getSecretConfig(): Path = {
-    val scastieSecrets = "scastie-secrets"
-    val secretFolder = rootFolder / ".." / scastieSecrets
-
-    if (Files.exists(secretFolder.toPath)) {
-      Process("git pull origin master", secretFolder)
-    } else {
-      Process(s"git clone git@github.com:scalacenter/$scastieSecrets.git")
+    final def sync(sources: (File, String)*): Unit = sources.foreach {
+      case (f, newName) => sync(f, newName)
     }
 
-    (secretFolder / "secrets.conf").toPath
+    protected def log: Logger
+    protected def processLog(name: String): ProcessLogger = ProcessLogger(
+      out => log.info(s"[$name] $out"),
+      err => log.warn(s"[$name] $err")
+    )
   }
 
-  private def getSentryDsn(secretConfig: Path): String = {
-    val config = ConfigFactory.parseFile(secretConfig.toFile)
-    val scastieConfig = config.getConfig("com.olegych.scastie")
-    scastieConfig.getString("sentry.dsn")
-  }
+  private object Deployer {
+    case class Local(rootDir: File, log: Logger) extends Deployer {
+      override def write(path: String, content: String, executable: Boolean = false): Unit = {
+        val f = rootDir / path
+        IO.write(f, content)
+        if (executable) setExecutable(f)
+      }
 
-  private val userName = "scastie"
+      override def sync(f: File, newName: String): Unit = {
+        val newFile = rootDir / newName
+        IO.createDirectory(newFile.getParentFile)
+        IO.copyFile(f, newFile)
+      }
 
-  private val deploymentFolder = rootFolder / "deployment"
-
-  private val productionConfig = (deploymentFolder / "production.conf").toPath
-  private val localConfig = (deploymentFolder / "local.conf").toPath
-
-  private val logbackConfig = (deploymentFolder / "logback.xml").toPath
-
-  private val config =
-    ConfigFactory.parseFile(productionConfig.toFile)
-
-  val balancerConfig = config.getConfig("com.olegych.scastie.balancer")
-
-  private val serverConfig = config.getConfig("com.olegych.scastie.web")
-  private val serverHostname = serverConfig.getString("hostname")
-  private val serverAkkaPort = serverConfig.getInt("akka-port")
-
-  private val runnersHostname = balancerConfig.getString("remote-hostname")
-
-  private val sbtRunnersPortsStart =
-    balancerConfig.getInt("remote-sbt-ports-start")
-  private val sbtRunnersPortsSize =
-    balancerConfig.getInt("remote-sbt-ports-size")
-
-  private val executablePermissions =
-    PosixFilePermissions.fromString("rwxr-xr-x")
-
-  private def rsync(file: Path, userName: String, hostname: String, logger: Logger): Unit = {
-    val uri = userName + "@" + hostname
-    val fileName = file.getFileName
-    Process(s"rsync $file $uri:$fileName") ! logger
-  }
-
-  private def rsyncServer(file: Path) =
-    rsync(file, userName, serverHostname, logger)
-
-  private def setPosixFilePermissions(
-      path: Path,
-      perms: java.util.Set[PosixFilePermission]
-  ): Path = {
-    try Files.setPosixFilePermissions(path, perms)
-    catch {
-      case e: Exception => path
+      override def run(scriptName: String, scriptContent: String): Unit = {
+        log.info(s"Generate $scriptName script")
+        write(scriptName, scriptContent, executable = true)
+        (rootDir / scriptName).absolutePath ! processLog(scriptName)
+      }
     }
+
+    case class Remote(host: String, user: String, log: Logger, tempFile: File) extends Deployer {
+      val home = s"/home/$user"
+      val uri: String = s"$user@$host"
+
+      override def write(path: String, content: String, executable: Boolean = false): Unit = {
+        IO.write(tempFile, content)
+        if (executable) setExecutable(tempFile)
+        sync(tempFile, path)
+        IO.delete(tempFile)
+      }
+
+      override def sync(f: File, newName: String): Unit =
+        s"rsync $f $uri:$newName" ! processLog("rsync")
+
+      override def run(scriptName: String, scriptContent: String): Unit = {
+        log.info(s"Generate $scriptName script")
+        write(scriptName, scriptContent, executable = true)
+        s"ssh $uri ./$scriptName" ! processLog(scriptName)
+      }
+
+      /** run `scriptContent` on `remoteHost` by:
+       *  + ssh to this `host`
+       *  + then, from this `host`, ssh to `remoteHost` and run */
+      def proxyRun(remoteHost: String, remoteUser: String, scriptName: String, scriptContent: String): Unit = {
+        log.info(s"Generate $scriptName script")
+        write(scriptName, scriptContent, executable = true)
+
+        val remoteUri = s"$remoteUser@$remoteHost"
+        run(s"proxy-$scriptName",
+          s"""|rsync $scriptName $remoteUri:$scriptName
+              |ssh $remoteUri ./$scriptName
+              |rm $scriptName
+              |""".stripMargin)
+      }
+    }
+
+    private val executablePermissions = PosixFilePermissions.fromString("rwxr-xr-x")
+
+    private def setExecutable(f: File): File =
+      try Files.setPosixFilePermissions(f.toPath, executablePermissions).toFile
+      catch { case _: Exception => f }
   }
 }

@@ -4,7 +4,7 @@ import SbtShared._
 import com.typesafe.sbt.SbtNativePackager
 import com.typesafe.sbt.SbtNativePackager.Universal
 import com.typesafe.sbt.packager.universal.UniversalPlugin
-import com.typesafe.sbt.packager.Keys.{bashScriptExtraDefines, executableScriptName, stage}
+import com.typesafe.sbt.packager.Keys.{bashScriptDefines, executableScriptName, scriptClasspath, stage}
 import com.typesafe.sbt.packager.archetypes.scripts.BashStartScriptPlugin
 import sbtdocker.DockerPlugin
 import sbtdocker.DockerPlugin.autoImport.{ImageName, docker, imageNames}
@@ -34,8 +34,8 @@ object DockerHelper extends AutoPlugin {
         tag = Some(gitHashNow)
       )
     ),
-    // https://www.scala-sbt.org/sbt-native-packager/archetypes/cheatsheet.html#extra-defines
-    bashScriptExtraDefines += s"""addJava "-Dlogback.configurationFile=$appDir/conf/logback.xml"""",
+    // Add to classPath so /app/conf/{logback.xml, application.conf} will auto be picked
+    bashScriptDefines / scriptClasspath += s"$appDir/conf/",
     Universal / mappings += (
       (ThisBuild / baseDirectory).value / "deployment" / "logback.xml" -> "conf/logback.xml"
     ),
@@ -59,6 +59,7 @@ object DockerHelper extends AutoPlugin {
 
   def serverDockerfile(): Def.Initialize[Task[Dockerfile]] = Def.task {
     baseDockerfile("adoptopenjdk:8u292-b10-jre-hotspot", stage.value)
+      .label("scastie" -> "server")
       .user(username)
       .workDir(appDir)
       .env("DATA_DIR" -> s"$appDir/data")
@@ -104,6 +105,7 @@ object DockerHelper extends AutoPlugin {
     val dest = s"$userHome/projects"
 
     baseDockerfile("adoptopenjdk:8u292-b10-jdk-hotspot", stage.value)
+      .label("scastie" -> "runner")
       .runRaw(s"""\\
         mkdir $appDir/sbt && \\
         curl -Lo /tmp/sbt-${distSbtVersion}.tgz \\

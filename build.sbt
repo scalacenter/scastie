@@ -1,5 +1,4 @@
 import SbtShared._
-import com.typesafe.sbt.SbtNativePackager.Universal
 import DockerHelper.{serverDockerfile, runnerDockerfile}
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % (
@@ -8,6 +7,17 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % (
 
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
 addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
+
+addCommandAlias("fullBuildServer", "client/Compile/fullOptJS/webpack;server/docker")
+addCommandAlias("deployLocal", "fullBuildServer;sbtRunner/docker;deployLocalQuick")
+
+// Deploy server and sbt instances without building and pushing docker images
+addCommandAlias("deployQuick", "deployRunnersQuick;deployServerQuick")
+addCommandAlias("deployRunners", "sbtRunner/dockerBuildAndPush;deployRunnersQuick")
+addCommandAlias("fullBuildAndPushServer", "client/Compile/fullOptJS/webpack;server/dockerBuildAndPush")
+addCommandAlias("deployServer", "fullBuildAndPushServer;deployServerQuick")
+// Deploy server and sbt instances
+addCommandAlias("deploy", "sbtRunner/dockerBuildAndPush;fullBuildAndPushServer;deployQuick")
 
 ThisBuild / packageTimestamp := None
 
@@ -28,9 +38,10 @@ lazy val scastie = project
   .settings(baseSettings)
   .settings(
     cachedCiTestFull := {
-      val _ = cachedCiTestFull.value
-      val __ = (sbtRunner / docker / dockerfile).value
-      val ___ = (server / Universal / packageBin).value
+      cachedCiTestFull.value
+      (sbtRunner / docker / dockerfile).value
+      (client / Compile / fullOptJS / webpack).value
+      (server / docker / dockerfile).value
     },
   )
   .settings(Deployment.settings(server, sbtRunner))
@@ -119,7 +130,7 @@ lazy val server = project
     Compile / products += (client / Compile / npmUpdate / crossTarget).value / "out",
     reStart := reStart.dependsOn(client / Compile / fastOptJS / webpack).evaluated,
     fullOptJS / reStart := reStart.dependsOn(client / Compile / fullOptJS / webpack).evaluated,
-    Universal / packageBin := (Universal / packageBin).dependsOn(client / Compile / fullOptJS / webpack).value,
+    // Universal / stage := (Universal / stage).dependsOn(client / Compile / fullOptJS / webpack).value,
     reStart / javaOptions += "-Xmx512m",
     maintainer := "scalacenter",
     libraryDependencies ++= Seq(
