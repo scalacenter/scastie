@@ -27,11 +27,11 @@ in rec {
 
   sbt = stdenv.mkDerivation rec {
     name = "sbt-${version}";
-    version = "1.5.2";
+    version = "1.5.5";
  
     src = fetchurl {
       url = "https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.tgz";
-      sha256 = "9d01f7eb1a3830190d53ed4d8b8b9a6380f013ad30573a04e330d1de42ff0212";
+      sha256 = "c0fcd50cf5c91ed27ad01c5c6a8717b62700c87a50ff9b0e7573b227acb2b3c9";
       name = "sbt.tgz";
     };
 
