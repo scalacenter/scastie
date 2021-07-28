@@ -36,11 +36,9 @@ object BuildSettings {
     Reusability.derive[BuildSettings]
 
   def renderTarget(props: BuildSettings): TagOf[Div] = {
-
     val targetTypes = List[ScalaTargetType](
       ScalaTargetType.Scala3,
       ScalaTargetType.Scala2,
-      ScalaTargetType.Typelevel,
       ScalaTargetType.JS //,
       // ScalaTargetType.Native
     )
