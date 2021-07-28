@@ -266,7 +266,7 @@ object ScalaTarget {
       Map("target" -> "JVM", "scalaVersion" -> "2.13")
 
     def renderSbt(lib: ScalaDependency): String =
-      renderSbtDouble(lib)
+      s"(${renderSbtDouble(lib)}).cross(CrossVersion.for3Use2_13)"
 
     def sbtConfig: String =
       sbtConfigScalaVersion(dottyVersion)
