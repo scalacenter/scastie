@@ -1,6 +1,7 @@
-[![Build Status](https://travis-ci.org/scalacenter/scastie.svg?branch=master)](
-  https://travis-ci.org/scalacenter/scastie
-) [![Join the chat](https://badges.gitter.im/scalacenter/scastie.svg)](
+![Github Build Status](https://github.com/scalacenter/scastie/workflows/Build%20Status/badge.svg)
+[![Travis Build Status](https://travis-ci.com/scalacenter/scastie.svg?branch=master)](https://travis-ci.com/scalacenter/scastie)
+
+[![Join the chat](https://badges.gitter.im/scalacenter/scastie.svg)](
   https://gitter.im/scalacenter/scastie
 )
 
