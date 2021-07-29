@@ -28,7 +28,7 @@ class GraphStageLogicForwarder[T: TypeTag, U: TypeTag](out: Outlet[T], shape: So
 
   private def deliver(): Unit =
     if (isAvailable(out) && buffer.nonEmpty)
-      push[T](out, buffer.dequeue)
+      push[T](out, buffer.dequeue())
 
   private def bufferElement(receive: (ActorRef, Any)): Unit =
     receive match {
