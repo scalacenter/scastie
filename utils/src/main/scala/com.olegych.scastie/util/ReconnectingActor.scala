@@ -50,14 +50,10 @@ trait ActorReconnecting extends Actor with ActorLogging {
       println("DisassociatedEvent " + ev)
 
       val isServerHostname =
-        reconnectInfo
-          .map(info => ev.remoteAddress.host.contains(info.serverHostname))
-          .getOrElse(false)
+        reconnectInfo.exists(info => ev.remoteAddress.host.contains(info.serverHostname))
 
       val isServerAkkaPort =
-        reconnectInfo
-          .map(info => ev.remoteAddress.port.contains(info.serverAkkaPort))
-          .getOrElse(false)
+        reconnectInfo.exists(info => ev.remoteAddress.port.contains(info.serverAkkaPort))
 
       if (isServerHostname && isServerAkkaPort && ev.inbound) {
         log.warning("Disconnected from server")
