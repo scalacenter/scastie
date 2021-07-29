@@ -1,9 +1,9 @@
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.26"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.15"
 
-val akkaHttpVersion = "10.1.11"
+val akkaHttpVersion = "10.2.5"
 
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
 addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
