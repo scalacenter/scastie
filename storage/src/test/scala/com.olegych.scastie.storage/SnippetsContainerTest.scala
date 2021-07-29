@@ -99,7 +99,7 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("update") {
     val container = testContainer
-    val user = UserLogin("github-user-update" + Random.nextInt)
+    val user = UserLogin("github-user-update" + Random.nextInt())
     val inputs1 =
       Inputs.default.copy(code = "inputs1").copy(isShowingInUserProfile = true)
     val snippetId1 = container.save(inputs1, Some(user)).await
@@ -122,8 +122,8 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("listSnippets") {
     val container = testContainer
-    val user = UserLogin("github-user-list" + Random.nextInt)
-    val user2 = UserLogin("github-user-list2" + Random.nextInt)
+    val user = UserLogin("github-user-list" + Random.nextInt())
+    val user2 = UserLogin("github-user-list2" + Random.nextInt())
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     container.save(inputs1, Some(user)).await
@@ -153,7 +153,7 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("delete") {
     val container = testContainer
-    val user = UserLogin("github-user-delete" + Random.nextInt)
+    val user = UserLogin("github-user-delete" + Random.nextInt())
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     val snippetId1 = container.save(inputs1, Some(user)).await

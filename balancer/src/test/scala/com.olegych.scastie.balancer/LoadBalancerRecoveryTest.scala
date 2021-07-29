@@ -154,7 +154,7 @@ class LoadBalancerRecoveryTest()
     }
   }
 
-  override def afterAll: Unit = {
+  override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(webSystem)
     TestKit.shutdownActorSystem(sbtSystem)
     TestKit.shutdownActorSystem(system)
