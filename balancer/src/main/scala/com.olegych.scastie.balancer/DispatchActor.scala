@@ -64,12 +64,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   private val sbtPorts = (0 until sbtPortsSize).map(sbtPortsStart + _)
 
-  private def connectRunner(
-      runnerName: String,
-      actorName: String,
-      host: String
-  )(port: Int): ((String, Int), ActorSelection) = {
-    val path = s"akka.tcp://$runnerName@$host:$port/user/$actorName"
+  private def connectRunner(host: String, port: Int): ((String, Int), ActorSelection) = {
+    val path = s"akka.tcp://SbtRunner@$host:$port/user/SbtActor"
     log.info(s"Connecting to ${path}")
     val selection = context.actorSelection(path)
     selection ! ActorConnected
@@ -77,7 +73,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   private var remoteSbtSelections =
-    sbtPorts.map(connectRunner("SbtRunner", "SbtActor", host)).toMap
+    sbtPorts.map(connectRunner(host, _)).toMap
 
   private var sbtLoadBalancer: SbtBalancer = {
     val sbtServers = remoteSbtSelections.to(Vector).map {
@@ -131,7 +127,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       statusActor ! SbtLoadBalancerUpdate(newSbtBalancer)
     }
     sbtLoadBalancer = newSbtBalancer
-    ()
   }
 
   //can be called from future
@@ -304,9 +299,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       if (!remoteSbtSelections.contains((runnerHostname, runnerAkkaPort))) {
         log.info("Connected Runner {}", runnerAkkaPort)
 
-        val sel = connectRunner("SbtRunner", "SbtActor", runnerHostname)(
-          runnerAkkaPort
-        )
+        val sel = connectRunner(runnerHostname, runnerAkkaPort)
         val (_, ref) = sel
 
         remoteSbtSelections = remoteSbtSelections + sel
@@ -328,7 +321,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case run: Run =>
       run0(run.inputsWithIpAndUser, run.snippetId)
-    case ping: Ping.type =>
+
+    case Ping =>
       implicit val timeout: Timeout = Timeout(10.seconds)
       logError(Future.sequence {
         sbtLoadBalancer.servers.map { s =>
