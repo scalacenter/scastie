@@ -1,7 +1,7 @@
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.32"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.15"
 
 val akkaHttpVersion = "10.2.6"
 
