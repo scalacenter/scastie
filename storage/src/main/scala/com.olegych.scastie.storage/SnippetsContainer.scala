@@ -127,7 +127,7 @@ trait SnippetsContainer {
       Files.createDirectories(projectFile.getParent)
       Files.write(projectFile, inputs.sbtPluginsConfig.getBytes)
 
-      val codeFile = projectDir.resolve("src/main/scala/main.scala")
+      val codeFile = projectDir.resolve(s"src/main/scala/main.${if (inputs._isWorksheetMode) "sc" else "scala"}")
       Files.createDirectories(codeFile.getParent)
       Files.write(codeFile, inputs.code.getBytes)
       val buildPropsFile = projectDir.resolve("project/build.properties")
