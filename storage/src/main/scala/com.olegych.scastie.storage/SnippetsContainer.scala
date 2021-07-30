@@ -121,11 +121,11 @@ trait SnippetsContainer {
       Files.createDirectories(projectDir)
 
       val buildFile = projectDir.resolve("build.sbt")
-      Files.write(buildFile, inputs.sbtConfig.getBytes)
+      Files.write(buildFile, inputs.sbtConfig.linesIterator.filterNot(_.contains("org.scastie")).mkString("\n").getBytes())
 
       val projectFile = projectDir.resolve("project/plugins.sbt")
       Files.createDirectories(projectFile.getParent)
-      Files.write(projectFile, inputs.sbtPluginsConfig.getBytes)
+      Files.write(projectFile, inputs.sbtPluginsConfig.linesIterator.filterNot(_.contains("org.scastie")).mkString("\n").getBytes())
 
       val codeFile = projectDir.resolve(s"src/main/scala/main.${if (inputs._isWorksheetMode) "sc" else "scala"}")
       Files.createDirectories(codeFile.getParent)
