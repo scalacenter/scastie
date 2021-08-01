@@ -58,11 +58,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   private val config =
     ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
-  private val host = config.getString("remote-hostname")
-  private val sbtPortsStart = config.getInt("remote-sbt-ports-start")
-  private val sbtPortsSize = config.getInt("remote-sbt-ports-size")
-
-  private val sbtPorts = (0 until sbtPortsSize).map(sbtPortsStart + _)
 
   private def connectRunner(host: String, port: Int): ((String, Int), ActorSelection) = {
     val path = s"akka.tcp://SbtRunner@$host:$port/user/SbtActor"
@@ -72,8 +67,13 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     (host, port) -> selection
   }
 
-  private var remoteSbtSelections =
+  private var remoteSbtSelections = {
+    val host = config.getString("remote-hostname")
+    val sbtPortsStart = config.getInt("remote-sbt-ports-start")
+    val sbtPortsSize = config.getInt("remote-sbt-ports-size")
+    val sbtPorts = (0 until sbtPortsSize).map(sbtPortsStart + _)
     sbtPorts.map(connectRunner(host, _)).toMap
+  }
 
   private var sbtLoadBalancer: SbtBalancer = {
     val sbtServers = remoteSbtSelections.to(Vector).map {
