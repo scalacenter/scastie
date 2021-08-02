@@ -15,19 +15,20 @@ class FormatActor() extends Actor {
     log.info(s"format (isWorksheetMode: $isWorksheetMode)")
     log.info(code)
 
-    val config = scalaTarget match {
-      case scalaTarget if isWorksheetMode && scalaTarget.hasWorksheetMode =>
-        ScalafmtConfig.default.copy(runner = ScalafmtRunner.sbt)
-      case dotty: ScalaTarget.Scala3 =>
-        ScalafmtConfig.default.withDialect(scala.meta.dialects.Scala3)
-      case _ =>
-        ScalafmtConfig.default
+    val config: ScalafmtConfig = {
+      val withDialect =  scalaTarget match {
+        case dotty: ScalaTarget.Scala3 => ScalafmtConfig.default.withDialect(scala.meta.dialects.Scala3)
+        case _ =>  ScalafmtConfig.default
+      }
+
+      if (isWorksheetMode && scalaTarget.hasWorksheetMode)
+        withDialect.copy(runner = ScalafmtRunner.sbt.copy(dialect=withDialect.runner.dialect))
+      else withDialect
     }
 
     Scalafmt.format(code, style = config) match {
       case Formatted.Success(formattedCode) => Right(formattedCode)
-      case Formatted.Failure(failure) =>
-        Left(failure.toString)
+      case Formatted.Failure(failure) => Left(failure.toString)
     }
   }
 
