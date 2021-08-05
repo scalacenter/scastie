@@ -260,27 +260,25 @@ object ScalaTarget {
          |""".stripMargin
   }
 
-  case class Scala3(dottyVersion: String) extends ScalaTarget {
-    def scalaVersion = dottyVersion
-
+  case class Scala3(scalaVersion: String) extends ScalaTarget {
     def targetType: ScalaTargetType =
       ScalaTargetType.Scala3
 
     def scaladexRequest: Map[String, String] =
-      Map("target" -> "JVM", "scalaVersion" -> "2.13")
+      Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
 
     def renderSbt(lib: ScalaDependency): String =
       if (Some(lib) == runtimeDependency) renderSbtDouble(lib)
       else s"${renderSbtDouble(lib)} cross CrossVersion.for3Use2_13"
 
     def sbtConfig: String =
-      sbtConfigScalaVersion(dottyVersion)
+      sbtConfigScalaVersion(scalaVersion)
 
     def sbtPluginsConfig: String = ""
 
     def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
     override def toString: String =
-      s"Scala $dottyVersion"
+      s"Scala $scalaVersion"
   }
 }

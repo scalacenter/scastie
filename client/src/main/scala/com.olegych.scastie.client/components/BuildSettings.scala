@@ -125,7 +125,8 @@ object BuildSettings {
         case d: ScalaTarget.Typelevel =>
           versionSelector(d.scalaVersion, ScalaTarget.Typelevel.apply)
         case d: ScalaTarget.Scala3 =>
-          versionSelector(d.scalaVersion, ScalaTarget.Scala3.apply)
+          versionSelector(d.scala3version, ScalaTarget.Scala3.apply)
+
         case js: ScalaTarget.Js =>
           versionSelector(js.scalaVersion, sv => ScalaTarget.Js(sv, js.scalaJsVersion))
         case n: ScalaTarget.Native =>
