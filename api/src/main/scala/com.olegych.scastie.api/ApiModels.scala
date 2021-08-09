@@ -2,12 +2,6 @@ package com.olegych.scastie.api
 
 import play.api.libs.json._
 
-case object SbtPing
-case object SbtPong
-
-case class SbtRunnerConnect(hostname: String, port: Int)
-case object ActorConnected
-
 object SnippetSummary {
   implicit val formatSnippetSummary: OFormat[SnippetSummary] =
     Json.format[SnippetSummary]

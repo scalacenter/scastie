@@ -1,12 +1,16 @@
 package com.olegych.scastie.balancer
 
-import akka.actor.{ActorSystem, Props}
-import akka.pattern.ask
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.actor.typed.{ActorRef, ActorSystem, Behavior, Scheduler}
+import akka.actor.typed.receptionist.Receptionist
+import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.AskPattern.Askable
+import akka.actor.testkit.typed.scaladsl.{ActorTestKit, TestProbe}
+import akka.actor.testkit.typed.FishingOutcome
+import com.typesafe.sslconfig.util.EnrichedConfig
 import akka.util.Timeout
 import com.olegych.scastie.api._
 import com.olegych.scastie.sbt._
-import com.olegych.scastie.util.ReconnectInfo
+import com.olegych.scastie.util.Services
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuiteLike
@@ -15,14 +19,9 @@ import scala.concurrent._
 import scala.concurrent.duration._
 
 class LoadBalancerRecoveryTest()
-    extends TestKit(
-      ActorSystem("LoadBalancerRecoveryTest", RemotePortConfig(0))
-    )
-    with ImplicitSender
-    with AnyFunSuiteLike
+    extends AnyFunSuiteLike
     with BeforeAndAfterAll {
 
-  // import system.dispatcher
   implicit val timeout = Timeout(10.seconds)
 
   test("recover from crash") {
@@ -49,64 +48,76 @@ class LoadBalancerRecoveryTest()
 
     waitFor(sid1, ret)(_.isDone)
     waitFor(sid2, ret)(_.isTimeout)
-    // waitFor(sid2)(_.isDone)
     waitFor(sid3, ret)(_.isDone)
   }
 
-  private val serverAkkaPort = 15000
-  private val webSystem = ActorSystem("Web", RemotePortConfig(serverAkkaPort))
+  private val config = EnrichedConfig(
+    ConfigFactory.load().getConfig("com.olegych.scastie")
+  )
+  private val testingConfig = TestingConfig(config.get[String]("system-name"))
+  import testingConfig._
 
-  private val sbtAkkaPort = 5150
-  private val sbtSystem =
-    ActorSystem("SbtRunner", RemotePortConfig(sbtAkkaPort))
+  private val sbtSystem = ActorSystem(
+    SbtActor(config.get[SbtConf]("sbt")),
+    systemName,
+    testingConfig(sbtAkkaPort)
+  )
 
-  private val progressActor = TestProbe()
-  private val statusActor = TestProbe()
-  private val sbtActorReadyProbe = TestProbe()
+  object WebSystem {
+    sealed trait Message
+    case class AskProgressActor(replyTo: ActorRef[TestProbe[ProgressActor.Message]]) extends Message
 
-  private val localhost = "127.0.0.1"
-
-  private val sbtActor =
-    sbtSystem.actorOf(
-      Props(
-        new SbtActor(
-          system = sbtSystem,
-          runTimeout = 10.seconds,
-          sbtReloadTimeout = 20.seconds,
-          isProduction = false,
-          readyRef = Some(sbtActorReadyProbe.ref),
-          reconnectInfo = Some(
-            ReconnectInfo(
-              serverHostname = localhost,
-              serverAkkaPort = serverAkkaPort,
-              actorHostname = localhost,
-              actorAkkaPort = sbtAkkaPort
-            )
-          )
+    def apply(): Behavior[Message] =
+      Behaviors.setup { context =>
+        // progressActor and statusActor need be in same system as DispatchActor
+        // otherwise, akka will complain about serializing ActerRef
+        implicit def system: ActorSystem[_] = context.system
+        val progressActor = TestProbe[ProgressActor.Message]()
+        val statusActor = TestProbe[StatusActor.Message]()
+        /* val dispatchActor = */ context.spawn(
+          DispatchActor(
+            progressActor.ref,
+            statusActor.ref,
+            config.get[BalancerConf]("balancer"),
+          ),
+          "DispatchActor"
         )
-      ),
-      name = "SbtActor"
-    )
-
-  sbtActorReadyProbe.fishForMessage(60.seconds) {
-    case SbtActorReady => {
-      println("sbt ready")
-      true
-    }
-    case msg => {
-      println("***")
-      println(msg)
-      println("***")
-      false
-    }
+        Behaviors.receiveMessage {
+          case AskProgressActor(replyTo) =>
+            replyTo ! progressActor
+            Behaviors.same
+        }
+      }
   }
 
-  private val dispatchActor =
-    webSystem.actorOf(
-      Props(new DispatchActor(progressActor.ref, statusActor.ref)),
-      name = "DispatchActor"
-    )
+  private val webSystem = ActorSystem(
+    WebSystem(),
+    systemName,
+    testingConfig(serverAkkaPort)
+  )
 
+  private val testKit = ActorTestKit(webSystem)
+  private val runnersReadyProbe = testKit.createTestProbe[Receptionist.Listing]()
+  testKit.system.receptionist ! Receptionist.Subscribe(
+    Services.Balancer,
+    runnersReadyProbe.ref
+  )
+
+  // wait sbt runners available in dispatchActor before sending RunSnippet to it
+  private val dispatchActor =
+    runnersReadyProbe.fishForMessage(60.seconds) {
+      case Services.Balancer.Listing(listings) =>
+        if (listings.isEmpty) {
+          FishingOutcome.ContinueAndIgnore
+        } else {
+          println("runners are ready")
+          FishingOutcome.Complete
+        }
+    }.head match {
+      case Services.Balancer.Listing(refs) => refs.head
+    }
+
+  implicit val scheduler: Scheduler = webSystem.scheduler
   private var id = 0
   private def run(code: String): SnippetId = {
     val wrapped =
@@ -118,62 +129,66 @@ class LoadBalancerRecoveryTest()
 
     val inputs = Inputs.default.copy(code = wrapped, _isWorksheetMode = false)
 
-    val task = RunSnippet(
-      InputsWithIpAndUser(inputs, UserTrace("ip-" + id, None))
+    val taskAsk = dispatchActor.ask(
+      RunSnippet(_, InputsWithIpAndUser(inputs, UserTrace("ip-" + id, None)))
     )
 
     id += 1
 
-    Await.result(
-      (dispatchActor.ask(task)).mapTo[SnippetId],
-      10.seconds
-    )
+    Await.result(taskAsk, 10.seconds)
   }
+
+  import WebSystem._
+  private val progressActor = Await.result(webSystem.ask(AskProgressActor), 10.seconds)
 
   private def waitFor(sid: SnippetId, ret: Map[SnippetId, String])(
       f: SnippetProgress => Boolean
-  ): Unit = {
-
-    progressActor.fishForMessage(50.seconds) {
-      case progress: SnippetProgress => {
+  ) =
+    progressActor.fishForMessagePF(50.seconds) {
+      case progress: SnippetProgress =>
         if (progress.snippetId.get != sid) {
-          println()
-          println()
-          println("*******************************")
-          println("expected: " + ret(sid))
-          println("got: " + ret(progress.snippetId.get))
-          println("*******************************")
-          println()
-          println()
-
-          assert(false)
+          FishingOutcome.Fail(s"""\n
+           |*******************************
+           |expected: ${ret(sid)}
+           |got: ${ret(progress.snippetId.get)}
+           |*******************************\n\n""".stripMargin)
+        } else if (f(progress)) {
+          FishingOutcome.Complete
+        } else {
+          FishingOutcome.ContinueAndIgnore
         }
-
-        f(progress)
-      }
     }
-  }
 
   override def afterAll(): Unit = {
-    TestKit.shutdownActorSystem(webSystem)
-    TestKit.shutdownActorSystem(sbtSystem)
-    TestKit.shutdownActorSystem(system)
+    ActorTestKit.shutdown(webSystem)
+    ActorTestKit.shutdown(sbtSystem)
   }
 }
 
-object RemotePortConfig {
+private case class TestingConfig(systemName: String) {
+  val serverAkkaPort = 15000
+  val sbtAkkaPort = 5150
+
   def apply(port: Int): Config =
     ConfigFactory.parseString(
       s"""|akka {
-          |  actor {
-          |    provider = "akka.remote.RemoteActorRefProvider"
-          |  }
           |  remote {
-          |    netty.tcp {
+          |    artery.canonical {
           |      hostname = "127.0.0.1"
           |      port = $port
           |    }
           |  }
-          |}""".stripMargin
+          |  cluster {
+          |    seed-nodes = [
+          |      "akka://$systemName@127.0.0.1:$serverAkkaPort",
+          |      "akka://$systemName@127.0.0.1:$sbtAkkaPort"]
+          |    jmx.enabled = off
+          |  }
+          |}
+          |com.olegych.scastie.sbt {
+          |  run-timeout = 10s
+          |  sbtReloadTimeout = 20s
+          |}
+          |""".stripMargin
     )
 }
