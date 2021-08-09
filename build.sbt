@@ -1,9 +1,9 @@
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.15"
-
-val akkaHttpVersion = "10.2.6"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % (
+  if(module.startsWith("http")) "10.2.6" else "2.6.15"
+)
 
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
 addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
@@ -55,12 +55,12 @@ lazy val utils = project
   .settings(
     resolvers += Resolver.typesafeRepo("releases"),
     libraryDependencies ++= Seq(
+      akka("serialization-jackson"),
       akka("protobuf"),
-      akka("stream"),
-      akka("actor"),
-      akka("remote"),
+      akka("stream-typed"),
+      akka("cluster-typed"),
       akka("slf4j"),
-      akka("testkit") % Test
+      akka("actor-testkit-typed") % Test
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm))
@@ -105,10 +105,7 @@ lazy val sbtRunner = project
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     resolvers += Resolver.sonatypeRepo("public"),
     libraryDependencies ++= Seq(
-      akka("actor"),
-      akka("testkit") % Test,
-      akka("remote"),
-      akka("slf4j"),
+      akka("actor-testkit-typed") % Test,
       "org.scalameta" %% "scalafmt-core" % "3.0.0"
     ),
     docker / imageNames := Seq(
@@ -156,13 +153,11 @@ lazy val server = project
     maintainer := "scalacenter",
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-text" % "1.9",
-      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+      akka("http"),
+      akka("actor-testkit-typed") % Test,
+      akka("http-testkit") % Test,
       "com.softwaremill.akka-http-session" %% "core" % "0.6.1",
       "ch.megard" %% "akka-http-cors" % "1.1.2",
-      akka("remote"),
-      akka("slf4j"),
-      akka("testkit") % Test,
-      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
     )
   )
   .enablePlugins(JavaServerAppPackaging)
@@ -173,7 +168,7 @@ lazy val balancer = project
   .settings(loggingAndTest)
   .settings(smallRunnerRuntimeDependenciesInTest)
   .settings(
-    libraryDependencies += akka("testkit") % Test
+    libraryDependencies += akka("actor-testkit-typed") % Test
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, storage, sbtRunner % Test)
 

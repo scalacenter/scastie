@@ -2,24 +2,20 @@ package com.olegych.scastie.sbt
 
 import java.nio.file._
 import java.time.Instant
-
-import akka.actor.{ActorRef, Cancellable, FSM, Stash}
-import akka.pattern.ask
+import akka.actor.typed.scaladsl.AskPattern.Askable
+import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import akka.util.Timeout
 import com.olegych.scastie.api._
 import com.olegych.scastie.instrumentation.InstrumentedInputs
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.util._
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import scala.util.Random
 
 object SbtProcess {
-  sealed trait SbtState
-  case object Initializing extends SbtState
-  case object Ready extends SbtState
-  case object Reloading extends SbtState
-  case object Running extends SbtState
 
   sealed trait Data
   case class SbtData(currentInputs: Inputs) extends Data
@@ -27,21 +23,19 @@ object SbtProcess {
       snippetId: SnippetId,
       inputs: Inputs,
       isForcedProgramMode: Boolean,
-      progressActor: ActorRef,
-      snippetActor: ActorRef,
-      timeoutEvent: Option[Cancellable]
+      progressActor: ActorRef[SnippetProgress],
+      snippetActor: ActorRef[SnippetProgressAsk],
+      timeoutKey: Option[Long]
   ) extends Data
-  case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
-    def message: String = {
-      val stateMsg =
-        state match {
-          case Reloading => "updating build configuration"
-          case Running   => "running code"
-          case _         => sys.error(s"unexpected timeout in state $state")
-        }
 
-      s"timed out after $duration when $stateMsg"
-    }
+  sealed trait Event
+
+  case class SbtTaskEvent(v: SbtTask) extends Event
+
+  case class ProcessOutputEvent(v: ProcessOutput) extends Event
+
+  case class SbtStateTimeout(duration: FiniteDuration, stateMsg: String) extends Event {
+    def message: String = s"timed out after $duration when $stateMsg"
 
     def toProgress(snippetId: SnippetId): SnippetProgress = {
       SnippetProgress.default.copy(
@@ -59,18 +53,41 @@ object SbtProcess {
       )
     }
   }
+
+  /** Let it die and restart the actor */
+  final class LetItDie(msg: String) extends Exception(msg)
+
+  def apply(runTimeout: FiniteDuration,
+    reloadTimeout: FiniteDuration,
+    isProduction: Boolean,
+    javaOptions: Seq[String],
+    customSbtDir: Option[Path] = None
+  ): Behavior[Event] =
+    Behaviors.withStash(100) { buffer =>
+      Behaviors.supervise[Event] {
+        Behaviors.setup { ctx =>
+          Behaviors.withTimers { timers =>
+            new SbtProcess(runTimeout, reloadTimeout, isProduction, javaOptions, customSbtDir)(ctx, buffer, timers)()
+          }
+        }
+      }.onFailure(SupervisorStrategy.restart)
+    }
 }
 
-class SbtProcess(runTimeout: FiniteDuration,
-                 reloadTimeout: FiniteDuration,
-                 isProduction: Boolean,
-                 javaOptions: Seq[String],
-                 customSbtDir: Option[Path] = None)
-    extends FSM[SbtProcess.SbtState, SbtProcess.Data]
-    with Stash {
+import SbtProcess._
+class SbtProcess private (
+  runTimeout: FiniteDuration,
+  reloadTimeout: FiniteDuration,
+  isProduction: Boolean,
+  javaOptions: Seq[String],
+  customSbtDir: Option[Path]
+)(context: ActorContext[Event], buffer: StashBuffer[Event], timers: TimerScheduler[Event]) {
   import ProcessActor._
-  import SbtProcess._
-  import context.dispatcher
+  import context.{executionContext, log}
+
+  // context.log is not thread safe
+  // https://doc.akka.io/docs/akka/current/typed/logging.html#how-to-log
+  private val safeLog = LoggerFactory.getLogger(classOf[SbtProcess])
 
   private var progressId = 0L
 
@@ -79,10 +96,11 @@ class SbtProcess(runTimeout: FiniteDuration,
     val p = _p.copy(id = Some(progressId))
     run.progressActor ! p
     implicit val tm = Timeout(10.seconds)
-    (run.snippetActor ? p)
+    implicit val sc = context.system.scheduler
+    run.snippetActor.ask(SnippetProgressAsk(_, p))
       .recover {
         case e =>
-          log.error(e, s"error while saving progress $p")
+          safeLog.error(s"error while saving progress $p", e)
       }
   }
 
@@ -107,17 +125,15 @@ class SbtProcess(runTimeout: FiniteDuration,
     slurp(sbtDir.resolve(ScalaTarget.Js.sourceMapFilename))
   }
 
-  startWith(
-    Initializing, {
-      InstrumentedInputs(Inputs.default) match {
-        case Right(instrumented) =>
-          val inputs = instrumented.inputs
-          setInputs(inputs)
-          val p = process
-          log.info(s"started process ${p}")
-          SbtData(inputs)
-        case e => sys.error("failed to instrument default input: " + e)
-      }
+  def apply(): Behavior[Event] = initializing(
+    InstrumentedInputs(Inputs.default) match {
+      case Right(instrumented) =>
+        val inputs = instrumented.inputs
+        setInputs(inputs)
+        val p = process
+        log.info(s"started process ${p}")
+        SbtData(inputs)
+      case e => sys.error("failed to instrument default input: " + e)
     }
   )
 
@@ -129,53 +145,63 @@ class SbtProcess(runTimeout: FiniteDuration,
         "-Dsbt.banner=false",
       )).mkString(" ")
 
-    val props =
-      ProcessActor.props(
+    context.spawn(
+      ProcessActor(
+        replyTo = context.messageAdapter(ProcessOutputEvent),
         command = List("sbt"),
         workingDir = sbtDir,
         environment = Map(
           "SBT_OPTS" -> sbtOpts
         )
-      )
-
-    context.actorOf(props, name = s"sbt-process-$promptUniqueId")
+      ),
+      name = s"sbt-process-$promptUniqueId"
+    )
   }
 
-  whenUnhandled {
-    case Event(_: SbtTask | _: ProcessOutput, _) =>
-      stash()
-      stay()
-    case Event(timeout: SbtStateTimeout, run: SbtRun) =>
-      println("*** timeout ***")
+  def unhandled(data: Data): PartialFunction[Event, Behavior[Event]] = {
+    case e @ (_: SbtTaskEvent | _: ProcessOutputEvent) =>
+      buffer.stash(e)
+      Behaviors.same
 
-      val progress = timeout.toProgress(run.snippetId)
-      sendProgress(run, progress)
-      throw new Exception(timeout.message)
-  }
-
-  onTransition {
-    case _ -> Ready =>
-      println("-- Ready --")
-      unstashAll()
-    case _ -> Initializing =>
-      println("-- Initializing --")
-    case _ -> Reloading =>
-      println("-- Reloading --")
-    case _ -> Running =>
-      println("-- Running --")
-  }
-
-  when(Initializing) {
-    case Event(out: ProcessOutput, _) =>
-      if (isPrompt(out.line)) {
-        goto(Ready)
-      } else {
-        stay()
+    case timeout: SbtStateTimeout =>
+      data match {
+        case run: SbtRun =>
+          println("*** timeout ***")
+          val progress = timeout.toProgress(run.snippetId)
+          sendProgress(run, progress)
+          throw new LetItDie(timeout.message)
+        case _ =>
+          log.error(s"Unexpected timeout $timeout - when data=$data")
+          Behaviors.same
       }
   }
 
-  when(Ready) {
-    case Event(task @ SbtTask(snippetId, taskInputs, ip, login, progressActor), SbtData(stateInputs)) =>
+  def initializing(data: SbtData): Behavior[Event] = {
+    println("-- Initializing --")
+    Behaviors.receiveMessage {
+      _initializing(data) orElse unhandled(data)
+    }
+  }
+
+  private def _initializing(data: SbtData): PartialFunction[Event, Behavior[Event]] = {
+    case ProcessOutputEvent(out) =>
+      if (isPrompt(out.line)) {
+        ready(data)
+      } else {
+        Behaviors.same
+      }
+  }
+
+  def ready(data: SbtData): Behavior[Event] = {
+    println("-- Ready --")
+    buffer.unstashAll(Behaviors.receiveMessage {
+      _ready(data) orElse unhandled(data)
+    })
+  }
+
+  private def _ready(data: SbtData): PartialFunction[Event, Behavior[Event]] = {
+    case SbtTaskEvent(SbtTask(snippetId, taskInputs, ip, login, progressActor, snippetActor)) =>
+      val SbtData(stateInputs) = data
       println(s"Running: (login: $login, ip: $ip) \n ${taskInputs.code.take(30)}")
 
       val _sbtRun = SbtRun(
@@ -183,8 +209,8 @@ class SbtProcess(runTimeout: FiniteDuration,
         inputs = taskInputs,
         isForcedProgramMode = false,
         progressActor = progressActor,
-        snippetActor = sender(),
-        timeoutEvent = None
+        snippetActor = snippetActor,
+        timeoutKey = None
       )
       sendProgress(_sbtRun, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snippetId)))
 
@@ -196,7 +222,7 @@ class SbtProcess(runTimeout: FiniteDuration,
 
           if (isReloading) {
             process ! Input("reload;compile/compileInputs")
-            gotoWithTimeout(sbtRun, Reloading, reloadTimeout)
+            gotoWithTimeout(sbtRun, reloading, SbtStateTimeout(reloadTimeout, "updating build configuration"))
           } else {
             gotoRunning(sbtRun)
           }
@@ -205,7 +231,7 @@ class SbtProcess(runTimeout: FiniteDuration,
           val sbtRun = _sbtRun
           setInputs(sbtRun.inputs)
           sendProgress(sbtRun, report.toProgress(snippetId))
-          goto(Ready)
+          Behaviors.same
       }
   }
 
@@ -216,52 +242,65 @@ class SbtProcess(runTimeout: FiniteDuration,
     promptUniqueId
   )
 
-  when(Reloading) {
-    case Event(output: ProcessOutput, sbtRun: SbtRun) =>
+  def reloading(data: SbtRun): Behavior[Event] = {
+    println("-- Reloading --")
+    Behaviors.receiveMessage {
+      _reloading(data) orElse unhandled(data)
+    }
+  }
+
+  private def _reloading(sbtRun: SbtRun): PartialFunction[Event, Behavior[Event]] = {
+    case ProcessOutputEvent(output) =>
       val progress = extractor.extractProgress(output, sbtRun, isReloading = true)
       sendProgress(sbtRun, progress)
 
       if (progress.isSbtError) {
-        throw new Exception("sbt error: " + output.line)
+        throw new LetItDie("sbt error: " + output.line)
       }
 
       if (isPrompt(output.line)) {
         gotoRunning(sbtRun)
       } else {
-        stay()
+        Behaviors.same
       }
   }
 
-  when(Running) {
-    case Event(output: ProcessOutput, sbtRun: SbtRun) =>
+  def running(data: SbtRun): Behavior[Event] = {
+    println("-- Running --")
+    Behaviors.receiveMessage {
+      _running(data) orElse unhandled(data)
+    }
+  }
+
+  private def _running(sbtRun: SbtRun): PartialFunction[Event, Behavior[Event]] = {
+    case ProcessOutputEvent(output) =>
       val progress = extractor.extractProgress(output, sbtRun, isReloading = false)
       sendProgress(sbtRun, progress)
 
       if (progress.isDone) {
-        sbtRun.timeoutEvent.foreach(_.cancel())
-        goto(Ready).using(SbtData(sbtRun.inputs))
+        sbtRun.timeoutKey.foreach(timers.cancel)
+        ready(SbtData(sbtRun.inputs))
       } else {
-        stay()
+        Behaviors.same
       }
   }
 
-  private def gotoWithTimeout(sbtRun: SbtRun, nextState: SbtState, duration: FiniteDuration): this.State = {
+  private[this] var timeoutKey = 0L
 
-    sbtRun.timeoutEvent.foreach(_.cancel())
-
-    val timeout =
-      context.system.scheduler.scheduleOnce(
-        duration,
-        self,
-        SbtStateTimeout(duration, nextState)
-      )
-
-    goto(nextState).using(sbtRun.copy(timeoutEvent = Some(timeout)))
+  private def gotoWithTimeout(
+    sbtRun: SbtRun,
+    nextState: SbtRun => Behavior[Event],
+    sbtStateTimeout: SbtStateTimeout
+  ): Behavior[Event] = {
+    sbtRun.timeoutKey.foreach(timers.cancel)
+    timeoutKey += 1
+    timers.startSingleTimer(timeoutKey, sbtStateTimeout, sbtStateTimeout.duration)
+    nextState(sbtRun.copy(timeoutKey = Some(timeoutKey)))
   }
 
-  private def gotoRunning(sbtRun: SbtRun): this.State = {
+  private def gotoRunning(sbtRun: SbtRun): Behavior[Event] = {
     process ! Input(sbtRun.inputs.target.sbtRunCommand(sbtRun.inputs.isWorksheetMode))
-    gotoWithTimeout(sbtRun, Running, runTimeout)
+    gotoWithTimeout(sbtRun, running, SbtStateTimeout(runTimeout, "running code"))
   }
 
   private def isPrompt(line: String): Boolean = {

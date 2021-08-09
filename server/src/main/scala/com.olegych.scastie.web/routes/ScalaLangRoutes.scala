@@ -6,22 +6,21 @@ import com.olegych.scastie.web.oauth2._
 import com.olegych.scastie.balancer._
 
 import akka.util.Timeout
-import akka.actor.{ActorRef, ActorSystem}
-
+import akka.actor.typed.{ActorRef, Scheduler}
 import akka.http.scaladsl.model.StatusCodes.Created
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 
-import akka.pattern.ask
+import akka.actor.typed.scaladsl.AskPattern.Askable
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 
 // temporary route for the scala-lang frontpage
 class ScalaLangRoutes(
-    dispatchActor: ActorRef,
+    dispatchActor: ActorRef[DispatchActor.Message],
     userDirectives: UserDirectives
-)(implicit system: ActorSystem) {
-  import system.dispatcher
+)(implicit ec: ExecutionContext, scheduler: Scheduler) {
   import userDirectives.optionalLogin
 
   implicit val timeout: Timeout = Timeout(5.seconds)
@@ -43,7 +42,7 @@ class ScalaLangRoutes(
                 )
 
               complete(
-                (dispatchActor ? RunSnippet(inputs))
+                dispatchActor.ask(RunSnippet(_, inputs))
                   .mapTo[SnippetId]
                   .map(
                     snippetId =>

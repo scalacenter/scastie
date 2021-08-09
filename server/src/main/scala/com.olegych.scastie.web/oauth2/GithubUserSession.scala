@@ -4,30 +4,30 @@ import java.lang.System.{lineSeparator => nl}
 import java.nio.file._
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.typed.{ActorRef, Scheduler}
 import com.olegych.scastie.api.User
+import com.olegych.scastie.web.WebConf
 import com.softwaremill.session._
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import play.api.libs.json.Json
 
 import scala.collection.concurrent.TrieMap
+import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class GithubUserSession(system: ActorSystem) {
+class GithubUserSession(
+  conf: WebConf,
+  refreshTokenStorageImpl: ActorRef[ActorRefreshTokenStorage.Message]
+)(implicit scheduler: Scheduler, ec: ExecutionContext) {
   val logger = Logger("GithubUserSession")
 
-  private val configuration =
-    ConfigFactory.load().getConfig("com.olegych.scastie.web")
-  private val usersFile =
-    Paths.get(configuration.getString("oauth2.users-file"))
-  private val usersSessions =
-    Paths.get(configuration.getString("oauth2.sessions-file"))
+  private val usersFile = conf.oauth2.usersFile
+  private val usersSessions = conf.oauth2.sessionsFile
 
   private val sessionConfig =
-    SessionConfig.default(configuration.getString("session-secret"))
+    SessionConfig.default(conf.sessionSecret)
 
   private lazy val users = {
     val trie = TrieMap[UUID, User]()
@@ -41,7 +41,7 @@ class GithubUserSession(system: ActorSystem) {
       (id: String) => Try { UUID.fromString(id) }
     )
   implicit val sessionManager = new SessionManager[UUID](sessionConfig)
-  implicit val refreshTokenStorage = new ActorRefreshTokenStorage(system)
+  implicit val refreshTokenStorage = new ActorRefreshTokenStorage(refreshTokenStorageImpl)
 
   private def readSessionsFile(): Vector[(UUID, User)] = {
     if (Files.exists(usersSessions)) {

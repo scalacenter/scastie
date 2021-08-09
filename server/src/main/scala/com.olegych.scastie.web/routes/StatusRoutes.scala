@@ -1,15 +1,16 @@
 package com.olegych.scastie.web.routes
 
 import akka.NotUsed
-import akka.actor.ActorRef
+import akka.actor.typed.{ActorRef, Scheduler}
 import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.http.scaladsl.model.ws.TextMessage._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Route, _}
-import akka.pattern.ask
+import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.stream.scaladsl._
+import akka.util.Timeout
 import com.olegych.scastie.api._
 import com.olegych.scastie.balancer._
 import com.olegych.scastie.web.oauth2.UserDirectives
@@ -18,7 +19,9 @@ import play.api.libs.json.Json
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
-class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives)(implicit ec: ExecutionContext) {
+class StatusRoutes(
+  statusActor: ActorRef[StatusActor.Message], userDirectives: UserDirectives
+)(implicit ec: ExecutionContext, scheduler: Scheduler) {
 
   val isAdminUser: Directive1[Boolean] =
     userDirectives.optionalLogin.map(
@@ -58,8 +61,10 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives)(implic
           case _ =>
             progress
         }
+
+    implicit val timeout: Timeout = 2.second
     Source
-      .fromFuture((statusActor ? SubscribeStatus)(2.seconds).mapTo[Source[StatusProgress, NotUsed]])
+      .future(statusActor.ask(SubscribeStatus.apply))
       .flatMapConcat(s => s.map(hideTask))
   }
 
