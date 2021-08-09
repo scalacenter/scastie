@@ -1,6 +1,6 @@
 package com.olegych.scastie.web.routes
 
-import akka.http.scaladsl.coding.{Gzip, NoCoding}
+import akka.http.scaladsl.coding.Coders.{Gzip, NoCoding}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import com.olegych.scastie.api.{SnippetId, SnippetUserPart}

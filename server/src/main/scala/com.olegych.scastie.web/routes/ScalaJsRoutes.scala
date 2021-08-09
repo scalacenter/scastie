@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.coding.Gzip
+import akka.http.scaladsl.coding.Coders.Gzip
 
 import scala.concurrent.duration.DurationInt
 
