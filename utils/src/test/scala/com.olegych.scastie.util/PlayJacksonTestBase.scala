@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.Module
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.olegych.scastie.api.{BaseInputs, Project, ScalaTarget, ShortInputs}
+import play.api.libs.json.jackson.PlayJsonDeserializer
 import play.api.libs.json.{Format, Json, Reads, Writes}
 
 import scala.reflect.ClassTag
