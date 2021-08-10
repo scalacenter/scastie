@@ -40,4 +40,10 @@ class PlayJsonDeserializerTest extends AnyFunSuite with Matchers {
     mapper(deserializerModule[ScalaTarget], DefaultScalaModule)
       .readValue(jsonInputs, classOf[ShortInputs]) mustBe inputs
   }
+
+  // see comments of class [[Input2]]
+  test("PlayJson/ deserializer don't consume input source beyond the ending '}' location of the registered field's class") {
+    mapper(deserializerModule[ScalaTarget], DefaultScalaModule)
+      .readValue(jsonInput2, classOf[Input2]) mustBe input2
+  }
 }
