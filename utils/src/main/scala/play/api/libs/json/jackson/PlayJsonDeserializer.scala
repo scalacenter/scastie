@@ -37,6 +37,8 @@ class PlayJsonDeserializer[T: Reads](cls: Class[T]) extends StdDeserializer[T](c
   }
 
   // copy from play-json 2.10.0-RC5 / play.api.libs.json.jackson.JsValueDeserializer.parseBigDecimal
+  // with minimal modifying:
+  // Don't consume input source beyond the ending '}' location of the parsing JsObject
   @tailrec
   final def deserialize(
       jp: JsonParser,
@@ -87,13 +89,14 @@ class PlayJsonDeserializer[T: Reads](cls: Class[T]) extends StdDeserializer[T](c
         throw new RuntimeException("We should have been reading an object, something got wrong")
     }
 
-    // Read ahead
-    jp.nextToken()
-
     valueAndCtx match {
       case (Some(v), Nil)               => v // done, no more tokens and got a value!
-      case (Some(v), previous :: stack) => deserialize(jp, ctxt, previous.addValue(v) :: stack)
-      case (None, nextContext)          => deserialize(jp, ctxt, nextContext)
+      case (Some(v), previous :: stack) =>
+        jp.nextToken() // Read ahead
+        deserialize(jp, ctxt, previous.addValue(v) :: stack)
+      case (None, nextContext)          =>
+        jp.nextToken() // Read ahead
+        deserialize(jp, ctxt, nextContext)
     }
   }
 }
