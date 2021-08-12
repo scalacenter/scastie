@@ -216,7 +216,7 @@ lazy val client = project
     test := {},
     Test / loadedTestFrameworks := Map(),
     Compile / npmDependencies ++= Seq(
-      "codemirror" -> "5.50.0",
+      "codemirror" -> "5.62.2",
       "firacode" -> "1.205.0",
       "font-awesome" -> "4.7.0",
       "raven-js" -> "3.11.0",
