@@ -25,6 +25,12 @@
     </encoder>
   </appender>
 
+  <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>8192</queueSize>
+    <neverBlock>true</neverBlock>
+    <appender-ref ref="FILE" />
+  </appender>
+
   <appender name="SENTRY" class="com.getsentry.raven.logback.SentryAppender">
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
       <level>WARN</level>
@@ -35,7 +41,7 @@
 
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>
-    <appender-ref ref="FILE"/>
+    <appender-ref ref="ASYNC"/>
     <appender-ref ref="SENTRY"/>
   </root>
 </configuration>
