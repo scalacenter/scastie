@@ -100,7 +100,7 @@ object ScaladexSearch {
     }
   }
 
-  private val scaladexBaseUrl = "http://localhost:8087"
+  private val scaladexBaseUrl = "http://localhost:8080"
   //private val scaladexBaseUrl = "https://index.scala-lang.org"
   private val scaladexApiUrl = scaladexBaseUrl + "/api"
 
@@ -190,7 +190,6 @@ object ScaladexSearch {
       if (state.selecteds.exists(_.matches(project, artifact))) Callback(())
       else
         Callback.future {
-          println("TARGET IS " + target)
           fetchSelected(project, artifact, target, version).map {
             case Some(selected) if !state.selecteds.exists(_.release.matches(selected.release)) =>
               def addScalaDependencyLocal =
