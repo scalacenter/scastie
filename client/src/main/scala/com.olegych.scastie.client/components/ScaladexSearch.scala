@@ -13,6 +13,8 @@ import dom.raw.{HTMLInputElement, HTMLElement}
 import dom.ext.Ajax
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.concurrent.Future
+import com.olegych.scastie.api.ScalaTarget.{Jvm, Scala3}
 
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency ~=> Callback,
@@ -55,22 +57,22 @@ object ScaladexSearch {
   private[ScaladexSearch] case class SearchState(
       query: String,
       selectedIndex: Int,
-      projects: List[Project],
+      projects: List[(Project, ScalaTarget)],
       selecteds: List[Selected]
   ) {
 
     private val selectedProjectsArtifacts = selecteds
-      .map(selected => (selected.project, selected.release.artifact, None))
+      .map(selected => (selected.project, selected.release.artifact, None, selected.release.target))
       .toSet
 
-    val search: List[(Project, String, Option[String])] =
+    val search: List[(Project, String, Option[String], ScalaTarget)] =
       projects
-        .flatMap(
-          project => project.artifacts.map(artifact => (project, artifact, None))
-        )
-        .filter(
+        .flatMap {
+          case (project, target) => project.artifacts.map(artifact => (project, artifact, None, target))
+        }
+        .filter {
           projectAndArtifact => !selectedProjectsArtifacts.contains(projectAndArtifact)
-        )
+        }
 
     def removeSelected(selected: Selected): SearchState = {
       copy(selecteds = selecteds.filterNot(_.release.matches(selected.release)))
@@ -89,7 +91,7 @@ object ScaladexSearch {
       )
     }
 
-    def setProjects(projects: List[Project]): SearchState = {
+    def setProjects(projects: List[(Project, ScalaTarget)]): SearchState = {
       copy(projects = projects)
     }
 
@@ -98,8 +100,8 @@ object ScaladexSearch {
     }
   }
 
-  // private val scaladexBaseUrl = "http://localhost:8080"
-  private val scaladexBaseUrl = "https://index.scala-lang.org"
+  private val scaladexBaseUrl = "http://localhost:8087"
+  //private val scaladexBaseUrl = "https://index.scala-lang.org"
   private val scaladexApiUrl = scaladexBaseUrl + "/api"
 
   private implicit val projectOrdering: Ordering[Project] =
@@ -168,10 +170,10 @@ object ScaladexSearch {
           for {
             state <- scope.state
             props <- scope.props
-            _ <- if (0 <= state.selectedIndex && state.selectedIndex < state.search.size)
-              addArtifact(state.search(state.selectedIndex), props.scalaTarget, state)
-            else
-              Callback.empty
+            _ <- if (0 <= state.selectedIndex && state.selectedIndex < state.search.size) {
+              val (p, a, v, t) = state.search(state.selectedIndex)
+              addArtifact((p, a, v), t, state)
+            } else Callback.empty
           } yield ()
 
         addArtifactIfInRange >> Callback(searchInputRef.unsafeGet().focus())
@@ -188,6 +190,7 @@ object ScaladexSearch {
       if (state.selecteds.exists(_.matches(project, artifact))) Callback(())
       else
         Callback.future {
+          println("TARGET IS " + target)
           fetchSelected(project, artifact, target, version).map {
             case Some(selected) if !state.selecteds.exists(_.release.matches(selected.release)) =>
               def addScalaDependencyLocal =
@@ -241,20 +244,33 @@ object ScaladexSearch {
     private def fetchProjects(): Callback = {
       def fetch(target: ScalaTarget, searchState: SearchState): Callback = {
         if (!searchState.query.isEmpty) {
-          val query = toQuery(
-            Map("q" -> searchState.query) ++ target.scaladexRequest
-          )
+
+          def queryAndParse(t: ScalaTarget): Future[List[(Project, ScalaTarget)]] = {
+            val q = toQuery(t.scaladexRequest + ("q" ->  searchState.query))
+            Ajax
+                .get(scaladexApiUrl + "/search" + q)
+                .map { ret =>
+                  Json
+                    .fromJson[List[Project]](Json.parse(ret.responseText))
+                    .asOpt
+                    .getOrElse(Nil)
+                    .map(_ -> t)
+                }
+          }
+
+          val projsForThisTarget = queryAndParse(target)
+          val projects: Future[List[(Project, ScalaTarget)]] = target match {
+            // If scala3 but no scala 3 versions available, offer 2.13 artifacts
+            case Scala3(_) =>
+              projsForThisTarget.flatMap { ls =>
+                if (ls.nonEmpty) projsForThisTarget
+                else queryAndParse(Jvm.default)
+              }
+            case _ => projsForThisTarget
+          }
 
           Callback.future(
-            Ajax
-              .get(scaladexApiUrl + "/search" + query)
-              .map { ret =>
-                Json
-                  .fromJson[List[Project]](Json.parse(ret.responseText))
-                  .asOpt
-                  .getOrElse(Nil)
-              }
-              .map(projects => scope.modState(_.setProjects(projects)))
+            projects.map(projects => scope.modState(_.setProjects(projects)))
           )
         } else scope.modState(_.clearProjects)
       }
@@ -304,6 +320,7 @@ object ScaladexSearch {
 
     def renderProject(project: Project,
                       artifact: String,
+                      scalaTarget: ScalaTarget,
                       selected: TagMod,
                       handlers: TagMod = EmptyVdom,
                       remove: TagMod = EmptyVdom,
@@ -335,7 +352,8 @@ object ScaladexSearch {
             .getOrElse(
               img(src := Assets.placeholderUrl, common, alt := s"placeholder logo for $organization")
             ),
-          span(cls := "artifact")(label)
+          span(cls := "artifact")(label),
+          if (scalaTarget != props.scalaTarget) span(cls := "artifact")(s"cross from ${scalaTarget} ") else ""
         ),
         options
       )
@@ -361,6 +379,7 @@ object ScaladexSearch {
           renderProject(
             selected.project,
             selected.release.artifact,
+            selected.release.target,
             i(cls := "fa fa-close")(
               onClick --> scope.backend.removeSelected(selected),
               cls := "remove"
@@ -397,13 +416,14 @@ object ScaladexSearch {
       ),
       div.withRef(projectListRef)(cls := "results", displayResults)(
         searchState.search.zipWithIndex.map {
-          case ((project, artifact, version), index) =>
+          case ((project, artifact, version, target), index) =>
             renderProject(
               project,
               artifact,
+              target,
               selected = selectedIndex(index, searchState.selectedIndex),
               handlers = TagMod(
-                onClick --> scope.backend.addArtifact((project, artifact, version), props.scalaTarget, scope.state),
+                onClick --> scope.backend.addArtifact((project, artifact, version), target, scope.state),
                 onMouseOver --> scope.backend.selectIndex(index)
               )
             )
