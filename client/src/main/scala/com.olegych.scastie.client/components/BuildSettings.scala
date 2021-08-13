@@ -130,7 +130,7 @@ object BuildSettings {
           versionSelector(d.dottyVersion, ScalaTarget.Scala3.apply)
 
         case js: ScalaTarget.Js =>
-          div(s"${js.scalaJsVersion} on Scala ${js.scalaVersion}")
+          versionSelector(js.scalaJsVersion, sv => ScalaTarget.Js(sv, js.scalaJsVersion))
 
         case n: ScalaTarget.Native =>
           div(s"${n.scalaNativeVersion} on Scala ${n.scalaVersion}")

@@ -6,6 +6,7 @@ object ScalaVersions {
   def suggestedScalaVersions(tpe: ScalaTargetType): List[String] = {
     val versions = tpe match {
       case ScalaTargetType.Scala3 => List(BuildInfo.stable3, BuildInfo.latest3)
+      case ScalaTargetType.JS => List(BuildInfo.stable3, BuildInfo.latest213, BuildInfo.latest212)
       case _ => List(BuildInfo.latest213, BuildInfo.latest212)
     }
     versions.distinct
@@ -26,6 +27,8 @@ object ScalaVersions {
           "3.0.0-M3",
           "3.0.0-M1"
         )
+      case ScalaTargetType.JS =>
+        allVersions(ScalaTargetType.Scala2) ++ allVersions(ScalaTargetType.Scala3)
       case _ =>
         List(
           BuildInfo.latest213,
