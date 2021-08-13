@@ -352,7 +352,7 @@ object ScaladexSearch {
               img(src := Assets.placeholderUrl, common, alt := s"placeholder logo for $organization")
             ),
           span(cls := "artifact")(label),
-          if (scalaTarget != props.scalaTarget) span(cls := "artifact")(s"cross from ${scalaTarget} ") else ""
+          if (scalaTarget != props.scalaTarget) span(cls := "artifact")(s"(${scalaTarget} artifacts)") else ""
         ),
         options
       )
