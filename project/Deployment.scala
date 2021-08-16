@@ -18,14 +18,15 @@ object Deployment {
     deployRunnersQuick := deployRunnersQuickTask(server, sbtRunner).value,
     deployServerQuick := deployServerQuickTask(server, sbtRunner).value,
     deployLocalQuick := deployLocalQuickTask(server, sbtRunner).value,
-    dockerCompose := dockerComposeTask(server, sbtRunner).value,
+    dockerComposeQuick := dockerComposeQuick(server, sbtRunner).value,
   )
 
   lazy val deployRunnersQuick = taskKey[Unit]("Deploy sbt runners")
   lazy val deployServerQuick = taskKey[Unit]("Deploy server without building server zip")
   lazy val deployLocalQuick = taskKey[Unit]("Deploy locally")
-  lazy val dockerCompose = taskKey[Unit](
-    "Create docker-compose.yml (alternative way to deploy locally)"
+  lazy val dockerComposeQuick = taskKey[Unit](
+    "Create docker-compose.yml and run `docker-compose down; docker-compose up`" +
+      " (alternative way to deploy locally)"
   )
 
   /**
@@ -33,12 +34,13 @@ object Deployment {
    *  - Don't mount secrets.conf and local.conf file to container
    *  - Don't set -Dsentry.dsn, -Dconfig.file `docker run` options
    */
-  private def dockerComposeTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  private def dockerComposeQuick(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val log = streams.value.log
       val baseDir = (ThisBuild / baseDirectory).value
+      val deployer = Deployer.Local(baseDir, log)
 
-      Deployer.Local(baseDir, log).write("docker-compose.yml",
+      deployer.write("docker-compose.yml",
         s"""
           |# https://www.cloudsavvyit.com/10765/how-to-simplify-docker-compose-files-with-yaml-anchors-and-extensions/
           |x-runner: &runner
@@ -75,7 +77,8 @@ object Deployment {
           |      - -Dakka.remote.artery.canonical.port=5150
           |""".stripMargin)
 
-      log.info("Created docker-compose.yml. `docker-compose up` to start scastie.")
+      deployer.run("docker-compose down")
+      deployer.run("docker-compose up")
     }
 
   /** @param rmi if true then delete all $label images
@@ -387,6 +390,9 @@ object Deployment {
         write(scriptName, scriptContent, executable = true)
         (rootDir / scriptName).absolutePath ! processLog(scriptName)
       }
+
+      def run(command: String): Unit =
+        Process(command, rootDir) ! processLog(command.trim.takeWhile(_ != ' '))
     }
 
     case class Remote(host: String, user: String, log: Logger, tempFile: File) extends Deployer {
