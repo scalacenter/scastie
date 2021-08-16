@@ -20,7 +20,10 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
   val root = Files.createTempDirectory("test")
   val oldRoot = Files.createTempDirectory("old-test")
 
-  private lazy val mongoContainer = new MongoDBSnippetsContainer(scala.concurrent.ExecutionContext.Implicits.global)
+  private lazy val mongoContainer = new MongoDBSnippetsContainer(
+    mongoUri = "mongodb://localhost:27017/snippets",
+    ec = scala.concurrent.ExecutionContext.Implicits.global
+  )
   private val testContainer: SnippetsContainer = {
     if (mongo)
       mongoContainer
