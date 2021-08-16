@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Route
 import com.olegych.scastie.api.{SnippetId, SnippetUserPart}
 import com.olegych.scastie.util.Base64UUID
 
-class FrontPageRoutes(production: Boolean) {
+class FrontPageRoutes(embeddedUrlBase: String) {
 
   private def index = getFromResource("public/index.html")
 
@@ -23,10 +23,6 @@ class FrontPageRoutes(production: Boolean) {
     }
 
     val id = "id-" + Base64UUID.create
-
-    val embeddedUrlBase =
-      if (production) "https://scastie.scala-lang.org"
-      else "http://localhost:9000"
 
     s"""|document.write("
         |<div id='$id'></div>
