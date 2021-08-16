@@ -221,7 +221,6 @@ object Deployment {
       )
 
       deployer.run("clean-server.sh", dockerClean("scastie=server"))
-      //TODO remove RUNNING_PID
       deployer.run("server.sh",
         serverScript(
           (server / docker / imageNames).value.head,

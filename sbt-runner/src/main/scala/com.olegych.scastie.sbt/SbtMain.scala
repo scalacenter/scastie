@@ -1,7 +1,6 @@
 package com.olegych.scastie.sbt
 
 import akka.actor.typed.scaladsl.Behaviors
-import com.olegych.scastie.util.ScastieFileUtil.writeRunningPid
 import com.olegych.scastie.util.ShowConfig
 import com.typesafe.sslconfig.util.EnrichedConfig
 import akka.actor.typed.{ActorSystem, Behavior}
@@ -19,11 +18,6 @@ object SbtMain {
       ConfigFactory.load().getConfig("com.olegych.scastie")
     )
     val sbtConf = config.get[SbtConf]("sbt")
-
-    if (sbtConf.production) {
-      val pid = writeRunningPid()
-      logger.info(s"Starting sbtRunner pid: $pid")
-    }
 
     val system = ActorSystem[Nothing](
       Guardian(sbtConf),
