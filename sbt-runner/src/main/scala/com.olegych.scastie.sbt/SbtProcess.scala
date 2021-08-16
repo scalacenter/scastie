@@ -57,17 +57,12 @@ object SbtProcess {
   /** Let it die and restart the actor */
   final class LetItDie(msg: String) extends Exception(msg)
 
-  def apply(runTimeout: FiniteDuration,
-    reloadTimeout: FiniteDuration,
-    isProduction: Boolean,
-    javaOptions: Seq[String],
-    customSbtDir: Option[Path] = None
-  ): Behavior[Event] =
+  def apply(conf: SbtConf, javaOptions: Seq[String]): Behavior[Event] =
     Behaviors.withStash(100) { buffer =>
       Behaviors.supervise[Event] {
         Behaviors.setup { ctx =>
           Behaviors.withTimers { timers =>
-            new SbtProcess(runTimeout, reloadTimeout, isProduction, javaOptions, customSbtDir)(ctx, buffer, timers)()
+            new SbtProcess(conf, javaOptions)(ctx, buffer, timers)()
           }
         }
       }.onFailure(SupervisorStrategy.restart)
@@ -76,11 +71,7 @@ object SbtProcess {
 
 import SbtProcess._
 class SbtProcess private (
-  runTimeout: FiniteDuration,
-  reloadTimeout: FiniteDuration,
-  isProduction: Boolean,
-  javaOptions: Seq[String],
-  customSbtDir: Option[Path]
+  conf: SbtConf, javaOptions: Seq[String]
 )(context: ActorContext[Event], buffer: StashBuffer[Event], timers: TimerScheduler[Event]) {
   import ProcessActor._
   import context.{executionContext, log}
@@ -104,8 +95,7 @@ class SbtProcess private (
       }
   }
 
-  private val sbtDir: Path =
-    customSbtDir.getOrElse(Files.createTempDirectory("scastie"))
+  private val sbtDir: Path = Files.createTempDirectory("scastie")
   private val buildFile = sbtDir.resolve("build.sbt")
   private val promptUniqueId = Random.alphanumeric.take(10).mkString
 
@@ -222,7 +212,7 @@ class SbtProcess private (
 
           if (isReloading) {
             process ! Input("reload;compile/compileInputs")
-            gotoWithTimeout(sbtRun, reloading, SbtStateTimeout(reloadTimeout, "updating build configuration"))
+            gotoWithTimeout(sbtRun, reloading, SbtStateTimeout(conf.sbtReloadTimeout, "updating build configuration"))
           } else {
             gotoRunning(sbtRun)
           }
@@ -238,7 +228,7 @@ class SbtProcess private (
   val extractor = new OutputExtractor(
     scalaJsContent _,
     scalaJsSourceMapContent _,
-    isProduction,
+    conf.production,
     promptUniqueId
   )
 
@@ -300,7 +290,7 @@ class SbtProcess private (
 
   private def gotoRunning(sbtRun: SbtRun): Behavior[Event] = {
     process ! Input(sbtRun.inputs.target.sbtRunCommand(sbtRun.inputs.isWorksheetMode))
-    gotoWithTimeout(sbtRun, running, SbtStateTimeout(runTimeout, "running code"))
+    gotoWithTimeout(sbtRun, running, SbtStateTimeout(conf.runTimeout, "running code"))
   }
 
   private def isPrompt(line: String): Boolean = {
