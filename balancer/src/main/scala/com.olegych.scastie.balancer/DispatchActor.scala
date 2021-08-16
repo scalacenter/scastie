@@ -104,7 +104,8 @@ class DispatchActor(
   private val container =
     config.snippetsContainer match {
       case SnippetsType.Memory => new InMemorySnippetsContainer
-      case SnippetsType.Mongo  => new MongoDBSnippetsContainer(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
+      case SnippetsType.Mongo(uri) =>
+        new MongoDBSnippetsContainer(uri, ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
       case f: SnippetsType.Files =>
         new FilesSnippetsContainer(
           f.snippetsDir,
@@ -289,16 +290,10 @@ case class BalancerConf(
 object BalancerConf {
   import SnippetsType._
   implicit val loader: ConfigLoader[BalancerConf] = (c: EnrichedConfig) => BalancerConf(
-    c.get[String]("snippets-container") match {
+    c.get[String]("snippets-container.type") match {
+      case "mongo"  => Mongo(c.get[String]("snippets-container.uri"))
+      case "files"  => c.get[Files]("snippets-container")
       case "memory" => Memory
-      case "mongo" => Mongo
-      case "files" => Files(
-        c.get[Path]("snippets-dir"),
-        c.get[Path]("old-snippets-dir"),
-      )
-      case _ =>
-        println("fallback to in-memory container")
-        Memory
     }
   )
 }
@@ -307,10 +302,16 @@ sealed trait SnippetsType
 object SnippetsType {
   case object Memory extends SnippetsType
 
-  case object Mongo extends SnippetsType
+  case class Mongo(uri: String) extends SnippetsType
 
   case class Files(
     snippetsDir: Path,
     oldSnippetsDir: Path,
   ) extends SnippetsType
+  object Files {
+    implicit val loader: ConfigLoader[Files] = (c: EnrichedConfig) => Files(
+      c.get[Path]("snippets-dir"),
+      c.get[Path]("old-snippets-dir"),
+    )
+  }
 }

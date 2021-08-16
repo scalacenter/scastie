@@ -46,10 +46,10 @@ object MongoSnippet {
   implicit val formatMongoSnippet: OFormat[MongoSnippet] = Json.format[MongoSnippet]
 }
 
-class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer {
-  protected implicit val ec: ExecutionContext = _ec
-
-  private val mongoUri = "mongodb://localhost:27017/snippets"
+class MongoDBSnippetsContainer(
+  private val mongoUri: String,
+  protected implicit val ec: ExecutionContext,
+) extends SnippetsContainer {
   private val driver = AsyncDriver()
   private val connection = for {
     parsedUri <- MongoConnection.fromString(mongoUri)
