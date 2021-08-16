@@ -171,6 +171,9 @@ exit
 ./server.sh
 ```
 
+# Run/test `deploy` task on development machine using vagrant & virtualbox
+See guide in [Vagrantfile]
+
 # Running with docker locally
 There are 2 options:
 1. Using [docker-compose](https://docs.docker.com/compose/install/)
