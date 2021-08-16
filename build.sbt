@@ -10,6 +10,7 @@ addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
 
 addCommandAlias("fullBuildServer", "client/Compile/fullOptJS/webpack;server/docker")
 addCommandAlias("deployLocal", "fullBuildServer;sbtRunner/docker;deployLocalQuick")
+addCommandAlias("dockerCompose", "server/docker;sbtRunner/docker;dockerComposeQuick")
 
 // Deploy server and sbt instances without building and pushing docker images
 addCommandAlias("deployQuick", "deployRunnersQuick;deployServerQuick")
