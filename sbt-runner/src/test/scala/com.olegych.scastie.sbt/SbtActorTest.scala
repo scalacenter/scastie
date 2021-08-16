@@ -1,6 +1,6 @@
 package com.olegych.scastie.sbt
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.TestActor.AutoPilot
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.olegych.scastie.api._
@@ -245,9 +245,11 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   // https://stackoverflow.com/questions/18335127/testing-akka-actors-that-mixin-stash-with-testactorref
   private val sbtActor = system.spawn(
     SbtProcess(
-      runTimeout = timeout,
-      reloadTimeout = 20.seconds,
-      isProduction = false,
+      SbtConf(
+        production = false,
+        runTimeout = timeout,
+        sbtReloadTimeout = 20.seconds
+      ),
       javaOptions = Seq("-Xms51m", "-Xmx550m")
     ),
     name = "SbtRunner-test"

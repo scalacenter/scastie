@@ -42,12 +42,7 @@ class SbtActor private (
 
   private val sbtRunner =
     context.spawn(
-      SbtProcess(
-        config.runTimeout,
-        config.sbtReloadTimeout,
-        config.production,
-        javaOptions = Seq("-Xms512m", "-Xmx1g")
-      ),
+      SbtProcess(config, Seq("-Xms512m", "-Xmx1g")),
       name = "SbtRunner"
     )
 
