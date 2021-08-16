@@ -64,7 +64,7 @@ class SbtActor private (
 }
 
 case class SbtConf(
-  production: Boolean,
+  production: Boolean, // TODO remove
   runTimeout: FiniteDuration,
   sbtReloadTimeout: FiniteDuration,
 )

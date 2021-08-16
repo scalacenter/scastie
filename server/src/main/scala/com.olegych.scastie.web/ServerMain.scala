@@ -3,7 +3,7 @@ package com.olegych.scastie.web
 import com.olegych.scastie.web.routes._
 import com.olegych.scastie.web.oauth2._
 import com.olegych.scastie.balancer._
-import com.olegych.scastie.util.{ShowConfig, ScastieFileUtil}
+import com.olegych.scastie.util.ShowConfig
 import com.typesafe.sslconfig.util.{ConfigLoader, EnrichedConfig}
 import com.olegych.scastie.util.ConfigLoaders._
 import akka.http.scaladsl._
@@ -54,10 +54,6 @@ private object Guardian {
       implicit def system: ActorSystem[Nothing] = context.system
       implicit def ec: ExecutionContext = context.system.executionContext
       implicit def sc: Scheduler = context.system.scheduler
-
-      if (webCfg.production) {
-        ScastieFileUtil.writeRunningPid()
-      }
 
       val github = new Github(webCfg.oauth2)
       val session = new GithubUserSession(

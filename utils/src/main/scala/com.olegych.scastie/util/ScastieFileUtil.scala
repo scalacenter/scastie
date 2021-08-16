@@ -1,8 +1,6 @@
 package com.olegych.scastie.util
 
 import java.nio.file._
-import java.lang.management.ManagementFactory
-import java.nio.charset.StandardCharsets
 
 object ScastieFileUtil {
   def slurp(src: Path): Option[String] = {
@@ -21,15 +19,5 @@ object ScastieFileUtil {
       Files.write(dst, content.getBytes, StandardOpenOption.APPEND)
       ()
     }
-  }
-
-  def writeRunningPid(): String = {
-    val pid = ManagementFactory.getRuntimeMXBean.getName.split("@").head
-    val pidFile = Paths.get("RUNNING_PID")
-    Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8))
-    sys.addShutdownHook {
-      Files.delete(pidFile)
-    }
-    pid
   }
 }
