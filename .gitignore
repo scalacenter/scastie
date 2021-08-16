@@ -20,3 +20,4 @@ local/
 metals.sbt
 .bsp/
 /docker-compose.yml
+/.vagrant
