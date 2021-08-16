@@ -228,7 +228,7 @@ class SbtProcess private (
   val extractor = new OutputExtractor(
     scalaJsContent _,
     scalaJsSourceMapContent _,
-    conf.production,
+    conf.remapSourceMapUrlBase,
     promptUniqueId
   )
 

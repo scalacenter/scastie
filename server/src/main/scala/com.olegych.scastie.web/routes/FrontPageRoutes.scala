@@ -13,11 +13,10 @@ import com.olegych.scastie.api.{FetchResult, SnippetId, SnippetUserPart}
 import com.olegych.scastie.balancer.FetchSnippet
 import com.olegych.scastie.util.Base64UUID
 import org.apache.commons.text.StringEscapeUtils
-
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
-class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec: ExecutionContext, mat: Materializer) {
+class FrontPageRoutes(dispatchActor: ActorRef, embeddedUrlBase: String)(implicit ec: ExecutionContext, mat: Materializer) {
   implicit val timeout: Timeout = Timeout(20.seconds)
   private val placeholders = List(
     "Scastie can run any Scala program with any library in your browser. You don’t need to download or install anything.",
@@ -41,10 +40,6 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec:
     }
 
     val id = "id-" + Base64UUID.create
-
-    val embeddedUrlBase =
-      if (production) "https://scastie.scala-lang.org"
-      else "http://localhost:9000"
 
     s"""|document.write("
         |<div id='$id'></div>

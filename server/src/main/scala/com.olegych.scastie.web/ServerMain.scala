@@ -84,7 +84,7 @@ private object Guardian {
         cors()(
           concat(
             new ScalaLangRoutes(dispatchActor, userDirectives).routes,
-            new FrontPageRoutes(dispatchActor, webCfg.production).routes
+            new FrontPageRoutes(dispatchActor, webCfg.embeddedUrlBase).routes,
           )
         )
       )
@@ -99,14 +99,14 @@ private object Guardian {
 }
 
 case class WebConf(
-  production: Boolean,
+  embeddedUrlBase: String,
   oauth2: Oauth2Conf,
   sessionSecret: String,
   bind: BindConf,
 )
 object WebConf {
   implicit val loader: ConfigLoader[WebConf] = (c: EnrichedConfig) => WebConf(
-    c.get[Boolean]("production"),
+    c.get[String]("embedded-url-base"),
     c.get[Oauth2Conf]("oauth2"),
     c.get[String]("session-secret"),
     c.get[BindConf]("bind")

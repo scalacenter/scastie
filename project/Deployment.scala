@@ -46,7 +46,7 @@ object Deployment {
           |  environment:
           |    JAVA_OPTS: >-
           |      -Dsentry.release=${ version.value }
-          |      -Dcom.olegych.scastie.sbt.production=true
+          |      -Dcom.olegych.scastie.sbt.remapSourceMapUrlBase="http://localhost:9000"
           |      -Dakka.cluster.seed-nodes.0=akka://sys@server:15000
           |      -Dakka.cluster.seed-nodes.1=akka://sys@sbt-runner-1:5150
           |  restart: unless-stopped
@@ -59,7 +59,7 @@ object Deployment {
           |      JAVA_OPTS: >-
           |        -Xmx1G
           |        -Dsentry.release=${ version.value }
-          |        -Dcom.olegych.scastie.web.production=true
+          |        -Dcom.olegych.scastie.web.embedded-url-base="http://localhost:9000"
           |        -Dakka.remote.artery.canonical.hostname=server
           |        -Dakka.remote.artery.canonical.port=15000
           |        -Dakka.cluster.seed-nodes.0=akka://sys@server:15000
@@ -148,7 +148,7 @@ object Deployment {
         |    $image \\
         |      -Dakka.remote.artery.canonical.port=$$i \\
         |      $arteryHostnameOpts \\
-        |      -Dcom.olegych.scastie.sbt.production=true \\
+        |      -Dcom.olegych.scastie.sbt.remapSourceMapUrlBase="${ c.sbtRunners.remapSourceMapUrlBase }" \\
         |      -Dsentry.release=$version \\
         |      -Dsentry.dsn=$sentryDsn \\
         |      -Dakka.cluster.seed-nodes.0=${ c.server.akkaUri } \\
@@ -300,7 +300,11 @@ object Deployment {
   )
 
   private object DeployConf {
-    case class RunnerConf(user: String, host: String, portsStart: Int, portsSize: Int) {
+    case class RunnerConf(
+      user: String, host: String,
+      portsStart: Int, portsSize: Int,
+      remapSourceMapUrlBase: String,
+    ) {
       def portsEnd: Int = portsStart + portsSize - 1
       def firstNodeAkkaUri = s"akka://sys@$host:$portsStart"
     }
@@ -310,6 +314,7 @@ object Deployment {
         c.get[String]("host"),
         c.get[Int]("ports-start"),
         c.get[Int]("ports-size"),
+        c.get[String]("remapSourceMapUrlBase"),
       )
     }
 

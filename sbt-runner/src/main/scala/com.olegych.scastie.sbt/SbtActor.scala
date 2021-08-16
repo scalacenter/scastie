@@ -59,14 +59,14 @@ class SbtActor private (
 }
 
 case class SbtConf(
-  production: Boolean, // TODO remove
+  remapSourceMapUrlBase: String,
   runTimeout: FiniteDuration,
   sbtReloadTimeout: FiniteDuration,
 )
 
 object SbtConf {
   implicit val loader: ConfigLoader[SbtConf] = (c: EnrichedConfig) => SbtConf(
-    c.get[Boolean]("production"),
+    c.get[String]("remapSourceMapUrlBase"),
     c.get[FiniteDuration]("runTimeout"),
     c.get[FiniteDuration]("sbtReloadTimeout")
   )

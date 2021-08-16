@@ -246,7 +246,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   private val sbtActor = system.spawn(
     SbtProcess(
       SbtConf(
-        production = false,
+        remapSourceMapUrlBase = "http://localhost:9000",
         runTimeout = timeout,
         sbtReloadTimeout = 20.seconds
       ),

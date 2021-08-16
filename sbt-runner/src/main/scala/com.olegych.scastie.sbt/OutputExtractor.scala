@@ -12,7 +12,7 @@ import scala.util.control.NonFatal
 
 class OutputExtractor(getScalaJsContent: () => Option[String],
                       getScalaJsSourceMapContent: () => Option[String],
-                      isProduction: Boolean,
+                      remapSourceMapUrlBase: String,
                       promptUniqueId: String) {
   def extractProgress(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
     import sbtRun._
@@ -108,11 +108,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
             sources = sourceMap.sources.map(
               source =>
                 if (source.startsWith(ScalaTarget.Js.sourceUUID)) {
-                  val host =
-                    if (isProduction) "https://scastie.scala-lang.org"
-                    else "http://localhost:9000"
-
-                  host + snippetId.scalaJsUrl(ScalaTarget.Js.sourceFilename)
+                  remapSourceMapUrlBase + snippetId.scalaJsUrl(ScalaTarget.Js.sourceFilename)
                 } else source
             )
           )
