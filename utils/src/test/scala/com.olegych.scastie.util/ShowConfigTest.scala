@@ -52,8 +52,4 @@ class ShowConfigTest extends AnyFunSuite with Matchers {
          |    d2.x: 1
          |}""".stripMargin
   }
-
-  test("with overridden") {
-    ShowConfig(config, "d.d2.x = 2") mustBe "d.d2.x = 2 # Overridden. Old value = 1"
-  }
 }

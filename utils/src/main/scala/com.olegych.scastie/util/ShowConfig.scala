@@ -25,12 +25,6 @@ object ShowConfig {
       case s if s.trim.startsWith("}") =>
         groups.pop()
         s
-      // override
-      case s if s.contains(':') || s.contains('=') =>
-        val Array(path, newValue) = s.split(Array(':', '='))
-        val value = valueAt(path)
-        if (newValue.trim == value) s
-        else s"$s # Overridden. Old value = $value"
       // normal path
       case s =>
         val leadingSpaces = "\n" + s.takeWhile(_ == ' ')
