@@ -29,10 +29,8 @@ object ServerMain {
     val webConf = config.get[WebConf]("web")
     val balancerConf = config.get[BalancerConf]("balancer")
 
-    val port = args.headOption.map(_.toInt).getOrElse(webConf.bind.port)
-
     val system = ActorSystem[Nothing](
-      Guardian(webConf, balancerConf, port),
+      Guardian(webConf, balancerConf),
       config.get[String]("system-name")
     )
 
@@ -42,17 +40,15 @@ object ServerMain {
           |  canonical
           |  bind
           |}
-          |com.olegych.scastie.web.bind {
-          |  hostname
-          |  port = $port
-          |}""".stripMargin))
+          |com.olegych.scastie.web.bind
+          |""".stripMargin))
 
     Await.result(system.whenTerminated, Duration.Inf)
   }
 }
 
 private object Guardian {
-  def apply(webCfg: WebConf, balancerCfg: BalancerConf, port: Int): Behavior[Nothing] =
+  def apply(webCfg: WebConf, balancerCfg: BalancerConf): Behavior[Nothing] =
     Behaviors.setup[Nothing] { context =>
       import context.spawn
       implicit def system: ActorSystem[Nothing] = context.system
@@ -99,7 +95,7 @@ private object Guardian {
 
       Await.result(
         Http()
-          .newServerAt(webCfg.bind.hostname, port)
+          .newServerAt(webCfg.bind.hostname, webCfg.bind.port)
           .bindFlow(routes), 1.seconds)
 
       Behaviors.empty
