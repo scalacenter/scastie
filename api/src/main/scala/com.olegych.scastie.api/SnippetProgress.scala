@@ -46,4 +46,11 @@ case class SnippetProgress(
   def isFailure: Boolean = isTimeout || isSbtError || runtimeError.nonEmpty || compilationInfos.exists(_.severity == Error)
 
   override def toString: String = Json.toJsObject(this).toString()
+
+  def logMsg: String = Json.toJsObject(
+    copy(
+      scalaJsContent = this.scalaJsContent.map(_ => "..."),
+      scalaJsSourceMapContent = this.scalaJsSourceMapContent.map(_ => "...")
+    )
+  ).toString()
 }
