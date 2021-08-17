@@ -90,8 +90,7 @@ class SbtProcess private (
     implicit val sc = context.system.scheduler
     run.snippetActor.ask(SnippetProgressAsk(_, p))
       .recover {
-        case e =>
-          safeLog.error(s"error while saving progress $p", e)
+        case e => safeLog.error(s"error while saving progress ${p.logMsg}")
       }
   }
 
