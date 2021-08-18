@@ -15,6 +15,7 @@ import dom.ext.Ajax
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.concurrent.Future
 import com.olegych.scastie.api.ScalaTarget.{Jvm, Scala3}
+import com.olegych.scastie.buildinfo.BuildInfo
 
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency ~=> Callback,
@@ -100,8 +101,8 @@ object ScaladexSearch {
     }
   }
 
-  private val scaladexBaseUrl = "http://localhost:8080"
-  //private val scaladexBaseUrl = "https://index.scala-lang.org"
+  // private val scaladexBaseUrl = "http://localhost:8080"
+  private val scaladexBaseUrl = "https://index.scala-lang.org"
   private val scaladexApiUrl = scaladexBaseUrl + "/api"
 
   private implicit val projectOrdering: Ordering[Project] =
@@ -263,7 +264,7 @@ object ScaladexSearch {
             case Scala3(_) =>
               projsForThisTarget.flatMap { ls =>
                 if (ls.nonEmpty) projsForThisTarget
-                else queryAndParse(Jvm.default)
+                else queryAndParse(Jvm(BuildInfo.latest213))
               }
             case _ => projsForThisTarget
           }

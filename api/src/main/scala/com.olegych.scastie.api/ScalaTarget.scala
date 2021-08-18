@@ -44,8 +44,24 @@ object ScalaTarget {
     private val formatJs = Json.format[Js]
     private val formatTypelevel = Json.format[Typelevel]
     private val formatNative = Json.format[Native]
-    private val formatScala3 = Json.format[Scala3]
-
+    private val formatScala3: OFormat[Scala3] = {
+      // Scala3.dottyVersion has been renamed to Scala3.scalaVersion
+      // so we use the default write
+      // But when reading we check dotty version if scalaVersion is not defined
+      val reads = new Reads[Scala3] {
+        override def reads(json: JsValue): JsResult[Scala3] = json match {
+          case obj: JsObject => 
+            val dict = obj.value
+            dict.get("scalaVersion").orElse(dict.get("dottyVersion")) match {
+              case Some(JsString(ver)) => JsSuccess(Scala3(ver))
+              case _ => JsError(Seq())
+            }
+          case _ => JsError(Seq())
+        }
+      }
+      OFormat(reads, Json.writes[Scala3])
+    }
+      
     def writes(target: ScalaTarget): JsValue = {
       target match {
         case jvm: Jvm =>
@@ -267,8 +283,8 @@ object ScalaTarget {
 
     def renderSbt(lib: ScalaDependency): String = {
       if (Some(lib) == runtimeDependency) renderSbtDouble(lib)
-      else if (lib.target.binaryScalaVersion.startsWith("2"))
-        s"${renderSbtDouble(lib)} cross CrossVersion.for3Use${lib.target.binaryScalaVersion.replace(".", "_")}"
+      else if (lib.target.binaryScalaVersion.startsWith("2.13"))
+        s"${renderSbtDouble(lib)} cross CrossVersion.for3Use2_13"
       else renderSbtDouble(lib)
     }
 
