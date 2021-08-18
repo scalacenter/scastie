@@ -31,7 +31,7 @@ object SbtShared {
   }
 
   object ScalaJSVersions {
-    val current = "1.5.1"
+    val current = "1.7.0"
   }
 
   val distSbtVersion = "1.5.5"
@@ -159,13 +159,11 @@ object SbtShared {
       libraryDependencies += {
         scalaVersion.value match {
           case v if v.startsWith("2.10") =>
-            "com.typesafe.play" %%% "play-json" % "2.6.9"
+            "com.typesafe.play" %%% "play-json" % "2.6.14"
           case v if v.startsWith("2.11") =>
             "com.typesafe.play" %%% "play-json" % "2.7.4"
-          case v if v.startsWith("3.0") =>
-            "com.typesafe.play" %%% "play-json" % "2.10.0-RC5"
           case _ =>
-            "com.typesafe.play" %%% "play-json" % "2.9.0"
+            "com.typesafe.play" %%% "play-json" % "2.10.0-RC5"
         }
       },
       buildInfoKeys := Seq[BuildInfoKey](

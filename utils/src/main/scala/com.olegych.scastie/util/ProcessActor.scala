@@ -1,31 +1,45 @@
 package com.olegych.scastie.util
 
+import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer}
+import akka.contrib.process.BlockingProcess.{Exited, Started}
+
 import java.nio.file._
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicLong
-
-import akka.actor.{Actor, ActorRef, Props, Stash}
 import akka.contrib.process._
 import akka.stream.scaladsl.{Flow, Framing, Sink, Source}
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, ThrottleMode}
+import akka.stream.typed.scaladsl.ActorSource
+import akka.stream.{Materializer, OverflowStrategy, ThrottleMode}
 import akka.util.ByteString
 import com.olegych.scastie.api.{ProcessOutput, ProcessOutputType}
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 
 object ProcessActor {
-  case class Input(line: String)
+  sealed trait Message
 
-  case object Shutdown
+  case class ProcessResponse(response: BlockingProcess.Response) extends Message
 
-  def props(command: List[String],
-            workingDir: Path = Paths.get(System.getProperty("user.dir")),
-            environment: Map[String, String] = Map.empty,
-            killOnExit: Boolean = false): Props = {
-    Props(new ProcessActor(command, workingDir, environment, killOnExit))
-  }
+  case class Input(line: String) extends Message
+
+  def apply(
+    replyTo: ActorRef[ProcessOutput],
+    command: List[String],
+    workingDir: Path = Paths.get(System.getProperty("user.dir")),
+    environment: Map[String, String] = Map.empty,
+    killOnExit: Boolean = false
+  ): Behavior[Message] =
+    Behaviors.setup { context =>
+      Behaviors.withStash(100) { buffer =>
+        new ProcessActor(
+          replyTo, command, workingDir, environment, killOnExit
+        )(context, buffer).receive
+      }
+    }
 }
+
+import ProcessActor._
 
 /*
   > Output line type
@@ -33,31 +47,24 @@ object ProcessActor {
   ! Exit
  */
 
-class ProcessActor(command: List[String], workingDir: Path, environment: Map[String, String], killOnExit: Boolean)
-    extends Actor
-    with Stash {
+class ProcessActor private(
+  replyTo: ActorRef[ProcessOutput],
+  command: List[String],
+  workingDir: Path,
+  environment: Map[String, String],
+  killOnExit: Boolean
+)(context: ActorContext[Message], buffer: StashBuffer[Message]) {
+  import context.log
 
-  import ProcessActor._
-
-  private val log = LoggerFactory.getLogger(getClass)
-
-  // private val props =
-  //   NonBlockingProcessPkill.props(
-  //     command = command,
-  //     workingDir = workingDir.toFile,
-  //     environment = environment
-  //   )
-  // import NonBlockingProcess._
-
-  private val props =
-    BlockingProcess.props(
-      command = command,
+  context.spawn(
+    BlockingProcess(
+      command,
       workingDir = workingDir.toFile,
-      environment = environment
-    )
-  import BlockingProcess._
-
-  private val process = context.actorOf(props, name = "process")
+      environment,
+      context.messageAdapter(ProcessResponse)
+    ),
+    name = "process"
+  )
 
   private def lines(std: Source[ByteString, _]): Source[String, _] = {
     std
@@ -71,13 +78,13 @@ class ProcessActor(command: List[String], workingDir: Path, environment: Map[Str
       .map(_.utf8String)
   }
 
-  private implicit val materializer = ActorMaterializer(
-    ActorMaterializerSettings(context.system)
-  )
+  // https://doc.akka.io/docs/akka/current/stream/stream-flows-and-basics.html#actor-materializer-lifecycle
+  implicit val mat: Materializer = Materializer(context)
 
   private val outputId = new AtomicLong(0)
-  override def receive: Receive = {
-    case Started(pid, stdin, stdout, stderr) =>
+
+  def receive: Behavior[Message] = Behaviors.receiveMessage {
+    case ProcessResponse(Started(pid, stdin, stdout, stderr)) =>
       println("process started: " + pid)
       lines(stdout)
         .map { line =>
@@ -94,36 +101,51 @@ class ProcessActor(command: List[String], workingDir: Path, environment: Map[Str
           case (ts, output) =>
             val now = Instant.now
             println(s"> ${output.id.getOrElse(0)} ${now.toEpochMilli - ts.toEpochMilli}ms: ${output.line}")
-            context.parent ! output
+            replyTo ! output
             now
         })
 
-      val stdin2: Source[ByteString, ActorRef] =
-        Source
-          .actorRef[Input](Int.MaxValue, OverflowStrategy.fail)
+      val stdin2: Source[ByteString, ActorRef[Input]] =
+        ActorSource
+          .actorRef[Input](
+            // only completed/ failed when this ProcessActor stop
+            completionMatcher = PartialFunction.empty,
+            failureMatcher = PartialFunction.empty,
+            Int.MaxValue,
+            OverflowStrategy.fail
+          )
           .map { case Input(line) => ByteString(line + "\n") }
 
-      val ref: ActorRef =
+      val ref: ActorRef[Input] =
         Flow[ByteString]
           .to(stdin)
           .runWith(stdin2)
 
-      context.become(active(ref))
-
-      unstashAll()
+      buffer.unstashAll(active(ref))
 
     case input: Input =>
-      stash()
+      buffer.stash(input)
+      Behaviors.same
+
+    case x @ ProcessResponse(Exited(_)) =>
+      log.error("Unexpected message {}", x)
+      Behaviors.same
   }
 
-  private def active(stdin: ActorRef): Receive = {
+  private def active(stdin: ActorRef[Input]): Behavior[Message] = Behaviors.receiveMessage {
     case input: Input =>
       println(s"< ${outputId.incrementAndGet()}: $input")
       stdin ! input
+      Behaviors.same
 
-    case Exited(exitValue) =>
+    case ProcessResponse(Exited(exitValue)) =>
       if (killOnExit) {
         throw new Exception("process exited: " + exitValue)
       }
+      Behaviors.same
+
+    case x @ ProcessResponse(_: Started) =>
+      log.error("Unexpected message {}", x)
+      Behaviors.same
   }
 }

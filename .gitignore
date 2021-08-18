@@ -19,3 +19,5 @@ bin/drone
 local/
 metals.sbt
 .bsp/
+/docker-compose.yml
+/.vagrant

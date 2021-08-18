@@ -8,6 +8,7 @@ import java.util.concurrent.Executors
 import com.olegych.scastie.api._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -19,7 +20,10 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
   val root = Files.createTempDirectory("test")
   val oldRoot = Files.createTempDirectory("old-test")
 
-  private lazy val mongoContainer = new MongoDBSnippetsContainer(scala.concurrent.ExecutionContext.Implicits.global)
+  private lazy val mongoContainer = new MongoDBSnippetsContainer(
+    mongoUri = "mongodb://localhost:27017/snippets",
+    ec = scala.concurrent.ExecutionContext.Implicits.global
+  )
   private val testContainer: SnippetsContainer = {
     if (mongo)
       mongoContainer
@@ -99,7 +103,7 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("update") {
     val container = testContainer
-    val user = UserLogin("github-user-update" + Random.nextInt)
+    val user = UserLogin("github-user-update" + Random.nextInt())
     val inputs1 =
       Inputs.default.copy(code = "inputs1").copy(isShowingInUserProfile = true)
     val snippetId1 = container.save(inputs1, Some(user)).await
@@ -122,8 +126,8 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("listSnippets") {
     val container = testContainer
-    val user = UserLogin("github-user-list" + Random.nextInt)
-    val user2 = UserLogin("github-user-list2" + Random.nextInt)
+    val user = UserLogin("github-user-list" + Random.nextInt())
+    val user2 = UserLogin("github-user-list2" + Random.nextInt())
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     container.save(inputs1, Some(user)).await
@@ -146,14 +150,12 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
     container.create(inputs4, Some(user)).await
 
     val snippets = container.listSnippets(user).await
-    assert(
-      snippets.map(_.summary) == List("inputs3", "inputs2", "inputs1")
-    )
+    snippets.map(_.summary) must contain theSameElementsAs List("inputs1", "inputs2", "inputs3")
   }
 
   test("delete") {
     val container = testContainer
-    val user = UserLogin("github-user-delete" + Random.nextInt)
+    val user = UserLogin("github-user-delete" + Random.nextInt())
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     val snippetId1 = container.save(inputs1, Some(user)).await

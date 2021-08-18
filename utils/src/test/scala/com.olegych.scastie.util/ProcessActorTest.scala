@@ -45,15 +45,21 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
     }
   }
 
-  override def afterAll: Unit = {
+  override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
   }
 }
 
 class ProcessReceiver(command: String, probe: ActorRef) extends Actor {
-  private val props =
-    ProcessActor.props(command = List("bash",  "-c", command.replace("\\", "/")), killOnExit = false)
-  private val process = context.actorOf(props, name = "process-receiver")
+  import akka.actor.typed.scaladsl.adapter._
+
+  private val process = context.spawn(
+    ProcessActor(
+      replyTo = self.toTyped[ProcessOutput],
+      command = List("bash",  "-c", command.replace("\\", "/"))
+    ),
+    name = "process-receiver"
+  )
 
   override def receive: Receive = {
     case output: ProcessOutput => probe ! output

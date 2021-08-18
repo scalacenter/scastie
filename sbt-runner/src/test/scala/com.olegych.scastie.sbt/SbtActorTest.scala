@@ -1,9 +1,10 @@
 package com.olegych.scastie.sbt
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.TestActor.AutoPilot
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.olegych.scastie.api._
+import com.olegych.scastie.sbt.SbtProcess.SbtTaskEvent
 import com.olegych.scastie.util.SbtTask
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuiteLike
@@ -233,17 +234,19 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   private val timeout = 40.seconds
 
+  import akka.actor.typed.scaladsl.adapter._
   // SbtProcess uses Stash and it's not compatible with TestActorRef
   // https://stackoverflow.com/questions/18335127/testing-akka-actors-that-mixin-stash-with-testactorref
-  private val sbtActor = system.actorOf(
-    Props(
-      new SbtProcess(
+  private val sbtActor = system.spawn(
+    SbtProcess(
+      SbtConf(
+        remapSourceMapUrlBase = "http://localhost:9000",
         runTimeout = timeout,
-        reloadTimeout = 20.seconds,
-        isProduction = false,
-        javaOptions = Seq("-Xms51m", "-Xmx550m")
-      )
-    )
+        sbtReloadTimeout = 20.seconds
+      ),
+      javaOptions = Seq("-Xms51m", "-Xmx550m")
+    ),
+    name = "SbtRunner-test"
   )
 
   private var currentId = 0
@@ -257,7 +260,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val ip = "my-ip"
     val progressActor = TestProbe()
 
-    sbtActor ! SbtTask(snippetId, inputs, ip, None, progressActor.ref)
+    sbtActor ! SbtTaskEvent(SbtTask(snippetId, inputs, ip, None, progressActor.ref, self))
 
     val totalTimeout =
       if (firstRun) timeout + 10.second

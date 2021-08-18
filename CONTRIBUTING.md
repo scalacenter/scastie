@@ -7,24 +7,24 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 
 ### How to install prerequisites via nix
 
-```
+```shell
 curl https://nixos.org/nix/install | sh
 nix-shell -A scastie
 ```
 
 ### How to install prerequisites on Mac
-```
+```shell
 brew install openjdk sbt nodejs yarn
 ```
 
 ### How to install prerequisites on Windows
 
 Assuming you use Git for Windows >= 2.16.2.1 (note this will erase uncommitted changes):
-```
+```shell
 git config --add core.symlinks true
 git reset --hard HEAD
 ```
-```
+```shell
 choco install nvm yarn sbt jdk8 python3
 nvm install 8.9.1
 nvm use 8.9.1
@@ -107,7 +107,7 @@ If you have any questions join us in the [gitter channel](https://gitter.im/scal
 
 ## Quick
 
-```
+```shell
 ssh scastie@alaska.epfl.ch
 ssh scastie@scastie.scala-lang.org
 ssh scastie@scastie-sbt.scala-lang.org
@@ -122,10 +122,10 @@ deploy
 ```
 
 ## Check logs
-```
+```shell
 ssh scastie@alaska.epfl.ch
 ssh scastie@scastie.scala-lang.org
-tail -F -n1000 output.log
+docker logs -f scastie-server
 ssh scastie@scastie-sbt.scala-lang.org
 ~/log.sh
 ```
@@ -162,7 +162,7 @@ These people have access:
 
 In case anything goes wrong:
 
-```
+```shell
 ssh scastie@alaska.epfl.ch
 ssh scastie@scastie.scala-lang.org
 ssh scastie@scastie-sbt.scala-lang.org
@@ -171,18 +171,24 @@ exit
 ./server.sh
 ```
 
+# Run/test `deploy` task on development machine using vagrant & virtualbox
+See guide in [Vagrantfile]
+
 # Running with docker locally
-
+There are 2 options:
+1. Using [docker-compose](https://docs.docker.com/compose/install/)
+```shell
+sbt dockerCompose
 ```
-git commit
 
-sbt "sbtRunner/docker"
+`dockerCompose` task will build scastie docker images and create `docker-compose.yml`
+and run `docker-compose down;docker-compose up`.
+See `dockerCompose` alias defined in `build.sbt` for more info.
 
-docker run \
-  --network=host \
-  -e RUNNER_PORT=5150 \
-  -e RUNNER_HOSTNAME=127.0.0.1 \
-  -e RUNNER_RECONNECT=false \
-  -e RUNNER_PRODUCTION=true \
-  scalacenter/scastie-sbt-runner:`git rev-parse --verify HEAD`
+2. Let `sbt` run `docker` commands directly instead of using `docker-compose`
+```shell
+sbt deployLocal
 ```
+`deployLocal` task will build scastie docker images and deploy deployment files into `local` folder
+and run the `*.sh` file in that folder.
+See `deployLocal` alias defined in `build.sbt` for more info.

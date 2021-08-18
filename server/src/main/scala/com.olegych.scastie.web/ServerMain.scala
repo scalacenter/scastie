@@ -3,8 +3,9 @@ package com.olegych.scastie.web
 import com.olegych.scastie.web.routes._
 import com.olegych.scastie.web.oauth2._
 import com.olegych.scastie.balancer._
-import com.olegych.scastie.util.ScastieFileUtil
-
+import com.olegych.scastie.util.ShowConfig
+import com.typesafe.sslconfig.util.{ConfigLoader, EnrichedConfig}
+import com.olegych.scastie.util.ConfigLoaders._
 import akka.http.scaladsl._
 import server.Directives._
 
@@ -12,87 +13,112 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
-import akka.actor.{ActorSystem, Props}
-import akka.stream.ActorMaterializer
+import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorSystem, Behavior, Scheduler}
 
 import scala.concurrent.duration._
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext}
 
 object ServerMain {
   def main(args: Array[String]): Unit = {
-
     val logger = Logger("ServerMain")
 
-    val port =
-      if (args.isEmpty) 9000
-      else args.head.toInt
+    val config = EnrichedConfig(
+      ConfigFactory.load().getConfig("com.olegych.scastie")
+    )
+    val webConf = config.get[WebConf]("web")
+    val balancerConf = config.get[BalancerConf]("balancer")
 
-    val config2 = ConfigFactory.load().getConfig("akka.remote.netty.tcp")
-    println("akka tcp config")
-    println(config2.getString("hostname"))
-    println(config2.getInt("port"))
-
-    val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
-    val production = config.getBoolean("production")
-
-    if (production) {
-      ScastieFileUtil.writeRunningPid()
-    }
-
-    implicit val system: ActorSystem = ActorSystem("Web")
-    import system.dispatcher
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-
-    val github = new Github
-    val session = new GithubUserSession(system)
-    val userDirectives = new UserDirectives(session)
-
-    val progressActor =
-      system.actorOf(
-        Props[ProgressActor](),
-        name = "ProgressActor"
-      )
-
-    val statusActor =
-      system.actorOf(
-        StatusActor.props,
-        name = "StatusActor"
-      )
-
-    val dispatchActor =
-      system.actorOf(
-        Props(new DispatchActor(progressActor, statusActor)),
-        name = "DispatchActor"
-      )
-
-    val routes = concat(
-      cors()(
-        pathPrefix("api")(
-          concat(
-            new ApiRoutes(dispatchActor, userDirectives).routes,
-            new ProgressRoutes(progressActor).routes,
-            new DownloadRoutes(dispatchActor).routes,
-            new StatusRoutes(statusActor, userDirectives).routes,
-            new ScalaJsRoutes(dispatchActor).routes
-          )
-        )
-      ),
-      new OAuth2Routes(github, session).routes,
-      cors()(
-        concat(
-          new ScalaLangRoutes(dispatchActor, userDirectives).routes,
-          new FrontPageRoutes(production).routes
-        )
-      )
+    val system = ActorSystem[Nothing](
+      Guardian(webConf, balancerConf),
+      config.get[String]("system-name")
     )
 
-    Await.result(Http().bindAndHandle(routes, "0.0.0.0", port), 1.seconds)
-    logger.info(s"Scastie started (port: $port)")
+    logger.info(ShowConfig(system.settings.config,
+      s"""|# Scastie sever started with config:
+          |akka.remote.artery {
+          |  canonical
+          |  bind
+          |}
+          |com.olegych.scastie.web.bind
+          |""".stripMargin))
 
-//    scala.io.StdIn.readLine("press enter to stop server")
-//    system.terminate()
     Await.result(system.whenTerminated, Duration.Inf)
-
-    ()
   }
+}
+
+private object Guardian {
+  def apply(webCfg: WebConf, balancerCfg: BalancerConf): Behavior[Nothing] =
+    Behaviors.setup[Nothing] { context =>
+      import context.spawn
+      implicit def system: ActorSystem[Nothing] = context.system
+      implicit def ec: ExecutionContext = context.system.executionContext
+      implicit def sc: Scheduler = context.system.scheduler
+
+      val github = new Github(webCfg.oauth2)
+      val session = new GithubUserSession(
+        webCfg,
+        spawn(ActorRefreshTokenStorageImpl(), "refresh-token-storage")
+      )
+      val userDirectives = new UserDirectives(session)
+
+      val progressActor = spawn(ProgressActor(), "ProgressActor")
+
+      val statusActor = spawn(StatusActor(), "StatusActor")
+
+      val dispatchActor = spawn(DispatchActor(progressActor, statusActor, balancerCfg), "DispatchActor")
+
+      val routes = concat(
+        cors()(
+          pathPrefix("api")(
+            concat(
+              new ApiRoutes(dispatchActor, userDirectives).routes,
+              new ProgressRoutes(progressActor).routes,
+              new DownloadRoutes(dispatchActor).routes,
+              new StatusRoutes(statusActor, userDirectives).routes,
+              new ScalaJsRoutes(dispatchActor).routes
+            )
+          )
+        ),
+        new OAuth2Routes(github, session).routes,
+        cors()(
+          concat(
+            new ScalaLangRoutes(dispatchActor, userDirectives).routes,
+            new FrontPageRoutes(webCfg.embeddedUrlBase).routes
+          )
+        )
+      )
+
+      Await.result(
+        Http()
+          .newServerAt(webCfg.bind.hostname, webCfg.bind.port)
+          .bindFlow(routes), 1.seconds)
+
+      Behaviors.empty
+    }
+}
+
+case class WebConf(
+  embeddedUrlBase: String,
+  oauth2: Oauth2Conf,
+  sessionSecret: String,
+  bind: BindConf,
+)
+object WebConf {
+  implicit val loader: ConfigLoader[WebConf] = (c: EnrichedConfig) => WebConf(
+    c.get[String]("embedded-url-base"),
+    c.get[Oauth2Conf]("oauth2"),
+    c.get[String]("session-secret"),
+    c.get[BindConf]("bind")
+  )
+}
+case class BindConf(
+  hostname: String,
+  port: Int,
+)
+object BindConf {
+  implicit val loader: ConfigLoader[BindConf] = (c: EnrichedConfig) => BindConf(
+    c.get[String]("hostname"),
+    c.get[Int]("port")
+  )
 }

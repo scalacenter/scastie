@@ -1,21 +1,21 @@
 package com.olegych.scastie.web.routes
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.coding.Gzip
+import akka.actor.typed.{ActorRef, Scheduler}
+import akka.http.scaladsl.coding.Coders.Gzip
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive1, Route}
 import com.olegych.scastie.api._
+import com.olegych.scastie.balancer.DispatchActor
 import com.olegych.scastie.web._
 import com.olegych.scastie.web.oauth2._
 
 class ApiRoutes(
-    dispatchActor: ActorRef,
+    dispatchActor: ActorRef[DispatchActor.Message],
     userDirectives: UserDirectives
-)(implicit system: ActorSystem)
+)(implicit scheduler: Scheduler)
     extends PlayJsonSupport {
 
   import play.api.libs.json._
-  import system.dispatcher
   import userDirectives.optionalLogin
   implicit val readsInputs: Reads[Inputs] = Json.reads[Inputs]
 

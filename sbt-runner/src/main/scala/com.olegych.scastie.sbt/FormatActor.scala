@@ -1,14 +1,15 @@
 package com.olegych.scastie
 package sbt
 
-import akka.actor.Actor
+import akka.actor.typed.{Behavior, SupervisorStrategy}
+import akka.actor.typed.scaladsl.Behaviors
 import com.olegych.scastie.api.{FormatRequest, FormatResponse, ScalaTarget}
-import org.scalafmt.config.ScalafmtRunner.Dialect
+import com.olegych.scastie.util.FormatReq
 import org.scalafmt.config.{ScalafmtConfig, ScalafmtRunner}
 import org.scalafmt.{Formatted, Scalafmt}
 import org.slf4j.LoggerFactory
 
-class FormatActor() extends Actor {
+object FormatActor {
   private val log = LoggerFactory.getLogger(getClass)
 
   private def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
@@ -32,8 +33,12 @@ class FormatActor() extends Actor {
     }
   }
 
-  override def receive: Receive = {
-    case FormatRequest(code, isWorksheetMode, scalaTarget) =>
-      sender() ! FormatResponse(format(code, isWorksheetMode, scalaTarget))
-  }
+  def apply(): Behavior[FormatReq] =
+    Behaviors.supervise {
+      Behaviors.receiveMessage[FormatReq] {
+        case FormatReq(sender, FormatRequest(code, isWorksheetMode, scalaTarget)) =>
+          sender ! FormatResponse(format(code, isWorksheetMode, scalaTarget))
+          Behaviors.same
+      }
+    }.onFailure(SupervisorStrategy.resume)
 }

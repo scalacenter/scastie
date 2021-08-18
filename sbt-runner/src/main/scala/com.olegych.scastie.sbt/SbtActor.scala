@@ -1,95 +1,73 @@
 package com.olegych.scastie.sbt
 
-import com.olegych.scastie.api._
+import akka.actor.typed.receptionist.Receptionist
 import com.olegych.scastie.util._
-import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
+import com.olegych.scastie.util.ConfigLoaders._
+import com.typesafe.sslconfig.util.{ConfigLoader, EnrichedConfig}
+import akka.actor.typed.{Behavior, PostStop, Signal, SupervisorStrategy}
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import com.olegych.scastie.util.FormatReq
+import com.olegych.scastie.sbt.SbtProcess.SbtTaskEvent
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.FiniteDuration
 
-case object SbtActorReady
+object SbtActor {
+  type Message = SbtMessage
 
-class SbtActor(system: ActorSystem,
-               runTimeout: FiniteDuration,
-               sbtReloadTimeout: FiniteDuration,
-               isProduction: Boolean,
-               readyRef: Option[ActorRef],
-               override val reconnectInfo: Option[ReconnectInfo])
-    extends Actor
-    with ActorLogging
-    with ActorReconnecting {
+  def apply(config: SbtConf): Behavior[Message] =
+    Behaviors.supervise {
+      Behaviors.setup[Message]  { ctx =>
+        ctx.system.receptionist ! Receptionist.Register(Services.SbtRunner, ctx.self)
 
-  def balancer(context: ActorContext, info: ReconnectInfo): ActorSelection = {
-    import info._
-    context.actorSelection(
-      s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
-    )
-  }
-
-  override def tryConnect(context: ActorContext): Unit = {
-    if (isProduction) {
-      reconnectInfo.foreach { info =>
-        import info._
-        balancer(context, info) ! SbtRunnerConnect(actorHostname, actorAkkaPort)
+        new SbtActor(config)(ctx)
       }
-    }
+    }.onFailure(SupervisorStrategy.restart)
+}
+
+import SbtActor._
+class SbtActor private (
+  config: SbtConf
+)(ctx: ActorContext[Message]) extends AbstractBehavior[Message](ctx) {
+  import context.log
+
+  log.info("*** SbtRunner preStart ***")
+
+  override def onSignal: PartialFunction[Signal, Behavior[Message]] = {
+    case PostStop =>
+      log.info("*** SbtRunner postStop ***")
+      Behaviors.unhandled
   }
 
-  override def preStart(): Unit = {
-    log.info("*** SbtRunner preStart ***")
-
-    readyRef.foreach(_ ! SbtActorReady)
-    super.preStart()
-  }
-
-  override def postStop(): Unit = {
-    log.info("*** SbtRunner postStop ***")
-
-    super.postStop()
-  }
-
-  private val formatActor =
-    context.actorOf(Props(new FormatActor()), name = "FormatActor")
+  private val formatActor = context.spawn(FormatActor(), name = "FormatActor")
 
   private val sbtRunner =
-    context.actorOf(
-      Props(
-        new SbtProcess(
-          runTimeout,
-          sbtReloadTimeout,
-          isProduction,
-          javaOptions = Seq("-Xms512m", "-Xmx1g")
-        )
-      ),
+    context.spawn(
+      SbtProcess(config, Seq("-Xms512m", "-Xmx1g")),
       name = "SbtRunner"
     )
 
-  override def receive: Receive = reconnectBehavior orElse [Any, Unit] {
-    case SbtPing => {
-      sender() ! SbtPong
-    }
+  override def onMessage(msg: Message): Behavior[Message] = {
+    msg match {
+      case format: FormatReq =>
+        formatActor ! format
 
-    case format: FormatRequest => {
-      formatActor.forward(format)
+      case task: SbtTask =>
+        sbtRunner ! SbtTaskEvent(task)
     }
-
-    case task: SbtTask => {
-      sbtRunner.forward(task)
-    }
-
-    case SbtUp => {
-      log.info("SbtUp")
-      reconnectInfo.foreach { info =>
-        log.info("SbtUp sent")
-        balancer(context, info) ! SbtUp
-      }
-    }
-
-    case replay: Replay => {
-      log.info("Replay")
-      reconnectInfo.foreach { info =>
-        log.info("Replay sent")
-        balancer(context, info) ! replay
-      }
-    }
+    this
   }
+}
+
+case class SbtConf(
+  remapSourceMapUrlBase: String,
+  runTimeout: FiniteDuration,
+  sbtReloadTimeout: FiniteDuration,
+)
+
+object SbtConf {
+  implicit val loader: ConfigLoader[SbtConf] = (c: EnrichedConfig) => SbtConf(
+    c.get[String]("remapSourceMapUrlBase"),
+    c.get[FiniteDuration]("runTimeout"),
+    c.get[FiniteDuration]("sbtReloadTimeout")
+  )
 }

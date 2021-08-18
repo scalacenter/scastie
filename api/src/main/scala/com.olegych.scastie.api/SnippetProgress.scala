@@ -24,6 +24,9 @@ object SnippetProgress {
   implicit val formatSnippetProgress: OFormat[SnippetProgress] = Json.format[SnippetProgress]
 }
 
+// note: ProgressActor.Message alias to this
+trait ProgressMessage
+
 case class SnippetProgress(
     ts: Option[Long],
     id: Option[Long],
@@ -39,8 +42,15 @@ case class SnippetProgress(
     isTimeout: Boolean,
     isSbtError: Boolean,
     isForcedProgramMode: Boolean
-) {
+) extends ProgressMessage {
   def isFailure: Boolean = isTimeout || isSbtError || runtimeError.nonEmpty || compilationInfos.exists(_.severity == Error)
 
   override def toString: String = Json.toJsObject(this).toString()
+
+  def logMsg: String = Json.toJsObject(
+    copy(
+      scalaJsContent = this.scalaJsContent.map(_ => "..."),
+      scalaJsSourceMapContent = this.scalaJsSourceMapContent.map(_ => "...")
+    )
+  ).toString()
 }

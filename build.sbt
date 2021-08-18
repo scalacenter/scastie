@@ -1,12 +1,24 @@
 import SbtShared._
-import com.typesafe.sbt.SbtNativePackager.Universal
+import DockerHelper.{serverDockerfile, runnerDockerfile}
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.26"
-
-val akkaHttpVersion = "10.1.11"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % (
+  if(module.startsWith("http")) "10.2.5" else "2.6.15"
+)
 
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
 addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
+
+addCommandAlias("fullBuildServer", "client/Compile/fullOptJS/webpack;server/docker")
+addCommandAlias("deployLocal", "fullBuildServer;sbtRunner/docker;deployLocalQuick")
+addCommandAlias("dockerCompose", "server/docker;sbtRunner/docker;dockerComposeQuick")
+
+// Deploy server and sbt instances without building and pushing docker images
+addCommandAlias("deployQuick", "deployRunnersQuick;deployServerQuick")
+addCommandAlias("deployRunners", "sbtRunner/dockerBuildAndPush;deployRunnersQuick")
+addCommandAlias("fullBuildAndPushServer", "client/Compile/fullOptJS/webpack;server/dockerBuildAndPush")
+addCommandAlias("deployServer", "fullBuildAndPushServer;deployServerQuick")
+// Deploy server and sbt instances
+addCommandAlias("deploy", "sbtRunner/dockerBuildAndPush;fullBuildAndPushServer;deployQuick")
 
 lazy val scastie = project
   .in(file("."))
@@ -25,16 +37,17 @@ lazy val scastie = project
   .settings(baseSettings)
   .settings(
     cachedCiTestFull := {
-      val _ = cachedCiTestFull.value
-      val __ = (sbtRunner / docker / dockerfile).value
-      val ___ = (server / Universal / packageBin).value
+      cachedCiTestFull.value
+      (sbtRunner / docker / dockerfile).value
+      (client / Compile / fullOptJS / webpack).value
+      (server / docker / dockerfile).value
     },
   )
   .settings(Deployment.settings(server, sbtRunner))
 
 lazy val testSettings =
   Seq(
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % Test
   )
 
 lazy val loggingAndTest =
@@ -53,12 +66,12 @@ lazy val utils = project
   .settings(
     resolvers += Resolver.typesafeRepo("releases"),
     libraryDependencies ++= Seq(
+      akka("serialization-jackson"),
       akka("protobuf"),
-      akka("stream"),
-      akka("actor"),
-      akka("remote"),
+      akka("stream-typed"),
+      akka("cluster-typed"),
       akka("slf4j"),
-      akka("testkit") % Test
+      akka("actor-testkit-typed") % Test
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm))
@@ -68,7 +81,6 @@ lazy val runnerRuntimeDependencies = (api.projectRefs ++ runtimeScala.projectRef
   )).map(_ / publishLocal)
 
 lazy val runnerRuntimeDependenciesInTest = Seq(
-  assembly / test := {},
   Test / test := (Test / test).dependsOn(runnerRuntimeDependencies: _*).value,
   Test / testOnly := (Test / testOnly).dependsOn(runnerRuntimeDependencies: _*).evaluated,
   Test / testQuick := (Test / testQuick).dependsOn(runnerRuntimeDependencies: _*).evaluated
@@ -83,14 +95,11 @@ lazy val smallRunnerRuntimeDependenciesInTest = {
     sbtScastie
   ).map(_ / publishLocal)
   Seq(
-    assembly / test := {},
     Test / test := (Test / test).dependsOn(smallRunnerRuntimeDependencies: _*).value,
     Test / testOnly := (Test / testOnly).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated,
     Test / testQuick := (Test / testQuick).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated
   )
 }
-
-lazy val dockerOrg = "scalacenter"
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
@@ -103,52 +112,14 @@ lazy val sbtRunner = project
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     resolvers += Resolver.sonatypeRepo("public"),
     libraryDependencies ++= Seq(
-      akka("actor"),
-      akka("testkit") % Test,
-      akka("remote"),
-      akka("slf4j"),
+      akka("actor-testkit-typed") % Test,
       "org.scalameta" %% "scalafmt-core" % "3.0.0-RC6"
     ),
-    docker / imageNames := Seq(
-      ImageName(
-        namespace = Some(dockerOrg),
-        repository = "scastie-sbt-runner",
-        tag = Some(gitHashNow)
-      )
-    ),
-    docker := {
-      val log = Keys.streams.value.log
-      val dockerPath = (docker / DockerKeys.dockerPath).value
-      val buildOptions = (docker / DockerKeys.buildOptions).value
-      val stageDir = (docker / target).value
-      val dockerfile = (docker / DockerKeys.dockerfile).value
-      val imageNames = (docker / DockerKeys.imageNames).value
-      sbtdocker.DockerBuildFixed(dockerfile, sbtdocker.staging.DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
-    },
-    docker / dockerfile := Def
-      .task {
-        DockerHelper(
-          baseDirectory = (ThisBuild / baseDirectory).value.toPath,
-          sbtTargetDir = target.value.toPath,
-          ivyHome = ivyPaths.value.ivyHome.get.toPath,
-          organization = organization.value,
-          artifact = assembly.value.toPath,
-          sbtScastie = (sbtScastie / moduleName).value
-        )
-      }
-      .dependsOn(runnerRuntimeDependencies: _*)
-      .value,
-    assembly / assemblyMergeStrategy := {
-      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-      case in @ PathList("reference.conf", xs @ _*) => {
-        val old = (assembly / assemblyMergeStrategy).value
-        old(in)
-      }
-      case x => MergeStrategy.first
-    }
+    dockerImageName := "scastie-sbt-runner",
+    docker / dockerfile := runnerDockerfile(sbtScastie).dependsOn(runnerRuntimeDependencies: _*).value,
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), instrumentation, utils)
-  .enablePlugins(sbtdocker.DockerPlugin, BuildInfoPlugin)
+  .enablePlugins(sbtdocker.DockerPlugin, JavaServerAppPackaging, BuildInfoPlugin)
 
 lazy val server = project
   .settings(baseNoCrossSettings)
@@ -158,20 +129,20 @@ lazy val server = project
     Compile / products += (client / Compile / npmUpdate / crossTarget).value / "out",
     reStart := reStart.dependsOn(client / Compile / fastOptJS / webpack).evaluated,
     fullOptJS / reStart := reStart.dependsOn(client / Compile / fullOptJS / webpack).evaluated,
-    Universal / packageBin := (Universal / packageBin).dependsOn(client / Compile / fullOptJS / webpack).value,
+    // Universal / stage := (Universal / stage).dependsOn(client / Compile / fullOptJS / webpack).value,
     reStart / javaOptions += "-Xmx512m",
     maintainer := "scalacenter",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+      akka("http"),
       "com.softwaremill.akka-http-session" %% "core" % "0.5.10",
       "ch.megard" %% "akka-http-cors" % "0.4.2",
-      akka("remote"),
-      akka("slf4j"),
-      akka("testkit") % Test,
-      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
-    )
+      akka("actor-testkit-typed") % Test,
+      akka("http-testkit") % Test
+    ),
+    dockerImageName := "scastie-server",
+    docker / dockerfile := serverDockerfile().value,
   )
-  .enablePlugins(JavaServerAppPackaging)
+  .enablePlugins(sbtdocker.DockerPlugin, JavaServerAppPackaging)
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, balancer)
 
 lazy val balancer = project
@@ -179,7 +150,7 @@ lazy val balancer = project
   .settings(loggingAndTest)
   .settings(smallRunnerRuntimeDependenciesInTest)
   .settings(
-    libraryDependencies += akka("testkit") % Test
+    libraryDependencies += akka("actor-testkit-typed") % Test
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, storage, sbtRunner % Test)
 
@@ -225,7 +196,7 @@ lazy val client = project
     test := {},
     Test / loadedTestFrameworks := Map(),
     Compile / npmDependencies ++= Seq(
-      "codemirror" -> "5.50.0",
+      "codemirror" -> "5.62.2",
       "firacode" -> "1.205.0",
       "font-awesome" -> "4.7.0",
       "raven-js" -> "3.11.0",
@@ -248,7 +219,7 @@ lazy val client = project
       "webpack-merge" -> "4.1.0",
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.6",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.7",
     )
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
