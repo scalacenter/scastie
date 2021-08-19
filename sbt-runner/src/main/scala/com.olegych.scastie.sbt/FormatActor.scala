@@ -8,13 +8,8 @@ import org.scalafmt.config.{ScalafmtConfig, ScalafmtRunner}
 import org.scalafmt.{Formatted, Scalafmt}
 import org.slf4j.LoggerFactory
 
-class FormatActor() extends Actor {
-  private val log = LoggerFactory.getLogger(getClass)
-
-  private def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
-    log.info(s"format (isWorksheetMode: $isWorksheetMode)")
-    log.info(code)
-
+object FormatActor {
+  private[sbt] def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
     val config: ScalafmtConfig = {
       val withDialect =  scalaTarget match {
         case dotty: ScalaTarget.Scala3 => ScalafmtConfig.default.withDialect(scala.meta.dialects.Scala3)
@@ -31,9 +26,17 @@ class FormatActor() extends Actor {
       case Formatted.Failure(failure) => Left(failure.toString)
     }
   }
+}
+
+class FormatActor() extends Actor {
+  import FormatActor._
+  private val log = LoggerFactory.getLogger(getClass)
 
   override def receive: Receive = {
     case FormatRequest(code, isWorksheetMode, scalaTarget) =>
+      log.info(s"format (isWorksheetMode: $isWorksheetMode)")
+      log.info(code)
+
       sender() ! FormatResponse(format(code, isWorksheetMode, scalaTarget))
   }
 }
