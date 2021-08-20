@@ -22,6 +22,7 @@ class FormatActorTest extends AnyFunSuite {
     val code = "val x:Int=41+1"
     val output = "val x: Int = 41 + 1\n"
 
+    assert(ScalaTarget.Jvm.default.hasWorksheetMode)
     assert(FormatActor.format(code, true, ScalaTarget.Jvm.default) == Right(output))
   }
 
@@ -41,6 +42,7 @@ class FormatActorTest extends AnyFunSuite {
     val code = "val x:Int=41+1"
     val output = "val x: Int = 41 + 1\n"
 
+    assert(ScalaTarget.Scala3.default.hasWorksheetMode)
     assert(FormatActor.format(code, true, ScalaTarget.Scala3.default) == Right(output))
   }
 }

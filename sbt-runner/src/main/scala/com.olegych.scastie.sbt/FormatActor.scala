@@ -10,15 +10,10 @@ import org.slf4j.LoggerFactory
 
 object FormatActor {
   private[sbt] def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
-    val config: ScalafmtConfig = {
-      val withDialect =  scalaTarget match {
-        case dotty: ScalaTarget.Scala3 => ScalafmtConfig.default.withDialect(scala.meta.dialects.Scala3)
-        case _ =>  ScalafmtConfig.default
-      }
-
-      if (isWorksheetMode && scalaTarget.hasWorksheetMode)
-        withDialect.copy(runner = ScalafmtRunner.sbt.copy(dialect=withDialect.runner.dialect))
-      else withDialect
+    val config: ScalafmtConfig = scalaTarget match {
+      case _ if isWorksheetMode && scalaTarget.hasWorksheetMode => ScalafmtConfig.default.copy(runner=ScalafmtRunner.sbt)
+      case _: ScalaTarget.Scala3 => ScalafmtConfig.default.withDialect(scala.meta.dialects.Scala3)
+      case _ => ScalafmtConfig.default
     }
 
     Scalafmt.format(code, style = config) match {
