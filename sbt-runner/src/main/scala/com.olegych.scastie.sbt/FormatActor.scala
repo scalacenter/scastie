@@ -2,18 +2,39 @@ package com.olegych.scastie
 package sbt
 
 import akka.actor.Actor
-import com.olegych.scastie.api.{FormatRequest, FormatResponse, ScalaTarget}
+import com.olegych.scastie.api.FormatRequest
+import com.olegych.scastie.api.FormatResponse
+import com.olegych.scastie.api.ScalaTarget
+import org.scalafmt.Formatted
+import org.scalafmt.Scalafmt
+import org.scalafmt.config.ScalafmtConfig
+import org.scalafmt.config.ScalafmtRunner
 import org.scalafmt.config.ScalafmtRunner.Dialect
-import org.scalafmt.config.{ScalafmtConfig, ScalafmtRunner}
-import org.scalafmt.{Formatted, Scalafmt}
 import org.slf4j.LoggerFactory
 
 object FormatActor {
   private[sbt] def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
-    val config: ScalafmtConfig = scalaTarget match {
-      case _ if isWorksheetMode && scalaTarget.hasWorksheetMode => ScalafmtConfig.default.copy(runner=ScalafmtRunner.sbt)
-      case _: ScalaTarget.Scala3 => ScalafmtConfig.default.withDialect(scala.meta.dialects.Scala3)
-      case _ => ScalafmtConfig.default
+    val config: ScalafmtConfig = {
+      val dialect = scalaTarget match {
+        // TODO: Support 2.10, 2.11, 2.12? Maybe wait for abstract ScalaTarget.scalaVersion
+        case ScalaTarget.Jvm(_) =>
+          ScalafmtRunner.Dialect.scala213
+        case ScalaTarget.Js(scalaVersion, _) =>
+          if (scalaVersion.startsWith("2")) ScalafmtRunner.Dialect.scala213
+          else if (scalaVersion.startsWith("3")) scala.meta.dialects.Scala3
+          else ScalafmtRunner.Dialect.scala213
+        case ScalaTarget.Scala3(_) => 
+          scala.meta.dialects.Scala3
+        case _ => ScalafmtRunner.Dialect.scala213
+      }
+
+      val runner = {
+        val tmp = ScalafmtRunner(dialect = dialect)
+        if (isWorksheetMode && scalaTarget.hasWorksheetMode)
+          tmp.forSbt
+        else tmp
+      }
+      ScalafmtConfig.default.copy(runner = runner)
     }
 
     Scalafmt.format(code, style = config) match {
