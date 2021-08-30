@@ -14,9 +14,6 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
                       getScalaJsSourceMapContent: () => Option[String],
                       isProduction: Boolean,
                       promptUniqueId: String) {
-
-  private val log = LoggerFactory.getLogger(getClass)
-
   def extractProgress(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
     import sbtRun._
 
@@ -43,8 +40,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     val isScalaJs = inputs.target.targetType == ScalaTargetType.JS
 
     val userOutput =
-      if (problems.isEmpty
-          && instrumentations.isEmpty
+      if (problems.toList.flatten.isEmpty
+          && instrumentations.toList.flatten.isEmpty
           && runtimeError.isEmpty
           && !isDone
           && !isSbtMessage
