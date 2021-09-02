@@ -15,18 +15,11 @@ import org.slf4j.LoggerFactory
 object FormatActor {
   private[sbt] def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
     val config: ScalafmtConfig = {
-      val dialect = scalaTarget match {
-        // TODO: Support 2.10, 2.11, 2.12? Maybe wait for abstract ScalaTarget.scalaVersion
-        case ScalaTarget.Jvm(_) =>
-          ScalafmtRunner.Dialect.scala213
-        case ScalaTarget.Js(scalaVersion, _) =>
-          if (scalaVersion.startsWith("2")) ScalafmtRunner.Dialect.scala213
-          else if (scalaVersion.startsWith("3")) scala.meta.dialects.Scala3
-          else ScalafmtRunner.Dialect.scala213
-        case ScalaTarget.Scala3(_) => 
-          scala.meta.dialects.Scala3
-        case _ => ScalafmtRunner.Dialect.scala213
-      }
+      val dialect =
+        if (scalaTarget.scalaVersion.startsWith("2.12")) ScalafmtRunner.Dialect.scala212
+        else if (scalaTarget.scalaVersion.startsWith("2.13")) ScalafmtRunner.Dialect.scala213
+        else if (scalaTarget.scalaVersion.startsWith("3")) scala.meta.dialects.Scala3
+        else ScalafmtRunner.Dialect.scala213
 
       val runner = {
         val tmp = ScalafmtRunner(dialect = dialect)
@@ -39,7 +32,7 @@ object FormatActor {
 
     Scalafmt.format(code, style = config) match {
       case Formatted.Success(formattedCode) => Right(formattedCode)
-      case Formatted.Failure(failure) => Left(failure.toString)
+      case Formatted.Failure(failure)       => Left(failure.toString)
     }
   }
 }

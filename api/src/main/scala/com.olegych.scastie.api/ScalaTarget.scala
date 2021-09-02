@@ -3,6 +3,7 @@ package com.olegych.scastie.api
 import com.olegych.scastie.buildinfo.BuildInfo
 
 sealed trait ScalaTarget {
+  def scalaVersion: String
   def targetType: ScalaTargetType
   def scaladexRequest: Map[String, String]
   def renderSbt(lib: ScalaDependency): String
@@ -260,6 +261,8 @@ object ScalaTarget {
   }
 
   case class Scala3(dottyVersion: String) extends ScalaTarget {
+    def scalaVersion = dottyVersion
+
     def targetType: ScalaTargetType =
       ScalaTargetType.Scala3
 

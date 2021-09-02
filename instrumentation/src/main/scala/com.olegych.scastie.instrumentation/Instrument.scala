@@ -23,12 +23,7 @@ object Instrument {
     if (inputs.isWorksheetMode) -1 else 0
   }
   def getExceptionLineOffset(inputs: Inputs): Int = {
-    if (inputs.isWorksheetMode) -2
-    else
-      inputs.target match {
-        case _: Scala3 => 0
-        case _        => 0
-      }
+    if (inputs.isWorksheetMode) -2 else 0
   }
   def getMessageLineOffset(inputs: Inputs): Int = {
     if (inputs.isWorksheetMode) -2 else 0
@@ -185,18 +180,14 @@ object Instrument {
       else if (scalaVersion.startsWith("2.12")) Some(dialects.Scala212)
       else if (scalaVersion.startsWith("2.11")) Some(dialects.Scala211)
       else if (scalaVersion.startsWith("2.10")) Some(dialects.Scala210)
+      else if (scalaVersion.startsWith("3")) Some(dialects.Dotty)
       else None
     }
 
-    val maybeDialect =
-      target match {
-        case Jvm(scalaVersion)       => scala(scalaVersion)
-        case Js(scalaVersion, _)     => scala(scalaVersion)
-        case Native(scalaVersion, _) => scala(scalaVersion)
-        case Scala3(_)                => Some(dialects.Dotty)
-        case Typelevel(scalaVersion) => typelevel(scalaVersion)
-        case _                       => None
-      }
+    val maybeDialect = target match {
+      case Typelevel(scalaVersion) => typelevel(scalaVersion)
+      case target                  => scala(target.scalaVersion)
+    }
 
     maybeDialect match {
       case Some(dialect) =>
