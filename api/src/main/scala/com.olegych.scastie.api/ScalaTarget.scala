@@ -192,7 +192,7 @@ object ScalaTarget {
     )
 
     def renderSbt(lib: ScalaDependency): String =
-      renderSbtCross(lib)
+      s"${renderSbtCross(lib)} cross CrossVersion.for3Use2_13"
 
     def sbtConfig: String = {
       s"""|${sbtConfigScalaVersion(scalaVersion)}
@@ -202,7 +202,7 @@ object ScalaTarget {
           |scalacOptions += {
           |  val from = (LocalRootProject / baseDirectory).value.toURI.toString
           |  val to = "${ScalaTarget.Js.sourceUUID}/"
-          |  "-P:scalajs:mapSourceURI:" + from + "->" + to
+          |  "-${if (scalaVersion.startsWith("3")) "scalajs-mapSourceURI" else "P:scalajs:mapSourceURI"}:" + from + "->" + to
           |}""".stripMargin
     }
 

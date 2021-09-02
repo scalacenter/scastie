@@ -28,6 +28,7 @@ object SbtShared {
     val sbt = latest212
     val jvm = latest213
     val cross = List(latest210, latest211, latest212, latest213, stable3, js, sbt, jvm).distinct
+    val crossJS = List(latest212, latest213, js).distinct
   }
 
   object ScalaJSVersions {
@@ -111,7 +112,7 @@ object SbtShared {
 
   lazy val baseJsSettings = Seq(
     test := {},
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.1.0",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.2.0" cross CrossVersion.for3Use2_13,
   )
 
   private def readSbtVersion(base: Path): String = {
@@ -144,7 +145,7 @@ object SbtShared {
     .in(file("api"))
     .settings(apiSettings)
     .jvmPlatform(ScalaVersions.cross)
-    .jsPlatform(List(ScalaVersions.js), baseJsSettings)
+    .jsPlatform(ScalaVersions.crossJS, baseJsSettings)
     .enablePlugins(BuildInfoPlugin)
 
   lazy val sbtApiProject: Project = Project(id = "api-sbt", base = file("api-sbt"))
@@ -192,7 +193,7 @@ object SbtShared {
       name := runtimeProjectName,
     )
     .jvmPlatform(ScalaVersions.cross)
-    .jsPlatform(List(ScalaVersions.js), baseJsSettings)
+    .jsPlatform(ScalaVersions.crossJS, baseJsSettings)
     .settings(
       inConfig(Compile)(
         unmanagedSourceDirectories ++= scala2MajorSourceDirs(scalaSource.value, virtualAxes.value),
