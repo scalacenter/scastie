@@ -20,8 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec: ExecutionContext, mat: Materializer) {
   implicit val timeout: Timeout = Timeout(20.seconds)
   private val placeholders = List(
-//    "Scastie - An interactive playground for Scala.",
-    "Scastie can run any Scala program with any library in your browser. You don’t need to download or install anything.",
+    "Scastie - An interactive playground for Scala.",
   )
   private val indexResource = "public/index.html"
   private val indexResourceContent = Future.traverse(Option(getClass.getClassLoader.getResource(indexResource)).toList) { url =>

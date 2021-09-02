@@ -1,7 +1,5 @@
 package com.olegych.scastie.client.components
 
-import java.util.UUID
-
 import com.olegych.scastie.api._
 import com.olegych.scastie.client._
 import japgolly.scalajs.react._
@@ -10,6 +8,8 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLScriptElement
+
+import java.util.UUID
 
 final case class Scastie(
     router: Option[RouterCtl[Page]],
@@ -47,9 +47,9 @@ object Scastie {
   private def setTitle(state: ScastieState, props: Scastie) =
     if (!props.isEmbedded) {
       if (state.inputsHasChanged) {
-        Callback(dom.document.title = "Scastie (*)")
+        Callback(dom.document.title = "* " + state.inputs.code)
       } else {
-        Callback(dom.document.title = "Scastie")
+        Callback(dom.document.title = state.inputs.code)
       }
     } else {
       Callback(())
