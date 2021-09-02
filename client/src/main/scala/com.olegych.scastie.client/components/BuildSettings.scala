@@ -106,7 +106,7 @@ object BuildSettings {
             input(`type` := "radio", id := scalaVersion, value := scalaVersion, name := "scalaV", handler(scalaVersion)),
             label(
               div(cls := "select-wrapper")(
-                select(name := "scalaVersion", value := scalaVersion.toString, onChange ==> setScalaVersion(targetFun))(
+                select(name := "scalaVersion", value := scalaVersion, onChange ==> setScalaVersion(targetFun))(
                   ScalaVersions.allVersions(props.scalaTarget.targetType)
                     .map(version => option(version))
                     .toTagMod
@@ -120,18 +120,14 @@ object BuildSettings {
 
     val versionSelectors =
       props.scalaTarget match {
-        case ScalaTarget.Jvm(scalaVersion) =>
-          versionSelector(scalaVersion, ScalaTarget.Jvm.apply)
-
-        case ScalaTarget.Typelevel(scalaVersion) =>
-          versionSelector(scalaVersion, ScalaTarget.Typelevel.apply)
-
+        case d: ScalaTarget.Jvm =>
+          versionSelector(d.scalaVersion, ScalaTarget.Jvm.apply)
+        case d: ScalaTarget.Typelevel =>
+          versionSelector(d.scalaVersion, ScalaTarget.Typelevel.apply)
         case d: ScalaTarget.Scala3 =>
-          versionSelector(d.dottyVersion, ScalaTarget.Scala3.apply)
-
+          versionSelector(d.scalaVersion, ScalaTarget.Scala3.apply)
         case js: ScalaTarget.Js =>
-          versionSelector(js.scalaJsVersion, sv => ScalaTarget.Js(sv, js.scalaJsVersion))
-
+          versionSelector(js.scalaVersion, sv => ScalaTarget.Js(sv, js.scalaJsVersion))
         case n: ScalaTarget.Native =>
           div(s"${n.scalaNativeVersion} on Scala ${n.scalaVersion}")
       }
