@@ -8,6 +8,8 @@ val akkaHttpVersion = "10.2.6"
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
 addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
 
+ThisBuild / packageTimestamp := None
+
 lazy val scastie = project
   .in(file("."))
   .aggregate(
