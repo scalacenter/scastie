@@ -195,7 +195,7 @@ object ScalaTarget {
 
     def sbtConfig: String = {
       s"""|${sbtConfigScalaVersion(scalaVersion)}
-          |${hktScalacOptions(scalaVersion)}
+          |${if (scalaVersion.startsWith("3")) "" else hktScalacOptions(scalaVersion)}
           |enablePlugins(ScalaJSPlugin)
           |Compile / fastOptJS / artifactPath := baseDirectory.value / "${ScalaTarget.Js.targetFilename}"
           |scalacOptions += {
@@ -206,7 +206,8 @@ object ScalaTarget {
     }
 
     def sbtPluginsConfig: String =
-      s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")""" + "\n" + partialUnificationSbtPlugin
+      s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")""" + "\n" +
+        (if (!scalaVersion.startsWith("3")) partialUnificationSbtPlugin else "")
 
     def sbtRunCommand(worksheetMode: Boolean): String = "fastOptJS"
 
