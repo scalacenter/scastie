@@ -1,9 +1,9 @@
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.26"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.32"
 
-val akkaHttpVersion = "10.1.11"
+val akkaHttpVersion = "10.2.6"
 
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
 addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
@@ -163,8 +163,8 @@ lazy val server = project
     maintainer := "scalacenter",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "com.softwaremill.akka-http-session" %% "core" % "0.5.10",
-      "ch.megard" %% "akka-http-cors" % "0.4.2",
+      "com.softwaremill.akka-http-session" %% "core" % "0.6.1",
+      "ch.megard" %% "akka-http-cors" % "1.1.2",
       akka("remote"),
       akka("slf4j"),
       akka("testkit") % Test,

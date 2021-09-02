@@ -1,7 +1,7 @@
 package com.olegych.scastie.web.routes
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.coding.Gzip
+import akka.http.scaladsl.coding.Coders.Gzip
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive1, Route}
 import com.olegych.scastie.api._

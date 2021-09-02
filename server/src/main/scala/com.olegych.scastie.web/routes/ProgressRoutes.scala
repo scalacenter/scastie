@@ -2,7 +2,7 @@ package com.olegych.scastie.web.routes
 
 import akka.NotUsed
 import akka.actor.ActorRef
-import akka.http.scaladsl.coding.Gzip
+import akka.http.scaladsl.coding.Coders.Gzip
 import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.sse.ServerSentEvent
