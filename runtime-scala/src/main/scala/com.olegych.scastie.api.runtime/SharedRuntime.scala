@@ -5,7 +5,7 @@ import play.api.libs.json.Json
 
 protected[runtime] trait SharedRuntime {
   def write(instrumentations: List[Instrumentation]): String = {
-    Json.stringify(Json.toJson(instrumentations))
+    if (instrumentations.isEmpty) "" else Json.stringify(Json.toJson(instrumentations))
   }
 
   private val maxValueLength = 500
