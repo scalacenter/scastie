@@ -44,16 +44,18 @@ object Scastie {
       tryLibrary = None
     )
 
-  private def setTitle(state: ScastieState, props: Scastie) =
+  private def setTitle(state: ScastieState, props: Scastie) = {
+    def scastieCode = if (state.inputs.code.isEmpty) "Scastie" else state.inputs.code + " - Scastie"
     if (!props.isEmbedded) {
       if (state.inputsHasChanged) {
-        Callback(dom.document.title = "* " + state.inputs.code)
+        Callback(dom.document.title = "* " + scastieCode)
       } else {
-        Callback(dom.document.title = state.inputs.code)
+        Callback(dom.document.title = scastieCode)
       }
     } else {
       Callback(())
     }
+  }
 
   private def render(
       scope: RenderScope[Scastie, ScastieState, ScastieBackend],
