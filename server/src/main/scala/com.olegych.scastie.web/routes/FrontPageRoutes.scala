@@ -2,22 +2,31 @@ package com.olegych.scastie.web.routes
 
 import akka.actor.ActorRef
 import akka.http.scaladsl.coding.Coders.{Gzip, NoCoding}
+import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{Route, RouteResult}
 import akka.pattern.ask
+import akka.stream.Materializer
 import akka.stream.scaladsl.StreamConverters
-import akka.util.Timeout
+import akka.util.{ByteString, Timeout}
 import com.olegych.scastie.api.{FetchResult, SnippetId, SnippetUserPart}
 import com.olegych.scastie.balancer.FetchSnippet
 import com.olegych.scastie.util.Base64UUID
+import org.apache.commons.text.StringEscapeUtils
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
+import scala.concurrent.{ExecutionContext, Future}
 
-class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec: ExecutionContext) {
+class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec: ExecutionContext, mat: Materializer) {
   implicit val timeout: Timeout = Timeout(20.seconds)
+  private val placeholders = List(
+    "Scastie - An interactive playground for Scala.",
+    "Scastie can run any Scala program with any library in your browser. You don’t need to download or install anything.",
+  )
   private val indexResource = "public/index.html"
-  private val indexResourceContent = Option(getClass.getClassLoader.getResource(indexResource)).map(url => StreamConverters.fromInputStream(() => url.openStream()))
+  private val indexResourceContent = Future.traverse(Option(getClass.getClassLoader.getResource(indexResource)).toList) { url =>
+    StreamConverters.fromInputStream(() => url.openStream()).runFold("")(_ + _.utf8String)
+  }
   private val index = getFromResource(indexResource)
 
   private def embeddedResource(snippetId: SnippetId, theme: Option[String]): String = {
@@ -77,13 +86,25 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec:
           path => getFromResource("public/" + path)
         ),
         pathSingleSlash(index),
-        snippetId { snippetId =>
-//          complete {
-//            dispatchActor.ask(FetchSnippet(snippetId)).mapTo[Option[FetchResult]].map { r =>
-//              index.map()
-//            }
-//          }
-          index
+        snippetId { snippetId => ctx =>
+          for {
+            s <- dispatchActor.ask(FetchSnippet(snippetId)).mapTo[Option[FetchResult]]
+            c <- indexResourceContent
+            r <- index(ctx)
+          } yield
+            (r, c, s) match {
+              case (r: RouteResult.Complete, List(c), Some(s)) if r.response.status.intValue() == 200 =>
+                val code = StringEscapeUtils.escapeHtml4(s.inputs.code)
+                r.copy(
+                  response = r.response.withEntity(
+                    HttpEntity.Strict(
+                      r.response.entity.contentType,
+                      ByteString.fromString(placeholders.foldLeft(c)(_.replace(_, code))),
+                    )
+                  )
+                )
+              case _ => r
+            }
         },
         parameter("theme".?) { theme =>
           snippetIdExtension(".js") { sid =>

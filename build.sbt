@@ -164,6 +164,7 @@ lazy val server = project
     reStart / javaOptions += "-Xmx512m",
     maintainer := "scalacenter",
     libraryDependencies ++= Seq(
+      "org.apache.commons" % "commons-text" % "1.9",
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.softwaremill.akka-http-session" %% "core" % "0.6.1",
       "ch.megard" %% "akka-http-cors" % "1.1.2",
