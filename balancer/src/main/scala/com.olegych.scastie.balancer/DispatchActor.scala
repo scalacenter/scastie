@@ -1,25 +1,24 @@
 package com.olegych.scastie.balancer
 
-import java.nio.file.Path
-import java.time.Instant
-import java.util.concurrent.Executors
-import akka.NotUsed
 import akka.actor.typed._
-import akka.actor.typed.scaladsl._
 import akka.actor.typed.receptionist.Receptionist
+import akka.actor.typed.scaladsl._
 import com.olegych.scastie.api
 import com.olegych.scastie.api._
+import com.olegych.scastie.balancer.DispatchActor._
 import com.olegych.scastie.storage._
+import com.olegych.scastie.util.ConfigLoaders._
 import com.olegych.scastie.util._
-import ConfigLoaders._
 import com.typesafe.sslconfig.util.{ConfigLoader, EnrichedConfig}
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
+import java.nio.file.Path
+import java.time.Instant
+import java.util.concurrent.Executors
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.util.{Failure, Try}
-import DispatchActor._
 
 case class UserTrace(ip: String, user: Option[User])
 
@@ -78,7 +77,7 @@ class DispatchActor(
 )(ctx: ActorContext[Message],
   timers: TimerScheduler[Message]
 ) extends AbstractBehavior(ctx) {
-  import context.{system, messageAdapter, self, executionContext, log}
+  import context.{executionContext, log, messageAdapter, self, system}
 
   // context.log is not thread safe
   // https://doc.akka.io/docs/akka/current/typed/logging.html#how-to-log
@@ -215,16 +214,15 @@ class DispatchActor(
       case Adapter.FetchScalaJsSourceMap(sender, snippetId) =>
         container.readScalaJsSourceMap(snippetId).map(sender ! _).andThen(logError)
 
-      case SnippetProgressAsk(sender, progress) =>
+      case SnippetProgressAsk(progress) =>
         if (progress.isDone) {
           self ! Done(progress, retries = 100)
         }
         container
           .appendOutput(progress)
           .recover {
-            case e => log.error(s"failed to save $progress from $sender", e)
+            case e => log.error(s"failed to save $progress", e)
           }
-          .map(_ => sender ! NotUsed)
           .andThen(logError)
 
       case done: Done =>

@@ -1,23 +1,28 @@
 package com.olegych.scastie.web.routes
 
-import akka.actor.ActorRef
+import akka.actor.typed.scaladsl.AskPattern.Askable
+import akka.actor.typed.{ActorRef, Scheduler}
 import akka.http.scaladsl.coding.Coders.{Gzip, NoCoding}
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Route, RouteResult}
-import akka.pattern.ask
 import akka.stream.Materializer
 import akka.stream.scaladsl.StreamConverters
 import akka.util.{ByteString, Timeout}
 import com.olegych.scastie.api.{FetchResult, SnippetId, SnippetUserPart}
-import com.olegych.scastie.balancer.FetchSnippet
+import com.olegych.scastie.balancer.{DispatchActor, FetchSnippet}
 import com.olegych.scastie.util.Base64UUID
 import org.apache.commons.text.StringEscapeUtils
+
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
-class FrontPageRoutes(dispatchActor: ActorRef, embeddedUrlBase: String)(implicit ec: ExecutionContext, mat: Materializer) {
-  implicit val timeout: Timeout = Timeout(20.seconds)
+class FrontPageRoutes(dispatchActor: ActorRef[DispatchActor.Message], embeddedUrlBase: String)(implicit
+    ec: ExecutionContext,
+    mat: Materializer,
+    scheduler: Scheduler,
+) {
+  private implicit val timeout = Timeout(20.seconds)
   private val placeholders = List(
     "Scastie can run any Scala program with any library in your browser. You don’t need to download or install anything.",
   )
@@ -76,36 +81,33 @@ class FrontPageRoutes(dispatchActor: ActorRef, embeddedUrlBase: String)(implicit
         path("embedded.js.map")(
           getFromResource("public/embedded.js.map")
         ),
-        path("public" / Remaining)(
-          path => getFromResource("public/" + path)
-        ),
+        path("public" / Remaining)(path => getFromResource("public/" + path)),
         pathSingleSlash(index),
         snippetId { snippetId => ctx =>
           for {
-            s <- dispatchActor.ask(FetchSnippet(snippetId)).mapTo[Option[FetchResult]]
+            s <- dispatchActor.ask(FetchSnippet(_, snippetId)).mapTo[Option[FetchResult]]
             c <- indexResourceContent
             r <- index(ctx)
-          } yield
-            (r, c, s) match {
-              case (r: RouteResult.Complete, List(c), Some(s)) if r.response.status.intValue() == 200 =>
-                val code = StringEscapeUtils.escapeHtml4(s.inputs.code)
-                r.copy(
-                  response = r.response.withEntity(
-                    HttpEntity.Strict(
-                      r.response.entity.contentType,
-                      ByteString.fromString(placeholders.foldLeft(c)(_.replace(_, code))),
-                    )
+          } yield (r, c, s) match {
+            case (r: RouteResult.Complete, List(c), Some(s)) if r.response.status.intValue() == 200 =>
+              val code = StringEscapeUtils.escapeHtml4(s.inputs.code)
+              r.copy(
+                response = r.response.withEntity(
+                  HttpEntity.Strict(
+                    r.response.entity.contentType,
+                    ByteString.fromString(placeholders.foldLeft(c)(_.replace(_, code)))
                   )
                 )
-              case _ => r
-            }
+              )
+            case _ => r
+          }
         },
         parameter("theme".?) { theme =>
           snippetIdExtension(".js") { sid =>
             complete(embeddedResource(sid, theme))
           }
         },
-        index,
+        index
       )
     )
   )

@@ -1,17 +1,15 @@
 package com.olegych.scastie.sbt
 
-import java.nio.file._
-import java.time.Instant
-import akka.actor.typed.scaladsl.AskPattern.Askable
-import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
-import akka.util.Timeout
+import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import com.olegych.scastie.api._
 import com.olegych.scastie.instrumentation.InstrumentedInputs
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.util._
 import org.slf4j.LoggerFactory
 
+import java.nio.file._
+import java.time.Instant
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -20,12 +18,12 @@ object SbtProcess {
   sealed trait Data
   case class SbtData(currentInputs: Inputs) extends Data
   case class SbtRun(
-      snippetId: SnippetId,
-      inputs: Inputs,
-      isForcedProgramMode: Boolean,
-      progressActor: ActorRef[SnippetProgress],
-      snippetActor: ActorRef[SnippetProgressAsk],
-      timeoutKey: Option[Long]
+    snippetId: SnippetId,
+    inputs: Inputs,
+    isForcedProgramMode: Boolean,
+    progressActor: ActorRef[SnippetProgress],
+    snippetActor: ActorRef[SnippetProgressAsk],
+    timeoutKey: Option[Long]
   ) extends Data
 
   sealed trait Event
@@ -59,22 +57,25 @@ object SbtProcess {
 
   def apply(conf: SbtConf, javaOptions: Seq[String]): Behavior[Event] =
     Behaviors.withStash(100) { buffer =>
-      Behaviors.supervise[Event] {
-        Behaviors.setup { ctx =>
-          Behaviors.withTimers { timers =>
-            new SbtProcess(conf, javaOptions)(ctx, buffer, timers)()
+      Behaviors
+        .supervise[Event] {
+          Behaviors.setup { ctx =>
+            Behaviors.withTimers { timers =>
+              new SbtProcess(conf, javaOptions)(ctx, buffer, timers)()
+            }
           }
         }
-      }.onFailure(SupervisorStrategy.restart)
+        .onFailure(SupervisorStrategy.restart)
     }
 }
 
-import SbtProcess._
+import com.olegych.scastie.sbt.SbtProcess._
 class SbtProcess private (
-  conf: SbtConf, javaOptions: Seq[String]
+  conf: SbtConf,
+  javaOptions: Seq[String]
 )(context: ActorContext[Event], buffer: StashBuffer[Event], timers: TimerScheduler[Event]) {
   import ProcessActor._
-  import context.{executionContext, log}
+  import context.log
 
   // context.log is not thread safe
   // https://doc.akka.io/docs/akka/current/typed/logging.html#how-to-log
@@ -85,13 +86,8 @@ class SbtProcess private (
   def sendProgress(run: SbtRun, _p: SnippetProgress): Unit = {
     progressId += 1
     val p = _p.copy(id = Some(progressId))
-    run.progressActor ! p
-    implicit val tm = Timeout(10.seconds)
-    implicit val sc = context.system.scheduler
-    run.snippetActor.ask(SnippetProgressAsk(_, p))
-      .recover {
-        case e => safeLog.error(s"error while saving progress ${p.logMsg}")
-      }
+    run.progressActor.tell(p)
+    run.snippetActor.tell(SnippetProgressAsk(p))
   }
 
   private val sbtDir: Path = Files.createTempDirectory("scastie")
@@ -172,13 +168,12 @@ class SbtProcess private (
     }
   }
 
-  private def _initializing(data: SbtData): PartialFunction[Event, Behavior[Event]] = {
-    case ProcessOutputEvent(out) =>
-      if (isPrompt(out.line)) {
-        ready(data)
-      } else {
-        Behaviors.same
-      }
+  private def _initializing(data: SbtData): PartialFunction[Event, Behavior[Event]] = { case ProcessOutputEvent(out) =>
+    if (isPrompt(out.line)) {
+      ready(data)
+    } else {
+      Behaviors.same
+    }
   }
 
   def ready(data: SbtData): Behavior[Event] = {
@@ -238,20 +233,19 @@ class SbtProcess private (
     }
   }
 
-  private def _reloading(sbtRun: SbtRun): PartialFunction[Event, Behavior[Event]] = {
-    case ProcessOutputEvent(output) =>
-      val progress = extractor.extractProgress(output, sbtRun, isReloading = true)
-      sendProgress(sbtRun, progress)
+  private def _reloading(sbtRun: SbtRun): PartialFunction[Event, Behavior[Event]] = { case ProcessOutputEvent(output) =>
+    val progress = extractor.extractProgress(output, sbtRun, isReloading = true)
+    sendProgress(sbtRun, progress)
 
-      if (progress.isSbtError) {
-        throw new LetItDie("sbt error: " + output.line)
-      }
+    if (progress.isSbtError) {
+      throw new LetItDie("sbt error: " + output.line)
+    }
 
-      if (isPrompt(output.line)) {
-        gotoRunning(sbtRun)
-      } else {
-        Behaviors.same
-      }
+    if (isPrompt(output.line)) {
+      gotoRunning(sbtRun)
+    } else {
+      Behaviors.same
+    }
   }
 
   def running(data: SbtRun): Behavior[Event] = {
@@ -261,17 +255,16 @@ class SbtProcess private (
     }
   }
 
-  private def _running(sbtRun: SbtRun): PartialFunction[Event, Behavior[Event]] = {
-    case ProcessOutputEvent(output) =>
-      val progress = extractor.extractProgress(output, sbtRun, isReloading = false)
-      sendProgress(sbtRun, progress)
+  private def _running(sbtRun: SbtRun): PartialFunction[Event, Behavior[Event]] = { case ProcessOutputEvent(output) =>
+    val progress = extractor.extractProgress(output, sbtRun, isReloading = false)
+    sendProgress(sbtRun, progress)
 
-      if (progress.isDone) {
-        sbtRun.timeoutKey.foreach(timers.cancel)
-        ready(SbtData(sbtRun.inputs))
-      } else {
-        Behaviors.same
-      }
+    if (progress.isDone) {
+      sbtRun.timeoutKey.foreach(timers.cancel)
+      ready(SbtData(sbtRun.inputs))
+    } else {
+      Behaviors.same
+    }
   }
 
   private[this] var timeoutKey = 0L
@@ -299,9 +292,7 @@ class SbtProcess private (
   // Sbt files setup
 
   private def setInputs(inputs: Inputs): Unit = {
-    val prompt =
-      s"""shellPrompt := {_ => println("$promptUniqueId"); "> "}"""
-
+    val prompt = s"""shellPrompt := {_ => println(""); "$promptUniqueId" + "\\n "}"""
     writeFile(pluginFile, inputs.sbtPluginsConfig + "\n")
     writeFile(buildFile, prompt + "\n" + inputs.sbtConfig)
     Files.deleteIfExists(sbtDir.resolve(ScalaTarget.Js.targetFilename))

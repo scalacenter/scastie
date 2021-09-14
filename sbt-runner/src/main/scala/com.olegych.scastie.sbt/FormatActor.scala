@@ -1,27 +1,18 @@
 package com.olegych.scastie
 package sbt
 
-import akka.actor.typed.{Behavior, SupervisorStrategy}
 import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{Behavior, SupervisorStrategy}
 import com.olegych.scastie.api.{FormatRequest, FormatResponse, ScalaTarget}
 import com.olegych.scastie.util.FormatReq
 import org.scalafmt.config.{ScalafmtConfig, ScalafmtRunner}
 import org.scalafmt.{Formatted, Scalafmt}
-import akka.actor.Actor
-import com.olegych.scastie.api.FormatRequest
-import com.olegych.scastie.api.FormatResponse
-import com.olegych.scastie.api.ScalaTarget
-import org.scalafmt.Formatted
-import org.scalafmt.Scalafmt
-import org.scalafmt.config.ScalafmtConfig
-import org.scalafmt.config.ScalafmtRunner
-import org.scalafmt.config.ScalafmtRunner.Dialect
 import org.slf4j.LoggerFactory
 
 object FormatActor {
   private val log = LoggerFactory.getLogger(getClass)
 
-  private def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
+  private[sbt] def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
     log.info(s"format (isWorksheetMode: $isWorksheetMode)")
     log.info(code)
 
