@@ -1,14 +1,13 @@
-import sbt._
-import Keys._
-
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import sbt.Keys._
+import sbt._
 import sbtbuildinfo.BuildInfoPlugin
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
 import sbtprojectmatrix.ProjectMatrixPlugin.autoImport._
 
-import java.util.Properties
-import java.nio.file._
 import java.io.FileInputStream
+import java.nio.file._
+import java.util.Properties
 
 /*
 This code is shared between the build and the "build-build".
@@ -20,7 +19,7 @@ object SbtShared {
   object ScalaVersions {
     val latest210 = "2.10.7"
     val latest211 = "2.11.12"
-    val latest212 = "2.12.13"
+    val latest212 = "2.12.15"
     val latest213 = "2.13.6"
     val stable3   = "3.0.2"
     val latest3   = "3.1.0-RC1"
