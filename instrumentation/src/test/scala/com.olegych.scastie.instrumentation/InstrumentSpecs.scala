@@ -1,12 +1,11 @@
 package com.olegych.scastie
 package instrumentation
 
-import java.nio.file._
-
 import com.olegych.scastie.api.ScalaTarget
 import com.olegych.scastie.util.ScastieFileUtil.slurp
 import org.scalatest.funsuite.AnyFunSuite
 
+import java.nio.file._
 import scala.jdk.CollectionConverters._
 
 class InstrumentSpecs extends AnyFunSuite {
@@ -16,7 +15,7 @@ class InstrumentSpecs extends AnyFunSuite {
   private val testFiles = {
     val path = Paths.get("instrumentation", "src", "test", "resources")
     val s = Files.newDirectoryStream(path)
-    val t = s.asScala.toList
+    val t = s.asScala.toList.filter(_.endsWith(".scala"))
     s.close()
     t
   }
@@ -30,41 +29,42 @@ class InstrumentSpecs extends AnyFunSuite {
 
       val target =
         if (dirName == "scalajs") ScalaTarget.Js.default
+        else if (dirName == "scala3") ScalaTarget.Scala3.default
         else ScalaTarget.Jvm.default
 
       val Right(obtained) = Instrument(original, target)
 
-//      Files.write(path.resolve("obtained.scala"), obtained.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+      Files.write(path.resolve("obtained.scala"), obtained.getBytes(java.nio.charset.StandardCharsets.UTF_8))
       Diff.assertNoDiff(obtained.trim, expected.trim)
     }
   }
 
   test("top level fails") {
-    val Left(e) = Instrument("package foo { }")
+    val Left(e) = Instrument("package foo { }", ScalaTarget.Jvm.default)
     assert(e.isInstanceOf[ParsingError])
   }
 
   test("main method fails") {
     val Left(HasMainMethod) =
-      Instrument("object Main { def main(args: Array[String]): Unit = () }")
+      Instrument("object Main { def main(args: Array[String]): Unit = () }", ScalaTarget.Jvm.default)
   }
 
   test("extends App trait fails") {
     val Left(HasMainMethod) =
-      Instrument("object Main extends App { }")
+      Instrument("object Main extends App { }", ScalaTarget.Jvm.default)
   }
 
   test("with App trait fails") {
     val Left(HasMainMethod) =
-      Instrument("trait Foo; object Main extends Foo with App { }")
+      Instrument("trait Foo; object Main extends Foo with App { }", ScalaTarget.Jvm.default)
   }
 
   test("extends App primary fails") {
-    val Left(HasMainMethod) = Instrument("object Main extends App")
+    val Left(HasMainMethod) = Instrument("object Main extends App", ScalaTarget.Jvm.default)
   }
 
   test("extends App secondary fails") {
-    val Left(HasMainMethod) = Instrument("object Main extends A with App")
+    val Left(HasMainMethod) = Instrument("object Main extends A with App", ScalaTarget.Jvm.default)
   }
 
   test("bug #83") {

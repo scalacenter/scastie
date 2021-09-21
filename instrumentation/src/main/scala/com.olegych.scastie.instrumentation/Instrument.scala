@@ -1,7 +1,7 @@
 package com.olegych.scastie.instrumentation
 
 import com.olegych.scastie.api.ScalaTarget._
-import com.olegych.scastie.api.{Inputs, ScalaTarget, ScalaTargetType, Instrumentation}
+import com.olegych.scastie.api.{Inputs, Instrumentation, ScalaTarget, ScalaTargetType}
 
 import scala.collection.immutable.Seq
 import scala.meta._
@@ -98,9 +98,14 @@ object Instrument {
             Patch(openCurlyBrace, openCurlyBrace, instrumentationMapCode)
 
           instrumentationMapPatch +:
-            c.templ.stats.collect {
-            case term: Term => instrumentOne(term, None, offset, isScalaJs)
-          }
+            c.templ.stats
+            .filter {
+              case _: Term.EndMarker => false
+              case _                 => true
+            }
+            .collect {
+              case term: Term => instrumentOne(term, None, offset, isScalaJs)
+            }
       }.flatten
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
@@ -155,10 +160,7 @@ object Instrument {
     }
   }
 
-  def apply(
-      code: String,
-      target: ScalaTarget = Jvm.default
-  ): Either[InstrumentationFailure, String] = {
+  def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, String] = {
     val runtimeImport = "import _root_.com.olegych.scastie.api.runtime._"
 
     val isScalaJs = target.targetType == ScalaTargetType.JS
@@ -180,7 +182,7 @@ object Instrument {
       else if (scalaVersion.startsWith("2.12")) Some(dialects.Scala212)
       else if (scalaVersion.startsWith("2.11")) Some(dialects.Scala211)
       else if (scalaVersion.startsWith("2.10")) Some(dialects.Scala210)
-      else if (scalaVersion.startsWith("3")) Some(dialects.Dotty)
+      else if (scalaVersion.startsWith("3")) Some(dialects.Scala3)
       else None
     }
 
