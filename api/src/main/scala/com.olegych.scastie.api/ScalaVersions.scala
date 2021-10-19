@@ -20,7 +20,7 @@ object ScalaVersions {
           BuildInfo.latest3,
           "3.0.2",
           "3.0.1",
-          "3.0.0",
+          "3.0.0"
         )
       case ScalaTargetType.JS =>
         allVersions(ScalaTargetType.Scala3) ++ allVersions(ScalaTargetType.Scala2).filter(v => v.startsWith("2.12") || v.startsWith("2.13"))
