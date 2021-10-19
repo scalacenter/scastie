@@ -18,15 +18,9 @@ object ScalaVersions {
         List(
           BuildInfo.stable3,
           BuildInfo.latest3,
+          "3.0.2",
           "3.0.1",
-          "3.0.1-RC2",
-          "3.0.1-RC1",
           "3.0.0",
-          "3.0.0-RC3",
-          "3.0.0-RC2",
-          "3.0.0-RC1",
-          "3.0.0-M3",
-          "3.0.0-M1"
         )
       case ScalaTargetType.JS =>
         allVersions(ScalaTargetType.Scala3) ++ allVersions(ScalaTargetType.Scala2).filter(v => v.startsWith("2.12") || v.startsWith("2.13"))
