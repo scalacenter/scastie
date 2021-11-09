@@ -353,11 +353,11 @@ object ScaladexSearch {
               img(src := Assets.placeholderUrl, common, alt := s"placeholder logo for $organization")
             ),
           span(cls := "artifact")(label),
+          options,
           if (scalaTarget.binaryScalaVersion != props.scalaTarget.binaryScalaVersion)
             span(cls := "artifact")(s"(Scala ${scalaTarget.binaryScalaVersion} artifacts)")
           else ""
         ),
-        options
       )
     }
 
@@ -442,7 +442,7 @@ object ScaladexSearch {
       .renderPS(render)
       .componentWillReceiveProps { x =>
         Callback.traverse(x.nextProps.librariesFrom.toList.sortBy(_._1.artifact)) { lib =>
-          x.backend.addArtifact((lib._2, lib._1.artifact, Some(lib._1.version)), x.nextProps.scalaTarget, x.state, localOnly = true)
+          x.backend.addArtifact((lib._2, lib._1.artifact, Some(lib._1.version)), lib._1.target, x.state, localOnly = true)
         }
       }
       .configure(Reusability.shouldComponentUpdate)
