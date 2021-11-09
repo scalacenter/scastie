@@ -71,8 +71,8 @@ object ScaladexSearch {
         .flatMap {
           case (project, target) => project.artifacts.map(artifact => (project, artifact, None, target))
         }
-        .filter {
-          projectAndArtifact => !selectedProjectsArtifacts.contains(projectAndArtifact)
+        .filter { projectAndArtifact =>
+          !selectedProjectsArtifacts.contains(projectAndArtifact)
         }
 
     def removeSelected(selected: Selected): SearchState = {
@@ -246,16 +246,16 @@ object ScaladexSearch {
         if (!searchState.query.isEmpty) {
 
           def queryAndParse(t: ScalaTarget): Future[List[(Project, ScalaTarget)]] = {
-            val q = toQuery(t.scaladexRequest + ("q" ->  searchState.query))
+            val q = toQuery(t.scaladexRequest + ("q" -> searchState.query))
             Ajax
-                .get(scaladexApiUrl + "/search" + q)
-                .map { ret =>
-                  Json
-                    .fromJson[List[Project]](Json.parse(ret.responseText))
-                    .asOpt
-                    .getOrElse(Nil)
-                    .map(_ -> t)
-                }
+              .get(scaladexApiUrl + "/search" + q)
+              .map { ret =>
+                Json
+                  .fromJson[List[Project]](Json.parse(ret.responseText))
+                  .asOpt
+                  .getOrElse(Nil)
+                  .map(_ -> t)
+              }
           }
 
           val projsForThisTarget = queryAndParse(target)
@@ -353,7 +353,9 @@ object ScaladexSearch {
               img(src := Assets.placeholderUrl, common, alt := s"placeholder logo for $organization")
             ),
           span(cls := "artifact")(label),
-          if (scalaTarget != props.scalaTarget) span(cls := "artifact")(s"(${scalaTarget} artifacts)") else ""
+          if (scalaTarget.binaryScalaVersion != props.scalaTarget.binaryScalaVersion)
+            span(cls := "artifact")(s"(Scala ${scalaTarget.binaryScalaVersion} artifacts)")
+          else ""
         ),
         options
       )

@@ -29,7 +29,7 @@ sealed trait ScalaTarget {
     s""""$groupId" %%% "$artifact" % "$version""""
   }
 
-  protected def binaryScalaVersion: String = {
+  def binaryScalaVersion: String = {
     val digits = scalaVersion.split('.')
     if (digits.head == "2") digits.init.mkString(".")
     else digits.head
@@ -279,7 +279,7 @@ object ScalaTarget {
       ScalaTargetType.Scala3
 
     def scaladexRequest: Map[String, String] =
-      Map("target" -> "JVM", "scalaVersion" -> "3")
+      Map("target" -> "JVM", "scalaVersion" -> binaryScalaVersion)
 
     def renderSbt(lib: ScalaDependency): String = {
       if (Some(lib) == runtimeDependency) renderSbtDouble(lib)
