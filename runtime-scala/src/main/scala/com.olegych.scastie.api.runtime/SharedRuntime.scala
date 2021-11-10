@@ -10,11 +10,15 @@ protected[runtime] trait SharedRuntime {
 
   private val maxValueLength = 500
 
+  private def show[A](a: A): String =
+    if(a == null) "null"
+    else a.toString
+
   protected[runtime] def render[T](a: T, typeName: String): Render = {
     a match {
       case html: Html => html
       case v =>
-        val vs = v.toString
+        val vs = show(v)
         val out =
           if (vs.size > maxValueLength) vs.take(maxValueLength) + "..."
           else vs
