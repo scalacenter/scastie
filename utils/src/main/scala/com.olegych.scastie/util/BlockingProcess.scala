@@ -17,11 +17,13 @@ import scala.concurrent.duration.Duration
 
 object BlockingProcess {
 
-  def getPid(process: JavaProcess): Option[Long] = {
+  def getPid(process: JavaProcess): Option[Int] = {
     if (Helpers.isWindows) {
       None
     } else {
-      Some(process.pid())
+      val pidField = process.getClass.getDeclaredField("pid")
+      pidField.setAccessible(true)
+      Some(pidField.get(process).asInstanceOf[Int])
     }
   }
 
@@ -40,7 +42,7 @@ object BlockingProcess {
    * @param stdout a `akka.stream.scaladsl.Source[ByteString, Future[IOResult]]` for the standard output stream of the process
    * @param stderr a `akka.stream.scaladsl.Source[ByteString, Future[IOResult]]` for the standard error stream of the process
    */
-  case class Started(pid: Option[Long],
+  case class Started(pid: Option[Int],
                      stdin: Sink[ByteString, Future[IOResult]],
                      stdout: Source[ByteString, Future[IOResult]],
                      stderr: Source[ByteString, Future[IOResult]])
