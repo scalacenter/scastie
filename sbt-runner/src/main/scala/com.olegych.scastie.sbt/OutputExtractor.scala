@@ -22,7 +22,13 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     val runtimeError = extractRuntimeError(output.line, Instrument.getExceptionLineOffset(inputs))
     val sbtOutput = extract[ConsoleOutput.SbtOutput](output.line)
     // sbt plugin is not loaded at this stage. we need to drop those messages
-    val initializationMessages = List(
+    val hiddenInitializationMessages = List(
+      "WARNING: A terminally deprecated method in java.lang.System has been called",
+      "WARNING: System::setSecurityManager has been called by sbt.TrapExit$",
+      "WARNING: Please consider reporting this to the maintainers of sbt.TrapExit$",
+      "WARNING: System::setSecurityManager will be removed in a future release",
+    )
+    val initializationMessages = hiddenInitializationMessages ++ List(
       "[info] Loading global plugins from",
       "[info] Loading project definition from",
       "[info] Set current project to scastie",
@@ -32,8 +38,10 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
       "[error] Type error in expression"
     )
 
+    val isHiddenSbtMessage =
+      hiddenInitializationMessages.exists(message => output.line.toLowerCase().startsWith(message.toLowerCase()))
     val isSbtMessage =
-      initializationMessages.exists(message => output.line.startsWith(message))
+      initializationMessages.exists(message => output.line.toLowerCase().startsWith(message.toLowerCase()))
 
     val isDone = output.line == promptUniqueId
 
@@ -61,7 +69,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     val isReallyDone = (isDone && !isReloading) || isSbtError
 
     val sbtProcessOutput =
-      if (isSbtMessage) Some(output)
+      if (isHiddenSbtMessage) None
+      else if (isSbtMessage) Some(output)
       else sbtOutput.map(_.output)
 
     SnippetProgress(
