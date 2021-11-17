@@ -13,4 +13,4 @@ jobs:
     - uses: nixbuild/nix-quick-install-action@v5
     - name: Run tests
       run: |
-        nix-shell --command "sbt -DSnippetsContainerTest.mongo=true cachedCiTest"
+        nix-shell -A scastie --command "sbt -DSnippetsContainerTest.mongo=true cachedCiTest"

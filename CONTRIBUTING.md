@@ -9,7 +9,7 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 
 ```
 curl https://nixos.org/nix/install | sh
-nix-shell
+nix-shell -A scastie
 ```
 
 ### How to install prerequisites on Mac
