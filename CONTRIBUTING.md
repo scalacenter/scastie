@@ -9,12 +9,12 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 
 ```
 curl https://nixos.org/nix/install | sh
-nix-shell -A scastie
+nix-shell
 ```
 
 ### How to install prerequisites on Mac
 ```
-brew install openjdk sbt nodejs yarn
+brew install openjdk@17 sbt nodejs yarn
 ```
 
 ### How to install prerequisites on Windows
@@ -25,7 +25,7 @@ git config --add core.symlinks true
 git reset --hard HEAD
 ```
 ```
-choco install nvm yarn sbt jdk8 python3
+choco install nvm yarn sbt openjdk17 python3
 nvm install 8.9.1
 nvm use 8.9.1
 ```
