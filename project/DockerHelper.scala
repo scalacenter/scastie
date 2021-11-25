@@ -47,7 +47,7 @@ object DockerHelper {
     sbtGlobal.toFile.mkdirs()
 
     new Dockerfile {
-      from("openjdk:8u171-jdk-alpine")
+      from("openjdk:17-alpine")
 
       // Install ca-certificates for wget https
       runRaw("apk update")
