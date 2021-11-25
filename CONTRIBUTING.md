@@ -8,8 +8,8 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 ### How to install prerequisites via nix
 
 ```
-curl https://nixos.org/nix/install | sh
-nix-shell -A scastie
+curl -L https://nixos.org/nix/install | sh
+nix-shell -v
 ```
 
 ### How to install prerequisites on Mac
@@ -116,7 +116,7 @@ cd ~/scastie-secrets && git pull #optional
 cd ~/scastie && git pull && ~/proot_5.1.1_x86_64_rc2--no-seccomp  -b ~/.nix:/nix
 bash 
 . /home/scastie/.nix-profile/etc/profile.d/nix.sh
-nix-shell -A scastie
+nix-shell -v
 sbt 
 deploy
 ```
