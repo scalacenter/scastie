@@ -45,7 +45,7 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
     }
   }
 
-  override def afterAll: Unit = {
+  override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
   }
 }
