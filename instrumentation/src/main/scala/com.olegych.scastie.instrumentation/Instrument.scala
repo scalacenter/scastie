@@ -20,13 +20,13 @@ object InstrumentationFailure {
 
 object Instrument {
   def getParsingLineOffset(inputs: Inputs): Int = {
-    if (inputs.isWorksheetMode) -1 else 0
+    if (inputs.isWorksheetMode) -2 else 0
   }
   def getExceptionLineOffset(inputs: Inputs): Int = {
-    if (inputs.isWorksheetMode) -2 else 0
+    if (inputs.isWorksheetMode) -3 else 0
   }
   def getMessageLineOffset(inputs: Inputs): Int = {
-    if (inputs.isWorksheetMode) -2 else 0
+    if (inputs.isWorksheetMode) -3 else 0
   }
 
   import InstrumentationFailure._
@@ -74,8 +74,8 @@ object Instrument {
 
     val replacement =
       Seq(
-        "scala.Predef.locally {",
-        treeQuote + "; ",
+        "scala.Predef.locally {\n",
+        treeQuote + "\n",
         s"$instrumentationMap(${posToApi(term.pos, offset)}) = $renderCall",
         "$t}"
       ).mkString("")

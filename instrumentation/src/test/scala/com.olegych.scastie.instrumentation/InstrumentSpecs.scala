@@ -15,7 +15,7 @@ class InstrumentSpecs extends AnyFunSuite {
   private val testFiles = {
     val path = Paths.get("instrumentation", "src", "test", "resources")
     val s = Files.newDirectoryStream(path)
-    val t = s.asScala.toList.filter(_.endsWith(".scala"))
+    val t = s.asScala.toList.filter(_.resolve("original.scala").toFile.exists())
     s.close()
     t
   }
@@ -29,7 +29,7 @@ class InstrumentSpecs extends AnyFunSuite {
 
       val target =
         if (dirName == "scalajs") ScalaTarget.Js.default
-        else if (dirName == "scala3") ScalaTarget.Scala3.default
+        else if (dirName contains "scala3") ScalaTarget.Scala3.default
         else ScalaTarget.Jvm.default
 
       val Right(obtained) = Instrument(original, target)

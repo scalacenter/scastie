@@ -3,7 +3,9 @@ object Playground extends ScastieApp with _root_.com.olegych.scastie.api.runtime
 import org.scalajs.dom
 import org.scalajs.dom.html.Canvas
 
-scala.Predef.locally {val $t = dom.document.createElement("canvas").asInstanceOf[Canvas]; instrumentationMap$(_root_.com.olegych.scastie.api.Position(59, 116)) = _root_.com.olegych.scastie.api.runtime.Runtime.render($t, attach _);$t}
+scala.Predef.locally {
+val $t = dom.document.createElement("canvas").asInstanceOf[Canvas]
+instrumentationMap$(_root_.com.olegych.scastie.api.Position(59, 116)) = _root_.com.olegych.scastie.api.runtime.Runtime.render($t, attach _);$t}
 }
 @_root_.scala.scalajs.js.annotation.JSExportTopLevel("ScastiePlaygroundMain") class ScastiePlaygroundMain {
   def suppressUnusedWarnsScastie = Html
