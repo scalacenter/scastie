@@ -10,7 +10,7 @@ stdenv.mkDerivation {
 
   buildInputs = with pkgs; [ sbt nodejs yarn bash ];
 
-  SBT_OPTS = "-Xms512m -Xmx1024M";
+  SBT_OPTS = "";
 
   shellHook = ''
     alias cls=clear
