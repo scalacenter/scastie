@@ -1,3 +1,5 @@
+#workaround for java17
+-Djdk.lang.Process.launchMechanism=vfork
 -Dfile.encoding=UTF-8
 #less jerky heap freeing than Parallel, but may crash on java 8 < 181
 -J-XX:+UseG1GC
