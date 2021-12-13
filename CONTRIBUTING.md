@@ -113,9 +113,7 @@ ssh scastie@scastie.scala-lang.org
 ssh scastie@scastie-sbt.scala-lang.org
 docker login
 cd ~/scastie-secrets && git pull #optional
-cd ~/scastie && git pull && ~/proot_5.1.1_x86_64_rc2--no-seccomp  -b ~/.nix:/nix
-bash 
-. /home/scastie/.nix-profile/etc/profile.d/nix.sh
+cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
 nix-shell -v
 sbt 
 deploy
