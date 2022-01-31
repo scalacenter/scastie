@@ -118,7 +118,7 @@ lazy val sbtRunner = project
         tag = Some(gitHashNow)
       )
     ),
-    docker / dockerBuildArguments += ("--add-host", "jenkins.scala-sbt.org:127.0.0.1"),
+    docker / buildOptions := (docker / buildOptions).value.copy(additionalArguments = List("--add-host", "jenkins.scala-sbt.org:127.0.0.1")),
     docker / dockerfile := Def
       .task {
         DockerHelper(
