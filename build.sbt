@@ -1,9 +1,9 @@
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.32"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.18"
 
-val akkaHttpVersion = "10.2.6"
+val akkaHttpVersion = "10.2.7"
 
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
 addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
@@ -36,14 +36,14 @@ lazy val scastie = project
 
 lazy val testSettings =
   Seq(
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.4" % Test
   )
 
 lazy val loggingAndTest =
   Seq(
     libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-classic" % "1.1.7",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+      "ch.qos.logback" % "logback-classic" % "1.1.11",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
       "com.getsentry.raven" % "raven-logback" % "8.0.3"
     )
   ) ++ testSettings
@@ -167,7 +167,7 @@ lazy val server = project
       "org.apache.commons" % "commons-text" % "1.9",
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.softwaremill.akka-http-session" %% "core" % "0.6.1",
-      "ch.megard" %% "akka-http-cors" % "1.1.2",
+      "ch.megard" %% "akka-http-cors" % "1.1.3",
       akka("remote"),
       akka("slf4j"),
       akka("testkit") % Test,
@@ -191,10 +191,10 @@ lazy val storage = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "net.lingala.zip4j" % "zip4j" % "1.3.1",
-      "org.reactivemongo" %% "reactivemongo" % "0.20.1",
-      "org.reactivemongo" %% "reactivemongo-play-json" % "0.20.1-play28",
-      "org.reactivemongo" %% "reactivemongo-play-json-compat" % "0.20.1-play28",
+      "net.lingala.zip4j" % "zip4j" % "1.3.3",
+      "org.reactivemongo" %% "reactivemongo" % "0.20.13",
+      "org.reactivemongo" %% "reactivemongo-play-json" % "0.20.13-play29",
+      "org.reactivemongo" %% "reactivemongo-play-json-compat" % "0.20.13-play29",
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
@@ -251,7 +251,7 @@ lazy val client = project
       "webpack-merge" -> "4.1.0",
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.6",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.7",
     )
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
