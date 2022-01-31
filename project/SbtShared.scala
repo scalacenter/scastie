@@ -113,7 +113,7 @@ object SbtShared {
 
   lazy val baseJsSettings = Seq(
     test := {},
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.2.0" cross CrossVersion.for3Use2_13,
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.1.0" cross CrossVersion.for3Use2_13,
   )
 
   private def readSbtVersion(base: Path): String = {
