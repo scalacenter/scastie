@@ -125,7 +125,7 @@ lazy val sbtRunner = project
       val stageDir = (docker / target).value
       val dockerfile = (docker / DockerKeys.dockerfile).value
       val imageNames = (docker / DockerKeys.imageNames).value
-      sbtdocker.DockerBuildFixed(dockerfile, sbtdocker.staging.DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
+      sbtdocker.DockerBuildFixed(dockerfile.asInstanceOf[sbtdocker.DockerfileLike], sbtdocker.staging.DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
     },
     docker / dockerfile := Def
       .task {
