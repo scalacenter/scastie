@@ -118,15 +118,7 @@ lazy val sbtRunner = project
         tag = Some(gitHashNow)
       )
     ),
-    docker := {
-      val log = Keys.streams.value.log
-      val dockerPath = (docker / DockerKeys.dockerPath).value
-      val buildOptions = (docker / DockerKeys.buildOptions).value
-      val stageDir = (docker / target).value
-      val dockerfile = (docker / DockerKeys.dockerfile).value
-      val imageNames = (docker / DockerKeys.imageNames).value
-      sbtdocker.DockerBuildFixed(dockerfile.asInstanceOf[sbtdocker.DockerfileLike], sbtdocker.staging.DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
-    },
+    docker / dockerBuildArguments += ("--add-host", "jenkins.scala-sbt.org:127.0.0.1"),
     docker / dockerfile := Def
       .task {
         DockerHelper(
