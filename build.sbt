@@ -36,7 +36,7 @@ lazy val scastie = project
 
 lazy val testSettings =
   Seq(
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.4" % Test
   )
 
 lazy val loggingAndTest =
