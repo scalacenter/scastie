@@ -27,7 +27,7 @@ object ServerMain {
       if (args.isEmpty) 9000
       else args.head.toInt
 
-    val config2 = ConfigFactory.load().getConfig("akka.remote.netty.tcp")
+    val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
     println("akka tcp config")
     println(config2.getString("hostname"))
     println(config2.getInt("port"))

@@ -18,7 +18,7 @@ object SbtMain {
 
     val system = ActorSystem("SbtRunner")
 
-    val config2 = ConfigFactory.load().getConfig("akka.remote.netty.tcp")
+    val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
     logger.info("akka tcp config")
     logger.info("  '" + config2.getString("hostname") + "'")
     logger.info("  " + config2.getInt("port"))
