@@ -48,6 +48,7 @@ object MongoSnippet {
 
 class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer {
   protected implicit val ec: ExecutionContext = _ec
+  import json2bson._
 
   private val mongoUri = "mongodb://localhost:27017/snippets"
   private val driver = AsyncDriver()
@@ -93,9 +94,11 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
       time = System.currentTimeMillis
     )
 
-  def isSuccess(writeResult: WriteResult): Boolean =
-    if (writeResult.ok) true
-    else throw new Exception(writeResult.toString)
+  def isSuccess(writeResult: WriteResult): Boolean = 
+    writeResult match {
+      case WriteResult.Exception(cause) => throw cause
+      case _ => true
+    }
 
   protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] = {
     snippets.flatMap(_.insert.one(toMongoSnippet(snippetId, inputs.withSavedConfig))).map(r => isSuccess(r))
