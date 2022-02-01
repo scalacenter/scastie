@@ -166,7 +166,7 @@ lazy val server = project
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-text" % "1.9",
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "com.softwaremill.akka-http-session" %% "core" % "0.6.1",
+      "com.softwaremill.akka-http-session" %% "core" % "0.7.0",
       "ch.megard" %% "akka-http-cors" % "1.1.2",
       akka("remote"),
       akka("slf4j"),
