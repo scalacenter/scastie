@@ -158,7 +158,7 @@ lazy val server = project
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-text" % "1.9",
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "com.softwaremill.akka-http-session" %% "core" % "0.6.1",
+      "com.softwaremill.akka-http-session" %% "core" % "0.7.0",
       "ch.megard" %% "akka-http-cors" % "1.1.3",
       akka("remote"),
       akka("slf4j"),
@@ -253,7 +253,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "4.4.28",
+      "org.scalameta" %% "scalameta" % "4.4.33",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
