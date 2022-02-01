@@ -184,9 +184,8 @@ lazy val storage = project
   .settings(
     libraryDependencies ++= Seq(
       "net.lingala.zip4j" % "zip4j" % "1.3.3",
-      "org.reactivemongo" %% "reactivemongo" % "0.20.13",
-      "org.reactivemongo" %% "reactivemongo-play-json" % "0.20.13-play29",
-      "org.reactivemongo" %% "reactivemongo-play-json-compat" % "0.20.13-play29",
+      "org.reactivemongo" %% "reactivemongo" % "1.0.10",
+      "org.reactivemongo" %% "reactivemongo-play-json-compat" % "1.0.10-play29",
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
