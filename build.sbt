@@ -107,7 +107,7 @@ lazy val sbtRunner = project
     libraryDependencies ++= Seq(
       akka("actor"),
       akka("testkit") % Test,
-      akka("remote"),
+      akka("cluster"),
       akka("slf4j"),
       "org.scalameta" %% "scalafmt-core" % "3.0.4"
     ),

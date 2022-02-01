@@ -21,7 +21,7 @@ class SbtActor(system: ActorSystem,
   def balancer(context: ActorContext, info: ReconnectInfo): ActorSelection = {
     import info._
     context.actorSelection(
-      s"akka.tcp://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
+      s"akka://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
     )
   }
 
