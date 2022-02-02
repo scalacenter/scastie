@@ -1,9 +1,9 @@
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.5.32"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.18"
 
-val akkaHttpVersion = "10.2.6"
+val akkaHttpVersion = "10.2.7"
 
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
 addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
@@ -36,14 +36,14 @@ lazy val scastie = project
 
 lazy val testSettings =
   Seq(
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.4" % Test
   )
 
 lazy val loggingAndTest =
   Seq(
     libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-classic" % "1.1.7",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+      "ch.qos.logback" % "logback-classic" % "1.1.11",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
       "com.getsentry.raven" % "raven-logback" % "8.0.3"
     )
   ) ++ testSettings
@@ -107,7 +107,7 @@ lazy val sbtRunner = project
     libraryDependencies ++= Seq(
       akka("actor"),
       akka("testkit") % Test,
-      akka("remote"),
+      akka("cluster"),
       akka("slf4j"),
       "org.scalameta" %% "scalafmt-core" % "3.0.4"
     ),
@@ -118,15 +118,7 @@ lazy val sbtRunner = project
         tag = Some(gitHashNow)
       )
     ),
-    docker := {
-      val log = Keys.streams.value.log
-      val dockerPath = (docker / DockerKeys.dockerPath).value
-      val buildOptions = (docker / DockerKeys.buildOptions).value
-      val stageDir = (docker / target).value
-      val dockerfile = (docker / DockerKeys.dockerfile).value
-      val imageNames = (docker / DockerKeys.imageNames).value
-      sbtdocker.DockerBuildFixed(dockerfile, sbtdocker.staging.DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
-    },
+    docker / buildOptions := (docker / buildOptions).value.copy(additionalArguments = List("--add-host", "jenkins.scala-sbt.org:127.0.0.1")),
     docker / dockerfile := Def
       .task {
         DockerHelper(
@@ -166,9 +158,9 @@ lazy val server = project
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-text" % "1.9",
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "com.softwaremill.akka-http-session" %% "core" % "0.6.1",
-      "ch.megard" %% "akka-http-cors" % "1.1.2",
-      akka("remote"),
+      "com.softwaremill.akka-http-session" %% "core" % "0.7.0",
+      "ch.megard" %% "akka-http-cors" % "1.1.3",
+      akka("cluster"),
       akka("slf4j"),
       akka("testkit") % Test,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
@@ -191,10 +183,9 @@ lazy val storage = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "net.lingala.zip4j" % "zip4j" % "1.3.1",
-      "org.reactivemongo" %% "reactivemongo" % "0.20.1",
-      "org.reactivemongo" %% "reactivemongo-play-json" % "0.20.1-play28",
-      "org.reactivemongo" %% "reactivemongo-play-json-compat" % "0.20.1-play28",
+      "net.lingala.zip4j" % "zip4j" % "1.3.3",
+      "org.reactivemongo" %% "reactivemongo" % "1.0.10",
+      "org.reactivemongo" %% "reactivemongo-play-json-compat" % "1.0.10-play29",
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
@@ -251,7 +242,7 @@ lazy val client = project
       "webpack-merge" -> "4.1.0",
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.6",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.7",
     )
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
@@ -262,7 +253,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "4.4.28",
+      "org.scalameta" %% "scalameta" % "4.4.33",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

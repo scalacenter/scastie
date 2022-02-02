@@ -154,7 +154,7 @@ class LoadBalancerRecoveryTest()
     }
   }
 
-  override def afterAll: Unit = {
+  override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(webSystem)
     TestKit.shutdownActorSystem(sbtSystem)
     TestKit.shutdownActorSystem(system)
@@ -166,10 +166,11 @@ object RemotePortConfig {
     ConfigFactory.parseString(
       s"""|akka {
           |  actor {
-          |    provider = "akka.remote.RemoteActorRefProvider"
+          |    provider = cluster
+          |    allow-java-serialization = on
           |  }
           |  remote {
-          |    netty.tcp {
+          |    artery.canonical {
           |      hostname = "127.0.0.1"
           |      port = $port
           |    }
