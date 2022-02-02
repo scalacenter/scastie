@@ -21,12 +21,13 @@ object SbtShared {
     val latest211 = "2.11.12"
     val latest212 = "2.12.15"
     val latest213 = "2.13.8"
+    val old3 = "3.0.2"
     val stable3 = "3.1.1"
     val latest3 = "3.1.0"
     val js = latest213
     val sbt = latest212
     val jvm = latest213
-    val cross = List(latest210, latest211, latest212, latest213, stable3, js, sbt, jvm).distinct
+    val cross = List(latest210, latest211, latest212, latest213, old3, js, sbt, jvm).distinct
     val crossJS = List(latest212, latest213, js).distinct
   }
 
