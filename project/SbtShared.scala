@@ -35,7 +35,7 @@ object SbtShared {
     val current = "1.7.0"
   }
 
-  val distSbtVersion = "1.5.5"
+  val distSbtVersion = "1.5.7"
 
   val runtimeProjectName = "runtime-scala"
 
@@ -113,7 +113,7 @@ object SbtShared {
 
   lazy val baseJsSettings = Seq(
     test := {},
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.2.0" cross CrossVersion.for3Use2_13,
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.1.0",
   )
 
   private def readSbtVersion(base: Path): String = {
@@ -161,7 +161,7 @@ object SbtShared {
       libraryDependencies += {
         scalaVersion.value match {
           case v if v.startsWith("2.10") =>
-            "com.typesafe.play" %%% "play-json" % "2.6.9"
+            "com.typesafe.play" %%% "play-json" % "2.6.14"
           case v if v.startsWith("2.11") =>
             "com.typesafe.play" %%% "play-json" % "2.7.4"
           case _ =>

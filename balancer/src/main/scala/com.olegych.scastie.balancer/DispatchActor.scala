@@ -69,7 +69,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       actorName: String,
       host: String
   )(port: Int): ((String, Int), ActorSelection) = {
-    val path = s"akka.tcp://$runnerName@$host:$port/user/$actorName"
+    val path = s"akka://$runnerName@$host:$port/user/$actorName"
     log.info(s"Connecting to ${path}")
     val selection = context.actorSelection(path)
     selection ! ActorConnected
