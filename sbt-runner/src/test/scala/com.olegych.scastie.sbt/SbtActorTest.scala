@@ -192,6 +192,15 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     run(dotty)(assertUserOutput("Hello, Scala 3 worksheet!"))
   }
 
+  test("Scala 3.0 worksheet support") {
+    val message = "Hello, Scala 3.0 worksheet!"
+    val dotty = Inputs.default.copy(
+      code = s"""println("$message")""",
+      target = ScalaTarget.Scala3("3.0.0"),
+    )
+    run(dotty)(assertUserOutput("Hello, Scala 3.0 worksheet!"))
+  }
+
   test("Capture System.err #284") {
     val message = "Failure"
     runCode(s"""System.err.println("$message")""")(
