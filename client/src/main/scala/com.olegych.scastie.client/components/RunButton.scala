@@ -18,21 +18,19 @@ object RunButton {
   def render(props: RunButton): VdomElement = {
     if (!props.isRunning) {
       val runTitle =
-        if (props.embedded)
+        if (props.isStatusOk)
           s"Run (${EditorOptions.Keys.saveOrUpdate})"
-        else if (props.isStatusOk)
-          s"Save (${EditorOptions.Keys.saveOrUpdate})"
         else
-          s"Save (${EditorOptions.Keys.saveOrUpdate}) - warning: unknown status"
+          s"Run (${EditorOptions.Keys.saveOrUpdate}) - warning: unknown status"
 
       li(onClick --> props.save, role := "button", title := runTitle, cls := "btn run-button")(
         i(cls := "fa fa-play"),
-        span(if (props.embedded) "Run" else "Save")
+        span("Run")
       )
     } else {
-      li(onClick --> props.setView(View.Editor), title := "Saving your Code...", cls := "btn run-button")(
+      li(onClick --> props.setView(View.Editor), title := "Running your Code...", cls := "btn run-button")(
         i(cls := "fa fa-spinner fa-spin"),
-        span(if (props.embedded) "Running" else "Saving")
+        span("Running")
       )
     }
   }
