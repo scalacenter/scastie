@@ -268,7 +268,7 @@ private class ProcessDestroyer(process: JavaProcess, exitValueReceiver: ActorRef
       if (Helpers.isWindows) {
         s"taskkill /F /PID ${process.pid()}".!
       } else {
-        s"pkill -KILL ${process.pid()}".!
+        s"kill -9 ${process.pid()}".!
       }
     }
   }
