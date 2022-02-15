@@ -3,7 +3,7 @@ import com.typesafe.sbt.SbtNativePackager.Universal
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.18"
 
-val akkaHttpVersion = "10.2.7"
+val akkaHttpVersion = "10.2.8"
 
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
 addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
@@ -36,7 +36,7 @@ lazy val scastie = project
 
 lazy val testSettings =
   Seq(
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.4" % Test
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.11" % Test
   )
 
 lazy val loggingAndTest =
@@ -253,7 +253,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "4.4.33",
+      "org.scalameta" %% "scalameta" % "4.4.35",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
