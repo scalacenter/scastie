@@ -21,9 +21,9 @@ sealed trait Page
 case object Home extends Page
 case object Embedded extends Page
 
-case class TargetTypePage(targetType: ScalaTargetType) extends Page
+case class TargetTypePage(targetType: ScalaTargetType, code: Option[String]) extends Page
 
-case class TryLibraryPage(dependency: (ScalaDependency, Project)) extends Page
+case class TryLibraryPage(dependency: ScalaDependency, project: Project, code: Option[String]) extends Page
 
 case class OldSnippetIdPage(id: Int) extends Page
 
