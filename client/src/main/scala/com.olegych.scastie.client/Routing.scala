@@ -36,7 +36,7 @@ class Routing(defaultServerUrl: String) {
             None
           }, inputs => Some(InputsPage(inputs)))
       }
-    }(p => Map("inputs" -> Json.toJson(p.inputs).toString()))
+    }(p => Map("inputs" -> Json.toJson(p.inputs).toString().replace("{", "%7B").replace("}", "%7D")))
 
     def parseTryLibrary(map: Map[String, String]) = {
       (
