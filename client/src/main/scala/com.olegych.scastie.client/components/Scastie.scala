@@ -86,10 +86,6 @@ object Scastie {
         scope.backend,
         props
       ).render,
-      WelcomeModal(
-        isClosed = state.modalState.isWelcomeModalClosed,
-        close = scope.backend.closeWelcomeModal
-      ).render,
       HelpModal(
         isClosed = state.modalState.isHelpModalClosed,
         close = scope.backend.closeHelpModal

@@ -10,7 +10,6 @@ object ModalState {
   implicit val formatModalState: OFormat[ModalState] = Json.format[ModalState]
 
   def allClosed: ModalState = ModalState(
-    isWelcomeModalClosed = true,
     isHelpModalClosed = true,
     shareModalSnippetId = None,
     isResetModalClosed = true,
@@ -20,7 +19,6 @@ object ModalState {
 
   def default: ModalState = ModalState(
     isHelpModalClosed = true,
-    isWelcomeModalClosed = false,
     shareModalSnippetId = None,
     isResetModalClosed = true,
     isNewSnippetModalClosed = true,
@@ -29,7 +27,6 @@ object ModalState {
 }
 
 case class ModalState(
-    isWelcomeModalClosed: Boolean,
     isHelpModalClosed: Boolean,
     shareModalSnippetId: Option[SnippetId],
     isResetModalClosed: Boolean,

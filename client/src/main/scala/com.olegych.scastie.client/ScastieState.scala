@@ -183,12 +183,6 @@ case class ScastieState(
       inputsHasChanged = true
     )
 
-  def openWelcomeModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(isWelcomeModalClosed = false))
-
-  def closeWelcomeModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(isWelcomeModalClosed = true))
-
   def toggleHelpModal: ScastieState =
     copyAndSave(
       modalState = modalState.copy(isHelpModalClosed = !modalState.isHelpModalClosed)

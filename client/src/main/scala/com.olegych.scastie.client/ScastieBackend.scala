@@ -141,9 +141,6 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val toggleHelpModal: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleHelpModal))
 
-  val closeWelcomeModal: Reusable[Callback] =
-    Reusable.always(scope.modState(_.closeWelcomeModal))
-
   val closeShareModal: Reusable[Callback] =
     Reusable.always(scope.modState(_.closeShareModal))
 
