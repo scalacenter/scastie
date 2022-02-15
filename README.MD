@@ -162,6 +162,22 @@ window.addEventListener('load', function() {
 
 Take a look at: https://codepen.io/MasseGuillaume/pen/OxbVzm
 
+## Try library
+You can pass your library to scastie like this:
+                                                                
+`https://scastie.scala-lang.org/try?g=com.typesafe.play&a=play&v=2.8.12&t=JVM&sv=2.13&o=playframework&r=playframework`
+
+The parameters are:
+* g - maven group id, required  
+* a - maven artifact id, required  
+* v - maven artifact version, required  
+* t - target type, one of JVM|DOTTY|JS, required
+* sv - scala version, required, can be partial like 2.12
+* sjsv - scala.js version, optional
+* o - scaladex organization, required for proper display of your library in build settings
+* r - scaladex repository, required for proper display of your library in build settings
+* c - initial snippet code, optional
+
 # Supports
 
 Scastie is supported by the Scala Center
