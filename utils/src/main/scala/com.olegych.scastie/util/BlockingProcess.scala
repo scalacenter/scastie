@@ -17,12 +17,8 @@ import scala.concurrent.duration.Duration
 
 object BlockingProcess {
 
-  def getPid(process: JavaProcess): Option[Long] = {
-    if (Helpers.isWindows) {
-      None
-    } else {
-      Some(process.pid())
-    }
+  def getPid(process: JavaProcess): Long = {
+    process.pid()
   }
 
   /**
@@ -179,7 +175,7 @@ class BlockingProcess(command: immutable.Seq[String], directory: File, environme
         .withAttributes(selfDispatcherAttribute)
         .mapMaterializedValue(_.andThen { case _ => self ! StderrTerminated })
 
-      context.parent ! Started(getPid(process), stdin, stdout, stderr)
+      context.parent ! Started(Some(process.pid()), stdin, stdout, stderr)
 
       log.debug(
         s"Blocking process started with dispatcher: $blockingIODispatcherId"
@@ -262,23 +258,26 @@ private class ProcessDestroyer(process: JavaProcess, exitValueReceiver: ActorRef
     )
 
   private val inspectionTick =
-    context.system.scheduler.schedule(inspectionInterval, inspectionInterval, self, Inspect)
+    context.system.scheduler.scheduleAtFixedRate(inspectionInterval, inspectionInterval, self, Inspect)
 
   def pkill(): Unit = {
-    if (Helpers.isWindows) {
-      process.destroy()
-    } else {
-      val pid = BlockingProcess.getPid(process).get
-      import sys.process._
-      s"pkill -KILL -P $pid".! == 0
+    import sys.process._
+    import scala.jdk.CollectionConverters._
+    val all = process.descendants().toList.asScala :+ process.toHandle
+    all.foreach { process =>
+      if (Helpers.isWindows) {
+        s"taskkill /F /PID ${process.pid()}".!
+      } else {
+        s"pkill -KILL ${process.pid()}".!
+      }
     }
   }
 
   override def receive = {
     case Destroy =>
-      blocking(process.destroy())
+      blocking(pkill())
     case DestroyForcibly =>
-      blocking(process.destroyForcibly())
+      blocking(pkill())
     case Inspect =>
       if (!process.isAlive) {
         log.debug("Process has terminated, stopping self")
@@ -291,8 +290,6 @@ private class ProcessDestroyer(process: JavaProcess, exitValueReceiver: ActorRef
     pkill()
 
     val exitValue = blocking {
-      process.destroy()
-      process.destroyForcibly()
       process.waitFor()
     }
     exitValueReceiver ! BlockingProcess.Exited(exitValue)

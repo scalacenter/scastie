@@ -1,9 +1,11 @@
 package com.olegych.scastie
 package sbtscastie
 
-import sbt.Keys._
-import sbt._
+import sbt.Keys.*
+import sbt.*
 import sbt.internal.inc.AnalyzingCompiler
+
+import scala.util.{Success, Try, Failure}
 
 object SbtScastiePlugin extends AutoPlugin {
 
@@ -23,10 +25,26 @@ object SbtScastiePlugin extends AutoPlugin {
           //compile bridge to init everything on reload
           r.scalac() match {
             case c: AnalyzingCompiler =>
-              c.provider.fetchCompiledBridge(c.scalaInstance , streams.value.log)
-            case _                    => ()
+              c.provider.fetchCompiledBridge(c.scalaInstance, streams.value.log)
+            case _ => ()
           }
           r
+        },
+        Compile / run / runner ~= { runner =>
+          new ForkRun(null) {
+            override def run(mainClass: String, classpath: Seq[File], options: Seq[String], log: Logger): Try[Unit] = {
+              val prev = ScastieTrapExit.installManager()
+              try {
+                val exitCode = ScastieTrapExit(runner.run(mainClass, classpath, options, log), log)
+                if (exitCode == 0) {
+                  log.debug("Exited with code 0")
+                  Success(())
+                } else Failure(new MessageOnlyException("Nonzero exit code: " + exitCode))
+              } finally {
+                ScastieTrapExit.uninstallManager(prev)
+              }
+            }
+          }
         },
         resolvers := {
           Seq[Resolver](

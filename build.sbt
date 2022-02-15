@@ -127,7 +127,8 @@ lazy val sbtRunner = project
           ivyHome = ivyPaths.value.ivyHome.get.toPath,
           organization = organization.value,
           artifact = assembly.value.toPath,
-          sbtScastie = (sbtScastie / moduleName).value
+          sbtScastie = (sbtScastie / moduleName).value,
+          sbtVersion = sbtVersion.value,
         )
       }
       .dependsOn(runnerRuntimeDependencies: _*)

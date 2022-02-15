@@ -1,11 +1,9 @@
-import SbtShared._
-
 import sbtdocker.DockerPlugin.autoImport._
 
 import java.nio.file.Path
 
 object DockerHelper {
-  def apply(baseDirectory: Path, sbtTargetDir: Path, sbtScastie: String, ivyHome: Path, organization: String, artifact: Path): Dockerfile = {
+  def apply(baseDirectory: Path, sbtTargetDir: Path, sbtScastie: String, ivyHome: Path, organization: String, artifact: Path, sbtVersion: String): Dockerfile = {
 
     val artifactTargetPath = s"/app/${artifact.getFileName()}"
     val generatedProjects = new GenerateProjects(sbtTargetDir)
@@ -32,9 +30,9 @@ object DockerHelper {
         lazy val dirName = dir.getFileName.toString
 
         if (depth == 1) {
-          dirName == versionNow || dirName == versionRuntime || isSbtScastiePath
+          dirName == SbtShared.versionNow || dirName == SbtShared.versionRuntime || isSbtScastiePath
         } else if (depth == 3 && isSbtScastiePath) {
-          dirName == versionNow || dirName == versionRuntime
+          dirName == SbtShared.versionNow || dirName == SbtShared.versionRuntime
         } else {
           true
         }
@@ -62,9 +60,9 @@ object DockerHelper {
       runRaw("mkdir -p /app/sbt")
 
       runRaw(
-        s"wget https://github.com/sbt/sbt/releases/download/v${distSbtVersion}/sbt-${distSbtVersion}.tgz -O /tmp/sbt-${distSbtVersion}.tgz"
+        s"wget https://github.com/sbt/sbt/releases/download/v${sbtVersion}/sbt-${sbtVersion}.tgz -O /tmp/sbt-${sbtVersion}.tgz"
       )
-      runRaw(s"tar -xzvf /tmp/sbt-$distSbtVersion.tgz -C /app/sbt")
+      runRaw(s"tar -xzvf /tmp/sbt-$sbtVersion.tgz -C /app/sbt")
 
       runRaw("ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt")
 

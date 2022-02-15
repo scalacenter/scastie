@@ -35,8 +35,6 @@ object SbtShared {
     val current = "1.7.0"
   }
 
-  val distSbtVersion = "1.5.7"
-
   val runtimeProjectName = "runtime-scala"
 
   def gitIsDirty(): Boolean = {
@@ -116,31 +114,6 @@ object SbtShared {
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.2.0",
   )
 
-  private def readSbtVersion(base: Path): String = {
-    val sbtPropertiesFileName = "build.properties"
-    val projectFolder = "project"
-    val to = Paths.get(projectFolder, sbtPropertiesFileName)
-    val guess1 = base.resolve(to)
-    val guess2 = base.getParent.resolve(to)
-    val sbtPropertiesFile =
-      if (Files.isRegularFile(guess1)) guess1
-      else if (Files.isRegularFile(guess2)) guess2
-      else {
-        sys.error(
-          s"cannot find $sbtPropertiesFileName in $guess1 and $guess2"
-        )
-      }
-    val prop = new Properties() {
-      new FileInputStream(sbtPropertiesFile.toFile) {
-        load(this)
-        close()
-      }
-    }
-    val res = prop.getProperty("sbt.version")
-    assert(res != null)
-    res
-  }
-
   /* api is for the communication between sbt <=> server <=> frontend */
   lazy val api = projectMatrix
     .in(file("api"))
@@ -180,7 +153,7 @@ object SbtShared {
         "latest3" -> ScalaVersions.latest3,
         "jsScalaVersion" -> ScalaVersions.js,
         "defaultScalaJsVersion" -> ScalaJSVersions.current,
-        "sbtVersion" -> readSbtVersion((ThisBuild / baseDirectory).value.toPath),
+        "sbtVersion" -> sbtVersion.value,
       ),
       buildInfoPackage := "com.olegych.scastie.buildinfo",
     )
