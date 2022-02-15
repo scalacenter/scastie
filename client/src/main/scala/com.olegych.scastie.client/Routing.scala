@@ -1,10 +1,12 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.{Project, ScalaDependency, ScalaTarget, ScalaTargetType, ScalaVersions, SnippetId, SnippetUserPart}
+import com.olegych.scastie.api.{Inputs, Project, ScalaDependency, ScalaTarget, ScalaTargetType, ScalaVersions, SnippetId, SnippetUserPart}
 import com.olegych.scastie.client.components._
 import japgolly.scalajs.react._
 import vdom.all._
 import extra.router._
+import play.api.libs.json.Json
+
 import java.util.UUID
 
 class Routing(defaultServerUrl: String) {
@@ -23,6 +25,18 @@ class Routing(defaultServerUrl: String) {
         case _ => None
       }
     }(p => Map("target" -> p.targetType.toString) ++ p.code.map("c" -> _))
+
+    val inputs = queryToMap.pmap { map =>
+      map.get("inputs").flatMap { inputs =>
+        Json
+          .fromJson[Inputs](Json.parse(inputs))
+          .fold({ e =>
+            println(s"failed to parse ${inputs}")
+            println(e)
+            None
+          }, inputs => Some(InputsPage(inputs)))
+      }
+    }(p => Map("inputs" -> Json.toJson(p.inputs).toString()))
 
     def parseTryLibrary(map: Map[String, String]) = {
       (
@@ -82,6 +96,8 @@ class Routing(defaultServerUrl: String) {
           renderR(renderScastieDefault)
         | dynamicRouteCT("try" ~ tryLibrary) ~>
           dynRenderR((page, router) => renderTryLibraryPage(page, router))
+        | dynamicRouteCT(inputs) ~>
+          dynRenderR((page, router) => renderInputs(page, router))
         | dynamicRouteCT(targetType) ~>
           dynRenderR((page, router) => renderTargetTypePage(page, router))
         | dynamicRouteCT(oldId.caseClass[OldSnippetIdPage]) ~>
@@ -117,6 +133,10 @@ class Routing(defaultServerUrl: String) {
 
   private def renderTryLibraryPage(page: TryLibraryPage, router: RouterCtl[Page]): VdomElement = {
     Scastie.default(router).copy(tryLibrary = Some((page.dependency, page.project)), code = page.code).render
+  }
+
+  private def renderInputs(page: InputsPage, router: RouterCtl[Page]): VdomElement = {
+    Scastie.default(router).copy(inputs = Some(page.inputs)).render
   }
 
   private def renderOldSnippetIdPage(page: OldSnippetIdPage, router: RouterCtl[Page]): VdomElement = {
@@ -164,6 +184,7 @@ class Routing(defaultServerUrl: String) {
       targetType = None,
       tryLibrary = None,
       code = None,
+      inputs = None,
     ).render
   }
 

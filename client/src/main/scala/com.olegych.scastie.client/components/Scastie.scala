@@ -20,6 +20,7 @@ final case class Scastie(
     private val targetType: Option[ScalaTargetType],
     private val tryLibrary: Option[(ScalaDependency, Project)],
     private val code: Option[String],
+    private val inputs: Option[Inputs],
 ) {
 
   @inline def render = Scastie.component(serverUrl, scastieId)(this)
@@ -44,6 +45,7 @@ object Scastie {
       targetType = None,
       tryLibrary = None,
       code = None,
+      inputs = None,
     )
 
   private def setTitle(state: ScastieState, props: Scastie) = {
@@ -235,9 +237,14 @@ object Scastie {
           case _ => state1
         }
 
-        props.code match {
+        val state3 = props.code match {
           case Some(code) => state2.setCode(code)
           case _          => state2
+        }
+
+        props.inputs match {
+          case Some(inputs) => state3.setInputs(inputs)
+          case _            => state3
         }
       }
       .backend(ScastieBackend(scastieId, serverUrl, _))

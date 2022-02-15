@@ -176,6 +176,7 @@ object ScastieEmbedded {
       targetType = None,
       tryLibrary = None,
       code = None,
+      inputs = None,
     ).render.renderIntoDOM(container)
 
     container
