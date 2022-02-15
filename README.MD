@@ -178,11 +178,11 @@ The parameters are:
 * r - scaladex repository, required for proper display of your library in build settings
 * c - initial snippet code, optional
               
-## Configure Scastie via query params
+## Configure snippet via query params
 
 You can also pass full inputs json like this:
 
-https://scastie.scala-lang.org/?inputs=%7B%0A%20%20%22inputs%22%20%3A%20%7B%0A%20%20%20%20%22isWorksheetMode%22%20%3A%20true%2C%0A%20%20%20%20%22code%22%20%3A%20%221%22%2C%0A%20%20%20%20%22target%22%20%3A%20%7B%0A%20%20%20%20%20%20%22scalaVersion%22%20%3A%20%223.1.1%22%2C%0A%20%20%20%20%20%20%22tpe%22%20%3A%20%22Scala3%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%22libraries%22%20%3A%20%5B%20%5D%2C%0A%20%20%20%20%22librariesFromList%22%20%3A%20%5B%20%5D%2C%0A%20%20%20%20%22sbtConfigExtra%22%20%3A%20%22scalacOptions%20%2B%2B%3D%20Seq%28%5Cn%20%20%5C%22-deprecation%5C%22%2C%5Cn%20%20%5C%22-encoding%5C%22%2C%20%5C%22UTF-8%5C%22%2C%5Cn%20%20%5C%22-feature%5C%22%2C%5Cn%20%20%5C%22-unchecked%5C%22%5Cn%29%22%2C%0A%20%20%20%20%22sbtPluginsConfigExtra%22%20%3A%20%22%22%2C%0A%20%20%20%20%22isShowingInUserProfile%22%20%3A%20true%0A%20%20%7D%2C%0A%20%20%22progresses%22%20%3A%20%5B%20%5D%0A%7D
+https://scastie.scala-lang.org/?inputs=%7B%0A%20%20%20%20%22_isWorksheetMode%22%20%3A%20true%2C%0A%20%20%20%20%22code%22%20%3A%20%221%20%2B%201%22%2C%0A%20%20%20%20%22target%22%20%3A%20%7B%0A%20%20%20%20%20%20%22scalaVersion%22%20%3A%20%223.1.1%22%2C%0A%20%20%20%20%20%20%22tpe%22%20%3A%20%22Scala3%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%22libraries%22%20%3A%20%5B%20%5D%2C%0A%20%20%20%20%22librariesFromList%22%20%3A%20%5B%20%5D%2C%0A%20%20%20%20%22sbtConfigExtra%22%20%3A%20%22scalacOptions%20%2B%2B%3D%20Seq%28%5Cn%20%20%5C%22-deprecation%5C%22%2C%5Cn%20%20%5C%22-encoding%5C%22%2C%20%5C%22UTF-8%5C%22%2C%5Cn%20%20%5C%22-feature%5C%22%2C%5Cn%20%20%5C%22-unchecked%5C%22%5Cn%29%22%2C%0A%20%20%20%20%22sbtPluginsConfigExtra%22%20%3A%20%22%22%2C%0A%20%20%20%20%22isShowingInUserProfile%22%20%3A%20true%0A%7D
                                                                       
 See the format here:
 https://github.com/scalacenter/scastie/blob/b5feb3278837cbe3393e4598f32ab84f16aa25ba/api/src/main/scala/com.olegych.scastie.api/Inputs.scala#L61
