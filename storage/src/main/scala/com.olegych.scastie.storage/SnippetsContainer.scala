@@ -4,7 +4,7 @@ import com.olegych.scastie.api._
 import com.olegych.scastie.instrumentation.Instrument
 import com.olegych.scastie.util.Base64UUID
 
-import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 
 import java.nio.file.{Files, Path, Paths}
