@@ -14,10 +14,8 @@ class ApiRoutes(
 )(implicit system: ActorSystem)
     extends PlayJsonSupport {
 
-  import play.api.libs.json._
   import system.dispatcher
   import userDirectives.optionalLogin
-  implicit val readsInputs: Reads[Inputs] = Json.reads[Inputs]
 
   val withRestApiServer: Directive1[RestApiServer] =
     (extractClientIP & optionalLogin).tmap {
