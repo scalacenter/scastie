@@ -24,8 +24,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     // sbt plugin is not loaded at this stage. we need to drop those messages
     val hiddenInitializationMessages = List(
       "WARNING: A terminally deprecated method in java.lang.System has been called",
-      "WARNING: System::setSecurityManager has been called by sbt.TrapExit$",
-      "WARNING: Please consider reporting this to the maintainers of sbt.TrapExit$",
+      "WARNING: System::setSecurityManager has been called",
+      "WARNING: Please consider reporting this to the maintainers",
       "WARNING: System::setSecurityManager will be removed in a future release",
     )
     val initializationMessages = hiddenInitializationMessages ++ List(
