@@ -184,7 +184,7 @@ lazy val storage = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "net.lingala.zip4j" % "zip4j" % "2.9.1",
+      "net.lingala.zip4j" % "zip4j" % "2.10.0",
       "org.reactivemongo" %% "reactivemongo" % "1.0.10",
       "org.reactivemongo" %% "reactivemongo-play-json-compat" % "1.0.10-play29",
     )
