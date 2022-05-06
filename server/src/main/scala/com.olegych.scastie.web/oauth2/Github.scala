@@ -1,28 +1,23 @@
 package com.olegych.scastie.web.oauth2
 
-import com.olegych.scastie.web.PlayJsonSupport
-
-import akka.http.scaladsl._
-import akka.http.scaladsl.model._
-import HttpMethods.POST
-import headers._
-import Uri._
-import unmarshalling.Unmarshal
-
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import akka.http.scaladsl._
+import akka.http.scaladsl.model.HttpMethods.POST
+import akka.http.scaladsl.model.Uri._
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.olegych.scastie.api.User
+import com.olegych.scastie.web.PlayJsonSupport
+import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Future
-import com.typesafe.config.ConfigFactory
-import play.api.libs.json.{OFormat, Reads}
 
 case class AccessToken(access_token: String)
 
-class Github(implicit system: ActorSystem, materializer: ActorMaterializer) extends PlayJsonSupport {
-  import system.dispatcher
-
+class Github(implicit system: ActorSystem) extends PlayJsonSupport {
   import play.api.libs.json._
+  import system.dispatcher
   implicit val formatUser: OFormat[User] = Json.format[User]
   implicit val readAccessToken: Reads[AccessToken] = Json.reads[AccessToken]
 
