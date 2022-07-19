@@ -111,7 +111,7 @@ object SbtShared {
 
   lazy val baseJsSettings = Seq(
     test := {},
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.2.0",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
   )
 
   /* api is for the communication between sbt <=> server <=> frontend */

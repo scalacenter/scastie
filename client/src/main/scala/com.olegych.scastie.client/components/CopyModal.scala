@@ -26,7 +26,7 @@ object CopyModal {
       def copyLink: Callback = divRef.get.map { divRef =>
         val range = dom.document.createRange()
         val selection = dom.window.getSelection()
-        range.selectNodeContents(divRef)
+        divRef.foreach(range.selectNodeContents)
         selection.addRange(range)
         if (!document.execCommand("copy")) {
           window.alert("cannot copy link")
