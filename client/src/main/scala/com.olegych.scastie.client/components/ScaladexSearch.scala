@@ -398,7 +398,7 @@ object ScaladexSearch {
 
     val displayClose =
       if (searchState.search.isEmpty) display.none
-      else display.`inline-block`
+      else display.inlineBlock
 
     div(cls := "search", cls := "library")(
       added,

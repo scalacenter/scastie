@@ -273,7 +273,7 @@ object Scastie {
 
         val loadSnippet: CallbackOption[Unit] =
           for {
-            snippetId <- CallbackOption.liftOption(next)
+            snippetId <- CallbackOption.option(next)
             _ <- CallbackOption.require(next != current)
             _ <- CallbackOption.liftCallback(
               backend.loadSnippet(snippetId) >> backend.setView(View.Editor)
