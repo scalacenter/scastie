@@ -109,7 +109,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.0.4"
+      "org.scalameta" %% "scalafmt-core" % "3.5.8"
     ),
     docker / imageNames := Seq(
       ImageName(
