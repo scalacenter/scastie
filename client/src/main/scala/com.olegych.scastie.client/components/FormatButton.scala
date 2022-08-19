@@ -1,6 +1,5 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.client.components.editor.EditorOptions
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.vdom.all._
@@ -14,7 +13,7 @@ object FormatButton {
 
   private def render(props: FormatButton): VdomElement = {
     li(
-      title := s"Format Code (${EditorOptions.Keys.format})",
+      title := s"Format Code ()",
       role := "button",
       cls := "btn",
       onClick --> props.formatCode,

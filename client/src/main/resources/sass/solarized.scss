@@ -45,12 +45,12 @@
       .cm-qualifier { color: $yellow; }
       .cm-builtin { color: $magenta; }
       .cm-bracket { color: $orange; }
-      .CodeMirror-matchingbracket { 
+      .cm-matchingbracket { 
         color: $green !important; 
         border-bottom-style: solid;
         border-bottom-width: 2px;
       }
-      .CodeMirror-nonmatchingbracket {
+      .cm-nonmatchingbracket {
         color: $red !important;
         border-bottom-style: solid;
         border-bottom-width: 2px;
@@ -79,11 +79,6 @@
         border-bottom-width: 2px;
       }
 
-      .CodeMirror-gutters {
-        background-color: $base02;
-        border-right-color: transparent;
-      }
-
       a { color: $blue; }
 
       &.cm-s-dark {
@@ -94,19 +89,23 @@
           border-bottom-color: $base02;
         }
 
-        .CodeMirror-gutter-filler {
+        .cm-gutter-filler {
           background-color: $base03;
         }
 
-        .CodeMirror-selected, .cm-searching {
+        &.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection {
           background: rgba(255, 255, 255, 0.10);
         }
 
-        .CodeMirror-activeline-background {
+        .cm-activeLine, .cm-activeLineGutter {
           background-color: $base02;
         }
 
-        .CodeMirror-scrollbar-filler {
+        .cm-diagnostic, .cm-tooltip-autocomplete {
+          background-color: $base02;
+        }
+
+        .cm-scrollbar-filler {
           background-color:  $base03;
         }
       }
@@ -119,53 +118,49 @@
           border-bottom-color: $base2;
         }
 
-        .CodeMirror-gutter-filler {
+        .cm-gutter-filler {
           background-color: $base3;
         }
 
-        .CodeMirror-selected, .cm-searching {
+        &.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection {
           background: rgba(0, 0, 0, 0.10);
         }
 
-        .CodeMirror-activeline-background {
-          background-color: $base2;
-        }
-
-        .CodeMirror-scrollbar-filler {
+        .cm-scrollbar-filler {
           background-color:  $base3;
         }
       }
     }
     .cm-s-solarized {
-      &.CodeMirror {
+      &.cm {
         box-shadow: none;
       }
 
       &.cm-s-dark {
-        .CodeMirror-widget .fold,
-        .CodeMirror-linewidget .compilation-info,
-        .CodeMirror-linewidget .runtime-error,
-        .CodeMirror-linewidget .line,
-        .CodeMirror-linewidget .inline {
+        .cm-widget .fold,
+        .cm-linewidget .compilation-info,
+        .cm-linewidget .runtime-error,
+        .cm-linewidget .line,
+        .cm-linewidget .inline {
           background-color: $base02;
         }
 
-        .CodeMirror-dialog {
+        .cm-dialog {
           background-color: $base02;
           color: $base01;
         }
       }
 
       &.cm-s-light {
-        .CodeMirror-widget .fold,
-        .CodeMirror-linewidget .compilation-info,
-        .CodeMirror-linewidget .runtime-error,
-        .CodeMirror-linewidget .line,
-        .CodeMirror-linewidget .inline {
+        .cm-widget .fold,
+        .cm-linewidget .compilation-info,
+        .cm-linewidget .runtime-error,
+        .cm-linewidget .line,
+        .cm-linewidget .inline {
           background-color: $base2;
         }
 
-        .CodeMirror-dialog {
+        .cm-dialog {
           background-color: $base2;
           color: $base1;
         }

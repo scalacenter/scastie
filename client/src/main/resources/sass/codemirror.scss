@@ -1,51 +1,56 @@
 @import "commonvars";
 
 .scastie {
-  .CodeMirror-cursor {
+  .cm-cursor {
     border-left-width: 2px;
   }
 
-  .CodeMirror, .CodeMirror-scroll {
+  .cm-editor , .cm-scroller {
     height: 100%;
   }
 
-  .CodeMirror-simplescroll-vertical {
+  .cm-simplescroll-vertical {
     width: 12px;
     margin-right: 2px;
   }
 
-  .CodeMirror-simplescroll-horizontal {
+  .cm-simplescroll-horizontal {
     height: 12px;
     margin-bottom: 2px;
   }
 
-  .CodeMirror-simplescroll-vertical,
-  .CodeMirror-simplescroll-horizontal { 
+  .cm-simplescroll-vertical,
+  .cm-simplescroll-horizontal { 
     background-color: transparent;
     div {
       border: none;
     }
   }
 
-  .CodeMirror-scroll {
+  .cm-scroll {
     overflow: auto;
   }
 
   $margin: 0px;
-  .CodeMirror-lines {
-    line-height: initial;
+  .cm-line {
+    line-height: normal;
     padding: $margin;
-    .cm-tab {
-      visibility: hidden;
-    }
   }
-  .CodeMirror-linenumber{
+  .cm-linenumber{
     margin-left: -$margin;
   }
-  .CodeMirror-linewidget .line,
-  .CodeMirror-linewidget .compilation-info,
-  .CodeMirror-linewidget .runtime-error,
-  .CodeMirror-widget .fold {
+  .inline {
+    overflow: hidden;
+    margin-left: 15px;
+    vertical-align: bottom;
+    white-space: pre-wrap;
+    display: inline-block;
+    opacity: 75%;
+  }
+  .cm-linewidget .line,
+  .cm-linewidget .compilation-info,
+  .cm-linewidget .runtime-error,
+  .cm-widget .fold {
     margin-left: -($margin) + 4px;
     width: 120%;
 
@@ -80,24 +85,24 @@
     }
   }
 
-  .CodeMirror-widget .fold.code-fold {
+  .cm-widget .fold.code-fold {
     cursor: pointer;
   }
 
-  .CodeMirror {
+  .cm {
     font-family: $code-font-family;
     
     // emphasis on not parsed (){}
-    .CodeMirror-code > pre > span,
-    .CodeMirror-code > div > pre > span,
-    .CodeMirror-linewidget pre {
+    .cm -code > pre > span,
+    .cm-code > div > pre > span,
+    .cm-linewidget pre {
       font-weight: bold;
       & > * {
         font-weight: normal;
       }
     }
 
-    .CodeMirror-linewidget {
+    .cm-linewidget {
       overflow: visible !important;
       .runtime-error pre, .compilation-info pre {
         padding-left: 1rem;
@@ -148,7 +153,7 @@
     }
   }
 
-  .CodeMirror-hints {
+  .cm-hints {
     z-index: 10;
 
     max-height: 50%;
@@ -189,21 +194,21 @@
     }
   }
 
-  .CodeMirror-hints.presentation-mode {
+  .cm-hints.presentation-mode {
     margin-left: 0;
     margin-top: -$editor-topbar-height;
   }
 
-  .CodeMirror-gutters {
+  .cm-gutters {
     white-space: nowrap;
   }
-  .CodeMirror-linenumber {
+  .cm-linenumber {
     padding: 0 3px 0 5px;
     text-align: right;
     white-space: nowrap;
   }
 
-  .CodeMirror-hover-tooltip {
+  .cm-hover-tooltip {
     border: 1px solid black;
     border-radius: 2px 2px 2px 2px;
     font-family: $code-font-family;

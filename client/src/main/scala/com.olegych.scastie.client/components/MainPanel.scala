@@ -1,9 +1,12 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.client.components.editor.Editor
 import com.olegych.scastie.client.{ScastieBackend, ScastieState, View}
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
+import org.scalajs.dom.HTMLTextAreaElement
+import org.scalajs.dom.HTMLElement
+import org.scalajs.dom.Element
+import com.olegych.scastie.client.components.editor.Editor
 
 final case class MainPanel(state: ScastieState, backend: ScastieBackend, props: Scastie) {
 
@@ -62,10 +65,10 @@ object MainPanel {
         visible = visible(View.Editor),
         isDarkTheme = state.isDarkTheme,
         isPresentationMode = state.isPresentationMode,
+        isWorksheetMode = state.inputs.isWorksheetMode,
         isEmbedded = props.isEmbedded,
         showLineNumbers = state.showLineNumbers,
         code = state.inputs.code,
-        attachedDoms = state.attachedDoms,
         instrumentations = state.outputs.instrumentations,
         compilationInfos = state.outputs.compilationInfos,
         runtimeError = state.outputs.runtimeError,
@@ -78,6 +81,7 @@ object MainPanel {
         togglePresentationMode = backend.togglePresentationMode,
         formatCode = backend.formatCode,
         codeChange = backend.codeChange,
+        invalidateDecorations =backend.invalidateDecorations
       ).render
 
     val console =

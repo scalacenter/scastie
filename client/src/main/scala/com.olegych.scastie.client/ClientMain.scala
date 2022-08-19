@@ -8,7 +8,7 @@ import japgolly.scalajs.react.component.Generic
 import japgolly.scalajs.react.extra.router._
 import org.scalajs.dom
 import org.scalajs.dom.ext._
-import org.scalajs.dom.raw.{HTMLElement, Node}
+import org.scalajs.dom.{HTMLElement, HTMLDivElement, HTMLLinkElement, Node}
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, _}
@@ -39,7 +39,7 @@ object ScastieMain {
     dom.document.body.className = "scastie"
 
     val container =
-      dom.document.createElement("div").asInstanceOf[dom.raw.HTMLDivElement]
+      dom.document.createElement("div").asInstanceOf[HTMLDivElement]
     container.className = "scastie"
     dom.document.body.appendChild(container)
 
@@ -99,7 +99,7 @@ object ScastieEmbedded {
     }
 
     nodes.foreach {
-      case node: dom.raw.HTMLElement => {
+      case node: HTMLElement => {
         val embeddedOptions0 =
           if (node.textContent.isEmpty) {
             embeddedOptions
@@ -150,7 +150,7 @@ object ScastieEmbedded {
   def addStylesheet(baseUrl: String): Unit = {
     val link = dom.document
       .createElement("link")
-      .asInstanceOf[dom.raw.HTMLLinkElement]
+      .asInstanceOf[HTMLLinkElement]
 
     link.`type` = "text/css"
     link.rel = "stylesheet"
@@ -163,7 +163,7 @@ object ScastieEmbedded {
 
     val container = dom.document
       .createElement("div")
-      .asInstanceOf[dom.raw.HTMLDivElement]
+      .asInstanceOf[HTMLDivElement]
 
     container.className = "scastie embedded"
 

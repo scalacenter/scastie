@@ -76,30 +76,30 @@ $cm-active-hint-text: #002b36;
       color: $cm-color;
       background-color: $cm-background-color;
 
-      .CodeMirror-cursor {
+      .cm-cursor {
         border-left-color: $cm-cursor;
       }
 
-      .CodeMirror-simplescroll-vertical div,
-      .CodeMirror-simplescroll-horizontal div {
+      .cm-simplescroll-vertical div,
+      .cm-simplescroll-horizontal div {
         background: $hover-option-color;
       }
       
-      .CodeMirror-hints {
+      .cm-hints {
         background: $snippet-background-color;
       }
 
-      li.CodeMirror-hint-active {
+      li.cm-hint-active {
         background: $cm-active-hint-background;
         color: $cm-active-hint-text;
       }
 
-      .CodeMirror-gutters {
+      .cm-gutters {
         border-right: 1px solid $cm-gutters-border-color;
         background-color: $cm-background-color;
       }
 
-      .CodeMirror-linenumber {
+      .cm-linenumber {
         color: $cm-gutters-linenumber-color;
       }
     }

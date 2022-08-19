@@ -11,16 +11,16 @@ import extra._
 import scala.scalajs.js
 import js.annotation._
 
-@JSImport("resources/images/icon-scastie.png", JSImport.Namespace)
+@JSImport("resources/images/icon-scastie.png", JSImport.Default)
 @js.native
 object ScastieLogo extends js.Object
 
-@JSImport("resources/images/placeholder.png", JSImport.Namespace)
+@JSImport("resources/images/placeholder.png", JSImport.Default)
 @js.native
 object Placeholder extends js.Object
 
 object Assets {
-  def logoUrl: String = ScastieLogo.asInstanceOf[String]
+  def logoUrl = ScastieLogo.asInstanceOf[String]
   def placeholderUrl: String = Placeholder.asInstanceOf[String]
 }
 

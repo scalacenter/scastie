@@ -1,6 +1,7 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
+import com.olegych.scastie.client.components.editor.SimpleEditor
 import japgolly.scalajs.react._
 import vdom.TagOf
 import vdom.all._
@@ -35,111 +36,7 @@ object BuildSettings {
   implicit val reusability: Reusability[BuildSettings] =
     Reusability.derive[BuildSettings]
 
-  def renderTarget(props: BuildSettings): TagOf[Div] = {
-    val targetTypes = List[ScalaTargetType](
-      ScalaTargetType.Scala3,
-      ScalaTargetType.Scala2,
-      ScalaTargetType.JS //,
-      // ScalaTargetType.Native
-    )
-
-    def labelFor(targetType: ScalaTargetType) = {
-      targetType match {
-        case ScalaTargetType.Scala2    => "Scala 2"
-        case ScalaTargetType.JS        => "Scala.js"
-        case ScalaTargetType.Scala3    => "Scala 3"
-        case ScalaTargetType.Native    => "Native"
-        case ScalaTargetType.Typelevel => "Typelevel"
-      }
-    }
-
-    def selected(targetType: ScalaTargetType) =
-      TagMod(`checked` := targetType == props.scalaTarget.targetType)
-
-    div(
-      ul(cls := "target")(
-        targetTypes.map { targetType =>
-          val targetLabel = labelFor(targetType)
-          li(
-            input(
-              `type` := "radio",
-              id := targetLabel,
-              value := targetLabel,
-              name := "target",
-              onChange --> props.setTarget(targetType.defaultScalaTarget),
-              selected(targetType)
-            ),
-            label(`for` := targetLabel, role := "button", cls := "radio", targetLabel)
-          )
-        }.toTagMod
-      )
-    )
-  }
-
-  def renderVersions(props: BuildSettings): TagMod = {
-    def setScalaVersion(
-        targetFun: String => ScalaTarget
-    )(event: ReactEventFromInput): Callback =
-      props.setTarget(targetFun(event.target.value))
-
-    def versionSelector(scalaVersion: String, targetFun: String => ScalaTarget) = {
-      def handler(scalaVersion: String) =
-        TagMod(onChange --> props.setTarget(targetFun(scalaVersion)))
-
-      def selected(version: String) =
-        TagMod(`checked` := targetFun(version) == props.scalaTarget)
-
-      TagMod(
-        ul(cls := "suggestedVersions")(
-          ScalaVersions.suggestedScalaVersions(props.scalaTarget.targetType).map { suggestedVersion =>
-            li(
-              input(`type` := "radio",
-                    id := s"scala-$suggestedVersion",
-                    value := suggestedVersion,
-                    name := "scalaV",
-                    handler(suggestedVersion),
-                    selected(suggestedVersion)),
-              label(`for` := s"scala-$suggestedVersion", cls := "radio", role := "button", suggestedVersion)
-            )
-          }.toTagMod,
-          li(
-            input(`type` := "radio", id := scalaVersion, value := scalaVersion, name := "scalaV", handler(scalaVersion)),
-            label(
-              div(cls := "select-wrapper")(
-                select(name := "scalaVersion", value := scalaVersion, onChange ==> setScalaVersion(targetFun))(
-                  ScalaVersions.allVersions(props.scalaTarget.targetType)
-                    .map(version => option(version))
-                    .toTagMod
-                )
-              )
-            )
-          )
-        )
-      )
-    }
-
-    val versionSelectors =
-      props.scalaTarget match {
-        case d: ScalaTarget.Jvm =>
-          versionSelector(d.scalaVersion, ScalaTarget.Jvm.apply)
-        case d: ScalaTarget.Typelevel =>
-          versionSelector(d.scalaVersion, ScalaTarget.Typelevel.apply)
-        case d: ScalaTarget.Scala3 =>
-          versionSelector(d.scalaVersion, ScalaTarget.Scala3.apply)
-
-        case js: ScalaTarget.Js =>
-          versionSelector(js.scalaVersion, sv => ScalaTarget.Js(sv, js.scalaJsVersion))
-        case n: ScalaTarget.Native =>
-          div(s"${n.scalaNativeVersion} on Scala ${n.scalaVersion}")
-      }
-
-    versionSelectors
-  }
-
   private def render(props: BuildSettings): VdomElement = {
-    val theme =
-      if (props.isDarkTheme) "dark"
-      else "light"
 
     val resetButton = TagMod(
       PromptModal(
@@ -175,11 +72,11 @@ object BuildSettings {
       h2(
         span("Target"),
       ),
-      renderTarget(props),
+      TargetSelector(props.scalaTarget, props.setTarget).render,
       h2(
         span("Scala Version")
       ),
-      renderVersions(props),
+      VersionSelector(props.scalaTarget, props.setTarget).render,
       h2(
         span("Libraries")
       ),
@@ -188,9 +85,9 @@ object BuildSettings {
         span("Extra Sbt Configuration")
       ),
       pre(cls := "configuration")(
-        CodeMirrorEditor(
+        SimpleEditor(
           value = props.sbtConfigExtra,
-          theme = s"solarized $theme",
+          isDarkTheme = props.isDarkTheme,
           readOnly = false,
           onChange = props.sbtConfigChange
         ).render
@@ -199,9 +96,9 @@ object BuildSettings {
         span("Base Sbt Configuration (readonly)")
       ),
       pre(cls := "configuration")(
-        CodeMirrorEditor(
+        SimpleEditor(
           value = props.sbtConfig,
-          theme = s"solarized $theme",
+          isDarkTheme = props.isDarkTheme,
           readOnly = true,
           onChange = Reusable.always(_ => Callback.empty)
         ).render
@@ -210,9 +107,9 @@ object BuildSettings {
         span("Base Sbt Plugins Configuration (readonly)")
       ),
       pre(cls := "configuration")(
-        CodeMirrorEditor(
+        SimpleEditor(
           value = props.sbtPluginsConfig,
-          theme = s"solarized $theme",
+          isDarkTheme = props.isDarkTheme,
           readOnly = true,
           onChange = Reusable.always(_ => Callback.empty)
         ).render

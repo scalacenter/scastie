@@ -88,8 +88,7 @@ object SbtShared {
           "-encoding",
           "UTF-8",
           "-feature",
-          "-unchecked",
-          "-target:jvm-1.8"
+          "-unchecked"
         )
 
       if (scalaV == ScalaVersions.latest210 || scalaV.startsWith("3.")) base

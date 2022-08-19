@@ -159,8 +159,7 @@ case class Inputs(
   }
 
   lazy val sbtConfig: String =
-    s"""|$sbtConfigGenerated
-        |$sbtConfigExtra""".stripMargin
+    mapToConfig(sbtConfigGenerated, sbtConfigExtra)
 
   lazy val sbtConfigGenerated: String = sbtConfigSaved.getOrElse {
     val targetConfig = target.sbtConfig
@@ -189,17 +188,18 @@ case class Inputs(
             )
       }
 
-    s"""|$targetConfig
-        |$librariesConfig""".stripMargin
+    mapToConfig(targetConfig, librariesConfig)
   }
 
   lazy val sbtPluginsConfig: String =
-    s"""|$sbtPluginsConfigGenerated
-        |$sbtPluginsConfigExtra""".stripMargin
+    mapToConfig(sbtPluginsConfigGenerated, sbtPluginsConfigExtra)
 
   lazy val sbtPluginsConfigGenerated: String = sbtPluginsConfigSaved.getOrElse {
     sbtPluginsConfig0(withSbtScastie = true)
   }
+
+  private def mapToConfig(parts: String*): String =
+    parts.filter(_.nonEmpty).mkString("\n")
 
   private def sbtPluginsConfig0(withSbtScastie: Boolean): String = {
     val targetConfig = target.sbtPluginsConfig
@@ -209,8 +209,7 @@ case class Inputs(
         s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.versionRuntime}")"""
       else ""
 
-    s"""|$targetConfig
-        |$sbtScastie""".stripMargin
+    mapToConfig(targetConfig, sbtScastie)
   }
 }
 

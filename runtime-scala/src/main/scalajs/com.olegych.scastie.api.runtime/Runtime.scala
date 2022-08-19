@@ -3,7 +3,7 @@ package runtime
 
 import play.api.libs.json.Json
 
-import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.HTMLElement
 
 import java.util.UUID
 

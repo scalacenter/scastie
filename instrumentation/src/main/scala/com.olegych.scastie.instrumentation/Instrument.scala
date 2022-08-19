@@ -197,9 +197,9 @@ object Instrument {
 
         try {
           code0.parse[Source] match {
-            case Parsed.Success(source) =>
-              if (!hasMainMethod(source))
-                Right(instrument(source, prelude.length + 1, isScalaJs))
+            case parsed: Parsed.Success[_] =>
+              if (!hasMainMethod(parsed.get))
+                Right(instrument(parsed.get, prelude.length + 1, isScalaJs))
               else Left(HasMainMethod)
             case e: Parsed.Error => Left(ParsingError(e))
           }

@@ -50,7 +50,7 @@ object ScalaTarget {
       // But when reading we check dotty version if scalaVersion is not defined
       val reads = new Reads[Scala3] {
         override def reads(json: JsValue): JsResult[Scala3] = json match {
-          case obj: JsObject => 
+          case obj: JsObject =>
             val dict = obj.value
             dict.get("scalaVersion").orElse(dict.get("dottyVersion")) match {
               case Some(JsString(ver)) => JsSuccess(Scala3(ver))
@@ -61,7 +61,7 @@ object ScalaTarget {
       }
       OFormat(reads, Json.writes[Scala3])
     }
-      
+
     def writes(target: ScalaTarget): JsValue = {
       target match {
         case jvm: Jvm =>

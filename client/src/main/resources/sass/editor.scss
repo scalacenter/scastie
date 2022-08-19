@@ -94,13 +94,13 @@
 
           $min-height: 400px;
 
-          .CodeMirror-scroll {
+          .cm-scroll {
             min-height: $min-height;
             height: 100%;
           }
 
           &.console-open{
-            .CodeMirror-scroll {
+            .cm-scroll {
               min-height: $min-height - $console-height + $console-handle-height;
               height: 100%;
             }
@@ -125,7 +125,7 @@
         height: 100%;
         left: 0;
 
-        .CodeMirror {
+        .cm {
           font-size: 32px;
         }
 
