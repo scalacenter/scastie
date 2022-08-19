@@ -42,7 +42,7 @@ const Web = Merge(Common.Web, {
       Common.rootDir
     ],
     proxy: {
-      "/***": {
+      "/": {
         target: "http://localhost:9000",
         bypass: function(req, res, proxyOptions) {
           // regex matching snippet ids

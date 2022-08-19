@@ -1,6 +1,5 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.client.components.editor.EditorOptions
 import japgolly.scalajs.react._
 import vdom.all._
 
@@ -42,22 +41,22 @@ object HelpModal {
       content = TagMod(
         p(cls := "normal", "Scastie is an interactive playground for Scala with support for sbt configuration."),
         p(cls := "normal", "Scastie editor supports Sublime Text ", sublime),
-        h2(s"Save (${EditorOptions.Keys.saveOrUpdate})"),
+        h2(s"Save ()"),
         p(
           cls := "normal",
           "Run and save your code."
         ),
-        h2(s"New (${EditorOptions.Keys.openNew})"),
+        h2(s"New ()"),
         p(
           cls := "normal",
           "Removes all your code lines from the current editor instance and resets sbt configuration."
         ),
-        h2(s"Clear Messages (${EditorOptions.Keys.clear})"),
+        h2(s"Clear Messages ()"),
         p(
           cls := "normal",
           "Removes all messages from the current editor instance."
         ),
-        h2(s"Format (${EditorOptions.Keys.format})"),
+        h2(s"Format ()"),
         p(cls := "normal",
           "The code formatting is done by scalafmt. You can configure the formatting with comments in your code. Read the ",
           scalafmtConfiguration),
@@ -80,7 +79,7 @@ object HelpModal {
           cls := "normal",
           "Create an url embeddable in external web pages."
         ),
-        h2(s"Console (${EditorOptions.Keys.console})"),
+        h2(s"Console ()"),
         p(
           cls := "normal",
           "You can see your code's output in the Scastie's console."

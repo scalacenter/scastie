@@ -1,7 +1,6 @@
 package com.olegych.scastie.client
 package components
 
-import com.olegych.scastie.client.components.editor.EditorOptions
 import japgolly.scalajs.react._
 import vdom.all._
 import extra._
@@ -19,7 +18,7 @@ object NewButton {
 
   def render(props: NewButton): VdomElement = {
 
-    li(title := s"New code snippet (${EditorOptions.Keys.openNew})", role := "button", onClick --> props.openNewSnippetModal, cls := "btn")(
+    li(title := s"New code snippet ()", role := "button", onClick --> props.openNewSnippetModal, cls := "btn")(
       i(cls := "fa fa-file-o"),
       span("New"),
       PromptModal(

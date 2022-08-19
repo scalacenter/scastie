@@ -8,7 +8,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.util.Effect.Id
-import org.scalajs.dom._
+import org.scalajs.dom.{Position => _, _}
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -28,8 +28,20 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val codeChange: String ~=> Callback =
     Reusable.fn(code => scope.modState(_.setCode(code)))
 
-  val sbtConfigChange: String ~=> Callback =
+  val sbtConfigChange: String ~=> Callback = {
     Reusable.fn(newConfig => scope.modState(_.setSbtConfigExtra(newConfig)))
+  }
+
+  val invalidateDecorations: Position ~=> Callback = {
+    Reusable.fn(range => {
+      scope.modState(state => {
+        val x = state.outputs.instrumentations.filterNot {
+          case Instrumentation(Position(start, end), _) => range.start >= start || range.end <= end
+        }
+        state.updateDecorations(x)
+      })
+    })
+  }
 
   val resetBuild: Reusable[Callback] =
     Reusable.always {

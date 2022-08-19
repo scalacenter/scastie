@@ -6,7 +6,7 @@ import play.api.libs.json._
 
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
-import org.scalajs.dom.raw.XMLHttpRequest
+import org.scalajs.dom.XMLHttpRequest
 
 import scala.concurrent.Future
 import scalajs.concurrent.JSExecutionContext.Implicits.queue

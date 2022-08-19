@@ -19,3 +19,7 @@ bin/drone
 local/
 metals.sbt
 .bsp/
+.bloop
+.metals
+.vscode
+project/project

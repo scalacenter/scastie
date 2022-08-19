@@ -38,9 +38,9 @@ object InstrumentedInputs {
             case UnsupportedDialect =>
               Left(InstrumentationFailureReport("This Scala target does not have a worksheet mode", None))
 
-            case ParsingError(Parsed.Error(pos, message, _)) =>
+            case ParsingError(error) =>
               val lineOffset = Instrument.getParsingLineOffset(inputs0)
-              Left(InstrumentationFailureReport(message, Some(pos.startLine + lineOffset)))
+              Left(InstrumentationFailureReport(error.message, Some(error.pos.startLine + lineOffset)))
 
             case InternalError(exception) =>
               val errors = new StringWriter()

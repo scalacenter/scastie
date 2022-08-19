@@ -7,7 +7,7 @@ import scala.scalajs.js
 import scala.collection.mutable.{Map => MMap}
 import scala.util.{Try, Failure, Success}
 
-import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.HTMLElement
 
 import japgolly.scalajs.react._
 

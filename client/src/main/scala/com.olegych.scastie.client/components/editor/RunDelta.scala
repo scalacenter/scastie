@@ -4,22 +4,14 @@ import com.olegych.scastie.client.components._
 
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.Reusability
+import typings.codemirrorState.mod.EditorState
 
-import codemirror.TextAreaEditor
 
 private[editor] object RunDelta {
 
-  val editorShouldRefresh: Reusability[Editor] = {
-    Reusability.byRef ||
-    (
-      Reusability.by((_: Editor).attachedDoms) &&
-      Reusability.by((_: Editor).instrumentations) &&
-      Reusability.by((_: Editor).compilationInfos) &&
-      Reusability.by((_: Editor).runtimeError)
-    )
-  }
+  val editorShouldRefresh: Reusability[Editor] =  Reusability.byRef
 
-  def apply(editor: TextAreaEditor,
+  def apply(editor: Editor,
             currentProps: Option[Editor],
             nextProps: Editor,
             state: EditorState,
@@ -33,7 +25,7 @@ private[editor] object RunDelta {
           if (nextProps.isDarkTheme) "dark"
           else "light"
 
-        editor.setOption("theme", s"solarized $theme")
+        // editor.setOption("theme", s"solarized $theme")
       }.when_(themeChanged)
     }
 
@@ -42,12 +34,13 @@ private[editor] object RunDelta {
         currentProps.map(_.code) != Some(nextProps.code)
 
       Callback {
-        val doc = editor.getDoc()
-        if (doc.getValue() != nextProps.code) {
-          val prevScrollPosition = editor.getScrollInfo()
-          doc.setValue(nextProps.code)
-          editor.scrollTo(prevScrollPosition.left, prevScrollPosition.top)
-        }
+        // state.doc = nextProps.code
+        // val doc = editor.getDoc()
+        // if (doc.getValue() != nextProps.code) {
+        //   val prevScrollPosition = editor.getScrollInfo()
+        //   doc.setValue(nextProps.code)
+        //   editor.scrollTo(prevScrollPosition.left, prevScrollPosition.top)
+        // }
       }.when_(codeChanged)
     }
 
@@ -56,25 +49,12 @@ private[editor] object RunDelta {
         currentProps.map(_.showLineNumbers) != Some(nextProps.showLineNumbers)
 
       Callback {
-        editor.setOption("lineNumbers", nextProps.showLineNumbers)
+        // editor.setOption("lineNumbers", nextProps.showLineNumbers)
       }.when_(lineNumbersChanged)
-    }
-
-    def refresh: Callback = {
-      val shouldRefresh =
-        currentProps
-          .map(c => !editorShouldRefresh.test(c, nextProps))
-          .getOrElse(true)
-
-      Callback(editor.refresh()).when_(shouldRefresh)
     }
 
     setTheme >>
       setCode >>
-      setLineNumbers >>
-      ProblemAnnotations(editor, currentProps, nextProps, state, modState) >>
-      RenderAnnotations(editor, currentProps, nextProps, state, modState) >>
-      RuntimeErrorAnnotations(editor, currentProps, nextProps, state, modState) >>
-      refresh
+      setLineNumbers
   }
 }
