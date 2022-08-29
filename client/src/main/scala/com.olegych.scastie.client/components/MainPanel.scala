@@ -69,6 +69,7 @@ object MainPanel {
         isEmbedded = props.isEmbedded,
         showLineNumbers = state.showLineNumbers,
         code = state.inputs.code,
+        attachedDoms = state.attachedDoms,
         instrumentations = state.outputs.instrumentations,
         compilationInfos = state.outputs.compilationInfos,
         runtimeError = state.outputs.runtimeError,
@@ -81,7 +82,6 @@ object MainPanel {
         togglePresentationMode = backend.togglePresentationMode,
         formatCode = backend.formatCode,
         codeChange = backend.codeChange,
-        invalidateDecorations =backend.invalidateDecorations
       ).render
 
     val console =

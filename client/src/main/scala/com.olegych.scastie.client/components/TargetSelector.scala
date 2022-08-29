@@ -3,11 +3,10 @@ package com.olegych.scastie.client.components
 import com.olegych.scastie.api._
 import com.olegych.scastie.client.components.editor.SimpleEditor
 import japgolly.scalajs.react._
-import org.scalajs.dom.html.Div
-
 import vdom.TagOf
 import vdom.all._
 import extra._
+import org.scalajs.dom.html.Div
 
 case class TargetSelector(scalaTarget: ScalaTarget, onChange: ScalaTarget ~=> Callback) {
   @inline def render: VdomElement = TargetSelector.targetSelector(this)
@@ -35,9 +34,7 @@ object TargetSelector {
   val targetSelector =
     ScalaFnComponent
       .withHooks[TargetSelector]
-      .useStateBy[ScalaTarget](_.scalaTarget)
-      .useEffectBy((props, newTarget) => props.onChange(newTarget.value))
-      .render((props, currentTarget) => {
+      .render(props => {
         div(
           ul(cls := "target")(
             targetTypes.map { targetType =>
@@ -48,8 +45,8 @@ object TargetSelector {
                   id := targetLabel,
                   value := targetLabel,
                   name := "target",
-                  onChange --> currentTarget.setState(targetType.defaultScalaTarget),
-                  checked := targetType == currentTarget.value.targetType
+                  onChange --> props.onChange(targetType.defaultScalaTarget),
+                  checked := targetType == props.scalaTarget.targetType
                 ),
                 label(`for` := targetLabel, role := "button", cls := "radio", targetLabel)
               )

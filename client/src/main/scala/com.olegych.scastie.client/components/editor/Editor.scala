@@ -15,6 +15,7 @@ import scalajs.js
 import vdom.all._
 import JsUtils._
 import hooks.Hooks.UseStateF
+import com.olegych.scastie.client.AttachedDoms
 
 final case class Editor(visible: Boolean,
                         isDarkTheme: Boolean,
@@ -23,6 +24,7 @@ final case class Editor(visible: Boolean,
                         isEmbedded: Boolean,
                         showLineNumbers: Boolean,
                         code: String,
+                        attachedDoms: AttachedDoms,
                         instrumentations: Set[api.Instrumentation],
                         compilationInfos: Set[api.Problem],
                         runtimeError: Option[api.RuntimeError],
@@ -35,7 +37,6 @@ final case class Editor(visible: Boolean,
                         togglePresentationMode: Reusable[Callback],
                         formatCode: Reusable[Callback],
                         codeChange: String ~=> Callback,
-                        invalidateDecorations: api.Position ~=> Callback
 ) {
   Editor
   @inline def render: VdomElement = Editor.hooksComponent(this)
@@ -52,18 +53,19 @@ object Editor {
         state = EditorState.create(new EditorStateConfig {
           doc = props.code
           extensions = js.Array[Any](
+            StateField
+              .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
+              .extension,
             typings.codemirror.mod.basicSetup,
+            TypeDecorationProvider(props),
             EditorState.tabSize.of(2),
             typings.codemirrorState.mod.Prec.highest(EditorKeymaps.keymapping(props)),
-            OnChangeHandler(props.codeChange, props.invalidateDecorations),
-            //TODO Type decoration are not ready yet.
-            // StateField
-            //   .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
-            //   .extension,
             mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
-            TypeDecorationProvider(props),
             SyntaxHighlightingTheme.highlightingTheme,
-            lintGutter()
+            lintGutter(),
+            mod.codeFolding(),
+            OnChangeHandler(props.codeChange),
+
           )
         })
         parent = divRef
@@ -85,8 +87,13 @@ object Editor {
   private def getDecorations(props: Editor, doc: Text): js.Array[Diagnostic] = {
     val errors = props.compilationInfos
       .map(problem => {
+        println(problem)
         val line = problem.line.getOrElse(1)
-        val lineInfo = doc.line(line)
+        val lineInfo = if (line <= doc.lines)
+          doc.line(line)
+        else
+          doc.line(doc.lines)
+
         Diagnostic(lineInfo.from, HTMLFormatter.format(problem.message), parseSeverity(problem.severity), lineInfo.to)
           .setRenderMessage(CallbackTo {
             val wrapper  = dom.document.createElement("pre")
@@ -121,7 +128,7 @@ object Editor {
     ref.foreach(ref => {
       val theme = if (props.isDarkTheme) "dark" else "light"
       ref.setAttribute("class", s"editor-wrapper cm-s-solarized cm-s-$theme")
-    }).when_(prevProps.isDefined && prevProps.get.isDarkTheme != props.isDarkTheme)
+    }).when_(prevProps.map(_.isDarkTheme != props.isDarkTheme).getOrElse(true))
 
 
   val hooksComponent =
@@ -131,11 +138,15 @@ object Editor {
       .useRef[Option[Editor]](None)
       .useState(new EditorView())
       .useLayoutEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
-      // .useEffectBy((props, ref, prevProps, editorView) => TypeDecorationProvider.updateTypeDecorations(editorView, prevProps.value, props))
-      .useEffectBy((props, ref, prevProps, _) => updateTheme(ref.value, prevProps.value, props))
       .useEffectBy((props, _, _, editorRef) => updateCode(editorRef, props))
+      .useEffectBy((props, ref, prevProps, editorView) => TypeDecorationProvider.updateTypeDecorations(editorView, prevProps.value, props))
+      .useEffectBy((props, ref, prevProps, _) => updateTheme(ref.value, prevProps.value, props))
       .useEffectBy((props, _, prevProps, editorRef) => updateDiagnostics(editorRef, prevProps.value, props))
-      .useEffectBy((props, _, prevProps, _) => prevProps.set(Some(props)))
+      .useEffectBy((props, _, prevProps, _) => {
+
+        println(props.instrumentations)
+        prevProps.set(Some(props))
+      })
       .render((_, ref, _, _) => render(ref.value))
 
 }
