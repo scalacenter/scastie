@@ -18,14 +18,7 @@ object VersionSelector {
   val versionSelectorHook =
     ScalaFnComponent
       .withHooks[VersionSelector]
-      .useStateBy[ScalaTarget](_.scalaTarget)
-      .useEffectBy((props, newVersion) => {
-        if (newVersion.value.targetType != props.scalaTarget.targetType) {
-          newVersion.setState(props.scalaTarget)
-        } else
-          props.onChange(newVersion.value)
-      })
-      .render((props, currentVersion) => {
+      .render(props => {
         def versionSelectors(scalaVersion: String) =
           props.scalaTarget match {
             case d: ScalaTarget.Jvm       => ScalaTarget.Jvm.apply(scalaVersion)
@@ -37,7 +30,7 @@ object VersionSelector {
 
         ul(cls := "suggestedVersions")(
           ScalaVersions
-            .suggestedScalaVersions(currentVersion.value.targetType)
+            .suggestedScalaVersions(props.scalaTarget.targetType)
             .map { suggestedVersion =>
               li(
                 input(
@@ -45,8 +38,8 @@ object VersionSelector {
                   id := s"scala-$suggestedVersion",
                   value := suggestedVersion,
                   name := "scalaV",
-                  onChange --> currentVersion.setState(versionSelectors(suggestedVersion)),
-                  checked := currentVersion.value.scalaVersion == suggestedVersion
+                  onChange --> props.onChange(versionSelectors(suggestedVersion)),
+                  checked := props.scalaTarget.scalaVersion == suggestedVersion
                 ),
                 label(`for` := s"scala-$suggestedVersion", cls := "radio", role := "button", suggestedVersion)
               )
@@ -58,7 +51,7 @@ object VersionSelector {
                 select(
                   name := "scalaVersion",
                   onChange ==> { (e: ReactEventFromInput) =>
-                    currentVersion.setState(versionSelectors(e.target.value))
+                    props.onChange(versionSelectors(e.target.value))
                   },
                 )(
                   ScalaVersions
