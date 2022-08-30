@@ -28,7 +28,6 @@ class OnChangeHandler(
 }
 
 object OnChangeHandler{
-  def apply(
-    onChange: String ~=> Callback,
-  ): Extension = ViewPlugin.define(_ => new OnChangeHandler(onChange)).extension
+  def apply(onChange: String ~=> Callback): Extension =
+    ViewPlugin.define(_ => new OnChangeHandler(onChange)).extension
 }
