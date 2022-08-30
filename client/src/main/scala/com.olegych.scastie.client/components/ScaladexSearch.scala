@@ -16,6 +16,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.concurrent.Future
 import com.olegych.scastie.api.ScalaTarget.{Jvm, Scala3}
 import com.olegych.scastie.buildinfo.BuildInfo
+import scalajs.js.Thenable.Implicits._
 
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency ~=> Callback,
@@ -123,9 +124,7 @@ object ScaladexSearch {
   private val projectListRef = Ref[HTMLElement]
   private val searchInputRef = Ref[HTMLInputElement]
 
-  private[ScaladexSearch] class ScaladexSearchBackend(
-      scope: BackendScope[ScaladexSearch, SearchState]
-  ) {
+  private[ScaladexSearch] class ScaladexSearchBackend(scope: BackendScope[ScaladexSearch, SearchState]) {
     def keyDown(e: ReactKeyboardEventFromInput): Callback = {
 
       if (e.keyCode == KeyCode.Down || e.keyCode == KeyCode.Up) {
@@ -247,15 +246,12 @@ object ScaladexSearch {
 
           def queryAndParse(t: ScalaTarget): Future[List[(Project, ScalaTarget)]] = {
             val q = toQuery(t.scaladexRequest + ("q" -> searchState.query))
-            Ajax
-              .get(scaladexApiUrl + "/search" + q)
-              .map { ret =>
-                Json
-                  .fromJson[List[Project]](Json.parse(ret.responseText))
-                  .asOpt
-                  .getOrElse(Nil)
-                  .map(_ -> t)
-              }
+            for {
+              response <- dom.fetch(scaladexApiUrl + "/search" + q)
+              text <- response.text()
+            } yield {
+              Json.fromJson[List[Project]](Json.parse(text)).asOpt.getOrElse(Nil).map(_ -> t)
+            }
           }
 
           val projsForThisTarget = queryAndParse(target)
@@ -292,8 +288,12 @@ object ScaladexSearch {
           "repository" -> project.repository
         ) ++ target.scaladexRequest
       )
-      Ajax.get(scaladexApiUrl + "/project" + query).map { ret =>
-        Json.fromJson[ReleaseOptions](Json.parse(ret.responseText)).asOpt.map { options =>
+
+      for {
+        response <- dom.fetch(scaladexApiUrl + "/project" + query)
+        text <- response.text()
+      } yield {
+        Json.fromJson[ReleaseOptions](Json.parse(text)).asOpt.map { options => {
           Selected(
             project = project,
             release = ScalaDependency(
@@ -304,10 +304,9 @@ object ScaladexSearch {
             ),
             options = options,
           )
-        }
+        }}
       }
     }
-
   }
 
   private def render(

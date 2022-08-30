@@ -18,7 +18,7 @@ import typings.codemirrorState.codemirrorStateBooleans
 import com.olegych.scastie.client.AttachedDoms
 import com.olegych.scastie.api.AttachedDom
 
-object TypeDecorationProvider {
+object DecorationProvider {
 
   class AttachedDomDecoration(uuid: String, attachedDoms: AttachedDoms) extends WidgetType {
     override def toDOM(view: EditorView): HTMLElement = {
@@ -37,13 +37,13 @@ object TypeDecorationProvider {
         wrap.setAttribute("class", "cm-linewidget")
         val textBody = dom.document.createElement("pre")
         textBody.setAttribute("class", "inline")
-        val value = dom.document.createElement("span")
-        value.setAttribute("class", "cm-variable")
-        value.innerText = s"$value: "
-        val typ = dom.document.createElement("span")
-        typ.setAttribute("class", "cm-type")
-        typ.innerText = typeName
-        textBody.append(value, typ)
+        val valueWrapper = dom.document.createElement("span")
+        valueWrapper.setAttribute("class", "cm-variable")
+        valueWrapper.innerText = s"$value: "
+        val typeWrapper = dom.document.createElement("span")
+        typeWrapper.setAttribute("class", "cm-type")
+        typeWrapper.innerText = typeName
+        textBody.append(valueWrapper, typeWrapper)
         wrap.append(textBody)
         wrap.domAsHtml
     }
@@ -135,11 +135,11 @@ object TypeDecorationProvider {
     !ignoredRanges.contains(from)
   }
 
-  def updateTypeDecorations(
+  def updateDecorations(
       editorView: UseStateF[CallbackTo, EditorView],
       prevProps: Option[Editor],
       props: Editor
-  ): AsyncCallback[Unit] =
+  ): Callback =
     Callback {
       val decorations = createDecorations(props.instrumentations, props.attachedDoms, editorView.value.state.doc.length.toInt + 1)
       val addTypesEffect = addTypeDecorations.of(decorations)
@@ -159,7 +159,7 @@ object TypeDecorationProvider {
     }.when_(
         prevProps.isDefined &&
           (props.instrumentations != prevProps.get.instrumentations)
-      ).async
+      )
 
   def stateFieldSpec(props: Editor) =
     StateFieldSpec[DecorationSet](

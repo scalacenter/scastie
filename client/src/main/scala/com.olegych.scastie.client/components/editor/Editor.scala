@@ -57,7 +57,7 @@ object Editor {
               .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
               .extension,
             typings.codemirror.mod.basicSetup,
-            TypeDecorationProvider(props),
+            DecorationProvider(props),
             EditorState.tabSize.of(2),
             typings.codemirrorState.mod.Prec.highest(EditorKeymaps.keymapping(props)),
             mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
@@ -85,14 +85,10 @@ object Editor {
   }
 
   private def getDecorations(props: Editor, doc: Text): js.Array[Diagnostic] = {
-    val errors = props.compilationInfos
+    val errors = props.compilationInfos.filter(prob => prob.line.isDefined && prob.line.get <= doc.lines)
       .map(problem => {
-        println(problem)
-        val line = problem.line.getOrElse(1)
-        val lineInfo = if (line <= doc.lines)
-          doc.line(line)
-        else
-          doc.line(doc.lines)
+        val line = problem.line.get
+        val lineInfo = doc.line(line)
 
         Diagnostic(lineInfo.from, HTMLFormatter.format(problem.message), parseSeverity(problem.severity), lineInfo.to)
           .setRenderMessage(CallbackTo {
@@ -130,6 +126,17 @@ object Editor {
       ref.setAttribute("class", s"editor-wrapper cm-s-solarized cm-s-$theme")
     }).when_(prevProps.map(_.isDarkTheme != props.isDarkTheme).getOrElse(true))
 
+  private def updateComponent(
+    props: Editor,
+    ref: Ref.Simple[Element],
+    prevProps: Option[Editor],
+    editorView: UseStateF[CallbackTo, EditorView]
+  ): Callback = {
+    updateCode(editorView, props) >>
+    updateTheme(ref, prevProps, props) >>
+    updateDiagnostics(editorView, prevProps, props) >>
+    DecorationProvider.updateDecorations(editorView, prevProps, props)
+  }
 
   val hooksComponent =
     ScalaFnComponent
@@ -138,15 +145,9 @@ object Editor {
       .useRef[Option[Editor]](None)
       .useState(new EditorView())
       .useLayoutEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
-      .useEffectBy((props, _, _, editorRef) => updateCode(editorRef, props))
-      .useEffectBy((props, ref, prevProps, editorView) => TypeDecorationProvider.updateTypeDecorations(editorView, prevProps.value, props))
-      .useEffectBy((props, ref, prevProps, _) => updateTheme(ref.value, prevProps.value, props))
-      .useEffectBy((props, _, prevProps, editorRef) => updateDiagnostics(editorRef, prevProps.value, props))
-      .useEffectBy((props, _, prevProps, _) => {
-
-        println(props.instrumentations)
-        prevProps.set(Some(props))
-      })
+      .useEffectBy((props, ref, prevProps, editorView) =>
+          updateComponent(props, ref.value, prevProps.value, editorView) >> prevProps.set(Some(props))
+      )
       .render((_, ref, _, _) => render(ref.value))
 
 }

@@ -7,7 +7,7 @@ import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
-import org.scalajs.dom.raw.HTMLScriptElement
+import org.scalajs.dom.HTMLScriptElement
 
 import java.util.UUID
 

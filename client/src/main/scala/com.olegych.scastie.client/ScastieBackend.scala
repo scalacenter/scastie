@@ -32,17 +32,6 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     Reusable.fn(newConfig => scope.modState(_.setSbtConfigExtra(newConfig)))
   }
 
-  val invalidateDecorations: Position ~=> Callback = {
-    Reusable.fn(range => {
-      scope.modState(state => {
-        val x = state.outputs.instrumentations.filterNot {
-          case Instrumentation(Position(start, end), _) => range.start >= start || range.end <= end
-        }
-        state.updateDecorations(x)
-      })
-    })
-  }
-
   val resetBuild: Reusable[Callback] =
     Reusable.always {
       val setData = scope.state.map(
