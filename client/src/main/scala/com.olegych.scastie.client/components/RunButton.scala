@@ -4,13 +4,9 @@ package components
 import japgolly.scalajs.react._
 import vdom.all._
 import extra._
+import com.olegych.scastie.client.components.editor.EditorKeymaps
 
-final case class RunButton(
-    isRunning: Boolean, 
-    isStatusOk: Boolean, 
-    save: Reusable[Callback], 
-    setView: View ~=> Callback, 
-    embedded: Boolean) {
+final case class RunButton(isRunning: Boolean, isStatusOk: Boolean, save: Reusable[Callback], setView: View ~=> Callback, embedded: Boolean) {
   @inline def render: VdomElement = RunButton.component(this)
 }
 
@@ -23,9 +19,9 @@ object RunButton {
     if (!props.isRunning) {
       val runTitle =
         if (props.isStatusOk)
-          s"Run "
+          s"Run (${EditorKeymaps.saveOrUpdate.getName})"
         else
-          s"Run  - warning: unknown status"
+          s"Run (${EditorKeymaps.saveOrUpdate.getName}) - warning: unknown status"
 
       li(onClick --> props.save, role := "button", title := runTitle, cls := "btn run-button")(
         i(cls := "fa fa-play"),

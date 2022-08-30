@@ -54,7 +54,7 @@ object ScalaTarget {
             val dict = obj.value
             dict.get("scalaVersion").orElse(dict.get("dottyVersion")) match {
               case Some(JsString(ver)) => JsSuccess(Scala3(ver))
-              case _ => JsError(Seq())
+              case _                   => JsError(Seq())
             }
           case _ => JsError(Seq())
         }

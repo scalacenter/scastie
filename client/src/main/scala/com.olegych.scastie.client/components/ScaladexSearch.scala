@@ -293,18 +293,20 @@ object ScaladexSearch {
         response <- dom.fetch(scaladexApiUrl + "/project" + query)
         text <- response.text()
       } yield {
-        Json.fromJson[ReleaseOptions](Json.parse(text)).asOpt.map { options => {
-          Selected(
-            project = project,
-            release = ScalaDependency(
-              groupId = options.groupId,
-              artifact = artifact,
-              target = target,
-              version = version.getOrElse(options.version),
-            ),
-            options = options,
-          )
-        }}
+        Json.fromJson[ReleaseOptions](Json.parse(text)).asOpt.map { options =>
+          {
+            Selected(
+              project = project,
+              release = ScalaDependency(
+                groupId = options.groupId,
+                artifact = artifact,
+                target = target,
+                version = version.getOrElse(options.version),
+              ),
+              options = options,
+            )
+          }
+        }
       }
     }
   }

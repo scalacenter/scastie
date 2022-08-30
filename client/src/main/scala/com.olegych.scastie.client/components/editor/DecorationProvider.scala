@@ -22,52 +22,51 @@ object DecorationProvider {
 
   class AttachedDomDecoration(uuid: String, attachedDoms: AttachedDoms) extends WidgetType {
     override def toDOM(view: EditorView): HTMLElement = {
-        val wrap = dom.document.createElement("div")
-        wrap.setAttribute("aria-hidden", "true")
-        wrap.setAttribute("class", "cm-domWidget")
-        attachedDoms.get(uuid).map(wrap.append(_))
-        wrap.domAsHtml
+      val wrap = dom.document.createElement("div")
+      wrap.setAttribute("aria-hidden", "true")
+      wrap.setAttribute("class", "cm-domWidget")
+      attachedDoms.get(uuid).map(wrap.append(_))
+      wrap.domAsHtml
     }
   }
 
   class TypeDecoration(value: String, typeName: String) extends WidgetType {
     override def toDOM(view: EditorView): HTMLElement = {
-        val wrap = dom.document.createElement("span")
-        wrap.setAttribute("aria-hidden", "true")
-        wrap.setAttribute("class", "cm-linewidget")
-        val textBody = dom.document.createElement("pre")
-        textBody.setAttribute("class", "inline")
-        val valueWrapper = dom.document.createElement("span")
-        valueWrapper.setAttribute("class", "cm-variable")
-        valueWrapper.innerText = s"$value: "
-        val typeWrapper = dom.document.createElement("span")
-        typeWrapper.setAttribute("class", "cm-type")
-        typeWrapper.innerText = typeName
-        textBody.append(valueWrapper, typeWrapper)
-        wrap.append(textBody)
-        wrap.domAsHtml
+      val wrap = dom.document.createElement("span")
+      wrap.setAttribute("aria-hidden", "true")
+      wrap.setAttribute("class", "cm-linewidget")
+      val textBody = dom.document.createElement("pre")
+      textBody.setAttribute("class", "inline")
+      val valueWrapper = dom.document.createElement("span")
+      valueWrapper.setAttribute("class", "cm-variable")
+      valueWrapper.innerText = s"$value: "
+      val typeWrapper = dom.document.createElement("span")
+      typeWrapper.setAttribute("class", "cm-type")
+      typeWrapper.innerText = typeName
+      textBody.append(valueWrapper, typeWrapper)
+      wrap.append(textBody)
+      wrap.domAsHtml
     }
   }
 
   class HTMLDecoration(html: String) extends WidgetType {
     override def toDOM(view: EditorView): HTMLElement = {
-        val wrap = dom.document.createElement("pre")
-        wrap.setAttribute("aria-hidden", "true")
-        wrap.setAttribute("class", "cm-linewidget")
-        wrap.innerHTML = html
-        wrap.domAsHtml
+      val wrap = dom.document.createElement("pre")
+      wrap.setAttribute("aria-hidden", "true")
+      wrap.setAttribute("class", "cm-linewidget")
+      wrap.innerHTML = html
+      wrap.domAsHtml
     }
   }
 
-
-  def createDecorations(instrumentations: Set[api.Instrumentation], attachedDoms: AttachedDoms, maxPosititon: Int): DecorationSet = {
+  private def createDecorations(instrumentations: Set[api.Instrumentation], attachedDoms: AttachedDoms, maxPosititon: Int): DecorationSet = {
     val deco = instrumentations
       .filter(_.position.end < maxPosititon)
       .map { instrumentation =>
         {
-          val decoration = Decoration.widget(WidgetDecorationSpec( instrumentation.render match {
-            case AttachedDom(uuid, _) => new AttachedDomDecoration(uuid, attachedDoms)
-            case Html(a, folded) => new HTMLDecoration(a)
+          val decoration = Decoration.widget(WidgetDecorationSpec(instrumentation.render match {
+            case AttachedDom(uuid, _)    => new AttachedDomDecoration(uuid, attachedDoms)
+            case Html(a, folded)         => new HTMLDecoration(a)
             case Value(value, className) => new TypeDecoration(value, className)
           }).setBlock(!instrumentation.render.isInstanceOf[Value]).setSide(1))
 
@@ -80,10 +79,9 @@ object DecorationProvider {
     Decoration.set(x, true)
   }
 
-  val addTypeDecorations = StateEffect.define[DecorationSet]()
-  val filterTypeDecorations = StateEffect.define[DecorationSet]()
+  private val addTypeDecorations = StateEffect.define[DecorationSet]()
+  private val filterTypeDecorations = StateEffect.define[DecorationSet]()
 
-  // This method is a workaround for
   private def updateDecorationPositions(previousValue: DecorationSet, transaction: Transaction): DecorationSet = {
     val newNewlines: ListBuffer[Int] = ListBuffer.empty
     val decorationsToReAdd: ListBuffer[Range[Decoration]] = ListBuffer.empty
@@ -91,7 +89,7 @@ object DecorationProvider {
     transaction.changes.iterChanges((_, _, fromB, toB, _) => {
       transaction.newDoc.sliceString(fromB, toB).lastOption.foreach {
         case '\n' => newNewlines.addAll(List(fromB.toInt))
-        case _ =>
+        case _    =>
       }
     })
 
@@ -116,7 +114,7 @@ object DecorationProvider {
       }.asInstanceOf[RangeSetUpdate[DecorationSet]])
   }
 
-  def updateState(previousValue: DecorationSet, transaction: Transaction): DecorationSet = {
+  private def updateState(previousValue: DecorationSet, transaction: Transaction): DecorationSet = {
     val (addEffects, filterEffects) = transaction.effects
       .filter(effect => { effect.is(addTypeDecorations) | effect.is(filterTypeDecorations) })
       .partition(_.is(addTypeDecorations))
@@ -131,22 +129,28 @@ object DecorationProvider {
     }
   }
 
-  def filterFunction(ignoredRanges: List[Int]): js.Function2[Double, Double, Boolean] = { (from, to) =>
+  private def filterFunction(ignoredRanges: List[Int]): js.Function2[Double, Double, Boolean] = { (from, to) =>
     !ignoredRanges.contains(from)
   }
 
+  private def stateFieldSpec(props: CodeEditor) =
+    StateFieldSpec[DecorationSet](
+      create = _ => createDecorations(props.instrumentations, props.attachedDoms, props.value.length),
+      update = updateState,
+    ).setProvide(v => EditorView.decorations.from(v))
+
   def updateDecorations(
       editorView: UseStateF[CallbackTo, EditorView],
-      prevProps: Option[Editor],
-      props: Editor
+      prevProps: Option[CodeEditor],
+      props: CodeEditor
   ): Callback =
     Callback {
       val decorations = createDecorations(props.instrumentations, props.attachedDoms, editorView.value.state.doc.length.toInt + 1)
       val addTypesEffect = addTypeDecorations.of(decorations)
       val changes = new js.Object {
         var desc = new js.Object {
-          var length = prevProps.map(_.code.length).getOrElse(0)
-          var newLength = props.code.length
+          var length = prevProps.map(_.value.length).getOrElse(0)
+          var newLength = props.value.length
           var empty = newLength == length
         }.asInstanceOf[ChangeDesc]
       }.asInstanceOf[ChangeSpec]
@@ -157,15 +161,9 @@ object DecorationProvider {
           .setEffects(addTypesEffect.asInstanceOf[StateEffect[Any]])
       )
     }.when_(
-        prevProps.isDefined &&
-          (props.instrumentations != prevProps.get.instrumentations)
-      )
+      prevProps.isDefined &&
+        (props.instrumentations != prevProps.get.instrumentations)
+    )
 
-  def stateFieldSpec(props: Editor) =
-    StateFieldSpec[DecorationSet](
-      create = _ => createDecorations(props.instrumentations, props.attachedDoms, props.code.length),
-      update = updateState,
-    ).setProvide(v => EditorView.decorations.from(v))
-
-  def apply(props: Editor): Extension = StateField.define(stateFieldSpec(props)).extension
+  def apply(props: CodeEditor): Extension = StateField.define(stateFieldSpec(props)).extension
 }

@@ -1,7 +1,9 @@
 package com.olegych.scastie.client
 package components
 
+import com.olegych.scastie.client.components.editor.EditorKeymaps
 import japgolly.scalajs.react._
+
 import vdom.all._
 import extra._
 
@@ -15,7 +17,12 @@ object ClearButton {
     Reusability.derive[ClearButton]
 
   private def render(props: ClearButton): VdomElement = {
-    li(title := s"Clear Messages ()", role := "button", cls := "btn", onClick --> props.clear)(
+    li(
+      title := s"Clear Messages (${EditorKeymaps.clear.getName})",
+      role := "button",
+      cls := "btn",
+      onClick --> props.clear
+    )(
       div(
         i(cls := "fa fa-eraser"),
         span("Clear Messages")

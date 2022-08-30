@@ -3,7 +3,13 @@ import sbtdocker.DockerPlugin.autoImport._
 import java.nio.file.Path
 
 object DockerHelper {
-  def apply(baseDirectory: Path, sbtTargetDir: Path, sbtScastie: String, ivyHome: Path, organization: String, artifact: Path, sbtVersion: String): Dockerfile = {
+  def apply(baseDirectory: Path,
+            sbtTargetDir: Path,
+            sbtScastie: String,
+            ivyHome: Path,
+            organization: String,
+            artifact: Path,
+            sbtVersion: String): Dockerfile = {
 
     val artifactTargetPath = s"/app/${artifact.getFileName()}"
     val generatedProjects = new GenerateProjects(sbtTargetDir)
@@ -55,7 +61,6 @@ object DockerHelper {
       runRaw("apk add openssl")
       runRaw("apk add nss")
       runRaw("apk add bash")
-
 
       runRaw("mkdir -p /app/sbt")
 

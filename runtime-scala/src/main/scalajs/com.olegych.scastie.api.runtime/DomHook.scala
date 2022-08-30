@@ -18,5 +18,5 @@ trait DomHook {
     uuid
   }
 
-  def attachedElements: js.Array[HTMLElement] = js.Array(elements.toSeq:_*)
+  def attachedElements: js.Array[HTMLElement] = js.Array(elements.toSeq: _*)
 }

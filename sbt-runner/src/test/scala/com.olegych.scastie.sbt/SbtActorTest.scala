@@ -122,7 +122,8 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("Scala.js 3 support") {
     val scalaJs =
-      Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Js.default.copy(scalaVersion = com.olegych.scastie.buildinfo.BuildInfo.latest3))
+      Inputs.default.copy(code = "1 + 1",
+                          target = ScalaTarget.Js.default.copy(scalaVersion = com.olegych.scastie.buildinfo.BuildInfo.latest3))
     run(scalaJs)(_.isDone)
   }
 
@@ -146,7 +147,8 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("avoid https://github.com/scala/bug/issues/8119") {
     val scala =
-      Inputs.default.copy(code = "val n = 0; val m = List(1).par.foreach(_ => n); println(1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest212))
+      Inputs.default.copy(code = "val n = 0; val m = List(1).par.foreach(_ => n); println(1)",
+                          target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest212))
     run(scala)(assertUserOutput("1"))
   }
 
@@ -164,7 +166,9 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("no warnings on 2.12") {
     val scala =
-      Inputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""", target = ScalaTarget.Jvm("2.12.10"))
+      Inputs.default.copy(code = "println(1 + 1)",
+                          sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""",
+                          target = ScalaTarget.Jvm("2.12.10"))
     run(scala)(assertUserOutput("2"))
   }
 
@@ -217,15 +221,18 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("#304 null pointer") {
-    runCode("""|trait A {
-           |  val a = "1"
-           |  val b = a
-           |}
-           |
-           |new A {
-           |  override val a = ("2")
-           |  println(b)
-           |}""".stripMargin, allowFailure = true)(_.isDone)
+    runCode(
+      """|trait A {
+         |  val a = "1"
+         |  val b = a
+         |}
+         |
+         |new A {
+         |  override val a = ("2")
+         |  println(b)
+         |}""".stripMargin,
+      allowFailure = true
+    )(_.isDone)
   }
 
   def assertCompilationInfo(
@@ -278,12 +285,13 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       if (firstRun) timeout + 10.second
       else timeout
 
-    progressActor.fishForMessage(totalTimeout + 100.seconds) { case progress: SnippetProgress =>
-      val fishResult = fish(progress)
-      //        println(progress -> fishResult)
-      if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
-        throw new Exception(s"Fail to meet expectation at ${progress}")
-      else fishResult
+    progressActor.fishForMessage(totalTimeout + 100.seconds) {
+      case progress: SnippetProgress =>
+        val fishResult = fish(progress)
+        //        println(progress -> fishResult)
+        if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
+          throw new Exception(s"Fail to meet expectation at ${progress}")
+        else fishResult
     }
     firstRun = false
   }

@@ -13,8 +13,8 @@ import scala.collection.concurrent.TrieMap
 import java.lang.ref.WeakReference
 import Thread.currentThread
 import java.security.Permission
-import java.util.concurrent.{ ConcurrentHashMap => CMap }
-import java.lang.Integer.{ toHexString => hex }
+import java.util.concurrent.{ConcurrentHashMap => CMap}
+import java.lang.Integer.{toHexString => hex}
 import java.util.function.Supplier
 
 import sbt.util.InterfaceUtil
@@ -41,7 +41,7 @@ object ScastieTrapExit {
   def apply(execute: => Unit, log: Logger): Int =
     System.getSecurityManager match {
       case m: ScastieTrapExit => m.runManaged(InterfaceUtil.toSupplier(execute), log)
-      case _           => runUnmanaged(execute, log)
+      case _                  => runUnmanaged(execute, log)
     }
 
   /**
@@ -51,7 +51,7 @@ object ScastieTrapExit {
   def installManager(): SecurityManager =
     System.getSecurityManager match {
       case m: ScastieTrapExit => m
-      case m           => System.setSecurityManager(new ScastieTrapExit(m)); m
+      case m                  => System.setSecurityManager(new ScastieTrapExit(m)); m
     }
 
   /** Uninstalls the isolation SecurityManager and restores the old security manager. */
@@ -100,8 +100,7 @@ object ScastieTrapExit {
     log.debug("\tInterrupted " + thread.getName)
   }
   // an uncaught exception handler that swallows InterruptedExceptions and otherwise defers to originalHandler
-  private final class TrapInterrupt(originalHandler: Thread.UncaughtExceptionHandler)
-      extends Thread.UncaughtExceptionHandler {
+  private final class TrapInterrupt(originalHandler: Thread.UncaughtExceptionHandler) extends Thread.UncaughtExceptionHandler {
     def uncaughtException(thread: Thread, e: Throwable): Unit = {
       withCause[InterruptedException, Unit](e) { interrupted =>
         ()
