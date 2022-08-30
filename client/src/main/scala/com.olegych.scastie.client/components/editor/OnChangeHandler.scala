@@ -9,7 +9,7 @@ import typings.std.PropertyKey
 import scalajs.js
 
 class OnChangeHandler(
-  onChange: String ~=> Callback,
+    onChange: String ~=> Callback,
 ) extends PluginValue {
 
   override var constructor: js.Function = null
@@ -27,7 +27,7 @@ class OnChangeHandler(
 
 }
 
-object OnChangeHandler{
+object OnChangeHandler {
   def apply(onChange: String ~=> Callback): Extension =
     ViewPlugin.define(_ => new OnChangeHandler(onChange)).extension
 }

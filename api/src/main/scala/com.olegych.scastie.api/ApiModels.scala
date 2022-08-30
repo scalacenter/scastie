@@ -104,7 +104,7 @@ case class ScalaDependency(
   def matches(sd: ScalaDependency): Boolean =
     sd.groupId == this.groupId &&
       sd.artifact == this.artifact
-  
+
   override def toString: String = target.renderSbt(this)
 }
 

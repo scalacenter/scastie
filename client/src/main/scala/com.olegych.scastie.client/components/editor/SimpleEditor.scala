@@ -16,30 +16,26 @@ final case class SimpleEditor(
     value: String,
     isDarkTheme: Boolean,
     onChange: String ~=> Callback,
-  ) {
-    @inline def render: VdomElement = SimpleEditor.hooksComponent(this)
-  }
+) extends Editor {
+  @inline def render: VdomElement = SimpleEditor.hooksComponent(this)
+}
 
 object SimpleEditor {
 
-  private def render(ref: Ref.Simple[Element]): VdomElement =
-    div(cls := "editor-wrapper").withRef(ref)
-
   private def init(props: SimpleEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback =
-
     ref.foreachCB(divRef => {
       lazy val readOnlyExtensions = js.Array[Any](
-          typings.codemirror.mod.minimalSetup,
-          mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
-          SyntaxHighlightingTheme.highlightingTheme,
-          EditorState.readOnly.of(true),
-        )
+        typings.codemirror.mod.minimalSetup,
+        mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
+        SyntaxHighlightingTheme.highlightingTheme,
+        EditorState.readOnly.of(true),
+      )
       lazy val editableExtensions = js.Array[Any](
-          typings.codemirror.mod.basicSetup,
-          mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
-          SyntaxHighlightingTheme.highlightingTheme,
-          OnChangeHandler(props.onChange),
-        )
+        typings.codemirror.mod.basicSetup,
+        mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
+        SyntaxHighlightingTheme.highlightingTheme,
+        OnChangeHandler(props.onChange),
+      )
       val editor = new EditorView(new EditorViewConfig {
         state = EditorState.create(new EditorStateConfig {
           doc = props.value
@@ -51,14 +47,14 @@ object SimpleEditor {
       editorView.setState(editor)
     })
 
-  private def updateCode(editorView: UseStateF[CallbackTo, EditorView], newState: SimpleEditor): Callback = {
-    Callback {
-      editorView.value.dispatch(TransactionSpec().setChanges(new js.Object {
-        var from = 0
-        var to = editorView.value.state.doc.length
-        var insert = newState.value
-      }.asInstanceOf[ChangeSpec]))
-    }.when_(editorView.value.state.doc.toString() != newState.value)
+  private def updateComponent(
+      props: SimpleEditor,
+      ref: Ref.Simple[Element],
+      prevProps: Option[SimpleEditor],
+      editorView: UseStateF[CallbackTo, EditorView]
+  ): Callback = {
+    Editor.updateCode(editorView, props) >>
+      Editor.updateTheme(ref, prevProps, props)
   }
 
   val hooksComponent =
@@ -66,13 +62,9 @@ object SimpleEditor {
       .withHooks[SimpleEditor]
       .useRef(Ref[Element])
       .useState(new EditorView())
-      .useLayoutEffectOnMountBy((props, ref, editorView) => init(props, ref.value, editorView))
-      .useEffectBy((props, ref, _) => ref.value.foreach( ref => {
-        //TODO change logic behind theming
-        val theme = if (props.isDarkTheme) "dark" else "light"
-        ref.setAttribute("class", s"editor-wrapper cm-s-solarized cm-s-$theme")
-      }))
-      .useEffectBy((props, _, editorRef) => updateCode(editorRef, props))
-      .render((props, ref, _) => render(ref.value))
-
+      .useRef[Option[SimpleEditor]](None)
+      .useLayoutEffectOnMountBy((props, ref, editorView, prevProps) => init(props, ref.value, editorView))
+      .useEffectBy((props, ref, editorRef, prevProps) => updateComponent(props, ref.value, prevProps.value, editorRef))
+      .useEffectBy((props, _, editorRef, prevProps) => prevProps.set(Some(props)))
+      .render((props, ref, _, prevProps) => Editor.render(ref.value))
 }

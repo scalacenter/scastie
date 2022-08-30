@@ -5,7 +5,6 @@ import typings.codemirrorLint.codemirrorLintStrings
 
 import scalajs.js.|
 
-
 object JsUtils {
   type jsSeverity = codemirrorLintStrings.error | codemirrorLintStrings.info | codemirrorLintStrings.warning
 

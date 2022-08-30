@@ -11,7 +11,7 @@ protected[runtime] trait SharedRuntime {
   private val maxValueLength = 500
 
   private def show[A](a: A): String =
-    if(a == null) "null"
+    if (a == null) "null"
     else a.toString
 
   protected[runtime] def render[T](a: T, typeName: String): Render = {

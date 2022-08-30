@@ -23,9 +23,9 @@ object CompilerReporter {
 
   val setting: sbt.Def.Setting[_] =
     Compile / compile / compilerReporter := new xsbti.Reporter {
-      private val buffer       = collection.mutable.ArrayBuffer.empty[Problem]
-      def reset(): Unit        = buffer.clear()
-      def hasErrors: Boolean   = buffer.exists(_.severity == Severity.Error)
+      private val buffer = collection.mutable.ArrayBuffer.empty[Problem]
+      def reset(): Unit = buffer.clear()
+      def hasErrors: Boolean = buffer.exists(_.severity == Severity.Error)
       def hasWarnings: Boolean = buffer.exists(_.severity == Severity.Warn)
 
       def printSummary(): Unit = {
@@ -51,11 +51,11 @@ object CompilerReporter {
 //        def log(pos: Position, msg: String, sev: Severity): Unit = {
       def log(problem: Problem): Unit = {
         object MyProblem extends Problem {
-          def category: String   = "foo"
+          def category: String = "foo"
           def severity: Severity = problem.severity()
-          def message: String    = problem.message()
+          def message: String = problem.message()
           def position: Position = problem.position()
-          override def toString  = s"$position:$severity: $message"
+          override def toString = s"$position:$severity: $message"
         }
         buffer.append(MyProblem)
       }
