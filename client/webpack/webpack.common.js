@@ -6,6 +6,25 @@ const generatedConfig = require('./scalajs.webpack.config');
 const rootDir = Path.resolve(__dirname, '../../../..');
 const resourcesDir = Path.resolve(rootDir, 'src/main/resources');
 
+const ScalaJs = Merge(generatedConfig, {
+  resolve: {
+    alias: {
+      'resources': resourcesDir
+    }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.png$/,
+        loader: 'file-loader',
+        options: {
+          name: "[name].[hash].[ext]"
+        }
+      }
+    ]
+  }
+});
+
 const Web = {
   devtool: "source-map",
   resolve: {
@@ -31,5 +50,5 @@ module.exports = {
   rootDir: rootDir,
   resourcesDir: resourcesDir,
   Web: Web,
-  ScalaJs: generatedConfig
+  ScalaJs: ScalaJs
 }
