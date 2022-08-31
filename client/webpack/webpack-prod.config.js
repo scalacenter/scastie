@@ -1,8 +1,8 @@
 const Path = require('path');
 const Merge = require("webpack-merge");
 
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const ExtractTextPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
@@ -44,14 +44,22 @@ function Web(extractSass){
       rules: [
         {
           test: /\.scss$/,
-           use: extractSass.extract({
-            use: [
+           use: [
+             ExtractTextPlugin.loader,
+             // "css-loader",
+             // "sass-loader",
+             // "resolve-url-loader"
               { loader: "css-loader", options: {sourceMap: true} },
               { loader: "resolve-url-loader", options: {sourceMap: true} },
               { loader: "sass-loader", options: {sourceMap: true} }
-            ],
-            fallback: "style-loader"
-          })
+           ]
+          // extract({
+          //   use: [
+          //     { loader: "css-loader", options: {sourceMap: true} },
+          //     { loader: "resolve-url-loader", options: {sourceMap: true} },
+          //     { loader: "sass-loader", options: {sourceMap: true} }
+          //   ],
+          //   fallback: "style-loader"
         },
         {
           test: /\.js$/,
@@ -67,7 +75,7 @@ function Web(extractSass){
         sourceMap: true
       }),
       new CompressionPlugin({
-        asset: "[path].gz[query]",
+        filename: "[path].gz[query]",
         algorithm: "gzip",
         test: /\.js$|\.css$|\.html$/,
         threshold: 10240,
@@ -88,7 +96,7 @@ const WebApp = Merge(Web(extractSassApp), {
       template: Path.resolve(Common.resourcesDir, './prod.html'),
       favicon: Path.resolve(Common.resourcesDir, './images/favicon.ico')
     }),
-    new CleanWebpackPlugin([publicFolderName], {verbose: false}),
+    new CleanWebpackPlugin({verbose: false }),
   ]
 });
 
@@ -108,5 +116,5 @@ const ScalaJs = Merge(Common.ScalaJs,{
 module.exports = [
   ScalaJs,
   WebApp,
-  WebEmbed
+  WebEmbed,
 ]
