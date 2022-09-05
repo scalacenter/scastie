@@ -184,9 +184,8 @@ lazy val storage = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
+      "org.mongodb.scala" %% "mongo-scala-driver" % "4.7.0",
       "net.lingala.zip4j" % "zip4j" % "2.10.0",
-      "org.reactivemongo" %% "reactivemongo" % "1.0.10",
-      "org.reactivemongo" %% "reactivemongo-play-json-compat" % "1.0.10-play29",
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
