@@ -441,9 +441,6 @@ case class ScastieState(
     }
   }
 
-  def updateDecorations(instrumentations: Set[Instrumentation]): ScastieState =
-    copyAndSave(outputs = outputs.copy(instrumentations = instrumentations))
-
   def addOutputs(compilationInfos: List[Problem], instrumentations: List[Instrumentation]): ScastieState = {
 
     def topDef(problem: Problem): Boolean = {
