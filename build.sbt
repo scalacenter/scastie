@@ -1,4 +1,3 @@
-import org.scalajs.linker.interface.ESVersion
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
 

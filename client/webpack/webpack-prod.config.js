@@ -16,6 +16,29 @@ const ProdConfig =
   })
 
 const Common = require('./webpack.common.js');
+
+const ScalaJs = Merge(Common.generatedConfig, {
+  resolve: {
+    alias: {
+      'resources': Common.resourcesDir
+    }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.png$/,
+        loader: 'file-loader',
+        options: {
+          name: "[name].[hash].[ext]"
+        }
+      }
+    ]
+  },
+  plugins: [
+    ProdConfig
+  ]
+});
+
 const publicFolderName = "out/public"
 
 function extract(){
@@ -46,20 +69,10 @@ function Web(extractSass){
           test: /\.scss$/,
            use: [
              ExtractTextPlugin.loader,
-             // "css-loader",
-             // "sass-loader",
-             // "resolve-url-loader"
               { loader: "css-loader", options: {sourceMap: true} },
               { loader: "resolve-url-loader", options: {sourceMap: true} },
               { loader: "sass-loader", options: {sourceMap: true} }
            ]
-          // extract({
-          //   use: [
-          //     { loader: "css-loader", options: {sourceMap: true} },
-          //     { loader: "resolve-url-loader", options: {sourceMap: true} },
-          //     { loader: "sass-loader", options: {sourceMap: true} }
-          //   ],
-          //   fallback: "style-loader"
         },
         {
           test: /\.js$/,
@@ -105,13 +118,6 @@ const WebEmbed = Merge(Web(extractSassEmbed), {
     embedded: Path.resolve(Common.resourcesDir, './prod-embed.js')
   }
 });
-
-const ScalaJs = Merge(Common.ScalaJs,{
-  plugins: [
-    ProdConfig
-  ]
-});
-
 
 module.exports = [
   ScalaJs,

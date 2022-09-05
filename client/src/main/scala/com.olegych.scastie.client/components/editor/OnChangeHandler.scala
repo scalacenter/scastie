@@ -8,22 +8,15 @@ import typings.std.PropertyKey
 
 import scalajs.js
 
-class OnChangeHandler(
-    onChange: String ~=> Callback,
-) extends PluginValue {
+class OnChangeHandler(onChange: String ~=> Callback) extends js.Object {
 
-  override var constructor: js.Function = null
-  override def hasOwnProperty(v: PropertyKey): Boolean = false
-  override def propertyIsEnumerable(v: PropertyKey): Boolean = false
-
-  def scalaUpdate: js.Function1[ViewUpdate, Unit] = viewUpdate => {
-
+  private def scalaUpdate: js.Function1[ViewUpdate, Unit] = viewUpdate => {
     if (viewUpdate.docChanged && viewUpdate.startState.doc != viewUpdate.state.doc) {
       onChange(viewUpdate.state.doc.toString).runNow()
     }
   }
 
-  update = scalaUpdate
+  var update = scalaUpdate
 
 }
 

@@ -6,7 +6,7 @@ const Merge = require("webpack-merge");
 const Common = require('./webpack.common.js');
 const devDir = Path.resolve(Common.rootDir, 'dev-static');
 
-const ScalaJs = Merge(Common.ScalaJs, {
+const ScalaJs = Merge(Common.generatedConfig, {
   output: {
     publicPath: '/'
   }

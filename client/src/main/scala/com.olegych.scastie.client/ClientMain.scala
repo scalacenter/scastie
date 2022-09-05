@@ -7,7 +7,6 @@ import com.olegych.scastie.client.components._
 import japgolly.scalajs.react.component.Generic
 import japgolly.scalajs.react.extra.router._
 import org.scalajs.dom
-import org.scalajs.dom.ext._
 import org.scalajs.dom.{HTMLElement, HTMLDivElement, HTMLLinkElement, Node}
 
 import scala.scalajs.js
