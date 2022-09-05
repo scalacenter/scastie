@@ -109,7 +109,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.0.4"
+      "org.scalameta" %% "scalafmt-core" % "3.5.8"
     ),
     docker / imageNames := Seq(
       ImageName(
@@ -184,9 +184,8 @@ lazy val storage = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
+      "org.mongodb.scala" %% "mongo-scala-driver" % "4.7.0",
       "net.lingala.zip4j" % "zip4j" % "2.10.0",
-      "org.reactivemongo" %% "reactivemongo" % "1.0.10",
-      "org.reactivemongo" %% "reactivemongo-play-json-compat" % "1.0.10-play29",
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
@@ -243,7 +242,8 @@ lazy val client = project
       "webpack-merge" -> "4.1.0",
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "extra" % "1.7.7",
+      "com.github.japgolly.scalajs-react" %%% "core" % "2.1.1",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "2.1.1",
     )
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)

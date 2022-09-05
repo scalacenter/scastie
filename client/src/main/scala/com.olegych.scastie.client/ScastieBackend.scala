@@ -7,7 +7,7 @@ import com.olegych.scastie.client.components.Scastie
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra._
-import japgolly.scalajs.react.internal.Effect.Id
+import japgolly.scalajs.react.util.Effect.Id
 import org.scalajs.dom._
 
 import scala.concurrent.Future

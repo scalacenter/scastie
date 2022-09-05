@@ -9,20 +9,20 @@ import org.scalafmt.Formatted
 import org.scalafmt.Scalafmt
 import org.scalafmt.config.ScalafmtConfig
 import org.scalafmt.config.ScalafmtRunner
-import org.scalafmt.config.ScalafmtRunner.Dialect
+import org.scalafmt.config.NamedDialect
 import org.slf4j.LoggerFactory
 
 object FormatActor {
   private[sbt] def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
     val config: ScalafmtConfig = {
       val dialect =
-        if (scalaTarget.scalaVersion.startsWith("2.12")) ScalafmtRunner.Dialect.scala212
-        else if (scalaTarget.scalaVersion.startsWith("2.13")) ScalafmtRunner.Dialect.scala213
-        else if (scalaTarget.scalaVersion.startsWith("3")) scala.meta.dialects.Scala3
-        else ScalafmtRunner.Dialect.scala213
+        if (scalaTarget.scalaVersion.startsWith("2.12")) NamedDialect.scala212
+        else if (scalaTarget.scalaVersion.startsWith("2.13")) NamedDialect.scala213
+        else if (scalaTarget.scalaVersion.startsWith("3")) NamedDialect.scala3
+        else NamedDialect.scala213
 
       val runner = {
-        val tmp = ScalafmtRunner(dialect = dialect)
+        val tmp = ScalafmtRunner(dialect = NamedDialect(dialect))
         if (isWorksheetMode && scalaTarget.hasWorksheetMode)
           tmp.forSbt
         else tmp
