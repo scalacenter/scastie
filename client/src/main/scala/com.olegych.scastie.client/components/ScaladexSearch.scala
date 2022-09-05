@@ -10,7 +10,6 @@ import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import org.scalajs.dom
 import dom.ext.KeyCode
 import dom.{HTMLInputElement, HTMLElement}
-import dom.ext.Ajax
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.concurrent.Future

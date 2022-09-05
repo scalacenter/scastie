@@ -5,7 +5,6 @@ import com.olegych.scastie.api._
 import play.api.libs.json._
 
 import org.scalajs.dom
-import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.XMLHttpRequest
 
 import scala.concurrent.Future
