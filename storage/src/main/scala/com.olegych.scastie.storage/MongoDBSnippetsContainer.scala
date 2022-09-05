@@ -58,7 +58,6 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
   protected implicit val ec: ExecutionContext = _ec
 
   private val mongoUri = "mongodb://localhost:27017/snippets"
-  System.setProperty("org.mongodb.async.type", "netty")
 
   private val client: MongoClient = MongoClient(mongoUri)
   val database: MongoDatabase = client.getDatabase("snippets")
