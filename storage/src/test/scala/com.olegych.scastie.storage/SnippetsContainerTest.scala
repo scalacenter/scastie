@@ -8,12 +8,13 @@ import java.util.concurrent.Executors
 import com.olegych.scastie.api._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.OptionValues
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Random
 
-class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
+class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues {
   val mongo = sys.props.get("SnippetsContainerTest.mongo").flatMap(_.toBooleanOption).contains(true)
   println(s"SnippetsContainerTest using mongodb: $mongo")
   val root = Files.createTempDirectory("test")
@@ -76,8 +77,7 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
     val snippetId = container.create(inputs, user = None).await
     val result = container.readSnippet(snippetId).await
 
-    assert(result.isDefined)
-    assert(result.get.inputs == inputs.withSavedConfig)
+    assert(result.value.inputs == inputs.withSavedConfig)
   }
 
   test("fork") {
@@ -99,7 +99,7 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("update") {
     val container = testContainer
-    val user = UserLogin("github-user-update" + Random.nextInt)
+    val user = UserLogin("github-user-update" + Random.nextInt())
     val inputs1 =
       Inputs.default.copy(code = "inputs1").copy(isShowingInUserProfile = true)
     val snippetId1 = container.save(inputs1, Some(user)).await
@@ -122,8 +122,8 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("listSnippets") {
     val container = testContainer
-    val user = UserLogin("github-user-list" + Random.nextInt)
-    val user2 = UserLogin("github-user-list2" + Random.nextInt)
+    val user = UserLogin("github-user-list" + Random.nextInt())
+    val user2 = UserLogin("github-user-list2" + Random.nextInt())
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     container.save(inputs1, Some(user)).await
@@ -153,7 +153,7 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("delete") {
     val container = testContainer
-    val user = UserLogin("github-user-delete" + Random.nextInt)
+    val user = UserLogin("github-user-delete" + Random.nextInt())
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     val snippetId1 = container.save(inputs1, Some(user)).await
@@ -175,5 +175,16 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(container.readSnippet(snippetId2).await == None)
 
     assert(container.listSnippets(user).await.size == 1)
+  }
+
+  test("appendOutput") {
+    val container = testContainer
+    val inputs = Inputs.default
+    val snippetId = container.create(inputs, user = None).await
+    val progress = SnippetProgress.default.copy(snippetId = Some(snippetId))
+    container.appendOutput(progress)
+    val result = container.readSnippet(snippetId).await
+
+    assert(result.value.progresses.headOption.value == progress, "we properly append output")
   }
 }

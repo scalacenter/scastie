@@ -2,11 +2,10 @@ package com.olegych.scastie.storage
 
 import com.olegych.scastie.api._
 import org.mongodb.scala._
-import org.mongodb.scala.model._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
-import play.api.libs.json.Json
-import play.api.libs.json.OFormat
+import org.mongodb.scala.model._
+import play.api.libs.json._
 
 import java.lang.System.{lineSeparator => nl}
 import scala.concurrent.ExecutionContext
@@ -40,14 +39,6 @@ case class MongoSnippet(
     time: Long
 ) extends BaseMongoSnippet {
   def toFetchResult: FetchResult = FetchResult.create(inputs, progresses)
-
-  // TODO: Change client logic to use provided codecs
-  // MongoDB client provides its own BSON converter, but would require changes in API.
-  // Instead we reuse our JSON codecs and create BSON from the generated JSON.
-  def toDocument: Document = {
-    val json = Json.toJson(this).toString
-    Document.apply(json)
-  }
 }
 
 object MongoSnippet {
@@ -58,6 +49,18 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
   protected implicit val ec: ExecutionContext = _ec
 
   private val mongoUri = "mongodb://localhost:27017/snippets"
+
+  // TODO: Change client logic to use provided codecs
+  // MongoDB client provides its own BSON converter, but would require changes in API.
+  // Instead we reuse our JSON codecs and create BSON from the generated JSON.
+  private def toBson[T](obj: T)(implicit writes: Writes[T]): Document = {
+    val json = Json.toJson(obj).toString
+    Document.apply(json)
+  }
+
+  private def fromBson[T](obj: Document)(implicit reads: Reads[T]): Option[T] = {
+    Json.parse(obj.toJson()).asOpt[T]
+  }
 
   private val client: MongoClient = MongoClient(mongoUri)
   val database: MongoDatabase = client.getDatabase("snippets")
@@ -88,7 +91,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
     )
 
   protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] = {
-    val snippet = toMongoSnippet(snippetId, inputs.withSavedConfig).toDocument
+    val snippet = toBson(toMongoSnippet(snippetId, inputs.withSavedConfig))
     snippets.insertOne(snippet).toFuture().map(_ => ())
   }
 
@@ -106,15 +109,15 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
         val selection = select(snippetId)
 
         val appendOutputLogs = {
-          val update = push("progresses", progress)
-          snippets.updateOne(selection, update).map(_.wasAcknowledged()).headOption()
+          val update = push("progresses", toBson(progress))
+          snippets.updateOne(selection, update).map(_.wasAcknowledged).headOption()
         }
 
         val setScalaJsOutput =
           (progress.scalaJsContent, progress.scalaJsSourceMapContent) match {
             case (Some(scalaJsContent), Some(scalaJsSourceMapContent)) =>
               val updateJs = combine(set("scalaJsContent" , scalaJsContent), set("scalaJsSourceMapContent" ,scalaJsSourceMapContent))
-              snippets.updateOne(selection, Document(updateJs.toString)).map(_.wasAcknowledged).headOption()
+              snippets.updateOne(selection, updateJs.toBsonDocument).map(_.wasAcknowledged).headOption()
             case _ => Future(())
           }
 
@@ -127,7 +130,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
     snippets.find(select(snippetId))
       .first()
       .headOption()
-      .map(_.flatMap(result => Json.parse(result.toJson()).asOpt[MongoSnippet]))
+      .map(_.flatMap(fromBson[MongoSnippet](_)))
   }
 
   def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]] = {
@@ -148,7 +151,7 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
           "inputs.target" -> 1,
           "time" -> 1
           )
-      ).map(result => Json.parse(result.toJson()).asOpt[ShortMongoSnippet])
+      ).map(fromBson[ShortMongoSnippet](_))
 
     mongoSnippets.collect().headOption().map(results => {
       val sortedSnippets = results.getOrElse(Nil).flatten.sortBy(-_.time)
@@ -170,13 +173,11 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
       _.map(m => FetchResultScalaJsSourceMap(m.scalaJsSourceMapContent))
     )
 
-  private def select(id: Int) = Json.obj("oldId" -> id)
-
   def readOldSnippet(id: Int): Future[Option[FetchResult]] =
     snippets.find(Document("oldId" -> id))
       .first()
       .headOption()
-      .map(_.flatMap(result => Json.parse(result.toJson()).asOpt[MongoSnippet]).map(_.toFetchResult))
+      .map(_.flatMap(fromBson[MongoSnippet](_)).map(_.toFetchResult))
 
   override def close(): Unit = client.close()
 }
