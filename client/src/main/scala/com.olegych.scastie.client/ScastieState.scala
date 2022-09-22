@@ -2,6 +2,7 @@ package com.olegych.scastie.client
 
 import com.olegych.scastie.api._
 import play.api.libs.json._
+import org.scalajs.dom.HTMLElement
 
 object SnippetState {
   implicit val formatSnippetState: OFormat[SnippetState] =
@@ -36,7 +37,7 @@ object ScastieState {
         scalaJsContent = None,
       ),
       user = None,
-      attachedDoms = AttachedDoms(Map()),
+      attachedDoms = Map(),
       inputs = Inputs.default,
       outputs = Outputs.default,
       status = StatusState.empty,
@@ -44,8 +45,8 @@ object ScastieState {
     )
   }
 
-  implicit val dontSerializeAttachedDoms: Format[AttachedDoms] =
-    dontSerialize[AttachedDoms](AttachedDoms(Map()))
+  implicit val dontSerializeAttachedDoms: Format[Map[String, HTMLElement]] =
+    dontSerialize[Map[String, HTMLElement]](Map())
 
   implicit val dontSerializeStatusState: Format[StatusState] =
     dontSerialize[StatusState](StatusState.empty)
@@ -75,7 +76,7 @@ case class ScastieState(
     inputsHasChanged: Boolean,
     snippetState: SnippetState,
     user: Option[User],
-    attachedDoms: AttachedDoms,
+    attachedDoms: Map[String, HTMLElement],
     inputs: Inputs,
     outputs: Outputs,
     status: StatusState,
@@ -86,7 +87,7 @@ case class ScastieState(
   def loadSnippet: Boolean = snippetState.loadSnippet
 
   def copyAndSave(
-      attachedDoms: AttachedDoms = attachedDoms,
+      attachedDoms: Map[String, HTMLElement] = attachedDoms,
       view: View = view,
       isRunning: Boolean = isRunning,
       statusStream: Option[EventStream[StatusProgress]] = statusStream,
@@ -338,7 +339,7 @@ case class ScastieState(
 
   def scalaJsScriptLoaded: ScastieState = copyAndSave(scalaJsContent = None)
 
-  def resetScalajs: ScastieState = copyAndSave(attachedDoms = AttachedDoms(Map()))
+  def resetScalajs: ScastieState = copyAndSave(attachedDoms = Map())
 
   def clearOutputs: ScastieState = {
     copyAndSave(

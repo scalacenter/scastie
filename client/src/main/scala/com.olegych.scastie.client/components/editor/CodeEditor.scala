@@ -1,11 +1,10 @@
 package com.olegych.scastie.client.components.editor
 
 import com.olegych.scastie.api
-import com.olegych.scastie.client.AttachedDoms
 import com.olegych.scastie.client.HTMLFormatter
 import japgolly.scalajs.react._
 import org.scalajs.dom
-import org.scalajs.dom.Element
+import org.scalajs.dom.{Element, HTMLElement}
 import typings.codemirrorLanguage.mod
 import typings.codemirrorLint.codemirrorLintStrings
 import typings.codemirrorLint.mod._
@@ -24,7 +23,7 @@ final case class CodeEditor(visible: Boolean,
                             isEmbedded: Boolean,
                             showLineNumbers: Boolean,
                             value: String,
-                            attachedDoms: AttachedDoms,
+                            attachedDoms: Map[String, HTMLElement],
                             instrumentations: Set[api.Instrumentation],
                             compilationInfos: Set[api.Problem],
                             runtimeError: Option[api.RuntimeError],

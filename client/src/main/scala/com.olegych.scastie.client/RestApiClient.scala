@@ -22,26 +22,12 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
     tryParse(response.responseText)
 
   def tryParse[T: Reads](response: dom.Response): Future[Option[T]] =
-    for {
-      text <- response.text()
-    } yield {
-      tryParse(text)
-    }
+    response.text().map(tryParse(_))
 
   def tryParse[T: Reads](text: String): Option[T] = {
-    if (text.nonEmpty) {
-      Try(Json.parse(text)) match {
-        case Success(json) => {
-          Json.fromJson[T](json).asOpt
-        }
-        case Failure(e) => {
-          e.printStackTrace()
-          None
-        }
-      }
-    } else {
-      None
-    }
+    Option.when(text.nonEmpty)(text).flatMap(t =>
+      Try(Json.parse(t)).toOption.flatMap(Json.fromJson[T](_).asOpt)
+    )
   }
 
   def get[T: Reads](url: String): Future[Option[T]] = {
