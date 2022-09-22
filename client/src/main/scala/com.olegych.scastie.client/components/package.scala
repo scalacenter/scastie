@@ -5,6 +5,7 @@ import com.olegych.scastie.api._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.Reusable
 import japgolly.scalajs.react.Callback
+import org.scalajs.dom.HTMLElement
 
 package object components {
 
@@ -34,9 +35,9 @@ package object components {
   implicit val scalaScalaDependency: Reusability[ScalaDependency] =
     Reusability.byRefOr_==
 
-  implicit val attachedDomsReuse: Reusability[AttachedDoms] =
+  implicit val attachedDomsReuse: Reusability[Map[String, HTMLElement]] =
     Reusability.byRef ||
-      Reusability.by(_.v.keys.toSet)
+      Reusability.by(_.keys.toSet)
 
   implicit val releaseOptionsReuse: Reusability[ReleaseOptions] =
     Reusability.byRefOr_==

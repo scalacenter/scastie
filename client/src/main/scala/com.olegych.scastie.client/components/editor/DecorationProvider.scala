@@ -15,12 +15,11 @@ import scalajs.js
 import hooks.Hooks.UseStateF
 import typings.codemirrorView.codemirrorViewBooleans
 import typings.codemirrorState.codemirrorStateBooleans
-import com.olegych.scastie.client.AttachedDoms
 import com.olegych.scastie.api.AttachedDom
 
 object DecorationProvider {
 
-  class AttachedDomDecoration(uuid: String, attachedDoms: AttachedDoms) extends WidgetType {
+  final class AttachedDomDecoration(uuid: String, attachedDoms: Map[String, HTMLElement]) extends WidgetType {
     override def toDOM(view: EditorView): HTMLElement = {
       val wrap = dom.document.createElement("div")
       wrap.setAttribute("aria-hidden", "true")
@@ -30,7 +29,7 @@ object DecorationProvider {
     }
   }
 
-  class TypeDecoration(value: String, typeName: String) extends WidgetType {
+  final class TypeDecoration(value: String, typeName: String) extends WidgetType {
     override def toDOM(view: EditorView): HTMLElement = {
       val wrap = dom.document.createElement("span")
       wrap.setAttribute("aria-hidden", "true")
@@ -49,7 +48,7 @@ object DecorationProvider {
     }
   }
 
-  class HTMLDecoration(html: String) extends WidgetType {
+  final class HTMLDecoration(html: String) extends WidgetType {
     override def toDOM(view: EditorView): HTMLElement = {
       val wrap = dom.document.createElement("pre")
       wrap.setAttribute("aria-hidden", "true")
@@ -59,7 +58,7 @@ object DecorationProvider {
     }
   }
 
-  private def createDecorations(instrumentations: Set[api.Instrumentation], attachedDoms: AttachedDoms, maxPosititon: Int): DecorationSet = {
+  private def createDecorations(instrumentations: Set[api.Instrumentation], attachedDoms: Map[String, HTMLElement], maxPosititon: Int): DecorationSet = {
     val deco = instrumentations
       .filter(_.position.end < maxPosititon)
       .map { instrumentation =>
