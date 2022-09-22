@@ -98,6 +98,24 @@ lazy val smallRunnerRuntimeDependenciesInTest = {
   )
 }
 
+lazy val metalsRunner = project
+  .in(file("metals-runner"))
+  .settings(baseNoCrossSettings)
+  .settings(
+    scalaVersion := "3.2.0",
+    libraryDependencies ++= Seq(
+      "org.scalameta" % "metals" % "0.11.8" cross(CrossVersion.for3Use2_13),
+      "org.eclipse.lsp4j" % "org.eclipse.lsp4j" % "0.15.0",
+      "org.http4s"                  %% "http4s-ember-server"      % "0.23.16",
+      "org.http4s"                  %% "http4s-ember-client"      % "0.23.16",
+      "org.http4s"                  %% "http4s-dsl"               % "0.23.16",
+      "org.http4s" %% "http4s-circe" % "0.23.16",
+      "io.circe" %% "circe-generic" % "0.14.3",
+      "org.scalameta"               %% "munit"                    % "0.7.29" % Test,
+      "org.typelevel"               %% "munit-cats-effect-3" % "1.0.6" % Test
+    )
+  ).dependsOn(utils)
+
 lazy val dockerOrg = "scalacenter"
 
 lazy val sbtRunner = project
