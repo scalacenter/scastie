@@ -43,18 +43,23 @@ import cats.effect._
 import cats.syntax.all._
 
 class MetalsDispatcher() {
-  val compiler: TrieMap[ScastieMetalsOptions, ScastiePresentationCompiler] = TrieMap()
+  private val compiler: TrieMap[ScastieMetalsOptions, ScastiePresentationCompiler] = TrieMap()
   private val mtagsResolver = MtagsResolver.default()
   private val metalsWorkingDirectory = Files.createTempDirectory("scastie-metals")
+  private val supportedVersions = Set("2.12", "2.13", "3")
 
   def getCompiler(configuration: ScastieMetalsOptions): Either[String, ScastiePresentationCompiler] = {
-    mtagsResolver
-      .resolve(configuration.scalaTarget.scalaVersion)
-      .toRight("Mtags couldn't be resolved")
-      .map(mtags => compiler.getOrElseUpdate(configuration, initializeCompiler(configuration, mtags)))
+    if !isSupportedVersion(configuration) then
+      Left(s"Interactive features are not supported for Scala ${configuration.scalaTarget.binaryScalaVersion}.")
+    else
+      mtagsResolver
+        .resolve(configuration.scalaTarget.scalaVersion)
+        .toRight("Mtags couldn't be resolved")
+        .map(mtags => compiler.getOrElseUpdate(configuration, initializeCompiler(configuration, mtags)))
   }
 
-  def isSupportedScalaVersion(scalaTarget: ScalaTarget) = mtagsResolver.isSupportedScalaVersion(scalaTarget.scalaVersion)
+  def isSupportedVersion(configuration: ScastieMetalsOptions): Boolean =
+    supportedVersions.contains(configuration.scalaTarget.binaryScalaVersion)
 
   private def initializeCompiler(configuration: ScastieMetalsOptions, mtags: MtagsBinaries): ScastiePresentationCompiler = {
     val classpath = getDependencyClasspath(configuration.dependencies) ++ getCompilerClasspath(configuration.scalaTarget)
@@ -76,7 +81,6 @@ class MetalsDispatcher() {
         Dependency.of(groupId, artifactWithBinaryVersion(artifact, target), version)
     }.toSeq
 
-    // add cache for coursier directory
     Fetch
       .create()
       .addRepositories(Embedded.repositories: _*)

@@ -13,52 +13,13 @@ import org.eclipse.lsp4j.CompletionList
 import scala.jdk.CollectionConverters._
 import com.olegych.scastie.api.{ScalaTarget, ScalaDependency}
 import org.eclipse.lsp4j.MarkupContent
+import com.olegych.scastie.api.ScalaVersions
+import com.olegych.scastie.buildinfo.BuildInfo
+import TestUtils._
+
 
 class MetalsServerTest extends CatsEffectSuite {
-
-  private val server = ScastieMetalsImpl.instance[IO]
-
-  private def testCode(code: String): ScastieOffsetParams = {
-    val offset = code.indexOfSlice("@@")
-    ScastieOffsetParams(code.filter(_ != '@'), offset)
-  }
-
-  private def testCompletion(
-    scalaTarget: ScalaTarget = ScalaTarget.Scala3("3.2.0"),
-    dependencies: Set[ScalaDependency] = Set(),
-    code: String = "",
-    expected: Set[String] = Set()
-  ) =
-    val offsetParamsComplete = testCode(code)
-    val request = LSPRequestDTO(ScastieMetalsOptions(dependencies, scalaTarget), offsetParamsComplete)
-    import DTOCodecs._
-    println(request.asJson)
-    val comp = server.complete(request).map(_.getItems.asScala.map(_.getLabel).toSet).value
-    assertIO(comp, expected.asRight)
-
-  private def testHover(
-    scalaTarget: ScalaTarget = ScalaTarget.Scala3("3.2.0"),
-    dependencies: Set[ScalaDependency] = Set(),
-    code: String = "",
-    expected: MarkupContent = MarkupContent()
-  ) =
-    val offsetParamsComplete = testCode(code)
-    val request = LSPRequestDTO(ScastieMetalsOptions(dependencies, scalaTarget), offsetParamsComplete)
-    val comp = server.hover(request).map(_.getContents().getRight()).value
-    assertIO(comp, expected.asRight)
-
-  private def testSignatureHelp(
-    scalaTarget: ScalaTarget = ScalaTarget.Scala3("3.2.0"),
-    dependencies: Set[ScalaDependency] = Set(),
-    code: String = "",
-    expected: Set[String] = Set()
-  ) =
-    val offsetParamsComplete = testCode(code)
-    val request = LSPRequestDTO(ScastieMetalsOptions(dependencies, scalaTarget), offsetParamsComplete)
-    val comp = server.signatureHelp(request).map(_.getSignatures.asScala.map(_.getLabel).toSet).value
-    assertIO(comp, expected.asRight)
-
-
+  private val catsVersion = "2.8.0"
 
   test("Simple completions") {
     testCompletion(
@@ -70,7 +31,7 @@ class MetalsServerTest extends CatsEffectSuite {
       expected = Set(
         "println(): Unit",
         "println(x: Any): Unit",
-      )
+      ).asRight
     )
   }
 
@@ -86,15 +47,14 @@ class MetalsServerTest extends CatsEffectSuite {
         "println(x: Any): Unit",
         "print(x: Any): Unit",
         "printf(text: String, xs: Any*): Unit"
-      )
+      ).asRight
     )
   }
 
+
   test("Completions with dependencies") {
-    val scalaTarget: ScalaTarget = ScalaTarget.Scala3("3.2.0")
     testCompletion(
-      scalaTarget = scalaTarget,
-      dependencies = Set(ScalaDependency("org.typelevel", "cats-core", scalaTarget, "2.8.0")),
+      dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
       code =
         """import cats.syntax.all._
           |object M {
@@ -103,7 +63,10 @@ class MetalsServerTest extends CatsEffectSuite {
           """.stripMargin,
       expected = Set(
         "asRight[B]: Either[B, A]",
-      )
+      ).asRight,
+      compat = Map(
+       "2" -> Set("asRight[B]: Either[B,String]").asRight
+     )
     )
   }
 
@@ -114,7 +77,7 @@ class MetalsServerTest extends CatsEffectSuite {
           |  def hello = prin@@tln()
           |}
           """.stripMargin,
-      expected = MarkupContent("markdown", "```scala\ndef println(): Unit\n```")
+      expected = MarkupContent("markdown", "```scala\ndef println(): Unit\n```").asRight
     )
   }
 
@@ -125,15 +88,13 @@ class MetalsServerTest extends CatsEffectSuite {
           |  def hello = prin@@t()
           |}
           """.stripMargin,
-      expected = MarkupContent("markdown", "```scala\ndef print(x: Any): Unit\n```")
+      expected = MarkupContent("markdown", "```scala\ndef print(x: Any): Unit\n```").asRight
     )
   }
 
   test("Hover with dependencies") {
-    val scalaTarget: ScalaTarget = ScalaTarget.Scala3("3.2.0")
     testHover(
-      scalaTarget = scalaTarget,
-      dependencies = Set(ScalaDependency("org.typelevel", "cats-core", scalaTarget, "2.8.0")),
+      dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
       code =
         """import cats.syntax.all._
           |object M {
@@ -148,7 +109,18 @@ class MetalsServerTest extends CatsEffectSuite {
           |**Symbol signature**:
           |```scala
           |def asRight[B]: Either[B, String]
-          |```""".stripMargin)
+          |```""".stripMargin).asRight,
+      compat = Map(
+        "2" -> MarkupContent("markdown",
+        """**Expression type**:
+          |```scala
+          |Either[Nothing,String]
+          |```
+          |**Symbol signature**:
+          |```scala
+          |def asRight[B]: Either[B,String]
+          |```""".stripMargin).asRight
+        )
     )
   }
 
@@ -156,13 +128,13 @@ class MetalsServerTest extends CatsEffectSuite {
     testSignatureHelp(
       code =
         """object M {
-          |  def hello = println(@@
+          |  def hello = println(@@)
           |}
           """.stripMargin,
       expected = Set(
         "println(): Unit",
         "println(x: Any): Unit",
-      )
+      ).asRight
     )
   }
 
@@ -170,31 +142,73 @@ class MetalsServerTest extends CatsEffectSuite {
     testSignatureHelp(
       code =
         """object M {
-          |  def hello = print(@@
+          |  def hello = print(@@)
           |}
           """.stripMargin,
       expected = Set(
         "print(x: Any): Unit",
-      )
+      ).asRight
     )
   }
 
   test("Signature help with dependencies") {
-    val scalaTarget: ScalaTarget = ScalaTarget.Scala3("3.2.0")
     testSignatureHelp(
-      scalaTarget = scalaTarget,
-      dependencies = Set(ScalaDependency("org.typelevel", "cats-core", scalaTarget, "2.8.0")),
+      dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
       code =
         """import cats.syntax.all._
           |object M {
-          |  def test = "5".asRight.traverse(@@
+          |  def test = "5".asRight.traverse(@@)
           |}
           """.stripMargin,
       expected = Set(
         "traverse[F[_$4], AA >: Any, D](f: String => F[D])(using F: cats.Applicative[F]): F[Either[AA, D]]"
+      ).asRight,
+      compat = Map(
+        "2" -> Set("traverse[F[_], AA >: B, D](f: String => F[D])(implicit F: Applicative[F]): F[Either[AA,D]]").asRight
       )
     )
   }
 
+  test("No completions for unsupported scala versions") {
+    testCompletion(
+      testTargets = unsupportedVersions,
+      code =
+        """object M {
+          |  def hello = printl@@
+          |}
+          """.stripMargin,
+        compat =  unsupportedVersions.map(v =>
+            v.binaryScalaVersion -> s"Interactive features are not supported for Scala ${v.binaryScalaVersion}.".asLeft
+        ).toMap
+    )
+  }
+
+  test("No hovers for unsupported scala versions") {
+    testHover(
+      testTargets = unsupportedVersions,
+      code =
+        """object M {
+          |  def hello = prin@@tln()
+          |}
+          """.stripMargin,
+        compat =  unsupportedVersions.map(v =>
+            v.binaryScalaVersion -> s"Interactive features are not supported for Scala ${v.binaryScalaVersion}.".asLeft
+        ).toMap
+    )
+  }
+
+  test("No signatureHelps for unsupported scala versions") {
+    testSignatureHelp(
+      testTargets = unsupportedVersions,
+      code =
+        """object M {
+          |  def hello = println(@@)
+          |}
+          """.stripMargin,
+        compat =  unsupportedVersions.map(v =>
+            v.binaryScalaVersion -> s"Interactive features are not supported for Scala ${v.binaryScalaVersion}.".asLeft
+        ).toMap
+    )
+  }
 
 }
