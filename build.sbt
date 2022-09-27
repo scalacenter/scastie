@@ -44,7 +44,7 @@ lazy val loggingAndTest =
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % "1.2.11",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-      "com.getsentry.raven" % "raven-logback" % "8.0.3"
+      "io.sentry" % "sentry-logback" % "6.4.2"
     )
   ) ++ testSettings
 
@@ -237,10 +237,11 @@ lazy val client = project
       "@lezer/highlight" -> "1.0.0",
       "firacode" -> "1.205.0",
       "font-awesome" -> "4.7.0",
-      "raven-js" -> "3.11.0",
       "react" -> "17.0.0",
       "react-dom" -> "17.0.0",
       "typeface-roboto-slab" -> "0.0.35",
+      "@sentry/browser" -> "7.13.0",
+      "@sentry/tracing" -> "7.13.0",
     ),
     Compile / npmDevDependencies ++= Seq(
       "compression-webpack-plugin" -> "6.1.1",
