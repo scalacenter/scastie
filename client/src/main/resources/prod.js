@@ -1,22 +1,21 @@
-require("./sass/app-main.scss");
+import "./sass/app-main.scss";
 
-var Raven = require("node_modules/raven-js");
-var common = require("./prod-common.js");
+import * as Sentry from "node_modules/@sentry/browser";
+import { BrowserTracing } from "node_modules/@sentry/tracing";
+import common, { scastie } from "./prod-common.js";
 
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+Sentry.init({
+  dsn: "https://729713d6e2f243a4ae0b16c770e6c071@o1427772.ingest.sentry.io/6778768",
+  integrations: [new BrowserTracing()],
 
-ga('create', 'UA-574683-17', 'auto');
-ga('send', 'pageview');
+  tracesSampleRate: 1.0,
+});
 
-Raven.config('https://0b9ff62cbc2344369cab867af776ae07@sentry.io/171717').install();
 
-module.exports = common;
+export default common;
 
 window.ScastieSettings = {
   defaultServerUrl: "https://scastie.scala-lang.org"
 };
 
-common.scastie.ScastieMain.main();
+scastie.ScastieMain.main();
