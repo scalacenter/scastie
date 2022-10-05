@@ -65,7 +65,7 @@ object EmbeddedMenu {
         embedded = true,
       ).render,
       li(cls := "logo")(
-        img(src := urlBase + Assets.logoUrl),
+        img(src := Assets.logo),
         span("to Scastie"),
         onClick --> openScastie
       )

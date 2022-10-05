@@ -64,8 +64,9 @@ case class Key(default: String, linux: String, mac: String, win: String) {
 }
 
 object KeyBinding {
-  def fromCommand(action: anon.Dispatch => Boolean, key: Key, preventDefault: Boolean = false): JSKeyBinding = {
-    JSKeyBinding(x => action(x.asInstanceOf[anon.Dispatch]))
+  def fromCommand(action: typings.codemirrorState.mod.StateCommand, key: Key, preventDefault: Boolean = false): JSKeyBinding = {
+    JSKeyBinding()
+      .setRun(x => action(x.asInstanceOf[anon.Dispatch]))
       .setKey(key.default)
       .setLinux(key.linux)
       .setMac(key.mac)
@@ -74,7 +75,8 @@ object KeyBinding {
   }
 
   def apply(action: EditorView => Unit, key: Key, preventDefault: Boolean = false): JSKeyBinding = {
-    JSKeyBinding(editorView => { action(editorView); true })
+    JSKeyBinding()
+      .setRun(editorView => { action(editorView); true })
       .setKey(key.default)
       .setLinux(key.linux)
       .setMac(key.mac)

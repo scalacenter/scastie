@@ -1,3 +1,4 @@
+import scala.sys.process.ProcessLogger
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
 
@@ -5,8 +6,11 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.19"
 
 val akkaHttpVersion = "10.2.9"
 
-addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastOptJS/startWebpackDevServer")
-addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullOptJS/reStart")
+addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastLinkJS")
+addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullLinkJS/reStart")
+
+val fastLinkOutputDir = taskKey[String]("output directory for `yarn dev`")
+val fullLinkOutputDir = taskKey[String]("output directory for `yarn build`")
 
 ThisBuild / packageTimestamp := None
 
@@ -150,10 +154,7 @@ lazy val server = project
   .settings(loggingAndTest)
   .settings(
     watchSources ++= (client / watchSources).value,
-    Compile / products += (client / Compile / npmUpdate / crossTarget).value / "out",
-    reStart := reStart.dependsOn(client / Compile / fastOptJS / webpack).evaluated,
-    fullOptJS / reStart := reStart.dependsOn(client / Compile / fullOptJS / webpack).evaluated,
-    Universal / packageBin := (Universal / packageBin).dependsOn(client / Compile / fullOptJS / webpack).value,
+    Compile / products += (client / baseDirectory).value / "dist",
     reStart / javaOptions += "-Xmx512m",
     maintainer := "scalacenter",
     libraryDependencies ++= Seq(
@@ -202,68 +203,45 @@ val webpackProdConf = Def.setting {
   Some(webpackDir.value / "webpack-prod.config.js")
 }
 
+import org.scalajs.linker.interface.ModuleSplitStyle
+
 lazy val client = project
-  .enablePlugins(ScalablyTypedConverterPlugin)
+  .enablePlugins(ScalablyTypedConverterExternalNpmPlugin)
   .settings(baseNoCrossSettings)
   .settings(baseJsSettings)
   .settings(
-    webpack / version := "4.46.0",
-    startWebpackDevServer / version := "3.11.2",
+    externalNpm := {
+      scala.sys.process.Process("yarn", baseDirectory.value.getParentFile)! ProcessLogger(line => ())
+      baseDirectory.value.getParentFile
+    },
     stFlavour := Flavour.ScalajsReact,
-    fastOptJS / webpackConfigFile := webpackDevConf.value,
-    fullOptJS / webpackConfigFile := webpackProdConf.value,
-    webpackMonitoredDirectories += (Compile / resourceDirectory).value,
-    webpackResources := webpackDir.value * "*.js",
-    webpackMonitoredFiles / includeFilter := "*",
-    useYarn := true,
-    fastOptJS / webpackBundlingMode := BundlingMode.LibraryOnly(),
-    fullOptJS / webpackBundlingMode := BundlingMode.Application,
+    scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.ESModule)
+    },
+    fastLinkOutputDir := linkerOutputDirectory((Compile / fastLinkJS).value).getAbsolutePath(),
+    fullLinkOutputDir := linkerOutputDirectory((Compile / fullLinkJS).value).getAbsolutePath(),
     test := {},
     Test / loadedTestFrameworks := Map(),
     stIgnore := List(
-      "firacode", "font-awesome", "raven-js", "react", "react-dom", "typeface-roboto-slab",
+      "firacode", "font-awesome", "@sentry/browser", "@sentry/tracing", "react", "react-dom", "typeface-roboto-slab"
       ),
     stEnableScalaJsDefined := Selection.AllExcept(),
-    Compile / npmDependencies ++= Seq(
-      "codemirror" -> "6.0.1",
-      "@codemirror/commands" -> "6.0.1",
-      "@codemirror/autocomplete" -> "6.1.0",
-      "@codemirror/language" -> "6.2.1",
-      "@codemirror/legacy-modes" -> "6.1.0",
-      "@codemirror/state" -> "6.1.1",
-      "@codemirror/view" -> "6.2.0",
-      "@codemirror/lint" -> "6.0.0",
-      "@lezer/common" -> "1.0.0",
-      "@lezer/highlight" -> "1.0.0",
-      "firacode" -> "1.205.0",
-      "font-awesome" -> "4.7.0",
-      "react" -> "17.0.0",
-      "react-dom" -> "17.0.0",
-      "typeface-roboto-slab" -> "0.0.35",
-      "@sentry/browser" -> "7.13.0",
-      "@sentry/tracing" -> "7.13.0",
-    ),
-    Compile / npmDevDependencies ++= Seq(
-      "compression-webpack-plugin" -> "6.1.1",
-      "clean-webpack-plugin" -> "4.0.0",
-      "css-loader" -> "5.2.7",
-      "mini-css-extract-plugin" -> "1.6.2",
-      "file-loader" -> "6.2.0",
-      "node-sass" -> "4.14.1",
-      "resolve-url-loader" -> "5.0.0",
-      "sass-loader" -> "10.3.1",
-      "style-loader" -> "2.0.0",
-      "uglifyjs-webpack-plugin" -> "2.2.0",
-      "webpack-merge" -> "4.2.2",
-      "html-webpack-plugin" -> "4.5.2",
-    ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "core" % "2.1.1",
       "com.github.japgolly.scalajs-react" %%% "extra" % "2.1.1",
+      "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0"
     )
   )
-  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
+  .enablePlugins(ScalaJSPlugin)
   .dependsOn(api.js(ScalaVersions.js))
+
+def linkerOutputDirectory(v: Attributed[org.scalajs.linker.interface.Report]): File = {
+  v.get(scalaJSLinkerOutputDirectory.key).getOrElse {
+    throw new MessageOnlyException(
+        "Linking report was not attributed with output directory. " +
+        "Please report this as a Scala.js bug.")
+  }
+}
 
 lazy val instrumentation = project
   .settings(baseNoCrossSettings)
