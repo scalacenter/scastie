@@ -12,6 +12,8 @@ addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullLinkJS/reStart")
 val fastLinkOutputDir = taskKey[String]("output directory for `yarn dev`")
 val fullLinkOutputDir = taskKey[String]("output directory for `yarn build`")
 
+val yarnBuild = taskKey[Unit]("builds es modules with `yarn build`")
+
 ThisBuild / packageTimestamp := None
 
 lazy val scastie = project
@@ -107,7 +109,7 @@ lazy val sbtRunner = project
     reStart / javaOptions += "-Xmx256m",
     Test / parallelExecution := false,
     reStart := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
-    resolvers += Resolver.sonatypeRepo("public"),
+    resolvers ++= Resolver.sonatypeOssRepos("public"),
     libraryDependencies ++= Seq(
       akka("actor"),
       akka("testkit") % Test,
@@ -155,6 +157,8 @@ lazy val server = project
   .settings(
     watchSources ++= (client / watchSources).value,
     Compile / products += (client / baseDirectory).value / "dist",
+    fullLinkJS / reStart := reStart.dependsOn(client / Compile / fullLinkJS / yarnBuild).evaluated,
+    Universal / packageBin := (Universal / packageBin).dependsOn(client / Compile / fullLinkJS / yarnBuild).value,
     reStart / javaOptions += "-Xmx512m",
     maintainer := "scalacenter",
     libraryDependencies ++= Seq(
@@ -220,6 +224,9 @@ lazy val client = project
     },
     fastLinkOutputDir := linkerOutputDirectory((Compile / fastLinkJS).value).getAbsolutePath(),
     fullLinkOutputDir := linkerOutputDirectory((Compile / fullLinkJS).value).getAbsolutePath(),
+    yarnBuild := {
+      scala.sys.process.Process("yarn build").!
+    },
     test := {},
     Test / loadedTestFrameworks := Map(),
     stIgnore := List(
