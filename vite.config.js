@@ -51,8 +51,8 @@ const websiteOptions = {
     app: path.resolve(root, 'index.html')
   },
   output: {
-    assetFileNames: "assets/[name].[ext]",
     entryFileNames: "[name].js",
+    assetFileNames: "assets/[name].[ext]"
   }
 }
 

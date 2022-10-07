@@ -1,3 +1,4 @@
+import sbt.internal.BuildStructure
 import scala.sys.process.ProcessLogger
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
@@ -219,18 +220,21 @@ lazy val client = project
       baseDirectory.value.getParentFile
     },
     stFlavour := Flavour.ScalajsReact,
-    scalaJSLinkerConfig ~= {
-      _.withModuleKind(ModuleKind.ESModule)
+    scalaJSLinkerConfig := {
+      val dir = (Compile / fastLinkJS / scalaJSLinkerOutputDirectory).value.toURI()
+      scalaJSLinkerConfig.value.withModuleKind(ModuleKind.ESModule)
+        .withRelativizeSourceMapBase(Some(dir))
     },
-    fastLinkOutputDir := linkerOutputDirectory((Compile / fastLinkJS).value).getAbsolutePath(),
-    fullLinkOutputDir := linkerOutputDirectory((Compile / fullLinkJS).value).getAbsolutePath(),
+    fastLinkOutputDir := (Compile / fastLinkJS / scalaJSLinkerOutputDirectory).value.getAbsolutePath(),
+    fullLinkOutputDir := (Compile / fullLinkJS / scalaJSLinkerOutputDirectory).value.getAbsolutePath(),
     yarnBuild := {
       scala.sys.process.Process("yarn build").!
     },
     test := {},
     Test / loadedTestFrameworks := Map(),
     stIgnore := List(
-      "firacode", "font-awesome", "@sentry/browser", "@sentry/tracing", "react", "react-dom", "typeface-roboto-slab"
+      "firacode", "font-awesome", "@sentry/browser", "@sentry/tracing",
+      "react", "react-dom", "typeface-roboto-slab", "source-map-support"
       ),
     stEnableScalaJsDefined := Selection.AllExcept(),
     libraryDependencies ++= Seq(
@@ -241,14 +245,6 @@ lazy val client = project
   )
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(api.js(ScalaVersions.js))
-
-def linkerOutputDirectory(v: Attributed[org.scalajs.linker.interface.Report]): File = {
-  v.get(scalaJSLinkerOutputDirectory.key).getOrElse {
-    throw new MessageOnlyException(
-        "Linking report was not attributed with output directory. " +
-        "Please report this as a Scala.js bug.")
-  }
-}
 
 lazy val instrumentation = project
   .settings(baseNoCrossSettings)
