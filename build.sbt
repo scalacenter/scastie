@@ -1,4 +1,3 @@
-import sbt.internal.BuildStructure
 import scala.sys.process.ProcessLogger
 import SbtShared._
 import com.typesafe.sbt.SbtNativePackager.Universal
