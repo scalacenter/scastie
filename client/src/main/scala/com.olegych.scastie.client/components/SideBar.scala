@@ -11,23 +11,22 @@ import extra._
 import scala.scalajs.js
 import js.annotation._
 
-@JSImport("resources/images/icon-scastie.png", JSImport.Default)
+@JSImport("@resources/images/icon-scastie.png", JSImport.Default)
 @js.native
 object ScastieLogo extends js.Object
 
-@JSImport("resources/images/placeholder.png", JSImport.Default)
+@JSImport("@resources/images/placeholder.png", JSImport.Default)
 @js.native
 object Placeholder extends js.Object
 
 object Assets {
-  def logoUrl = ScastieLogo.asInstanceOf[String]
-  def placeholderUrl: String = Placeholder.asInstanceOf[String]
+  def logo: String = ScastieLogo.asInstanceOf[String]
+  def placeholder: String = Placeholder.asInstanceOf[String]
 }
 
 final case class SideBar(isDarkTheme: Boolean,
                          status: StatusState,
                          inputs: Inputs,
-                         serverUrl: Option[String],
                          toggleTheme: Reusable[Callback],
                          view: StateSnapshot[View],
                          openHelpModal: Reusable[Callback]) {
@@ -40,8 +39,6 @@ object SideBar {
     Reusability.derive[SideBar]
 
   private def render(props: SideBar): VdomElement = {
-    val urlBase = props.serverUrl.getOrElse("")
-
     val toggleThemeLabel =
       if (props.isDarkTheme) "Light"
       else "Dark"
@@ -100,7 +97,7 @@ object SideBar {
     nav(cls := "sidebar")(
       div(cls := "actions-container")(
         div(cls := "logo")(
-          img(src := urlBase + Assets.logoUrl),
+          img(src := Assets.logo),
           h1("Scastie")
         ),
         ul(cls := "actions-top")(

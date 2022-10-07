@@ -51,7 +51,7 @@
           font-weight: normal;
       }
       label img {
-          border-radius: $modal-trigger-image-width / 2;
+          border-radius: calc($modal-trigger-image-width / 2);
           display: block;
           max-width: $modal-trigger-image-width;
       }
@@ -98,8 +98,8 @@
           }
       }
       .modal-close {
-          top: ($modal-padding/1.5);
-          right: ($modal-padding /2);
+          top: calc($modal-padding/1.5);
+          right: calc($modal-padding /2);
           position: absolute;
           @include size(1.5em, 1.5em);
           background: $modal-background;

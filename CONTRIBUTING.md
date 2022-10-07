@@ -38,12 +38,25 @@ nvm use 8.9.1
 sbt
 > startAll
 ```
+in a separate terminal, start the vite dev server by running `yarn dev` in the root directory of the repository
 
 open `http://localhost:8080`
 
-then run `~client/fastOptJS` if you work on client part or `~sbtRunner/reStart;server/reStart` if you work on server part. 
+then run `~client/fastLinkJS` if you work on client part 
+or `~sbtRunner/reStart;server/reStart` if you work on the server part. 
 
 you can also open `http://localhost:8080/embed.html` to edit the embedded style
+
+### Testing production build
+
+Start the sbt production server:
+
+```
+sbt
+> startAllProd
+```
+
+open `http://localhost:9000`
 
 ## Scalafmt
 

@@ -67,19 +67,16 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec:
     get(
       concat(
         path("public" / "app.css")(
-          getFromResource("public/app.css.gz")
+          getFromResource("public/assets/index.css")
         ),
         path("public" / "app.js")(
-          getFromResource("public/app.js.gz")
+          getFromResource("public/app.js")
         ),
         path("public" / "embedded.css")(
-          getFromResource("public/embedded.css.gz")
+          getFromResource("public/assets/index.css")
         ),
         path("embedded.js")(
-          getFromResource("public/embedded.js.gz")
-        ),
-        path("embedded.js.map")(
-          getFromResource("public/embedded.js.map")
+          getFromResource("public/embedded.js")
         ),
         path("public" / Remaining)(
           path => getFromResource("public/" + path)
