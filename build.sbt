@@ -224,8 +224,8 @@ lazy val client = project
       scalaJSLinkerConfig.value.withModuleKind(ModuleKind.ESModule)
         .withRelativizeSourceMapBase(Some(dir))
     },
-    fastLinkOutputDir := (Compile / fastLinkJS / scalaJSLinkerOutputDirectory).value.getAbsolutePath(),
-    fullLinkOutputDir := (Compile / fullLinkJS / scalaJSLinkerOutputDirectory).value.getAbsolutePath(),
+    fastLinkOutputDir := linkerOutputDirectory((Compile / fastLinkJS).value).getAbsolutePath(),
+    fullLinkOutputDir := linkerOutputDirectory((Compile / fullLinkJS).value).getAbsolutePath(),
     yarnBuild := {
       scala.sys.process.Process("yarn build").!
     },
@@ -244,6 +244,14 @@ lazy val client = project
   )
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(api.js(ScalaVersions.js))
+
+def linkerOutputDirectory(v: Attributed[org.scalajs.linker.interface.Report]): File = {
+  v.get(scalaJSLinkerOutputDirectory.key).getOrElse {
+    throw new MessageOnlyException(
+        "Linking report was not attributed with output directory. " +
+        "Please report this as a Scala.js bug.")
+  }
+}
 
 lazy val instrumentation = project
   .settings(baseNoCrossSettings)
