@@ -5,7 +5,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && MODE=embed vite build -l error"
+    "build": "vite build && MODE=embed vite build"
   },
   "devDependencies": {
     "sass": "^1.55.0"
