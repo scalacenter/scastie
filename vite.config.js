@@ -11,7 +11,7 @@ function emitEmbedded() {
 }
 
 function printSbtTask(task) {
-  const args = ["--error", "--batch", `print ${task}`];
+  const args = ["-J-Xlog:all=error", "--error", "--batch", `print ${task}`];
   const options = {
     stdio: [
       "pipe", // StdIn.
