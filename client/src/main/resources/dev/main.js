@@ -5,4 +5,5 @@ window.ScastieSettings = {
   defaultServerUrl: ""
 };
 
+window.scastie = scastie;
 scastie.ScastieMain.main();

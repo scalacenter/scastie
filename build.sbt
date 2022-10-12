@@ -239,7 +239,6 @@ lazy val client = project
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "core" % "2.1.1",
       "com.github.japgolly.scalajs-react" %%% "extra" % "2.1.1",
-      "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0"
     )
   )
   .enablePlugins(ScalaJSPlugin)

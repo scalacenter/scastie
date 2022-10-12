@@ -110,7 +110,10 @@ object SbtShared {
 
   lazy val baseJsSettings = Seq(
     test := {},
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "2.2.0",
+      "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0" cross(CrossVersion.for3Use2_13),
+    )
   )
 
   /* api is for the communication between sbt <=> server <=> frontend */
@@ -160,14 +163,12 @@ object SbtShared {
 
   /* runtime* pretty print values and type */
   lazy val `runtime-scala` = (projectMatrix in file(runtimeProjectName))
+    .jvmPlatform(ScalaVersions.cross)
+    .jsPlatform(ScalaVersions.crossJS, baseJsSettings)
     .settings(
       baseSettings,
       version := versionRuntime,
       name := runtimeProjectName,
-    )
-    .jvmPlatform(ScalaVersions.cross)
-    .jsPlatform(ScalaVersions.crossJS, baseJsSettings)
-    .settings(
       inConfig(Compile)(
         unmanagedSourceDirectories ++= scala2MajorSourceDirs(scalaSource.value, virtualAxes.value),
       )
