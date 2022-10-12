@@ -16,4 +16,5 @@ window.ScastieSettings = {
   defaultServerUrl: "https://scastie.scala-lang.org"
 };
 
+window.scastie = scastie;
 scastie.ScastieMain.main();
