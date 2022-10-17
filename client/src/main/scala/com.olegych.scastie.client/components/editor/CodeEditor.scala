@@ -84,9 +84,10 @@ object CodeEditor {
 
       })
     val runtimeErrors = props.runtimeError.map(runtimeError => {
-      val line = runtimeError.line.getOrElse(1)
+      val line = runtimeError.line.getOrElse(1).min(doc.lines.toInt)
       val lineInfo = doc.line(line)
-      Diagnostic(lineInfo.from, HTMLFormatter.format(runtimeError.message), codemirrorLintStrings.error, lineInfo.to)
+      val msg = if (runtimeError.fullStack.nonEmpty) runtimeError.fullStack else runtimeError.message
+      Diagnostic(lineInfo.from, HTMLFormatter.format(msg), codemirrorLintStrings.error, lineInfo.to)
     })
 
     js.Array((errors ++ runtimeErrors).toSeq: _*)
