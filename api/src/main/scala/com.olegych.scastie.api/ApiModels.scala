@@ -108,6 +108,50 @@ case class ScalaDependency(
   override def toString: String = target.renderSbt(this)
 }
 
+case class ScastieMetalsOptions(dependencies: Set[ScalaDependency], scalaTarget: ScalaTarget)
+
+object ScastieMetalsOptions {
+  implicit val scastieMetalsOptions: OFormat[ScastieMetalsOptions] = Json.format[ScastieMetalsOptions]
+}
+
+case class ScastieOffsetParams(content: String, offset: Int)
+
+object ScastieOffsetParams {
+  implicit val scastieOffsetParams: OFormat[ScastieOffsetParams] = Json.format[ScastieOffsetParams]
+}
+
+case class LSPRequestDTO(options: ScastieMetalsOptions, offsetParams: ScastieOffsetParams)
+case class CompletionInfoRequest(options: ScastieMetalsOptions, completionItem: CompletionItemDTO)
+
+object CompletionInfoRequest {
+  implicit val completionInfoRequestFormat: OFormat[CompletionInfoRequest] = Json.format[CompletionInfoRequest]
+}
+
+
+
+case class InsertInstructions(text: String, cursorMove: Int)
+case class CompletionItemDTO(label: String, info: String, tpe: String, order: Option[Int], instructions: InsertInstructions, detail: String, symbol: Option[String])
+case class HoverDTO(label: String, info: String, tpe: String, order: Option[Int], instructions: InsertInstructions, symbol: String)
+
+case class CompletionsDTO(items: Set[CompletionItemDTO])
+
+
+object InsertInstructions {
+  implicit val insertInstructionsFormat: OFormat[InsertInstructions] = Json.format[InsertInstructions]
+}
+
+object CompletionItemDTO {
+  implicit val completionItemDTOFormat: OFormat[CompletionItemDTO] = Json.format[CompletionItemDTO]
+}
+
+object CompletionsDTO {
+  implicit val completionsDTOFormat: OFormat[CompletionsDTO] = Json.format[CompletionsDTO]
+}
+
+object LSPRequestDTO {
+  implicit val lspRequestDTOFormat: OFormat[LSPRequestDTO] = Json.format[LSPRequestDTO]
+}
+
 object Project {
   implicit val formatProject: OFormat[Project] =
     Json.format[Project]

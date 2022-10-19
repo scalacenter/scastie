@@ -16,6 +16,7 @@ import hooks.Hooks.UseStateF
 import typings.codemirrorView.codemirrorViewBooleans
 import typings.codemirrorState.codemirrorStateBooleans
 import com.olegych.scastie.api.AttachedDom
+import js.JSConverters._
 
 object DecorationProvider {
 
@@ -74,7 +75,7 @@ object DecorationProvider {
         }
       }
       .toSeq
-    val x: js.Array[Range[Decoration]] = js.Array(deco: _*)
+    val x: js.Array[Range[Decoration]] = deco.toJSArray
     Decoration.set(x, true)
   }
 
@@ -84,7 +85,6 @@ object DecorationProvider {
   private def updateDecorationPositions(previousValue: DecorationSet, transaction: Transaction): DecorationSet = {
     val newNewlines: ListBuffer[Int] = ListBuffer.empty
     val decorationsToReAdd: ListBuffer[Range[Decoration]] = ListBuffer.empty
-    var value = previousValue
     transaction.changes.iterChanges((_, _, fromB, toB, _) => {
       transaction.newDoc.sliceString(fromB, toB).lastOption.foreach {
         case '\n' => newNewlines.addAll(List(fromB.toInt))
@@ -109,7 +109,7 @@ object DecorationProvider {
       newValues
     else
       newValues.update(new js.Object {
-        var add = js.Array(decorationsToReAdd.toSeq: _*)
+        var add = decorationsToReAdd.toJSArray
       }.asInstanceOf[RangeSetUpdate[DecorationSet]])
   }
 

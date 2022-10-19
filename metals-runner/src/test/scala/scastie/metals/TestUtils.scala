@@ -18,6 +18,9 @@ import com.olegych.scastie.buildinfo.BuildInfo
 import munit.CatsEffectAssertions
 import munit.CatsEffectSuitePlatform
 import munit.Assertions
+import com.olegych.scastie.api._
+import JavaConverters._
+import cats.implicits._
 
 object TestUtils extends Assertions with CatsEffectAssertions {
   private val server = ScastieMetalsImpl.instance[IO]
@@ -34,7 +37,6 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     ScastieOffsetParams(code.filter(_ != '@'), offset)
   }
 
-
   private def createRequest(
     scalaTarget: ScalaTarget,
     dependencies: Set[DependencyForVersion],
@@ -43,7 +45,6 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     val offsetParamsComplete = testCode(code)
     val dependencies0 = dependencies.map(_.apply(scalaTarget))
     LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget), offsetParamsComplete)
-
 
   def getCompat[A](scalaTarget: ScalaTarget, compat: Map[String, A], default: A): A =
     val binaryScalaVersion = scalaTarget.binaryScalaVersion
@@ -92,6 +93,26 @@ object TestUtils extends Assertions with CatsEffectAssertions {
       val request = createRequest(scalaTarget, dependencies, code)
       val comp = server.signatureHelp(request).map(_.getSignatures.asScala.map(_.getLabel).toSet).value
       assertIO(comp, getCompat(scalaTarget, compat, expected), s"Failed for target $scalaTarget")
+    )
+
+  def testCompletionInfo(
+    testTargets: List[ScalaTarget] = testTargets,
+    dependencies: Set[DependencyForVersion] = Set(),
+    code: String = "",
+    expected: List[Either[String, String]] = List(),
+    compat: Map[String, List[Either[String, String]]] = Map()
+  ): IO[List[Unit]] =
+    testTargets.traverse (scalaTarget =>
+      val request = createRequest(scalaTarget, dependencies, code)
+      val comp = server.complete(request).fold(_ => Set(), _.toSimpleScalaList).flatMap { cmps =>
+        cmps.map { cmp =>
+          val infoRequest = CompletionInfoRequest(request._1, cmp)
+          server.completionInfo(infoRequest).value
+        }.toList.sequence
+      }
+
+      assertIO(comp, getCompat(scalaTarget, compat, expected), s"Failed for target $scalaTarget")
+
     )
 
 }

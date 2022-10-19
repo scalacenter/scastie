@@ -70,6 +70,39 @@ class MetalsServerTest extends CatsEffectSuite {
     )
   }
 
+  // test("Completion info with dependencies") {
+  //   testCompletionInfo(
+  //     testTargets = List(ScalaTarget.Scala3("3.2.0")),
+  //     dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
+  //     code =
+  //       """import cats.syntax.all._
+  //         |object M {
+  //         |  def test = "5".asRigh@@
+  //         |}
+  //         """.stripMargin,
+  //     expected = List(
+  //       // "asRight[B]: Either[B, A]",
+  //     ),
+  //     // compat = Map(
+  //     //  "2" -> Set("asRight[B]: Either[B,String]").asRight
+  //    // )
+  //   )
+  // }
+
+  test("Completions item info") {
+    testCompletionInfo(
+      code =
+        """object M {
+          |  printl@@
+          |}
+          """.stripMargin,
+      expected = List(
+        Right("println(): Unit"),
+        Right("println(x: Any): Unit"),
+      )
+    )
+  }
+
   test("Simple hover") {
     testHover(
       code =
@@ -155,9 +188,9 @@ class MetalsServerTest extends CatsEffectSuite {
     testSignatureHelp(
       dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
       code =
-        """import cats.syntax.all._
+        """import cats.data.Kleisli
           |object M {
-          |  def test = "5".asRight.traverse(@@)
+          |  def test = Kleisli(@@)
           |}
           """.stripMargin,
       expected = Set(

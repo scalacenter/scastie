@@ -27,7 +27,7 @@ import scala.meta.internal.process.SystemProcess
 import scala.meta.io.AbsolutePath
 import scala.util.Try
 import com.olegych.scastie.api.ScalaDependency
-import com.olegych.scastie.api.ScalaTarget
+import com.olegych.scastie.api._
 import scala.meta.internal.metals.Embedded
 import coursierapi.Dependency
 import coursierapi.Fetch
@@ -41,6 +41,11 @@ import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.SignatureHelp
 import cats.effect._
 import cats.syntax.all._
+import com.olegych.scastie.api.ScalaTarget.Jvm
+import com.olegych.scastie.api.ScalaTarget.Typelevel
+import com.olegych.scastie.api.ScalaTarget.Js
+import com.olegych.scastie.api.ScalaTarget.Native
+import com.olegych.scastie.api.ScalaTarget.Scala3
 
 class MetalsDispatcher() {
   private val compiler: TrieMap[ScastieMetalsOptions, ScastiePresentationCompiler] = TrieMap()
@@ -62,7 +67,9 @@ class MetalsDispatcher() {
     supportedVersions.contains(configuration.scalaTarget.binaryScalaVersion)
 
   private def initializeCompiler(configuration: ScastieMetalsOptions, mtags: MtagsBinaries): ScastiePresentationCompiler = {
-    val classpath = getDependencyClasspath(configuration.dependencies) ++ getCompilerClasspath(configuration.scalaTarget)
+    val classpath = getDependencyClasspath(configuration.dependencies) ++
+      getCompilerClasspath(configuration.scalaTarget) ++
+      getCompilerSources(configuration.scalaTarget)
     val scalaVersion = configuration.scalaTarget.scalaVersion
     val pc = PresentationCompilers.createPresentationCompiler(classpath.toSeq, scalaVersion, mtags)
     ScastiePresentationCompiler(pc, metalsWorkingDirectory)
@@ -75,16 +82,39 @@ class MetalsDispatcher() {
     Embedded.scalaLibrary(scalaTarget.scalaVersion).toSet
   }
 
+  private def getCompilerSources(scalaTarget: ScalaTarget): Set[Path] = {
+    scalaTarget match
+      case Jvm(scalaVersion) => Embedded.downloadScalaSources(scalaTarget.scalaVersion).toSet
+      case Typelevel(scalaVersion) => Set.empty
+      case Js(scalaVersion, scalaJsVersion) => Set.empty
+      case Native(scalaVersion, scalaNativeVersion) => Set.empty
+      case Scala3(scalaVersion) => Embedded.downloadScala3Sources(scalaTarget.scalaVersion).toSet
+  }
+
+
   private def getDependencyClasspath(dependencies: Set[ScalaDependency]): Set[Path] = {
     val dep = dependencies.map {
       case ScalaDependency(groupId, artifact, target, version) =>
         Dependency.of(groupId, artifactWithBinaryVersion(artifact, target), version)
     }.toSeq
 
+    // Fetch
+    //   .create()
+    //   .withRepositories(repositories.toSeq: _*)
+    //   .withDependencies(dependencies: _*)
+    //   .withClassifiers(classifiers.asJava)
+    //   .withMainArtifacts()
+    //   .fetch()
+    //   .map(_.toPath)
+    //   .asScala
+    //   .toList
+
     Fetch
       .create()
       .addRepositories(Embedded.repositories: _*)
       .withDependencies(dep: _*)
+      .withClassifiers(Set("sources").asJava)
+      .withMainArtifacts()
       .fetch().asScala.map(file => Path.of(file.getPath)).toSet
 
   }

@@ -11,11 +11,11 @@ import org.scalajs.dom
 import dom.ext.KeyCode
 import dom.{HTMLInputElement, HTMLElement}
 
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.concurrent.Future
 import com.olegych.scastie.api.ScalaTarget.{Jvm, Scala3}
 import com.olegych.scastie.buildinfo.BuildInfo
 import scalajs.js.Thenable.Implicits._
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency ~=> Callback,

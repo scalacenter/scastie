@@ -47,10 +47,28 @@ import java.util.Optional
 import scala.meta.inputs.Input.VirtualFile
 import scala.reflect.internal.util.SourceFile
 import scala.reflect.internal.util.BatchSourceFile
+import com.olegych.scastie.api._
+import scastie.metals.DTOExtensions.toOffsetParams
+import org.eclipse.lsp4j.CompletionItem
+import JavaConverters._
+import scala.meta.internal.pc.CompletionItemData
+
 
 case class ScastiePresentationCompiler(pc: PresentationCompiler, metalsWorkingDirectory: Path) {
   def complete[F[_]: Async](offsetParams: ScastieOffsetParams): F[CompletionList] =
-    Async[F].fromFuture(pc.complete(offsetParams.toOffsetParams).asScala.pure)
+    Async[F].fromFuture(
+      pc.complete(offsetParams.toOffsetParams)
+    .asScala.pure)
+
+  def completionItemResolve[F[_]: Async](completionItem: CompletionItemDTO)(implicit ec: ExecutionContext): F[String] =
+    completionItem.symbol.map { symbol =>
+      val completionItemJ = CompletionItem(completionItem.label)
+      completionItemJ.setDetail(completionItem.detail)
+      val doc = pc.completionItemResolve(completionItemJ, symbol)
+        .asScala
+        .map(cmp => Option(cmp.getDocumentation()).map(_.asScala.map(_.getValue()).merge).getOrElse(""))
+      Async[F].fromFuture(doc.pure)
+    }.getOrElse(Async[F].fromFuture(Future("").pure))
 
   def hover[F[_]: Async](offsetParams: ScastieOffsetParams)(implicit ec: ExecutionContext): EitherT[F, String, Hover] =
     val javaHover = pc.hover(offsetParams.toOffsetParams)

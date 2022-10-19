@@ -8,9 +8,11 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits._
 import cats.instances.future._
+import com.olegych.scastie.api._
 
 trait ScastieMetals[F[_]]:
   def complete(request: LSPRequestDTO): EitherT[F, String, CompletionList]
+  def completionInfo(request: CompletionInfoRequest): EitherT[F, String, String]
   def hover(request: LSPRequestDTO): EitherT[F, String, Hover]
   def signatureHelp(request: LSPRequestDTO): EitherT[F, String, SignatureHelp]
 
@@ -21,6 +23,9 @@ object ScastieMetalsImpl:
 
     def complete(request: LSPRequestDTO): EitherT[F, String, CompletionList] =
       EitherT(dispatcher.getCompiler(request.options).traverse(_.complete(request.offsetParams)))
+
+    def completionInfo(request: CompletionInfoRequest): EitherT[F, String, String] =
+      EitherT(dispatcher.getCompiler(request.options).traverse(_.completionItemResolve(request.completionItem)))
 
     def hover(request: LSPRequestDTO): EitherT[F, String, Hover] =
       EitherT.fromEither(dispatcher.getCompiler(request.options)).flatMap(_.hover(request.offsetParams))

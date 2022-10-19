@@ -27,7 +27,7 @@ object SbtShared {
     val js = latest213
     val sbt = latest212
     val jvm = latest213
-    val cross = List(latest210, latest211, latest212, latest213, old3, js, sbt, jvm).distinct
+    val cross = List(latest211, latest212, latest213, stable3, js, sbt, jvm).distinct
     val crossJS = List(latest212, latest213, js).distinct
   }
 
@@ -140,7 +140,7 @@ object SbtShared {
           case v if v.startsWith("2.11") =>
             "com.typesafe.play" %%% "play-json" % "2.7.4"
           case _ =>
-            "com.typesafe.play" %%% "play-json" % "2.10.0-RC5"
+            "com.typesafe.play" %%% "play-json" % "2.10.0-RC6"
         }
       },
       buildInfoKeys := Seq[BuildInfoKey](

@@ -82,6 +82,8 @@ object MainPanel {
         togglePresentationMode = backend.togglePresentationMode,
         formatCode = backend.formatCode,
         codeChange = backend.codeChange,
+        target = state.inputs.target,
+        dependencies = state.inputs.libraries
       ).render
 
     val console =
