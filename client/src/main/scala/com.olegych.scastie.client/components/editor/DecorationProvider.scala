@@ -1,6 +1,7 @@
 package com.olegych.scastie.client.components.editor
 
 import com.olegych.scastie.api
+import com.olegych.scastie.api.AttachedDom
 import com.olegych.scastie.api.Html
 import com.olegych.scastie.api.Value
 import japgolly.scalajs.react._
@@ -8,14 +9,11 @@ import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
-import scala.concurrent.duration._
+
 import scala.collection.mutable.ListBuffer
 
 import scalajs.js
 import hooks.Hooks.UseStateF
-import typings.codemirrorView.codemirrorViewBooleans
-import typings.codemirrorState.codemirrorStateBooleans
-import com.olegych.scastie.api.AttachedDom
 import js.JSConverters._
 
 object DecorationProvider {

@@ -1,12 +1,9 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
-import com.olegych.scastie.client.components.editor.SimpleEditor
 import japgolly.scalajs.react._
-import vdom.TagOf
+
 import vdom.all._
-import extra._
-import org.scalajs.dom.html.Div
 
 case class TargetSelector(scalaTarget: ScalaTarget, onChange: ScalaTarget ~=> Callback) {
   @inline def render: VdomElement = TargetSelector.targetSelector(this)

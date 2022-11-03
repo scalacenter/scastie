@@ -101,14 +101,22 @@ export default defineConfig({
       },
       {
         find: '@resources',
-        replacement: path.resolve(__dirname, 'client', 'src', 'main', './resources'),
+        replacement: path.resolve(__dirname, 'client', 'src', 'main', 'resources'),
       }
     ],
   },
   build: {
     outDir: path.resolve(__dirname, 'client', 'dist', 'public'),
     rollupOptions: emitEmbedded() ? embeddedOptions : websiteOptions,
-    emptyOutDir: !emitEmbedded()
+    emptyOutDir: !emitEmbedded(),
+  },
+  css: {
+    devSourcemap: true,
+    preprocessorOptions: {
+       stylus: { // or stylus, depending on the stylus files extension name you use
+         imports: [path.resolve(__dirname, 'node_modules', 'highlight.js', 'styles')],
+       }
+    }
   },
   server: {
     proxy: proxy,

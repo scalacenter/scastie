@@ -2,33 +2,26 @@ package com.olegych.scastie.client.components.editor
 
 import com.olegych.scastie.api
 import com.olegych.scastie.client.HTMLFormatter
+import com.olegych.scastie.client._
 import japgolly.scalajs.react._
 import org.scalajs.dom
-import org.scalajs.dom.{Element, HTMLElement}
-import typings.codemirrorLanguage.mod
-import typings.codemirrorLint.codemirrorLintStrings
-import typings.codemirrorLint.mod._
-import typings.codemirrorState.mod._
-import typings.codemirrorView.mod._
+import org.scalajs.dom.Element
+import org.scalajs.dom.HTMLElement
 import typings.codemirrorAutocomplete.mod._
 import typings.codemirrorCommands.mod._
+import typings.codemirrorLanguage.mod
 import typings.codemirrorLanguage.mod._
+import typings.codemirrorLint.codemirrorLintStrings
+import typings.codemirrorLint.mod._
 import typings.codemirrorSearch.mod._
+import typings.codemirrorState.mod._
+import typings.codemirrorView.mod._
 
 import scalajs.js
 import vdom.all._
 import JsUtils._
 import hooks.Hooks.UseStateF
-import netscape.javascript.JSObject
-import typings.codemirrorAutocomplete.anon
-import play.api.libs.json.Json
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scalajs.js.Thenable.Implicits._
-import scala.concurrent.Await
 import js.JSConverters._
-import typings.codemirrorState
-import typings.std.Node
-import typings.codemirrorView
 
 final case class CodeEditor(visible: Boolean,
                             isDarkTheme: Boolean,
@@ -51,102 +44,14 @@ final case class CodeEditor(visible: Boolean,
                             formatCode: Reusable[Callback],
                             codeChange: String ~=> Callback,
                             target: api.ScalaTarget,
+                            metalsStatus: MetalsStatus,
+                            setMetalsStatus: MetalsStatus ~=> Callback,
                             dependencies: Set[api.ScalaDependency])
     extends Editor {
   @inline def render: VdomElement = CodeEditor.hooksComponent(this)
 }
 
-case class InteractiveProvider(scalaTarget: api.ScalaTarget, dependencies: Set[api.ScalaDependency]) {
-  def extension = autocompletion(autocompletionConfig)
-
-  def toLSPRequest(code: String, offset: Int): api.LSPRequestDTO = {
-    val metalsOption = api.ScastieMetalsOptions(dependencies, scalaTarget)
-    val offsetParams = api.ScastieOffsetParams(code, offset)
-    api.LSPRequestDTO(metalsOption, offsetParams)
-  }
-
-  def makeRequest(req: api.LSPRequestDTO, endpoint: String) =
-    dom.fetch(s"http://localhost:8000/metals/$endpoint", js.Dynamic.literal(
-      body = Json.toJson(req).toString,
-      method = dom.HttpMethod.POST
-    ).asInstanceOf[dom.RequestInit])
-
-  def makeRequestInfo(req: api.CompletionInfoRequest, endpoint: String) =
-    dom.fetch(s"http://localhost:8000/metals/completionInfo", js.Dynamic.literal(
-      body = Json.toJson(req).toString,
-      method = dom.HttpMethod.POST
-    ).asInstanceOf[dom.RequestInit])
-
-  val completionsF: js.Function1[CompletionContext, js.Promise[CompletionResult]] = { ctx =>
-    val word: anon.Text = ctx.matchBefore(js.RegExp("\\.?\\w*")).asInstanceOf[anon.Text]
-
-    val request = toLSPRequest(ctx.state.doc.toString(), ctx.pos.toInt)
-    val from = if (word.text.headOption == Some('.')) word.from + 1 else word.from
-
-    if (word == null || (word.from == word.to && !ctx.explicit)) {
-      null
-    } else {
-      (for {
-        res <- makeRequest(request, "complete")
-        text <- res.text()
-      } yield {
-        val completions = Json.parse(text).asOpt[Set[api.CompletionItemDTO]].getOrElse(Set.empty).map {
-          case cmp @ api.CompletionItemDTO(label, info, tpe, boost, insertInstructions, details, symbol) => {
-            Completion(label)
-              .setInfo({
-                val infoFunction: js.Function1[Completion, js.Promise[dom.Node]] = _ =>
-                    (for {
-                      res <- makeRequestInfo(api.CompletionInfoRequest(request.options, cmp), "")
-                      text <- res.text()
-                    } yield {
-                      if (text.nonEmpty) {
-                        val node = dom.document.createElement("pre")
-                        node.textContent = text
-                        node
-                      } else {
-                        null
-                      }
-                    }).toJSPromise
-               infoFunction
-
-              })
-              .setType(tpe)
-              .setBoost(boost.getOrElse(0).toDouble)
-              .setApplyFunction4((view, cmp, from, to) => Callback {
-                view.dispatch(
-                  TransactionSpec().setChanges(
-                    js.Dynamic.literal(
-                      from = from.toDouble,
-                      to = to.toDouble,
-                      insert = insertInstructions.text
-                    ).asInstanceOf[ChangeSpec]
-                  ).setSelection(
-                    codemirrorState.anon.Anchor(from.toDouble + insertInstructions.cursorMove)
-                  )
-              )})
-          }
-        }
-        CompletionResult(from, completions.toJSArray).setValidFor(js.RegExp("^\\w*$"))
-      }).toJSPromise
-    }
-  }
-
-  private val autocompletionConfig = CompletionConfig()
-    .setOverrideVarargs(completionsF)
-    .setIcons(true)
-    .setDefaultKeymap(true)
-
-}
-
-object Interactive {
-  val interactiveExtension = new Compartment()
-
-  // def extension = interactiveExtension.of()
-}
-
 object CodeEditor {
-
-  val interactive = new Compartment()
 
   private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback =
     ref.foreachCB(divRef => {
@@ -176,7 +81,9 @@ object CodeEditor {
             DecorationProvider(props),
             EditorState.tabSize.of(2),
             Prec.highest(EditorKeymaps.keymapping(props)),
-            interactive.of(InteractiveProvider(props.target, props.dependencies).extension),
+            InteractiveProvider.interactive.of(
+              InteractiveProvider(props).extension
+            ),
             mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
             SyntaxHighlightingTheme.highlightingTheme,
             lintGutter(),
@@ -227,21 +134,6 @@ object CodeEditor {
     )
   }
 
-  private def reloadMetalsConfiguration(
-    editorView: UseStateF[CallbackTo, EditorView],
-    prevProps: Option[CodeEditor],
-    props: CodeEditor
-  ): Callback = {
-    Callback {
-      val newBuildConfiguration = InteractiveProvider(props.target, props.dependencies)
-      val effects = interactive.reconfigure(newBuildConfiguration.extension)
-      editorView.value.dispatch(TransactionSpec().setEffects(effects.asInstanceOf[StateEffect[Any]]))
-    }.when_(prevProps.isDefined && (
-      props.target != prevProps.get.target || props.dependencies != prevProps.get.dependencies
-    )
-  )
-  }
-
   private def updateComponent(
       props: CodeEditor,
       ref: Ref.Simple[Element],
@@ -252,7 +144,7 @@ object CodeEditor {
       Editor.updateTheme(ref, prevProps, props) >>
       updateDiagnostics(editorView, prevProps, props) >>
       DecorationProvider.updateDecorations(editorView, prevProps, props) >>
-      reloadMetalsConfiguration(editorView, prevProps, props)
+      InteractiveProvider.reloadMetalsConfiguration(editorView, prevProps, props)
   }
 
   val hooksComponent =

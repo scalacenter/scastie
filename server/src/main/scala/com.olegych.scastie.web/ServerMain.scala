@@ -36,7 +36,7 @@ object ServerMain {
     val production = config.getBoolean("production")
 
     if (production) {
-      ScastieFileUtil.writeRunningPid()
+      ScastieFileUtil.writeRunningPid("RUNNING_PID")
     }
 
     implicit val system: ActorSystem = ActorSystem("Web")

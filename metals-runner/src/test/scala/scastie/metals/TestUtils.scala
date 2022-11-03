@@ -21,6 +21,8 @@ import munit.Assertions
 import com.olegych.scastie.api._
 import JavaConverters._
 import cats.implicits._
+import cats.data.Kleisli.apply
+
 
 object TestUtils extends Assertions with CatsEffectAssertions {
   private val server = ScastieMetalsImpl.instance[IO]
@@ -34,7 +36,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
 
   private def testCode(code: String): ScastieOffsetParams = {
     val offset = code.indexOfSlice("@@")
-    ScastieOffsetParams(code.filter(_ != '@'), offset)
+    ScastieOffsetParams(code.filter(_ != '@'), offset, false)
   }
 
   private def createRequest(
@@ -60,47 +62,51 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     testTargets: List[ScalaTarget] = testTargets,
     dependencies: Set[DependencyForVersion] = Set(),
     code: String = "",
-    expected: Either[String, Set[String]] = Right(Set()),
-    compat: Map[String, Either[String, Set[String]]] = Map()
+    expected: Either[FailureType, Set[String]] = Right(Set()),
+    compat: Map[String, Either[FailureType, Set[String]]] = Map()
   ): IO[List[Unit]] =
     testTargets.traverse (scalaTarget =>
       val request = createRequest(scalaTarget, dependencies, code)
       val comp = server.complete(request).map(_.getItems.asScala.map(_.getLabel).toSet).value
-      assertIO(comp, getCompat(scalaTarget, compat, expected), s"Failed for target $scalaTarget")
+      assertIO(comp, getCompat(scalaTarget, compat, expected), Left(NoResult(s"Failed for target $scalaTarget")))
     )
 
   def testHover(
     testTargets: List[ScalaTarget] = testTargets,
     dependencies: Set[DependencyForVersion] = Set(),
     code: String = "",
-    expected: Either[String, MarkupContent] = Right(MarkupContent()),
-    compat: Map[String, Either[String, MarkupContent]] = Map()
+    expected: Either[FailureType, MarkupContent] = Right(MarkupContent()),
+    compat: Map[String, Either[FailureType, MarkupContent]] = Map()
   ): IO[List[Unit]] =
     testTargets.traverse (scalaTarget =>
       val request = createRequest(scalaTarget, dependencies, code)
       val comp = server.hover(request).map(_.getContents().getRight()).value
-      assertIO(comp, getCompat(scalaTarget, compat, expected), s"Failed for target $scalaTarget")
+      assertIO(comp, getCompat(scalaTarget, compat, expected), Left(NoResult(s"Failed for target $scalaTarget")))
     )
+
+  case class TestSignatureHelp(label: String, doc: String)
 
   def testSignatureHelp(
     testTargets: List[ScalaTarget] = testTargets,
     dependencies: Set[DependencyForVersion] = Set(),
     code: String = "",
-    expected: Either[String, Set[String]] = Right(Set()),
-    compat: Map[String, Either[String, Set[String]]] = Map()
+    expected: Either[FailureType, Set[TestSignatureHelp]] = Right(Set()),
+    compat: Map[String, Either[FailureType, Set[TestSignatureHelp]]] = Map()
   ): IO[List[Unit]] =
     testTargets.traverse (scalaTarget =>
       val request = createRequest(scalaTarget, dependencies, code)
-      val comp = server.signatureHelp(request).map(_.getSignatures.asScala.map(_.getLabel).toSet).value
-      assertIO(comp, getCompat(scalaTarget, compat, expected), s"Failed for target $scalaTarget")
+      val comp = server.signatureHelp(request).map(_.getSignatures.asScala.map(signature =>
+        TestSignatureHelp(signature.getLabel, signature.getDocumentation().asScala.map(_.getValue).merge)
+      ).toSet).value
+      assertIO(comp, getCompat(scalaTarget, compat, expected), Left(NoResult(s"Failed for target $scalaTarget")))
     )
 
   def testCompletionInfo(
     testTargets: List[ScalaTarget] = testTargets,
     dependencies: Set[DependencyForVersion] = Set(),
     code: String = "",
-    expected: List[Either[String, String]] = List(),
-    compat: Map[String, List[Either[String, String]]] = Map()
+    expected: List[Either[FailureType, String]] = List(),
+    compat: Map[String, List[Either[FailureType, String]]] = Map()
   ): IO[List[Unit]] =
     testTargets.traverse (scalaTarget =>
       val request = createRequest(scalaTarget, dependencies, code)
@@ -111,7 +117,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
         }.toList.sequence
       }
 
-      assertIO(comp, getCompat(scalaTarget, compat, expected), s"Failed for target $scalaTarget")
+      assertIO(comp, getCompat(scalaTarget, compat, expected), Left(NoResult(s"Failed for target $scalaTarget")))
 
     )
 

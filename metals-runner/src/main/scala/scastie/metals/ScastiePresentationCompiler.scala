@@ -66,14 +66,14 @@ case class ScastiePresentationCompiler(pc: PresentationCompiler, metalsWorkingDi
       completionItemJ.setDetail(completionItem.detail)
       val doc = pc.completionItemResolve(completionItemJ, symbol)
         .asScala
-        .map(cmp => Option(cmp.getDocumentation()).map(_.asScala.map(_.getValue()).merge).getOrElse(""))
+        .map(_.getDocstring)
       Async[F].fromFuture(doc.pure)
     }.getOrElse(Async[F].fromFuture(Future("").pure))
 
-  def hover[F[_]: Async](offsetParams: ScastieOffsetParams)(implicit ec: ExecutionContext): EitherT[F, String, Hover] =
+  def hover[F[_]: Async](offsetParams: ScastieOffsetParams)(implicit ec: ExecutionContext): EitherT[F, FailureType, Hover] =
     val javaHover = pc.hover(offsetParams.toOffsetParams)
       .asScala
-      .map(_.toScala.toRight("There is no hover for given position"))
+      .map(_.toScala.toRight(NoResult("There is no hover for given position")))
     EitherT(Async[F].fromFuture(javaHover.pure))
 
   def signatureHelp[F[_]: Async](offsetParams: ScastieOffsetParams): F[SignatureHelp] =

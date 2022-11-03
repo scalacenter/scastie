@@ -1,23 +1,16 @@
 package scastie.metals
 
 
-import cats.effect._
+import cats.effect.Async
 import cats.syntax.all._
-import org.http4s.HttpRoutes
-import org.http4s.dsl.Http4sDsl
-
 import io.circe.syntax._
-import io.circe._
+import io.circe.generic.auto._
 import org.http4s.circe._
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.ember.server._
-import org.http4s.jawn._
-import org.http4s.implicits._
-import com.google.gson.Gson
 import com.olegych.scastie.api._
-import scala.jdk.CollectionConverters._
-
+import org.http4s.dsl.Http4sDsl
 
 object ScastieMetalsRoutes {
   def routes[F[_]: Async](metals: ScastieMetals[F]): HttpRoutes[F] =
@@ -26,50 +19,44 @@ object ScastieMetalsRoutes {
     import DTOCodecs._
     import JavaConverters._
 
-    val gson = new Gson()
-
-    implicit val lspRequestdecoder: EntityDecoder[F, LSPRequestDTO] = jsonOf[F, LSPRequestDTO]
+    implicit val lspRequestDecoder: EntityDecoder[F, LSPRequestDTO] = jsonOf[F, LSPRequestDTO]
+    implicit val ScastieMetalsOptionsDecoder: EntityDecoder[F, ScastieMetalsOptions] = jsonOf[F, ScastieMetalsOptions]
     implicit val completionInfoDecoder: EntityDecoder[F, CompletionInfoRequest] = jsonOf[F, CompletionInfoRequest]
 
     HttpRoutes.of[F] {
       case req @ POST -> Root / "metals" / "complete" =>
         for {
           lspRequest <- req.as[LSPRequestDTO]
-          completions <- metals.complete(lspRequest).value
-          resp <- completions match {
-            case Left(error) => BadRequest(error)
-            case Right(completionList) => Ok(completionList.toSimpleScalaList.asJson)
-          }
+          maybeCompletions <- metals.complete(lspRequest).value
+          resp <- Ok(maybeCompletions.map(_.toSimpleScalaList).asJson)
         } yield resp
 
-      case req @ POST -> Root / "metals" / "completionInfo" =>
+      case req @ POST -> Root / "metals" / "completionItemResolve" =>
         for {
           completionInfoRequest <- req.as[CompletionInfoRequest]
-          completions <- metals.completionInfo(completionInfoRequest).value
-          resp <- completions match {
-            case Left(error) => BadRequest(error)
-            case Right(doc) => Ok(doc)
-          }
+          maybeCompletionInfo <- metals.completionInfo(completionInfoRequest).value
+          resp <- Ok(maybeCompletionInfo.asJson)
         } yield resp
 
       case req @ POST -> Root / "metals" / "hover" =>
         for {
           lspRequest <- req.as[LSPRequestDTO]
           hover <- metals.hover(lspRequest).value
-          resp <- hover match {
-            case Left(error) => BadRequest(error)
-            case Right(hover) => Ok(gson.toJson(hover))
-          }
+          resp <- Ok(hover.map(_.toHoverDTO).asJson)
         } yield resp
 
       case req @ POST -> Root / "metals" / "signatureHelp" =>
         for {
           lspRequest <- req.as[LSPRequestDTO]
           signatureHelp <- metals.signatureHelp(lspRequest).value
-          resp <- signatureHelp match {
-            case Left(error) => BadRequest(error)
-            case Right(signatureHelp) => Ok(gson.toJson(signatureHelp))
-          }
+          resp <- Status.NotImplemented()
+        } yield resp
+
+      case req @ POST -> Root / "metals" / "isConfigurationSupported" =>
+        for {
+          scastieConfiguration <- req.as[ScastieMetalsOptions]
+          isConfigurationSupported <- metals.isConfigurationSupported(scastieConfiguration).value
+          resp <- Ok(isConfigurationSupported.asJson)
         } yield resp
 
   }

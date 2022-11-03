@@ -1,69 +1,48 @@
 package scastie.metals
 
-import ch.epfl.scala.bsp4j
-import ch.epfl.scala.bsp4j.BspConnectionDetails
-import ch.epfl.scala.bsp4j.BuildServer
-import ch.epfl.scala.bsp4j.ScalaBuildServer
-import ch.epfl.scala.bsp4j.ScalaBuildTarget
-import ch.epfl.scala.bsp4j._
-import com.google.gson.Gson
-import org.eclipse.lsp4j.CompletionList
-import org.eclipse.lsp4j.jsonrpc.Launcher
-import cats.syntax.all._
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.URI
-import java.nio.file.Files
-import java.nio.file.Path
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.jdk.CollectionConverters._
-import scala.jdk.OptionConverters._
-import scala.jdk.FutureConverters._
-import scala.meta.internal.metals.CompilerOffsetParams
-import scala.meta.internal.metals.MtagsBinaries
-import scala.meta.internal.process.SystemProcess
-import scala.meta.io.AbsolutePath
-import scala.util.Try
-import com.olegych.scastie.api.ScalaDependency
+import cats.effect.Async
+import com.google.common.cache._
 import com.olegych.scastie.api._
-import scala.meta.internal.metals.Embedded
-import coursierapi.Dependency
-import coursierapi.Fetch
-import coursierapi.ResolutionParams
-import scala.collection.concurrent.TrieMap
-import org.jline.reader.Editor
-import scala.meta.internal.pc.ScalaPresentationCompiler
+import scala.meta.internal.metals.MtagsBinaries
+import scala.concurrent.ExecutionContext
+import cats.data.EitherT
 import scala.meta.internal.metals.MtagsResolver
-import scala.meta.pc.PresentationCompiler
-import org.eclipse.lsp4j.Hover
-import org.eclipse.lsp4j.SignatureHelp
-import cats.effect._
-import cats.syntax.all._
-import com.olegych.scastie.api.ScalaTarget.Jvm
-import com.olegych.scastie.api.ScalaTarget.Typelevel
-import com.olegych.scastie.api.ScalaTarget.Js
-import com.olegych.scastie.api.ScalaTarget.Native
-import com.olegych.scastie.api.ScalaTarget.Scala3
+import java.nio.file.Files
+import scala.meta.internal.metals.Embedded
+import java.nio.file.Path
+import com.olegych.scastie.api.ScalaTarget._
+import coursierapi.{Fetch, Dependency}
+import scala.jdk.CollectionConverters._
+
 
 class MetalsDispatcher() {
-  private val compiler: TrieMap[ScastieMetalsOptions, ScastiePresentationCompiler] = TrieMap()
+  private val cache: LoadingCache[(ScastieMetalsOptions, MtagsBinaries), ScastiePresentationCompiler] = CacheBuilder
+    .newBuilder()
+    .expireAfterAccess(1, java.util.concurrent.TimeUnit.MINUTES)
+    .maximumSize(25)
+    .build(new CacheLoader[(ScastieMetalsOptions, MtagsBinaries), ScastiePresentationCompiler] {
+      override def load(key: (ScastieMetalsOptions, MtagsBinaries)): ScastiePresentationCompiler =
+        initializeCompiler(key._1, key._2)
+    })
+
   private val mtagsResolver = MtagsResolver.default()
   private val metalsWorkingDirectory = Files.createTempDirectory("scastie-metals")
   private val supportedVersions = Set("2.12", "2.13", "3")
 
-  def getCompiler(configuration: ScastieMetalsOptions): Either[String, ScastiePresentationCompiler] = {
-    if !isSupportedVersion(configuration) then
-      Left(s"Interactive features are not supported for Scala ${configuration.scalaTarget.binaryScalaVersion}.")
-    else
-      mtagsResolver
-        .resolve(configuration.scalaTarget.scalaVersion)
-        .toRight("Mtags couldn't be resolved")
-        .map(mtags => compiler.getOrElseUpdate(configuration, initializeCompiler(configuration, mtags)))
-  }
+  def getCompiler[F[_]: Async](
+    configuration: ScastieMetalsOptions
+  )(implicit ec: ExecutionContext): EitherT[F, FailureType, ScastiePresentationCompiler] = EitherT(
+    Async[F].pure {
+      if !isSupportedVersion(configuration) then
+        Left(PresentationCompilerFailure(s"Interactive features are not supported for Scala ${configuration.scalaTarget.binaryScalaVersion}."))
+      else
+        mtagsResolver
+          .resolve(configuration.scalaTarget.scalaVersion)
+          .toRight(PresentationCompilerFailure("Mtags couldn't be resolved."))
+          .map(mtags => cache.get(configuration -> mtags))
+    })
 
-  def isSupportedVersion(configuration: ScastieMetalsOptions): Boolean =
+  private def isSupportedVersion(configuration: ScastieMetalsOptions): Boolean =
     supportedVersions.contains(configuration.scalaTarget.binaryScalaVersion)
 
   private def initializeCompiler(configuration: ScastieMetalsOptions, mtags: MtagsBinaries): ScastiePresentationCompiler = {
@@ -98,17 +77,6 @@ class MetalsDispatcher() {
         Dependency.of(groupId, artifactWithBinaryVersion(artifact, target), version)
     }.toSeq
 
-    // Fetch
-    //   .create()
-    //   .withRepositories(repositories.toSeq: _*)
-    //   .withDependencies(dependencies: _*)
-    //   .withClassifiers(classifiers.asJava)
-    //   .withMainArtifacts()
-    //   .fetch()
-    //   .map(_.toPath)
-    //   .asScala
-    //   .toList
-
     Fetch
       .create()
       .addRepositories(Embedded.repositories: _*)
@@ -116,6 +84,5 @@ class MetalsDispatcher() {
       .withClassifiers(Set("sources").asJava)
       .withMainArtifacts()
       .fetch().asScala.map(file => Path.of(file.getPath)).toSet
-
   }
 }

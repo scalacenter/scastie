@@ -1,10 +1,8 @@
 package com.olegych.scastie.client.components.editor
 
-import com.olegych.scastie.api
 import japgolly.scalajs.react._
 import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
-import typings.std.PropertyKey
 
 import scalajs.js
 

@@ -2,10 +2,10 @@ package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
 import com.olegych.scastie.client.View
-
-import japgolly.scalajs.react._, vdom.all._, extra._
-
+import japgolly.scalajs.react._
 import org.scalajs.dom
+
+import vdom.all._
 
 final case class EmbeddedMenu(isRunning: Boolean,
                               inputs: Inputs,

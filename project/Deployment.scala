@@ -15,10 +15,10 @@ import sbtdocker.ImageName
 import sys.process._
 
 object Deployment {
-  def settings(server: Project, sbtRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
-    deploy := deployTask(server, sbtRunner).value,
+  def settings(server: Project, sbtRunner: Project, metalsRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
+    deploy := deployTask(server, sbtRunner, metalsRunner).value,
     deployServer := deployServerTask(server, sbtRunner).value,
-    deployQuick := deployQuickTask(server, sbtRunner).value,
+    deployQuick := deployQuickTask(server, sbtRunner, metalsRunner).value,
     deployServerQuick := deployServerQuickTask(server, sbtRunner).value,
     deployLocal := deployLocalTask(server, sbtRunner).value
   )
@@ -54,24 +54,26 @@ object Deployment {
       deployment.deployLocal(serverZip)
     }
 
-  def deployTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = (server / Universal / packageBin).value.toPath
+      val metalsRunnerZip = (metalsRunner / Universal / packageBin).value.toPath
       val imageIdSbt = (sbtRunner / dockerBuildAndPush).value
 
-      deployment.deploy(serverZip)
+      deployment.deploy(serverZip, metalsRunnerZip)
     }
 
-  def deployQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployQuickTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = serverZipTask(server).value
+      val metalsRunnerZip = serverZipTask(metalsRunner).value
 
       deployment.logger.warn(
         "deployQuick will not push the sbt-runner docker image nor create the server zip"
       )
-      deployment.deploy(serverZip)
+      deployment.deploy(serverZip, metalsRunnerZip)
     }
 
   def deployServerQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
@@ -107,9 +109,10 @@ object Deployment {
 }
 
 class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, val logger: Logger) {
-  def deploy(serverZip: Path): Unit = {
+  def deploy(serverZip: Path, metalsServerZip: Path): Unit = {
     deployRunners()
     deployServer(serverZip)
+    deployMetalsRunner(metalsServerZip)
   }
 
   def deployLocal(serverZip: Path): Unit = {
@@ -169,20 +172,32 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     Process(s"ssh $uri ./$scriptFileName") ! logger
   }
 
+  def deployMetalsRunner(metalsRunnerZip: Path): Unit = {
+    val metalsRunnerScriptDir = Files.createTempDirectory("server")
+
+    val deploymentFiles =
+      deployMetalsRunnerFiles(metalsRunnerZip, metalsRunnerScriptDir, local = false)
+
+    deploymentFiles.files.foreach(rsyncServer)
+
+    val scriptFileName = deploymentFiles.serverScript.getFileName
+    val uri = userName + "@" + serverHostname
+    Process(s"ssh $uri ./$scriptFileName") ! logger
+  }
+
   case class DeploymentFiles(
-      secretConfig: Path,
       serverZip: Path,
       serverScript: Path,
       productionConfig: Path,
-      logbackConfig: Path
+      logbackConfig: Path,
+      secretConfig: Option[Path] = None
   ) {
     def files: List[Path] = List(
-      secretConfig,
       serverZip,
       serverScript,
       productionConfig,
       logbackConfig
-    )
+    ) ++ secretConfig.toList
   }
 
   private def deployServerFiles(serverZip: Path, destination: Path, local: Boolean): DeploymentFiles = {
@@ -234,9 +249,59 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     logger.info("Deploy servers")
 
     DeploymentFiles(
-      secretConfig,
       serverZip,
       serverScript,
+      config,
+      logbackConfig,
+      Some(secretConfig)
+    )
+  }
+
+  private def deployMetalsRunnerFiles(metalsRunnerZip: Path, destination: Path, local: Boolean): DeploymentFiles = {
+    logger.info("Generate metalsrunner script")
+
+    val metalsRunnerScript = destination.resolve("server.sh")
+    val config =
+      if (local) localConfig
+      else productionConfig
+
+    val configFileName = config.getFileName
+    val logbackConfigFileName = logbackConfig.getFileName
+    val serverZipFileName = metalsRunnerZip.getFileName.toString.replace(".zip", "")
+
+    val baseDir =
+      if (!local) s"/home/$userName/"
+      else ""
+
+    val content =
+      s"""|#!/usr/bin/env bash
+          |
+          |whoami
+          |
+          |serverZipFileName=$serverZipFileName
+          |
+          |kill -9 `cat ${baseDir}METALS_RUNNING_PID`
+          |
+          |rm -rf ${baseDir}metalsrunner/*
+          |unzip -o -d ${baseDir}metalsrunner ${baseDir}$$serverZipFileName
+          |mv ${baseDir}metalsrunner/$$serverZipFileName/* ${baseDir}metalsrunner/
+          |rm -rf ${baseDir}metalsrunner/$$serverZipFileName
+          |
+          |nohup ${baseDir}metalsrunner/bin/metalsrunner \\
+          |  -J-Xmx4G \\
+          |  -Dconfig.file=${baseDir}${configFileName} \\
+          |  -Dlogback.configurationFile=${baseDir}${logbackConfigFileName}
+          |  &>/dev/null &
+          |""".stripMargin
+
+    Files.write(metalsRunnerScript, content.getBytes)
+    setPosixFilePermissions(metalsRunnerScript, executablePermissions)
+
+    logger.info("Deploy metals runner")
+
+    DeploymentFiles(
+      metalsRunnerZip,
+      metalsRunnerScript,
       config,
       logbackConfig
     )

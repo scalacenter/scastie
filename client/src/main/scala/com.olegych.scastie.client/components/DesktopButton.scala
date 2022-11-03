@@ -2,7 +2,9 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._, vdom.all._, extra._
+import japgolly.scalajs.react._
+
+import vdom.all._
 
 final case class DesktopButton(forceDesktop: Reusable[Callback]) {
   @inline def render: VdomElement = DesktopButton.component(this)

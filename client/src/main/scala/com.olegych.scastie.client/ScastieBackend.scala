@@ -102,6 +102,12 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val toggleTheme: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleTheme))
 
+  val setMetalsStatus: MetalsStatus ~=> Callback =
+    Reusable.fn(status => scope.modState(_.setMetalsStatus(status)))
+
+  val toggleMetalsStatus: Reusable[Callback] =
+    Reusable.always(scope.modState(_.toggleMetalsStatus))
+
   val toggleLineNumbers: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleLineNumbers))
 

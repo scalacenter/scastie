@@ -11,11 +11,12 @@ import cats.effect._
 import cats.syntax.all._
 import org.eclipse.lsp4j.CompletionList
 import scala.jdk.CollectionConverters._
-import com.olegych.scastie.api.{ScalaTarget, ScalaDependency}
+import com.olegych.scastie.api.{ScalaTarget, ScalaDependency, PresentationCompilerFailure, NoResult}
 import org.eclipse.lsp4j.MarkupContent
 import com.olegych.scastie.api.ScalaVersions
 import com.olegych.scastie.buildinfo.BuildInfo
 import TestUtils._
+import cats.data.Kleisli
 
 
 class MetalsServerTest extends CatsEffectSuite {
@@ -70,25 +71,6 @@ class MetalsServerTest extends CatsEffectSuite {
     )
   }
 
-  // test("Completion info with dependencies") {
-  //   testCompletionInfo(
-  //     testTargets = List(ScalaTarget.Scala3("3.2.0")),
-  //     dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
-  //     code =
-  //       """import cats.syntax.all._
-  //         |object M {
-  //         |  def test = "5".asRigh@@
-  //         |}
-  //         """.stripMargin,
-  //     expected = List(
-  //       // "asRight[B]: Either[B, A]",
-  //     ),
-  //     // compat = Map(
-  //     //  "2" -> Set("asRight[B]: Either[B,String]").asRight
-  //    // )
-  //   )
-  // }
-
   test("Completions item info") {
     testCompletionInfo(
       code =
@@ -97,8 +79,29 @@ class MetalsServerTest extends CatsEffectSuite {
           |}
           """.stripMargin,
       expected = List(
-        Right("println(): Unit"),
-        Right("println(x: Any): Unit"),
+        Right("Prints a newline character on the default output."),
+        Right(
+          """Prints out an object to the default output, followed by a newline character.
+            |
+            |
+            |**Parameters**
+            |- `x`: the object to print.""".stripMargin),
+      )
+    )
+  }
+
+  test("Completions item info with dependencies") {
+    testCompletionInfo(
+      testTargets = List(ScalaTarget.Scala3("3.2.0")),
+      dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
+      code =
+        """import cats.syntax.all._
+          |object M {
+          |  def test = "5".asRigh@@
+          |}
+          """.stripMargin,
+      expected = List(
+        Right("Wrap a value in `Right`."),
       )
     )
   }
@@ -110,7 +113,7 @@ class MetalsServerTest extends CatsEffectSuite {
           |  def hello = prin@@tln()
           |}
           """.stripMargin,
-      expected = MarkupContent("markdown", "```scala\ndef println(): Unit\n```").asRight
+      expected = MarkupContent("markdown", "```scala\ndef println(): Unit\n```\nPrints a newline character on the default output.").asRight
     )
   }
 
@@ -121,7 +124,9 @@ class MetalsServerTest extends CatsEffectSuite {
           |  def hello = prin@@t()
           |}
           """.stripMargin,
-      expected = MarkupContent("markdown", "```scala\ndef print(x: Any): Unit\n```").asRight
+      expected = MarkupContent("markdown",
+        "```scala\ndef print(x: Any): Unit\n```\nPrints an object to `out` using its `toString` method.\n\n\n**Parameters**\n- `x`: the object to print; may be null."
+      ).asRight
     )
   }
 
@@ -142,7 +147,8 @@ class MetalsServerTest extends CatsEffectSuite {
           |**Symbol signature**:
           |```scala
           |def asRight[B]: Either[B, String]
-          |```""".stripMargin).asRight,
+          |```
+          |Wrap a value in `Right`.""".stripMargin).asRight,
       compat = Map(
         "2" -> MarkupContent("markdown",
         """**Expression type**:
@@ -152,7 +158,8 @@ class MetalsServerTest extends CatsEffectSuite {
           |**Symbol signature**:
           |```scala
           |def asRight[B]: Either[B,String]
-          |```""".stripMargin).asRight
+          |```
+          |Wrap a value in `Right`.""".stripMargin).asRight,
         )
     )
   }
@@ -165,8 +172,16 @@ class MetalsServerTest extends CatsEffectSuite {
           |}
           """.stripMargin,
       expected = Set(
-        "println(): Unit",
-        "println(x: Any): Unit",
+        TestSignatureHelp(
+          "println(x: Any): Unit",
+          """Prints out an object to the default output, followed by a newline character.
+            |
+            |
+            |**Parameters**
+            |- `x`: the object to print.""".stripMargin),
+        TestSignatureHelp(
+          "println(): Unit",
+          "Prints a newline character on the default output."),
       ).asRight
     )
   }
@@ -179,7 +194,14 @@ class MetalsServerTest extends CatsEffectSuite {
           |}
           """.stripMargin,
       expected = Set(
-        "print(x: Any): Unit",
+        TestSignatureHelp(
+          "print(x: Any): Unit",
+          """Prints an object to `out` using its `toString` method.
+            |
+            |
+            |**Parameters**
+            |- `x`: the object to print; may be null.""".stripMargin
+        ),
       ).asRight
     )
   }
@@ -188,17 +210,39 @@ class MetalsServerTest extends CatsEffectSuite {
     testSignatureHelp(
       dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
       code =
-        """import cats.data.Kleisli
+        """import cats.syntax.all._
           |object M {
-          |  def test = Kleisli(@@)
+          |  def test = List().collectSomeFold(@@)
           |}
           """.stripMargin,
       expected = Set(
-        "traverse[F[_$4], AA >: Any, D](f: String => F[D])(using F: cats.Applicative[F]): F[Either[AA, D]]"
+        TestSignatureHelp(
+          "collectSomeFold[M](f: Any => Option[M])(using F: cats.Foldable[List], M: cats.kernel.Monoid[M]): M",
+          """Tear down a subset of this structure using a `A => Option[M]`.
+            |
+            |```
+            |scala> import cats.syntax.all._
+            |scala> val xs = List(1, 2, 3, 4)
+            |scala> def f(n: Int): Option[Int] = if (n % 2 == 0) Some(n) else None
+            |scala> xs.collectFoldSome(f)
+            |res0: Int = 6
+            |```""".stripMargin
+        )
       ).asRight,
       compat = Map(
-        "2" -> Set("traverse[F[_], AA >: B, D](f: String => F[D])(implicit F: Applicative[F]): F[Either[AA,D]]").asRight
-      )
+        "2" -> Set(TestSignatureHelp(
+            "collectSomeFold[M](f: A => Option[M])(implicit F: Foldable[List], M: Monoid[M]): M",
+            """Tear down a subset of this structure using a `A => Option[M]`.
+              |
+              |```
+              |scala> import cats.syntax.all._
+              |scala> val xs = List(1, 2, 3, 4)
+              |scala> def f(n: Int): Option[Int] = if (n % 2 == 0) Some(n) else None
+              |scala> xs.collectFoldSome(f)
+              |res0: Int = 6
+              |```""".stripMargin
+          )).asRight
+        )
     )
   }
 
@@ -210,9 +254,9 @@ class MetalsServerTest extends CatsEffectSuite {
           |  def hello = printl@@
           |}
           """.stripMargin,
-        compat =  unsupportedVersions.map(v =>
-            v.binaryScalaVersion -> s"Interactive features are not supported for Scala ${v.binaryScalaVersion}.".asLeft
-        ).toMap
+      compat =  unsupportedVersions.map(v =>
+          v.binaryScalaVersion -> PresentationCompilerFailure(s"Interactive features are not supported for Scala ${v.binaryScalaVersion}.").asLeft
+      ).toMap
     )
   }
 
@@ -224,9 +268,9 @@ class MetalsServerTest extends CatsEffectSuite {
           |  def hello = prin@@tln()
           |}
           """.stripMargin,
-        compat =  unsupportedVersions.map(v =>
-            v.binaryScalaVersion -> s"Interactive features are not supported for Scala ${v.binaryScalaVersion}.".asLeft
-        ).toMap
+      compat =  unsupportedVersions.map(v =>
+          v.binaryScalaVersion -> PresentationCompilerFailure(s"Interactive features are not supported for Scala ${v.binaryScalaVersion}.").asLeft
+      ).toMap
     )
   }
 
@@ -238,9 +282,42 @@ class MetalsServerTest extends CatsEffectSuite {
           |  def hello = println(@@)
           |}
           """.stripMargin,
-        compat =  unsupportedVersions.map(v =>
-            v.binaryScalaVersion -> s"Interactive features are not supported for Scala ${v.binaryScalaVersion}.".asLeft
-        ).toMap
+      compat =  unsupportedVersions.map(v =>
+          v.binaryScalaVersion -> PresentationCompilerFailure(s"Interactive features are not supported for Scala ${v.binaryScalaVersion}.").asLeft
+      ).toMap
+    )
+  }
+
+  test("No completions for illegal snippet") {
+    testCompletion(
+      code =
+        """object M {
+          |  test hello = printl@@
+          |}
+          """.stripMargin,
+      expected = Set().asRight
+    )
+  }
+
+  test("No hovers for illegal snippet") {
+    testHover(
+      code =
+        """object M {
+          |  prin@@
+          |}
+          """.stripMargin,
+        expected =  NoResult(s"There is no hover for given position").asLeft
+    )
+  }
+
+  test("No signatureHelps for illegal snippet") {
+    testSignatureHelp(
+      code =
+        """object M {
+          |  printl(@@)
+          |}
+          """.stripMargin,
+      expected =  Set().asRight
     )
   }
 

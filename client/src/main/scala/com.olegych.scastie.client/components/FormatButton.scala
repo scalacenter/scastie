@@ -1,9 +1,8 @@
 package com.olegych.scastie.client.components
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra._
-import japgolly.scalajs.react.vdom.all._
 import com.olegych.scastie.client.components.editor.EditorKeymaps
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all._
 
 final case class FormatButton(inputsHasChanged: Boolean, isStatusOk: Boolean, formatCode: Reusable[Callback]) {
   @inline def render: VdomElement = FormatButton.component(this)
