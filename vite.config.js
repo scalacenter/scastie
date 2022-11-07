@@ -87,6 +87,9 @@ const proxy = {
         console.log("proxied: " + req.url);
       }
     }
+  },
+  "/metals": {
+    target: "http://localhost:8000"
   }
 }
  

@@ -70,7 +70,8 @@ case class InteractiveProvider(props: CodeEditor) {
   }
 
   private def makeRequest[A](req: A, endpoint: String)(implicit writes: Writes[A]) =
-    dom.fetch(s"http://localhost:8000/metals/$endpoint", js.Dynamic.literal(
+    // We don't support metals in embedded so we don't need to map server url
+    dom.fetch(s"/metals/$endpoint", js.Dynamic.literal(
       body = Json.toJson(req).toString,
       method = dom.HttpMethod.POST
     ).asInstanceOf[dom.RequestInit])

@@ -1,20 +1,22 @@
 package scastie.metals
 
+import java.lang.management.ManagementFactory
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
+
 import cats.effect.{Async, Resource}
 import cats.syntax.all._
+import com.comcast.ip4s._
 import fs2.Stream
 import org.http4s.ember.client.EmberClientBuilder
-import org.http4s.server.middleware._
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
-import com.comcast.ip4s._
-import java.lang.management.ManagementFactory
-import java.nio.file.{Paths, Files}
-import java.nio.charset.StandardCharsets
+import org.http4s.server.middleware._
 
 object Server:
+
   def writeRunningPid(name: String): String = {
-    val pid = ManagementFactory.getRuntimeMXBean.getName.split("@").head
+    val pid     = ManagementFactory.getRuntimeMXBean.getName.split("@").head
     val pidFile = Paths.get(name)
     Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8))
     sys.addShutdownHook {
@@ -30,18 +32,18 @@ object Server:
 
       httpApp = ScastieMetalsRoutes.routes[F](metalsImpl).orNotFound
 
-      corsService = CORS.policy.withAllowOriginAll(httpApp)
+      corsService  = CORS.policy.withAllowOriginAll(httpApp)
       finalHttpApp = Logger.httpApp(true, false)(corsService)
-      _ = if (true) writeRunningPid("METALS_RUNNING_PID")
+      _            = if (true) writeRunningPid("METALS_RUNNING_PID")
 
       exitCode <- Stream.resource(
-        EmberServerBuilder.default[F]
+        EmberServerBuilder
+          .default[F]
           .withHost(ipv4"0.0.0.0")
           .withPort(port"8000")
           .withHttpApp(finalHttpApp)
           .build >>
-        Resource.eval(Async[F].never)
+          Resource.eval(Async[F].never)
       )
     } yield exitCode
   }.drain
-

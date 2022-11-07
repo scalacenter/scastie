@@ -24,22 +24,22 @@ object SimpleEditor {
 
   private def init(props: SimpleEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback =
     ref.foreachCB(divRef => {
-      lazy val readOnlyExtensions = js.Array[Any](
+      val basicExtensions = js.Array[Any](
         typings.codemirror.mod.minimalSetup,
         mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
         SyntaxHighlightingTheme.highlightingTheme,
+      )
+      lazy val readOnlyExtensions = js.Array[Any](
         EditorState.readOnly.of(true),
       )
       lazy val editableExtensions = js.Array[Any](
-        typings.codemirror.mod.basicSetup,
-        mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
-        SyntaxHighlightingTheme.highlightingTheme,
+        lineNumbers(),
         OnChangeHandler(props.onChange),
       )
       val editor = new EditorView(new EditorViewConfig {
         state = EditorState.create(new EditorStateConfig {
           doc = props.value
-          extensions = if (props.readOnly) readOnlyExtensions else editableExtensions
+          extensions = (if (props.readOnly) readOnlyExtensions else editableExtensions) ++ basicExtensions
         })
         parent = divRef
       })
