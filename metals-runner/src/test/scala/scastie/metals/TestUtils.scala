@@ -14,7 +14,7 @@ import org.http4s._
 import JavaConverters._
 
 object TestUtils extends Assertions with CatsEffectAssertions {
-  private val server = ScastieMetalsImpl.instance[IO]
+  private val server = ScastieMetalsImpl.instance[IO]()
 
   type DependencyForVersion = ScalaTarget => ScalaDependency
 

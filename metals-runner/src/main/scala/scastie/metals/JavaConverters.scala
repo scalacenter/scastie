@@ -58,7 +58,6 @@ object JavaConverters {
   def createInsertInstructions(completion: CompletionItem): Option[InsertInstructions] = {
     completion.getTextEdit().asScala match {
       case Left(textEdit) =>
-        logger.error("[InsertReplaceEdit] should not appear as it is not used in metals")
         val move = textEdit.getNewText.indexOf("$0")
         Some(
           InsertInstructions(

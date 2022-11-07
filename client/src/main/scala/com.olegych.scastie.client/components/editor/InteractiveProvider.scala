@@ -220,6 +220,20 @@ object InteractiveProvider {
   val marked = typings.marked.mod.marked.`package`
   marked.setOptions(typings.marked.mod.marked.MarkedOptions().setHighlight(highlightF))
 
+
+  private def wasMetalsToggled(prevProps: Option[CodeEditor], props: CodeEditor): Boolean =
+    prevProps.isDefined && (
+      (prevProps.get.metalsStatus == MetalsDisabled && props.metalsStatus == MetalsLoading) ||
+      (prevProps.get.metalsStatus != MetalsDisabled && props.metalsStatus == MetalsDisabled)
+    )
+
+  private def didConfigChange(prevProps: Option[CodeEditor], props: CodeEditor): Boolean =
+    prevProps.isDefined && (
+      props.target != prevProps.get.target ||
+      props.dependencies != prevProps.get.dependencies ||
+      props.isWorksheetMode != prevProps.get.isWorksheetMode
+    )
+
   def reloadMetalsConfiguration(
     editorView: UseStateF[CallbackTo, EditorView],
     prevProps: Option[CodeEditor],
@@ -230,16 +244,7 @@ object InteractiveProvider {
       val effects = interactive.reconfigure(extension)
       editorView.value.dispatch(TransactionSpec().setEffects(effects.asInstanceOf[StateEffect[Any]]))
     }.when_(props.visible && prevProps.isDefined && (
-      (
-        props.target != prevProps.get.target ||
-        props.dependencies != prevProps.get.dependencies ||
-        props.isWorksheetMode != prevProps.get.isWorksheetMode
-      ) || (prevProps.get.visible != props.visible) ||
-        (
-          (prevProps.get.metalsStatus == MetalsDisabled && props.metalsStatus == MetalsLoading) ||
-          (prevProps.get.metalsStatus != MetalsDisabled && props.metalsStatus == MetalsDisabled)
-        )
-      )
+      didConfigChange(prevProps, props) || (prevProps.get.visible != props.visible) || wasMetalsToggled(prevProps, props))
     )
   }
 

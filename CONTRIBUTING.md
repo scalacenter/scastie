@@ -109,7 +109,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
  |          |        | | <-----------------+ oauth               |
  |          +--------+ |  SnippetProgress  | static ressources   |
  |                     |  (sse/websocket)  +---------------------+
- | InterativePro^ider  |
+ | InterativeProvider  |
  |          +--------+ |                   +---------------------+
  |          |        | |                   |                     |
  |          |        | |                   |  MetalsRunnerServer |
