@@ -7,6 +7,7 @@ import java.nio.file.{Files, Paths}
 import cats.effect.{Async, Resource}
 import cats.syntax.all._
 import com.comcast.ip4s._
+import com.typesafe.config.ConfigFactory
 import fs2.Stream
 import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.ember.server.EmberServerBuilder
@@ -25,16 +26,22 @@ object Server:
     pid
   }
 
+  val config               = ConfigFactory.load().getConfig("scastie.metals")
+  val cacheSize            = config.getInt("cache-size")
+  val cacheExpireInSeconds = config.getInt("cache-size")
+  val isProduction         = config.getBoolean("production")
+
   def stream[F[_]: Async]: Stream[F, Nothing] = {
     for {
       client <- Stream.resource(EmberClientBuilder.default[F].build)
-      metalsImpl = ScastieMetalsImpl.instance[F]
+
+      metalsImpl = ScastieMetalsImpl.instance[F](cacheSize, cacheExpireInSeconds)
 
       httpApp = ScastieMetalsRoutes.routes[F](metalsImpl).orNotFound
 
       corsService  = CORS.policy.withAllowOriginAll(httpApp)
       finalHttpApp = Logger.httpApp(true, false)(corsService)
-      _            = if (true) writeRunningPid("METALS_RUNNING_PID")
+      _            = if (isProduction) writeRunningPid("METALS_RUNNING_PID")
 
       exitCode <- Stream.resource(
         EmberServerBuilder

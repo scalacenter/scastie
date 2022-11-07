@@ -17,8 +17,8 @@ trait ScastieMetals[F[_]]:
 
 object ScastieMetalsImpl:
 
-  def instance[F[_]: Async]: ScastieMetals[F] = new ScastieMetals[F] {
-    private val dispatcher: MetalsDispatcher = new MetalsDispatcher()
+  def instance[F[_]: Async](cacheSize: Int = 25, timeoutSeconds: Int = 60): ScastieMetals[F] = new ScastieMetals[F] {
+    private val dispatcher: MetalsDispatcher = new MetalsDispatcher(cacheSize, timeoutSeconds)
 
     def complete(request: LSPRequestDTO): EitherT[F, FailureType, CompletionList] =
       dispatcher.getCompiler(request.options).flatMap(_.complete(request.offsetParams))

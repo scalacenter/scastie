@@ -15,12 +15,12 @@ import com.olegych.scastie.api._
 import com.olegych.scastie.api.ScalaTarget._
 import coursierapi.{Dependency, Fetch}
 
-class MetalsDispatcher() {
+class MetalsDispatcher(cacheSize: Int, timeoutSeconds: Int) {
 
   private val cache: LoadingCache[(ScastieMetalsOptions, MtagsBinaries), ScastiePresentationCompiler] = CacheBuilder
     .newBuilder()
-    .expireAfterAccess(1, java.util.concurrent.TimeUnit.MINUTES)
-    .maximumSize(25)
+    .maximumSize(cacheSize)
+    .expireAfterAccess(timeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
     .build(new CacheLoader[(ScastieMetalsOptions, MtagsBinaries), ScastiePresentationCompiler] {
       override def load(key: (ScastieMetalsOptions, MtagsBinaries)): ScastiePresentationCompiler =
         initializeCompiler(key._1, key._2)

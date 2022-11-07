@@ -63,6 +63,9 @@ if (!isDev()) {
 }
 
 const proxy = {
+  "/metals": {
+    target: "http://localhost:8000"
+  },
   "/": {
     target: "http://localhost:9000",
     bypass: function(req, res, proxyOptions) {
@@ -87,9 +90,6 @@ const proxy = {
         console.log("proxied: " + req.url);
       }
     }
-  },
-  "/metals": {
-    target: "http://localhost:8000"
   }
 }
  
