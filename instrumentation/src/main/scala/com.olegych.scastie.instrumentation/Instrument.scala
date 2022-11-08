@@ -181,7 +181,6 @@ object Instrument {
       if (scalaVersion.startsWith("2.13")) Some(dialects.Scala213)
       else if (scalaVersion.startsWith("2.12")) Some(dialects.Scala212)
       else if (scalaVersion.startsWith("2.11")) Some(dialects.Scala211)
-      else if (scalaVersion.startsWith("2.10")) Some(dialects.Scala210)
       else if (scalaVersion.startsWith("3")) Some(dialects.Scala3)
       else None
     }

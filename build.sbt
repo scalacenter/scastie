@@ -120,7 +120,7 @@ lazy val metalsRunner = project
     )
   )
   .enablePlugins(JavaServerAppPackaging)
-  .dependsOn(api.jvm(ScalaVersions.stable3))
+  .dependsOn(api.jvm(ScalaVersions.old3))
 
 lazy val dockerOrg = "scalacenter"
 

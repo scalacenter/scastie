@@ -73,9 +73,7 @@ object ScalaVersions {
           "2.11.3",
           "2.11.2",
           "2.11.1",
-          "2.11.0",
-          BuildInfo.latest210,
-          "2.10.6"
+          "2.11.0"
         )
     }
     versions.distinct
