@@ -83,7 +83,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
 ├── runtime-scala       | methods exposed inside scastie
 ├── sbt-runner          | remote actor communicating with sbt instance over I/O streams
 ├── sbt-scastie         | sbt plugin to report errors and console output with the `sbt-api` model
-├── metals-runner       | server responsible for managin metals instances to provide interactive features
+├── metals-runner       | server responsible for managing metals instances to provide interactive features
 ├── server              | web server
 └── utils               | read/writte files
 ```
@@ -109,7 +109,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
  |          |        | | <-----------------+ oauth               |
  |          +--------+ |  SnippetProgress  | static ressources   |
  |                     |  (sse/websocket)  +---------------------+
- | InterativeProvider  |
+ | InteractiveProvider |
  |          +--------+ |                   +---------------------+
  |          |        | |                   |                     |
  |          |        | |                   |  MetalsRunnerServer |

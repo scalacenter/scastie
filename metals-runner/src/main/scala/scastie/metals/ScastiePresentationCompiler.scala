@@ -16,34 +16,33 @@ import org.eclipse.lsp4j._
 import DTOExtensions._
 import JavaConverters._
 
-case class ScastiePresentationCompiler(pc: PresentationCompiler, metalsWorkingDirectory: Path) {
+case class ScastiePresentationCompiler(pc: PresentationCompiler) {
   def complete[F[_]: Async](offsetParams: ScastieOffsetParams): F[CompletionList] =
-    Async[F].fromFuture(pc.complete(offsetParams.toOffsetParams).asScala.pure)
+    Async[F].fromFuture(Async[F].delay(pc.complete(offsetParams.toOffsetParams).asScala))
 
   def completionItemResolve[F[_]: Async](completionItem: CompletionItemDTO)(
     implicit ec: ExecutionContext
   ): F[String] = completionItem.symbol
     .map { symbol =>
-      val completionItemJ = CompletionItem(completionItem.label)
-      completionItemJ.setDetail(completionItem.detail)
-      val doc = pc
-        .completionItemResolve(completionItemJ, symbol)
-        .asScala
-        .map(_.getDocstring)
-      Async[F].fromFuture(doc.pure)
+      Async[F].fromFuture(Async[F].delay {
+        val completionItemJ = CompletionItem(completionItem.label)
+        completionItemJ.setDetail(completionItem.detail)
+        pc.completionItemResolve(completionItemJ, symbol)
+          .asScala
+          .map(_.getDocstring)
+      })
     }
     .getOrElse(Async[F].fromFuture(Future("").pure))
 
   def hover[F[_]: Async](offsetParams: ScastieOffsetParams)(
     implicit ec: ExecutionContext
-  ): EitherT[F, FailureType, Hover] =
-    val javaHover = pc
-      .hover(offsetParams.toOffsetParams)
+  ): EitherT[F, FailureType, Hover] = EitherT(Async[F].fromFuture(Async[F].delay {
+    pc.hover(offsetParams.toOffsetParams)
       .asScala
       .map(_.toScala.toRight(NoResult("There is no hover for given position")))
-    EitherT(Async[F].fromFuture(javaHover.pure))
+  }))
 
   def signatureHelp[F[_]: Async](offsetParams: ScastieOffsetParams): F[SignatureHelp] =
-    Async[F].fromFuture(pc.signatureHelp(offsetParams.toOffsetParams).asScala.pure)
+    Async[F].fromFuture(Async[F].delay(pc.signatureHelp(offsetParams.toOffsetParams).asScala))
 
 }

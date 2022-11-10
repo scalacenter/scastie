@@ -19,7 +19,7 @@ final case class MetalsStatusIndicator(
 
 @JSImport("@resources/images/scalameta-logo.png", JSImport.Default)
 @js.native
-object MetalsLogo extends js.Object
+object MetalsLogo extends js.Any
 
 
 object MetalsStatusIndicator {
@@ -37,7 +37,7 @@ object MetalsStatusIndicator {
 
   private def render(props: MetalsStatusIndicator): VdomElement = {
     li(
-      title := props.metalsStatus.toString,
+      title := props.metalsStatus.info,
       role := "button",
       cls := "btn editor metals-status-indicator",
       onClick --> props.toggleMetalsStatus,
@@ -51,6 +51,5 @@ object MetalsStatusIndicator {
   private val component =
     ScalaFnComponent
       .withHooks[MetalsStatusIndicator]
-      .useEffectBy(x => Callback { println(x) })
       .render(props => MetalsStatusIndicator.render(props))
 }

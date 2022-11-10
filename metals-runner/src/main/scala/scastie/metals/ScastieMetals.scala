@@ -17,20 +17,20 @@ trait ScastieMetals[F[_]]:
 
 object ScastieMetalsImpl:
 
-  def instance[F[_]: Async](cacheSize: Int = 25, timeoutSeconds: Int = 60): ScastieMetals[F] = new ScastieMetals[F] {
-    private val dispatcher: MetalsDispatcher = new MetalsDispatcher(cacheSize, timeoutSeconds)
+  def instance[F[_]: Async](timeoutSeconds: Int): ScastieMetals[F] = new ScastieMetals[F] {
+    private val dispatcher: MetalsDispatcher[F] = new MetalsDispatcher[F](timeoutSeconds)
 
     def complete(request: LSPRequestDTO): EitherT[F, FailureType, CompletionList] =
-      dispatcher.getCompiler(request.options).flatMap(_.complete(request.offsetParams))
+      dispatcher.getCompiler(request.options) >>= (_.complete(request.offsetParams))
 
     def completionInfo(request: CompletionInfoRequest): EitherT[F, FailureType, String] =
-      dispatcher.getCompiler(request.options).flatMap(_.completionItemResolve(request.completionItem))
+      dispatcher.getCompiler(request.options) >>= (_.completionItemResolve(request.completionItem))
 
     def hover(request: LSPRequestDTO): EitherT[F, FailureType, Hover] =
-      dispatcher.getCompiler(request.options).flatMap(_.hover(request.offsetParams))
+      dispatcher.getCompiler(request.options) >>= (_.hover(request.offsetParams))
 
     def signatureHelp(request: LSPRequestDTO): EitherT[F, FailureType, SignatureHelp] =
-      dispatcher.getCompiler(request.options).flatMap(_.signatureHelp(request.offsetParams))
+      dispatcher.getCompiler(request.options) >>= (_.signatureHelp(request.offsetParams))
 
     def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, Boolean] =
       dispatcher.getCompiler(config).map(_ => true)

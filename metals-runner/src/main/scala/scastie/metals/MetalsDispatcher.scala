@@ -3,91 +3,171 @@ package scastie.metals
 import java.nio.file.Files
 import java.nio.file.Path
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
 import scala.meta.internal.metals.Embedded
 import scala.meta.internal.metals.MtagsBinaries
 import scala.meta.internal.metals.MtagsResolver
+import scala.util.control.NonFatal
 
 import cats.data.EitherT
-import cats.effect.Async
-import com.google.common.cache._
+import cats.effect.{Async, Sync}
+import cats.syntax.all._
 import com.olegych.scastie.api._
 import com.olegych.scastie.api.ScalaTarget._
 import coursierapi.{Dependency, Fetch}
+import org.slf4j.LoggerFactory
 
-class MetalsDispatcher(cacheSize: Int, timeoutSeconds: Int) {
+/*
+ * MetalsDispatcher is responsible for managing the lifecycle of presentation compilers.
+ *
+ * Each metals client configuration requires separate presentation compilers
+ * to support cabailities for 3rd party capabilities.
+ *
+ * @param expirationInSeconds - time after which unused keys are invalidated in guava cache
+ */
+class MetalsDispatcher[F[_]: Async](expirationInSeconds: Int) {
+  private val logger                = LoggerFactory.getLogger(getClass)
+  private val presentationCompilers = PresentationCompilers[F]()
 
-  private val cache: LoadingCache[(ScastieMetalsOptions, MtagsBinaries), ScastiePresentationCompiler] = CacheBuilder
-    .newBuilder()
-    .maximumSize(cacheSize)
-    .expireAfterAccess(timeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
-    .build(new CacheLoader[(ScastieMetalsOptions, MtagsBinaries), ScastiePresentationCompiler] {
-      override def load(key: (ScastieMetalsOptions, MtagsBinaries)): ScastiePresentationCompiler =
-        initializeCompiler(key._1, key._2)
-    })
+  type ScastieGuavaCache = LoadingGuavaCache[F, ScastieMetalsOptions, ScastiePresentationCompiler]
+  private val cache: ScastieGuavaCache = LoadingGuavaCache(expirationInSeconds)
 
   private val mtagsResolver          = MtagsResolver.default()
   private val metalsWorkingDirectory = Files.createTempDirectory("scastie-metals")
   private val supportedVersions      = Set("2.12", "2.13", "3")
 
-  def getCompiler[F[_]: Async](
-    configuration: ScastieMetalsOptions
-  )(
+  /*
+   * If `configuration` is supported returns either `FailureType` in case of error during its initialization
+   * or fetches the `ScastiePresentationCompiler` from guava cache.
+   * If the key is not present in guava cache, it is initialized
+   *
+   * @param configuration - scastie client configuration
+   * @returns `EitherT[F, FailureType, ScastiePresentationCompiler]`
+   */
+  def getCompiler(configuration: ScastieMetalsOptions)(
     implicit ec: ExecutionContext
-  ): EitherT[F, FailureType, ScastiePresentationCompiler] = EitherT(Async[F].pure {
+  ): EitherT[F, FailureType, ScastiePresentationCompiler] = EitherT {
     if !isSupportedVersion(configuration) then
-      Left(
-        PresentationCompilerFailure(
-          s"Interactive features are not supported for Scala ${configuration.scalaTarget.binaryScalaVersion}."
+      Async[F].pure(
+        Left(
+          PresentationCompilerFailure(
+            s"Interactive features are not supported for Scala ${configuration.scalaTarget.binaryScalaVersion}."
+          )
         )
       )
     else
-      mtagsResolver
-        .resolve(configuration.scalaTarget.scalaVersion)
-        .toRight(PresentationCompilerFailure("Mtags couldn't be resolved."))
-        .map(mtags => cache.get(configuration -> mtags))
-  })
+      Sync[F].delay(
+        mtagsResolver
+          .resolve(configuration.scalaTarget.scalaVersion)
+          .toRight(
+            PresentationCompilerFailure(
+              s"Mtags couldn't be resolved for target: ${configuration.scalaTarget.scalaVersion}."
+            )
+          )
+      ) >>= (_.traverse(mtags => cache.getOrLoad(configuration)(initializeCompiler(configuration, mtags)))
+        .recoverWith { case NonFatal(e) =>
+          logger.error(e.getMessage)
+          PresentationCompilerFailure(e.getMessage).asLeft.pure[F]
+        })
+  }
 
+  /*
+   * Checks if given configuration is supported. Currently it is based on scala binary version.
+   * We are supporting only those versions which are defined in `supportedVersions`.
+   */
   private def isSupportedVersion(configuration: ScastieMetalsOptions): Boolean =
     supportedVersions.contains(configuration.scalaTarget.binaryScalaVersion)
 
+  /*
+   * Initializes the compiler with proper classpath and version
+   *
+   * @param configuration - scastie client configuration
+   * @param mtags - binaries of mtags for specific scala version
+   */
   private def initializeCompiler(
     configuration: ScastieMetalsOptions,
     mtags: MtagsBinaries
-  ): ScastiePresentationCompiler = {
-    val classpath = getDependencyClasspath(configuration.dependencies) ++
-      getCompilerClasspath(configuration.scalaTarget) ++
-      getCompilerSources(configuration.scalaTarget)
+  ): F[ScastiePresentationCompiler] = (
+    getDependencyClasspath(configuration.dependencies, getScalaJsDependencies(configuration.scalaTarget)),
+    getScalaLibrary(configuration.scalaTarget),
+    getScalaTargetSources(configuration.scalaTarget)
+  ).mapN(_ ++ _ ++ _) >>= { classpath =>
     val scalaVersion = configuration.scalaTarget.scalaVersion
-    val pc           = PresentationCompilers.createPresentationCompiler(classpath.toSeq, scalaVersion, mtags)
-    ScastiePresentationCompiler(pc, metalsWorkingDirectory)
+    presentationCompilers
+      .createPresentationCompiler(classpath.toSeq, scalaVersion, mtags)
+      .map(ScastiePresentationCompiler.apply)
   }
 
-  private def artifactWithBinaryVersion(artifact: String, target: ScalaTarget) =
-    s"${artifact}_${target.binaryScalaVersion}"
+  /*
+   * Maps the artifact name to proper artifact name.
+   */
+  private def artifactWithBinaryVersion(artifact: String, target: ScalaTarget): String = target match
+    case Js(scalaVersion, scalaJsVersion) =>
+      val scalaJsBinaryVersion =
+        if scalaJsVersion.startsWith("1") then "1"
+        else scalaJsVersion.split('.').take(2).mkString(".")
 
-  private def getCompilerClasspath(scalaTarget: ScalaTarget): Set[Path] = {
-    Embedded.scalaLibrary(scalaTarget.scalaVersion).toSet
+      s"${artifact}_sjs${scalaJsBinaryVersion}_${target.binaryScalaVersion}"
+    case other => s"${artifact}_${target.binaryScalaVersion}"
+
+  /*
+   * Fetches scala library for given `scalaTarget`
+   *
+   * @param scalaTarget - scala target for scastie client configuration
+   * @returns paths of downloaded files
+   */
+  private def getScalaLibrary(scalaTarget: ScalaTarget): F[Set[Path]] =
+    Sync[F].delay { Embedded.scalaLibrary(scalaTarget.scalaVersion).toSet }
+
+  /*
+   * Fetches scala sources for given `scalaTarget`
+   *
+   * @param scalaTarget - scala target for scastie client configuration
+   * @returns paths of downloaded files
+   */
+  private def getScalaTargetSources(scalaTarget: ScalaTarget): F[Set[Path]] = Sync[F].delay {
+    if scalaTarget.scalaVersion.startsWith("3") then Embedded.downloadScala3Sources(scalaTarget.scalaVersion).toSet
+    else Embedded.downloadScalaSources(scalaTarget.scalaVersion).toSet
   }
 
-  private def getCompilerSources(scalaTarget: ScalaTarget): Set[Path] = {
-    scalaTarget match
-      case Jvm(scalaVersion)                        => Embedded.downloadScalaSources(scalaTarget.scalaVersion).toSet
-      case Typelevel(scalaVersion)                  => Set.empty
-      case Js(scalaVersion, scalaJsVersion)         => Set.empty
-      case Native(scalaVersion, scalaNativeVersion) => Set.empty
-      case Scala3(scalaVersion)                     => Embedded.downloadScala3Sources(scalaTarget.scalaVersion).toSet
-  }
+  /*
+   * Fetches scalajs sources when `scalaTarget` is `scalajs`
+   *
+   * @param scalaTarget - scala target for scastie client configuration
+   * @returns paths of downloaded files
+   */
+  private def getScalaJsDependencies(scalaTarget: ScalaTarget): Set[Dependency] = scalaTarget match
+    case Js(scalaVersion, scalaJsVersion) if scalaVersion.startsWith("3") =>
+      Set(Dependency.of("org.scala-js", "scalajs-library_2.13", scalaJsVersion))
+    case Js(scalaVersion, scalaJsVersion) => Set(
+        Dependency.of(
+          "org.scala-js",
+          artifactWithBinaryVersion("scalajs-library", ScalaTarget.Jvm(scalaVersion)),
+          scalaJsVersion
+        )
+      )
+    case _ => Set.empty
 
-  private def getDependencyClasspath(dependencies: Set[ScalaDependency]): Set[Path] = {
+  /*
+   * Fetches scala dependencies classpath
+   *
+   * @param dependencies - scala dependencies used in scastie client configuration
+   * @param extraDependencies - extra dependencies to fetch
+   * @returns paths of downloaded files
+   */
+  private def getDependencyClasspath(
+    dependencies: Set[ScalaDependency],
+    extraDependencies: Set[Dependency]
+  ): F[Set[Path]] = Sync[F].delay {
     val dep = dependencies.map { case ScalaDependency(groupId, artifact, target, version) =>
       Dependency.of(groupId, artifactWithBinaryVersion(artifact, target), version)
-    }.toSeq
+    }.toSeq ++ extraDependencies
 
     Fetch
       .create()
-      .addRepositories(Embedded.repositories: _*)
-      .withDependencies(dep: _*)
+      .addRepositories(Embedded.repositories*)
+      .withDependencies(dep*)
       .withClassifiers(Set("sources").asJava)
       .withMainArtifacts()
       .fetch()

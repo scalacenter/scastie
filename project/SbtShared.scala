@@ -17,6 +17,7 @@ configuration matrix
  */
 object SbtShared {
   object ScalaVersions {
+    val latest210 = "2.10.7"
     val latest211 = "2.11.12"
     val latest212 = "2.12.17"
     val latest213 = "2.13.10"
@@ -26,7 +27,7 @@ object SbtShared {
     val js = latest213
     val sbt = latest212
     val jvm = latest213
-    val cross = List(latest211, latest212, latest213, old3, js, sbt, jvm).distinct
+    val cross = List(latest210, latest211, latest212, latest213, old3, js, sbt, jvm).distinct
     val crossJS = List(latest212, latest213, js).distinct
   }
 
@@ -90,7 +91,7 @@ object SbtShared {
           "-unchecked"
         )
 
-      if (scalaV.startsWith("3.")) base
+      if (scalaV == ScalaVersions.latest210 || scalaV.startsWith("3.")) base
       else {
         base ++ Seq(
           "-Yrangepos",
@@ -134,6 +135,8 @@ object SbtShared {
       name := "api",
       libraryDependencies += {
         scalaVersion.value match {
+          case v if v.startsWith("2.10") =>
+            "com.typesafe.play" %%% "play-json" % "2.6.14"
           case v if v.startsWith("2.11") =>
             "com.typesafe.play" %%% "play-json" % "2.7.4"
           case _ =>
@@ -144,6 +147,7 @@ object SbtShared {
         organization,
         "runtimeProjectName" -> runtimeProjectName,
         "versionRuntime" -> versionRuntime,
+        "latest210" -> ScalaVersions.latest210,
         "latest211" -> ScalaVersions.latest211,
         "latest212" -> ScalaVersions.latest212,
         "latest213" -> ScalaVersions.latest213,

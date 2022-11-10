@@ -14,14 +14,14 @@ import org.http4s._
 import JavaConverters._
 
 object TestUtils extends Assertions with CatsEffectAssertions {
-  private val server = ScastieMetalsImpl.instance[IO]()
+  private val server = ScastieMetalsImpl.instance[IO](30)
 
   type DependencyForVersion = ScalaTarget => ScalaDependency
 
   val testTargets = List(BuildInfo.latest3, BuildInfo.stable3).map(ScalaTarget.Scala3.apply) ++
     List(BuildInfo.latest213, BuildInfo.latest212).map(ScalaTarget.Jvm.apply)
 
-  val unsupportedVersions = List(BuildInfo.latest211).map(ScalaTarget.Jvm.apply)
+  val unsupportedVersions = List(BuildInfo.latest211, BuildInfo.latest210).map(ScalaTarget.Jvm.apply)
 
   private def testCode(code: String): ScastieOffsetParams = {
     val offset = code.indexOfSlice("@@")

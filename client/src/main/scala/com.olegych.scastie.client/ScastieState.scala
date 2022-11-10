@@ -5,24 +5,28 @@ import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.{Position => _}
 import play.api.libs.json._
 
-sealed trait MetalsStatus
-case object MetalsLoading extends MetalsStatus {
-  override def toString(): String = "Metals are loading"
+sealed trait MetalsStatus {
+  val info: String
 }
+
+case object MetalsLoading extends MetalsStatus {
+  val info: String = "Compiler is loading"
+}
+
 case object MetalsReady extends MetalsStatus {
-  override def toString(): String = "Metals are ready"
+  val info: String = "Metals is ready"
 }
 
 case object MetalsDisabled extends MetalsStatus {
-  override def toString(): String = "Metals Disabled"
+  val info: String = "Metals Disabled"
 }
 
 case class MetalsConfigurationError(msg: String) extends MetalsStatus {
-  override def toString(): String = s"Unsupported Configuration: \n  $msg"
+  val info: String = s"Unsupported Configuration: \n  $msg"
 }
 
 case class NetworkError(msg: String) extends MetalsStatus {
-  override def toString(): String = s"Network Error: \n  $msg"
+  val info: String = s"Network Error: \n  $msg"
 }
 
 object SnippetState {

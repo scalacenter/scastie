@@ -44,14 +44,11 @@ case class InteractiveProvider(props: CodeEditor) {
   private val scastieMetalsOptions = api.ScastieMetalsOptions(props.dependencies, props.target)
   private val isConfigurationSupported: Future[Boolean] = {
     if (props.metalsStatus == MetalsDisabled || props.isEmbedded) Future.successful(false)
-      else {
+    else {
       props.setMetalsStatus(MetalsLoading).runNow()
-      val res = for {
-        res <- makeRequest(scastieMetalsOptions, "isConfigurationSupported")
-        text <- res.text()
-      } yield  {
-        parseMetalsResponse[Boolean](text, res.ok).getOrElse(false)
-      }
+      val res = makeRequest(scastieMetalsOptions, "isConfigurationSupported").map(maybeText =>
+        parseMetalsResponse[Boolean](maybeText).getOrElse(false)
+      )
       res.onComplete {
         case Success(true) => props.setMetalsStatus(MetalsReady).runNow()
         case Failure(exception) => props.setMetalsStatus(NetworkError(exception.getMessage)).runNow()
@@ -69,15 +66,21 @@ case class InteractiveProvider(props: CodeEditor) {
     api.LSPRequestDTO(scastieOptions, offsetParams)
   }
 
-  private def makeRequest[A](req: A, endpoint: String)(implicit writes: Writes[A]) =
+  private def makeRequest[A](req: A, endpoint: String)(implicit writes: Writes[A]): Future[Option[String]] = {
     // We don't support metals in embedded so we don't need to map server url
-    dom.fetch(s"/metals/$endpoint", js.Dynamic.literal(
+    val request = dom.fetch(s"/metals/$endpoint", js.Dynamic.literal(
       body = Json.toJson(req).toString,
       method = dom.HttpMethod.POST
     ).asInstanceOf[dom.RequestInit])
 
-  private def parseMetalsResponse[B](jsonText: String, conditions: Boolean)(implicit readsB: Reads[B]): Option[B] = {
-    if (conditions) {
+    for {
+      res <- request
+      text <- res.text()
+    } yield if (res.ok) Some(text) else None
+  }
+
+  private def parseMetalsResponse[B](maybeJsonText: Option[String])(implicit readsB: Reads[B]): Option[B] = {
+    maybeJsonText.flatMap(jsonText => {
       Json.parse(jsonText).asOpt[Either[api.FailureType, B]] match {
         case None =>
           println(s"Parsing error for text: $jsonText")
@@ -92,10 +95,13 @@ case class InteractiveProvider(props: CodeEditor) {
           props.setMetalsStatus(MetalsReady)
           Some(value)
       }
-    } else None
+    })
   }
 
-  private def ifSupported[A](f: => Future[A]): js.Promise[Option[A]] = {
+  /*
+   * Runs function `f` only when current scastie configuration is supported.
+   */
+  private def ifSupported[A](f: => Future[Option[A]]): js.Promise[Option[A]] = {
     isConfigurationSupported.flatMap(isSupported => {
       if (isSupported) {
         props.setMetalsStatus(MetalsLoading).runNow()
@@ -104,9 +110,12 @@ case class InteractiveProvider(props: CodeEditor) {
         res
       } else
         Future.successful(None)
-    }).toJSPromise
+    }).map(_.flatten).toJSPromise
   }
 
+  /*
+   * Creates additionalInsertInstructions e.g autoimport for completions
+   */
   private def createAdditionalTextEdits(insertInstructions: List[api.AdditionalInsertInstructions], view: EditorView): Seq[ChangeSpec] = {
     insertInstructions.map(textEdit => {
       val startPos = view.state.doc.line(textEdit.startLine).from.toInt + textEdit.startChar
@@ -119,6 +128,9 @@ case class InteractiveProvider(props: CodeEditor) {
     })
   }
 
+  /*
+   * Creates edit transaction for completion. This enables cursor to be in proper possition after completion is accpeted
+   */
   private def createEditTransaction(view: EditorView, completion: api.CompletionItemDTO, from: Int, to: Int): TransactionSpec = {
     val cursorChange = from.toDouble +
       completion.additionalInsertInstructions.foldLeft(0)(_ + _.text.length) +
@@ -133,24 +145,23 @@ case class InteractiveProvider(props: CodeEditor) {
     ).setSelection(codemirrorState.anon.Anchor(cursorChange))
   }
 
+  /*
+   * Fetches documentation for selected completion
+   */
   private def getCompletionInfo(completionItemDTO: api.CompletionItemDTO) = {
     val scastieOptions = api.ScastieMetalsOptions(props.dependencies, props.target)
     val infoFunction: js.Function1[Completion, js.Promise[dom.Node]] = _ =>
-        (for {
-          res <- makeRequest(api.CompletionInfoRequest(scastieOptions, completionItemDTO), "completionItemResolve")
-          text <- res.text()
-        } yield {
-          parseMetalsResponse[String](text, text.nonEmpty && res.ok).filter(_.nonEmpty).map { completionInfo =>
-            val node = dom.document.createElement("div")
-            node.innerHTML = InteractiveProvider.marked(completionInfo)
-            node
-          }.getOrElse(null)
-        }
-      ).toJSPromise
+      makeRequest(api.CompletionInfoRequest(scastieOptions, completionItemDTO), "completionItemResolve").map { maybeText =>
+        parseMetalsResponse[String](maybeText).filter(_.nonEmpty).map { completionInfo =>
+          val node = dom.document.createElement("div")
+          node.innerHTML = InteractiveProvider.marked(completionInfo)
+          node
+        }.getOrElse(null)
+      }.toJSPromise
     infoFunction
   }
 
-  private val completionsF: js.Function1[CompletionContext, js.Promise[CompletionResult]] = { ctx => ifSupported {
+  private val completionsF: js.Function1[CompletionContext, js.Promise[CompletionResult]] = ctx => ifSupported {
     val word: anon.Text = ctx.matchBefore(js.RegExp("\\.?\\w*")).asInstanceOf[anon.Text]
 
     val request = toLSPRequest(ctx.state.doc.toString(), ctx.pos.toInt)
@@ -159,43 +170,39 @@ case class InteractiveProvider(props: CodeEditor) {
     if (word == null || (word.from == word.to && !ctx.explicit)) {
       Future.successful(null)
     } else {
-      (for {
-        res <- makeRequest(request, "complete")
-        text <- res.text()
-      } yield {
-          parseMetalsResponse[Set[api.CompletionItemDTO]](text, res.ok).map { completionList => {
-            val completions = completionList.map {
-              case cmp @ api.CompletionItemDTO(name, detail, tpe, boost, insertInstructions, additionalInsertInstructions, symbol) => {
-                Completion(name)
-                  .setDetail(detail)
-                  .setInfo(getCompletionInfo(cmp))
-                  .setType(tpe)
-                  .setBoost(-boost.getOrElse(-99).toDouble)
-                  .setApplyFunction4((view, _, from, to) => Callback(view.dispatch(createEditTransaction(view, cmp, from.toInt, to.toInt))))
-              }
-            }
-            CompletionResult(from, completions.toJSArray).setValidFor(js.RegExp("^\\w*[!A-Z]?$"))
+      makeRequest(request, "complete").map(maybeText =>
+        parseMetalsResponse[Set[api.CompletionItemDTO]](maybeText).map { completionList =>
+          val completions = completionList.map {
+            case cmp @ api.CompletionItemDTO(name, detail, tpe, boost, insertInstructions, additionalInsertInstructions, symbol) =>
+              Completion(name)
+                .setDetail(detail)
+                .setInfo(getCompletionInfo(cmp))
+                .setType(tpe)
+                .setBoost(-boost.getOrElse(-99).toDouble)
+                .setApplyFunction4((view, _, from, to) =>
+                  Callback(view.dispatch(createEditTransaction(view, cmp, from.toInt, to.toInt)))
+                )
           }
-        }.getOrElse(null)
-      })
-    }}.map(_.getOrElse(null)).toJSPromise
-  }
+          CompletionResult(from, completions.toJSArray).setValidForFunction4((word, _, _, _) => {
+            word.lastOption.exists(_.isLower)
+          })
+        }
+      )
+    }
+  }.map(_.getOrElse(null)).toJSPromise
 
   private val hovers = hoverTooltip((view, pos, side) => ifSupported {
     val request = toLSPRequest(view.state.doc.toString(), pos.toInt)
-    (for {
-      res <- makeRequest(request, "hover")
-      text <- res.text()
-    } yield {
-      parseMetalsResponse[api.HoverDTO](text, res.ok).map { hover => {
+    makeRequest(request, "hover").map(maybeText =>
+      parseMetalsResponse[api.HoverDTO](maybeText).map { hover =>
         val hoverF: js.Function1[EditorView, TooltipView] = view => {
           val node = dom.document.createElement("div")
           node.innerHTML = InteractiveProvider.marked(hover.content)
           TooltipView(node.domToHtml.get)
         }
         Tooltip(hoverF, pos)
-      }}.getOrElse(null)
-    })
+      }
+    )
   }.map(_.getOrElse(null)).toJSPromise)
 
   private val autocompletionConfig = CompletionConfig()
@@ -221,18 +228,14 @@ object InteractiveProvider {
   marked.setOptions(typings.marked.mod.marked.MarkedOptions().setHighlight(highlightF))
 
 
-  private def wasMetalsToggled(prevProps: Option[CodeEditor], props: CodeEditor): Boolean =
-    prevProps.isDefined && (
-      (prevProps.get.metalsStatus == MetalsDisabled && props.metalsStatus == MetalsLoading) ||
-      (prevProps.get.metalsStatus != MetalsDisabled && props.metalsStatus == MetalsDisabled)
-    )
+  private def wasMetalsToggled(prevProps: CodeEditor, props: CodeEditor): Boolean =
+    (prevProps.metalsStatus == MetalsDisabled && props.metalsStatus == MetalsLoading) ||
+    (prevProps.metalsStatus != MetalsDisabled && props.metalsStatus == MetalsDisabled)
 
-  private def didConfigChange(prevProps: Option[CodeEditor], props: CodeEditor): Boolean =
-    prevProps.isDefined && (
-      props.target != prevProps.get.target ||
-      props.dependencies != prevProps.get.dependencies ||
-      props.isWorksheetMode != prevProps.get.isWorksheetMode
-    )
+  private def didConfigChange(prevProps: CodeEditor, props: CodeEditor): Boolean =
+      props.target != prevProps.target ||
+        props.dependencies != prevProps.dependencies ||
+        props.isWorksheetMode != prevProps.isWorksheetMode
 
   def reloadMetalsConfiguration(
     editorView: UseStateF[CallbackTo, EditorView],
@@ -243,9 +246,9 @@ object InteractiveProvider {
       val extension = InteractiveProvider(props).extension
       val effects = interactive.reconfigure(extension)
       editorView.value.dispatch(TransactionSpec().setEffects(effects.asInstanceOf[StateEffect[Any]]))
-    }.when_(props.visible && prevProps.isDefined && (
-      didConfigChange(prevProps, props) || (prevProps.get.visible != props.visible) || wasMetalsToggled(prevProps, props))
-    )
+    }.when_(props.visible && prevProps.exists(prevProps => {
+      didConfigChange(prevProps, props) || (prevProps.visible != props.visible) || wasMetalsToggled(prevProps, props)
+    }))
   }
 
 }

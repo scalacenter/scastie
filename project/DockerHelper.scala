@@ -51,7 +51,16 @@ object DockerHelper {
     sbtGlobal.toFile.mkdirs()
 
     new Dockerfile {
-      from("eclipse-temurin:17")
+      from("openjdk:17-alpine")
+
+      // Install ca-certificates for wget https
+      runRaw("apk update")
+      runRaw("apk --update upgrade")
+      runRaw("apk add ca-certificates")
+      runRaw("update-ca-certificates")
+      runRaw("apk add openssl")
+      runRaw("apk add nss")
+      runRaw("apk add bash")
 
       runRaw("mkdir -p /app/sbt")
 
@@ -59,12 +68,15 @@ object DockerHelper {
         s"wget https://github.com/sbt/sbt/releases/download/v${sbtVersion}/sbt-${sbtVersion}.tgz -O /tmp/sbt-${sbtVersion}.tgz"
       )
       runRaw(s"tar -xzvf /tmp/sbt-$sbtVersion.tgz -C /app/sbt")
+
       runRaw("ln -s /app/sbt/sbt/bin/sbt /usr/local/bin/sbt")
 
       val userHome = s"/home/$containerUsername"
 
-      runRaw(s"addgroup --force-badname --gid 433 $containerUsername")
-      runRaw(s"adduser --force-badname --home $userHome --shell /bin/sh --uid 433 --gid 433 $containerUsername")
+      runRaw(s"addgroup -g 433 $containerUsername")
+      runRaw(
+        s"adduser -h $userHome -G $containerUsername -D -u 433 -s /bin/sh $containerUsername"
+      )
 
       def chown(dir: String) = {
         user("root")

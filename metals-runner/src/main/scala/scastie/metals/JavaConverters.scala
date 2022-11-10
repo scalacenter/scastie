@@ -10,8 +10,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.{Either => JEither}
 import org.slf4j.LoggerFactory
 
 object JavaConverters {
-  val logger = LoggerFactory.getLogger(getClass)
-
+  private val logger = LoggerFactory.getLogger(getClass)
   private val gson = new Gson()
 
   extension [A, B](either: JEither[A, B])

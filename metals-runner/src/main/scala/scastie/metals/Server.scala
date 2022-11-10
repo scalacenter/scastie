@@ -26,16 +26,15 @@ object Server:
     pid
   }
 
-  val config               = ConfigFactory.load().getConfig("scastie.metals")
-  val cacheSize            = config.getInt("cache-size")
-  val cacheExpireInSeconds = config.getInt("cache-size")
-  val isProduction         = config.getBoolean("production")
+  val config                   = ConfigFactory.load().getConfig("scastie.metals")
+  val cacheExpirationInSeconds = config.getInt("cache-expire-in-seconds")
+  val isProduction             = config.getBoolean("production")
 
   def stream[F[_]: Async]: Stream[F, Nothing] = {
     for {
       client <- Stream.resource(EmberClientBuilder.default[F].build)
 
-      metalsImpl = ScastieMetalsImpl.instance[F](cacheSize, cacheExpireInSeconds)
+      metalsImpl = ScastieMetalsImpl.instance[F](cacheExpirationInSeconds)
 
       httpApp = ScastieMetalsRoutes.routes[F](metalsImpl).orNotFound
 
