@@ -3,10 +3,14 @@ package scastie.metals
 import java.lang.management.ManagementFactory
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
+import scala.concurrent.duration.*
 
 import cats.effect.{Async, Resource}
+import cats.effect.implicits.*
 import cats.syntax.all._
 import com.comcast.ip4s._
+import com.evolutiongaming.scache.{Cache, ExpiringCache}
+import com.olegych.scastie.api.ScastieMetalsOptions
 import com.typesafe.config.ConfigFactory
 import fs2.Stream
 import org.http4s.ember.client.EmberClientBuilder
@@ -31,25 +35,29 @@ object Server:
   val isProduction             = config.getBoolean("production")
 
   def stream[F[_]: Async]: Stream[F, Nothing] = {
-    for {
-      client <- Stream.resource(EmberClientBuilder.default[F].build)
+    val cache = Cache.expiring[F, ScastieMetalsOptions, ScastiePresentationCompiler](
+      ExpiringCache.Config(expireAfterRead = cacheExpirationInSeconds.seconds, maxSize = Some(64)),
+      None
+    )
 
-      metalsImpl = ScastieMetalsImpl.instance[F](cacheExpirationInSeconds)
+    val finalHttpApp = (cache0: Cache[F, ScastieMetalsOptions, ScastiePresentationCompiler]) => {
+      val metalsImpl  = ScastieMetalsImpl.instance[F](cache0)
+      val httpApp     = ScastieMetalsRoutes.routes[F](metalsImpl).orNotFound
+      val corsService = CORS.policy.withAllowOriginAll(httpApp)
+      Logger.httpApp(true, false)(corsService)
+    }
 
-      httpApp = ScastieMetalsRoutes.routes[F](metalsImpl).orNotFound
+    if (isProduction) writeRunningPid("METALS_RUNNING_PID")
 
-      corsService  = CORS.policy.withAllowOriginAll(httpApp)
-      finalHttpApp = Logger.httpApp(true, false)(corsService)
-      _            = if (isProduction) writeRunningPid("METALS_RUNNING_PID")
-
-      exitCode <- Stream.resource(
+    Stream.resource(
+      cache.flatMap(cache =>
         EmberServerBuilder
           .default[F]
           .withHost(ipv4"0.0.0.0")
           .withPort(port"8000")
-          .withHttpApp(finalHttpApp)
+          .withHttpApp(finalHttpApp(cache))
           .build >>
           Resource.eval(Async[F].never)
       )
-    } yield exitCode
+    )
   }.drain

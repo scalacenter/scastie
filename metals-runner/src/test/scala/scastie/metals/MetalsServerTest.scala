@@ -59,6 +59,21 @@ class MetalsServerTest extends CatsEffectSuite {
     )
   }
 
+  test("Completions with dependencies cross version") {
+    testCompletion(
+      testTargets = List(ScalaTarget.Scala3.default),
+      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", ScalaTarget.Jvm.default, catsVersion)),
+      code = """import cats.syntax.all._
+               |object M {
+               |  def test = "5".asRigh@@
+               |}
+          """.stripMargin,
+      expected = Set(
+        "asRight[B]: Either[B, A]"
+      ).asRight
+    )
+  }
+
   test("Completions item info") {
     testCompletionInfo(
       code = """object M {
@@ -87,6 +102,21 @@ class MetalsServerTest extends CatsEffectSuite {
           """.stripMargin,
       expected = List(
         Right("Wrap a value in `Right`.")
+      )
+    )
+  }
+
+  test("Completion infos with dependencies cross version") {
+    testCompletionInfo(
+      testTargets = List(ScalaTarget.Scala3.default),
+      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", ScalaTarget.Jvm.default, catsVersion)),
+      code = """import cats.syntax.all._
+               |object M {
+               |  def test = "5".asRigh@@
+               |}
+          """.stripMargin,
+      expected = List(
+        "Wrap a value in `Right`.".asRight
       )
     )
   }
@@ -151,6 +181,30 @@ class MetalsServerTest extends CatsEffectSuite {
             |Wrap a value in `Right`.""".stripMargin
         ).asRight
       )
+    )
+  }
+
+  test("Hover with dependencies cross version") {
+    testHover(
+      testTargets = List(ScalaTarget.Scala3.default),
+      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", ScalaTarget.Jvm.default, catsVersion)),
+      code = """import cats.syntax.all._
+               |object M {
+               |  def test = "5".asRigh@@t
+               |}
+          """.stripMargin,
+      expected = MarkupContent(
+        "markdown",
+        """**Expression type**:
+          |```scala
+          |Either[Nothing, String]
+          |```
+          |**Symbol signature**:
+          |```scala
+          |def asRight[B]: Either[B, String]
+          |```
+          |Wrap a value in `Right`.""".stripMargin
+      ).asRight,
     )
   }
 
@@ -314,5 +368,4 @@ class MetalsServerTest extends CatsEffectSuite {
       expected = Set().asRight
     )
   }
-
 }

@@ -92,7 +92,7 @@ const proxy = {
     }
   }
 }
- 
+
 export default defineConfig({
   root: root,
   base: isDev() ? '' : '/public/',

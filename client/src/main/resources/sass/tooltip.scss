@@ -5,7 +5,6 @@
   .cm-tooltip {
     .cm-completionInfo, &-hover {
       font-size: 14px;
-      max-width: fit-content !important;
       min-width: 400px;
       max-height: 500px;
       overflow-x: hidden;
@@ -15,6 +14,26 @@
           padding-inline-start: 1.5em;
           padding: 0 0.7em 0.3em 1.3em;
       }
+    }
+
+    @media only screen and (max-width: #{$mobile-width}) {
+      min-width: 95%; 
+    }
+
+    .cm-completionInfo-right-narrow {
+      top: 100% !important;
+      max-height: 300px;
+      max-width: 100% !important;
+      min-width: 100%;
+
+      left: 0px;
+
+      code {
+        max-width: 96%;
+        display: inline-block;
+        overflow-y: scroll;
+      }
+
     }
 
     strong {

@@ -2,8 +2,10 @@ package scastie.metals
 
 import scala.jdk.CollectionConverters._
 
+import cats.effect.implicits.*
 import cats.effect.IO
 import cats.syntax.all._
+import com.evolutiongaming.scache.Cache
 import com.olegych.scastie.api._
 import com.olegych.scastie.api.{ScalaDependency, ScalaTarget}
 import com.olegych.scastie.buildinfo.BuildInfo
@@ -14,7 +16,8 @@ import org.http4s._
 import JavaConverters._
 
 object TestUtils extends Assertions with CatsEffectAssertions {
-  private val server = ScastieMetalsImpl.instance[IO](30)
+  val cache  = Cache.empty[IO, ScastieMetalsOptions, ScastiePresentationCompiler]
+  val server = ScastieMetalsImpl.instance[IO](cache)
 
   type DependencyForVersion = ScalaTarget => ScalaDependency
 

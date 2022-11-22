@@ -12,7 +12,9 @@ import scala.meta.internal.pc.ScalaPresentationCompiler
 import scala.meta.io.AbsolutePath
 import scala.meta.pc.PresentationCompiler
 
-import cats.effect.Resource
+import cats.effect.implicits.monadCancelOps_
+import cats.effect.std.Semaphore
+import cats.effect.Async
 import cats.effect.Sync
 import cats.syntax.all._
 import meta.internal.mtags.MtagsEnrichments.XtensionAbsolutePath
@@ -23,24 +25,29 @@ trait BlockingServiceLoader[F[_]] {
 
 object BlockingServiceLoader {
 
-  def instance[F[_]: Sync] = new BlockingServiceLoader[F] {
+  def instance[F[_]: Sync](semaphore: Semaphore[F]) = new BlockingServiceLoader[F] {
 
     /*
      * ServiceLoader is not thread safe. That's why we are blocking it's execution.
      */
-    def load[T](cls: Class[T], className: String, classloader: URLClassLoader): F[T] = Sync[F].blocking {
-      val services = ServiceLoader.load(cls, classloader).iterator()
-      if (services.hasNext) services.next()
-      else {
-        // NOTE(olafur): ServiceLoader doesn't find the service on Appveyor for
-        // some reason, I'm unable to reproduce on my computer. Here below we
-        // fallback to manual classloading.
-        val cls  = classloader.loadClass(className)
-        val ctor = cls.getDeclaredConstructor()
-        ctor.setAccessible(true)
-        ctor.newInstance().asInstanceOf[T]
+    def load[T](cls: Class[T], className: String, classloader: URLClassLoader): F[T] =
+      def load0: F[T] = Sync[F].delay {
+        val services = ServiceLoader.load(cls, classloader).iterator()
+        if (services.hasNext) services.next()
+        else {
+          // NOTE(olafur): ServiceLoader doesn't find the service on Appveyor for
+          // some reason, I'm unable to reproduce on my computer. Here below we
+          // fallback to manual classloading.
+          val cls  = classloader.loadClass(className)
+          val ctor = cls.getDeclaredConstructor()
+          ctor.setAccessible(true)
+          ctor.newInstance().asInstanceOf[T]
+        }
       }
-    }
+
+      Sync[F].uncancelable { poll =>
+        poll(semaphore.acquire) *> poll(load0).guarantee(semaphore.release)
+      }
 
   }
 
@@ -57,12 +64,12 @@ object BlockingServiceLoader {
  * IMPORTANT, Presentation compilers are stored to make sure we are not loading same classes with Classloader.
  * They are also not thread safe that's why their creation for the first time for specific `scalaVersion` is blocking.
  */
-class PresentationCompilers[F[_]: Sync] {
+class PresentationCompilers[F[_]: Async] {
   private val presentationCompilers: TrieMap[String, URLClassLoader] = TrieMap.empty
 
   // service loader must be blocking as it's not thread safe
-  private val serviceLoader: Resource[F, BlockingServiceLoader[F]] = Resource.pure(BlockingServiceLoader.instance[F])
-  private val mtagsResolver                                        = MtagsResolver.default()
+  private val serviceLoader: F[BlockingServiceLoader[F]] = Semaphore[F](1).map(BlockingServiceLoader.instance[F])
+  private val mtagsResolver                              = MtagsResolver.default()
 
   val index = OnDemandSymbolIndex.empty()
   val docs  = new Docstrings(index)
@@ -98,7 +105,7 @@ class PresentationCompilers[F[_]: Sync] {
         newPresentationCompilerClassLoader(mtags, scalaLibrary)
       )
     } >>= (classloader =>
-      serviceLoader.use(
+      serviceLoader.flatMap(
         _.load(classOf[PresentationCompiler], classOf[ScalaPresentationCompiler].getName(), classloader)
       )
     )

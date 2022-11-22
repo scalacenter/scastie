@@ -2,7 +2,7 @@ package scastie.metals
 
 import java.nio.file.Files
 import java.nio.file.Path
-import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.*
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
 import scala.meta.internal.metals.Embedded
@@ -11,8 +11,10 @@ import scala.meta.internal.metals.MtagsResolver
 import scala.util.control.NonFatal
 
 import cats.data.EitherT
+import cats.data.OptionT
 import cats.effect.{Async, Sync}
 import cats.syntax.all._
+import com.evolutiongaming.scache.Cache
 import com.olegych.scastie.api._
 import com.olegych.scastie.api.ScalaTarget._
 import coursierapi.{Dependency, Fetch}
@@ -26,12 +28,9 @@ import org.slf4j.LoggerFactory
  *
  * @param expirationInSeconds - time after which unused keys are invalidated in guava cache
  */
-class MetalsDispatcher[F[_]: Async](expirationInSeconds: Int) {
+class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, ScastiePresentationCompiler]) {
   private val logger                = LoggerFactory.getLogger(getClass)
   private val presentationCompilers = PresentationCompilers[F]()
-
-  type ScastieGuavaCache = LoadingGuavaCache[F, ScastieMetalsOptions, ScastiePresentationCompiler]
-  private val cache: ScastieGuavaCache = LoadingGuavaCache(expirationInSeconds)
 
   private val mtagsResolver          = MtagsResolver.default()
   private val metalsWorkingDirectory = Files.createTempDirectory("scastie-metals")
@@ -45,9 +44,7 @@ class MetalsDispatcher[F[_]: Async](expirationInSeconds: Int) {
    * @param configuration - scastie client configuration
    * @returns `EitherT[F, FailureType, ScastiePresentationCompiler]`
    */
-  def getCompiler(configuration: ScastieMetalsOptions)(
-    implicit ec: ExecutionContext
-  ): EitherT[F, FailureType, ScastiePresentationCompiler] = EitherT {
+  def getCompiler(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastiePresentationCompiler] = EitherT {
     if !isSupportedVersion(configuration) then
       Async[F].pure(
         Left(
@@ -65,7 +62,7 @@ class MetalsDispatcher[F[_]: Async](expirationInSeconds: Int) {
               s"Mtags couldn't be resolved for target: ${configuration.scalaTarget.scalaVersion}."
             )
           )
-      ) >>= (_.traverse(mtags => cache.getOrLoad(configuration)(initializeCompiler(configuration, mtags)))
+      ) >>= (_.traverse(mtags => cache.getOrUpdate(configuration)(initializeCompiler(configuration, mtags)))
         .recoverWith { case NonFatal(e) =>
           logger.error(e.getMessage)
           PresentationCompilerFailure(e.getMessage).asLeft.pure[F]
@@ -78,6 +75,41 @@ class MetalsDispatcher[F[_]: Async](expirationInSeconds: Int) {
    */
   private def isSupportedVersion(configuration: ScastieMetalsOptions): Boolean =
     supportedVersions.contains(configuration.scalaTarget.binaryScalaVersion)
+
+  /*
+   * This is workaround for bad scaladex search UI in scastie.
+   * We must properly handle non compatibile library versions.
+   * In sbt it is automatically resolved but here, we manually specify scala target.
+   */
+  def areDependenciesSupported(configuration: ScastieMetalsOptions): EitherT[F, FailureType, Boolean] =
+    def scalaTargetString(scalaTarget: ScalaTarget): String =
+      s"${scalaTarget.scalaVersion}" ++ (if scalaTarget.targetType == ScalaTargetType.JS then
+                                           s" ${scalaTarget.targetType}"
+                                         else "")
+
+    def checkScalaVersionCompatibility(scalaTarget: ScalaTarget): Boolean =
+      if configuration.scalaTarget.binaryScalaVersion.startsWith("3") then
+        scalaTarget.binaryScalaVersion.startsWith("2.13") || scalaTarget.targetType == ScalaTargetType.Scala3
+      else scalaTarget.binaryScalaVersion == configuration.scalaTarget.binaryScalaVersion
+
+    def checkScalaJsCompatibility(scalaTarget: ScalaTarget): Boolean =
+      if configuration.scalaTarget.targetType == ScalaTargetType.JS then scalaTarget.targetType == ScalaTargetType.JS
+      else true
+
+    val misconfiguredLibraries = configuration.dependencies
+      .filterNot(l => checkScalaVersionCompatibility(l.target) && checkScalaJsCompatibility(l.target))
+
+    Option
+      .when(misconfiguredLibraries.nonEmpty) {
+        val errorString = misconfiguredLibraries
+          .map(l =>
+            s"${l.toString} dependency  binary version is: ${scalaTargetString(l.target)} while scastie is set to: ${scalaTargetString(configuration.scalaTarget)}"
+          )
+          .mkString("\n")
+        PresentationCompilerFailure(s"Misconfigured dependencies: $errorString")
+      }
+      .toLeft(true)
+      .toEitherT
 
   /*
    * Initializes the compiler with proper classpath and version

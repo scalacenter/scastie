@@ -63,7 +63,6 @@ object CodeEditor {
             highlightActiveLineGutter(),
             highlightSpecialChars(),
             history(),
-            foldGutter(),
             drawSelection(),
             dropCursor(),
             EditorState.allowMultipleSelections.of(true),
@@ -87,7 +86,6 @@ object CodeEditor {
             mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
             SyntaxHighlightingTheme.highlightingTheme,
             lintGutter(),
-            mod.codeFolding(),
             OnChangeHandler(props.codeChange),
           )
         })

@@ -67,8 +67,14 @@ case class InteractiveProvider(props: CodeEditor) {
   }
 
   private def makeRequest[A](req: A, endpoint: String)(implicit writes: Writes[A]): Future[Option[String]] = {
+    val location = dom.window.location
+    // this is workaround until we migrate all services to proper docker setup or unify the servers
+    val apiBase = if (location.hostname == "localhost") {
+      location.protocol ++ "//" ++ location.hostname + ":" ++ "8000"
+    } else ""
+
     // We don't support metals in embedded so we don't need to map server url
-    val request = dom.fetch(s"/metals/$endpoint", js.Dynamic.literal(
+    val request = dom.fetch(s"$apiBase/metals/$endpoint", js.Dynamic.literal(
       body = Json.toJson(req).toString,
       method = dom.HttpMethod.POST
     ).asInstanceOf[dom.RequestInit])
@@ -76,7 +82,13 @@ case class InteractiveProvider(props: CodeEditor) {
     for {
       res <- request
       text <- res.text()
-    } yield if (res.ok) Some(text) else None
+    } yield {
+      if (res.ok) Some(text)
+      else {
+        props.setMetalsStatus(NetworkError(text))
+        None
+      }
+    }
   }
 
   private def parseMetalsResponse[B](maybeJsonText: Option[String])(implicit readsB: Reads[B]): Option[B] = {
@@ -206,6 +218,7 @@ case class InteractiveProvider(props: CodeEditor) {
   }.map(_.getOrElse(null)).toJSPromise)
 
   private val autocompletionConfig = CompletionConfig()
+    .setCloseOnBlur(false)
     .setOverrideVarargs(completionsF)
     .setIcons(true)
     .setDefaultKeymap(true)
@@ -226,7 +239,6 @@ object InteractiveProvider {
 
   val marked = typings.marked.mod.marked.`package`
   marked.setOptions(typings.marked.mod.marked.MarkedOptions().setHighlight(highlightF))
-
 
   private def wasMetalsToggled(prevProps: CodeEditor, props: CodeEditor): Boolean =
     (prevProps.metalsStatus == MetalsDisabled && props.metalsStatus == MetalsLoading) ||

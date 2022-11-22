@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 
 object JavaConverters {
   private val logger = LoggerFactory.getLogger(getClass)
-  private val gson = new Gson()
+  private val gson   = new Gson()
 
   extension [A, B](either: JEither[A, B])
 

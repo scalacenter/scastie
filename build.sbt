@@ -115,8 +115,8 @@ lazy val metalsRunner = project
       "org.http4s"                  %% "http4s-circe"             % "0.23.16",
       "io.circe"                    %% "circe-generic"            % "0.14.2",
       "org.scalameta"               %% "munit"                    % "0.7.29" % Test,
-      "org.typelevel"               %% "munit-cats-effect-3" % "1.0.6" % Test,
-      "com.google.guava" % "guava" % "31.1-jre"
+      "com.evolutiongaming"         %% "scache"                   % "4.2.3",
+      "org.typelevel"               %% "munit-cats-effect-3"      % "1.0.6" % Test
     )
   )
   .enablePlugins(JavaServerAppPackaging)
@@ -284,7 +284,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "4.5.5",
+      "org.scalameta" %% "scalameta" % "4.6.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
