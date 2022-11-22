@@ -90,6 +90,9 @@ package object components {
   implicit val embeddedOptionsReuse: Reusability[EmbeddedOptions] =
     Reusability.derive[EmbeddedOptions]
 
+  implicit val metalsStatusReuse: Reusability[MetalsStatus] =
+    Reusability.byRefOr_==
+
   implicit val scastieStateReuse: Reusability[ScastieState] =
     Reusability.derive[ScastieState]
 

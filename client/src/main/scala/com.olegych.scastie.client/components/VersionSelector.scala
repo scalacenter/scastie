@@ -1,13 +1,9 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
-import com.olegych.scastie.client.components.editor.SimpleEditor
 import japgolly.scalajs.react._
-import org.scalajs.dom.html.Div
 
-import vdom.TagOf
 import vdom.all._
-import extra._
 
 case class VersionSelector(scalaTarget: ScalaTarget, onChange: ScalaTarget ~=> Callback) {
   @inline def render: VdomElement = VersionSelector.versionSelectorHook(this)

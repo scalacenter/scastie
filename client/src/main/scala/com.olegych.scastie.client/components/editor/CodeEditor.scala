@@ -2,12 +2,18 @@ package com.olegych.scastie.client.components.editor
 
 import com.olegych.scastie.api
 import com.olegych.scastie.client.HTMLFormatter
+import com.olegych.scastie.client._
 import japgolly.scalajs.react._
 import org.scalajs.dom
-import org.scalajs.dom.{Element, HTMLElement}
+import org.scalajs.dom.Element
+import org.scalajs.dom.HTMLElement
+import typings.codemirrorAutocomplete.mod._
+import typings.codemirrorCommands.mod._
 import typings.codemirrorLanguage.mod
+import typings.codemirrorLanguage.mod._
 import typings.codemirrorLint.codemirrorLintStrings
 import typings.codemirrorLint.mod._
+import typings.codemirrorSearch.mod._
 import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
 
@@ -15,6 +21,7 @@ import scalajs.js
 import vdom.all._
 import JsUtils._
 import hooks.Hooks.UseStateF
+import js.JSConverters._
 
 final case class CodeEditor(visible: Boolean,
                             isDarkTheme: Boolean,
@@ -36,7 +43,11 @@ final case class CodeEditor(visible: Boolean,
                             togglePresentationMode: Reusable[Callback],
                             formatCode: Reusable[Callback],
                             codeChange: String ~=> Callback,
-) extends Editor {
+                            target: api.ScalaTarget,
+                            metalsStatus: MetalsStatus,
+                            setMetalsStatus: MetalsStatus ~=> Callback,
+                            dependencies: Set[api.ScalaDependency])
+    extends Editor {
   @inline def render: VdomElement = CodeEditor.hooksComponent(this)
 }
 
@@ -48,17 +59,33 @@ object CodeEditor {
         state = EditorState.create(new EditorStateConfig {
           doc = props.value
           extensions = js.Array[Any](
+            lineNumbers(),
+            highlightActiveLineGutter(),
+            highlightSpecialChars(),
+            history(),
+            drawSelection(),
+            dropCursor(),
+            EditorState.allowMultipleSelections.of(true),
+            indentOnInput(),
+            bracketMatching(),
+            closeBrackets(),
+            rectangularSelection(),
+            crosshairCursor(),
+            highlightActiveLine(),
+            highlightSelectionMatches(),
+            keymap.of(closeBracketsKeymap ++ defaultKeymap ++ historyKeymap ++ foldKeymap ++ completionKeymap ++ lintKeymap ++ searchKeymap),
             StateField
               .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
               .extension,
-            typings.codemirror.mod.basicSetup,
             DecorationProvider(props),
             EditorState.tabSize.of(2),
-            typings.codemirrorState.mod.Prec.highest(EditorKeymaps.keymapping(props)),
+            Prec.highest(EditorKeymaps.keymapping(props)),
+            InteractiveProvider.interactive.of(
+              InteractiveProvider(props).extension
+            ),
             mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
             SyntaxHighlightingTheme.highlightingTheme,
             lintGutter(),
-            mod.codeFolding(),
             OnChangeHandler(props.codeChange),
           )
         })
@@ -90,7 +117,7 @@ object CodeEditor {
       Diagnostic(lineInfo.from, HTMLFormatter.format(msg), codemirrorLintStrings.error, lineInfo.to)
     })
 
-    js.Array((errors ++ runtimeErrors).toSeq: _*)
+    (errors ++ runtimeErrors).toJSArray
   }
 
   private def updateDiagnostics(editorView: UseStateF[CallbackTo, EditorView], prevProps: Option[CodeEditor], props: CodeEditor): Callback = {
@@ -114,7 +141,8 @@ object CodeEditor {
     Editor.updateCode(editorView, props) >>
       Editor.updateTheme(ref, prevProps, props) >>
       updateDiagnostics(editorView, prevProps, props) >>
-      DecorationProvider.updateDecorations(editorView, prevProps, props)
+      DecorationProvider.updateDecorations(editorView, prevProps, props) >>
+      InteractiveProvider.reloadMetalsConfiguration(editorView, prevProps, props)
   }
 
   val hooksComponent =

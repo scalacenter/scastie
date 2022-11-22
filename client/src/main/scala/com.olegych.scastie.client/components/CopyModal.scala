@@ -2,12 +2,13 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._, vdom.all._, extra._
-
+import japgolly.scalajs.react._
 import org.scalajs.dom
-
+import org.scalajs.dom.document
 import org.scalajs.dom.html
-import org.scalajs.dom.{window, document}
+import org.scalajs.dom.window
+
+import vdom.all._
 
 final case class CopyModal(title: String, subtitle: String, content: String, modalId: String, isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement =

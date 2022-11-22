@@ -15,12 +15,12 @@ import sbtdocker.ImageName
 import sys.process._
 
 object Deployment {
-  def settings(server: Project, sbtRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
-    deploy := deployTask(server, sbtRunner).value,
+  def settings(server: Project, sbtRunner: Project, metalsRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
+    deploy := deployTask(server, sbtRunner, metalsRunner).value,
     deployServer := deployServerTask(server, sbtRunner).value,
-    deployQuick := deployQuickTask(server, sbtRunner).value,
-    deployServerQuick := deployServerQuickTask(server, sbtRunner).value,
-    deployLocal := deployLocalTask(server, sbtRunner).value
+    deployQuick := deployQuickTask(server, sbtRunner, metalsRunner).value,
+    deployServerQuick := deployServerQuickTask(server, sbtRunner, metalsRunner).value,
+    deployLocal := deployLocalTask(server, sbtRunner, metalsRunner).value
   )
 
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
@@ -45,44 +45,49 @@ object Deployment {
       deployment.deployServer(serverZip)
     }
 
-  def deployLocalTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployLocalTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = (server / Universal / packageBin).value.toPath
+      val metalsServerZip = (metalsRunner / Universal / packageBin).value.toPath
       val imageIdSbt = (sbtRunner / docker).value
 
-      deployment.deployLocal(serverZip)
+      deployment.deployLocal(serverZip, metalsServerZip)
     }
 
-  def deployTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = (server / Universal / packageBin).value.toPath
+      val metalsRunnerZip = (metalsRunner / Universal / packageBin).value.toPath
       val imageIdSbt = (sbtRunner / dockerBuildAndPush).value
 
-      deployment.deploy(serverZip)
+      deployment.deploy(serverZip, metalsRunnerZip)
     }
 
-  def deployQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployQuickTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = serverZipTask(server).value
+      val metalsRunnerZip = serverZipTask(metalsRunner).value
 
       deployment.logger.warn(
         "deployQuick will not push the sbt-runner docker image nor create the server zip"
       )
-      deployment.deploy(serverZip)
+      deployment.deploy(serverZip, metalsRunnerZip)
     }
 
-  def deployServerQuickTask(server: Project, sbtRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployServerQuickTask(server: Project, sbtRunner: Project, metalsServer: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = serverZipTask(server).value
+      val metalsServerZip = serverZipTask(metalsServer).value
 
       deployment.logger.warn(
         "deployServerQuick will not create the server zip"
       )
       deployment.deployServer(serverZip)
+      deployment.deployMetalsRunner(metalsServerZip)
     }
 
   private def deploymentTask(
@@ -97,22 +102,23 @@ object Deployment {
       )
     }
 
-  private def serverZipTask(server: Project): Def.Initialize[Task[Path]] =
+  private def serverZipTask(genericServer: Project): Def.Initialize[Task[Path]] =
     Def.task {
-      val universalTarget = (server / Universal / target).value
-      val universalName = (server / Universal / name).value
-      val serverVersion = (server / version).value
+      val universalTarget = (genericServer / Universal / target).value
+      val universalName = (genericServer / Universal / name).value
+      val serverVersion = (genericServer / version).value
       (universalTarget / (universalName + "-" + serverVersion + ".zip")).toPath
     }
 }
 
 class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, val logger: Logger) {
-  def deploy(serverZip: Path): Unit = {
+  def deploy(serverZip: Path, metalsServerZip: Path): Unit = {
     deployRunners()
     deployServer(serverZip)
+    deployMetalsRunner(metalsServerZip)
   }
 
-  def deployLocal(serverZip: Path): Unit = {
+  def deployLocal(serverZip: Path, metalsServerZip: Path): Unit = {
     val sbtDockerNamespace = sbtDockerImage.namespace.get
     val sbtDockerRepository = sbtDockerImage.repository
 
@@ -128,10 +134,10 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
       Files.createDirectory(snippetsFolder)
     }
 
-    val deploymentFiles =
-      deployServerFiles(serverZip, destination, local = true)
+    val deploymentFiles = deployServerFiles(serverZip, destination, local = true).files ++
+      deployMetalsRunnerFiles(metalsServerZip, destination, true).files
 
-    deploymentFiles.files.foreach(
+    deploymentFiles.foreach(
       file =>
         Files
           .copy(file, destination.resolve(file.getFileName), REPLACE_EXISTING)
@@ -154,6 +160,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     Files.write(runnerScript, runnerScriptContent.getBytes)
     setPosixFilePermissions(runnerScript, executablePermissions)
+
   }
 
   def deployServer(serverZip: Path): Unit = {
@@ -169,20 +176,32 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     Process(s"ssh $uri ./$scriptFileName") ! logger
   }
 
+  def deployMetalsRunner(metalsRunnerZip: Path): Unit = {
+    val metalsRunnerScriptDir = Files.createTempDirectory("metalsRunner")
+
+    val deploymentFiles =
+      deployMetalsRunnerFiles(metalsRunnerZip, metalsRunnerScriptDir, local = false)
+
+    deploymentFiles.files.foreach(rsyncServer)
+
+    val scriptFileName = deploymentFiles.serverScript.getFileName
+    val uri = userName + "@" + serverHostname
+    Process(s"ssh $uri ./$scriptFileName") ! logger
+  }
+
   case class DeploymentFiles(
-      secretConfig: Path,
       serverZip: Path,
       serverScript: Path,
       productionConfig: Path,
-      logbackConfig: Path
+      logbackConfig: Path,
+      secretConfig: Option[Path] = None
   ) {
     def files: List[Path] = List(
-      secretConfig,
       serverZip,
       serverScript,
       productionConfig,
       logbackConfig
-    )
+    ) ++ secretConfig.toList
   }
 
   private def deployServerFiles(serverZip: Path, destination: Path, local: Boolean): DeploymentFiles = {
@@ -197,9 +216,6 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     val configFileName = config.getFileName
     val logbackConfigFileName = logbackConfig.getFileName
     val serverZipFileName = serverZip.getFileName.toString.replace(".zip", "")
-
-    val secretConfig = getSecretConfig()
-    val sentryDsn = getSentryDsn(secretConfig)
 
     val baseDir =
       if (!local) s"/home/$userName/"
@@ -222,9 +238,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
           |nohup ${baseDir}server/bin/server \\
           |  -J-Xmx1G \\
           |  -Dconfig.file=${baseDir}${configFileName} \\
-          |  -Dlogback.configurationFile=${baseDir}${logbackConfigFileName} \\
-          |  -Dsentry.dsn=$sentryDsn \\
-          |  -Dsentry.release=$version \\
+          |  -Dlogback.configurationFile=${baseDir}${logbackConfigFileName}
           |  &>/dev/null &
           |""".stripMargin
 
@@ -234,9 +248,59 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     logger.info("Deploy servers")
 
     DeploymentFiles(
-      secretConfig,
       serverZip,
       serverScript,
+      config,
+      logbackConfig,
+      None,
+    )
+  }
+
+  private def deployMetalsRunnerFiles(metalsRunnerZip: Path, destination: Path, local: Boolean): DeploymentFiles = {
+    logger.info("Generate metalsrunner script")
+
+    val metalsRunnerScript = destination.resolve("metalsRunner.sh")
+    val config =
+      if (local) localConfig
+      else productionConfig
+
+    val configFileName = config.getFileName
+    val logbackConfigFileName = logbackConfig.getFileName
+    val serverZipFileName = metalsRunnerZip.getFileName.toString.replace(".zip", "")
+
+    val baseDir =
+      if (!local) s"/home/$userName/"
+      else ""
+
+    val content =
+      s"""|#!/usr/bin/env bash
+          |
+          |whoami
+          |
+          |serverZipFileName=$serverZipFileName
+          |
+          |kill -9 `cat ${baseDir}METALS_RUNNING_PID`
+          |
+          |rm -rf ${baseDir}metalsrunner/*
+          |unzip -o -d ${baseDir}metalsrunner ${baseDir}$$serverZipFileName
+          |mv ${baseDir}metalsrunner/$$serverZipFileName/* ${baseDir}metalsrunner/
+          |rm -rf ${baseDir}metalsrunner/$$serverZipFileName
+          |
+          |nohup ${baseDir}metalsrunner/bin/metalsrunner \\
+          |  -J-Xmx4G \\
+          |  -Dconfig.file=${baseDir}${configFileName} \\
+          |  -Dlogback.configurationFile=${baseDir}${logbackConfigFileName}
+          |  &>/dev/null &
+          |""".stripMargin
+
+    Files.write(metalsRunnerScript, content.getBytes)
+    setPosixFilePermissions(metalsRunnerScript, executablePermissions)
+
+    logger.info("Deploy metals runner")
+
+    DeploymentFiles(
+      metalsRunnerZip,
+      metalsRunnerScript,
       config,
       logbackConfig
     )
@@ -309,8 +373,6 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     val dockerImagePath = s"$image:$gitHashNow"
 
-    val sentryDsn = getSentryDsn(getSecretConfig())
-
     //jenkins.scala-sbt.org points to 127.0.0.1 to workaround https://github.com/sbt/sbt/issues/5458 and https://github.com/sbt/sbt/issues/5456
     val runnerScriptContent =
       s"""|#!/usr/bin/env bash
@@ -333,9 +395,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
           |    -e RUNNER_PORT=$$i \\
           |    -e SERVER_HOSTNAME=$serverHostname \\
           |    -e SERVER_AKKA_PORT=$serverAkkaPort \\
-          |    -e RUNNER_HOSTNAME=$runnersHostname \\
-          |    -e SENTRY_DSN=$sentryDsn \\
-          |    -e SENTRY_RELEASE=$version \\
+          |    -e RUNNER_HOSTNAME=$runnersHostname
           |    $dockerImagePath
           |done
           |""".stripMargin
@@ -362,25 +422,6 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     rsyncServer(runnerScript)
     rsyncServer(proxyScript)
     Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
-  }
-
-  private def getSecretConfig(): Path = {
-    val scastieSecrets = "scastie-secrets"
-    val secretFolder = rootFolder / ".." / scastieSecrets
-
-    if (Files.exists(secretFolder.toPath)) {
-      Process("git pull origin master", secretFolder)
-    } else {
-      Process(s"git clone git@github.com:scalacenter/$scastieSecrets.git")
-    }
-
-    (secretFolder / "secrets.conf").toPath
-  }
-
-  private def getSentryDsn(secretConfig: Path): String = {
-    val config = ConfigFactory.parseFile(secretConfig.toFile)
-    val scastieConfig = config.getConfig("com.olegych.scastie")
-    scastieConfig.getString("sentry.dsn")
   }
 
   private val userName = "scastie"

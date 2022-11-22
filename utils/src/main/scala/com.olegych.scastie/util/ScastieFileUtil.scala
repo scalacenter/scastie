@@ -23,9 +23,9 @@ object ScastieFileUtil {
     }
   }
 
-  def writeRunningPid(): String = {
+  def writeRunningPid(name: String): String = {
     val pid = ManagementFactory.getRuntimeMXBean.getName.split("@").head
-    val pidFile = Paths.get("RUNNING_PID")
+    val pidFile = Paths.get(name)
     Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8))
     sys.addShutdownHook {
       Files.delete(pidFile)

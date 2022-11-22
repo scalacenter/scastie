@@ -6,8 +6,8 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.19"
 
 val akkaHttpVersion = "10.2.9"
 
-addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;client/fastLinkJS")
-addCommandAlias("startAllProd", "sbtRunner/reStart;server/fullLinkJS/reStart")
+addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
+addCommandAlias("startAllProd", "sbtRunner/reStart;metalsRunner/reStart;server/fullLinkJS/reStart")
 
 val fastLinkOutputDir = taskKey[String]("output directory for `yarn dev`")
 val fullLinkOutputDir = taskKey[String]("output directory for `yarn build`")
@@ -28,6 +28,7 @@ lazy val scastie = project
       server,
       storage,
       utils,
+      metalsRunner,
     ).map(_.project)):_*
   )
   .settings(baseSettings)
@@ -38,7 +39,7 @@ lazy val scastie = project
       val ___ = (server / Universal / packageBin).value
     },
   )
-  .settings(Deployment.settings(server, sbtRunner))
+  .settings(Deployment.settings(server, sbtRunner, metalsRunner))
 
 lazy val testSettings =
   Seq(
@@ -97,6 +98,29 @@ lazy val smallRunnerRuntimeDependenciesInTest = {
     Test / testQuick := (Test / testQuick).dependsOn(smallRunnerRuntimeDependencies: _*).evaluated
   )
 }
+
+lazy val metalsRunner = project
+  .in(file("metals-runner"))
+  .settings(baseNoCrossSettings)
+  .settings(
+    fork := true,
+    maintainer := "scalacenter",
+    scalaVersion := ScalaVersions.stable3,
+    libraryDependencies ++= Seq(
+      "org.scalameta" % "metals" % "0.11.9" cross(CrossVersion.for3Use2_13),
+      "org.eclipse.lsp4j" % "org.eclipse.lsp4j" % "0.15.0",
+      "org.http4s"                  %% "http4s-ember-server"      % "0.23.16",
+      "org.http4s"                  %% "http4s-ember-client"      % "0.23.16",
+      "org.http4s"                  %% "http4s-dsl"               % "0.23.16",
+      "org.http4s"                  %% "http4s-circe"             % "0.23.16",
+      "io.circe"                    %% "circe-generic"            % "0.14.2",
+      "org.scalameta"               %% "munit"                    % "0.7.29" % Test,
+      "com.evolutiongaming"         %% "scache"                   % "4.2.3",
+      "org.typelevel"               %% "munit-cats-effect-3"      % "1.0.6" % Test
+    )
+  )
+  .enablePlugins(JavaServerAppPackaging)
+  .dependsOn(api.jvm(ScalaVersions.old3))
 
 lazy val dockerOrg = "scalacenter"
 
@@ -219,10 +243,13 @@ lazy val client = project
       baseDirectory.value.getParentFile
     },
     stFlavour := Flavour.ScalajsReact,
-    scalaJSLinkerConfig := {
+    Compile / fastLinkJS / scalaJSLinkerConfig := {
       val dir = (Compile / fastLinkJS / scalaJSLinkerOutputDirectory).value.toURI()
       scalaJSLinkerConfig.value.withModuleKind(ModuleKind.ESModule)
         .withRelativizeSourceMapBase(Some(dir))
+    },
+    Compile / fullLinkJS / scalaJSLinkerConfig := {
+      scalaJSLinkerConfig.value.withModuleKind(ModuleKind.ESModule)
     },
     fastLinkOutputDir := linkerOutputDirectory((Compile / fastLinkJS).value).getAbsolutePath(),
     fullLinkOutputDir := linkerOutputDirectory((Compile / fullLinkJS).value).getAbsolutePath(),
@@ -257,7 +284,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "4.5.5",
+      "org.scalameta" %% "scalameta" % "4.6.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

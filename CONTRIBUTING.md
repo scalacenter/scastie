@@ -83,6 +83,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
 ├── runtime-scala       | methods exposed inside scastie
 ├── sbt-runner          | remote actor communicating with sbt instance over I/O streams
 ├── sbt-scastie         | sbt plugin to report errors and console output with the `sbt-api` model
+├── metals-runner       | server responsible for managing metals instances to provide interactive features
 ├── server              | web server
 └── utils               | read/writte files
 ```
@@ -91,22 +92,39 @@ You can install a pre-commit hook with `bin/hooks.sh`
 
 
 ```
-Scala.js Client     run/save/format                                           +-------------------------------------------+
-+-----------------+  AutowireApi      +---------------------+                +-------------------------------------------+|
-|  ScastieBackend |  (HTTP)           | +------------+      | akka+remote   +-------------------------------------------+||
-|      +--------+ +-----------------> | |LoadBalancer| <------------------+ |    SbtActor                Sbt(Proccess)  |||
-|      |        | |                   | +------------+      |             | |   +----------+             +-----------+  |||
-|      |        | |                   |                     |             +---> |          |  <----->    |sbt|scastie|  ||+
-|      |        | |                   |                     |               |   +----+-----+ I/O Stream  +-----------+  |+
-|      |        | |                   |                     |               +-------------------------------------------+
-|      |        | |                   |                     |
-|      |        | |                   |                     |
-|      |        | |                   |                     |
-|      |        | |                   | SnippetContainer(DB)|
-|      |        | |                   |                     |
-|      |        | | <-----------------+ oauth               |
-|      +--------+ |  SnippetProgress  | static ressources   |
-+-----------------+  (sse/websocket)  +---------------------+
+
+ Scala.js Client     run/save/format                                               +-------------------------------------------+
+ +---------------------+  AutowireApi      +---------------------+                +-------------------------------------------+|
+ |      ScastieBackend |  (HTTP)           | +------------+      | akka+remote   +-------------------------------------------+||
+ |          +--------+ +-----------------> | |LoadBalancer| <------------------+ |    SbtActor                Sbt(Proccess)  |||
+ |          |        | |                   | +------------+      |             | |   +----------+             +-----------+  |||
+ |          |        | |                   |                     |             +---> |          |  <----->    |sbt|scastie|  ||+
+ |          |        | |                   |                     |               |   +----------+ I/O Stream  +-----------+  ++
+ |          |        | |                   |                     |               +-------------------------------------------+
+ |          |        | |                   |                     |
+ |          |        | |                   |                     |
+ |          |        | |                   |                     |
+ |          |        | |                   | SnippetContainer(DB)|
+ |          |        | |                   |                     |
+ |          |        | | <-----------------+ oauth               |
+ |          +--------+ |  SnippetProgress  | static ressources   |
+ |                     |  (sse/websocket)  +---------------------+
+ | InteractiveProvider |
+ |          +--------+ |                   +---------------------+
+ |          |        | |                   |                     |
+ |          |        | |                   |  MetalsRunnerServer |
+ |          |        +-------------------> |                     |
+ |          |        | |  (HTTP request)   |                     |
+ |          +--------+ |                   |                     |
+ |                     |                   |                     |
+ +---------------------+                   +---------------------+
+
+
+
+
+
+
+
 
 
 Editor: http://asciiflow.com/
@@ -180,6 +198,7 @@ ssh scastie@scastie-sbt.scala-lang.org
 ./sbt.sh
 exit
 ./server.sh
+./metalsRunner.sh
 ```
 
 # Running with docker locally

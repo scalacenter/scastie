@@ -1,10 +1,11 @@
 package com.olegych.scastie.client
 package components
 
+import com.olegych.scastie.client.components.editor.EditorKeymaps
 import japgolly.scalajs.react._
+
 import vdom.all._
 import extra._
-import com.olegych.scastie.client.components.editor.EditorKeymaps
 
 final case class NewButton(isNewSnippetModalClosed: Boolean,
                            openNewSnippetModal: Reusable[Callback],

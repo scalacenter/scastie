@@ -22,5 +22,4 @@ metals.sbt
 .bloop
 .metals
 .vscode
-project/project
-dist
+client/dist

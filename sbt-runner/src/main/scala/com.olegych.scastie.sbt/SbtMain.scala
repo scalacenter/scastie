@@ -33,7 +33,7 @@ object SbtMain {
     val isReconnecting = sbtConfig.getBoolean("reconnect")
 
     if (isProduction) {
-      val pid = writeRunningPid()
+      val pid = writeRunningPid("RUNNING_PID")
       logger.info(s"Starting sbtRunner pid: $pid")
     }
 

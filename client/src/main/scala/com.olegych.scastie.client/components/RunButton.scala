@@ -1,10 +1,10 @@
 package com.olegych.scastie.client
 package components
 
-import japgolly.scalajs.react._
-import vdom.all._
-import extra._
 import com.olegych.scastie.client.components.editor.EditorKeymaps
+import japgolly.scalajs.react._
+
+import vdom.all._
 
 final case class RunButton(isRunning: Boolean, isStatusOk: Boolean, save: Reusable[Callback], setView: View ~=> Callback, embedded: Boolean) {
   @inline def render: VdomElement = RunButton.component(this)

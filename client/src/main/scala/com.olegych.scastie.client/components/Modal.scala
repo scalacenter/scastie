@@ -1,6 +1,8 @@
 package com.olegych.scastie.client.components
 
-import japgolly.scalajs.react._, vdom.all._, extra._
+import japgolly.scalajs.react._
+
+import vdom.all._
 
 final case class Modal(title: String, isClosed: Boolean, close: Reusable[Callback], modalCss: TagMod, modalId: String, content: TagMod) {
   @inline def render: VdomElement = Modal.component(this)

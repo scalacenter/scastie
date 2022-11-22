@@ -72,6 +72,9 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec:
         path("public" / "app.js")(
           getFromResource("public/app.js")
         ),
+        path("public" / "app.js.map")(
+          getFromResource("public/app.js.map")
+        ),
         path("public" / "embedded.css")(
           getFromResource("public/assets/index.css")
         ),

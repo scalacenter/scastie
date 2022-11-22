@@ -1,8 +1,33 @@
 package com.olegych.scastie.client
 
 import com.olegych.scastie.api._
-import play.api.libs.json._
 import org.scalajs.dom.HTMLElement
+import org.scalajs.dom.{Position => _}
+import play.api.libs.json._
+
+sealed trait MetalsStatus {
+  val info: String
+}
+
+case object MetalsLoading extends MetalsStatus {
+  val info: String = "Compiler is loading"
+}
+
+case object MetalsReady extends MetalsStatus {
+  val info: String = "Metals is ready"
+}
+
+case object MetalsDisabled extends MetalsStatus {
+  val info: String = "Metals Disabled"
+}
+
+case class MetalsConfigurationError(msg: String) extends MetalsStatus {
+  val info: String = s"Unsupported Configuration: \n  $msg"
+}
+
+case class NetworkError(msg: String) extends MetalsStatus {
+  val info: String = s"Network Error: \n  $msg"
+}
 
 object SnippetState {
   implicit val formatSnippetState: OFormat[SnippetState] =
@@ -57,6 +82,9 @@ object ScastieState {
   implicit val dontSerializeProgressStream: Format[EventStream[SnippetProgress]] =
     dontSerializeOption[EventStream[SnippetProgress]]
 
+  implicit val dontSerializeMetalsStatus: Format[MetalsStatus] =
+    dontSerialize[MetalsStatus](MetalsLoading)
+
   implicit val formatScastieState: OFormat[ScastieState] =
     Json.format[ScastieState]
 
@@ -80,6 +108,7 @@ case class ScastieState(
     inputs: Inputs,
     outputs: Outputs,
     status: StatusState,
+    metalsStatus: MetalsStatus = MetalsLoading,
     isEmbedded: Boolean = false,
     transient: Boolean = false,
 ) {
@@ -106,6 +135,7 @@ case class ScastieState(
       inputs: Inputs = inputs,
       outputs: Outputs = outputs,
       status: StatusState = status,
+      metalsStatus: MetalsStatus = metalsStatus,
       transient: Boolean = transient,
   ): ScastieState = {
     val state0 =
@@ -134,6 +164,7 @@ case class ScastieState(
         ),
         outputs = outputs,
         status = status,
+        metalsStatus = metalsStatus,
         isEmbedded = isEmbedded,
         transient = transient,
       )
@@ -171,6 +202,12 @@ case class ScastieState(
 
   def setTheme(dark: Boolean): ScastieState =
     copyAndSave(isDarkTheme = dark)
+
+  def setMetalsStatus(status: MetalsStatus): ScastieState =
+    copyAndSave(metalsStatus = status)
+
+  def toggleMetalsStatus: ScastieState =
+    copyAndSave(metalsStatus = if (metalsStatus != MetalsDisabled) MetalsDisabled else MetalsLoading)
 
   def toggleLineNumbers: ScastieState =
     copyAndSave(showLineNumbers = !showLineNumbers)

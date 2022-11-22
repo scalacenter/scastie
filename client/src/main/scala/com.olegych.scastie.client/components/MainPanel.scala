@@ -1,12 +1,11 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.client.{ScastieBackend, ScastieState, View}
+import com.olegych.scastie.client.ScastieBackend
+import com.olegych.scastie.client.ScastieState
+import com.olegych.scastie.client.View
+import com.olegych.scastie.client.components.editor.CodeEditor
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
-import org.scalajs.dom.HTMLTextAreaElement
-import org.scalajs.dom.HTMLElement
-import org.scalajs.dom.Element
-import com.olegych.scastie.client.components.editor.CodeEditor
 
 final case class MainPanel(state: ScastieState, backend: ScastieBackend, props: Scastie) {
 
@@ -82,6 +81,10 @@ object MainPanel {
         togglePresentationMode = backend.togglePresentationMode,
         formatCode = backend.formatCode,
         codeChange = backend.codeChange,
+        target = state.inputs.target,
+        metalsStatus = state.metalsStatus,
+        setMetalsStatus = backend.setMetalsStatus,
+        dependencies = state.inputs.libraries
       ).render
 
     val console =
@@ -155,6 +158,8 @@ object MainPanel {
         user = state.user,
         view = backend.viewSnapshot(state.view),
         isWorksheetMode = state.inputs.isWorksheetMode,
+        metalsStatus = state.metalsStatus,
+        toggleMetalsStatus = backend.toggleMetalsStatus,
         scalaTarget = state.inputs.target
       ).render.unless(props.isEmbedded || state.isPresentationMode)
 

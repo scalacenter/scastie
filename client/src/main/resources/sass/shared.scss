@@ -6,6 +6,8 @@
 @import "editor";
 @import "editor-theme";
 @import "ansi";
+@import "tooltip";
+@import "metals-status-indicator";
 
 @include modal();
 @include solarized();
@@ -15,6 +17,8 @@
   .scastie {
     .app.#{$class} {
       @include editorTheme($class);
+      @include tooltip($class);
+      @include metalsStatusIndicator($class);
     }
   }
 }

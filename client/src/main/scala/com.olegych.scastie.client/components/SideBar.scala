@@ -13,11 +13,11 @@ import js.annotation._
 
 @JSImport("@resources/images/icon-scastie.png", JSImport.Default)
 @js.native
-object ScastieLogo extends js.Object
+object ScastieLogo extends js.Any
 
 @JSImport("@resources/images/placeholder.png", JSImport.Default)
 @js.native
-object Placeholder extends js.Object
+object Placeholder extends js.Any
 
 object Assets {
   def logo: String = ScastieLogo.asInstanceOf[String]

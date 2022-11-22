@@ -143,6 +143,7 @@ object SbtShared {
             "com.typesafe.play" %%% "play-json" % "2.10.0-RC5"
         }
       },
+      semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
       buildInfoKeys := Seq[BuildInfoKey](
         organization,
         "runtimeProjectName" -> runtimeProjectName,
@@ -169,6 +170,7 @@ object SbtShared {
       baseSettings,
       version := versionRuntime,
       name := runtimeProjectName,
+      semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
       inConfig(Compile)(
         unmanagedSourceDirectories ++= scala2MajorSourceDirs(scalaSource.value, virtualAxes.value),
       )

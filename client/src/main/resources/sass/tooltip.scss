@@ -1,0 +1,62 @@
+@import "commonvars";
+@import "highlight.js/styles/base16/solarized-dark.css";
+
+@mixin tooltip($class) {
+  .cm-tooltip {
+    .cm-completionInfo, &-hover {
+      font-size: 14px;
+      min-width: 400px;
+      max-height: 500px;
+      overflow-x: hidden;
+      ul {
+          list-style-type: disc;
+          line-height: 0.90em;
+          padding-inline-start: 1.5em;
+          padding: 0 0.7em 0.3em 1.3em;
+      }
+    }
+
+    @media only screen and (max-width: #{$mobile-width}) {
+      min-width: 95%; 
+    }
+
+    .cm-completionInfo-right-narrow {
+      top: 100% !important;
+      max-height: 300px;
+      max-width: 100% !important;
+      min-width: 100%;
+
+      left: 0px;
+
+      code {
+        max-width: 96%;
+        display: inline-block;
+        overflow-y: scroll;
+      }
+
+    }
+
+    strong {
+      font-weight: 600;
+    }
+    p {
+      line-height: 0.90em;
+      margin: 0.5em 0;
+    }
+    code:not(.language-scala){
+      padding: 0 0.4em;
+      background-color: $code-background-color;
+      border-radius: 4px;
+    }
+
+    padding: 0.3em;
+
+    a {
+      pointer-events: none;
+      cursor: default;
+      text-decoration: none;
+      color: $snippets-line-color
+
+    }
+  }
+}

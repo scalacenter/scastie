@@ -1,15 +1,12 @@
 package com.olegych.scastie.client.components.editor
 
-import com.olegych.scastie.client.components.editor.OnChangeHandler
 import japgolly.scalajs.react._
 import org.scalajs.dom.Element
-import typings.codemirrorLanguage.mod
 import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
 
 import scalajs.js
 import vdom.all._
-import hooks.Hooks.UseStateF
 
 trait Editor {
   val isDarkTheme: Boolean

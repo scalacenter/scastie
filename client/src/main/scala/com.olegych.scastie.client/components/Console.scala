@@ -1,11 +1,12 @@
 package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api.ConsoleOutput
-import com.olegych.scastie.client.{ConsoleState, HTMLFormatter}
-import org.scalajs.dom.raw.HTMLDivElement
+import com.olegych.scastie.client.ConsoleState
+import com.olegych.scastie.client.HTMLFormatter
 import japgolly.scalajs.react._
+import org.scalajs.dom.raw.HTMLDivElement
+
 import vdom.all._
-import extra._
 
 final case class Console(isOpen: Boolean,
                          isRunning: Boolean,

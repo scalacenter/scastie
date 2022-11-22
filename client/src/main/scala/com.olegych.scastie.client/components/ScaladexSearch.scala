@@ -1,21 +1,21 @@
 package com.olegych.scastie.client.components
 
+import com.olegych.scastie.api.ScalaTarget.Jvm
+import com.olegych.scastie.api.ScalaTarget.Scala3
 import com.olegych.scastie.api._
-
+import com.olegych.scastie.buildinfo.BuildInfo
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
+import org.scalajs.dom
 import play.api.libs.json.Json
 
-import japgolly.scalajs.react._, vdom.all._, extra._
-import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
+import scala.concurrent.Future
 
-import org.scalajs.dom
+import vdom.all._
 import dom.ext.KeyCode
 import dom.{HTMLInputElement, HTMLElement}
-
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.concurrent.Future
-import com.olegych.scastie.api.ScalaTarget.{Jvm, Scala3}
-import com.olegych.scastie.buildinfo.BuildInfo
 import scalajs.js.Thenable.Implicits._
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency ~=> Callback,

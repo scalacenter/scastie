@@ -1,16 +1,14 @@
 package com.olegych.scastie.client
 
 import com.olegych.scastie.api._
-
-import play.api.libs.json._
-
 import org.scalajs.dom
 import org.scalajs.dom.XMLHttpRequest
+import play.api.libs.json._
 
 import scala.concurrent.Future
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.util.Try
 
-import scala.util.{Try, Success, Failure}
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scalajs.js.Thenable.Implicits._
 import scalajs.js
 

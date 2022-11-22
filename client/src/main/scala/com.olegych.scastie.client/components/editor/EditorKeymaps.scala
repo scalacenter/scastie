@@ -20,7 +20,6 @@ object EditorKeymaps {
     }
   }
 
-  private val modKey = if (client.isMac) "Ctrl-" else "Cmd-"
   val saveOrUpdate = new Key("Ctrl-Enter", "Meta-Enter")
   val saveOrUpdateAlt = new Key("Ctrl-s", "Meta-s")
   val openNewSnippetModal = new Key("Ctrl-m", "Meta-m")

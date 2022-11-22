@@ -1,0 +1,41 @@
+@import "commonvars";
+
+@mixin metalsStatusIndicator($class) {
+
+    .metals-status-indicator-icon {
+        margin-left: 0.5em;
+    }
+
+    .metals-status-indicator {
+        float: right;
+
+        img {
+            height: 24px;
+            padding-right: 0.5em;
+            vertical-align: text-bottom;
+        }
+
+        .fa-exclamation-triangle {
+            color: orange;
+        }
+
+        .fa-exclamation-triangle {
+            color: red;
+        }
+
+        .fa-spinner {
+            margin-right: 10px;
+            margin-left: 7px;
+        }
+
+        .fa-circle {
+            &.metals-ready {
+                color: $worksheet-enabled;
+            }
+            &.metals-disabled {
+                color: $topbar-background;
+            }
+        }
+    }
+    
+}
