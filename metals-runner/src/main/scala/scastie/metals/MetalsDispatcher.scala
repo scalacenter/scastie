@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory
  * Each metals client configuration requires separate presentation compilers
  * to support cabailities for 3rd party capabilities.
  *
- * @param expirationInSeconds - time after which unused keys are invalidated in guava cache
+ * @param cache - cache used for managing presentation compilers
  */
 class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, ScastiePresentationCompiler]) {
   private val logger                = LoggerFactory.getLogger(getClass)
