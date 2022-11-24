@@ -17,6 +17,7 @@ import sys.process._
 object Deployment {
   def settings(server: Project, sbtRunner: Project, metalsRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
     deploy := deployTask(server, sbtRunner, metalsRunner).value,
+    deployStaging := deployTask(server, sbtRunner, metalsRunner, true).value,
     deployServer := deployServerTask(server, sbtRunner).value,
     deployQuick := deployQuickTask(server, sbtRunner, metalsRunner).value,
     deployServerQuick := deployServerQuickTask(server, sbtRunner, metalsRunner).value,
@@ -24,6 +25,8 @@ object Deployment {
   )
 
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
+
+  lazy val deployStaging = taskKey[Unit]("Deploy server and sbt instances with staging configuration")
 
   lazy val deployServer = taskKey[Unit]("Deploy server")
 
@@ -55,7 +58,7 @@ object Deployment {
       deployment.deployLocal(serverZip, metalsServerZip)
     }
 
-  def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project, staging: Boolean = false): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = (server / Universal / packageBin).value.toPath
@@ -91,14 +94,16 @@ object Deployment {
     }
 
   private def deploymentTask(
-      sbtRunner: Project
+      sbtRunner: Project,
+      staging: Boolean = false,
   ): Def.Initialize[Task[Deployment]] =
     Def.task {
       new Deployment(
         rootFolder = (ThisBuild / baseDirectory).value,
         version = version.value,
         sbtDockerImage = (sbtRunner / docker / imageNames).value.head,
-        logger = streams.value.log
+        logger = streams.value.log,
+        staging = staging
       )
     }
 
@@ -111,7 +116,7 @@ object Deployment {
     }
 }
 
-class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, val logger: Logger) {
+class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, val logger: Logger, staging: Boolean) {
   def deploy(serverZip: Path, metalsServerZip: Path): Unit = {
     deployRunners()
     deployServer(serverZip)
@@ -211,6 +216,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     val config =
       if (local) localConfig
+      else if (staging) stagingConfig
       else productionConfig
 
     val configFileName = config.getFileName
@@ -262,6 +268,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     val metalsRunnerScript = destination.resolve("metalsRunner.sh")
     val config =
       if (local) localConfig
+      else if (staging) stagingConfig
       else productionConfig
 
     val configFileName = config.getFileName
@@ -430,6 +437,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
   private val productionConfig = (deploymentFolder / "production.conf").toPath
   private val localConfig = (deploymentFolder / "local.conf").toPath
+  private val stagingConfig = (deploymentFolder / "staging.conf").toPath
 
   private val logbackConfig = (deploymentFolder / "logback.xml").toPath
 
