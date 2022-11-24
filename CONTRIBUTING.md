@@ -165,13 +165,10 @@ ssh scastie@scastie-sbt.scala-lang.org
 
 These people have access:
 
-* [@heathermiller](https://github.com/heathermiller)
 * [@julienrf](https://github.com/julienrf)
-* [@jvican](https://github.com/jvican)
-* [@olafurpg](https://github.com/olafurpg)
-* [@OlegYch](https://github.com/OlegYch)
-* [@dimart](https://github.com/dimart)
-* [@rorygraves](https://github.com/rorygraves)
+* [@rochala](https://github.com/rochala)
+* [@fsalvi](https://github.com/fsalvi)
+
 
 0. see `production.conf` file for current production configuration, notably it uses mongodb instead of local file storage 
 
