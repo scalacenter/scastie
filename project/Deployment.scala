@@ -178,7 +178,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     val scriptFileName = deploymentFiles.serverScript.getFileName
     val uri = userName + "@" + serverHostname
-    Process(s"ssh $uri ./$scriptFileName") ! logger
+    Process(s"ssh $uri ./$stagingDirectory$scriptFileName") ! logger
   }
 
   def deployMetalsRunner(metalsRunnerZip: Path): Unit = {
@@ -191,7 +191,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     val scriptFileName = deploymentFiles.serverScript.getFileName
     val uri = userName + "@" + serverHostname
-    Process(s"ssh $uri ./$scriptFileName") ! logger
+    Process(s"ssh $uri ./$stagingDirectory$scriptFileName") ! logger
   }
 
   case class DeploymentFiles(
@@ -223,23 +223,23 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     val logbackConfigFileName = logbackConfig.getFileName
     val serverZipFileName = serverZip.getFileName.toString.replace(".zip", "")
 
+    val homeDir = s"/home/$userName/"
     val baseDir =
-      if (!local) s"/home/$userName/"
-      else ""
+      if (local) ""
+      else if (staging) s"/home/$userName/$stagingDirectory"
+      else homeDir
 
     val content =
       s"""|#!/usr/bin/env bash
           |
           |whoami
           |
-          |serverZipFileName=$serverZipFileName
-          |
           |kill -9 `cat ${baseDir}RUNNING_PID`
           |
           |rm -rf ${baseDir}server/*
-          |unzip -o -d ${baseDir}server ${baseDir}$$serverZipFileName
-          |mv ${baseDir}server/$$serverZipFileName/* ${baseDir}server/
-          |rm -rf ${baseDir}server/$$serverZipFileName
+          |unzip -o -d ${baseDir}server ${baseDir}$serverZipFileName
+          |mv ${baseDir}server/$serverZipFileName/* ${baseDir}server/
+          |rm -rf ${baseDir}server/$serverZipFileName
           |
           |nohup ${baseDir}server/bin/server \\
           |  -J-Xmx1G \\
@@ -275,22 +275,22 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     val logbackConfigFileName = logbackConfig.getFileName
     val serverZipFileName = metalsRunnerZip.getFileName.toString.replace(".zip", "")
 
+    val homeDir = s"/home/$userName/"
     val baseDir =
-      if (!local) s"/home/$userName/"
-      else ""
+      if (local) ""
+      else if (staging) s"/home/$userName/$stagingDirectory/"
+      else homeDir
 
     val content =
       s"""|#!/usr/bin/env bash
           |
           |whoami
           |
-          |serverZipFileName=$serverZipFileName
-          |
-          |kill -9 `cat ${baseDir}METALS_RUNNING_PID`
+          |kill -9 `cat ${homeDir}METALS_RUNNING_PID`
           |
           |rm -rf ${baseDir}metalsrunner/*
-          |unzip -o -d ${baseDir}metalsrunner ${baseDir}$$serverZipFileName
-          |mv ${baseDir}metalsrunner/$$serverZipFileName/* ${baseDir}metalsrunner/
+          |unzip -o -d ${baseDir}metalsrunner ${baseDir}$serverZipFileName
+          |mv ${baseDir}metalsrunner/$serverZipFileName/* ${baseDir}metalsrunner/
           |rm -rf ${baseDir}metalsrunner/$$serverZipFileName
           |
           |nohup ${baseDir}metalsrunner/bin/metalsrunner \\
@@ -366,7 +366,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     rsyncServer(killScript)
     rsyncServer(proxyScript)
-    Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
+    Process(s"ssh $serverUri ./$stagingDirectory$proxyScriptFileName") ! logger
   }
 
   def deployRunners(runner: String, image: String, runnersPortsStart: Int, runnersPortsSize: Int): Unit = {
@@ -441,6 +441,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
   private val logbackConfig = (deploymentFolder / "logback.xml").toPath
 
+  private val stagingDirectory = if (staging) "scastie-staging/" else ""
   private val config =
     ConfigFactory.parseFile(productionConfig.toFile)
 
@@ -463,7 +464,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
   private def rsync(file: Path, userName: String, hostname: String, logger: Logger): Unit = {
     val uri = userName + "@" + hostname
     val fileName = file.getFileName
-    Process(s"rsync $file $uri:$fileName") ! logger
+    Process(s"rsync $file $uri:$stagingDirectory$fileName") ! logger
   }
 
   private def rsyncServer(file: Path) =
