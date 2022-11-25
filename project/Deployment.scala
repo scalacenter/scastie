@@ -63,7 +63,12 @@ object Deployment {
       val deployment = deploymentTask(sbtRunner).value
       val serverZip = (server / Universal / packageBin).value.toPath
       val metalsRunnerZip = (metalsRunner / Universal / packageBin).value.toPath
-      val imageIdSbt = (sbtRunner / dockerBuildAndPush).value
+      val imageIdSbt = (if (staging) {
+        (sbtRunner / docker)
+      } else {
+        (sbtRunner / dockerBuildAndPush)
+      }).value
+
 
       deployment.deploy(serverZip, metalsRunnerZip)
     }
@@ -428,7 +433,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     rsyncServer(runnerScript)
     rsyncServer(proxyScript)
-    Process(s"ssh $serverUri ./$proxyScriptFileName") ! logger
+    Process(s"ssh $serverUri ./$stagingDirectory$proxyScriptFileName") ! logger
   }
 
   private val userName = "scastie"
