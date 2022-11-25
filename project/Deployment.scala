@@ -231,7 +231,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     val homeDir = s"/home/$userName/"
     val baseDir =
       if (local) ""
-      else if (staging) s"/home/$userName/$stagingDirectory"
+      else if (staging) s"$homeDir$stagingDirectory"
       else homeDir
 
     val content =
@@ -283,7 +283,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
     val homeDir = s"/home/$userName/"
     val baseDir =
       if (local) ""
-      else if (staging) s"/home/$userName/$stagingDirectory/"
+      else if (staging) s"$homeDir$stagingDirectory"
       else homeDir
 
     val content =
@@ -469,6 +469,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
   private def rsync(file: Path, userName: String, hostname: String, logger: Logger): Unit = {
     val uri = userName + "@" + hostname
     val fileName = file.getFileName
+    logger.info(s"RSYNC URI $uri:$stagingDirectory$fileName")
     Process(s"rsync $file $uri:$stagingDirectory$fileName") ! logger
   }
 
