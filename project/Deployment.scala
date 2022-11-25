@@ -296,7 +296,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
           |rm -rf ${baseDir}metalsrunner/*
           |unzip -o -d ${baseDir}metalsrunner ${baseDir}$serverZipFileName
           |mv ${baseDir}metalsrunner/$serverZipFileName/* ${baseDir}metalsrunner/
-          |rm -rf ${baseDir}metalsrunner/$$serverZipFileName
+          |rm -rf ${baseDir}metalsrunner/$serverZipFileName
           |
           |nohup ${baseDir}metalsrunner/bin/metalsrunner \\
           |  -J-Xmx4G \\
@@ -362,7 +362,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     val proxyScriptContent =
       s"""|rm kill-proxy.sh
-          |rsync $scriptFileName $runnerUri:$scriptFileName
+          |rsync $scriptFileName $runnerUri:$stagingDirectory$scriptFileName
           |ssh $runnerUri ./$scriptFileName
           |rm $scriptFileName""".stripMargin
 
@@ -424,7 +424,7 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     val proxyScriptContent =
       s"""|rm ${runner}-proxy.sh
-          |rsync $scriptFileName $runnerUri:$scriptFileName
+          |rsync $scriptFileName $runnerUri:$stagingDirectory$scriptFileName
           |ssh $runnerUri ./$scriptFileName
           |rm $scriptFileName""".stripMargin
 
