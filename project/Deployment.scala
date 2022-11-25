@@ -447,12 +447,12 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
   private val logbackConfig = (deploymentFolder / "logback.xml").toPath
 
   private val stagingDirectory = if (staging) "scastie-staging/" else ""
-  private val config =
-    ConfigFactory.parseFile(productionConfig.toFile)
-
+  private val config = if (staging) ConfigFactory.parseFile(stagingConfig.toFile)
+    else ConfigFactory.parseFile(productionConfig.toFile)
   val balancerConfig = config.getConfig("com.olegych.scastie.balancer")
 
   private val serverConfig = config.getConfig("com.olegych.scastie.web")
+  println(serverConfig.toString)
   private val serverHostname = serverConfig.getString("hostname")
   private val serverAkkaPort = serverConfig.getInt("akka-port")
 
