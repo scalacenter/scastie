@@ -375,6 +375,8 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
   }
 
   def deployRunners(runner: String, image: String, runnersPortsStart: Int, runnersPortsSize: Int): Unit = {
+    val sbtDockerNamespace = sbtDockerImage.namespace.get
+    val sbtDockerRepository = sbtDockerImage.repository
 
     val runnerScriptDir = Files.createTempDirectory(runner)
     val runnerScript = runnerScriptDir.resolve(runner + ".sh")
@@ -383,7 +385,12 @@ class Deployment(rootFolder: File, version: String, sbtDockerImage: ImageName, v
 
     val runnersPortsEnd = runnersPortsStart + (runnersPortsSize - 1)
 
-    val dockerImagePath = s"$image:$gitHashNow"
+    val dockerImagePath =
+      if (staging) {
+        s"$sbtDockerNamespace/$sbtDockerRepository:$gitHashNow"
+      } else {
+        s"$image:$gitHashNow"
+      }
 
     //jenkins.scala-sbt.org points to 127.0.0.1 to workaround https://github.com/sbt/sbt/issues/5458 and https://github.com/sbt/sbt/issues/5456
     val runnerScriptContent =

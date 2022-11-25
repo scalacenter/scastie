@@ -34,6 +34,7 @@ object ServerMain {
 
     val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
     val production = config.getBoolean("production")
+    println(s"Is production: $production")
 
     if (production) {
       ScastieFileUtil.writeRunningPid("RUNNING_PID")
