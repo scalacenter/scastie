@@ -60,7 +60,7 @@ object Deployment {
 
   def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project, staging: Boolean = false): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner).value
+      val deployment = deploymentTask(sbtRunner, staging).value
       val serverZip = (server / Universal / packageBin).value.toPath
       val metalsRunnerZip = (metalsRunner / Universal / packageBin).value.toPath
       val imageIdSbt = (if (staging) {
