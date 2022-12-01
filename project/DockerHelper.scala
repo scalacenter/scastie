@@ -1,18 +1,21 @@
-import sbtdocker.DockerPlugin.autoImport._
-
 import java.nio.file.Path
 
+import sbtdocker.DockerPlugin.autoImport._
+
 object DockerHelper {
-  def apply(baseDirectory: Path,
-            sbtTargetDir: Path,
-            sbtScastie: String,
-            ivyHome: Path,
-            organization: String,
-            artifact: Path,
-            sbtVersion: String): Dockerfile = {
+
+  def apply(
+    baseDirectory: Path,
+    sbtTargetDir: Path,
+    sbtScastie: String,
+    ivyHome: Path,
+    organization: String,
+    artifact: Path,
+    sbtVersion: String
+  ): Dockerfile = {
 
     val artifactTargetPath = s"/app/${artifact.getFileName()}"
-    val generatedProjects = new GenerateProjects(sbtTargetDir)
+    val generatedProjects  = new GenerateProjects(sbtTargetDir)
     generatedProjects.generateSbtProjects()
 
     val logbackConfDestination = "/home/scastie/logback.xml"
@@ -33,7 +36,7 @@ object DockerHelper {
       destination = ivyLocalTemp,
       directoryFilter = { (dir, depth) =>
         lazy val isSbtScastiePath = dir.getName(0).toString == sbtScastie
-        lazy val dirName = dir.getFileName.toString
+        lazy val dirName          = dir.getFileName.toString
 
         if (depth == 1) {
           dirName == SbtShared.versionNow || dirName == SbtShared.versionRuntime || isSbtScastiePath
@@ -99,9 +102,7 @@ object DockerHelper {
       add(ivyLocalTemp.toFile, s"$userHome/.ivy2/local/$organization")
       chown(".ivy2")
 
-      generatedProjects.projects.foreach(
-        generatedProject => runRaw(generatedProject.runCmd(dest))
-      )
+      generatedProjects.projects.foreach(generatedProject => runRaw(generatedProject.runCmd(dest)))
 
       add(artifact.toFile, artifactTargetPath)
 
@@ -120,4 +121,5 @@ object DockerHelper {
       )
     }
   }
+
 }

@@ -4,24 +4,24 @@ import com.olegych.scastie.api._
 import com.olegych.scastie.client.View
 import japgolly.scalajs.react._
 import org.scalajs.dom
-
 import vdom.all._
 
-final case class EmbeddedMenu(isRunning: Boolean,
-                              inputs: Inputs,
-                              inputsHasChanged: Boolean,
-                              embeddedSnippetId: Option[SnippetId],
-                              serverUrl: Option[String],
-                              run: Reusable[Callback],
-                              save: Reusable[CallbackTo[Option[SnippetId]]],
-                              setView: View ~=> Callback) {
+final case class EmbeddedMenu(
+  isRunning: Boolean,
+  inputs: Inputs,
+  inputsHasChanged: Boolean,
+  embeddedSnippetId: Option[SnippetId],
+  serverUrl: Option[String],
+  run: Reusable[Callback],
+  save: Reusable[CallbackTo[Option[SnippetId]]],
+  setView: View ~=> Callback
+) {
   @inline def render: VdomElement = EmbeddedMenu.component(this)
 }
 
 object EmbeddedMenu {
 
-  implicit val reusability: Reusability[EmbeddedMenu] =
-    Reusability.derive[EmbeddedMenu]
+  implicit val reusability: Reusability[EmbeddedMenu] = Reusability.derive[EmbeddedMenu]
 
   private def render(props: EmbeddedMenu): VdomElement = {
 
@@ -62,9 +62,9 @@ object EmbeddedMenu {
         isStatusOk = true,
         save = props.run,
         setView = props.setView,
-        embedded = true,
+        embedded = true
       ).render,
-      li(cls := "logo")(
+      li(cls    := "logo")(
         img(src := Assets.logo),
         span("to Scastie"),
         onClick --> openScastie
@@ -72,10 +72,10 @@ object EmbeddedMenu {
     )
   }
 
-  private val component =
-    ScalaComponent
-      .builder[EmbeddedMenu]("EmbeddedMenu")
-      .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  private val component = ScalaComponent
+    .builder[EmbeddedMenu]("EmbeddedMenu")
+    .render_P(render)
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }
