@@ -93,7 +93,7 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Completions item info with dependencies") {
     testCompletionInfo(
-      testTargets = List(ScalaTarget.Scala3("3.2.0")),
+      testTargets = List(ScalaTarget.Scala3("3.2.1")),
       dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
       code = """import cats.syntax.all._
                |object M {
@@ -204,7 +204,7 @@ class MetalsServerTest extends CatsEffectSuite {
           |def asRight[B]: Either[B, String]
           |```
           |Wrap a value in `Right`.""".stripMargin
-      ).asRight,
+      ).asRight
     )
   }
 
