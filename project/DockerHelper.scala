@@ -3,6 +3,59 @@ import sbtdocker.DockerPlugin.autoImport._
 import java.nio.file.Path
 
 object DockerHelper {
+
+  def javaProject(baseDirectory: Path, organization: String, artifactZip: Path, configPath: Path): Dockerfile = {
+    val containerUsername = "scastie"
+
+    new Dockerfile {
+      from("alpine:latest")
+
+      // Install ca-certificates for wget https
+      runRaw("apk update")
+      runRaw("apk --update upgrade")
+      runRaw("apk add openjdk17")
+      runRaw("apk add bash")
+
+      val userHome = s"/home/$containerUsername"
+
+      runRaw(s"addgroup -g 433 $containerUsername")
+      runRaw(
+        s"adduser -h $userHome -G $containerUsername -D -u 433 -s /bin/sh $containerUsername"
+      )
+
+      def chown(dir: String) = {
+        user("root")
+        runRaw(s"chown -R $containerUsername:$containerUsername $userHome/$dir")
+        user(containerUsername)
+      }
+
+      user(containerUsername)
+      workDir(userHome)
+
+      env("LANG", "en_US.UTF-8")
+      env("HOME", userHome)
+
+      val artifactName = artifactZip.getFileName.toString.replace(".zip", "")
+      val artifactZipFileName = artifactZip.getFileName.toString
+      val artifactTargetPath = s"/app/$artifactZipFileName"
+      val configDestination      = "/home/scastie/config.conf"
+
+      add(configPath.toFile, configDestination)
+      add(artifactZip.toFile, artifactTargetPath)
+
+      runRaw(s"jar -xvf /app/$artifactZipFileName")
+      runRaw(s"mv $artifactName server")
+      runRaw("chmod +x server/bin/server")
+
+      entryPoint(
+        "./server/bin/server",
+        "-J-Xmx1G",
+        s"-Dconfig.file=$configDestination"
+      )
+    }
+  }
+
+
   def apply(baseDirectory: Path,
             sbtTargetDir: Path,
             sbtScastie: String,
@@ -51,13 +104,14 @@ object DockerHelper {
     sbtGlobal.toFile.mkdirs()
 
     new Dockerfile {
-      from("openjdk:17-alpine")
+      from("alpine:latest")
 
       // Install ca-certificates for wget https
       runRaw("apk update")
       runRaw("apk --update upgrade")
       runRaw("apk add ca-certificates")
       runRaw("update-ca-certificates")
+      runRaw("apk add openjdk17")
       runRaw("apk add openssl")
       runRaw("apk add nss")
       runRaw("apk add bash")
@@ -98,10 +152,6 @@ object DockerHelper {
 
       add(ivyLocalTemp.toFile, s"$userHome/.ivy2/local/$organization")
       chown(".ivy2")
-
-      generatedProjects.projects.foreach(
-        generatedProject => runRaw(generatedProject.runCmd(dest))
-      )
 
       add(artifact.toFile, artifactTargetPath)
 
