@@ -18,18 +18,20 @@ import com.typesafe
 
 object Deployment {
   def settings(server: Project, sbtRunner: Project, metalsRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
-    deploy := deployTask(server, sbtRunner, metalsRunner).value,
+    deploy := deployTask(server, sbtRunner, metalsRunner, Production).value,
+    deployStaging := deployTask(server, sbtRunner, metalsRunner, Staging).value,
     deployDryRun := deployDryTask(server, sbtRunner, metalsRunner).value,
     deployLocal := deployLocalTask(server, sbtRunner, metalsRunner).value
   )
 
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
+  lazy val deployStaging = taskKey[Unit]("Deploy server and sbt instances with staging configuration")
   lazy val deployDryRun = taskKey[Unit]("Runs deployment without actually deploying it")
   lazy val deployLocal = taskKey[Unit]("Deploy locally")
 
-  def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project, deploymentType: DeploymentType): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, metalsRunner, Production).value
+      val deployment = deploymentTask(sbtRunner, metalsRunner, deploymentType).value
       val serverZip = (server / Universal / packageBin).value.toPath
       (sbtRunner / dockerBuildAndPush).value
       (metalsRunner / dockerBuildAndPush).value
@@ -125,11 +127,6 @@ class Deployment(
   val metalsDockerNamespace = metalsDockerImage.namespace.get
   val metalsDockerRepository = metalsDockerImage.repository
 
-  // cleanup old scastie images, they are all available on scalacenter docker repository
-  println("DOCKER IMAGES:")
-  val images = Process("docker images -q --filter=reference='scalacenter/scastie-*'").!!
-  println(images)
-
   def deploy(serverZip: Path, dryRun: Boolean = false) = {
     val time = LocalDateTime.now()
     val outputPath = deploymentFolder.toPath.resolve(s"generated-scripts-$time")
@@ -154,7 +151,7 @@ class Deployment(
     val dockerImagePath = deploymentType match {
       case Local => s"$sbtDockerNamespace/$sbtDockerRepository:$gitHashNow"
       case Production => s"$sbtDockerNamespace/$sbtDockerRepository:latest"
-      case Staging => ???
+      case Staging => s"$sbtDockerNamespace/$sbtDockerRepository:latest"
     }
 
     val runnersStartupScriptContent: String =
@@ -164,9 +161,9 @@ class Deployment(
          |  echo "Starting Runner: Port $$port / ${config.sbtRunnersPortsEnd}"
          |  docker run \\
          |    --add-host jenkins.scala-sbt.org:127.0.0.1 \\
-         |    --network=host \\
          |    --restart=always \\
          |    --name=scastie-sbt-runner-$$port \\
+         |    -p $$port:$$port
          |    -d \\
          |    -e RUNNER_PRODUCTION=true \\
          |    -e RUNNER_PORT=$$port \\
@@ -191,23 +188,23 @@ class Deployment(
     val dockerImagePath = deploymentType match {
       case Local => s"$metalsDockerNamespace/$metalsDockerRepository:$gitHashNow"
       case Production => s"$metalsDockerNamespace/$metalsDockerRepository:latest"
-      case Staging => ???
+      case Staging => s"$metalsDockerNamespace/$metalsDockerRepository:latest"
     }
 
-    val runnersStartupScriptContent: String =
+    val metalsRunnerStartupScriptContent: String =
       s"""#!/usr/bin/env bash
          |echo "Starting Metals: Port ${config.metalsPort}"
          |docker run \\
-         |  --network=host \\
          |  --restart=always \\
          |  --name=scastie-metals-runner \\
+         |  -p ${config.metalsPort}:${config.metalsPort} \\
          |  -d \\
          |  -e PORT=${config.metalsPort} \\
          |  -e CACHE_EXPIRE_IN_SECONDS=${config.cacheExpireInSeconds} \\
          |  $dockerImagePath""".stripMargin
 
 
-    Files.write(scriptPath, runnersStartupScriptContent.getBytes())
+    Files.write(scriptPath, metalsRunnerStartupScriptContent.getBytes())
     setPosixFilePermissions(scriptPath, executablePermissions)
 
     scriptPath
@@ -243,7 +240,7 @@ class Deployment(
       ).map { script =>
         val isUpToDate: Boolean = compareScriptWithRemote(script)
         if (!isUpToDate) {
-          logger.error(s"Deployment stopped. Script: $script is not up to date with remote version or could not be validated. You have to update it manually.")
+          logger.error(s"Deployment stopped. Script: $script is not up to date with remote version or could not be validated. You have to update it manually. It should be located in the user home directory.")
         }
         isUpToDate
       }.forall(_ == true)
@@ -333,6 +330,9 @@ class Deployment(
     val baseDir =
       if (!local) s"/home/${config.userName}/"
       else ""
+
+    if (baseDir.contains(" "))
+      throw new IllegalStateException("Basedir contains space and may lead to removal of unwanted files.")
 
     val content =
       s"""|#!/usr/bin/env bash
