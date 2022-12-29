@@ -4,10 +4,10 @@ set -o pipefail
 
 echo "[0/7] Deploying SBT runners"
 echo "[1/7] Removing old previous image"
-docker rmi scalacenter/scastie-sbt-runner:previous
+docker rmi scalacenter/scastie-sbt-runner:previous || true
 
 echo "[2/7] Tagging running image as the new previous"
-docker tag scalacenter/scastie-sbt-runner:latest scalacenter/scastie-sbt-runner:previous
+docker tag scalacenter/scastie-sbt-runner:latest scalacenter/scastie-sbt-runner:previous || true
 
 echo "[3/7] Fetching new latest from repository"
 docker pull scalacenter/scastie-sbt-runner:latest
