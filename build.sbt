@@ -99,11 +99,33 @@ lazy val smallRunnerRuntimeDependenciesInTest = {
   )
 }
 
+lazy val dockerOrg = "scalacenter"
+
 lazy val metalsRunner = project
   .in(file("metals-runner"))
   .settings(baseNoCrossSettings)
   .settings(
-    fork := true,
+    fork := true, // we need to fork it, as it is dynamically loading classes, and they persist in the sbt shell instance
+    docker / imageNames := Seq(
+      ImageName(
+        namespace = Some(dockerOrg),
+        repository = "scastie-metals-runner",
+        tag = Some(gitHashNow)
+      ),
+    ),
+    dockerUpdateLatest := true,
+    executableScriptName := "server",
+    docker / dockerfile := Def
+      .task {
+        DockerHelper.javaProject(
+          baseDirectory = (ThisBuild / baseDirectory).value.toPath,
+          organization = organization.value,
+          artifactZip = (Universal / packageBin).value.toPath,
+          configPath = (baseDirectory.value / "src" / "main" / "resources" / "application.conf").toPath
+        )
+      }
+      .dependsOn(runnerRuntimeDependencies: _*)
+      .value,
     maintainer := "scalacenter",
     scalaVersion := ScalaVersions.stable3,
     libraryDependencies ++= Seq(
@@ -119,10 +141,8 @@ lazy val metalsRunner = project
       "org.typelevel"               %% "munit-cats-effect-3"      % "1.0.6" % Test
     )
   )
-  .enablePlugins(JavaServerAppPackaging)
+  .enablePlugins(JavaServerAppPackaging, sbtdocker.DockerPlugin)
   .dependsOn(api.jvm(ScalaVersions.old3))
-
-lazy val dockerOrg = "scalacenter"
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
@@ -148,6 +168,7 @@ lazy val sbtRunner = project
         tag = Some(gitHashNow)
       )
     ),
+    dockerUpdateLatest := true,
     docker / buildOptions := (docker / buildOptions).value.copy(additionalArguments = List("--add-host", "jenkins.scala-sbt.org:127.0.0.1")),
     docker / dockerfile := Def
       .task {
