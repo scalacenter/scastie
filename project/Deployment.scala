@@ -151,6 +151,8 @@ class Deployment(
       case Staging => s"$sbtDockerNamespace/$sbtDockerRepository:latest"
     }
 
+    val containerName = if (deploymentType == Staging) "scastie-sbt-runner-staging" else "scastie-sbt-runner"
+
     val runnersStartupScriptContent: String =
       s"""#!/usr/bin/env bash
          |for port in `seq ${config.sbtRunnersPortsStart} ${config.sbtRunnersPortsEnd}`;
@@ -159,7 +161,7 @@ class Deployment(
          |  docker run \\
          |    --add-host jenkins.scala-sbt.org:127.0.0.1 \\
          |    --restart=always \\
-         |    --name=scastie-sbt-runner-$$port \\
+         |    --name=$containerName-$$port \\
          |    -p $$port:$$port
          |    -d \\
          |    -e RUNNER_PRODUCTION=true \\
@@ -188,12 +190,14 @@ class Deployment(
       case Staging => s"$metalsDockerNamespace/$metalsDockerRepository:latest"
     }
 
+    val containerName = if (deploymentType == Staging) "scastie-metals-runner-staging" else "scastie-metals-runner"
+
     val metalsRunnerStartupScriptContent: String =
       s"""#!/usr/bin/env bash
          |echo "Starting Metals: Port ${config.metalsPort}"
          |docker run \\
          |  --restart=always \\
-         |  --name=scastie-metals-runner \\
+         |  --name=$containerName \\
          |  -p ${config.metalsPort}:${config.metalsPort} \\
          |  -d \\
          |  -e PORT=${config.metalsPort} \\
