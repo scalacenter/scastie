@@ -76,7 +76,7 @@ case object Local extends DeploymentType
 case object Staging extends DeploymentType
 case object Production extends DeploymentType
 
-class ScastieConfig(val configurationFile: File) {
+class ScastieConfig(val configurationFile: File, val remoteDeploymentFolder: String) {
   val config = ConfigFactory.parseFile(configurationFile)
   val userName = "scastie"
 
@@ -96,15 +96,12 @@ class ScastieConfig(val configurationFile: File) {
 }
 
 object ScastieConfig {
-  def ofType(deploymentType: DeploymentType, deploymentFolder: File): ScastieConfig = {
-    val configurationFile: File = deploymentType match {
-      case Local => deploymentFolder / "local.conf"
-      case Staging => deploymentFolder / "staging.conf"
-      case Production => deploymentFolder / "production.conf"
+  def ofType(deploymentType: DeploymentType, deploymentFolder: File): ScastieConfig =
+    deploymentType match {
+      case Local => new ScastieConfig(deploymentFolder / "local.conf", "local")
+      case Staging => new ScastieConfig(deploymentFolder / "staging.conf", "staging")
+      case Production => new ScastieConfig(deploymentFolder / "production.conf", "production")
     }
-    new ScastieConfig(configurationFile)
-
-  }
 
   def logbackConfigPath(deploymentFolder: File): Path = (deploymentFolder / "logback.xml").toPath
 
@@ -213,9 +210,9 @@ class Deployment(
   /* Compares script with its remote version */
   def compareScriptWithRemote(scriptPath: Path): Boolean = {
     val uri = s"${config.userName}@${config.runnersHostname}"
-    val scriptFileName = scriptPath.getFileName().toString()
+    val remoteScriptPath = s"${config.remoteDeploymentFolder}/${scriptPath.getFileName().toString()}"
 
-    val exitCode = Process(s"ssh $uri cat $scriptFileName | diff - scriptPath") ! logger
+    val exitCode = Process(s"ssh $uri cat $remoteScriptPath | diff - $scriptPath") ! logger
     exitCode == 0
   }
 
@@ -240,7 +237,8 @@ class Deployment(
       ).map { script =>
         val isUpToDate: Boolean = compareScriptWithRemote(script)
         if (!isUpToDate) {
-          logger.error(s"Deployment stopped. Script: $script is not up to date with remote version or could not be validated. You have to update it manually. It should be located in the user home directory.")
+          val remoteScriptPath = s".${config.remoteDeploymentFolder}/${script}"
+          logger.error(s"Deployment stopped. Script: $script is not up to date with remote version $remoteScriptPath or could not be validated. You have to update it manually. It should be located in the user home directory.")
         }
         isUpToDate
       }.forall(_ == true)
@@ -249,13 +247,15 @@ class Deployment(
 
   def deployRunners(): Boolean = {
     val uri = s"${config.userName}@${config.runnersHostname}"
-    val exitCode = Process(s"ssh $uri ./deploy-runners.sh") ! logger
+    val remoteScriptPath = s".${config.remoteDeploymentFolder}/deploy-runners.sh}"
+    val exitCode = Process(s"ssh $uri $remoteScriptPath") ! logger
     exitCode == 0
   }
 
   def deployMetalsRunner(): Boolean = {
     val uri = s"${config.userName}@${config.runnersHostname}"
-    val exitCode = Process(s"ssh $uri ./deploy-metals.sh") ! logger
+    val remoteScriptPath = s".${config.remoteDeploymentFolder}/deploy-metals.sh}"
+    val exitCode = Process(s"ssh $uri $remoteScriptPath") ! logger
     exitCode == 0
   }
 

@@ -96,7 +96,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
  Scala.js Client     run/save/format                                               +-------------------------------------------+
  +---------------------+  AutowireApi      +---------------------+                +-------------------------------------------+|
  |      ScastieBackend |  (HTTP)           | +------------+      | akka+remote   +-------------------------------------------+||
- |          +--------+ +-----------------> | |LoadBalancer| <------------------+ |    SbtActor                Sbt(Proccess)  |||
+ |          +--------+ +-----------------> | |LoadBalancer| <------------------+ |    SbtActor                Sbt(Process)   |||
  |          |        | |                   | +------------+      |             | |   +----------+             +-----------+  |||
  |          |        | |                   |                     |             +---> |          |  <----->    |sbt|scastie|  ||+
  |          |        | |                   |                     |               |   +----------+ I/O Stream  +-----------+  ++
@@ -136,19 +136,48 @@ If you have any questions join us in the [gitter channel](https://gitter.im/scal
 
 # How to deploy
 
-## Quick
+## Preparing SBT environment
+The whole deployment process is done semi-automatically via SBT task.
 
 ```
 ssh scastie@alaska.epfl.ch
 ssh scastie@scastie.scala-lang.org
 ssh scastie@scastie-sbt.scala-lang.org
 docker login
-cd ~/scastie-secrets && git pull #optional
 cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
 nix-shell -v
-sbt 
-deploy
+sbt
 ```
+
+Scastie offers multiple deployment configurations with following instructions for each of them.
+
+If you didn't make any changes to the deployment task should finish with success.
+Otherwise, the deployment will fail and inform you that remote deployment scripts are not up-to-date with their
+local counterparts. In such situation you should follow the instructions from the SBT console.
+
+Every IP which is put into the configuration should be double-checked. If you have any doubts if they are correct, please
+contact one of the maintainers.
+
+## Production
+
+Scastie production environment is used for internal deployment. It's configuration is present at `./deployment/production.conf`.
+The production deployment is start with `deploy` command.
+
+## Staging
+
+Scastie also has staging environment. The deployment can be done by running `deployStaging` task.
+It will do normal deployment, but with Staging environment configuration file located at: `./deployment/staging.conf`
+
+## Dry run
+
+Scastie deployment process generates shell scripts responsible for proper remote deployment.
+If in any case you want to check the scripts without running them, it can be done by running
+`deployDryRun` SBT task.
+
+## Reverting the deployment
+
+Deployment process is sequentiall, so if the process fails on any step, it will be stopped so only one part of the system
+will be affected. You will need to manually start failed step.
 
 ## Check logs
 ```
@@ -192,24 +221,13 @@ In case anything goes wrong:
 ssh scastie@alaska.epfl.ch
 ssh scastie@scastie.scala-lang.org
 ssh scastie@scastie-sbt.scala-lang.org
-./sbt.sh
+./production/deploy-runners.sh
+./production/deploy-metals.sh
 exit
 ./server.sh
-./metalsRunner.sh
 ```
 
 # Running with docker locally
 
-```
-git commit
-
-sbt "sbtRunner/docker"
-
-docker run \
-  --network=host \
-  -e RUNNER_PORT=5150 \
-  -e RUNNER_HOSTNAME=127.0.0.1 \
-  -e RUNNER_RECONNECT=false \
-  -e RUNNER_PRODUCTION=true \
-  scalacenter/scastie-sbt-runner:`git rev-parse --verify HEAD`
-```
+Running with docker locally works only with linux for now ( it won't work on macOS )
+It can be started by running `sbt deployLocal` command.
