@@ -20,13 +20,13 @@ object Deployment {
   def settings(server: Project, sbtRunner: Project, metalsRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
     deploy := deployTask(server, sbtRunner, metalsRunner, Production).value,
     deployStaging := deployTask(server, sbtRunner, metalsRunner, Staging).value,
-    deployDryRun := deployDryTask(server, sbtRunner, metalsRunner).value,
+    generateDeploymentScripts := generateDeploymentScriptsTask(server, sbtRunner, metalsRunner).value,
     deployLocal := deployLocalTask(server, sbtRunner, metalsRunner).value
   )
 
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
   lazy val deployStaging = taskKey[Unit]("Deploy server and sbt instances with staging configuration")
-  lazy val deployDryRun = taskKey[Unit]("Runs deployment without actually deploying it")
+  lazy val generateDeploymentScripts = taskKey[Unit]("Generates deployment scripts with production configuration.")
   lazy val deployLocal = taskKey[Unit]("Deploy locally")
 
   def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project, deploymentType: DeploymentType): Def.Initialize[Task[Unit]] =
@@ -39,12 +39,10 @@ object Deployment {
       deployment.deploy(serverZip)
     }
 
-  def deployDryTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
+  def generateDeploymentScriptsTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       val deployment = deploymentTask(sbtRunner, metalsRunner, Production).value
-      val serverZip = (server / Universal / packageBin).value.toPath
-
-      deployment.deploy(serverZip, dryRun = true)
+      deployment.generateDeploymentScripts()
     }
 
 
@@ -76,7 +74,7 @@ case object Local extends DeploymentType
 case object Staging extends DeploymentType
 case object Production extends DeploymentType
 
-class ScastieConfig(val configurationFile: File, val remoteDeploymentFolder: String) {
+class ScastieConfig(val configurationFile: File) {
   val config = ConfigFactory.parseFile(configurationFile)
   val userName = "scastie"
 
@@ -98,9 +96,9 @@ class ScastieConfig(val configurationFile: File, val remoteDeploymentFolder: Str
 object ScastieConfig {
   def ofType(deploymentType: DeploymentType, deploymentFolder: File): ScastieConfig =
     deploymentType match {
-      case Local => new ScastieConfig(deploymentFolder / "local.conf", "local")
-      case Staging => new ScastieConfig(deploymentFolder / "staging.conf", "staging")
-      case Production => new ScastieConfig(deploymentFolder / "production.conf", "production")
+      case Local => new ScastieConfig(deploymentFolder / "local.conf")
+      case Staging => new ScastieConfig(deploymentFolder / "staging.conf")
+      case Production => new ScastieConfig(deploymentFolder / "production.conf")
     }
 
   def logbackConfigPath(deploymentFolder: File): Path = (deploymentFolder / "logback.xml").toPath
@@ -124,7 +122,7 @@ class Deployment(
   val metalsDockerNamespace = metalsDockerImage.namespace.get
   val metalsDockerRepository = metalsDockerImage.repository
 
-  def deploy(serverZip: Path, dryRun: Boolean = false) = {
+  def deploy(serverZip: Path) = {
     val time = LocalDateTime.now()
     val outputPath = deploymentFolder.toPath.resolve(s"generated-scripts-$time")
 
@@ -132,17 +130,19 @@ class Deployment(
       Files.createDirectory(outputPath)
     }
 
-    if (createAndVerifyDeploymentScriptsData(outputPath, dryRun)) {
-      // the deployment will be sequential so if anything fails, other services will keep working.
-      deployRunners() && deployMetalsRunner() && deployServer(serverZip)
-    } else {
-      logger.error("Deployment process stopped.")
-    }
+    // the deployment will be sequential so if anything fails, other services will keep working.
+    val success =
+      createAndVerifyDeploymentScriptsData(outputPath) &&
+      deployRunners() &&
+      deployMetalsRunner() &&
+      deployServer(serverZip)
+
+    if (!success) logger.error("Deployment process stopped.")
   }
 
   /* Create runner script which will be used during deployment to start SBT runners docker containers */
   def createRunnersStartupScript(scriptOutputDirectory: Path): Path = {
-    val fileName = "start-runners.sh"
+    val fileName = if (deploymentType == Staging) "start-runners-staging.sh" else "start-runners.sh"
     val scriptPath = scriptOutputDirectory.resolve(fileName)
 
     val dockerImagePath = deploymentType match {
@@ -181,7 +181,7 @@ class Deployment(
 
   /* Create metals script which will be used during deployment to start metals docker container */
   def createMetalsStartupScript(scriptOutputDirectory: Path): Path = {
-    val fileName = "start-metals.sh"
+    val fileName = if (deploymentType == Staging) "start-metals-staging.sh" else "start-metals.sh"
     val scriptPath = scriptOutputDirectory.resolve(fileName)
 
     val dockerImagePath = deploymentType match {
@@ -214,11 +214,24 @@ class Deployment(
   /* Compares script with its remote version */
   def compareScriptWithRemote(scriptPath: Path): Boolean = {
     val uri = s"${config.userName}@${config.runnersHostname}"
-    val remoteScriptPath = s"${config.remoteDeploymentFolder}/${scriptPath.getFileName().toString()}"
+    val remoteScriptPath = scriptPath.getFileName().toString()
 
     val exitCode = Process(s"ssh $uri cat $remoteScriptPath | diff - $scriptPath") ! logger
     exitCode == 0
   }
+
+  def generateDeploymentScripts() = {
+    val time = LocalDateTime.now()
+    val outputPath = deploymentFolder.toPath.resolve(s"generated-scripts-$time")
+
+    if (!Files.exists(outputPath)) {
+      Files.createDirectory(outputPath)
+    }
+
+    createRunnersStartupScript(outputPath)
+    createMetalsStartupScript(outputPath)
+  }
+
 
   /*
    * Verifies if deployment scripts are up to date on remote
@@ -228,38 +241,30 @@ class Deployment(
    * It doesn't require any user action unless a change in deployment has been made.
    * By manually copying the files, we are ensuring that everything is properly configured.
    */
-  def createAndVerifyDeploymentScriptsData(scriptOutputDirectory: Path, dryRun: Boolean): Boolean = {
-    val runnerDeploymentScript: Path = (deploymentFolder / "deploy-runners.sh").toPath
+  def createAndVerifyDeploymentScriptsData(scriptOutputDirectory: Path): Boolean = {
+    val deploymentScript : Path = (deploymentFolder / "deploy.sh").toPath
     val runnerContainersStartupScript: Path = createRunnersStartupScript(scriptOutputDirectory)
-
-    val metalsDeploymentScript: Path = (deploymentFolder / "deploy-metals.sh").toPath
     val metalsContainerStartupScript: Path = createMetalsStartupScript(scriptOutputDirectory)
 
-    if (!dryRun) {
-      List(
-        runnerDeploymentScript, runnerContainersStartupScript, metalsDeploymentScript, metalsContainerStartupScript
-      ).map { script =>
-        val isUpToDate: Boolean = compareScriptWithRemote(script)
-        if (!isUpToDate) {
-          val remoteScriptPath = s".${config.remoteDeploymentFolder}/${script}"
-          logger.error(s"Deployment stopped. Script: $script is not up to date with remote version $remoteScriptPath or could not be validated. You have to update it manually. It should be located in the user home directory.")
-        }
-        isUpToDate
-      }.forall(_ == true)
-    } else false
+    List(deploymentScript, runnerContainersStartupScript, metalsContainerStartupScript).map { script =>
+      val isUpToDate: Boolean = compareScriptWithRemote(script)
+      if (!isUpToDate) {
+        val remoteScriptPath = s"./$script"
+        logger.error(s"Deployment stopped. Script: $script is not up to date with remote version $remoteScriptPath or could not be validated. You have to update it manually. It should be located in the user home directory.")
+      }
+      isUpToDate
+    }.forall(_ == true)
   }
 
   def deployRunners(): Boolean = {
     val uri = s"${config.userName}@${config.runnersHostname}"
-    val remoteScriptPath = s".${config.remoteDeploymentFolder}/deploy-runners.sh}"
-    val exitCode = Process(s"ssh $uri $remoteScriptPath") ! logger
+    val exitCode = Process(s"ssh $uri ./deploy.sh SBT $deploymentType") ! logger
     exitCode == 0
   }
 
   def deployMetalsRunner(): Boolean = {
     val uri = s"${config.userName}@${config.runnersHostname}"
-    val remoteScriptPath = s".${config.remoteDeploymentFolder}/deploy-metals.sh}"
-    val exitCode = Process(s"ssh $uri $remoteScriptPath") ! logger
+    val exitCode = Process(s"ssh $uri ./deploy.sh Metals $deploymentType") ! logger
     exitCode == 0
   }
 

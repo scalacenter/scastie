@@ -3,12 +3,13 @@ import sbtdocker.DockerPlugin.autoImport._
 import java.nio.file.Path
 
 object DockerHelper {
+  val alpineImageName = "alpine:3.17"
 
   def javaProject(baseDirectory: Path, organization: String, artifactZip: Path, configPath: Path): Dockerfile = {
     val containerUsername = "scastie"
 
     new Dockerfile {
-      from("alpine:latest")
+      from(alpineImageName)
 
       // Install ca-certificates for wget https
       runRaw("apk update")
@@ -104,7 +105,7 @@ object DockerHelper {
     sbtGlobal.toFile.mkdirs()
 
     new Dockerfile {
-      from("alpine:latest")
+      from(alpineImageName)
 
       // Install ca-certificates for wget https
       runRaw("apk update")
