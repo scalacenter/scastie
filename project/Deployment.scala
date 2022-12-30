@@ -327,12 +327,13 @@ class Deployment(
     val logbackConfigFileName= logbackConfig.getFileName()
     val serverZipFileName = serverZip.getFileName.toString.replace(".zip", "")
 
+    val regex = "^[a-zA-Z0-9]$".r
+    if (regex.findFirstIn(config.userName).isEmpty)
+      throw new IllegalStateException("Basedir contains space and may lead to removal of unwanted files.")
+
     val baseDir =
       if (!local) s"/home/${config.userName}/"
       else ""
-
-    if (baseDir.contains(" "))
-      throw new IllegalStateException("Basedir contains space and may lead to removal of unwanted files.")
 
     val content =
       s"""|#!/usr/bin/env bash

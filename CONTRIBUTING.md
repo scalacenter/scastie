@@ -136,7 +136,7 @@ If you have any questions join us in the [gitter channel](https://gitter.im/scal
 
 # How to deploy
 
-## Preparing SBT environment
+## Preparing sbt environment
 The whole deployment process is done semi-automatically via SBT task.
 
 ```
@@ -151,33 +151,33 @@ sbt
 
 Scastie offers multiple deployment configurations with following instructions for each of them.
 
-If you didn't make any changes to the deployment task should finish with success.
+If you didn't make any changes to the deployment task, it should finish with success.
 Otherwise, the deployment will fail and inform you that remote deployment scripts are not up-to-date with their
-local counterparts. In such situation you should follow the instructions from the SBT console.
+local counterparts. In such situation you should follow the instructions from the sbt console.
 
 Every IP which is put into the configuration should be double-checked. If you have any doubts if they are correct, please
 contact one of the maintainers.
 
 ## Production
 
-Scastie production environment is used for internal deployment. It's configuration is present at `./deployment/production.conf`.
-The production deployment is start with `deploy` command.
+Scastie production environment is used for internal deployment. Its configuration is present at `./deployment/production.conf`.
+Start the production deployment with the `deploy` sbt task.
 
 ## Staging
 
-Scastie also has staging environment. The deployment can be done by running `deployStaging` task.
+Scastie also has a staging environment. The deployment can be done by running the task `deployStaging`.
 It will do normal deployment, but with Staging environment configuration file located at: `./deployment/staging.conf`
 
 ## Dry run
 
 Scastie deployment process generates shell scripts responsible for proper remote deployment.
 If in any case you want to check the scripts without running them, it can be done by running
-`deployDryRun` SBT task.
+`deployDryRun` sbt task.
 
 ## Reverting the deployment
 
-Deployment process is sequentiall, so if the process fails on any step, it will be stopped so only one part of the system
-will be affected. You will need to manually start failed step.
+The deployment process is sequential, so if the process fails on any step, it will be stopped, so only one part of the system
+will be affected. You will need to manually restart failed step.
 
 ## Check logs
 ```
