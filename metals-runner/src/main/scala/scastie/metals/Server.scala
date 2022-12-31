@@ -20,19 +20,9 @@ import org.http4s.server.middleware._
 
 object Server:
 
-  def writeRunningPid(name: String): String = {
-    val pid     = ManagementFactory.getRuntimeMXBean.getName.split("@").head
-    val pidFile = Paths.get(name)
-    Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8))
-    sys.addShutdownHook {
-      Files.delete(pidFile)
-    }
-    pid
-  }
-
   val config                   = ConfigFactory.load().getConfig("scastie.metals")
   val cacheExpirationInSeconds = config.getInt("cache-expire-in-seconds")
-  val isProduction             = config.getBoolean("production")
+  val serverPort = config.getInt("port")
 
   def stream[F[_]: Async]: Stream[F, Nothing] = {
     val cache = Cache.expiring[F, ScastieMetalsOptions, ScastiePresentationCompiler](
@@ -47,14 +37,12 @@ object Server:
       Logger.httpApp(true, false)(corsService)
     }
 
-    if (isProduction) writeRunningPid("METALS_RUNNING_PID")
-
     Stream.resource(
       cache.flatMap(cache =>
         EmberServerBuilder
           .default[F]
           .withHost(ipv4"0.0.0.0")
-          .withPort(port"8000")
+          .withPort(Port.fromInt(serverPort).getOrElse(port"8000"))
           .withHttpApp(finalHttpApp(cache))
           .build >>
           Resource.eval(Async[F].never)
