@@ -2,21 +2,18 @@ package com.olegych.scastie.util
 
 import java.io.File
 import java.nio.file.{Files, StandardCopyOption}
-import scala.concurrent.duration._
 
 import akka.actor.{Actor, ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import com.olegych.scastie.api.ProcessOutput
 import com.olegych.scastie.api.ProcessOutputType._
 import com.olegych.scastie.util.ProcessActor._
-import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuiteLike
 
-class ProcessActorTest()
-  extends TestKit(ActorSystem("ProcessActorTest"))
-  with ImplicitSender
-  with AnyFunSuiteLike
-  with BeforeAndAfterAll {
+import scala.concurrent.duration._
+
+class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
 
   test("do it") {
     (1 to 10).foreach { i =>
@@ -51,16 +48,15 @@ class ProcessActorTest()
   override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
   }
-
 }
 
 class ProcessReceiver(command: String, probe: ActorRef) extends Actor {
-  private val props   = ProcessActor.props(command = List("bash", "-c", command.replace("\\", "/")), killOnExit = false)
+  private val props =
+    ProcessActor.props(command = List("bash", "-c", command.replace("\\", "/")), killOnExit = false)
   private val process = context.actorOf(props, name = "process-receiver")
 
   override def receive: Receive = {
     case output: ProcessOutput => probe ! output
     case input: Input          => process ! input
   }
-
 }
