@@ -1,8 +1,7 @@
 package com.olegych.scastie.util
 
-import com.olegych.scastie.api._
-
 import akka.actor.ActorRef
+import com.olegych.scastie.api._
 
 case class SbtTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String], progressActor: ActorRef)
 
