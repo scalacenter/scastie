@@ -2,6 +2,7 @@
 @import "reset";
 
 .scastie {
+  @include reset();
 
   .console-container {
     .run-button {
