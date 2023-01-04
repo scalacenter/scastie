@@ -169,9 +169,6 @@ contact one of the maintainers.
 ### Production
 
 Scastie production environment is used for internal deployment. Its configuration is present at `./deployment/production.conf`.
-Start the production deployment with the `deploy` sbt task.
-
-Important! Production deployment assures that you've already deployed staging.
 
 <details>
   <summary>Instructions</summary>
@@ -183,7 +180,18 @@ docker login
 cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
 nix-shell -v
 sbt
+```
 
+In case docker images are not published e.g. when staging for the current version is not deployed,
+it must be done before proceeding with the production deployment. It is done by running:
+
+```
+sbt> publishContainers
+```
+
+Then deployment can be started by running `deploy` sbt task.
+
+```
 sbt> deploy
 ```
 
