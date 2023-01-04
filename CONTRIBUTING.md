@@ -141,7 +141,6 @@ The whole deployment process is done semi-automatically via SBT task.
 
 ```
 ssh scastie@alaska.epfl.ch
-ssh scastie@scastie.scala-lang.org
 ssh scastie@scastie-sbt.scala-lang.org
 docker login
 cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
@@ -172,10 +171,45 @@ contact one of the maintainers.
 Scastie production environment is used for internal deployment. Its configuration is present at `./deployment/production.conf`.
 Start the production deployment with the `deploy` sbt task.
 
+Important! Production deployment assures that you've already deployed staging.
+
+<details>
+  <summary>Instructions</summary>
+
+```
+ssh scastie@alaska.epfl.ch
+ssh scastie@scastie-sbt.scala-lang.org
+docker login
+cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
+nix-shell -v
+sbt
+
+sbt> deploy
+```
+
+</details>
+
 ### Staging
 
 Scastie also has a staging environment. The deployment can be done by running the task `deployStaging`.
 It will do normal deployment, but with Staging environment configuration file located at: `./deployment/staging.conf`
+
+<details>
+  <summary>Instructions</summary>
+
+```
+ssh scastie@alaska.epfl.ch
+ssh scastie@scastie-sbt.scala-lang.org
+docker login
+cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
+nix-shell -v
+sbt
+
+sbt> publishContainers
+sbt> deployStaging
+```
+
+</details>
 
 ### Dry run
 
