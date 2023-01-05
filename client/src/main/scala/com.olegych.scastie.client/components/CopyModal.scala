@@ -7,29 +7,25 @@ import org.scalajs.dom
 import org.scalajs.dom.document
 import org.scalajs.dom.html
 import org.scalajs.dom.window
+
 import vdom.all._
 
-final case class CopyModal(
-  title: String,
-  subtitle: String,
-  content: String,
-  modalId: String,
-  isClosed: Boolean,
-  close: Reusable[Callback]
-) {
-  @inline def render: VdomElement = new CopyModal.ShareModalComponent().build(this)
+final case class CopyModal(title: String, subtitle: String, content: String, modalId: String, isClosed: Boolean, close: Reusable[Callback]) {
+  @inline def render: VdomElement =
+    new CopyModal.ShareModalComponent().build(this)
 }
 
 object CopyModal {
 
-  implicit val reusability: Reusability[CopyModal] = Reusability.derive[CopyModal]
+  implicit val reusability: Reusability[CopyModal] =
+    Reusability.derive[CopyModal]
 
   private class ShareModalComponent() {
     private val divRef = Ref[html.Div]
 
     private def render(props: CopyModal): VdomElement = {
       def copyLink: Callback = divRef.get.map { divRef =>
-        val range     = dom.document.createRange()
+        val range = dom.document.createRange()
         val selection = dom.window.getSelection()
         divRef.foreach(range.selectNodeContents)
         selection.addRange(range)
@@ -53,20 +49,20 @@ object CopyModal {
               props.content
             ),
             div(onClick --> copyLink, title := "Copy to Clipboard", cls := "snippet-clip clipboard-copy")(
-              i(cls                         := "fa fa-clipboard")
+              i(cls := "fa fa-clipboard")
             )
           )
         )
       ).render
     }
 
-    private val component = ScalaComponent
-      .builder[CopyModal]("CopyModal")
-      .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+    private val component =
+      ScalaComponent
+        .builder[CopyModal]("CopyModal")
+        .render_P(render)
+        .configure(Reusability.shouldComponentUpdate)
+        .build
 
     def build(props: CopyModal): VdomElement = component(props)
   }
-
 }

@@ -2,6 +2,7 @@ package com.olegych.scastie.client.components
 
 import com.olegych.scastie.api._
 import japgolly.scalajs.react._
+
 import vdom.all._
 
 case class TargetSelector(scalaTarget: ScalaTarget, onChange: ScalaTarget ~=> Callback) {
@@ -27,27 +28,27 @@ object TargetSelector {
     }
   }
 
-  val targetSelector = ScalaFnComponent
-    .withHooks[TargetSelector]
-    .render(props => {
-      div(
-        ul(cls := "target")(
-          targetTypes.map { targetType =>
-            val targetLabel = labelFor(targetType)
-            li(
-              input(
-                `type` := "radio",
-                id     := targetLabel,
-                value  := targetLabel,
-                name   := "target",
-                onChange --> props.onChange(targetType.defaultScalaTarget),
-                checked := targetType == props.scalaTarget.targetType
-              ),
-              label(`for` := targetLabel, role := "button", cls := "radio", targetLabel)
-            )
-          }.toTagMod
+  val targetSelector =
+    ScalaFnComponent
+      .withHooks[TargetSelector]
+      .render(props => {
+        div(
+          ul(cls := "target")(
+            targetTypes.map { targetType =>
+              val targetLabel = labelFor(targetType)
+              li(
+                input(
+                  `type` := "radio",
+                  id := targetLabel,
+                  value := targetLabel,
+                  name := "target",
+                  onChange --> props.onChange(targetType.defaultScalaTarget),
+                  checked := targetType == props.scalaTarget.targetType
+                ),
+                label(`for` := targetLabel, role := "button", cls := "radio", targetLabel)
+              )
+            }.toTagMod
+          )
         )
-      )
-    })
-
+      })
 }
