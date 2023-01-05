@@ -32,7 +32,7 @@ object SbtShared {
   }
 
   object ScalaJSVersions {
-    val current = "1.11.0"
+    val current = "1.12.0"
   }
 
   val runtimeProjectName = "runtime-scala"

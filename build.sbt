@@ -9,9 +9,6 @@ val akkaHttpVersion = "10.2.9"
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
 addCommandAlias("startAllProd", "sbtRunner/reStart;metalsRunner/reStart;server/fullLinkJS/reStart")
 
-val fastLinkOutputDir = taskKey[String]("output directory for `yarn dev`")
-val fullLinkOutputDir = taskKey[String]("output directory for `yarn build`")
-
 val yarnBuild = taskKey[Unit]("builds es modules with `yarn build`")
 
 ThisBuild / packageTimestamp := None
@@ -264,8 +261,6 @@ lazy val client = project
     Compile / fullLinkJS / scalaJSLinkerConfig := {
       scalaJSLinkerConfig.value.withModuleKind(ModuleKind.ESModule)
     },
-    fastLinkOutputDir := linkerOutputDirectory((Compile / fastLinkJS).value).getAbsolutePath(),
-    fullLinkOutputDir := linkerOutputDirectory((Compile / fullLinkJS).value).getAbsolutePath(),
     yarnBuild := {
       scala.sys.process.Process("yarn build").!
     },
@@ -283,14 +278,6 @@ lazy val client = project
   )
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(api.js(ScalaVersions.js))
-
-def linkerOutputDirectory(v: Attributed[org.scalajs.linker.interface.Report]): File = {
-  v.get(scalaJSLinkerOutputDirectory.key).getOrElse {
-    throw new MessageOnlyException(
-        "Linking report was not attributed with output directory. " +
-        "Please report this as a Scala.js bug.")
-  }
-}
 
 lazy val instrumentation = project
   .settings(baseNoCrossSettings)
