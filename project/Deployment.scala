@@ -20,12 +20,14 @@ object Deployment {
   def settings(server: Project, sbtRunner: Project, metalsRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
     deploy := deployTask(server, sbtRunner, metalsRunner, Production).value,
     deployStaging := deployTask(server, sbtRunner, metalsRunner, Staging).value,
+    publishContainers := publishContainers(sbtRunner, metalsRunner).value,
     generateDeploymentScripts := generateDeploymentScriptsTask(server, sbtRunner, metalsRunner).value,
     deployLocal := deployLocalTask(server, sbtRunner, metalsRunner).value
   )
 
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
   lazy val deployStaging = taskKey[Unit]("Deploy server and sbt instances with staging configuration")
+  lazy val publishContainers = taskKey[Unit]("Publishes sbt runners and metals runner to docker repository")
   lazy val generateDeploymentScripts = taskKey[Unit]("Generates deployment scripts with production configuration.")
   lazy val deployLocal = taskKey[Unit]("Deploy locally")
 
@@ -33,10 +35,14 @@ object Deployment {
     Def.task {
       val deployment = deploymentTask(sbtRunner, metalsRunner, deploymentType).value
       val serverZip = (server / Universal / packageBin).value.toPath
-      (sbtRunner / dockerBuildAndPush).value
-      (metalsRunner / dockerBuildAndPush).value
 
       deployment.deploy(serverZip)
+    }
+
+  def publishContainers(sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
+    Def.task {
+      (sbtRunner / dockerBuildAndPush).value
+      (metalsRunner / dockerBuildAndPush).value
     }
 
   def generateDeploymentScriptsTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
@@ -162,7 +168,7 @@ class Deployment(
          |    --add-host jenkins.scala-sbt.org:127.0.0.1 \\
          |    --restart=always \\
          |    --name=$containerName-$$port \\
-         |    -p $$port:$$port
+         |    --network=host \\
          |    -d \\
          |    -e RUNNER_PRODUCTION=true \\
          |    -e RUNNER_PORT=$$port \\
@@ -249,7 +255,7 @@ class Deployment(
     List(deploymentScript, runnerContainersStartupScript, metalsContainerStartupScript).map { script =>
       val isUpToDate: Boolean = compareScriptWithRemote(script)
       if (!isUpToDate) {
-        val remoteScriptPath = s"./$script"
+        val remoteScriptPath = script.getFileName().toString()
         logger.error(s"Deployment stopped. Script: $script is not up to date with remote version $remoteScriptPath or could not be validated. You have to update it manually. It should be located in the user home directory.")
       }
       isUpToDate
@@ -336,7 +342,7 @@ class Deployment(
     val logbackConfigFileName= logbackConfig.getFileName()
     val serverZipFileName = serverZip.getFileName.toString.replace(".zip", "")
 
-    val regex = "^[a-zA-Z0-9]$".r
+    val regex = "^[a-zA-Z0-9]+$".r
     if (regex.findFirstIn(config.userName).isEmpty)
       throw new IllegalStateException("Basedir contains space and may lead to removal of unwanted files.")
 
@@ -359,7 +365,7 @@ class Deployment(
           |nohup ${baseDir}server/bin/server \\
           |  -J-Xmx1G \\
           |  -Dconfig.file=${baseDir}${configFileName} \\
-          |  -Dlogback.configurationFile=${baseDir}${logbackConfigFileName}
+          |  -Dlogback.configurationFile=${baseDir}${logbackConfigFileName} \\
           |  &>/dev/null &
           |""".stripMargin
 
