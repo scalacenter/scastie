@@ -55,4 +55,5 @@ object ScastieMetalsRoutes {
         } yield resp
 
     }
+
 }
