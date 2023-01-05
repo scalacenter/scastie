@@ -25,10 +25,10 @@ elif [[ $1 = "SBT" ]]; then
   repository_name="scalacenter/scastie-sbt-runner"
 
   if [[ $2 = "Staging" ]]; then
-    container_name_regex="^scastie-sbt-runner-staging-\d$"
+    container_name_regex="^scastie-sbt-runner-staging-\d+$"
     script=./start-runners-staging.sh
   elif [[ $2 = "Production" ]]; then
-    container_name_regex="^scastie-sbt-runner-\d$"
+    container_name_regex="^scastie-sbt-runner-\d+$"
     script=./start-runners.sh
   else
     echo "Illegal argument: $2"
@@ -53,16 +53,16 @@ echo "[1/7] Removing old previous image: $repository_name:$previous_tag"
 docker rmi $repository_name:$previous_tag || true
 
 echo "[2/7] Tagging image $repository_name:latest as the new previous: $repository_name:$previous_tag"
-docker tag $repository_name:latest $repository_name:$previous_tag || true
+docker tag $repository_name:latest $repository_name:$previous_tag
 
 echo "[3/7] Fetching new latest from repository: $repository_name"
 docker pull $repository_name:latest
 
 echo "[4/7] Stopping $repository_name $2 containers"
-docker ps -q --filter "name=$container_name_regex" | xargs docker stop
+docker ps -q --filter "name=$container_name_regex" | xargs docker stop || true
 
 echo "[5/7] Removing $repository_name $2 containers"
-docker ps -a -q --filter "status=exited" --filter "name=$container_name_regex" | xargs docker rm
+docker ps -a -q --filter "status=exited" --filter "name=$container_name_regex" | xargs docker rm || true
 
 echo "[6/7] Starting $1 runner docker containers with script $script"
 
