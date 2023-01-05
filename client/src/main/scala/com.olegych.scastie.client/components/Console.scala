@@ -3,6 +3,7 @@ package com.olegych.scastie.client.components
 import com.olegych.scastie.api.ConsoleOutput
 import com.olegych.scastie.client.ConsoleState
 import com.olegych.scastie.client.HTMLFormatter
+import com.olegych.scastie.client.View
 import japgolly.scalajs.react._
 import org.scalajs.dom.raw.HTMLDivElement
 
@@ -10,7 +11,10 @@ import vdom.all._
 
 final case class Console(isOpen: Boolean,
                          isRunning: Boolean,
+                         isEmbedded: Boolean,
                          consoleOutputs: Vector[ConsoleOutput],
+                         run: Reusable[Callback],
+                         setView: View ~=> Callback,
                          close: Reusable[Callback],
                          open: Reusable[Callback]) {
   @inline def render: VdomElement = Console.component(this)
@@ -26,7 +30,7 @@ object Console {
   def render(props: Console): VdomElement = {
     val (displayConsole, displaySwitcher) =
       if (props.isOpen) (display.block, display.none)
-      else (display.none, display.block)
+      else (display.none, display.flex)
 
     val consoleCss =
       if (props.isOpen)
@@ -49,10 +53,19 @@ object Console {
     div(cls := "console-container", consoleCss)(
       div(cls := "console", displayConsole)(
         div(cls := "handler"),
-        div(cls := "switcher-hide", displayConsole, role := "button", onClick --> props.close)(
-          i(cls := "fa fa-terminal"),
-          "Console (F3)",
-          i(cls := "fa fa-caret-down")
+        div(cls := "switcher-hide", display.flex, role := "button", onClick --> props.close)(
+          RunButton(
+            isRunning = props.isRunning,
+            isStatusOk = true,
+            save = props.run,
+            setView = props.setView,
+            embedded = true,
+          ).render.when(props.isEmbedded),
+          div(cls := "console-label")(
+            i(cls := "fa fa-terminal"),
+            p("Console (F3)"),
+            i(cls := "fa fa-caret-down")
+          )
         ),
         div.withRef(consoleElement)(
           cls := "output-console",
@@ -60,10 +73,19 @@ object Console {
         )
       ),
       div(cls := "switcher-show", role := "button", onClick --> props.open)(
+        RunButton(
+          isRunning = props.isRunning,
+          isStatusOk = true,
+          save = props.run,
+          setView = props.setView,
+          embedded = true,
+        ).render.when(props.isEmbedded),
         displaySwitcher,
-        i(cls := "fa fa-terminal"),
-        "Console (F3)",
-        i(cls := "fa fa-caret-up")
+        div(cls := "console-label")(
+          i(cls := "fa fa-terminal"),
+          p("Console (F3)"),
+          i(cls := "fa fa-caret-up")
+        )
       )
     )
   }

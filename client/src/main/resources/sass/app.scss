@@ -18,6 +18,8 @@
 @import "status";
 @import "status-theme";
 
+@include reset();
+
 body {
   font-family: $font-family;
   font-size: $text-size;

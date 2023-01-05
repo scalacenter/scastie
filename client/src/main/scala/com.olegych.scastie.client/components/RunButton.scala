@@ -23,7 +23,7 @@ object RunButton {
         else
           s"Run (${EditorKeymaps.saveOrUpdate.getName}) - warning: unknown status"
 
-      li(onClick --> props.save, role := "button", title := runTitle, cls := "btn run-button")(
+      li(onClick ==> { e => e.stopPropagationCB >> props.save }, role := "button", title := runTitle, cls := "btn run-button")(
         i(cls := "fa fa-play"),
         span("Run")
       )
