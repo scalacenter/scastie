@@ -22,8 +22,7 @@ object DTOExtensions {
 
       val (content, position) =
         if offsetParams.isWorksheetMode then
-          val adjustedContent = s"""|$wrapperObject${offsetParams.content.replace("\n", "\n" + ident)}
-                                    |}""".stripMargin
+          val adjustedContent = s"""$wrapperObject${offsetParams.content.replace("\n", "\n" + ident)}}"""
           val adjustedPosition = wrapperObject.length + line * 2 + offsetParams.offset
           (adjustedContent, adjustedPosition)
         else (offsetParams.content, offsetParams.offset)

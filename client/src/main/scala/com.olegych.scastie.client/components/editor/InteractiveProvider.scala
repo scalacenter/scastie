@@ -95,13 +95,11 @@ case class InteractiveProvider(props: CodeEditor) {
     maybeJsonText.flatMap(jsonText => {
       Json.parse(jsonText).asOpt[Either[api.FailureType, B]] match {
         case None =>
-          println(s"Parsing error for text: $jsonText")
           None
         case Some(Left(api.PresentationCompilerFailure(msg))) =>
           props.setMetalsStatus(MetalsConfigurationError(msg)).runNow()
           None
         case Some(Left(api.NoResult(msg))) =>
-          println(s"No hover for given position: $msg")
           None
         case Some(Right(value)) =>
           props.setMetalsStatus(MetalsReady)
