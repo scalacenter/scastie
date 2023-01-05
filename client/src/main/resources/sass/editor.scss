@@ -170,9 +170,7 @@
 
       .console-container {
         $handler-height: 6px;
-
         font-family: $code-font-family;
-        height: 100%;
 
         &.console-open {
           .output-console {

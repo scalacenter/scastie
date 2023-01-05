@@ -16,6 +16,7 @@ import org.apache.commons.text.StringEscapeUtils
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
+import akka.http.scaladsl.model._
 
 class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec: ExecutionContext, mat: Materializer) {
   implicit val timeout: Timeout = Timeout(20.seconds)
@@ -76,10 +77,10 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec:
           getFromResource("public/app.js.map")
         ),
         path("public" / "embedded.css")(
-          getFromResource("public/assets/embedded.css")
+          getFromResource("public/assets/style.css")
         ),
         path("embedded.js")(
-          getFromResource("public/embedded.js")
+          getFromResource("public/embedded.js", ContentType(MediaTypes.`application/javascript`, HttpCharsets.`UTF-8`))
         ),
         path("public" / Remaining)(
           path => getFromResource("public/" + path)
@@ -107,7 +108,9 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean)(implicit ec:
         },
         parameter("theme".?) { theme =>
           snippetIdExtension(".js") { sid =>
-            complete(embeddedResource(sid, theme))
+            complete {
+              HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`application/javascript`, HttpCharsets.`UTF-8`), embeddedResource(sid, theme)))
+            }
           }
         },
         index,

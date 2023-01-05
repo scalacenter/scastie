@@ -6,6 +6,8 @@
   }
 
   .cm-editor , .cm-scroller {
+    font-family: $code-font-family;
+    font-weight: normal;
     height: 100%;
   }
 
@@ -87,70 +89,6 @@
 
   .cm-widget .fold.code-fold {
     cursor: pointer;
-  }
-
-  .cm {
-    font-family: $code-font-family;
-    
-    // emphasis on not parsed (){}
-    .cm -code > pre > span,
-    .cm-code > div > pre > span,
-    .cm-linewidget pre {
-      font-weight: bold;
-      & > * {
-        font-weight: normal;
-      }
-    }
-
-    .cm-linewidget {
-      overflow: visible !important;
-      .runtime-error pre, .compilation-info pre {
-        padding-left: 1rem;
-      }
-
-      .runtime-error i,
-      .compilation-info.error i {
-        color: red;
-      }
-      .runtime-error,
-      .compilation-info {
-        &.warning i {
-          color: yellow;
-        }
-
-        @keyframes blinker {
-          50% { opacity: 0; }
-        }
-
-        pre {
-          padding-top: 0;
-        }
-        i, pre {
-          display: inline-block;
-        }
-        i {
-          vertical-align: top;
-          font-size: 20px;
-        }
-
-        
-      }
-
-      .inline {
-        border-radius: 2px;
-        position: absolute;
-        bottom: 0;
-        overflow: hidden;
-        margin-left: 20px;
-        padding-left: 5px;
-      }
-
-      i {
-        margin-left: 16px;
-        margin-right: 6px;
-        font-size: 12px;
-      }
-    }
   }
 
   .cm-hints {

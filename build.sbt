@@ -110,7 +110,6 @@ lazy val metalsRunner = project
       ImageName(namespace = Some(dockerOrg), repository = "scastie-metals-runner", tag = Some(gitHashNow)),
       ImageName(namespace = Some(dockerOrg), repository = "scastie-metals-runner", tag = Some("latest"))
     ),
-    dockerUpdateLatest := true,
     executableScriptName := "server",
     docker / dockerfile := Def
       .task {
@@ -162,7 +161,6 @@ lazy val sbtRunner = project
       ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some(gitHashNow)),
       ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some("latest")),
     ),
-    dockerUpdateLatest := true,
     docker / buildOptions := (docker / buildOptions).value.copy(additionalArguments = List("--add-host", "jenkins.scala-sbt.org:127.0.0.1")),
     docker / dockerfile := Def
       .task {
