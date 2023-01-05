@@ -28,12 +28,14 @@ object ServerMain {
       else args.head.toInt
 
     val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
-    println("akka tcp config")
-    println(config2.getString("hostname"))
-    println(config2.getInt("port"))
+    logger.info("akka tcp config")
+    logger.info(config2.getString("hostname"))
+    logger.info(config2.getInt("port").toString)
 
     val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
     val production = config.getBoolean("production")
+
+    logger.info(s"Production: $production")
 
     if (production) {
       ScastieFileUtil.writeRunningPid("RUNNING_PID")
