@@ -75,7 +75,7 @@ object Deployment {
     }
 }
 
-trait DeploymentType
+sealed trait DeploymentType
 case object Local extends DeploymentType
 case object Staging extends DeploymentType
 case object Production extends DeploymentType

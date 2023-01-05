@@ -29,8 +29,8 @@ function printSbtTask(task) {
 }
 
 const linkOutputDir = isDev()
-  ? printSbtTask("fastLinkOutputDir")
-  : printSbtTask("fullLinkOutputDir");
+  ? printSbtTask("client / fastLinkJSOutput")
+  : printSbtTask("client / fullLinkJSOutput");
 
 
 const root = path.resolve('client/src/main/resources', (isDev() ? 'dev' : 'prod'))
