@@ -107,11 +107,8 @@ lazy val metalsRunner = project
   .settings(
     fork := true, // we need to fork it, as it is dynamically loading classes, and they persist in the sbt shell instance
     docker / imageNames := Seq(
-      ImageName(
-        namespace = Some(dockerOrg),
-        repository = "scastie-metals-runner",
-        tag = Some(gitHashNow)
-      ),
+      ImageName(namespace = Some(dockerOrg), repository = "scastie-metals-runner", tag = Some(gitHashNow)),
+      ImageName(namespace = Some(dockerOrg), repository = "scastie-metals-runner", tag = Some("latest"))
     ),
     dockerUpdateLatest := true,
     executableScriptName := "server",
@@ -162,11 +159,8 @@ lazy val sbtRunner = project
       "org.scalameta" %% "scalafmt-core" % "3.5.8"
     ),
     docker / imageNames := Seq(
-      ImageName(
-        namespace = Some(dockerOrg),
-        repository = "scastie-sbt-runner",
-        tag = Some(gitHashNow)
-      )
+      ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some(gitHashNow)),
+      ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some("latest")),
     ),
     dockerUpdateLatest := true,
     docker / buildOptions := (docker / buildOptions).value.copy(additionalArguments = List("--add-host", "jenkins.scala-sbt.org:127.0.0.1")),

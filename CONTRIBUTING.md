@@ -141,13 +141,21 @@ The whole deployment process is done semi-automatically via SBT task.
 
 ```
 ssh scastie@alaska.epfl.ch
-ssh scastie@scastie.scala-lang.org
 ssh scastie@scastie-sbt.scala-lang.org
 docker login
 cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
 nix-shell -v
 sbt
 ```
+
+## Publishing images
+To deploy new version of scastie, you need to first build and push docker images.
+In order to do it, you should run `publishContainers`.
+You should do it only when you're sure that containers are working as intended.
+
+Using this task automatically replaces `latest` image on the docker repository.
+
+## Deployment
 
 Scastie offers multiple deployment configurations with following instructions for each of them.
 
@@ -158,17 +166,60 @@ local counterparts. In such situation you should follow the instructions from th
 Every IP which is put into the configuration should be double-checked. If you have any doubts if they are correct, please
 contact one of the maintainers.
 
-## Production
+### Production
 
 Scastie production environment is used for internal deployment. Its configuration is present at `./deployment/production.conf`.
-Start the production deployment with the `deploy` sbt task.
 
-## Staging
+<details>
+  <summary>Instructions</summary>
+
+```
+ssh scastie@alaska.epfl.ch
+ssh scastie@scastie-sbt.scala-lang.org
+docker login
+cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
+nix-shell -v
+sbt
+```
+
+In case docker images are not published e.g. when staging for the current version is not deployed,
+it must be done before proceeding with the production deployment. It is done by running:
+
+```
+sbt> publishContainers
+```
+
+Then deployment can be started by running `deploy` sbt task.
+
+```
+sbt> deploy
+```
+
+</details>
+
+### Staging
 
 Scastie also has a staging environment. The deployment can be done by running the task `deployStaging`.
 It will do normal deployment, but with Staging environment configuration file located at: `./deployment/staging.conf`
 
-## Dry run
+<details>
+  <summary>Instructions</summary>
+
+```
+ssh scastie@alaska.epfl.ch
+ssh scastie@scastie-sbt.scala-lang.org
+docker login
+cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
+nix-shell -v
+sbt
+
+sbt> publishContainers
+sbt> deployStaging
+```
+
+</details>
+
+### Dry run
 
 Scastie deployment process generates shell scripts responsible for proper remote deployment.
 If in any case you want to check the scripts without running them, it can be done by running
