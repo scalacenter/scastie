@@ -3,27 +3,32 @@ package client
 package components
 
 import japgolly.scalajs.react._
+
 import vdom.all._
 
 final case class WorksheetButton(
-  hasWorksheetMode: Boolean,
-  isWorksheetMode: Boolean,
-  toggleWorksheetMode: Reusable[Callback],
-  view: View
+    hasWorksheetMode: Boolean,
+    isWorksheetMode: Boolean,
+    toggleWorksheetMode: Reusable[Callback],
+    view: View
 ) {
   @inline def render: VdomElement = WorksheetButton.component(this)
 }
 
 object WorksheetButton {
 
-  implicit val reusability: Reusability[WorksheetButton] = Reusability.derive[WorksheetButton]
+  implicit val reusability: Reusability[WorksheetButton] =
+    Reusability.derive[WorksheetButton]
 
   private def render(props: WorksheetButton): VdomElement = {
     val isWorksheetModeSelected =
       if (props.isWorksheetMode)
-        if (props.view != View.Editor) TagMod(cls := "enabled alpha")
-        else TagMod(cls                           := "enabled")
-      else EmptyVdom
+        if (props.view != View.Editor)
+          TagMod(cls := "enabled alpha")
+        else
+          TagMod(cls := "enabled")
+      else
+        EmptyVdom
 
     val isWorksheetModeToggleLabel =
       if (props.isWorksheetMode) "OFF"
@@ -35,7 +40,7 @@ object WorksheetButton {
                 else "This configuration does not support Worksheet mode"),
       isWorksheetModeSelected,
       role := "button",
-      cls  := "btn editor",
+      cls := "btn editor",
       onClick --> props.toggleWorksheetMode
     )(
       i(cls := "fa fa-calendar"),
@@ -44,10 +49,10 @@ object WorksheetButton {
     )
   }
 
-  private val component = ScalaComponent
-    .builder[WorksheetButton]("WorksheetButton")
-    .render_P(render)
-    .configure(Reusability.shouldComponentUpdate)
-    .build
-
+  private val component =
+    ScalaComponent
+      .builder[WorksheetButton]("WorksheetButton")
+      .render_P(render)
+      .configure(Reusability.shouldComponentUpdate)
+      .build
 }

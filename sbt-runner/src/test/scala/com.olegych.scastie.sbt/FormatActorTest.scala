@@ -2,8 +2,8 @@ package com.olegych.scastie.sbt
 
 import com.olegych.scastie.api.ScalaTarget
 import com.olegych.scastie.sbt.FormatActor
-import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.Assertions._
+import org.scalatest.funsuite.AnyFunSuite
 
 class FormatActorTest extends AnyFunSuite {
   test("format should accept scala 2 code") {
@@ -19,7 +19,7 @@ class FormatActorTest extends AnyFunSuite {
   }
 
   test("format should accept scala 2 worksheets") {
-    val code   = "val x:Int=41+1"
+    val code = "val x:Int=41+1"
     val output = "val x: Int = 41 + 1\n"
 
     assert(ScalaTarget.Jvm.default.hasWorksheetMode)
@@ -39,7 +39,7 @@ class FormatActorTest extends AnyFunSuite {
   }
 
   test("format should accept scala 3 worksheets") {
-    val code   = "val x:Int=41+1"
+    val code = "val x:Int=41+1"
     val output = "val x: Int = 41 + 1\n"
 
     assert(ScalaTarget.Scala3.default.hasWorksheetMode)

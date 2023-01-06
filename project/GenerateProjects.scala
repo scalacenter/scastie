@@ -17,7 +17,7 @@ class GenerateProjects(sbtTargetDir: Path) {
     )
 
     def scala(version: String): Inputs = defaultWithMain.copy(
-      target = ScalaTarget.Jvm(version)
+      target = ScalaTarget.Jvm(version),
     )
 
     val scala212 = scala(BuildInfo.latest212)
@@ -29,7 +29,7 @@ class GenerateProjects(sbtTargetDir: Path) {
 
     val scalaJs = Inputs.default.copy(
       code = """@_root_.scala.scalajs.js.annotation.JSExportTopLevel("ScastiePlaygroundMain") class Test""".stripMargin,
-      target = ScalaTarget.Js.default
+      target = ScalaTarget.Js.default,
     )
 
     List(
@@ -37,22 +37,24 @@ class GenerateProjects(sbtTargetDir: Path) {
       (scala213, "scala213"),
       (dotty, "dotty"),
       (scalaJs, "scalaJs")
-    ).map { case (inputs, name) =>
-      new GeneratedProject(
-        inputs,
-        projectTarget.resolve(name)
-      )
+    ).map {
+      case (inputs, name) =>
+        new GeneratedProject(
+          inputs,
+          projectTarget.resolve(name)
+        )
     }
   }
 
-  def generateSbtProjects(): Unit = projects.foreach(_.generateSbtProject)
+  def generateSbtProjects(): Unit =
+    projects.foreach(_.generateSbtProject)
 }
 
 class GeneratedProject(inputs: Inputs, sbtDir: Path) {
-  private val buildFile  = sbtDir.resolve("build.sbt")
+  private val buildFile = sbtDir.resolve("build.sbt")
   private val projectDir = sbtDir.resolve("project")
   private val pluginFile = projectDir.resolve("plugins.sbt")
-  private val codeFile   = sbtDir.resolve("src/main/scala/main.scala")
+  private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
 
   def generateSbtProject(): Unit = {
     Files.createDirectories(projectDir)
@@ -74,5 +76,4 @@ class GeneratedProject(inputs: Inputs, sbtDir: Path) {
 
     s"""cd $dest/$dir && sbt "${inputs.target.sbtRunCommand(true)}""""
   }
-
 }
