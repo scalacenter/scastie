@@ -1,26 +1,24 @@
 package com.olegych.scastie.web.routes
 
-import com.olegych.scastie.api._
-import com.olegych.scastie.web.oauth2._
-
-import com.olegych.scastie.balancer._
-
-import akka.util.Timeout
-import akka.actor.{ActorRef, ActorSystem}
-
-import akka.http.scaladsl.model.StatusCodes.Created
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.Directives._
-
-import akka.pattern.ask
-
 import scala.concurrent.duration.DurationInt
+
+import akka.actor.{ActorRef, ActorSystem}
+import akka.http.scaladsl.model.StatusCodes.Created
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import akka.pattern.ask
+import akka.util.Timeout
+import com.olegych.scastie.api._
+import com.olegych.scastie.balancer._
+import com.olegych.scastie.web.oauth2._
 
 // temporary route for the scala-lang frontpage
 class ScalaLangRoutes(
-    dispatchActor: ActorRef,
-    userDirectives: UserDirectives
-)(implicit system: ActorSystem) {
+  dispatchActor: ActorRef,
+  userDirectives: UserDirectives
+)(
+  implicit system: ActorSystem
+) {
   import system.dispatcher
   import userDirectives.optionalLogin
 
