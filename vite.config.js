@@ -1,6 +1,6 @@
 import { spawnSync } from "child_process";
 import path from "path";
-import { defineConfig } from "vite";
+import { defineConfig, splitVendorChunkPlugin } from "vite";
 
 function isDev() {
   return process.env.NODE_ENV !== "production";
@@ -41,9 +41,14 @@ const embeddedOptions = {
   },
   output: {
     entryFileNames: "[name].js",
-    assetFileNames: "assets/[name].[ext]",
-    format: "es"
+    assetFileNames: "assets/[name].[ext]"
   }
+}
+
+const embeddedLibrary = {
+  entry: path.resolve(root, 'embedded.js'),
+  name: "scastie",
+  formats: ['umd'],
 }
 
 const websiteOptions = {
@@ -94,8 +99,13 @@ const proxy = {
 }
 
 export default defineConfig({
+  define: {
+    'process.env.NODE_ENV': `"${process.env.NODE_ENV}"`,
+    'process.env.MODE': `"${process.env.MODE}"`
+  },
   root: root,
   base: isDev() ? '' : '/public/',
+  plugins: [splitVendorChunkPlugin()],
   resolve: {
     alias: [
       {
@@ -112,6 +122,9 @@ export default defineConfig({
     outDir: path.resolve(__dirname, 'client', 'dist', 'public'),
     rollupOptions: emitEmbedded() ? embeddedOptions : websiteOptions,
     emptyOutDir: !emitEmbedded(),
+    // Embedded is used as a library, in order to support current scastie embedded users.
+    // It outputs 'umd' module which allows to use <script> tag without specifying its type to "module"
+    lib: emitEmbedded() ? embeddedLibrary : null,
   },
   css: {
     devSourcemap: true,

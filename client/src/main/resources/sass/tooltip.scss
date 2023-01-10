@@ -4,6 +4,7 @@
 @mixin tooltip($class) {
   .cm-tooltip {
     .cm-completionInfo, &-hover {
+      font-family: $font-family;
       font-size: 14px;
       min-width: 400px;
       max-width: 500px;
@@ -57,7 +58,6 @@
       cursor: default;
       text-decoration: none;
       color: $snippets-line-color
-
     }
   }
 }
