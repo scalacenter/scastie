@@ -36,13 +36,16 @@ object SimpleEditor {
         lineNumbers(),
         OnChangeHandler(props.onChange),
       )
-      val editor = new EditorView(new EditorViewConfig {
-        state = EditorState.create(new EditorStateConfig {
-          doc = props.value
-          extensions = (if (props.readOnly) readOnlyExtensions else editableExtensions) ++ basicExtensions
-        })
-        parent = divRef
-      })
+      val editorStateConfig = EditorStateConfig()
+        .setDoc(props.value)
+        .setExtensions {
+          (if (props.readOnly) readOnlyExtensions else editableExtensions) ++ basicExtensions
+        }
+
+      val editor = new EditorView(EditorViewConfig()
+        .setState(EditorState.create(editorStateConfig))
+        .setParent(divRef)
+      )
 
       editorView.setState(editor)
     })

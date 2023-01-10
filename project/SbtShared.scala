@@ -111,7 +111,7 @@ object SbtShared {
   lazy val baseJsSettings = Seq(
     test := {},
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "2.2.0",
+      "org.scala-js" %%% "scalajs-dom" % "2.3.0",
       "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0" cross(CrossVersion.for3Use2_13),
     )
   )

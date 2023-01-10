@@ -55,42 +55,45 @@ object CodeEditor {
 
   private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback =
     ref.foreachCB(divRef => {
-      val editor = new EditorView(new EditorViewConfig {
-        state = EditorState.create(new EditorStateConfig {
-          doc = props.value
-          extensions = js.Array[Any](
-            lineNumbers(),
-            highlightActiveLineGutter(),
-            highlightSpecialChars(),
-            history(),
-            drawSelection(),
-            dropCursor(),
-            EditorState.allowMultipleSelections.of(true),
-            indentOnInput(),
-            bracketMatching(),
-            closeBrackets(),
-            rectangularSelection(),
-            crosshairCursor(),
-            highlightActiveLine(),
-            highlightSelectionMatches(),
-            keymap.of(closeBracketsKeymap ++ defaultKeymap ++ historyKeymap ++ foldKeymap ++ completionKeymap ++ lintKeymap ++ searchKeymap),
-            StateField
-              .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
-              .extension,
-            DecorationProvider(props),
-            EditorState.tabSize.of(2),
-            Prec.highest(EditorKeymaps.keymapping(props)),
-            InteractiveProvider.interactive.of(
-              InteractiveProvider(props).extension
-            ),
-            mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
-            SyntaxHighlightingTheme.highlightingTheme,
-            lintGutter(),
-            OnChangeHandler(props.codeChange),
-          )
-        })
-        parent = divRef
-      })
+      val extensions = js.Array[Any](
+        lineNumbers(),
+        highlightActiveLineGutter(),
+        highlightSpecialChars(),
+        history(),
+        drawSelection(),
+        dropCursor(),
+        EditorState.allowMultipleSelections.of(true),
+        indentOnInput(),
+        bracketMatching(),
+        closeBrackets(),
+        rectangularSelection(),
+        crosshairCursor(),
+        highlightActiveLine(),
+        highlightSelectionMatches(),
+        keymap.of(closeBracketsKeymap ++ defaultKeymap ++ historyKeymap ++ foldKeymap ++ completionKeymap ++ lintKeymap ++ searchKeymap),
+        StateField
+          .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
+          .extension,
+        DecorationProvider(props),
+        EditorState.tabSize.of(2),
+        Prec.highest(EditorKeymaps.keymapping(props)),
+        InteractiveProvider.interactive.of(
+          InteractiveProvider(props).extension
+        ),
+        mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
+        SyntaxHighlightingTheme.highlightingTheme,
+        lintGutter(),
+        OnChangeHandler(props.codeChange),
+      )
+
+      val editorStateConfig = EditorStateConfig()
+        .setDoc(props.value)
+        .setExtensions(extensions)
+
+      val editor = new EditorView(EditorViewConfig()
+        .setState(EditorState.create(editorStateConfig))
+        .setParent(divRef)
+      )
 
       editorView.setState(editor)
     })

@@ -22,10 +22,10 @@ object FormatActor {
         else NamedDialect.scala213
 
       val runner = {
-        val tmp = ScalafmtRunner(dialect = NamedDialect(dialect))
         if (isWorksheetMode && scalaTarget.hasWorksheetMode)
-          tmp.forSbt
-        else tmp
+          ScalafmtRunner.sbt
+        else
+          ScalafmtRunner.default
       }
       ScalafmtConfig.default.copy(runner = runner)
     }
