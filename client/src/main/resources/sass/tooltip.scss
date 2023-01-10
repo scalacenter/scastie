@@ -2,8 +2,12 @@
 @import "highlight.js/styles/base16/solarized-dark.css";
 
 @mixin tooltip($class) {
+  .cm-tooltip-lint {
+    font-size: 14px;
+  }
+
   .cm-tooltip {
-    .cm-completionInfo, &-hover {
+    .cm-completionInfo, &-hover > &:not(.cm-tooltip-lint) {
       font-family: $font-family;
       font-size: 14px;
       min-width: 400px;
@@ -19,7 +23,7 @@
     }
 
     @media only screen and (max-width: #{$mobile-width}) {
-      min-width: 95%; 
+      min-width: 95%;
     }
 
     .cm-completionInfo-right-narrow {
@@ -41,10 +45,12 @@
     strong {
       font-weight: 600;
     }
+
     p {
       line-height: 0.90em;
       margin: 0.5em 0;
     }
+
     code:not(.language-scala){
       padding: 0 0.4em;
       background-color: $code-background-color;
