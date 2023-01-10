@@ -1,6 +1,4 @@
 ![Github Build Status](https://github.com/scalacenter/scastie/workflows/Build%20Status/badge.svg)
-[![Travis Build Status](https://travis-ci.com/scalacenter/scastie.svg?branch=master)](https://travis-ci.com/scalacenter/scastie)
-
 [![Join the chat](https://badges.gitter.im/scalacenter/scastie.svg)](
   https://gitter.im/scalacenter/scastie
 )
@@ -8,7 +6,7 @@
 # [Scastie](https://scastie.scala-lang.org)
 
 <a href="https://scastie.scala-lang.org/OlegYch/fpDs19tOQYiqILyVmkNC5g/3">
-  <img alt="Demo" src="https://raw.githubusercontent.com/scalacenter/scastie/master/demo/demo.png" style="width: 400px;">
+  <img alt="Demo" src="https://raw.githubusercontent.com/scalacenter/scastie/main/demo/demo.png" style="width: 400px;">
 </a>
 
 ## What is Scastie?
