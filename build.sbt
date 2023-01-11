@@ -127,7 +127,7 @@ lazy val metalsRunner = project
       "org.http4s"          %% "http4s-ember-server" % "0.23.16",
       "org.http4s"          %% "http4s-ember-client" % "0.23.16",
       "org.http4s"          %% "http4s-dsl"          % "0.23.16",
-      "org.http4s"          %% "http4s-circe"        % "0.23.16",
+      "org.http4s"          %% "http4s-circe"        % "0.23.17",
       "io.circe"            %% "circe-generic"       % "0.14.3",
       "org.scalameta"       %% "munit"               % "0.7.29" % Test,
       "com.evolutiongaming" %% "scache"              % "4.2.3",
