@@ -47,14 +47,14 @@ object MongoSnippet {
 }
 
 class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer {
+  protected implicit val ec: ExecutionContext = _ec
+
   private val config = ConfigFactory.load().getConfig("scastie.mongodb")
   private val user = config.getString("user")
   private val password = config.getString("password")
   private val databaseName = config.getString("database")
   private val host = config.getString("host")
   private val port = config.getInt("port")
-
-  protected implicit val ec: ExecutionContext = _ec
 
   private val mongoUri = s"mongodb://$user:$password@$host:$port/$databaseName"
 
