@@ -3,6 +3,8 @@ package com.olegych.scastie.balancer
 import java.nio.file.Paths
 import java.time.Instant
 import java.util.concurrent.Executors
+import scala.concurrent._
+import scala.concurrent.duration._
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, OneForOneStrategy, SupervisorStrategy}
 import akka.event
@@ -14,9 +16,6 @@ import com.olegych.scastie.api._
 import com.olegych.scastie.storage._
 import com.olegych.scastie.util._
 import com.typesafe.config.ConfigFactory
-
-import scala.concurrent._
-import scala.concurrent.duration._
 
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
@@ -47,27 +46,25 @@ case object Ping
 
 class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 // extends PersistentActor with AtLeastOnceDelivery
-    extends Actor
-    with ActorLogging {
+  extends Actor
+  with ActorLogging {
 
-  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {
-    case e =>
-      log.error(e, "failure")
-      SupervisorStrategy.resume
+  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() { case e =>
+    log.error(e, "failure")
+    SupervisorStrategy.resume
   }
 
-  private val config =
-    ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
-  private val host = config.getString("remote-hostname")
+  private val config        = ConfigFactory.load().getConfig("com.olegych.scastie.balancer")
+  private val host          = config.getString("remote-hostname")
   private val sbtPortsStart = config.getInt("remote-sbt-ports-start")
-  private val sbtPortsSize = config.getInt("remote-sbt-ports-size")
+  private val sbtPortsSize  = config.getInt("remote-sbt-ports-size")
 
   private val sbtPorts = (0 until sbtPortsSize).map(sbtPortsStart + _)
 
   private def connectRunner(
-      runnerName: String,
-      actorName: String,
-      host: String
+    runnerName: String,
+    actorName: String,
+    host: String
   )(port: Int): ((String, Int), ActorSelection) = {
     val path = s"akka://$runnerName@$host:$port/user/$actorName"
     log.info(s"Connecting to ${path}")
@@ -76,14 +73,12 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     (host, port) -> selection
   }
 
-  private var remoteSbtSelections =
-    sbtPorts.map(connectRunner("SbtRunner", "SbtActor", host)).toMap
+  private var remoteSbtSelections = sbtPorts.map(connectRunner("SbtRunner", "SbtActor", host)).toMap
 
   private var sbtLoadBalancer: SbtBalancer = {
-    val sbtServers = remoteSbtSelections.to(Vector).map {
-      case (_, ref) =>
-        val state: SbtState = SbtState.Unknown
-        Server(ref, Inputs.default, state)
+    val sbtServers = remoteSbtSelections.to(Vector).map { case (_, ref) =>
+      val state: SbtState = SbtState.Unknown
+      Server(ref, Inputs.default, state)
     }
 
     LoadBalancer(servers = sbtServers)
@@ -108,23 +103,21 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   val containerType = config.getString("snippets-container")
 
-  private val container =
-    containerType match {
-      case "memory" => new InMemorySnippetsContainer
-      case "mongo"  => new MongoDBSnippetsContainer(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
-      case "files" =>
-        new FilesSnippetsContainer(
-          Paths.get(config.getString("snippets-dir")),
-          Paths.get(config.getString("old-snippets-dir"))
-        )(
-          ExecutionContext.fromExecutorService(
-            Executors.newCachedThreadPool()
-          )
+  private val container = containerType match {
+    case "memory" => new InMemorySnippetsContainer
+    case "mongo"  => new MongoDBSnippetsContainer(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
+    case "files" => new FilesSnippetsContainer(
+        Paths.get(config.getString("snippets-dir")),
+        Paths.get(config.getString("old-snippets-dir"))
+      )(
+        ExecutionContext.fromExecutorService(
+          Executors.newCachedThreadPool()
         )
-      case _ =>
-        println("fallback to in-memory container")
-        new InMemorySnippetsContainer
-    }
+      )
+    case _ =>
+      println("fallback to in-memory container")
+      new InMemorySnippetsContainer
+  }
 
   private def updateSbtBalancer(newSbtBalancer: SbtBalancer): Unit = {
     if (sbtLoadBalancer != newSbtBalancer) {
@@ -134,11 +127,12 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     ()
   }
 
-  //can be called from future
+  // can be called from future
   private def run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId): Unit = {
     self ! Run(inputsWithIpAndUser, snippetId)
   }
-  //cannot be called from future
+
+  // cannot be called from future
   private def run0(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId): Unit = {
 
     val InputsWithIpAndUser(inputs, UserTrace(ip, user)) = inputsWithIpAndUser
@@ -160,8 +154,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   private def logError[T](f: Future[T]) = {
-    f.recover {
-      case e => log.error(e, "failed future")
+    f.recover { case e =>
+      log.error(e, "failed future")
     }
   }
 
@@ -176,7 +170,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case x @ RunSnippet(inputsWithIpAndUser) =>
       log.info(s"starting ${x}")
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
-      val sender = this.sender()
+      val sender                                          = this.sender()
       logError(container.create(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
         sender ! snippetId
         run(inputsWithIpAndUser, snippetId)
@@ -185,7 +179,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case SaveSnippet(inputsWithIpAndUser) =>
       val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
-      val sender = this.sender()
+      val sender                                          = this.sender()
       logError(container.save(inputs, user.map(u => UserLogin(u.login))).map { snippetId =>
         sender ! snippetId
         run(inputsWithIpAndUser, snippetId)
@@ -195,15 +189,12 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       val sender = this.sender()
       logError(container.update(snippetId, inputsWithIpAndUser.inputs).map { updatedSnippetId =>
         sender ! updatedSnippetId
-        updatedSnippetId.foreach(
-          snippetIdU => run(inputsWithIpAndUser, snippetIdU)
-        )
+        updatedSnippetId.foreach(snippetIdU => run(inputsWithIpAndUser, snippetIdU))
       })
 
     case ForkSnippet(snippetId, inputsWithIpAndUser) =>
-      val InputsWithIpAndUser(inputs, UserTrace(_, user)) =
-        inputsWithIpAndUser
-      val sender = this.sender()
+      val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
+      val sender                                          = this.sender()
       logError(
         container
           .fork(snippetId, inputs, user.map(u => UserLogin(u.login)))
@@ -253,38 +244,33 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       logError(
         container
           .appendOutput(progress)
-          .recover {
-            case e =>
-              log.error(e, s"failed to save $progress from $sender")
-              e
+          .recover { case e =>
+            log.error(e, s"failed to save $progress from $sender")
+            e
           }
           .map(sender ! _)
       )
 
-    case done: Done =>
-      done.progress.snippetId.foreach { sid =>
+    case done: Done => done.progress.snippetId.foreach { sid =>
         val newBalancer = sbtLoadBalancer.done(TaskId(sid))
         newBalancer match {
-          case Some(newBalancer) =>
-            updateSbtBalancer(newBalancer)
+          case Some(newBalancer) => updateSbtBalancer(newBalancer)
           case None =>
             if (done.retries >= 0) {
               system.scheduler.scheduleOnce(1.second) {
                 self ! done.copy(retries = done.retries - 1)
               }
             } else {
-              val taskIds =
-                sbtLoadBalancer.servers.flatMap(_.mailbox.map(_.taskId))
+              val taskIds = sbtLoadBalancer.servers.flatMap(_.mailbox.map(_.taskId))
               log.error(s"stopped retrying to update ${taskIds} with ${done}")
             }
         }
       }
 
-    case event: DisassociatedEvent =>
-      for {
+    case event: DisassociatedEvent => for {
         host <- event.remoteAddress.host
         port <- event.remoteAddress.port
-        ref <- remoteSbtSelections.get((host, port))
+        ref  <- remoteSbtSelections.get((host, port))
       } {
         log.warning("removing disconnected: {}", ref)
         val previousRemoteSbtSelections = remoteSbtSelections
@@ -294,11 +280,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         }
       }
 
-    case SbtUp =>
-      log.info("SbtUp")
+    case SbtUp => log.info("SbtUp")
 
-    case Replay(SbtRun(snippetId, inputs, progressActor, snippetActor)) =>
-      log.info("Replay: " + inputs.code)
+    case Replay(SbtRun(snippetId, inputs, progressActor, snippetActor)) => log.info("Replay: " + inputs.code)
 
     case SbtRunnerConnect(runnerHostname, runnerAkkaPort) =>
       if (!remoteSbtSelections.contains((runnerHostname, runnerAkkaPort))) {
@@ -320,14 +304,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
         )
       }
 
-    case ReceiveStatus(requester) =>
-      sender() ! LoadBalancerInfo(sbtLoadBalancer, requester)
+    case ReceiveStatus(requester) => sender() ! LoadBalancerInfo(sbtLoadBalancer, requester)
 
-    case statusProgress: StatusProgress =>
-      statusActor ! statusProgress
+    case statusProgress: StatusProgress => statusActor ! statusProgress
 
-    case run: Run =>
-      run0(run.inputsWithIpAndUser, run.snippetId)
+    case run: Run => run0(run.inputsWithIpAndUser, run.snippetId)
     case ping: Ping.type =>
       implicit val timeout: Timeout = Timeout(10.seconds)
       logError(Future.sequence {
@@ -336,10 +317,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
             .map { _ =>
               log.info(s"pinged ${s.ref} server")
             }
-            .recover {
-              case e => log.error(e, s"couldn't ping ${s} server")
+            .recover { case e =>
+              log.error(e, s"couldn't ping ${s} server")
             }
         }
       })
   }
+
 }
