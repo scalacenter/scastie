@@ -28,12 +28,16 @@ object ServerMain {
       else args.head.toInt
 
     val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
-    println("akka tcp config")
-    println(config2.getString("hostname"))
-    println(config2.getInt("port"))
+    logger.info("akka tcp config")
+    logger.info(config2.getString("hostname"))
+    logger.info(config2.getInt("port").toString)
 
-    val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
+    val config = ConfigFactory.load().getConfig("com.olegych.scastie")
     val production = config.getBoolean("production")
+    val hostname = config.getString("web.hostname")
+
+    logger.info(s"Production: $production")
+    logger.info(s"Server hostname: $hostname")
 
     if (production) {
       ScastieFileUtil.writeRunningPid("RUNNING_PID")
@@ -81,7 +85,7 @@ object ServerMain {
       cors()(
         concat(
           new ScalaLangRoutes(dispatchActor, userDirectives).routes,
-          new FrontPageRoutes(dispatchActor, production).routes
+          new FrontPageRoutes(dispatchActor, production, hostname).routes
         )
       )
     )

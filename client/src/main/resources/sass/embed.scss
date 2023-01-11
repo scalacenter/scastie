@@ -1,38 +1,43 @@
 @import "shared";
+@import "reset";
 
 .scastie {
-  .embedded-menu {
+  @include reset();
+
+  .console-container {
+    .run-button {
+      margin-right: auto;
+      text-align: left;
+
+      background: #54A1CC;
+
+      line-height: 25px;
+      min-width: 50px;
+
+      padding: 0px 16px 0px 8px;
+      margin: 4px 0px 4px 4px;
+      border-radius: 15px;
+    }
+
+    .run-button:hover {
+      background-color: #267CAC
+    }
+  }
+
+
+  .embedded-overlay {
     position: absolute;
     top: 0;
     right: 0;
     z-index: 3;
 
-    margin: 20px;
-
     list-style: none;
 
-    & > * {
-      list-style: none;
-      width: 140px;
+    margin: 10px;
 
-      cursor: pointer;
-      
-      &.disabled {
-        cursor: not-allowed;
-      }
-
-      margin: 10px;
-      padding: 10px;
-      font-size: 20px;
-    }
-
-    .logo {
-      img {
-        display: inline-block;
-        width: 20px;
-        margin: 0 5px 0 5px;
-        vertical-align: middle;
-      }
+    .fa {
+      font-size: 1.5em;
+      padding: 5px;
     }
   }
 }
@@ -40,19 +45,21 @@
 @mixin embeddedMenuStyle($class) {
   .scastie {
     .app.#{$class} {
-      .embedded-menu {
+      .embedded-overlay {
         & > * {
-          background-color: $sidebar-background;
           color: $editor-button-color;
-
-          &.disabled {
-            color: grey;
-          }
+          background-color: $embedded-overlay-button-background;
+          border-radius: 10px;
+        }
+        & > *:hover {
+          background-color: $embedded-overlay-button-background-hover;
         }
       }
     }
   }
 }
 
+
 @import "dark-embedded";
 @import "light-embedded";
+

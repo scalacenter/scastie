@@ -1,2 +1,6 @@
 @import "light";
+
+$embedded-overlay-button-background: #dbdbdb;
+$embedded-overlay-button-background-hover: #b1b1b1;
+
 @include embeddedMenuStyle('light');

@@ -60,7 +60,7 @@
         }
       }
     }
-    $console-handle-height: 33px;
+    $console-handle-height: 38px;
 
     .content {
       height: 100%;
@@ -170,6 +170,7 @@
 
       .console-container {
         $handler-height: 6px;
+        font-family: $code-font-family;
 
         &.console-open {
           .output-console {
@@ -179,17 +180,22 @@
 
         .switcher-show, .switcher-hide {
           text-align: right;
+          align-items: center;
           line-height: $console-handle-height;
           padding-right: 20px;
           cursor: pointer;
         }
 
         .console {
-          font-family: $code-font-family;
-          height: 100%;
           .handler {
             height: $handler-height;
           }
+        }
+
+        .console-label {
+          display: flex;
+          align-items: center;
+          margin-left: auto;
         }
 
         .output-console {

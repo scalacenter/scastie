@@ -22,8 +22,8 @@ object SbtShared {
     val latest212 = "2.12.17"
     val latest213 = "2.13.10"
     val old3 = "3.0.2"
-    val stable3 = "3.2.0"
-    val latest3 = "3.2.1-RC2"
+    val stable3 = "3.2.1"
+    val latest3 = "3.2.2-RC2"
     val js = latest213
     val sbt = latest212
     val jvm = latest213
@@ -32,7 +32,7 @@ object SbtShared {
   }
 
   object ScalaJSVersions {
-    val current = "1.11.0"
+    val current = "1.12.0"
   }
 
   val runtimeProjectName = "runtime-scala"
@@ -111,7 +111,7 @@ object SbtShared {
   lazy val baseJsSettings = Seq(
     test := {},
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "2.2.0",
+      "org.scala-js" %%% "scalajs-dom" % "2.3.0",
       "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0" cross(CrossVersion.for3Use2_13),
     )
   )

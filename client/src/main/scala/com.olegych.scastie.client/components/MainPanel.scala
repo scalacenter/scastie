@@ -27,15 +27,11 @@ object MainPanel {
     val isStatusOk = state.status.isSbtOk
 
     val embeddedMenu =
-      EmbeddedMenu(
-        isRunning = state.isRunning,
-        inputs = state.inputs,
+      EmbeddedOverlay(
         inputsHasChanged = state.inputsHasChanged,
         embeddedSnippetId = props.embeddedSnippetId,
         serverUrl = props.serverUrl,
-        run = backend.run,
         save = backend.saveBlocking,
-        setView = backend.setViewReused
       ).render.when(props.isEmbedded)
 
     val consoleCssForEditor =
@@ -91,7 +87,10 @@ object MainPanel {
       Console(
         isOpen = state.consoleState.consoleIsOpen,
         isRunning = state.isRunning,
+        isEmbedded = props.isEmbedded,
         consoleOutputs = state.outputs.consoleOutputs,
+        run = backend.run,
+        setView = backend.setViewReused,
         close = backend.closeConsole,
         open = backend.openConsole
       ).render

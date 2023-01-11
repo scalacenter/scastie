@@ -193,7 +193,9 @@ object Scastie {
         state.snippetState.scalaJsContent.foreach { content =>
           println("== Loading Scala.js! ==")
           val scalaJsScriptElement = createScript(scalaJsId)
-          scalaJsScriptElement.innerHTML = content.replace("let ScastiePlaygroundMain;", "var ScastiePlaygroundMain;")
+          val fixedContent = content.replace("let ScastiePlaygroundMain;", "var ScastiePlaygroundMain;")
+          val scriptTextNode = dom.document.createTextNode(fixedContent)
+          scalaJsScriptElement.appendChild(scriptTextNode)
           runScalaJs()
         }
       }

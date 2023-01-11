@@ -1,2 +1,6 @@
 @import "dark";
+
+$embedded-overlay-button-background: $console-background;
+$embedded-overlay-button-background-hover: $selected-dropdown-background;
+
 @include embeddedMenuStyle('dark');
