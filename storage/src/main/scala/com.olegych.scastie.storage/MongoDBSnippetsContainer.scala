@@ -51,11 +51,12 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer 
   private val user = config.getString("user")
   private val password = config.getString("password")
   private val databaseName = config.getString("database")
+  private val host = config.getString("host")
   private val port = config.getInt("port")
 
   protected implicit val ec: ExecutionContext = _ec
 
-  private val mongoUri = s"mongodb://$user:$password@localhost:$port/$databaseName"
+  private val mongoUri = s"mongodb://$user:$password@$host:$port/$databaseName"
 
   // TODO: Change client logic to use provided codecs
   // MongoDB client provides its own BSON converter, but would require changes in API.
