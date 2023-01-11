@@ -46,17 +46,23 @@ object MongoSnippet {
   implicit val formatMongoSnippet: OFormat[MongoSnippet] = Json.format[MongoSnippet]
 }
 
-class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer {
+class MongoDBSnippetsContainer(_ec: ExecutionContext, ci: Boolean = false) extends SnippetsContainer {
   protected implicit val ec: ExecutionContext = _ec
 
-  private val config = ConfigFactory.load().getConfig("scastie.mongodb")
-  private val user = config.getString("user")
-  private val password = config.getString("password")
-  private val databaseName = config.getString("database")
-  private val host = config.getString("host")
-  private val port = config.getInt("port")
+  val mongoUri = {
+    if (ci)
+      s"mongodb://localhost:27017/scastie"
+    else {
+      val config = ConfigFactory.load().getConfig("scastie.mongodb")
+      val user = config.getString("user")
+      val password = config.getString("password")
+      val databaseName = config.getString("database")
+      val host = config.getString("host")
+      val port = config.getInt("port")
+      s"mongodb://$user:$password@$host:$port/$databaseName"
+    }
+  }
 
-  private val mongoUri = s"mongodb://$user:$password@$host:$port/$databaseName"
 
   // TODO: Change client logic to use provided codecs
   // MongoDB client provides its own BSON converter, but would require changes in API.

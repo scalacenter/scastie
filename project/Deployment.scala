@@ -95,7 +95,7 @@ class ScastieConfig(val configurationFile: File) {
   val balancerConfig = config.getConfig("com.olegych.scastie.balancer")
   val runnersHostname = balancerConfig.getString("remote-hostname")
   val sbtRunnersPortsStart = balancerConfig.getInt("remote-sbt-ports-start")
-  val containerType = balancerConfig.getString("snippets-container")
+  val containerType = balancerConfig.getString("snippets-storage")
 
   private val sbtRunnersPortsSize = balancerConfig.getInt("remote-sbt-ports-size")
   val sbtRunnersPortsEnd = sbtRunnersPortsStart + sbtRunnersPortsSize - 1

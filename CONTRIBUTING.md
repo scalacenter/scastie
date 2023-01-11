@@ -173,6 +173,8 @@ Scastie production environment is used for internal deployment. Its configuratio
 Production requires `mongodb-prod.conf` file to be in the same directory as `production.conf` configuration file.
 The template for this file is located at `./deployment/mongodb.template.conf`
 
+It also requires OAuth2 configuration at `oauth2-prod.conf` in the same directory as `production.conf`
+
 <details>
   <summary>Instructions</summary>
 
@@ -208,6 +210,8 @@ It will do normal deployment, but with Staging environment configuration file lo
 
 Staging requires `mongodb-staging.conf` file to be in the same directory as `staging.conf` configuration file.
 The template for this file is located at `./deployment/mongodb.template.conf`
+
+It also requires OAuth2 configuration at `oauth2-staging.conf` in the same directory as `staging.conf`
 
 <details>
   <summary>Instructions</summary>

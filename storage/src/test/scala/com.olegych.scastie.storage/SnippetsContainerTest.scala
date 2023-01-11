@@ -22,7 +22,7 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll with Opti
 
   private val testContainer: SnippetsContainer = {
     if (mongo)
-      new MongoDBSnippetsContainer(scala.concurrent.ExecutionContext.Implicits.global)
+      new MongoDBSnippetsContainer(scala.concurrent.ExecutionContext.Implicits.global, ci = true)
     else {
       new FilesSnippetsContainer(root, oldRoot)(
         Executors.newSingleThreadExecutor()
