@@ -124,7 +124,7 @@ lazy val metalsRunner = project
     libraryDependencies ++= Seq(
       "org.scalameta"        % "metals"              % "0.11.9" cross (CrossVersion.for3Use2_13),
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.19.0",
-      "org.http4s"          %% "http4s-ember-server" % "0.23.16",
+      "org.http4s"          %% "http4s-ember-server" % "0.23.17",
       "org.http4s"          %% "http4s-ember-client" % "0.23.17",
       "org.http4s"          %% "http4s-dsl"          % "0.23.17",
       "org.http4s"          %% "http4s-circe"        % "0.23.17",
