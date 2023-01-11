@@ -95,6 +95,8 @@ class ScastieConfig(val configurationFile: File) {
   val balancerConfig = config.getConfig("com.olegych.scastie.balancer")
   val runnersHostname = balancerConfig.getString("remote-hostname")
   val sbtRunnersPortsStart = balancerConfig.getInt("remote-sbt-ports-start")
+  val containerType = balancerConfig.getString("snippets-container")
+
   private val sbtRunnersPortsSize = balancerConfig.getInt("remote-sbt-ports-size")
   val sbtRunnersPortsEnd = sbtRunnersPortsStart + sbtRunnersPortsSize - 1
 }
@@ -350,12 +352,22 @@ class Deployment(
       if (!local) s"/home/${config.userName}/"
       else ""
 
+    val isMongoDB = config.containerType == "mongo"
+    val mongodbConfig = if (deploymentType == Production) "mongodb-prod.conf" else "mongodb-staging.conf"
+
     val content =
       s"""|#!/usr/bin/env bash
           |
           |whoami
           |
-          |kill -9 `cat ${baseDir}RUNNING_PID`
+          |if [ -e ${baseDir}RUNNING_PID ]; then
+          |  kill -9 `cat ${baseDir}RUNNING_PID`
+          |fi
+          |
+          |if [ ! -f ${baseDir}${mongodbConfig} ] && ${isMongoDB}; then
+          |  echo "mongodb configuration file: ${baseDir}${mongodbConfig} is missing"
+          |  exit 1
+          |fi
           |
           |rm -rf ${baseDir}server/*
           |unzip -o -d ${baseDir}server ${baseDir}$serverZipFileName
