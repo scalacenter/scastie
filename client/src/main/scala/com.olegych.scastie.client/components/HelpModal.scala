@@ -1,34 +1,37 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.client.components.editor.EditorKeymaps
 import japgolly.scalajs.react._
 import vdom.all._
+import com.olegych.scastie.client.components.editor.EditorKeymaps
 
 final case class HelpModal(isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = HelpModal.component(this)
 }
 
 object HelpModal {
-  implicit val reusability: Reusability[HelpModal] = Reusability.derive[HelpModal]
+  implicit val reusability: Reusability[HelpModal] =
+    Reusability.derive[HelpModal]
 
   private def render(props: HelpModal): VdomElement = {
-    def generateATag(url: String, text: String) = a(href := url, target := "_blank", rel := "nofollow", text)
+    def generateATag(url: String, text: String) =
+      a(href := url, target := "_blank", rel := "nofollow", text)
 
-    val scastieGithub = generateATag("https://github.com/scalacenter/scastie", "scalacenter/scastie")
+    val scastieGithub =
+      generateATag("https://github.com/scalacenter/scastie", "scalacenter/scastie")
 
     val sublime = generateATag(
       "https://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html",
       "keyboard shortcuts."
     )
 
-    val scalafmtConfiguration = generateATag(
-      "https://scalameta.org/scalafmt/docs/configuration.html#disabling-or-customizing-formatting",
-      "configuration section"
-    )
+    val scalafmtConfiguration =
+      generateATag("https://scalameta.org/scalafmt/docs/configuration.html#disabling-or-customizing-formatting", "configuration section")
 
-    val originalScastie = generateATag("https://github.com/OlegYch/scastie_old", "GitHub")
+    val originalScastie =
+      generateATag("https://github.com/OlegYch/scastie_old", "GitHub")
 
-    val gitter = generateATag("https://gitter.im/scalacenter/scastie", "Gitter")
+    val gitter =
+      generateATag("https://gitter.im/scalacenter/scastie", "Gitter")
 
     Modal(
       title = "Help about Scastie",
@@ -55,11 +58,9 @@ object HelpModal {
           "Removes all messages from the current editor instance."
         ),
         h2(s"Format (${EditorKeymaps.format.getName})"),
-        p(
-          cls := "normal",
+        p(cls := "normal",
           "The code formatting is done by scalafmt. You can configure the formatting with comments in your code. Read the ",
-          scalafmtConfiguration
-        ),
+          scalafmtConfiguration),
         h2(s"Worksheet"),
         p(
           cls := "normal",
@@ -100,7 +101,7 @@ object HelpModal {
         p(cls := "normal", "It's available on Github at ")(
           scastieGithub,
           br,
-          " License: Apache 2"
+          " License: Apache 2",
         ),
         p(
           cls := "normal",
@@ -112,10 +113,10 @@ object HelpModal {
     ).render
   }
 
-  private val component = ScalaComponent
-    .builder[HelpModal]("HelpModal")
-    .render_P(render)
-    .configure(Reusability.shouldComponentUpdate)
-    .build
-
+  private val component =
+    ScalaComponent
+      .builder[HelpModal]("HelpModal")
+      .render_P(render)
+      .configure(Reusability.shouldComponentUpdate)
+      .build
 }
