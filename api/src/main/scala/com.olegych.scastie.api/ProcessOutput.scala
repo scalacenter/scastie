@@ -3,20 +3,21 @@ package com.olegych.scastie.api
 import play.api.libs.json._
 
 trait ProcessOutputType
+
 object ProcessOutputType {
   case object StdOut extends ProcessOutputType
   case object StdErr extends ProcessOutputType
 
   implicit object ProcessOutputTypeFormat extends Format[ProcessOutputType] {
+
     def writes(processOutputType: ProcessOutputType): JsValue = {
       JsString(processOutputType.toString)
     }
 
-    private val values =
-      List(
-        StdOut,
-        StdErr
-      ).map(v => (v.toString, v)).toMap
+    private val values = List(
+      StdOut,
+      StdErr
+    ).map(v => (v.toString, v)).toMap
 
     def reads(json: JsValue): JsResult[ProcessOutputType] = {
       json match {
@@ -29,7 +30,9 @@ object ProcessOutputType {
         case _ => JsError(Seq())
       }
     }
+
   }
+
 }
 
 object ProcessOutput {
@@ -37,7 +40,7 @@ object ProcessOutput {
 }
 
 case class ProcessOutput(
-    line: String,
-    tpe: ProcessOutputType,
-    id: Option[Long]
+  line: String,
+  tpe: ProcessOutputType,
+  id: Option[Long]
 )

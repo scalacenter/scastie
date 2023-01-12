@@ -1,21 +1,27 @@
 package com.olegych.scastie.sbt
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.testkit.TestActor.AutoPilot
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import com.olegych.scastie.api._
-import com.olegych.scastie.util.SbtTask
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.funsuite.AnyFunSuiteLike
-
 import scala.concurrent.duration._
 
-class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
+import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.TestActor.AutoPilot
+import com.olegych.scastie.api._
+import com.olegych.scastie.util.SbtTask
+import org.scalatest.funsuite.AnyFunSuiteLike
+import org.scalatest.BeforeAndAfterAll
+
+class SbtActorTest()
+  extends TestKit(ActorSystem("SbtActorTest"))
+  with ImplicitSender
+  with AnyFunSuiteLike
+  with BeforeAndAfterAll {
   setAutoPilot(new AutoPilot {
+
     def run(sender: ActorRef, msg: Any): AutoPilot = {
       sender ! s"reply to $msg"
       this
     }
+
   })
   print("\u001b")
 
@@ -76,7 +82,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val message = "Hello"
     runCode(
       s"""object Main { def main(args: Array[String]): Unit = println("$message") }""",
-      allowFailure = true,
+      allowFailure = true
     ) { progress =>
       if (progress.isDone) progress.isForcedProgramMode else false
     }
@@ -115,46 +121,47 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("Scala.js support") {
-    val scalaJs =
-      Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Js.default)
+    val scalaJs = Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Js.default)
     run(scalaJs)(_.isDone)
   }
 
   test("Scala.js 3 support") {
-    val scalaJs =
-      Inputs.default.copy(code = "1 + 1",
-                          target = ScalaTarget.Js.default.copy(scalaVersion = com.olegych.scastie.buildinfo.BuildInfo.latest3))
+    val scalaJs = Inputs.default.copy(
+      code = "1 + 1",
+      target = ScalaTarget.Js.default.copy(scalaVersion = com.olegych.scastie.buildinfo.BuildInfo.latest3)
+    )
     run(scalaJs)(_.isDone)
   }
 
   test("Scala 2.10 support") {
-    val scala =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest210))
+    val scala = Inputs.default
+      .copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest210))
     run(scala)(assertUserOutput("2"))
   }
 
   test("Scala 2.11 support") {
-    val scala =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest211))
+    val scala = Inputs.default
+      .copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest211))
     run(scala)(assertUserOutput("2"))
   }
 
   test("Scala 2.12 support") {
-    val scala =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest212))
+    val scala = Inputs.default
+      .copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest212))
     run(scala)(assertUserOutput("2"))
   }
 
   test("avoid https://github.com/scala/bug/issues/8119") {
-    val scala =
-      Inputs.default.copy(code = "val n = 0; val m = List(1).par.foreach(_ => n); println(1)",
-                          target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest212))
+    val scala = Inputs.default.copy(
+      code = "val n = 0; val m = List(1).par.foreach(_ => n); println(1)",
+      target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest212)
+    )
     run(scala)(assertUserOutput("1"))
   }
 
   test("Scala 2.13 support") {
-    val scala =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest213))
+    val scala = Inputs.default
+      .copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(com.olegych.scastie.buildinfo.BuildInfo.latest213))
     run(scala)(assertUserOutput("2"))
   }
 
@@ -165,10 +172,11 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("no warnings on 2.12") {
-    val scala =
-      Inputs.default.copy(code = "println(1 + 1)",
-                          sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""",
-                          target = ScalaTarget.Jvm("2.12.10"))
+    val scala = Inputs.default.copy(
+      code = "println(1 + 1)",
+      sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""",
+      target = ScalaTarget.Jvm("2.12.10")
+    )
     run(scala)(assertUserOutput("2"))
   }
 
@@ -191,7 +199,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val message = "Hello, Scala 3 worksheet!"
     val dotty = Inputs.default.copy(
       code = s"""println("$message")""",
-      target = ScalaTarget.Scala3.default,
+      target = ScalaTarget.Scala3.default
     )
     run(dotty)(assertUserOutput("Hello, Scala 3 worksheet!"))
   }
@@ -200,7 +208,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val message = "Hello, Scala 3.0 worksheet!"
     val dotty = Inputs.default.copy(
       code = s"""println("$message")""",
-      target = ScalaTarget.Scala3("3.0.0"),
+      target = ScalaTarget.Scala3("3.0.0")
     )
     run(dotty)(assertUserOutput("Hello, Scala 3.0 worksheet!"))
   }
@@ -217,7 +225,9 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("hide Playground from types") {
-    runCode("case class A(i:Int) extends AnyVal; A(1)")(_.instrumentations.headOption.exists(_.render == Value("A(1)", "A")))
+    runCode("case class A(i:Int) extends AnyVal; A(1)")(
+      _.instrumentations.headOption.exists(_.render == Value("A(1)", "A"))
+    )
   }
 
   test("#304 null pointer") {
@@ -236,7 +246,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   def assertCompilationInfo(
-      infoAssert: Problem => Any
+    infoAssert: Problem => Any
   )(progress: SnippetProgress): Boolean = {
 
     val gotCompilationError = progress.compilationInfos.nonEmpty
@@ -269,14 +279,17 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   )
 
   private var currentId = 0
+
   private def snippetId = {
     val t = currentId
     currentId += 1
     SnippetId(t.toString, None)
   }
+
   private var firstRun = true
+
   private def run(inputs: Inputs, allowFailure: Boolean = false)(fish: SnippetProgress => Boolean): Unit = {
-    val ip = "my-ip"
+    val ip            = "my-ip"
     val progressActor = TestProbe()
 
     sbtActor ! SbtTask(snippetId, inputs, ip, None, progressActor.ref)
@@ -285,26 +298,25 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       if (firstRun) timeout + 10.second
       else timeout
 
-    progressActor.fishForMessage(totalTimeout + 100.seconds) {
-      case progress: SnippetProgress =>
-        val fishResult = fish(progress)
-        //        println(progress -> fishResult)
-        if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
-          throw new Exception(s"Fail to meet expectation at ${progress}")
-        else fishResult
+    progressActor.fishForMessage(totalTimeout + 100.seconds) { case progress: SnippetProgress =>
+      val fishResult = fish(progress)
+      //        println(progress -> fishResult)
+      if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
+        throw new Exception(s"Fail to meet expectation at ${progress}")
+      else fishResult
     }
     firstRun = false
   }
 
   private def runCode(code: String, target: ScalaTarget = ScalaTarget.Jvm.default, allowFailure: Boolean = false)(
-      fish: SnippetProgress => Boolean
+    fish: SnippetProgress => Boolean
   ): Unit = {
     run(Inputs.default.copy(code = code, target = target), allowFailure)(fish)
   }
 
   private def assertUserOutput(
-      message: String,
-      outputType: ProcessOutputType = ProcessOutputType.StdOut
+    message: String,
+    outputType: ProcessOutputType = ProcessOutputType.StdOut
   )(progress: SnippetProgress): Boolean = {
     val gotHelloMessage = progress.userOutput.exists(out => out.line == message && out.tpe == outputType)
 //    if (!gotHelloMessage) assert(progress.userOutput.isEmpty)

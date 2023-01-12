@@ -1,10 +1,8 @@
 package com.olegych.scastie.client
 
 import com.olegych.scastie.api.SnippetId
-
-import play.api.libs.json._
-
 import japgolly.scalajs.react._
+import play.api.libs.json._
 
 object ModalState {
   implicit val formatModalState: OFormat[ModalState] = Json.format[ModalState]
@@ -24,18 +22,17 @@ object ModalState {
     isNewSnippetModalClosed = true,
     isEmbeddedClosed = true
   )
+
 }
 
 case class ModalState(
-    isHelpModalClosed: Boolean,
-    shareModalSnippetId: Option[SnippetId],
-    isResetModalClosed: Boolean,
-    isNewSnippetModalClosed: Boolean,
-    isEmbeddedClosed: Boolean
+  isHelpModalClosed: Boolean,
+  shareModalSnippetId: Option[SnippetId],
+  isResetModalClosed: Boolean,
+  isNewSnippetModalClosed: Boolean,
+  isEmbeddedClosed: Boolean
 ) {
   val isShareModalClosed: SnippetId ~=> Boolean =
-    Reusable.fn(
-      shareModalSnippetId2 => !shareModalSnippetId.contains(shareModalSnippetId2)
-    )
+    Reusable.fn(shareModalSnippetId2 => !shareModalSnippetId.contains(shareModalSnippetId2))
 
 }

@@ -1,39 +1,46 @@
 package com.olegych.scastie.web.routes
 
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.DurationInt
+
 import akka.actor.ActorRef
 import akka.http.scaladsl.coding.Coders.{Gzip, NoCoding}
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Route, RouteResult}
+import akka.http.scaladsl.server.Directives._
 import akka.pattern.ask
-import akka.stream.Materializer
 import akka.stream.scaladsl.StreamConverters
+import akka.stream.Materializer
 import akka.util.{ByteString, Timeout}
 import com.olegych.scastie.api.{FetchResult, SnippetId, SnippetUserPart}
 import com.olegych.scastie.balancer.FetchSnippet
 import com.olegych.scastie.util.Base64UUID
 import org.apache.commons.text.StringEscapeUtils
 
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{ExecutionContext, Future}
-import akka.http.scaladsl.model._
-
-class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean, hostname: String)(implicit ec: ExecutionContext, mat: Materializer) {
+class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean, hostname: String)(
+  implicit ec: ExecutionContext,
+  mat: Materializer
+) {
   implicit val timeout: Timeout = Timeout(20.seconds)
+
   private val placeholders = List(
-    "Scastie can run any Scala program with any library in your browser. You don’t need to download or install anything.",
+    "Scastie can run any Scala program with any library in your browser. You don’t need to download or install anything."
   )
+
   private val indexResource = "public/index.html"
-  private val indexResourceContent = Future.traverse(Option(getClass.getClassLoader.getResource(indexResource)).toList) { url =>
-    StreamConverters.fromInputStream(() => url.openStream()).runFold("")(_ + _.utf8String)
-  }
+
+  private val indexResourceContent =
+    Future.traverse(Option(getClass.getClassLoader.getResource(indexResource)).toList) { url =>
+      StreamConverters.fromInputStream(() => url.openStream()).runFold("")(_ + _.utf8String)
+    }
+
   private val index = getFromResource(indexResource)
 
   private def embeddedResource(snippetId: SnippetId, theme: Option[String]): String = {
     val user = snippetId.user match {
-      case Some(SnippetUserPart(login, update)) =>
-        s"user: '$login', update: $update,"
-      case None => ""
+      case Some(SnippetUserPart(login, update)) => s"user: '$login', update: $update,"
+      case None                                 => ""
     }
 
     val themePart = theme match {
@@ -82,39 +89,42 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean, hostname: St
         path("embedded.js")(
           getFromResource("public/embedded.js", ContentType(MediaTypes.`application/javascript`, HttpCharsets.`UTF-8`))
         ),
-        path("public" / Remaining)(
-          path => getFromResource("public/" + path)
-        ),
+        path("public" / Remaining)(path => getFromResource("public/" + path)),
         pathSingleSlash(index),
         snippetId { snippetId => ctx =>
           for {
             s <- dispatchActor.ask(FetchSnippet(snippetId)).mapTo[Option[FetchResult]]
             c <- indexResourceContent
             r <- index(ctx)
-          } yield
-            (r, c, s) match {
-              case (r: RouteResult.Complete, List(c), Some(s)) if r.response.status.intValue() == 200 =>
-                val code = StringEscapeUtils.escapeHtml4(s.inputs.code)
-                r.copy(
-                  response = r.response.withEntity(
-                    HttpEntity.Strict(
-                      r.response.entity.contentType,
-                      ByteString.fromString(placeholders.foldLeft(c)(_.replace(_, code))),
-                    )
+          } yield (r, c, s) match {
+            case (r: RouteResult.Complete, List(c), Some(s)) if r.response.status.intValue() == 200 =>
+              val code = StringEscapeUtils.escapeHtml4(s.inputs.code)
+              r.copy(
+                response = r.response.withEntity(
+                  HttpEntity.Strict(
+                    r.response.entity.contentType,
+                    ByteString.fromString(placeholders.foldLeft(c)(_.replace(_, code)))
                   )
                 )
-              case _ => r
-            }
+              )
+            case _ => r
+          }
         },
         parameter("theme".?) { theme =>
           snippetIdExtension(".js") { sid =>
             complete {
-              HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`application/javascript`, HttpCharsets.`UTF-8`), embeddedResource(sid, theme)))
+              HttpResponse(entity =
+                HttpEntity(
+                  ContentType(MediaTypes.`application/javascript`, HttpCharsets.`UTF-8`),
+                  embeddedResource(sid, theme)
+                )
+              )
             }
           }
         },
-        index,
+        index
       )
     )
   )
+
 }
