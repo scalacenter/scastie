@@ -1,3 +1,5 @@
+resolvers ++= Resolver.sonatypeOssRepos("snapshots")
+
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.15.0")
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.11")
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
@@ -7,7 +9,7 @@ addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.9.0")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % SbtShared.ScalaJSVersions.current)
 
 addSbtPlugin("org.olegych" %% "sbt-cached-ci" % "1.0.4")
-addSbtPlugin("org.scalablytyped.converter" % "sbt-converter" % "1.0.0-beta41")
+addSbtPlugin("org.scalablytyped.converter" % "sbt-converter" % "1.0.0-beta40+18-efa5bdc4-SNAPSHOT")
 addSbtPlugin("com.evolution" % "sbt-artifactory-plugin" % "0.0.2")
 
 //workaround https://github.com/sbt/sbt/issues/5374
