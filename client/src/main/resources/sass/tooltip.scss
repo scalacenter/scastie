@@ -8,11 +8,11 @@
 
   .cm-completionInfo {
     min-width: 400px;
+    max-width: 600px !important;
   }
 
   .cm-completionInfo, .cm-tooltip-hover > :not(.cm-tooltip-lint) {
     font-family: $font-family;
-    max-width: 600px !important;
     overflow: auto;
     max-height: 500px;
     font-size: 14px;
@@ -26,6 +26,7 @@
   }
 
   .cm-tooltip {
+    max-width: 70%;
 
     @media only screen and (max-width: #{$mobile-width}) {
       min-width: 95%;
