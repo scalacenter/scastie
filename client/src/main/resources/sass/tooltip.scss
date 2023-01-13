@@ -6,21 +6,26 @@
     font-size: 14px;
   }
 
-  .cm-tooltip {
-    .cm-completionInfo, &-hover > &:not(.cm-tooltip-lint) {
-      font-family: $font-family;
-      font-size: 14px;
-      min-width: 400px;
-      max-width: 500px;
-      max-height: 500px;
-      overflow-x: hidden;
-      ul {
-          list-style-type: disc;
-          line-height: 0.90em;
-          padding-inline-start: 1.5em;
-          padding: 0 0.7em 0.3em 1.3em;
-      }
+  .cm-completionInfo {
+    min-width: 400px;
+  }
+
+  .cm-completionInfo, .cm-tooltip-hover > :not(.cm-tooltip-lint) {
+    font-family: $font-family;
+    max-width: 600px !important;
+    overflow: auto;
+    max-height: 500px;
+    font-size: 14px;
+
+    ul {
+      list-style-type: disc;
+      line-height: 0.90em;
+      padding-inline-start: 1.5em;
+      padding: 0 0.7em 0.3em 1.3em;
     }
+  }
+
+  .cm-tooltip {
 
     @media only screen and (max-width: #{$mobile-width}) {
       min-width: 95%;
@@ -51,7 +56,7 @@
       margin: 0.5em 0;
     }
 
-    code:not(.language-scala){
+    code:not(.language-scala) {
       padding: 0 0.4em;
       background-color: $code-background-color;
       border-radius: 4px;
