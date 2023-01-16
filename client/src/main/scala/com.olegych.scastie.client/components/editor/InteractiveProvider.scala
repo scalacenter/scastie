@@ -203,6 +203,7 @@ case class InteractiveProvider(props: CodeEditor) {
 
   private val hovers = hoverTooltip((view, pos, side) => ifSupported {
     val request = toLSPRequest(view.state.doc.toString(), pos.toInt)
+
     makeRequest(request, "hover").map(maybeText =>
       parseMetalsResponse[api.HoverDTO](maybeText).map { hover =>
         val hoverF: js.Function1[EditorView, TooltipView] = view => {
@@ -210,7 +211,12 @@ case class InteractiveProvider(props: CodeEditor) {
           node.innerHTML = InteractiveProvider.marked(hover.content)
           TooltipView(node.domToHtml.get)
         }
-        Tooltip(hoverF, pos)
+
+        view.state.wordAt(pos) match {
+          case range: SelectionRange => Tooltip(hoverF, range.from)
+            .setEnd(range.to)
+          case _ => Tooltip(hoverF, pos)
+        }
       }
     )
   }.map(_.getOrElse(null)).toJSPromise)

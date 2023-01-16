@@ -80,7 +80,7 @@ object CodeEditor {
         InteractiveProvider.interactive.of(
           InteractiveProvider(props).extension
         ),
-        mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
+        mod.StreamLanguage.define(typings.codemirrorLegacyModes.modeClikeMod.scala_),
         SyntaxHighlightingTheme.highlightingTheme,
         lintGutter(),
         OnChangeHandler(props.codeChange),
