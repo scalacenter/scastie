@@ -26,7 +26,7 @@ object SimpleEditor {
     ref.foreachCB(divRef => {
       val basicExtensions = js.Array[Any](
         typings.codemirror.mod.minimalSetup,
-        mod.StreamLanguage.define(typings.codemirrorLegacyModes.clikeMod.scala_),
+        mod.StreamLanguage.define(typings.codemirrorLegacyModes.modeClikeMod.scala_),
         SyntaxHighlightingTheme.highlightingTheme,
       )
       lazy val readOnlyExtensions = js.Array[Any](
