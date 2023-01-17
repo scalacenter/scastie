@@ -39,7 +39,7 @@ case class ScastiePresentationCompiler(pc: PresentationCompiler) {
       Async[F].fromFuture(Async[F].delay {
         pc.hover(offsetParams.toOffsetParams)
           .asScala
-          .map(_.toScala.toRight(NoResult("There is no hover for given position")))
+          .map(_.toScala.map(_.toLsp).toRight(NoResult("There is no hover for given position")))
       })
     })
 
