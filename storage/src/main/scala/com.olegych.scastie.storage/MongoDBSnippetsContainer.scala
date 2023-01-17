@@ -10,6 +10,7 @@ import play.api.libs.json._
 import java.lang.System.{lineSeparator => nl}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import com.typesafe.config.ConfigFactory
 
 sealed trait BaseMongoSnippet {
   def snippetId: SnippetId
@@ -45,10 +46,23 @@ object MongoSnippet {
   implicit val formatMongoSnippet: OFormat[MongoSnippet] = Json.format[MongoSnippet]
 }
 
-class MongoDBSnippetsContainer(_ec: ExecutionContext) extends SnippetsContainer {
+class MongoDBSnippetsContainer(_ec: ExecutionContext, ci: Boolean = false) extends SnippetsContainer {
   protected implicit val ec: ExecutionContext = _ec
 
-  private val mongoUri = "mongodb://localhost:27017/snippets"
+  val mongoUri = {
+    if (ci)
+      s"mongodb://localhost:27017/scastie"
+    else {
+      val config = ConfigFactory.load().getConfig("scastie.mongodb")
+      val user = config.getString("user")
+      val password = config.getString("password")
+      val databaseName = config.getString("database")
+      val host = config.getString("host")
+      val port = config.getInt("port")
+      s"mongodb://$user:$password@$host:$port/$databaseName"
+    }
+  }
+
 
   // TODO: Change client logic to use provided codecs
   // MongoDB client provides its own BSON converter, but would require changes in API.

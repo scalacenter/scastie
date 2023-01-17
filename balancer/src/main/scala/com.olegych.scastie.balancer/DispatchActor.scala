@@ -106,7 +106,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     container.close()
   }
 
-  val containerType = config.getString("snippets-container")
+  val containerType = config.getString("snippets-storage")
 
   private val container =
     containerType match {
