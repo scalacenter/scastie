@@ -378,7 +378,6 @@ class Deployment(
           |  -J-Xmx1G \\
           |  -Dconfig.file=${baseDir}${configFileName} \\
           |  -Dlogback.configurationFile=${baseDir}${logbackConfigFileName} \\
-          |  -DreleaseGitHash=${SbtShared.gitHashNow}
           |  &>/dev/null &
           |""".stripMargin
 

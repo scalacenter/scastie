@@ -3,7 +3,7 @@ package com.olegych.scastie.web
 import com.olegych.scastie.web.routes._
 import com.olegych.scastie.web.oauth2._
 import com.olegych.scastie.balancer._
-import com.olegych.scastie.util.{ScastieFileUtil, Base64UUID}
+import com.olegych.scastie.util.ScastieFileUtil
 
 import akka.http.scaladsl._
 import server.Directives._
@@ -35,7 +35,6 @@ object ServerMain {
     val config = ConfigFactory.load().getConfig("com.olegych.scastie")
     val production = config.getBoolean("production")
     val hostname = config.getString("web.hostname")
-    val version = sys.props.getOrElse("releaseGitHash", Base64UUID.create)
 
     logger.info(s"Production: $production")
     logger.info(s"Server hostname: $hostname")
@@ -86,7 +85,7 @@ object ServerMain {
       cors()(
         concat(
           new ScalaLangRoutes(dispatchActor, userDirectives).routes,
-          new FrontPageRoutes(dispatchActor, production, hostname, version).routes
+          new FrontPageRoutes(dispatchActor, production, hostname).routes
         )
       )
     )
