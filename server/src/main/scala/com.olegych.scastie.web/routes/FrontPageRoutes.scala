@@ -5,7 +5,7 @@ import akka.http.scaladsl.coding.Coders.Gzip
 import akka.http.scaladsl.coding.Coders.NoCoding
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.ETag
+import akka.http.scaladsl.model.headers.{`Cache-Control`, CacheDirectives}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.RouteResult
@@ -75,22 +75,13 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean, hostname: St
   val routes: Route = encodeResponseWith(Gzip, NoCoding)(
     get(
       concat(
-        path("public" / "app.css")(
-          getFromResource("public/assets/index.css")
-        ),
-        path("public" / "app.js")(
-          getFromResource("public/app.js")
-        ),
-        path("public" / "app.js.map")(
-          getFromResource("public/app.js.map")
-        ),
-        respondWithHeader(ETag(version))(
+        respondWithHeader(`Cache-Control`(CacheDirectives.`no-cache`))(
           concat(
-            path("public" / "embedded.css")(
-              getFromResource("public/embedded/style.css", ContentType(MediaTypes.`text/css`, HttpCharsets.`UTF-8`))
-            ),
             path("embedded.js")(
               getFromResource("public/embedded/embedded.js", ContentType(MediaTypes.`application/javascript`, HttpCharsets.`UTF-8`))
+            ),
+            path("public" / "embedded.css")(
+              getFromResource("public/embedded/style.css", ContentType(MediaTypes.`text/css`, HttpCharsets.`UTF-8`))
             ),
           ),
         ),
