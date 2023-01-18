@@ -84,11 +84,15 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean, hostname: St
         path("public" / "app.js.map")(
           getFromResource("public/app.js.map")
         ),
-        (path("public" / "embedded.css") & respondWithHeader(ETag(version)))(
-          getFromResource("public/embedded/style.css", ContentType(MediaTypes.`text/css`, HttpCharsets.`UTF-8`))
-        ),
-        (path("embedded.js") & respondWithHeader(ETag(version)))(
-          getFromResource("public/embedded/embedded.js", ContentType(MediaTypes.`application/javascript`, HttpCharsets.`UTF-8`))
+        respondWithHeader(ETag(version))(
+          concat(
+            path("public" / "embedded.css")(
+              getFromResource("public/embedded/style.css", ContentType(MediaTypes.`text/css`, HttpCharsets.`UTF-8`))
+            ),
+            path("embedded.js")(
+              getFromResource("public/embedded/embedded.js", ContentType(MediaTypes.`application/javascript`, HttpCharsets.`UTF-8`))
+            ),
+          ),
         ),
         path("public" / Remaining)(
           path => getFromResource("public/" + path)
