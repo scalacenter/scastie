@@ -57,7 +57,6 @@ object CodeEditor {
     ref.foreachCB(divRef => {
       val extensions = js.Array[Any](
         lineNumbers(),
-        highlightActiveLineGutter(),
         highlightSpecialChars(),
         history(),
         drawSelection(),
@@ -68,7 +67,6 @@ object CodeEditor {
         closeBrackets(),
         rectangularSelection(),
         crosshairCursor(),
-        highlightActiveLine(),
         highlightSelectionMatches(),
         keymap.of(closeBracketsKeymap ++ defaultKeymap ++ historyKeymap ++ foldKeymap ++ completionKeymap ++ lintKeymap ++ searchKeymap),
         StateField
