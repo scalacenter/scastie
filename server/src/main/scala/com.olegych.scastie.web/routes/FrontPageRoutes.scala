@@ -85,8 +85,10 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean, hostname: St
             ),
           ),
         ),
-        path("public" / Remaining)(
-          path => getFromResource("public/" + path)
+        respondWithHeader(`Cache-Control`(CacheDirectives.immutableDirective))(
+          path("public" / Remaining)(
+            path => getFromResource("public/" + path)
+          ),
         ),
         pathSingleSlash(index),
         snippetId { snippetId => ctx =>
