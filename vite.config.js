@@ -40,8 +40,8 @@ const embeddedOptions = {
     embedded: path.resolve(root, 'embedded.js')
   },
   output: {
-    entryFileNames: "[name].js",
-    assetFileNames: "assets/[name].[ext]"
+    entryFileNames: "embedded/[name].js",
+    assetFileNames: "embedded/[name].[ext]"
   }
 }
 
@@ -56,8 +56,8 @@ const websiteOptions = {
     app: path.resolve(root, 'index.html')
   },
   output: {
-    entryFileNames: "[name].js",
-    assetFileNames: "assets/[name].[ext]"
+    entryFileNames: "[name]-[hash].js",
+    assetFileNames: "assets/[name]-[hash].[ext]"
   }
 }
 
