@@ -2,27 +2,27 @@ package com.olegych.scastie.client
 package components
 
 import com.olegych.scastie.client.components.editor.EditorKeymaps
-import japgolly.scalajs.react._
-
-import vdom.all._
 import extra._
+import japgolly.scalajs.react._
+import vdom.all._
 
-final case class NewButton(isNewSnippetModalClosed: Boolean,
-                           openNewSnippetModal: Reusable[Callback],
-                           closeNewSnippetModal: Reusable[Callback],
-                           newSnippet: Reusable[Callback]) {
+final case class NewButton(
+  isNewSnippetModalClosed: Boolean,
+  openNewSnippetModal: Reusable[Callback],
+  closeNewSnippetModal: Reusable[Callback],
+  newSnippet: Reusable[Callback]
+) {
   @inline def render: VdomElement = NewButton.component(this)
 }
 
 object NewButton {
-  implicit val reusability: Reusability[NewButton] =
-    Reusability.derive[NewButton]
+  implicit val reusability: Reusability[NewButton] = Reusability.derive[NewButton]
 
   def render(props: NewButton): VdomElement = {
 
     li(
       title := s"New code snippet (${EditorKeymaps.openNewSnippetModal.getName})",
-      role := "button",
+      role  := "button",
       onClick --> props.openNewSnippetModal,
       cls := "btn"
     )(
@@ -40,10 +40,10 @@ object NewButton {
     )
   }
 
-  private val component =
-    ScalaComponent
-      .builder[NewButton]("NewButton")
-      .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  private val component = ScalaComponent
+    .builder[NewButton]("NewButton")
+    .render_P(render)
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }
