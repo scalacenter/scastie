@@ -99,6 +99,8 @@ object ServerMain {
         system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
         system.terminate()
     }
+
+    Await.result(system.whenTerminated, Duration.Inf)
   }
 
 }
