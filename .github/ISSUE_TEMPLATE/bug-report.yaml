@@ -46,7 +46,8 @@ body:
     id: screenshot
     attributes:
       label: Screenshot ( Optional )
-      placeholder: Screenshot should be pasted here
+      description: Paste screenshot of the bug
+      placeholder: '..'
      validations:
       required: false
   - type: dropdown
