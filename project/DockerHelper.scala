@@ -50,7 +50,6 @@ object DockerHelper {
 
       entryPoint(
         "./server/bin/server",
-        "-J-Xmx1G",
         s"-Dconfig.file=$configDestination"
       )
     }
