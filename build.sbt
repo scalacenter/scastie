@@ -108,6 +108,7 @@ lazy val metalsRunner = project
       ImageName(namespace = Some(dockerOrg), repository = "scastie-metals-runner", tag = Some("latest"))
     ),
     executableScriptName := "server",
+    javacOptions ++= Seq("-Xms1G", "-Xmx4G", "-XX:+CrashOnOutOfMemoryError"),
     docker / dockerfile := Def
       .task {
         DockerHelper.javaProject(
