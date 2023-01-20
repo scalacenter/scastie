@@ -1,16 +1,16 @@
 package com.olegych.scastie.storage
 
-import com.olegych.scastie.api._
-import org.mongodb.scala._
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Updates._
-import org.mongodb.scala.model._
-import play.api.libs.json._
-
 import java.lang.System.{lineSeparator => nl}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+
+import com.olegych.scastie.api._
 import com.typesafe.config.ConfigFactory
+import org.mongodb.scala._
+import org.mongodb.scala.model._
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Updates._
+import play.api.libs.json._
 
 sealed trait BaseMongoSnippet {
   def snippetId: SnippetId
@@ -19,9 +19,9 @@ sealed trait BaseMongoSnippet {
 }
 
 case class ShortMongoSnippet(
-    snippetId: SnippetId,
-    inputs: ShortInputs,
-    time: Long
+  snippetId: SnippetId,
+  inputs: ShortInputs,
+  time: Long
 ) extends BaseMongoSnippet
 
 object ShortMongoSnippet {
@@ -29,15 +29,15 @@ object ShortMongoSnippet {
 }
 
 case class MongoSnippet(
-    simpleSnippetId: String,
-    user: Option[String],
-    snippetId: SnippetId,
-    oldId: Long,
-    inputs: Inputs,
-    progresses: List[SnippetProgress],
-    scalaJsContent: String,
-    scalaJsSourceMapContent: String,
-    time: Long
+  simpleSnippetId: String,
+  user: Option[String],
+  snippetId: SnippetId,
+  oldId: Long,
+  inputs: Inputs,
+  progresses: List[SnippetProgress],
+  scalaJsContent: String,
+  scalaJsSourceMapContent: String,
+  time: Long
 ) extends BaseMongoSnippet {
   def toFetchResult: FetchResult = FetchResult.create(inputs, progresses)
 }
@@ -50,35 +50,37 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext, ci: Boolean = false) exten
   protected implicit val ec: ExecutionContext = _ec
 
   val mongoUri = {
-    if (ci)
-      s"mongodb://localhost:27017/scastie"
+    if (ci) s"mongodb://localhost:27017/scastie"
     else {
-      val config = ConfigFactory.load().getConfig("scastie.mongodb")
-      val user = config.getString("user")
-      val password = config.getString("password")
+      val config       = ConfigFactory.load().getConfig("scastie.mongodb")
+      val user         = config.getString("user")
+      val password     = config.getString("password")
       val databaseName = config.getString("database")
-      val host = config.getString("host")
-      val port = config.getInt("port")
+      val host         = config.getString("host")
+      val port         = config.getInt("port")
       s"mongodb://$user:$password@$host:$port/$databaseName"
     }
   }
 
-
   // TODO: Change client logic to use provided codecs
   // MongoDB client provides its own BSON converter, but would require changes in API.
   // Instead we reuse our JSON codecs and create BSON from the generated JSON.
-  private def toBson[T](obj: T)(implicit writes: Writes[T]): Document = {
+  private def toBson[T](obj: T)(
+    implicit writes: Writes[T]
+  ): Document = {
     val json = Json.toJson(obj).toString
     Document.apply(json)
   }
 
-  private def fromBson[T](obj: Document)(implicit reads: Reads[T]): Option[T] = {
+  private def fromBson[T](obj: Document)(
+    implicit reads: Reads[T]
+  ): Option[T] = {
     Json.parse(obj.toJson()).asOpt[T]
   }
 
   private val client: MongoClient = MongoClient(mongoUri)
-  val database: MongoDatabase = client.getDatabase("snippets")
-  val snippets = database.getCollection[Document]("snippets")
+  val database: MongoDatabase     = client.getDatabase("snippets")
+  val snippets                    = database.getCollection[Document]("snippets")
 
   private val initDatabase = {
     Seq(
@@ -87,22 +89,21 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext, ci: Boolean = false) exten
       Indexes.hashed("user"),
       Indexes.hashed("snippetId.user.login"),
       Indexes.hashed("inputs.isShowingInUserProfile"),
-      Indexes.hashed("time"),
+      Indexes.hashed("time")
     ).map(snippets.createIndex(_))
   }
 
-  def toMongoSnippet(snippetId: SnippetId, inputs: Inputs): MongoSnippet =
-    MongoSnippet(
-      simpleSnippetId = snippetId.url,
-      user = snippetId.user.map(_.login),
-      snippetId = snippetId,
-      oldId = 0,
-      inputs = inputs,
-      progresses = Nil,
-      scalaJsContent = "",
-      scalaJsSourceMapContent = "",
-      time = System.currentTimeMillis
-    )
+  def toMongoSnippet(snippetId: SnippetId, inputs: Inputs): MongoSnippet = MongoSnippet(
+    simpleSnippetId = snippetId.url,
+    user = snippetId.user.map(_.login),
+    snippetId = snippetId,
+    oldId = 0,
+    inputs = inputs,
+    progresses = Nil,
+    scalaJsContent = "",
+    scalaJsSourceMapContent = "",
+    time = System.currentTimeMillis
+  )
 
   protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] = {
     val snippet = toBson(toMongoSnippet(snippetId, inputs.withSavedConfig))
@@ -127,13 +128,13 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext, ci: Boolean = false) exten
           snippets.updateOne(selection, update).map(_.wasAcknowledged).headOption()
         }
 
-        val setScalaJsOutput =
-          (progress.scalaJsContent, progress.scalaJsSourceMapContent) match {
-            case (Some(scalaJsContent), Some(scalaJsSourceMapContent)) =>
-              val updateJs = combine(set("scalaJsContent" , scalaJsContent), set("scalaJsSourceMapContent" ,scalaJsSourceMapContent))
-              snippets.updateOne(selection, updateJs.toBsonDocument).map(_.wasAcknowledged).headOption()
-            case _ => Future(())
-          }
+        val setScalaJsOutput = (progress.scalaJsContent, progress.scalaJsSourceMapContent) match {
+          case (Some(scalaJsContent), Some(scalaJsSourceMapContent)) =>
+            val updateJs =
+              combine(set("scalaJsContent", scalaJsContent), set("scalaJsSourceMapContent", scalaJsSourceMapContent))
+            snippets.updateOne(selection, updateJs.toBsonDocument).map(_.wasAcknowledged).headOption()
+          case _ => Future(())
+        }
 
         appendOutputLogs.zip(setScalaJsOutput).map(_ => ())
       case None => Future(())
@@ -141,7 +142,8 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext, ci: Boolean = false) exten
   }
 
   def readMongoSnippet(snippetId: SnippetId): Future[Option[MongoSnippet]] = {
-    snippets.find(select(snippetId))
+    snippets
+      .find(select(snippetId))
       .first()
       .headOption()
       .map(_.flatMap(fromBson[MongoSnippet](_)))
@@ -152,46 +154,53 @@ class MongoDBSnippetsContainer(_ec: ExecutionContext, ci: Boolean = false) exten
   }
 
   def listSnippets(user: UserLogin): Future[List[SnippetSummary]] = {
-    val userSnippets = and(Document(
-      "snippetId.user.login" -> user.login,
-      "inputs.isShowingInUserProfile" -> true,
-    ))
+    val userSnippets = and(
+      Document(
+        "snippetId.user.login"          -> user.login,
+        "inputs.isShowingInUserProfile" -> true
+      )
+    )
 
-    val mongoSnippets =
-      snippets.find(userSnippets).projection(
+    val mongoSnippets = snippets
+      .find(userSnippets)
+      .projection(
         Document(
-          "snippetId" -> 1,
-          "inputs.code" -> 1,
+          "snippetId"     -> 1,
+          "inputs.code"   -> 1,
           "inputs.target" -> 1,
-          "time" -> 1
-          )
-      ).map(fromBson[ShortMongoSnippet](_))
+          "time"          -> 1
+        )
+      )
+      .map(fromBson[ShortMongoSnippet](_))
 
-    mongoSnippets.collect().headOption().map(results => {
-      val sortedSnippets = results.getOrElse(Nil).flatten.sortBy(-_.time)
-      sortedSnippets.map(result =>
-        SnippetSummary(result.snippetId, result.inputs.code.split(nl).take(3).mkString(nl), result.time)
-      ).toList
-    })
+    mongoSnippets
+      .collect()
+      .headOption()
+      .map(results => {
+        val sortedSnippets = results.getOrElse(Nil).flatten.sortBy(-_.time)
+        sortedSnippets
+          .map(result =>
+            SnippetSummary(result.snippetId, result.inputs.code.split(nl).take(3).mkString(nl), result.time)
+          )
+          .toList
+      })
   }
 
-  def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] =
-    readMongoSnippet(snippetId).map(
-      _.map(m => FetchResultScalaJs(m.scalaJsContent))
-    )
+  def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] = readMongoSnippet(snippetId).map(
+    _.map(m => FetchResultScalaJs(m.scalaJsContent))
+  )
 
   def readScalaJsSourceMap(
-      snippetId: SnippetId
-  ): Future[Option[FetchResultScalaJsSourceMap]] =
-    readMongoSnippet(snippetId).map(
-      _.map(m => FetchResultScalaJsSourceMap(m.scalaJsSourceMapContent))
-    )
+    snippetId: SnippetId
+  ): Future[Option[FetchResultScalaJsSourceMap]] = readMongoSnippet(snippetId).map(
+    _.map(m => FetchResultScalaJsSourceMap(m.scalaJsSourceMapContent))
+  )
 
-  def readOldSnippet(id: Int): Future[Option[FetchResult]] =
-    snippets.find(Document("oldId" -> id))
-      .first()
-      .headOption()
-      .map(_.flatMap(fromBson[MongoSnippet](_)).map(_.toFetchResult))
+  def readOldSnippet(id: Int): Future[Option[FetchResult]] = snippets
+    .find(Document("oldId" -> id))
+    .first()
+    .headOption()
+    .map(_.flatMap(fromBson[MongoSnippet](_)).map(_.toFetchResult))
 
   override def close(): Unit = client.close()
 }

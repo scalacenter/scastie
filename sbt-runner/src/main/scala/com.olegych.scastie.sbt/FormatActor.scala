@@ -5,14 +5,15 @@ import akka.actor.Actor
 import com.olegych.scastie.api.FormatRequest
 import com.olegych.scastie.api.FormatResponse
 import com.olegych.scastie.api.ScalaTarget
-import org.scalafmt.Formatted
-import org.scalafmt.Scalafmt
+import org.scalafmt.config.NamedDialect
 import org.scalafmt.config.ScalafmtConfig
 import org.scalafmt.config.ScalafmtRunner
-import org.scalafmt.config.NamedDialect
+import org.scalafmt.Formatted
+import org.scalafmt.Scalafmt
 import org.slf4j.LoggerFactory
 
 object FormatActor {
+
   private[sbt] def format(code: String, isWorksheetMode: Boolean, scalaTarget: ScalaTarget): Either[String, String] = {
     val config: ScalafmtConfig = {
       val dialect =
@@ -22,10 +23,8 @@ object FormatActor {
         else NamedDialect.scala213
 
       val runner = {
-        if (isWorksheetMode && scalaTarget.hasWorksheetMode)
-          ScalafmtRunner.sbt
-        else
-          ScalafmtRunner.default
+        if (isWorksheetMode && scalaTarget.hasWorksheetMode) ScalafmtRunner.sbt
+        else ScalafmtRunner.default
       }.withDialect(dialect)
 
       ScalafmtConfig.default.copy(runner = runner)
@@ -36,17 +35,18 @@ object FormatActor {
       case Formatted.Failure(failure)       => Left(failure.toString)
     }
   }
+
 }
 
 class FormatActor() extends Actor {
   import FormatActor._
   private val log = LoggerFactory.getLogger(getClass)
 
-  override def receive: Receive = {
-    case FormatRequest(code, isWorksheetMode, scalaTarget) =>
-      log.info(s"format (isWorksheetMode: $isWorksheetMode)")
-      log.info(code)
+  override def receive: Receive = { case FormatRequest(code, isWorksheetMode, scalaTarget) =>
+    log.info(s"format (isWorksheetMode: $isWorksheetMode)")
+    log.info(code)
 
-      sender() ! FormatResponse(format(code, isWorksheetMode, scalaTarget))
+    sender() ! FormatResponse(format(code, isWorksheetMode, scalaTarget))
   }
+
 }
