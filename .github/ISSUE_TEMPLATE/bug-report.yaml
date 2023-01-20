@@ -43,6 +43,7 @@ body:
     validations:
       required: true
   - type: textarea
+    id: screenshot
     attributes:
       label: Screenshot ( Optional )
       placeholder: Screenshot should be pasted here
