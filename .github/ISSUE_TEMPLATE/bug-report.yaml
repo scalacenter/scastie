@@ -15,7 +15,7 @@ body:
     validations:
       required: false
   - type: input
-    id: Link to the Scastie snippet
+    id: scastie-link
     attributes:
       label: Scastie snippet link
       description: A link to the Scastie website
@@ -23,7 +23,7 @@ body:
     validations:
       required: false
   - type: textarea
-    id: To Reproduce
+    id: to-reproduce
     attributes:
       label: To Reproduce
       description: Tell us the steps to reproduce the behavior
@@ -36,7 +36,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: Expected behavior
+    id: expected-behavior
     attributes:
       label: Expected behavior
       description: What did you expect to happen?
@@ -44,7 +44,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: Screenshot
+    id: screenshot
     attributes:
       label: Screenshot ( Optional )
       description: Paste screenshot of the bug
