@@ -29,9 +29,10 @@ body:
       description: Tell us the steps to reproduce the behavior
       placeholder: ...
       value: |
-        1. Go to '...' |
-        2. Click on '...' |
+        1. Go to '...'
+        2. Click on '...'
         3. See error
+        ...
     validations:
       required: true
   - type: textarea
@@ -39,16 +40,16 @@ body:
     attributes:
       label: Expected behavior
       description: What did you expect to happen?
-      placeholder: ...
+      placeholder: '...'
     validations:
       required: true
   - type: textarea
-    id: screenshot
+    id: Screenshot
     attributes:
       label: Screenshot ( Optional )
       description: Paste screenshot of the bug
-      placeholder: '..'
-     validations:
+      placeholder: '...'
+    validations:
       required: false
   - type: dropdown
     id: version
