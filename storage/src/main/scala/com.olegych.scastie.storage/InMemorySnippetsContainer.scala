@@ -1,29 +1,30 @@
 package com.olegych.scastie.storage
 
-import com.olegych.scastie.api._
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
-import scala.collection.mutable
+import com.olegych.scastie.api._
 import System.{lineSeparator => nl}
 
-class InMemorySnippetsContainer(implicit protected val ec: ExecutionContext) extends SnippetsContainer {
+class InMemorySnippetsContainer(
+  implicit protected val ec: ExecutionContext
+) extends SnippetsContainer {
 
   private val snippets = mutable.Map[SnippetId, Storage]()
 
   case class Storage(
-      snippetId: SnippetId,
-      inputs: Inputs,
-      progresses: mutable.Queue[SnippetProgress] = mutable.Queue(),
-      var scalaJsContent: String = "",
-      var scalaJsSourceMapContent: String = "",
-      time: Long = System.currentTimeMillis
+    snippetId: SnippetId,
+    inputs: Inputs,
+    progresses: mutable.Queue[SnippetProgress] = mutable.Queue(),
+    var scalaJsContent: String = "",
+    var scalaJsSourceMapContent: String = "",
+    time: Long = System.currentTimeMillis
   )
 
   def appendOutput(progress: SnippetProgress): Future[Unit] = Future {
-    progress.snippetId.foreach(
-      id => snippets.get(id).foreach(storage => storage.progresses += progress)
-    )
+    progress.snippetId.foreach(id => snippets.get(id).foreach(storage => storage.progresses += progress))
   }
+
   def delete(snippetId: SnippetId): Future[Boolean] = Future {
     val found = snippets.contains(snippetId)
     snippets -= snippetId
@@ -44,13 +45,12 @@ class InMemorySnippetsContainer(implicit protected val ec: ExecutionContext) ext
       .toList
   }
 
-  def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] =
-    Future {
-      snippets.get(snippetId).map(m => FetchResultScalaJs(m.scalaJsContent))
-    }
+  def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] = Future {
+    snippets.get(snippetId).map(m => FetchResultScalaJs(m.scalaJsContent))
+  }
 
   def readScalaJsSourceMap(
-      snippetId: SnippetId
+    snippetId: SnippetId
   ): Future[Option[FetchResultScalaJsSourceMap]] = Future {
     snippets
       .get(snippetId)
@@ -63,14 +63,14 @@ class InMemorySnippetsContainer(implicit protected val ec: ExecutionContext) ext
 
   def readOldSnippet(id: Int): Future[Option[FetchResult]] = Future(None)
 
-  protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] =
-    Future {
-      snippets.update(snippetId, Storage(snippetId, inputs.withSavedConfig))
-    }
+  protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] = Future {
+    snippets.update(snippetId, Storage(snippetId, inputs.withSavedConfig))
+  }
 
   override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] = Future {
     for {
       old <- snippets.get(snippetId)
     } yield snippets.update(snippetId, old.copy(inputs = old.inputs.copy(isShowingInUserProfile = false)))
   }
+
 }
