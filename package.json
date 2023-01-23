@@ -22,7 +22,7 @@
     "@lezer/common": "^1.0.1",
     "@lezer/highlight": "^1.1.1",
     "@sentry/browser": "^7.30.0",
-    "@sentry/tracing": "^7.30.0",
+    "@sentry/tracing": "^7.31.1",
     "@types/marked": "^4.0.7",
     "codemirror": "^6.0.1",
     "highlight.js": "^11.6.0",
