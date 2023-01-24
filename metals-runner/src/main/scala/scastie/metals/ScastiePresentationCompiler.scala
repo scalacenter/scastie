@@ -16,6 +16,8 @@ import DTOExtensions._
 import JavaConverters._
 
 case class ScastiePresentationCompiler(pc: PresentationCompiler) {
+  val underlyingPC = pc
+
   def complete[F[_]: Async](offsetParams: ScastieOffsetParams): F[CompletionList] =
     Async[F].fromFuture(Async[F].delay(pc.complete(offsetParams.toOffsetParams).asScala))
 
