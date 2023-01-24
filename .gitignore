@@ -25,3 +25,4 @@ metals.sbt
 client/dist
 vite.config.js.*
 generated-scripts*
+dump*
