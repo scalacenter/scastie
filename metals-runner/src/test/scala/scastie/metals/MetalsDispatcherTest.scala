@@ -38,13 +38,18 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
   }
 
   test("cache should properly shutdown presentation compiler") {
+    val cache = Cache.expiring[IO, ScastieMetalsOptions, ScastiePresentationCompiler](
+      ExpiringCache.Config(expireAfterRead = 2.seconds),
+      None
+    )
+
     cache.use { cache =>
       {
         val dispatcher = dispatcherF(cache)
         val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latest3))
         val task = for {
           pc     <- dispatcher.getCompiler(options)
-          _      <- EitherT.right(IO.sleep(40.seconds))
+          _      <- EitherT.right(IO.sleep(4.seconds))
           result <- EitherT.right(pc.complete(ScastieOffsetParams("print", 3, true)))
         } yield { result.getItems.asScala.toList }
         interceptIO[java.util.concurrent.CancellationException](task.value)
