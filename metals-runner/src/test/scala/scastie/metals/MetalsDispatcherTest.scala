@@ -7,19 +7,12 @@ import scala.util.Success
 import cats.data.EitherT
 import cats.effect.implicits.*
 import cats.effect.kernel.Outcome
-import cats.effect.testkit.TestControl
 import cats.effect.IO
 import cats.effect.IO.asyncForIO
 import cats.implicits._
 import cats.syntax.all._
-import com.evolutiongaming.scache.{Cache, LoadingCache}
-import com.evolutiongaming.scache.ExpiringCache
-import com.olegych.scastie.api.ScalaDependency
-import com.olegych.scastie.api.ScalaTarget
-import com.olegych.scastie.api.ScalaTargetType
-import com.olegych.scastie.api.ScalaVersions
-import com.olegych.scastie.api.ScastieMetalsOptions
-import com.olegych.scastie.api.ScastieOffsetParams
+import com.evolutiongaming.scache.{Cache, ExpiringCache}
+import com.olegych.scastie.api._
 import com.olegych.scastie.buildinfo.BuildInfo
 import munit.Assertions
 import munit.CatsEffectAssertions
@@ -49,7 +42,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       {
         val dispatcher = dispatcherF(cache)
         val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latest3))
-        val task  = for {
+        val task = for {
           pc     <- dispatcher.getCompiler(options)
           _      <- EitherT.right(IO.sleep(40.seconds))
           result <- EitherT.right(pc.complete(ScastieOffsetParams("print", 3, true)))
