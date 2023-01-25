@@ -1,21 +1,17 @@
 package com.olegych.scastie.storage
 
-import com.olegych.scastie.api._
-
+import java.io.IOException
+import java.nio.file._
 import java.util.concurrent.ExecutorService
 import scala.concurrent.{ExecutionContext, Future}
 
-import System.{lineSeparator => nl}
-
-import java.nio.file._
-import java.io.IOException
-
+import com.olegych.scastie.api._
 import play.api.libs.json.Json
+import System.{lineSeparator => nl}
 
 class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService) extends SnippetsContainer {
 
-  implicit protected val ec: ExecutionContext =
-    ExecutionContext.fromExecutorService(es)
+  implicit protected val ec: ExecutionContext = ExecutionContext.fromExecutorService(es)
 
   def appendOutput(progress: SnippetProgress): Future[Unit] = Future {
     (progress.scalaJsContent, progress.scalaJsSourceMapContent, progress.snippetId) match {
@@ -25,17 +21,14 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
       case _ => ()
     }
 
-    progress.snippetId.foreach(
-      sid => append(outputsFile(sid), Json.stringify(Json.toJson(progress)) + nl)
-    )
+    progress.snippetId.foreach(sid => append(outputsFile(sid), Json.stringify(Json.toJson(progress)) + nl))
   }
 
   def delete(snippetId: SnippetId): Future[Boolean] = {
     def rootDir(snippetId: SnippetId): Path = {
       snippetId.user match {
-        case Some(SnippetUserPart(login, _)) =>
-          root.resolve(login)
-        case _ => root.resolve(anonFolder)
+        case Some(SnippetUserPart(login, _)) => root.resolve(login)
+        case _                               => root.resolve(anonFolder)
       }
     }
 
@@ -79,7 +72,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
       import java.nio.file.attribute.BasicFileAttributes
 
       val filePath = inputsFile(snippetId)
-      val attr = Files.readAttributes(filePath, classOf[BasicFileAttributes])
+      val attr     = Files.readAttributes(filePath, classOf[BasicFileAttributes])
 
       attr.creationTime().toMillis
     }
@@ -104,8 +97,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
 
             updates
               .flatMap { update =>
-                val snippetId =
-                  SnippetId(uuid, Some(SnippetUserPart(user.login, update)))
+                val snippetId = SnippetId(uuid, Some(SnippetUserPart(user.login, update)))
                 readInputs(snippetId) match {
                   case Some(inputs) =>
                     if (inputs.isShowingInUserProfile) {
@@ -129,10 +121,9 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
 
   def readOldSnippet(id: Int): Future[Option[FetchResult]] = {
 
-    def oldPath(id: Int): Path =
-      oldRoot
-        .resolve("paste%20d".format(id).replaceAll(" ", "0"))
-        .resolve("src/main/scala/")
+    def oldPath(id: Int): Path = oldRoot
+      .resolve("paste%20d".format(id).replaceAll(" ", "0"))
+      .resolve("src/main/scala/")
 
     def readOldInputs(id: Int): Option[Inputs] = {
       slurp(oldPath(id).resolve("test.scala"))
@@ -145,47 +136,40 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
     }
 
     Future {
-      readOldInputs(id).map(
-        inputs => FetchResult.create(inputs, readOldOutputs(id).getOrElse(Nil))
-      )
+      readOldInputs(id).map(inputs => FetchResult.create(inputs, readOldOutputs(id).getOrElse(Nil)))
     }
   }
 
-  def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] =
-    Future {
-      slurp(scalaJsFile(snippetId)).map(content => FetchResultScalaJs(content))
-    }
+  def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] = Future {
+    slurp(scalaJsFile(snippetId)).map(content => FetchResultScalaJs(content))
+  }
 
   def readScalaJsSourceMap(
-      snippetId: SnippetId
+    snippetId: SnippetId
   ): Future[Option[FetchResultScalaJsSourceMap]] = Future {
     slurp(scalaJsSourceMapFile(snippetId))
       .map(content => FetchResultScalaJsSourceMap(content))
   }
 
   def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]] = Future {
-    readInputs(snippetId).map(
-      inputs => FetchResult.create(inputs, readOutputs(snippetId).getOrElse(Nil))
-    )
+    readInputs(snippetId).map(inputs => FetchResult.create(inputs, readOutputs(snippetId).getOrElse(Nil)))
   }
 
-  protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] =
-    Future {
-      write(inputsFile(snippetId), Json.prettyPrint(Json.toJson(inputs.withSavedConfig)))
+  protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] = Future {
+    write(inputsFile(snippetId), Json.prettyPrint(Json.toJson(inputs.withSavedConfig)))
+  }
+
+  override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] = for {
+    old <- readSnippet(snippetId)
+    _ <- Future.traverse(old.toList) { old =>
+      insert(snippetId, old.inputs.copy(isShowingInUserProfile = false))
     }
+  } yield ()
 
-  override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] =
-    for {
-      old <- readSnippet(snippetId)
-      _ <- Future.traverse(old.toList) { old =>
-        insert(snippetId, old.inputs.copy(isShowingInUserProfile = false))
-      }
-    } yield ()
-
-  private val anonFolder = "_anonymous_"
-  private val inputFileName = "input3.json"
-  private val outputFileName = "output3.json"
-  private val scalaJsFileName = ScalaTarget.Js.targetFilename
+  private val anonFolder               = "_anonymous_"
+  private val inputFileName            = "input3.json"
+  private val outputFileName           = "output3.json"
+  private val scalaJsFileName          = ScalaTarget.Js.targetFilename
   private val scalaJsSourceMapFileName = ScalaTarget.Js.sourceMapFilename
 
   private def inputsFile(snippetId: SnippetId): Path = {
@@ -207,43 +191,41 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
   private def snippetFile(snippetId: SnippetId, fileName: String): Path = {
     if (!Files.exists(root)) Files.createDirectory(root)
 
-    val baseDirectory =
-      snippetId.user match {
-        case Some(SnippetUserPart(login, update)) =>
-          val userFolder = root.resolve(login)
-          if (!Files.exists(userFolder)) Files.createDirectory(userFolder)
+    val baseDirectory = snippetId.user match {
+      case Some(SnippetUserPart(login, update)) =>
+        val userFolder = root.resolve(login)
+        if (!Files.exists(userFolder)) Files.createDirectory(userFolder)
 
-          val base = userFolder.resolve(snippetId.base64UUID)
-          if (!Files.exists(base)) Files.createDirectory(base)
+        val base = userFolder.resolve(snippetId.base64UUID)
+        if (!Files.exists(base)) Files.createDirectory(base)
 
-          val baseVersion = base.resolve(update.toString)
-          if (!Files.exists(baseVersion)) Files.createDirectory(baseVersion)
+        val baseVersion = base.resolve(update.toString)
+        if (!Files.exists(baseVersion)) Files.createDirectory(baseVersion)
 
-          baseVersion
-        case None =>
-          val anon = root.resolve(anonFolder)
-          if (!Files.exists(anon)) Files.createDirectory(anon)
+        baseVersion
+      case None =>
+        val anon = root.resolve(anonFolder)
+        if (!Files.exists(anon)) Files.createDirectory(anon)
 
-          val base = anon.resolve(snippetId.base64UUID)
-          if (!Files.exists(base)) Files.createDirectory(base)
-          base
-      }
+        val base = anon.resolve(snippetId.base64UUID)
+        if (!Files.exists(base)) Files.createDirectory(base)
+        base
+    }
 
     baseDirectory.resolve(Paths.get(fileName))
   }
 
   private def readInputs(snippetId: SnippetId): Option[Inputs] = {
     slurp(inputsFile(snippetId))
-      .map(
-        content =>
-          Json
-            .fromJson[Inputs](Json.parse(content))
-            .fold(e => sys.error(e.toString + s" for ${snippetId} $content"), identity)
+      .map(content =>
+        Json
+          .fromJson[Inputs](Json.parse(content))
+          .fold(e => sys.error(e.toString + s" for ${snippetId} $content"), identity)
       )
   }
 
   private def readOutputs(
-      snippetId: SnippetId
+    snippetId: SnippetId
   ): Option[List[SnippetProgress]] = {
     slurp(outputsFile(snippetId)).map {
       _.linesIterator
@@ -272,7 +254,7 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
 
   private def deleteEmptyDirectories(base: Path): Unit = {
     def dirIsEmpty(dir: Path): Boolean = {
-      val ds = Files.newDirectoryStream(dir)
+      val ds  = Files.newDirectoryStream(dir)
       val ret = ds.iterator().hasNext
       ds.close()
       !ret
@@ -292,4 +274,5 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
 
     ()
   }
+
 }

@@ -1,10 +1,11 @@
 package com.olegych.scastie.util
 
-import java.nio.file._
 import java.lang.management.ManagementFactory
 import java.nio.charset.StandardCharsets
+import java.nio.file._
 
 object ScastieFileUtil {
+
   def slurp(src: Path): Option[String] = {
     if (Files.exists(src)) Some(Files.readAllLines(src).toArray.mkString("\n"))
     else None
@@ -24,7 +25,7 @@ object ScastieFileUtil {
   }
 
   def writeRunningPid(name: String): String = {
-    val pid = ManagementFactory.getRuntimeMXBean.getName.split("@").head
+    val pid     = ManagementFactory.getRuntimeMXBean.getName.split("@").head
     val pidFile = Paths.get(name)
     Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8))
     sys.addShutdownHook {
@@ -32,4 +33,5 @@ object ScastieFileUtil {
     }
     pid
   }
+
 }

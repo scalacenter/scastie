@@ -26,7 +26,8 @@ case class ScastiePresentationCompiler(underlyingPC: PresentationCompiler) {
           Async[F].fromFuture(Async[F].delay {
             val completionItemJ = CompletionItem(completionItem.label)
             completionItemJ.setDetail(completionItem.detail)
-            underlyingPC.completionItemResolve(completionItemJ, symbol)
+            underlyingPC
+              .completionItemResolve(completionItemJ, symbol)
               .asScala
               .map(_.getDocstring)
           })
@@ -37,7 +38,8 @@ case class ScastiePresentationCompiler(underlyingPC: PresentationCompiler) {
   def hover[F[_]: Async](offsetParams: ScastieOffsetParams): F[Either[FailureType, Hover]] =
     (Async[F].executionContext >>= { implicit ec =>
       Async[F].fromFuture(Async[F].delay {
-        underlyingPC.hover(offsetParams.toOffsetParams)
+        underlyingPC
+          .hover(offsetParams.toOffsetParams)
           .asScala
           .map(_.toScala.map(_.toLsp).toRight(NoResult("There is no hover for given position")))
       })
