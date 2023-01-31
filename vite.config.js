@@ -69,10 +69,10 @@ if (!isDev()) {
 
 const proxy = {
   "/metals": {
-    target: "http://localhost:8000"
+    target: "http://0.0.0.0:8000"
   },
   "/": {
-    target: "http://localhost:9000",
+    target: "http://0.0.0.0:9000",
     bypass: function(req, res, proxyOptions) {
       // regex matching snippet ids
       const snippet = /(\/[A-Za-z0-9]{22}|\/[A-Za-z0-9]{22}\/([A-Za-z0-9])*[/(0-9)*])/;
