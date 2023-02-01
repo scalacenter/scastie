@@ -48,7 +48,7 @@ lazy val loggingAndTest = Seq(
   libraryDependencies ++= Seq(
     "ch.qos.logback"              % "logback-classic" % "1.4.5",
     "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5",
-    "io.sentry"                   % "sentry-logback"  % "6.11.0"
+    "io.sentry"                   % "sentry-logback"  % "6.13.0"
   )
 ) ++ testSettings
 
@@ -125,10 +125,10 @@ lazy val metalsRunner = project
     libraryDependencies ++= Seq(
       "org.scalameta"        % "metals"              % "0.11.10" cross (CrossVersion.for3Use2_13),
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.19.0",
-      "org.http4s"          %% "http4s-ember-server" % "0.23.17",
-      "org.http4s"          %% "http4s-ember-client" % "0.23.17",
-      "org.http4s"          %% "http4s-dsl"          % "0.23.17",
-      "org.http4s"          %% "http4s-circe"        % "0.23.17",
+      "org.http4s"          %% "http4s-ember-server" % "0.23.18",
+      "org.http4s"          %% "http4s-ember-client" % "0.23.18",
+      "org.http4s"          %% "http4s-dsl"          % "0.23.18",
+      "org.http4s"          %% "http4s-circe"        % "0.23.18",
       "io.circe"            %% "circe-generic"       % "0.14.3",
       "org.scalameta"       %% "munit"               % "0.7.29" % Test,
       "com.evolutiongaming" %% "scache"              % "4.2.3",
