@@ -1,9 +1,10 @@
 package com.olegych.scastie
 package client
 
+import play.api.libs.json.Json
+
 import org.scalajs.dom
 import org.scalajs.dom.window.localStorage
-import play.api.libs.json.Json
 
 object LocalStorage {
   private val stateKey = "state"
@@ -22,5 +23,4 @@ object LocalStorage {
         None
     }
   }
-
 }
