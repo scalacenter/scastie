@@ -20,18 +20,18 @@ object ScalaTargetType {
   }
 
   implicit object ScalaTargetTypeFormat extends Format[ScalaTargetType] {
-
     def writes(scalaTargetType: ScalaTargetType): JsValue = {
       JsString(scalaTargetType.toString)
     }
 
-    private val values = List(
-      Scala2,
-      Scala3,
-      JS,
-      Native,
-      Typelevel
-    ).map(v => (v.toString, v)).toMap
+    private val values =
+      List(
+        Scala2,
+        Scala3,
+        JS,
+        Native,
+        Typelevel
+      ).map(v => (v.toString, v)).toMap
 
     def reads(json: JsValue): JsResult[ScalaTargetType] = {
       json match {
@@ -44,7 +44,6 @@ object ScalaTargetType {
         case _ => JsError(Seq())
       }
     }
-
   }
 
   case object Scala2 extends ScalaTargetType {
@@ -66,5 +65,4 @@ object ScalaTargetType {
   case object Typelevel extends ScalaTargetType {
     def defaultScalaTarget: ScalaTarget = ScalaTarget.Typelevel.default
   }
-
 }
