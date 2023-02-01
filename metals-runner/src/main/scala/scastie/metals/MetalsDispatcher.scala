@@ -14,7 +14,7 @@ import cats.data.EitherT
 import cats.data.OptionT
 import cats.effect.{Async, Sync}
 import cats.syntax.all._
-import com.evolutiongaming.scache.Cache
+import com.evolutiongaming.scache.{Cache, Releasable}
 import com.olegych.scastie.api._
 import com.olegych.scastie.api.ScalaTarget._
 import coursierapi.{Dependency, Fetch}
@@ -62,11 +62,16 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
               s"Mtags couldn't be resolved for target: ${configuration.scalaTarget.scalaVersion}."
             )
           )
-      ) >>= (_.traverse(mtags => cache.getOrUpdate(configuration)(initializeCompiler(configuration, mtags)))
-        .recoverWith { case NonFatal(e) =>
-          logger.error(e.getMessage)
-          PresentationCompilerFailure(e.getMessage).asLeft.pure[F]
-        })
+      ) >>= (_.traverse(mtags =>
+        cache.getOrUpdateReleasable(configuration) {
+          initializeCompiler(configuration, mtags).map { newPC =>
+            Releasable(newPC, Sync[F].delay(newPC.underlyingPC.shutdown()))
+          }
+        }
+      ).recoverWith { case NonFatal(e) =>
+        logger.error(e.getMessage)
+        PresentationCompilerFailure(e.getMessage).asLeft.pure[F]
+      })
   }
 
   /*
