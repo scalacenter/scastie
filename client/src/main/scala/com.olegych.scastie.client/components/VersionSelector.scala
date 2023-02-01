@@ -25,22 +25,6 @@ object VersionSelector {
           }
 
         ul(cls := "suggestedVersions")(
-          ScalaVersions
-            .suggestedScalaVersions(props.scalaTarget.targetType)
-            .map { suggestedVersion =>
-              li(
-                input(
-                  `type` := "radio",
-                  id := s"scala-$suggestedVersion",
-                  value := suggestedVersion,
-                  name := "scalaV",
-                  onChange --> props.onChange(versionSelectors(suggestedVersion)),
-                  checked := props.scalaTarget.scalaVersion == suggestedVersion
-                ),
-                label(`for` := s"scala-$suggestedVersion", cls := "radio", role := "button", suggestedVersion)
-              )
-            }
-            .toTagMod,
           li(
             label(
               div(cls := "select-wrapper")(
