@@ -2,12 +2,12 @@ package com.olegych.scastie.instrumentation
 
 import java.io.{PrintWriter, StringWriter}
 import java.time.Instant
+import scala.meta.parsers.Parsed
 
 import com.olegych.scastie.api._
 
-import scala.meta.parsers.Parsed
-
 case class InstrumentationFailureReport(message: String, line: Option[Int]) {
+
   def toProgress(snippetId: SnippetId): SnippetProgress = {
     SnippetProgress.default.copy(
       ts = Some(Instant.now.toEpochMilli),
@@ -15,9 +15,11 @@ case class InstrumentationFailureReport(message: String, line: Option[Int]) {
       compilationInfos = List(Problem(Error, line, message))
     )
   }
+
 }
 
 object InstrumentedInputs {
+
   def apply(inputs0: Inputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
     if (inputs0.isWorksheetMode) {
       val instrumented = Instrument(inputs0.code, inputs0.target).map { instrumentedCode =>
@@ -25,8 +27,7 @@ object InstrumentedInputs {
       }
 
       instrumented match {
-        case Right(inputs) =>
-          success(inputs)
+        case Right(inputs) => success(inputs)
 
         case Left(error) =>
           import InstrumentationFailure._
@@ -59,9 +60,10 @@ object InstrumentedInputs {
   private def success(inputs: Inputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
     Right(InstrumentedInputs(inputs, isForcedProgramMode = false))
   }
+
 }
 
 case class InstrumentedInputs(
-    inputs: Inputs,
-    isForcedProgramMode: Boolean
+  inputs: Inputs,
+  isForcedProgramMode: Boolean
 )
