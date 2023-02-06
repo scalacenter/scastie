@@ -130,8 +130,8 @@ lazy val metalsRunner = project
       "org.http4s"          %% "http4s-dsl"          % "0.23.18",
       "org.http4s"          %% "http4s-circe"        % "0.23.18",
       "io.circe"            %% "circe-generic"       % "0.14.3",
-      "org.scalameta"       %% "munit"               % "0.7.29" % Test,
       "com.evolutiongaming" %% "scache"              % "4.2.3",
+      "org.scalameta"       %% "munit"               % "0.7.29" % Test,
       "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test
     )
   )
@@ -224,6 +224,7 @@ lazy val storage = project
   .settings(baseNoCrossSettings)
   .settings(loggingAndTest)
   .settings(
+    scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
       "org.mongodb.scala" %% "mongo-scala-driver" % "4.8.2",
       "net.lingala.zip4j"  % "zip4j"              % "2.11.3"
@@ -258,6 +259,7 @@ lazy val client = project
     stIgnore := List(
       "@sentry/browser",
       "@sentry/tracing",
+      "github-markdown-css",
       "react",
       "react-dom",
       "source-map-support"

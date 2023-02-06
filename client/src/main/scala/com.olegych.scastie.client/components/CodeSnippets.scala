@@ -16,6 +16,7 @@ final case class CodeSnippets(
     view: View,
     user: User,
     router: RouterCtl[Page],
+    isDarkTheme: Boolean,
     isShareModalClosed: SnippetId ~=> Boolean,
     closeShareModal: Reusable[Callback],
     openShareModal: SnippetId ~=> Callback,
@@ -71,6 +72,7 @@ object CodeSnippets {
 
     div(cls := "snippet")(
       CopyModal(
+        isDarkTheme = props.isDarkTheme,
         title = "Share your Code Snippet",
         subtitle = "Copy and share your code snippet's URL:",
         modalId = "share-modal-" + summary.snippetId.url.replace(".", "-"),

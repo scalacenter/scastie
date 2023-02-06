@@ -80,7 +80,8 @@ object Scastie {
         inputs = state.inputs,
         toggleTheme = scope.backend.toggleTheme,
         view = scope.backend.viewSnapshot(state.view),
-        openHelpModal = scope.backend.openHelpModal
+        openHelpModal = scope.backend.openHelpModal,
+        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal
       ).render.unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(
         state,
@@ -88,9 +89,28 @@ object Scastie {
         props
       ).render,
       HelpModal(
+        isDarkTheme = state.isDarkTheme,
         isClosed = state.modalState.isHelpModalClosed,
         close = scope.backend.closeHelpModal
-      ).render
+      ).render,
+      LoginModal(
+        isDarkTheme = state.isDarkTheme,
+        isClosed = state.modalState.isLoginModalClosed,
+        close = scope.backend.closeLoginModal,
+        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal,
+      ).render,
+      PrivacyPolicyPrompt(
+        isDarkTheme = state.isDarkTheme,
+        isClosed = state.modalState.isPrivacyPolicyPromptClosed,
+        acceptPrivacyPolicy = scope.backend.acceptPolicy,
+        refusePrivacyPolicy = scope.backend.refusePrivacyPolicy,
+        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal,
+      ).render,
+      PrivacyPolicyModal(
+        isDarkTheme = state.isDarkTheme,
+        isClosed = state.modalState.isPrivacyPolicyModalClosed,
+        close = scope.backend.closePrivacyPolicyModal
+      ).render,
     )
   }
 

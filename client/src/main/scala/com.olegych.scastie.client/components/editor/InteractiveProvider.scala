@@ -222,7 +222,6 @@ case class InteractiveProvider(props: CodeEditor) {
   }.map(_.getOrElse(null)).toJSPromise)
 
   private val autocompletionConfig = CompletionConfig()
-    .setCloseOnBlur(false)
     .setOverrideVarargs(completionsF)
     .setIcons(true)
     .setDefaultKeymap(true)
