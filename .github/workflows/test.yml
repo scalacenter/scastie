@@ -16,7 +16,7 @@ jobs:
     - uses: cachix/install-nix-action@v19
       with:
         nix_path: nixpkgs=channel:nixos-22.11
-      run: nix-build
+    - run: nix-build
     - name: Run tests
-      run: |
+    - run: |
         nix-shell --command "sbt -DSnippetsContainerTest.mongo=true cachedCiTest"
