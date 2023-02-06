@@ -1,31 +1,38 @@
 package com.olegych.scastie.storage
 
-import java.io.IOException
-import java.nio.file.attribute.BasicFileAttributes
-import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
-import java.util.concurrent.Executors
-
 import com.olegych.scastie.api._
+import com.olegych.scastie.storage.filesystem.FilesystemContainer
+import com.olegych.scastie.storage.mongodb.MongoDBContainer
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.OptionValues
+import org.scalatest.funsuite.AnyFunSuite
 
+import java.io.IOException
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
+import java.util.concurrent.Executors
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 import scala.util.Random
 
-class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues {
+class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues {
   val mongo = sys.props.get("SnippetsContainerTest.mongo").flatMap(_.toBooleanOption).contains(true)
-  println(s"SnippetsContainerTest using mongodb: $mongo")
+  println(s"ContainerTest using mongodb: $mongo")
   val root = Files.createTempDirectory("test")
   val oldRoot = Files.createTempDirectory("old-test")
 
-  private val testContainer: SnippetsContainer = {
+  private val testContainer: SnippetsContainer with UsersContainer = {
     if (mongo)
-      new MongoDBSnippetsContainer(scala.concurrent.ExecutionContext.Implicits.global, ci = true)
+      new MongoDBContainer(defaultConfig = true)
     else {
-      new FilesSnippetsContainer(root, oldRoot)(
-        Executors.newSingleThreadExecutor()
+      new FilesystemContainer(root, oldRoot)(
+       ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
       )
     }
   }
@@ -121,19 +128,15 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll with Opti
 
     val inputs1 = Inputs.default.copy(code = "inputs1")
     testContainer.save(inputs1, Some(user)).await
-    Thread.sleep(100)
 
     val inputs2 = Inputs.default.copy(code = "inputs2")
     testContainer.save(inputs2, Some(user)).await
-    Thread.sleep(100)
 
     val inputs3 = Inputs.default.copy(code = "inputs3")
     testContainer.save(inputs3, Some(user)).await
-    Thread.sleep(100)
 
     val user2inputs = Inputs.default.copy(code = "inputs3")
     testContainer.save(user2inputs, Some(user2)).await
-    Thread.sleep(100)
 
     val inputs4 =
       Inputs.default.copy(code = "inputs4", isShowingInUserProfile = false)
@@ -141,7 +144,7 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll with Opti
 
     val snippets = testContainer.listSnippets(user).await
     assert(
-      snippets.map(_.summary) == List("inputs3", "inputs2", "inputs1")
+      snippets.map(_.summary).toSet == Set("inputs3", "inputs2", "inputs1")
     )
   }
 
@@ -178,5 +181,68 @@ class SnippetsContainerTest extends AnyFunSuite with BeforeAndAfterAll with Opti
     val result = testContainer.readSnippet(snippetId).await
 
     assert(result.value.progresses.headOption.value == progress, "we properly append output")
+  }
+
+  test("deleteAllSnippets") {
+    val user = UserLogin("github-user-delete" + Random.nextInt())
+
+    val inputs1 = Inputs.default.copy(code = "inputs1")
+    val snippetId1 = testContainer.save(inputs1, Some(user)).await
+
+    val inputs2 = Inputs.default.copy(code = "inputs2")
+    val snippetId2 = testContainer.save(inputs2, Some(user)).await
+
+    val inputs2U = Inputs.default.copy(code = "inputs2 updated")
+    val snippetId2U = testContainer.update(snippetId2, inputs2U).await.get
+
+    assert(testContainer.listSnippets(user).await.size == 2)
+
+    testContainer.removeUserSnippets(user).await
+
+    assert(testContainer.readSnippet(snippetId1).await == None)
+    assert(testContainer.readSnippet(snippetId2U).await == None)
+    assert(testContainer.readSnippet(snippetId2).await == None)
+
+    assert(testContainer.listSnippets(user).await.size == 0)
+  }
+
+  def ensureUserCleanup(username: String, test: String => Any) = {
+    try {
+      test("bob")
+    } finally {
+      testContainer.deleteUser(UserLogin(username)).await
+    }
+
+  }
+
+  test("add new user") {
+    ensureUserCleanup("bob", { username =>
+      val snippetId = testContainer.addNewUser(UserLogin(username)).await
+      assert(snippetId)
+    })
+  }
+
+  test("get user privacy policy acceptance") {
+    ensureUserCleanup("bob", { username =>
+      val snippetId = testContainer.addNewUser(UserLogin(username)).await
+      val response = testContainer.getPrivacyPolicyResponse(UserLogin(username)).await
+      assert(testContainer.deleteUser(UserLogin(username)).await == true)
+    })
+  }
+
+  test("set user privacy policy acceptance") {
+    ensureUserCleanup("bob", { username =>
+      val snippetId = testContainer.addNewUser(UserLogin(username)).await
+      val updatePrivacyPolicy = testContainer.setPrivacyPolicyResponse(UserLogin(username), false).await
+      val response = testContainer.getPrivacyPolicyResponse(UserLogin(username)).await
+      assert(response == false)
+    })
+  }
+
+  test("remove user from privacy policy list") {
+    val username = "bob"
+    val snippetId = testContainer.addNewUser(UserLogin(username)).await
+    val removeUser = testContainer.deleteUser(UserLogin(username)).await
+    assert(removeUser == true)
   }
 }

@@ -38,6 +38,7 @@ object BuildSettings {
 
     val resetButton = TagMod(
       PromptModal(
+        isDarkTheme = props.isDarkTheme,
         modalText = "Reset Build",
         modalId = "reset-build-modal",
         isClosed = props.isResetModalClosed,

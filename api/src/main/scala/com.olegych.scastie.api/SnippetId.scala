@@ -4,18 +4,11 @@ import play.api.libs.json._
 
 object User {
   // low tech solution
-  val admins: Set[String] = Set(
-    "Duhemm",
-    "heathermiller",
-    "julienrf",
-    "jvican",
-    "MasseGuillaume",
-    "olafurpg",
-    "OlegYch"
-  )
-  implicit val formatUser: OFormat[User] =
-    Json.format[User]
+  val admins: Set[String] = Set("rochala", "julienrf")
+
+  implicit val formatUser: OFormat[User] = Json.format[User]
 }
+
 case class User(login: String, name: Option[String], avatar_url: String) {
   def isAdmin: Boolean = User.admins.contains(login)
 }

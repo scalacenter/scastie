@@ -7,7 +7,9 @@ import japgolly.scalajs.react._
 import vdom.all._
 import extra._
 
-final case class NewButton(isNewSnippetModalClosed: Boolean,
+final case class NewButton(
+                           isDarkTheme: Boolean,
+                           isNewSnippetModalClosed: Boolean,
                            openNewSnippetModal: Reusable[Callback],
                            closeNewSnippetModal: Reusable[Callback],
                            newSnippet: Reusable[Callback]) {
@@ -29,6 +31,7 @@ object NewButton {
       i(cls := "fa fa-file-o"),
       span("New"),
       PromptModal(
+        isDarkTheme = props.isDarkTheme,
         modalText = "New Snippet",
         modalId = "new-snippet-modal",
         isClosed = props.isNewSnippetModalClosed,

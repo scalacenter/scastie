@@ -101,6 +101,22 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
   def fetchUser(): Future[Option[User]] =
     get[User]("/user/settings")
 
+  @deprecated("Scheduled for removal", "2023-04-30")
+  def getPrivacyPolicyStatus(): Future[Boolean] =
+    post[Boolean].using("/user/privacyPolicyStatus", "").map(_.getOrElse(true))
+
+  @deprecated("Scheduled for removal", "2023-04-30")
+  def acceptPrivacyPolicy(): Future[Boolean] =
+    post[Boolean].using("/user/acceptPrivacyPolicy", "", async=false).map(_.getOrElse(false))
+
+  @deprecated("Scheduled for removal", "2023-04-30")
+  def removeAllUserSnippets(): Future[Boolean] =
+    post[Boolean].using("/user/removeAllUserSnippets", "", async=false).map(_.getOrElse(false))
+
+  @deprecated("Scheduled for removal", "2023-04-30")
+  def removeUserFromPolicyStatus(): Future[Boolean] =
+    post[Boolean].using("/user/removeUserFromPolicyStatus", "", async=false).map(_.getOrElse(false))
+
   def fetchUserSnippets(): Future[List[SnippetSummary]] =
     get[List[SnippetSummary]]("/user/snippets").map(_.getOrElse(Nil))
 }

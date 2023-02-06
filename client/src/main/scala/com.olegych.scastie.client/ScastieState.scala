@@ -226,8 +226,26 @@ case class ScastieState(
       modalState = modalState.copy(isHelpModalClosed = !modalState.isHelpModalClosed)
     )
 
+  def togglePrivacyPolicyModal: ScastieState =
+    copyAndSave(
+      modalState = modalState.copy(isPrivacyPolicyModalClosed = !modalState.isPrivacyPolicyModalClosed)
+    )
+
+  def setPrivacyPolicyPromptClosed(status: Boolean): ScastieState =
+    copyAndSave(
+      modalState = modalState.copy(isPrivacyPolicyPromptClosed = status)
+    )
+
+  def setLoginModalClosed(status: Boolean): ScastieState =
+    copyAndSave(
+      modalState = modalState.copy(isLoginModalClosed = status)
+    )
+
   def openHelpModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isHelpModalClosed = false))
+
+  def openPrivacyPolicyModal: ScastieState =
+    copyAndSave(modalState = modalState.copy(isPrivacyPolicyModalClosed = false))
 
   def closeHelpModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isHelpModalClosed = true))

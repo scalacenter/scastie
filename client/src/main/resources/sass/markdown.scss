@@ -1,0 +1,10 @@
+@import "commonvars";
+
+@mixin markdown($class) {
+  .markdown-body {
+    background-color: $background-color;
+    ul {
+      list-style: revert;
+    }
+  }
+}

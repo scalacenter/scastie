@@ -1,12 +1,17 @@
-package com.olegych.scastie.storage
+package com.olegych.scastie.storage.inmemory
 
 import com.olegych.scastie.api._
 import scala.concurrent.{ExecutionContext, Future}
 
 import scala.collection.mutable
 import System.{lineSeparator => nl}
+import com.olegych.scastie.storage.SnippetsContainer
+import com.olegych.scastie.storage.UserLogin
+import com.olegych.scastie.storage.UsersContainer
+import com.olegych.scastie.storage.PolicyAcceptance
 
-class InMemorySnippetsContainer(implicit protected val ec: ExecutionContext) extends SnippetsContainer {
+
+trait InMemorySnippetsContainer extends SnippetsContainer {
 
   private val snippets = mutable.Map[SnippetId, Storage]()
 

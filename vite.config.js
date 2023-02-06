@@ -1,6 +1,7 @@
 import { spawnSync } from "child_process";
 import path from "path";
 import { defineConfig, splitVendorChunkPlugin } from "vite";
+import { plugin as mdPlugin } from 'vite-plugin-markdown';
 
 function isDev() {
   return process.env.NODE_ENV !== "production";
@@ -105,7 +106,9 @@ export default defineConfig({
   },
   root: root,
   base: isDev() ? '' : '/public/',
-  plugins: [splitVendorChunkPlugin()],
+  plugins: [splitVendorChunkPlugin(), mdPlugin({
+    mode: ['html']
+  })],
   resolve: {
     alias: [
       {
@@ -115,6 +118,10 @@ export default defineConfig({
       {
         find: '@resources',
         replacement: path.resolve(__dirname, 'client', 'src', 'main', 'resources'),
+      },
+      {
+        find: '@scastieRoot',
+        replacement: path.resolve(__dirname),
       }
     ],
   },

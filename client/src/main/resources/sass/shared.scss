@@ -8,17 +8,19 @@
 @import "ansi";
 @import "tooltip";
 @import "metals-status-indicator";
+@import "markdown";
 
-@include modal();
 @include solarized();
 @include editor();
 
 @mixin sharedStyles($class) {
   .scastie {
     .app.#{$class} {
+      @include modal($class);
       @include editorTheme($class);
       @include tooltip($class);
       @include metalsStatusIndicator($class);
+      @include markdown($class);
     }
   }
 }

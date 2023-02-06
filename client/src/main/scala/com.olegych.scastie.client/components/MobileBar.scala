@@ -6,6 +6,7 @@ import japgolly.scalajs.react.vdom.all._
 
 final case class MobileBar(isRunning: Boolean,
                            isStatusOk: Boolean,
+                           isDarkTheme: Boolean,
                            save: Reusable[Callback],
                            setView: View ~=> Callback,
                            isNewSnippetModalClosed: Boolean,
@@ -32,6 +33,7 @@ object MobileBar {
           embedded = false,
         ).render,
         NewButton(
+          isDarkTheme = props.isDarkTheme,
           isNewSnippetModalClosed = props.isNewSnippetModalClosed,
           openNewSnippetModal = props.openNewSnippetModal,
           closeNewSnippetModal = props.closeNewSnippetModal,
