@@ -9,8 +9,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Start mongodb
-      uses: supercharge/mongodb-github-action@1.6.0
-    - uses: nixbuild/nix-quick-install-action@v5
+      uses: supercharge/mongodb-github-action@1.8.0
+    - uses: nixbuild/nix-quick-install-action@v21
     - name: Run tests
       run: |
         nix-shell --command "sbt -DSnippetsContainerTest.mongo=true cachedCiTest"
