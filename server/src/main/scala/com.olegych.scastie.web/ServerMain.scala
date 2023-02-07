@@ -77,17 +77,19 @@ object ServerMain {
     val scalaLangRoutes = new ScalaLangRoutes(dispatchActor, userDirectives).routes
     val frontPageRoutes = new FrontPageRoutes(dispatchActor, production, hostname).routes
 
-    val routes = cors() {
-      pathPrefix("api") {
-        apiRoutes ~
-          progressRoutes ~
-          downloadRoutes ~
-          statusRoutes ~
-          scalaJsRoutes
-      } ~
-        scalaLangRoutes ~
-        frontPageRoutes
-    } ~ oauthRoutes
+    val routes =
+      oauthRoutes ~
+      cors() {
+        pathPrefix("api") {
+          apiRoutes ~
+            progressRoutes ~
+            downloadRoutes ~
+            statusRoutes ~
+            scalaJsRoutes
+        } ~
+          scalaLangRoutes ~
+          frontPageRoutes
+      }
 
     val futureBinding = Http().newServerAt("localhost", port).bindFlow(routes)
 

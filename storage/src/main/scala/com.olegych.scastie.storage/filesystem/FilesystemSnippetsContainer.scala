@@ -1,21 +1,21 @@
-package com.olegych.scastie.storage
+package com.olegych.scastie.storage.filesystem
 
 import com.olegych.scastie.api._
+import com.olegych.scastie.storage.OldScastieConverter
+import com.olegych.scastie.storage.SnippetsContainer
+import com.olegych.scastie.storage.UserLogin
+import play.api.libs.json.Json
 
-import java.util.concurrent.ExecutorService
-import scala.concurrent.{ExecutionContext, Future}
+import java.io.IOException
+import java.nio.file._
+import scala.concurrent.Future
 
 import System.{lineSeparator => nl}
 
-import java.nio.file._
-import java.io.IOException
 
-import play.api.libs.json.Json
-
-class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService) extends SnippetsContainer {
-
-  implicit protected val ec: ExecutionContext =
-    ExecutionContext.fromExecutorService(es)
+trait FilesystemSnippetsContainer extends SnippetsContainer with GenericFilesystemContainer {
+  val root: Path
+  val oldRoot: Path
 
   def appendOutput(progress: SnippetProgress): Future[Unit] = Future {
     (progress.scalaJsContent, progress.scalaJsSourceMapContent, progress.snippetId) match {
@@ -257,18 +257,6 @@ class FilesSnippetsContainer(root: Path, oldRoot: Path)(val es: ExecutorService)
     }
   }
 
-  private def write(path: Path, content: String): Unit = {
-    Files.write(path, content.getBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
-  }
-
-  private def append(path: Path, content: String): Unit = {
-    Files.write(path, content.getBytes, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
-  }
-
-  def slurp(src: Path): Option[String] = {
-    if (Files.exists(src)) Some(new String(Files.readAllBytes(src)))
-    else None
-  }
 
   private def deleteEmptyDirectories(base: Path): Unit = {
     def dirIsEmpty(dir: Path): Boolean = {

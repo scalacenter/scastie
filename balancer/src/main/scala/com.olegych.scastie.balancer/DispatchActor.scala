@@ -1,10 +1,11 @@
 package com.olegych.scastie.balancer
 
-import java.nio.file.Paths
-import java.time.Instant
-import java.util.concurrent.Executors
-
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, OneForOneStrategy, SupervisorStrategy}
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.ActorRef
+import akka.actor.ActorSelection
+import akka.actor.OneForOneStrategy
+import akka.actor.SupervisorStrategy
 import akka.event
 import akka.pattern.ask
 import akka.remote.DisassociatedEvent
@@ -12,9 +13,15 @@ import akka.util.Timeout
 import com.olegych.scastie.api
 import com.olegych.scastie.api._
 import com.olegych.scastie.storage._
+import com.olegych.scastie.storage.filesystem._
+import com.olegych.scastie.storage.inmemory._
+import com.olegych.scastie.storage.mongodb._
 import com.olegych.scastie.util._
 import com.typesafe.config.ConfigFactory
 
+import java.nio.file.Paths
+import java.time.Instant
+import java.util.concurrent.Executors
 import scala.concurrent._
 import scala.concurrent.duration._
 
@@ -38,6 +45,15 @@ case class FetchOldSnippet(id: Int)
 case class FetchUserSnippets(user: User)
 
 case class ReceiveStatus(requester: ActorRef)
+
+@deprecated("Scheduled for removal", "2023-04-30")
+case class GetPrivacyPolicy(user: User)
+@deprecated("Scheduled for removal", "2023-04-30")
+case class SetPrivacyPolicy(user: User, status: Boolean)
+@deprecated("Scheduled for removal", "2023-04-30")
+case class RemovePrivacyPolicy(user: User)
+@deprecated("Scheduled for removal", "2023-04-30")
+case class RemoveAllUserSnippets(user: User)
 
 case class Run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId)
 
@@ -110,20 +126,16 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   private val container =
     containerType match {
-      case "memory" => new InMemorySnippetsContainer
-      case "mongo"  => new MongoDBSnippetsContainer(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
-      case "files" =>
-        new FilesSnippetsContainer(
-          Paths.get(config.getString("snippets-dir")),
-          Paths.get(config.getString("old-snippets-dir"))
-        )(
-          ExecutionContext.fromExecutorService(
-            Executors.newCachedThreadPool()
-          )
-        )
+      case "memory" => new InMemoryContainer()
+      case "mongo"  => new MongoDBContainer()(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
+      case "mongo-local"  => new MongoDBContainer(defaultConfig = false)(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
+      case "files" => new FilesystemContainer(
+        Paths.get(config.getString("snippets-dir")),
+        Paths.get(config.getString("old-snippets-dir"))
+      )(ExecutionContext.fromExecutorService(Executors.newCachedThreadPool()))
       case _ =>
         println("fallback to in-memory container")
-        new InMemorySnippetsContainer
+        new InMemoryContainer
     }
 
   private def updateSbtBalancer(newSbtBalancer: SbtBalancer): Unit = {
@@ -244,6 +256,18 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case FetchScalaJsSourceMap(snippetId) =>
       val sender = this.sender()
       logError(container.readScalaJsSourceMap(snippetId).map(sender ! _))
+    case GetPrivacyPolicy(user) =>
+      val sender = this.sender()
+      logError(container.getPrivacyPolicyResponse(UserLogin(user.login)).map(sender ! _))
+    case SetPrivacyPolicy(user, status) =>
+      val sender = this.sender()
+      logError(container.setPrivacyPolicyResponse(UserLogin(user.login), status).map(sender ! _))
+    case RemovePrivacyPolicy(user) =>
+      val sender = this.sender()
+      logError(container.deleteUser(UserLogin(user.login)).map(sender ! _))
+    case RemoveAllUserSnippets(user) =>
+      val sender = this.sender()
+      logError(container.removeUserSnippets(UserLogin(user.login)).map(sender ! _))
 
     case progress: api.SnippetProgress =>
       val sender = this.sender()

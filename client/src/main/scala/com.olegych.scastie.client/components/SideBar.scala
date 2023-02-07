@@ -29,7 +29,8 @@ final case class SideBar(isDarkTheme: Boolean,
                          inputs: Inputs,
                          toggleTheme: Reusable[Callback],
                          view: StateSnapshot[View],
-                         openHelpModal: Reusable[Callback]) {
+                         openHelpModal: Reusable[Callback],
+                         openPrivacyPolicyModal: Reusable[Callback]) {
   @inline def render: VdomElement = SideBar.component(this)
 }
 
@@ -51,6 +52,12 @@ object SideBar {
       li(onClick --> props.toggleTheme, role := "button", title := s"Select $toggleThemeLabel Theme (F2)", cls := "btn")(
         i(cls := s"fa $selectedIcon"),
         span(toggleThemeLabel)
+      )
+
+    val privacyPolicyButton =
+      li(onClick --> props.openPrivacyPolicyModal, role := "button", title := "Show privacy policy", cls := "btn")(
+        i(cls := "fa fa-user-secret"),
+        span("Privacy Policy")
       )
 
     val helpButton =
@@ -106,6 +113,7 @@ object SideBar {
         ),
         ul(cls := "actions-bottom")(
           themeButton,
+          privacyPolicyButton,
           helpButton,
           runnersStatusButton
         )

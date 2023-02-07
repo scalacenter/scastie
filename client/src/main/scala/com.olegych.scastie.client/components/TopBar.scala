@@ -8,7 +8,7 @@ import japgolly.scalajs.react._, vdom.all._, extra._
 
 import org.scalajs.dom
 
-final case class TopBar(view: StateSnapshot[View], user: Option[User]) {
+final case class TopBar(view: StateSnapshot[View], user: Option[User], openLoginModal: Reusable[Callback]) {
   @inline def render: VdomElement = TopBar.component(this)
 }
 
@@ -35,9 +35,6 @@ object TopBar {
       props.view.setState(View.Editor) >>
         Callback(dom.window.location.pathname = logoutUrl)
 
-    def login: Callback =
-      Callback(dom.window.location.pathname = "/login")
-
     val profileButton =
       props.user match {
         case Some(user) =>
@@ -63,7 +60,7 @@ object TopBar {
           )
 
         case None =>
-          li(role := "link", onClick --> login, cls := "btn", i(cls := "fa fa-sign-in"), "Login")
+          li(role := "link", onClick --> props.openLoginModal, cls := "btn", i(cls := "fa fa-sign-in"), "Login")
       }
 
     nav(
