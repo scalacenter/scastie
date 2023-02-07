@@ -1,6 +1,6 @@
-import java.nio.file.Path
-
 import sbtdocker.DockerPlugin.autoImport._
+
+import java.nio.file.Path
 
 object DockerHelper {
   val alpineImageName = "alpine:3.17"
@@ -36,10 +36,10 @@ object DockerHelper {
       env("LANG", "en_US.UTF-8")
       env("HOME", userHome)
 
-      val artifactName        = artifactZip.getFileName.toString.replace(".zip", "")
+      val artifactName = artifactZip.getFileName.toString.replace(".zip", "")
       val artifactZipFileName = artifactZip.getFileName.toString
-      val artifactTargetPath  = s"/app/$artifactZipFileName"
-      val configDestination   = "/home/scastie/config.conf"
+      val artifactTargetPath = s"/app/$artifactZipFileName"
+      val configDestination      = "/home/scastie/config.conf"
 
       add(configPath.toFile, configDestination)
       add(artifactZip.toFile, artifactTargetPath)
@@ -55,18 +55,17 @@ object DockerHelper {
     }
   }
 
-  def apply(
-    baseDirectory: Path,
-    sbtTargetDir: Path,
-    sbtScastie: String,
-    ivyHome: Path,
-    organization: String,
-    artifact: Path,
-    sbtVersion: String
-  ): Dockerfile = {
+
+  def apply(baseDirectory: Path,
+            sbtTargetDir: Path,
+            sbtScastie: String,
+            ivyHome: Path,
+            organization: String,
+            artifact: Path,
+            sbtVersion: String): Dockerfile = {
 
     val artifactTargetPath = s"/app/${artifact.getFileName()}"
-    val generatedProjects  = new GenerateProjects(sbtTargetDir)
+    val generatedProjects = new GenerateProjects(sbtTargetDir)
     generatedProjects.generateSbtProjects()
 
     val logbackConfDestination = "/home/scastie/logback.xml"
@@ -87,7 +86,7 @@ object DockerHelper {
       destination = ivyLocalTemp,
       directoryFilter = { (dir, depth) =>
         lazy val isSbtScastiePath = dir.getName(0).toString == sbtScastie
-        lazy val dirName          = dir.getFileName.toString
+        lazy val dirName = dir.getFileName.toString
 
         if (depth == 1) {
           dirName == SbtShared.versionNow || dirName == SbtShared.versionRuntime || isSbtScastiePath
@@ -171,5 +170,4 @@ object DockerHelper {
       )
     }
   }
-
 }

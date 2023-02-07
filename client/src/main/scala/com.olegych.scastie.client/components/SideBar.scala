@@ -2,13 +2,14 @@ package com.olegych.scastie
 package client
 package components
 
-import scala.scalajs.js
-
 import com.olegych.scastie.api._
-import extra._
+
 import japgolly.scalajs.react._
-import js.annotation._
 import vdom.all._
+import extra._
+
+import scala.scalajs.js
+import js.annotation._
 
 @JSImport("@resources/images/icon-scastie.png", JSImport.Default)
 @js.native
@@ -19,24 +20,23 @@ object ScastieLogo extends js.Any
 object Placeholder extends js.Any
 
 object Assets {
-  def logo: String        = ScastieLogo.asInstanceOf[String]
+  def logo: String = ScastieLogo.asInstanceOf[String]
   def placeholder: String = Placeholder.asInstanceOf[String]
 }
 
-final case class SideBar(
-  isDarkTheme: Boolean,
-  status: StatusState,
-  inputs: Inputs,
-  toggleTheme: Reusable[Callback],
-  view: StateSnapshot[View],
-  openHelpModal: Reusable[Callback]
-) {
+final case class SideBar(isDarkTheme: Boolean,
+                         status: StatusState,
+                         inputs: Inputs,
+                         toggleTheme: Reusable[Callback],
+                         view: StateSnapshot[View],
+                         openHelpModal: Reusable[Callback]) {
   @inline def render: VdomElement = SideBar.component(this)
 }
 
 object SideBar {
 
-  implicit val reusability: Reusability[SideBar] = Reusability.derive[SideBar]
+  implicit val reusability: Reusability[SideBar] =
+    Reusability.derive[SideBar]
 
   private def render(props: SideBar): VdomElement = {
     val toggleThemeLabel =
@@ -47,36 +47,32 @@ object SideBar {
       if (props.isDarkTheme) "fa fa-sun-o"
       else "fa fa-moon-o"
 
-    val themeButton = li(
-      onClick --> props.toggleTheme,
-      role  := "button",
-      title := s"Select $toggleThemeLabel Theme (F2)",
-      cls   := "btn"
-    )(
-      i(cls := s"fa $selectedIcon"),
-      span(toggleThemeLabel)
-    )
+    val themeButton =
+      li(onClick --> props.toggleTheme, role := "button", title := s"Select $toggleThemeLabel Theme (F2)", cls := "btn")(
+        i(cls := s"fa $selectedIcon"),
+        span(toggleThemeLabel)
+      )
 
-    val helpButton = li(onClick --> props.openHelpModal, role := "button", title := "Show help Menu", cls := "btn")(
-      i(cls := "fa fa-question-circle"),
-      span("Help")
-    )
+    val helpButton =
+      li(onClick --> props.openHelpModal, role := "button", title := "Show help Menu", cls := "btn")(
+        i(cls := "fa fa-question-circle"),
+        span("Help")
+      )
 
     val runnersStatusButton = {
-      val (statusIcon, statusClass, statusLabel) = props.status.sbtRunnerCount match {
-        case None => ("fa-times-circle", "status-unknown", "Unknown")
+      val (statusIcon, statusClass, statusLabel) =
+        props.status.sbtRunnerCount match {
+          case None =>
+            ("fa-times-circle", "status-unknown", "Unknown")
 
-        case Some(0) => ("fa-times-circle", "status-down", "Down")
+          case Some(0) =>
+            ("fa-times-circle", "status-down", "Down")
 
-        case Some(_) => ("fa-check-circle", "status-up", "Up")
-      }
+          case Some(_) =>
+            ("fa-check-circle", "status-up", "Up")
+        }
 
-      li(
-        onClick --> props.view.setState(View.Status),
-        role  := "button",
-        title := "Show runners status",
-        cls   := s"btn $statusClass"
-      )(
+      li(onClick --> props.view.setState(View.Status), role := "button", title := "Show runners status", cls := s"btn $statusClass")(
         i(cls := s"fa $statusIcon"),
         span(statusLabel)
       )
@@ -100,7 +96,7 @@ object SideBar {
 
     nav(cls := "sidebar")(
       div(cls := "actions-container")(
-        div(cls   := "logo")(
+        div(cls := "logo")(
           img(src := Assets.logo),
           h1("Scastie")
         ),
@@ -117,10 +113,10 @@ object SideBar {
     )
   }
 
-  private val component = ScalaComponent
-    .builder[SideBar]("SideBar")
-    .render_P(render)
-    .configure(Reusability.shouldComponentUpdate)
-    .build
-
+  private val component =
+    ScalaComponent
+      .builder[SideBar]("SideBar")
+      .render_P(render)
+      .configure(Reusability.shouldComponentUpdate)
+      .build
 }
