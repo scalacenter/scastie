@@ -1,35 +1,42 @@
 package com.olegych.scastie.storage.mongodb
 
+import java.lang.System.{lineSeparator => nl}
+import scala.concurrent.duration._
+import scala.concurrent.Await
+import scala.concurrent.Future
+
 import com.olegych.scastie.api._
 import com.olegych.scastie.storage._
 import org.mongodb.scala._
+import org.mongodb.scala.model._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
-import org.mongodb.scala.model._
-
-import java.lang.System.{lineSeparator => nl}
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
 
 trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContainer {
+
   lazy val snippets = {
     val db = database.getCollection[Document]("snippets")
 
-    Await.result(db.createIndex(Indexes.ascending("simpleSnippetId", "oldId"), IndexOptions().unique(true)).head(), Duration.Inf)
-    Await.result(Future.sequence(Seq(
-      Indexes.hashed("simpleSnippetId"),
-      Indexes.hashed("oldId"),
-      Indexes.hashed("user"),
-      Indexes.hashed("snippetId.user.login"),
-      Indexes.hashed("inputs.isShowingInUserProfile"),
-      Indexes.hashed("time")
-    ).map(db.createIndex(_).head())), Duration.Inf)
+    Await.result(
+      db.createIndex(Indexes.ascending("simpleSnippetId", "oldId"), IndexOptions().unique(true)).head(),
+      Duration.Inf
+    )
+    Await.result(
+      Future.sequence(
+        Seq(
+          Indexes.hashed("simpleSnippetId"),
+          Indexes.hashed("oldId"),
+          Indexes.hashed("user"),
+          Indexes.hashed("snippetId.user.login"),
+          Indexes.hashed("inputs.isShowingInUserProfile"),
+          Indexes.hashed("time")
+        ).map(db.createIndex(_).head())
+      ),
+      Duration.Inf
+    )
 
     db
   }
-
 
   def toMongoSnippet(snippetId: SnippetId, inputs: Inputs): MongoSnippet = MongoSnippet(
     simpleSnippetId = snippetId.url,
@@ -141,7 +148,7 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
     .map(_.flatMap(fromBson[MongoSnippet]).map(_.toFetchResult))
 
   override def removeUserSnippets(user: UserLogin): Future[Boolean] = {
-    val query = or(Document("user" -> user.login), Document("snippetId.user.login" -> user.login))
+    val query    = or(Document("user" -> user.login), Document("snippetId.user.login" -> user.login))
     val deletion = snippets.deleteMany(query).head().map(_.wasAcknowledged)
 
     lazy val validation = listSnippets(user).map(_.isEmpty)

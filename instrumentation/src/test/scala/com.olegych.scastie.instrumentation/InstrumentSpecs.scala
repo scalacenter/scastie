@@ -1,12 +1,12 @@
 package com.olegych.scastie
 package instrumentation
 
+import java.nio.file._
+import scala.jdk.CollectionConverters._
+
 import com.olegych.scastie.api.ScalaTarget
 import com.olegych.scastie.util.ScastieFileUtil.slurp
 import org.scalatest.funsuite.AnyFunSuite
-
-import java.nio.file._
-import scala.jdk.CollectionConverters._
 
 class InstrumentSpecs extends AnyFunSuite {
 
@@ -14,8 +14,8 @@ class InstrumentSpecs extends AnyFunSuite {
 
   private val testFiles = {
     val path = Paths.get("instrumentation", "src", "test", "resources")
-    val s = Files.newDirectoryStream(path)
-    val t = s.asScala.toList.filter(_.endsWith(".scala"))
+    val s    = Files.newDirectoryStream(path)
+    val t    = s.asScala.toList.filter(_.endsWith(".scala"))
     s.close()
     t
   }
@@ -50,13 +50,11 @@ class InstrumentSpecs extends AnyFunSuite {
   }
 
   test("extends App trait fails") {
-    val Left(HasMainMethod) =
-      Instrument("object Main extends App { }", ScalaTarget.Jvm.default)
+    val Left(HasMainMethod) = Instrument("object Main extends App { }", ScalaTarget.Jvm.default)
   }
 
   test("with App trait fails") {
-    val Left(HasMainMethod) =
-      Instrument("trait Foo; object Main extends Foo with App { }", ScalaTarget.Jvm.default)
+    val Left(HasMainMethod) = Instrument("trait Foo; object Main extends Foo with App { }", ScalaTarget.Jvm.default)
   }
 
   test("extends App primary fails") {
