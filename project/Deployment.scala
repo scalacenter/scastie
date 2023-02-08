@@ -223,7 +223,7 @@ class Deployment(
   def compareScriptWithRemote(scriptPath: Path): Boolean = {
     val uri = s"${config.userName}@${config.runnersHostname}"
     val remoteScriptPath = scriptPath.getFileName().toString()
-    val exitCode = Process(s"ssh $uri 'cat $remoteScriptPath'") #| (s"diff - $scriptPath") ! logger
+    val exitCode = Process(s"ssh $uri cat $remoteScriptPath") #| (s"diff - $scriptPath") ! logger
     logger.info(s"EXIT CODE $exitCode")
     exitCode == 0
   }
