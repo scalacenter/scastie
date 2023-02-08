@@ -3,25 +3,26 @@ package client
 package components
 
 import japgolly.scalajs.react._
+
 import vdom.all._
 
 final case class PromptModal(
-  isDarkTheme: Boolean,
-  modalText: String,
-  modalId: String,
-  isClosed: Boolean,
-  close: Reusable[Callback],
-  actionText: String,
-  actionLabel: String,
-  action: Reusable[Callback]
-) {
+                             isDarkTheme: Boolean,
+                             modalText: String,
+                             modalId: String,
+                             isClosed: Boolean,
+                             close: Reusable[Callback],
+                             actionText: String,
+                             actionLabel: String,
+                             action: Reusable[Callback]) {
 
   @inline def render: VdomElement = PromptModal.component(this)
 }
 
 object PromptModal {
 
-  implicit val reusability: Reusability[PromptModal] = Reusability.derive[PromptModal]
+  implicit val reusability: Reusability[PromptModal] =
+    Reusability.derive[PromptModal]
 
   private def render(props: PromptModal): VdomElement = {
     Modal(
@@ -37,7 +38,10 @@ object PromptModal {
           props.actionText
         ),
         ul(
-          li(onClick ==> (e => e.stopPropagationCB >> props.action >> props.close), cls := "btn")(
+          li(onClick ==> (
+                 e => e.stopPropagationCB >> props.action >> props.close
+             ),
+             cls := "btn")(
             props.actionLabel
           ),
           li(onClick ==> (e => e.stopPropagationCB >> props.close), cls := "btn")(
@@ -48,10 +52,10 @@ object PromptModal {
     ).render
   }
 
-  private val component = ScalaComponent
-    .builder[PromptModal]("PrompModal")
-    .render_P(render)
-    .configure(Reusability.shouldComponentUpdate)
-    .build
-
+  private val component =
+    ScalaComponent
+      .builder[PromptModal]("PrompModal")
+      .render_P(render)
+      .configure(Reusability.shouldComponentUpdate)
+      .build
 }

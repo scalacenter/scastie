@@ -1,27 +1,32 @@
 package com.olegych.scastie.client
 package components
 
+
 import com.olegych.scastie.client.components.editor.EditorKeymaps
-import extra._
 import japgolly.scalajs.react._
 import org.scalajs.dom
+
 import vdom.all._
+import extra._
+
 
 // scheduled for removal 2023-04-30
 @deprecated("Scheduled for removal", "2023-04-30")
 final case class PrivacyPolicyPrompt(
-  isDarkTheme: Boolean,
-  isClosed: Boolean,
-  acceptPrivacyPolicy: Reusable[Callback],
-  refusePrivacyPolicy: Reusable[Callback],
-  openPrivacyPolicyModal: Reusable[Callback]
-) {
+                           isDarkTheme: Boolean,
+                           isClosed: Boolean,
+                           acceptPrivacyPolicy: Reusable[Callback],
+                           refusePrivacyPolicy: Reusable[Callback],
+                           openPrivacyPolicyModal: Reusable[Callback]
+                         ) {
   @inline def render: VdomElement = PrivacyPolicyPrompt.component(this)
 }
 
+
 @deprecated("Scheduled for removal", "2023-04-30")
 object PrivacyPolicyPrompt {
-  implicit val reusability: Reusability[PrivacyPolicyPrompt] = Reusability.derive[PrivacyPolicyPrompt]
+  implicit val reusability: Reusability[PrivacyPolicyPrompt] =
+    Reusability.derive[PrivacyPolicyPrompt]
 
   def reloadWindow = Reusable.always(Callback { dom.window.location.reload() })
 
@@ -37,8 +42,7 @@ object PrivacyPolicyPrompt {
       modalId = "privacy-policy-prompt",
       content = TagMod(
         div(cls := "modal-intro")(
-          p(
-            """With the introduction of privacy policy to Scastie, you have to decide
+          p("""With the introduction of privacy policy to Scastie, you have to decide
               | whether you want to keep your existing code snippets, or remove them all from our database.
               | By keeping the snippets, you acknowledge that you have read and agreed
               | to the privacy policy terms available """.stripMargin.stripLineEnd,
@@ -60,13 +64,15 @@ object PrivacyPolicyPrompt {
           ),
           p(
             """If you do not explicitly ask us to keep your snippets before April 30th 2023, we will delete them all."""
-          )
+          ),
         ),
         ul(
           li(onClick ==> (e => e.stopPropagationCB >> props.acceptPrivacyPolicy), cls := "btn")(
             "Keep my existing snippets"
           ),
-          li(onClick ==> (e => e.stopPropagationCB >> props.refusePrivacyPolicy), cls := "btn")(
+        li(onClick ==> (e =>
+            e.stopPropagationCB >> props.refusePrivacyPolicy
+          ), cls := "btn")(
             "Delete my existing snippets"
           )
         )
@@ -74,8 +80,8 @@ object PrivacyPolicyPrompt {
     ).render
   }
 
-  private val component = ScalaFnComponent
-    .withHooks[PrivacyPolicyPrompt]
-    .renderWithReuse(render)
-
+  private val component =
+    ScalaFnComponent
+      .withHooks[PrivacyPolicyPrompt]
+      .renderWithReuse(render)
 }

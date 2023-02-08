@@ -1,8 +1,9 @@
 package com.olegych.scastie.client.components.editor
 
 import com.olegych.scastie.api
-import scalajs.js.|
 import typings.codemirrorLint.codemirrorLintStrings
+
+import scalajs.js.|
 
 object JsUtils {
   type jsSeverity = codemirrorLintStrings.error | codemirrorLintStrings.info | codemirrorLintStrings.warning

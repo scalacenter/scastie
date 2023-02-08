@@ -16,5 +16,4 @@ trait GenericFilesystemContainer {
     if (Files.exists(src)) Some(new String(Files.readAllBytes(src)))
     else None
   }
-
 }

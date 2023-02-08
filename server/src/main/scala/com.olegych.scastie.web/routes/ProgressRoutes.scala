@@ -1,8 +1,6 @@
 package com.olegych.scastie.web.routes
 
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.Future
-
+import akka.NotUsed
 import akka.actor.ActorRef
 import akka.http.scaladsl.coding.Coders.Gzip
 import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
@@ -13,13 +11,14 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.stream.scaladsl._
-import akka.NotUsed
 import com.olegych.scastie.api._
 import com.olegych.scastie.balancer._
 import play.api.libs.json.Json
 
-class ProgressRoutes(progressActor: ActorRef) {
+import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
 
+class ProgressRoutes(progressActor: ActorRef) {
   val routes: Route = encodeResponseWith(Gzip)(
     concat(
       snippetIdStart("progress-sse") { sid =>
@@ -29,12 +28,14 @@ class ProgressRoutes(progressActor: ActorRef) {
           }
         }
       },
-      snippetIdStart("progress-ws")(sid => handleWebSocketMessages(webSocket(sid)))
+      snippetIdStart("progress-ws")(
+        sid => handleWebSocketMessages(webSocket(sid))
+      )
     )
   )
 
   private def progressSource(
-    snippetId: SnippetId
+      snippetId: SnippetId
   ): Source[SnippetProgress, NotUsed] = {
     Source
       .fromFuture((progressActor ? SubscribeProgress(snippetId))(1.second).mapTo[Source[SnippetProgress, NotUsed]])
@@ -43,7 +44,7 @@ class ProgressRoutes(progressActor: ActorRef) {
 
   private def webSocket(snippetId: SnippetId): Flow[ws.Message, ws.Message, _] = {
     def flow: Flow[String, SnippetProgress, NotUsed] = {
-      val in  = Flow[String].to(Sink.ignore)
+      val in = Flow[String].to(Sink.ignore)
       val out = progressSource(snippetId)
       Flow.fromSinkAndSource(in, out)
     }
@@ -54,7 +55,8 @@ class ProgressRoutes(progressActor: ActorRef) {
         case e         => Future.failed(new Exception(e.toString))
       }
       .via(flow)
-      .map(progress => ws.TextMessage.Strict(Json.stringify(Json.toJson(progress))))
+      .map(
+        progress => ws.TextMessage.Strict(Json.stringify(Json.toJson(progress)))
+      )
   }
-
 }

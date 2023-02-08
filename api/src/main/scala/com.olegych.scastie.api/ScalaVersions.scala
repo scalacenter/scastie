@@ -3,7 +3,6 @@ package com.olegych.scastie.api
 import com.olegych.scastie.buildinfo.BuildInfo
 
 object ScalaVersions {
-
   def suggestedScalaVersions(tpe: ScalaTargetType): List[String] = {
     val versions = tpe match {
       case ScalaTargetType.Scala3 => List(BuildInfo.stable3, BuildInfo.latest3)
@@ -15,7 +14,8 @@ object ScalaVersions {
 
   def allVersions(tpe: ScalaTargetType): List[String] = {
     val versions = tpe match {
-      case ScalaTargetType.Scala3 => List(
+      case ScalaTargetType.Scala3 =>
+        List(
           BuildInfo.stable3,
           BuildInfo.latest3,
           "3.2.1",
@@ -28,10 +28,10 @@ object ScalaVersions {
           "3.0.1",
           "3.0.0"
         )
-      case ScalaTargetType.JS => allVersions(ScalaTargetType.Scala3) ++ allVersions(ScalaTargetType.Scala2).filter(v =>
-          v.startsWith("2.12") || v.startsWith("2.13")
-        )
-      case _ => List(
+      case ScalaTargetType.JS =>
+        allVersions(ScalaTargetType.Scala3) ++ allVersions(ScalaTargetType.Scala2).filter(v => v.startsWith("2.12") || v.startsWith("2.13"))
+      case _ =>
+        List(
           BuildInfo.latest213,
           "2.13.9",
           "2.13.8",
@@ -83,5 +83,6 @@ object ScalaVersions {
     versions.distinct
   }
 
-  def find(tpe: ScalaTargetType, sv: String): String = allVersions(tpe).find(_.startsWith(sv)).getOrElse(sv)
+  def find(tpe: ScalaTargetType, sv: String): String =
+    allVersions(tpe).find(_.startsWith(sv)).getOrElse(sv)
 }

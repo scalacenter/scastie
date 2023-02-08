@@ -23,5 +23,4 @@ trait GenericMongoContainer {
   ): Option[T] = {
     Json.parse(obj.toJson()).asOpt[T]
   }
-
 }

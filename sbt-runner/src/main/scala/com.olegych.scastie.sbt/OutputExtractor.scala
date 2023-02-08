@@ -1,7 +1,6 @@
 package com.olegych.scastie.sbt
 
 import java.time.Instant
-import scala.util.control.NonFatal
 
 import com.olegych.scastie.api._
 import com.olegych.scastie.instrumentation.Instrument
@@ -9,26 +8,25 @@ import com.olegych.scastie.sbt.SbtProcess._
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
 
-class OutputExtractor(
-  getScalaJsContent: () => Option[String],
-  getScalaJsSourceMapContent: () => Option[String],
-  isProduction: Boolean,
-  promptUniqueId: String
-) {
+import scala.util.control.NonFatal
 
+class OutputExtractor(getScalaJsContent: () => Option[String],
+                      getScalaJsSourceMapContent: () => Option[String],
+                      isProduction: Boolean,
+                      promptUniqueId: String) {
   def extractProgress(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
     import sbtRun._
 
-    val problems         = extractProblems(output.line, Instrument.getMessageLineOffset(inputs), inputs.isWorksheetMode)
+    val problems = extractProblems(output.line, Instrument.getMessageLineOffset(inputs), inputs.isWorksheetMode)
     val instrumentations = extract[List[Instrumentation]](output.line)
-    val runtimeError     = extractRuntimeError(output.line, Instrument.getExceptionLineOffset(inputs))
-    val sbtOutput        = extract[ConsoleOutput.SbtOutput](output.line)
+    val runtimeError = extractRuntimeError(output.line, Instrument.getExceptionLineOffset(inputs))
+    val sbtOutput = extract[ConsoleOutput.SbtOutput](output.line)
     // sbt plugin is not loaded at this stage. we need to drop those messages
     val hiddenInitializationMessages = List(
       "WARNING: A terminally deprecated method in java.lang.System has been called",
       "WARNING: System::setSecurityManager has been called",
       "WARNING: Please consider reporting this to the maintainers",
-      "WARNING: System::setSecurityManager will be removed in a future release"
+      "WARNING: System::setSecurityManager will be removed in a future release",
     )
     val initializationMessages = hiddenInitializationMessages ++ List(
       "[info] Loading global plugins from",
@@ -50,14 +48,13 @@ class OutputExtractor(
     val isScalaJs = inputs.target.targetType == ScalaTargetType.JS
 
     val userOutput =
-      if (
-        problems.toList.flatten.isEmpty
-        && instrumentations.toList.flatten.isEmpty
-        && runtimeError.isEmpty
-        && !isDone
-        && !isSbtMessage
-        && sbtOutput.isEmpty
-      ) Some(output)
+      if (problems.toList.flatten.isEmpty
+          && instrumentations.toList.flatten.isEmpty
+          && runtimeError.isEmpty
+          && !isDone
+          && !isSbtMessage
+          && sbtOutput.isEmpty)
+        Some(output)
       else None
 
     val (scalaJsContent, scalaJsSourceMapContent) =
@@ -96,35 +93,38 @@ class OutputExtractor(
     )
   }
 
-  private implicit val formatSourceMap: OFormat[SourceMap] = Json.format[SourceMap]
+  private implicit val formatSourceMap: OFormat[SourceMap] =
+    Json.format[SourceMap]
 
   private case class SourceMap(
-    version: Int,
-    file: String,
-    mappings: String,
-    sources: List[String],
-    names: List[String],
-    lineCount: Int
+      version: Int,
+      file: String,
+      mappings: String,
+      sources: List[String],
+      names: List[String],
+      lineCount: Int
   )
 
   private def remapSourceMap(
-    snippetId: SnippetId
+      snippetId: SnippetId
   )(sourceMapRaw: String): String = {
     Json
       .fromJson[SourceMap](Json.parse(sourceMapRaw))
       .asOpt
       .map { sourceMap =>
-        val sourceMap0 = sourceMap.copy(
-          sources = sourceMap.sources.map(source =>
-            if (source.startsWith(ScalaTarget.Js.sourceUUID)) {
-              val host =
-                if (isProduction) "https://scastie.scala-lang.org"
-                else "http://localhost:9000"
+        val sourceMap0 =
+          sourceMap.copy(
+            sources = sourceMap.sources.map(
+              source =>
+                if (source.startsWith(ScalaTarget.Js.sourceUUID)) {
+                  val host =
+                    if (isProduction) "https://scastie.scala-lang.org"
+                    else "http://localhost:9000"
 
-              host + snippetId.scalaJsUrl(ScalaTarget.Js.sourceFilename)
-            } else source
+                  host + snippetId.scalaJsUrl(ScalaTarget.Js.sourceFilename)
+                } else source
+            )
           )
-        )
 
         Json.prettyPrint(Json.toJson(sourceMap0))
       }
@@ -132,9 +132,9 @@ class OutputExtractor(
   }
 
   private def extractProblems(
-    line: String,
-    lineOffset: Int,
-    isWorksheetMode: Boolean
+      line: String,
+      lineOffset: Int,
+      isWorksheetMode: Boolean
   ): Option[List[Problem]] = {
     val problems = extract[List[Problem]](line)
 
@@ -154,8 +154,7 @@ class OutputExtractor(
   private def extractRuntimeError(line: String, lineOffset: Int): Option[RuntimeError] = {
     extract[RuntimeErrorWrap](line).flatMap {
       _.error.map { error =>
-        val noStackTraceError =
-          if (error.message.contains("No main class detected.")) error.copy(fullStack = "") else error
+        val noStackTraceError = if (error.message.contains("No main class detected.")) error.copy(fullStack = "") else error
         val errorWithOffset = noStackTraceError.copy(line = noStackTraceError.line.map(_ + lineOffset))
         errorWithOffset
       }

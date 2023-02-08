@@ -1,10 +1,5 @@
 package com.olegych.scastie.web
 
-import scala.concurrent.duration._
-import scala.concurrent.Await
-import scala.util.Failure
-import scala.util.Success
-
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.http.scaladsl._
@@ -16,6 +11,12 @@ import com.olegych.scastie.web.oauth2._
 import com.olegych.scastie.web.routes._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.util.Failure
+import scala.util.Success
+
 import server.Directives._
 
 object ServerMain {
@@ -76,7 +77,8 @@ object ServerMain {
     val scalaLangRoutes = new ScalaLangRoutes(dispatchActor, userDirectives).routes
     val frontPageRoutes = new FrontPageRoutes(dispatchActor, production, hostname).routes
 
-    val routes = oauthRoutes ~
+    val routes =
+      oauthRoutes ~
       cors() {
         pathPrefix("api") {
           apiRoutes ~

@@ -1,28 +1,29 @@
 package com.olegych.scastie
 package web
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.DurationInt
-
-import akka.actor.ActorRef
-import akka.http.scaladsl.model.RemoteAddress
-import akka.pattern.ask
-import akka.util.Timeout
 import api._
 import balancer._
+
+import akka.pattern.ask
+import akka.actor.ActorRef
+import akka.util.Timeout
+import akka.http.scaladsl.model.RemoteAddress
+
+import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.duration.DurationInt
 import com.olegych.scastie.storage.PolicyAcceptance
 
 class RestApiServer(
-  dispatchActor: ActorRef,
-  ip: RemoteAddress,
-  maybeUser: Option[User]
-)(
-  implicit executionContext: ExecutionContext
-) extends RestApi {
+    dispatchActor: ActorRef,
+    ip: RemoteAddress,
+    maybeUser: Option[User]
+)(implicit executionContext: ExecutionContext)
+    extends RestApi {
 
   implicit val timeout: Timeout = Timeout(20.seconds)
 
-  private def wrap(inputs: Inputs): InputsWithIpAndUser = InputsWithIpAndUser(inputs, UserTrace(ip.toString, maybeUser))
+  private def wrap(inputs: Inputs): InputsWithIpAndUser =
+    InputsWithIpAndUser(inputs, UserTrace(ip.toString, maybeUser))
 
   def run(inputs: Inputs): Future[SnippetId] = {
     dispatchActor
@@ -89,7 +90,8 @@ class RestApiServer(
 
   def fetchUserSnippets(): Future[List[SnippetSummary]] = {
     maybeUser match {
-      case Some(user) => dispatchActor
+      case Some(user) =>
+        dispatchActor
           .ask(FetchUserSnippets(user))
           .mapTo[List[SnippetSummary]]
       case _ => Future.successful(Nil)
@@ -99,7 +101,8 @@ class RestApiServer(
   @deprecated("Scheduled for removal", "2023-04-30")
   def getPrivacyPolicy(): Future[Boolean] = {
     maybeUser match {
-      case Some(user) => dispatchActor
+      case Some(user) =>
+        dispatchActor
           .ask(GetPrivacyPolicy(user))
           .mapTo[Boolean]
       case _ => Future.successful(true)
@@ -109,7 +112,8 @@ class RestApiServer(
   @deprecated("Scheduled for removal", "2023-04-30")
   def acceptPrivacyPolicy(): Future[Boolean] = {
     maybeUser match {
-      case Some(user) => dispatchActor
+      case Some(user) =>
+        dispatchActor
           .ask(SetPrivacyPolicy(user, true))
           .mapTo[Boolean]
       case _ => Future.successful(true)
@@ -119,7 +123,8 @@ class RestApiServer(
   @deprecated("Scheduled for removal", "2023-04-30")
   def removeUserFromPolicyStatus(): Future[Boolean] = {
     maybeUser match {
-      case Some(user) => dispatchActor
+      case Some(user) =>
+        dispatchActor
           .ask(RemovePrivacyPolicy(user))
           .mapTo[Boolean]
       case _ => Future.successful(true)
@@ -129,11 +134,11 @@ class RestApiServer(
   @deprecated("Scheduled for removal", "2023-04-30")
   def removeAllUserSnippets(): Future[Boolean] = {
     maybeUser match {
-      case Some(user) => dispatchActor
+      case Some(user) =>
+        dispatchActor
           .ask(RemoveAllUserSnippets(user))
           .mapTo[Boolean]
       case _ => Future.successful(true)
     }
   }
-
 }
