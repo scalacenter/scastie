@@ -204,7 +204,7 @@ class MetalsServerTest extends CatsEffectSuite {
           |def asRight[B]: Either[B, String]
           |```
           |Wrap a value in `Right`.""".stripMargin
-      ).asRight,
+      ).asRight
     )
   }
 

@@ -1,9 +1,8 @@
 package com.olegych.scastie.client.components.editor
 
+import scalajs.js
 import typings.codemirrorLanguage.mod
 import typings.lezerHighlight.mod.tags
-
-import scalajs.js
 
 object SyntaxHighlightingTheme {
 
@@ -18,7 +17,7 @@ object SyntaxHighlightingTheme {
       mod.TagStyle(tags.comment).setClass("cm-comment"),
       mod.TagStyle(tags.string).setClass("cm-string"),
       mod.TagStyle(tags.meta).setClass("cm-meta"),
-      mod.TagStyle(tags.invalid).setClass("cm-invalidchar"),
+      mod.TagStyle(tags.invalid).setClass("cm-invalidchar")
     )
   )
 
