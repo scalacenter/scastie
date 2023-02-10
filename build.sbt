@@ -227,7 +227,7 @@ lazy val storage = project
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
       "org.mongodb.scala" %% "mongo-scala-driver" % "4.8.2",
-      "net.lingala.zip4j"  % "zip4j"              % "2.11.3"
+      "net.lingala.zip4j"  % "zip4j"              % "2.11.4"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
