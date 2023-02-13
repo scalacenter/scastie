@@ -48,7 +48,7 @@ lazy val loggingAndTest = Seq(
   libraryDependencies ++= Seq(
     "ch.qos.logback"              % "logback-classic" % "1.4.5",
     "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5",
-    "io.sentry"                   % "sentry-logback"  % "6.13.0"
+    "io.sentry"                   % "sentry-logback"  % "6.13.1"
   )
 ) ++ testSettings
 
@@ -227,7 +227,7 @@ lazy val storage = project
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
       "org.mongodb.scala" %% "mongo-scala-driver" % "4.8.2",
-      "net.lingala.zip4j"  % "zip4j"              % "2.11.3"
+      "net.lingala.zip4j"  % "zip4j"              % "2.11.4"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
