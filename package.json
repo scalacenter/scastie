@@ -22,7 +22,7 @@
     "@lezer/common": "^1.0.1",
     "@lezer/highlight": "^1.1.1",
     "@sentry/browser": "^7.37.1",
-    "@sentry/tracing": "^7.34.0",
+    "@sentry/tracing": "^7.37.1",
     "@types/marked": "^4.0.7",
     "codemirror": "^6.0.1",
     "github-markdown-css": "^5.2.0",
