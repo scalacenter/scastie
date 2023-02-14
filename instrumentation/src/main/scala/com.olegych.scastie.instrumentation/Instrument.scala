@@ -1,112 +1,108 @@
 package com.olegych.scastie.instrumentation
 
-import com.olegych.scastie.api.ScalaTarget._
-import com.olegych.scastie.api.{Inputs, Instrumentation, ScalaTarget, ScalaTargetType}
-
 import scala.collection.immutable.Seq
 import scala.meta._
 import scala.meta.inputs.Position
 import scala.meta.parsers.Parsed
 import scala.util.control.NonFatal
 
+import com.olegych.scastie.api.{Inputs, Instrumentation, ScalaTarget, ScalaTargetType}
+import com.olegych.scastie.api.ScalaTarget._
+
 sealed trait InstrumentationFailure
 
 object InstrumentationFailure {
-  case object HasMainMethod extends InstrumentationFailure
-  case object UnsupportedDialect extends InstrumentationFailure
-  case class ParsingError(error: Parsed.Error) extends InstrumentationFailure
+  case object HasMainMethod                      extends InstrumentationFailure
+  case object UnsupportedDialect                 extends InstrumentationFailure
+  case class ParsingError(error: Parsed.Error)   extends InstrumentationFailure
   case class InternalError(exception: Throwable) extends InstrumentationFailure
 }
 
 object Instrument {
+
   def getParsingLineOffset(inputs: Inputs): Int = {
     if (inputs.isWorksheetMode) -1 else 0
   }
+
   def getExceptionLineOffset(inputs: Inputs): Int = {
     if (inputs.isWorksheetMode) -2 else 0
   }
+
   def getMessageLineOffset(inputs: Inputs): Int = {
     if (inputs.isWorksheetMode) -2 else 0
   }
 
   import InstrumentationFailure._
 
-  private val instrumentedObject = Instrumentation.instrumentedObject
+  private val instrumentedObject    = Instrumentation.instrumentedObject
   private val instrumentationMethod = "instrumentations$"
-  private val instrumentationMap = "instrumentationMap$"
+  private val instrumentationMap    = "instrumentationMap$"
 
-  private val emptyMapT = "_root_.scala.collection.mutable.Map.empty"
-  private val jsExportT = "_root_.scala.scalajs.js.annotation.JSExport"
-  private val jsExportTopLevelT =
-    "_root_.scala.scalajs.js.annotation.JSExportTopLevel"
+  private val emptyMapT         = "_root_.scala.collection.mutable.Map.empty"
+  private val jsExportT         = "_root_.scala.scalajs.js.annotation.JSExport"
+  private val jsExportTopLevelT = "_root_.scala.scalajs.js.annotation.JSExportTopLevel"
 
-  private val apiPackage = "_root_.com.olegych.scastie.api"
-  private val positionT = s"$apiPackage.Position"
-  private val renderT = s"$apiPackage.Render"
-  private val runtimeErrorT = s"$apiPackage.RuntimeError"
+  private val apiPackage       = "_root_.com.olegych.scastie.api"
+  private val positionT        = s"$apiPackage.Position"
+  private val renderT          = s"$apiPackage.Render"
+  private val runtimeErrorT    = s"$apiPackage.RuntimeError"
   private val instrumentationT = s"$apiPackage.Instrumentation"
-  private val runtimeT = s"$apiPackage.runtime.Runtime"
-  private val domhookT = s"$apiPackage.runtime.DomHook"
+  private val runtimeT         = s"$apiPackage.runtime.Runtime"
+  private val domhookT         = s"$apiPackage.runtime.DomHook"
 
-  private val elemArrayT =
-    "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
+  private val elemArrayT = "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
 
   private def posToApi(position: Position, offset: Int) = {
     val (x, y) = position match {
-      case Position.None => (0, 0)
-      case Position.Range(_, start, end) =>
-        (start - offset, end - offset)
+      case Position.None                 => (0, 0)
+      case Position.Range(_, start, end) => (start - offset, end - offset)
     }
     s"$positionT($x, $y)"
   }
 
   def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int, isScalaJs: Boolean): Patch = {
 
-    val treeQuote =
-      tpeTree match {
-        case None      => s"val $$t = $term"
-        case Some(tpe) => s"val $$t: $tpe = $term"
-      }
+    val treeQuote = tpeTree match {
+      case None      => s"val $$t = $term"
+      case Some(tpe) => s"val $$t: $tpe = $term"
+    }
 
     val renderCall =
       if (!isScalaJs) s"$runtimeT.render($$t);"
       else s"$runtimeT.render($$t, attach _);"
 
-    val replacement =
-      Seq(
-        "scala.Predef.locally {",
-        treeQuote + "; ",
-        s"$instrumentationMap(${posToApi(term.pos, offset)}) = $renderCall",
-        "$t}"
-      ).mkString("")
+    val replacement = Seq(
+      "scala.Predef.locally {",
+      treeQuote + "; ",
+      s"$instrumentationMap(${posToApi(term.pos, offset)}) = $renderCall",
+      "$t}"
+    ).mkString("")
 
     Patch(term.tokens.head, term.tokens.last, replacement)
   }
 
   private def instrument(source: Source, offset: Int, isScalaJs: Boolean): String = {
-    val instrumentedCodePatches =
-      source.stats.collect {
-        case c: Defn.Object if c.name.value == instrumentedObject =>
-          val openCurlyBrace = c.templ.tokens.find(_.toString == "{").get
+    val instrumentedCodePatches = source.stats.collect {
+      case c: Defn.Object if c.name.value == instrumentedObject =>
+        val openCurlyBrace = c.templ.tokens.find(_.toString == "{").get
 
-          val instrumentationMapCode = Seq(
-            s"{ private val $instrumentationMap = $emptyMapT[$positionT, $renderT]",
-            s"def $instrumentationMethod = $instrumentationMap.toList.map{ case (pos, r) => $instrumentationT(pos, r) }"
-          ).mkString("", ";", ";")
+        val instrumentationMapCode = Seq(
+          s"{ private val $instrumentationMap = $emptyMapT[$positionT, $renderT]",
+          s"def $instrumentationMethod = $instrumentationMap.toList.map{ case (pos, r) => $instrumentationT(pos, r) }"
+        ).mkString("", ";", ";")
 
-          val instrumentationMapPatch =
-            Patch(openCurlyBrace, openCurlyBrace, instrumentationMapCode)
+        val instrumentationMapPatch = Patch(openCurlyBrace, openCurlyBrace, instrumentationMapCode)
 
-          instrumentationMapPatch +:
-            c.templ.stats
+        instrumentationMapPatch +:
+          c.templ.stats
             .filter {
               case _: Term.EndMarker => false
               case _                 => true
             }
-            .collect {
-              case term: Term => instrumentOne(term, None, offset, isScalaJs)
+            .collect { case term: Term =>
+              instrumentOne(term, None, offset, isScalaJs)
             }
-      }.flatten
+    }.flatten
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
 
@@ -144,9 +140,8 @@ object Instrument {
         case _                                         => false
       }
     }
-    val apps = Set("App", "IOApp")
-    def hasApp(templ: Template): Boolean =
-      templ.inits.exists(p => apps(p.syntax))
+    val apps                             = Set("App", "IOApp")
+    def hasApp(templ: Template): Boolean = templ.inits.exists(p => apps(p.syntax))
 
     source.stats.exists {
       case c: Defn.Object if c.name.value == instrumentedObject =>
@@ -169,7 +164,7 @@ object Instrument {
       if (!isScalaJs) s"object $instrumentedObject extends ScastieApp {"
       else s"object $instrumentedObject extends ScastieApp with $domhookT {"
     val prelude = s"""$runtimeImport\n$classBegin"""
-    val code0 = s"""$prelude\n$code\n}"""
+    val code0   = s"""$prelude\n$code\n}"""
 
     def typelevel(scalaVersion: String): Option[Dialect] = {
       if (scalaVersion.startsWith("2.12")) Some(dialects.Typelevel212)
@@ -198,16 +193,15 @@ object Instrument {
         try {
           code0.parse[Source] match {
             case parsed: Parsed.Success[_] =>
-              if (!hasMainMethod(parsed.get))
-                Right(instrument(parsed.get, prelude.length + 1, isScalaJs))
+              if (!hasMainMethod(parsed.get)) Right(instrument(parsed.get, prelude.length + 1, isScalaJs))
               else Left(HasMainMethod)
             case e: Parsed.Error => Left(ParsingError(e))
           }
         } catch {
-          case NonFatal(e) =>
-            Left(InternalError(e))
+          case NonFatal(e) => Left(InternalError(e))
         }
       case None => Left(UnsupportedDialect)
     }
   }
+
 }
