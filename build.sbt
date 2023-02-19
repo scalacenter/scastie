@@ -27,7 +27,9 @@ lazy val scastie = project
       server,
       storage,
       utils,
-      metalsRunner
+      metalsRunner,
+
+      scliRunner
     ).map(_.project)): _*
   )
   .settings(baseSettings)
@@ -295,3 +297,23 @@ lazy val sbtScastie = project
   )
   .settings(version := versionRuntime)
   .dependsOn(api.jvm(ScalaVersions.sbt))
+
+lazy val scliRunner = project
+  .in(file("scli-runner"))
+  .settings(baseNoCrossSettings)
+  .settings(loggingAndTest)
+  .settings(runnerRuntimeDependenciesInTest)
+  .settings(
+    reStart / javaOptions += "-Xmx256m",
+    Test / parallelExecution := false,
+    reStart                  := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
+    resolvers ++= Resolver.sonatypeOssRepos("public"),
+    libraryDependencies ++= Seq(
+      akka("actor"),
+      akka("testkit") % Test,
+      akka("cluster"),
+      akka("slf4j"),
+      "org.scalameta" %% "scalafmt-core" % "3.6.1"
+    )
+  )
+  .dependsOn(api.jvm(ScalaVersions.jvm), instrumentation, utils)
