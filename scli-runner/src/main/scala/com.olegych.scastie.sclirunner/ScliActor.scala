@@ -10,11 +10,14 @@ import akka.actor.ActorContext
 import com.olegych.scastie.util.SbtTask
 import com.olegych.scastie.api.SnippetId
 import com.olegych.scastie.api.Inputs
+import com.olegych.scastie.api.SbtPing
+import com.olegych.scastie.api.SbtPong
 
 // Low level process interation
 import scala.sys.process._
 import java.nio.charset.StandardCharsets
 import scala.io.{Source => IOSource}
+import com.olegych.scastie.sclirunner.ScliRunner
 
 object ScliActor {
   // States
@@ -23,12 +26,12 @@ object ScliActor {
   case object Available extends ScliState
   case object Running extends ScliState
 
-  case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String], progressActor: ActorRef)
+  case class ScliActorTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String], progressActor: ActorRef)
 
-  def sbtTaskToScliTask(sbtTask: SbtTask): ScliTask = {
+  def sbtTaskToScliActorTask(sbtTask: SbtTask): ScliActorTask = {
     sbtTask match {
       case SbtTask(snippetId, inputs, ip, login, progressActor) =>
-        ScliTask(snippetId, inputs, ip, login, progressActor)
+        ScliActorTask(snippetId, inputs, ip, login, progressActor)
     }
   }
 }
@@ -43,20 +46,25 @@ class ScliActor(system: ActorSystem,
 
   import ScliActor._
 
+  // Runner
+  private val runner: ScliRunner = new ScliRunner // TODO: is new normal?
+
   // Initial state
   var currentState: ScliState = Available
   override def receive: Receive = whenAvailable
 
 
   // FSM
-
   // Available state (no running scala cli instance)
   val whenAvailable: Receive = message => message match {
     case task @ SbtTask(_, _, _, _, _) => {
-      log.warning("Should not receive an SbtTask, converting to ScliTask")
-      runTask(sbtTaskToScliTask(task))
+      log.warning("Should not receive an SbtTask, converting to ScliActorTask")
+      runTask(sbtTaskToScliActorTask(task))
     }
-    case task @ ScliTask(_, _, _, _, _) => runTask(task)
+    case task @ ScliActorTask(_, _, _, _, _) => runTask(task)
+
+    case SbtPing => sender() ! SbtPong
+    case x => log.error(s"CHECK CHECK CHECK URGENT dead letter: $x")
   }
 
   // Unavailable state (running scala cli instance)
@@ -67,29 +75,15 @@ class ScliActor(system: ActorSystem,
 
 
   // Run task
-  def runTask(task: ScliTask): Unit = {
-    log.info(s"Running task: $task")
-    currentState = Running
-
-    val processBuilder: ProcessBuilder = Process("scala-cli -") // TODO: change to scala scripts!? maybe let the user chose.
-    val io = BasicIO.standard(true)
-      .withInput(write => {
-        write.write(task.inputs.code.getBytes(StandardCharsets.UTF_8))
-        write.close()
-      })
-      .withOutput(output => {
-        val outputString = IOSource.fromInputStream(output).mkString
-        log.info(s"Output WOOOOOAA: $outputString")
-        // TODO: handle correctly lol
-      })
-
-    processBuilder.run(io)
+  def runTask(task: ScliActorTask): Unit = {
+    val scliTask = task match {
+      case ScliActorTask(snipId, inp, ip, login, progressActor) => ScliRunner.ScliTask(snipId, inp, ip, login)
+    }
+    // TODO: keep track of progressActor?
+    runner.runTask(scliTask)
   }
 
   override def reconnectInfo: Option[ReconnectInfo] = None // TODO: talk about it
 
   override def tryConnect(context: ActorContext): Unit = () // TODO: talk about it
-
-        
-
 }
