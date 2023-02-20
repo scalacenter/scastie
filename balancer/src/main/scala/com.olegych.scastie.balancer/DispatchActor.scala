@@ -77,7 +77,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   private var remoteSbtSelections =
-    sbtPorts.map(connectRunner("SbtRunner", "SbtActor", host)).toMap
+    sbtPorts.map(connectRunner("ScliRunner", "ScliActor", host)).toMap
 
   private var sbtLoadBalancer: SbtBalancer = {
     val sbtServers = remoteSbtSelections.to(Vector).map {

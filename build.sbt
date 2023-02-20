@@ -8,8 +8,8 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.19"
 
 val akkaHttpVersion = "10.2.9"
 
-addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
-addCommandAlias("startAllProd", "sbtRunner/reStart;metalsRunner/reStart;server/fullLinkJS/reStart")
+addCommandAlias("startAll", "scliRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
+addCommandAlias("startAllProd", "scliRunner/reStart;metalsRunner/reStart;server/fullLinkJS/reStart")
 
 val yarnBuild = taskKey[Unit]("builds es modules with `yarn build`")
 
