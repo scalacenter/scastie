@@ -11,7 +11,7 @@
     "sass": "^1.55.0"
   },
   "dependencies": {
-    "@codemirror/autocomplete": "^6.3.3",
+    "@codemirror/autocomplete": "^6.4.2",
     "@codemirror/commands": "^6.2.0",
     "@codemirror/language": "^6.5.0",
     "@codemirror/legacy-modes": "^6.1.0",
