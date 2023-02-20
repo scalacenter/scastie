@@ -71,7 +71,7 @@ class ScliActor(system: ActorSystem,
     log.info(s"Running task: $task")
     currentState = Running
 
-    val processBuilder: ProcessBuilder = Process("scala-cli")
+    val processBuilder: ProcessBuilder = Process("scala-cli -") // TODO: change to scala scripts!? maybe let the user chose.
     val io = BasicIO.standard(true)
       .withInput(write => {
         write.write(task.inputs.code.getBytes(StandardCharsets.UTF_8))
