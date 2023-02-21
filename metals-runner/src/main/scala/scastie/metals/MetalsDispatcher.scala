@@ -54,7 +54,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
         )
       )
     else
-      Sync[F].delay(
+      Sync[F].blocking(
         mtagsResolver
           .resolve(configuration.scalaTarget.scalaVersion)
           .toRight(
@@ -155,7 +155,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
    * @returns paths of downloaded files
    */
   private def getScalaLibrary(scalaTarget: ScalaTarget): F[Set[Path]] =
-    Sync[F].delay { Embedded.scalaLibrary(scalaTarget.scalaVersion).toSet }
+    Sync[F].blocking { Embedded.scalaLibrary(scalaTarget.scalaVersion).toSet }
 
   /*
    * Fetches scala sources for given `scalaTarget`
@@ -163,7 +163,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
    * @param scalaTarget - scala target for scastie client configuration
    * @returns paths of downloaded files
    */
-  private def getScalaTargetSources(scalaTarget: ScalaTarget): F[Set[Path]] = Sync[F].delay {
+  private def getScalaTargetSources(scalaTarget: ScalaTarget): F[Set[Path]] = Sync[F].blocking {
     if scalaTarget.scalaVersion.startsWith("3") then Embedded.downloadScala3Sources(scalaTarget.scalaVersion).toSet
     else Embedded.downloadScalaSources(scalaTarget.scalaVersion).toSet
   }
@@ -196,7 +196,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
   private def getDependencyClasspath(
     dependencies: Set[ScalaDependency],
     extraDependencies: Set[Dependency]
-  ): F[Set[Path]] = Sync[F].delay {
+  ): F[Set[Path]] = Sync[F].blocking {
     val dep = dependencies.map { case ScalaDependency(groupId, artifact, target, version) =>
       Dependency.of(groupId, artifactWithBinaryVersion(artifact, target), version)
     }.toSeq ++ extraDependencies
