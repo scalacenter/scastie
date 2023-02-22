@@ -18,6 +18,7 @@ import scala.sys.process._
 import java.nio.charset.StandardCharsets
 import scala.io.{Source => IOSource}
 import com.olegych.scastie.sclirunner.ScliRunner
+import com.olegych.scastie.api.SnippetProgress
 
 object ScliActor {
   // States
@@ -76,14 +77,28 @@ class ScliActor(system: ActorSystem,
 
   // Run task
   def runTask(task: ScliActorTask): Unit = {
-    val scliTask = task match {
-      case ScliActorTask(snipId, inp, ip, login, progressActor) => ScliRunner.ScliTask(snipId, inp, ip, login)
-    }
+    val ScliActorTask(snipId, inp, ip, login, progressActor) = task
+
+    sendProgress(progressActor, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snipId)))
+
     // TODO: keep track of progressActor?
-    runner.runTask(scliTask)
+    val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip, login), successOutput => {
+      // TODO: handle
+    })
+    
+    // if failure
+    r.map(failure => progressActor ! failure.toProgress(snipId))
   }
 
-  override def reconnectInfo: Option[ReconnectInfo] = None // TODO: talk about it
+  // Progress
+  private var progressId = 0L
 
-  override def tryConnect(context: ActorContext): Unit = () // TODO: talk about it
+  private def sendProgress(progressActor: ActorRef, _p: SnippetProgress): Unit = {
+    val p: SnippetProgress = _p.copy(id = Some(progressId += 1))
+    progressActor ! p
+  }
+
+  override def reconnectInfo: Option[ReconnectInfo] = None // TODO: fill
+
+  override def tryConnect(context: ActorContext): Unit = () // TODO: fill
 }
