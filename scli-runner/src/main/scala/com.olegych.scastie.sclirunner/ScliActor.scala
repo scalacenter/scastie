@@ -79,7 +79,7 @@ class ScliActor(system: ActorSystem,
   def runTask(task: ScliActorTask): Unit = {
     val ScliActorTask(snipId, inp, ip, login, progressActor) = task
 
-    sendProgress(progressActor, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snipId)))
+    // sendProgress(progressActor, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snipId)))
 
     // TODO: keep track of progressActor?
     val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip, login), successOutput => {
@@ -94,7 +94,8 @@ class ScliActor(system: ActorSystem,
   private var progressId = 0L
 
   private def sendProgress(progressActor: ActorRef, _p: SnippetProgress): Unit = {
-    val p: SnippetProgress = _p.copy(id = Some(progressId += 1))
+    progressId = progressId + 1
+    val p: SnippetProgress = _p.copy(id = Some(progressId))
     progressActor ! p
   }
 
