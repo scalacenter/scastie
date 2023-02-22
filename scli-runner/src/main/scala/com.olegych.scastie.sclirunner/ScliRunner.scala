@@ -18,7 +18,6 @@ import com.olegych.scastie.instrumentation.InstrumentedInputs
 import java.io.OutputStream
 import java.io.InputStream
 
-
 object ScliRunner {
   case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String])
 }
