@@ -311,7 +311,8 @@ lazy val scliRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.6.1"
+      "org.scalameta" %% "scalafmt-core" % "3.6.1",
+      "ch.epfl.scala" % "bsp4j" % "2.1.0-M4"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), instrumentation, utils)
