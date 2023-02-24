@@ -30,6 +30,11 @@ import ch.epfl.scala.bsp4j.BuildServer
 import ch.epfl.scala.bsp4j.InitializeBuildParams
 import ch.epfl.scala.bsp4j.BuildClientCapabilities
 import java.util.Collections
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
+import ch.epfl.scala.bsp4j.BuildTargetIdentifier
+import ch.epfl.scala.bsp4j.CompileParams
+import ch.epfl.scala.bsp4j.RunParams
 
 object ScliRunner {
   case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String])
@@ -40,8 +45,27 @@ class ScliRunner {
 
   private val log = Logger("ScliRunner")
 
-  // TODO: working dir, setup directory, is it that useful except for multiple files?
+
+  // Files
   private val workingDir = Files.createTempDirectory("scastie")
+  private val scalaMain = workingDir.resolve("src/main/scala/main.scala")
+
+  private def initFiles : Unit = {
+    Files.createDirectories(scalaMain.getParent())
+    writeFile(scalaMain, "@main def main = println(\"hello world!a\")")
+  }
+
+  private def writeFile(path: Path, content: String): Unit = {
+    if (Files.exists(path)) {
+      Files.delete(path)
+    }
+
+    Files.write(path, content.getBytes, StandardOpenOption.CREATE_NEW)
+
+    ()
+  }
+
+  initFiles
 
   
   def runTask(task: ScliTask, onSuccess: String => Any): Option[InstrumentationFailureReport] = {
@@ -100,16 +124,25 @@ class ScliRunner {
     listeningThread = Some(new Thread {
       override def run() = bspLauncher.startListening().get()
     })
+    listeningThread.get.start()
+
+    val targetUri = workingDir.toAbsolutePath().normalize().toUri().toString()
 
     log.info("Initializing workspace")
     val initialize = bspServer.get.buildInitialize(new InitializeBuildParams(
       "BspClient",
       "1.0.0", // TODO: maybe not hard-code the version? not really much important
       "2.1.0-M3", // TODO: same
-      workingDir.toAbsolutePath().normalize().toUri().toString(),
+      targetUri,
       new BuildClientCapabilities(Collections.singletonList("scala"))
     )).get // Force to wait
-    log.info("OK")
+    bspServer.get.onBuildInitialized()
+    val compile = bspServer.get.buildTargetCompile(new CompileParams(Collections.singletonList(new BuildTargetIdentifier(targetUri))))
+    compile.get()
+    val run = bspServer.get.buildTargetRun(new RunParams(new BuildTargetIdentifier(targetUri)))
+    val result = run.get()
+
+    println(s"result: ${result.getStatusCode()}")
   }
 
   private def scalaDepToFullName = (dep: ScalaDependency) => s"${dep.groupId}::${dep.artifact}:${dep.version}"
@@ -131,5 +164,4 @@ class ScliRunner {
   private var listeningThread: Option[Thread] = None
 
   startBsp
-
 }
