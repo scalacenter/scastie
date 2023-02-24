@@ -52,7 +52,7 @@ class ScliRunner {
 
   private def initFiles : Unit = {
     Files.createDirectories(scalaMain.getParent())
-    writeFile(scalaMain, "@main def main = println(\"hello world!a\")")
+    writeFile(scalaMain, "@main def main = println(\"hello world!\")")
   }
 
   private def writeFile(path: Path, content: String): Unit = {
@@ -76,14 +76,16 @@ class ScliRunner {
 
     input match {
       case Left(failure) => Some(failure)
-      case Right(notFinalCode) => {
+      case Right(InstrumentedInputs(notFinalCode, isForcedProgramMode)) => {
         // notFinalCode
         val runtimeDependency = task.inputs.target.runtimeDependency.map(x => Set(x))
 
         val code = (task.inputs.libraries ++ runtimeDependency.getOrElse(Set()))
-          .map(scalaDepToFullName).map(s => s"//> using lib \"$s\"").mkString + "\n" + notFinalCode
+          .map(scalaDepToFullName).map(s => s"//> using lib \"$s\"").mkString + "\n" + notFinalCode.code
 
 
+        writeFile(scalaMain, code)
+        bspClient.build
         None
       }
     }
@@ -93,8 +95,9 @@ class ScliRunner {
   private var pStdin: Option[OutputStream] = None
   private var pStdout: Option[InputStream] = None
   private var pStderr: Option[InputStream] = None
-
-  private def startBsp : Unit = {
+  
+  // Bsp
+  private val bspClient = {
     log.info(s"Starting Scala-CLI BSP in folder ${workingDir.toAbsolutePath().normalize().toString()}")
     val processBuilder: ProcessBuilder = Process(Seq("scala-cli", "bsp", "."), workingDir.toFile())
     val io = BasicIO.standard(true)
@@ -108,60 +111,8 @@ class ScliRunner {
     while (pStdin.isEmpty || pStdout.isEmpty || pStderr.isEmpty) Thread.sleep(100)
 
     // Create BSP connection
-    import java.util.concurrent._
-    val es = Executors.newFixedThreadPool(1)
-
-    val bspLauncher = new Launcher.Builder[BuildServer]()
-      .setOutput(pStdin.get)
-      .setInput(pStdout.get)
-      .setLocalService(localClient)
-      .setExecutorService(es)
-      .setRemoteInterface(classOf[BuildServer])
-      .create()
-
-    bspServer = Some(bspLauncher.getRemoteProxy())
-
-    listeningThread = Some(new Thread {
-      override def run() = bspLauncher.startListening().get()
-    })
-    listeningThread.get.start()
-
-    val targetUri = workingDir.toAbsolutePath().normalize().toUri().toString()
-
-    log.info("Initializing workspace")
-    val initialize = bspServer.get.buildInitialize(new InitializeBuildParams(
-      "BspClient",
-      "1.0.0", // TODO: maybe not hard-code the version? not really much important
-      "2.1.0-M3", // TODO: same
-      targetUri,
-      new BuildClientCapabilities(Collections.singletonList("scala"))
-    )).get // Force to wait
-    bspServer.get.onBuildInitialized()
-    val compile = bspServer.get.buildTargetCompile(new CompileParams(Collections.singletonList(new BuildTargetIdentifier(targetUri))))
-    compile.get()
-    val run = bspServer.get.buildTargetRun(new RunParams(new BuildTargetIdentifier(targetUri)))
-    val result = run.get()
-
-    println(s"result: ${result.getStatusCode()}")
+    new BspClient(workingDir, pStdout.get, pStdin.get)
   }
 
   private def scalaDepToFullName = (dep: ScalaDependency) => s"${dep.groupId}::${dep.artifact}:${dep.version}"
-
-  // Client
-  class BspClient extends BuildClient {
-    def onBuildLogMessage(params: LogMessageParams): Unit = log.info(s"onBuildLogMessage $params")
-    def onBuildPublishDiagnostics(params: PublishDiagnosticsParams): Unit = log.info(s"onBuildPublishDiagnostics $params")
-    def onBuildShowMessage(params: ShowMessageParams): Unit = log.info(s"onBuildShowMessage $params")
-    def onBuildTargetDidChange(params: DidChangeBuildTarget): Unit = log.info(s"onBuildTargetDidChange $params")
-    def onBuildTaskFinish(params: TaskFinishParams): Unit = log.info(s"onBuildTaskFinish $params")
-    def onBuildTaskProgress(params: TaskProgressParams): Unit = log.info(s"onBuildTaskProgress $params")
-    def onBuildTaskStart(params: TaskStartParams): Unit = log.info(s"onBuildTaskStart $params")
-
-    override def onConnectWithServer(server: BuildServer): Unit = log.info("connected to server")
-  }
-  private val localClient = new BspClient()
-  private var bspServer: Option[BuildServer] = None
-  private var listeningThread: Option[Thread] = None
-
-  startBsp
 }
