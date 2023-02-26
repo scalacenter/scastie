@@ -1,50 +1,24 @@
 package com.olegych.scastie.sclirunner
 
-import scala.collection.immutable.Queue
-import com.olegych.scastie.api.SnippetId
-import com.olegych.scastie.api.Inputs
-import com.typesafe.scalalogging.Logger
-import java.nio.file.Files
-
-// Process interaction
 import scala.sys.process._
-import java.nio.charset.StandardCharsets
-import scala.io.{Source => IOSource}
-import com.olegych.scastie.instrumentation.Instrument
-import com.olegych.scastie.instrumentation.InstrumentationFailure
-import com.olegych.scastie.api.ScalaDependency
-import com.olegych.scastie.instrumentation.InstrumentationFailureReport
-import com.olegych.scastie.instrumentation.InstrumentedInputs
-import java.io.OutputStream
-import java.io.InputStream
-import ch.epfl.scala.bsp4j.BuildClient
-import ch.epfl.scala.bsp4j.LogMessageParams
-import ch.epfl.scala.bsp4j.PublishDiagnosticsParams
-import ch.epfl.scala.bsp4j.ShowMessageParams
-import ch.epfl.scala.bsp4j.DidChangeBuildTarget
-import ch.epfl.scala.bsp4j.TaskFinishParams
-import ch.epfl.scala.bsp4j.TaskProgressParams
-import ch.epfl.scala.bsp4j.TaskStartParams
-import org.eclipse.lsp4j.jsonrpc.Launcher
-import ch.epfl.scala.bsp4j.BuildServer
-import ch.epfl.scala.bsp4j.InitializeBuildParams
-import ch.epfl.scala.bsp4j.BuildClientCapabilities
-import java.util.Collections
-import java.nio.file.Path
-import java.nio.file.StandardOpenOption
-import ch.epfl.scala.bsp4j.BuildTargetIdentifier
-import ch.epfl.scala.bsp4j.CompileParams
-import ch.epfl.scala.bsp4j.RunParams
+import com.typesafe.scalalogging.Logger
+import java.nio.file.{Files, Path, StandardOpenOption}
+import com.olegych.scastie.api.{SnippetId, Inputs, ScalaDependency}
+import java.util.concurrent.CompletableFuture
+import com.olegych.scastie.instrumentation.{InstrumentedInputs, InstrumentationFailureReport}
+import java.io.{InputStream, OutputStream}
 
 object ScliRunner {
   case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String])
+  case class ScliTaskResultContent()
+
+  type ScliTaskResult = Either[ScliTaskResultContent, InstrumentationFailureReport]
 }
 
 class ScliRunner {
   import ScliRunner._
 
   private val log = Logger("ScliRunner")
-
 
   // Files
   private val workingDir = Files.createTempDirectory("scastie")
@@ -65,30 +39,24 @@ class ScliRunner {
     ()
   }
 
-  initFiles
-
-  
-  def runTask(task: ScliTask, onSuccess: String => Any): Option[InstrumentationFailureReport] = {
+  def runTask(task: ScliTask): CompletableFuture[ScliTaskResult] = {
+    val future = new CompletableFuture[ScliTaskResult]()
     log.info(s"Running task $task")
 
-    // Instrumentation
-    var input = InstrumentedInputs(task.inputs)
+    // Instrument
+    InstrumentedInputs(task.inputs) match {
+      case Left(failure) => future.complete(Right(failure))
+      case Right(InstrumentedInputs(inputs, isForcedProgramMode)) => {
+        val runtimeDependency = task.inputs.target.runtimeDependency.map(Set(_)).getOrElse(Set()) ++ task.inputs.libraries
 
-    input match {
-      case Left(failure) => Some(failure)
-      case Right(InstrumentedInputs(notFinalCode, isForcedProgramMode)) => {
-        // notFinalCode
-        val runtimeDependency = task.inputs.target.runtimeDependency.map(x => Set(x))
-
-        val code = (task.inputs.libraries ++ runtimeDependency.getOrElse(Set()))
-          .map(scalaDepToFullName).map(s => s"//> using lib \"$s\"").mkString + "\n" + notFinalCode.code
-
-
+        val code = runtimeDependency.map(scalaDepToFullName).map(libraryDirective).mkString("\n") + "\n" + inputs.code
         writeFile(scalaMain, code)
-        bspClient.build
-        None
+        val build = bspClient.build(task.snippetId.base64UUID) // TODO: use a fresh identifier
+        
       }
     }
+
+    future
   }
 
   // Process streams
@@ -115,4 +83,7 @@ class ScliRunner {
   }
 
   private def scalaDepToFullName = (dep: ScalaDependency) => s"${dep.groupId}::${dep.artifact}:${dep.version}"
+  private def libraryDirective = (lib: String) => s"//> using lib \"$lib\"".mkString
+
+  initFiles
 }
