@@ -82,12 +82,7 @@ class ScliActor(system: ActorSystem,
     // sendProgress(progressActor, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snipId)))
 
     // TODO: keep track of progressActor?
-    val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip, login), successOutput => {
-      // TODO: handle
-    })
-    
-    // if failure
-    r.map(failure => progressActor ! failure.toProgress(snipId))
+    val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip, login))
   }
 
   // Progress
