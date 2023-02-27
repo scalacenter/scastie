@@ -26,7 +26,7 @@ class ScliRunner {
 
   private def initFiles : Unit = {
     Files.createDirectories(scalaMain.getParent())
-    writeFile(scalaMain, "@main def main = println(\"hello world!\")")
+    writeFile(scalaMain, "@main def main = { println(\"hello world!\") } ")
   }
 
   private def writeFile(path: Path, content: String): Unit = {
@@ -43,16 +43,19 @@ class ScliRunner {
     val future = new CompletableFuture[ScliTaskResult]()
     log.info(s"Running task with snippetId=${task.snippetId}")
 
+    // Extract directives from user code
+    val (directives, userCode) = task.inputs.code.split("\n")
+      .span(line => line.startsWith("//>") || line.trim().size == 0)
+
     // Instrument
-    InstrumentedInputs(task.inputs) match {
+    InstrumentedInputs(task.inputs.copy(code = userCode.mkString("\n"))) match {
       case Left(failure) => future.complete(Right(failure))
       case Right(InstrumentedInputs(inputs, isForcedProgramMode)) => {
         val runtimeDependency = task.inputs.target.runtimeDependency.map(Set(_)).getOrElse(Set()) ++ task.inputs.libraries
 
-        val code = runtimeDependency.map(scalaDepToFullName).map(libraryDirective).mkString("\n") + "\n" + inputs.code
+        val code = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ directives).mkString("\n") + "\n" + inputs.code
         writeFile(scalaMain, code)
         val build = bspClient.build(task.snippetId.base64UUID) // TODO: use a fresh identifier
-        
       }
     }
 
@@ -81,6 +84,8 @@ class ScliRunner {
     // Create BSP connection
     new BspClient(workingDir, pStdout.get, pStdin.get)
   }
+
+  private val runTimeScala = "//> using lib \"org.scastie::runtime-scala\""
 
   private def scalaDepToFullName = (dep: ScalaDependency) => s"${dep.groupId}::${dep.artifact}:${dep.version}"
   private def libraryDirective = (lib: String) => s"//> using lib \"$lib\"".mkString
