@@ -124,6 +124,7 @@ class BspClient(private val workingDir: Path,
         .map(_ => {
           val output = logMessages(s"$id-run")
           logMessages.remove(s"$id-run")
+          log.info(s"Ran successfully: $output")
           BspClientRun(output.map(_.getMessage()))
         })
       })
