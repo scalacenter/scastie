@@ -41,7 +41,7 @@ class ScliRunner {
 
   def runTask(task: ScliTask): CompletableFuture[ScliTaskResult] = {
     val future = new CompletableFuture[ScliTaskResult]()
-    log.info(s"Running task $task")
+    log.info(s"Running task with snippetId=${task.snippetId}")
 
     // Instrument
     InstrumentedInputs(task.inputs) match {
