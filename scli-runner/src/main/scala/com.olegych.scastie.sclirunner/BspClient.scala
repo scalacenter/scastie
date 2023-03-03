@@ -13,7 +13,11 @@ import scala.concurrent.Future
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.FutureConverters._
+import scala.jdk.CollectionConverters._
 import java.util.Optional
+import com.olegych.scastie.api.Problem
+import com.olegych.scastie.api.Severity
+import com.olegych.scastie.api
 
 
 object BspClient {
@@ -21,8 +25,30 @@ object BspClient {
 
   case class NoTargetsFoundException(err: String) extends Exception
   case class NoMainClassFound(err: String) extends Exception
-  case class CompilationError(err: PublishDiagnosticsParams) extends Exception
+  case class CompilationError(err: List[Diagnostic]) extends Exception {
+
+    private def diagSeverityToSeverity(severity: DiagnosticSeverity): Severity = {
+      if (severity == DiagnosticSeverity.ERROR) api.Error
+      else if (severity == DiagnosticSeverity.INFORMATION) api.Info
+      else if (severity == DiagnosticSeverity.HINT) api.Info
+      else if (severity == DiagnosticSeverity.WARNING) api.Warning
+      else api.Error
+    }
+
+    def toProblemList: List[Problem] = {
+      err.map(diagnostic =>
+        Problem(
+          diagSeverityToSeverity(diagnostic.getSeverity()),
+          Some(diagnostic.getRange().getStart().getLine()),
+          diagnostic.getMessage()
+        )).toList
+    }
+
+
+  }
   case class FailedRunError(err: String) extends Exception
+
+  type Callback = String => Any
 }
 
 trait ScalaCliServer extends BuildServer with ScalaBuildServer
@@ -52,7 +78,11 @@ class BspClient(private val workingDir: Path,
   }
   listeningThread.start()
 
-  def build(id: String) = {
+  def build(id: String,
+            onOutput: Callback = _ => ()) = {
+
+    runMessageEvent.put(s"$id-run", onOutput)
+
     bspServer.workspaceReload().asScala
     .map(d => log.info("Reloaded workspace."))
     .flatMap(_ => {
@@ -124,6 +154,8 @@ class BspClient(private val workingDir: Path,
         .map(_ => {
           val output = logMessages(s"$id-run")
           logMessages.remove(s"$id-run")
+          runMessageEvent.remove(id)
+
           log.info(s"Ran successfully: $output")
           BspClientRun(output.map(_.getMessage()))
         })
@@ -145,26 +177,30 @@ class BspClient(private val workingDir: Path,
 
   initWorkspace
 
-  val diagnostics: Map[String, PublishDiagnosticsParams] = HashMap()
+  val runMessageEvent: Map[String, Callback] = HashMap()
+
+  val diagnostics: Map[String, List[Diagnostic]] = HashMap().withDefault(_ => List())
   val logMessages: Map[String, List[LogMessageParams]] = HashMap().withDefault(_ => List())
 
   class InnerClient extends BuildClient {
     def onBuildLogMessage(params: LogMessageParams): Unit = {
       val origin = params.getOriginId()
 
-      if (origin != null)
+      if (origin != null) {
         logMessages.put(origin, params +: logMessages(origin))
+        runMessageEvent(origin)(params.getMessage())
+      }
     }
     def onBuildPublishDiagnostics(params: PublishDiagnosticsParams): Unit = {
       val origin = params.getOriginId()
 
       if (origin != null)
-        diagnostics.put(origin, params)
+        diagnostics.put(origin, params.getDiagnostics.asScala.toList ++ diagnostics(origin))
     }
-    def onBuildShowMessage(params: ShowMessageParams): Unit = log.info(s"onBuildShowMessage $params")
-    def onBuildTargetDidChange(params: DidChangeBuildTarget): Unit = log.info(s"onBuildTargetDidChange $params")
-    def onBuildTaskFinish(params: TaskFinishParams): Unit = log.info(s"onBuildTaskFinish $params")
-    def onBuildTaskProgress(params: TaskProgressParams): Unit = log.info(s"onBuildTaskProgress $params")
-    def onBuildTaskStart(params: TaskStartParams): Unit = log.info(s"onBuildTaskStart $params")
+    def onBuildShowMessage(params: ShowMessageParams): Unit = ()
+    def onBuildTargetDidChange(params: DidChangeBuildTarget): Unit = ()
+    def onBuildTaskFinish(params: TaskFinishParams): Unit = ()
+    def onBuildTaskProgress(params: TaskProgressParams): Unit = ()
+    def onBuildTaskStart(params: TaskStartParams): Unit = ()
   }
 }
