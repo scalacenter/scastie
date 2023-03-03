@@ -1,18 +1,23 @@
 package com.olegych.scastie.sclirunner
 
-import scala.sys.process._
+import com.olegych.scastie.api.{SnippetId, Inputs, ScalaDependency}
+import com.olegych.scastie.instrumentation.{InstrumentedInputs, InstrumentationFailureReport}
 import com.typesafe.scalalogging.Logger
 import java.nio.file.{Files, Path, StandardOpenOption}
-import com.olegych.scastie.api.{SnippetId, Inputs, ScalaDependency}
 import java.util.concurrent.CompletableFuture
-import com.olegych.scastie.instrumentation.{InstrumentedInputs, InstrumentationFailureReport}
 import java.io.{InputStream, OutputStream}
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.sys.process._
+import com.olegych.scastie.instrumentation.InstrumentationFailure
+import com.olegych.scastie.api.Problem
+import com.olegych.scastie.instrumentation.Instrument
 
 object ScliRunner {
   case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String])
-  case class ScliTaskResultContent()
+  case class InstrumentationException(failure: InstrumentationFailureReport) extends Exception
 
-  type ScliTaskResult = Either[ScliTaskResultContent, InstrumentationFailureReport]
+  case class CompilationError(problems: List[Problem]) extends Exception
 }
 
 class ScliRunner {
@@ -39,27 +44,33 @@ class ScliRunner {
     ()
   }
 
-  def runTask(task: ScliTask): CompletableFuture[ScliTaskResult] = {
-    val future = new CompletableFuture[ScliTaskResult]()
+  def runTask(task: ScliTask, onOutput: String => Any): Future[BspClient.BspClientRun] = {
     log.info(s"Running task with snippetId=${task.snippetId}")
 
     // Extract directives from user code
-    val (directives, userCode) = task.inputs.code.split("\n")
-      .span(line => line.startsWith("//>") || line.trim().size == 0)
+    val (userDirectives, userCode) = task.inputs.code.split("\n")
+      .span(line => line.startsWith("//>"))
 
     // Instrument
     InstrumentedInputs(task.inputs.copy(code = userCode.mkString("\n"))) match {
-      case Left(failure) => future.complete(Right(failure))
+      case Left(failure) => Future.failed(InstrumentationException(failure))
       case Right(InstrumentedInputs(inputs, isForcedProgramMode)) => {
         val runtimeDependency = task.inputs.target.runtimeDependency.map(Set(_)).getOrElse(Set()) ++ task.inputs.libraries
+        val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
+        val totalOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(task.inputs)
 
-        val code = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ directives).mkString("\n") + "\n" + inputs.code
+        println(s"OFFSET IS = $totalOffset because ${runtimeDependency.size} + ${Instrument.getExceptionLineOffset(task.inputs)}")
+
+        val code = allDirectives.mkString("\n") + "\n" + inputs.code
         writeFile(scalaMain, code)
-        val build = bspClient.build(task.snippetId.base64UUID) // TODO: use a fresh identifier
+        val build = bspClient.build(task.snippetId.base64UUID, onOutput) // TODO: use a fresh identifier
+        build recover {
+          case x: BspClient.CompilationError => throw CompilationError(x.toProblemList.map(pb =>
+            pb.copy(line = pb.line.map(_ + totalOffset + 1))))
+          case other => throw other
+        }
       }
     }
-
-    future
   }
 
   // Process streams
