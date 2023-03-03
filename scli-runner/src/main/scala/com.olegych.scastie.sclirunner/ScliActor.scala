@@ -86,9 +86,6 @@ class ScliActor(system: ActorSystem,
   def runTask(task: ScliActorTask): Unit = {
     val ScliActorTask(snipId, inp, ip, login, progressActor) = task
 
-    // sendProgress(progressActor, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snipId)))
-
-    // TODO: keep track of progressActor?
     val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip, login), output => {
       sendProgress(progressActor, SnippetProgress.default.copy(
         ts = Some(Instant.now.toEpochMilli),
@@ -100,8 +97,8 @@ class ScliActor(system: ActorSystem,
 
     r.onComplete({
       case Failure(exception) => {
-        println(s"except $exception")
         exception match {
+          // TODO: handle every possible exception
           case ScliRunner.InstrumentationException(report) => sendProgress(progressActor, report.toProgress(snippetId = snipId))
           // case x: BspClient.NoTargetsFoundException => sendProgress(progressActor, buildErrorProgress(snipId, x.err)
           case x @ ScliRunner.CompilationError(problems) => {
