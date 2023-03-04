@@ -158,7 +158,11 @@ class BspClient(private val workingDir: Path,
 
           log.info(s"Ran successfully: $output")
           BspClientRun(output.map(_.getMessage()))
-        })
+        }).recover { e =>
+          logMessages.remove(s"$id-run")
+          runMessageEvent.remove(id)
+          throw e
+        }
       })
     })
   }
@@ -197,10 +201,10 @@ class BspClient(private val workingDir: Path,
       if (origin != null)
         diagnostics.put(origin, params.getDiagnostics.asScala.toList ++ diagnostics(origin))
     }
-    def onBuildShowMessage(params: ShowMessageParams): Unit = ()
-    def onBuildTargetDidChange(params: DidChangeBuildTarget): Unit = ()
-    def onBuildTaskFinish(params: TaskFinishParams): Unit = ()
-    def onBuildTaskProgress(params: TaskProgressParams): Unit = ()
-    def onBuildTaskStart(params: TaskStartParams): Unit = ()
+    def onBuildShowMessage(params: ShowMessageParams): Unit = () // log.info(s"ShowMessageParams: $params")
+    def onBuildTargetDidChange(params: DidChangeBuildTarget): Unit = () // log.info(s"DidChangeBuildTarget: $params")
+    def onBuildTaskFinish(params: TaskFinishParams): Unit = () // log.info(s"TaskFinishParams: $params")
+    def onBuildTaskProgress(params: TaskProgressParams): Unit = () // log.info(s"TaskProgressParams: $params")
+    def onBuildTaskStart(params: TaskStartParams): Unit = () // log.info(s"TaskStartParams: $params")
   }
 }
