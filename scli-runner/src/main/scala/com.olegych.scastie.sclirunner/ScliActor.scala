@@ -26,6 +26,8 @@ import java.time.Instant
 import scala.sys.process._
 import java.nio.charset.StandardCharsets
 import scala.io.{Source => IOSource}
+import com.olegych.scastie.api.Problem
+import com.olegych.scastie.api
 
 object ScliActor {
   // States
@@ -100,13 +102,14 @@ class ScliActor(system: ActorSystem,
         exception match {
           // TODO: handle every possible exception
           case ScliRunner.InstrumentationException(report) => sendProgress(progressActor, report.toProgress(snippetId = snipId))
-          // case x: BspClient.NoTargetsFoundException => sendProgress(progressActor, buildErrorProgress(snipId, x.err)
+          case x: BspClient.NoTargetsFoundException => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
+          case x: BspClient.NoMainClassFound => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
+          case x: BspClient.FailedRunError => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
           case x @ ScliRunner.CompilationError(problems) => {
             sendProgress(progressActor, SnippetProgress.default.copy(
               ts = Some(Instant.now.toEpochMilli),
               snippetId = Some(snipId),
               compilationInfos = problems,
-              isSbtError = false,
               isDone = true
             ))
           }
@@ -127,6 +130,16 @@ class ScliActor(system: ActorSystem,
     progressId = progressId + 1
     val p: SnippetProgress = _p.copy(id = Some(progressId))
     progressActor ! p
+  }
+
+  private def buildErrorProgress(snipId: SnippetId, err: String) = {
+    SnippetProgress.default.copy(
+      ts = Some(Instant.now.toEpochMilli),
+      snippetId = Some(snipId),
+      isDone = true,
+      compilationInfos = List(Problem(api.Error, line = None, message = err)),
+      userOutput = Some(ProcessOutput(err, ProcessOutputType.StdErr, None))
+    )
   }
 
   override def reconnectInfo: Option[ReconnectInfo] = None // TODO: fill
