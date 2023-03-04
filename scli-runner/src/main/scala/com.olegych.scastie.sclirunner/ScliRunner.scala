@@ -59,8 +59,6 @@ class ScliRunner {
         val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
         val totalOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(task.inputs)
 
-        println(s"OFFSET IS = $totalOffset because ${runtimeDependency.size} + ${Instrument.getExceptionLineOffset(task.inputs)}")
-
         val code = allDirectives.mkString("\n") + "\n" + inputs.code
         writeFile(scalaMain, code)
         val build = bspClient.build(task.snippetId.base64UUID, onOutput) // TODO: use a fresh identifier
