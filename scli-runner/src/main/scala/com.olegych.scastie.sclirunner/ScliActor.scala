@@ -28,6 +28,9 @@ import java.nio.charset.StandardCharsets
 import scala.io.{Source => IOSource}
 import com.olegych.scastie.api.Problem
 import com.olegych.scastie.api
+import play.api.libs.json.Reads
+import play.api.libs.json.Json
+import scala.util.control.NonFatal
 
 object ScliActor {
   // States
@@ -89,12 +92,23 @@ class ScliActor(system: ActorSystem,
     val ScliActorTask(snipId, inp, ip, login, progressActor) = task
 
     val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip, login), output => {
-      sendProgress(progressActor, SnippetProgress.default.copy(
-        ts = Some(Instant.now.toEpochMilli),
-        snippetId = Some(snipId),
-        userOutput = Some(ProcessOutput(output, tpe = ProcessOutputType.StdOut, id = None)),
-        isDone = false
-      ))
+      val instrumentation = extract[List[api.Instrumentation]](output)
+
+      instrumentation match {
+        case Some(instrumentations) => sendProgress(progressActor, SnippetProgress.default.copy(
+          ts = Some(Instant.now.toEpochMilli),
+          snippetId = Some(snipId),
+          instrumentations = instrumentations,
+          isDone = false
+        ))
+
+        case None => sendProgress(progressActor, SnippetProgress.default.copy(
+          ts = Some(Instant.now.toEpochMilli),
+          snippetId = Some(snipId),
+          userOutput = Some(ProcessOutput(output, tpe = ProcessOutputType.StdOut, id = None)),
+          isDone = false
+        ))
+      }
     })
 
     r.onComplete({
@@ -142,7 +156,16 @@ class ScliActor(system: ActorSystem,
     )
   }
 
+  private def extract[T: Reads](line: String) = {
+    try {
+      Json.fromJson[T](Json.parse(line)).asOpt
+    } catch {
+      case NonFatal(e) => None
+    }
+  }
+
   override def reconnectInfo: Option[ReconnectInfo] = None // TODO: fill
 
   override def tryConnect(context: ActorContext): Unit = () // TODO: fill
+
 }
