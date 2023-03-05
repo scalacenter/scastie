@@ -18,11 +18,15 @@ import java.util.Optional
 import com.olegych.scastie.api.Problem
 import com.olegych.scastie.api.Severity
 import com.olegych.scastie.api
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import org.eclipse.lsp4j.jsonrpc.messages.CancelParams
 
 
 object BspClient {
   case class BspClientRun(output: List[String])
 
+  case class FailedRunError(err: String) extends Exception
   case class NoTargetsFoundException(err: String) extends Exception
   case class NoMainClassFound(err: String) extends Exception
   case class CompilationError(err: List[Diagnostic]) extends Exception {
@@ -46,12 +50,11 @@ object BspClient {
 
 
   }
-  case class FailedRunError(err: String) extends Exception
 
   type Callback = String => Any
 }
 
-trait ScalaCliServer extends BuildServer with ScalaBuildServer
+trait ScalaCliServer extends BuildServer with ScalaBuildServer with CancellableServer
 
 class BspClient(private val workingDir: Path,
                 private val inputStream: InputStream,
@@ -124,7 +127,7 @@ class BspClient(private val workingDir: Path,
         })
         // it compiled
         // Asking for main classes
-        .flatMap(_ => 
+        .flatMap(_ =>
           bspServer.buildTargetScalaMainClasses({
             val param = new ScalaMainClassesParams(Collections.singletonList(targetId))
             param.setOriginId(id + "-main-classes")
@@ -139,16 +142,17 @@ class BspClient(private val workingDir: Path,
         })
         // Run
         .flatMap(mainClass => {
-          bspServer.buildTargetRun({
+          wrapTimeout(s"$id-run", bspServer.buildTargetRun({
             val param = new RunParams(targetId)
             param.setDataKind("scala-main-class")
             param.setData(mainClass.getClasses().get(0))
             param.setOriginId(s"$id-run")
             param
-          }).asScala
+          }))
         })
         .map(result => {
           if (result.getStatusCode() == StatusCode.ERROR) throw FailedRunError(s"Failed run: $result.")
+          if (result.getStatusCode() == StatusCode.CANCELLED) throw FailedRunError(s"Cancelled run: $result")
           result
         })
         .map(_ => {
@@ -206,5 +210,19 @@ class BspClient(private val workingDir: Path,
     def onBuildTaskFinish(params: TaskFinishParams): Unit = () // log.info(s"TaskFinishParams: $params")
     def onBuildTaskProgress(params: TaskProgressParams): Unit = () // log.info(s"TaskProgressParams: $params")
     def onBuildTaskStart(params: TaskStartParams): Unit = () // log.info(s"TaskStartParams: $params")
+  }
+
+  private def wrapTimeout[T](id: String, cf: CompletableFuture[T]) = {
+    /*cf.orTimeout(10, TimeUnit.SECONDS).asScala.recover((throwable => {
+      throwable match {
+        case _: TimeoutException => {
+          println("okokokokokokok");
+          cf.cancel(true)
+          throw FailedRunError("Timeout exceeded.")
+        }
+        case _ => throw throwable
+      }
+    }))*/
+    cf.asScala
   }
 }
