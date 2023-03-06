@@ -179,7 +179,7 @@ class BspClient(private val workingDir: Path,
       workingDir.toAbsolutePath().normalize().toUri().toString(),
       new BuildClientCapabilities(Collections.singletonList("scala"))
     )).get // Force to wait
-    log.info(s"initialized $r")
+    log.info(s"Initialized workspace: $r")
     bspServer.onBuildInitialized()
   }
 
@@ -192,18 +192,15 @@ class BspClient(private val workingDir: Path,
 
   class InnerClient extends BuildClient {
     def onBuildLogMessage(params: LogMessageParams): Unit = {
-      val origin = params.getOriginId()
-
-      if (origin != null) {
+      Option(params.getOriginId).map(origin => {
         logMessages.put(origin, params +: logMessages(origin))
         runMessageEvent(origin)(params.getMessage())
-      }
+      })
     }
     def onBuildPublishDiagnostics(params: PublishDiagnosticsParams): Unit = {
-      val origin = params.getOriginId()
-
-      if (origin != null)
+      Option(params.getOriginId).map(origin => {
         diagnostics.put(origin, params.getDiagnostics.asScala.toList ++ diagnostics(origin))
+      })
     }
     def onBuildShowMessage(params: ShowMessageParams): Unit = () // log.info(s"ShowMessageParams: $params")
     def onBuildTargetDidChange(params: DidChangeBuildTarget): Unit = () // log.info(s"DidChangeBuildTarget: $params")
@@ -213,16 +210,14 @@ class BspClient(private val workingDir: Path,
   }
 
   private def wrapTimeout[T](id: String, cf: CompletableFuture[T]) = {
-    /*cf.orTimeout(10, TimeUnit.SECONDS).asScala.recover((throwable => {
+    cf.orTimeout(10, TimeUnit.SECONDS).asScala.recover((throwable => {
       throwable match {
         case _: TimeoutException => {
-          println("okokokokokokok");
-          cf.cancel(true)
+          // TODO: cancel
           throw FailedRunError("Timeout exceeded.")
         }
         case _ => throw throwable
       }
-    }))*/
-    cf.asScala
+    }))
   }
 }
