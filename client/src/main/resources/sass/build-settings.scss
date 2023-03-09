@@ -20,6 +20,12 @@
         text-align: center;
       }
 
+      .cm-s-dark {
+        .cm-gutter, .cm-editor {
+          background-color: #073642;
+        }
+      }
+
       h2 {
         font-size: 24px;
         font-weight: bold;

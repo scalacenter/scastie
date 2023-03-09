@@ -48,7 +48,7 @@ lazy val loggingAndTest = Seq(
   libraryDependencies ++= Seq(
     "ch.qos.logback"              % "logback-classic" % "1.4.5",
     "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5",
-    "io.sentry"                   % "sentry-logback"  % "6.11.0"
+    "io.sentry"                   % "sentry-logback"  % "6.13.1"
   )
 ) ++ testSettings
 
@@ -108,6 +108,7 @@ lazy val metalsRunner = project
       ImageName(namespace = Some(dockerOrg), repository = "scastie-metals-runner", tag = Some("latest"))
     ),
     executableScriptName := "server",
+    javacOptions ++= Seq("-Xms1G", "-Xmx4G", "-XX:+CrashOnOutOfMemoryError"),
     docker / dockerfile := Def
       .task {
         DockerHelper.javaProject(
@@ -124,13 +125,13 @@ lazy val metalsRunner = project
     libraryDependencies ++= Seq(
       "org.scalameta"        % "metals"              % "0.11.10" cross (CrossVersion.for3Use2_13),
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.19.0",
-      "org.http4s"          %% "http4s-ember-server" % "0.23.17",
-      "org.http4s"          %% "http4s-ember-client" % "0.23.17",
-      "org.http4s"          %% "http4s-dsl"          % "0.23.17",
-      "org.http4s"          %% "http4s-circe"        % "0.23.17",
-      "io.circe"            %% "circe-generic"       % "0.14.3",
-      "org.scalameta"       %% "munit"               % "0.7.29" % Test,
+      "org.http4s"          %% "http4s-ember-server" % "0.23.18",
+      "org.http4s"          %% "http4s-ember-client" % "0.23.18",
+      "org.http4s"          %% "http4s-dsl"          % "0.23.18",
+      "org.http4s"          %% "http4s-circe"        % "0.23.18",
+      "io.circe"            %% "circe-generic"       % "0.14.4",
       "com.evolutiongaming" %% "scache"              % "4.2.3",
+      "org.scalameta"       %% "munit"               % "0.7.29" % Test,
       "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test
     )
   )
@@ -152,7 +153,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.6.1"
+      "org.scalameta" %% "scalafmt-core" % "3.7.1"
     ),
     docker / imageNames := Seq(
       ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some(gitHashNow)),
@@ -223,9 +224,10 @@ lazy val storage = project
   .settings(baseNoCrossSettings)
   .settings(loggingAndTest)
   .settings(
+    scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
-      "org.mongodb.scala" %% "mongo-scala-driver" % "4.8.1",
-      "net.lingala.zip4j"  % "zip4j"              % "2.11.2"
+      "org.mongodb.scala" %% "mongo-scala-driver" % "4.8.2",
+      "net.lingala.zip4j"  % "zip4j"              % "2.11.4"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
@@ -257,6 +259,7 @@ lazy val client = project
     stIgnore := List(
       "@sentry/browser",
       "@sentry/tracing",
+      "github-markdown-css",
       "react",
       "react-dom",
       "source-map-support"
@@ -274,7 +277,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta"                 %% "scalameta" % "4.7.1",
+      "org.scalameta"                 %% "scalameta" % "4.7.3",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

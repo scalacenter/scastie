@@ -1,28 +1,36 @@
 package com.olegych.scastie.web.routes
 
 import akka.actor.ActorRef
-import akka.http.scaladsl.coding.Coders.{Gzip, NoCoding}
+import akka.http.scaladsl.coding.Coders.Gzip
+import akka.http.scaladsl.coding.Coders.NoCoding
 import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{`Cache-Control`, CacheDirectives}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{Route, RouteResult}
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.RouteResult
 import akka.pattern.ask
 import akka.stream.Materializer
 import akka.stream.scaladsl.StreamConverters
-import akka.util.{ByteString, Timeout}
-import com.olegych.scastie.api.{FetchResult, SnippetId, SnippetUserPart}
+import akka.util.ByteString
+import akka.util.Timeout
+import com.olegych.scastie.api.FetchResult
+import com.olegych.scastie.api.SnippetId
+import com.olegych.scastie.api.SnippetUserPart
 import com.olegych.scastie.balancer.FetchSnippet
 import com.olegych.scastie.util.Base64UUID
 import org.apache.commons.text.StringEscapeUtils
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{ExecutionContext, Future}
-import akka.http.scaladsl.model._
 
 class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean, hostname: String)(implicit ec: ExecutionContext, mat: Materializer) {
   implicit val timeout: Timeout = Timeout(20.seconds)
   private val placeholders = List(
     "Scastie can run any Scala program with any library in your browser. You don’t need to download or install anything.",
   )
+
   private val indexResource = "public/index.html"
   private val indexResourceContent = Future.traverse(Option(getClass.getClassLoader.getResource(indexResource)).toList) { url =>
     StreamConverters.fromInputStream(() => url.openStream()).runFold("")(_ + _.utf8String)
@@ -67,23 +75,20 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean, hostname: St
   val routes: Route = encodeResponseWith(Gzip, NoCoding)(
     get(
       concat(
-        path("public" / "app.css")(
-          getFromResource("public/assets/index.css")
+        respondWithHeader(`Cache-Control`(CacheDirectives.`no-cache`))(
+          concat(
+            path("embedded.js")(
+              getFromResource("public/embedded/embedded.js", ContentType(MediaTypes.`application/javascript`, HttpCharsets.`UTF-8`))
+            ),
+            path("public" / "embedded.css")(
+              getFromResource("public/embedded/style.css", ContentType(MediaTypes.`text/css`, HttpCharsets.`UTF-8`))
+            ),
+          ),
         ),
-        path("public" / "app.js")(
-          getFromResource("public/app.js")
-        ),
-        path("public" / "app.js.map")(
-          getFromResource("public/app.js.map")
-        ),
-        path("public" / "embedded.css")(
-          getFromResource("public/assets/style.css")
-        ),
-        path("embedded.js")(
-          getFromResource("public/embedded.js", ContentType(MediaTypes.`application/javascript`, HttpCharsets.`UTF-8`))
-        ),
-        path("public" / Remaining)(
-          path => getFromResource("public/" + path)
+        respondWithHeader(`Cache-Control`(CacheDirectives.immutableDirective))(
+          path("public" / Remaining)(
+            path => getFromResource("public/" + path)
+          ),
         ),
         pathSingleSlash(index),
         snippetId { snippetId => ctx =>

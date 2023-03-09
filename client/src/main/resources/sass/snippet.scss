@@ -12,9 +12,8 @@
           }
         }
         .snippet-link {
-          height: 48px;
           border: 1px solid #5d7c83;
-          margin-top: 34px;
+          margin-left: 10px;
           padding: 10px;
 
           .link-to-copy {
@@ -29,6 +28,7 @@
           .snippet-clip {
             display: inline-block;
             width: 46px;
+            padding-left: 10px;
             height: 100%;
             cursor: pointer;
             font-size: 22px;

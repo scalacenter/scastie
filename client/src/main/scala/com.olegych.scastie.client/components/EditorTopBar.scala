@@ -17,6 +17,7 @@ final case class EditorTopBar(clear: Reusable[Callback],
                               toggleWorksheetMode: Reusable[Callback],
                               router: Option[RouterCtl[Page]],
                               inputsHasChanged: Boolean,
+                              isDarkTheme: Boolean,
                               isNewSnippetModalClosed: Boolean,
                               isEmbeddedModalClosed: Boolean,
                               isRunning: Boolean,
@@ -48,6 +49,7 @@ object EditorTopBar {
     ).render
 
     val newButton = NewButton(
+      isDarkTheme = props.isDarkTheme,
       isNewSnippetModalClosed = props.isNewSnippetModalClosed,
       openNewSnippetModal = props.openNewSnippetModal,
       closeNewSnippetModal = props.closeNewSnippetModal,
@@ -95,6 +97,7 @@ object EditorTopBar {
 
           val embeddedModal =
             CopyModal(
+              isDarkTheme = props.isDarkTheme,
               title = "Share your Code Snippet",
               subtitle = "Copy and embed your code snippet",
               modalId = "embed-modal",

@@ -42,6 +42,7 @@ object MainPanel {
         case (Some(router), Some(user)) if state.view == View.CodeSnippets =>
           div(cls := "snippets-container inner-container")(
             CodeSnippets(
+              isDarkTheme = state.isDarkTheme,
               view = state.view,
               user = user,
               router = router,
@@ -120,6 +121,7 @@ object MainPanel {
       MobileBar(
         isRunning = state.isRunning,
         isStatusOk = isStatusOk,
+        isDarkTheme = state.isDarkTheme,
         save = backend.saveOrUpdate,
         setView = backend.setViewReused,
         clear = backend.clear,
@@ -133,7 +135,8 @@ object MainPanel {
     val topBar =
       TopBar(
         backend.viewSnapshot(state.view),
-        state.user
+        state.user,
+        backend.openLoginModal
       ).render.unless(props.isEmbedded || state.isPresentationMode)
 
     val editorTopBar =
@@ -149,6 +152,7 @@ object MainPanel {
         toggleWorksheetMode = backend.toggleWorksheetMode,
         router = props.router,
         inputsHasChanged = state.inputsHasChanged,
+        isDarkTheme = state.isDarkTheme,
         isNewSnippetModalClosed = state.modalState.isNewSnippetModalClosed,
         isEmbeddedModalClosed = state.modalState.isEmbeddedClosed,
         isRunning = state.isRunning,

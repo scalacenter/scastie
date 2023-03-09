@@ -64,21 +64,38 @@ $cm-gutters-linenumber-color: #839496;
 $cm-active-hint-background: #7dc8e5;
 $cm-active-hint-text: #002b36;
 
+// modal
+$modal-button-background: #073642;
+$modal-button-background-hover: #185463;
+
 // Tooltip
 $code-background-color: #171717;
 
 .scastie {
   .dark {
     .main-panel {
-      background-color: $cm-background-color; 
+      background-color: $cm-background-color;
+    }
+  }
+
+  .code .cm-s-solarized.cm-s-dark {
+    background-color: $cm-background-color;
+    .editor-wrapper, .cm-gutters {
+      background-color: $cm-background-color;
+    }
+  }
+
+  .configuration .cm-s-solarized.cm-s-dark {
+    background-color: $snippet-background-color;
+
+    .editor-wrapper, .cm-gutters {
+      background-color: $snippet-background-color;
     }
   }
 
   .code, .configuration {
     .cm-s-solarized.cm-s-dark {
       color: $cm-color;
-      background-color: $cm-background-color;
-
       .cm-cursor {
         border-left-color: $cm-cursor;
       }
@@ -87,7 +104,6 @@ $code-background-color: #171717;
       .cm-simplescroll-horizontal div {
         background: $hover-option-color;
       }
-      
       .cm-hints {
         background: $snippet-background-color;
       }
@@ -99,7 +115,6 @@ $code-background-color: #171717;
 
       .cm-gutters {
         border-right: 1px solid $cm-gutters-border-color;
-        background-color: $cm-background-color;
       }
 
       .cm-linenumber {

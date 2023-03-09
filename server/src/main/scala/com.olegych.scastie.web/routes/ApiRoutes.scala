@@ -74,7 +74,23 @@ class ApiRoutes(
                 )
               )
             )
+          ),
+        post(
+          concat(
+            path("user" / "privacyPolicyStatus")(
+              complete(server.getPrivacyPolicy())
+            ),
+            path("user" / "acceptPrivacyPolicy")(
+              complete(server.acceptPrivacyPolicy())
+            ),
+            path("user" / "removeUserFromPolicyStatus")(
+              complete(server.removeUserFromPolicyStatus())
+            ),
+            path("user" / "removeAllUserSnippets")(
+              complete(server.removeAllUserSnippets())
+            ),
           )
+        )
       )
     )
 }
