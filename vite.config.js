@@ -2,6 +2,7 @@ import { spawnSync } from "child_process";
 import path from "path";
 import { defineConfig, splitVendorChunkPlugin } from "vite";
 import { plugin as mdPlugin } from 'vite-plugin-markdown';
+import scalaJSPlugin from '@scala-js/vite-plugin-scalajs';
 
 function isDev() {
   return process.env.NODE_ENV !== "production";
@@ -10,29 +11,6 @@ function isDev() {
 function emitEmbedded() {
   return process.env.MODE == "embed"
 }
-
-function printSbtTask(task) {
-  const args = ["-J-Xlog:all=error", "--error", "--batch", `print ${task}`];
-  const options = {
-    stdio: [
-      "pipe", // StdIn.
-      "pipe", // StdOut.
-      "inherit", // StdErr.
-    ],
-  };
-  const result = spawnSync("sbt", args, options);
-
-  if (result.error)
-    throw result.error;
-  if (result.status !== 0)
-    throw new Error(`sbt process failed with exit code ${result.status}`);
-  return result.stdout.toString('utf8').trim();
-}
-
-const linkOutputDir = isDev()
-  ? printSbtTask("client / fastLinkJSOutput")
-  : printSbtTask("client / fullLinkJSOutput");
-
 
 const root = path.resolve('client/src/main/resources', (isDev() ? 'dev' : 'prod'))
 
@@ -106,15 +84,17 @@ export default defineConfig({
   },
   root: root,
   base: isDev() ? '' : '/public/',
-  plugins: [splitVendorChunkPlugin(), mdPlugin({
-    mode: ['html']
-  })],
+  plugins: [
+    scalaJSPlugin({
+      projectID: 'client'
+    }),
+    splitVendorChunkPlugin(),
+    mdPlugin({
+      mode: ['html']
+    }),
+  ],
   resolve: {
     alias: [
-      {
-        find: '@linkOutputDir',
-        replacement: linkOutputDir,
-      },
       {
         find: '@resources',
         replacement: path.resolve(__dirname, 'client', 'src', 'main', 'resources'),
