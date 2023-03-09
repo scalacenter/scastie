@@ -201,7 +201,7 @@ lazy val server = project
       "org.apache.commons"                  % "commons-text"   % "1.10.0",
       "com.typesafe.akka"                  %% "akka-http"      % akkaHttpVersion,
       "com.softwaremill.akka-http-session" %% "core"           % "0.7.0",
-      "ch.megard"                          %% "akka-http-cors" % "1.1.3",
+      "ch.megard"                          %% "akka-http-cors" % "1.2.0",
       akka("cluster"),
       akka("slf4j"),
       akka("testkit")      % Test,
