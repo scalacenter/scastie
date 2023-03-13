@@ -21,6 +21,7 @@
     "@codemirror/view": "^6.9.1",
     "@lezer/common": "^1.0.1",
     "@lezer/highlight": "^1.1.1",
+    "@scala-js/vite-plugin-scalajs": "^1.0.0",
     "@sentry/browser": "^7.38.0",
     "@sentry/tracing": "^7.38.0",
     "@types/marked": "^4.0.7",
