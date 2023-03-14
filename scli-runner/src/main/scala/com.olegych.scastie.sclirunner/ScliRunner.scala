@@ -63,7 +63,7 @@ class ScliRunner {
         val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
         val totalOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(task.inputs)
 
-        val charOffsetInstrumentation = userDirectives.map(_.length()).sum + 1
+        val charOffsetInstrumentation = userDirectives.map(_.length() + 1).sum
 
         val code = allDirectives.mkString("\n") + "\n" + inputs.code
         writeFile(scalaMain, code)

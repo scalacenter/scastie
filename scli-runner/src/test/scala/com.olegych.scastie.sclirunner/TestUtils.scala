@@ -24,18 +24,18 @@ object TestUtils {
     }
   }
 
-  def shouldOutputString(run: Future[BspClient.BspClientRun], str: String): List[String] = {
+  def shouldOutputString(run: Future[BspClient.BspClientRun], str: String): BspClient.BspClientRun = {
     val result = getResultWithTimeout(run)
     result match {
-      case Success(BspClient.BspClientRun(output, instrumentations)) => {
-        if (output.exists(_.contains(str))) output
+      case Success(x @ BspClient.BspClientRun(output, instrumentations)) => {
+        if (output.exists(_.contains(str))) x
         else throw new AssertionError(s"Expected the output to contain at least $str. Contained only $output")
       }
       case _ => throw new AssertionError(s"Expected the run to have been run. Got $result")
     }
   }
 
-  def shouldRun(run: Future[BspClient.BspClientRun]): Unit = {
+  def shouldRun(run: Future[BspClient.BspClientRun]) = {
     shouldOutputString(run, "")
   }
 

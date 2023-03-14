@@ -7,6 +7,7 @@ import java.nio.file.Paths
 import com.olegych.scastie.api.SnippetId
 import com.olegych.scastie.api.Inputs
 import scala.concurrent.Future
+import com.olegych.scastie.api.Value
 
 class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
   
@@ -37,7 +38,26 @@ class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("instrumentation is correct") {
+    val r = TestUtils.shouldRun(
+      run("instrumentation-test")
+    )
     
+    assert(r.instrumentation.isDefined)
+    val content = r.instrumentation.get
+    assert(content.exists(
+      p => p.position.start == 193 && p.position.end == 197
+          && { p.render match {
+            case Value("44", "Int") => true
+            case _ => false
+          } }
+    ))
+    assert(content.exists(
+      p => p.position.start == 70 && p.position.end == 75
+          && { p.render match {
+            case Value("126", "Int") => true
+            case _ => false
+          } }
+    ))
   }
 
   override protected def afterAll(): Unit = {
