@@ -71,10 +71,16 @@ class ScliRunner {
     }
   }
 
+  def end: Unit = {
+    bspClient.end
+    process.map(_.destroy())
+  }
+
   // Process streams
   private var pStdin: Option[OutputStream] = None
   private var pStdout: Option[InputStream] = None
   private var pStderr: Option[InputStream] = None
+  private var process: Option[Process] = None
   
   // Bsp
   private val bspClient = {
@@ -85,7 +91,7 @@ class ScliRunner {
       .withError(e => pStderr = Some(e))
       .withOutput(o => pStdout = Some(o))
 
-    val process = processBuilder.run(io)
+    process = Some(processBuilder.run(io))
 
     // TODO: really bad
     while (pStdin.isEmpty || pStdout.isEmpty || pStderr.isEmpty) Thread.sleep(100)
