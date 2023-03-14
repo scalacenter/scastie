@@ -27,7 +27,7 @@ object TestUtils {
   def shouldOutputString(run: Future[BspClient.BspClientRun], str: String): List[String] = {
     val result = getResultWithTimeout(run)
     result match {
-      case Success(BspClient.BspClientRun(output)) => {
+      case Success(BspClient.BspClientRun(output, instrumentations)) => {
         if (output.exists(_.contains(str))) output
         else throw new AssertionError(s"Expected the output to contain at least $str. Contained only $output")
       }
@@ -35,10 +35,14 @@ object TestUtils {
     }
   }
 
+  def shouldRun(run: Future[BspClient.BspClientRun]): Unit = {
+    shouldOutputString(run, "")
+  }
+
   def shouldTimeout(run: Future[BspClient.BspClientRun]): Unit = {
     val result = getResultWithTimeout(run)
     result match {
-      case Failure(BspClient.FailedRunError("Timeout exceed.")) => ()
+      case Failure(BspClient.FailedRunError("Timeout exceeded.")) => ()
       case _ => throw new AssertionError(s"Expected the run to timeout. Instead, got $result")
     }
   }
