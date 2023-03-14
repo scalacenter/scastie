@@ -15,10 +15,6 @@ class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
   override protected def beforeAll(): Unit = {
     scliRunner = Some(new ScliRunner)
   }
-
-  // Make some test api
-  // On changing directives
-  // Directives are taken into account
   test("forward compile errors") {
     TestUtils.shouldNotCompile(
       run("non-compilable")
@@ -29,6 +25,19 @@ class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
     TestUtils.shouldTimeout(
       run("too-long")
     )
+  }
+
+  test("directives are updated") {
+    TestUtils.shouldRun(
+      run("directive-1")
+    )
+    TestUtils.shouldRun(
+      run("directive-2")
+    )
+  }
+
+  test("instrumentation is correct") {
+    
   }
 
   override protected def afterAll(): Unit = {

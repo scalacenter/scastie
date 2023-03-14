@@ -12,6 +12,10 @@ import scala.sys.process._
 import com.olegych.scastie.instrumentation.InstrumentationFailure
 import com.olegych.scastie.api.Problem
 import com.olegych.scastie.instrumentation.Instrument
+import play.api.libs.json.Reads
+import play.api.libs.json.Json
+import scala.util.control.NonFatal
+import com.olegych.scastie.api.Instrumentation
 
 object ScliRunner {
   case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String])
@@ -59,14 +63,31 @@ class ScliRunner {
         val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
         val totalOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(task.inputs)
 
+        val charOffsetInstrumentation = userDirectives.map(_.length()).sum + 1
+
         val code = allDirectives.mkString("\n") + "\n" + inputs.code
         writeFile(scalaMain, code)
-        val build = bspClient.build(task.snippetId.base64UUID, onOutput) // TODO: use a fresh identifier
-        build recover {
+
+        var instrumentationMem: Option[List[Instrumentation]] = None
+
+        val build = bspClient.build(task.snippetId.base64UUID, line => {
+          extract[List[Instrumentation]](line) match { // extract instrumentation
+            case None => onOutput(line)
+            case Some(value) => {
+              instrumentationMem = Some(value.map(inst => inst.copy(
+                position = inst.position.copy(inst.position.start + charOffsetInstrumentation, inst.position.end + charOffsetInstrumentation)
+              )))
+            }
+          }
+        })
+
+        build map { r =>
+          r.copy(instrumentation = instrumentationMem)
+        } recover {
           case x: BspClient.CompilationError => throw CompilationError(x.toProblemList.map(pb =>
             pb.copy(line = pb.line.map(_ + totalOffset + 1))))
           case other => throw other
-        }
+        } 
       }
     }
   }
@@ -106,4 +127,12 @@ class ScliRunner {
   private def libraryDirective = (lib: String) => s"//> using lib \"$lib\"".mkString
 
   initFiles
+
+  private def extract[T: Reads](line: String) = {
+    try {
+      Json.fromJson[T](Json.parse(line)).asOpt
+    } catch {
+      case NonFatal(e) => None
+    }
+  }
 }
