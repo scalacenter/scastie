@@ -92,23 +92,12 @@ class ScliActor(system: ActorSystem,
     val ScliActorTask(snipId, inp, ip, login, progressActor) = task
 
     val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip, login), output => {
-      val instrumentation = extract[List[api.Instrumentation]](output)
-
-      instrumentation match {
-        case Some(instrumentations) => sendProgress(progressActor, SnippetProgress.default.copy(
-          ts = Some(Instant.now.toEpochMilli),
-          snippetId = Some(snipId),
-          instrumentations = instrumentations,
-          isDone = false
-        ))
-
-        case None => sendProgress(progressActor, SnippetProgress.default.copy(
+      sendProgress(progressActor, SnippetProgress.default.copy(
           ts = Some(Instant.now.toEpochMilli),
           snippetId = Some(snipId),
           userOutput = Some(ProcessOutput(output, tpe = ProcessOutputType.StdOut, id = None)),
           isDone = false
-        ))
-      }
+      ))
     })
 
     r.onComplete({
@@ -132,7 +121,8 @@ class ScliActor(system: ActorSystem,
       case Success(value) => sendProgress(progressActor, SnippetProgress.default.copy(
         ts = Some(Instant.now.toEpochMilli),
         snippetId = Some(snipId),
-        isDone = true
+        isDone = true,
+        instrumentations = value.instrumentation.getOrElse(List())
       ))
     })
   }
@@ -154,14 +144,6 @@ class ScliActor(system: ActorSystem,
       compilationInfos = List(Problem(api.Error, line = None, message = err)),
       userOutput = Some(ProcessOutput(err, ProcessOutputType.StdErr, None))
     )
-  }
-
-  private def extract[T: Reads](line: String) = {
-    try {
-      Json.fromJson[T](Json.parse(line)).asOpt
-    } catch {
-      case NonFatal(e) => None
-    }
   }
 
   override def reconnectInfo: Option[ReconnectInfo] = None // TODO: fill

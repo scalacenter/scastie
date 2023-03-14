@@ -24,7 +24,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.CancelParams
 
 
 object BspClient {
-  case class BspClientRun(output: List[String])
+  case class BspClientRun(output: List[String], instrumentation: Option[List[api.Instrumentation]] = None)
 
   case class FailedRunError(err: String) extends Exception
   case class NoTargetsFoundException(err: String) extends Exception
