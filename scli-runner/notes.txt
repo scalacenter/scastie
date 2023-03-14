@@ -21,3 +21,7 @@ compilations errors with diagnostics (lsp machin chouette)
 
 // later
 Queues:
+
+
+Extract scala dependencies
+another DTOs

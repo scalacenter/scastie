@@ -54,7 +54,7 @@ object BspClient {
   type Callback = String => Any
 }
 
-trait ScalaCliServer extends BuildServer with ScalaBuildServer with CancellableServer
+trait ScalaCliServer extends BuildServer with ScalaBuildServer 
 
 class BspClient(private val workingDir: Path,
                 private val inputStream: InputStream,
@@ -77,12 +77,20 @@ class BspClient(private val workingDir: Path,
   private val bspServer = bspLauncher.getRemoteProxy()
 
   private val listeningThread = new Thread {
-    override def run() = bspLauncher.startListening().get()
+    override def run() = {
+      try {
+        bspLauncher.startListening().get()
+      } catch {
+        case _: Throwable => log.info("Listening thread down.")
+      }
+    }
   }
   listeningThread.start()
 
   def build(id: String,
             onOutput: Callback = _ => ()) = {
+
+    // TODO: fucking refactor it !!! :) 
 
     runMessageEvent.put(s"$id-run", onOutput)
 
@@ -171,6 +179,14 @@ class BspClient(private val workingDir: Path,
     })
   }
 
+  // Kills the BSP connection and makes this object
+  // un-usable.
+  def end = {
+    bspServer.buildShutdown().get(2, TimeUnit.SECONDS)
+    bspServer.onBuildExit()
+    listeningThread.interrupt() // This will stop the thread
+  }
+
   def initWorkspace: Unit = {
     val r = bspServer.buildInitialize(new InitializeBuildParams(
       "BspClient",
@@ -185,7 +201,7 @@ class BspClient(private val workingDir: Path,
 
   initWorkspace
 
-  val runMessageEvent: Map[String, Callback] = HashMap()
+  val runMessageEvent: Map[String, Callback] = HashMap().withDefault(_ => str => ())
 
   val diagnostics: Map[String, List[Diagnostic]] = HashMap().withDefault(_ => List())
   val logMessages: Map[String, List[LogMessageParams]] = HashMap().withDefault(_ => List())
@@ -210,7 +226,7 @@ class BspClient(private val workingDir: Path,
   }
 
   private def wrapTimeout[T](id: String, cf: CompletableFuture[T]) = {
-    cf.orTimeout(10, TimeUnit.SECONDS).asScala.recover((throwable => {
+    cf.orTimeout(30, TimeUnit.SECONDS).asScala.recover((throwable => {
       throwable match {
         case _: TimeoutException => {
           // TODO: cancel
