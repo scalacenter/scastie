@@ -14,6 +14,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.FutureConverters._
 import scala.jdk.CollectionConverters._
+import scala.sys.process.{ Process, ProcessBuilder }
 import java.util.Optional
 import com.olegych.scastie.api.Problem
 import com.olegych.scastie.api.Severity
@@ -21,10 +22,12 @@ import com.olegych.scastie.api
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import org.eclipse.lsp4j.jsonrpc.messages.CancelParams
+import java.net.URI
+import java.nio.file.Paths
 
 
 object BspClient {
-  case class BspClientRun(output: List[String], instrumentation: Option[List[api.Instrumentation]] = None)
+  case class BspClientRun(process: ProcessBuilder)
 
   case class FailedRunError(err: String) extends Exception
   case class NoTargetsFoundException(err: String) extends Exception
@@ -54,7 +57,8 @@ object BspClient {
   type Callback = String => Any
 }
 
-trait ScalaCliServer extends BuildServer with ScalaBuildServer 
+trait ScalaCliServer extends BuildServer with ScalaBuildServer
+        with JvmBuildServer
 
 class BspClient(private val workingDir: Path,
                 private val inputStream: InputStream,
@@ -87,12 +91,9 @@ class BspClient(private val workingDir: Path,
   }
   listeningThread.start()
 
-  def build(id: String,
-            onOutput: Callback = _ => ()) = {
+  def build(id: String) = {
 
     // TODO: fucking refactor it !!! :) 
-
-    runMessageEvent.put(s"$id-run", onOutput)
 
     bspServer.workspaceReload().asScala
     .map(d => log.info("Reloaded workspace."))
@@ -146,33 +147,34 @@ class BspClient(private val workingDir: Path,
         .map(r => r.getItems())
         .map(classes => {
           if (classes.size() == 0) throw NoMainClassFound("No main class found.")
-          classes.get(0)
+          if (classes.get(0).getClasses().size() == 0) throw NoMainClassFound("No main class found.")
+          classes.get(0).getClasses().get(0)
         })
         // Run
         .flatMap(mainClass => {
-          wrapTimeout(s"$id-run", bspServer.buildTargetRun({
-            val param = new RunParams(targetId)
-            param.setDataKind("scala-main-class")
-            param.setData(mainClass.getClasses().get(0))
-            param.setOriginId(s"$id-run")
-            param
-          }))
+          bspServer.jvmRunEnvironment(new JvmRunEnvironmentParams(java.util.List.of(targetId)))
+            .asScala.map((mainClass, _))
         })
-        .map(result => {
-          if (result.getStatusCode() == StatusCode.ERROR) throw FailedRunError(s"Failed run: $result.")
-          if (result.getStatusCode() == StatusCode.CANCELLED) throw FailedRunError(s"Cancelled run: $result")
-          result
+        .map({
+          case (mainClass, runSettings) if runSettings.getItems().isEmpty() => throw BspClient.FailedRunError("Could not find run settings.")
+          case (mainClass, runSettings) => (mainClass, runSettings.getItems().get(0))
         })
-        .map(_ => {
-          val output = logMessages(s"$id-run")
-          logMessages.remove(s"$id-run")
-          runMessageEvent.remove(id)
+        .map({ case (mainClass, runSettings) => {
 
-          log.info(s"Ran successfully: $output")
-          BspClientRun(output.map(_.getMessage()))
-        }).recover { e =>
+          val classpath = runSettings.getClasspath.asScala.map(uri => Paths.get(new URI(uri))).mkString(":")
+          val envVars = Map(
+            "CLASSPATH" -> classpath
+          ) ++ runSettings.getEnvironmentVariables.asScala
+
+          val process = Process(
+            Seq("java", mainClass.getClassName()) ++ runSettings.getJvmOptions().asScala,
+            cwd = new java.io.File(runSettings.getWorkingDirectory()),
+            envVars.toSeq : _*
+          )
+
+          BspClientRun(process)
+        }}).recover { e =>
           logMessages.remove(s"$id-run")
-          runMessageEvent.remove(id)
           throw e
         }
       })
@@ -191,7 +193,7 @@ class BspClient(private val workingDir: Path,
     val r = bspServer.buildInitialize(new InitializeBuildParams(
       "BspClient",
       "1.0.0", // TODO: maybe not hard-code the version? not really much important
-      "2.1.0-M3", // TODO: same
+      "2.1.0-M4", // TODO: same
       workingDir.toAbsolutePath().normalize().toUri().toString(),
       new BuildClientCapabilities(Collections.singletonList("scala"))
     )).get // Force to wait
@@ -201,8 +203,6 @@ class BspClient(private val workingDir: Path,
 
   initWorkspace
 
-  val runMessageEvent: Map[String, Callback] = HashMap().withDefault(_ => str => ())
-
   val diagnostics: Map[String, List[Diagnostic]] = HashMap().withDefault(_ => List())
   val logMessages: Map[String, List[LogMessageParams]] = HashMap().withDefault(_ => List())
 
@@ -210,7 +210,6 @@ class BspClient(private val workingDir: Path,
     def onBuildLogMessage(params: LogMessageParams): Unit = {
       Option(params.getOriginId).map(origin => {
         logMessages.put(origin, params +: logMessages(origin))
-        runMessageEvent(origin)(params.getMessage())
       })
     }
     def onBuildPublishDiagnostics(params: PublishDiagnosticsParams): Unit = {

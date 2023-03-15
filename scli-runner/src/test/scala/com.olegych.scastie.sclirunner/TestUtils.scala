@@ -1,6 +1,5 @@
 package com.olegych.scastie.sclirunner
 
-
 import scala.jdk.FutureConverters._
 import scala.concurrent.Future
 import scala.concurrent.Await
@@ -16,7 +15,7 @@ object TestUtils {
     Try(Await.result(run, Duration(35, TimeUnit.SECONDS)))
   }
 
-  def shouldNotCompile(run: Future[BspClient.BspClientRun]): List[Problem] = {
+  def shouldNotCompile(run: Future[ScliRunner.ScliRun]): List[Problem] = {
     val result = getResultWithTimeout(run)
     result match {
       case Failure(ScliRunner.CompilationError(problems)) => problems
@@ -24,10 +23,10 @@ object TestUtils {
     }
   }
 
-  def shouldOutputString(run: Future[BspClient.BspClientRun], str: String): BspClient.BspClientRun = {
+  def shouldOutputString(run: Future[ScliRunner.ScliRun], str: String): ScliRunner.ScliRun = {
     val result = getResultWithTimeout(run)
     result match {
-      case Success(x @ BspClient.BspClientRun(output, instrumentations)) => {
+      case Success(x @ ScliRunner.ScliRun(output, instrumentations)) => {
         if (output.exists(_.contains(str))) x
         else throw new AssertionError(s"Expected the output to contain at least $str. Contained only $output")
       }
@@ -35,15 +34,11 @@ object TestUtils {
     }
   }
 
-  def shouldRun(run: Future[BspClient.BspClientRun]) = {
+  def shouldRun(run: Future[ScliRunner.ScliRun]) = {
     shouldOutputString(run, "")
   }
 
-  def shouldTimeout(run: Future[BspClient.BspClientRun]): Unit = {
-    val result = getResultWithTimeout(run)
-    result match {
-      case Failure(BspClient.FailedRunError("Timeout exceeded.")) => ()
-      case _ => throw new AssertionError(s"Expected the run to timeout. Instead, got $result")
-    }
+  def shouldTimeout(run: Future[ScliRunner.ScliRun]): Unit = {
+    shouldOutputString(run, "Timeout exceeded.")
   }
 }

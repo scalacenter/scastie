@@ -65,7 +65,7 @@ class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
     scliRunner = None
   }
 
-  def run(file: String, isWorksheet: Boolean = true, onOutput: String => Any = str => ()): Future[BspClient.BspClientRun] = {
+  def run(file: String, isWorksheet: Boolean = true, onOutput: String => Any = str => ()): Future[ScliRunner.ScliRun] = {
     val f = ScastieFileUtil.slurp(Paths.get("scli-runner", "src", "test", "resources", s"$file.scala"))
 
     if (scliRunner.isEmpty) throw new IllegalStateException("scli-runner is not defined")
