@@ -227,7 +227,7 @@ lazy val storage = project
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
       "org.mongodb.scala" %% "mongo-scala-driver" % "4.8.2",
-      "net.lingala.zip4j"  % "zip4j"              % "2.11.4"
+      "net.lingala.zip4j"  % "zip4j"              % "2.11.5"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
@@ -277,7 +277,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta"                 %% "scalameta" % "4.7.3",
+      "org.scalameta"                 %% "scalameta" % "4.7.5",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
