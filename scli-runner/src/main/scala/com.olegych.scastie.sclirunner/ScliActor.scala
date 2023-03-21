@@ -102,23 +102,25 @@ class ScliActor(system: ActorSystem,
 
     r.onComplete({
       case Failure(exception) => {
-        exception match {
-          // TODO: handle every possible exception
-          case ScliRunner.InstrumentationException(report) => sendProgress(progressActor, report.toProgress(snippetId = snipId))
-          case x: BspClient.NoTargetsFoundException => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
-          case x: BspClient.NoMainClassFound => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
-          case x: BspClient.FailedRunError => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
-          case x @ ScliRunner.CompilationError(problems) => {
-            sendProgress(progressActor, SnippetProgress.default.copy(
-              ts = Some(Instant.now.toEpochMilli),
-              snippetId = Some(snipId),
-              compilationInfos = problems,
-              isDone = true
-            ))
-          }
+        // Unexpected exception
+        sendProgress(progressActor, buildErrorProgress(snipId, s"Unexpected exception while running $exception"))
+      }
+      case Success(Right(error)) => error match {
+        // TODO: handle every possible exception
+        case ScliRunner.InstrumentationException(report) => sendProgress(progressActor, report.toProgress(snippetId = snipId))
+        case ScliRunner.ErrorFromBsp(x: BspClient.NoTargetsFoundException) => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
+        case ScliRunner.ErrorFromBsp(x: BspClient.NoMainClassFound) => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
+        case ScliRunner.ErrorFromBsp(x: BspClient.FailedRunError) => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
+        case ScliRunner.CompilationError(problems) => {
+          sendProgress(progressActor, SnippetProgress.default.copy(
+            ts = Some(Instant.now.toEpochMilli),
+            snippetId = Some(snipId),
+            compilationInfos = problems,
+            isDone = true
+          ))
         }
       }
-      case Success(value) => sendProgress(progressActor, SnippetProgress.default.copy(
+      case Success(Left(value)) => sendProgress(progressActor, SnippetProgress.default.copy(
         ts = Some(Instant.now.toEpochMilli),
         snippetId = Some(snipId),
         isDone = true,
