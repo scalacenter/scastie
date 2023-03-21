@@ -16,12 +16,26 @@ import play.api.libs.json.Reads
 import play.api.libs.json.Json
 import scala.util.control.NonFatal
 import com.olegych.scastie.api.Instrumentation
+import scala.concurrent.duration.Duration
+import java.util.concurrent.TimeUnit
+import scala.concurrent.Await
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
+import java.util.concurrent.TimeoutException
+import scala.collection.concurrent.TrieMap
+
 
 object ScliRunner {
+  case class ScliRun(output: List[String], instrumentation: Option[List[Instrumentation]] = None)
   case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String])
-  case class InstrumentationException(failure: InstrumentationFailureReport) extends Exception
 
-  case class CompilationError(problems: List[Problem]) extends Exception
+  // Errors
+  trait ScliRunnerError extends Exception
+  case class InstrumentationException(failure: InstrumentationFailureReport) extends ScliRunnerError
+  case class CompilationError(problems: List[Problem]) extends ScliRunnerError
+  // From Bsp
+  case class ErrorFromBsp(err: BspClient.BspError) extends ScliRunnerError
 }
 
 class ScliRunner {
@@ -48,7 +62,7 @@ class ScliRunner {
     ()
   }
 
-  def runTask(task: ScliTask, onOutput: String => Any): Future[BspClient.BspClientRun] = {
+  def runTask(task: ScliTask, onOutput: String => Any): Future[Either[ScliRun, ScliRunnerError]] = {
     log.info(s"Running task with snippetId=${task.snippetId}")
 
     // Extract directives from user code
@@ -58,44 +72,98 @@ class ScliRunner {
     // Instrument
     InstrumentedInputs(task.inputs.copy(code = userCode.mkString("\n"))) match {
       case Left(failure) => Future.failed(InstrumentationException(failure))
-      case Right(InstrumentedInputs(inputs, isForcedProgramMode)) => {
-        val runtimeDependency = task.inputs.target.runtimeDependency.map(Set(_)).getOrElse(Set()) ++ task.inputs.libraries
-        val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
-        val totalOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(task.inputs)
+      case Right(InstrumentedInputs(inputs, isForcedProgramMode)) =>
+        buildAndRun(task.snippetId, inputs, isForcedProgramMode, userDirectives, userCode, onOutput)
+    }
+  }
 
-        val charOffsetInstrumentation = userDirectives.map(_.length() + 1).sum
+  def buildAndRun(snippetId: SnippetId, inputs: Inputs, isForcedProgramMode: Boolean, userDirectives: Array[String], userCode: Array[String], onOutput: String => Any)
+      : Future[Either[ScliRun, ScliRunnerError]] = {
+    val runtimeDependency = inputs.target.runtimeDependency.map(Set(_)).getOrElse(Set()) ++ inputs.libraries
+    val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
+    val totalOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(inputs)
 
-        val code = allDirectives.mkString("\n") + "\n" + inputs.code
-        writeFile(scalaMain, code)
+    val charOffsetInstrumentation = userDirectives.map(_.length() + 1).sum
 
-        var instrumentationMem: Option[List[Instrumentation]] = None
+    val code = allDirectives.mkString("\n") + "\n" + inputs.code
+    writeFile(scalaMain, code)
 
-        val build = bspClient.build(task.snippetId.base64UUID, line => {
-          extract[List[Instrumentation]](line) match { // extract instrumentation
-            case None => onOutput(line)
+    var instrumentationMem: Option[List[Instrumentation]] = None
+    var outputBuffer: List[String] = List()
+
+    def forwardPrint(str: String) = {
+      outputBuffer = str :: outputBuffer
+      onOutput(str)
+    }
+
+    def handleError(bspError: BspClient.BspError): ScliRunnerError = bspError match {
+      case x: BspClient.CompilationError => 
+        CompilationError(x.toProblemList.map(pb =>
+          pb.copy(line = pb.line.map(_ + totalOffset + 1))))
+      case _ => ErrorFromBsp(bspError)
+    }
+
+    // Should be executed asynchronously due to the timeout (executed synchronously)
+    def runProcess(p: ProcessBuilder) = {
+      val runProcess = p.run(
+        ProcessLogger({ line: String => {
+          // extract instrumentation
+          extract[List[Instrumentation]](line) match {
+            case None => forwardPrint(line)
             case Some(value) => {
               instrumentationMem = Some(value.map(inst => inst.copy(
                 position = inst.position.copy(inst.position.start + charOffsetInstrumentation, inst.position.end + charOffsetInstrumentation)
               )))
             }
           }
-        })
 
-        build map { r =>
-          r.copy(instrumentation = instrumentationMem)
-        } recover {
-          case x: BspClient.CompilationError => throw CompilationError(x.toProblemList.map(pb =>
-            pb.copy(line = pb.line.map(_ + totalOffset + 1))))
-          case other => throw other
-        } 
+        }})
+      )
+      javaProcesses.put(snippetId, runProcess)
+
+      // Wait
+      val f = Future { runProcess.exitValue() }
+      val didSucceed =
+        Try(Await.result(f, Duration(30, TimeUnit.SECONDS))) match {
+          case Success(value) => {
+            forwardPrint(s"Process exited with error code $value")
+            true
+          }
+          case Failure(_: TimeoutException) => {
+            forwardPrint("Timeout exceeded.")
+            false
+          }
+          case Failure(e) => {
+            forwardPrint(s"Unknown exception $e")
+            false
+          }
+        }
+
+      if (!didSucceed) {
+        runProcess.destroy()
+      }
+      javaProcesses.remove(snippetId)
+
+      ScliRun(outputBuffer, instrumentationMem)
+    }
+
+    val build = bspClient.build(snippetId.base64UUID)
+    build.map { result =>
+      result match {
+        case Right(bspError) => Right(handleError(bspError))
+        case Left(process) => Left(runProcess(process))
       }
     }
   }
 
   def end: Unit = {
     bspClient.end
+    javaProcesses.values.foreach(_.destroy())
     process.map(_.destroy())
   }
+
+  // Java processes
+  private val javaProcesses = TrieMap[SnippetId, Process]() // mutable HashMap
 
   // Process streams
   private var pStdin: Option[OutputStream] = None
