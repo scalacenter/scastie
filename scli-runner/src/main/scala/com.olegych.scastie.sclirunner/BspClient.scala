@@ -14,6 +14,8 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.FutureConverters._
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
+import scala.sys.process.{ Process, ProcessBuilder }
 import java.util.Optional
 import com.olegych.scastie.api.Problem
 import com.olegych.scastie.api.Severity
@@ -21,15 +23,16 @@ import com.olegych.scastie.api
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import org.eclipse.lsp4j.jsonrpc.messages.CancelParams
+import java.net.URI
+import java.nio.file.Paths
 
 
 object BspClient {
-  case class BspClientRun(output: List[String], instrumentation: Option[List[api.Instrumentation]] = None)
-
-  case class FailedRunError(err: String) extends Exception
-  case class NoTargetsFoundException(err: String) extends Exception
-  case class NoMainClassFound(err: String) extends Exception
-  case class CompilationError(err: List[Diagnostic]) extends Exception {
+  trait BspError extends Exception 
+  case class FailedRunError(err: String) extends BspError
+  case class NoTargetsFoundException(err: String) extends BspError
+  case class NoMainClassFound(err: String) extends BspError
+  case class CompilationError(err: List[Diagnostic]) extends BspError {
 
     private def diagSeverityToSeverity(severity: DiagnosticSeverity): Severity = {
       if (severity == DiagnosticSeverity.ERROR) api.Error
@@ -47,14 +50,13 @@ object BspClient {
           diagnostic.getMessage()
         )).toList
     }
-
-
   }
 
   type Callback = String => Any
 }
 
-trait ScalaCliServer extends BuildServer with ScalaBuildServer 
+trait ScalaCliServer extends BuildServer with ScalaBuildServer
+        with JvmBuildServer
 
 class BspClient(private val workingDir: Path,
                 private val inputStream: InputStream,
@@ -87,96 +89,127 @@ class BspClient(private val workingDir: Path,
   }
   listeningThread.start()
 
-  def build(id: String,
-            onOutput: Callback = _ => ()) = {
+  def reloadWorkspace = bspServer.workspaceReload().asScala
 
-    // TODO: fucking refactor it !!! :) 
-
-    runMessageEvent.put(s"$id-run", onOutput)
-
-    bspServer.workspaceReload().asScala
-    .map(d => log.info("Reloaded workspace."))
-    .flatMap(_ => {
-      bspServer.workspaceBuildTargets().asScala
-      // Getting the first build target that is not test (which would be "run")
+  def getBuildTargetId: Future[Either[BuildTargetIdentifier, NoTargetsFoundException]] =
+    bspServer.workspaceBuildTargets().asScala
+      .map(_.getTargets().stream().filter(t => {
+        val isTestBuild = t.getTags().stream().anyMatch(tag => tag.equals("test"))
+        !isTestBuild
+      }).findFirst())
+      .map(_.toScala)
       .map(
-        _.getTargets().stream().filter(t => {
-          val isTestBuild = t.getTags().stream().anyMatch(tag => tag.equals("test"))
-          !isTestBuild
-        }).findFirst()
+        _.map(target => Left(target.getId()))
+        .getOrElse(Right(NoTargetsFoundException("No build target found.")))
       )
-      // Fail if no build target has been found.
-      .map(opt => {
-        if (opt.isEmpty()) throw NoTargetsFoundException("No build target found.")
-        opt.get()
-      })
-      // Otherwise compile
-      .flatMap(target => {
-        val targetId = target.getId()
-          // Trigger compilation
-        bspServer.buildTargetCompile({
-          val param = new CompileParams(Collections.singletonList(targetId))
-          param.setOriginId(s"$id-compile")
-          param
-        }).asScala
-        .map(compileResult => {
-          log.info(s"Compilation result $compileResult")
-          compileResult
-        })
-        // Handle failed compilation
-        .map(compileResult => {
-          if (compileResult.getStatusCode() == StatusCode.ERROR) {
-            val diag = diagnostics(s"$id-compile")
-            log.info(s"Error while compiling $diag.")
-            diagnostics.remove(s"$id-compile")
-            throw CompilationError(diag)
-          }
-          compileResult
-        })
-        // it compiled
-        // Asking for main classes
-        .flatMap(_ =>
-          bspServer.buildTargetScalaMainClasses({
-            val param = new ScalaMainClassesParams(Collections.singletonList(targetId))
-            param.setOriginId(id + "-main-classes")
-            param
-          }).asScala
-        )
-        // Check if main classes exists
-        .map(r => r.getItems())
-        .map(classes => {
-          if (classes.size() == 0) throw NoMainClassFound("No main class found.")
-          classes.get(0)
-        })
-        // Run
-        .flatMap(mainClass => {
-          wrapTimeout(s"$id-run", bspServer.buildTargetRun({
-            val param = new RunParams(targetId)
-            param.setDataKind("scala-main-class")
-            param.setData(mainClass.getClasses().get(0))
-            param.setOriginId(s"$id-run")
-            param
-          }))
-        })
-        .map(result => {
-          if (result.getStatusCode() == StatusCode.ERROR) throw FailedRunError(s"Failed run: $result.")
-          if (result.getStatusCode() == StatusCode.CANCELLED) throw FailedRunError(s"Cancelled run: $result")
-          result
-        })
-        .map(_ => {
-          val output = logMessages(s"$id-run")
-          logMessages.remove(s"$id-run")
-          runMessageEvent.remove(id)
-
-          log.info(s"Ran successfully: $output")
-          BspClientRun(output.map(_.getMessage()))
-        }).recover { e =>
-          logMessages.remove(s"$id-run")
-          runMessageEvent.remove(id)
-          throw e
-        }
-      })
+  
+  def compile(id: String, buildTargetId: BuildTargetIdentifier): Future[Either[CompileResult, CompilationError]] =
+    bspServer.buildTargetCompile({
+      val param = new CompileParams(Collections.singletonList(buildTargetId))
+      param.setOriginId(s"$id-compile")
+      param
     })
+    .asScala
+    .map(compileResult => {
+      if (compileResult.getStatusCode() == StatusCode.ERROR) {
+        val diag = diagnostics(s"$id-compile")
+        log.info(s"Error while compiling $diag.")
+        diagnostics.remove(s"$id-compile")
+        Right(CompilationError(diag))
+      } else {
+        Left(compileResult)
+      }
+    })
+
+  // Throws either NoMainClassFound or UnexpectedError on unexpected result.
+  def getMainClass(id: BuildTargetIdentifier): Future[Either[ScalaMainClass, BspError]] =
+    bspServer.buildTargetScalaMainClasses({
+      val param = new ScalaMainClassesParams(Collections.singletonList(id))
+      param.setOriginId(s"$id-main-classes")
+      param
+    })
+    .asScala
+    .map(_.getItems().asScala.toList)
+    .map({
+      case Nil => Right(NoMainClassFound("No main class found."))
+      case item :: _ => item.getClasses.asScala.toList match {
+        case class_ :: _ => Left(class_)
+        case _ => Right(NoMainClassFound("No main class found."))
+      }
+    })
+
+  def getJvmRunEnvironment(id: BuildTargetIdentifier): Future[Either[JvmEnvironmentItem, FailedRunError]] =
+    bspServer.jvmRunEnvironment(new JvmRunEnvironmentParams(java.util.List.of(id)))
+    .asScala
+    .map(_.getItems().asScala.toList)
+    .map({
+      case head :: next => Left(head)
+      case Nil => Right(FailedRunError("No JvmRunEnvironmentResult available."))
+    })
+
+  def makeProcess(mainClass: String, runSettings: JvmEnvironmentItem) = {
+    val classpath = runSettings.getClasspath.asScala.map(uri => Paths.get(new URI(uri))).mkString(":")
+    val envVars = Map(
+      "CLASSPATH" -> classpath
+    ) ++ runSettings.getEnvironmentVariables.asScala
+
+    val process = Process(
+      Seq("java", mainClass) ++ runSettings.getJvmOptions().asScala,
+      cwd = new java.io.File(runSettings.getWorkingDirectory()),
+      envVars.toSeq : _*
+    )
+
+    process
+  }
+
+  // Forward Right if res is Right
+  // or returns the future if Left
+  def withShortCircuit[T, U](res: Either[T, BspError], f: T => Future[Either[U, BspError]]): Future[Either[U, BspError]] = {
+    res match {
+      case Left(value) => f(value)
+      case Right(k) => Future.successful(Right(k))
+    }
+  }
+
+  // Returns a (T, U) if the two are left
+  // if any of the two is Right, then returns Right of the first
+  def combineEither[T, U](a: Either[T, BspError], b: Either[U, BspError]) = {
+    a match {
+      case Left(value) => b.fold(bLeft => Left(value,bLeft), Right(_))
+      case Right(value) => Right(value)
+    }
+  }
+
+  def build(id: String): Future[Either[ProcessBuilder, BspError]]= {
+    // TODO: ok
+    for (
+      r <- reloadWorkspace;
+      buildTarget <- getBuildTargetId;
+
+      // Compile
+      compilationResult <- withShortCircuit(buildTarget, target => compile(id, target));
+
+      // Get main class
+      // Note: it is combined to compilationResult so if compilationResult fails,
+      // then we do not continue
+      mainClass <- withShortCircuit[(BuildTargetIdentifier, CompileResult), ScalaMainClass](
+        combineEither(buildTarget, compilationResult),
+        {
+          case ((tId: BuildTargetIdentifier, _)) => getMainClass(tId)
+        }
+      );
+
+      // Get JvmRunEnv
+      jvmRunEnv <- withShortCircuit[(BuildTargetIdentifier, ScalaMainClass), JvmEnvironmentItem](
+        combineEither(buildTarget, mainClass),
+        {
+          case ((tId: BuildTargetIdentifier, _)) => getJvmRunEnvironment(tId)
+        }
+      )
+    ) yield { combineEither(mainClass, jvmRunEnv) match {
+      case Left((mainClass, jvmRunEnv)) => Left(makeProcess(mainClass.getClassName(), jvmRunEnv))
+      case Right(value) => Right(value)
+    } }
   }
 
   // Kills the BSP connection and makes this object
@@ -191,7 +224,7 @@ class BspClient(private val workingDir: Path,
     val r = bspServer.buildInitialize(new InitializeBuildParams(
       "BspClient",
       "1.0.0", // TODO: maybe not hard-code the version? not really much important
-      "2.1.0-M3", // TODO: same
+      "2.1.0-M4", // TODO: same
       workingDir.toAbsolutePath().normalize().toUri().toString(),
       new BuildClientCapabilities(Collections.singletonList("scala"))
     )).get // Force to wait
@@ -201,16 +234,16 @@ class BspClient(private val workingDir: Path,
 
   initWorkspace
 
-  val runMessageEvent: Map[String, Callback] = HashMap().withDefault(_ => str => ())
-
   val diagnostics: Map[String, List[Diagnostic]] = HashMap().withDefault(_ => List())
+
+  // Note, log messages is not really useful now but if we want to forward
+  // execution progress, could be a good idea
   val logMessages: Map[String, List[LogMessageParams]] = HashMap().withDefault(_ => List())
 
   class InnerClient extends BuildClient {
     def onBuildLogMessage(params: LogMessageParams): Unit = {
       Option(params.getOriginId).map(origin => {
         logMessages.put(origin, params +: logMessages(origin))
-        runMessageEvent(origin)(params.getMessage())
       })
     }
     def onBuildPublishDiagnostics(params: PublishDiagnosticsParams): Unit = {
