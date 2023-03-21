@@ -11,6 +11,7 @@ import scala.meta.internal.mtags._
 import scala.meta.internal.pc.ScalaPresentationCompiler
 import scala.meta.io.AbsolutePath
 import scala.meta.pc.PresentationCompiler
+import scala.meta.dialects._
 
 import cats.effect.implicits.monadCancelOps_
 import cats.effect.std.Semaphore
@@ -58,7 +59,7 @@ object BlockingServiceLoader {
  *
  * To properly provide all capabilities with documentation or enable resolution of symbol definition iterator
  * also handles creation of all necessary components:
- *  - SymbolIndex - shared by all presentation compilers enablind its search with `symbols`
+ *  - SymbolIndex - shared by all presentation compilers enabling its search with `symbols`
  *  - Docstrings - responsible for providing markdown javadoc for `symbol`
  *
  * IMPORTANT, Presentation compilers are stored to make sure we are not loading same classes with Classloader.
@@ -74,6 +75,8 @@ class PresentationCompilers[F[_]: Async] {
   val index = OnDemandSymbolIndex.empty()
   val docs  = new Docstrings(index)
 
+  JdkSources().foreach(jdk => index.addSourceJar(jdk, Scala213))
+
   def createPresentationCompiler(classpath: Seq[Path], version: String, mtags: MtagsBinaries): F[PresentationCompiler] =
     prepareClasspathSearch(classpath) >>= { classpathSearch =>
       (mtags match {
@@ -86,7 +89,6 @@ class PresentationCompilers[F[_]: Async] {
     }
 
   private def prepareClasspathSearch(classpath: Seq[Path]): F[ClasspathSearch] = Sync[F].delay {
-    import scala.meta.dialects._
     classpath.filter(isSourceJar).foreach { path =>
       index.addSourceJar(AbsolutePath(path), ScalaVersions.dialectForDependencyJar(AbsolutePath(path).filename))
     }
