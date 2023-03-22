@@ -46,9 +46,9 @@ lazy val testSettings = Seq(
 
 lazy val loggingAndTest = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"              % "logback-classic" % "1.4.5",
+    "ch.qos.logback"              % "logback-classic" % "1.4.6",
     "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5",
-    "io.sentry"                   % "sentry-logback"  % "6.13.1"
+    "io.sentry"                   % "sentry-logback"  % "6.16.0"
   )
 ) ++ testSettings
 
@@ -123,13 +123,13 @@ lazy val metalsRunner = project
     maintainer   := "scalacenter",
     scalaVersion := ScalaVersions.stable3,
     libraryDependencies ++= Seq(
-      "org.scalameta"        % "metals"              % "0.11.10" cross (CrossVersion.for3Use2_13),
-      "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.19.0",
+      "org.scalameta"        % "metals"              % "0.11.11" cross (CrossVersion.for3Use2_13),
+      "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.20.1",
       "org.http4s"          %% "http4s-ember-server" % "0.23.18",
       "org.http4s"          %% "http4s-ember-client" % "0.23.18",
       "org.http4s"          %% "http4s-dsl"          % "0.23.18",
       "org.http4s"          %% "http4s-circe"        % "0.23.18",
-      "io.circe"            %% "circe-generic"       % "0.14.4",
+      "io.circe"            %% "circe-generic"       % "0.14.5",
       "com.evolutiongaming" %% "scache"              % "4.2.3",
       "org.scalameta"       %% "munit"               % "0.7.29" % Test,
       "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test
@@ -201,7 +201,7 @@ lazy val server = project
       "org.apache.commons"                  % "commons-text"   % "1.10.0",
       "com.typesafe.akka"                  %% "akka-http"      % akkaHttpVersion,
       "com.softwaremill.akka-http-session" %% "core"           % "0.7.0",
-      "ch.megard"                          %% "akka-http-cors" % "1.1.3",
+      "ch.megard"                          %% "akka-http-cors" % "1.2.0",
       akka("cluster"),
       akka("slf4j"),
       akka("testkit")      % Test,
@@ -226,8 +226,8 @@ lazy val storage = project
   .settings(
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
-      "org.mongodb.scala" %% "mongo-scala-driver" % "4.8.2",
-      "net.lingala.zip4j"  % "zip4j"              % "2.11.4"
+      "org.mongodb.scala" %% "mongo-scala-driver" % "4.9.0",
+      "net.lingala.zip4j"  % "zip4j"              % "2.11.5"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
@@ -277,7 +277,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta"                 %% "scalameta" % "4.7.3",
+      "org.scalameta"                 %% "scalameta" % "4.7.6",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

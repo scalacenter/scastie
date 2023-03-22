@@ -1,4 +1,4 @@
-import { scastie } from '@linkOutputDir/main.js'
+import { scastie } from 'scalajs:main.js'
 import '@resources/sass/app-main.scss'
 
 import * as Sentry from "@sentry/browser";
