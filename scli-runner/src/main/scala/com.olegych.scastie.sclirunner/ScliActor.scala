@@ -86,6 +86,8 @@ class ScliActor(system: ActorSystem,
     case any => ()
   } }
 
+  def makeOutput(str: String) = Some(ProcessOutput(str, tpe = ProcessOutputType.StdOut, id = None))
+  def makeOutput(str: List[String]): Option[ProcessOutput] = makeOutput(str.mkString("\n"))
 
   // Run task
   def runTask(task: ScliActorTask): Unit = {
@@ -95,7 +97,7 @@ class ScliActor(system: ActorSystem,
       sendProgress(progressActor, SnippetProgress.default.copy(
           ts = Some(Instant.now.toEpochMilli),
           snippetId = Some(snipId),
-          userOutput = Some(ProcessOutput(output, tpe = ProcessOutputType.StdOut, id = None)),
+          userOutput = makeOutput(output),
           isDone = false
       ))
     })
@@ -108,14 +110,15 @@ class ScliActor(system: ActorSystem,
       case Success(Right(error)) => error match {
         // TODO: handle every possible exception
         case ScliRunner.InstrumentationException(report) => sendProgress(progressActor, report.toProgress(snippetId = snipId))
-        case ScliRunner.ErrorFromBsp(x: BspClient.NoTargetsFoundException) => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
-        case ScliRunner.ErrorFromBsp(x: BspClient.NoMainClassFound) => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
-        case ScliRunner.ErrorFromBsp(x: BspClient.FailedRunError) => sendProgress(progressActor, buildErrorProgress(snipId, x.err))
-        case ScliRunner.CompilationError(problems) => {
+        case ScliRunner.ErrorFromBsp(x: BspClient.NoTargetsFoundException, logs) => sendProgress(progressActor, buildErrorProgress(snipId, x.err, logs))
+        case ScliRunner.ErrorFromBsp(x: BspClient.NoMainClassFound, logs) => sendProgress(progressActor, buildErrorProgress(snipId, x.err, logs))
+        case ScliRunner.ErrorFromBsp(x: BspClient.FailedRunError, logs) => sendProgress(progressActor, buildErrorProgress(snipId, x.err, logs))
+        case ScliRunner.CompilationError(problems, logs) => {
           sendProgress(progressActor, SnippetProgress.default.copy(
             ts = Some(Instant.now.toEpochMilli),
             snippetId = Some(snipId),
             compilationInfos = problems,
+            userOutput = makeOutput(logs),
             isDone = true
           ))
         }
@@ -124,7 +127,8 @@ class ScliActor(system: ActorSystem,
         ts = Some(Instant.now.toEpochMilli),
         snippetId = Some(snipId),
         isDone = true,
-        instrumentations = value.instrumentation.getOrElse(List())
+        instrumentations = value.instrumentation.getOrElse(List()),
+        compilationInfos = value.diagnostics
       ))
     })
   }
@@ -138,13 +142,13 @@ class ScliActor(system: ActorSystem,
     progressActor ! p
   }
 
-  private def buildErrorProgress(snipId: SnippetId, err: String) = {
+  private def buildErrorProgress(snipId: SnippetId, err: String, logs: List[String] = List()) = {
     SnippetProgress.default.copy(
       ts = Some(Instant.now.toEpochMilli),
       snippetId = Some(snipId),
       isDone = true,
       compilationInfos = List(Problem(api.Error, line = None, message = err)),
-      userOutput = Some(ProcessOutput(err, ProcessOutputType.StdErr, None))
+      userOutput = Some(ProcessOutput(logs.mkString("\n") + "\n" + err, ProcessOutputType.StdErr, None))
     )
   }
 

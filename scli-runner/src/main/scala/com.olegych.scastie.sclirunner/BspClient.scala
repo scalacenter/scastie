@@ -28,29 +28,37 @@ import java.nio.file.Paths
 
 
 object BspClient {
-  trait BspError extends Exception 
-  case class FailedRunError(err: String) extends BspError
-  case class NoTargetsFoundException(err: String) extends BspError
-  case class NoMainClassFound(err: String) extends BspError
-  case class CompilationError(err: List[Diagnostic]) extends BspError {
-
-    private def diagSeverityToSeverity(severity: DiagnosticSeverity): Severity = {
-      if (severity == DiagnosticSeverity.ERROR) api.Error
-      else if (severity == DiagnosticSeverity.INFORMATION) api.Info
-      else if (severity == DiagnosticSeverity.HINT) api.Info
-      else if (severity == DiagnosticSeverity.WARNING) api.Warning
-      else api.Error
-    }
-
-    def toProblemList: List[Problem] = {
-      err.map(diagnostic =>
-        Problem(
-          diagSeverityToSeverity(diagnostic.getSeverity()),
-          Some(diagnostic.getRange().getStart().getLine()),
-          diagnostic.getMessage()
-        )).toList
-    }
+  case class BspRun(process: ProcessBuilder, warnings: List[Diagnostic], logMessages: List[String]) {
+    def toProblemList: List[Problem] = convertDiagListToProblemList(warnings)
   }
+
+  trait BspError extends Exception {
+    val logs: List[String] = List()
+  }
+  case class FailedRunError(err: String, override val logs: List[String] = List()) extends BspError
+  case class NoTargetsFoundException(err: String, override val logs: List[String] = List()) extends BspError
+  case class NoMainClassFound(err: String, override val logs: List[String] = List()) extends BspError
+  case class CompilationError(err: List[Diagnostic], override val logs: List[String] = List()) extends BspError {
+    def toProblemList: List[Problem] = convertDiagListToProblemList(err)
+  }
+
+  private def diagSeverityToSeverity(severity: DiagnosticSeverity): Severity = {
+    if (severity == DiagnosticSeverity.ERROR) api.Error
+    else if (severity == DiagnosticSeverity.INFORMATION) api.Info
+    else if (severity == DiagnosticSeverity.HINT) api.Info
+    else if (severity == DiagnosticSeverity.WARNING) api.Warning
+    else api.Error
+  }
+
+
+  private def convertDiagListToProblemList(list: List[Diagnostic]) =
+    list.map(diagnostic =>
+      Problem(
+        diagSeverityToSeverity(diagnostic.getSeverity()),
+        Some(diagnostic.getRange().getStart().getLine()),
+        diagnostic.getMessage()
+      ))
+
 
   type Callback = String => Any
 }
@@ -89,6 +97,11 @@ class BspClient(private val workingDir: Path,
   }
   listeningThread.start()
 
+  def resetInternalBuffers = {
+    diagnostics = List()
+    logMessages = List()
+  }
+
   def reloadWorkspace = bspServer.workspaceReload().asScala
 
   def getBuildTargetId: Future[Either[BuildTargetIdentifier, NoTargetsFoundException]] =
@@ -112,10 +125,8 @@ class BspClient(private val workingDir: Path,
     .asScala
     .map(compileResult => {
       if (compileResult.getStatusCode() == StatusCode.ERROR) {
-        val diag = diagnostics(s"$id-compile")
-        log.info(s"Error while compiling $diag.")
-        diagnostics.remove(s"$id-compile")
-        Right(CompilationError(diag))
+        log.info(s"Error while compiling $diagnostics.")
+        Right(CompilationError(diagnostics, logMessages.map(_.getMessage())))
       } else {
         Left(compileResult)
       }
@@ -131,10 +142,10 @@ class BspClient(private val workingDir: Path,
     .asScala
     .map(_.getItems().asScala.toList)
     .map({
-      case Nil => Right(NoMainClassFound("No main class found."))
+      case Nil => Right(NoMainClassFound("No main class found.", logMessages.map(_.getMessage())))
       case item :: _ => item.getClasses.asScala.toList match {
         case class_ :: _ => Left(class_)
-        case _ => Right(NoMainClassFound("No main class found."))
+        case _ => Right(NoMainClassFound("No main class found.", logMessages.map(_.getMessage())))
       }
     })
 
@@ -144,7 +155,7 @@ class BspClient(private val workingDir: Path,
     .map(_.getItems().asScala.toList)
     .map({
       case head :: next => Left(head)
-      case Nil => Right(FailedRunError("No JvmRunEnvironmentResult available."))
+      case Nil => Right(FailedRunError("No JvmRunEnvironmentResult available.", logMessages.map(_.getMessage())))
     })
 
   def makeProcess(mainClass: String, runSettings: JvmEnvironmentItem) = {
@@ -180,8 +191,9 @@ class BspClient(private val workingDir: Path,
     }
   }
 
-  def build(id: String): Future[Either[ProcessBuilder, BspError]]= {
-    // TODO: ok
+  def build(id: String): Future[Either[BspRun, BspError]]= {
+    resetInternalBuffers
+
     for (
       r <- reloadWorkspace;
       buildTarget <- getBuildTargetId;
@@ -206,10 +218,19 @@ class BspClient(private val workingDir: Path,
           case ((tId: BuildTargetIdentifier, _)) => getJvmRunEnvironment(tId)
         }
       )
-    ) yield { combineEither(mainClass, jvmRunEnv) match {
-      case Left((mainClass, jvmRunEnv)) => Left(makeProcess(mainClass.getClassName(), jvmRunEnv))
-      case Right(value) => Right(value)
-    } }
+    ) yield {
+      val ret = combineEither(mainClass, jvmRunEnv) match {
+        case Left((mainClass, jvmRunEnv)) => {
+          Left(BspRun(
+            makeProcess(mainClass.getClassName(), jvmRunEnv),
+            diagnostics,
+            logMessages.map(_.getMessage())
+          ))
+        }
+        case Right(value) => Right(value)
+      }
+      ret
+    }
   }
 
   // Kills the BSP connection and makes this object
@@ -234,22 +255,18 @@ class BspClient(private val workingDir: Path,
 
   initWorkspace
 
-  val diagnostics: Map[String, List[Diagnostic]] = HashMap().withDefault(_ => List())
+  var diagnostics: List[Diagnostic] = List()
 
   // Note, log messages is not really useful now but if we want to forward
   // execution progress, could be a good idea
-  val logMessages: Map[String, List[LogMessageParams]] = HashMap().withDefault(_ => List())
+  var logMessages: List[LogMessageParams] = List()
 
   class InnerClient extends BuildClient {
     def onBuildLogMessage(params: LogMessageParams): Unit = {
-      Option(params.getOriginId).map(origin => {
-        logMessages.put(origin, params +: logMessages(origin))
-      })
+      logMessages = params :: logMessages
     }
     def onBuildPublishDiagnostics(params: PublishDiagnosticsParams): Unit = {
-      Option(params.getOriginId).map(origin => {
-        diagnostics.put(origin, params.getDiagnostics.asScala.toList ++ diagnostics(origin))
-      })
+      diagnostics = params.getDiagnostics().asScala.toList ++ diagnostics
     }
     def onBuildShowMessage(params: ShowMessageParams): Unit = () // log.info(s"ShowMessageParams: $params")
     def onBuildTargetDidChange(params: DidChangeBuildTarget): Unit = () // log.info(s"DidChangeBuildTarget: $params")
