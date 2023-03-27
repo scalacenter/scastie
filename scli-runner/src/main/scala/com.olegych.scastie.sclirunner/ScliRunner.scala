@@ -27,15 +27,20 @@ import scala.collection.concurrent.TrieMap
 
 
 object ScliRunner {
-  case class ScliRun(output: List[String], instrumentation: Option[List[Instrumentation]] = None)
+  case class ScliRun(
+    output: List[String],
+    instrumentation: Option[List[Instrumentation]] = None,
+    diagnostics: List[Problem] = List()
+  )
+
   case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String])
 
   // Errors
   trait ScliRunnerError extends Exception
   case class InstrumentationException(failure: InstrumentationFailureReport) extends ScliRunnerError
-  case class CompilationError(problems: List[Problem]) extends ScliRunnerError
+  case class CompilationError(problems: List[Problem], logs: List[String] = List()) extends ScliRunnerError
   // From Bsp
-  case class ErrorFromBsp(err: BspClient.BspError) extends ScliRunnerError
+  case class ErrorFromBsp(err: BspClient.BspError, logs: List[String] = List()) extends ScliRunnerError
 }
 
 class ScliRunner {
@@ -81,7 +86,7 @@ class ScliRunner {
       : Future[Either[ScliRun, ScliRunnerError]] = {
     val runtimeDependency = inputs.target.runtimeDependency.map(Set(_)).getOrElse(Set()) ++ inputs.libraries
     val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
-    val totalOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(inputs)
+    val totalLineOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(inputs)
 
     val charOffsetInstrumentation = userDirectives.map(_.length() + 1).sum
 
@@ -96,16 +101,28 @@ class ScliRunner {
       onOutput(str)
     }
 
+    def mapProblems(list: List[Problem]): List[Problem] = {
+      list.map(pb =>
+        pb.copy(line = pb.line.map(line => {
+          if (line <= allDirectives.size) // if issue is on directive, then do not map.
+            line
+          else
+            line + totalLineOffset + 1
+        }))
+      )
+    }
+
     def handleError(bspError: BspClient.BspError): ScliRunnerError = bspError match {
-      case x: BspClient.CompilationError => 
-        CompilationError(x.toProblemList.map(pb =>
-          pb.copy(line = pb.line.map(_ + totalOffset + 1))))
-      case _ => ErrorFromBsp(bspError)
+      case x: BspClient.CompilationError => CompilationError(mapProblems(x.toProblemList), x.logs)
+      case _ => ErrorFromBsp(bspError, bspError.logs)
     }
 
     // Should be executed asynchronously due to the timeout (executed synchronously)
-    def runProcess(p: ProcessBuilder) = {
-      val runProcess = p.run(
+    def runProcess(bspRun: BspClient.BspRun) = {
+      // print log messages
+      bspRun.logMessages.foreach(forwardPrint)
+
+      val runProcess = bspRun.process.run(
         ProcessLogger({ line: String => {
           // extract instrumentation
           extract[List[Instrumentation]](line) match {
@@ -144,14 +161,14 @@ class ScliRunner {
       }
       javaProcesses.remove(snippetId)
 
-      ScliRun(outputBuffer, instrumentationMem)
+      ScliRun(outputBuffer, instrumentationMem, mapProblems(bspRun.toProblemList))
     }
 
     val build = bspClient.build(snippetId.base64UUID)
     build.map { result =>
       result match {
         case Right(bspError) => Right(handleError(bspError))
-        case Left(process) => Left(runProcess(process))
+        case Left(x: BspClient.BspRun) => Left(runProcess(x))
       }
     }
   }
@@ -163,7 +180,7 @@ class ScliRunner {
   }
 
   // Java processes
-  private val javaProcesses = TrieMap[SnippetId, Process]() // mutable HashMap
+  private val javaProcesses = TrieMap[SnippetId, Process]() // mutable and concurrent HashMap
 
   // Process streams
   private var pStdin: Option[OutputStream] = None
@@ -174,7 +191,7 @@ class ScliRunner {
   // Bsp
   private val bspClient = {
     log.info(s"Starting Scala-CLI BSP in folder ${workingDir.toAbsolutePath().normalize().toString()}")
-    val processBuilder: ProcessBuilder = Process(Seq("scala-cli", "bsp", "."), workingDir.toFile())
+    val processBuilder: ProcessBuilder = Process(Seq("scala-cli", "bsp", ".", "-deprecation"), workingDir.toFile())
     val io = BasicIO.standard(true)
       .withInput(i => pStdin = Some(i)) 
       .withError(e => pStderr = Some(e))

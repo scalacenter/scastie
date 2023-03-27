@@ -18,7 +18,7 @@ object TestUtils {
   def shouldNotCompile(run: Future[Either[ScliRunner.ScliRun, ScliRunner.ScliRunnerError]]): List[Problem] = {
     val result = getResultWithTimeout(run)
     result match {
-      case Success(Right(ScliRunner.CompilationError(problems))) => problems
+      case Success(Right(ScliRunner.CompilationError(problems, _))) => problems
       case _ => throw new AssertionError(s"Expected the code to not compile. Instead, got $result")
     }
   }
@@ -26,7 +26,7 @@ object TestUtils {
   def shouldOutputString(run: Future[Either[ScliRunner.ScliRun, ScliRunner.ScliRunnerError]], str: String): ScliRunner.ScliRun = {
     val result = getResultWithTimeout(run)
     result match {
-      case Success(Left(x @ ScliRunner.ScliRun(output, instrumentations))) => {
+      case Success(Left(x @ ScliRunner.ScliRun(output, instrumentations, _))) => {
         if (output.exists(_.contains(str))) x
         else throw new AssertionError(s"Expected the output to contain at least $str. Contained only $output")
       }
