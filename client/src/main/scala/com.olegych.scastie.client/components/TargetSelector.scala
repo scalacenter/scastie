@@ -12,6 +12,7 @@ case class TargetSelector(scalaTarget: ScalaTarget, onChange: ScalaTarget ~=> Ca
 object TargetSelector {
 
   val targetTypes = List[ScalaTargetType](
+    ScalaTargetType.ScalaCli,
     ScalaTargetType.Scala3,
     ScalaTargetType.Scala2,
     ScalaTargetType.JS
@@ -20,6 +21,7 @@ object TargetSelector {
 
   def labelFor(targetType: ScalaTargetType) = {
     targetType match {
+      case ScalaTargetType.ScalaCli  => "Scala-CLI"
       case ScalaTargetType.Scala2    => "Scala 2"
       case ScalaTargetType.JS        => "Scala.js"
       case ScalaTargetType.Scala3    => "Scala 3"

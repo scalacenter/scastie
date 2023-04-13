@@ -81,7 +81,8 @@ object MainPanel {
         target = state.inputs.target,
         metalsStatus = state.metalsStatus,
         setMetalsStatus = backend.setMetalsStatus,
-        dependencies = state.inputs.libraries
+        dependencies = state.inputs.libraries,
+        isMetalsStale = state.isMetalsStale
       ).render
 
     val console =
@@ -114,7 +115,10 @@ object MainPanel {
         sbtConfigChange = backend.sbtConfigChange,
         removeScalaDependency = backend.removeScalaDependency,
         updateDependencyVersion = backend.updateDependencyVersion,
-        addScalaDependency = backend.addScalaDependency
+        addScalaDependency = backend.addScalaDependency,
+
+        convertToScalaCli = backend.convertToScalaCli,
+        scalaCliConversionError = state.scalaCliConversionError
       ).render
 
     val mobileBar =
@@ -162,6 +166,8 @@ object MainPanel {
         view = backend.viewSnapshot(state.view),
         isWorksheetMode = state.inputs.isWorksheetMode,
         metalsStatus = state.metalsStatus,
+        isMetalsStale = state.isMetalsStale,
+        reloadStaleMetals = backend.reloadStaleMetals,
         toggleMetalsStatus = backend.toggleMetalsStatus,
         scalaTarget = state.inputs.target
       ).render.unless(props.isEmbedded || state.isPresentationMode)

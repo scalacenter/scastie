@@ -5,6 +5,8 @@ import com.olegych.scastie.client.components.editor.SimpleEditor
 import japgolly.scalajs.react._
 
 import vdom.all._
+import com.olegych.scastie.api.ScalaTarget._
+import japgolly.scalajs.react.feature.ReactFragment
 
 final case class BuildSettings(
     visible: Boolean,
@@ -23,7 +25,10 @@ final case class BuildSettings(
     sbtConfigChange: String ~=> Callback,
     removeScalaDependency: ScalaDependency ~=> Callback,
     updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
-    addScalaDependency: (ScalaDependency, Project) ~=> Callback
+    addScalaDependency: (ScalaDependency, Project) ~=> Callback,
+
+    convertToScalaCli: Reusable[Callback],
+    scalaCliConversionError: Option[String]
 ) {
 
   @inline def render: VdomElement = BuildSettings.component(this)
@@ -67,6 +72,11 @@ object BuildSettings {
       isDarkTheme = props.isDarkTheme
     ).render
 
+    val isScalaCli = props.scalaTarget match {
+      case _: ScalaCli => true
+      case _ => false
+    }
+
     div(cls := "build-settings-container")(
       resetButton,
       h2(
@@ -76,44 +86,68 @@ object BuildSettings {
       h2(
         span("Scala Version")
       ),
-      VersionSelector(props.scalaTarget, props.setTarget).render,
+      VersionSelector(props.scalaTarget, props.setTarget).render.unless(isScalaCli),
+      p()(
+        "To use a specific version of Scala with Scala-CLI, use directives. See ",
+        a(href := "https://scala-cli.virtuslab.org/docs/reference/directives/#scala-version", target := "_blank")("Scala version directive on Scala-CLI documentation"),
+        "."
+      ).when(isScalaCli),
       h2(
         span("Libraries")
       ),
-      scaladexSearch,
-      h2(
-        span("Extra Sbt Configuration")
-      ),
-      pre(cls := "configuration")(
-        SimpleEditor(
-          value = props.sbtConfigExtra,
-          isDarkTheme = props.isDarkTheme,
-          readOnly = false,
-          onChange = props.sbtConfigChange
-        ).render
-      ),
-      h2(
-        span("Base Sbt Configuration (readonly)")
-      ),
-      pre(cls := "configuration")(
-        SimpleEditor(
-          value = props.sbtConfig,
-          isDarkTheme = props.isDarkTheme,
-          readOnly = true,
-          onChange = Reusable.always(_ => Callback.empty)
-        ).render
-      ),
-      h2(
-        span("Base Sbt Plugins Configuration (readonly)")
-      ),
-      pre(cls := "configuration")(
-        SimpleEditor(
-          value = props.sbtPluginsConfig,
-          isDarkTheme = props.isDarkTheme,
-          readOnly = true,
-          onChange = Reusable.always(_ => Callback.empty)
-        ).render
-      )
+      scaladexSearch.unless(isScalaCli),
+      p()(
+        "To use libraries with Scala-CLI, use directives. See ",
+        a(href := "https://scala-cli.virtuslab.org/docs/reference/directives#dependency", target := "_blank")("Dependency directive on Scala-CLI documentation"),
+        "."
+      ).when(isScalaCli),
+      ReactFragment(
+        h2(
+          span("Extra Sbt Configuration")
+        ),
+        pre(cls := "configuration")(
+          SimpleEditor(
+            value = props.sbtConfigExtra,
+            isDarkTheme = props.isDarkTheme,
+            readOnly = false,
+            onChange = props.sbtConfigChange
+          ).render
+        ),
+        h2(
+          span("Base Sbt Configuration (readonly)")
+        ),
+        pre(cls := "configuration")(
+          SimpleEditor(
+            value = props.sbtConfig,
+            isDarkTheme = props.isDarkTheme,
+            readOnly = true,
+            onChange = Reusable.always(_ => Callback.empty)
+          ).render
+        ),
+        h2(
+          span("Base Sbt Plugins Configuration (readonly)")
+        ),
+        pre(cls := "configuration")(
+          SimpleEditor(
+            value = props.sbtPluginsConfig,
+            isDarkTheme = props.isDarkTheme,
+            readOnly = true,
+            onChange = Reusable.always(_ => Callback.empty)
+          ).render
+        ),
+
+        h2(
+          span("Convert to Scala-CLI")
+        ),
+        div(
+          title := "Convert to Scala-CLI",
+          onClick --> props.convertToScalaCli,
+          role := "button",
+          cls := "btn"
+        )("Convert to Scala-CLI"),
+
+        props.scalaCliConversionError.map(err => p()(s"Failed to convert to Scala-CLI: $err"))
+      ).when(!isScalaCli)
     )
   }
 

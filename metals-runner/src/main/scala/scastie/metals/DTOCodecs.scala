@@ -4,6 +4,7 @@ import com.olegych.scastie.api._
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.syntax._
+import com.olegych.scastie.api.ScalaTarget._
 
 object DTOCodecs {
   import JavaConverters._
@@ -14,7 +15,7 @@ object DTOCodecs {
     final def apply(c: HCursor): Decoder.Result[ScalaTarget] =
       val res = for {
         tpe          <- c.downField("tpe").as[String]
-        scalaVersion <- c.downField("scalaVersion").as[String]
+        scalaVersion <- if (tpe == "ScalaCli") then Right("") else c.downField("scalaVersion").as[String] 
       } yield tpe -> scalaVersion
 
       res.flatMap((tpe, scalaVersion) =>
@@ -24,9 +25,27 @@ object DTOCodecs {
           case "Typelevel" => Right(ScalaTarget.Typelevel(scalaVersion))
           case "Native"    => c.downField("scalaNativeVersion").as[String].map(ScalaTarget.Native(scalaVersion, _))
           case "Scala3" | "Dotty" => Right(ScalaTarget.Scala3(scalaVersion))
+          case "ScalaCli"  => Right(ScalaTarget.ScalaCli())
         }
       )
+  }
+  
+  implicit val scalaTargetEncoder: Encoder[ScalaTarget] = new Encoder[ScalaTarget] {
+    def apply(a: ScalaTarget): Json = {
+      val supplementaryFields = a match
+          case Jvm(scalaVersion) => List("tpe" -> "Jvm")
+          case Typelevel(scalaVersion) => List("tpe" -> "Typelevel")
+          case Js(scalaVersion, scalaJsVersion) => List("tpe" -> "Js", "scalaJsVersion" -> scalaJsVersion)
+          case Native(scalaVersion, scalaNativeVersion) => List("tpe" -> "Native", "scalaNativeVersion" -> scalaNativeVersion)
+          case Scala3(scalaVersion) => List("tpe" -> "Scala3")
+          case ScalaCli(scalaBinaryVersion0) => List("tpe" -> "ScalaCli")
 
+      Json.fromFields(
+        (List("scalaVersion" -> a.scalaVersion) ++ supplementaryFields).map({
+          case (a1, a2) => (a1, Json.fromString(a2))
+        })
+      )
+    }
   }
 
   implicit val scalaDependencyDecoder: Decoder[ScalaDependency] = deriveDecoder
@@ -47,10 +66,13 @@ object DTOCodecs {
     implicit val noResultEncoder: Encoder.AsObject[NoResult] = deriveEncoder[NoResult]
     implicit val presentationCompilerFailureEncoder: Encoder.AsObject[PresentationCompilerFailure] =
       deriveEncoder[PresentationCompilerFailure]
+    implicit val invalidScalaVersionEncoder: Encoder.AsObject[InvalidScalaVersion] =
+      deriveEncoder[InvalidScalaVersion]
 
     def apply(a: FailureType): Json = (a match
       case noResult: NoResult                     => noResult.asJsonObject
       case pcFailure: PresentationCompilerFailure => pcFailure.asJsonObject
+      case invScalaVersion: InvalidScalaVersion   => invScalaVersion.asJsonObject
     ).+:("_type" -> a.getClass.getCanonicalName.toString.asJson).asJson
 
   }

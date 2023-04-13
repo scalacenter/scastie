@@ -24,6 +24,8 @@ import scala.util.Success
 import scala.util.Failure
 import java.util.concurrent.TimeoutException
 import scala.collection.concurrent.TrieMap
+import com.olegych.scastie.api.ScalaTarget
+import com.olegych.scastie.buildinfo.BuildInfo
 
 
 object ScliRunner {
@@ -36,7 +38,8 @@ object ScliRunner {
   case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String])
 
   // Errors
-  trait ScliRunnerError extends Exception
+  abstract class ScliRunnerError extends Exception
+  case class InvalidScalaVersion(version: String) extends ScliRunnerError
   case class InstrumentationException(failure: InstrumentationFailureReport) extends ScliRunnerError
   case class CompilationError(problems: List[Problem], logs: List[String] = List()) extends ScliRunnerError
   // From Bsp
@@ -74,11 +77,21 @@ class ScliRunner {
     val (userDirectives, userCode) = task.inputs.code.split("\n")
       .span(line => line.startsWith("//>"))
 
-    // Instrument
-    InstrumentedInputs(task.inputs.copy(code = userCode.mkString("\n"))) match {
-      case Left(failure) => Future.failed(InstrumentationException(failure))
-      case Right(InstrumentedInputs(inputs, isForcedProgramMode)) =>
-        buildAndRun(task.snippetId, inputs, isForcedProgramMode, userDirectives, userCode, onOutput)
+    var userTarget = userDirectives.map(_.split(" ")).find(_.contains("scala")).map(_.last).getOrElse("3")
+    // removing quotes
+    userTarget = userTarget.replaceAll("\"", "")
+
+    val scalaTarget = ScalaTarget.fromScalaVersion(userTarget)
+
+    scalaTarget match {
+      case None => Future.successful(Right(InvalidScalaVersion(userTarget)))
+      case Some(scalaTarget) =>
+        // Instrument
+        InstrumentedInputs(task.inputs.copy(code = userCode.mkString("\n"), target = scalaTarget)) match {
+          case Left(failure) => Future.failed(InstrumentationException(failure))
+          case Right(InstrumentedInputs(inputs, isForcedProgramMode, _)) =>
+            buildAndRun(task.snippetId, inputs, isForcedProgramMode, userDirectives, userCode, onOutput)
+        }
     }
   }
 
@@ -107,8 +120,13 @@ class ScliRunner {
           if (line <= allDirectives.size) // if issue is on directive, then do not map.
             line
           else
-            line + totalLineOffset + 1
-        }))
+            (line + totalLineOffset + 1)
+        })
+          // removing invalid lines
+          // NOTE: somehow, BSP can report lines ≤ 0 and are usually
+          // duplicates of previous reports.
+          .filter(_ > 0)
+        )
       )
     }
 
