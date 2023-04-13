@@ -135,7 +135,8 @@ lazy val metalsRunner = project
       "io.circe"            %% "circe-generic"       % "0.14.6",
       "com.evolutiongaming" %% "scache"              % "4.2.3",
       "org.scalameta"       %% "munit"               % "0.7.29" % Test,
-      "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test
+      "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test,
+      "org.virtuslab"        % "using_directives"    % "0.1.0" // Used for parsing scala cli directives
     )
   )
   .enablePlugins(JavaServerAppPackaging, sbtdocker.DockerPlugin)

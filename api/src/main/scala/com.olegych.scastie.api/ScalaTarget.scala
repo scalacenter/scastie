@@ -76,6 +76,7 @@ object ScalaTarget {
           formatNative.writes(native) ++ JsObject(Seq("tpe" -> JsString("Native")))
         case dotty: Scala3 =>
           formatScala3.writes(dotty) ++ JsObject(Seq("tpe" -> JsString("Scala3")))
+        case scli: ScalaCli => JsObject(Seq("tpe" -> JsString("ScalaCli")))
       }
     }
 
@@ -91,6 +92,7 @@ object ScalaTarget {
                 case "Typelevel"        => formatTypelevel.reads(json)
                 case "Native"           => formatNative.reads(json)
                 case "Scala3" | "Dotty" => formatScala3.reads(json)
+                case "ScalaCli"         => JsSuccess(ScalaCli())
                 case _                  => JsError(Seq())
               }
             case _ => JsError(Seq())
@@ -108,6 +110,29 @@ object ScalaTarget {
       BuildInfo.versionRuntime
     )
   )
+
+  def fromScalaVersion(version: String): Option[ScalaTarget] = {
+    if (version.startsWith("3")) {
+      if (version == "3")
+        Some(ScalaTarget.Scala3(BuildInfo.latest3))
+      else 
+        Some(ScalaTarget.Scala3(version))
+    } else if (version.startsWith("2")) {
+      if (version == "2")
+        Some(ScalaTarget.Jvm(BuildInfo.latest213))
+      else if (version == "2.13") 
+        Some(ScalaTarget.Jvm(BuildInfo.latest213))
+      else if (version == "2.12")
+        Some(ScalaTarget.Jvm(BuildInfo.latest212))
+      else if (version == "2.11")
+        Some(ScalaTarget.Jvm(BuildInfo.latest211))
+      else if (version == "2.10")
+        Some(ScalaTarget.Jvm(BuildInfo.latest210))
+      else
+        Some(ScalaTarget.Jvm(version))
+    } else
+      None
+  }
 
   object Jvm {
     def default: ScalaTarget = ScalaTarget.Jvm(scalaVersion = BuildInfo.latest213)
@@ -298,5 +323,38 @@ object ScalaTarget {
 
     override def toString: String =
       s"Scala $scalaVersion"
+  }
+
+  object ScalaCli {
+    def default: ScalaTarget = ScalaCli()
+
+    def defaultCode: String =
+      """|// Hello!
+         |// Scastie is compatible with Scala CLI! You can use
+         |// directives: https://scala-cli.virtuslab.org/docs/guides/using-directives/
+         |
+         |println("Hi Scala CLI <3")
+      """.stripMargin
+  }
+  
+  case class ScalaCli(scalaBinaryVersion0: String = "") extends ScalaTarget {
+    override def binaryScalaVersion: String = scalaBinaryVersion0
+
+    override def scalaVersion: String = ""
+
+    override def targetType: ScalaTargetType = ScalaTargetType.ScalaCli
+
+    override def scaladexRequest: Map[String,String] = 
+      Map("target" -> "JVM")
+
+    override def renderSbt(lib: ScalaDependency): String = "// Non-applicable"
+
+    override def sbtConfig: String = "// Non-applicable"
+
+    override def sbtPluginsConfig: String = "// Non-applicable"
+
+    override def sbtRunCommand(worksheetMode: Boolean): String = ???
+
+    override def toString: String = "Scala-CLI"
   }
 }
