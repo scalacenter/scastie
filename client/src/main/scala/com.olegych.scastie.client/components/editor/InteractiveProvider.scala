@@ -16,6 +16,7 @@ import hooks.Hooks.UseStateF
 case class InteractiveProvider(
   dependencies: Set[api.ScalaDependency],
   target: api.ScalaTarget,
+  code: Some[String],
   metalsStatus: MetalsStatus,
   updateStatus: MetalsStatus ~=> Callback,
   isWorksheetMode: Boolean,
@@ -34,6 +35,7 @@ object InteractiveProvider {
     InteractiveProvider(
       props.dependencies,
       props.target,
+      Some(props.value),
       props.metalsStatus,
       props.setMetalsStatus,
       props.isWorksheetMode,
@@ -77,6 +79,7 @@ object InteractiveProvider {
       val extension = InteractiveProvider(
         props.dependencies,
         props.target,
+        Some(props.value),
         props.metalsStatus,
         props.setMetalsStatus,
         props.isWorksheetMode,
@@ -86,7 +89,7 @@ object InteractiveProvider {
       val effects = interactive.reconfigure(extension)
       editorView.value.dispatch(TransactionSpec().setEffects(effects.asInstanceOf[StateEffect[Any]]))
     }.when_(props.visible && prevProps.exists(prevProps => {
-      didConfigChange(prevProps, props) || (prevProps.visible != props.visible) || wasMetalsToggled(prevProps, props)
+      didConfigChange(prevProps, props) || (prevProps.visible != props.visible) || wasMetalsToggled(prevProps, props) || (prevProps.isMetalsStale == true && props.isMetalsStale == false)
     }))
   }
 

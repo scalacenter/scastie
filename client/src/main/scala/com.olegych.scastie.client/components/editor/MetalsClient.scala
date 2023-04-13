@@ -25,21 +25,27 @@ trait MetalsClient {
   val target: api.ScalaTarget
   val isWorksheetMode: Boolean
   val isEmbedded: Boolean
-  val scastieMetalsOptions = api.ScastieMetalsOptions(dependencies, target)
+  val code: Option[String]
+  var scastieMetalsOptions = api.ScastieMetalsOptions(dependencies, target, code)
+  
 
   private val isConfigurationSupported: Future[Boolean] = {
     if (metalsStatus == MetalsDisabled || isEmbedded) Future.successful(false)
     else {
       updateStatus(MetalsLoading).runNow()
       val res = makeRequest(scastieMetalsOptions, "isConfigurationSupported").map(maybeText =>
-        parseMetalsResponse[Boolean](maybeText).getOrElse(false)
+        parseMetalsResponse[api.ScastieMetalsOptions](maybeText).map(Right(_)).getOrElse(Left(maybeText))
       )
       res.onComplete {
-        case Success(true) => updateStatus(MetalsReady).runNow()
+        case Success(Right(opt)) => {
+          scastieMetalsOptions = opt
+          updateStatus(MetalsReady).runNow()
+        }
+        case Success(Left(details)) => updateStatus(NetworkError(s"Error sent from server: $details")).runNow()
         case Failure(exception) => updateStatus(NetworkError(exception.getMessage)).runNow()
         case _ =>
       }
-      res
+      res.map { _.isRight }
     }
   }
 

@@ -127,7 +127,9 @@ case class ScalaDependency(
   override def toString: String = target.renderSbt(this)
 }
 
-case class ScastieMetalsOptions(dependencies: Set[ScalaDependency], scalaTarget: ScalaTarget)
+// Note: adding a code parameter is for the metals-runner
+// so it can parse dependencies and give support for it :)
+case class ScastieMetalsOptions(dependencies: Set[ScalaDependency], scalaTarget: ScalaTarget, code: Option[String] = Some(""))
 
 object ScastieMetalsOptions {
   implicit val scastieMetalsOptions: OFormat[ScastieMetalsOptions] = Json.format[ScastieMetalsOptions]
@@ -141,6 +143,8 @@ sealed trait FailureType {
 
 case class NoResult(msg: String) extends FailureType
 case class PresentationCompilerFailure(msg: String) extends FailureType
+case class InvalidScalaVersion(msg: String) extends FailureType
+
 
 object FailureType {
   implicit val failureTypeFormat: OFormat[FailureType] = Json.format[FailureType]
@@ -156,6 +160,10 @@ object PresentationCompilerFailure {
 
 object ScastieOffsetParams {
   implicit val scastieOffsetParams: OFormat[ScastieOffsetParams] = Json.format[ScastieOffsetParams]
+}
+
+object InvalidScalaVersion {
+  implicit val InvalidScalaVersionFormat: OFormat[InvalidScalaVersion] = Json.format[InvalidScalaVersion]
 }
 
 case class LSPRequestDTO(options: ScastieMetalsOptions, offsetParams: ScastieOffsetParams)

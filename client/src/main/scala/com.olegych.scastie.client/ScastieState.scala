@@ -4,6 +4,7 @@ import com.olegych.scastie.api._
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.{Position => _}
 import play.api.libs.json._
+import com.olegych.scastie.client.scli.ScalaCliUtils
 
 sealed trait MetalsStatus {
   val info: String
@@ -109,8 +110,11 @@ case class ScastieState(
     outputs: Outputs,
     status: StatusState,
     metalsStatus: MetalsStatus = MetalsLoading,
+    isMetalsStale : Boolean = false,
     isEmbedded: Boolean = false,
     transient: Boolean = false,
+
+    scalaCliConversionError: Option[String] = None
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean = snippetState.loadSnippet
@@ -136,7 +140,9 @@ case class ScastieState(
       outputs: Outputs = outputs,
       status: StatusState = status,
       metalsStatus: MetalsStatus = metalsStatus,
+      isMetalsStale: Boolean = isMetalsStale,
       transient: Boolean = transient,
+      scalaCliConversionError: Option[String] = scalaCliConversionError
   ): ScastieState = {
     val state0 =
       copy(
@@ -167,6 +173,8 @@ case class ScastieState(
         metalsStatus = metalsStatus,
         isEmbedded = isEmbedded,
         transient = transient,
+        scalaCliConversionError = scalaCliConversionError,
+        isMetalsStale = isMetalsStale
       )
 
     if (!isEmbedded && !transient) {
@@ -528,6 +536,16 @@ case class ScastieState(
         instrumentations = outputs.instrumentations ++ instrumentations.toSet
       )
     )
+  }
+
+  // Returns None if it has been correctly converted.
+  // Returns a String explaining why the conversion failed.
+  //
+  def convertToScalaCli: ScastieState = {
+    ScalaCliUtils.convertInputsToScalaCli(inputs) match {
+      case Left(inputs) => copyAndSave(inputs = inputs, scalaCliConversionError = None, view = View.Editor) 
+      case Right(error) => copyAndSave(scalaCliConversionError = Some(error))
+    }
   }
 
   override def toString: String = Json.toJson(this).toString()
