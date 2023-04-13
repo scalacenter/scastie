@@ -70,11 +70,11 @@ class ScliActor(system: ActorSystem,
   // FSM
   // Available state (no running scala cli instance)
   val whenAvailable: Receive = reconnectBehavior orElse { message => message match {
-    case task @ SbtTask(_, _, _, _, _) => {
+    case task: SbtTask => {
       log.warning("Should not receive an SbtTask, converting to ScliActorTask")
       runTask(sbtTaskToScliActorTask(task))
     }
-    case task @ ScliActorTask(_, _, _, _, _) => runTask(task)
+    case task: ScliActorTask => runTask(task)
 
     case SbtPing => sender() ! SbtPong
     case x => log.error(s"CHECK CHECK CHECK URGENT dead letter: $x")

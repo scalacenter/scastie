@@ -6,6 +6,7 @@ import cats.effect.Async
 import cats.syntax.all._
 import com.evolutiongaming.scache.Cache
 import com.olegych.scastie.api._
+import scastie.metals.DTOCodecs._
 import org.eclipse.lsp4j._
 
 trait ScastieMetals[F[_]]:
@@ -13,7 +14,7 @@ trait ScastieMetals[F[_]]:
   def completionInfo(request: CompletionInfoRequest): EitherT[F, FailureType, String]
   def hover(request: LSPRequestDTO): EitherT[F, FailureType, Hover]
   def signatureHelp(request: LSPRequestDTO): EitherT[F, FailureType, SignatureHelp]
-  def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, Boolean]
+  def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, ScastieMetalsOptions]
 
 object ScastieMetalsImpl:
 
@@ -33,8 +34,12 @@ object ScastieMetalsImpl:
       def signatureHelp(request: LSPRequestDTO): EitherT[F, FailureType, SignatureHelp] =
         dispatcher.getCompiler(request.options) >>= (_.signatureHelp(request.offsetParams))
 
-      def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, Boolean] =
-        dispatcher.areDependenciesSupported(config) >>=
-          (_ => dispatcher.getCompiler(config).map(_ => true))
+      def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, ScastieMetalsOptions] =
+        dispatcher.convertConfigurationFromScalaCli(config) >>=
+          (config =>
+            dispatcher.areDependenciesSupported(config) >>=
+              (_ => dispatcher.getCompiler(config).map(_ => config))
+          )
+
 
     }

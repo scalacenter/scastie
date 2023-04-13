@@ -17,14 +17,20 @@ object DTOExtensions {
       val wrapperObject = s"""|object worksheet {
                               |$wrapperIndent""".stripMargin
 
-      val contentToOffset = offsetParams.content.take(offsetParams.offset).linesWithSeparators
-      val line            = contentToOffset.size - 1
-
       val (content, position) =
         if offsetParams.isWorksheetMode then
-          val adjustedContent = s"""$wrapperObject${offsetParams.content.replace("\n", "\n" + wrapperIndent)}}"""
-          val adjustedPosition = wrapperObject.length + line * 2 + offsetParams.offset
-          (adjustedContent, adjustedPosition)
+          val (userDirectives, userCode) = offsetParams.content.split("\n").span(_.startsWith("//>"))
+
+          val adjustedContent = s"""${userDirectives.mkString("\n")}\n$wrapperObject${userCode.mkString("\n" + wrapperIndent)}}"""
+
+          val userDirectivesLength = userDirectives.map(_.length + 1).sum
+          if (offsetParams.offset < userDirectivesLength) then
+            // cursor is in directives
+            (adjustedContent, offsetParams.offset)
+          else
+            // cursor is in code
+            (adjustedContent, wrapperObject.length + offsetParams.offset + (userCode.length - 1) * wrapperIndent.length + 1)
+
         else (offsetParams.content, offsetParams.offset)
 
       new CompilerOffsetParams(noSourceFilePath.toUri, content, position)

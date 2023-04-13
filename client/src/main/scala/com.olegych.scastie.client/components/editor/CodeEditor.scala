@@ -44,6 +44,7 @@ final case class CodeEditor(visible: Boolean,
                             codeChange: String ~=> Callback,
                             target: api.ScalaTarget,
                             metalsStatus: MetalsStatus,
+                            isMetalsStale: Boolean,
                             setMetalsStatus: MetalsStatus ~=> Callback,
                             dependencies: Set[api.ScalaDependency])
     extends Editor {

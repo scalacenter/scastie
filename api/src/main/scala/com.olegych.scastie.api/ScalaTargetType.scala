@@ -15,6 +15,7 @@ object ScalaTargetType {
       case "JS"        => Some(JS)
       case "NATIVE"    => Some(Native)
       case "TYPELEVEL" => Some(Typelevel)
+      case "SCALACLI"  => Some(ScalaCli)
       case _           => None
     }
   }
@@ -30,7 +31,8 @@ object ScalaTargetType {
         Scala3,
         JS,
         Native,
-        Typelevel
+        Typelevel,
+        ScalaCli
       ).map(v => (v.toString, v)).toMap
 
     def reads(json: JsValue): JsResult[ScalaTargetType] = {
@@ -64,5 +66,9 @@ object ScalaTargetType {
 
   case object Typelevel extends ScalaTargetType {
     def defaultScalaTarget: ScalaTarget = ScalaTarget.Typelevel.default
+  }
+
+  case object ScalaCli extends ScalaTargetType {
+    def defaultScalaTarget: ScalaTarget = ScalaTarget.ScalaCli.default
   }
 }
