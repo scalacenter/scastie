@@ -39,10 +39,10 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     val newDirectives = takeDirectives(state.inputs)
     previousDirectives match {
       case None => { previousDirectives = Some(newDirectives); state }
-      case Some(previousDirectives) if previousDirectives != newDirectives => println("stale!"); state.copy(isMetalsStale = true)
+      case Some(previousDirectives) if previousDirectives != newDirectives => state.copy(isMetalsStale = true)
       case _ => state
     }
-  }).async.rateLimit(1.second)
+  }).async.debounce(5.second)
 
   val codeChange: String ~=> Callback =
     Reusable.fn(code => {
@@ -52,7 +52,6 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
         newState
       })
     })
-
 
   val sbtConfigChange: String ~=> Callback = {
     Reusable.fn(newConfig => scope.modState(_.setSbtConfigExtra(newConfig)))
@@ -132,7 +131,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     Reusable.fn(status => scope.modState(_.setMetalsStatus(status)))
 
   val toggleMetalsStatus: Reusable[Callback] =
-    Reusable.always(scope.modState(_.toggleMetalsStatus))
+    Reusable.always(scope.modState({ state => previousDirectives = None; state.toggleMetalsStatus }))
 
   val toggleLineNumbers: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleLineNumbers))

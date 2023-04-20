@@ -89,7 +89,7 @@ object InteractiveProvider {
       val effects = interactive.reconfigure(extension)
       editorView.value.dispatch(TransactionSpec().setEffects(effects.asInstanceOf[StateEffect[Any]]))
     }.when_(props.visible && prevProps.exists(prevProps => {
-      didConfigChange(prevProps, props) || (prevProps.visible != props.visible) || wasMetalsToggled(prevProps, props) || (prevProps.isMetalsStale == true && props.isMetalsStale == false)
+      didConfigChange(prevProps, props) || (prevProps.visible != props.visible) || wasMetalsToggled(prevProps, props) || (prevProps.isMetalsStale && !props.isMetalsStale)
     }))
   }
 
