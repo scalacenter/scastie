@@ -122,6 +122,7 @@ class BspClient(private val workingDir: Path,
       param.setOriginId(s"$id-compile")
       param
     })
+    .orTimeout(10, TimeUnit.SECONDS)
     .asScala
     .map(compileResult => {
       if (compileResult.getStatusCode() == StatusCode.ERROR) {
@@ -130,6 +131,12 @@ class BspClient(private val workingDir: Path,
       } else {
         Left(compileResult)
       }
+    })
+    .recover({
+      case _: TimeoutException => 
+        log.warn(s"Compilation timeout on snippet $id")
+        sys.exit(-1)
+      case k => throw k
     })
 
   // Throws either NoMainClassFound or UnexpectedError on unexpected result.

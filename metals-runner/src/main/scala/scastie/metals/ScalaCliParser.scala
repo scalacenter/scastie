@@ -37,19 +37,29 @@ object ScalaCliParser {
 
     allDefs
 
-  private def extractValue(k: SettingDefOrUsingValue): String = {
+  private def extractValue(k: SettingDefOrUsingValue): Option[String] = {
     k match
-      case k: NumericLiteral => k.getValue()
-      case k: StringLiteral => k.getValue()
+      case k: NumericLiteral => Some(k.getValue())
+      case k: StringLiteral => Some(k.getValue())
+      case _ => None
     
   }
 
   def getScalaTarget(string: String): Either[FailureType, ScastieMetalsOptions] = {
     // TODO: get it correctly
-    val defs = parse(string).groupMap(_.getKey())(t => extractValue(t.getValue()))
+    //val defs: Map[String, List[String]] = parse(string).groupMap(_.getKey())(t => extractValue(t.getValue()).toList)
+    val defs: Map[String, List[String]] = parse(string).groupMapReduce(
+      _.getKey()
+    )(
+      t => {
+        val option = extractValue(t.getValue())
+        option.toList
+      }
+    )(_ ++ _)
 
     // get the scala version
-    var scalaVersion = defs.get("scala").getOrElse(List(BuildInfo.latest3)).head
+    var scalaVersion = defs.get("scala").getOrElse(List(BuildInfo.latest3)).headOption.getOrElse("3")
+
     // now we have the scala version
     // get the target
     val scalaTarget: Either[FailureType, ScalaTarget] =

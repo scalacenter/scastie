@@ -42,7 +42,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       case Some(previousDirectives) if previousDirectives != newDirectives => state.copy(isMetalsStale = true)
       case _ => state
     }
-  }).async.debounce(5.second)
+  }).async.rateLimit(1.second)
 
   val codeChange: String ~=> Callback =
     Reusable.fn(code => {
