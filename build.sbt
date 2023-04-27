@@ -46,7 +46,7 @@ lazy val testSettings = Seq(
 
 lazy val loggingAndTest = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"              % "logback-classic" % "1.4.6",
+    "ch.qos.logback"              % "logback-classic" % "1.4.7",
     "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5",
     "io.sentry"                   % "sentry-logback"  % "6.17.0"
   )
