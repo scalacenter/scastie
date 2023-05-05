@@ -137,7 +137,7 @@ object SbtShared {
         scalaVersion.value match {
           case v if v.startsWith("2.10") => "com.typesafe.play" %%% "play-json" % "2.6.14"
           case v if v.startsWith("2.11") => "com.typesafe.play" %%% "play-json" % "2.7.4"
-          case _                         => "com.typesafe.play" %%% "play-json" % "2.10.0-RC5"
+          case _                         => "com.typesafe.play" %%% "play-json" % "2.10.0-RC8"
         }
       },
       semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
@@ -184,13 +184,9 @@ object SbtShared {
     *   scalajvm-3 is already configured by sbt-projectmatrix for scala 3 sub projects
     */
   private def scala2MajorSourceDirs(scalaSource: File, axisValues: Seq[VirtualAxis]): Seq[File] = {
-    val platform = (axisValues collect { case pv: VirtualAxis.PlatformAxis =>
-      pv.directorySuffix
-    }).head
+    val platform = (axisValues collect { case pv: VirtualAxis.PlatformAxis => pv.directorySuffix }).head
 
-    val svMajors = (axisValues collect { case sv: VirtualAxis.ScalaVersionAxis =>
-      sv.value.head
-    }).filter(_ == '2')
+    val svMajors = (axisValues collect { case sv: VirtualAxis.ScalaVersionAxis => sv.value.head }).filter(_ == '2')
 
     svMajors.map(v => scalaSource.getParentFile / s"scala$platform-$v")
   }
