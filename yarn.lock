@@ -64,10 +64,10 @@
   resolved "https://registry.yarnpkg.com/@codemirror/state/-/state-6.2.0.tgz#a0fb08403ced8c2a68d1d0acee926bd20be922f2"
   integrity sha512-69QXtcrsc3RYtOtd+GsvczJ319udtBf1PTrr2KbLWM/e2CXUPnh0Nz9AUo8WfhSQ7GeL8dPVNUmhQVgpmuaNGA==
 
-"@codemirror/view@^6.0.0", "@codemirror/view@^6.6.0", "@codemirror/view@^6.9.4":
-  version "6.9.5"
-  resolved "https://registry.yarnpkg.com/@codemirror/view/-/view-6.9.5.tgz#8149b5e93e6fbdff2573ed205a53be311dfe80ab"
-  integrity sha512-IZwGdkn8PDyMkGms7bCMpFuTCg6+6eCZNgLOe9xQL4RYvMw1yYLviH+qoAqsNoYGpDt4HhHoW9v3FmalobFoKw==
+"@codemirror/view@^6.0.0", "@codemirror/view@^6.11.0", "@codemirror/view@^6.6.0", "@codemirror/view@^6.9.4":
+  version "6.11.0"
+  resolved "https://registry.yarnpkg.com/@codemirror/view/-/view-6.11.0.tgz#7840cec0b983c3ac36348fd005ce405a8e788e0c"
+  integrity sha512-PRpPRkqMkAKKxEuiUBxapE0YR+wqs9At92ujbJo93PwTZ0jEJDzx9wahrDcXEhQ43Pe0RK9DdZMLWrt+QN80DA==
   dependencies:
     "@codemirror/state" "^6.1.4"
     style-mod "^4.0.0"
