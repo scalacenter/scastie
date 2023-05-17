@@ -127,7 +127,7 @@ lazy val metalsRunner = project
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.20.1",
       "org.http4s"          %% "http4s-ember-server" % "0.23.18",
       "org.http4s"          %% "http4s-ember-client" % "0.23.18",
-      "org.http4s"          %% "http4s-dsl"          % "0.23.18",
+      "org.http4s"          %% "http4s-dsl"          % "0.23.19",
       "org.http4s"          %% "http4s-circe"        % "0.23.19",
       "io.circe"            %% "circe-generic"       % "0.14.5",
       "com.evolutiongaming" %% "scache"              % "4.2.3",
