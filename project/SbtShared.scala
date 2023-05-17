@@ -111,7 +111,7 @@ object SbtShared {
   lazy val baseJsSettings = Seq(
     test := {},
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom"               % "2.4.0",
+      "org.scala-js" %%% "scalajs-dom"               % "2.5.0",
       "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0" cross (CrossVersion.for3Use2_13)
     )
   )
@@ -184,13 +184,9 @@ object SbtShared {
     *   scalajvm-3 is already configured by sbt-projectmatrix for scala 3 sub projects
     */
   private def scala2MajorSourceDirs(scalaSource: File, axisValues: Seq[VirtualAxis]): Seq[File] = {
-    val platform = (axisValues collect { case pv: VirtualAxis.PlatformAxis =>
-      pv.directorySuffix
-    }).head
+    val platform = (axisValues collect { case pv: VirtualAxis.PlatformAxis => pv.directorySuffix }).head
 
-    val svMajors = (axisValues collect { case sv: VirtualAxis.ScalaVersionAxis =>
-      sv.value.head
-    }).filter(_ == '2')
+    val svMajors = (axisValues collect { case sv: VirtualAxis.ScalaVersionAxis => sv.value.head }).filter(_ == '2')
 
     svMajors.map(v => scalaSource.getParentFile / s"scala$platform-$v")
   }
