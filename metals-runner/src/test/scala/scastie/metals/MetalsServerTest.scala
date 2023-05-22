@@ -366,4 +366,42 @@ class MetalsServerTest extends CatsEffectSuite {
       expected = Set().asRight
     )
   }
+
+  test("Scala-CLI: Completion with dependency given with `import dep` directives") {
+    testCompletion(
+      testTargets = List(ScalaTarget.ScalaCli()),
+      code = """//> using dep "com.lihaoyi::os-lib:0.9.1"
+            |object M {
+            |   os.pw@@
+            |}
+          """.stripMargin,
+      expected = Set("pwd: Path").asRight
+    )
+  }
+
+  test("Scala-CLI: Completion with dependency given with `import lib` directives") {
+    testCompletion(
+      testTargets = List(ScalaTarget.ScalaCli()),
+      code = """//> using lib "com.lihaoyi::os-lib:0.9.1"
+            |object M {
+            |   os.pw@@
+            |}
+          """.stripMargin,
+      expected = Set("pwd: Path").asRight
+    )
+  }
+
+  test("Scala-CLI: Hover on a dependency function works") {
+    testCompletionInfo(
+      testTargets = List(ScalaTarget.ScalaCli()),
+      code = """//> using lib "com.lihaoyi::os-lib:0.9.1"
+            |object M {
+            |   os.pw@@d
+            |}
+          """.stripMargin,
+      expected = List(
+        "The current working directory for this process.".asRight
+      )
+    )
+  }
 }

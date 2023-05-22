@@ -98,7 +98,6 @@ class BspClient(private val workingDir: Path,
   listeningThread.start()
 
   def resetInternalBuffers = {
-    diagnostics = List()
     logMessages = List()
   }
 
@@ -273,6 +272,9 @@ class BspClient(private val workingDir: Path,
       logMessages = params :: logMessages
     }
     def onBuildPublishDiagnostics(params: PublishDiagnosticsParams): Unit = {
+      if (params.getReset())
+        diagnostics = List()
+
       diagnostics = params.getDiagnostics().asScala.toList ++ diagnostics
     }
     def onBuildShowMessage(params: ShowMessageParams): Unit = () // log.info(s"ShowMessageParams: $params")
