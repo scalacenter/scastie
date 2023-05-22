@@ -38,7 +38,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
   ): LSPRequestDTO =
     val offsetParamsComplete = testCode(code)
     val dependencies0        = dependencies.map(_.apply(scalaTarget))
-    LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget), offsetParamsComplete)
+    LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget, code = Some(code)), offsetParamsComplete)
 
   def getCompat[A](scalaTarget: ScalaTarget, compat: Map[String, A], default: A): A =
     val binaryScalaVersion = scalaTarget.binaryScalaVersion
