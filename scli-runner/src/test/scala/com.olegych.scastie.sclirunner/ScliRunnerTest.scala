@@ -60,6 +60,13 @@ class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
     ))
   }
 
+  test("do not instrument if not need") {
+    val r = TestUtils.shouldRun(
+      run("normal")
+    )
+    assert(r.output.mkString.contains("hello!"))
+  }
+
   override protected def afterAll(): Unit = {
     scliRunner.map(_.end)
     scliRunner = None
