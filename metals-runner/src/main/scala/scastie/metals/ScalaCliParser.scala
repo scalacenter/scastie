@@ -41,8 +41,7 @@ object ScalaCliParser {
     k match
       case k: NumericLiteral => Some(k.getValue())
       case k: StringLiteral => Some(k.getValue())
-      case _ => None
-    
+      case _ => None  
   }
 
   def getScalaTarget(string: String): Either[FailureType, ScastieMetalsOptions] = {
