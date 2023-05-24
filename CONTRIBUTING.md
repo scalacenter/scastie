@@ -180,7 +180,7 @@ It also requires OAuth2 configuration at `oauth2-prod.conf` in the same director
 
 ```
 ssh scastie@alaska.epfl.ch
-ssh scastie@scastie-sbt.scala-lang.org
+ssh scastie@scastie.scala-lang.org
 docker login
 cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
 nix-shell -v
@@ -218,7 +218,7 @@ It also requires OAuth2 configuration at `oauth2-staging.conf` in the same direc
 
 ```
 ssh scastie@alaska.epfl.ch
-ssh scastie@scastie-sbt.scala-lang.org
+ssh scastie@scastie.scala-lang.org
 docker login
 cd ~/scastie && git pull && ~/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl ~/.nix bash -l
 nix-shell -v
