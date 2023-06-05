@@ -18,7 +18,7 @@
     "@codemirror/lint": "^6.2.0",
     "@codemirror/search": "^6.4.0",
     "@codemirror/state": "^6.1.4",
-    "@codemirror/view": "^6.11.2",
+    "@codemirror/view": "^6.12.0",
     "@lezer/common": "^1.0.1",
     "@lezer/highlight": "^1.1.1",
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
