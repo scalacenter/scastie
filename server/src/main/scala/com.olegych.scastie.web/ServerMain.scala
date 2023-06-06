@@ -7,9 +7,7 @@ import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import com.olegych.scastie.balancer._
 import com.olegych.scastie.util.ScastieFileUtil
-import com.olegych.scastie.web.oauth2._
 import com.olegych.scastie.web.routes._
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 
 import scala.concurrent.Await
@@ -18,80 +16,78 @@ import scala.util.Failure
 import scala.util.Success
 
 import server.Directives._
+import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
+import sttp.tapir.server.akkahttp.AkkaHttpServerOptions
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import ch.megard.akka.http.cors.scaladsl.model.HttpOriginMatcher
+import akka.http.scaladsl.model.HttpMethods
 
 object ServerMain {
+  val logger = Logger("Server")
 
   def main(args: Array[String]): Unit = {
 
-    val logger = Logger("ServerMain")
-
-    val port =
-      if (args.isEmpty) 9000
-      else args.head.toInt
-
-    val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
-    logger.info("akka tcp config")
-    logger.info(config2.getString("hostname"))
-    logger.info(config2.getInt("port").toString)
-
-    val config     = ConfigFactory.load().getConfig("com.olegych.scastie")
-    val production = config.getBoolean("production")
-    val hostname   = config.getString("web.hostname")
-
-    logger.info(s"Production: $production")
-    logger.info(s"Server hostname: $hostname")
-
-    if (production) {
+    if (ServerConfig.production) {
       ScastieFileUtil.writeRunningPid("RUNNING_PID")
     }
 
     implicit val system: ActorSystem = ActorSystem("Web")
     import system.dispatcher
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    val github         = new Github()
-    val session        = new GithubUserSession(system)
-    val userDirectives = new UserDirectives(session)
+    val progressActor = system.actorOf(Props[ProgressActor](), name = "ProgressActor")
+    val statusActor = system.actorOf(StatusActor.props, name = "StatusActor")
+    val dispatchActor = system.actorOf(Props(new DispatchActor(progressActor, statusActor)), name = "DispatchActor")
 
-    val progressActor = system.actorOf(
-      Props[ProgressActor](),
-      name = "ProgressActor"
+    val apiServerEndpoints = new ApiRoutesImpl(dispatchActor).serverEndpoints
+    val publicApiServerEndpoints = new PublicApiRoutesImpl(dispatchActor).serverEndpoints
+    val progressServerEndpoints = new ProgressRoutesImpl(progressActor).serverEndpoints
+    val downloadServerEndpoints = new DownloadRoutesImpl(dispatchActor).serverEndpoints
+    val statusServerEndpoints = new StatusRoutesImpl(statusActor).serverEndpoints
+    val oauthServerEndpoints = new OAuthRoutesImpl().serverEndpoints
+    val frontPageServerEndpoints = new FrontPageEndpointsImpl(dispatchActor).serverEndpoints
+    val docsServerEndpoints =  new DocsRoutes().serverEndpoints
+
+    def serverLogger = AkkaHttpServerOptions.defaultSlf4jServerLog.copy(
+      logWhenReceived = true,
+      logWhenHandled = true,
+      logAllDecodeFailures = true,
     )
 
-    val statusActor = system.actorOf(
-      StatusActor.props,
-      name = "StatusActor"
+    val defaultSettings = AkkaHttpServerOptions
+      .customiseInterceptors
+      .serverLog(serverLogger)
+      .options
+
+    val hostOriginRoutes = AkkaHttpServerInterpreter(defaultSettings).toRoute(
+      List(
+        oauthServerEndpoints,
+        docsServerEndpoints,
+        statusServerEndpoints,
+        downloadServerEndpoints,
+        apiServerEndpoints
+      ).flatten
     )
 
-    val dispatchActor = system.actorOf(
-      Props(new DispatchActor(progressActor, statusActor)),
-      name = "DispatchActor"
+    val crossOriginRoutes = AkkaHttpServerInterpreter(defaultSettings).toRoute(
+      List(
+        publicApiServerEndpoints,
+        progressServerEndpoints,
+        frontPageServerEndpoints,
+      ).flatten
     )
 
-    val apiRoutes       = new ApiRoutes(dispatchActor, userDirectives).routes
-    val progressRoutes  = new ProgressRoutes(progressActor).routes
-    val downloadRoutes  = new DownloadRoutes(dispatchActor).routes
-    val statusRoutes    = new StatusRoutes(statusActor, userDirectives).routes
-    val scalaJsRoutes   = new ScalaJsRoutes(dispatchActor).routes
-    val oauthRoutes     = new OAuth2Routes(github, session).routes
-    val scalaLangRoutes = new ScalaLangRoutes(dispatchActor, userDirectives).routes
-    val frontPageRoutes = new FrontPageRoutes(dispatchActor, production, hostname).routes
+    val publicCORSSettings =
+      CorsSettings(system)
+        .withAllowedOrigins(HttpOriginMatcher.*)
+        .withAllowCredentials(false)
+        .withAllowedMethods(List(HttpMethods.GET, HttpMethods.POST, HttpMethods.OPTIONS))
 
-    val routes =
-      oauthRoutes ~
-      cors() {
-        pathPrefix("api") {
-          apiRoutes ~
-            progressRoutes ~
-            downloadRoutes ~
-            statusRoutes ~
-            scalaJsRoutes
-        } ~
-          scalaLangRoutes ~
-          frontPageRoutes
-      }
+    val routes = concat(
+      cors()(hostOriginRoutes),
+      cors(publicCORSSettings)(crossOriginRoutes)
+    )
 
-    val futureBinding = Http().newServerAt("localhost", port).bindFlow(routes)
+    val futureBinding = Http().newServerAt("localhost", ServerConfig.port).bindFlow(routes)
 
     futureBinding.onComplete {
       case Success(binding) =>

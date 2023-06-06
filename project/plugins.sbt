@@ -9,6 +9,7 @@ addSbtPlugin("org.scala-js"      % "sbt-scalajs"         % SbtShared.ScalaJSVers
 addSbtPlugin("org.olegych"                %% "sbt-cached-ci"          % "1.0.4")
 addSbtPlugin("org.scalablytyped.converter" % "sbt-converter"          % "1.0.0-beta41")
 addSbtPlugin("com.evolution"               % "sbt-artifactory-plugin" % "0.0.2")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.11.0")
 
 //workaround https://github.com/sbt/sbt/issues/5374
 allExcludeDependencies ++= List(

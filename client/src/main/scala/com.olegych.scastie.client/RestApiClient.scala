@@ -28,8 +28,17 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
     )
   }
 
+  def appendXSRFHeader(headers: dom.Headers) = {
+    val xsrfToken = dom.document.cookie
+      .split(";")
+      .find(_.startsWith("__Host-XSRF-Token"))
+      .flatMap(_.split("=").lastOption)
+    xsrfToken.map(xsrf => headers.append("X-XSRF-TOKEN", xsrf))
+    headers
+  }
+
   def get[T: Reads](url: String): Future[Option[T]] = {
-    val header = new dom.Headers(js.Dictionary("Accept" -> "application/json"))
+    val header = appendXSRFHeader(new dom.Headers(js.Dictionary("Accept" -> "application/json")))
     dom
       .fetch(apiBase + "/api" + url, js.Dynamic.literal(headers = header, method = dom.HttpMethod.GET).asInstanceOf[dom.RequestInit])
       .flatMap(tryParse[T](_))
@@ -37,7 +46,7 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
 
   class Post[O: Reads]() {
     def using[I: Writes](url: String, data: I, async: Boolean = true): Future[Option[O]] = {
-      val header = new dom.Headers(js.Dictionary("Accept" -> "application/json", "Content-Type" -> "application/json"))
+      val header = appendXSRFHeader(new dom.Headers(js.Dictionary("Accept" -> "application/json", "Content-Type" -> "application/json")))
       dom
         .fetch(
           apiBase + "/api" + url,

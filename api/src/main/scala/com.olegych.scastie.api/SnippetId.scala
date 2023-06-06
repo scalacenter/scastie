@@ -23,6 +23,8 @@ case class SnippetUserPart(login: String, update: Int = 0)
 object SnippetId {
   implicit val formatSnippetId: OFormat[SnippetId] =
     Json.format[SnippetId]
+
+  def apply(user: String, uuid: String, rev: Int): SnippetId = SnippetId(uuid, Some(SnippetUserPart(user, rev)))
 }
 
 case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {

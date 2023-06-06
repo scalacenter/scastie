@@ -2,7 +2,7 @@ package com.olegych.scastie.api
 
 import play.api.libs.json._
 
-trait ProcessOutputType
+sealed trait ProcessOutputType
 object ProcessOutputType {
   case object StdOut extends ProcessOutputType
   case object StdErr extends ProcessOutputType

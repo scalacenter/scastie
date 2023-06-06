@@ -11,7 +11,6 @@ import akka.http.scaladsl.model.RemoteAddress
 
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration.DurationInt
-import com.olegych.scastie.storage.PolicyAcceptance
 
 class RestApiServer(
     dispatchActor: ActorRef,

@@ -9,6 +9,7 @@ import net.lingala.zip4j.model.ZipParameters
 
 import java.nio.file.{Files, Path, Paths}
 import scala.concurrent.{ExecutionContext, Future}
+import java.io.File
 
 
 trait SnippetsContainer {
@@ -90,8 +91,8 @@ trait SnippetsContainer {
       )
     )
 
-  final def downloadSnippet(snippetId: SnippetId): Future[Option[Path]] =
-    readSnippet(snippetId).map(_.map(asZip(snippetId)))
+  final def downloadSnippet(snippetId: SnippetId): Future[Option[File]] =
+    readSnippet(snippetId).map(_.map(asZip(snippetId)).map(_.toFile))
 
   protected final def newSnippetId(user: Option[UserLogin]): SnippetId = {
     val uuid = Base64UUID.create

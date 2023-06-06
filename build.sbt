@@ -4,7 +4,7 @@ import com.typesafe.sbt.SbtNativePackager.Universal
 import org.scalajs.linker.interface.ModuleSplitStyle
 import SbtShared._
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.19"
+def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.20"
 
 val akkaHttpVersion = "10.2.9"
 
@@ -98,6 +98,20 @@ lazy val smallRunnerRuntimeDependenciesInTest = {
 
 lazy val dockerOrg = "scalacenter"
 
+lazy val endpoints = project
+  .in(file("endpoints"))
+  .settings(baseNoCrossSettings)
+  .settings(
+    scalacOptions += "-Ywarn-unused",
+    libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.tapir"        %% "tapir-core"     % "1.5.0",
+      "com.softwaremill.sttp.tapir" %% "tapir-json-play" % "1.5.0",
+      "com.softwaremill.sttp.tapir" %% "tapir-files" % "1.5.0",
+      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % "1.5.0",
+    )
+  )
+  .dependsOn(api.jvm(ScalaVersions.jvm))
+
 lazy val metalsRunner = project
   .in(file("metals-runner"))
   .settings(baseNoCrossSettings)
@@ -129,6 +143,7 @@ lazy val metalsRunner = project
       "org.http4s"          %% "http4s-ember-client" % "0.23.19",
       "org.http4s"          %% "http4s-dsl"          % "0.23.19",
       "org.http4s"          %% "http4s-circe"        % "0.23.19",
+      "com.softwaremill.sttp.tapir" %% "tapir-core"  % "1.5.0",
       "io.circe"            %% "circe-generic"       % "0.14.5",
       "com.evolutiongaming" %% "scache"              % "4.2.3",
       "org.scalameta"       %% "munit"               % "0.7.29" % Test,
@@ -195,11 +210,16 @@ lazy val server = project
     Compile / products += (client / baseDirectory).value / "dist",
     fullLinkJS / reStart   := reStart.dependsOn(client / Compile / fullLinkJS / yarnBuild).evaluated,
     Universal / packageBin := (Universal / packageBin).dependsOn(client / Compile / fullLinkJS / yarnBuild).value,
+    javaOptions += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5055",
     reStart / javaOptions += "-Xmx512m",
     maintainer := "scalacenter",
+    scalacOptions += "-Wunused",
     libraryDependencies ++= Seq(
       "org.apache.commons"                  % "commons-text"   % "1.10.0",
       "com.typesafe.akka"                  %% "akka-http"      % akkaHttpVersion,
+      "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % "1.5.0",
+      "com.softwaremill.sttp.client3" %% "core" % "3.8.15",
+      "com.github.jwt-scala" %% "jwt-play-json" % "9.3.0",
       "com.softwaremill.akka-http-session" %% "core"           % "0.7.0",
       "ch.megard"                          %% "akka-http-cors" % "1.2.0",
       akka("cluster"),
@@ -209,7 +229,7 @@ lazy val server = project
     )
   )
   .enablePlugins(JavaServerAppPackaging)
-  .dependsOn(api.jvm(ScalaVersions.jvm), utils, balancer)
+  .dependsOn(api.jvm(ScalaVersions.jvm), utils, balancer, endpoints)
 
 lazy val balancer = project
   .settings(baseNoCrossSettings)

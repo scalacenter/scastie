@@ -11,7 +11,9 @@ case class SbtRunnerState(
     config: Inputs,
     tasks: Vector[TaskId],
     sbtState: SbtState
-)
+) {
+  def withoutTasks: SbtRunnerState = this.copy(tasks = Vector.empty)
+}
 sealed trait StatusProgress
 object StatusProgress {
   implicit object StatusProgressFormat extends Format[StatusProgress] {
