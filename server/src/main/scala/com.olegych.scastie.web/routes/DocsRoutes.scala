@@ -1,6 +1,6 @@
-package com.olegych.scastie.web.routes
+package scastie.server.routes
 
-import com.olegych.scastie.web.ServerConfig
+import scastie.server.ServerConfig
 import scastie.endpoints.ApiEndpoints
 import scastie.endpoints._
 import sttp.tapir.redoc.bundle.RedocInterpreter

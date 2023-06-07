@@ -1,11 +1,10 @@
-package com.olegych.scastie.web.routes
+package scastie.server.routes
 
 import akka.actor.{ActorRef, ActorSystem}
-import com.olegych.scastie.web._
+import scastie.server.RestApiServer
 import scastie.endpoints.ApiEndpoints
 import scala.concurrent.Future
 import cats.syntax.all._
-import akka.http.scaladsl.model.RemoteAddress
 
 class ApiRoutesImpl(dispatchActor: ActorRef)(implicit system: ActorSystem) {
   import system.dispatcher
@@ -14,26 +13,28 @@ class ApiRoutesImpl(dispatchActor: ActorRef)(implicit system: ActorSystem) {
   val saveImpl = ApiEndpoints.saveEndpoint
     .secure
     .serverLogicSuccess(maybeUser =>
-      new RestApiServer(dispatchActor, RemoteAddress.Unknown, maybeUser).save(_)
+      new RestApiServer(dispatchActor, maybeUser).save(_)
     )
 
   val forkImpl = ApiEndpoints.forkEndpoint
     .secure
-    .serverLogic(maybeUser =>
-      new RestApiServer(dispatchActor, RemoteAddress.Unknown, maybeUser).fork(_).map(_.toRight("Failure"))
-    )
+    .serverLogic(maybeUser => inputs => {
+      val (clientIP, input) = inputs
+      new RestApiServer(dispatchActor, maybeUser, clientIP).fork(input).map(_.toRight("Failure"))
+    })
 
   val deleteImpl = ApiEndpoints.deleteEndpoint
     .secure
     .serverLogicSuccess(user =>
-      new RestApiServer(dispatchActor, RemoteAddress.Unknown, Some(user)).delete(_)
+      new RestApiServer(dispatchActor, Some(user)).delete(_)
     )
 
   val updateImpl = ApiEndpoints.updateEndpoint
     .secure
-    .serverLogic(user =>
-      new RestApiServer(dispatchActor, RemoteAddress.Unknown, Some(user)).update(_).map(_.toRight("Failure"))
-    )
+    .serverLogic(user => inputs => {
+      val (clientIP, editInputs) = inputs
+      new RestApiServer(dispatchActor, Some(user), clientIP).update(editInputs).map(_.toRight("Failure"))
+    })
 
   val userSettingsImpl = ApiEndpoints.userSettingsEndpoint
     .secure
@@ -42,7 +43,7 @@ class ApiRoutesImpl(dispatchActor: ActorRef)(implicit system: ActorSystem) {
   val userSnippetsEndpoint = ApiEndpoints.userSnippetsEndpoint
     .secure
     .serverLogicSuccess(user => _ =>
-        new RestApiServer(dispatchActor, RemoteAddress.Unknown, Some(user)).fetchUserSnippets()
+        new RestApiServer(dispatchActor, Some(user)).fetchUserSnippets()
     )
 
   val serverEndpoints = List(saveImpl, forkImpl, deleteImpl, updateImpl, userSettingsImpl, userSnippetsEndpoint)

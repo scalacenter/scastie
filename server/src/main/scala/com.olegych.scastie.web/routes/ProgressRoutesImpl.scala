@@ -1,8 +1,7 @@
-package com.olegych.scastie.web.routes
+package scastie.server.routes
 
 import akka.NotUsed
 import akka.actor.ActorRef
-// import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.pattern.ask
 import akka.stream.scaladsl._
 import com.olegych.scastie.api._

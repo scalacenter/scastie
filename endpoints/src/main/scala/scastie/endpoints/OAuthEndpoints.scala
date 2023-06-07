@@ -1,6 +1,5 @@
 package scastie.endpoints
 
-
 import sttp.tapir._
 import sttp.model.StatusCode
 import sttp.model.headers.CacheDirective

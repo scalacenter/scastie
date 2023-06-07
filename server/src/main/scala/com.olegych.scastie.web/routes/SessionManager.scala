@@ -1,4 +1,4 @@
-package com.olegych.scastie.web.routes
+package scastie.server.routes
 
 import cats.syntax.all._
 import com.olegych.scastie.api._

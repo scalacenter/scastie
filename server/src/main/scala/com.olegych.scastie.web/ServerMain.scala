@@ -1,13 +1,12 @@
-package com.olegych.scastie.web
+package scastie.server
 
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.http.scaladsl._
-import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import com.olegych.scastie.balancer._
 import com.olegych.scastie.util.ScastieFileUtil
-import com.olegych.scastie.web.routes._
+import scastie.server.routes._
 import com.typesafe.scalalogging.Logger
 
 import scala.concurrent.Await

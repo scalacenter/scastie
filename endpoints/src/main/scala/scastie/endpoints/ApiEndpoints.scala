@@ -14,8 +14,14 @@ object ApiEndpoints {
   val baseEndpoint = optionalSecureEndpoint.in("api")
   val secureApiEndpoint = secureEndpoint.in("api")
 
-  val runEndpoint: PublicEndpoint[Inputs, Unit, SnippetId, Any] =
-    publicEndpoint.post.in("run").in(jsonBody[Inputs]).out(jsonBody[SnippetId])
+  type ClientIP = Option[String]
+
+  val runEndpoint: PublicEndpoint[(ClientIP, Inputs), Unit, SnippetId, Any] =
+    publicEndpoint.post
+      .in("run")
+      .in(clientIp)
+      .in(jsonBody[Inputs])
+      .out(jsonBody[SnippetId])
       .description(
         """|Endpoint used to run snippet without saving it to the database.
            |This is the recommended way to run snippets from 3rd party websites.
@@ -24,14 +30,24 @@ object ApiEndpoints {
       .name("Run snippet")
 
   val formatEndpoint: PublicEndpoint[FormatRequest, Unit, FormatResponse, Any]  =
-    publicEndpoint.post.in("format").in(jsonBody[FormatRequest]).out(jsonBody[FormatResponse])
+    publicEndpoint.post
+      .in("format")
+      .in(jsonBody[FormatRequest])
+      .out(jsonBody[FormatResponse])
       .name("Format snippet")
 
   val saveEndpoint: Endpoint[OptionalUserSession, Inputs, String, SnippetId, Any] =
-    baseEndpoint.post.in("save").in(jsonBody[Inputs]).out(jsonBody[SnippetId])
+    baseEndpoint.post
+      .in("save")
+      .in(jsonBody[Inputs])
+      .out(jsonBody[SnippetId])
 
-  val forkEndpoint: Endpoint[OptionalUserSession, EditInputs, String, SnippetId, Any]  =
-    baseEndpoint.post.in("fork").in(jsonBody[EditInputs]).out(jsonBody[SnippetId])
+  val forkEndpoint: Endpoint[OptionalUserSession, (ClientIP, EditInputs), String, SnippetId, Any]  =
+    baseEndpoint.post
+      .in("fork")
+      .in(clientIp)
+      .in(jsonBody[EditInputs])
+      .out(jsonBody[SnippetId])
       .description(
         """|Endpoint used to run and then save snippet with a new unique UUID.
            |Should not be used from 3rd party websites, and all custom integrations
@@ -41,9 +57,17 @@ object ApiEndpoints {
 
   // To be changed to `DELETE` method after we migrate to STTP client
   val deleteEndpoint: Endpoint[UserSession, SnippetId, String, Boolean, Any]  =
-    secureApiEndpoint.delete.in("delete").in(jsonBody[SnippetId]).out(jsonBody[Boolean])
-  val updateEndpoint: Endpoint[UserSession, EditInputs, String, SnippetId, Any]  =
-    secureApiEndpoint.post.in("update").in(jsonBody[EditInputs]).out(jsonBody[SnippetId])
+    secureApiEndpoint.delete
+      .in("delete")
+      .in(jsonBody[SnippetId])
+      .out(jsonBody[Boolean])
+
+  val updateEndpoint: Endpoint[UserSession, (ClientIP, EditInputs), String, SnippetId, Any]  =
+    secureApiEndpoint.post
+      .in("update")
+      .in(clientIp)
+      .in(jsonBody[EditInputs])
+      .out(jsonBody[SnippetId])
       .description(
         """|Endpoint used to run and then update the snippet revision number.
            |Should not be used from 3rd party websites, and all custom integrations
@@ -52,9 +76,14 @@ object ApiEndpoints {
         )
 
   val userSettingsEndpoint: Endpoint[UserSession, Unit, String, User, Any] =
-    secureApiEndpoint.get.in("user" / "settings").out(jsonBody[User])
+    secureApiEndpoint.get
+      .in("user" / "settings")
+      .out(jsonBody[User])
+
   val userSnippetsEndpoint: Endpoint[UserSession, Unit, String, List[SnippetSummary], Any] =
-    secureApiEndpoint.get.in("user" / "snippets").out(jsonBody[List[SnippetSummary]])
+    secureApiEndpoint.get
+      .in("user" / "snippets")
+      .out(jsonBody[List[SnippetSummary]])
 
   private val snippetBaseEndpoint = publicEndpoint.in("snippets")
   val snippetApiEndpoints = SnippetMatcher.getApiSnippetEndpoints(snippetBaseEndpoint, "Get ").map { endpoint =>

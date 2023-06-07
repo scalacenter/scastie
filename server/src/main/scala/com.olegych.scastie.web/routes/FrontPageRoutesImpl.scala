@@ -1,4 +1,4 @@
-package com.olegych.scastie.web.routes
+package scastie.server.routes
 
 import akka.actor.ActorRef
 import akka.pattern.ask
@@ -21,7 +21,7 @@ import sttp.tapir.files.FilesOptions
 import sttp.tapir.files.Resources
 import scastie.endpoints.FrontPageEndpoints.ColorScheme
 import scastie.endpoints.SnippetIdUtils._
-import com.olegych.scastie.web.ServerConfig
+import scastie.server.ServerConfig
 
 
 class FrontPageEndpointsImpl(dispatchActor: ActorRef)(implicit ec: ExecutionContext, mat: Materializer) {

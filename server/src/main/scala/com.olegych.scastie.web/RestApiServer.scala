@@ -1,28 +1,28 @@
-package com.olegych.scastie
-package web
+package scastie.server
 
-import api._
-import balancer._
-
-import akka.pattern.ask
 import akka.actor.ActorRef
+import akka.pattern.ask
 import akka.util.Timeout
-import akka.http.scaladsl.model.RemoteAddress
+import scastie.endpoints.ApiEndpoints
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
+
+import com.olegych.scastie.api._
+import com.olegych.scastie.balancer._
 
 class RestApiServer(
     dispatchActor: ActorRef,
-    ip: RemoteAddress,
-    maybeUser: Option[User]
+    maybeUser: Option[User],
+    ip: ApiEndpoints.ClientIP = None,
 )(implicit executionContext: ExecutionContext)
     extends RestApi {
 
   implicit val timeout: Timeout = Timeout(20.seconds)
 
   private def wrap(inputs: Inputs): InputsWithIpAndUser =
-    InputsWithIpAndUser(inputs, UserTrace(ip.toString, maybeUser))
+    InputsWithIpAndUser(inputs, UserTrace(ip, maybeUser))
 
   def run(inputs: Inputs): Future[SnippetId] = {
     dispatchActor

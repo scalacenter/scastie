@@ -1,4 +1,4 @@
-package com.olegych.scastie.web.routes
+package scastie.server.routes
 
 import com.olegych.scastie.api._
 import play.api.libs.json.Json
@@ -9,15 +9,15 @@ import cats.syntax.all._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
-import scastie.endpoints.OAuthEndpoints
 import java.time.Instant
 import play.api.libs.json.OFormat
 import sttp.model.headers.CookieValueWithMeta
 import sttp.model.headers.Cookie
 import java.util.UUID
-import OAuthEndpoints._
+import scastie.endpoints.OAuthEndpoints._
 import com.typesafe.config.ConfigFactory
-import com.olegych.scastie.web.ServerConfig
+import scastie.server.ServerConfig
+import scastie.endpoints.OAuthEndpoints
 
 case class AccessToken(token: String) extends AnyVal
 object AccessToken {

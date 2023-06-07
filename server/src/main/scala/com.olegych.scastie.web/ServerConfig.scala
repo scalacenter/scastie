@@ -1,4 +1,4 @@
-package com.olegych.scastie.web
+package scastie.server
 
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger

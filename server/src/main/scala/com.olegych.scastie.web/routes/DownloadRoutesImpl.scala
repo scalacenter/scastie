@@ -1,4 +1,4 @@
-package com.olegych.scastie.web.routes
+package scastie.server.routes
 
 import com.olegych.scastie.balancer.DownloadSnippet
 
@@ -12,9 +12,8 @@ import scala.concurrent.duration.DurationInt
 import scastie.endpoints.DownloadEndpoints
 import scala.concurrent.Future
 import java.io.File
-import scala.concurrent.ExecutionContext
 
-class DownloadRoutesImpl(dispatchActor: ActorRef)(implicit ec: ExecutionContext) {
+class DownloadRoutesImpl(dispatchActor: ActorRef) {
   implicit val timeout = Timeout(5.seconds)
 
   val downloadSnippetImpl = DownloadEndpoints.downloadSnippetEndpoint.map { endpoint =>

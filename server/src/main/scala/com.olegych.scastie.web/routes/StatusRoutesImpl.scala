@@ -1,4 +1,4 @@
-package com.olegych.scastie.web.routes
+package scastie.server.routes
 
 import akka.NotUsed
 import akka.actor.ActorRef

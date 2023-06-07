@@ -30,6 +30,11 @@ case class SbtConfig(config: String)
 
 case class UserTrace(ip: String, user: Option[User])
 
+object UserTrace {
+  def apply(ip: Option[String], user: Option[User]): UserTrace =
+    UserTrace(ip.getOrElse("unknown"), user)
+}
+
 case class InputsWithIpAndUser(inputs: Inputs, user: UserTrace)
 
 case class RunSnippet(inputs: InputsWithIpAndUser)
