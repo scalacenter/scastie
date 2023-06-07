@@ -21,4 +21,3 @@ object ServerConfig {
   logger.info(s"Server hostname: $hostname")
   logger.info(s"Server port: $port")
 }
-

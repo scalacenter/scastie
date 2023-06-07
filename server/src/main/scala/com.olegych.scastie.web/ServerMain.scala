@@ -1,25 +1,24 @@
 package scastie.server
 
-import akka.actor.ActorSystem
-import akka.actor.Props
-import akka.http.scaladsl._
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import com.olegych.scastie.balancer._
-import com.olegych.scastie.util.ScastieFileUtil
-import scastie.server.routes._
-import com.typesafe.scalalogging.Logger
-
-import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.Await
 import scala.util.Failure
 import scala.util.Success
 
+import akka.actor.ActorSystem
+import akka.actor.Props
+import akka.http.scaladsl._
+import akka.http.scaladsl.model.HttpMethods
+import ch.megard.akka.http.cors.scaladsl.model.HttpOriginMatcher
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import com.olegych.scastie.balancer._
+import com.olegych.scastie.util.ScastieFileUtil
+import com.typesafe.scalalogging.Logger
+import scastie.server.routes._
 import server.Directives._
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.server.akkahttp.AkkaHttpServerOptions
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import ch.megard.akka.http.cors.scaladsl.model.HttpOriginMatcher
-import akka.http.scaladsl.model.HttpMethods
 
 object ServerMain {
   val logger = Logger("Server")
@@ -34,26 +33,25 @@ object ServerMain {
     import system.dispatcher
 
     val progressActor = system.actorOf(Props[ProgressActor](), name = "ProgressActor")
-    val statusActor = system.actorOf(StatusActor.props, name = "StatusActor")
+    val statusActor   = system.actorOf(StatusActor.props, name = "StatusActor")
     val dispatchActor = system.actorOf(Props(new DispatchActor(progressActor, statusActor)), name = "DispatchActor")
 
-    val apiServerEndpoints = new ApiRoutesImpl(dispatchActor).serverEndpoints
+    val apiServerEndpoints       = new ApiRoutesImpl(dispatchActor).serverEndpoints
     val publicApiServerEndpoints = new PublicApiRoutesImpl(dispatchActor).serverEndpoints
-    val progressServerEndpoints = new ProgressRoutesImpl(progressActor).serverEndpoints
-    val downloadServerEndpoints = new DownloadRoutesImpl(dispatchActor).serverEndpoints
-    val statusServerEndpoints = new StatusRoutesImpl(statusActor).serverEndpoints
-    val oauthServerEndpoints = new OAuthRoutesImpl().serverEndpoints
+    val progressServerEndpoints  = new ProgressRoutesImpl(progressActor).serverEndpoints
+    val downloadServerEndpoints  = new DownloadRoutesImpl(dispatchActor).serverEndpoints
+    val statusServerEndpoints    = new StatusRoutesImpl(statusActor).serverEndpoints
+    val oauthServerEndpoints     = new OAuthRoutesImpl().serverEndpoints
     val frontPageServerEndpoints = new FrontPageEndpointsImpl(dispatchActor).serverEndpoints
-    val docsServerEndpoints =  new DocsRoutes().serverEndpoints
+    val docsServerEndpoints      = new DocsRoutes().serverEndpoints
 
     def serverLogger = AkkaHttpServerOptions.defaultSlf4jServerLog.copy(
       logWhenReceived = true,
       logWhenHandled = true,
-      logAllDecodeFailures = true,
+      logAllDecodeFailures = true
     )
 
-    val defaultSettings = AkkaHttpServerOptions
-      .customiseInterceptors
+    val defaultSettings = AkkaHttpServerOptions.customiseInterceptors
       .serverLog(serverLogger)
       .options
 
@@ -71,15 +69,14 @@ object ServerMain {
       List(
         publicApiServerEndpoints,
         progressServerEndpoints,
-        frontPageServerEndpoints,
+        frontPageServerEndpoints
       ).flatten
     )
 
-    val publicCORSSettings =
-      CorsSettings(system)
-        .withAllowedOrigins(HttpOriginMatcher.*)
-        .withAllowCredentials(false)
-        .withAllowedMethods(List(HttpMethods.GET, HttpMethods.POST, HttpMethods.OPTIONS))
+    val publicCORSSettings = CorsSettings(system)
+      .withAllowedOrigins(HttpOriginMatcher.*)
+      .withAllowCredentials(false)
+      .withAllowedMethods(List(HttpMethods.GET, HttpMethods.POST, HttpMethods.OPTIONS))
 
     val routes = concat(
       cors()(hostOriginRoutes),

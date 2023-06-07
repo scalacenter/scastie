@@ -1,5 +1,12 @@
 package scastie.server.routes
 
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.util.Try
+
 import cats.syntax.all._
 import com.olegych.scastie.api._
 import com.typesafe.config.ConfigFactory
@@ -7,23 +14,15 @@ import pdi.jwt._
 import play.api.libs.json.Json
 import scastie.endpoints.OAuthEndpoints
 import sttp.tapir._
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
-import scala.util.Try
-
 import OAuthEndpoints._
 
 object SessionManager {
   private val jwtAlgorithm = JwtAlgorithm.HS256
 
-  private val config = ConfigFactory.load().getConfig("com.olegych.scastie.web")
+  private val config     = ConfigFactory.load().getConfig("com.olegych.scastie.web")
   private val sessionKey = config.getString("session-secret")
-  private val xsrfKey = config.getString("xsrf-secret")
-  private val random = new java.security.SecureRandom()
+  private val xsrfKey    = config.getString("xsrf-secret")
+  private val random     = new java.security.SecureRandom()
 
   val tokenDuration = 30.days
 
@@ -32,7 +31,9 @@ object SessionManager {
       .serverSecurityLogic[User, Future](session => Future(authenticate(session)))
   }
 
-  implicit class SecureOptionalEndpointExtension[Input, Output, R](endpoint: Endpoint[OptionalUserSession, Input, String, Output, R]) {
+  implicit class SecureOptionalEndpointExtension[Input, Output, R](
+    endpoint: Endpoint[OptionalUserSession, Input, String, Output, R]
+  ) {
     def secure(implicit ec: ExecutionContext) = endpoint
       .serverSecurityLogic[Option[User], Future](optionalSession => Future(maybeAuthenticate(optionalSession)))
   }
@@ -49,24 +50,25 @@ object SessionManager {
 
   def createXSRFToken(sessionUUID: UUID): String = {
     val randomValue = random.nextInt()
-    val message = sessionUUID.toString + "!" + randomValue.toString
-    val signHash = JwtUtils.sign(message, xsrfKey, jwtAlgorithm)
+    val message     = sessionUUID.toString + "!" + randomValue.toString
+    val signHash    = JwtUtils.sign(message, xsrfKey, jwtAlgorithm)
     JwtBase64.encodeString(signHash) + "#" + message
   }
 
   def authenticate(userSession: UserSession): Either[String, User] = {
     userSession match {
-      case UserSession(jwtCookie, xsrfCookie, xsrfHeader) if verifyXSRF(xsrfCookie, xsrfHeader) => authenticateJwt(jwtCookie)
+      case UserSession(jwtCookie, xsrfCookie, xsrfHeader) if verifyXSRF(xsrfCookie, xsrfHeader) =>
+        authenticateJwt(jwtCookie)
       case _ => "Invalid XSRF token".asLeft
     }
   }
 
   def maybeAuthenticate(maybeUserSession: OptionalUserSession): Either[String, Option[User]] = {
     maybeUserSession match {
-      case UserSession(jwtCookie, xsrfCookie, xsrfHeader)
-        if verifyXSRF(xsrfCookie, xsrfHeader) => authenticateJwt(jwtCookie).map(_.some)
+      case UserSession(jwtCookie, xsrfCookie, xsrfHeader) if verifyXSRF(xsrfCookie, xsrfHeader) =>
+        authenticateJwt(jwtCookie).map(_.some)
       case NoSession(_) => None.asRight
-      case _ => "Illegal authentication".asLeft
+      case _            => "Illegal authentication".asLeft
     }
   }
 
@@ -78,17 +80,18 @@ object SessionManager {
       .flatMap(decoded => Json.parse(decoded._2.content).asOpt[User].toRight("Invalid token"))
   }
 
-  private def verifyXSRFSign(xsrfToken: String): Boolean =
-    xsrfToken.split("#").toList match {
-      case base64SignHash :: message :: Nil => {
-        val maybeSignHashBytes = Try { JwtBase64.decode(base64SignHash) }.toOption
-        val messageBytes = JwtUtils.bytify(message)
-        maybeSignHashBytes.map(
+  private def verifyXSRFSign(xsrfToken: String): Boolean = xsrfToken.split("#").toList match {
+    case base64SignHash :: message :: Nil => {
+      val maybeSignHashBytes = Try { JwtBase64.decode(base64SignHash) }.toOption
+      val messageBytes       = JwtUtils.bytify(message)
+      maybeSignHashBytes
+        .map(
           JwtUtils.verify(messageBytes, _, xsrfKey, jwtAlgorithm)
-        ).getOrElse(false)
-      }
-      case _ => false
+        )
+        .getOrElse(false)
     }
+    case _ => false
+  }
 
   def verifyXSRF(xsrfCookie: XSRFCookie, xsrfHeader: XSRFHeader): Boolean =
     verifyXSRFSign(xsrfCookie) && verifyXSRFSign(xsrfHeader) && xsrfCookie == xsrfHeader

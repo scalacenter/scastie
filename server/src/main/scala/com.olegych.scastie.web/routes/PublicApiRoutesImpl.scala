@@ -1,8 +1,8 @@
 package scastie.server.routes
 
 import akka.actor.{ActorRef, ActorSystem}
-import scastie.server.RestApiServer
 import scastie.endpoints.ApiEndpoints
+import scastie.server.RestApiServer
 
 class PublicApiRoutesImpl(dispatchActor: ActorRef)(implicit system: ActorSystem) {
   import system.dispatcher
@@ -13,8 +13,7 @@ class PublicApiRoutesImpl(dispatchActor: ActorRef)(implicit system: ActorSystem)
       new RestApiServer(dispatchActor, None, clientIP).run(input)
     })
 
-  val formatImpl =
-    ApiEndpoints.formatEndpoint
+  val formatImpl = ApiEndpoints.formatEndpoint
     .serverLogicSuccess(
       new RestApiServer(dispatchActor, None).format(_)
     )
