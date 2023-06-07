@@ -64,7 +64,7 @@ class LoadBalancerRecoveryTest()
   private val statusActor = TestProbe()
   private val sbtActorReadyProbe = TestProbe()
 
-  private val localhost = "127.0.0.1"
+  private val localhost = "localhost"
 
   private val sbtActor =
     sbtSystem.actorOf(
@@ -171,7 +171,7 @@ object RemotePortConfig {
           |  }
           |  remote {
           |    artery.canonical {
-          |      hostname = "127.0.0.1"
+          |      hostname = "localhost"
           |      port = $port
           |    }
           |  }

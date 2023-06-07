@@ -13,6 +13,11 @@ object OAuthEndpoints {
   val authorizationUrl = "https://github.com/login/oauth/authorize"
   val accessTokenUrl = "https://github.com/login/oauth/access_token"
 
+  val sessionCookieName = "__Secure-Session-Token"
+  val xsrfCookieName= "__Host-XSRF-Token"
+  val xsrfHeaderName = "X-XSRF-Token"
+
+  // TODO: Migrate to opaque types
   type ResponseCookies = (CookieValueWithMeta, CookieValueWithMeta)
   type ResponseCookiesWithRedirect = (String, CookieValueWithMeta, CookieValueWithMeta)
   type ErrorWithRedirect = (String, String)
@@ -43,10 +48,6 @@ object OAuthEndpoints {
       }
     }
   }
-
-  val sessionCookieName = "__Secure-Session-Token"
-  val xsrfCookieName= "__Host-XSRF-Token"
-  val xsrfHeaderName = "X-XSRF-Token"
 
   val login: PublicEndpoint[Option[String], Unit, String, Any] =
     endpoint.get

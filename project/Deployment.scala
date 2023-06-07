@@ -167,7 +167,7 @@ class Deployment(
          |do
          |  echo "Starting Runner: Port $$port / ${config.sbtRunnersPortsEnd}"
          |  docker run \\
-         |    --add-host jenkins.scala-sbt.org:127.0.0.1 \\
+         |    --add-host jenkins.scala-sbt.org:localhost \\
          |    --restart=always \\
          |    --name=$containerName-$$port \\
          |    --network=host \\

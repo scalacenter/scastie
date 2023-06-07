@@ -17,31 +17,30 @@ class ApiRoutesImpl(dispatchActor: ActorRef)(implicit system: ActorSystem) {
       new RestApiServer(dispatchActor, RemoteAddress.Unknown, maybeUser).save(_)
     )
 
-  val forkImpl =
-    ApiEndpoints.forkEndpoint
+  val forkImpl = ApiEndpoints.forkEndpoint
     .secure
     .serverLogic(maybeUser =>
       new RestApiServer(dispatchActor, RemoteAddress.Unknown, maybeUser).fork(_).map(_.toRight("Failure"))
     )
 
-  val deleteImpl =
-    ApiEndpoints.deleteEndpoint
+  val deleteImpl = ApiEndpoints.deleteEndpoint
     .secure
     .serverLogicSuccess(user =>
       new RestApiServer(dispatchActor, RemoteAddress.Unknown, Some(user)).delete(_)
     )
 
-  val updateImpl =
-    ApiEndpoints.updateEndpoint
+  val updateImpl = ApiEndpoints.updateEndpoint
     .secure
     .serverLogic(user =>
       new RestApiServer(dispatchActor, RemoteAddress.Unknown, Some(user)).update(_).map(_.toRight("Failure"))
     )
 
-  val userSettingsImpl = ApiEndpoints.userSettingsEndpoint.secure
+  val userSettingsImpl = ApiEndpoints.userSettingsEndpoint
+    .secure
     .serverLogic(user => _ => Future(user.asRight))
 
-  val userSnippetsEndpoint = ApiEndpoints.userSnippetsEndpoint.secure
+  val userSnippetsEndpoint = ApiEndpoints.userSnippetsEndpoint
+    .secure
     .serverLogicSuccess(user => _ =>
         new RestApiServer(dispatchActor, RemoteAddress.Unknown, Some(user)).fetchUserSnippets()
     )

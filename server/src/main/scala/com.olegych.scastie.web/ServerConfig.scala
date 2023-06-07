@@ -22,6 +22,3 @@ object ServerConfig {
   logger.info(s"Server port: $port")
 }
 
-
-
-

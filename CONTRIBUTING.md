@@ -170,10 +170,10 @@ contact one of the maintainers.
 
 Scastie production environment is used for internal deployment. Its configuration is present at `./deployment/production.conf`.
 
-Production requires `mongodb-prod.conf` file to be in the same directory as `production.conf` configuration file.
-The template for this file is located at `./deployment/mongodb.template.conf`
-
-It also requires OAuth2 configuration at `oauth2-prod.conf` in the same directory as `production.conf`
+Production requires following configuration files to be present in the same directory as `production.conf`:
+- `mongodb-prod.conf` with template at `./deployment/mongodb.template.conf`
+- `oauth2-prod.conf` with template at `./deployment/oauth2.template.conf`
+- `authentication-prod.conf` with template at `./deployment/authentication.template.conf`.
 
 <details>
   <summary>Instructions</summary>
@@ -199,6 +199,7 @@ Then deployment can be started by running `deploy` sbt task.
 
 ```
 sbt> deploy
+docker logout
 ```
 
 </details>
@@ -208,10 +209,10 @@ sbt> deploy
 Scastie also has a staging environment. The deployment can be done by running the task `deployStaging`.
 It will do normal deployment, but with Staging environment configuration file located at: `./deployment/staging.conf`
 
-Staging requires `mongodb-staging.conf` file to be in the same directory as `staging.conf` configuration file.
-The template for this file is located at `./deployment/mongodb.template.conf`
-
-It also requires OAuth2 configuration at `oauth2-staging.conf` in the same directory as `staging.conf`
+Staging requires following configuration files to be present in the same directory as `staging.conf`:
+- `mongodb-staging.conf` with template at `./deployment/mongodb.template.conf`
+- `oauth2-staging.conf` with template at `./deployment/oauth2.template.conf`
+- `authentication-staging.conf` with template at `./deployment/authentication.template.conf`.
 
 <details>
   <summary>Instructions</summary>
@@ -226,6 +227,7 @@ sbt
 
 sbt> publishContainers
 sbt> deployStaging
+docker logout
 ```
 
 </details>

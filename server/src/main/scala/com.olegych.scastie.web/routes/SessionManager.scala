@@ -63,8 +63,8 @@ object SessionManager {
 
   def maybeAuthenticate(maybeUserSession: OptionalUserSession): Either[String, Option[User]] = {
     maybeUserSession match {
-      case UserSession(jwtCookie, xsrfCookie, xsrfHeader) if verifyXSRF(xsrfCookie, xsrfHeader) =>
-        authenticateJwt(jwtCookie).map(_.some)
+      case UserSession(jwtCookie, xsrfCookie, xsrfHeader)
+        if verifyXSRF(xsrfCookie, xsrfHeader) => authenticateJwt(jwtCookie).map(_.some)
       case NoSession(_) => None.asRight
       case _ => "Illegal authentication".asLeft
     }
@@ -83,9 +83,9 @@ object SessionManager {
       case base64SignHash :: message :: Nil => {
         val maybeSignHashBytes = Try { JwtBase64.decode(base64SignHash) }.toOption
         val messageBytes = JwtUtils.bytify(message)
-        maybeSignHashBytes.map { signHashBytes =>
-          JwtUtils.verify(messageBytes, signHashBytes, xsrfKey, jwtAlgorithm)
-        }.getOrElse(false)
+        maybeSignHashBytes.map(
+          JwtUtils.verify(messageBytes, _, xsrfKey, jwtAlgorithm)
+        ).getOrElse(false)
       }
       case _ => false
     }

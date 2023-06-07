@@ -1,6 +1,5 @@
 package com.olegych.scastie.web.routes
 
-// import akka.http.scaladsl.model.sse.ServerSentEvent
 import com.olegych.scastie.api._
 import play.api.libs.json.Json
 
@@ -18,6 +17,7 @@ import sttp.model.headers.Cookie
 import java.util.UUID
 import OAuthEndpoints._
 import com.typesafe.config.ConfigFactory
+import com.olegych.scastie.web.ServerConfig
 
 case class AccessToken(token: String) extends AnyVal
 object AccessToken {
@@ -95,16 +95,15 @@ class OAuthRoutesImpl(implicit ec: ExecutionContext) {
       .map(resp => Json.parse(resp.body).asOpt[User])
 
   private def createSession(user: User): Either[String, ResponseCookies] = {
-    val sessionUUID = UUID.randomUUID()
     val now = Instant.now
     val responseCookies = for {
       sessionJWTCookie <- createJWTCookie(user, now)
-      xsrfCookie <- createXSRFCookie(sessionUUID, now)
+      xsrfCookie <- createXSRFCookie(now)
     } yield (sessionJWTCookie, xsrfCookie)
     responseCookies.toRight("Could not create session")
   }
 
-  private def createXSRFCookie(sessionUUID: UUID, now: Instant): Option[CookieValueWithMeta] = {
+  private def createXSRFCookie(now: Instant): Option[CookieValueWithMeta] = {
     val expirationTime = now.plusSeconds(30.days.toSeconds)
     val sessionUUID = UUID.randomUUID()
     val signedCSRF: String = SessionManager.createXSRFToken(sessionUUID)
@@ -112,7 +111,7 @@ class OAuthRoutesImpl(implicit ec: ExecutionContext) {
       value = signedCSRF,
       expires = Some(expirationTime),
       maxAge = Some(30.days.toSeconds),
-      domain = Some("localhost"), // set from config
+      domain = Some(ServerConfig.hostname),
       httpOnly = false,
       path = Some("/"),
       sameSite = Some(Cookie.SameSite.Strict),
@@ -128,7 +127,7 @@ class OAuthRoutesImpl(implicit ec: ExecutionContext) {
       value = claim,
       expires = Some(expirationTime),
       maxAge = Some(30.days.toSeconds),
-      domain = Some("localhost"), // set from config
+      domain = Some(ServerConfig.hostname),
       httpOnly = true,
       path = Some("/"),
       sameSite = Some(Cookie.SameSite.Strict),

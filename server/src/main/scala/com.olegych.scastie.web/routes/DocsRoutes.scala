@@ -1,19 +1,28 @@
 package com.olegych.scastie.web.routes
 
+import com.olegych.scastie.web.ServerConfig
 import scastie.endpoints.ApiEndpoints
-import scala.concurrent.Future
-import scastie.endpoints.OAuthEndpoints
 import scastie.endpoints._
 import sttp.tapir.redoc.bundle.RedocInterpreter
 
-class DocsRoutes() {
-  private val allEndpoints =
-    OAuthEndpoints.endpoints ++
-    FrontPageEndpoints.endpoints ++
-    ApiEndpoints.endpoints ++
-    ProgressEndpoints.endpoints ++
-    DownloadEndpoints.endpoints ++
-    StatusEndpoints.endpoints
+import scala.concurrent.Future
 
-  val serverEndpoints = RedocInterpreter().fromEndpoints[Future](allEndpoints, "Scastie", "1.0.0-RC1")
+class DocsRoutes() {
+  private val publicEndpoints =
+    FrontPageEndpoints.endpoints ++
+    ApiEndpoints.publicEndpoints ++
+    ProgressEndpoints.endpoints
+
+  private val allEndpoints = publicEndpoints ++
+    DownloadEndpoints.endpoints ++
+    StatusEndpoints.endpoints ++
+    OAuthEndpoints.endpoints
+
+  val endpointsForDocumentation = if (ServerConfig.production)
+    publicEndpoints
+  else
+    allEndpoints
+
+  val serverEndpoints = RedocInterpreter()
+    .fromEndpoints[Future](endpointsForDocumentation, "Scastie", "1.0.0-RC1")
 }

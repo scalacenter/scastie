@@ -13,24 +13,25 @@ object FrontPageEndpoints {
   val classLoader = ClassLoader.getSystemClassLoader()
 
   val embeddedJSEndpoint = staticResourcesGetEndpoint("embedded.js")
-    .out(
-      header(Header.cacheControl(CacheDirective.NoCache)) and
-      header(Header.contentType(MediaType.TextJavascript))
-    )
+    .out(header(Header.cacheControl(CacheDirective.NoCache)))
+    .out(header(Header.contentType(MediaType.TextJavascript)))
     .description("Access point to JavaScript source required to run embedded snippets")
+    .name("Get embedded.js")
 
   val embeddedCSSEndpoint= staticResourcesGetEndpoint("public" / "embedded.css")
-    .out(
-      header(Header.cacheControl(CacheDirective.NoCache)) and
-      header(Header.contentType(MediaType.TextCss))
-    )
+    .out(header(Header.cacheControl(CacheDirective.NoCache)))
+    .out(header(Header.contentType(MediaType.TextCss)))
     .description("Access point to CSS source required to run embedded snippets")
+    .name("Get embedded.css")
 
   val publicAssetsEndpoint = staticResourcesGetEndpoint("public")
+    .name("Public assets")
 
   val indexEndpoint = staticResourcesGetEndpoint("")
     .out(header(Header.cacheControl(CacheDirective.NoCache)))
+    .name("Index")
 
+  // TODO: Migrate to Scala3 enum and move this to API
   object ColorScheme extends Enumeration {
     type ColorScheme = Value
     val Light = Value("light")

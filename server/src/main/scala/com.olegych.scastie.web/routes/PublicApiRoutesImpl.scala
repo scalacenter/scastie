@@ -7,19 +7,16 @@ import akka.http.scaladsl.model.RemoteAddress
 
 class PublicApiRoutesImpl(dispatchActor: ActorRef)(implicit system: ActorSystem) {
   import system.dispatcher
-  import SessionManager._
 
   val runImpl = ApiEndpoints.runEndpoint
-    .secure
-    .serverLogicSuccess(maybeUser =>
-      new RestApiServer(dispatchActor, RemoteAddress.Unknown, maybeUser).run(_)
+    .serverLogicSuccess(
+      new RestApiServer(dispatchActor, RemoteAddress.Unknown, None).run(_)
     )
 
   val formatImpl =
     ApiEndpoints.formatEndpoint
-    .secure
-    .serverLogicSuccess(maybeUser =>
-      new RestApiServer(dispatchActor, RemoteAddress.Unknown, maybeUser).format(_)
+    .serverLogicSuccess(
+      new RestApiServer(dispatchActor, RemoteAddress.Unknown, None).format(_)
     )
 
   val snippetEndpoints = ApiEndpoints.snippetApiEndpoints.map { endpoint =>

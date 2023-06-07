@@ -7,7 +7,7 @@ object SnippetIdUtils {
   type EmbeddedSnippetId = SnippetId
   type NormalSnippetId = SnippetId
 
-  // Migrate to opaque types in the future
+  // TODO: Migrate to opaque types
   type MaybeEmbeddedSnippet = Either[NormalSnippetId, EmbeddedSnippetId]
 
   sealed trait FrontPageSnippet { def content: String }
