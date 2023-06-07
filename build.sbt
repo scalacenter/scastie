@@ -107,7 +107,8 @@ lazy val endpoints = project
       "com.softwaremill.sttp.tapir" %% "tapir-core"             % "1.5.0",
       "com.softwaremill.sttp.tapir" %% "tapir-json-play"        % "1.5.0",
       "com.softwaremill.sttp.tapir" %% "tapir-files"            % "1.5.0",
-      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % "1.5.0"
+      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % "1.5.0",
+      "com.softwaremill.sttp.tapir" %% "tapir-testing"          % "1.5.0"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm))

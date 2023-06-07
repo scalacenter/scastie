@@ -19,6 +19,7 @@ import scastie.server.routes._
 import server.Directives._
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.server.akkahttp.AkkaHttpServerOptions
+import sttp.tapir.testing.EndpointVerifier
 
 object ServerMain {
   val logger = Logger("Server")
@@ -55,23 +56,28 @@ object ServerMain {
       .serverLog(serverLogger)
       .options
 
-    val hostOriginRoutes = AkkaHttpServerInterpreter(defaultSettings).toRoute(
-      List(
-        oauthServerEndpoints,
-        docsServerEndpoints,
-        statusServerEndpoints,
-        downloadServerEndpoints,
-        apiServerEndpoints
-      ).flatten
-    )
+    val hostOriginEndpointsOrdered =
+      oauthServerEndpoints ++
+      docsServerEndpoints ++
+      statusServerEndpoints ++
+      downloadServerEndpoints ++
+      apiServerEndpoints
 
-    val crossOriginRoutes = AkkaHttpServerInterpreter(defaultSettings).toRoute(
-      List(
-        publicApiServerEndpoints,
-        progressServerEndpoints,
-        frontPageServerEndpoints
-      ).flatten
-    )
+    val crossOriginEndpointsOrdered =
+      publicApiServerEndpoints ++
+      progressServerEndpoints ++
+      frontPageServerEndpoints
+
+    val endpointVerification =
+      EndpointVerifier((hostOriginEndpointsOrdered ++ crossOriginEndpointsOrdered).map(_.endpoint))
+
+    assert(endpointVerification.isEmpty, "Endpoint verification failed:\n" + endpointVerification.mkString("\n"))
+
+    val hostOriginRoutes = AkkaHttpServerInterpreter(defaultSettings)
+      .toRoute(hostOriginEndpointsOrdered)
+
+    val crossOriginRoutes = AkkaHttpServerInterpreter(defaultSettings)
+      .toRoute(crossOriginEndpointsOrdered)
 
     val publicCORSSettings = CorsSettings(system)
       .withAllowedOrigins(HttpOriginMatcher.*)

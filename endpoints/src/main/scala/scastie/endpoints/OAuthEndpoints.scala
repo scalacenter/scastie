@@ -7,7 +7,6 @@ import sttp.model.Header
 import sttp.model.headers.CookieValueWithMeta
 import sttp.model.HeaderNames
 
-
 object OAuthEndpoints {
   val authorizationUrl = "https://github.com/login/oauth/authorize"
   val accessTokenUrl = "https://github.com/login/oauth/access_token"

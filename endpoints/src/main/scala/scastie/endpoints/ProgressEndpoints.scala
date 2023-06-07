@@ -16,7 +16,7 @@ object ProgressEndpoints {
     SnippetMatcher
       .getApiSnippetEndpoints(endpointBase.in("progress-sse"), "SSE progress for")
       .map { endpoint =>
-        endpoint.get.out(serverSentEventsBody)
+        endpoint.out(serverSentEventsBody)
         .description(
           """|Endpoint used to connect to EventStream for specific snippet Id.
              |The connection to it should be instantly estabilished after the snippet is run.
