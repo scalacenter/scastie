@@ -8,7 +8,7 @@
     "build": "vite build && MODE=embed vite build"
   },
   "devDependencies": {
-    "sass": "^1.62.1"
+    "sass": "^1.63.3"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.7.1",
