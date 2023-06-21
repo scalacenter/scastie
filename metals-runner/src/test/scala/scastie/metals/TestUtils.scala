@@ -102,8 +102,8 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     compat: Map[String, List[Either[FailureType, String]]] = Map()
   ): IO[List[Unit]] = testTargets.traverse(scalaTarget =>
     val request = createRequest(scalaTarget, dependencies, code)
-    val comp = server.complete(request).fold(_ => Set(), _.toScalaCompletionList).flatMap { cmps =>
-      cmps
+    val comp = server.complete(request).fold(_ => ScalaCompletionList(Set(), false), _.toScalaCompletionList(false)).flatMap { cmps =>
+      cmps.items
         .map { cmp =>
           val infoRequest = CompletionInfoRequest(request._1, cmp)
           server.completionInfo(infoRequest).value
