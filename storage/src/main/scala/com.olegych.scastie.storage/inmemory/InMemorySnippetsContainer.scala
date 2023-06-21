@@ -1,14 +1,13 @@
 package com.olegych.scastie.storage.inmemory
 
 import com.olegych.scastie.api._
-import scala.concurrent.{ExecutionContext, Future}
-
-import scala.collection.mutable
-import System.{lineSeparator => nl}
 import com.olegych.scastie.storage.SnippetsContainer
 import com.olegych.scastie.storage.UserLogin
-import com.olegych.scastie.storage.UsersContainer
-import com.olegych.scastie.storage.PolicyAcceptance
+
+import scala.collection.mutable
+import scala.concurrent.Future
+
+import System.{lineSeparator => nl}
 
 
 trait InMemorySnippetsContainer extends SnippetsContainer {
