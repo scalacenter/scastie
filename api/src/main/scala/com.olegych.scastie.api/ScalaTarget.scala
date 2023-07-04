@@ -34,6 +34,8 @@ sealed trait ScalaTarget {
     if (digits.head == "2") digits.init.mkString(".")
     else digits.head
   }
+
+  def isJVMTarget = targetType == ScalaTargetType.Scala3 || targetType == ScalaTargetType.Scala2
 }
 
 object ScalaTarget {
