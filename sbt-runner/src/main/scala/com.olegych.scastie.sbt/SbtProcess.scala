@@ -194,6 +194,10 @@ class SbtProcess(runTimeout: FiniteDuration,
           val isReloading = stateInputs.needsReload(sbtRun.inputs)
           setInputs(sbtRun.inputs)
 
+          instrumented.optionalParsingError.foreach { error =>
+            sendProgress(sbtRun, error.toProgress(snippetId).copy(isDone = false))
+          }
+
           if (isReloading) {
             process ! Input("reload;compile/compileInputs")
             gotoWithTimeout(sbtRun, Reloading, reloadTimeout)
@@ -202,6 +206,7 @@ class SbtProcess(runTimeout: FiniteDuration,
           }
 
         case Left(report) =>
+          log.info(s"Instrumentation error: ${report.message}")
           val sbtRun = _sbtRun
           setInputs(sbtRun.inputs)
           sendProgress(sbtRun, report.toProgress(snippetId))
