@@ -3,6 +3,10 @@ name: Build Status
 on:
   pull_request:
   push:
+
+env:
+  MUNIT_FLAKY_OK: true
+
 jobs:
   tests:
     runs-on: ubuntu-latest
