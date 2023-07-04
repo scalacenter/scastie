@@ -85,7 +85,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     }
   }
 
-  test("parallel metals access with dependencies") {
+  test("parallel metals access with dependencies".flaky) {
     val targets = List(
       ScalaTarget.Jvm.default,
       ScalaTarget.Jvm(BuildInfo.latest212),

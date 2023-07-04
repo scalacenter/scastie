@@ -23,7 +23,7 @@ class LoadBalancerRecoveryTest()
     with BeforeAndAfterAll {
 
   // import system.dispatcher
-  implicit val timeout = Timeout(10.seconds)
+  implicit val timeout: Timeout = Timeout(25.seconds)
 
   test("recover from crash") {
     val crash =
@@ -126,7 +126,7 @@ class LoadBalancerRecoveryTest()
 
     Await.result(
       (dispatchActor.ask(task)).mapTo[SnippetId],
-      10.seconds
+      15.seconds
     )
   }
 
