@@ -128,7 +128,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     val problems = extract[List[Problem]](line)
 
     val problemsWithOffset = problems.map {
-      _.map(problem => problem.copy(line = problem.line.map(_ + lineOffset)))
+      _.map(problem => problem.copy(line = problem.line.map(lineNumber => (lineNumber + lineOffset) max 1)))
     }
 
     def annoying(in: Problem): Boolean = {
@@ -144,7 +144,9 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     extract[RuntimeErrorWrap](line).flatMap {
       _.error.map { error =>
         val noStackTraceError = if (error.message.contains("No main class detected.")) error.copy(fullStack = "") else error
-        val errorWithOffset = noStackTraceError.copy(line = noStackTraceError.line.map(_ + lineOffset))
+        val errorWithOffset = noStackTraceError.copy(
+          line = noStackTraceError.line.map(lineNumber => (lineNumber + lineOffset) max 1)
+        )
         errorWithOffset
       }
     }
