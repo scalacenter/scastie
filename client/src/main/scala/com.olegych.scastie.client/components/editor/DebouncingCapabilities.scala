@@ -28,7 +28,7 @@ trait DebouncingCapabilities {
         .length
 
       tokenLength match {
-        case 0 | 1 | 2 => fn(code, view)
+        case 0 => fn(code, view)
         case _ =>
           timeout.foreach(clearTimeout)
           timeout = setTimeout(250.millis) {
