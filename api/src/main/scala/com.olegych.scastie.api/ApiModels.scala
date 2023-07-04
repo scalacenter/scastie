@@ -165,8 +165,11 @@ object CompletionInfoRequest {
   implicit val completionInfoRequestFormat: OFormat[CompletionInfoRequest] = Json.format[CompletionInfoRequest]
 }
 
-case class InsertInstructions(text: String, cursorMove: Int)
-case class AdditionalInsertInstructions(text: String, startLine: Int, startChar: Int, endLine: Int, endChar: Int)
+case class InsertInstructions(text: String, editRange: EditRange)
+case class AdditionalInsertInstructions(text: String, editRange: EditRange)
+case class EditRange(startLine: Int, startChar: Int, endLine: Int, endChar: Int)
+
+case class ScalaCompletionList(items: Set[CompletionItemDTO], isIncomplete: Boolean)
 
 case class CompletionItemDTO(
   label: String,
@@ -183,6 +186,9 @@ case class HoverDTO(from: Int, to: Int, content: String)
 
 case class CompletionsDTO(items: Set[CompletionItemDTO])
 
+object EditRange {
+  implicit val editRangeFormat: OFormat[EditRange] = Json.format[EditRange]
+}
 
 object InsertInstructions {
   implicit val insertInstructionsFormat: OFormat[InsertInstructions] = Json.format[InsertInstructions]
@@ -190,6 +196,10 @@ object InsertInstructions {
 
 object AdditionalInsertInstructions {
   implicit val additionalInsertInstructionsFormat: OFormat[AdditionalInsertInstructions] = Json.format[AdditionalInsertInstructions]
+}
+
+object ScalaCompletionList {
+  implicit val completionListFormat: OFormat[ScalaCompletionList] = Json.format[ScalaCompletionList]
 }
 
 object CompletionItemDTO {

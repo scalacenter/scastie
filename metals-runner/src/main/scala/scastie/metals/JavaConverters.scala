@@ -33,62 +33,74 @@ object JavaConverters {
       val doc = Option(item.getContents).fold("")(_.getRight.getValue)
       HoverDTO(0, 0, doc)
 
-  extension (completions: CompletionList)
-
-    def toSimpleScalaList: Set[CompletionItemDTO] = (for {
-      completion         <- completions.getItems().asScala
-      filterText         <- Option(completion.getFilterText())
-      detail             <- Option(completion.getDetail())
-      kind               <- Option(completion.getKind()).map(_.toString.toLowerCase)
-      order              <- Option(completion.getSortText()).map(_.toIntOption)
-      insertInstructions <- createInsertInstructions(completion)
-      additionalInsertInstructions = createAdditionalInsertInstructions(completion)
-      data                         = parseCompletionData(completion)
-    } yield CompletionItemDTO(
-      filterText,
-      detail,
-      kind,
-      order,
-      insertInstructions,
-      additionalInsertInstructions,
-      data
-    )).toSet
-
-  def createInsertInstructions(completion: CompletionItem): Option[InsertInstructions] = {
-    completion.getTextEdit().asScala match {
-      case Left(textEdit) =>
-        val move = textEdit.getNewText.indexOf("$0")
-        Some(
-          InsertInstructions(
-            textEdit.getNewText.replace("$0", ""),
-            if move > 0 then move else textEdit.getNewText.length
-          )
-        )
-      case Right(insertReplace) =>
-        logger.error("[InsertReplaceEdit] should not appear as it is not used in metals")
-        None
-
-    }
+  extension (range: Range) {
+    def toScalaRange(insideWrapper: Boolean) =
+      val start = range.getStart()
+      val end = range.getEnd()
+      val lineOffset = if insideWrapper then 0 else 1
+      val charOffset = if insideWrapper then -DTOExtensions.wrapperIndent.length else 0
+      EditRange(
+        start.getLine + lineOffset,
+        start.getCharacter + charOffset,
+        end.getLine + lineOffset,
+        end.getCharacter + charOffset
+      )
   }
 
-  def createAdditionalInsertInstructions(completion: CompletionItem): List[AdditionalInsertInstructions] = Option(
-    completion.getAdditionalTextEdits()
-  ).map(_.asScala)
-    .toList
-    .flatten
-    .map(edit => {
-      val range = edit.getRange
-      val start = range.getStart
-      val end   = range.getEnd
-      AdditionalInsertInstructions(
-        edit.getNewText(),
-        start.getLine + 1,
-        start.getCharacter,
-        end.getLine + 1,
-        end.getCharacter
+  extension (completions: CompletionList)
+
+    def toScalaCompletionList(isWorksheetMode: Boolean): ScalaCompletionList = {
+
+      def createInsertInstructions(completion: CompletionItem): Option[InsertInstructions] = {
+        completion.getTextEdit().asScala match {
+          case Left(textEdit) =>
+            Some(
+              InsertInstructions(
+                textEdit.getNewText,
+                textEdit.getRange.toScalaRange(isWorksheetMode),
+              )
+            )
+          case Right(insertReplace) =>
+            logger.error("[InsertReplaceEdit] should not appear as it is not used in metals")
+            None
+
+        }
+      }
+
+      def createAdditionalInsertInstructions(completion: CompletionItem): List[AdditionalInsertInstructions] = Option(
+        completion.getAdditionalTextEdits()
+      ).map(_.asScala)
+        .toList
+        .flatten
+        .map(edit => {
+          AdditionalInsertInstructions(
+            edit.getNewText(),
+            edit.getRange().toScalaRange(false),
+          )
+        })
+        .toList
+
+
+      val completionItems = for {
+        completion         <- completions.getItems().asScala
+        filterText         <- Option(completion.getFilterText())
+        detail             <- Option(completion.getDetail())
+        kind               <- Option(completion.getKind()).map(_.toString.toLowerCase)
+        order              <- Option(completion.getSortText()).map(_.toIntOption)
+        insertInstructions <- createInsertInstructions(completion)
+        additionalInsertInstructions = createAdditionalInsertInstructions(completion)
+        data                         = parseCompletionData(completion)
+      } yield CompletionItemDTO(
+        filterText,
+        detail,
+        kind,
+        order,
+        insertInstructions,
+        additionalInsertInstructions,
+        data
       )
-    })
-    .toList
+      ScalaCompletionList(completionItems.toSet, completions.isIncomplete)
+    }
 
   def parseCompletionData(completion: CompletionItem): Option[String] =
     Option(completion.getData()).map { completionData =>

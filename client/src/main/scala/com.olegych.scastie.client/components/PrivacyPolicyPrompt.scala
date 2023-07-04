@@ -2,12 +2,10 @@ package com.olegych.scastie.client
 package components
 
 
-import com.olegych.scastie.client.components.editor.EditorKeymaps
 import japgolly.scalajs.react._
 import org.scalajs.dom
 
 import vdom.all._
-import extra._
 
 
 // scheduled for removal 2023-04-30
@@ -46,7 +44,7 @@ object PrivacyPolicyPrompt {
               | whether you want to keep your existing code snippets, or remove them all from our database.
               | By keeping the snippets, you acknowledge that you have read and agreed
               | to the privacy policy terms available """.stripMargin.stripLineEnd,
-            a(href := "javascript:;", onClick ==> (e => e.stopPropagationCB >> props.openPrivacyPolicyModal))(
+            a(href := "#", onClick ==> (e => e.preventDefaultCB >> e.stopPropagationCB >> props.openPrivacyPolicyModal))(
               "here"
             ),
             "."
