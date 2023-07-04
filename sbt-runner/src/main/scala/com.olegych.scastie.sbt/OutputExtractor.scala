@@ -28,20 +28,9 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
       "WARNING: Please consider reporting this to the maintainers",
       "WARNING: System::setSecurityManager will be removed in a future release",
     )
-    val initializationMessages = hiddenInitializationMessages ++ List(
-      "[info] Loading global plugins from",
-      "[info] Loading project definition from",
-      "[info] Set current project to scastie",
-      "[info] Updating {file:",
-      "[info] Done updating.",
-      "[info] Resolving",
-      "[error] Type error in expression"
-    )
 
     val isHiddenSbtMessage =
       hiddenInitializationMessages.exists(message => output.line.toLowerCase().startsWith(message.toLowerCase()))
-    val isSbtMessage =
-      initializationMessages.exists(message => output.line.toLowerCase().startsWith(message.toLowerCase()))
 
     val isDone = output.line == promptUniqueId
 
@@ -52,7 +41,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
           && instrumentations.toList.flatten.isEmpty
           && runtimeError.isEmpty
           && !isDone
-          && !isSbtMessage
+          && !isHiddenSbtMessage
+          && !isReloading
           && sbtOutput.isEmpty)
         Some(output)
       else None
@@ -70,7 +60,6 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
 
     val sbtProcessOutput =
       if (isHiddenSbtMessage) None
-      else if (isSbtMessage) Some(output)
       else sbtOutput.map(_.output)
 
     SnippetProgress(
