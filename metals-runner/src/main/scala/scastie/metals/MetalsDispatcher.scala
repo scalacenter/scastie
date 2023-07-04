@@ -8,6 +8,7 @@ import scala.jdk.CollectionConverters._
 import scala.meta.internal.metals.Embedded
 import scala.meta.internal.metals.MtagsBinaries
 import scala.meta.internal.metals.MtagsResolver
+import scala.meta.internal.semver.SemVer
 import scala.util.control.NonFatal
 
 import cats.data.EitherT
@@ -93,13 +94,13 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
                                          else "")
 
     def checkScalaVersionCompatibility(scalaTarget: ScalaTarget): Boolean =
-      if configuration.scalaTarget.binaryScalaVersion.startsWith("3") then
-        scalaTarget.binaryScalaVersion.startsWith("2.13") || scalaTarget.targetType == ScalaTargetType.Scala3
-      else scalaTarget.binaryScalaVersion == configuration.scalaTarget.binaryScalaVersion
+      SemVer.isCompatibleVersion(scalaTarget.scalaVersion, configuration.scalaTarget.scalaVersion)
 
     def checkScalaJsCompatibility(scalaTarget: ScalaTarget): Boolean =
-      if configuration.scalaTarget.targetType == ScalaTargetType.JS then scalaTarget.targetType == ScalaTargetType.JS
-      else true
+      if configuration.scalaTarget.targetType == ScalaTargetType.JS then
+        scalaTarget.targetType == ScalaTargetType.JS
+      else
+        scalaTarget.isJVMTarget
 
     val misconfiguredLibraries = configuration.dependencies
       .filterNot(l => checkScalaVersionCompatibility(l.target) && checkScalaJsCompatibility(l.target))
