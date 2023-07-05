@@ -26,6 +26,7 @@ import java.util.concurrent.TimeoutException
 import scala.collection.concurrent.TrieMap
 import com.olegych.scastie.api.ScalaTarget
 import com.olegych.scastie.buildinfo.BuildInfo
+import scala.concurrent.duration.FiniteDuration
 
 
 object ScliRunner {
@@ -70,7 +71,7 @@ class ScliRunner {
     ()
   }
 
-  def runTask(task: ScliTask, onOutput: String => Any): Future[Either[ScliRun, ScliRunnerError]] = {
+  def runTask(task: ScliTask, timeout: FiniteDuration, onOutput: String => Any): Future[Either[ScliRun, ScliRunnerError]] = {
     log.info(s"Running task with snippetId=${task.snippetId}")
 
     // Extract directives from user code
@@ -90,12 +91,20 @@ class ScliRunner {
         InstrumentedInputs(task.inputs.copy(code = userCode.mkString("\n"), target = scalaTarget)) match {
           case Left(failure) => Future.failed(InstrumentationException(failure))
           case Right(InstrumentedInputs(inputs, isForcedProgramMode, _)) =>
-            buildAndRun(task.snippetId, inputs, isForcedProgramMode, userDirectives, userCode, onOutput)
+            buildAndRun(task.snippetId, inputs, isForcedProgramMode, userDirectives, userCode, timeout, onOutput)
         }
     }
   }
 
-  def buildAndRun(snippetId: SnippetId, inputs: Inputs, isForcedProgramMode: Boolean, userDirectives: Array[String], userCode: Array[String], onOutput: String => Any)
+  def buildAndRun(
+        snippetId: SnippetId,
+        inputs: Inputs,
+        isForcedProgramMode: Boolean,
+        userDirectives: Array[String],
+        userCode: Array[String],
+        timeout: FiniteDuration,
+        onOutput: String => Any
+    )
       : Future[Either[ScliRun, ScliRunnerError]] = {
     val runtimeDependency = inputs.target.runtimeDependency.map(Set(_)).getOrElse(Set()) ++ inputs.libraries
     val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
@@ -159,7 +168,7 @@ class ScliRunner {
       // Wait
       val f = Future { runProcess.exitValue() }
       val didSucceed =
-        Try(Await.result(f, Duration(30, TimeUnit.SECONDS))) match {
+        Try(Await.result(f, timeout)) match {
           case Success(value) => {
             forwardPrint(s"Process exited with error code $value")
             true
