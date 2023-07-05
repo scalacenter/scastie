@@ -31,6 +31,8 @@ import com.olegych.scastie.api
 import play.api.libs.json.Reads
 import play.api.libs.json.Json
 import scala.util.control.NonFatal
+import akka.actor.ActorSelection
+import scala.concurrent.duration.FiniteDuration
 
 object ScliActor {
   // States
@@ -52,7 +54,9 @@ object ScliActor {
 
 class ScliActor(system: ActorSystem,
                isProduction: Boolean,
-               readyRef: Option[ActorRef])
+               runTimeout: FiniteDuration,
+               readyRef: Option[ActorRef],
+               override val reconnectInfo: Option[ReconnectInfo])
     extends Actor
     with ActorLogging
     with ActorReconnecting {
@@ -71,7 +75,7 @@ class ScliActor(system: ActorSystem,
   // Available state (no running scala cli instance)
   val whenAvailable: Receive = reconnectBehavior orElse { message => message match {
     case task: SbtTask => {
-      log.warning("Should not receive an SbtTask, converting to ScliActorTask")
+      // log.warning("Should not receive an SbtTask, converting to ScliActorTask")
       runTask(sbtTaskToScliActorTask(task))
     }
     case task: ScliActorTask => runTask(task)
@@ -80,11 +84,6 @@ class ScliActor(system: ActorSystem,
     case x => log.error(s"CHECK CHECK CHECK URGENT dead letter: $x")
   } }
 
-  // Unavailable state (running scala cli instance)
-  val whenRunning: Receive = reconnectBehavior orElse { message => message match {
-    // TODO: answer appropriately, maybe queue?
-    case any => ()
-  } }
 
   def makeOutput(str: String) = Some(ProcessOutput(str, tpe = ProcessOutputType.StdOut, id = None))
   def makeOutput(str: List[String]): Option[ProcessOutput] = makeOutput(str.mkString("\n"))
@@ -93,7 +92,7 @@ class ScliActor(system: ActorSystem,
   def runTask(task: ScliActorTask): Unit = {
     val ScliActorTask(snipId, inp, ip, login, progressActor) = task
 
-    val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip, login), output => {
+    val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip, login), runTimeout, output => {
       sendProgress(progressActor, SnippetProgress.default.copy(
           ts = Some(Instant.now.toEpochMilli),
           snippetId = Some(snipId),
@@ -152,8 +151,22 @@ class ScliActor(system: ActorSystem,
     )
   }
 
-  override def reconnectInfo: Option[ReconnectInfo] = None // TODO: fill
 
-  override def tryConnect(context: ActorContext): Unit = () // TODO: fill
+  // Reconnection
+  def balancer(context: ActorContext, info: ReconnectInfo): ActorSelection = {
+    import info._
+    context.actorSelection(
+      s"akka://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
+    )
+  }
+
+  override def tryConnect(context: ActorContext): Unit = {
+    if (isProduction) {
+      reconnectInfo.foreach { info =>
+        import info._
+        balancer(context, info) ! api.SbtRunnerConnect(actorHostname, actorAkkaPort)
+      }
+    }
+  }
 
 }

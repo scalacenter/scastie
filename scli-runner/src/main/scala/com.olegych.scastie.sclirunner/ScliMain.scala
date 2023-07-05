@@ -12,6 +12,10 @@ import java.util.concurrent.TimeUnit
 
 import org.slf4j.LoggerFactory
 
+/**
+  * This object provides the main endpoint for the Scala-CLI runner.
+  * Its role is to create and setup the ActorSystem and create the ScalaCli Actor
+  */
 object SbtMain {
   def main(args: Array[String]): Unit = {
     val logger = LoggerFactory.getLogger(getClass)
@@ -26,6 +30,7 @@ object SbtMain {
     val config = ConfigFactory.load().getConfig("com.olegych.scastie")
 
     val serverConfig = config.getConfig("web")
+    val sbtConfig = config.getConfig("sbt")
 
     val isProduction = true
 
@@ -36,18 +41,36 @@ object SbtMain {
       logger.info(s"Starting scliRunner pid: $pid")
     }
 
+    val runTimeout = {
+      val timeunit = TimeUnit.SECONDS
+      FiniteDuration(
+        sbtConfig.getDuration("runTimeout", timeunit),
+        timeunit
+      )
+    }
+
+    // Reconnect info
+    val reconnectInfo = ReconnectInfo(
+      serverHostname = serverConfig.getString("hostname"),
+      serverAkkaPort = serverConfig.getInt("akka-port"),
+      actorHostname = sbtConfig.getString("hostname"),
+      actorAkkaPort = sbtConfig.getInt("akka-port")
+    )
+
     system.actorOf(
       Props(
         new ScliActor(
           system = system,
           isProduction = isProduction,
-          readyRef = None
+          readyRef = None,
+          runTimeout = runTimeout,
+          reconnectInfo = Some(reconnectInfo)
         )
       ),
       name = "ScliActor"
     )
 
-    logger.info("ScliRunner + ScliActor started")
+    logger.info("ScliActor started")
 
     Await.result(system.whenTerminated, Duration.Inf)
 
