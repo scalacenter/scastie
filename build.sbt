@@ -29,7 +29,6 @@ lazy val scastie = project
       storage,
       utils,
       metalsRunner,
-
       scliRunner
     ).map(_.project)): _*
   )
@@ -137,6 +136,8 @@ lazy val metalsRunner = project
       "org.scalameta"       %% "munit"               % "0.7.29" % Test,
       "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test,
       "org.virtuslab"        % "using_directives"    % "0.1.0" // Used for parsing scala cli directives
+  .dependsOn(api.jvm(ScalaVersions.sbt))
+
     )
   )
   .enablePlugins(JavaServerAppPackaging, sbtdocker.DockerPlugin)
