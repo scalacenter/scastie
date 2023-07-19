@@ -31,8 +31,6 @@ object DTOExtensions {
             // cursor is in directives
             (adjustedContent, offsetParams.offset)
           else
-
-            val adjustedPosition = wrapperObject.length + offsetParams.offset + (userCode.length - 1) * ident.length
             // cursor is in code
             val lines = userCode.take(offsetParams.offset - userDirectivesLength).linesWithSeparators
             (adjustedContent, wrapperObject.length + offsetParams.offset + lines.size * wrapperIndent.length)
