@@ -114,8 +114,7 @@ case class ScastieState(
     isEmbedded: Boolean = false,
     transient: Boolean = false,
 
-    scalaCliConversionError: Option[String] = None,
-    isMetalsStale: Boolean = false
+    scalaCliConversionError: Option[String] = None
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean = snippetState.loadSnippet
@@ -143,8 +142,7 @@ case class ScastieState(
       metalsStatus: MetalsStatus = metalsStatus,
       isMetalsStale: Boolean = isMetalsStale,
       transient: Boolean = transient,
-      scalaCliConversionError: Option[String] = scalaCliConversionError,
-      isMetalsStale: Boolean = isMetalsStale
+      scalaCliConversionError: Option[String] = scalaCliConversionError
   ): ScastieState = {
     val state0 =
       copy(
