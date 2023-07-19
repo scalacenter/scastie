@@ -169,9 +169,7 @@ object MainPanel {
         isMetalsStale = state.isMetalsStale,
         reloadStaleMetals = backend.reloadStaleMetals,
         toggleMetalsStatus = backend.toggleMetalsStatus,
-        scalaTarget = state.inputs.target,
-        isMetalsStale = state.isMetalsStale,
-        reloadStaleMetals = backend.reloadStaleMetals
+        scalaTarget = state.inputs.target
       ).render.unless(props.isEmbedded || state.isPresentationMode)
 
     val statusView =
