@@ -30,9 +30,7 @@ final case class EditorTopBar(clear: Reusable[Callback],
                               isMetalsStale: Boolean,
                               reloadStaleMetals: Reusable[Callback],
                               toggleMetalsStatus: Reusable[Callback],
-                              scalaTarget: ScalaTarget,
-                              isMetalsStale: Boolean,
-                              reloadStaleMetals: Reusable[Callback]) {
+                              scalaTarget: ScalaTarget) {
   @inline def render: VdomElement = EditorTopBar.component(this)
 }
 
