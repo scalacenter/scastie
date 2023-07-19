@@ -7,6 +7,7 @@ import java.nio.file.Paths
 import com.olegych.scastie.api.SnippetId
 import com.olegych.scastie.api.Inputs
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import com.olegych.scastie.api.Value
 
 class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
@@ -85,6 +86,6 @@ class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
         "1.1.1.1",
         None
       )
-    , onOutput)
+    , 30.seconds, onOutput)
   }
 }
