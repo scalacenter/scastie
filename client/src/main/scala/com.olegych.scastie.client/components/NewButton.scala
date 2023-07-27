@@ -5,7 +5,6 @@ import com.olegych.scastie.client.components.editor.EditorKeymaps
 import japgolly.scalajs.react._
 
 import vdom.all._
-import extra._
 
 final case class NewButton(
                            isDarkTheme: Boolean,

@@ -3,9 +3,7 @@ package components
 
 import japgolly.scalajs.react._
 import org.scalajs.dom
-import org.scalajs.dom.document
-import org.scalajs.dom.html
-import org.scalajs.dom.window
+
 import vdom.all._
 
 
@@ -43,7 +41,7 @@ object LoginModal {
         ),
         p(
           "By signing in, you agree to our ",
-          a(href := "javascript:;", onClick ==> (e => e.stopPropagationCB >> props.openPrivacyPolicyModal))("privacy policy"),
+          a(href := "#", onClick ==> (e => e.preventDefaultCB >> e.stopPropagationCB >> props.openPrivacyPolicyModal))("privacy policy"),
           "."
         )
       )

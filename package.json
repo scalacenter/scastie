@@ -8,7 +8,7 @@
     "build": "vite build && MODE=embed vite build"
   },
   "devDependencies": {
-    "sass": "^1.62.1"
+    "sass": "^1.64.1"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.7.1",
@@ -29,11 +29,12 @@
     "github-markdown-css": "^5.2.0",
     "highlight.js": "^11.8.0",
     "marked": "^5.0.3",
+    "marked-highlight": "^2.0.1",
     "react": "17",
     "react-dom": "17",
     "source-map-support": "^0.5.21",
-    "typescript": "^5.0.4",
-    "vite": "^4.3.9",
+    "typescript": "^5.1.6",
+    "vite": "^4.4.6",
     "vite-plugin-markdown": "^2.1.0"
   },
   "resolutions": {

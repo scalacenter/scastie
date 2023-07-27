@@ -100,7 +100,7 @@ object CodeEditor {
     val errors = props.compilationInfos
       .filter(prob => prob.line.isDefined && prob.line.get <= doc.lines)
       .map(problem => {
-        val line = problem.line.get
+        val line = problem.line.get max 1
         val lineInfo = doc.line(line)
 
         Diagnostic(lineInfo.from, HTMLFormatter.format(problem.message), parseSeverity(problem.severity), lineInfo.to)
