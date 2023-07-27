@@ -10,8 +10,8 @@ import com.olegych.scastie.util.ReconnectInfo
 import com.olegych.scastie.util.SbtTask
 import com.olegych.scastie.api.SnippetId
 import com.olegych.scastie.api.Inputs
-import com.olegych.scastie.api.SbtPing
-import com.olegych.scastie.api.SbtPong
+import com.olegych.scastie.api.RunnerPing
+import com.olegych.scastie.api.RunnerPong
 import com.olegych.scastie.api.SnippetProgress
 import com.olegych.scastie.api.ProcessOutput
 import com.olegych.scastie.api.ProcessOutputType
@@ -33,6 +33,10 @@ import play.api.libs.json.Json
 import scala.util.control.NonFatal
 import akka.actor.ActorSelection
 import scala.concurrent.duration.FiniteDuration
+import com.olegych.scastie.util.ScliActorTask
+import akka.util.Timeout
+import scala.concurrent.duration._
+import akka.pattern.ask
 
 object ScliActor {
   // States
@@ -41,12 +45,10 @@ object ScliActor {
   case object Available extends ScliState
   case object Running extends ScliState
 
-  case class ScliActorTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String], progressActor: ActorRef)
-
   def sbtTaskToScliActorTask(sbtTask: SbtTask): ScliActorTask = {
     sbtTask match {
-      case SbtTask(snippetId, inputs, ip, login, progressActor) =>
-        ScliActorTask(snippetId, inputs, ip, login, progressActor)
+      case SbtTask(snippetId, inputs, ip, _, progressActor) =>
+        ScliActorTask(snippetId, inputs, ip, progressActor)
     }
   }
 }
@@ -76,11 +78,11 @@ class ScliActor(system: ActorSystem,
   val whenAvailable: Receive = reconnectBehavior orElse { message => message match {
     case task: SbtTask => {
       // log.warning("Should not receive an SbtTask, converting to ScliActorTask")
-      runTask(sbtTaskToScliActorTask(task))
+      runTask(sbtTaskToScliActorTask(task), sender())
     }
-    case task: ScliActorTask => runTask(task)
+    case task: ScliActorTask => runTask(task, sender())
 
-    case SbtPing => sender() ! SbtPong
+    case RunnerPing => sender() ! RunnerPong
     case x => log.error(s"CHECK CHECK CHECK URGENT dead letter: $x")
   } }
 
@@ -89,11 +91,11 @@ class ScliActor(system: ActorSystem,
   def makeOutput(str: List[String]): Option[ProcessOutput] = makeOutput(str.mkString("\n"))
 
   // Run task
-  def runTask(task: ScliActorTask): Unit = {
-    val ScliActorTask(snipId, inp, ip, login, progressActor) = task
+  def runTask(task: ScliActorTask, author: ActorRef): Unit = {
+    val ScliActorTask(snipId, inp, ip, progressActor) = task
 
-    val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip, login), runTimeout, output => {
-      sendProgress(progressActor, SnippetProgress.default.copy(
+    val r = runner.runTask(ScliRunner.ScliTask(snipId, inp, ip), runTimeout, output => {
+      sendProgress(progressActor, author, SnippetProgress.default.copy(
           ts = Some(Instant.now.toEpochMilli),
           snippetId = Some(snipId),
           userOutput = makeOutput(output),
@@ -104,16 +106,17 @@ class ScliActor(system: ActorSystem,
     r.onComplete({
       case Failure(exception) => {
         // Unexpected exception
-        sendProgress(progressActor, buildErrorProgress(snipId, s"Unexpected exception while running $exception"))
+        log.error(exception, s"Could not run $snipId")
+        sendProgress(progressActor, author, buildErrorProgress(snipId, s"Unexpected exception while running: $exception"))
       }
       case Success(Right(error)) => error match {
         // TODO: handle every possible exception
-        case ScliRunner.InstrumentationException(report) => sendProgress(progressActor, report.toProgress(snippetId = snipId))
-        case ScliRunner.ErrorFromBsp(x: BspClient.NoTargetsFoundException, logs) => sendProgress(progressActor, buildErrorProgress(snipId, x.err, logs))
-        case ScliRunner.ErrorFromBsp(x: BspClient.NoMainClassFound, logs) => sendProgress(progressActor, buildErrorProgress(snipId, x.err, logs))
-        case ScliRunner.ErrorFromBsp(x: BspClient.FailedRunError, logs) => sendProgress(progressActor, buildErrorProgress(snipId, x.err, logs))
+        case ScliRunner.InstrumentationException(report) => sendProgress(progressActor, author, report.toProgress(snippetId = snipId))
+        case ScliRunner.ErrorFromBsp(x: BspClient.NoTargetsFoundException, logs) => sendProgress(progressActor, author, buildErrorProgress(snipId, x.err, logs))
+        case ScliRunner.ErrorFromBsp(x: BspClient.NoMainClassFound, logs) => sendProgress(progressActor, author, buildErrorProgress(snipId, x.err, logs))
+        case ScliRunner.ErrorFromBsp(x: BspClient.FailedRunError, logs) => sendProgress(progressActor, author, buildErrorProgress(snipId, x.err, logs))
         case ScliRunner.CompilationError(problems, logs) => {
-          sendProgress(progressActor, SnippetProgress.default.copy(
+          sendProgress(progressActor, author, SnippetProgress.default.copy(
             ts = Some(Instant.now.toEpochMilli),
             snippetId = Some(snipId),
             compilationInfos = problems,
@@ -122,7 +125,7 @@ class ScliActor(system: ActorSystem,
           ))
         }
       }
-      case Success(Left(value)) => sendProgress(progressActor, SnippetProgress.default.copy(
+      case Success(Left(value)) => sendProgress(progressActor, author, SnippetProgress.default.copy(
         ts = Some(Instant.now.toEpochMilli),
         snippetId = Some(snipId),
         isDone = true,
@@ -135,10 +138,16 @@ class ScliActor(system: ActorSystem,
   // Progress
   private var progressId = 0L
 
-  private def sendProgress(progressActor: ActorRef, _p: SnippetProgress): Unit = {
+  private def sendProgress(progressActor: ActorRef, author: ActorRef, _p: SnippetProgress): Unit = {
     progressId = progressId + 1
     val p: SnippetProgress = _p.copy(id = Some(progressId))
     progressActor ! p
+      implicit val tm = Timeout(10.seconds)
+    (author ? p)
+      .recover {
+        case e =>
+          log.error(e, s"error while saving progress $p")
+      }
   }
 
   private def buildErrorProgress(snipId: SnippetId, err: String, logs: List[String] = List()) = {
@@ -156,7 +165,7 @@ class ScliActor(system: ActorSystem,
   def balancer(context: ActorContext, info: ReconnectInfo): ActorSelection = {
     import info._
     context.actorSelection(
-      s"akka://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
+      s"akka://Web@$serverHostname:$serverAkkaPort/user/DispatchActor/ScliDispatcher"
     )
   }
 
@@ -164,7 +173,7 @@ class ScliActor(system: ActorSystem,
     if (isProduction) {
       reconnectInfo.foreach { info =>
         import info._
-        balancer(context, info) ! api.SbtRunnerConnect(actorHostname, actorAkkaPort)
+        balancer(context, info) ! api.RunnerConnect(actorHostname, actorAkkaPort)
       }
     }
   }

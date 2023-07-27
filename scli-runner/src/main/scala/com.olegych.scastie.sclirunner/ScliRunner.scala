@@ -36,7 +36,7 @@ object ScliRunner {
     diagnostics: List[Problem] = List()
   )
 
-  case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String, login: Option[String])
+  case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String)
 
   // Errors
   abstract class ScliRunnerError extends Exception

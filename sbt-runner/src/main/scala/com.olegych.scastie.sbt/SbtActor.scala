@@ -21,7 +21,7 @@ class SbtActor(system: ActorSystem,
   def balancer(context: ActorContext, info: ReconnectInfo): ActorSelection = {
     import info._
     context.actorSelection(
-      s"akka://Web@$serverHostname:$serverAkkaPort/user/DispatchActor"
+      s"akka://Web@$serverHostname:$serverAkkaPort/user/DispatchActor/SbtDispatcher"
     )
   }
 
@@ -29,7 +29,7 @@ class SbtActor(system: ActorSystem,
     if (isProduction) {
       reconnectInfo.foreach { info =>
         import info._
-        balancer(context, info) ! SbtRunnerConnect(actorHostname, actorAkkaPort)
+        balancer(context, info) ! RunnerConnect(actorHostname, actorAkkaPort)
       }
     }
   }
@@ -64,8 +64,8 @@ class SbtActor(system: ActorSystem,
     )
 
   override def receive: Receive = reconnectBehavior orElse [Any, Unit] {
-    case SbtPing => {
-      sender() ! SbtPong
+    case RunnerPing => {
+      sender() ! RunnerPong
     }
 
     case format: FormatRequest => {
