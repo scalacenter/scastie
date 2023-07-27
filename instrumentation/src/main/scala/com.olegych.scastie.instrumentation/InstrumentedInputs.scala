@@ -40,7 +40,12 @@ object InstrumentedInputs {
 
             case ParsingError(error) =>
               val lineOffset = Instrument.getParsingLineOffset(inputs0)
-              Left(InstrumentationFailureReport(error.message, Some(error.pos.startLine + lineOffset)))
+              val errorLine = (error.pos.startLine + lineOffset) max 1
+              Right(InstrumentedInputs(
+                inputs = inputs0.copy(code = error.pos.input.text),
+                isForcedProgramMode = false,
+                optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorLine)))
+              ))
 
             case InternalError(exception) =>
               val errors = new StringWriter()
@@ -63,5 +68,6 @@ object InstrumentedInputs {
 
 case class InstrumentedInputs(
     inputs: Inputs,
-    isForcedProgramMode: Boolean
+    isForcedProgramMode: Boolean,
+    optionalParsingError: Option[InstrumentationFailureReport] = None
 )

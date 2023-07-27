@@ -27,7 +27,7 @@ object TopBar {
       openInNewTab("https://gitter.im/scalacenter/scastie")
 
     def issue: Callback =
-      openInNewTab("https://github.com/scalacenter/scastie/issues/new")
+      openInNewTab("https://github.com/scalacenter/scastie/issues/new/choose")
 
     val logoutUrl = "/logout"
 

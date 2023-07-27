@@ -3,7 +3,6 @@ package com.olegych.scastie.client.components
 import japgolly.scalajs.react._
 import scalajs.js
 import vdom.all._
-import com.olegych.scastie.client.components.editor.EditorKeymaps
 import scala.scalajs.js.annotation.JSImport
 
 final case class PrivacyPolicyModal(isDarkTheme: Boolean, isClosed: Boolean, close: Reusable[Callback]) {

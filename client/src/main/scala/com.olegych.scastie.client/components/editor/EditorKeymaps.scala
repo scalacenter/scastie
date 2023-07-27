@@ -4,12 +4,13 @@ import org.scalajs.dom
 import typings.codemirrorState.anon
 import typings.codemirrorView.mod.EditorView
 import typings.codemirrorView.mod.{KeyBinding => JSKeyBinding}
+import typings.codemirrorCommands.mod._
+import typings.codemirrorAutocomplete.mod.acceptCompletion
 import com.olegych.scastie.client
 
 import scalajs.js
 
 object EditorKeymaps {
-  import typings.codemirrorCommands.mod._
 
   private def presentationMode(editor: CodeEditor): Unit = {
     if (!editor.isEmbedded) {
@@ -33,7 +34,7 @@ object EditorKeymaps {
   def keymapping(e: CodeEditor) =
     typings.codemirrorView.mod.keymap.of(
       js.Array(
-        KeyBinding.fromCommand(insertTab, new Key("Tab")),
+        KeyBinding.tabKeybind,
         KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdate, true),
         KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdateAlt, true),
         KeyBinding(_ => e.openNewSnippetModal.runNow(), openNewSnippetModal, true),
@@ -63,14 +64,20 @@ case class Key(default: String, linux: String, mac: String, win: String) {
 }
 
 object KeyBinding {
-  def fromCommand(action: typings.codemirrorState.mod.StateCommand, key: Key, preventDefault: Boolean = false): JSKeyBinding = {
+  val tabKeybind: JSKeyBinding = {
+    val key = new Key("Tab")
     JSKeyBinding()
-      .setRun(x => action(x.asInstanceOf[anon.Dispatch]))
+      .setRun(dispatch =>
+          if (!acceptCompletion(dispatch))
+            insertTab(dispatch.asInstanceOf[anon.Dispatch])
+          else
+            false
+      )
       .setKey(key.default)
       .setLinux(key.linux)
       .setMac(key.mac)
       .setWin(key.win)
-      .setPreventDefault(preventDefault)
+      .setPreventDefault(true)
   }
 
   def apply(action: EditorView => Unit, key: Key, preventDefault: Boolean = false): JSKeyBinding = {
