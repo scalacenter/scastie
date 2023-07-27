@@ -11,6 +11,9 @@ val akkaHttpVersion = "10.2.9"
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
 addCommandAlias("startAllProd", "sbtRunner/reStart;metalsRunner/reStart;server/fullLinkJS/reStart")
 
+addCommandAlias("cstartAll", "scliRunner/reStart;sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
+addCommandAlias("cstartAllProd", "scliRunner/reStart;sbtRunner/reStart;metalsRunner/reStart;server/fullLinkJS/reStart")
+
 val yarnBuild = taskKey[Unit]("builds es modules with `yarn build`")
 
 ThisBuild / packageTimestamp := None
