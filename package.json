@@ -15,7 +15,7 @@
     "@codemirror/commands": "^6.2.4",
     "@codemirror/language": "^6.7.0",
     "@codemirror/legacy-modes": "^6.1.0",
-    "@codemirror/lint": "^6.2.2",
+    "@codemirror/lint": "^6.4.0",
     "@codemirror/search": "^6.4.0",
     "@codemirror/state": "^6.1.4",
     "@codemirror/view": "^6.12.0",
