@@ -2,10 +2,10 @@ package com.olegych.scastie.api
 
 import play.api.libs.json._
 
-case object SbtPing
-case object SbtPong
+case object RunnerPing
+case object RunnerPong
 
-case class SbtRunnerConnect(hostname: String, port: Int)
+case class RunnerConnect(hostname: String, port: Int)
 case object ActorConnected
 
 object SnippetSummary {
