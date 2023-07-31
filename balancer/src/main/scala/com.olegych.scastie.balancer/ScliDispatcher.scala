@@ -46,9 +46,11 @@ class ScliDispatcher(config: Config, progressActor: ActorRef, statusActor: Actor
   }
 
   private def enqueueAvailableServer(addr: SocketAddress, server: ActorSelection) =
-    if (remoteServers.contains(addr))
+    if (remoteServers.contains(addr)) {
       availableServersQueue = availableServersQueue.enqueue((addr, server))
       giveTask
+    }
+
 
   private def giveTask = {
     if (!taskQueue.isEmpty) {
@@ -94,10 +96,7 @@ class ScliDispatcher(config: Config, progressActor: ActorRef, statusActor: Actor
       if (progress.isDone) {
         self ! Done(progress, retries = 100)
       }
-      (parent ? progress).map(answerOfProgress => {
-        log.info(s"GOT ANSWER OF PROGRESS $answerOfProgress")
-        sender ! answerOfProgress
-      })
+      (parent ? progress).map(sender ! _)
 
     case done: Done =>
       done.progress.snippetId.foreach { sid =>
