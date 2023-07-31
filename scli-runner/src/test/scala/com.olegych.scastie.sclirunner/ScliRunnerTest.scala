@@ -83,8 +83,7 @@ class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
       ScliRunner.ScliTask(
         SnippetId("1", None),
         Inputs.default.copy(_isWorksheetMode = isWorksheet, code = f.get),
-        "1.1.1.1",
-        None
+        "1.1.1.1"
       )
     , 30.seconds, onOutput)
   }
