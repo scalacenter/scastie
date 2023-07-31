@@ -238,6 +238,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       statusActor ! statusProgress
 
     case progress: SnippetProgress => 
+      val sender = this.sender()
+      
+
       logError(
         container.appendOutput(progress)
           .recover {
@@ -245,7 +248,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
               log.error(e, s"failed to save $progress from $sender")
               e
           }
-          .map(sender() ! _)
+          .map(sender ! _)
       )
 
     case run: Run => {
