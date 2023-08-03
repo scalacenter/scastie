@@ -83,7 +83,6 @@ class ScliActor(system: ActorSystem,
     case task: ScliActorTask => runTask(task, sender())
 
     case RunnerPing => sender() ! RunnerPong
-    case x => log.error(s"CHECK CHECK CHECK URGENT dead letter: $x")
   } }
 
 
