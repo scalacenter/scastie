@@ -161,7 +161,10 @@ object Instrument {
   }
 
   def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, String] = {
-    val runtimeImport = "import _root_.com.olegych.scastie.api.runtime._"
+    val runtimeImport = target match {
+      case Scala3(scalaVersion) => "import _root_.com.olegych.scastie.api.runtime.*"
+      case _ => "import _root_.com.olegych.scastie.api.runtime._"
+    }
 
     val isScalaJs = target.targetType == ScalaTargetType.JS
 

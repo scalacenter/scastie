@@ -50,7 +50,7 @@ lazy val loggingAndTest = Seq(
   libraryDependencies ++= Seq(
     "ch.qos.logback"              % "logback-classic" % "1.4.7",
     "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5",
-    "io.sentry"                   % "sentry-logback"  % "6.19.1"
+    "io.sentry"                   % "sentry-logback"  % "6.22.0"
   )
 ) ++ testSettings
 
@@ -280,7 +280,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta"                 %% "scalameta" % "4.7.7",
+      "org.scalameta"                 %% "scalameta" % "4.7.8",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

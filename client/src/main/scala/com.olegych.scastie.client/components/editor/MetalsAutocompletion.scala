@@ -94,7 +94,7 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
    */
   private def getCompletionInfo(completionItemDTO: api.CompletionItemDTO): CompletionInfoF = {
     val key = completionItemDTO.symbol.getOrElse(completionItemDTO.label)
-    val maybeCachedResult = completionInfoCache.get(key)
+    lazy val maybeCachedResult = completionInfoCache.get(key)
       .map(node => js.Promise.resolve[dom.Node](node))
       .getOrElse {
         makeRequest(api.CompletionInfoRequest(scastieMetalsOptions, completionItemDTO), "completionItemResolve")
