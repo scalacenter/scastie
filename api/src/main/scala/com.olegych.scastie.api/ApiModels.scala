@@ -129,7 +129,7 @@ case class ScalaDependency(
 
 // Note: adding a code parameter is for the metals-runner
 // so it can parse dependencies and give support for it :)
-case class ScastieMetalsOptions(dependencies: Set[ScalaDependency], scalaTarget: ScalaTarget, code: Option[String] = Some(""))
+case class ScastieMetalsOptions(dependencies: Set[ScalaDependency], scalaTarget: ScalaTarget, code: Option[String] = None)
 
 object ScastieMetalsOptions {
   implicit val scastieMetalsOptions: OFormat[ScastieMetalsOptions] = Json.format[ScastieMetalsOptions]
