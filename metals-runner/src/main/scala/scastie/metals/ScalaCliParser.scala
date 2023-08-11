@@ -44,10 +44,8 @@ object ScalaCliParser {
       case _ => None  
   }
 
-  def getScalaTarget(string: String): Either[FailureType, ScastieMetalsOptions] = {
-    // TODO: get it correctly
-    //val defs: Map[String, List[String]] = parse(string).groupMap(_.getKey())(t => extractValue(t.getValue()).toList)
-    val defs: Map[String, List[String]] = parse(string).groupMapReduce(
+  def getScalaTarget(code: String): Either[FailureType, ScastieMetalsOptions] = {
+    val defs: Map[String, List[String]] = parse(code).groupMapReduce(
       _.getKey()
     )(
       t => {
