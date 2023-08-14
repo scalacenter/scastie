@@ -22,7 +22,7 @@
     "@lezer/common": "^1.0.3",
     "@lezer/highlight": "^1.1.6",
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
-    "@sentry/browser": "^7.54.0",
+    "@sentry/browser": "^7.63.0",
     "@sentry/tracing": "^7.60.1",
     "@types/marked": "^5.0.0",
     "codemirror": "^6.0.1",
