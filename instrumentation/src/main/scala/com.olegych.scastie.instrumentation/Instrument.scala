@@ -172,7 +172,7 @@ object Instrument {
       if (!isScalaJs) s"object $instrumentedObject extends ScastieApp {"
       else s"object $instrumentedObject extends ScastieApp with $domhookT {"
     val prelude = s"""$runtimeImport\n$classBegin"""
-    val code0 = s"""$prelude\n$code}"""
+    val code0 = s"""$prelude\n$code\n}"""
 
     def typelevel(scalaVersion: String): Option[Dialect] = {
       if (scalaVersion.startsWith("2.12")) Some(dialects.Typelevel212)
