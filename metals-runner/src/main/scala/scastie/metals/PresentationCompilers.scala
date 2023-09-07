@@ -72,7 +72,7 @@ class PresentationCompilers[F[_]: Async] {
   private val serviceLoader: F[BlockingServiceLoader[F]] = Semaphore[F](1).map(BlockingServiceLoader.instance[F])
   private val mtagsResolver                              = MtagsResolver.default()
 
-  val index = OnDemandSymbolIndex.empty()
+  val index = OnDemandSymbolIndex.empty()(using EmptyReportContext)
   val docs  = new Docstrings(index)
 
   JdkSources().foreach(jdk => index.addSourceJar(jdk, Scala213))
