@@ -123,7 +123,7 @@ lazy val metalsRunner = project
     maintainer   := "scalacenter",
     scalaVersion := ScalaVersions.stable3,
     libraryDependencies ++= Seq(
-      "org.scalameta"        % "metals"              % "0.11.12" cross (CrossVersion.for3Use2_13),
+      "org.scalameta"        % "metals"              % "1.0.1" cross (CrossVersion.for3Use2_13),
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.21.0",
       "org.http4s"          %% "http4s-ember-server" % "0.23.19",
       "org.http4s"          %% "http4s-ember-client" % "0.23.19",
@@ -153,7 +153,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.7.1"
+      "org.scalameta" %% "scalafmt-core" % "3.7.14"
     ),
     docker / imageNames := Seq(
       ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some(gitHashNow)),
@@ -277,7 +277,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta"                 %% "scalameta" % "4.7.8",
+      "org.scalameta"                 %% "scalameta" % "4.8.10",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

@@ -216,6 +216,24 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     runCode("val t = 1; t")(_.instrumentations.nonEmpty)
   }
 
+  test("last line comment should not fail compilation in worksheet Scala 2") {
+    val dotty = Inputs.default.copy(
+      code = s"""|println("Hello world!")
+                 |// test comment""".stripMargin,
+      target = ScalaTarget.Jvm.default,
+    )
+    run(dotty)(assertUserOutput("Hello world!"))
+  }
+
+  test("last line comment should not fail compilation in worksheet Scala 3") {
+    val dotty = Inputs.default.copy(
+      code = s"""|println("Hello world!")
+                 |// test comment""".stripMargin,
+      target = ScalaTarget.Scala3.default,
+    )
+    run(dotty)(assertUserOutput("Hello world!"))
+  }
+
   test("hide Playground from types") {
     runCode("case class A(i:Int) extends AnyVal; A(1)")(_.instrumentations.headOption.exists(_.render == Value("A(1)", "A")))
   }
