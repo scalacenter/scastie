@@ -3,7 +3,7 @@ addSbtPlugin("com.github.sbt"    % "sbt-native-packager" % "1.9.16")
 addSbtPlugin("io.spray"          % "sbt-revolver"        % "0.10.0")
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker"          % "1.10.0")
 addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo"       % "0.11.0")
-addSbtPlugin("com.eed3si9n"      % "sbt-projectmatrix"   % "0.9.1")
+addSbtPlugin("com.eed3si9n"      % "sbt-projectmatrix"   % "0.9.0")
 addSbtPlugin("org.scala-js"      % "sbt-scalajs"         % SbtShared.ScalaJSVersions.current)
 
 addSbtPlugin("org.olegych"                %% "sbt-cached-ci"          % "1.0.4")
