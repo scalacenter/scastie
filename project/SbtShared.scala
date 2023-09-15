@@ -137,7 +137,7 @@ object SbtShared {
         scalaVersion.value match {
           case v if v.startsWith("2.10") => "com.typesafe.play" %%% "play-json" % "2.6.14"
           case v if v.startsWith("2.11") => "com.typesafe.play" %%% "play-json" % "2.7.4"
-          case _                         => "com.typesafe.play" %%% "play-json" % "2.10.0-RC5"
+          case _                         => "com.typesafe.play" %%% "play-json" % "2.10.0"
         }
       },
       semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
