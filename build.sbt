@@ -46,9 +46,9 @@ lazy val testSettings = Seq(
 
 lazy val loggingAndTest = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"              % "logback-classic" % "1.4.7",
+    "ch.qos.logback"              % "logback-classic" % "1.4.8",
     "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5",
-    "io.sentry"                   % "sentry-logback"  % "6.22.0"
+    "io.sentry"                   % "sentry-logback"  % "6.29.0"
   )
 ) ++ testSettings
 
@@ -124,12 +124,12 @@ lazy val metalsRunner = project
     scalaVersion := ScalaVersions.stable3,
     libraryDependencies ++= Seq(
       "org.scalameta"        % "metals"              % "1.0.1" cross (CrossVersion.for3Use2_13),
-      "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.21.0",
-      "org.http4s"          %% "http4s-ember-server" % "0.23.19",
-      "org.http4s"          %% "http4s-ember-client" % "0.23.19",
-      "org.http4s"          %% "http4s-dsl"          % "0.23.19",
-      "org.http4s"          %% "http4s-circe"        % "0.23.19",
-      "io.circe"            %% "circe-generic"       % "0.14.5",
+      "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.21.1",
+      "org.http4s"          %% "http4s-ember-server" % "0.23.23",
+      "org.http4s"          %% "http4s-ember-client" % "0.23.23",
+      "org.http4s"          %% "http4s-dsl"          % "0.23.23",
+      "org.http4s"          %% "http4s-circe"        % "0.23.23",
+      "io.circe"            %% "circe-generic"       % "0.14.6",
       "com.evolutiongaming" %% "scache"              % "4.2.3",
       "org.scalameta"       %% "munit"               % "0.7.29" % Test,
       "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test
@@ -200,7 +200,7 @@ lazy val server = project
     libraryDependencies ++= Seq(
       "org.apache.commons"                  % "commons-text"   % "1.10.0",
       "com.typesafe.akka"                  %% "akka-http"      % akkaHttpVersion,
-      "com.softwaremill.akka-http-session" %% "core"           % "0.7.0",
+      "com.softwaremill.akka-http-session" %% "core"           % "0.7.1",
       "ch.megard"                          %% "akka-http-cors" % "1.2.0",
       akka("cluster"),
       akka("slf4j"),
@@ -226,7 +226,7 @@ lazy val storage = project
   .settings(
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
-      "org.mongodb.scala" %% "mongo-scala-driver" % "4.9.1",
+      "org.mongodb.scala" %% "mongo-scala-driver" % "4.10.2",
       "net.lingala.zip4j"  % "zip4j"              % "2.11.5"
     )
   )
