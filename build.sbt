@@ -277,7 +277,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta"                 %% "scalameta" % "4.8.10",
+      "org.scalameta"                 %% "scalameta" % "4.8.11",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )
