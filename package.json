@@ -36,6 +36,7 @@
     "typescript": "^5.1.6",
     "vite": "^4.4.12",
     "vite-plugin-markdown": "^2.1.0"
+    "web-tree-sitter": "^0.20.8"
   },
   "resolutions": {
     "@codemirror/state": "^6.1.4",

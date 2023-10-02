@@ -53,7 +53,7 @@ final case class CodeEditor(visible: Boolean,
 
 object CodeEditor {
 
-  private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback =
+  private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback = {
     ref.foreachCB(divRef => {
       val extensions = js.Array[Any](
         lineNumbers(),
@@ -75,13 +75,11 @@ object CodeEditor {
         DecorationProvider(props),
         EditorState.tabSize.of(2),
         Prec.highest(EditorKeymaps.keymapping(props)),
-        InteractiveProvider.interactive.of(
-          InteractiveProvider(props).extension
-        ),
-        mod.StreamLanguage.define(typings.codemirrorLegacyModes.modeClikeMod.scala_),
+        InteractiveProvider.interactive.of(InteractiveProvider(props).extension),
         SyntaxHighlightingTheme.highlightingTheme,
         lintGutter(),
         OnChangeHandler(props.codeChange),
+        SyntaxHighlightingHandler.syntaxHighlightingExtension.of(SyntaxHighlightingHandler.fallbackExtension),
       )
 
       val editorStateConfig = EditorStateConfig()
@@ -95,6 +93,7 @@ object CodeEditor {
 
       editorView.setState(editor)
     })
+  }
 
   private def getDecorations(props: CodeEditor, doc: Text): js.Array[Diagnostic] = {
     val errors = props.compilationInfos
@@ -111,6 +110,7 @@ object CodeEditor {
           })
 
       })
+
     val runtimeErrors = props.runtimeError.map(runtimeError => {
       val line = runtimeError.line.getOrElse(1).min(doc.lines.toInt)
       val lineInfo = doc.line(line)
@@ -143,7 +143,8 @@ object CodeEditor {
       Editor.updateTheme(ref, prevProps, props) >>
       updateDiagnostics(editorView, prevProps, props) >>
       DecorationProvider.updateDecorations(editorView, prevProps, props) >>
-      InteractiveProvider.reloadMetalsConfiguration(editorView, prevProps, props)
+      InteractiveProvider.reloadMetalsConfiguration(editorView, prevProps, props) >>
+      SyntaxHighlightingHandler.switchToTreesitterParser(editorView, props)
   }
 
   val hooksComponent =
