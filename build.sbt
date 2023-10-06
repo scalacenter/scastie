@@ -265,8 +265,9 @@ lazy val client = project
       "source-map-support"
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "core"  % "2.1.1",
-      "com.github.japgolly.scalajs-react" %%% "extra" % "2.1.1"
+      "com.github.japgolly.scalajs-react" %%% "core"                        % "2.1.1",
+      "com.github.japgolly.scalajs-react" %%% "extra"                       % "2.1.1",
+      "org.scala-js"                      %%% "scala-js-macrotask-executor" % "1.1.1"
     )
   )
   .enablePlugins(ScalaJSPlugin)

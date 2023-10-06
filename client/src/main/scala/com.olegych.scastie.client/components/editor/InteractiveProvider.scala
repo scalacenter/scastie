@@ -84,7 +84,7 @@ object InteractiveProvider {
       ).extension
 
       val effects = interactive.reconfigure(extension)
-      editorView.value.dispatch(TransactionSpec().setEffects(effects.asInstanceOf[StateEffect[Any]]))
+      editorView.value.dispatch(TransactionSpec().setEffects(effects))
     }.when_(props.visible && prevProps.exists(prevProps => {
       didConfigChange(prevProps, props) || (prevProps.visible != props.visible) || wasMetalsToggled(prevProps, props)
     }))

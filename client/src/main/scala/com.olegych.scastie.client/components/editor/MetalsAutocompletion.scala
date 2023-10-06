@@ -5,7 +5,6 @@ import japgolly.scalajs.react._
 import org.scalajs.dom
 import typings.codemirrorAutocomplete.anon
 import typings.codemirrorAutocomplete.mod._
-import typings.codemirrorState
 import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
 

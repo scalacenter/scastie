@@ -9,7 +9,6 @@ import org.scalajs.dom.Element
 import org.scalajs.dom.HTMLElement
 import typings.codemirrorAutocomplete.mod._
 import typings.codemirrorCommands.mod._
-import typings.codemirrorLanguage.mod
 import typings.codemirrorLanguage.mod._
 import typings.codemirrorLint.codemirrorLintStrings
 import typings.codemirrorLint.mod._
@@ -53,8 +52,10 @@ final case class CodeEditor(visible: Boolean,
 
 object CodeEditor {
 
-  private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback = {
+  private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback =
     ref.foreachCB(divRef => {
+
+      val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
       val extensions = js.Array[Any](
         lineNumbers(),
         highlightSpecialChars(),
@@ -79,12 +80,12 @@ object CodeEditor {
         SyntaxHighlightingTheme.highlightingTheme,
         lintGutter(),
         OnChangeHandler(props.codeChange),
-        SyntaxHighlightingHandler.syntaxHighlightingExtension.of(SyntaxHighlightingHandler.fallbackExtension),
+        syntaxHighlighting.syntaxHighlightingExtension.of(syntaxHighlighting.fallbackExtension),
       )
 
       val editorStateConfig = EditorStateConfig()
-        .setDoc(props.value)
         .setExtensions(extensions)
+        .setDoc(props.value)
 
       val editor = new EditorView(EditorViewConfig()
         .setState(EditorState.create(editorStateConfig))
@@ -93,7 +94,6 @@ object CodeEditor {
 
       editorView.setState(editor)
     })
-  }
 
   private def getDecorations(props: CodeEditor, doc: Text): js.Array[Diagnostic] = {
     val errors = props.compilationInfos
@@ -143,8 +143,7 @@ object CodeEditor {
       Editor.updateTheme(ref, prevProps, props) >>
       updateDiagnostics(editorView, prevProps, props) >>
       DecorationProvider.updateDecorations(editorView, prevProps, props) >>
-      InteractiveProvider.reloadMetalsConfiguration(editorView, prevProps, props) >>
-      SyntaxHighlightingHandler.switchToTreesitterParser(editorView, props)
+      InteractiveProvider.reloadMetalsConfiguration(editorView, prevProps, props)
   }
 
   val hooksComponent =
@@ -153,7 +152,7 @@ object CodeEditor {
       .useRef(Ref[Element])
       .useRef[Option[CodeEditor]](None)
       .useState(new EditorView())
-      .useLayoutEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
+      .useEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
       .useEffectBy(
         (props, ref, prevProps, editorView) => updateComponent(props, ref.value, prevProps.value, editorView) >> prevProps.set(Some(props))
       )

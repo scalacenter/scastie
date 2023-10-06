@@ -5,10 +5,15 @@
     border-left-width: 2px;
   }
 
-  .cm-editor , .cm-scroller {
+  .cm-editor , .cm-scroller, .inline {
     font-family: $code-font-family;
     font-weight: normal;
     height: 100%;
+  }
+
+  .cm-tooltip-section > *, .cm-diagnosticText > * {
+    font-family: $font-family;
+    font-weight: normal;
   }
 
   .cm-simplescroll-vertical {
@@ -43,48 +48,12 @@
   }
   .inline {
     overflow: hidden;
-    margin-left: 15px;
-    vertical-align: bottom;
+    margin-left: 5px;
+    vertical-align: top;
+    padding: 0px 1px 1px 5px;
     white-space: pre-wrap;
     display: inline-block;
     opacity: 75%;
-  }
-  .cm-linewidget .line,
-  .cm-linewidget .compilation-info,
-  .cm-linewidget .runtime-error,
-  .cm-widget .fold {
-    margin-left: -($margin) + 4px;
-    width: 120%;
-
-    padding: $margin;
-    white-space: pre-wrap;
-
-    p {
-      display: inline-block;
-    }
-
-    p, pre, h1, h2, h3, h4, h5, h6 {
-      padding: 0;
-      margin: 0;
-    }
-
-    ul, ol {
-      margin: 0
-    }
-
-    .short {
-      padding: 1px 5px 1px 5px;
-    }
-    .block {
-      display: block;
-    }
-
-    pre {
-      width: 100vw;
-      white-space: pre-wrap;
-      padding: 0px;
-      display: inline-block;
-    }
   }
 
   .cm-widget .fold.code-fold {
