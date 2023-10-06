@@ -17,7 +17,9 @@ class ScastieSymbolSearch(docs: Docstrings, classpathSearch: ClasspathSearch) ex
     buildTargetIdentifier: String,
     visitor: SymbolSearchVisitor
   ): SymbolSearch.Result = {
-    classpathSearch.search(WorkspaceSymbolQuery.exact(query), visitor)
+    if query.nonEmpty then
+      classpathSearch.search(WorkspaceSymbolQuery.exact(query), visitor)
+    else SymbolSearch.Result.INCOMPLETE
   }
 
   override def searchMethods(
@@ -25,7 +27,9 @@ class ScastieSymbolSearch(docs: Docstrings, classpathSearch: ClasspathSearch) ex
     buildTargetIdentifier: String,
     visitor: SymbolSearchVisitor
   ): SymbolSearch.Result = {
-    classpathSearch.search(WorkspaceSymbolQuery.exact(query), visitor)
+    if query.nonEmpty then
+      classpathSearch.search(WorkspaceSymbolQuery.exact(query), visitor)
+    else SymbolSearch.Result.INCOMPLETE
   }
 
   def definition(symbol: String, source: URI): ju.List[Location] = {
