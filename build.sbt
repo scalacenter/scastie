@@ -139,7 +139,7 @@ lazy val metalsRunner = project
     )
   )
   .enablePlugins(JavaServerAppPackaging, sbtdocker.DockerPlugin)
-  .dependsOn(api.jvm(ScalaVersions.old3))
+  .dependsOn(api.jvm(ScalaVersions.latest3))
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
@@ -337,6 +337,7 @@ lazy val instrumentation = project
   .dependsOn(api.jvm(ScalaVersions.jvm), utils)
 
 lazy val api          = SbtShared.api
+lazy val runtimeApi   = SbtShared.`runtime-api`
 lazy val runtimeScala = SbtShared.`runtime-scala`
 
 lazy val sbtScastie = project
