@@ -1,7 +1,7 @@
-package com.olegych.scastie
-package api
+package scastie.runtime
 
 import java.awt.image.BufferedImage
+import scastie.runtime.api._
 
 package object runtime {
 

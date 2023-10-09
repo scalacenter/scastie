@@ -1,9 +1,17 @@
-package com.olegych.scastie.api
-package runtime
+package scastie.runtime
 
 import play.api.libs.json.Json
+import scastie.runtime.api._
+import play.api.libs.json.OFormat
 
 protected[runtime] trait SharedRuntime {
+  implicit val instrumentationFormat: OFormat[Instrumentation] = Json.format[Instrumentation]
+  implicit val positionFormat: OFormat[Position] = Json.format[Position]
+  implicit val valueFormat: OFormat[Value] = Json.format[Value]
+  implicit val htmlFormat: OFormat[Html] = Json.format[Html]
+  implicit val attachedDomFormat: OFormat[AttachedDom] = Json.format[AttachedDom]
+  implicit val renderFormat: OFormat[Render] = Json.format[Render]
+
   def write(instrumentations: List[Instrumentation]): String = {
     if (instrumentations.isEmpty) "" else Json.stringify(Json.toJson(instrumentations))
   }

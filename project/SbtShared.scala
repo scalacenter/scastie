@@ -122,15 +122,17 @@ object SbtShared {
   lazy val api = projectMatrix
     .in(file("api"))
     .settings(apiSettings)
-    .jvmPlatform(ScalaVersions.cross)
-    .jsPlatform(ScalaVersions.crossJS, baseJsSettings)
+    .jvmPlatform(Seq(ScalaVersions.jvm, ScalaVersions.latest3, ScalaVersions.sbt))
+    .jsPlatform(Seq(ScalaVersions.js), baseJsSettings)
     .enablePlugins(BuildInfoPlugin)
 
-  lazy val sbtApiProject: Project = Project(id = "api-sbt", base = file("api-sbt"))
-    .settings(sourceDirectory := baseDirectory.value / ".." / ".." / "api" / "src")
-    .settings(apiSettings)
-    .settings(scalaVersion := ScalaVersions.sbt)
-    .enablePlugins(BuildInfoPlugin)
+  lazy val `runtime-api` = projectMatrix
+    .in(file("runtime-api"))
+    .settings(
+      semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
+    )
+    .jvmPlatform(ScalaVersions.cross)
+    .jsPlatform(ScalaVersions.crossJS, baseJsSettings)
 
   private def apiSettings = {
     baseSettings ++ List(
@@ -172,11 +174,18 @@ object SbtShared {
       version           := versionRuntime,
       name              := runtimeProjectName,
       semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
+      libraryDependencies += {
+        scalaVersion.value match {
+          case v if v.startsWith("2.10") => "com.typesafe.play" %%% "play-json" % "2.6.14"
+          case v if v.startsWith("2.11") => "com.typesafe.play" %%% "play-json" % "2.7.4"
+          case _                         => "com.typesafe.play" %%% "play-json" % "2.10.0-RC5"
+        }
+      },
       inConfig(Compile)(
         unmanagedSourceDirectories ++= scala2MajorSourceDirs(scalaSource.value, virtualAxes.value)
       )
     )
-    .dependsOn(api)
+    .dependsOn(`runtime-api`)
 
   /**
     * A sub project in projectMatrix, ex with scala 2.13.x, is already configured with unmanagedSourceDirectories:

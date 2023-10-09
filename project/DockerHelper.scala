@@ -65,8 +65,6 @@ object DockerHelper {
             sbtVersion: String): Dockerfile = {
 
     val artifactTargetPath = s"/app/${artifact.getFileName()}"
-    val generatedProjects = new GenerateProjects(sbtTargetDir)
-    generatedProjects.generateSbtProjects()
 
     val logbackConfDestination = "/home/scastie/logback.xml"
 
@@ -147,7 +145,6 @@ object DockerHelper {
       env("HOME", userHome)
 
       val dest = s"$userHome/projects"
-      add(generatedProjects.projectTarget.toFile, dest)
       chown("projects")
 
       add(ivyLocalTemp.toFile, s"$userHome/.ivy2/local/$organization")
