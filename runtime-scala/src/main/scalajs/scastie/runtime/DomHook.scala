@@ -1,5 +1,4 @@
-package com.olegych.scastie.api
-package runtime
+package scastie.runtime
 
 import org.scalajs.dom.HTMLElement
 import scala.scalajs.js
