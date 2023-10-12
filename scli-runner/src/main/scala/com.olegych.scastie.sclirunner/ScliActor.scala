@@ -8,13 +8,7 @@ import akka.actor.ActorContext
 import com.olegych.scastie.util.ActorReconnecting
 import com.olegych.scastie.util.ReconnectInfo
 import com.olegych.scastie.util.SbtTask
-import com.olegych.scastie.api.SnippetId
-import com.olegych.scastie.api.Inputs
-import com.olegych.scastie.api.RunnerPing
-import com.olegych.scastie.api.RunnerPong
-import com.olegych.scastie.api.SnippetProgress
-import com.olegych.scastie.api.ProcessOutput
-import com.olegych.scastie.api.ProcessOutputType
+import scastie.api._
 import com.olegych.scastie.sclirunner.ScliRunner
 import com.olegych.scastie.sclirunner.BspClient
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -26,10 +20,6 @@ import java.time.Instant
 import scala.sys.process._
 import java.nio.charset.StandardCharsets
 import scala.io.{Source => IOSource}
-import com.olegych.scastie.api.Problem
-import com.olegych.scastie.api
-import play.api.libs.json.Reads
-import play.api.libs.json.Json
 import scala.util.control.NonFatal
 import akka.actor.ActorSelection
 import scala.concurrent.duration.FiniteDuration
@@ -44,13 +34,6 @@ object ScliActor {
 
   case object Available extends ScliState
   case object Running extends ScliState
-
-  def sbtTaskToScliActorTask(sbtTask: SbtTask): ScliActorTask = {
-    sbtTask match {
-      case SbtTask(snippetId, inputs, ip, _, progressActor) =>
-        ScliActorTask(snippetId, inputs, ip, progressActor)
-    }
-  }
 }
 
 
@@ -76,13 +59,9 @@ class ScliActor(system: ActorSystem,
   // FSM
   // Available state (no running scala cli instance)
   val whenAvailable: Receive = reconnectBehavior orElse { message => message match {
-    case task: SbtTask => {
-      // log.warning("Should not receive an SbtTask, converting to ScliActorTask")
-      runTask(sbtTaskToScliActorTask(task), sender())
-    }
     case task: ScliActorTask => runTask(task, sender())
-
     case RunnerPing => sender() ! RunnerPong
+    case _ =>
   } }
 
 
@@ -154,7 +133,7 @@ class ScliActor(system: ActorSystem,
       ts = Some(Instant.now.toEpochMilli),
       snippetId = Some(snipId),
       isDone = true,
-      compilationInfos = List(Problem(api.Error, line = None, message = err)),
+      compilationInfos = List(Problem(Error, line = None, message = err)),
       userOutput = Some(ProcessOutput(logs.mkString("\n") + "\n" + err, ProcessOutputType.StdErr, None))
     )
   }
@@ -172,7 +151,7 @@ class ScliActor(system: ActorSystem,
     if (isProduction) {
       reconnectInfo.foreach { info =>
         import info._
-        balancer(context, info) ! api.RunnerConnect(actorHostname, actorAkkaPort)
+        balancer(context, info) ! RunnerConnect(actorHostname, actorAkkaPort)
       }
     }
   }

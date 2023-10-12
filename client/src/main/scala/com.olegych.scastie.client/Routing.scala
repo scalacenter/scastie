@@ -1,13 +1,16 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.{Inputs, Project, ScalaDependency, ScalaTarget, ScalaTargetType, ScalaVersions, SnippetId, SnippetUserPart}
+import scastie.api._
 import com.olegych.scastie.client.components._
 import japgolly.scalajs.react._
 import vdom.all._
 import extra.router._
-import play.api.libs.json.Json
 
 import java.util.UUID
+
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
 
 class Routing(defaultServerUrl: String) {
   val config: RouterConfig[Page] = RouterConfigDsl[Page].buildConfig { dsl =>
@@ -27,16 +30,10 @@ class Routing(defaultServerUrl: String) {
     }(p => Map("target" -> p.targetType.toString) ++ p.code.map("c" -> _))
 
     val inputs = queryToMap.pmap { map =>
-      map.get("inputs").flatMap { inputs =>
-        Json
-          .fromJson[Inputs](Json.parse(inputs))
-          .fold({ e =>
-            println(s"failed to parse ${inputs}")
-            println(e)
-            None
-          }, inputs => Some(InputsPage(inputs)))
-      }
-    }(p => Map("inputs" -> Json.toJson(p.inputs).toString().replace("{", "%7B").replace("}", "%7D")))
+      map.get("inputs")
+        .flatMap(inputs => decode[BaseInputs](inputs).toOption)
+        .map(inputs => InputsPage(inputs))
+    }(p => Map("inputs" -> p.inputs.asJson.noSpaces.replace("{", "%7B").replace("}", "%7D")))
 
     def parseTryLibrary(map: Map[String, String]) = {
       (
@@ -50,11 +47,11 @@ class Routing(defaultServerUrl: String) {
         case (Some(g), Some(a), Some(v), o, r, c) =>
           val target = map.get("t").flatMap(ScalaTargetType.parse) match {
             case Some(t @ ScalaTargetType.Scala2) =>
-              map.get("sv").map(sv => ScalaTarget.Jvm(ScalaVersions.find(t, sv)))
+              map.get("sv").map(sv => Jvm(ScalaVersions.find(t, sv)))
             case Some(t @ ScalaTargetType.JS) =>
               (map.get("sv"), map.get("sjsv")) match {
                 case (Some(sv), sjsv) =>
-                  Some(ScalaTarget.Js(ScalaVersions.find(t, sv), sjsv.getOrElse(ScalaTarget.Js.default.scalaJsVersion)))
+                  Some(Js(ScalaVersions.find(t, sv), sjsv.getOrElse(Js.default.scalaJsVersion)))
                 case _ => None
               }
             case _ => None
@@ -70,8 +67,8 @@ class Routing(defaultServerUrl: String) {
 
     def renderTryLibrary(dep: TryLibraryPage) = {
       val tm = dep.dependency.target match {
-        case ScalaTarget.Jvm(sv)      => Map("sv" -> sv)
-        case ScalaTarget.Js(sv, sjsv) => Map("sv" -> sv, "sjsv" -> sjsv)
+        case Jvm(sv)      => Map("sv" -> sv)
+        case Js(sv, sjsv) => Map("sv" -> sv, "sjsv" -> sjsv)
         case _                        => Map[String, String]()
       }
       tm ++ dep.code.map("c" -> _) ++ Map(

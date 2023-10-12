@@ -1,6 +1,9 @@
-package com.olegych.scastie.api
+package scastie.api
 
-import play.api.libs.json._
+import io.circe.generic.semiauto._
+import io.circe._
+import scastie.runtime.api._
+import RuntimeCodecs._
 
 object SnippetProgress {
   def default: SnippetProgress =
@@ -21,7 +24,8 @@ object SnippetProgress {
       isForcedProgramMode = false
     )
 
-  implicit val formatSnippetProgress: OFormat[SnippetProgress] = Json.format[SnippetProgress]
+  implicit val snippetProgressEncoder: Encoder[SnippetProgress] = deriveEncoder[SnippetProgress]
+  implicit val snippetProgressDecoder: Decoder[SnippetProgress] = deriveDecoder[SnippetProgress]
 }
 
 case class SnippetProgress(
@@ -42,5 +46,5 @@ case class SnippetProgress(
 ) {
   def isFailure: Boolean = isTimeout || isSbtError || runtimeError.nonEmpty || compilationInfos.exists(_.severity == Error)
 
-  override def toString: String = Json.toJsObject(this).toString()
+  override def toString: String = "" // Json.toJsObject(this).toString()
 }

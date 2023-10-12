@@ -2,7 +2,7 @@ package com.olegych.scastie
 package client
 package components
 
-import com.olegych.scastie.api._
+import scastie.api._
 
 import japgolly.scalajs.react._
 import vdom.all._
@@ -26,7 +26,7 @@ object Assets {
 
 final case class SideBar(isDarkTheme: Boolean,
                          status: StatusState,
-                         inputs: Inputs,
+                         inputs: BaseInputs,
                          toggleTheme: Reusable[Callback],
                          view: StateSnapshot[View],
                          openHelpModal: Reusable[Callback],

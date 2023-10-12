@@ -1,7 +1,12 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api._
+import scastie.api._
+import scastie.runtime.api._
+import io.circe._
+import io.circe.parser._
+
 import com.olegych.scastie.client.components.Scastie
+import RuntimeCodecs._
 
 import scala.scalajs.js
 import scala.collection.mutable.{Map => MMap}
@@ -10,8 +15,6 @@ import scala.util.{Try, Failure, Success}
 import org.scalajs.dom.HTMLElement
 
 import japgolly.scalajs.react._
-
-import play.api.libs.json.Json
 
 import java.util.UUID
 
@@ -51,18 +54,9 @@ object Global {
 
   def signal(instrumentationsRaw: String, attachedDoms: js.Array[HTMLElement], rawId: String): Unit = {
 
-    val result =
-      Json
-        .fromJson[ScalaJsResult](
-          Json.parse(instrumentationsRaw)
-        )
-        .asOpt
+    val result = decode[ScalaJsResult](instrumentationsRaw).toOption
 
-    val (instr, runtimeError) = result.map(_.in) match {
-      case Some(Left(maybeRuntimeError)) => (Nil, maybeRuntimeError)
-      case Some(Right(instrumentations)) => (instrumentations, None)
-      case _                             => (Nil, None)
-    }
+    val ScalaJsResult(instr, runtimeError) = result.getOrElse(ScalaJsResult(Nil, None))
 
     withScope(rawId)(
       _.withEffectsImpure.modState(

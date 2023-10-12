@@ -17,9 +17,8 @@ import cats.data.OptionT
 import cats.effect.{Async, Sync}
 import cats.syntax.all._
 import com.evolutiongaming.scache.{Cache, Releasable}
-import com.olegych.scastie.api._
-import com.olegych.scastie.api.ScalaTarget._
-import com.typesafe.config.ConfigFactory
+import scastie.api._
+import scastie.api.ScalaTarget._
 import coursierapi.{Dependency, Fetch}
 import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext
@@ -103,14 +102,14 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
 
   /**
     * This converts a configuration that targets Scala-CLI
-    * It extracts directives and expose a new configuration understandable
+    * It extracts directives and expose a new configurunderstandable
     * by the runner.
     * If it is not a Scala-CLI target, it will return the untouched configuration.
     */
   def convertConfigurationFromScalaCli(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastieMetalsOptions] =
-    if (configuration.scalaTarget.targetType == ScalaTargetType.ScalaCli && configuration.code.isDefined) then
-      val res = Async[F].delay ( ScalaCliParser.getScalaTarget(configuration.code.get) )
-      EitherT(res)
+    if configuration.scalaTarget.targetType == ScalaCli then
+      val res = Async[F].delay ( ScalaCliParser.getScalaTarget(configuration.code) )
+      EitherT.right(res)
     else
       EitherT.rightT(configuration)
 
@@ -127,36 +126,31 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
    * In sbt it is automatically resolved but here, we manually specify scala target.
    */
   def areDependenciesSupported(configuration: ScastieMetalsOptions): EitherT[F, FailureType, Boolean] =
-    if (configuration.scalaTarget.targetType == ScalaTargetType.ScalaCli) then
-      convertConfigurationFromScalaCli(configuration).flatMap(areDependenciesSupported(_))
-    else {
-      def scalaTargetString(scalaTarget: ScalaTarget): String =
-        s"${scalaTarget.scalaVersion}" ++ (if scalaTarget.targetType == ScalaTargetType.JS then
-                                            s" ${scalaTarget.targetType}"
-                                          else "")
+    def scalaTargetString(scalaTarget: ScalaTarget): String =
+      s"${scalaTarget.scalaVersion}" ++ (if scalaTarget.isInstanceOf[Js] then "JS" else "")
 
     def checkScalaVersionCompatibility(scalaTarget: ScalaTarget): Boolean =
       SemVer.isCompatibleVersion(scalaTarget.scalaVersion, configuration.scalaTarget.scalaVersion)
 
     def checkScalaJsCompatibility(scalaTarget: ScalaTarget): Boolean =
-      if configuration.scalaTarget.targetType == ScalaTargetType.JS then scalaTarget.targetType == ScalaTargetType.JS
-      else scalaTarget.isJVMTarget
+      if configuration.scalaTarget.isInstanceOf[Js] then scalaTarget.isInstanceOf[Js]
+      else true
 
-      val misconfiguredLibraries = configuration.dependencies
-        .filterNot(l => checkScalaVersionCompatibility(l.target) && checkScalaJsCompatibility(l.target))
 
-      Option
-        .when(misconfiguredLibraries.nonEmpty) {
-          val errorString = misconfiguredLibraries
-            .map(l =>
-              s"${l.toString} dependency  binary version is: ${scalaTargetString(l.target)} while scastie is set to: ${scalaTargetString(configuration.scalaTarget)}"
-            )
-            .mkString("\n")
-          PresentationCompilerFailure(s"Misconfigured dependencies: $errorString")
-        }
-        .toLeft(true)
-        .toEitherT
-    }
+    val misconfiguredLibraries = configuration.dependencies
+      .filterNot(l => checkScalaVersionCompatibility(l.target) && checkScalaJsCompatibility(l.target))
+
+    Option
+      .when(misconfiguredLibraries.nonEmpty) {
+        val errorString = misconfiguredLibraries
+          .map(l =>
+            s"${l.toString} dependency  binary version is: ${scalaTargetString(l.target)} while scastie is set to: ${scalaTargetString(configuration.scalaTarget)}"
+          )
+          .mkString("\n")
+        PresentationCompilerFailure(s"Misconfigured dependencies: $errorString")
+      }
+      .toLeft(true)
+      .toEitherT
 
   /*
    * Initializes the compiler with proper classpath and version
@@ -220,11 +214,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
     case Js(scalaVersion, scalaJsVersion) if scalaVersion.startsWith("3") =>
       Set(Dependency.of("org.scala-js", "scalajs-library_2.13", scalaJsVersion))
     case Js(scalaVersion, scalaJsVersion) => Set(
-        Dependency.of(
-          "org.scala-js",
-          artifactWithBinaryVersion("scalajs-library", ScalaTarget.Jvm(scalaVersion)),
-          scalaJsVersion
-        )
+        Dependency.of("org.scala-js", artifactWithBinaryVersion("scalajs-library", Jvm(scalaVersion)), scalaJsVersion)
       )
     case _ => Set.empty
 

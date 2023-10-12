@@ -2,7 +2,7 @@ package com.olegych.scastie.util
 
 import akka.actor.{Actor, ActorContext, ActorLogging, Cancellable}
 import akka.remote.DisassociatedEvent
-import com.olegych.scastie.api.ActorConnected
+import scastie.api.ActorConnected
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._

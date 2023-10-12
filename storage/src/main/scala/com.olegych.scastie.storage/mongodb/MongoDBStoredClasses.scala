@@ -1,8 +1,9 @@
 package com.olegych.scastie.storage
 
-import play.api.libs.json.OFormat
-import play.api.libs.json.Json
-import com.olegych.scastie.api._
+import scastie.api._
+
+import io.circe._
+import io.circe.generic.semiauto._
 
 sealed trait BaseMongoSnippet {
   def snippetId: SnippetId
@@ -17,13 +18,15 @@ case class ShortMongoSnippet(
 ) extends BaseMongoSnippet
 
 object ShortMongoSnippet {
-  implicit val formatShortMongoSnippet: OFormat[ShortMongoSnippet] = Json.format[ShortMongoSnippet]
+  implicit val shortMongoSnippetEncoder: Encoder[ShortMongoSnippet] = deriveEncoder[ShortMongoSnippet]
+  implicit val shortMongoSnippetDecoder: Decoder[ShortMongoSnippet] = deriveDecoder[ShortMongoSnippet]
 }
 
 case class PolicyAcceptance(user: String, acceptedPrivacyPolicy: Boolean = false)
 
 object PolicyAcceptance {
-  implicit val formatPolicyAcceptance: OFormat[PolicyAcceptance] = Json.format[PolicyAcceptance]
+  implicit val policyAcceptanceEncoder: Encoder[PolicyAcceptance] = deriveEncoder[PolicyAcceptance]
+  implicit val policyAcceptanceDecoder: Decoder[PolicyAcceptance] = deriveDecoder[PolicyAcceptance]
 }
 
 case class MongoSnippet(
@@ -31,7 +34,7 @@ case class MongoSnippet(
     user: Option[String],
     snippetId: SnippetId,
     oldId: Long,
-    inputs: Inputs,
+    inputs: BaseInputs,
     progresses: List[SnippetProgress],
     scalaJsContent: String,
     scalaJsSourceMapContent: String,
@@ -41,5 +44,7 @@ case class MongoSnippet(
 }
 
 object MongoSnippet {
-  implicit val formatMongoSnippet: OFormat[MongoSnippet] = Json.format[MongoSnippet]
+  implicit val mongoSnippetEncoder: Encoder[MongoSnippet] = deriveEncoder[MongoSnippet]
+  implicit val mongoSnippetDecoder: Decoder[MongoSnippet] = deriveDecoder[MongoSnippet]
+
 }

@@ -5,7 +5,7 @@ import scala.meta.internal.metals.CompilerOffsetParams
 import scala.meta.internal.metals.EmptyCancelToken
 import scala.reflect.internal.util.NoSourceFile
 
-import com.olegych.scastie.api.ScastieOffsetParams
+import scastie.api.ScastieOffsetParams
 
 object DTOExtensions {
   val wrapperIndent = "  "

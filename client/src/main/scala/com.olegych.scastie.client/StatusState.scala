@@ -1,6 +1,6 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.SbtRunnerState
+import scastie.api.SbtRunnerState
 
 object StatusState {
   def empty: StatusState = StatusState(sbtRunners = None)

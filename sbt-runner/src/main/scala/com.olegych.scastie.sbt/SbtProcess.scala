@@ -6,7 +6,7 @@ import java.time.Instant
 import akka.actor.{ActorRef, Cancellable, FSM, Stash}
 import akka.pattern.ask
 import akka.util.Timeout
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.instrumentation.InstrumentedInputs
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.util._
@@ -22,10 +22,10 @@ object SbtProcess {
   case object Running extends SbtState
 
   sealed trait Data
-  case class SbtData(currentInputs: Inputs) extends Data
+  case class SbtData(currentInputs: SbtInputs) extends Data
   case class SbtRun(
       snippetId: SnippetId,
-      inputs: Inputs,
+      inputs: SbtInputs,
       isForcedProgramMode: Boolean,
       progressActor: ActorRef,
       snippetActor: ActorRef,
@@ -100,18 +100,19 @@ class SbtProcess(runTimeout: FiniteDuration,
   Files.createDirectories(codeFile.getParent)
 
   private def scalaJsContent(): Option[String] = {
-    slurp(sbtDir.resolve(ScalaTarget.Js.targetFilename))
+    slurp(sbtDir.resolve(Js.targetFilename))
   }
 
   private def scalaJsSourceMapContent(): Option[String] = {
-    slurp(sbtDir.resolve(ScalaTarget.Js.sourceMapFilename))
+    slurp(sbtDir.resolve(Js.sourceMapFilename))
   }
 
   startWith(
     Initializing, {
-      InstrumentedInputs(Inputs.default) match {
+      // TODO
+      InstrumentedInputs(SbtInputs.default) match {
         case Right(instrumented) =>
-          val inputs = instrumented.inputs
+          val inputs = instrumented.inputs.asInstanceOf[SbtInputs]
           setInputs(inputs)
           val p = process
           log.info(s"started process ${p}")
@@ -190,7 +191,7 @@ class SbtProcess(runTimeout: FiniteDuration,
 
       InstrumentedInputs(taskInputs) match {
         case Right(instrumented) =>
-          val sbtRun = _sbtRun.copy(inputs = instrumented.inputs, isForcedProgramMode = instrumented.isForcedProgramMode)
+          val sbtRun = _sbtRun.copy(inputs = instrumented.inputs.asInstanceOf[SbtInputs], isForcedProgramMode = instrumented.isForcedProgramMode)
           val isReloading = stateInputs.needsReload(sbtRun.inputs)
           setInputs(sbtRun.inputs)
 
@@ -275,14 +276,14 @@ class SbtProcess(runTimeout: FiniteDuration,
 
   // Sbt files setup
 
-  private def setInputs(inputs: Inputs): Unit = {
+  private def setInputs(inputs: SbtInputs): Unit = {
     val prompt =
       s"""shellPrompt := {_ => println(""); "$promptUniqueId" + "\\n "}"""
 
     writeFile(pluginFile, inputs.sbtPluginsConfig + "\n")
     writeFile(buildFile, prompt + "\n" + inputs.sbtConfig)
-    Files.deleteIfExists(sbtDir.resolve(ScalaTarget.Js.targetFilename))
-    Files.deleteIfExists(sbtDir.resolve(ScalaTarget.Js.sourceMapFilename))
+    Files.deleteIfExists(sbtDir.resolve(Js.targetFilename))
+    Files.deleteIfExists(sbtDir.resolve(Js.sourceMapFilename))
     write(codeFile, inputs.code, truncate = true)
   }
 

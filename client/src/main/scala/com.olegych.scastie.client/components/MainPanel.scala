@@ -81,8 +81,8 @@ object MainPanel {
         target = state.inputs.target,
         metalsStatus = state.metalsStatus,
         setMetalsStatus = backend.setMetalsStatus,
+        isMetalsStale = state.isMetalsStale,
         dependencies = state.inputs.libraries,
-        isMetalsStale = state.isMetalsStale
       ).render
 
     val console =
@@ -100,14 +100,10 @@ object MainPanel {
     val buildSettings =
       BuildSettings(
         visible = visible(View.BuildSettings),
-        librariesFrom = state.inputs.librariesFrom,
+        inputs = state.inputs,
         isDarkTheme = state.isDarkTheme,
         isBuildDefault = state.isBuildDefault,
         isResetModalClosed = state.modalState.isResetModalClosed,
-        scalaTarget = state.inputs.target,
-        sbtConfigExtra = state.inputs.sbtConfigExtra,
-        sbtConfig = state.inputs.sbtConfigGenerated,
-        sbtPluginsConfig = state.inputs.sbtPluginsConfigGenerated,
         setTarget = backend.setTarget,
         closeResetModal = backend.closeResetModal,
         resetBuild = backend.resetBuild,

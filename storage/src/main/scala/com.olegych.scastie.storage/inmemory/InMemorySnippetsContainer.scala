@@ -1,6 +1,6 @@
 package com.olegych.scastie.storage.inmemory
 
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.storage.SnippetsContainer
 import com.olegych.scastie.storage.UserLogin
 
@@ -16,7 +16,7 @@ trait InMemorySnippetsContainer extends SnippetsContainer {
 
   case class Storage(
       snippetId: SnippetId,
-      inputs: Inputs,
+      inputs: BaseInputs,
       progresses: mutable.Queue[SnippetProgress] = mutable.Queue(),
       var scalaJsContent: String = "",
       var scalaJsSourceMapContent: String = "",
@@ -67,14 +67,19 @@ trait InMemorySnippetsContainer extends SnippetsContainer {
 
   def readOldSnippet(id: Int): Future[Option[FetchResult]] = Future(None)
 
-  protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] =
-    Future {
-      snippets.update(snippetId, Storage(snippetId, inputs.withSavedConfig))
+  protected def insert(snippetId: SnippetId, inputs: BaseInputs): Future[Unit] = {
+    val adjustedInputs = inputs match {
+      case sbtInputs: SbtInputs => sbtInputs.withSavedConfig
+      case _ => inputs
     }
+    Future {
+      snippets.update(snippetId, Storage(snippetId, adjustedInputs))
+    }
+  }
 
   override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] = Future {
     for {
       old <- snippets.get(snippetId)
-    } yield snippets.update(snippetId, old.copy(inputs = old.inputs.copy(isShowingInUserProfile = false)))
+    } yield snippets.update(snippetId, old.copy(inputs = old.inputs.copyBaseInput(isShowingInUserProfile = false)))
   }
 }

@@ -4,7 +4,7 @@ import scala.jdk.CollectionConverters._
 import scala.meta.internal.pc.CompletionItemData
 
 import com.google.gson.Gson
-import com.olegych.scastie.api._
+import scastie.api._
 import org.eclipse.lsp4j._
 import org.eclipse.lsp4j.jsonrpc.messages.{Either => JEither}
 import org.slf4j.LoggerFactory

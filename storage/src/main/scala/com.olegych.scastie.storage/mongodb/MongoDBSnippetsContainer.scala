@@ -1,6 +1,6 @@
 package com.olegych.scastie.storage.mongodb
 
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.storage._
 import org.mongodb.scala._
 import org.mongodb.scala.model.Filters._
@@ -31,7 +31,7 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
   }
 
 
-  def toMongoSnippet(snippetId: SnippetId, inputs: Inputs): MongoSnippet = MongoSnippet(
+  def toMongoSnippet(snippetId: SnippetId, inputs: BaseInputs): MongoSnippet = MongoSnippet(
     simpleSnippetId = snippetId.url,
     user = snippetId.user.map(_.login),
     snippetId = snippetId,
@@ -43,8 +43,12 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
     time = System.currentTimeMillis
   )
 
-  protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] = {
-    val snippet = toBson(toMongoSnippet(snippetId, inputs.withSavedConfig))
+  protected def insert(snippetId: SnippetId, inputs: BaseInputs): Future[Unit] = {
+    val adjustedInputs = inputs match {
+      case sbtInputs: SbtInputs => sbtInputs.withSavedConfig
+      case _ => inputs
+    }
+    val snippet = toBson(toMongoSnippet(snippetId, adjustedInputs))
     snippets.insertOne(snippet).toFuture().map(_ => ())
   }
 

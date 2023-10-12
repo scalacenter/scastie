@@ -11,8 +11,7 @@ import akka.event
 import akka.pattern.ask
 import akka.remote.DisassociatedEvent
 import akka.util.Timeout
-import com.olegych.scastie.api
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.storage._
 import com.olegych.scastie.storage.filesystem._
 import com.olegych.scastie.storage.inmemory._
@@ -25,19 +24,13 @@ import java.time.Instant
 import java.util.concurrent.Executors
 import scala.concurrent._
 import scala.concurrent.duration._
-import com.olegych.scastie.api.ScalaTarget.Typelevel
-import com.olegych.scastie.api.ScalaTarget.Native
-import com.olegych.scastie.api.ScalaTarget.Jvm
-import com.olegych.scastie.api.ScalaTarget.Js
-import com.olegych.scastie.api.ScalaTarget.Scala3
-import com.olegych.scastie.api.ScalaTarget.ScalaCli
 
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
 
 case class UserTrace(ip: String, user: Option[User])
 
-case class InputsWithIpAndUser(inputs: Inputs, user: UserTrace)
+case class InputsWithIpAndUser(inputs: BaseInputs, user: UserTrace)
 
 case class RunSnippet(inputs: InputsWithIpAndUser)
 case class SaveSnippet(inputs: InputsWithIpAndUser)
@@ -64,7 +57,7 @@ case class RemoveAllUserSnippets(user: User)
 
 case class Run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId)
 
-case class Done(progress: api.SnippetProgress, retries: Int)
+case class Done(progress: SnippetProgress, retries: Int)
 
 case object Ping
 
@@ -143,7 +136,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   def receive: Receive = event.LoggingReceive(event.Logging.InfoLevel) {
-    case api.RunnerPong => ()
+    case RunnerPong => ()
 
     case format: FormatRequest =>
       sbtDispatcher.tell(format, sender())
@@ -232,14 +225,14 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       val sender = this.sender()
       logError(container.removeUserSnippets(UserLogin(user.login)).map(sender ! _))
 
-    case x @ ReceiveStatus(requester) => sbtDispatcher.tell(x, sender()) 
+    case x @ ReceiveStatus(requester) => sbtDispatcher.tell(x, sender())
 
     case statusProgress: StatusProgress =>
       statusActor ! statusProgress
 
-    case progress: SnippetProgress => 
+    case progress: SnippetProgress =>
       val sender = this.sender()
-      
+
 
       logError(
         container.appendOutput(progress)
@@ -253,11 +246,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case run: Run => {
       run.inputsWithIpAndUser.inputs.target match {
-        case ScalaCli(_) => 
-          println(s"Forwarding run to Scala-CLI dispatcher: ${run.snippetId}")
+        case _: ScalaCli =>
+          log.info(s"Forwarding run to Scala-CLI dispatcher: ${run.snippetId}")
           scliDispatcher ! run
         case _ =>
-          println(s"Forwarding run to SBT dispatcher: ${run.snippetId}")
+          log.info(s"Forwarding run to SBT dispatcher: ${run.snippetId}")
           sbtDispatcher ! run
       }
     }

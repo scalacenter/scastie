@@ -1,9 +1,11 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api._
+import scastie.api._
 import japgolly.scalajs.react._
 
 import vdom.all._
+import scastie.api.ScalaTargetType.Scala2
+import scastie.api.ScalaTargetType.JS
 
 case class TargetSelector(scalaTarget: ScalaTarget, onChange: ScalaTarget ~=> Callback) {
   @inline def render: VdomElement = TargetSelector.targetSelector(this)
@@ -29,6 +31,7 @@ object TargetSelector {
       case ScalaTargetType.Typelevel => "Typelevel"
     }
   }
+
 
   val targetSelector =
     ScalaFnComponent

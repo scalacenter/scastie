@@ -2,9 +2,10 @@ package scastie.metals
 
 import cats.effect.Async
 import cats.syntax.all._
-import com.olegych.scastie.api._
-import io.circe.generic.auto._
+import scastie.api._
 import io.circe.syntax._
+import io.circe.disjunctionCodecs.encodeEither
+
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl.io._
@@ -16,7 +17,6 @@ object ScastieMetalsRoutes {
   def routes[F[_]: Async](metals: ScastieMetals[F]): HttpRoutes[F] =
     val dsl = new Http4sDsl[F] {}
     import dsl._
-    import DTOCodecs._
     import JavaConverters._
 
     implicit val lspRequestDecoder: EntityDecoder[F, LSPRequestDTO]                  = jsonOf[F, LSPRequestDTO]
@@ -50,6 +50,8 @@ object ScastieMetalsRoutes {
 
       case req @ POST -> Root / "metals" / "isConfigurationSupported" => for {
           scastieConfiguration     <- req.as[ScastieMetalsOptions]
+          _ = println(scastieConfiguration)
+          _ = println("WTF")
           isConfigurationSupported <- metals.isConfigurationSupported(scastieConfiguration).value
           resp                     <- Ok(isConfigurationSupported.asJson)
         } yield resp

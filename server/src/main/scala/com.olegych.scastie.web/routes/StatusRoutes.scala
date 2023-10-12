@@ -10,10 +10,10 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Route, _}
 import akka.pattern.ask
 import akka.stream.scaladsl._
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.balancer._
 import com.olegych.scastie.web.oauth2.UserDirectives
-import play.api.libs.json.Json
+import io.circe.syntax._
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,9 +31,7 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives)(implic
         path("status-sse")(
           complete(
             statusSource(isAdmin).map { progress =>
-              ServerSentEvent(
-                Json.stringify(Json.toJson(progress))
-              )
+              ServerSentEvent(progress.asJson.noSpaces)
             }
           )
         ),
@@ -79,7 +77,7 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives)(implic
       }
       .via(flow)
       .map(
-        progress => ws.TextMessage.Strict(Json.stringify(Json.toJson(progress)))
+        progress => ws.TextMessage.Strict(progress.asJson.noSpaces)
       )
   }
 }

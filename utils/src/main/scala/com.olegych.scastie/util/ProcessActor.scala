@@ -9,7 +9,7 @@ import akka.contrib.process._
 import akka.stream.scaladsl.{Flow, Framing, Sink, Source}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, ThrottleMode}
 import akka.util.ByteString
-import com.olegych.scastie.api.{ProcessOutput, ProcessOutputType}
+import scastie.api.{ProcessOutput, ProcessOutputType}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._

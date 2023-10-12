@@ -1,10 +1,14 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api._
+import scastie.api._
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.{Position => _}
-import play.api.libs.json._
 import com.olegych.scastie.client.scli.ScalaCliUtils
+import io.circe._
+import io.circe.generic.semiauto._
+import io.circe.syntax._
+import scastie.runtime.api._
+import RuntimeCodecs._
 
 sealed trait MetalsStatus {
   val info: String
@@ -31,8 +35,8 @@ case class NetworkError(msg: String) extends MetalsStatus {
 }
 
 object SnippetState {
-  implicit val formatSnippetState: OFormat[SnippetState] =
-    Json.format[SnippetState]
+  implicit val formatSnippetEncoder: Encoder[SnippetState] = deriveEncoder[SnippetState]
+  implicit val formatSnippetDecoder: Decoder[SnippetState] = deriveDecoder[SnippetState]
 }
 
 case class SnippetState(
@@ -64,30 +68,30 @@ object ScastieState {
       ),
       user = None,
       attachedDoms = Map(),
-      inputs = Inputs.default,
+      inputs = ScalaCliInputs.default,
       outputs = Outputs.default,
       status = StatusState.empty,
       isEmbedded = isEmbedded
     )
   }
 
-  implicit val dontSerializeAttachedDoms: Format[Map[String, HTMLElement]] =
+  implicit val dontSerializeAttachedDoms: Codec[Map[String, HTMLElement]] =
     dontSerialize[Map[String, HTMLElement]](Map())
 
-  implicit val dontSerializeStatusState: Format[StatusState] =
+  implicit val dontSerializeStatusState: Codec[StatusState] =
     dontSerialize[StatusState](StatusState.empty)
 
-  implicit val dontSerializeEventStream: Format[EventStream[StatusProgress]] =
+  implicit val dontSerializeEventStream: Codec[EventStream[StatusProgress]] =
     dontSerializeOption[EventStream[StatusProgress]]
 
-  implicit val dontSerializeProgressStream: Format[EventStream[SnippetProgress]] =
+  implicit val dontSerializeProgressStream: Codec[EventStream[SnippetProgress]] =
     dontSerializeOption[EventStream[SnippetProgress]]
 
-  implicit val dontSerializeMetalsStatus: Format[MetalsStatus] =
+  implicit val dontSerializeMetalsStatus: Codec[MetalsStatus] =
     dontSerialize[MetalsStatus](MetalsLoading)
 
-  implicit val formatScastieState: OFormat[ScastieState] =
-    Json.format[ScastieState]
+  implicit val scastieStateEncoder: Encoder[ScastieState] = deriveEncoder[ScastieState]
+  implicit val scastieStateDecoder: Decoder[ScastieState] = deriveDecoder[ScastieState]
 
 }
 
@@ -106,7 +110,7 @@ case class ScastieState(
     snippetState: SnippetState,
     user: Option[User],
     attachedDoms: Map[String, HTMLElement],
-    inputs: Inputs,
+    inputs: BaseInputs,
     outputs: Outputs,
     status: StatusState,
     metalsStatus: MetalsStatus = MetalsLoading,
@@ -136,7 +140,7 @@ case class ScastieState(
       loadSnippet: Boolean = loadSnippet,
       scalaJsContent: Option[String] = snippetState.scalaJsContent,
       user: Option[User] = user,
-      inputs: Inputs = inputs,
+      inputs: BaseInputs = inputs,
       outputs: Outputs = outputs,
       status: StatusState = status,
       metalsStatus: MetalsStatus = metalsStatus,
@@ -164,10 +168,7 @@ case class ScastieState(
         ),
         user = user,
         attachedDoms = attachedDoms,
-        inputs = inputs.copy(
-          isShowingInUserProfile = false,
-          forked = None
-        ),
+        inputs = inputs.markAsCopied,
         outputs = outputs,
         status = status,
         metalsStatus = metalsStatus,
@@ -188,7 +189,10 @@ case class ScastieState(
     if (transient) update(this) else update(this.copy(transient = true)).copyAndSave(transient = false)
   }
 
-  def isBuildDefault: Boolean = inputs.isDefault
+  def isBuildDefault: Boolean = inputs match {
+    case sbtInputs: SbtInputs => sbtInputs.isDefault
+    case _ => true
+  }
 
   def isClearable: Boolean =
     outputs.isClearable
@@ -225,7 +229,7 @@ case class ScastieState(
 
   def toggleWorksheetMode: ScastieState =
     copyAndSave(
-      inputs = inputs.copy(_isWorksheetMode = !inputs.isWorksheetMode),
+      inputs = inputs.toggleWorksheet,
       inputsHasChanged = true
     )
 
@@ -339,7 +343,7 @@ case class ScastieState(
   def setCode(code: String): ScastieState = {
     if (inputs.code != code) {
       copyAndSave(
-        inputs = inputs.copy(code = code),
+        inputs = inputs.copyBaseInput(code = code),
         inputsHasChanged = true
       )
     } else {
@@ -347,14 +351,14 @@ case class ScastieState(
     }
   }
 
-  def setInputs(inputs: Inputs): ScastieState =
+  def setInputs(inputs: BaseInputs): ScastieState =
     copyAndSave(
       inputs = inputs
     )
 
   def setSbtConfigExtra(config: String): ScastieState =
     copyAndSave(
-      inputs = inputs.copy(sbtConfigExtra = config),
+      // inputs = inputs, // .copy(sbtConfigExtra = config),
       inputsHasChanged = true
     )
 
@@ -369,33 +373,33 @@ case class ScastieState(
 
   def setTarget(target: ScalaTarget): ScastieState =
     copyAndSave(
-      inputs = inputs.modifyConfig(_.copy(target = target)),
+      inputs = inputs.setTarget(target),
       inputsHasChanged = true
     )
 
   def clearDependencies: ScastieState =
     copyAndSave(
-      inputs = inputs.clearDependencies,
+      // inputs = inputs.clearDependencies,
       inputsHasChanged = true
     )
 
   def addScalaDependency(scalaDependency: ScalaDependency, project: Project): ScastieState = {
-    val newInputs = inputs.addScalaDependency(scalaDependency, project)
+    // val newInputs = inputs.addScalaDependency(scalaDependency, project)
     copyAndSave(
-      inputs = newInputs,
-      inputsHasChanged = newInputs != inputs,
+      // inputs = newInputs,
+      // inputsHasChanged = newInputs != inputs,
     )
   }
 
   def removeScalaDependency(scalaDependency: ScalaDependency): ScastieState =
     copyAndSave(
-      inputs = inputs.removeScalaDependency(scalaDependency),
+      // inputs = inputs.removeScalaDependency(scalaDependency),
       inputsHasChanged = true
     )
 
   def updateDependencyVersion(scalaDependency: ScalaDependency, version: String): ScastieState = {
     copyAndSave(
-      inputs = inputs.updateScalaDependency(scalaDependency, version),
+      // inputs = inputs.updateScalaDependency(scalaDependency, version),
       inputsHasChanged = true
     )
   }
@@ -445,7 +449,7 @@ case class ScastieState(
     copyAndSave(
       outputs = outputs.copy(
         consoleOutputs = outputs.consoleOutputs ++ Vector(
-          ConsoleOutput.ScastieOutput(line)
+          ScastieOutput(line)
         )
       )
     )
@@ -454,8 +458,8 @@ case class ScastieState(
   def addProgress(progress: SnippetProgress): ScastieState = coalesceUpdates { self =>
     val state = self
       .addOutputs(progress.compilationInfos, progress.instrumentations)
-      .logOutput(progress.userOutput, ConsoleOutput.UserOutput.apply _)
-      .logOutput(progress.sbtOutput, ConsoleOutput.SbtOutput.apply _)
+      .logOutput(progress.userOutput, UserOutput.apply _)
+      .logOutput(progress.sbtOutput, SbtOutput.apply _)
       .setForcedProgramMode(progress.isForcedProgramMode)
       .setRuntimeError(progress.runtimeError)
       .setSbtError(progress.isSbtError)
@@ -508,13 +512,13 @@ case class ScastieState(
   def addOutputs(compilationInfos: List[Problem], instrumentations: List[Instrumentation]): ScastieState = {
 
     def topDef(problem: Problem): Boolean = {
-      problem.severity == Error &&
+      problem.severity == scastie.api.Error &&
       problem.message == "expected class or object definition"
     }
 
     val useWorksheetModeTip =
       if (compilationInfos.exists(ci => topDef(ci)))
-        if (inputs.target.hasWorksheetMode)
+        if (inputs.isWorksheetMode)
           Set(
             info(
               """|It seems you're writing code without an enclosing class/object.
@@ -542,11 +546,15 @@ case class ScastieState(
   // Returns a String explaining why the conversion failed.
   //
   def convertToScalaCli: ScastieState = {
-    ScalaCliUtils.convertInputsToScalaCli(inputs) match {
-      case Left(inputs) => copyAndSave(inputs = inputs, scalaCliConversionError = None, view = View.Editor) 
-      case Right(error) => copyAndSave(scalaCliConversionError = Some(error))
+    inputs match {
+      case sbtInputs: SbtInputs =>
+        ScalaCliUtils.convertInputsToScalaCli(sbtInputs) match {
+          case Left(inputs) => copyAndSave(inputs = inputs, scalaCliConversionError = None, view = View.Editor)
+          case Right(error) => copyAndSave(scalaCliConversionError = Some(error))
+        }
+      case _ => this
     }
   }
 
-  override def toString: String = Json.toJson(this).toString()
+  override def toString: String = this.asJson.noSpaces
 }

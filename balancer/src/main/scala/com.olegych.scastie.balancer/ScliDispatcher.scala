@@ -5,18 +5,11 @@ import akka.actor.ActorLogging
 import com.typesafe.config.Config
 import akka.actor.ActorRef
 import akka.actor.ActorSelection
-import com.olegych.scastie.api.ActorConnected
-import com.olegych.scastie.api.ScliState
-import com.olegych.scastie.api.SnippetId
-import com.olegych.scastie.balancer.Ping
-import com.olegych.scastie.api.RunnerConnect
-import com.olegych.scastie.api.RunnerPong
-import com.olegych.scastie.api.TaskId
 import java.time.Instant
 import scala.collection.immutable.Queue
 import com.olegych.scastie.util.SbtTask
 import com.olegych.scastie.util.ScliActorTask
-import com.olegych.scastie.api.SnippetProgress
+import scastie.api._
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
@@ -30,15 +23,15 @@ class ScliDispatcher(config: Config, progressActor: ActorRef, statusActor: Actor
   var remoteServers = getRemoteServers("scli", "ScliRunner", "ScliActor")
 
   var availableServersQueue = Queue[(SocketAddress, ActorSelection)](remoteServers.toSeq :_ *)
-  var taskQueue = Queue[Task]()
+  var taskQueue = Queue[Task[ScalaCliInputs]]()
   var processedSnippetsId: Map[SnippetId, (SocketAddress, ActorSelection)] = Nil.toMap
 
-  private def run0(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId) = {
-    val InputsWithIpAndUser(inputs, UserTrace(ip, user)) = inputsWithIpAndUser
+  private def run0(scalaCliInputs: ScalaCliInputs, userTrace: UserTrace, snippetId: SnippetId) = {
+    val UserTrace(ip, user) = userTrace
 
-    log.info("id: {}, ip: {} run inputs: {}", snippetId, ip, inputs)
+    log.info("id: {}, ip: {} run inputs: {}", snippetId, ip, scalaCliInputs)
 
-    val task = Task(inputs, Ip(ip), TaskId(snippetId), Instant.now)
+    val task = Task[ScalaCliInputs](scalaCliInputs, Ip(ip), TaskId(snippetId), Instant.now)
 
     taskQueue = taskQueue.enqueue(task)
 
@@ -62,7 +55,7 @@ class ScliDispatcher(config: Config, progressActor: ActorRef, statusActor: Actor
           log.info(s"Giving task ${task.taskId} to ${server.pathString}")
           taskQueue = newTaskQueue
           availableServersQueue = newQueue
-          server ! ScliActorTask(task.taskId.snippetId, task.config, task.ip.v, progressActor)
+          server ! ScliActorTask(task.taskId.snippetId, task.config.asInstanceOf[ScalaCliInputs], task.ip.v, progressActor)
           processedSnippetsId += task.taskId.snippetId -> (addr, server)
         }
       }
@@ -74,7 +67,7 @@ class ScliDispatcher(config: Config, progressActor: ActorRef, statusActor: Actor
   def receive: Receive = {
     case RunnerPong => ()
 
-    case p: Ping.type => 
+    case p: Ping.type =>
       val sender = this.sender()
       ping(remoteServers.values.toList).andThen(s => sender ! RunnerPong)
 
@@ -106,7 +99,8 @@ class ScliDispatcher(config: Config, progressActor: ActorRef, statusActor: Actor
         enqueueAvailableServer(addr, server)
       }
 
-    case Run(inputsWithIpAndUser, snippetId) => run0(inputsWithIpAndUser, snippetId)
+    case Run(InputsWithIpAndUser(scalaCliInputs: ScalaCliInputs, userTrace), snippetId) =>
+      run0(scalaCliInputs, userTrace, snippetId)
 
     case event: DisassociatedEvent =>
       for {

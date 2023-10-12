@@ -1,6 +1,6 @@
 package com.olegych.scastie.storage
 
-import com.olegych.scastie.api._
+import scastie.api._
 
 object OldScastieConverter {
   private def convertLine(line: String): Converter => Converter = { converter =>
@@ -38,7 +38,7 @@ object OldScastieConverter {
       .toList
   }
 
-  def convertOldInput(content: String): Inputs = {
+  def convertOldInput(content: String): BaseInputs = {
     val blockStart = "/***"
     val blockEnd = "*/"
 
@@ -49,7 +49,7 @@ object OldScastieConverter {
       val start = blockStartPos + blockStart.length
 
       val sbtConfig = content.slice(start, start + blockEndPos - start)
-      val code = content.drop(blockEndPos + blockEnd.length)
+      val code = content.drop(blockEndPos + blockEnd.length).trim
 
       val converterFn =
         sbtConfig.split("\n").foldLeft(Converter.nil) {
@@ -57,9 +57,9 @@ object OldScastieConverter {
             convertLine(line)(converter)
         }
 
-      converterFn(Inputs.default).copy(code = code.trim)
+      converterFn(SbtInputs.default).copyBaseInput(code = code)
     } else {
-      Inputs.default.copy(code = content.trim)
+      SbtInputs.default.copy(code = content.trim)
     }
   }
 
@@ -83,32 +83,38 @@ object OldScastieConverter {
     def setTargetType(targetType0: ScalaTargetType): Converter =
       copy(targetType = Some(targetType0))
 
-    def apply(inputs: Inputs): Inputs = {
+    def apply(inputs: BaseInputs): BaseInputs = {
       val scalaTarget =
         targetType match {
           case Some(ScalaTargetType.Scala3) =>
-            ScalaTarget.Scala3.default
+            Scala3.default
 
           case Some(ScalaTargetType.Typelevel) =>
             scalaVersion
-              .map(sv => ScalaTarget.Typelevel(sv))
+              .map(sv => Typelevel(sv))
               .getOrElse(
-                ScalaTarget.Typelevel.default
+                Typelevel.default
               )
 
           case _ =>
             scalaVersion
-              .map(sv => ScalaTarget.Jvm(sv))
+              .map(sv => Jvm(sv))
               .getOrElse(
-                ScalaTarget.Jvm.default
+                Jvm.default
               )
         }
 
-      inputs.copy(
-        target = scalaTarget,
-        sbtConfigExtra = sbtExtra.trim,
-        _isWorksheetMode = false
-      )
+      inputs match {
+        case sbtInputs: SbtInputs => sbtInputs.copy(
+          target = scalaTarget,
+          sbtConfigExtra = sbtExtra.trim,
+          isWorksheetMode = false
+        )
+        case _ => inputs.copyBaseInput(
+          isWorksheetMode = false
+        ).setTarget(scalaTarget)
+      }
+
     }
   }
 }

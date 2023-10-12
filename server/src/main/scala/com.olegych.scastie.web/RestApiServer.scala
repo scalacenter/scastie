@@ -1,7 +1,7 @@
 package com.olegych.scastie
 package web
 
-import api._
+import scastie.api._
 import balancer._
 
 import akka.pattern.ask
@@ -22,10 +22,10 @@ class RestApiServer(
 
   implicit val timeout: Timeout = Timeout(20.seconds)
 
-  private def wrap(inputs: Inputs): InputsWithIpAndUser =
+  private def wrap(inputs: BaseInputs): InputsWithIpAndUser =
     InputsWithIpAndUser(inputs, UserTrace(ip.toString, maybeUser))
 
-  def run(inputs: Inputs): Future[SnippetId] = {
+  def run(inputs: BaseInputs): Future[SnippetId] = {
     dispatchActor
       .ask(RunSnippet(wrap(inputs)))
       .mapTo[SnippetId]
@@ -37,7 +37,7 @@ class RestApiServer(
       .mapTo[FormatResponse]
   }
 
-  def save(inputs: Inputs): Future[SnippetId] = {
+  def save(inputs: BaseInputs): Future[SnippetId] = {
     dispatchActor
       .ask(SaveSnippet(wrap(inputs)))
       .mapTo[SnippetId]

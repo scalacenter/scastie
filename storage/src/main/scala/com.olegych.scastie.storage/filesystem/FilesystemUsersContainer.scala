@@ -3,7 +3,9 @@ package com.olegych.scastie.storage.filesystem
 import com.olegych.scastie.storage.PolicyAcceptance
 import com.olegych.scastie.storage.UserLogin
 import com.olegych.scastie.storage.UsersContainer
-import play.api.libs.json.Json
+import io.circe._
+import io.circe.syntax._
+import io.circe.parser._
 
 import java.nio.file._
 import scala.concurrent.Future
@@ -29,7 +31,7 @@ trait FilesystemUsersContainer extends UsersContainer with GenericFilesystemCont
     Try {
       if (!Files.exists(userDir)) Files.createDirectory(userDir)
 
-      Files.write(privacyPolicyFile, Json.stringify(Json.toJson(PolicyAcceptance(user.login, status))).getBytes())
+      Files.write(privacyPolicyFile, PolicyAcceptance(user.login, status).asJson.noSpaces.getBytes())
     }.isSuccess
   }
 
@@ -40,7 +42,7 @@ trait FilesystemUsersContainer extends UsersContainer with GenericFilesystemCont
 
     val maybePrivacyPolicy = if (Files.exists(privacyPolicyFile)) {
       val response = new String(Files.readAllBytes(privacyPolicyFile))
-      Json.parse(response).asOpt[PolicyAcceptance]
+      decode[PolicyAcceptance](response).toOption
     } else {
       None
     }

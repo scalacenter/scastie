@@ -10,7 +10,7 @@ import cats.effect.implicits.*
 import cats.syntax.all._
 import com.comcast.ip4s._
 import com.evolutiongaming.scache.{Cache, ExpiringCache}
-import com.olegych.scastie.api.ScastieMetalsOptions
+import scastie.api.ScastieMetalsOptions
 import com.typesafe.config.ConfigFactory
 import fs2.Stream
 import org.http4s.ember.client.EmberClientBuilder

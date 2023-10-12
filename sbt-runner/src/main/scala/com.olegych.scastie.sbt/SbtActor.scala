@@ -1,6 +1,6 @@
 package com.olegych.scastie.sbt
 
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.util._
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 

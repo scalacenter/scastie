@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api._
+import scastie.api._
 import japgolly.scalajs.react._
 
 import vdom.all._
@@ -18,11 +18,11 @@ object VersionSelector {
       .render(props => {
         def versionSelectors(scalaVersion: String) =
           props.scalaTarget match {
-            case d: ScalaTarget.Jvm       => ScalaTarget.Jvm.apply(scalaVersion)
-            case d: ScalaTarget.Typelevel => ScalaTarget.Typelevel.apply(scalaVersion)
-            case d: ScalaTarget.Scala3    => ScalaTarget.Scala3.apply(scalaVersion)
-            case js: ScalaTarget.Js       => ScalaTarget.Js(scalaVersion, js.scalaJsVersion)
-            case n: ScalaTarget.Native    => ScalaTarget.Native(n.scalaNativeVersion, n.scalaVersion)
+            case d: Jvm       => Jvm.apply(scalaVersion)
+            case d: Typelevel => Typelevel.apply(scalaVersion)
+            case d: Scala3    => Scala3.apply(scalaVersion)
+            case js: Js       => Js(scalaVersion, js.scalaJsVersion)
+            case n: Native    => Native(n.scalaNativeVersion, n.scalaVersion)
           }
 
         def renderRecommended3Versions(scalaVersion: String) = {

@@ -11,9 +11,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.stream.scaladsl._
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.balancer._
-import play.api.libs.json.Json
+import io.circe.syntax._
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
@@ -24,7 +24,7 @@ class ProgressRoutes(progressActor: ActorRef) {
       snippetIdStart("progress-sse") { sid =>
         complete {
           progressSource(sid).map { progress =>
-            ServerSentEvent(Json.stringify(Json.toJson(progress)))
+            ServerSentEvent(progress.asJson.noSpaces)
           }
         }
       },
@@ -56,7 +56,7 @@ class ProgressRoutes(progressActor: ActorRef) {
       }
       .via(flow)
       .map(
-        progress => ws.TextMessage.Strict(Json.stringify(Json.toJson(progress)))
+        progress => ws.TextMessage.Strict(progress.asJson.noSpaces)
       )
   }
 }

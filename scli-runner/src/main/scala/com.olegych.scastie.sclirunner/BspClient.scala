@@ -17,9 +17,9 @@ import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 import scala.sys.process.{ Process, ProcessBuilder }
 import java.util.Optional
-import com.olegych.scastie.api.Problem
-import com.olegych.scastie.api.Severity
-import com.olegych.scastie.api
+import scastie.api.Problem
+import scastie.api.Severity
+import scastie.api
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import org.eclipse.lsp4j.jsonrpc.messages.CancelParams
@@ -114,7 +114,7 @@ class BspClient(private val workingDir: Path,
         _.map(target => Left(target.getId()))
         .getOrElse(Right(NoTargetsFoundException("No build target found.")))
       )
-  
+
   def compile(id: String, buildTargetId: BuildTargetIdentifier): Future[Either[CompileResult, CompilationError]] =
     bspServer.buildTargetCompile({
       val param = new CompileParams(Collections.singletonList(buildTargetId))
@@ -132,7 +132,7 @@ class BspClient(private val workingDir: Path,
       }
     })
     .recover({
-      case _: TimeoutException => 
+      case _: TimeoutException =>
         log.warn(s"Compilation timeout on snippet $id")
         sys.exit(-1)
       case k => throw k

@@ -1,12 +1,14 @@
-package com.olegych.scastie.api
+package scastie.api 
 
-import play.api.libs.json._
+import io.circe.generic.semiauto._
+import io.circe._
 
 object User {
   // low tech solution
   val admins: Set[String] = Set("rochala", "julienrf")
 
-  implicit val formatUser: OFormat[User] = Json.format[User]
+  implicit val userEncoder: Encoder[User] = deriveEncoder[User]
+  implicit val userDecoder: Decoder[User] = deriveDecoder[User]
 }
 
 case class User(login: String, name: Option[String], avatar_url: String) {
@@ -14,15 +16,15 @@ case class User(login: String, name: Option[String], avatar_url: String) {
 }
 
 object SnippetUserPart {
-  implicit val formatSnippetUserPart: OFormat[SnippetUserPart] =
-    Json.format[SnippetUserPart]
+  implicit val snippetUserPartEncoder: Encoder[SnippetUserPart] = deriveEncoder[SnippetUserPart]
+  implicit val snippetUserPartDecoder: Decoder[SnippetUserPart] = deriveDecoder[SnippetUserPart]
 }
 
 case class SnippetUserPart(login: String, update: Int = 0)
 
 object SnippetId {
-  implicit val formatSnippetId: OFormat[SnippetId] =
-    Json.format[SnippetId]
+  implicit val snippetIdEncoder: Encoder[SnippetId] = deriveEncoder[SnippetId]
+  implicit val snippetIdDecoder: Decoder[SnippetId] = deriveDecoder[SnippetId]
 }
 
 case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {

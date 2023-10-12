@@ -2,7 +2,7 @@ package com.olegych.scastie
 package client
 package components
 
-import api.User
+import scastie.api.User
 
 import japgolly.scalajs.react._, vdom.all._, extra._
 

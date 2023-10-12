@@ -1,6 +1,6 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.{Inputs, SnippetId, SnippetUserPart, ScalaTarget, ScalaTargetType}
+import scastie.api._
 
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
@@ -35,13 +35,13 @@ trait EmbeddedOptionsJs extends js.Object with SharedEmbeddedOptions {
 
 case class EmbeddedOptions(snippetId: Option[SnippetId],
                            injectId: Option[String],
-                           inputs: Option[Inputs],
+                           inputs: Option[BaseInputs],
                            theme: Option[String],
                            serverUrl: String) {
 
   def setCode(code: String): EmbeddedOptions = {
-    val inputs0 = inputs.getOrElse(Inputs.default)
-    copy(inputs = Some(inputs0.copy(code = code)))
+    val inputs0: BaseInputs = inputs.getOrElse(ScalaCliInputs.default)
+    copy(inputs = Some(inputs0.copyBaseInput(code = code)))
   }
 }
 
@@ -109,42 +109,42 @@ object EmbeddedOptions {
         case (Some("jvm"), _, None, None) => {
           Some(
             scalaVersion
-              .map(version => ScalaTarget.Jvm(version))
-              .getOrElse(ScalaTarget.Jvm.default)
+              .map(version => Jvm(version))
+              .getOrElse(Jvm.default)
           )
         }
 
         case (Some("dotty" | "scala3"), _, None, None) => {
           Some(
             scalaVersion
-              .map(version => ScalaTarget.Scala3(version))
-              .getOrElse(ScalaTarget.Scala3.default)
+              .map(version => Scala3(version))
+              .getOrElse(Scala3.default)
           )
         }
 
         case (Some("typelevel"), _, None, None) => {
           Some(
             scalaVersion
-              .map(version => ScalaTarget.Typelevel(version))
-              .getOrElse(ScalaTarget.Typelevel.default)
+              .map(version => Typelevel(version))
+              .getOrElse(Typelevel.default)
           )
         }
 
         case (Some("js"), None, None, None) => {
-          Some(ScalaTarget.Js.default)
+          Some(Js.default)
         }
 
         case (tpe, Some(scalaV), Some(jsV), None) if (tpe.contains("js") || tpe.isEmpty) => {
 
-          Some(ScalaTarget.Js(scalaV, jsV))
+          Some(Js(scalaV, jsV))
         }
 
         case (Some("native"), None, None, None) => {
-          Some(ScalaTarget.Native.default)
+          Some(Native.default)
         }
 
         case (tpe, Some(scalaV), None, Some(nativeV)) if (tpe.contains("native") || tpe.isEmpty) => {
-          Some(ScalaTarget.Native(scalaV, nativeV))
+          Some(Native(scalaV, nativeV))
         }
 
         case (None, None, None, None) => None
@@ -158,7 +158,7 @@ object EmbeddedOptions {
 
     val inputs =
       if (scalaTarget.isDefined || code.isDefined) {
-        val default = Inputs.default
+        val default = ScalaCliInputs.default
 
         val isScala3 =
           scalaTarget
@@ -166,15 +166,15 @@ object EmbeddedOptions {
             .getOrElse(false)
 
         val defaultCode =
-          if (isScala3) ScalaTarget.Scala3.defaultCode
+          if (isScala3) Scala3.defaultCode
           else default.code
 
         val inputs0 =
           default.copy(
-            _isWorksheetMode = isWorksheetMode.getOrElse(default.isWorksheetMode),
+            isWorksheetMode = isWorksheetMode.getOrElse(default.isWorksheetMode),
             code = code.getOrElse(defaultCode),
-            target = scalaTarget.getOrElse(default.target),
-            sbtConfigExtra = sbtConfig.getOrElse(default.sbtConfigExtra)
+            // target = scalaTarget.getOrElse(default.target),
+            // sbtConfigExtra = sbtConfig.getOrElse(default.sbtConfigExtra)
           )
         Some(inputs0)
       } else {

@@ -1,7 +1,9 @@
 package com.olegych.scastie.storage.mongodb
 
 import org.mongodb.scala._
-import play.api.libs.json._
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
 
 trait GenericMongoContainer {
   val mongoUri: String
@@ -12,15 +14,15 @@ trait GenericMongoContainer {
   // MongoDB client provides its own BSON converter, but would require changes in API.
   // Instead we reuse our JSON codecs and create BSON from the generated JSON.
   protected def toBson[T](obj: T)(
-    implicit writes: Writes[T]
+    implicit writes: Encoder[T]
   ): Document = {
-    val json = Json.toJson(obj).toString
+    val json = obj.asJson.noSpaces
     Document.apply(json)
   }
 
   protected def fromBson[T](obj: Document)(
-    implicit reads: Reads[T]
+    implicit reads: Decoder[T]
   ): Option[T] = {
-    Json.parse(obj.toJson()).asOpt[T]
+    decode[T](obj.toJson()).toOption
   }
 }

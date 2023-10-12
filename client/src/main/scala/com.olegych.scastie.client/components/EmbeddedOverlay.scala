@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api._
+import scastie.api._
 import japgolly.scalajs.react._
 import org.scalajs.dom
 import vdom.all._

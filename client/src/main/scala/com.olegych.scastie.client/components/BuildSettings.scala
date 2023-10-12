@@ -1,23 +1,19 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.client.components.editor.SimpleEditor
 import japgolly.scalajs.react._
 
 import vdom.all._
-import com.olegych.scastie.api.ScalaTarget._
+import scastie.api.ScalaTarget._
 import japgolly.scalajs.react.feature.ReactFragment
 
 final case class BuildSettings(
     visible: Boolean,
-    librariesFrom: Map[ScalaDependency, Project],
+    inputs: BaseInputs,
     isDarkTheme: Boolean,
     isBuildDefault: Boolean,
     isResetModalClosed: Boolean,
-    scalaTarget: ScalaTarget,
-    sbtConfigExtra: String,
-    sbtConfig: String,
-    sbtPluginsConfig: String,
     setTarget: ScalaTarget ~=> Callback,
     closeResetModal: Reusable[Callback],
     resetBuild: Reusable[Callback],
@@ -26,7 +22,6 @@ final case class BuildSettings(
     removeScalaDependency: ScalaDependency ~=> Callback,
     updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
     addScalaDependency: (ScalaDependency, Project) ~=> Callback,
-
     convertToScalaCli: Reusable[Callback],
     scalaCliConversionError: Option[String]
 ) {
@@ -39,9 +34,8 @@ object BuildSettings {
   implicit val reusability: Reusability[BuildSettings] =
     Reusability.derive[BuildSettings]
 
-  private def render(props: BuildSettings): VdomElement = {
-
-    val resetButton = TagMod(
+  private def renderResetButton(props: BuildSettings): TagMod = {
+    TagMod(
       PromptModal(
         isDarkTheme = props.isDarkTheme,
         modalText = "Reset Build",
@@ -57,97 +51,105 @@ object BuildSettings {
         onClick --> props.openResetModal,
         role := "button",
         cls := "btn",
-        if (props.isBuildDefault) visibility.collapse else visibility.visible
       )(
         "Reset"
       )
+    ).when(!props.isBuildDefault && props.inputs.target.targetType != ScalaTargetType.ScalaCli)
+  }
+
+  private def scaladexSearch(props: BuildSettings, sbtInputs: SbtInputs): VdomNode = ScaladexSearch(
+    removeScalaDependency = props.removeScalaDependency,
+    updateDependencyVersion = props.updateDependencyVersion,
+    addScalaDependency = props.addScalaDependency,
+    librariesFrom = sbtInputs.librariesFrom,
+    scalaTarget = sbtInputs.target,
+    isDarkTheme = props.isDarkTheme
+  ).render
+
+  private def sbtExtraConfigurationPanel(props: BuildSettings, sbtInputs: SbtInputs): VdomNode =
+    ReactFragment(
+      h2(
+        span("Extra Sbt Configuration")
+      ),
+      pre(cls := "configuration")(
+        SimpleEditor(
+          value = sbtInputs.sbtConfigExtra,
+          isDarkTheme = props.isDarkTheme,
+          readOnly = false,
+          onChange = props.sbtConfigChange
+        ).render
+      ),
     )
 
-    val scaladexSearch = ScaladexSearch(
-      removeScalaDependency = props.removeScalaDependency,
-      updateDependencyVersion = props.updateDependencyVersion,
-      addScalaDependency = props.addScalaDependency,
-      librariesFrom = props.librariesFrom,
-      scalaTarget = props.scalaTarget,
-      isDarkTheme = props.isDarkTheme
-    ).render
-
-    val isScalaCli = props.scalaTarget match {
-      case _: ScalaCli => true
-      case _ => false
-    }
-
-    div(cls := "build-settings-container")(
-      resetButton,
+  private def baseSbtConfiguration(props: BuildSettings, sbtInputs: SbtInputs): VdomNode =
+    ReactFragment(
       h2(
-        span("Target"),
+        span("Base Sbt Configuration (readonly)")
       ),
-      TargetSelector(props.scalaTarget, props.setTarget).render,
+      pre(cls := "configuration")(
+        SimpleEditor(
+          value = sbtInputs.sbtConfig,
+          isDarkTheme = props.isDarkTheme,
+          readOnly = true,
+          onChange = Reusable.always(_ => Callback.empty)
+        ).render
+      )
+    )
+
+  private def baseSbtPluginsConfiguration(props: BuildSettings, sbtInputs: SbtInputs): VdomNode =
+    ReactFragment(
       h2(
-        span("Scala Version")
+        span("Base Sbt Plugins Configuration (readonly)")
       ),
-      VersionSelector(props.scalaTarget, props.setTarget).render.unless(isScalaCli),
+      pre(cls := "configuration")(
+        SimpleEditor(
+          value = sbtInputs.sbtPluginsConfig,
+          isDarkTheme = props.isDarkTheme,
+          readOnly = true,
+          onChange = Reusable.always(_ => Callback.empty)
+        ).render
+      ),
+    )
+
+  private def sbtBuildSettingsPanel(props: BuildSettings, sbtInputs: SbtInputs): TagMod = {
+    div()(
+      h2(span("Scala Version")),
+      VersionSelector(props.inputs.target, props.setTarget).render,
+      h2(span("Libraries")),
+      scaladexSearch(props, sbtInputs),
+      sbtExtraConfigurationPanel(props, sbtInputs),
+      baseSbtConfiguration(props, sbtInputs),
+      baseSbtPluginsConfiguration(props, sbtInputs)
+    )
+  }
+
+  private def scalaCliBuildSettingsPanel(props: BuildSettings, scalaCliInputs: ScalaCliInputs): TagMod = {
+    div()(
       p()(
         "To use a specific version of Scala with Scala-CLI, use directives. See ",
         a(href := "https://scala-cli.virtuslab.org/docs/reference/directives/#scala-version", target := "_blank")("Scala version directive on Scala-CLI documentation"),
         "."
-      ).when(isScalaCli),
-      h2(
-        span("Libraries")
       ),
-      scaladexSearch.unless(isScalaCli),
       p()(
         "To use libraries with Scala-CLI, use directives. See ",
         a(href := "https://scala-cli.virtuslab.org/docs/reference/directives#dependency", target := "_blank")("Dependency directive on Scala-CLI documentation"),
         "."
-      ).when(isScalaCli),
-      ReactFragment(
-        h2(
-          span("Extra Sbt Configuration")
-        ),
-        pre(cls := "configuration")(
-          SimpleEditor(
-            value = props.sbtConfigExtra,
-            isDarkTheme = props.isDarkTheme,
-            readOnly = false,
-            onChange = props.sbtConfigChange
-          ).render
-        ),
-        h2(
-          span("Base Sbt Configuration (readonly)")
-        ),
-        pre(cls := "configuration")(
-          SimpleEditor(
-            value = props.sbtConfig,
-            isDarkTheme = props.isDarkTheme,
-            readOnly = true,
-            onChange = Reusable.always(_ => Callback.empty)
-          ).render
-        ),
-        h2(
-          span("Base Sbt Plugins Configuration (readonly)")
-        ),
-        pre(cls := "configuration")(
-          SimpleEditor(
-            value = props.sbtPluginsConfig,
-            isDarkTheme = props.isDarkTheme,
-            readOnly = true,
-            onChange = Reusable.always(_ => Callback.empty)
-          ).render
-        ),
+      ),
+    )
+  }
 
-        h2(
-          span("Convert to Scala-CLI")
-        ),
-        div(
-          title := "Convert to Scala-CLI",
-          onClick --> props.convertToScalaCli,
-          role := "button",
-          cls := "btn"
-        )("Convert to Scala-CLI"),
+  private def render(props: BuildSettings): VdomElement = {
+    val targetSpecificSettings = props.inputs match {
+      case sbtInputs: SbtInputs => sbtBuildSettingsPanel(props, sbtInputs)
+      case scalaCliInputs: ScalaCliInputs => scalaCliBuildSettingsPanel(props, scalaCliInputs)
+      case _ => div()()
+    }
 
-        props.scalaCliConversionError.map(err => p()(s"Failed to convert to Scala-CLI: $err"))
-      ).when(!isScalaCli)
+    div(cls := "build-settings-container")(
+      renderResetButton(props),
+      h2(span("Target")),
+      TargetSelector(props.inputs.target, props.setTarget).render,
+      targetSpecificSettings,
     )
   }
 

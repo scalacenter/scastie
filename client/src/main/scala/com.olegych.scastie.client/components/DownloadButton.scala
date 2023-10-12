@@ -1,7 +1,7 @@
 package com.olegych.scastie.client
 package components
 
-import com.olegych.scastie.api.SnippetId
+import scastie.api.SnippetId
 import japgolly.scalajs.react._
 
 import vdom.all._

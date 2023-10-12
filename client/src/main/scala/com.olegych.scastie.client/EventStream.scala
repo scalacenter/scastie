@@ -1,5 +1,9 @@
 package com.olegych.scastie.client
 
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
+
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.CallbackTo
 import org.scalajs.dom.CloseEvent
@@ -8,18 +12,16 @@ import org.scalajs.dom.EventSource
 import org.scalajs.dom.MessageEvent
 import org.scalajs.dom.WebSocket
 import org.scalajs.dom.window
-import play.api.libs.json.Json
-import play.api.libs.json.Reads
 
 import scala.util.Failure
 import scala.util.Success
 
-abstract class EventStream[T: Reads](handler: EventStreamHandler[T]) {
+abstract class EventStream[T: Decoder](handler: EventStreamHandler[T]) {
   var closing = false
 
   def onMessage(raw: String): Unit = {
     if (!closing) {
-      Json.fromJson[T](Json.parse(raw)).asOpt.foreach { msg =>
+      decode[T](raw).toOption.foreach { msg =>
         val shouldClose = handler.onMessage(msg)
         if (shouldClose) {
           close()
@@ -50,7 +52,7 @@ trait EventStreamHandler[T] {
 }
 
 object EventStream {
-  def connect[T: Reads](eventSourceUri: String, websocketUri: String, handler: EventStreamHandler[T]): Callback = {
+  def connect[T: Decoder](eventSourceUri: String, websocketUri: String, handler: EventStreamHandler[T]): Callback = {
 
     def connectEventSource =
       CallbackTo[EventStream[T]](
@@ -81,7 +83,7 @@ object EventStream {
   }
 }
 
-class WebSocketStream[T: Reads](uri: String, handler: EventStreamHandler[T]) extends EventStream[T](handler) {
+class WebSocketStream[T: Decoder](uri: String, handler: EventStreamHandler[T]) extends EventStream[T](handler) {
 
   private def onOpen(e: Event): Unit = {
     onOpen()
@@ -110,7 +112,7 @@ class WebSocketStream[T: Reads](uri: String, handler: EventStreamHandler[T]) ext
   socket.onmessage = onMessage _
 }
 
-class EventSourceStream[T: Reads](uri: String, handler: EventStreamHandler[T]) extends EventStream[T](handler) {
+class EventSourceStream[T: Decoder](uri: String, handler: EventStreamHandler[T]) extends EventStream[T](handler) {
 
   private def onOpen(e: Event): Unit = {
     onOpen()

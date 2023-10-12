@@ -1,13 +1,10 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api.ScalaTarget.Jvm
-import com.olegych.scastie.api.ScalaTarget.Scala3
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.buildinfo.BuildInfo
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import org.scalajs.dom
-import play.api.libs.json.Json
 
 import scala.concurrent.Future
 
@@ -17,6 +14,10 @@ import dom.{HTMLInputElement, HTMLElement}
 import scalajs.js.Thenable.Implicits._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
+
+import io.circe._
+import io.circe.syntax._
+import io.circe.parser._
 
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency ~=> Callback,
@@ -217,16 +218,20 @@ object ScaladexSearch {
       if (state.selecteds.exists(_.matches(project, artifact))) Callback(())
       else
         Callback.future {
-          fetchSelected(project, artifact, target, version).map {
-            case Some(selected) if !state.selecteds.exists(_.release.matches(selected.release)) =>
-              def addScalaDependencyLocal =
-                scope.modState(_.addSelected(selected))
+          target match {
+            case sbtScalaTarget: SbtScalaTarget =>
+              fetchSelected(project, artifact, sbtScalaTarget, version).map {
+                case Some(selected) if !state.selecteds.exists(_.release.matches(selected.release)) =>
+                  def addScalaDependencyLocal =
+                    scope.modState(_.addSelected(selected))
 
-              def addScalaDependencyBackend =
-                if (localOnly) Callback(()) else scope.props.flatMap(_.addScalaDependency((selected.release, selected.project)))
+                  def addScalaDependencyBackend =
+                    if (localOnly) Callback(()) else scope.props.flatMap(_.addScalaDependency((selected.release, selected.project)))
 
-              addScalaDependencyBackend >> addScalaDependencyLocal
-            case _ => Callback(())
+                  addScalaDependencyBackend >> addScalaDependencyLocal
+                case _ => Callback(())
+              }
+            case _ => Future.successful(Callback(()))
           }
         }
     }
@@ -268,16 +273,16 @@ object ScaladexSearch {
     }
 
     private def fetchProjects(): Callback = {
-      def fetch(target: ScalaTarget, searchState: SearchState): Callback = {
+      def fetch(target: SbtScalaTarget, searchState: SearchState): Callback = {
         if (!searchState.query.isEmpty) {
 
-          def queryAndParse(t: ScalaTarget): Future[List[(Project, ScalaTarget)]] = {
+          def queryAndParse(t: SbtScalaTarget): Future[List[(Project, ScalaTarget)]] = {
             val q = toQuery(t.scaladexRequest + ("q" -> searchState.query))
             for {
               response <- dom.fetch(scaladexApiUrl + "/search" + q)
               text <- response.text()
             } yield {
-              Json.fromJson[List[Project]](Json.parse(text)).asOpt.getOrElse(Nil).map(_ -> t)
+              decode[List[Project]](text).getOrElse(Nil).map(_ -> t)
             }
           }
 
@@ -301,14 +306,15 @@ object ScaladexSearch {
       for {
         props <- scope.props
         searchState <- scope.state
-        _ <- fetch(props.scalaTarget, searchState)
+        if props.scalaTarget.isInstanceOf[SbtScalaTarget]
+        _ <- fetch(props.scalaTarget.asInstanceOf[SbtScalaTarget], searchState)
       } yield ()
     }
 
     private def toQuery(in: Map[String, String]): String =
       in.map { case (k, v) => s"$k=$v" }.mkString("?", "&", "")
 
-    private def fetchSelected(project: Project, artifact: String, target: ScalaTarget, version: Option[String]) = {
+    private def fetchSelected(project: Project, artifact: String, target: SbtScalaTarget, version: Option[String]) = {
       val query = toQuery(
         Map(
           "organization" -> project.organization,
@@ -336,7 +342,7 @@ object ScaladexSearch {
         matchingGroupId = matchingArtifact.flatMap(obj => (obj \ "groupId").asOpt[String]).getOrElse("")
         matchingVersion = matchingArtifact.flatMap(obj => (obj \ "version").asOpt[String]).orElse(version)
       } yield {
-        Json.fromJson[ReleaseOptions](Json.parse(text)).asOpt.map { options =>
+        decode[ReleaseOptions](text).toOption.map{ options =>
           {
             Selected(
               project = project,
