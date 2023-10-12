@@ -1,4 +1,4 @@
-package com.olegych.scastie
+package org.scastie
 package balancer
 
 trait TestUtils {

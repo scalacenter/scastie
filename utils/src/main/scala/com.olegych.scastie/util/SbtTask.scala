@@ -1,6 +1,6 @@
-package com.olegych.scastie.util
+package org.scastie.util
 
-import scastie.api._
+import org.scastie.api._
 
 import akka.actor.ActorRef
 

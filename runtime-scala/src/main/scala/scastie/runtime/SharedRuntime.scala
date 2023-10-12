@@ -1,19 +1,11 @@
-package scastie.runtime
+package org.scastie.runtime
 
-import play.api.libs.json.Json
-import scastie.runtime.api._
-import play.api.libs.json.OFormat
+import org.scastie.runtime.api._
 
 protected[runtime] trait SharedRuntime {
-  implicit val instrumentationFormat: OFormat[Instrumentation] = Json.format[Instrumentation]
-  implicit val positionFormat: OFormat[Position] = Json.format[Position]
-  implicit val valueFormat: OFormat[Value] = Json.format[Value]
-  implicit val htmlFormat: OFormat[Html] = Json.format[Html]
-  implicit val attachedDomFormat: OFormat[AttachedDom] = Json.format[AttachedDom]
-  implicit val renderFormat: OFormat[Render] = Json.format[Render]
 
   def write(instrumentations: List[Instrumentation]): String = {
-    if (instrumentations.isEmpty) "" else Json.stringify(Json.toJson(instrumentations))
+    if (instrumentations.isEmpty) "" else instrumentations.map(_.asJsonString).mkString("[", ",", "]")
   }
 
   private val maxValueLength = 500

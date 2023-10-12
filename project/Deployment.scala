@@ -84,7 +84,7 @@ class ScastieConfig(val configurationFile: File) {
   val config = ConfigFactory.parseFile(configurationFile)
   val userName = "scastie"
 
-  val serverConfig = config.getConfig("com.olegych.scastie.web")
+  val serverConfig = config.getConfig("org.scastie.web")
   val serverHostname = serverConfig.getString("hostname")
   val serverAkkaPort = serverConfig.getInt("akka-port")
 
@@ -92,7 +92,7 @@ class ScastieConfig(val configurationFile: File) {
   val metalsPort = metalsConfig.getInt("port")
   val cacheExpireInSeconds = metalsConfig.getInt("cache-expire-in-seconds")
 
-  val balancerConfig = config.getConfig("com.olegych.scastie.balancer")
+  val balancerConfig = config.getConfig("org.scastie.balancer")
   val runnersHostname = balancerConfig.getString("remote-hostname")
   val sbtRunnersPortsStart = balancerConfig.getInt("remote-sbt-ports-start")
   val containerType = balancerConfig.getString("snippets-storage")
