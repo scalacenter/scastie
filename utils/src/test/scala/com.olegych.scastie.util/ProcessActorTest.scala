@@ -1,13 +1,13 @@
-package com.olegych.scastie.util
+package org.scastie.util
 
 import java.io.File
 import java.nio.file.{Files, StandardCopyOption}
 
 import akka.actor.{Actor, ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import com.olegych.scastie.api.ProcessOutput
-import com.olegych.scastie.api.ProcessOutputType._
-import com.olegych.scastie.util.ProcessActor._
+import org.scastie.api.ProcessOutput
+import org.scastie.api.ProcessOutputType._
+import org.scastie.util.ProcessActor._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuiteLike
 

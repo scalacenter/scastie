@@ -1,8 +1,8 @@
-package com.olegych.scastie
+package org.scastie
 package instrumentation
 
-import com.olegych.scastie.api.ScalaTarget
-import com.olegych.scastie.util.ScastieFileUtil.slurp
+import org.scastie.api.ScalaTarget
+import org.scastie.util.ScastieFileUtil.slurp
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file._

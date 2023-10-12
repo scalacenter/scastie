@@ -177,7 +177,7 @@ object SbtShared {
         "defaultScalaJsVersion" -> ScalaJSVersions.current,
         "sbtVersion"            -> sbtVersion.value
       ),
-      buildInfoPackage := "com.olegych.scastie.buildinfo"
+      buildInfoPackage := "org.scastie.buildinfo"
     )
   }
 
@@ -191,11 +191,10 @@ object SbtShared {
       name              := runtimeProjectName,
       Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "runtime-api",
       semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
-      libraryDependencies += {
+      libraryDependencies ++= {
         scalaVersion.value match {
-          case v if v.startsWith("2.10") => "com.typesafe.play" %%% "play-json" % "2.6.14"
-          case v if v.startsWith("2.11") => "com.typesafe.play" %%% "play-json" % "2.7.4"
-          case _                         => "com.typesafe.play" %%% "play-json" % "2.10.0-RC5"
+          case v if v.startsWith("2") => Seq("org.scala-lang" % "scala-reflect" % v)
+          case _                      => Seq()
         }
       },
       inConfig(Compile)(

@@ -1,12 +1,12 @@
-package com.olegych.scastie.balancer
+package org.scastie.balancer
 
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
-import com.olegych.scastie.api._
-import com.olegych.scastie.sbt._
-import com.olegych.scastie.util.ReconnectInfo
+import org.scastie.api._
+import org.scastie.sbt._
+import org.scastie.util.ReconnectInfo
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuiteLike

@@ -1,4 +1,4 @@
-package com.olegych.scastie.util
+package org.scastie.util
 
 import akka.actor.ActorRef
 import akka.stream.{Outlet, SourceShape}

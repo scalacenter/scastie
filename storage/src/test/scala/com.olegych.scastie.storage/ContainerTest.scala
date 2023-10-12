@@ -1,8 +1,8 @@
-package com.olegych.scastie.storage
+package org.scastie.storage
 
-import com.olegych.scastie.api._
-import com.olegych.scastie.storage.filesystem.FilesystemContainer
-import com.olegych.scastie.storage.mongodb.MongoDBContainer
+import org.scastie.api._
+import org.scastie.storage.filesystem.FilesystemContainer
+import org.scastie.storage.mongodb.MongoDBContainer
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.OptionValues
 import org.scalatest.funsuite.AnyFunSuite

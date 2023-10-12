@@ -1,7 +1,7 @@
-package scastie.runtime
+package org.scastie.runtime
 
 import scala.quoted.*
-import scastie.runtime.api.Render
+import org.scastie.runtime.api.Render
 
 object Runtime extends JvmRuntime:
   inline def render[T](a: T): Render = ${_render('a)}
