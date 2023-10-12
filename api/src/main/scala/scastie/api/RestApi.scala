@@ -1,10 +1,10 @@
-package com.olegych.scastie.api
+package scastie.api
 
 import scala.concurrent.Future
 
 trait RestApi {
-  def run(inputs: Inputs): Future[SnippetId]
-  def save(inputs: Inputs): Future[SnippetId]
+  def run(inputs: BaseInputs): Future[SnippetId]
+  def save(inputs: BaseInputs): Future[SnippetId]
 
   def update(editInputs: EditInputs): Future[Option[SnippetId]]
   def fork(editInputs: EditInputs): Future[Option[SnippetId]]

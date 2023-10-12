@@ -1,6 +1,7 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api._
+import scastie.api._
+import scastie.runtime.api._
 
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.Reusable
@@ -11,7 +12,7 @@ package object components {
 
   val reusableEmpty: Reusable[Callback] = Reusable.always(Callback.empty)
 
-  implicit val reusabilityInputs: Reusability[Inputs] =
+  implicit val reusabilityBaseInputs: Reusability[BaseInputs] =
     Reusability.byRefOr_==
 
   implicit val reusabilityUser: Reusability[User] =

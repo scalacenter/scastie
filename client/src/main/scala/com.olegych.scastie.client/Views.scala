@@ -1,6 +1,7 @@
 package com.olegych.scastie.client
 
-import play.api.libs.json._
+import io.circe._
+import io.circe.generic.semiauto._
 
 sealed trait View
 object View {
@@ -9,29 +10,7 @@ object View {
   case object CodeSnippets extends View
   case object Status extends View
 
-  implicit object ViewFormat extends Format[View] {
-    def writes(view: View): JsValue = {
-      JsString(view.toString)
-    }
+  implicit val viewEncoder: Encoder[View] = deriveEncoder[View]
+  implicit val viewDecoder: Decoder[View] = deriveDecoder[View]
 
-    private val values: Map[String, View] =
-      List[View](
-        Editor,
-        BuildSettings,
-        CodeSnippets,
-        Status
-      ).map(v => (v.toString, v)).toMap
-
-    def reads(json: JsValue): JsResult[View] = {
-      json match {
-        case JsString(tpe) => {
-          values.get(tpe) match {
-            case Some(v) => JsSuccess(v)
-            case _       => JsError(Seq())
-          }
-        }
-        case _ => JsError(Seq())
-      }
-    }
-  }
 }

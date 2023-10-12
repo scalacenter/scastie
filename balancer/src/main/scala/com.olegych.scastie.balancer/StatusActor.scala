@@ -1,6 +1,6 @@
 package com.olegych.scastie.balancer
 
-import com.olegych.scastie.api._
+import scastie.api._
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.stream.scaladsl.Source

@@ -1,4 +1,4 @@
-package com.olegych.scastie.api
+package scastie.api
 
 trait ServerState {
   def isReady: Boolean

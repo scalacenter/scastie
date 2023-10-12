@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api.ConsoleOutput
+import scastie.api._
 import com.olegych.scastie.client.ConsoleState
 import com.olegych.scastie.client.HTMLFormatter
 import com.olegych.scastie.client.View
@@ -38,7 +38,7 @@ object Console {
       else EmptyVdom
 
     val (users, systems) = props.consoleOutputs.partition {
-      case u: ConsoleOutput.UserOutput => true
+      case u: UserOutput => true
       case _                           => false
     }
 

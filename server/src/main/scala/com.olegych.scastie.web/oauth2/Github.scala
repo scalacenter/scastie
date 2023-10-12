@@ -7,19 +7,22 @@ import akka.http.scaladsl.model.Uri._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.olegych.scastie.api.User
-import com.olegych.scastie.web.PlayJsonSupport
+import scastie.api.User
+import io.circe._
+import io.circe.generic.semiauto._
 import com.typesafe.config.ConfigFactory
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import scala.concurrent.Future
 
 case class AccessToken(access_token: String)
 
-class Github(implicit system: ActorSystem) extends PlayJsonSupport {
-  import play.api.libs.json._
+class Github(implicit system: ActorSystem) extends FailFastCirceSupport {
   import system.dispatcher
-  implicit val formatUser: OFormat[User] = Json.format[User]
-  implicit val readAccessToken: Reads[AccessToken] = Json.reads[AccessToken]
+
+  implicit val userEncoder: Encoder[User] = deriveEncoder[User]
+  implicit val userDecoder: Decoder[User] = deriveDecoder[User]
+  implicit val readAccessToken: Decoder[AccessToken] = deriveDecoder[AccessToken]
 
   private val config =
     ConfigFactory.load().getConfig("com.olegych.scastie.web.oauth2")

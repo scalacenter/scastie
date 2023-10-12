@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components.editor
 
-import com.olegych.scastie.api
+import scastie.api
 import japgolly.scalajs.react._
 import org.scalajs.dom
 import typings.codemirrorAutocomplete.anon

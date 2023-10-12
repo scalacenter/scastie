@@ -1,6 +1,6 @@
 package com.olegych.scastie.web.oauth2
 
-import com.olegych.scastie.api.User
+import scastie.api.User
 
 import akka.http.scaladsl._
 import server._

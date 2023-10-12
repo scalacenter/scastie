@@ -2,9 +2,9 @@ package com.olegych.scastie
 package sbt
 
 import akka.actor.Actor
-import com.olegych.scastie.api.FormatRequest
-import com.olegych.scastie.api.FormatResponse
-import com.olegych.scastie.api.ScalaTarget
+import scastie.api.FormatRequest
+import scastie.api.FormatResponse
+import scastie.api.ScalaTarget
 import org.scalafmt.Formatted
 import org.scalafmt.Scalafmt
 import org.scalafmt.config.ScalafmtConfig
@@ -22,7 +22,7 @@ object FormatActor {
         else NamedDialect.scala213
 
       val runner = {
-        if (isWorksheetMode && scalaTarget.hasWorksheetMode)
+        if (isWorksheetMode)
           ScalafmtRunner.sbt
         else
           ScalafmtRunner.default
@@ -47,6 +47,9 @@ class FormatActor() extends Actor {
       log.info(s"format (isWorksheetMode: $isWorksheetMode)")
       log.info(code)
 
-      sender() ! FormatResponse(format(code, isWorksheetMode, scalaTarget))
+      format(code, isWorksheetMode, scalaTarget) match {
+        case Left(value) => sender() ! FormatResponse(code)
+        case Right(value) => sender() ! FormatResponse(value)
+      }
   }
 }

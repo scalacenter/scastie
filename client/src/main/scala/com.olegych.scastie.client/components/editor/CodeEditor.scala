@@ -1,6 +1,7 @@
 package com.olegych.scastie.client.components.editor
 
-import com.olegych.scastie.api
+import scastie.api._
+import scastie.runtime.api._
 import com.olegych.scastie.client.HTMLFormatter
 import com.olegych.scastie.client._
 import japgolly.scalajs.react._
@@ -30,9 +31,9 @@ final case class CodeEditor(visible: Boolean,
                             showLineNumbers: Boolean,
                             value: String,
                             attachedDoms: Map[String, HTMLElement],
-                            instrumentations: Set[api.Instrumentation],
-                            compilationInfos: Set[api.Problem],
-                            runtimeError: Option[api.RuntimeError],
+                            instrumentations: Set[Instrumentation],
+                            compilationInfos: Set[Problem],
+                            runtimeError: Option[RuntimeError],
                             saveOrUpdate: Reusable[Callback],
                             clear: Reusable[Callback],
                             openNewSnippetModal: Reusable[Callback],
@@ -42,11 +43,11 @@ final case class CodeEditor(visible: Boolean,
                             togglePresentationMode: Reusable[Callback],
                             formatCode: Reusable[Callback],
                             codeChange: String ~=> Callback,
-                            target: api.ScalaTarget,
+                            target: ScalaTarget,
                             metalsStatus: MetalsStatus,
                             isMetalsStale: Boolean,
                             setMetalsStatus: MetalsStatus ~=> Callback,
-                            dependencies: Set[api.ScalaDependency])
+                            dependencies: Set[ScalaDependency])
     extends Editor {
   @inline def render: VdomElement = CodeEditor.hooksComponent(this)
 }
@@ -74,7 +75,7 @@ object CodeEditor {
         Editor.indentationMarkersExtension,
         keymap.of(closeBracketsKeymap ++ defaultKeymap ++ historyKeymap ++ foldKeymap ++ completionKeymap ++ lintKeymap ++ searchKeymap),
         StateField
-          .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
+          .define(StateFieldSpec[Set[Instrumentation]](_ => props.instrumentations, (value, _) => value))
           .extension,
         DecorationProvider(props),
         EditorState.tabSize.of(2),

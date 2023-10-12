@@ -3,17 +3,17 @@ package com.olegych.scastie.balancer
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-import com.olegych.scastie.api._
+import scastie.api._
 import org.slf4j.LoggerFactory
 
 import scala.util.Random
 
 case class Ip(v: String)
 
-case class Task(config: Inputs, ip: Ip, taskId: TaskId, ts: Instant)
+case class Task[T <: BaseInputs](config: T, ip: Ip, taskId: TaskId, ts: Instant)
 
-case class TaskHistory(data: Vector[Task], maxSize: Int) {
-  def add(task: Task): TaskHistory = {
+case class TaskHistory(data: Vector[Task[SbtInputs]], maxSize: Int) {
+  def add(task: Task[SbtInputs]): TaskHistory = {
     val cappedData = if (data.length < maxSize) data else data.drop(1)
     copy(data = cappedData :+ task)
   }
@@ -38,14 +38,14 @@ case class LoadBalancer[R, S <: ServerState](servers: Vector[Server[R, S]]) {
     random(servers.filter(_.state.isReady))
   }
 
-  def add(task: Task): Option[(Server[R, S], LoadBalancer[R, S])] = {
+  def add(task: Task[SbtInputs]): Option[(Server[R, S], LoadBalancer[R, S])] = {
     log.info("Task added: {}", task.taskId)
 
     val (availableServers, unavailableServers) =
       servers.partition(_.state.isReady)
 
-    def lastTenMinutes(v: Vector[Task]) = v.filter(_.ts.isAfter(Instant.now.minus(10, ChronoUnit.MINUTES)))
-    def lastWithIp(v: Vector[Task]) = lastTenMinutes(v.filter(_.ip == task.ip)).lastOption
+    def lastTenMinutes(v: Vector[Task[SbtInputs]]) = v.filter(_.ts.isAfter(Instant.now.minus(10, ChronoUnit.MINUTES)))
+    def lastWithIp(v: Vector[Task[SbtInputs]]) = lastTenMinutes(v.filter(_.ip == task.ip)).lastOption
 
     if (availableServers.nonEmpty) {
       val selectedServer = availableServers.maxBy { s =>

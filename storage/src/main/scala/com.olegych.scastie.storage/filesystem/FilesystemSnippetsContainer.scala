@@ -1,10 +1,12 @@
 package com.olegych.scastie.storage.filesystem
 
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.storage.OldScastieConverter
 import com.olegych.scastie.storage.SnippetsContainer
 import com.olegych.scastie.storage.UserLogin
-import play.api.libs.json.Json
+import io.circe._
+import io.circe.syntax._
+import io.circe.parser._
 
 import java.io.IOException
 import java.nio.file._
@@ -26,7 +28,7 @@ trait FilesystemSnippetsContainer extends SnippetsContainer with GenericFilesyst
     }
 
     progress.snippetId.foreach(
-      sid => append(outputsFile(sid), Json.stringify(Json.toJson(progress)) + nl)
+      sid => append(outputsFile(sid), progress.asJson.noSpaces + nl)
     )
   }
 
@@ -134,7 +136,7 @@ trait FilesystemSnippetsContainer extends SnippetsContainer with GenericFilesyst
         .resolve("paste%20d".format(id).replaceAll(" ", "0"))
         .resolve("src/main/scala/")
 
-    def readOldInputs(id: Int): Option[Inputs] = {
+    def readOldInputs(id: Int): Option[BaseInputs] = {
       slurp(oldPath(id).resolve("test.scala"))
         .map(OldScastieConverter.convertOldInput)
     }
@@ -169,24 +171,28 @@ trait FilesystemSnippetsContainer extends SnippetsContainer with GenericFilesyst
     )
   }
 
-  protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit] =
+  protected def insert(snippetId: SnippetId, inputs: BaseInputs): Future[Unit] =
     Future {
-      write(inputsFile(snippetId), Json.prettyPrint(Json.toJson(inputs.withSavedConfig)))
+      val adjustedInputs = inputs match {
+        case sbtInputs: SbtInputs => sbtInputs.withSavedConfig
+        case _ => inputs
+      }
+      write(inputsFile(snippetId), adjustedInputs.asJson.noSpaces)
     }
 
   override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] =
     for {
       old <- readSnippet(snippetId)
       _ <- Future.traverse(old.toList) { old =>
-        insert(snippetId, old.inputs.copy(isShowingInUserProfile = false))
+        insert(snippetId, old.inputs.copyBaseInput(isShowingInUserProfile = false))
       }
     } yield ()
 
   private val anonFolder = "_anonymous_"
   private val inputFileName = "input3.json"
   private val outputFileName = "output3.json"
-  private val scalaJsFileName = ScalaTarget.Js.targetFilename
-  private val scalaJsSourceMapFileName = ScalaTarget.Js.sourceMapFilename
+  private val scalaJsFileName = Js.targetFilename
+  private val scalaJsSourceMapFileName = Js.sourceMapFilename
 
   private def inputsFile(snippetId: SnippetId): Path = {
     snippetFile(snippetId, inputFileName)
@@ -232,12 +238,11 @@ trait FilesystemSnippetsContainer extends SnippetsContainer with GenericFilesyst
     baseDirectory.resolve(Paths.get(fileName))
   }
 
-  private def readInputs(snippetId: SnippetId): Option[Inputs] = {
+  private def readInputs(snippetId: SnippetId): Option[BaseInputs] = {
     slurp(inputsFile(snippetId))
       .map(
         content =>
-          Json
-            .fromJson[Inputs](Json.parse(content))
+          decode[BaseInputs](content)
             .fold(e => sys.error(e.toString + s" for ${snippetId} $content"), identity)
       )
   }
@@ -249,8 +254,7 @@ trait FilesystemSnippetsContainer extends SnippetsContainer with GenericFilesyst
       _.linesIterator
         .filter(_.nonEmpty)
         .map { line =>
-          Json
-            .fromJson[SnippetProgress](Json.parse(line))
+          decode[SnippetProgress](line)
             .fold(e => sys.error(e.toString + s" for ${snippetId} $line"), identity)
         }
         .toList

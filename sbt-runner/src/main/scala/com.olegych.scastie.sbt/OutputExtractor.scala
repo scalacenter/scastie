@@ -2,11 +2,18 @@ package com.olegych.scastie.sbt
 
 import java.time.Instant
 
-import com.olegych.scastie.api._
+import scastie.api._
+import scastie.runtime.api._
 import com.olegych.scastie.instrumentation.Instrument
 import com.olegych.scastie.sbt.SbtProcess._
 import org.slf4j.LoggerFactory
-import play.api.libs.json._
+
+import io.circe._
+import io.circe.generic.semiauto._
+import io.circe.syntax._
+import io.circe.parser._
+
+import RuntimeCodecs._
 
 import scala.util.control.NonFatal
 
@@ -20,7 +27,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     val problems = extractProblems(output.line, Instrument.getMessageLineOffset(inputs), inputs.isWorksheetMode)
     val instrumentations = extract[List[Instrumentation]](output.line)
     val runtimeError = extractRuntimeError(output.line, Instrument.getExceptionLineOffset(inputs))
-    val sbtOutput = extract[ConsoleOutput.SbtOutput](output.line)
+    val consoleOutput = extract[ConsoleOutput](output.line)
+    println(consoleOutput)
     // sbt plugin is not loaded at this stage. we need to drop those messages
     val hiddenInitializationMessages = List(
       "WARNING: A terminally deprecated method in java.lang.System has been called",
@@ -43,7 +51,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
           && !isDone
           && !isHiddenSbtMessage
           && !isReloading
-          && sbtOutput.isEmpty)
+          && consoleOutput.isEmpty)
         Some(output)
       else None
 
@@ -59,8 +67,10 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     val isReallyDone = (isDone && !isReloading) || isSbtError
 
     val sbtProcessOutput =
-      if (isHiddenSbtMessage) None
-      else sbtOutput.map(_.output)
+      consoleOutput match {
+        case Some(SbtOutput(output)) if !isHiddenSbtMessage => Some(output)
+        case _ => None
+      }
 
     SnippetProgress(
       ts = Some(Instant.now.toEpochMilli),
@@ -82,8 +92,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     )
   }
 
-  private implicit val formatSourceMap: OFormat[SourceMap] =
-    Json.format[SourceMap]
+  private implicit val sourceMapEncoder: Encoder[SourceMap] = deriveEncoder[SourceMap]
+  private implicit val sourceMapDecoder: Decoder[SourceMap] = deriveDecoder[SourceMap]
 
   private case class SourceMap(
       version: Int,
@@ -97,25 +107,23 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   private def remapSourceMap(
       snippetId: SnippetId
   )(sourceMapRaw: String): String = {
-    Json
-      .fromJson[SourceMap](Json.parse(sourceMapRaw))
-      .asOpt
+    decode[SourceMap](sourceMapRaw).toOption
       .map { sourceMap =>
         val sourceMap0 =
           sourceMap.copy(
             sources = sourceMap.sources.map(
               source =>
-                if (source.startsWith(ScalaTarget.Js.sourceUUID)) {
+                if (source.startsWith(Js.sourceUUID)) {
                   val host =
                     if (isProduction) "https://scastie.scala-lang.org"
                     else "http://localhost:9000"
 
-                  host + snippetId.scalaJsUrl(ScalaTarget.Js.sourceFilename)
+                  host + snippetId.scalaJsUrl(Js.sourceFilename)
                 } else source
             )
           )
 
-        Json.prettyPrint(Json.toJson(sourceMap0))
+        sourceMap0.asJson.noSpaces
       }
       .getOrElse(sourceMapRaw)
   }
@@ -152,14 +160,14 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     }
   }
 
-  private def extract[T: Reads](line: String): Option[T] = {
+  private def extract[T: Decoder](line: String): Option[T] = {
     try {
-      Json.fromJson[T](Json.parse(line)).asOpt
+      decode[T](line).toOption
     } catch {
       case NonFatal(e) => None
     }
   }
 
-  private implicit val sbtOutputFormat: OFormat[ConsoleOutput.SbtOutput] =
-    ConsoleOutput.ConsoleOutputFormat.formatSbtOutput
+  private implicit val sbtOutputDecoder: Decoder[SbtOutput] = deriveDecoder[SbtOutput]
+
 }

@@ -1,10 +1,13 @@
-package com.olegych.scastie.api
+package scastie.api
 
-import play.api.libs.json._
+import io.circe.generic.semiauto._
+import io.circe._
+import scastie.runtime.api._
+import RuntimeCodecs._
 
 object ReleaseOptions {
-  implicit val formatReleaseOptions: OFormat[ReleaseOptions] =
-    Json.format[ReleaseOptions]
+  implicit val releaseOptionsEncoder: Encoder[ReleaseOptions] = deriveEncoder[ReleaseOptions]
+  implicit val releaseOptionsDecoder: Decoder[ReleaseOptions] = deriveDecoder[ReleaseOptions]
 }
 
 case class ReleaseOptions(groupId: String, versions: List[String], version: String)
@@ -12,8 +15,8 @@ case class ReleaseOptions(groupId: String, versions: List[String], version: Stri
 // case class MavenReference(groupId: String, artifactId: String, version: String)
 
 object Outputs {
-  implicit val formatOutputs: OFormat[Outputs] =
-    Json.format[Outputs]
+  implicit val outputsEncoder: Encoder[Outputs] = deriveEncoder[Outputs]
+  implicit val outputsDecoder: Decoder[Outputs] = deriveDecoder[Outputs]
 
   def default: Outputs = Outputs(
     consoleOutputs = Vector(),
@@ -31,7 +34,7 @@ case class Outputs(
     sbtError: Boolean
 ) {
 
-  def console: String = consoleOutputs.map(_.show).mkString("\n")
+  def console: String = consoleOutputs.mkString("\n")
 
   def isClearable: Boolean =
     consoleOutputs.nonEmpty ||
@@ -41,8 +44,6 @@ case class Outputs(
 }
 
 object Position {
-  implicit val formatPosition: OFormat[Position] =
-    Json.format[Position]
+  implicit val positionEncoder: Encoder[Position] = deriveEncoder[Position]
+  implicit val positionDecoder: Decoder[Position] = deriveDecoder[Position]
 }
-
-case class Position(start: Int, end: Int)

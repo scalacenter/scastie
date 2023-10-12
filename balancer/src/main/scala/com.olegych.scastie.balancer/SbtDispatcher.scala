@@ -7,14 +7,11 @@ import com.typesafe.config.Config
 import akka.actor.ActorLogging
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSelection
-import com.olegych.scastie.api
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.util._
 import scala.concurrent.Future
 import akka.remote.DisassociatedEvent
-import com.olegych.scastie.api.SnippetId
 import java.time.Instant
-import com.olegych.scastie.api.TaskId
 import scala.concurrent._
 import akka.pattern.ask
 
@@ -35,7 +32,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
     val sbtServers = remoteSbtSelections.to(Vector).map {
       case (_, ref) =>
         val state: SbtState = SbtState.Unknown
-        Server(ref, Inputs.default, state)
+        Server(ref, SbtInputs.default, state)
     }
 
     LoadBalancer(servers = sbtServers)
@@ -52,20 +49,20 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
   import context._
 
   // cannot be called from future
-  private def run0(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId): Unit = {
+  private def run0(sbtInputs: SbtInputs, userTrace: UserTrace, snippetId: SnippetId): Unit = {
 
-    val InputsWithIpAndUser(inputs, UserTrace(ip, user)) = inputsWithIpAndUser
+    val UserTrace(ip, user) = userTrace
 
-    log.info("id: {}, ip: {} run inputs: {}", snippetId, ip, inputs)
+    log.info("id: {}, ip: {} run inputs: {}", snippetId, ip, sbtInputs)
 
-    val task = Task(inputs, Ip(ip), TaskId(snippetId), Instant.now)
+    val task = Task(sbtInputs, Ip(ip), TaskId(snippetId), Instant.now)
 
     balancer.add(task) match {
       case Some((server, newBalancer)) =>
         updateSbtBalancer(newBalancer)
 
         server.ref.tell(
-          SbtTask(snippetId, inputs, ip, user.map(_.login), progressActor),
+          SbtTask(snippetId, sbtInputs, ip, user.map(_.login), progressActor),
           self
         )
       case _ => ()
@@ -73,7 +70,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
   }
 
   def receive: Receive = event.LoggingReceive(event.Logging.InfoLevel) {
-    case progress: api.SnippetProgress =>
+    case progress: SnippetProgress =>
       implicit val timeout: Timeout = Timeout(10.seconds)
       val sender = this.sender()
       if (progress.isDone) {
@@ -95,7 +92,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
 
     case SbtUp =>
       log.info("SbtUp")
-    
+
     case format: FormatRequest =>
       val server = balancer.getRandomServer
       server.foreach(_.ref.tell(format, sender()))
@@ -115,7 +112,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
           updateSbtBalancer(balancer.removeServer(ref))
         }
       }
-    
+
     case Replay(SbtRun(snippetId, inputs, progressActor, snippetActor)) =>
       log.info("Replay: " + inputs.code)
 
@@ -133,7 +130,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
 
         updateSbtBalancer(
           balancer.addServer(
-            Server(ref, Inputs.default, state)
+            Server(ref, SbtInputs.default, state)
           )
         )
       }
@@ -141,8 +138,8 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
     case ReceiveStatus(requester) =>
       sender() ! LoadBalancerInfo(balancer, requester)
 
-    case run: Run =>
-      run0(run.inputsWithIpAndUser, run.snippetId)
+    case Run(InputsWithIpAndUser(sbtTask: SbtInputs, userTrace), snippetId) =>
+      run0(sbtTask, userTrace, snippetId)
 
     case p: Ping.type =>
       val sender = this.sender()

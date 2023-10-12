@@ -1,6 +1,6 @@
 package com.olegych.scastie.web.routes
 
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.web.oauth2._
 
 import com.olegych.scastie.balancer._
@@ -35,7 +35,7 @@ class ScalaLangRoutes(
             entity(as[String]) { code =>
               val inputs =
                 InputsWithIpAndUser(
-                  Inputs.default.copy(code = code),
+                  SbtInputs.default.copy(code = code),
                   UserTrace(
                     remoteAddress.toString,
                     None

@@ -1,9 +1,7 @@
 package com.olegych.scastie.client.components.editor
 
-import com.olegych.scastie.api
-import com.olegych.scastie.api.AttachedDom
-import com.olegych.scastie.api.Html
-import com.olegych.scastie.api.Value
+import scastie.api._
+import scastie.runtime.api._
 import japgolly.scalajs.react._
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
@@ -57,7 +55,7 @@ object DecorationProvider {
     }
   }
 
-  private def createDecorations(instrumentations: Set[api.Instrumentation], attachedDoms: Map[String, HTMLElement], maxPosititon: Int): DecorationSet = {
+  private def createDecorations(instrumentations: Set[Instrumentation], attachedDoms: Map[String, HTMLElement], maxPosititon: Int): DecorationSet = {
     val deco = instrumentations
       .filter(_.position.end < maxPosititon)
       .map { instrumentation =>
