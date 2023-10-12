@@ -1,8 +1,8 @@
-package scastie.runtime
+package org.scastie.runtime
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
-import scastie.runtime.api._
+import org.scastie.runtime.api._
 
 object Runtime extends JvmRuntime {
   def render[T](a: T)(implicit _ct: ClassTag[T] = null, _tt: TypeTag[T] = null): Render = {

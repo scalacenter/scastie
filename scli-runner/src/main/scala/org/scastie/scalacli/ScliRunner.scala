@@ -1,0 +1,226 @@
+package org.scastie.scalacli
+
+import org.scastie.api._
+import org.scastie.runtime.api._
+import RuntimeCodecs._
+import org.scastie.instrumentation.{InstrumentedInputs, InstrumentationFailureReport}
+import com.typesafe.scalalogging.Logger
+import java.nio.file.{Files, Path, StandardOpenOption}
+import java.util.concurrent.CompletableFuture
+import java.io.{InputStream, OutputStream}
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.sys.process._
+import org.scastie.instrumentation.InstrumentationFailure
+import org.scastie.instrumentation.Instrument
+import scala.util.control.NonFatal
+import scala.concurrent.duration.Duration
+import java.util.concurrent.TimeUnit
+import scala.concurrent.Await
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
+import java.util.concurrent.TimeoutException
+import scala.collection.concurrent.TrieMap
+import org.scastie.buildinfo.BuildInfo
+import scala.concurrent.duration.FiniteDuration
+import io.circe._
+import io.circe.parser._
+
+
+object ScliRunner {
+  case class ScliRun(
+    output: List[String],
+    instrumentation: Option[List[Instrumentation]] = None,
+    diagnostics: List[Problem] = List()
+  )
+
+  case class ScliTask(snippetId: SnippetId, inputs: BaseInputs, ip: String)
+
+  // Errors
+  abstract class ScliRunnerError extends Exception
+  case class InvalidScalaVersion(version: String) extends ScliRunnerError
+  case class InstrumentationException(failure: InstrumentationFailureReport) extends ScliRunnerError
+  case class CompilationError(problems: List[Problem], logs: List[String] = List()) extends ScliRunnerError
+  // From Bsp
+  case class ErrorFromBsp(err: BspClient.BspError, logs: List[String] = List()) extends ScliRunnerError
+}
+
+class ScliRunner {
+  import ScliRunner._
+
+  private val log = Logger("ScliRunner")
+
+  // Files
+  private val workingDir = Files.createTempDirectory("scastie")
+  private val scalaMain = workingDir.resolve("src/main/scala/main.scala")
+
+  private def initFiles : Unit = {
+    Files.createDirectories(scalaMain.getParent())
+    writeFile(scalaMain, "@main def main = { println(\"hello world!\") } ")
+  }
+
+  private def writeFile(path: Path, content: String): Unit = {
+    if (Files.exists(path)) {
+      Files.delete(path)
+    }
+
+    Files.write(path, content.getBytes, StandardOpenOption.CREATE_NEW)
+
+    ()
+  }
+
+  def runTask(task: ScliTask, timeout: FiniteDuration, onOutput: String => Any): Future[Either[ScliRun, ScliRunnerError]] = {
+    log.info(s"Running task with snippetId=${task.snippetId}")
+    buildAndRun(task.snippetId, task.inputs, timeout, onOutput)
+  }
+
+  def buildAndRun(
+        snippetId: SnippetId,
+        inputs: BaseInputs,
+        timeout: FiniteDuration,
+        onOutput: String => Any
+    )
+      : Future[Either[ScliRun, ScliRunnerError]] = {
+    // val runtimeDependency = inputs.target.runtimeDependency.map(Set(_)).getOrElse(Set()) ++ inputs.libraries
+    // val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
+    // val totalLineOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(inputs)
+
+    // val charOffsetInstrumentation = userDirectives.map(_.length() + 1).sum
+
+    // val code = allDirectives.mkString("\n") + "\n" + inputs.code
+    writeFile(scalaMain, inputs.code)
+
+    var instrumentationMem: Option[List[Instrumentation]] = None
+    var outputBuffer: List[String] = List()
+
+    def forwardPrint(str: String) = {
+      outputBuffer = str :: outputBuffer
+      onOutput(str)
+    }
+
+    // def mapProblems(list: List[Problem]): List[Problem] = {
+    //   list.map(pb =>
+    //     pb.copy(line = pb.line.map(line => {
+    //       if (line <= allDirectives.size) // if issue is on directive, then do not map.
+    //         line
+    //       else
+    //         (line + totalLineOffset + 1)
+    //     })
+    //       // removing invalid lines
+    //       // NOTE: somehow, BSP can report lines ≤ 0 and are usually
+    //       // duplicates of previous reports.
+    //       .filter(_ > 0)
+    //     )
+    //   )
+    // }
+
+    def handleError(bspError: BspClient.BspError): ScliRunnerError = bspError match {
+      case x: BspClient.CompilationError => CompilationError(x.toProblemList, x.logs)
+      case _ => ErrorFromBsp(bspError, bspError.logs)
+    }
+
+    // Should be executed asynchronously due to the timeout (executed synchronously)
+    def runProcess(bspRun: BspClient.BspRun) = {
+      // print log messages
+      bspRun.logMessages.foreach(forwardPrint)
+
+      val runProcess = bspRun.process.run(
+        ProcessLogger({ line: String => {
+          // extract instrumentation
+          extract[List[Instrumentation]](line) match {
+            case _ => forwardPrint(line)
+            // case Some(value) => {
+            //   instrumentationMem = Some(value.map(inst => inst.copy(
+            //     position = inst.position.copy(inst.position.start + charOffsetInstrumentation, inst.position.end + charOffsetInstrumentation)
+            //   )))
+            // }
+          }
+
+        }})
+      )
+      javaProcesses.put(snippetId, runProcess)
+
+      // Wait
+      val f = Future { runProcess.exitValue() }
+      val didSucceed =
+        Try(Await.result(f, timeout)) match {
+          case Success(value) => {
+            forwardPrint(s"Process exited with error code $value")
+            true
+          }
+          case Failure(_: TimeoutException) => {
+            forwardPrint("Timeout exceeded.")
+            false
+          }
+          case Failure(e) => {
+            forwardPrint(s"Unknown exception $e")
+            false
+          }
+        }
+
+      if (!didSucceed) {
+        runProcess.destroy()
+      }
+      javaProcesses.remove(snippetId)
+
+      ScliRun(outputBuffer, instrumentationMem, bspRun.toProblemList)
+    }
+
+    val build = bspClient.build(snippetId.base64UUID)
+    build.map { result =>
+      result match {
+        case Right(bspError) => Right(handleError(bspError))
+        case Left(x: BspClient.BspRun) => Left(runProcess(x))
+      }
+    }
+  }
+
+  def end: Unit = {
+    bspClient.end
+    javaProcesses.values.foreach(_.destroy())
+    process.map(_.destroy())
+  }
+
+  // Java processes
+  private val javaProcesses = TrieMap[SnippetId, Process]() // mutable and concurrent HashMap
+
+  // Process streams
+  private var pStdin: Option[OutputStream] = None
+  private var pStdout: Option[InputStream] = None
+  private var pStderr: Option[InputStream] = None
+  private var process: Option[Process] = None
+
+  // Bsp
+  private val bspClient = {
+    log.info(s"Starting Scala-CLI BSP in folder ${workingDir.toAbsolutePath().normalize().toString()}")
+    val processBuilder: ProcessBuilder = Process(Seq("scala-cli", "bsp", ".", "-deprecation"), workingDir.toFile())
+    val io = BasicIO.standard(true)
+      .withInput(i => pStdin = Some(i))
+      .withError(e => pStderr = Some(e))
+      .withOutput(o => pStdout = Some(o))
+
+    process = Some(processBuilder.run(io))
+
+    // TODO: really bad
+    while (pStdin.isEmpty || pStdout.isEmpty || pStderr.isEmpty) Thread.sleep(100)
+
+    // Create BSP connection
+    new BspClient(workingDir, pStdout.get, pStdin.get)
+  }
+
+  private val runTimeScala = "//> using lib \"org.scastie::runtime-scala\""
+
+  private def scalaDepToFullName = (dep: ScalaDependency) => s"${dep.groupId}::${dep.artifact}:${dep.version}"
+  private def libraryDirective = (lib: String) => s"//> using lib \"$lib\"".mkString
+
+  initFiles
+
+  private def extract[T: Decoder](line: String) = {
+    try {
+      decode[T](line).toOption
+    } catch {
+      case NonFatal(e) => None
+    }
+  }
+}

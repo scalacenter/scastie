@@ -1,4 +1,4 @@
-package scastie.runtime
+package org.scastie.runtime
 
 import org.scalajs.dom.HTMLElement
 import scala.scalajs.js

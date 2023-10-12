@@ -1,10 +1,10 @@
-package scastie.runtime
+package org.scastie.runtime
 
 import javax.imageio.ImageIO
 import java.io.{ByteArrayOutputStream, File}
 import java.util.Base64
 import java.awt.image.BufferedImage
-import scastie.runtime.api._
+import org.scastie.runtime.api._
 
 protected[runtime] trait JvmRuntime extends SharedRuntime {
   def image(path: String): Html = {

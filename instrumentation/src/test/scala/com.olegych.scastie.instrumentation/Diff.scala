@@ -1,6 +1,6 @@
-package com.olegych.scastie.instrumentation
+package org.scastie.instrumentation
 
-import com.olegych.scastie.util.ScastieFileUtil
+import org.scastie.util.ScastieFileUtil
 
 case class DiffFailure(title: String, expected: String, obtained: String, diff: String)
     extends Exception(title + "\n" + Diff.error2message(obtained, expected))

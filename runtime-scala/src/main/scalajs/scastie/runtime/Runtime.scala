@@ -1,19 +1,15 @@
-package scastie.runtime
+package org.scastie.runtime
 
-import play.api.libs.json.Json
 import org.scalajs.dom.HTMLElement
 import java.util.UUID
 import java.awt.image.BufferedImage
 import scala.reflect.ClassTag
-import scastie.runtime.api._
-import play.api.libs.json.OFormat
+import org.scastie.runtime.api._
 
 object Runtime extends SharedRuntime {
-  implicit val runtimeErrorFormat: OFormat[RuntimeError] = Json.format[RuntimeError]
-  implicit val scalaJsResultFormat: OFormat[ScalaJsResult] = Json.format[ScalaJsResult]
 
   def write(instrumentations: List[Instrumentation], error: Option[RuntimeError]): String = {
-    Json.stringify(Json.toJson(ScalaJsResult(instrumentations, error)))
+    ScalaJsResult(instrumentations, error).asJsonString
   }
 
   def render[T](a: T, attach: HTMLElement => UUID)(implicit _ct: ClassTag[T] = null): Render = {

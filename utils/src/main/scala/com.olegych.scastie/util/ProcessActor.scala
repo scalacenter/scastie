@@ -1,4 +1,4 @@
-package com.olegych.scastie.util
+package org.scastie.util
 
 import java.nio.file._
 import java.time.Instant
@@ -9,7 +9,7 @@ import akka.contrib.process._
 import akka.stream.scaladsl.{Flow, Framing, Sink, Source}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, ThrottleMode}
 import akka.util.ByteString
-import scastie.api.{ProcessOutput, ProcessOutputType}
+import org.scastie.api.{ProcessOutput, ProcessOutputType}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._

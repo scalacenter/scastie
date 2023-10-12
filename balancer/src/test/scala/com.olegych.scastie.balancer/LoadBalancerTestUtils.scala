@@ -1,8 +1,8 @@
-package com.olegych.scastie.balancer
+package org.scastie.balancer
 
 import java.time.Instant
 
-import com.olegych.scastie.api._
+import org.scastie.api._
 import org.scalatest.Assertion
 import org.scalatest.funsuite.AnyFunSuite
 
