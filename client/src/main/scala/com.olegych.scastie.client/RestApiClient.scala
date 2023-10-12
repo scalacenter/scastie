@@ -1,9 +1,8 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api._
+import scastie.api._
 import org.scalajs.dom
 import org.scalajs.dom.XMLHttpRequest
-import play.api.libs.json._
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -12,55 +11,59 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scalajs.js.Thenable.Implicits._
 import scalajs.js
 
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
+
 class RestApiClient(serverUrl: Option[String]) extends RestApi {
 
   val apiBase: String = serverUrl.getOrElse("")
 
-  def tryParse[T: Reads](response: XMLHttpRequest): Option[T] =
+  def tryParse[T: Decoder](response: XMLHttpRequest): Option[T] =
     tryParse(response.responseText)
 
-  def tryParse[T: Reads](response: dom.Response): Future[Option[T]] =
+  def tryParse[T: Decoder](response: dom.Response): Future[Option[T]] =
     response.text().map(tryParse(_))
 
-  def tryParse[T: Reads](text: String): Option[T] = {
+  def tryParse[T: Decoder](text: String): Option[T] = {
     Option.when(text.nonEmpty)(text).flatMap(t =>
-      Try(Json.parse(t)).toOption.flatMap(Json.fromJson[T](_).asOpt)
+      decode[T](t).toOption
     )
   }
 
-  def get[T: Reads](url: String): Future[Option[T]] = {
+  def get[T: Decoder](url: String): Future[Option[T]] = {
     val header = new dom.Headers(js.Dictionary("Accept" -> "application/json"))
     dom
       .fetch(apiBase + "/api" + url, js.Dynamic.literal(headers = header, method = dom.HttpMethod.GET).asInstanceOf[dom.RequestInit])
       .flatMap(tryParse[T](_))
   }
 
-  class Post[O: Reads]() {
-    def using[I: Writes](url: String, data: I, async: Boolean = true): Future[Option[O]] = {
+  class Post[O: Decoder]() {
+    def using[I: Encoder](url: String, data: I, async: Boolean = true): Future[Option[O]] = {
       val header = new dom.Headers(js.Dictionary("Accept" -> "application/json", "Content-Type" -> "application/json"))
       dom
         .fetch(
           apiBase + "/api" + url,
           js.Dynamic
-            .literal(headers = header, method = dom.HttpMethod.POST, body = Json.prettyPrint(Json.toJson(data)))
+            .literal(headers = header, method = dom.HttpMethod.POST, body = data.asJson.noSpaces)
             .asInstanceOf[dom.RequestInit]
         )
         .flatMap(tryParse[O](_))
     }
   }
 
-  def post[O: Reads]: Post[O] = new Post[O]
+  def post[O: Decoder]: Post[O] = new Post[O]
 
-  def run(inputs: Inputs): Future[SnippetId] =
+  def run(inputs: BaseInputs): Future[SnippetId] =
     post[SnippetId].using("/run", inputs).map(_.get)
 
   def format(request: FormatRequest): Future[FormatResponse] =
     post[FormatResponse].using("/format", request).map(_.get)
 
-  def save(inputs: Inputs): Future[SnippetId] =
+  def save(inputs: BaseInputs): Future[SnippetId] =
     post[SnippetId].using("/save", inputs).map(_.get)
 
-  def saveBlocking(inputs: Inputs): Option[SnippetId] = {
+  def saveBlocking(inputs: BaseInputs): Option[SnippetId] = {
     val req = new dom.XMLHttpRequest()
     req.open(
       "POST",
@@ -78,7 +81,7 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
       }
     }
 
-    req.send(Json.prettyPrint(Json.toJson(inputs)))
+    req.send(inputs.asJson.noSpaces)
 
     snippetId
   }

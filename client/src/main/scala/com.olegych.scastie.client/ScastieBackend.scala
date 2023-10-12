@@ -2,7 +2,7 @@ package com.olegych.scastie.client
 
 import java.util.UUID
 
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.client.components.Scastie
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Scala.BackendScope
@@ -13,6 +13,7 @@ import org.scalajs.dom.{Position => _, _}
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scastie.runtime.api.RuntimeError
 
 case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendScope[Scastie, ScastieState]) {
 
@@ -28,20 +29,28 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
 
   val reloadStaleMetals: Reusable[Callback] =
     Reusable.always { scope.modState({ state => {
-      previousDirectives = Some(takeDirectives(state.inputs))
-      state.copyAndSave(isMetalsStale = false) 
+      state.inputs match {
+        case scalaCliInputs: ScalaCliInputs => Some(takeDirectives(scalaCliInputs))
+        case _ =>
+      }
+      state.copyAndSave(isMetalsStale = false)
     } }) }
 
-  private def takeDirectives(inp: Inputs) = inp.code.split("\n").takeWhile(_.startsWith("//>")).toList
+  private def takeDirectives(inp: ScalaCliInputs) = inp.code.split("\n").takeWhile(_.startsWith("//>")).toList
   private var previousDirectives: Option[List[String]] = None
 
   val checkIfMetalsStale = scope.modState(state => {
-    val newDirectives = takeDirectives(state.inputs)
-    previousDirectives match {
-      case None => { previousDirectives = Some(newDirectives); state }
-      case Some(previousDirectives) if previousDirectives != newDirectives => state.copy(isMetalsStale = true)
+    state.inputs match {
+      case scalaCliInputs: ScalaCliInputs =>
+        val newDirectives = takeDirectives(scalaCliInputs)
+        previousDirectives match {
+          case None => { previousDirectives = Some(newDirectives); state }
+          case Some(previousDirectives) if previousDirectives != newDirectives => state.copy(isMetalsStale = true)
+          case _ => state
+        }
       case _ => state
     }
+
   }).async.rateLimit(1.second)
 
   val codeChange: String ~=> Callback =
@@ -62,7 +71,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       val setData = scope.state.map(
         state => {
           state
-            .setInputs(Inputs.default.copy(code = state.inputs.code))
+            .setInputs(SbtInputs.default.copyBaseInput(code = state.inputs.code))
             .clearOutputs
             .clearSnippetId
             .setChangedInputs
@@ -77,7 +86,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       val setData = scope.state.map(state => {
         state
           .copy(isDesktopForced = false)
-          .setInputs(Inputs.default.copy(code = ""))
+          .setInputs(SbtInputs.default.copyBaseInput(code = ""))
           .clearOutputs
           .clearSnippetId
           .setChangedInputs
@@ -489,17 +498,17 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
         restApiClient
           .format(FormatRequest(state.inputs.code, state.inputs.isWorksheetMode, state.inputs.target))
           .map {
-            case FormatResponse(Right(formattedCode)) =>
+            case FormatResponse(formattedCode) =>
               scope.modState { s =>
                 // avoid overriding user's code if he/she types while it's formatting
                 if (s.inputs.code == state.inputs.code)
                   s.clearOutputsPreserveConsole.setCode(formattedCode)
                 else s
               }
-            case FormatResponse(Left(error)) =>
-              scope.modState {
-                _.setRuntimeError(Some(RuntimeError(message = "Formatting failed: " + error, line = None, fullStack = "")))
-              }
+            // case FormatResponse(error) =>
+            //   scope.modState {
+            //     _.setRuntimeError(Some(RuntimeError(message = "Formatting failed: " + error, line = None, fullStack = "")))
+            //   }
           }
       }
     }

@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.client._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
@@ -20,7 +20,7 @@ final case class Scastie(
     private val targetType: Option[ScalaTargetType],
     private val tryLibrary: Option[(ScalaDependency, Project)],
     private val code: Option[String],
-    private val inputs: Option[Inputs],
+    private val inputs: Option[BaseInputs],
 ) {
 
   @inline def render = Scastie.component(serverUrl, scastieId)(this)
@@ -227,7 +227,7 @@ object Scastie {
       .builder[Scastie]("Scastie")
       .initialStateFromProps { props =>
         val state = {
-          val loadedState = ScastieState.default(props.isEmbedded).copy(inputs = Inputs.default.copy(code = ""))
+          val loadedState = ScastieState.default(props.isEmbedded).copy(inputs = SbtInputs.default.copy(code = ""))
           if (!props.isEmbedded) {
             loadedState
           } else {
@@ -242,7 +242,7 @@ object Scastie {
                 state.setTarget(targetType.defaultScalaTarget)
 
               if (targetType == ScalaTargetType.Scala3) {
-                state0.setCode(ScalaTarget.Scala3.defaultCode)
+                state0.setCode(Scala3.defaultCode)
               } else {
                 state0
               }

@@ -4,7 +4,7 @@ package balancer
 import akka.NotUsed
 import akka.actor.{Actor, ActorRef}
 import akka.stream.scaladsl.Source
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.util.GraphStageForwarder
 
 import scala.collection.mutable.{Map => MMap, Queue => MQueue}

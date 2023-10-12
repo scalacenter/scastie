@@ -2,7 +2,7 @@ package com.olegych.scastie.balancer
 
 import com.typesafe.config.Config
 import akka.actor.ActorSelection
-import com.olegych.scastie.api.ActorConnected
+import scastie.api.ActorConnected
 import akka.actor.ActorLogging
 import akka.actor.Actor
 import akka.actor.ActorRef
@@ -10,27 +10,29 @@ import scala.concurrent.Future
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
-import com.olegych.scastie.api.RunnerPing
+// import scala.collection.mutable
+import scastie.api.RunnerPing
 
 abstract class BaseDispatcher[R, S](config: Config) extends Actor with ActorLogging {
   case class SocketAddress(host: String, port: Int)
 
   import context._
-  
+
   private def getRemoteActorsPath(
     key: String,
     runnerName: String,
     actorName: String
-  ): Map[SocketAddress, String] = {
+  ): collection.mutable.Map[SocketAddress, String] = {
     val host = config.getString(s"remote-$key-hostname")
     val portStart = config.getInt(s"remote-$key-ports-start")
     val portSize = config.getInt(s"remote-$key-ports-size")
-    (0 until portSize).map(_ + portStart)
+    val result = (0 until portSize).map(_ + portStart)
       .map(port => {
         val addr = SocketAddress(host, port)
         (addr, getRemoteActorPath(runnerName, addr, actorName))
       })
-      .toMap
+
+    collection.mutable.Map.from(result)
   }
 
   def getRemoteActorPath(
@@ -49,7 +51,7 @@ abstract class BaseDispatcher[R, S](config: Config) extends Actor with ActorLogg
     key: String,
     runnerName: String,
     actorName: String
-    ): Map[SocketAddress, ActorSelection] = {
+    ): collection.mutable.Map[SocketAddress, ActorSelection] = {
       getRemoteActorsPath(key, runnerName, actorName).map {
         case (address, url) => (address, connectRunner(url))
       }
@@ -61,12 +63,12 @@ abstract class BaseDispatcher[R, S](config: Config) extends Actor with ActorLogg
         (s ? RunnerPing).map { _ =>
           log.info(s"pinged $s")
           true
-        }.recover { e => 
+        }.recover { e =>
           log.error(e, s"could not ping $s")
           false
         }
       }
     Future.sequence(futures)
   }
-      
+
 }

@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components.editor
 
-import com.olegych.scastie.api
+import scastie.api
 import typings.codemirrorLint.mod.Severity
 
 object JsUtils {

@@ -2,7 +2,7 @@ package com.olegych.scastie.client
 
 import java.util.UUID
 
-import com.olegych.scastie.api.SnippetId
+import scastie.api.SnippetId
 import com.olegych.scastie.client.components._
 import japgolly.scalajs.react.component.Generic
 import japgolly.scalajs.react.extra.router._

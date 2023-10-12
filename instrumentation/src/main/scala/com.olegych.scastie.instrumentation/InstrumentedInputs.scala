@@ -3,7 +3,7 @@ package com.olegych.scastie.instrumentation
 import java.io.{PrintWriter, StringWriter}
 import java.time.Instant
 
-import com.olegych.scastie.api._
+import scastie.api._
 
 import scala.meta.parsers.Parsed
 
@@ -18,10 +18,10 @@ case class InstrumentationFailureReport(message: String, line: Option[Int]) {
 }
 
 object InstrumentedInputs {
-  def apply(inputs0: Inputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
+  def apply(inputs0: BaseInputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
     if (inputs0.isWorksheetMode) {
       val instrumented = Instrument(inputs0.code, inputs0.target).map { instrumentedCode =>
-        inputs0.copy(code = instrumentedCode)
+        inputs0.copyBaseInput(code = instrumentedCode)
       }
 
       instrumented match {
@@ -33,7 +33,7 @@ object InstrumentedInputs {
 
           error match {
             case HasMainMethod =>
-              Right(InstrumentedInputs(inputs0.copy(_isWorksheetMode = false), isForcedProgramMode = true))
+              Right(InstrumentedInputs(inputs0.copyBaseInput(isWorksheetMode = false), isForcedProgramMode = true))
 
             case UnsupportedDialect =>
               Left(InstrumentationFailureReport("This Scala target does not have a worksheet mode", None))
@@ -42,7 +42,7 @@ object InstrumentedInputs {
               val lineOffset = Instrument.getParsingLineOffset(inputs0)
               val errorLine = (error.pos.startLine + lineOffset) max 1
               Right(InstrumentedInputs(
-                inputs = inputs0.copy(code = error.pos.input.text),
+                inputs = inputs0.copyBaseInput(code = error.pos.input.text),
                 isForcedProgramMode = false,
                 optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorLine)))
               ))
@@ -61,13 +61,13 @@ object InstrumentedInputs {
     }
   }
 
-  private def success(inputs: Inputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
+  private def success(inputs: BaseInputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
     Right(InstrumentedInputs(inputs, isForcedProgramMode = false))
   }
 }
 
 case class InstrumentedInputs(
-    inputs: Inputs,
+    inputs: BaseInputs,
     isForcedProgramMode: Boolean,
     optionalParsingError: Option[InstrumentationFailureReport] = None
 )

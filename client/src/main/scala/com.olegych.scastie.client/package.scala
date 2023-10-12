@@ -1,22 +1,23 @@
 package com.olegych.scastie
 
-import play.api.libs.json._
+
+import io.circe._
 
 import org.scalajs.dom.window
 
 package object client {
 
-  def dontSerialize[T](fallback: T): Format[T] = new Format[T] {
-    def writes(v: T): JsValue = JsNull
-    def reads(json: JsValue): JsResult[T] = JsSuccess(fallback)
+  def dontSerialize[T](fallback: T): Codec[T] = new Codec[T] {
+    def apply(c: HCursor): Decoder.Result[T] = Right(fallback)
+    def apply(a: T): Json = io.circe.Json.Null
   }
 
-  def dontSerializeOption[T]: Format[T] = new Format[T] {
-    def writes(v: T): JsValue = JsNull
-    def reads(json: JsValue): JsResult[T] = JsSuccess(null.asInstanceOf[T])
+  def dontSerializeOption[T]: Codec[T] = new Codec[T] {
+    def apply(c: HCursor): Decoder.Result[T] = Right(null.asInstanceOf[T])
+    def apply(a: T): Json = io.circe.Json.Null
   }
 
-  def dontSerializeList[T]: Format[List[T]] =
+  def dontSerializeList[T]: Codec[List[T]] =
     dontSerialize(List())
 
   val isMac: Boolean = window.navigator.userAgent.contains("Mac")

@@ -1,6 +1,6 @@
 package com.olegych.scastie.storage
 
-import com.olegych.scastie.api._
+import scastie.api._
 import com.olegych.scastie.instrumentation.Instrument
 import com.olegych.scastie.util.Base64UUID
 
@@ -21,7 +21,7 @@ trait SnippetsContainer {
       for {
         read <- readSnippet(updateSnippetId)
         result <- read match {
-          case Some(read) =>
+          case Some(_) =>
             for {
               result <- delete(updateSnippetId)
               resultNext <- deleteUpdate(update + 1)
@@ -49,32 +49,32 @@ trait SnippetsContainer {
       snippetId: SnippetId
   ): Future[Option[FetchResultScalaJsSourceMap]]
   def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]]
-  protected def insert(snippetId: SnippetId, inputs: Inputs): Future[Unit]
+  protected def insert(snippetId: SnippetId, inputs: BaseInputs): Future[Unit]
   protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit]
 
-  private def insert0(snippetId: SnippetId, inputs: Inputs): Future[SnippetId] =
+  private def insert0(snippetId: SnippetId, inputs: BaseInputs): Future[SnippetId] =
     insert(snippetId, inputs).map(_ => snippetId)
 
-  final def create(inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] = {
+  final def create(inputs: BaseInputs, user: Option[UserLogin]): Future[SnippetId] = {
     insert0(newSnippetId(user), inputs)
   }
 
-  final def save(inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] =
-    create(inputs.copy(isShowingInUserProfile = true), user)
+  final def save(inputs: BaseInputs, user: Option[UserLogin]): Future[SnippetId] =
+    create(inputs.copyBaseInput(isShowingInUserProfile = true), user)
 
-  final def update(snippetId: SnippetId, inputs: Inputs): Future[Option[SnippetId]] = {
+  final def update(snippetId: SnippetId, inputs: BaseInputs): Future[Option[SnippetId]] = {
     updateSnippetId(snippetId).flatMap {
       case Some(nextSnippetId) =>
         for {
-          r <- insert0(nextSnippetId, inputs.copy(forked = Some(snippetId), isShowingInUserProfile = true))
+          r <- insert0(nextSnippetId, inputs.copyBaseInput(forked = Some(snippetId), isShowingInUserProfile = true))
           _ <- hideFromUserProfile(snippetId)
         } yield Some(r)
       case _ => Future.successful(None)
     }
   }
 
-  final def fork(snippetId: SnippetId, inputs: Inputs, user: Option[UserLogin]): Future[SnippetId] =
-    create(inputs.copy(forked = Some(snippetId), isShowingInUserProfile = true), user)
+  final def fork(snippetId: SnippetId, inputs: BaseInputs, user: Option[UserLogin]): Future[SnippetId] =
+    create(inputs.copyBaseInput(forked = Some(snippetId), isShowingInUserProfile = true), user)
 
   final def readScalaSource(
       snippetId: SnippetId
@@ -91,7 +91,10 @@ trait SnippetsContainer {
     )
 
   final def downloadSnippet(snippetId: SnippetId): Future[Option[Path]] =
-    readSnippet(snippetId).map(_.map(asZip(snippetId)))
+    readSnippet(snippetId).map(_.flatMap {
+      case FetchResult(sbtInputs: SbtInputs, _) => Option(asZip(snippetId)(sbtInputs))
+      case _ => None
+    })
 
   protected final def newSnippetId(user: Option[UserLogin]): SnippetId = {
     val uuid = Base64UUID.create
@@ -120,8 +123,7 @@ trait SnippetsContainer {
 
   private val snippetZip = Files.createTempDirectory(null)
 
-  private def asZip(snippetId: SnippetId)(snippet: FetchResult): Path = {
-    import snippet.inputs
+  private def asZip(snippetId: SnippetId)(inputs: SbtInputs): Path = {
 
     val projectDir = snippetZip.resolve(snippetId.url)
 

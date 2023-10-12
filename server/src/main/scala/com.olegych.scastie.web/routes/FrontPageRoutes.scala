@@ -14,9 +14,9 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.StreamConverters
 import akka.util.ByteString
 import akka.util.Timeout
-import com.olegych.scastie.api.FetchResult
-import com.olegych.scastie.api.SnippetId
-import com.olegych.scastie.api.SnippetUserPart
+import scastie.api.FetchResult
+import scastie.api.SnippetId
+import scastie.api.SnippetUserPart
 import com.olegych.scastie.balancer.FetchSnippet
 import com.olegych.scastie.util.Base64UUID
 import org.apache.commons.text.StringEscapeUtils

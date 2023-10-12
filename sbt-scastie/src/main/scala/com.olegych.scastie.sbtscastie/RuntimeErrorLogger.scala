@@ -1,9 +1,13 @@
 package sbt.internal.util.com.olegych.scastie.sbtscastie
 
-import com.olegych.scastie.api._
+import scastie.api._
+import scastie.runtime.api._
+import RuntimeCodecs._
+import io.circe._
+import io.circe.syntax._
+import io.circe.parser._
 import org.apache.logging.log4j.core.{Appender => XAppender, LogEvent => XLogEvent}
 import org.apache.logging.log4j.message.ObjectMessage
-import play.api.libs.json.Json
 import sbt.Keys._
 import sbt._
 import sbt.internal.util.ConsoleAppender.Properties
@@ -16,13 +20,8 @@ import java.util.concurrent.atomic.AtomicReference
 object RuntimeErrorLogger {
   private val scastieOut = new PrintWriter(new OutputStream {
     def out(in: String): Unit = {
-      println(
-        Json.stringify(
-          Json.toJson[ConsoleOutput](
-            ConsoleOutput.SbtOutput(ProcessOutput(in.trim, ProcessOutputType.StdOut, None))
-          )
-        )
-      )
+      val output: ConsoleOutput = SbtOutput(ProcessOutput(in.trim, ProcessOutputType.StdOut, None))
+      println(output.asJson.noSpaces)
     }
     override def write(b: Int): Unit = ()
     override def write(b: Array[Byte]): Unit = out(new String(b))
@@ -57,7 +56,7 @@ object RuntimeErrorLogger {
   }
   private def logThrowable(throwable: Throwable): Unit = {
     val error = RuntimeErrorWrap(RuntimeError.fromThrowable(throwable))
-    println(Json.stringify(Json.toJson(error)))
+    println(error.asJson.noSpaces)
   }
 
   val settings: Seq[sbt.Def.Setting[_]] = Seq(

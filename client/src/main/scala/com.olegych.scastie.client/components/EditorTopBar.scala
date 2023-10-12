@@ -2,9 +2,10 @@ package com.olegych.scastie
 package client
 package components
 
-import api.{SnippetId, User, ScalaTarget}
+import scastie.api.{SnippetId, User, ScalaTarget}
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
+import scastie.api.ScalaTargetType
 
 final case class EditorTopBar(clear: Reusable[Callback],
                               closeNewSnippetModal: Reusable[Callback],
@@ -69,7 +70,7 @@ object EditorTopBar {
     ).render
 
     val worksheetButton = WorksheetButton(
-      props.scalaTarget.hasWorksheetMode,
+      props.scalaTarget.targetType != ScalaTargetType.ScalaCli,
       props.isWorksheetMode,
       props.toggleWorksheetMode,
       props.view.value

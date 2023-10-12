@@ -5,8 +5,7 @@ import cats.data.OptionT
 import cats.effect.Async
 import cats.syntax.all._
 import com.evolutiongaming.scache.Cache
-import com.olegych.scastie.api._
-import scastie.metals.DTOCodecs._
+import scastie.api._
 import org.eclipse.lsp4j._
 
 trait ScastieMetals[F[_]]:

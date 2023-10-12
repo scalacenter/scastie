@@ -1,6 +1,6 @@
 package com.olegych.scastie.client.components.editor
 
-import com.olegych.scastie.api
+import scastie.api
 import com.olegych.scastie.client._
 import japgolly.scalajs.react._
 import typings.codemirrorState.mod._
@@ -16,7 +16,7 @@ import hooks.Hooks.UseStateF
 case class InteractiveProvider(
   dependencies: Set[api.ScalaDependency],
   target: api.ScalaTarget,
-  code: Some[String],
+  code: String,
   metalsStatus: MetalsStatus,
   updateStatus: MetalsStatus ~=> Callback,
   isWorksheetMode: Boolean,
@@ -35,7 +35,7 @@ object InteractiveProvider {
     InteractiveProvider(
       props.dependencies,
       props.target,
-      Some(props.value),
+      props.value,
       props.metalsStatus,
       props.setMetalsStatus,
       props.isWorksheetMode,
@@ -79,7 +79,7 @@ object InteractiveProvider {
       val extension = InteractiveProvider(
         props.dependencies,
         props.target,
-        Some(props.value),
+        props.value,
         props.metalsStatus,
         props.setMetalsStatus,
         props.isWorksheetMode,

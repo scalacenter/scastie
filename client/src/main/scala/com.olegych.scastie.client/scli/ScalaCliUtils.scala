@@ -1,27 +1,25 @@
 package com.olegych.scastie.client.scli
 
-import com.olegych.scastie.api.Inputs
-import com.olegych.scastie.api.ScalaTargetType
-import com.olegych.scastie.api.ScalaDependency
-import com.olegych.scastie.api.ScalaTarget
+import scastie.api._
 
 object ScalaCliUtils {
-  def convertInputsToScalaCli(in: Inputs): Either[Inputs, String] = {
-    val Inputs(_isWorksheetMode, code, target, libraries, librariesFromList, sbtConfigExtra, sbtConfigSaved, sbtPluginsConfigExtra, sbtPluginsConfigSaved, isShowingInUserProfile, forked) = in
+  def convertInputsToScalaCli(input: SbtInputs): Either[BaseInputs, String] = {
 
-    if (sbtConfigExtra.size > 0 && sbtConfigExtra != Inputs.default.sbtConfigExtra) {
+    if (input.sbtConfigExtra.size > 0 && input.sbtConfigExtra != SbtInputs.default.sbtConfigExtra) {
       Right("Custom SBT config is not supported in Scala-CLI")
-    } else if (target.targetType == ScalaTargetType.ScalaCli) {
+    } else if (input.target.isInstanceOf[ScalaCli]) {
       Right("Already a Scala-CLI snippet.")
-    } else if (target.targetType == ScalaTargetType.Scala2 || target.targetType == ScalaTargetType.Scala3) {
+    } else if (input.target.isJVMTarget) {
       Left(
-        Inputs.default.copy(_isWorksheetMode = _isWorksheetMode,
-            code = prependWithDirectives(target.scalaVersion, libraries, code),
-            target = ScalaTarget.ScalaCli()
+        ScalaCliInputs(
+          isWorksheetMode = input.isWorksheetMode,
+          code = prependWithDirectives(input.target.scalaVersion, input.libraries, input.code),
+          target = ScalaCli(input.target.scalaVersion),
+          isShowingInUserProfile = false,
         )
       )
     } else {
-      Right(s"Unsupported target ${target.targetType}")
+      Right(s"Unsupported target ${input.target}")
     }
   }
 
@@ -33,7 +31,6 @@ object ScalaCliUtils {
     }
 
     s"""//> using scala "$scalaVersion"$dependencies
-        |//> =============
         |
         |$code""".stripMargin
   }

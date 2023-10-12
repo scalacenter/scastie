@@ -1,6 +1,8 @@
 package com.olegych.scastie.sclirunner
 
-import com.olegych.scastie.api.{SnippetId, Inputs, ScalaDependency}
+import scastie.api._
+import scastie.runtime.api._
+import RuntimeCodecs._
 import com.olegych.scastie.instrumentation.{InstrumentedInputs, InstrumentationFailureReport}
 import com.typesafe.scalalogging.Logger
 import java.nio.file.{Files, Path, StandardOpenOption}
@@ -10,12 +12,8 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.sys.process._
 import com.olegych.scastie.instrumentation.InstrumentationFailure
-import com.olegych.scastie.api.Problem
 import com.olegych.scastie.instrumentation.Instrument
-import play.api.libs.json.Reads
-import play.api.libs.json.Json
 import scala.util.control.NonFatal
-import com.olegych.scastie.api.Instrumentation
 import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
@@ -24,9 +22,10 @@ import scala.util.Success
 import scala.util.Failure
 import java.util.concurrent.TimeoutException
 import scala.collection.concurrent.TrieMap
-import com.olegych.scastie.api.ScalaTarget
 import com.olegych.scastie.buildinfo.BuildInfo
 import scala.concurrent.duration.FiniteDuration
+import io.circe._
+import io.circe.parser._
 
 
 object ScliRunner {
@@ -36,7 +35,7 @@ object ScliRunner {
     diagnostics: List[Problem] = List()
   )
 
-  case class ScliTask(snippetId: SnippetId, inputs: Inputs, ip: String)
+  case class ScliTask(snippetId: SnippetId, inputs: BaseInputs, ip: String)
 
   // Errors
   abstract class ScliRunnerError extends Exception
@@ -73,47 +72,24 @@ class ScliRunner {
 
   def runTask(task: ScliTask, timeout: FiniteDuration, onOutput: String => Any): Future[Either[ScliRun, ScliRunnerError]] = {
     log.info(s"Running task with snippetId=${task.snippetId}")
-
-    // Extract directives from user code
-    val (userDirectives, userCode) = task.inputs.code.split("\n")
-      .span(line => line.startsWith("//>"))
-
-    var userTarget = userDirectives.map(_.split(" ")).find(_.contains("scala")).map(_.last).getOrElse("3")
-    // removing quotes
-    userTarget = userTarget.replaceAll("\"", "")
-
-    val scalaTarget = ScalaTarget.fromScalaVersion(userTarget)
-
-    scalaTarget match {
-      case None => Future.successful(Right(InvalidScalaVersion(userTarget)))
-      case Some(scalaTarget) =>
-        // Instrument
-        InstrumentedInputs(task.inputs.copy(code = userCode.mkString("\n"), target = scalaTarget)) match {
-          case Left(failure) => Future.failed(InstrumentationException(failure))
-          case Right(InstrumentedInputs(inputs, isForcedProgramMode, _)) =>
-            buildAndRun(task.snippetId, inputs, isForcedProgramMode, userDirectives, userCode, timeout, onOutput)
-        }
-    }
+    buildAndRun(task.snippetId, task.inputs, timeout, onOutput)
   }
 
   def buildAndRun(
         snippetId: SnippetId,
-        inputs: Inputs,
-        isForcedProgramMode: Boolean,
-        userDirectives: Array[String],
-        userCode: Array[String],
+        inputs: BaseInputs,
         timeout: FiniteDuration,
         onOutput: String => Any
     )
       : Future[Either[ScliRun, ScliRunnerError]] = {
-    val runtimeDependency = inputs.target.runtimeDependency.map(Set(_)).getOrElse(Set()) ++ inputs.libraries
-    val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
-    val totalLineOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(inputs)
+    // val runtimeDependency = inputs.target.runtimeDependency.map(Set(_)).getOrElse(Set()) ++ inputs.libraries
+    // val allDirectives = (runtimeDependency.map(scalaDepToFullName).map(libraryDirective) ++ userDirectives)
+    // val totalLineOffset = -runtimeDependency.size + Instrument.getExceptionLineOffset(inputs)
 
-    val charOffsetInstrumentation = userDirectives.map(_.length() + 1).sum
+    // val charOffsetInstrumentation = userDirectives.map(_.length() + 1).sum
 
-    val code = allDirectives.mkString("\n") + "\n" + inputs.code
-    writeFile(scalaMain, code)
+    // val code = allDirectives.mkString("\n") + "\n" + inputs.code
+    writeFile(scalaMain, inputs.code)
 
     var instrumentationMem: Option[List[Instrumentation]] = None
     var outputBuffer: List[String] = List()
@@ -123,24 +99,24 @@ class ScliRunner {
       onOutput(str)
     }
 
-    def mapProblems(list: List[Problem]): List[Problem] = {
-      list.map(pb =>
-        pb.copy(line = pb.line.map(line => {
-          if (line <= allDirectives.size) // if issue is on directive, then do not map.
-            line
-          else
-            (line + totalLineOffset + 1)
-        })
-          // removing invalid lines
-          // NOTE: somehow, BSP can report lines ≤ 0 and are usually
-          // duplicates of previous reports.
-          .filter(_ > 0)
-        )
-      )
-    }
+    // def mapProblems(list: List[Problem]): List[Problem] = {
+    //   list.map(pb =>
+    //     pb.copy(line = pb.line.map(line => {
+    //       if (line <= allDirectives.size) // if issue is on directive, then do not map.
+    //         line
+    //       else
+    //         (line + totalLineOffset + 1)
+    //     })
+    //       // removing invalid lines
+    //       // NOTE: somehow, BSP can report lines ≤ 0 and are usually
+    //       // duplicates of previous reports.
+    //       .filter(_ > 0)
+    //     )
+    //   )
+    // }
 
     def handleError(bspError: BspClient.BspError): ScliRunnerError = bspError match {
-      case x: BspClient.CompilationError => CompilationError(mapProblems(x.toProblemList), x.logs)
+      case x: BspClient.CompilationError => CompilationError(x.toProblemList, x.logs)
       case _ => ErrorFromBsp(bspError, bspError.logs)
     }
 
@@ -153,12 +129,12 @@ class ScliRunner {
         ProcessLogger({ line: String => {
           // extract instrumentation
           extract[List[Instrumentation]](line) match {
-            case None => forwardPrint(line)
-            case Some(value) => {
-              instrumentationMem = Some(value.map(inst => inst.copy(
-                position = inst.position.copy(inst.position.start + charOffsetInstrumentation, inst.position.end + charOffsetInstrumentation)
-              )))
-            }
+            case _ => forwardPrint(line)
+            // case Some(value) => {
+            //   instrumentationMem = Some(value.map(inst => inst.copy(
+            //     position = inst.position.copy(inst.position.start + charOffsetInstrumentation, inst.position.end + charOffsetInstrumentation)
+            //   )))
+            // }
           }
 
         }})
@@ -188,7 +164,7 @@ class ScliRunner {
       }
       javaProcesses.remove(snippetId)
 
-      ScliRun(outputBuffer, instrumentationMem, mapProblems(bspRun.toProblemList))
+      ScliRun(outputBuffer, instrumentationMem, bspRun.toProblemList)
     }
 
     val build = bspClient.build(snippetId.base64UUID)
@@ -214,13 +190,13 @@ class ScliRunner {
   private var pStdout: Option[InputStream] = None
   private var pStderr: Option[InputStream] = None
   private var process: Option[Process] = None
-  
+
   // Bsp
   private val bspClient = {
     log.info(s"Starting Scala-CLI BSP in folder ${workingDir.toAbsolutePath().normalize().toString()}")
     val processBuilder: ProcessBuilder = Process(Seq("scala-cli", "bsp", ".", "-deprecation"), workingDir.toFile())
     val io = BasicIO.standard(true)
-      .withInput(i => pStdin = Some(i)) 
+      .withInput(i => pStdin = Some(i))
       .withError(e => pStderr = Some(e))
       .withOutput(o => pStdout = Some(o))
 
@@ -240,9 +216,9 @@ class ScliRunner {
 
   initFiles
 
-  private def extract[T: Reads](line: String) = {
+  private def extract[T: Decoder](line: String) = {
     try {
-      Json.fromJson[T](Json.parse(line)).asOpt
+      decode[T](line).toOption
     } catch {
       case NonFatal(e) => None
     }

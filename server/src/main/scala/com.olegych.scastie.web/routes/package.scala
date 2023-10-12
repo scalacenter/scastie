@@ -1,6 +1,6 @@
 package com.olegych.scastie.web
 
-import com.olegych.scastie.api._
+import scastie.api._
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}

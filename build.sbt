@@ -131,7 +131,6 @@ lazy val metalsRunner = project
       "org.http4s"          %% "http4s-ember-client" % "0.23.23",
       "org.http4s"          %% "http4s-dsl"          % "0.23.23",
       "org.http4s"          %% "http4s-circe"        % "0.23.23",
-      "io.circe"            %% "circe-generic"       % "0.14.6",
       "com.evolutiongaming" %% "scache"              % "4.2.3",
       "org.scalameta"       %% "munit"               % "0.7.29" % Test,
       "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test,
@@ -156,7 +155,8 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.7.14"
+      "org.scalameta" %% "scalafmt-core" % "3.7.14",
+      "io.circe" %% "circe-parser" % "0.14.6"
     ),
     docker / imageNames := Seq(
       ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some(gitHashNow)),
@@ -243,6 +243,7 @@ lazy val server = project
       "com.typesafe.akka"                  %% "akka-http"      % akkaHttpVersion,
       "com.softwaremill.akka-http-session" %% "core"           % "0.7.1",
       "ch.megard"                          %% "akka-http-cors" % "1.2.0",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.39.2",
       akka("cluster"),
       akka("slf4j"),
       akka("testkit")      % Test,
@@ -268,7 +269,8 @@ lazy val storage = project
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
       "org.mongodb.scala" %% "mongo-scala-driver" % "4.10.2",
-      "net.lingala.zip4j"  % "zip4j"              % "2.11.5"
+      "net.lingala.zip4j"  % "zip4j"              % "2.11.5",
+      "io.circe" %% "circe-parser" % "0.14.6"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
@@ -309,10 +311,12 @@ lazy val client = project
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "core"                        % "2.1.1",
       "com.github.japgolly.scalajs-react" %%% "extra"                       % "2.1.1",
-      "org.scala-js"                      %%% "scala-js-macrotask-executor" % "1.1.1"
+      "org.scala-js"                      %%% "scala-js-macrotask-executor" % "1.1.1",
+      "io.circe"                          %%% "circe-parser"                % "0.14.6",
     )
   )
   .enablePlugins(ScalaJSPlugin)
+  .dependsOn(runtimeApi.js(ScalaVersions.js))
   .dependsOn(api.js(ScalaVersions.js))
 
 lazy val instrumentation = project
@@ -326,16 +330,17 @@ lazy val instrumentation = project
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils)
 
-lazy val api          = SbtShared.api
 lazy val runtimeApi   = SbtShared.`runtime-api`
 lazy val runtimeScala = SbtShared.`runtime-scala`
+lazy val api          = SbtShared.api
 
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))
   .settings(orgSettings)
   .settings(
     moduleName := "sbt-scastie",
-    sbtPlugin  := true
+    sbtPlugin  := true,
+    libraryDependencies += "io.circe" %% "circe-parser" % "0.14.6"
   )
   .settings(version := versionRuntime)
   .dependsOn(api.jvm(ScalaVersions.sbt))
@@ -356,7 +361,8 @@ lazy val scliRunner = project
       akka("cluster"),
       akka("slf4j"),
       "org.scalameta" %% "scalafmt-core" % "3.6.1",
-      "ch.epfl.scala" % "bsp4j" % "2.1.0-M3"
+      "ch.epfl.scala" % "bsp4j" % "2.1.0-M3",
+      "io.circe" %% "circe-parser" % "0.14.6"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), instrumentation, utils)

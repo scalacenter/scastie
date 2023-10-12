@@ -1,15 +1,19 @@
 package com.olegych.scastie.client.components
 
-import com.olegych.scastie.api.Inputs
-import com.olegych.scastie.api.TaskId
+import scastie.api._
+import scastie.api.TaskId
 import com.olegych.scastie.client.Page
 import com.olegych.scastie.client.StatusState
 import japgolly.scalajs.react._
 
 import vdom.all._
 import extra.router._
+import scastie.api.BaseInputs
+import scastie.api.SbtInputs
+import scastie.api.ScalaCliInputs
+import scastie.api.ShortInputs
 
-final case class Status(state: StatusState, router: RouterCtl[Page], isAdmin: Boolean, inputs: Inputs) {
+final case class Status(state: StatusState, router: RouterCtl[Page], isAdmin: Boolean, inputs: BaseInputs) {
   @inline def render: VdomElement = Status.component(this)
 }
 
@@ -40,12 +44,12 @@ object Status {
       }
     }
 
-    def renderConfiguration(serverInputs: Inputs): VdomElement = {
+    def renderConfiguration(serverInputs: SbtInputs): VdomElement = {
       val (cssConfig, label) =
-        if (serverInputs.needsReload(props.inputs)) {
-          ("needs-reload", "Different Configuration")
-        } else {
-          ("ready", "Same Configuration")
+        props.inputs match {
+          case sbtInputs: SbtInputs if (serverInputs.needsReload(sbtInputs)) => ("needs-reload", "Different Configuration")
+          case _: ScalaCliInputs => ("different-target", "sbt runner")
+          case _ => ("ready", "Ready sbt runner")
         }
 
       span(cls := "runner " + cssConfig)(label)
