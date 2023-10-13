@@ -3,6 +3,7 @@ package org.scastie.sbt
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.TestActor.AutoPilot
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import org.scastie.runtime.api._
 import org.scastie.api._
 import org.scastie.util.SbtTask
 import org.scalatest.BeforeAndAfterAll
@@ -105,7 +106,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("Disable Predef #357") {
     val message = "No Predef!"
-    val input = Inputs.default.copy(
+    val input = SbtInputs.default.copy(
       sbtConfigExtra = "scalacOptions += \"-Yno-predef\" ",
       code = s"""scala.Predef.println("$message")"""
     )
@@ -116,91 +117,96 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("Scala.js support") {
     val scalaJs =
-      Inputs.default.copy(code = "1 + 1", target = ScalaTarget.Js.default)
+      SbtInputs.default.copy(code = "1 + 1", target = Js.default)
     run(scalaJs)(_.isDone)
   }
 
   test("Scala.js 3 support") {
     val scalaJs =
+<<<<<<< HEAD
       Inputs.default.copy(code = "1 + 1",
                           target = ScalaTarget.Js.default.copy(scalaVersion = org.scastie.buildinfo.BuildInfo.latestLTS))
+=======
+      SbtInputs.default.copy(code = "1 + 1",
+                          target = Js.default.copy(scalaVersion = org.scastie.buildinfo.BuildInfo.latest3))
+>>>>>>> 4a20eb33 (make tests compile)
     run(scalaJs)(_.isDone)
   }
 
   test("Scala 2.10 support") {
     val scala =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(org.scastie.buildinfo.BuildInfo.latest210))
+      SbtInputs.default.copy(code = "println(1 + 1)", target = Jvm(org.scastie.buildinfo.BuildInfo.latest210))
     run(scala)(assertUserOutput("2"))
   }
 
   test("Scala 2.11 support") {
     val scala =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(org.scastie.buildinfo.BuildInfo.latest211))
+      SbtInputs.default.copy(code = "println(1 + 1)", target = Jvm(org.scastie.buildinfo.BuildInfo.latest211))
     run(scala)(assertUserOutput("2"))
   }
 
   test("Scala 2.12 support") {
     val scala =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(org.scastie.buildinfo.BuildInfo.latest212))
+      SbtInputs.default.copy(code = "println(1 + 1)", target = Jvm(org.scastie.buildinfo.BuildInfo.latest212))
     run(scala)(assertUserOutput("2"))
   }
 
   test("avoid https://github.com/scala/bug/issues/8119") {
     val scala =
-      Inputs.default.copy(code = "val n = 0; val m = List(1).par.foreach(_ => n); println(1)",
-                          target = ScalaTarget.Jvm(org.scastie.buildinfo.BuildInfo.latest212))
+      SbtInputs.default.copy(code = "val n = 0; val m = List(1).par.foreach(_ => n); println(1)",
+                          target = Jvm(org.scastie.buildinfo.BuildInfo.latest212))
     run(scala)(assertUserOutput("1"))
   }
 
   test("Scala 2.13 support") {
     val scala =
-      Inputs.default.copy(code = "println(1 + 1)", target = ScalaTarget.Jvm(org.scastie.buildinfo.BuildInfo.latest213))
+      SbtInputs.default.copy(code = "println(1 + 1)", target = Jvm(org.scastie.buildinfo.BuildInfo.latest213))
     run(scala)(assertUserOutput("2"))
   }
 
   test("no warnings by default") {
     val scala =
-      Inputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Xfatal-warnings")""")
+      SbtInputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Xfatal-warnings")""")
     run(scala)(assertUserOutput("2"))
   }
 
   test("no warnings on 2.12") {
     val scala =
-      Inputs.default.copy(code = "println(1 + 1)",
+      SbtInputs.default.copy(code = "println(1 + 1)",
                           sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""",
-                          target = ScalaTarget.Jvm("2.12.10"))
+                          target = Jvm("2.12.10"))
     run(scala)(assertUserOutput("2"))
   }
 
   test("Scala 3 support") {
     val message = "Hello, Scala 3!"
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = s"""|object Main {
                  |  def main(args: Array[String]): Unit = {
                  |    println("$message")
                  |  }
                  |}
                  |""".stripMargin,
-      target = ScalaTarget.Scala3.default,
-      _isWorksheetMode = false
+      target = Scala3.default,
+      isWorksheetMode = false
     )
     run(dotty)(assertUserOutput("Hello, Scala 3!"))
   }
 
   test("Scala 3 worksheet support") {
     val message = "Hello, Scala 3 worksheet!"
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = s"""println("$message")""",
-      target = ScalaTarget.Scala3.default,
+      target = Scala3.default,
     )
     run(dotty)(assertUserOutput("Hello, Scala 3 worksheet!"))
   }
 
   test("Scala 3.0 worksheet support") {
     val message = "Hello, Scala 3.0 worksheet!"
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = s"""println("$message")""",
-      target = ScalaTarget.Scala3("3.0.0"),
+      target = Scala3("3.0.0"),
     )
     run(dotty)(assertUserOutput("Hello, Scala 3.0 worksheet!"))
   }
@@ -217,19 +223,19 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("last line comment should not fail compilation in worksheet Scala 2") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = s"""|println("Hello world!")
                  |// test comment""".stripMargin,
-      target = ScalaTarget.Jvm.default,
+      target = Jvm.default,
     )
     run(dotty)(assertUserOutput("Hello world!"))
   }
 
   test("last line comment should not fail compilation in worksheet Scala 3") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = s"""|println("Hello world!")
                  |// test comment""".stripMargin,
-      target = ScalaTarget.Scala3.default,
+      target = Scala3.default,
     )
     run(dotty)(assertUserOutput("Hello world!"))
   }
@@ -293,7 +299,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     SnippetId(t.toString, None)
   }
   private var firstRun = true
-  private def run(inputs: Inputs, allowFailure: Boolean = false)(fish: SnippetProgress => Boolean): Unit = {
+  private def run(inputs: SbtInputs, allowFailure: Boolean = false)(fish: SnippetProgress => Boolean): Unit = {
     val ip = "my-ip"
     val progressActor = TestProbe()
 
@@ -314,10 +320,10 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     firstRun = false
   }
 
-  private def runCode(code: String, target: ScalaTarget = ScalaTarget.Jvm.default, allowFailure: Boolean = false)(
+  private def runCode(code: String, target: SbtScalaTarget = Jvm.default, allowFailure: Boolean = false)(
       fish: SnippetProgress => Boolean
   ): Unit = {
-    run(Inputs.default.copy(code = code, target = target), allowFailure)(fish)
+    run(SbtInputs.default.copy(code = code, target = target), allowFailure)(fish)
   }
 
   private def assertUserOutput(

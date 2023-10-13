@@ -43,7 +43,3 @@ case class Outputs(
       runtimeError.isDefined
 }
 
-object Position {
-  implicit val positionEncoder: Encoder[Position] = deriveEncoder[Position]
-  implicit val positionDecoder: Decoder[Position] = deriveDecoder[Position]
-}

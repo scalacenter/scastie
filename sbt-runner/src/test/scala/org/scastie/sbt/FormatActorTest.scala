@@ -1,6 +1,6 @@
 package org.scastie.sbt
 
-import org.scastie.api.ScalaTarget
+import org.scastie.api._
 import org.scastie.sbt.FormatActor
 import org.scalatest.Assertions._
 import org.scalatest.funsuite.AnyFunSuite

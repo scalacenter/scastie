@@ -4,11 +4,12 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scastie.api.{SnippetId, SnippetUserPart}
-import org.scastie.web.PlayJsonSupport
 import org.scalatest.funsuite.AnyFunSuite
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+
 
 class SnippetIdMatcherTests extends AnyFunSuite with ScalatestRouteTest {
-  import PlayJsonSupport._
+  import FailFastCirceSupport._
 
   def testRoute(snippetIdRoute: Route, f1: String => String, f2: String => String, checkEnd: Boolean = true): Unit = {
 

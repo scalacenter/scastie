@@ -21,11 +21,16 @@ object TestUtils extends Assertions with CatsEffectAssertions {
 
   type DependencyForVersion = ScalaTarget => ScalaDependency
 
+<<<<<<< HEAD
   val testTargets =
     List(BuildInfo.latestLTS, BuildInfo.stableLTS, BuildInfo.latestNext).map(ScalaTarget.Scala3.apply) ++
       List(BuildInfo.latest213, BuildInfo.latest212).map(ScalaTarget.Jvm.apply)
+=======
+  val testTargets = List(BuildInfo.latest3, BuildInfo.stable3).map(Scala3.apply) ++
+    List(BuildInfo.latest213, BuildInfo.latest212).map(Jvm.apply)
+>>>>>>> 4a20eb33 (make tests compile)
 
-  val unsupportedVersions = List(BuildInfo.latest211, BuildInfo.latest210).map(ScalaTarget.Jvm.apply)
+  val unsupportedVersions = List(BuildInfo.latest211, BuildInfo.latest210).map(Jvm.apply)
 
   private def testCode(code: String): ScastieOffsetParams = {
     val offset = code.indexOfSlice("@@")
@@ -39,7 +44,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
   ): LSPRequestDTO =
     val offsetParamsComplete = testCode(code)
     val dependencies0        = dependencies.map(_.apply(scalaTarget))
-    LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget, code = Some(code)), offsetParamsComplete)
+    LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget, code), offsetParamsComplete)
 
   def getCompat[A](scalaTarget: ScalaTarget, compat: Map[String, A], default: A): A =
     val binaryScalaVersion = scalaTarget.binaryScalaVersion

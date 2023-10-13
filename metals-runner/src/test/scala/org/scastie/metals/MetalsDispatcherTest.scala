@@ -32,7 +32,11 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
   test("single thread metals access") {
     cache.use { cache =>
       val dispatcher = dispatcherF(cache)
+<<<<<<< HEAD
       val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
+=======
+      val options    = ScastieMetalsOptions(Set.empty, Jvm(BuildInfo.latest3), "")
+>>>>>>> 4a20eb33 (make tests compile)
       assertIO(dispatcher.getCompiler(options).isRight, true)
     }
   }
@@ -57,7 +61,11 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     cache.use { cache =>
       {
         val dispatcher = dispatcherF(cache)
+<<<<<<< HEAD
         val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
+=======
+        val options    = ScastieMetalsOptions(Set.empty, Jvm(BuildInfo.latest3), "")
+>>>>>>> 4a20eb33 (make tests compile)
         val task = for {
           pc     <- dispatcher.getCompiler(options)
           _      <- EitherT.right(IO.sleep(4.seconds))
@@ -71,17 +79,21 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
   test("parallel metals access same version") {
     cache.use { cache =>
       val dispatcher = dispatcherF(cache)
+<<<<<<< HEAD
       val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
+=======
+      val options    = ScastieMetalsOptions(Set.empty, Jvm(BuildInfo.latest3), "")
+>>>>>>> 4a20eb33 (make tests compile)
       val task       = dispatcher.getCompiler(options).value.parReplicateA(10000)
       assertIO(task.map(results => results.nonEmpty && results.forall(_.isRight)), true)
     }
   }
 
   test("parallel metals access random scala version") {
-    val scalaVersions = ScalaVersions.allVersions(ScalaTargetType.Scala3).map(ScalaTarget.Scala3.apply) ++
-      Seq("2.13.9", "2.13.8", "2.12.17").map(ScalaTarget.Jvm.apply)
+    val scalaVersions = ScalaVersions.allVersions(ScalaTargetType.Scala3).map(Scala3.apply) ++
+      Seq("2.13.9", "2.13.8", "2.12.17").map(Jvm.apply)
 
-    val scalaOptions = scalaVersions.map(v => ScastieMetalsOptions(Set.empty, v))
+    val scalaOptions = scalaVersions.map(v => ScastieMetalsOptions(Set.empty, v, ""))
 
     cache.use { cache =>
       val dispatcher = dispatcherF(cache)
@@ -98,10 +110,10 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
 
   test("parallel metals access with dependencies".flaky) {
     val targets = List(
-      ScalaTarget.Jvm.default,
-      ScalaTarget.Jvm(BuildInfo.latest212),
-      ScalaTarget.Scala3.default,
-      ScalaTarget.Js.default
+      Jvm.default,
+      Jvm(BuildInfo.latest212),
+      Scala3.default,
+      Js.default
     )
     val dependencies = List(
       ScalaDependency("org.typelevel", "cats-core", _, "2.9.0"),
@@ -113,7 +125,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       ScalaDependency("io.monix", "monix", _, "3.4.1")
     )
 
-    val testCases = dependencies.flatMap(dep => targets.map(target => ScastieMetalsOptions(Set(dep(target)), target)))
+    val testCases = dependencies.flatMap(dep => targets.map(target => ScastieMetalsOptions(Set(dep(target)), target, "")))
     cache.use { cache =>
       val dispatcher = dispatcherF(cache)
       val task = List
