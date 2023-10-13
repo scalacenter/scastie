@@ -5,13 +5,13 @@ import org.scalatest.BeforeAndAfterAll
 import org.scastie.util.ScastieFileUtil
 import java.nio.file.Paths
 import org.scastie.api.SnippetId
-import org.scastie.api.Inputs
+import org.scastie.api._
+import org.scastie.runtime.api._
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import org.scastie.api.Value
 
 class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
-  
+
   var scliRunner: Option[ScliRunner] = None
 
   override protected def beforeAll(): Unit = {
@@ -42,7 +42,7 @@ class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
     val r = TestUtils.shouldRun(
       run("instrumentation-test")
     )
-    
+
     assert(r.instrumentation.isDefined)
     val content = r.instrumentation.get
     assert(content.exists(
@@ -77,12 +77,12 @@ class ScliRunnerTest extends AnyFunSuite with BeforeAndAfterAll {
     val f = ScastieFileUtil.slurp(Paths.get("scli-runner", "src", "test", "resources", s"$file.scala"))
 
     if (scliRunner.isEmpty) throw new IllegalStateException("scli-runner is not defined")
-    if (f.isEmpty) throw new IllegalArgumentException(s"Test file $file does not exist.") 
+    if (f.isEmpty) throw new IllegalArgumentException(s"Test file $file does not exist.")
 
     scliRunner.get.runTask(
       ScliRunner.ScliTask(
         SnippetId("1", None),
-        Inputs.default.copy(_isWorksheetMode = isWorksheet, code = f.get),
+        ScalaCliInputs.default.copy(isWorksheetMode = isWorksheet, code = f.get),
         "1.1.1.1"
       )
     , 30.seconds, onOutput)

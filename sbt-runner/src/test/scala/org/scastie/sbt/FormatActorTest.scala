@@ -1,6 +1,6 @@
 package org.scastie.sbt
 
-import org.scastie.api.ScalaTarget
+import org.scastie.api._
 import org.scastie.sbt.FormatActor
 import org.scalatest.Assertions._
 import org.scalatest.funsuite.AnyFunSuite
@@ -15,15 +15,15 @@ class FormatActorTest extends AnyFunSuite {
                    |  val a: Int = 3
                    |}
                    |""".stripMargin
-    assert(FormatActor.format(code, false, ScalaTarget.Jvm.default) == Right(output))
+    assert(FormatActor.format(code, false, Jvm.default) == Right(output))
   }
 
   test("format should accept scala 2 worksheets") {
     val code = "val x:Int=41+1"
     val output = "val x: Int = 41 + 1\n"
 
-    assert(ScalaTarget.Jvm.default.hasWorksheetMode)
-    assert(FormatActor.format(code, true, ScalaTarget.Jvm.default) == Right(output))
+    assert(Jvm.default.hasWorksheetMode)
+    assert(FormatActor.format(code, true, Jvm.default) == Right(output))
   }
 
   test("format should accept scala 3 code") {
@@ -35,15 +35,15 @@ class FormatActorTest extends AnyFunSuite {
                    |  val a: Int = 3
                    |}
                    |""".stripMargin
-    assert(FormatActor.format(code, false, ScalaTarget.Scala3.default) == Right(output))
+    assert(FormatActor.format(code, false, Scala3.default) == Right(output))
   }
 
   test("format should accept scala 3 worksheets") {
     val code = "val x:Int=41+1"
     val output = "val x: Int = 41 + 1\n"
 
-    assert(ScalaTarget.Scala3.default.hasWorksheetMode)
-    assert(FormatActor.format(code, true, ScalaTarget.Scala3.default) == Right(output))
+    assert(Scala3.default.hasWorksheetMode)
+    assert(FormatActor.format(code, true, Scala3.default) == Right(output))
   }
 
   test("Longer Scala 3 snippet is accepted (from Issue #511)") {
@@ -73,7 +73,7 @@ class FormatActorTest extends AnyFunSuite {
                           |  println(actual)
                           |  assert(actual == expected)
                           |""".stripMargin
-    val res = FormatActor.format(longerSnippet, true, ScalaTarget.Scala3.default)
+    val res = FormatActor.format(longerSnippet, true, Scala3.default)
     assert(res.isRight, res)
   }
 }

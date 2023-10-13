@@ -4,7 +4,7 @@ import scala.jdk.CollectionConverters._
 
 import cats.effect._
 import cats.syntax.all._
-import org.scastie.api.{NoResult, PresentationCompilerFailure, ScalaDependency, ScalaTarget}
+import org.scastie.api._
 import org.scastie.buildinfo.BuildInfo
 import munit.CatsEffectSuite
 import org.eclipse.lsp4j.MarkupContent
@@ -61,8 +61,8 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Completions with dependencies cross version") {
     testCompletion(
-      testTargets = List(ScalaTarget.Scala3.default),
-      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", ScalaTarget.Jvm.default, catsVersion)),
+      testTargets = List(Scala3.default),
+      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", Jvm.default, catsVersion)),
       code = """import cats.syntax.all._
                |object M {
                |  def test = "5".asRigh@@
@@ -93,7 +93,7 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Completions item info with dependencies") {
     testCompletionInfo(
-      testTargets = List(ScalaTarget.Scala3("3.2.0")),
+      testTargets = List(Scala3("3.2.0")),
       dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
       code = """import cats.syntax.all._
                |object M {
@@ -108,8 +108,8 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Completion infos with dependencies cross version") {
     testCompletionInfo(
-      testTargets = List(ScalaTarget.Scala3.default),
-      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", ScalaTarget.Jvm.default, catsVersion)),
+      testTargets = List(Scala3.default),
+      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", Jvm.default, catsVersion)),
       code = """import cats.syntax.all._
                |object M {
                |  def test = "5".asRigh@@
@@ -186,8 +186,8 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Hover with dependencies cross version") {
     testHover(
-      testTargets = List(ScalaTarget.Scala3.default),
-      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", ScalaTarget.Jvm.default, catsVersion)),
+      testTargets = List(Scala3.default),
+      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", Jvm.default, catsVersion)),
       code = """import cats.syntax.all._
                |object M {
                |  def test = "5".asRigh@@t
@@ -371,7 +371,7 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Scala-CLI: Completion with dependency given with `import dep` directives") {
     testCompletion(
-      testTargets = List(ScalaTarget.ScalaCli()),
+      testTargets = List(ScalaCli.default),
       code = """//> using dep "com.lihaoyi::os-lib:0.9.1"
             |object M {
             |   os.pw@@
@@ -383,7 +383,7 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Scala-CLI: Completion with dependency given with `import lib` directives") {
     testCompletion(
-      testTargets = List(ScalaTarget.ScalaCli()),
+      testTargets = List(ScalaCli.default),
       code = """//> using lib "com.lihaoyi::os-lib:0.9.1"
             |object M {
             |   os.pw@@
@@ -395,7 +395,7 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Scala-CLI: Hover on a dependency function works") {
     testCompletionInfo(
-      testTargets = List(ScalaTarget.ScalaCli()),
+      testTargets = List(ScalaCli.default),
       code = """//> using lib "com.lihaoyi::os-lib:0.9.1"
             |object M {
             |   os.pw@@d
