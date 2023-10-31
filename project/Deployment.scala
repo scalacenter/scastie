@@ -102,7 +102,7 @@ class ScastieConfig(val configurationFile: File) {
   val serverHostname = serverConfig.getString("hostname")
   val serverAkkaPort = serverConfig.getInt("akka-port")
 
-  val metalsConfig = config.getConfig("scastie.metals")
+  val metalsConfig = config.getConfig("org.scastie.metals")
   val metalsPort = metalsConfig.getInt("port")
   val cacheExpireInSeconds = metalsConfig.getInt("cache-expire-in-seconds")
 
