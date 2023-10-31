@@ -12,32 +12,33 @@ object DTOExtensions {
 
   extension (offsetParams: ScastieOffsetParams)
 
-    def toOffsetParams: CompilerOffsetParams = {
+    def toOffsetParams: (CompilerOffsetParams, Boolean) = {
       val noSourceFilePath = Path.of(NoSourceFile.path)
 
-      val wrapperObject = s"""|object worksheet {
-                              |$wrapperIndent""".stripMargin
+      val (content, position, insideWrapper) = if offsetParams.isWorksheetMode then
 
-      val (content, position) =
-        if offsetParams.isWorksheetMode then
-          val (userDirectives, userCode) = offsetParams.content.split("\n").span(_.startsWith("//>"))
+        val (usingDirectivesLines, remainingLines) = offsetParams.content.linesWithSeparators.span:
+          case line if line.startsWith("//>") => true
+          case _ => false
 
-          val userDirectivesEndingWithLR = if (userDirectives.size == 0) then "" else userDirectives.mkString("", "\n", "\n")
+        val (usingDirectives, remainingCode) = (usingDirectivesLines.mkString, remainingLines.mkString)
+        val wrapperObject = s"""|object worksheet {
+                                |$wrapperIndent""".stripMargin
 
-          val adjustedContent = s"""${userDirectives.mkString("\n")}\n$wrapperObject${userCode.mkString("\n" + wrapperIndent)}}"""
+        val adjustedContent = s"""$usingDirectives$wrapperObject${remainingCode.replace("\n", "\n" + wrapperIndent)}}"""
 
-          val userDirectivesLength = userDirectives.map(_.length + 1).sum
-          if (offsetParams.offset < userDirectivesLength) then
-            // cursor is in directives
-            (adjustedContent, offsetParams.offset)
-          else
-            // cursor is in code
-            val lines = userCode.take(offsetParams.offset - userDirectivesLength).linesWithSeparators
-            (adjustedContent, wrapperObject.length + offsetParams.offset + lines.size * wrapperIndent.length)
+        if (offsetParams.offset < usingDirectives.length) then
+          (adjustedContent, offsetParams.offset, false)
+        else
+          val offsetWithoutDirectives = offsetParams.offset - usingDirectives.length
+          val contentToOffset = remainingCode.take(offsetWithoutDirectives).linesWithSeparators
+          val line            = contentToOffset.size - 1
+          val adjustedPosition = wrapperObject.length + line * 2 + offsetParams.offset
 
-        else (offsetParams.content, offsetParams.offset)
+          (adjustedContent, adjustedPosition, true)
+      else (offsetParams.content, offsetParams.offset, false)
 
-      new CompilerOffsetParams(noSourceFilePath.toUri, content, position, EmptyCancelToken, java.util.Optional.empty())
+      (CompilerOffsetParams(noSourceFilePath.toUri, content, position, EmptyCancelToken, java.util.Optional.empty()), insideWrapper)
     }
 
 }

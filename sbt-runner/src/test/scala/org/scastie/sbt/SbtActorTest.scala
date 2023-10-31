@@ -62,7 +62,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("trap sys.exit") {
     runCode("sys.exit(-2)", allowFailure = false) { progress =>
-      progress.sbtOutput.exists(_.line.contains("Nonzero exit code: -2"))
+      progress.buildOutput.exists(_.line.contains("Nonzero exit code: -2"))
     }
   }
 
@@ -257,6 +257,41 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
          |}""".stripMargin,
       allowFailure = true
     )(_.isDone)
+  }
+
+  test("sbt worksheet correct error position") {
+    val input = SbtInputs.default.copy(
+      code = s"""
+                |
+                |printl
+                |
+                |""".stripMargin,
+      target = Scala3.default,
+      isWorksheetMode = true
+    )
+
+    run(input, allowFailure = true)(assertCompilationInfo { info =>
+      assert(info.message == "Not found: printl")
+      assert(info.line == Some(3)) // error lines are 1-based
+    })
+
+  }
+
+  test("sbt non-worksheet correct error position") {
+    val input = SbtInputs.default.copy(
+      code = s"""
+                |
+                |printl
+                |
+                |""".stripMargin,
+      target = Scala3.default,
+      isWorksheetMode = false
+    )
+
+    run(input, allowFailure = true)(assertCompilationInfo { info =>
+      assert(info.message == "Illegal start of toplevel definition")
+      assert(info.line == Some(3)) // error lines are 1 based
+    })
   }
 
   def assertCompilationInfo(

@@ -50,8 +50,6 @@ object ScastieMetalsRoutes {
 
       case req @ POST -> Root / "metals" / "isConfigurationSupported" => for {
           scastieConfiguration     <- req.as[ScastieMetalsOptions]
-          _ = println(scastieConfiguration)
-          _ = println("WTF")
           isConfigurationSupported <- metals.isConfigurationSupported(scastieConfiguration).value
           resp                     <- Ok(isConfigurationSupported.asJson)
         } yield resp

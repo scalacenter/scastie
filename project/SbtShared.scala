@@ -53,6 +53,7 @@ object SbtShared {
     val current = "1.18.1"
   }
 
+  val scalaCliVersion = "1.0.4"
   val runtimeProjectName = "runtime-scala"
 
   def gitIsDirty(): Boolean = {
@@ -175,7 +176,8 @@ object SbtShared {
         "latestNext"            -> ScalaVersions.latestNext,
         "jsScalaVersion"        -> ScalaVersions.js,
         "defaultScalaJsVersion" -> ScalaJSVersions.current,
-        "sbtVersion"            -> sbtVersion.value
+        "sbtVersion"            -> sbtVersion.value,
+        "scalaCliVersion"       -> scalaCliVersion
       ),
       buildInfoPackage := "org.scastie.buildinfo"
     )

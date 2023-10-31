@@ -62,7 +62,7 @@ case class Done(progress: SnippetProgress, retries: Int)
 case object Ping
 
 /**
-  * This Actor creates and takes care of two dispatchers: SbtDispatcher and ScliDispatcher.
+  * This Actor creates and takes care of two dispatchers: SbtDispatcher and ScalaCliDispatcher.
   * It will receive every request and forward to the proper dispatcher every request.
   *
   * @param progressActor
@@ -83,8 +83,8 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   )
 
   val scliDispatcher: ActorRef = context.actorOf(
-    Props(new ScliDispatcher(config, progressActor, statusActor)),
-    "ScliDispatcher"
+    Props(new ScalaCliDispatcher(config, progressActor, statusActor)),
+    "ScalaCliDispatcher"
   )
 
   override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {

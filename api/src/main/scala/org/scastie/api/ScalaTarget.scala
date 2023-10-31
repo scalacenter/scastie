@@ -13,6 +13,11 @@ sealed trait ScalaTarget {
     if (digits.head == "2") digits.init.mkString(".")
     else digits.head
   }
+
+  def runtimeDependency: ScalaDependency =
+    ScalaDependency(BuildInfo.organization, BuildInfo.runtimeProjectName, this, BuildInfo.versionRuntime)
+
+
 }
 
 sealed trait SbtScalaTarget extends ScalaTarget {
@@ -20,10 +25,6 @@ sealed trait SbtScalaTarget extends ScalaTarget {
   def sbtConfig: String
   def sbtPluginsConfig: String
   def sbtRunCommand(worksheetMode: Boolean): String
-
-  def runtimeDependency: Option[ScalaDependency] = Some(
-    ScalaDependency(BuildInfo.organization, BuildInfo.runtimeProjectName, this, BuildInfo.versionRuntime)
-  )
 
   def hasWorksheetMode: Boolean = true
 
@@ -43,10 +44,20 @@ sealed trait SbtScalaTarget extends ScalaTarget {
   }
 
   def isJVMTarget: Boolean
+
+  def withScalaVersion(newVersion: String): SbtScalaTarget = {
+    this match {
+      case Jvm(scalaVersion) => Jvm(newVersion)
+      case Typelevel(scalaVersion) => Typelevel(newVersion)
+      case Js(scalaVersion, scalaJsVersion) => Js(newVersion, scalaJsVersion)
+      case Native(scalaVersion, scalaNativeVersion) => Native(newVersion, scalaNativeVersion)
+      case Scala3(scalaVersion) => Scala3(newVersion)
+    }
+  }
 }
 
 object Jvm {
-  def default: SbtScalaTarget = Jvm(scalaVersion = BuildInfo.latest213)
+  def default: Jvm = Jvm(scalaVersion = BuildInfo.latest213)
   implicit val jvmEncoder: Encoder[Jvm] = deriveEncoder[Jvm]
   implicit val jvmDecoder: Decoder[Jvm] = deriveDecoder[Jvm]
 }
@@ -77,7 +88,7 @@ case class Jvm(scalaVersion: String) extends SbtScalaTarget {
 }
 
 object Typelevel {
-  def default: SbtScalaTarget = Typelevel(scalaVersion = "2.12.3-bin-typelevel-4")
+  def default: Typelevel = Typelevel(scalaVersion = "2.12.3-bin-typelevel-4")
   implicit val typeLevelEncoder: Encoder[Typelevel] = deriveEncoder[Typelevel]
   implicit val typeLevelDecoder: Decoder[Typelevel] = deriveDecoder[Typelevel]
 }
@@ -111,7 +122,7 @@ object Js {
   val sourceFilename = "main.scala"
   val sourceUUID = "file:///tmp/LxvjvKARSa2U5ctNis9LIA"
 
-  def default = Js(scalaVersion = BuildInfo.jsScalaVersion, scalaJsVersion = BuildInfo.defaultScalaJsVersion)
+  def default: Js = Js(scalaVersion = BuildInfo.jsScalaVersion, scalaJsVersion = BuildInfo.defaultScalaJsVersion)
   implicit val jsEncoder: Encoder[Js] = deriveEncoder[Js]
   implicit val jsDecoder: Decoder[Js] = deriveDecoder[Js]
 }
@@ -188,7 +199,7 @@ case class Native(scalaVersion: String, scalaNativeVersion: String) extends SbtS
 }
 
 object Scala3 {
-  def default: SbtScalaTarget = Scala3(BuildInfo.stable3)
+  def default: Scala3 = Scala3(BuildInfo.stable3)
 
   def defaultCode: String =
     """|// You can find more examples here:
@@ -208,7 +219,7 @@ case class Scala3(scalaVersion: String) extends SbtScalaTarget {
     Map("target" -> "JVM", "scalaVersion" -> binaryScalaVersion)
 
   def renderDependency(lib: ScalaDependency): String = {
-    if (Some(lib) == runtimeDependency) renderSbtDouble(lib)
+    if (lib == runtimeDependency) renderSbtDouble(lib)
     else if (lib.target.binaryScalaVersion.startsWith("2.13"))
       s"${renderSbtDouble(lib)} cross CrossVersion.for3Use2_13"
     else renderSbtDouble(lib)
@@ -249,7 +260,6 @@ object SbtScalaTarget {
         |addCompilerPlugin("${kpOrg}" %% "kind-projector" % "${kpVersion}" cross CrossVersion.${kpCross})
         |$paradise""".stripMargin
   }
-
 }
 
 object ScalaCli {
@@ -269,6 +279,8 @@ object ScalaCli {
 
 case class ScalaCli(scalaVersion: String) extends ScalaTarget {
   val targetType: ScalaTargetType = ScalaTargetType.ScalaCli
+
+  def versionDirective = s"//> using scala $scalaVersion"
 }
 
 object ScalaTarget {

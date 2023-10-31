@@ -111,8 +111,8 @@ object OldScastieConverter {
           isWorksheetMode = false
         )
         case _ => inputs.copyBaseInput(
-          isWorksheetMode = false
-        ).setTarget(scalaTarget)
+          isWorksheetMode = false,
+        )
       }
 
     }

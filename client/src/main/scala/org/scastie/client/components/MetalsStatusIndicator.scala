@@ -28,8 +28,9 @@ object MetalsStatusIndicator {
   def getIndicatorIconClasses(status: MetalsStatus): String = {
     status match {
       case MetalsLoading => "metals-loading fa-spinner fa-spin"
-      case MetalsDisabled => "metals-disabled fa-circle metals-disabled"
-      case MetalsReady => "metals-ready fa-circle metals-ready"
+      case MetalsDisabled => "metals-disabled fa-circle"
+      case MetalsReady => "metals-ready fa-circle"
+      case OutdatedScalaCli => "metals-outdated fa-circle"
       case _: NetworkError => "fa-exclamation-circle"
       case _: MetalsConfigurationError => "fa-exclamation-triangle"
     }

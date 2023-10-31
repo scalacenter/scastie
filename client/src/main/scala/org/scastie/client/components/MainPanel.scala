@@ -81,7 +81,7 @@ object MainPanel {
         target = state.inputs.target,
         metalsStatus = state.metalsStatus,
         setMetalsStatus = backend.setMetalsStatus,
-        isMetalsStale = state.isMetalsStale,
+        updateSettings = backend.updateSettings,
         dependencies = state.inputs.libraries,
       ).render
 
@@ -112,8 +112,6 @@ object MainPanel {
         removeScalaDependency = backend.removeScalaDependency,
         updateDependencyVersion = backend.updateDependencyVersion,
         addScalaDependency = backend.addScalaDependency,
-
-        convertToScalaCli = backend.convertToScalaCli,
         scalaCliConversionError = state.scalaCliConversionError
       ).render
 
@@ -162,8 +160,6 @@ object MainPanel {
         view = backend.viewSnapshot(state.view),
         isWorksheetMode = state.inputs.isWorksheetMode,
         metalsStatus = state.metalsStatus,
-        isMetalsStale = state.isMetalsStale,
-        reloadStaleMetals = backend.reloadStaleMetals,
         toggleMetalsStatus = backend.toggleMetalsStatus,
         scalaTarget = state.inputs.target
       ).render.unless(props.isEmbedded || state.isPresentationMode)

@@ -14,6 +14,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scastie.runtime.api.RuntimeError
+import org.scastie.client.components.ScaladexSearch
+import org.scastie.client.scalacli.ScalaCliUtils._
 
 case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendScope[Scastie, ScastieState]) {
 
@@ -27,35 +29,8 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     Callback(Global.subscribe(scope, scastieId))
   }
 
-  val reloadStaleMetals: Reusable[Callback] =
-    Reusable.always { scope.modState({ state => {
-      state.inputs match {
-        case scalaCliInputs: ScalaCliInputs => Some(takeDirectives(scalaCliInputs))
-        case _ =>
-      }
-      state.copyAndSave(isMetalsStale = false)
-    } }) }
-
-  private def takeDirectives(inp: ScalaCliInputs) = inp.code.split("\n").takeWhile(_.startsWith("//>")).toList
-  private var previousDirectives: Option[List[String]] = None
-
-  val checkIfMetalsStale = scope.modState(state => {
-    state.inputs match {
-      case scalaCliInputs: ScalaCliInputs =>
-        val newDirectives = takeDirectives(scalaCliInputs)
-        previousDirectives match {
-          case None => { previousDirectives = Some(newDirectives); state }
-          case Some(previousDirectives) if previousDirectives != newDirectives => state.copy(isMetalsStale = true)
-          case _ => state
-        }
-      case _ => state
-    }
-
-  }).async.rateLimit(1.second)
-
   val codeChange: String ~=> Callback =
     Reusable.fn(code => {
-      checkIfMetalsStale.runNow()
       scope.modState(state => {
         val newState = state.setCode(code)
         newState
@@ -139,8 +114,11 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val setMetalsStatus: MetalsStatus ~=> Callback =
     Reusable.fn(status => scope.modState(_.setMetalsStatus(status)))
 
+  val updateSettings: ScastieMetalsOptions ~=> Callback =
+    Reusable.fn(newSettings => scope.modState(_.updateScalaCliSettings(newSettings)))
+
   val toggleMetalsStatus: Reusable[Callback] =
-    Reusable.always(scope.modState({ state => previousDirectives = None; state.toggleMetalsStatus }))
+    Reusable.always(scope.modState(_.toggleMetalsStatus))
 
   val toggleLineNumbers: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleLineNumbers))
@@ -227,8 +205,10 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       .flatMap(isEmbedded => scope.modState(f).unless_(isEmbedded))
   }
 
-  private def connectProgress(snippetId: SnippetId): Callback = {
+  private def connectProgress(snippetId: SnippetId): Callback =
+  scope.state.map(_.inputs.target.targetType).flatMap { scalaTargetType =>
     val apiBase = serverUrl.getOrElse("")
+    val targetType = if (scalaTargetType == ScalaTargetType.ScalaCli) "Scala-CLI" else "sbt"
 
     EventStream.connect(
       eventSourceUri = s"$apiBase/api/progress-sse/${snippetId.url}",
@@ -242,7 +222,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
         }
 
         def onOpen(): Unit =
-          direct.modState(_.logSystem("Connected. Waiting for sbt"))
+          direct.modState(_.logSystem(s"Connected. Waiting for $targetType"))
 
         def onError(error: String): Unit =
           direct.modState(_.logSystem(s"Error: $error"))
@@ -525,8 +505,4 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       .map(_.set(Home))
       .getOrElse(Callback.empty)
   )
-
-  // Convert to Scala-CLI
-  val convertToScalaCli: Reusable[Callback] =
-    Reusable.always(scope.modState(_.convertToScalaCli))
 }

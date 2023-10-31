@@ -8,19 +8,19 @@ import akka.actor.ActorSelection
 import java.time.Instant
 import scala.collection.immutable.Queue
 import org.scastie.util.SbtTask
-import org.scastie.util.ScliActorTask
+import org.scastie.util.ScalaCliActorTask
 import org.scastie.api._
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
 import akka.remote.DisassociatedEvent
 
-class ScliDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorRef)
-  extends BaseDispatcher[ActorSelection, ScliState](config) {
+class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorRef)
+  extends BaseDispatcher[ActorSelection, ScalaCliState](config) {
 
   private val parent = context.parent
 
-  var remoteServers = getRemoteServers("scli", "ScliRunner", "ScliActor")
+  var remoteServers = getRemoteServers("scli", "ScalaCliRunner", "ScalaCliActor")
 
   var availableServersQueue = Queue[(SocketAddress, ActorSelection)](remoteServers.toSeq :_ *)
   var taskQueue = Queue[Task[ScalaCliInputs]]()
@@ -55,7 +55,7 @@ class ScliDispatcher(config: Config, progressActor: ActorRef, statusActor: Actor
           log.info(s"Giving task ${task.taskId} to ${server.pathString}")
           taskQueue = newTaskQueue
           availableServersQueue = newQueue
-          server ! ScliActorTask(task.taskId.snippetId, task.config.asInstanceOf[ScalaCliInputs], task.ip.v, progressActor)
+          server ! ScalaCliActorTask(task.taskId.snippetId, task.config.asInstanceOf[ScalaCliInputs], task.ip.v, progressActor)
           processedSnippetsId += task.taskId.snippetId -> (addr, server)
         }
       }
@@ -76,7 +76,7 @@ class ScliDispatcher(config: Config, progressActor: ActorRef, statusActor: Actor
         log.info("Connected runner {}", runnerAkkaPort)
 
         val address = SocketAddress(runnerHostname, runnerAkkaPort)
-        val ref = connectRunner(getRemoteActorPath("ScliRunner", address, "ScliActor"))
+        val ref = connectRunner(getRemoteActorPath("ScalaCliRunner", address, "ScalaCliActor"))
 
         remoteServers += address -> ref
         enqueueAvailableServer(address, ref)

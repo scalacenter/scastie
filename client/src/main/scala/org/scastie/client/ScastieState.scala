@@ -3,7 +3,7 @@ package org.scastie.client
 import org.scastie.api._
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.{Position => _}
-import org.scastie.client.scli.ScalaCliUtils
+import org.scastie.client.scalacli.ScalaCliUtils._
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.syntax._
@@ -32,6 +32,10 @@ case class MetalsConfigurationError(msg: String) extends MetalsStatus {
 
 case class NetworkError(msg: String) extends MetalsStatus {
   val info: String = s"Network Error: \n  $msg"
+}
+
+case object OutdatedScalaCli extends MetalsStatus {
+  val info: String = "Outdated Scala CLI directives, fetching new configuration."
 }
 
 object SnippetState {
@@ -114,7 +118,6 @@ case class ScastieState(
     outputs: Outputs,
     status: StatusState,
     metalsStatus: MetalsStatus = MetalsLoading,
-    isMetalsStale : Boolean = false,
     isEmbedded: Boolean = false,
     transient: Boolean = false,
 
@@ -144,7 +147,6 @@ case class ScastieState(
       outputs: Outputs = outputs,
       status: StatusState = status,
       metalsStatus: MetalsStatus = metalsStatus,
-      isMetalsStale: Boolean = isMetalsStale,
       transient: Boolean = transient,
       scalaCliConversionError: Option[String] = scalaCliConversionError
   ): ScastieState = {
@@ -175,7 +177,6 @@ case class ScastieState(
         isEmbedded = isEmbedded,
         transient = transient,
         scalaCliConversionError = scalaCliConversionError,
-        isMetalsStale = isMetalsStale
       )
 
     if (!isEmbedded && !transient) {
@@ -183,6 +184,25 @@ case class ScastieState(
     }
 
     state0
+  }
+
+  def modifySbtInputs(inputsModification: SbtInputs => SbtInputs): ScastieState =
+    inputs match {
+      case sbtInputs: SbtInputs => {
+        val newInputs = inputsModification(sbtInputs)
+        copyAndSave(inputs = newInputs, inputsHasChanged = inputs != newInputs)
+      }
+      case _ => this
+    }
+
+  def updateScalaCliSettings(newSettings: ScastieMetalsOptions): ScastieState = {
+    val newInputs = inputs match {
+      case scalaCliInputs: ScalaCliInputs =>
+        val newScalaCliTarget = ScalaCli(newSettings.scalaTarget.scalaVersion)
+        scalaCliInputs.copy(libraries = newSettings.dependencies, target = newScalaCliTarget)
+      case _ => inputs
+    }
+    copyAndSave(inputs = inputs)
   }
 
   private def coalesceUpdates(update: ScastieState => ScastieState) = {
@@ -219,7 +239,7 @@ case class ScastieState(
     copyAndSave(metalsStatus = status)
 
   def toggleMetalsStatus: ScastieState =
-    copyAndSave(metalsStatus = if (metalsStatus != MetalsDisabled) MetalsDisabled else MetalsLoading, isMetalsStale = false)
+    copyAndSave(metalsStatus = if (metalsStatus != MetalsDisabled) MetalsDisabled else MetalsLoading)
 
   def toggleLineNumbers: ScastieState =
     copyAndSave(showLineNumbers = !showLineNumbers)
@@ -351,16 +371,19 @@ case class ScastieState(
     }
   }
 
-  def setInputs(inputs: BaseInputs): ScastieState =
-    copyAndSave(
-      inputs = inputs
-    )
+  def setInputs(inputs: BaseInputs): ScastieState = {
+    println(inputs)
+    inputs match {
+      case sbtInputs: SbtInputs => println(sbtInputs.librariesFromList)
+      case _ => println("Dupa")
+    }
+    val x = copyAndSave(inputs = inputs)
+    println(inputs)
+    x
+  }
 
   def setSbtConfigExtra(config: String): ScastieState =
-    copyAndSave(
-      // inputs = inputs, // .copy(sbtConfigExtra = config),
-      inputsHasChanged = true
-    )
+    modifySbtInputs(_.copy(sbtConfigExtra = config))
 
   def setChangedInputs: ScastieState =
     copyAndSave(inputsHasChanged = true)
@@ -378,30 +401,21 @@ case class ScastieState(
     )
 
   def clearDependencies: ScastieState =
-    copyAndSave(
-      // inputs = inputs.clearDependencies,
-      inputsHasChanged = true
-    )
+    modifySbtInputs(_.clearDependencies)
 
   def addScalaDependency(scalaDependency: ScalaDependency, project: Project): ScastieState = {
-    // val newInputs = inputs.addScalaDependency(scalaDependency, project)
-    copyAndSave(
-      // inputs = newInputs,
-      // inputsHasChanged = newInputs != inputs,
-    )
+    modifySbtInputs(_.addScalaDependency(scalaDependency, project))
+  }
+
+  def setScalaDependencies(deps: List[(ScalaDependency, Project)]) = {
+    modifySbtInputs(_.copy(librariesFromList = deps))
   }
 
   def removeScalaDependency(scalaDependency: ScalaDependency): ScastieState =
-    copyAndSave(
-      // inputs = inputs.removeScalaDependency(scalaDependency),
-      inputsHasChanged = true
-    )
+    modifySbtInputs(_.removeScalaDependency(scalaDependency))
 
   def updateDependencyVersion(scalaDependency: ScalaDependency, version: String): ScastieState = {
-    copyAndSave(
-      // inputs = inputs.updateScalaDependency(scalaDependency, version),
-      inputsHasChanged = true
-    )
+    modifySbtInputs(_.updateScalaDependency(scalaDependency, version))
   }
 
   def scalaJsScriptLoaded: ScastieState = copyAndSave(scalaJsContent = None)
@@ -459,7 +473,7 @@ case class ScastieState(
     val state = self
       .addOutputs(progress.compilationInfos, progress.instrumentations)
       .logOutput(progress.userOutput, UserOutput.apply _)
-      .logOutput(progress.sbtOutput, SbtOutput.apply _)
+      .logOutput(progress.buildOutput, ConsoleOutput.systemOutput(inputs.target))
       .setForcedProgramMode(progress.isForcedProgramMode)
       .setRuntimeError(progress.runtimeError)
       .setSbtError(progress.isSbtError)
@@ -540,20 +554,6 @@ case class ScastieState(
         instrumentations = outputs.instrumentations ++ instrumentations.toSet
       )
     )
-  }
-
-  // Returns None if it has been correctly converted.
-  // Returns a String explaining why the conversion failed.
-  //
-  def convertToScalaCli: ScastieState = {
-    inputs match {
-      case sbtInputs: SbtInputs =>
-        ScalaCliUtils.convertInputsToScalaCli(sbtInputs) match {
-          case Left(inputs) => copyAndSave(inputs = inputs, scalaCliConversionError = None, view = View.Editor)
-          case Right(error) => copyAndSave(scalaCliConversionError = Some(error))
-        }
-      case _ => this
-    }
   }
 
   override def toString: String = this.asJson.noSpaces

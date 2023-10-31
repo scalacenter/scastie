@@ -27,6 +27,9 @@ package object components {
   implicit val scalaTargetReuse: Reusability[ScalaTarget] =
     Reusability.byRefOr_==
 
+  implicit val sbtScalaTargetReuse: Reusability[SbtScalaTarget] =
+    Reusability.byRefOr_==
+
   implicit val pageReuse: Reusability[Page] =
     Reusability.byRefOr_==
 

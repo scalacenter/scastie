@@ -242,8 +242,7 @@ object Scastie {
         val state1 =
           props.targetType match {
             case Some(targetType) => {
-              val state0 =
-                state.setTarget(targetType.defaultScalaTarget)
+              val state0 = state.setTarget(targetType.defaultScalaTarget)
 
               if (targetType == ScalaTargetType.Scala3) {
                 state0.setCode(Scala3.defaultCode)

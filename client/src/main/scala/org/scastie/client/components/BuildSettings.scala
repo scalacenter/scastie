@@ -22,7 +22,6 @@ final case class BuildSettings(
     removeScalaDependency: ScalaDependency ~=> Callback,
     updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
     addScalaDependency: (ScalaDependency, Project) ~=> Callback,
-    convertToScalaCli: Reusable[Callback],
     scalaCliConversionError: Option[String]
 ) {
 
@@ -30,12 +29,13 @@ final case class BuildSettings(
 }
 
 object BuildSettings {
+  var mutableList: List[(ScalaDependency, Project)] = List.empty[(ScalaDependency, Project)]
 
   implicit val reusability: Reusability[BuildSettings] =
     Reusability.derive[BuildSettings]
 
-  private def renderResetButton(props: BuildSettings): TagMod = {
-    TagMod(
+  private def renderResetButton(props: BuildSettings): VdomNode = {
+    ReactFragment(
       PromptModal(
         isDarkTheme = props.isDarkTheme,
         modalText = "Reset Build",
@@ -47,6 +47,7 @@ object BuildSettings {
         action = props.resetBuild
       ).render,
       div(
+        hidden := props.isBuildDefault && props.inputs.target.targetType == ScalaTargetType.ScalaCli,
         title := "Reset your configuration",
         onClick --> props.openResetModal,
         role := "button",
@@ -54,17 +55,26 @@ object BuildSettings {
       )(
         "Reset"
       )
-    ).when(!props.isBuildDefault && props.inputs.target.targetType != ScalaTargetType.ScalaCli)
+    )
   }
 
-  private def scaladexSearch(props: BuildSettings, sbtInputs: SbtInputs): VdomNode = ScaladexSearch(
-    removeScalaDependency = props.removeScalaDependency,
-    updateDependencyVersion = props.updateDependencyVersion,
-    addScalaDependency = props.addScalaDependency,
-    librariesFrom = sbtInputs.librariesFrom,
-    scalaTarget = sbtInputs.target,
-    isDarkTheme = props.isDarkTheme
-  ).render
+  val addScalaDependency: List[(ScalaDependency, Project)] ~=> Callback =
+    Reusable.byRef { dependencies =>
+      Callback {
+        mutableList = dependencies
+      }
+    }
+
+  private def scaladexSearch(props: BuildSettings, sbtInputs: SbtInputs): VdomNode = {
+    ScaladexSearch(
+      removeScalaDependency = props.removeScalaDependency,
+      updateDependencyVersion = props.updateDependencyVersion,
+      addScalaDependency = props.addScalaDependency,
+      libraries = sbtInputs.libraries,
+      scalaTarget = sbtInputs.target,
+      isDarkTheme = props.isDarkTheme
+    ).render
+  }
 
   private def sbtExtraConfigurationPanel(props: BuildSettings, sbtInputs: SbtInputs): VdomNode =
     ReactFragment(
@@ -114,7 +124,7 @@ object BuildSettings {
   private def sbtBuildSettingsPanel(props: BuildSettings, sbtInputs: SbtInputs): TagMod = {
     div()(
       h2(span("Scala Version")),
-      VersionSelector(props.inputs.target, props.setTarget).render,
+      VersionSelector(sbtInputs.target, props.setTarget).render,
       h2(span("Libraries")),
       scaladexSearch(props, sbtInputs),
       sbtExtraConfigurationPanel(props, sbtInputs),

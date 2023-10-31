@@ -45,8 +45,8 @@ final case class CodeEditor(visible: Boolean,
                             codeChange: String ~=> Callback,
                             target: ScalaTarget,
                             metalsStatus: MetalsStatus,
-                            isMetalsStale: Boolean,
                             setMetalsStatus: MetalsStatus ~=> Callback,
+                            updateSettings: ScastieMetalsOptions ~=> Callback,
                             dependencies: Set[ScalaDependency])
     extends Editor {
   @inline def render: VdomElement = CodeEditor.hooksComponent(this)
@@ -106,7 +106,7 @@ object CodeEditor {
         val line = problem.line.get max 1
         val lineInfo = doc.line(line)
 
-        Diagnostic(lineInfo.from, HTMLFormatter.format(problem.message), parseSeverity(problem.severity), lineInfo.to)
+        Diagnostic(lineInfo.from, problem.message, parseSeverity(problem.severity), lineInfo.to)
           .setRenderMessage(CallbackTo {
             val wrapper = dom.document.createElement("pre")
             wrapper.innerHTML = HTMLFormatter.format(problem.message)
@@ -119,7 +119,13 @@ object CodeEditor {
       val line = runtimeError.line.getOrElse(1).min(doc.lines.toInt)
       val lineInfo = doc.line(line)
       val msg = if (runtimeError.fullStack.nonEmpty) runtimeError.fullStack else runtimeError.message
-      Diagnostic(lineInfo.from, HTMLFormatter.format(msg), codemirrorLintStrings.error, lineInfo.to)
+
+      Diagnostic(lineInfo.from, msg, codemirrorLintStrings.error, lineInfo.to)
+          .setRenderMessage(CallbackTo {
+            val wrapper = dom.document.createElement("pre")
+            wrapper.innerHTML = HTMLFormatter.format(msg)
+            wrapper
+          })
     })
 
     (errors ++ runtimeErrors).toJSArray

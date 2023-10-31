@@ -14,6 +14,8 @@ import munit.CatsEffectAssertions
 import org.eclipse.lsp4j.MarkupContent
 import org.http4s._
 import JavaConverters._
+import cats.data.EitherT
+import cats.data.OptionT
 
 object TestUtils extends Assertions with CatsEffectAssertions {
   val cache  = Cache.empty[IO, ScastieMetalsOptions, ScastiePresentationCompiler]
@@ -21,28 +23,24 @@ object TestUtils extends Assertions with CatsEffectAssertions {
 
   type DependencyForVersion = ScalaTarget => ScalaDependency
 
-<<<<<<< HEAD
   val testTargets =
     List(BuildInfo.latestLTS, BuildInfo.stableLTS, BuildInfo.latestNext).map(ScalaTarget.Scala3.apply) ++
       List(BuildInfo.latest213, BuildInfo.latest212).map(ScalaTarget.Jvm.apply)
-=======
-  val testTargets = List(BuildInfo.latest3, BuildInfo.stable3).map(Scala3.apply) ++
-    List(BuildInfo.latest213, BuildInfo.latest212).map(Jvm.apply)
->>>>>>> 4a20eb33 (make tests compile)
 
   val unsupportedVersions = List(BuildInfo.latest211, BuildInfo.latest210).map(Jvm.apply)
 
-  private def testCode(code: String): ScastieOffsetParams = {
+  private def testCode(code: String, isWorksheet: Boolean): ScastieOffsetParams = {
     val offset = code.indexOfSlice("@@")
-    ScastieOffsetParams(code.filter(_ != '@'), offset, false)
+    ScastieOffsetParams(code.filter(_ != '@'), offset, isWorksheet)
   }
 
   private def createRequest(
     scalaTarget: ScalaTarget,
     dependencies: Set[DependencyForVersion],
-    code: String
+    code: String,
+    isWorksheet: Boolean = false
   ): LSPRequestDTO =
-    val offsetParamsComplete = testCode(code)
+    val offsetParamsComplete = testCode(code, isWorksheet)
     val dependencies0        = dependencies.map(_.apply(scalaTarget))
     LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget, code), offsetParamsComplete)
 
@@ -53,16 +51,41 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     else if (majorVersion.forall(v => compat.keys.exists(_ == v))) compat(majorVersion.get)
     else default
 
+  def convertScalaCliConfiguration(code: String, expected: Either[FailureType, ScastieMetalsOptions]): IO[Unit] =
+    val config = server.isConfigurationSupported(ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.latest3), code)).value
+    assertIO(config, expected)
+
+  def convertScalaCliConfiguration(code: String): IO[ScastieMetalsOptions] =
+    val config = server.isConfigurationSupported(ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.latest3), code)).toOption
+    assertIOBoolean(config.isDefined).flatMap(_ => config.value.map(_.get))
+
   def testCompletion(
     testTargets: List[ScalaTarget] = testTargets,
     dependencies: Set[DependencyForVersion] = Set(),
     code: String = "",
     expected: Either[FailureType, Set[String]] = Right(Set()),
-    compat: Map[String, Either[FailureType, Set[String]]] = Map()
+    compat: Map[String, Either[FailureType, Set[String]]] = Map(),
+    isWorksheet: Boolean = false,
   ): IO[List[Unit]] = testTargets.traverse(scalaTarget =>
-    val request = createRequest(scalaTarget, dependencies, code)
-    val comp    = server.complete(request).map(_.items.map(_.label)).value
+    val request = createRequest(scalaTarget, dependencies, code, isWorksheet)
+    val comp    = server.complete(request).map(_.items.map(item => s"${item.label} ${item.detail}").toSet).value
     assertIO(comp, getCompat(scalaTarget, compat, expected), Left(NoResult(s"Failed for target $scalaTarget")))
+  )
+
+  def testCompletionEdit(
+    testTargets: List[ScalaTarget] = testTargets,
+    dependencies: Set[DependencyForVersion] = Set(),
+    code: String,
+    expectedCode: String,
+    isWorksheet: Boolean,
+  ): IO[List[Unit]] = testTargets.traverse(scalaTarget =>
+    val request = createRequest(scalaTarget, dependencies, code, isWorksheet)
+    val newText = server.complete(request).map(_.items.head).map { completionDTO =>
+      val editRange = completionDTO.instructions.editRange
+      val offset = code.linesWithSeparators.take(editRange.startLine - 1).map(_.length).sum + editRange.startChar
+      request.offsetParams.content.patch(offset, completionDTO.instructions.text, editRange.endChar - editRange.startChar)
+    }
+    assertIO(newText.value, expectedCode.asRight[FailureType], Left(NoResult(s"Failed for target $scalaTarget")))
   )
 
   def testHover(
