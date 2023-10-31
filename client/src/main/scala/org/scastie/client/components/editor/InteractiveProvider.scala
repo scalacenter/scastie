@@ -19,14 +19,13 @@ case class InteractiveProvider(
   code: String,
   metalsStatus: MetalsStatus,
   updateStatus: MetalsStatus ~=> Callback,
+  updateSettings: api.ScastieMetalsOptions ~=> Callback,
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
 ) extends MetalsClient with MetalsAutocompletion with MetalsHover {
 
-  def extension: js.Array[Any] = js.Array[Any](
-    metalsHover,
-    metalsAutocomplete
-  )
+  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete)
+
 }
 
 object InteractiveProvider {
@@ -38,6 +37,7 @@ object InteractiveProvider {
       props.value,
       props.metalsStatus,
       props.setMetalsStatus,
+      props.updateSettings,
       props.isWorksheetMode,
       props.isEmbedded
     )
@@ -65,6 +65,32 @@ object InteractiveProvider {
     (prevProps.metalsStatus == MetalsDisabled && props.metalsStatus == MetalsLoading) ||
     (prevProps.metalsStatus != MetalsDisabled && props.metalsStatus == MetalsDisabled)
 
+  private def requiresDirectiveReload(prevProps: CodeEditor, props: CodeEditor): Boolean =
+    (prevProps.metalsStatus != OutdatedScalaCli && props.metalsStatus == OutdatedScalaCli)
+
+  private def takeDirectives(code: String) =
+    code.split("\n").takeWhile(_.startsWith("//>")).toList
+
+  import scala.concurrent.duration._
+  import scala.scalajs.js.timers._
+
+  val didDirectivesChange: (Option[CodeEditor], CodeEditor) => Unit = {
+    var timeout: js.UndefOr[js.timers.SetTimeoutHandle] = js.undefined
+    var originalPrevious: Option[CodeEditor] = None
+
+    (prev, current) =>
+      if (originalPrevious.isEmpty && prev.isDefined) originalPrevious = prev
+      timeout.foreach(clearTimeout)
+      timeout = setTimeout(5000.millis) {
+        originalPrevious.map { prev => {
+          val previousDirectives = takeDirectives(prev.value)
+          val newDirectives = takeDirectives(current.value)
+          originalPrevious = Some(current)
+          if (previousDirectives != newDirectives) current.setMetalsStatus(OutdatedScalaCli).runNow()
+        }}
+      }
+  }
+
   private def didConfigChange(prevProps: CodeEditor, props: CodeEditor): Boolean =
       props.target != prevProps.target ||
         props.dependencies != prevProps.dependencies ||
@@ -75,6 +101,8 @@ object InteractiveProvider {
     prevProps: Option[CodeEditor],
     props: CodeEditor
   ): Callback = {
+    if (props.metalsStatus != MetalsDisabled && props.target.targetType == api.ScalaTargetType.ScalaCli)
+      didDirectivesChange(prevProps, props)
     Callback {
       val extension = InteractiveProvider(
         props.dependencies,
@@ -82,6 +110,7 @@ object InteractiveProvider {
         props.value,
         props.metalsStatus,
         props.setMetalsStatus,
+        props.updateSettings,
         props.isWorksheetMode,
         props.isEmbedded
       ).extension
@@ -89,7 +118,10 @@ object InteractiveProvider {
       val effects = interactive.reconfigure(extension)
       editorView.value.dispatch(TransactionSpec().setEffects(effects))
     }.when_(props.visible && prevProps.exists(prevProps => {
-      didConfigChange(prevProps, props) || (prevProps.visible != props.visible) || wasMetalsToggled(prevProps, props)
+      didConfigChange(prevProps, props) ||
+      (prevProps.visible != props.visible) ||
+      wasMetalsToggled(prevProps, props) ||
+      requiresDirectiveReload(prevProps, props)
     }))
   }
 

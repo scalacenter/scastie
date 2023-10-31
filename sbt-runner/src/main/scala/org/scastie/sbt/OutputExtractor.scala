@@ -24,13 +24,10 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   def extractProgress(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
     import sbtRun._
 
-    val problems = extractProblems(output.line, Instrument.getMessageLineOffset(inputs), inputs.isWorksheetMode)
-    println(output.line)
+    val problems = extractProblems(output.line, Instrument.getMessageLineOffset(inputs.isWorksheetMode, isScalaCli = false), inputs.isWorksheetMode)
     val instrumentations = extract[List[Instrumentation]](output.line)
-    println(instrumentations)
-    val runtimeError = extractRuntimeError(output.line, Instrument.getExceptionLineOffset(inputs))
+    val runtimeError = extractRuntimeError(output.line, Instrument.getExceptionLineOffset(inputs.isWorksheetMode))
     val consoleOutput = extract[ConsoleOutput](output.line)
-    println(consoleOutput)
     // sbt plugin is not loaded at this stage. we need to drop those messages
     val hiddenInitializationMessages = List(
       "WARNING: A terminally deprecated method in java.lang.System has been called",
@@ -79,7 +76,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
       id = None,
       snippetId = Some(snippetId),
       userOutput = userOutput,
-      sbtOutput = sbtProcessOutput,
+      buildOutput = sbtProcessOutput,
       compilationInfos = problems.getOrElse(Nil),
       instrumentations = instrumentations.getOrElse(Nil),
       runtimeError = runtimeError,

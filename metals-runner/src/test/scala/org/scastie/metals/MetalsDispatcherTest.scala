@@ -51,7 +51,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
           pc     <- dispatcher.getCompiler(options)
           _      <- EitherT.right(IO.sleep(4.seconds))
           result <- EitherT.right(pc.complete(ScastieOffsetParams("print", 3, true)))
-        } yield { result.getItems.asScala.toList }
+        } yield { result.items }
         interceptIO[java.util.concurrent.CancellationException](task.value)
       }
     }

@@ -16,11 +16,11 @@ import org.slf4j.LoggerFactory
   * This object provides the main endpoint for the Scala-CLI runner.
   * Its role is to create and setup the ActorSystem and create the ScalaCli Actor
   */
-object SbtMain {
+object ScalaCliMain {
   def main(args: Array[String]): Unit = {
     val logger = LoggerFactory.getLogger(getClass)
 
-    val system = ActorSystem("ScliRunner")
+    val system = ActorSystem("ScalaCliRunner")
 
     val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
     logger.info("akka tcp config")
@@ -59,18 +59,17 @@ object SbtMain {
 
     system.actorOf(
       Props(
-        new ScliActor(
-          system = system,
+        new ScalaCliActor(
           isProduction = isProduction,
           readyRef = None,
           runTimeout = runTimeout,
           reconnectInfo = Some(reconnectInfo)
         )
       ),
-      name = "ScliActor"
+      name = "ScalaCliActor"
     )
 
-    logger.info("ScliActor started")
+    logger.info("ScalaCliActor started")
 
     Await.result(system.whenTerminated, Duration.Inf)
 

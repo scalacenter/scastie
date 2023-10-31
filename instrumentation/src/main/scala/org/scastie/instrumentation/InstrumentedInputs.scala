@@ -39,7 +39,7 @@ object InstrumentedInputs {
               Left(InstrumentationFailureReport("This Scala target does not have a worksheet mode", None))
 
             case ParsingError(error) =>
-              val lineOffset = Instrument.getParsingLineOffset(inputs0)
+              val lineOffset = Instrument.getParsingLineOffset(inputs0.isWorksheetMode)
               val errorLine = (error.pos.startLine + lineOffset) max 1
               Right(InstrumentedInputs(
                 inputs = inputs0.copyBaseInput(code = error.pos.input.text),

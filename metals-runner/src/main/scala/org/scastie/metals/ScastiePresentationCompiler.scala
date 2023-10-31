@@ -16,8 +16,14 @@ import DTOExtensions._
 import JavaConverters._
 
 case class ScastiePresentationCompiler(underlyingPC: PresentationCompiler) {
-  def complete[F[_]: Async](offsetParams: ScastieOffsetParams): F[CompletionList] =
-    Async[F].fromFuture(Async[F].delay(underlyingPC.complete(offsetParams.toOffsetParams).asScala))
+  def complete[F[_]: Async](offsetParams: ScastieOffsetParams): F[ScalaCompletionList] =
+    Async[F].executionContext.flatMap { implicit ec =>
+      Async[F].fromFuture(Async[F].delay {
+        val (lspOffsetParams, insideWrapper) = offsetParams.toOffsetParams
+        underlyingPC.complete(lspOffsetParams).asScala.map:
+          _.toScalaCompletionList(offsetParams.isWorksheetMode, insideWrapper)
+      })
+    }
 
   def completionItemResolve[F[_]: Async](completionItem: CompletionItemDTO): F[String] =
     Async[F].executionContext.flatMap { implicit ec =>
@@ -37,13 +43,13 @@ case class ScastiePresentationCompiler(underlyingPC: PresentationCompiler) {
   def hover[F[_]: Async](offsetParams: ScastieOffsetParams): F[Either[FailureType, Hover]] =
     (Async[F].executionContext >>= { implicit ec =>
       Async[F].fromFuture(Async[F].delay {
-        underlyingPC.hover(offsetParams.toOffsetParams)
+        underlyingPC.hover(offsetParams.toOffsetParams._1)
           .asScala
           .map(_.toScala.map(_.toLsp).toRight(NoResult("There is no hover for given position")))
       })
     })
 
   def signatureHelp[F[_]: Async](offsetParams: ScastieOffsetParams): F[SignatureHelp] =
-    Async[F].fromFuture(Async[F].delay(underlyingPC.signatureHelp(offsetParams.toOffsetParams).asScala))
+    Async[F].fromFuture(Async[F].delay(underlyingPC.signatureHelp(offsetParams.toOffsetParams._1).asScala))
 
 }

@@ -7,6 +7,7 @@ object AnsiColorFormatter extends AnsiColor {
   private val colors = Map(
     BLACK -> "ansi-color-black",
     RED -> "ansi-color-red",
+    "\u001b[90m" -> "ansi-color-gray",
     GREEN -> "ansi-color-green",
     YELLOW -> "ansi-color-yellow",
     BLUE -> "ansi-color-blue",

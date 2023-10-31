@@ -27,8 +27,7 @@ object ScastieMetalsRoutes {
       case req @ POST -> Root / "metals" / "complete" => for {
           lspRequest       <- req.as[LSPRequestDTO]
           maybeCompletions <- metals.complete(lspRequest).value
-          resp             <- Ok(maybeCompletions
-            .map(_.toScalaCompletionList(lspRequest.offsetParams.isWorksheetMode)).asJson)
+          resp             <- Ok(maybeCompletions.asJson)
         } yield resp
 
       case req @ POST -> Root / "metals" / "completionItemResolve" => for {
@@ -51,8 +50,6 @@ object ScastieMetalsRoutes {
 
       case req @ POST -> Root / "metals" / "isConfigurationSupported" => for {
           scastieConfiguration     <- req.as[ScastieMetalsOptions]
-          _ = println(scastieConfiguration)
-          _ = println("WTF")
           isConfigurationSupported <- metals.isConfigurationSupported(scastieConfiguration).value
           resp                     <- Ok(isConfigurationSupported.asJson)
         } yield resp

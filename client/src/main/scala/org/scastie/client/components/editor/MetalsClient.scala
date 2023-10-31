@@ -21,6 +21,7 @@ import io.circe.disjunctionCodecs.decoderEither
 
 trait MetalsClient {
   val updateStatus: MetalsStatus ~=> Callback
+  val updateSettings: ScastieMetalsOptions ~=> Callback
   val metalsStatus: MetalsStatus
   val dependencies: Set[ScalaDependency]
   val target: ScalaTarget
@@ -34,19 +35,13 @@ trait MetalsClient {
     if (metalsStatus == MetalsDisabled || isEmbedded) Future.successful(false)
     else {
       updateStatus(MetalsLoading).runNow()
-      println(scastieMetalsOptions)
-      val res = makeRequest(scastieMetalsOptions, "isConfigurationSupported").map(maybeText =>
-        parseMetalsResponse[ScastieMetalsOptions](maybeText).map(Right(_)).getOrElse(Left(maybeText))
-      )
+      val res = makeRequest(scastieMetalsOptions, "isConfigurationSupported").map(parseMetalsResponse[ScastieMetalsOptions])
       res.onComplete {
-        case Success(Right(opt)) => {
-          updateStatus(MetalsReady).runNow()
-        }
-        case Success(Left(details)) => updateStatus(NetworkError(s"Error sent from server: $details")).runNow()
+        case Success(Some(newScalaCliOptions)) => (updateSettings(newScalaCliOptions) >> updateStatus(MetalsReady)).runNow()
         case Failure(exception) => updateStatus(NetworkError(exception.getMessage)).runNow()
         case _ =>
       }
-      res.map { _.isRight }
+      res.map(_.isDefined)
     }
   }
 
@@ -97,18 +92,11 @@ trait MetalsClient {
 
   protected def parseMetalsResponse[A](maybeJsonText: Option[String])(implicit readsB: Decoder[A]): Option[A] = {
     maybeJsonText.flatMap(jsonText => {
-      decode[Either[FailureType, A]](jsonText).toOption match {
-        case None =>
+      decode[Either[FailureType, A]](jsonText).toOption.flatMap {
+        case Left(err) =>
+          updateStatus(MetalsConfigurationError(err.msg)).runNow()
           None
-        case Some(Left(PresentationCompilerFailure(msg))) =>
-          updateStatus(MetalsConfigurationError(msg)).runNow()
-          None
-        case Some(Left(err)) =>
-          println(err.msg)
-          None
-        case Some(Right(value)) =>
-          updateStatus(MetalsReady)
-          Some(value)
+        case Right(value) => Some(value)
       }
     })
   }

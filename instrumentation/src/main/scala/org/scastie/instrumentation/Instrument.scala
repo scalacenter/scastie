@@ -8,6 +8,9 @@ import scala.meta._
 import scala.meta.inputs.Position
 import scala.meta.parsers.Parsed
 import scala.util.control.NonFatal
+import org.scastie.buildinfo.BuildInfo
+import org.scastie.api.ScalaTargetType.Scala2
+import org.scastie.api.ScalaTargetType.JS
 
 sealed trait InstrumentationFailure
 
@@ -19,14 +22,12 @@ object InstrumentationFailure {
 }
 
 object Instrument {
-  def getParsingLineOffset(inputs: BaseInputs): Int = {
-    if (inputs.isWorksheetMode) -1 else 0
-  }
-  def getExceptionLineOffset(inputs: BaseInputs): Int = {
-    if (inputs.isWorksheetMode) -2 else 0
-  }
-  def getMessageLineOffset(inputs: BaseInputs): Int = {
-    if (inputs.isWorksheetMode) -2 else 0
+  def getParsingLineOffset(isWorksheet: Boolean): Int = if (isWorksheet) -1 else 0
+  def getExceptionLineOffset(isWorksheet: Boolean): Int = if (isWorksheet) -2 else 0
+  def getMessageLineOffset(isWorksheet: Boolean, isScalaCli: Boolean): Int = (isWorksheet, isScalaCli) match {
+      case (true, _) => -2
+      case (false, true) => 1
+      case (false, false) => 0
   }
 
   import InstrumentationFailure._
@@ -48,6 +49,8 @@ object Instrument {
   private val instrumentationT = s"$runtimeApiPackage.Instrumentation"
   private val runtimeT = s"$runtimePackage.Runtime"
   private val domhookT = s"$runtimePackage.DomHook"
+
+  val entryPointName = "Main"
 
   private val elemArrayT =
     "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
@@ -113,7 +116,7 @@ object Instrument {
 
     val entryPoint =
       if (!isScalaJs) {
-        s"""|object Main {
+        s"""|object $entryPointName {
             |  def suppressUnusedWarnsScastie = Html
             |  val playground = $instrumentedObject
             |  def main(args: Array[String]): Unit = {
@@ -161,6 +164,20 @@ object Instrument {
     }
   }
 
+  def separateDirectives(code: String, targetType: ScalaTargetType, additionalDirectives: Seq[String]): (String, String) = {
+
+    if (targetType == ScalaTargetType.ScalaCli) {
+      val (usingDirectives, remainingLines) = code.linesWithSeparators.span {
+        case line if line.startsWith("//>") => true
+        case _ => false
+      }
+      val allDirectives = usingDirectives ++ additionalDirectives
+      (allDirectives.mkString, remainingLines.mkString)
+    } else {
+      ("", code)
+    }
+  }
+
   def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, String] = {
     val runtimeImport = target match {
       case Scala3(scalaVersion) => "import _root_.org.scastie.runtime.*"
@@ -169,13 +186,14 @@ object Instrument {
 
     val isScalaJs = target.targetType == ScalaTargetType.JS
 
+    lazy val scalaCliRuntime = target.runtimeDependency.renderScalaCli.appended('\n')
+    val (usingDirectives, remainingCode) = separateDirectives(code, target.targetType, Seq(scalaCliRuntime))
+
     val classBegin =
       if (!isScalaJs) s"object $instrumentedObject extends ScastieApp {"
       else s"object $instrumentedObject extends ScastieApp with $domhookT {"
     val prelude = s"""$runtimeImport\n$classBegin"""
-    val code0 = s"""$prelude\n$code\n}"""
-
-    println(code0)
+    val code0 = s"""$usingDirectives$prelude\n$remainingCode\n}"""
 
     def typelevel(scalaVersion: String): Option[Dialect] = {
       if (scalaVersion.startsWith("2.12")) Some(dialects.Typelevel212)
@@ -197,6 +215,11 @@ object Instrument {
       case target                  => scala(target.scalaVersion)
     }
 
+    val offset = target match {
+      case _: ScalaCli => scalaCliRuntime.length + prelude.length + 1
+      case _ => prelude.length + 1
+    }
+
     maybeDialect match {
       case Some(dialect) =>
         implicit val selectedDialect: Dialect = dialect
@@ -204,9 +227,9 @@ object Instrument {
         try {
           code0.parse[Source] match {
             case parsed: Parsed.Success[_] =>
-              if (!hasMainMethod(parsed.get))
-                Right(instrument(parsed.get, prelude.length + 1, isScalaJs))
-              else Left(HasMainMethod)
+              if (!hasMainMethod(parsed.get)) {
+                Right(instrument(parsed.get, offset, isScalaJs))
+              } else Left(HasMainMethod)
             case e: Parsed.Error => Left(ParsingError(e))
           }
         } catch {

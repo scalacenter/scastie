@@ -64,15 +64,14 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
                 s"Mtags couldn't be resolved for target: ${configuration.scalaTarget.scalaVersion}."
               )
             )
-        ) >>= (_.traverse(mtags =>
+        ).recover { case err: MatchError => PresentationCompilerFailure(err.getMessage).asLeft } >>= (_.traverse(mtags =>
           cache.getOrUpdateReleasable(configuration) {
             initializeCompiler(configuration, mtags).map { newPC =>
               Releasable(newPC, Sync[F].delay(newPC.underlyingPC.shutdown()))
             }
           }
-        ).recoverWith { case NonFatal(e) =>
-          logger.error(e.getMessage)
-          PresentationCompilerFailure(e.getMessage).asLeft.pure[F]
+        ).recover {
+          case NonFatal(err) => PresentationCompilerFailure(err.getMessage).asLeft
         })
     }
 
@@ -83,9 +82,8 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
     * If it is not a Scala-CLI target, it will return the untouched configuration.
     */
   def convertConfigurationFromScalaCli(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastieMetalsOptions] =
-    if configuration.scalaTarget.targetType == ScalaCli then
-      val res = Async[F].delay ( ScalaCliParser.getScalaTarget(configuration.code) )
-      EitherT.right(res)
+    if configuration.scalaTarget.targetType == ScalaTargetType.ScalaCli then
+      EitherT { Async[F].delay(ScalaCliParser.getScalaTarget(configuration.code)) }
     else
       EitherT.rightT(configuration)
 
