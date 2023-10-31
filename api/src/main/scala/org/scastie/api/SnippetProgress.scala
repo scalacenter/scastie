@@ -2,6 +2,7 @@ package org.scastie.api
 
 import io.circe.generic.semiauto._
 import io.circe._
+import io.circe.syntax._
 import org.scastie.runtime.api._
 import RuntimeCodecs._
 
@@ -12,7 +13,7 @@ object SnippetProgress {
       id = None,
       snippetId = None,
       userOutput = None,
-      sbtOutput = None,
+      buildOutput = None,
       compilationInfos = Nil,
       instrumentations = Nil,
       runtimeError = None,
@@ -33,7 +34,7 @@ case class SnippetProgress(
     id: Option[Long],
     snippetId: Option[SnippetId],
     userOutput: Option[ProcessOutput],
-    sbtOutput: Option[ProcessOutput],
+    buildOutput: Option[ProcessOutput],
     compilationInfos: List[Problem],
     instrumentations: List[Instrumentation],
     runtimeError: Option[RuntimeError],
@@ -46,5 +47,5 @@ case class SnippetProgress(
 ) {
   def isFailure: Boolean = isTimeout || isSbtError || runtimeError.nonEmpty || compilationInfos.exists(_.severity == Error)
 
-  override def toString: String = "" // Json.toJsObject(this).toString()
+  override def toString: String = this.asJson.spaces2
 }

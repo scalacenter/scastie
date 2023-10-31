@@ -30,26 +30,6 @@ sealed trait BaseInputs {
     }
   }
 
-  def setTarget(newTarget: ScalaTarget): BaseInputs = {
-    target -> newTarget match {
-      case (_: SbtScalaTarget, newSbtScalaTarget: SbtScalaTarget) => this match {
-        case sbtInputs: SbtInputs => sbtInputs.copy(target = newSbtScalaTarget)
-        case _ => this
-      }
-      case (_: ScalaCli, newSbtScalaTarget: SbtScalaTarget) => convertToSbt(newSbtScalaTarget)
-      case (_: SbtScalaTarget, _: ScalaCli) => convertToScalaCli
-      case _ => this
-    }
-  }
-
-  private def convertToSbt(newSbtScalaTarget: SbtScalaTarget): SbtInputs = {
-    SbtInputs.default.copy(target = newSbtScalaTarget)
-  }
-
-  private def convertToScalaCli: ScalaCliInputs = {
-    ScalaCliInputs.default
-  }
-
   def copyBaseInput(
     isWorksheetMode: Boolean = this.isWorksheetMode,
     isShowingInUserProfile: Boolean = this.isShowingInUserProfile,
@@ -57,9 +37,27 @@ sealed trait BaseInputs {
     libraries: Set[ScalaDependency] = this.libraries,
     forked: Option[SnippetId] = this.forked,
   ): BaseInputs = this match {
-    case shortInputs: ShortInputs => shortInputs.copy(isWorksheetMode = isWorksheetMode, isShowingInUserProfile = isShowingInUserProfile, code = code, libraries = libraries, forked = forked)
-    case scalaCliInputs: ScalaCliInputs => scalaCliInputs.copy(isWorksheetMode = isWorksheetMode, isShowingInUserProfile = isShowingInUserProfile, code = code, forked = forked, libraries = libraries)
-    case sbtInputs: SbtInputs => sbtInputs.copy(isWorksheetMode = isWorksheetMode, isShowingInUserProfile = isShowingInUserProfile, code = code, libraries = libraries, forked = forked)
+    case shortInputs: ShortInputs => shortInputs.copy(
+      isWorksheetMode = isWorksheetMode,
+      isShowingInUserProfile = isShowingInUserProfile,
+      code = code,
+      libraries = libraries,
+      forked = forked
+    )
+    case scalaCliInputs: ScalaCliInputs => scalaCliInputs.copy(
+      isWorksheetMode = isWorksheetMode,
+      isShowingInUserProfile = isShowingInUserProfile,
+      code = code,
+      forked = forked,
+      libraries = libraries
+    )
+    case sbtInputs: SbtInputs => sbtInputs.copy(
+      isWorksheetMode = isWorksheetMode,
+      isShowingInUserProfile = isShowingInUserProfile,
+      code = code,
+      libraries = libraries,
+      forked = forked
+    )
   }
 }
 
@@ -82,7 +80,7 @@ object SbtInputs {
     isWorksheetMode = true,
     code = defaultCode,
     target = Scala3.default,
-    libraries= Set(),
+    libraries = Set(),
     librariesFromList = List(),
     sbtConfigExtra = """|scalacOptions ++= Seq(
                         |  "-deprecation",
@@ -234,7 +232,7 @@ case class SbtInputs(
     val targetConfig = target.sbtConfig
 
     val optionalTargetDependency =
-      if (target.hasWorksheetMode) target.runtimeDependency
+      if (target.hasWorksheetMode) Some(target.runtimeDependency)
       else None
 
     val allLibraries =

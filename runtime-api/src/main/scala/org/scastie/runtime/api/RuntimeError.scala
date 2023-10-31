@@ -1,6 +1,7 @@
 package org.scastie.runtime.api
 
 import java.io.{PrintWriter, StringWriter}
+import StringUtils._
 
 case class RuntimeError(
     message: String,
@@ -8,7 +9,7 @@ case class RuntimeError(
     fullStack: String
 ) {
   def asJsonString: String = {
-    s"""{"message":"$message","line":${line.getOrElse(null)},"fullStack":"$fullStack"}"""
+    s"""{"message":"${message.escaped}","line":${line.getOrElse(null)},"fullStack":"${fullStack.escaped}"}"""
   }
 }
 

@@ -10,6 +10,7 @@ import munit.CatsEffectSuite
 import org.eclipse.lsp4j.MarkupContent
 import org.http4s._
 import TestUtils._
+import org.scastie.buildinfo.BuildInfo
 
 class MetalsServerTest extends CatsEffectSuite {
   private val catsVersion = "2.8.0"
@@ -21,7 +22,8 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "println"
+        "println (): Unit",
+        "println (x: Any): Unit"
       ).asRight
     )
   }
@@ -33,9 +35,10 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "print",
-        "printf",
-        "println"
+        "println (): Unit",
+        "println (x: Any): Unit",
+        "print (x: Any): Unit",
+        "printf (text: String, xs: Any*): Unit"
       ).asRight
     )
   }
@@ -49,10 +52,10 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "asRight"
+        "asRight [B]: Either[B, A]"
       ).asRight,
       compat = Map(
-        "2" -> Set("asRight").asRight
+        "2" -> Set("asRight [B]: Either[B,String]").asRight
       )
     )
   }
@@ -67,7 +70,7 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "asRight"
+        "asRight [B]: Either[B, A]"
       ).asRight
     )
   }
@@ -367,41 +370,306 @@ class MetalsServerTest extends CatsEffectSuite {
     )
   }
 
-  test("Scala-CLI: Completion with dependency given with `import dep` directives") {
-    testCompletion(
-      testTargets = List(ScalaCli.default),
-      code = """//> using dep "com.lihaoyi::os-lib:0.9.1"
-            |object M {
-            |   os.pw@@
-            |}
+  test("Text edit is proper for no-worksheet") {
+    testCompletionEdit(
+      code = """object M {
+               |  printl@@
+               |}
           """.stripMargin,
-      expected = Set("pwd: Path").asRight
+      expectedCode =
+        """object M {
+          |  println()
+          |}
+          """.stripMargin,
+      isWorksheet = false
     )
   }
 
-  test("Scala-CLI: Completion with dependency given with `import lib` directives") {
-    testCompletion(
-      testTargets = List(ScalaCli.default),
-      code = """//> using lib "com.lihaoyi::os-lib:0.9.1"
-            |object M {
-            |   os.pw@@
-            |}
+  test("Text edit is proper for worksheet") {
+    testCompletionEdit(
+      code = """object M {
+               |  printl@@
+               |}
           """.stripMargin,
-      expected = Set("pwd: Path").asRight
+      expectedCode =
+        """object M {
+          |  println()
+          |}
+          """.stripMargin,
+      isWorksheet = true
     )
   }
+
+  // This does not actually uses using directives, only checks if they are handled properly in worksheet mode
+  test("Text edit is proper for worksheet with using directives") {
+    testCompletionEdit(
+      code = """//> using scala 3.3.1
+               |
+               |printl@@
+               |
+          """.stripMargin,
+      expectedCode =
+        """//> using scala 3.3.1
+          |
+          |println()
+          |
+          """.stripMargin,
+      isWorksheet = true
+    )
+  }
+
+  test("Text edit is proper for no workheet with using directives") {
+    testCompletionEdit(
+      code = """//> using scala 3.3.1
+               |object M {
+               |  printl@@
+               |}
+          """.stripMargin,
+      expectedCode =
+        """//> using scala 3.3.1
+          |object M {
+          |  println()
+          |}
+          """.stripMargin,
+      isWorksheet = false
+    )
+  }
+
+  test("Text edit is proper for worksheet inside using directives") {
+    testCompletionEdit(
+      testTargets = List(ScalaCli(BuildInfo.latest3)),
+      code = """//> using dep org.scast@@
+               |object M {
+               |  println()
+               |}
+          """.stripMargin,
+      expectedCode =
+        """//> using dep org.scastie
+          |object M {
+          |  println()
+          |}
+          """.stripMargin,
+      isWorksheet = true
+    )
+  }
+
+  test("Text edit is proper for no worksheet inside using directives") {
+    testCompletionEdit(
+      testTargets = List(ScalaCli(BuildInfo.latest3)),
+      code = """//> using dep org.scast@@
+               |object M {
+               |  println()
+               |}
+          """.stripMargin,
+      expectedCode =
+        """//> using dep org.scastie
+          |object M {
+          |  println()
+          |}
+          """.stripMargin,
+      isWorksheet = false
+    )
+  }
+
+  // test("Scastie runtime dependency is visible in completions") {
+  //   val code = "imag@@"
+  //   convertScalaCliConfiguration(code).flatMap: config =>
+  //     testCompletion(
+  //       testTargets = List(config.scalaTarget),
+  //       dependencies = config.dependencies.map(dep => _ => dep),
+  //       code = code,
+  //       isWorksheet = true,
+  //     )
+  // }
+
+  test("Scala-CLI //> using scala is extracted properly") {
+    val code = """//> using scala 3.3.1
+                 |println("test")""".stripMargin
+    convertScalaCliConfiguration(
+      code = code,
+      expected = ScastieMetalsOptions(Set(), ScalaCli("3.3.1"), code).asRight
+    )
+  }
+
+  test("Scala-CLI //> using scala is mapped properly if not full version") {
+    val code = """//> using scala 3
+                 |println("test")""".stripMargin
+    convertScalaCliConfiguration(
+      code = code,
+      expected = ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.latest3), code).asRight
+    )
+  }
+
+
+  test("Scala-CLI //> using dep is extracted properly") {
+    val code = """//> using dep com.lihaoyi::os-lib:0.9.1
+                 |println("test")""".stripMargin
+
+    val target = ScalaCli(BuildInfo.latest3)
+    convertScalaCliConfiguration(
+      code = code,
+      expected = ScastieMetalsOptions(
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1")),
+        target,
+        code
+      ).asRight
+    )
+  }
+
+  test("Scala-CLI //> using lib is extracted properly") {
+    val code = """//> using lib com.lihaoyi::os-lib:0.9.1
+                 |println("test")""".stripMargin
+
+    val target = ScalaCli(BuildInfo.latest3)
+    convertScalaCliConfiguration(
+      code = code,
+      expected = ScastieMetalsOptions(
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1")),
+        target,
+        code
+      ).asRight
+    )
+  }
+
+  test("Scala-CLI //> using toolkit is extracted properly") {
+    val code = """//> using toolkit latest
+                 |println("test")""".stripMargin
+
+    val target = ScalaCli(BuildInfo.latest3)
+    convertScalaCliConfiguration(
+      code = code,
+      expected = ScastieMetalsOptions(
+        Set(ScalaDependency("org.scala-lang", "toolkit", target, "latest.stable")),
+        target,
+        code
+      ).asRight
+    )
+  }
+
+  test("Scala-CLI //> using toolkit specific version is extracted properly") {
+    val code = """//> using toolkit 0.2.1
+                 |println("test")""".stripMargin
+
+    val target = ScalaCli(BuildInfo.latest3)
+    convertScalaCliConfiguration(
+      code = code,
+      expected = ScastieMetalsOptions(
+        Set(ScalaDependency("org.scala-lang", "toolkit", target, "0.2.1")),
+        target,
+        code
+      ).asRight
+    )
+  }
+
+  // test("Scala-CLI //> using scalac options are extracted properly") {
+  //   val code = """//> using option -Yexplicit-nulls
+  //                |println("test")""".stripMargin
+
+  //   val target = ScalaCli(BuildInfo.latest3)
+  //   convertScalaCliConfiguration(
+  //     code = code,
+  //     expected = ScastieMetalsOptions(
+  //       Set(),
+  //       target,
+  //       code
+  //     ).asRight
+  //   )
+  // }
+
+  test("Scala-CLI //> both dep and lib are extracted properly") {
+    val code = """//> using lib com.lihaoyi::os-lib:0.9.1
+                 |//> using dep org.scastie::runtime-scala:1.0.0-SNAPSHOT
+                 |println("test")""".stripMargin
+
+    val target = ScalaCli(BuildInfo.latest3)
+    convertScalaCliConfiguration(
+      code = code,
+      expected = ScastieMetalsOptions(
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scastie", "runtime-scala", target, "1.0.0-SNAPSHOT")),
+        target,
+        code
+      ).asRight
+    )
+  }
+
+  test("Scala-CLI //> both dep list are extracted properly") {
+    val code = """//> using dep com.lihaoyi::os-lib:0.9.1 org.scastie::runtime-scala:1.0.0-SNAPSHOT
+                 |println("test")""".stripMargin
+
+    val target = ScalaCli(BuildInfo.latest3)
+    convertScalaCliConfiguration(
+      code = code,
+      expected = ScastieMetalsOptions(
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scastie", "runtime-scala", target, "1.0.0-SNAPSHOT")),
+        target,
+        code
+      ).asRight
+    )
+  }
+
+  test("Scala-CLI //> both scala, dep and lib are extracted properly") {
+    val code = """//> using lib com.lihaoyi::os-lib:0.9.1
+                 |//> using dep org.scastie::runtime-scala:1.0.0-SNAPSHOT
+                 |//> using scala 3.3.0
+                 |println("test")""".stripMargin
+
+    val target = ScalaCli("3.3.0")
+    convertScalaCliConfiguration(
+      code = code,
+      expected = ScastieMetalsOptions(
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scastie", "runtime-scala", target, "1.0.0-SNAPSHOT")),
+        target,
+        code
+      ).asRight
+    )
+  }
+
+  // test("Scala-CLI //> both options, scala, dep and lib are extracted properly") {
+  //   val code = """//> using lib com.lihaoyi::os-lib:0.9.1
+  //                |//> using dep org.scastie::runtime-scala:1.0.0-SNAPSHOT
+  //                |//> using scala 3.3.0
+  //                |//> using option -Yexplicit-nulls
+  //                |println("test")""".stripMargin
+
+  //   val target = ScalaCli("3.3.0")
+  //   convertScalaCliConfiguration(
+  //     code = code,
+  //     expected = ScastieMetalsOptions(
+  //       Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scastie", "runtime-scala", target, "1.0.0-SNAPSHOT")),
+  //       target,
+  //       code
+  //     ).asRight
+  //   )
+  // }
+
+  test("Scala-CLI: Completion with dependency given with `import dep` directives") {
+    val code = """//> using dep com.lihaoyi::os-lib:0.9.1
+             |object M {
+             |   os.pw@@
+             |}""".stripMargin
+
+    convertScalaCliConfiguration(code).flatMap: config =>
+      testCompletion(
+        testTargets = List(config.scalaTarget),
+        dependencies = config.dependencies.map(dep => _ => dep),
+        code = code,
+        expected = Set("pwd Path").asRight
+      )
+  }
+
 
   test("Scala-CLI: Hover on a dependency function works") {
-    testCompletionInfo(
-      testTargets = List(ScalaCli.default),
-      code = """//> using lib "com.lihaoyi::os-lib:0.9.1"
-            |object M {
-            |   os.pw@@d
-            |}
-          """.stripMargin,
-      expected = List(
-        "The current working directory for this process.".asRight
+    val code = """//> using dep com.lihaoyi::os-lib:0.9.1
+             |object M {
+             |   os.pw@@d
+             |}""".stripMargin
+
+    convertScalaCliConfiguration(code).flatMap: config =>
+      testCompletionInfo(
+        testTargets = List(config.scalaTarget),
+        dependencies = config.dependencies.map(dep => _ => dep),
+        code = code,
+        expected = List("The current working directory for this process.".asRight)
       )
-    )
   }
 }

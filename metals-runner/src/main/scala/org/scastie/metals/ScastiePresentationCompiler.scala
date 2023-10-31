@@ -35,12 +35,12 @@ case class ScastiePresentationCompiler(underlyingPC: PresentationCompiler) {
       for
         given ExecutionContext <- Async[F].executionContext
         computationFuture = Async[F].delay:
-          val lspOffsetParams = offsetParams.toOffsetParams
+          val (lspOffsetParams, insideWrapper) = offsetParams.toOffsetParams
           underlyingPC
             .complete(lspOffsetParams)
             .asScala
             .map:
-              _.toScalaCompletionList(offsetParams.isWorksheetMode)
+              _.toScalaCompletionList(offsetParams.isWorksheetMode, insideWrapper)
         result <- Async[F].fromFuture(computationFuture)
       yield result
 
@@ -73,7 +73,7 @@ case class ScastiePresentationCompiler(underlyingPC: PresentationCompiler) {
         given ExecutionContext <- Async[F].executionContext
         computationFuture = Async[F].delay {
           underlyingPC
-            .hover(offsetParams.toOffsetParams)
+            .hover(offsetParams.toOffsetParams._1)
             .asScala
             .map(_.toScala.map(_.toLsp).toRight(NoResult("There is no hover for given position")))
         }
@@ -83,6 +83,6 @@ case class ScastiePresentationCompiler(underlyingPC: PresentationCompiler) {
     inifiniteCompilationDetection(task)(offsetParams)
 
   def signatureHelp[F[_]: Async](offsetParams: ScastieOffsetParams): F[SignatureHelp] =
-    Async[F].fromFuture(Async[F].delay(underlyingPC.signatureHelp(offsetParams.toOffsetParams).asScala))
+    Async[F].fromFuture(Async[F].delay(underlyingPC.signatureHelp(offsetParams.toOffsetParams._1).asScala))
 
 }

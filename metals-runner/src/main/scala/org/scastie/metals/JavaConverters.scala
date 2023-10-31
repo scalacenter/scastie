@@ -51,14 +51,14 @@ object JavaConverters {
 
   extension (completions: CompletionList)
 
-    def toScalaCompletionList(isWorksheetMode: Boolean): ScalaCompletionList = {
+    def toScalaCompletionList(isWorksheetMode: Boolean, insideWrapper: Boolean): ScalaCompletionList = {
 
       def createInsertInstructions(completion: CompletionItem): Option[InsertInstructions] = {
         completion.getTextEdit().asScala match {
           case Left(textEdit) => Some(
               InsertInstructions(
                 textEdit.getNewText,
-                textEdit.getRange.toScalaRange(isWorksheetMode)
+                textEdit.getRange.toScalaRange(insideWrapper),
               )
             )
           case Right(insertReplace) =>

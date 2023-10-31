@@ -105,9 +105,8 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
     * If it is not a Scala-CLI target, it will return the untouched configuration.
     */
   def convertConfigurationFromScalaCli(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastieMetalsOptions] =
-    if configuration.scalaTarget.targetType == ScalaCli then
-      val res = Async[F].delay ( ScalaCliParser.getScalaTarget(configuration.code) )
-      EitherT.right(res)
+    if configuration.scalaTarget.targetType == ScalaTargetType.ScalaCli then
+      EitherT { Async[F].delay(ScalaCliParser.getScalaTarget(configuration.code)) }
     else
       EitherT.rightT(configuration)
 

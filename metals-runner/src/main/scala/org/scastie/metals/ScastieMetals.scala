@@ -35,10 +35,6 @@ object ScastieMetalsImpl:
 
       def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, ScastieMetalsOptions] =
         dispatcher.convertConfigurationFromScalaCli(config) >>=
-          (config =>
-            dispatcher.areDependenciesSupported(config) >>=
-              (_ => dispatcher.getCompiler(config).map(_ => config))
-          )
-
+          (config => dispatcher.areDependenciesSupported(config) >>= (_ => dispatcher.getCompiler(config).map(_ => config)))
 
     }

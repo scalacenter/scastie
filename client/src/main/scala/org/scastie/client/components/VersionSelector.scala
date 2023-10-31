@@ -6,7 +6,7 @@ import japgolly.scalajs.react._
 import vdom.all._
 import com.olegych.scastie.buildinfo.BuildInfo
 
-case class VersionSelector(scalaTarget: ScalaTarget, onChange: ScalaTarget ~=> Callback) {
+case class VersionSelector(scalaTarget: SbtScalaTarget, onChange: ScalaTarget ~=> Callback) {
   @inline def render: VdomElement = VersionSelector.versionSelectorHook(this)
 }
 
