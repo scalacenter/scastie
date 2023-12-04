@@ -562,10 +562,10 @@ markdown-it@^12.0.0:
     mdurl "^1.0.1"
     uc.micro "^1.0.5"
 
-marked-highlight@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/marked-highlight/-/marked-highlight-2.0.1.tgz#a2b48533df77ea73bec3895be98bae6160dceec3"
-  integrity sha512-LDUfR/zDvD+dJ+lQOWHkxvBLNxiXcaN8pBtwJ/i4pI0bkDC/Ef6Mz1qUrAuHXfnpdr2rabdMpVFhqFuU+5Mskg==
+marked-highlight@^2.0.8:
+  version "2.0.8"
+  resolved "https://registry.yarnpkg.com/marked-highlight/-/marked-highlight-2.0.8.tgz#e37a94d9069ab4363588c0ce845cf5058176fded"
+  integrity sha512-AcZbUPXMODcR504hOaGwGuiYJcPcWyxJIKjIY/a7xLC9e2q9MBG/yDJvon/6W7xTzvk9RDf3nE2w1FNLQG4diA==
 
 marked@^5.1.2:
   version "5.1.2"
