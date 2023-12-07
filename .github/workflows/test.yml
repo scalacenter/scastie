@@ -16,7 +16,7 @@ jobs:
     - name: Start mongodb
       uses: supercharge/mongodb-github-action@1.10.0
 
-    - uses: cachix/install-nix-action@v23
+    - uses: cachix/install-nix-action@v24
       with:
         nix_path: nixpkgs=channel:nixos-22.11
     - name: Run tests
