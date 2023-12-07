@@ -11,10 +11,13 @@
     max-width: 600px !important;
   }
 
-  .cm-completionInfo, .cm-tooltip-hover > :not(.cm-tooltip-lint) {
+  .cm-completionInfo, .cm-tooltip-hover {
     font-family: $font-family;
     overflow: auto;
     max-height: 500px;
+  }
+
+  .cm-completionInfo, .cm-tooltip-hover > :not(.cm-tooltip-lint) {
     font-size: 14px;
 
     ul {
@@ -27,6 +30,8 @@
 
   .cm-tooltip {
     max-width: 70%;
+    display: grid;
+    flex-wrap: wrap;
 
     @media only screen and (max-width: #{$mobile-width}) {
       min-width: 95%;
@@ -43,9 +48,7 @@
       code {
         max-width: 96%;
         display: inline-block;
-        overflow-y: scroll;
       }
-
     }
 
     strong {
