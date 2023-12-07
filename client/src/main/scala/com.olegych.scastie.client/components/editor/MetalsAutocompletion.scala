@@ -123,16 +123,17 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
 
   private val completionsF: js.Function1[CompletionContext, js.Promise[CompletionResult]] = {
     ctx => ifSupported {
-      val word: anon.Text = ctx.matchBefore(jsRegex).asInstanceOf[anon.Text]
+      val word = ctx.matchBefore(jsRegex).asInstanceOf[anon.Text]
 
-      previousWord = word.text
-
-      val request = toLSPRequest(ctx.state.doc.toString(), ctx.pos.toInt)
-      val from = if (word.text.headOption == Some('.')) word.from + 1 else word.from
-
-      if (!ctx.explicit || (word == null || (word.from == word.to))) {
+      if (!ctx.explicit || (word == null || word.text.isEmpty || (word.from == word.to))) {
+        previousWord = ""
         Future.successful(null)
       } else {
+        previousWord = word.text
+
+        val request = toLSPRequest(ctx.state.doc.toString(), ctx.pos.toInt)
+        val from = if (word.text.headOption == Some('.')) word.from + 1 else word.from
+
         makeRequest(request, "complete").map(maybeText =>
           parseMetalsResponse[api.ScalaCompletionList](maybeText).map { completionList =>
             val completions = completionList.items.map {
