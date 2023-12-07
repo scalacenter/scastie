@@ -16,13 +16,12 @@ class SyntaxHighlightingPlugin(editorView: hooks.Hooks.UseStateF[CallbackTo, Edi
   val location = dom.window.location
   // this is workaround until we migrate all services to proper docker setup or unify the servers
   val apiBase = if (location.hostname == "localhost") {
-    location.protocol ++ "//" ++ location.hostname + ":" ++ "8080"
+    location.protocol ++ "//" ++ location.hostname + ":" ++ "9000"
   } else if (location.protocol == "file:") {
-    "http://localhost:8080"
+    "http://localhost:9000"
   } else {
     "https://scastie.scala-lang.org"
   }
-
 
   val initOptions = new js.Object {
     val apiBaseField = apiBase
@@ -34,15 +33,23 @@ class SyntaxHighlightingPlugin(editorView: hooks.Hooks.UseStateF[CallbackTo, Edi
     .toFuture
     .flatMap(_ => Language.load(s"$apiBase/public/tree-sitter-scala.wasm").toFuture)
 
-  fetchTSWasm.map { language =>
+
+  val highlightQuery = dom.fetch(s"$apiBase/public/highlights.scm")
+
+  for {
+    language <- fetchTSWasm
+    query <- highlightQuery.toFuture
+    text <- query.text().toFuture
+  } yield {
     val parser = new TreesitterParser()
     parser.setLanguage(language)
-    switchToTreesitterParser(parser, language)
+    val query = language.query(text)
+    switchToTreesitterParser(parser, language, query)
   }
 
-  def switchToTreesitterParser(scalaParser: Parser, language: Language): Unit = {
+  def switchToTreesitterParser(scalaParser: Parser, language: Language, query: Query): Unit = {
     val extension = ViewPlugin.define(editorView =>
-      new SyntaxHighlightingHandler(scalaParser, language, editorView.state.doc.toString),
+      new SyntaxHighlightingHandler(scalaParser, language, query, editorView.state.doc.toString),
       PluginSpec[SyntaxHighlightingHandler]().setDecorations(_.decorations)
     ).extension
 

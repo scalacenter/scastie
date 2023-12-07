@@ -9,8 +9,7 @@ import scala.collection.mutable.ListBuffer
 
 import scalajs.js
 
-class SyntaxHighlightingHandler(parser: Parser, language: Language, initialState: String) extends js.Object {
-  val query = language.query(HighlightQuery.queryString)
+class SyntaxHighlightingHandler(parser: Parser, language: Language, query: Query, initialState: String) extends js.Object {
   val queryCaptureNames = query.captureNames
 
   var tree = parser.parse(initialState)
