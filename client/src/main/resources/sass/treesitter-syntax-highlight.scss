@@ -1,0 +1,121 @@
+// Solarized theme for code-mirror: http://ethanschoonover.com/solarized
+// Solarized color pallette: http://ethanschoonover.com/solarized/img/solarized-palette.png
+
+@mixin treesitterSyntaxHighlight($class) {
+
+  $TSAnnotation         : $base0F;
+  $TSAttribute          : $base0A;
+  $TSBoolean            : $base09;
+  $TSCharacter          : $base08;
+  $TSComment            : $base03; //  + " " + "italic"
+  $TSConstructor        : $base0D;
+  $TSConditional        : $base0E;
+  $TSConstant           : $base09;
+  $TSConstBuiltin       : $base09; //+ " " + "italic"
+  $TSConstMacro         : $base08;
+  $TSError              : $base08;
+  $TSException          : $base08;
+  $TSField              : $base05;
+  $TSFloat              : $base09;
+  $TSFunction           : $base0D;
+  $TSFuncBuiltin        : $base0D; // + " " + "italic"
+  $TSFuncMacro          : $base08;
+  $TSInclude            : $base0D;
+  $TSKeyword            : $base0E;
+  $TSKeywordFunction    : $base0E;
+  $TSKeywordOperator    : $base0E;
+  $TSLabel              : $base0A;
+  $TSMethod             : $base0D;
+  $TSNamespace          : $base08;
+  $TSNone               : $base05;
+  $TSNumber             : $base09;
+  $TSOperator           : $base05;
+  $TSParameter          : $base05;
+  $TSParameterReference : $base05;
+  $TSProperty           : $base05;
+  $TSPunctDelimiter     : $base0F;
+  $TSPunctBracket       : $base05;
+  $TSPunctSpecial       : $base05;
+  $TSRepeat             : $base0E;
+  $TSString             : $base0B;
+  $TSStringRegex        : $base0C;
+  $TSStringEscape       : $base0C;
+  $TSSymbol             : $base0B;
+  $TSTag                : $base08;
+  $TSTagDelimiter       : $base0F;
+  $TSText               : $base05;
+  $TSEmphasis           : $base09; // + " " + "italic"
+  $TSUnderline          : $base00; //+ " " + "underline"
+  $TSStrike             : $base00; //+ " " + "strikethrough"
+  $TSTitle              : $base0D;
+  $TSLiteral            : $base09;
+  $TSURI                : $base09; //+ " " + "underline"
+  $TSType               : $base0A;
+  $TSTypeBuiltin        : $base0A; //+ " " + "italic"
+  $TSVariable           : $base08;
+  $TSVariableBuiltin    : $base08; //+ " " + "italic"
+
+  .cm-s-solarized {
+    color-profile: sRGB;
+    rendering-intent: auto;
+    .cm-line { color: $base05; }
+
+
+    .comment { color: $TSComment; }
+    .error { color: $TSError; }
+    .none { color: $TSNone; }
+    .operator { color: $TSOperator; }
+    .punctuation-delimiter { color: $TSPunctDelimiter; }
+    .punctuation-bracket { color: $TSPunctBracket; }
+    .punctuation-special { color: $TSPunctSpecial; }
+    .string { color: $TSString; }
+    .string-regex { color: $TSStringRegex; }
+    .string-escape { color: $TSStringEscape; }
+    .character { color: $TSCharacter; }
+    .boolean { color: $TSBoolean; }
+    .number { color: $TSNumber; }
+    .float { color: $TSFloat; }
+    .function { color: $TSFunction; }
+    .function-call { color: $TSFunction; }
+    .function-builtin { color: $TSFuncBuiltin; }
+    .function-macro { color: $TSFuncMacro; }
+    .method { color: $TSMethod; }
+    .method-call { color: $TSMethod !important; }
+    .constructor { color: $TSConstructor !important; }
+    .parameter { color: $TSParameter; }
+    .keyword { color: $TSKeyword; }
+    .keyword-function { color: $TSKeywordFunction; }
+    .keyword-operator { color: $TSKeywordOperator; }
+    .keyword-return { color: $TSKeyword; }
+    .conditional { color: $TSConditional; }
+    .repeat { color: $TSRepeat; }
+    .label { color: $TSLabel; }
+    .include { color: $TSInclude; }
+    .exception { color: $TSException; }
+    .type { color: $TSType; }
+    .type-builtin { color: $TSTypeBuiltin; }
+    .type-qualifier { color: $TSKeyword; }
+    .type-definition { color: $TSType; }
+    .attribute { color: $TSAttribute; }
+    .field { color: $TSField; }
+    .property { color: $TSProperty; }
+    .variable { color: $TSVariable; }
+    .variable-builtin { color: $TSVariableBuiltin; }
+    .constant { color: $TSConstant; }
+    .constant-builtin { color: $TSConstant; }
+    .constant-macro { color: $TSConstant; }
+    .namespace { color: $TSNamespace; }
+    .symbol { color: $TSSymbol; }
+    .text { color: $TSText; }
+    .text-strong { font-weight: bold; }
+    .text-emphasis { color: $TSEmphasis; }
+    .text-underline { color: $TSUnderline; }
+    .text-strike { color: $TSStrike; }
+    .text-title { color: $TSTitle; }
+    .text-literal { color: $TSLiteral; }
+    .text-reference { color: $TSParameterReference; }
+    .tag { color: $TSTag; }
+    .tag-attribute { color: $TSAttribute; }
+    .tag-delimiter { color: $TSTagDelimiter; }
+  }
+}

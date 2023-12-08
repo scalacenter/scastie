@@ -9,7 +9,6 @@ import org.scalajs.dom.Element
 import org.scalajs.dom.HTMLElement
 import typings.codemirrorAutocomplete.mod._
 import typings.codemirrorCommands.mod._
-import typings.codemirrorLanguage.mod
 import typings.codemirrorLanguage.mod._
 import typings.codemirrorLint.codemirrorLintStrings
 import typings.codemirrorLint.mod._
@@ -55,6 +54,8 @@ object CodeEditor {
 
   private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback =
     ref.foreachCB(divRef => {
+
+      val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
       val extensions = js.Array[Any](
         lineNumbers(),
         highlightSpecialChars(),
@@ -75,18 +76,16 @@ object CodeEditor {
         DecorationProvider(props),
         EditorState.tabSize.of(2),
         Prec.highest(EditorKeymaps.keymapping(props)),
-        InteractiveProvider.interactive.of(
-          InteractiveProvider(props).extension
-        ),
-        mod.StreamLanguage.define(typings.codemirrorLegacyModes.modeClikeMod.scala_),
+        InteractiveProvider.interactive.of(InteractiveProvider(props).extension),
         SyntaxHighlightingTheme.highlightingTheme,
         lintGutter(),
         OnChangeHandler(props.codeChange),
+        syntaxHighlighting.syntaxHighlightingExtension.of(syntaxHighlighting.fallbackExtension),
       )
 
       val editorStateConfig = EditorStateConfig()
-        .setDoc(props.value)
         .setExtensions(extensions)
+        .setDoc(props.value)
 
       val editor = new EditorView(EditorViewConfig()
         .setState(EditorState.create(editorStateConfig))
@@ -111,6 +110,7 @@ object CodeEditor {
           })
 
       })
+
     val runtimeErrors = props.runtimeError.map(runtimeError => {
       val line = runtimeError.line.getOrElse(1).min(doc.lines.toInt)
       val lineInfo = doc.line(line)
@@ -152,7 +152,7 @@ object CodeEditor {
       .useRef(Ref[Element])
       .useRef[Option[CodeEditor]](None)
       .useState(new EditorView())
-      .useLayoutEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
+      .useEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
       .useEffectBy(
         (props, ref, prevProps, editorView) => updateComponent(props, ref.value, prevProps.value, editorView) >> prevProps.set(Some(props))
       )

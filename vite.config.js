@@ -56,7 +56,7 @@ const proxy = {
       // regex matching snippet ids
       const snippet = /(\/[A-Za-z0-9]{22}|\/[A-Za-z0-9]{22}\/([A-Za-z0-9])*[/(0-9)*])/;
       const snippetOld = /(\/[0-9]+)/;
-      const backendUrls = /(\/api\/|\/login|\/logout)/;
+      const backendUrls = /(\/api\/|\/login|\/logout|\/*.wasm|\/*.scm)/;
 
       if(!backendUrls.test(req.url)) {
         if (snippet.test(req.url) || snippetOld.test(req.url)) {

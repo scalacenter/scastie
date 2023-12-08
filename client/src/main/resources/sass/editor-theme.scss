@@ -50,4 +50,64 @@
   .editor-mobile {
     background-color: $sidebar-background;
   }
+
+  .cm-s-solarized {
+    &.cm-s-dark {
+      color: $base07;
+
+      &.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection {
+        background: rgba(255, 255, 255, 0.10);
+      }
+
+      .cm-diagnostic, .cm-tooltip {
+        background-color: $sidebar-background;
+        border: 1px solid $console-background;
+      }
+
+      .cm-scrollbar-filler {
+        background-color:  $base07;
+      }
+
+      .inline {
+        background-color: $console-background;
+      }
+    }
+
+    &.cm-s-light {
+      color: $base04;
+
+      .cm-matchhighlight {
+        border-bottom-color: $base01;
+      }
+
+      .cm-gutter-filler {
+        background-color: $base07;
+      }
+
+      &.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection {
+        background: rgba(0, 0, 0, 0.10);
+      }
+
+      .cm-scrollbar-filler {
+        background-color:  $base07;
+      }
+
+      .cm-widget .fold,
+      .cm-linewidget .compilation-info,
+      .cm-linewidget .runtime-error,
+      .cm-linewidget .line,
+      .cm-linewidget .inline {
+        background-color: $base01;
+      }
+
+      .cm-dialog {
+        background-color: $base01;
+        color: $base05;
+      }
+    }
+
+    &.cm {
+      box-shadow: none;
+    }
+  }
 }

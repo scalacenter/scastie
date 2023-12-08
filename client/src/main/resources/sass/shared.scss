@@ -1,7 +1,6 @@
 @import "commonvars";
 
 @import "codemirror";
-@import "solarized";
 @import "modal";
 @import "editor";
 @import "editor-theme";
@@ -9,8 +8,8 @@
 @import "tooltip";
 @import "metals-status-indicator";
 @import "markdown";
+@import "treesitter-syntax-highlight";
 
-@include solarized();
 @include editor();
 
 @mixin sharedStyles($class) {
@@ -18,9 +17,12 @@
     .app.#{$class} {
       @include modal($class);
       @include editorTheme($class);
+      @include treesitterSyntaxHighlight($class);
       @include tooltip($class);
       @include metalsStatusIndicator($class);
       @include markdown($class);
+
+
     }
   }
 }

@@ -83,7 +83,16 @@ class FrontPageRoutes(dispatchActor: ActorRef, production: Boolean, hostname: St
             path("public" / "embedded.css")(
               getFromResource("public/embedded/style.css", ContentType(MediaTypes.`text/css`, HttpCharsets.`UTF-8`))
             ),
-          ),
+            path("public" / "tree-sitter.wasm")(
+              getFromResource("public/tree-sitter.wasm", ContentType(MediaType.applicationBinary("wasm", MediaType.Compressible, "wasm")))
+            ),
+            path("public" / "tree-sitter-scala.wasm")(
+              getFromResource("public/tree-sitter-scala.wasm", ContentType(MediaType.applicationBinary("wasm", MediaType.Compressible, "wasm")))
+            ),
+            path("public" / "highlights.scm")(
+              getFromResource("public/highlights.scm", ContentType(MediaTypes.`text/css`, HttpCharsets.`UTF-8`))
+            ),
+          )
         ),
         respondWithHeader(`Cache-Control`(CacheDirectives.immutableDirective))(
           path("public" / Remaining)(
