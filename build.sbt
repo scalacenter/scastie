@@ -229,7 +229,7 @@ lazy val server = project
       }
 
       sbt.IO.copyFile(treeSitterScalaHiglight, outputWasmDirectory / treeSitterScalaHiglightName)
-      sbt.IO.move(treeSitterScalaWasm, outputWasmDirectory / treeSitterOutputName)
+      sbt.IO.move(treeSitterScalaWasm, outputWasmDirectory / treeSitterScalaOutputName)
       sbt.IO.copyFile(treeSitterWasm, outputWasmDirectory / treeSitterOutputName)
       s.log.success(s"Copied $treeSitterScalaHiglight to ${(outputWasmDirectory / treeSitterScalaHiglightName).getAbsolutePath}")
       s.log.success(s"Copied $treeSitterScalaWasm to ${(outputWasmDirectory / treeSitterScalaOutputName).getAbsolutePath}")
