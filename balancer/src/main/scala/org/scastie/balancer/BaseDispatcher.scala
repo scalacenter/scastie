@@ -10,8 +10,8 @@ import scala.concurrent.Future
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
-// import scala.collection.mutable
 import org.scastie.api.RunnerPing
+import scala.collection.concurrent.TrieMap
 
 abstract class BaseDispatcher[R, S](config: Config) extends Actor with ActorLogging {
   case class SocketAddress(host: String, port: Int)
@@ -22,7 +22,7 @@ abstract class BaseDispatcher[R, S](config: Config) extends Actor with ActorLogg
     key: String,
     runnerName: String,
     actorName: String
-  ): collection.mutable.Map[SocketAddress, String] = {
+  ): TrieMap[SocketAddress, String] = {
     val host = config.getString(s"remote-$key-hostname")
     val portStart = config.getInt(s"remote-$key-ports-start")
     val portSize = config.getInt(s"remote-$key-ports-size")
@@ -32,7 +32,7 @@ abstract class BaseDispatcher[R, S](config: Config) extends Actor with ActorLogg
         (addr, getRemoteActorPath(runnerName, addr, actorName))
       })
 
-    collection.mutable.Map.from(result)
+    TrieMap.from(result)
   }
 
   def getRemoteActorPath(
@@ -51,7 +51,7 @@ abstract class BaseDispatcher[R, S](config: Config) extends Actor with ActorLogg
     key: String,
     runnerName: String,
     actorName: String
-    ): collection.mutable.Map[SocketAddress, ActorSelection] = {
+    ): TrieMap[SocketAddress, ActorSelection] = {
       getRemoteActorsPath(key, runnerName, actorName).map {
         case (address, url) => (address, connectRunner(url))
       }
