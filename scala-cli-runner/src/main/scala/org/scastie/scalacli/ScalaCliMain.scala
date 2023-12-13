@@ -22,6 +22,8 @@ object ScalaCliMain {
 
     val system = ActorSystem("ScalaCliRunner")
 
+    assert(scala.sys.process.Process("which scala-cli").! == 0, "scala-cli is not installed")
+
     val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
     logger.info("akka tcp config")
     logger.info("  '" + config2.getString("hostname") + "'")
@@ -30,21 +32,29 @@ object ScalaCliMain {
     val config = ConfigFactory.load().getConfig("org.scastie")
 
     val serverConfig = config.getConfig("web")
-    val sbtConfig = config.getConfig("sbt")
+    val scalaCliConfig = config.getConfig("scala-cli")
 
-    val isProduction = true
 
-    // TODO: check if production
-    // Create appropriate config files
+    val isProduction = scalaCliConfig.getBoolean("production")
+    val isReconnecting = scalaCliConfig.getBoolean("reconnect")
+
     if (isProduction) {
       val pid = writeRunningPid("RUNNING_PID")
-      logger.info(s"Starting scliRunner pid: $pid")
+      logger.info(s"Starting scala-cli runner pid: $pid")
     }
 
     val runTimeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(
-        sbtConfig.getDuration("runTimeout", timeunit),
+        scalaCliConfig.getDuration("runTimeout", timeunit),
+        timeunit
+      )
+    }
+
+    val compilationTimeout = {
+      val timeunit = TimeUnit.SECONDS
+      FiniteDuration(
+        scalaCliConfig.getDuration("compilationTimeout", timeunit),
         timeunit
       )
     }
@@ -53,8 +63,8 @@ object ScalaCliMain {
     val reconnectInfo = ReconnectInfo(
       serverHostname = serverConfig.getString("hostname"),
       serverAkkaPort = serverConfig.getInt("akka-port"),
-      actorHostname = sbtConfig.getString("hostname"),
-      actorAkkaPort = sbtConfig.getInt("akka-port")
+      actorHostname = scalaCliConfig.getString("hostname"),
+      actorAkkaPort = scalaCliConfig.getInt("akka-port")
     )
 
     system.actorOf(
@@ -63,11 +73,20 @@ object ScalaCliMain {
           isProduction = isProduction,
           readyRef = None,
           runTimeout = runTimeout,
+          compilationTimeout = compilationTimeout,
           reconnectInfo = Some(reconnectInfo)
         )
       ),
       name = "ScalaCliActor"
     )
+
+    logger.info("  runTimeout: {}", runTimeout)
+    logger.info("  compilationTimeout: {}", compilationTimeout)
+    logger.info("  isProduction: {}", isProduction)
+    logger.info("  runner hostname: {}", reconnectInfo.actorHostname)
+    logger.info("  runner port: {}", reconnectInfo.actorAkkaPort)
+    logger.info("  server hostname: {}", reconnectInfo.serverHostname)
+    logger.info("  server port: {}", reconnectInfo.serverAkkaPort)
 
     logger.info("ScalaCliActor started")
 
