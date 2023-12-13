@@ -103,7 +103,9 @@ class ScalaCliActor(
       case Left(BspTaskTimeout(msg)) =>
         Process("scala-cli --power bloop exit").!
         Process("scala-cli --power bloop start").!
-        sendProgress(progressActor, author, buildErrorProgress(snippetId, msg, progressId.getAndIncrement()))
+        sendProgress(progressActor, author, buildErrorProgress(snippetId, msg, progressId.getAndIncrement(), isTimeout = true))
+      case Left(RuntimeTimeout(msg)) =>
+        sendProgress(progressActor, author, buildErrorProgress(snippetId, msg, progressId.getAndIncrement(), isTimeout = true))
       case Left(error) =>
         sendProgress(progressActor, author, buildErrorProgress(snippetId, error.msg, progressId.getAndIncrement()))
     }.recover {
@@ -122,11 +124,12 @@ class ScalaCliActor(
       }
   }
 
-  private def buildErrorProgress(snippetId: SnippetId, error: String, progressId: Long) = {
+  private def buildErrorProgress(snippetId: SnippetId, error: String, progressId: Long, isTimeout: Boolean = false) = {
     SnippetProgress.default.copy(
       id = Some(progressId),
       ts = Some(Instant.now.toEpochMilli),
       snippetId = Some(snippetId),
+      isTimeout = isTimeout,
       isDone = true,
       compilationInfos = List(Problem(Error, Some(-1), error)),
       buildOutput = Some(ProcessOutput(error, ProcessOutputType.StdErr, None))

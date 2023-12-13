@@ -18,8 +18,4 @@ object Problem {
   implicit val problemDecoder: Decoder[Problem] = deriveDecoder[Problem]
 }
 
-case class Problem(
-    severity: Severity,
-    line: Option[Int],
-    message: String
-)
+case class Problem(severity: Severity, line: Option[Int], message: String)
