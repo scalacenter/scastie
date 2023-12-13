@@ -1,4 +1,4 @@
-package com.olegych.scastie.client.components.editor
+package org.scastie.client.components.editor
 
 import typings.webTreeSitter.mod._
 import org.scalablytyped.runtime.StObject

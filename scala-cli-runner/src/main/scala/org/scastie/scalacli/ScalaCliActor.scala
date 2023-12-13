@@ -35,13 +35,12 @@ import java.nio.file.Path
 
 class ScalaCliActor(
                isProduction: Boolean,
-               runTimeout: FiniteDuration,
                readyRef: Option[ActorRef],
                override val reconnectInfo: Option[ReconnectInfo],
                coloredStackTrace: Boolean = true,
                workingDir: Path = Files.createTempDirectory("scastie"),
-               compilationTimeout: FiniteDuration = 30.seconds, // move this to .conf
-               runtimeTimeout: FiniteDuration = 30.seconds
+               compilationTimeout: FiniteDuration = 30.seconds,
+               runTimeout: FiniteDuration = 30.seconds
       ) extends Actor with ActorLogging with ActorReconnecting {
 
 

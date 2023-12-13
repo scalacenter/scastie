@@ -1,4 +1,4 @@
-package com.olegych.scastie.client.components.editor
+package org.scastie.client.components.editor
 
 import typings.codemirrorState.mod.ChangeSet
 import typings.codemirrorState.mod._
