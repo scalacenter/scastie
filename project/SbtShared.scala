@@ -60,7 +60,7 @@ object SbtShared {
   val gitIsDirtyNow = gitIsDirty()
 
   val versionNow = {
-    val base = "0.30.0"
+    val base = "1.0.0"
     if (gitIsDirtyNow) base + "-SNAPSHOT"
     else {
       val hash = gitHashNow
