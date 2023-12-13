@@ -14,5 +14,6 @@ stdenv.mkDerivation {
         pkgs.yarn
         pkgs.bash
         sbtWithJRE
+        scala-cli
       ];
 }
