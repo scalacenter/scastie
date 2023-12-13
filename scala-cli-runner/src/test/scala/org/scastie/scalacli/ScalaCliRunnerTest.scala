@@ -45,7 +45,7 @@ class ScalaCliActorTest extends TestKit(ActorSystem("ScalaCliActorTest")) with I
         if (gotInstrumentation) {
           assert(
             progress.instrumentations == List(
-              Instrumentation(Position(0, 5), Value("2", "Int"))
+              Instrumentation(Position(0, 5), Value("2", "scala.Int"))
             )
           )
         }

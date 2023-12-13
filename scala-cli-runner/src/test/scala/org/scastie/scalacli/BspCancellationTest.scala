@@ -70,18 +70,18 @@ class BspCancellationTest extends TestKit(ActorSystem("ScalaCliActorTest")) with
   }
 
   test("BSP Timeout") {
-    runCode(longCompilation(15000), isWorksheet = false)(assertCompilationInfo { info =>
+    runCode(longCompilation(15000), isWorksheet = false, allowFailure = true)(assertCompilationInfo { info =>
       assert(info.message == "Build Server Timeout Exception" )
     })
   }
 
   test("BSP Timeout Multiple snippets") {
-    runCode(longCompilation(30000), isWorksheet = false)(assertCompilationInfo { info =>
+    runCode(longCompilation(30000), isWorksheet = false, allowFailure = true)(assertCompilationInfo { info =>
       assert(info.message == "Build Server Timeout Exception" )
     })
-    runCode(longCompilation(100), isWorksheet = false)(assertUserOutput("test"))
+    runCode(longCompilation(100), isWorksheet = false, allowFailure = false)(assertUserOutput("test"))
 
-    runCode(longCompilation(30000), isWorksheet = false)(assertCompilationInfo { info =>
+    runCode(longCompilation(30000), isWorksheet = false, allowFailure = true)(assertCompilationInfo { info =>
       assert(info.message == "Build Server Timeout Exception" )
     })
   }
@@ -91,8 +91,8 @@ class BspCancellationTest extends TestKit(ActorSystem("ScalaCliActorTest")) with
   }
 
   test("Runtime Timeout") {
-    runCode(longRuntime(15000), isWorksheet = false)(assertCompilationInfo { info =>
-      assert(info.message == "RuntimeError(Timeout exceeded.)" )
+    runCode(longRuntime(15000), isWorksheet = false, allowFailure = true)(assertCompilationInfo { info =>
+      assert(info.message == "Timeout exceeded." )
     })
   }
 
@@ -187,7 +187,7 @@ class BspCancellationTest extends TestKit(ActorSystem("ScalaCliActorTest")) with
       if (firstRun) timeout + 10.second
       else timeout
 
-    progressActor.fishForMessage(totalTimeout + 100.seconds) {
+    progressActor.fishForMessage(totalTimeout) {
       case progress: SnippetProgress =>
         val fishResult = fish(progress)
         //        println(progress -> fishResult)

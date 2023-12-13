@@ -20,29 +20,30 @@ import java.util.concurrent.Executors
 import akka.actor.Address
 import akka.actor.ActorSystem
 import akka.util.Timeout
+import java.util.concurrent.atomic.AtomicReference
 
 class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorRef)
   extends BaseDispatcher[ActorSelection, SbtState](config) with Actor {
 
   private val parent = context.parent
 
-  var remoteSbtSelections = getRemoteServers("sbt", "SbtRunner", "SbtActor")
+  val remoteSbtSelections = getRemoteServers("sbt", "SbtRunner", "SbtActor")
 
-  var balancer: SbtBalancer = {
+  val balancer: AtomicReference[SbtBalancer] = {
     val sbtServers = remoteSbtSelections.to(Vector).map {
       case (_, ref) =>
         val state: SbtState = SbtState.Unknown
         Server(ref, SbtInputs.default, state)
     }
 
-    LoadBalancer(servers = sbtServers)
+    new AtomicReference(LoadBalancer(servers = sbtServers))
   }
 
   private def updateSbtBalancer(newBalancer: SbtBalancer): Unit = {
     if (balancer != newBalancer) {
       statusActor ! SbtLoadBalancerUpdate(newBalancer)
     }
-    balancer = newBalancer
+    balancer.set(newBalancer)
     ()
   }
 
@@ -57,7 +58,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
 
     val task = Task(sbtInputs, Ip(ip), TaskId(snippetId), Instant.now)
 
-    balancer.add(task) match {
+    balancer.get.add(task) match {
       case Some((server, newBalancer)) =>
         updateSbtBalancer(newBalancer)
 
@@ -80,7 +81,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
 
     case done: Done =>
       done.progress.snippetId.foreach { sid =>
-        val newBalancer = balancer.done(TaskId(sid))
+        val newBalancer = balancer.get.done(TaskId(sid))
         newBalancer match {
           case Some(newBalancer) =>
             updateSbtBalancer(newBalancer)
@@ -94,7 +95,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
       log.info("SbtUp")
 
     case format: FormatRequest =>
-      val server = balancer.getRandomServer
+      val server = balancer.get.getRandomServer
       server.foreach(_.ref.tell(format, sender()))
       ()
 
@@ -107,9 +108,9 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
       } {
         log.warning("removing disconnected: {}", ref)
         val previousRemoteSbtSelections = remoteSbtSelections
-        remoteSbtSelections = remoteSbtSelections - (SocketAddress(host, port))
+        remoteSbtSelections.remove(SocketAddress(host, port))
         if (previousRemoteSbtSelections != remoteSbtSelections) {
-          updateSbtBalancer(balancer.removeServer(ref))
+          updateSbtBalancer(balancer.get.removeServer(ref))
         }
       }
 
@@ -124,19 +125,19 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
         val ref = connectRunner(getRemoteActorPath("SbtRunner", address, "SbtActor"))
         val sel = SocketAddress(runnerHostname, runnerAkkaPort) -> ref
 
-        remoteSbtSelections = remoteSbtSelections + sel
+        remoteSbtSelections.addOne(sel)
 
         val state: SbtState = SbtState.Unknown
 
         updateSbtBalancer(
-          balancer.addServer(
+          balancer.get.addServer(
             Server(ref, SbtInputs.default, state)
           )
         )
       }
 
     case ReceiveStatus(requester) =>
-      sender() ! LoadBalancerInfo(balancer, requester)
+      sender() ! LoadBalancerInfo(balancer.get, requester)
 
     case Run(InputsWithIpAndUser(sbtTask: SbtInputs, userTrace), snippetId) =>
       run0(sbtTask, userTrace, snippetId)

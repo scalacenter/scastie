@@ -90,7 +90,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path) {
       case Left(value) =>
         log.error(s"Error while instrumenting: $value")
         inputs
-    } // TODO !
+    }
 
     Files.write(scalaMain, instrumentedInput.code.getBytes)
     bspClient.build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target).value.recover {

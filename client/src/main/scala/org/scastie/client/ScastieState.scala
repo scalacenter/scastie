@@ -371,16 +371,8 @@ case class ScastieState(
     }
   }
 
-  def setInputs(inputs: BaseInputs): ScastieState = {
-    println(inputs)
-    inputs match {
-      case sbtInputs: SbtInputs => println(sbtInputs.librariesFromList)
-      case _ => println("Dupa")
-    }
-    val x = copyAndSave(inputs = inputs)
-    println(inputs)
-    x
-  }
+  def setInputs(inputs: BaseInputs): ScastieState =
+    copyAndSave(inputs = inputs)
 
   def setSbtConfigExtra(config: String): ScastieState =
     modifySbtInputs(_.copy(sbtConfigExtra = config))
@@ -395,28 +387,22 @@ case class ScastieState(
     copyAndSave(view = newView)
 
   def setTarget(target: ScalaTarget): ScastieState =
-    copyAndSave(
-      inputs = inputs.setTarget(target),
-      inputsHasChanged = true
-    )
+    copyAndSave(inputs = inputs.setTarget(target), inputsHasChanged = true)
 
   def clearDependencies: ScastieState =
     modifySbtInputs(_.clearDependencies)
 
-  def addScalaDependency(scalaDependency: ScalaDependency, project: Project): ScastieState = {
+  def addScalaDependency(scalaDependency: ScalaDependency, project: Project): ScastieState =
     modifySbtInputs(_.addScalaDependency(scalaDependency, project))
-  }
 
-  def setScalaDependencies(deps: List[(ScalaDependency, Project)]) = {
+  def setScalaDependencies(deps: List[(ScalaDependency, Project)]) =
     modifySbtInputs(_.copy(librariesFromList = deps))
-  }
 
   def removeScalaDependency(scalaDependency: ScalaDependency): ScastieState =
     modifySbtInputs(_.removeScalaDependency(scalaDependency))
 
-  def updateDependencyVersion(scalaDependency: ScalaDependency, version: String): ScastieState = {
+  def updateDependencyVersion(scalaDependency: ScalaDependency, version: String): ScastieState =
     modifySbtInputs(_.updateScalaDependency(scalaDependency, version))
-  }
 
   def scalaJsScriptLoaded: ScastieState = copyAndSave(scalaJsContent = None)
 
@@ -431,11 +417,8 @@ case class ScastieState(
     )
   }
 
-  def clearOutputsPreserveConsole: ScastieState = {
-    copyAndSave(
-      outputs = Outputs.default.copy(consoleOutputs = outputs.consoleOutputs),
-    )
-  }
+  def clearOutputsPreserveConsole: ScastieState =
+    copyAndSave(outputs = Outputs.default.copy(consoleOutputs = outputs.consoleOutputs))
 
   def closeModals: ScastieState =
     copyAndSave(modalState = ModalState.allClosed)
