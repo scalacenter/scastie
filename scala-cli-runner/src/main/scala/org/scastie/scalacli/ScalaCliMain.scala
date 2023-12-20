@@ -33,7 +33,7 @@ object ScalaCliMain {
 
     val serverConfig = config.getConfig("web")
     val scalaCliConfig = config.getConfig("scala-cli")
-
+    val sharedRunnersConfig = config.getConfig("runners")
 
     val isProduction = scalaCliConfig.getBoolean("production")
     val isReconnecting = scalaCliConfig.getBoolean("reconnect")
@@ -46,7 +46,7 @@ object ScalaCliMain {
     val runTimeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(
-        scalaCliConfig.getDuration("runTimeout", timeunit),
+        sharedRunnersConfig.getDuration("runTimeout", timeunit),
         timeunit
       )
     }
@@ -54,7 +54,15 @@ object ScalaCliMain {
     val compilationTimeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(
-        scalaCliConfig.getDuration("compilationTimeout", timeunit),
+        sharedRunnersConfig.getDuration("compilationTimeout", timeunit),
+        timeunit
+      )
+    }
+
+    val reloadTimeout = {
+      val timeunit = TimeUnit.SECONDS
+      FiniteDuration(
+        sharedRunnersConfig.getDuration("reloadTimeout", timeunit),
         timeunit
       )
     }
@@ -71,9 +79,9 @@ object ScalaCliMain {
       Props(
         new ScalaCliActor(
           isProduction = isProduction,
-          readyRef = None,
           runTimeout = runTimeout,
           compilationTimeout = compilationTimeout,
+          reloadTimeout = reloadTimeout,
           reconnectInfo = Some(reconnectInfo)
         )
       ),

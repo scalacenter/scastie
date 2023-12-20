@@ -18,7 +18,6 @@ sealed trait BaseInputs {
     this match {
       case s: SbtInputs => s.copy(isShowingInUserProfile = false, forked = None)
       case s: ScalaCliInputs => s.copy(isShowingInUserProfile = false, forked = None)
-      case s: ShortInputs => s.copy(isShowingInUserProfile = false, forked = None)
     }
   }
 
@@ -26,7 +25,6 @@ sealed trait BaseInputs {
     this match {
       case s: SbtInputs      => s.copy(isWorksheetMode = !s.isWorksheetMode)
       case s: ScalaCliInputs => s.copy(isWorksheetMode = !s.isWorksheetMode)
-      case s: ShortInputs    => s.copy(isWorksheetMode = !s.isWorksheetMode)
     }
   }
 
@@ -37,13 +35,6 @@ sealed trait BaseInputs {
     libraries: Set[ScalaDependency] = this.libraries,
     forked: Option[SnippetId] = this.forked,
   ): BaseInputs = this match {
-    case shortInputs: ShortInputs => shortInputs.copy(
-      isWorksheetMode = isWorksheetMode,
-      isShowingInUserProfile = isShowingInUserProfile,
-      code = code,
-      libraries = libraries,
-      forked = forked
-    )
     case scalaCliInputs: ScalaCliInputs => scalaCliInputs.copy(
       isWorksheetMode = isWorksheetMode,
       isShowingInUserProfile = isShowingInUserProfile,
@@ -66,7 +57,7 @@ object BaseInputs {
   implicit val baseInputDecoder: Decoder[BaseInputs] = deriveDecoder[BaseInputs]
 }
 
-case class ShortInputs(code: String, target: ScalaTarget, isWorksheetMode: Boolean, libraries: Set[ScalaDependency], isShowingInUserProfile: Boolean, forked: Option[SnippetId]) extends BaseInputs
+case class ShortInputs(code: String, target: ScalaTarget)
 
 object ShortInputs {
   implicit val shortInputsEncoder: Encoder[ShortInputs] = deriveEncoder[ShortInputs]

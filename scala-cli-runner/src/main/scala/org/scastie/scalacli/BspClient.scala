@@ -41,6 +41,10 @@ import scala.util.Success
 import com.google.gson.Gson
 import com.google.gson.internal.LinkedTreeMap
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseError
+import scala.util.control.NonFatal
+import org.apache.commons.io.IOUtils
+import java.io.PrintWriter
+import java.lang
 
 
 object BspClient {
@@ -72,11 +76,13 @@ object BspClient {
       Option(diag.getRange.getStart.getLine + Instrument.getMessageLineOffset(isWorksheet, isScalaCli = true)),
       diag.getMessage()
     )
+
+  val scalaCliExec = Seq("cs", "launch", "org.virtuslab.scala-cli:cliBootstrapped:latest.release", "-M", "scala.cli.ScalaCli", "--")
 }
 
 trait ScalaCliServer extends BuildServer with ScalaBuildServer with JvmBuildServer
 
-class BspClient(coloredStackTrace: Boolean, workingDir: Path) {
+class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout: FiniteDuration, reloadTimeout: FiniteDuration) {
   import BspClient._
 
   private implicit val defaultTimeout: FiniteDuration = FiniteDuration(10, TimeUnit.SECONDS)
@@ -87,17 +93,23 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path) {
   private val localClient = new InnerClient()
   private val es = Executors.newFixedThreadPool(1)
 
-  Process(Seq("scala-cli", "setup-ide", workingDir.toAbsolutePath.toString)).!
+  val scalaCliExec = Seq("cs", "launch", "org.virtuslab.scala-cli:cliBootstrapped:latest.release", "-M", "scala.cli.ScalaCli", "--")
+  Process(scalaCliExec ++  Seq("clean", workingDir.toAbsolutePath.toString)).!
+  Process(scalaCliExec ++ Seq("setup-ide", workingDir.toAbsolutePath.toString)).!
+
   private val processBuilder: java.lang.ProcessBuilder = new java.lang.ProcessBuilder()
-  processBuilder.command("scala-cli", "--cli-version", "nightly", "bsp", workingDir.toAbsolutePath.toString)
+  val logFile = workingDir.toAbsolutePath.resolve("bsp.error.log")
+  processBuilder
+    .command((scalaCliExec ++ Seq("bsp", workingDir.toAbsolutePath.toString)):_*)
+    .redirectError(logFile.toFile)
+
   val scalaCliServer = processBuilder.start()
 
   private val bspIn = scalaCliServer.getInputStream()
-  private val bspErr = scalaCliServer.getErrorStream()
   private val bspOut = scalaCliServer.getOutputStream()
+  private val bspErr = scalaCliServer.getErrorStream()
 
   log.info(s"Starting Scala-CLI BSP in folder ${workingDir.toAbsolutePath().normalize().toString()}")
-
 
   private val bspLauncher = new Launcher.Builder[ScalaCliServer]()
     .setOutput(bspOut)
@@ -108,18 +120,17 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path) {
     .create()
 
   private val bspServer = bspLauncher.getRemoteProxy()
+  private val listening = bspLauncher.startListening()
 
-  private val listeningThread = new Thread {
-    override def run() = {
-      try {
-        bspLauncher.startListening().get()
-      } catch {
-        case _: Throwable => log.info("Listening thread down.")
-      }
-    }
-  }
-  listeningThread.start()
+  bspServer.buildInitialize(new InitializeBuildParams(
+    "BspClient",
+    "1.1.0",
+    Bsp4j.PROTOCOL_VERSION,
+    workingDir.toAbsolutePath.toUri.toString,
+    new BuildClientCapabilities(List("scala", "java").asJava)
+  )).get // Force to wait
 
+  bspServer.onBuildInitialized()
 
   case class ScalaCliBuildTarget(id: BuildTargetIdentifier, scalabuildTarget: ScalaBuildTarget)
 
@@ -128,13 +139,18 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path) {
   private def requestWithTimeout[T](f: ScalaCliServer => CompletableFuture[T])(implicit timeout: FiniteDuration): Future[T] =
     f(bspServer).orTimeout(timeout.length, timeout.unit).asScala
 
-  private def reloadWorkspace(): BspTask[Unit] = EitherT(requestWithTimeout(_.workspaceReload())
-    .map {
+  private def reloadWorkspace(retry: Int = 0): BspTask[Unit] = EitherT(requestWithTimeout(_.workspaceReload())(using reloadTimeout).flatMap {
       case gsonMap: LinkedTreeMap[?, ?] if !gsonMap.isEmpty =>
-        val gson = new Gson()
-        val error = gson.fromJson(gson.toJson(gsonMap), classOf[ResponseError])
-        Left(InternalBspError(error.getMessage))
-      case _ => ().asRight
+          val gson = new Gson()
+          val error = gson.fromJson(gson.toJson(gsonMap), classOf[ResponseError])
+          log.info(s"Reload failed: ${error.getMessage}")
+          if (retry < 3) {
+            log.info(s"Reload failed, retry #$retry/3")
+            reloadWorkspace(retry + 1).value
+          } else {
+            Future.successful(Left(InternalBspError(error.getMessage)))
+          }
+      case _ => Future.successful(().asRight)
     }
   )
 
@@ -164,7 +180,7 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path) {
 
   private def compile(id: String, isWorksheet: Boolean, buildTargetId: BuildTargetIdentifier): BspTask[CompileResult] = EitherT {
     val params: CompileParams = new CompileParams(Collections.singletonList(buildTargetId))
-    requestWithTimeout(_.buildTargetCompile(params))(10.seconds).map(compileResult =>
+    requestWithTimeout(_.buildTargetCompile(params))(using compilationTimeout).map(compileResult =>
       compileResult.getStatusCode match {
         case StatusCode.OK => Right(compileResult)
         case StatusCode.ERROR => Left(CompilationError(diagnostics.getAndSet(Nil).map(diagnosticToProblem(isWorksheet))))
@@ -184,10 +200,6 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path) {
     val param = new JvmRunEnvironmentParams(java.util.List.of(id))
     requestWithTimeout(_.buildTargetJvmRunEnvironment(param)).map { jvmRunEnvironment =>
       Option(jvmRunEnvironment.getItems)
-        .map(x => {
-          log.info(x.asScala.toList.toString)
-          x
-        })
         .fold(List.empty[JvmEnvironmentItem])(_.asScala.toList)
         .find(_.getTarget == id)
         .toRight[BuildError](InternalBspError(s"No JvmRunEnvironmentResult available."))
@@ -208,7 +220,9 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path) {
     }
 
     val javaBinURI = URI.create(buildTarget.scalabuildTarget.getJvmBuildTarget.getJavaHome())
-    val javaBinPath = Try { Paths.get(javaBinURI).resolve("bin/java").toString }.toEither.leftMap(err => InternalBspError(s"Can't find java binary: $err"))
+    val javaBinPath = Try { Paths.get(javaBinURI).resolve("bin/java").toString }
+      .toEither
+      .leftMap(err => InternalBspError(s"Can't find java binary: $err"))
 
     for {
       mainClass <- getMainClass(runSettings.getMainClasses.asScala.toList, isWorksheet)
@@ -230,38 +244,64 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path) {
   }
 
   def build(taskId: String, isWorksheet: Boolean, target: ScalaTarget): BspTask[BuildOutput] = {
+    println("Reloading")
     for {
       _ <- reloadWorkspace()
+      _ = println("Build target")
       buildTarget <- getFirstBuildTarget()
+      _ = println("Compile")
       compileResult <- compile(taskId, isWorksheet, buildTarget.id)
+      _ = println("Get jvm")
       jvmRunEnvironment <- getJvmRunEnvironment(buildTarget.id)
+      _ = println("Create process")
       process <- makeProcess(jvmRunEnvironment, buildTarget, isWorksheet)
     } yield BuildOutput(process, diagnostics.getAndSet(Nil).map(diagnosticToProblem(isWorksheet)))
   }
 
   // Kills the BSP connection and makes this object
   // un-usable.
-  def end = {
-    bspServer.buildShutdown().get(5, TimeUnit.SECONDS)
-    bspServer.onBuildExit()
-    Process("scala-cli --power bloop exit").!
-    scalaCliServer.destroyForcibly()
-    listeningThread.interrupt() // This will stop the thread
+  def end() = {
+    Process(BspClient.scalaCliExec ++ Seq("--power", "bloop", "exit")).!
+    try {
+      log.info("Sending buildShutdown.")
+      bspServer.buildShutdown().get(30, TimeUnit.SECONDS)
+      log.info("buildShutdown finished.")
+    } catch {
+      case NonFatal(e) =>
+        log.error(s"Ignoring $e while shutting down BSP server")
+    } finally {
+      log.info("Process finalisation has started.")
+      bspServer.onBuildExit()
+      log.info("Graceful process destruction requested.")
+      scalaCliServer.destroy()
+      log.info("Forceful process destruction requested.")
+      scalaCliServer.destroyForcibly()
+    }
+
+    try {
+      log.info("Awaiting process termination confirmation.")
+      scalaCliServer.onExit().get(30, TimeUnit.SECONDS)
+      log.info("Process successfully terminated.")
+    } catch {
+      case NonFatal(e) =>
+        log.error(s"Ignoring $e while shutting down BSP server")
+    } finally {
+      if (scalaCliServer.isAlive()) {
+        log.error("Destroying the process forcefully.")
+        val pid = scalaCliServer.pid()
+        Process(s"kill -9 $pid").!
+      }
+
+      log.info("Closing streams.")
+
+      bspIn.close()
+      bspOut.close()
+      bspErr.close()
+
+      log.info("Stopping listening thread.")
+      listening.cancel(true)
+    }
   }
-
-  def initWorkspace: Unit = {
-    val r = bspServer.buildInitialize(new InitializeBuildParams(
-      "BspClient",
-      "1.0.0",
-      Bsp4j.PROTOCOL_VERSION,
-      workingDir.toAbsolutePath.toUri.toString,
-      new BuildClientCapabilities(Collections.singletonList("scala"))
-    )).get // Force to wait
-    bspServer.onBuildInitialized()
-  }
-
-  initWorkspace
-
 
   class InnerClient extends BuildClient {
     def onBuildPublishDiagnostics(params: PublishDiagnosticsParams): Unit = {

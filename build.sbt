@@ -9,7 +9,7 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.19"
 
 val akkaHttpVersion = "10.2.9"
 
-addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
+addCommandAlias("startAll", "scalaCliRunner/reStart;sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
 addCommandAlias("startAllProd", "scalaCliRunner/reStart;sbtRunner/reStart;metalsRunner/reStart;server/buildTreesitterWasm;server/fullLinkJS/reStart")
 
 val yarnBuild = taskKey[Unit]("builds es modules with `yarn build`")
@@ -35,9 +35,11 @@ lazy val scastie = project
   .settings(baseSettings)
   .settings(
     cachedCiTestFull := {
-      val _   = cachedCiTestFull.value
-      val __  = (sbtRunner / docker / dockerfile).value
-      val ___ = (server / Universal / packageBin).value
+      val _     = cachedCiTestFull.dependsOn(publishLocal).value
+      val __    = (sbtRunner / docker / dockerfile).value
+      val ___   = (scalaCliRunner / docker / dockerfile).value
+      val ____  = (metalsRunner / docker / dockerfile).value
+      val _____ = (server / Universal / packageBin).value
     }
   )
   .settings(Deployment.settings(server, sbtRunner, scalaCliRunner, metalsRunner))
@@ -156,7 +158,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.7.14",
+      "org.scalameta" %% "scalafmt-core" % "3.7.17",
       "io.circe" %% "circe-parser" % "0.14.6"
     ),
     docker / imageNames := Seq(
@@ -223,9 +225,10 @@ lazy val server = project
       val s: TaskStreams = streams.value
       val shell: Seq[String] = if (sys.props("os.name").contains("Windows")) Seq("cmd", "/c") else Seq("bash", "-c")
       val updateGitSubmodule: Seq[String] = shell :+ "git submodule update --init"
-      val buildWasm: Seq[String] = shell :+ """cd tree-sitter-scala && nix-shell -p emscripten --run 'nix-shell --run "tree-sitter build-wasm"'"""
+      val installNpmDependencies: Seq[String] = shell :+ "cd tree-sitter-scala && npm install"
+      val buildWasm: Seq[String] = shell :+ "cd tree-sitter-scala && npx tree-sitter build-wasm"
       s.log.info("building tree-sitter-scala wasm...")
-      if((updateGitSubmodule #&& buildWasm !) == 0) {
+      if((updateGitSubmodule #&& installNpmDependencies #&& buildWasm !) == 0) {
         s.log.success(s"$treeSitterOutputName build successfuly!")
       } else {
         throw new IllegalStateException(s"Failed to generate $treeSitterOutputName!")
@@ -370,7 +373,6 @@ lazy val scalaCliRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.6.1",
       "ch.epfl.scala" % "bsp4j" % "2.1.0-M7",
       "org.typelevel" %% "cats-core" % "2.10.0",
       "io.circe" %% "circe-parser" % "0.14.6",
