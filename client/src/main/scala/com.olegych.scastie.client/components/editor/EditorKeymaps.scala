@@ -6,9 +6,11 @@ import typings.codemirrorView.mod.EditorView
 import typings.codemirrorView.mod.{KeyBinding => JSKeyBinding}
 import typings.codemirrorCommands.mod._
 import typings.codemirrorAutocomplete.mod.acceptCompletion
+import typings.codemirrorState.mod._
 import com.olegych.scastie.client
 
 import scalajs.js
+import typings.codemirrorState.mod.TransactionSpec
 
 object EditorKeymaps {
 
@@ -69,7 +71,11 @@ object KeyBinding {
     JSKeyBinding()
       .setRun(view =>
           if (!acceptCompletion(view)) {
-            indentWithTab.run.map(_.apply(view))
+            view.dispatch(
+              TransactionSpec()
+                .setChanges(js.Dynamic.literal(from = view.state.selection.main.head, insert = "  ").asInstanceOf[ChangeSpec])
+                .setSelection(EditorSelection.single(view.state.selection.main.head + 2))
+            )
             true
           }
           else false
