@@ -25,6 +25,8 @@ object SimpleEditor {
   private def init(props: SimpleEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback =
     ref.foreachCB(divRef => {
       val basicExtensions = js.Array[Any](
+        Editor.editorTheme.of(props.codemirrorTheme),
+        Editor.indentationMarkersExtension,
         typings.codemirror.mod.minimalSetup,
         mod.StreamLanguage.define(typings.codemirrorLegacyModes.modeClikeMod.scala_),
         SyntaxHighlightingTheme.highlightingTheme,
@@ -57,7 +59,7 @@ object SimpleEditor {
       editorView: UseStateF[CallbackTo, EditorView]
   ): Callback = {
     Editor.updateCode(editorView, props) >>
-      Editor.updateTheme(ref, prevProps, props)
+      Editor.updateTheme(ref, prevProps, props, editorView)
   }
 
   val hooksComponent =
