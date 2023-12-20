@@ -7,7 +7,6 @@ import akka.actor.ActorLogging
 import akka.actor.ActorContext
 import org.scastie.util.ActorReconnecting
 import org.scastie.util.ReconnectInfo
-import org.scastie.util.SbtTask
 import org.scastie.api._
 import org.scastie.scalacli.ScalaCliRunner
 import org.scastie.scalacli.BspClient
@@ -31,23 +30,26 @@ import org.agrona.concurrent.status.AtomicCounter
 import java.util.concurrent.atomic.AtomicLong
 import java.nio.file.Files
 import java.nio.file.Path
+import org.scastie.util._
 
 
 class ScalaCliActor(
                isProduction: Boolean,
-               readyRef: Option[ActorRef],
                override val reconnectInfo: Option[ReconnectInfo],
                coloredStackTrace: Boolean = true,
                workingDir: Path = Files.createTempDirectory("scastie"),
-               compilationTimeout: FiniteDuration = 30.seconds,
-               runTimeout: FiniteDuration = 30.seconds
+               compilationTimeout: FiniteDuration = 15.seconds,
+               runTimeout: FiniteDuration = 30.seconds,
+               reloadTimeout: FiniteDuration = 30.seconds,
       ) extends Actor with ActorLogging with ActorReconnecting {
 
-
-  private val runner: ScalaCliRunner = new ScalaCliRunner(coloredStackTrace, workingDir)
+  private val runner: ScalaCliRunner = new ScalaCliRunner(coloredStackTrace, workingDir, compilationTimeout, reloadTimeout)
 
   override def receive: Receive = reconnectBehavior orElse { message => message match {
     case task: ScalaCliActorTask => runTask(task, sender())
+    case StopRunner =>
+      runner.end()
+      sender() ! RunnerTerminated
     case RunnerPing => sender() ! RunnerPong
     case _ =>
   }}
@@ -100,12 +102,13 @@ class ScalaCliActor(
           isDone = true
         ))
       case Left(BspTaskTimeout(msg)) =>
-        Process("scala-cli --power bloop exit").!
-        Process("scala-cli --power bloop start").!
+        log.warning("Timeout detected, restarting BSP")
+        runner.restart()
         sendProgress(progressActor, author, buildErrorProgress(snippetId, msg, progressId.getAndIncrement(), isTimeout = true))
       case Left(RuntimeTimeout(msg)) =>
         sendProgress(progressActor, author, buildErrorProgress(snippetId, msg, progressId.getAndIncrement(), isTimeout = true))
       case Left(error) =>
+        log.error(s"Error reported: ${error.msg}")
         sendProgress(progressActor, author, buildErrorProgress(snippetId, error.msg, progressId.getAndIncrement()))
     }.recover {
       case error =>

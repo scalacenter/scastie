@@ -56,7 +56,7 @@ object ScalaDependency {
   implicit val scalaDependencyDecoder: Decoder[ScalaDependency] = deriveDecoder[ScalaDependency]
 }
 
-case class ScalaDependency(groupId: String, artifact: String, target: ScalaTarget, version: String) {
+case class ScalaDependency(groupId: String, artifact: String, target: ScalaTarget, version: String, isAutoResolve: Boolean = true) {
   def matches(sd: ScalaDependency): Boolean = sd.groupId == this.groupId && sd.artifact == this.artifact
 
   def renderSbt: String = {
@@ -65,7 +65,8 @@ case class ScalaDependency(groupId: String, artifact: String, target: ScalaTarge
   }
 
   def renderScalaCli: String = {
-    s"//> using dep $groupId::$artifact:$version"
+    val resolveSymbol = if (isAutoResolve) "::" else ":"
+    s"//> using dep $groupId$resolveSymbol$artifact:$version"
   }
 }
 

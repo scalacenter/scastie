@@ -6,7 +6,7 @@ sealed trait Render {
   def asJsonString: String = this match {
     case Value(v, className) => s"""{"Value":{"v":"${v.escaped}","className":"${className.escaped}"}}"""
     case Html(a, folded) => s"""{"Html":{"a":"${a.escaped}","folded":$folded}}"""
-    case AttachedDom(uuid, folded) => s"""{"AttachedDom":{"uuid":'$uuid',"folded":$folded}}"""
+    case AttachedDom(uuid, folded) => s"""{"AttachedDom":{"uuid":"$uuid","folded":$folded}}"""
   }
 }
 

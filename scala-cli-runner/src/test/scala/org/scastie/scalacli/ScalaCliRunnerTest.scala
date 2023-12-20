@@ -4,6 +4,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.BeforeAndAfterAll
 import org.scastie.util.ScastieFileUtil
 import java.nio.file.Paths
+import java.nio.file.Files
 import org.scastie.api.SnippetId
 import org.scastie.api._
 import org.scastie.runtime.api._
@@ -21,8 +22,13 @@ import org.scalatest.funsuite.AnyFunSuiteLike
 import scala.concurrent.duration._
 import akka.testkit.TestActorRef
 import org.scastie.util.ScalaCliActorTask
+import org.scastie.util.StopRunner
+import org.scastie.util.RunnerTerminated
 
-class ScalaCliActorTest extends TestKit(ActorSystem("ScalaCliActorTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
+class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
+  val workingDir = Files.createTempDirectory("scastie")
+  println(workingDir)
+
   setAutoPilot(new AutoPilot {
     def run(sender: ActorRef, msg: Any): AutoPilot = {
       sender ! s"reply to $msg"
@@ -33,12 +39,12 @@ class ScalaCliActorTest extends TestKit(ActorSystem("ScalaCliActorTest")) with I
 
   (1 to 2).foreach { i =>
     test(s"[$i] timeout") {
-      runCode(s"Thread.sleep(${timeout.toMillis + 1000})", allowFailure = true)(progress => {
+      runCode(s"Thread.sleep(${timeout.toMillis + 3000})", allowFailure = true)(progress => {
         progress.isTimeout
       })
     }
 
-    test(s"[$i] after a timeout the sbt instance is ready to be used") {
+    test(s"[$i] after a timeout the scala-cli instance is ready to be used") {
       runCode("1 + 1")(progress => {
         val gotInstrumentation = progress.instrumentations.nonEmpty
 
@@ -117,7 +123,7 @@ class ScalaCliActorTest extends TestKit(ActorSystem("ScalaCliActorTest")) with I
          |object Main extends App {
          |  println(util.Properties.versionNumberString)
          |}""".stripMargin
-   runCode(code, isWorksheet = false)(assertUserOutput(output => assert(output.line.startsWith("2.12"))))
+    runCode(code, isWorksheet = false)(assertUserOutput(output => assert(output.line.startsWith("2.12"))))
   }
 
   test("Scala 2.13 support") {
@@ -320,6 +326,56 @@ class ScalaCliActorTest extends TestKit(ActorSystem("ScalaCliActorTest")) with I
     })
   }
 
+  private val macroCode =
+    """import scala.quoted._
+      |
+      |object SleepMacro:
+      |  inline def sleep(inline time: Int) =
+      |    ${ wait('time) }
+      |
+      |  def wait(x: Expr[Int])(using Quotes): Expr[Any] =
+      |    Thread.sleep(x.valueOrAbort)
+      |    x
+      |""".stripMargin
+
+  test("No bsp timeout") {
+    Files.writeString(workingDir.resolve("SleepMacro.scala"), macroCode)
+    runCode(longCompilation(1000), isWorksheet = false)(assertUserOutput("test"))
+    Files.delete(workingDir.resolve("SleepMacro.scala"))
+  }
+
+  test("BSP Timeout") {
+    Files.writeString(workingDir.resolve("SleepMacro.scala"), macroCode)
+    runCode(longCompilation(compilationTimeout.toMillis + 5000), isWorksheet = false, allowFailure = true)(assertCompilationInfo { info =>
+      assert(info.message == "Build Server Timeout Exception" )
+    })
+    Files.delete(workingDir.resolve("SleepMacro.scala"))
+  }
+
+  def longCompilation(time: Long): String =
+    s"""//> using scala 3
+       |//> using file SleepMacro.scala
+       |
+       |@main def hello =
+       |  SleepMacro.sleep($time)
+       |  println("test")
+       |""".stripMargin
+
+  test("BSP Timeout Multiple snippets") {
+    Files.writeString(workingDir.resolve("SleepMacro.scala"), macroCode)
+    runCode(longCompilation(compilationTimeout.toMillis + 5000), isWorksheet = false, allowFailure = true)(assertCompilationInfo { info =>
+      assert(info.message == "Build Server Timeout Exception" )
+    })
+    runCode(longCompilation(100), isWorksheet = false, allowFailure = false)(assertUserOutput("test"))
+
+    runCode(longCompilation(compilationTimeout.toMillis + 5000), isWorksheet = false, allowFailure = true)(assertCompilationInfo { info =>
+      assert(info.message == "Build Server Timeout Exception" )
+    })
+
+    runCode(longCompilation(100), isWorksheet = false, allowFailure = false)(assertUserOutput("test"))
+    Files.delete(workingDir.resolve("SleepMacro.scala"))
+  }
+
   def assertCompilationInfo(infoAssert: Problem => Any)(progress: SnippetProgress): Boolean = {
 
     val gotCompilationError = progress.compilationInfos.nonEmpty
@@ -338,12 +394,21 @@ class ScalaCliActorTest extends TestKit(ActorSystem("ScalaCliActorTest")) with I
   }
 
   override def afterAll(): Unit = {
-    TestKit.shutdownActorSystem(system)
+    println("Cleaning processess")
+    scalaCliActor ! StopRunner
+
+    fishForMessage(1.minute, "RunnerTerminated") {
+      case RunnerTerminated => true
+      case _ => false
+    }
+
+    TestKit.shutdownActorSystem(system, 1.minute, true)
   }
 
-  private val timeout = 40.seconds
+  private val timeout = 45.seconds
+  private val compilationTimeout = 25.seconds
 
-  val scalaCliActor = system.actorOf(Props(new ScalaCliActor(runTimeout = timeout, isProduction = false, readyRef = None, reconnectInfo = None, coloredStackTrace = false)))
+  val scalaCliActor = system.actorOf(Props(new ScalaCliActor(runTimeout = timeout, isProduction = false, reconnectInfo = None, coloredStackTrace = false, compilationTimeout = compilationTimeout, workingDir = workingDir)))
 
   private var currentId = 0
   private def snippetId = {

@@ -98,7 +98,7 @@ object ScalaCliParser:
         // "groupId::artifact::version"
         case groupId :: "" :: artifactId :: "" :: version :: Nil => ScalaDependency(groupId, artifactId, scalaTarget, version)
         // "groupId:artifact:version"
-        case groupId :: artifactId :: version :: Nil => ScalaDependency(groupId, artifactId, scalaTarget, version)
+        case groupId :: artifactId :: version :: Nil => ScalaDependency(groupId, artifactId, scalaTarget, version, isAutoResolve = false)
 
       ScastieMetalsOptions(dependencies.toSet ++ toolkitDependency, scalaTarget, code)
 
