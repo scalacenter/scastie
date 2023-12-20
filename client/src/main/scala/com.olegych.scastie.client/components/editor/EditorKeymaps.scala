@@ -67,11 +67,12 @@ object KeyBinding {
   val tabKeybind: JSKeyBinding = {
     val key = new Key("Tab")
     JSKeyBinding()
-      .setRun(dispatch =>
-          if (!acceptCompletion(dispatch))
-            insertTab(dispatch.asInstanceOf[anon.Dispatch])
-          else
-            false
+      .setRun(view =>
+          if (!acceptCompletion(view)) {
+            indentWithTab.run.map(_.apply(view))
+            true
+          }
+          else false
       )
       .setKey(key.default)
       .setLinux(key.linux)
