@@ -124,7 +124,7 @@ lazy val metalsRunner = project
     maintainer   := "scalacenter",
     scalaVersion := ScalaVersions.stable3,
     libraryDependencies ++= Seq(
-      "org.scalameta"        % "metals"              % "1.0.1" cross (CrossVersion.for3Use2_13),
+      "org.scalameta"        % "metals"              % "1.1.0" cross (CrossVersion.for3Use2_13),
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.21.1",
       "org.http4s"          %% "http4s-ember-server" % "0.23.23",
       "org.http4s"          %% "http4s-ember-client" % "0.23.23",
