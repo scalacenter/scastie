@@ -34,9 +34,9 @@ case class ScastiePresentationCompiler(underlyingPC: PresentationCompiler) {
     val task = for
       given ExecutionContext <- Async[F].executionContext
       computationFuture = Async[F].delay:
-        val (lspOffsetParams, insideWrapper) = offsetParams.toOffsetParams
+        val lspOffsetParams = offsetParams.toOffsetParams
         underlyingPC.complete(lspOffsetParams).asScala.map:
-          _.toScalaCompletionList(offsetParams.isWorksheetMode, insideWrapper)
+          _.toScalaCompletionList(offsetParams.isWorksheetMode)
       result <- Async[F].fromFuture(computationFuture)
     yield result
 
@@ -63,7 +63,7 @@ case class ScastiePresentationCompiler(underlyingPC: PresentationCompiler) {
     val task: F[Either[FailureType, Hover]] = for
       given ExecutionContext <- Async[F].executionContext
       computationFuture = Async[F].delay {
-        underlyingPC.hover(offsetParams.toOffsetParams._1)
+        underlyingPC.hover(offsetParams.toOffsetParams)
           .asScala
           .map(_.toScala.map(_.toLsp).toRight(NoResult("There is no hover for given position")))
       }
