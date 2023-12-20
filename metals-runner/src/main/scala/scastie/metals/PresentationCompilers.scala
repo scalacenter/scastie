@@ -107,8 +107,11 @@ class PresentationCompilers[F[_]: Async] {
         newPresentationCompilerClassLoader(mtags, scalaLibrary)
       )
     } >>= (classloader =>
-      serviceLoader.flatMap(
-        _.load(classOf[PresentationCompiler], classOf[ScalaPresentationCompiler].getName(), classloader)
+      serviceLoader.flatMap(serviceLoader =>
+        val classname = if (mtags.isScala3PresentationCompiler) "dotty.tools.pc.ScalaPresentationCompiler"
+          else classOf[ScalaPresentationCompiler].getName()
+
+        serviceLoader.load(classOf[PresentationCompiler], classname, classloader)
       )
     )
 
