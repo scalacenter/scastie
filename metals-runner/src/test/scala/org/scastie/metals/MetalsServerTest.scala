@@ -437,7 +437,7 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Text edit is proper for worksheet inside using directives") {
     testCompletionEdit(
-      testTargets = List(ScalaCli(BuildInfo.latest3)),
+      testTargets = List(ScalaCli(BuildInfo.stable3)),
       code = """//> using dep org.scala-lan@@
                |object M {
                |  println()
@@ -455,7 +455,7 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Text edit is proper for no worksheet inside using directives") {
     testCompletionEdit(
-      testTargets = List(ScalaCli(BuildInfo.latest3)),
+      testTargets = List(ScalaCli(BuildInfo.stable3)),
       code = """//> using dep org.scala-lan@@
                |object M {
                |  println()
@@ -496,7 +496,7 @@ class MetalsServerTest extends CatsEffectSuite {
                  |println("test")""".stripMargin
     convertScalaCliConfiguration(
       code = code,
-      expected = ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.latest3), code).asRight
+      expected = ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.stable3), code).asRight
     )
   }
 
@@ -505,7 +505,7 @@ class MetalsServerTest extends CatsEffectSuite {
     val code = """//> using dep com.lihaoyi::os-lib:0.9.1
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.latest3)
+    val target = ScalaCli(BuildInfo.stable3)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
@@ -520,7 +520,7 @@ class MetalsServerTest extends CatsEffectSuite {
     val code = """//> using lib com.lihaoyi::os-lib:0.9.1
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.latest3)
+    val target = ScalaCli(BuildInfo.stable3)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
@@ -535,7 +535,7 @@ class MetalsServerTest extends CatsEffectSuite {
     val code = """//> using toolkit latest
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.latest3)
+    val target = ScalaCli(BuildInfo.stable3)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
@@ -550,7 +550,7 @@ class MetalsServerTest extends CatsEffectSuite {
     val code = """//> using toolkit 0.2.1
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.latest3)
+    val target = ScalaCli(BuildInfo.stable3)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
@@ -581,7 +581,7 @@ class MetalsServerTest extends CatsEffectSuite {
                  |//> using dep org.scala-lang:scala3-library_3:3.3.1
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.latest3)
+    val target = ScalaCli(BuildInfo.stable3)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
@@ -596,7 +596,7 @@ class MetalsServerTest extends CatsEffectSuite {
     val code = """//> using dep com.lihaoyi::os-lib:0.9.1 org.scala-lang:scala3-library_3:3.3.1
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.latest3)
+    val target = ScalaCli(BuildInfo.stable3)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
