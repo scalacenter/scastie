@@ -42,12 +42,12 @@ lazy val scastie = project
   .settings(Deployment.settings(server, sbtRunner, metalsRunner))
 
 lazy val testSettings = Seq(
-  libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.16" % Test
+  libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.17" % Test
 )
 
 lazy val loggingAndTest = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"              % "logback-classic" % "1.4.8",
+    "ch.qos.logback"              % "logback-classic" % "1.4.11",
     "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5",
     "io.sentry"                   % "sentry-logback"  % "6.29.0"
   )
@@ -302,7 +302,8 @@ lazy val client = project
       "github-markdown-css",
       "react",
       "react-dom",
-      "source-map-support"
+      "source-map-support",
+      "vite"
     ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "core"                        % "2.1.1",
@@ -318,7 +319,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta"                 %% "scalameta" % "4.8.10",
+      "org.scalameta"                 %% "scalameta" % "4.8.11",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

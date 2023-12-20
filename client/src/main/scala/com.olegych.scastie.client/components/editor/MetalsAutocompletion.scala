@@ -158,9 +158,8 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
   }
 
   private val autocompletionConfig = CompletionConfig()
-    .setInteractionDelay(500)
-    .setActivateOnTyping(false)
     .setOverrideVarargs(completionsF)
+    .setActivateOnTyping(false) // we use our own autocompletion trigger with working debounce MetalsAutocompletion.autocompletionTrigger
     .setIcons(true)
     .setDefaultKeymap(true)
 

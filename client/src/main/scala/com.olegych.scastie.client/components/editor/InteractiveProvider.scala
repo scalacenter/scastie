@@ -7,6 +7,7 @@ import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
 import typings.highlightJs.mod.{HighlightOptions => HLJSOptions}
 import typings.markedHighlight.mod._
+import typings.marked.mod.marked.MarkedExtension
 
 import scala.util.Try
 
@@ -44,7 +45,7 @@ object InteractiveProvider {
   val interactive = new Compartment()
 
   val highlightJS = typings.highlightJs.mod.default
-  val highlightF: (String, String) => String = (str, lang) => {
+  val highlightF: (String, String, String) => String = (str, lang, _) => {
     if (lang != null && highlightJS.getLanguage(lang) != null && lang != "") {
       Try { highlightJS.highlight(str, HLJSOptions(lang)).value}.getOrElse(str)
     } else {
@@ -53,7 +54,7 @@ object InteractiveProvider {
   }
 
   val marked = typings.marked.mod.marked.`package`
-  marked.use(markedHighlight(SynchronousOptions.apply(highlightF)))
+  marked.use(markedHighlight(SynchronousOptions.apply(highlightF)).asInstanceOf[MarkedExtension])
   marked.setOptions(typings.marked.mod.marked.MarkedOptions()
     .setHeaderIds(false)
     .setMangle(false)
