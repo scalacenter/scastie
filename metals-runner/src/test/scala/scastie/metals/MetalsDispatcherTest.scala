@@ -37,6 +37,15 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     }
   }
 
+  test("parallel metals access for same cache entry") {
+    cache.use { cache =>
+      val dispatcher = dispatcherF(cache)
+      val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latest3))
+      val tasks = List.fill(10)(dispatcher.getCompiler(options).flatMap(_.complete(ScastieOffsetParams("prin", 4, true))).value).parSequence
+      assertIO(tasks.map(_.forall(_.isRight)), true)
+    }
+  }
+
   test("cache should properly shutdown presentation compiler") {
     val cache = Cache.expiring[IO, ScastieMetalsOptions, ScastiePresentationCompiler](
       ExpiringCache.Config(expireAfterRead = 2.seconds),
@@ -51,7 +60,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
           pc     <- dispatcher.getCompiler(options)
           _      <- EitherT.right(IO.sleep(4.seconds))
           result <- EitherT.right(pc.complete(ScastieOffsetParams("print", 3, true)))
-        } yield { result.getItems.asScala.toList }
+        } yield { result.items }
         interceptIO[java.util.concurrent.CancellationException](task.value)
       }
     }

@@ -55,7 +55,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     compat: Map[String, Either[FailureType, Set[String]]] = Map()
   ): IO[List[Unit]] = testTargets.traverse(scalaTarget =>
     val request = createRequest(scalaTarget, dependencies, code)
-    val comp    = server.complete(request).map(_.getItems.asScala.map(_.getLabel).toSet).value
+    val comp    = server.complete(request).map(_.items.map(_.label)).value
     assertIO(comp, getCompat(scalaTarget, compat, expected), Left(NoResult(s"Failed for target $scalaTarget")))
   )
 
@@ -102,7 +102,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     compat: Map[String, List[Either[FailureType, String]]] = Map()
   ): IO[List[Unit]] = testTargets.traverse(scalaTarget =>
     val request = createRequest(scalaTarget, dependencies, code)
-    val comp = server.complete(request).fold(_ => ScalaCompletionList(Set(), false), _.toScalaCompletionList(false)).flatMap { cmps =>
+    val comp = server.complete(request).getOrElse(ScalaCompletionList(Set(), false)).flatMap { cmps =>
       cmps.items
         .map { cmp =>
           val infoRequest = CompletionInfoRequest(request._1, cmp)

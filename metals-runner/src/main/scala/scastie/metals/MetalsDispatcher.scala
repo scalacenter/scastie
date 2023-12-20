@@ -45,35 +45,31 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
    * @param configuration - scastie client configuration
    * @returns `EitherT[F, FailureType, ScastiePresentationCompiler]`
    */
-  def getCompiler(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastiePresentationCompiler] = EitherT {
-    if !isSupportedVersion(configuration) then
-      Async[F].pure(
-        Left(
-          PresentationCompilerFailure(
-            s"Interactive features are not supported for Scala ${configuration.scalaTarget.binaryScalaVersion}."
-          )
-        )
-      )
-    else
-      Sync[F].blocking(
-        mtagsResolver
-          .resolve(configuration.scalaTarget.scalaVersion)
-          .toRight(
-            PresentationCompilerFailure(
-              s"Mtags couldn't be resolved for target: ${configuration.scalaTarget.scalaVersion}."
-            )
-          )
-      ) >>= (_.traverse(mtags =>
-        cache.getOrUpdateReleasable(configuration) {
-          initializeCompiler(configuration, mtags).map { newPC =>
-            Releasable(newPC, Sync[F].delay(newPC.underlyingPC.shutdown()))
-          }
-        }
-      ).recoverWith { case NonFatal(e) =>
-        logger.error(e.getMessage)
-        PresentationCompilerFailure(e.getMessage).asLeft.pure[F]
-      })
-  }
+  def getCompiler(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastiePresentationCompiler] =
+    EitherT:
+      if !isSupportedVersion(configuration) then
+        Async[F].delay(PresentationCompilerFailure(
+          s"Interactive features are not supported for Scala ${configuration.scalaTarget.binaryScalaVersion}."
+        ).asLeft)
+      else
+        cache.contains(configuration).flatMap: isCached =>
+          if isCached then
+            cache.get(configuration).map(_.toRight(PresentationCompilerFailure("Can't extract presentation compiler from cache.")))
+          else
+            val mtags = Sync[F].delay(
+              mtagsResolver
+                .resolve(configuration.scalaTarget.scalaVersion)
+                .toRight(PresentationCompilerFailure(s"Mtags couldn't be resolved for target: ${configuration.scalaTarget.scalaVersion}."))
+            ).recover { case err: MatchError => PresentationCompilerFailure(err.getMessage).asLeft }
+
+            mtags.flatMap(_.traverse(mtags =>
+              cache.getOrUpdateReleasable(configuration) {
+                initializeCompiler(configuration, mtags).map { newPC =>
+                  Releasable(newPC, Sync[F].delay(newPC.underlyingPC.shutdown()))
+                }
+              }
+            )).recover { case NonFatal(err) => PresentationCompilerFailure(err.getMessage).asLeft }
+
 
   /*
    * Checks if given configuration is supported. Currently it is based on scala binary version.

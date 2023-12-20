@@ -21,8 +21,7 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "println(): Unit",
-        "println(x: Any): Unit"
+        "println",
       ).asRight
     )
   }
@@ -34,10 +33,9 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "println(): Unit",
-        "println(x: Any): Unit",
-        "print(x: Any): Unit",
-        "printf(text: String, xs: Any*): Unit"
+        "print",
+        "printf",
+        "println"
       ).asRight
     )
   }
@@ -51,10 +49,10 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "asRight[B]: Either[B, A]"
+        "asRight"
       ).asRight,
       compat = Map(
-        "2" -> Set("asRight[B]: Either[B,String]").asRight
+        "2" -> Set("asRight").asRight
       )
     )
   }
@@ -69,7 +67,7 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "asRight[B]: Either[B, A]"
+        "asRight"
       ).asRight
     )
   }
