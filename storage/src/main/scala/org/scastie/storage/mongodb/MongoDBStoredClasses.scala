@@ -15,7 +15,7 @@ case class ShortMongoSnippet(
     snippetId: SnippetId,
     inputs: ShortInputs,
     time: Long
-) extends BaseMongoSnippet
+)
 
 object ShortMongoSnippet {
   implicit val shortMongoSnippetEncoder: Encoder[ShortMongoSnippet] = deriveEncoder[ShortMongoSnippet]

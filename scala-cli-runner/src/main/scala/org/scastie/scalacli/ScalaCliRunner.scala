@@ -65,10 +65,10 @@ case class RunOutput(
   exitCode: Int
 )
 
-class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path) {
+class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout: FiniteDuration, reloadTimeout: FiniteDuration) {
 
   private val log = Logger("ScalaCliRunner")
-  private val bspClient = new BspClient(coloredStackTrace, workingDir)
+  private var bspClient = new BspClient(coloredStackTrace, workingDir, compilationTimeout, reloadTimeout)
   private val scalaMain = workingDir.resolve("Main.scala")
   Files.createDirectories(scalaMain.getParent())
 
@@ -136,5 +136,11 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path) {
     }
   }
 
-  def end: Unit = bspClient.end
+  def restart(): Unit = {
+    bspClient.end()
+    bspClient = new BspClient(coloredStackTrace, workingDir, compilationTimeout, reloadTimeout)
+  }
+
+  def end(): Unit =
+    bspClient.end()
 }

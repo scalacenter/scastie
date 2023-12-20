@@ -45,7 +45,7 @@ object Instrument {
   private val runtimeApiPackage = "_root_.org.scastie.runtime.api"
   private val positionT = s"$runtimeApiPackage.Position"
   private val renderT = s"$runtimeApiPackage.Render"
-  private val runtimeErrorT = s"$runtimePackage.RuntimeError"
+  private val runtimeErrorT = s"$runtimeApiPackage.RuntimeError"
   private val instrumentationT = s"$runtimeApiPackage.Instrumentation"
   private val runtimeT = s"$runtimePackage.Runtime"
   private val domhookT = s"$runtimePackage.DomHook"

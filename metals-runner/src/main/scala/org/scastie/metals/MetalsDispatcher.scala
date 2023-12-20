@@ -226,8 +226,11 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
     dependencies: Set[ScalaDependency],
     extraDependencies: Set[Dependency]
   ): F[Set[Path]] = Sync[F].blocking {
-    val dep = dependencies.map { case ScalaDependency(groupId, artifact, target, version) =>
-      Dependency.of(groupId, artifactWithBinaryVersion(artifact, target), version)
+    val dep = dependencies.map {
+      case ScalaDependency(groupId, artifact, target, version, true) =>
+        Dependency.of(groupId, artifactWithBinaryVersion(artifact, target), version)
+      case ScalaDependency(groupId, artifact, target, version, false) =>
+        Dependency.of(groupId, artifact, version)
     }.toSeq ++ extraDependencies
 
     Fetch

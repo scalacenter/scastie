@@ -10,7 +10,7 @@ case object SbtActorReady
 
 class SbtActor(system: ActorSystem,
                runTimeout: FiniteDuration,
-               sbtReloadTimeout: FiniteDuration,
+               reloadTimeout: FiniteDuration,
                isProduction: Boolean,
                readyRef: Option[ActorRef],
                override val reconnectInfo: Option[ReconnectInfo])
@@ -55,7 +55,7 @@ class SbtActor(system: ActorSystem,
       Props(
         new SbtProcess(
           runTimeout,
-          sbtReloadTimeout,
+          reloadTimeout,
           isProduction,
           javaOptions = Seq("-Xms512m", "-Xmx1g")
         )

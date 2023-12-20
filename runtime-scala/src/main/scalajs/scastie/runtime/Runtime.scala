@@ -8,8 +8,11 @@ import org.scastie.runtime.api._
 
 object Runtime extends SharedRuntime {
 
-  def write(instrumentations: List[Instrumentation], error: Option[RuntimeError]): String = {
-    ScalaJsResult(instrumentations, error).asJsonString
+  def write(in: Either[Option[RuntimeError], List[Instrumentation]]): String = {
+    in match {
+      case Right(instrumentations) => ScalaJsResult(instrumentations, None).asJsonString
+      case Left(error) => ScalaJsResult(Nil, error).asJsonString
+    }
   }
 
   def render[T](a: T, attach: HTMLElement => UUID)(implicit _ct: ClassTag[T] = null): Render = {

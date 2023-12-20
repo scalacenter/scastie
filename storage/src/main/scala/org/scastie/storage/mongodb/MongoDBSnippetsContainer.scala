@@ -1,11 +1,14 @@
 package org.scastie.storage.mongodb
 
-import org.scastie.api._
-import org.scastie.storage._
+import com.mongodb.client.result.UpdateResult
 import org.mongodb.scala._
+import org.mongodb.scala.bson.BsonArray
 import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Projections._
 import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.model._
+import org.scastie.api._
+import org.scastie.storage._
 
 import java.lang.System.{lineSeparator => nl}
 import scala.concurrent.Await
@@ -52,15 +55,25 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
     snippets.insertOne(snippet).toFuture().map(_ => ())
   }
 
-  override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] =
-    snippets.updateOne(select(snippetId), set("inputs.isShowingInUserProfile", false)).headOption().map(_ => ())
+  def updateSnippet(snippetId: SnippetId)(update: MongoSnippet => MongoSnippet): Future[Option[UpdateResult]] =
+    readMongoSnippet(snippetId).flatMap {
+      case Some(value) =>
+        val updatedSnippet = update(value)
+        snippets.replaceOne(select(snippetId), toBson(updatedSnippet)).headOption()
+      case None => Future.successful(None)
+    }
 
-  private def select(snippetId: SnippetId) = Document("simpleSnippetId" -> snippetId.url)
+  override protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit] =
+    updateSnippet(snippetId)(oldSnippet =>
+      oldSnippet.copy(inputs = oldSnippet.inputs.copyBaseInput(isShowingInUserProfile = false))
+    ).map(_ => ())
+
+  private def select(snippetId: SnippetId) = equal("simpleSnippetId", snippetId.url)
 
   def delete(snippetId: SnippetId): Future[Boolean] =
     snippets.deleteOne(select(snippetId)).map(_.wasAcknowledged).headOption().map(_.getOrElse(false))
 
-  def appendOutput(progress: SnippetProgress): Future[Unit] = {
+  def appendOutput(progress: SnippetProgress): Future[Unit] =
     progress.snippetId match {
       case Some(snippetId) =>
         val selection = select(snippetId)
@@ -81,7 +94,6 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
         appendOutputLogs.zip(setScalaJsOutput).map(_ => ())
       case None => Future(())
     }
-  }
 
   def readMongoSnippet(snippetId: SnippetId): Future[Option[MongoSnippet]] = {
     snippets
@@ -97,21 +109,24 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
 
   def listSnippets(user: UserLogin): Future[List[SnippetSummary]] = {
     val userSnippets = and(
-      Document(
-        "snippetId.user.login"          -> user.login,
-        "inputs.isShowingInUserProfile" -> true
+      equal("snippetId.user.login", user.login),
+      or(
+        equal("inputs.SbtInputs.isShowingInUserProfile", true),
+        equal("inputs.ScalaCliInputs.isShowingInUserProfile", true)
       )
     )
 
     val mongoSnippets = snippets
       .find(userSnippets)
       .projection(
-        Document(
-          "snippetId"     -> 1,
-          "inputs.code"   -> 1,
-          "inputs.target" -> 1,
-          "time"          -> 1
-        )
+        fields(
+          include("snippetId"),
+          computed("inputs.code", Document("$ifNull" -> Seq("$inputs.SbtInputs.code", "$inputs.ScalaCliInputs.code"))),
+          computed("inputs.target", Document("$ifNull" ->
+            BsonArray("$inputs.SbtInputs.target", Document("ScalaCli" -> "$inputs.ScalaCliInputs.target")))
+          ),
+          include("time")
+        ),
       )
       .map(fromBson[ShortMongoSnippet])
 
@@ -139,13 +154,16 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
   )
 
   def readOldSnippet(id: Int): Future[Option[FetchResult]] = snippets
-    .find(Document("oldId" -> id))
+    .find(equal("oldId", id))
     .first()
     .headOption()
     .map(_.flatMap(fromBson[MongoSnippet]).map(_.toFetchResult))
 
   override def removeUserSnippets(user: UserLogin): Future[Boolean] = {
-    val query = or(Document("user" -> user.login), Document("snippetId.user.login" -> user.login))
+    val query = or(
+      equal("user", user.login),
+      equal("snippetId.user.login", user.login)
+    )
     val deletion = snippets.deleteMany(query).head().map(_.wasAcknowledged)
 
     lazy val validation = listSnippets(user).map(_.isEmpty)

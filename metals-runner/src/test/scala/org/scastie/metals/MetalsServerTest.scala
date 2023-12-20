@@ -438,13 +438,13 @@ class MetalsServerTest extends CatsEffectSuite {
   test("Text edit is proper for worksheet inside using directives") {
     testCompletionEdit(
       testTargets = List(ScalaCli(BuildInfo.latest3)),
-      code = """//> using dep org.scast@@
+      code = """//> using dep org.scala-lan@@
                |object M {
                |  println()
                |}
           """.stripMargin,
       expectedCode =
-        """//> using dep org.scastie
+        """//> using dep org.scala-lang
           |object M {
           |  println()
           |}
@@ -456,13 +456,13 @@ class MetalsServerTest extends CatsEffectSuite {
   test("Text edit is proper for no worksheet inside using directives") {
     testCompletionEdit(
       testTargets = List(ScalaCli(BuildInfo.latest3)),
-      code = """//> using dep org.scast@@
+      code = """//> using dep org.scala-lan@@
                |object M {
                |  println()
                |}
           """.stripMargin,
       expectedCode =
-        """//> using dep org.scastie
+        """//> using dep org.scala-lang
           |object M {
           |  println()
           |}
@@ -578,14 +578,14 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Scala-CLI //> both dep and lib are extracted properly") {
     val code = """//> using lib com.lihaoyi::os-lib:0.9.1
-                 |//> using dep org.scastie::runtime-scala:1.0.0-SNAPSHOT
+                 |//> using dep org.scala-lang:scala3-library_3:3.3.1
                  |println("test")""".stripMargin
 
     val target = ScalaCli(BuildInfo.latest3)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
-        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scastie", "runtime-scala", target, "1.0.0-SNAPSHOT")),
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scala-lang", "scala3-library_3", target, "3.3.1", false)),
         target,
         code
       ).asRight
@@ -593,14 +593,14 @@ class MetalsServerTest extends CatsEffectSuite {
   }
 
   test("Scala-CLI //> both dep list are extracted properly") {
-    val code = """//> using dep com.lihaoyi::os-lib:0.9.1 org.scastie::runtime-scala:1.0.0-SNAPSHOT
+    val code = """//> using dep com.lihaoyi::os-lib:0.9.1 org.scala-lang:scala3-library_3:3.3.1
                  |println("test")""".stripMargin
 
     val target = ScalaCli(BuildInfo.latest3)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
-        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scastie", "runtime-scala", target, "1.0.0-SNAPSHOT")),
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scala-lang", "scala3-library_3", target, "3.3.1", false)),
         target,
         code
       ).asRight
@@ -609,7 +609,7 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Scala-CLI //> both scala, dep and lib are extracted properly") {
     val code = """//> using lib com.lihaoyi::os-lib:0.9.1
-                 |//> using dep org.scastie::runtime-scala:1.0.0-SNAPSHOT
+                 |//> using dep org.scala-lang:scala3-library_3:3.3.1
                  |//> using scala 3.3.0
                  |println("test")""".stripMargin
 
@@ -617,7 +617,7 @@ class MetalsServerTest extends CatsEffectSuite {
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
-        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scastie", "runtime-scala", target, "1.0.0-SNAPSHOT")),
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scala-lang", "scala3-library_3", target, "3.3.1", false)),
         target,
         code
       ).asRight

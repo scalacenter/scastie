@@ -27,6 +27,7 @@ object SbtMain {
 
     val serverConfig = config.getConfig("web")
     val sbtConfig = config.getConfig("sbt")
+    val sharedRunnersConfig = config.getConfig("runners")
 
     val isProduction = sbtConfig.getBoolean("production")
 
@@ -40,15 +41,15 @@ object SbtMain {
     val runTimeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(
-        sbtConfig.getDuration("runTimeout", timeunit),
+        sharedRunnersConfig.getDuration("runTimeout", timeunit),
         timeunit
       )
     }
 
-    val sbtReloadTimeout = {
+    val reloadTimeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(
-        sbtConfig.getDuration("sbtReloadTimeout", timeunit),
+        sharedRunnersConfig.getDuration("reloadTimeout", timeunit),
         timeunit
       )
     }
@@ -62,7 +63,7 @@ object SbtMain {
       )
 
     logger.info("  runTimeout: {}", runTimeout)
-    logger.info("  sbtReloadTimeout: {}", sbtReloadTimeout)
+    logger.info("  reloadTimeout: {}", reloadTimeout)
     logger.info("  isProduction: {}", isProduction)
     logger.info("  runner hostname: {}", reconnectInfo.actorHostname)
     logger.info("  runner port: {}", reconnectInfo.actorAkkaPort)
@@ -74,7 +75,7 @@ object SbtMain {
         new SbtActor(
           system = system,
           runTimeout = runTimeout,
-          sbtReloadTimeout = sbtReloadTimeout,
+          reloadTimeout = reloadTimeout,
           isProduction = isProduction,
           readyRef = None,
           reconnectInfo = Some(reconnectInfo)

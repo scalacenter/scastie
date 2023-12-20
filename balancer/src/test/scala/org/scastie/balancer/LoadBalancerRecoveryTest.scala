@@ -72,7 +72,7 @@ class LoadBalancerRecoveryTest()
         new SbtActor(
           system = sbtSystem,
           runTimeout = 10.seconds,
-          sbtReloadTimeout = 20.seconds,
+          reloadTimeout = 20.seconds,
           isProduction = false,
           readyRef = Some(sbtActorReadyProbe.ref),
           reconnectInfo = Some(
