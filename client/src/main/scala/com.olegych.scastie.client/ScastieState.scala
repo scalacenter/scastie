@@ -50,7 +50,7 @@ object ScastieState {
       modalState =
         if (isEmbedded) ModalState.allClosed
         else ModalState.default,
-      isDarkTheme = false,
+      isDarkTheme = org.scalajs.dom.window.matchMedia("(prefers-color-scheme: dark)").matches,
       isDesktopForced = false,
       isPresentationMode = false,
       showLineNumbers = true,

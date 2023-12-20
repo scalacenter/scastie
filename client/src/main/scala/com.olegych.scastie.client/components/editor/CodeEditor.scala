@@ -57,6 +57,7 @@ object CodeEditor {
 
       val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
       val extensions = js.Array[Any](
+        Editor.editorTheme.of(props.codemirrorTheme),
         lineNumbers(),
         highlightSpecialChars(),
         history(),
@@ -69,6 +70,7 @@ object CodeEditor {
         rectangularSelection(),
         crosshairCursor(),
         highlightSelectionMatches(),
+        Editor.indentationMarkersExtension,
         keymap.of(closeBracketsKeymap ++ defaultKeymap ++ historyKeymap ++ foldKeymap ++ completionKeymap ++ lintKeymap ++ searchKeymap),
         StateField
           .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
@@ -140,7 +142,7 @@ object CodeEditor {
       editorView: UseStateF[CallbackTo, EditorView]
   ): Callback = {
     Editor.updateCode(editorView, props) >>
-      Editor.updateTheme(ref, prevProps, props) >>
+      Editor.updateTheme(ref, prevProps, props, editorView) >>
       updateDiagnostics(editorView, prevProps, props) >>
       DecorationProvider.updateDecorations(editorView, prevProps, props) >>
       InteractiveProvider.reloadMetalsConfiguration(editorView, prevProps, props)
