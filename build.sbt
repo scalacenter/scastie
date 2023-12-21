@@ -244,7 +244,7 @@ lazy val server = project
       Seq(outputWasmDirectory / treeSitterScalaOutputName, outputWasmDirectory / treeSitterOutputName)
     },
     libraryDependencies ++= Seq(
-      "org.apache.commons"                  % "commons-text"   % "1.10.0",
+      "org.apache.commons"                  % "commons-text"   % "1.11.0",
       "com.typesafe.akka"                  %% "akka-http"      % akkaHttpVersion,
       "com.softwaremill.akka-http-session" %% "core"           % "0.7.1",
       "ch.megard"                          %% "akka-http-cors" % "1.2.0",
