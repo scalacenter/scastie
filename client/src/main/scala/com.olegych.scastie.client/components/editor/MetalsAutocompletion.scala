@@ -112,17 +112,15 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
   }
 
   private val autocompletionTrigger = onChangeCallback((code, view) => {
-    if (wasPreviousIncomplete || !view.matchesPreviousToken(previousWord)) {
-      startCompletion(view)
-    }
-    if (!view.matchesPreviousToken(previousWord)) {
-      wasPreviousIncomplete = true
-    }
+    val matchesPreviousToken = view.matchesPreviousToken(previousWord)
+    if (wasPreviousIncomplete || !matchesPreviousToken) startCompletion(view)
+    if (!matchesPreviousToken) wasPreviousIncomplete = true
   })
 
   private val completionsF: js.Function1[CompletionContext, js.Promise[CompletionResult]] = {
     ctx => ifSupported {
       val word = ctx.matchBefore(jsRegex).asInstanceOf[anon.Text]
+      println("running completions")
 
       if (!ctx.explicit || (word == null || word.text.isEmpty || (word.from == word.to))) {
         previousWord = ""
@@ -143,6 +141,7 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
                   .setType(tpe)
                   .setBoost(-boost.getOrElse(-99).toDouble)
                   .setApplyFunction4((view, _, from, to) => {
+                    wasPreviousIncomplete = false
                     Callback(view.dispatch(createEditTransaction(view, cmp, to.toInt)))
                   }
                   )
@@ -158,6 +157,7 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
   }
 
   private val autocompletionConfig = CompletionConfig()
+    .setInteractionDelay(0) // we want completions to work instantly
     .setOverrideVarargs(completionsF)
     .setActivateOnTyping(false) // we use our own autocompletion trigger with working debounce MetalsAutocompletion.autocompletionTrigger
     .setIcons(true)
