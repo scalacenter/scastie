@@ -18,18 +18,20 @@ configuration matrix
 object SbtShared {
 
   object ScalaVersions {
-    val latest210 = "2.10.7"
-    val latest211 = "2.11.12"
-    val latest212 = "2.12.18"
-    val latest213 = "2.13.12"
-    val old3      = "3.0.2"
-    val stable3   = "3.3.1"
-    val latest3   = "3.3.2-RC1"
-    val js        = latest213
-    val sbt       = latest212
-    val jvm       = latest213
-    val cross     = List(latest210, latest211, latest212, latest213, old3, js, sbt, jvm).distinct
-    val crossJS   = List(latest212, latest213, js).distinct
+    val latest210  = "2.10.7"
+    val latest211  = "2.11.12"
+    val latest212  = "2.12.18"
+    val latest213  = "2.13.12"
+    val old3       = "3.0.2"
+    val stableLTS  = "3.3.1"
+    val stableNext = "???"
+    val latestLTS  = "3.3.2-RC1"
+    val latestNext = "3.4.0-RC1"
+    val js         = latest213
+    val sbt        = latest212
+    val jvm        = latest213
+    val cross      = List(latest210, latest211, latest212, latest213, old3, js, sbt, jvm).distinct
+    val crossJS    = List(latest212, latest213, js).distinct
   }
 
   object ScalaJSVersions {
@@ -149,8 +151,10 @@ object SbtShared {
         "latest211"             -> ScalaVersions.latest211,
         "latest212"             -> ScalaVersions.latest212,
         "latest213"             -> ScalaVersions.latest213,
-        "stable3"               -> ScalaVersions.stable3,
-        "latest3"               -> ScalaVersions.latest3,
+        "stableLTS"             -> ScalaVersions.stableLTS,
+        // "stableNext"            -> ScalaVersions.stableNext,
+        "latestLTS"             -> ScalaVersions.latestLTS,
+        "latestNext"            -> ScalaVersions.latestNext,
         "jsScalaVersion"        -> ScalaVersions.js,
         "defaultScalaJsVersion" -> ScalaJSVersions.current,
         "sbtVersion"            -> sbtVersion.value

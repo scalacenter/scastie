@@ -5,8 +5,8 @@ import com.olegych.scastie.buildinfo.BuildInfo
 object ScalaVersions {
   def suggestedScalaVersions(tpe: ScalaTargetType): List[String] = {
     val versions = tpe match {
-      case ScalaTargetType.Scala3 => List(BuildInfo.stable3, BuildInfo.latest3)
-      case ScalaTargetType.JS     => List(BuildInfo.stable3, BuildInfo.latest213, BuildInfo.latest212)
+      case ScalaTargetType.Scala3 => List(BuildInfo.stableLTS, BuildInfo.latestLTS, BuildInfo.latestNext)
+      case ScalaTargetType.JS     => List(BuildInfo.stableLTS, BuildInfo.latest213, BuildInfo.latest212)
       case _                      => List(BuildInfo.latest213, BuildInfo.latest212)
     }
     versions.distinct
@@ -16,8 +16,10 @@ object ScalaVersions {
     val versions = tpe match {
       case ScalaTargetType.Scala3 =>
         List(
-          BuildInfo.stable3,
-          BuildInfo.latest3,
+          BuildInfo.stableLTS,
+          // BuildInfo.stableNext,
+          BuildInfo.latestLTS,
+          BuildInfo.latestNext,
           "3.3.0",
           "3.2.2",
           "3.2.1",
