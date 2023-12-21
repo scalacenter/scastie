@@ -65,7 +65,7 @@ object BlockingServiceLoader {
  * IMPORTANT, Presentation compilers are stored to make sure we are not loading same classes with Classloader.
  * They are also not thread safe that's why their creation for the first time for specific `scalaVersion` is blocking.
  */
-class PresentationCompilers[F[_]: Async] {
+class PresentationCompilers[F[_]: Async](metalsWorkingDirectory: Path) {
   private val presentationCompilers: TrieMap[String, URLClassLoader] = TrieMap.empty
 
   // service loader must be blocking as it's not thread safe
@@ -85,6 +85,7 @@ class PresentationCompilers[F[_]: Async] {
       }).map(pc =>
         pc.newInstance("", classpath.filterNot(isSourceJar).asJava, Nil.asJava)
           .withSearch(ScastieSymbolSearch(docs, classpathSearch))
+          .withWorkspace(metalsWorkingDirectory)
       )
     }
 
