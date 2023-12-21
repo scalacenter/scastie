@@ -120,7 +120,6 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
   private val completionsF: js.Function1[CompletionContext, js.Promise[CompletionResult]] = {
     ctx => ifSupported {
       val word = ctx.matchBefore(jsRegex).asInstanceOf[anon.Text]
-      println("running completions")
 
       if (!ctx.explicit || (word == null || word.text.isEmpty || (word.from == word.to))) {
         previousWord = ""
