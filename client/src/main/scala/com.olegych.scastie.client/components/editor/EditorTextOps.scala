@@ -4,7 +4,7 @@ import typings.codemirrorView.mod._
 
 
 object EditorTextOps {
-  val regex = """\.?\w+""".r
+  val regex = """\.\w*|\w+""".r
 
   implicit class EditorTextOpsOps(view: EditorView) {
     def lineBeforeCursor: String = {
