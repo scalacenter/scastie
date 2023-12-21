@@ -20,6 +20,8 @@ import com.olegych.scastie.api._
 import com.olegych.scastie.api.ScalaTarget._
 import coursierapi.{Dependency, Fetch}
 import org.slf4j.LoggerFactory
+import com.typesafe.config.ConfigFactory
+import java.nio.file.Paths
 
 /*
  * MetalsDispatcher is responsible for managing the lifecycle of presentation compilers.
@@ -31,10 +33,19 @@ import org.slf4j.LoggerFactory
  */
 class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, ScastiePresentationCompiler]) {
   private val logger                = LoggerFactory.getLogger(getClass)
-  private val presentationCompilers = PresentationCompilers[F]()
 
+  private val config                 = ConfigFactory.load().getConfig("scastie.metals")
+  private val isDocker               = config.getBoolean("is-docker")
   private val mtagsResolver          = MtagsResolver.default()
-  private val metalsWorkingDirectory = Files.createTempDirectory("scastie-metals")
+  private val metalsWorkingDirectory =
+    if isDocker then
+      Files.createDirectories(Paths.get("/home/scastie")) // temporal solution
+    else
+      Files.createTempDirectory("scastie-metals")
+
+  logger.info(s"Metals working directory: $metalsWorkingDirectory")
+
+  private val presentationCompilers = PresentationCompilers[F](metalsWorkingDirectory)
   private val supportedVersions      = Set("2.12", "2.13", "3")
 
   /*

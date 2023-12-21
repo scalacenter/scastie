@@ -210,8 +210,8 @@ class Deployment(
          |  -d \\
          |  -e PORT=${config.metalsPort} \\
          |  -e CACHE_EXPIRE_IN_SECONDS=${config.cacheExpireInSeconds} \\
+         |  -e IS_DOCKER=true \\
          |  $dockerImagePath""".stripMargin
-
 
     Files.write(scriptPath, metalsRunnerStartupScriptContent.getBytes())
     setPosixFilePermissions(scriptPath, executablePermissions)
