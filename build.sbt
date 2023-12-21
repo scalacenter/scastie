@@ -1,16 +1,19 @@
+import scala.sys.process._
 import scala.sys.process.ProcessLogger
 
 import com.typesafe.sbt.SbtNativePackager.Universal
 import org.scalajs.linker.interface.ModuleSplitStyle
 import SbtShared._
-import scala.sys.process._
 
 def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.19"
 
 val akkaHttpVersion = "10.2.9"
 
 addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
-addCommandAlias("startAllProd", "sbtRunner/reStart;metalsRunner/reStart;server/buildTreesitterWasm;server/fullLinkJS/reStart")
+addCommandAlias(
+  "startAllProd",
+  "sbtRunner/reStart;metalsRunner/reStart;server/buildTreesitterWasm;server/fullLinkJS/reStart"
+)
 
 val yarnBuild = taskKey[Unit]("builds es modules with `yarn build`")
 
@@ -49,7 +52,7 @@ lazy val loggingAndTest = Seq(
   libraryDependencies ++= Seq(
     "ch.qos.logback"              % "logback-classic" % "1.4.11",
     "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5",
-    "io.sentry"                   % "sentry-logback"  % "6.29.0"
+    "io.sentry"                   % "sentry-logback"  % "6.34.0"
   )
 ) ++ testSettings
 
@@ -196,33 +199,33 @@ lazy val server = project
   .settings(
     watchSources ++= (client / watchSources).value,
     Compile / products += (client / baseDirectory).value / "dist",
-    fullLinkJS / reStart   := reStart.dependsOn(client / Compile / fullLinkJS / yarnBuild).evaluated,
+    fullLinkJS / reStart := reStart.dependsOn(client / Compile / fullLinkJS / yarnBuild).evaluated,
     Universal / packageBin := (Universal / packageBin)
       .dependsOn(buildTreesitterWasm)
-      .dependsOn(client / Compile / fullLinkJS / yarnBuild).value,
+      .dependsOn(client / Compile / fullLinkJS / yarnBuild)
+      .value,
     reStart / javaOptions += "-Xmx512m",
     maintainer := "scalacenter",
     buildTreesitterWasm := {
       val treeSitterOutputName = "tree-sitter.wasm"
-      val treeSitterWasm = 
-        baseDirectory.value.getParentFile / "node_modules" / "web-tree-sitter" / treeSitterOutputName
+      val treeSitterWasm = baseDirectory.value.getParentFile / "node_modules" / "web-tree-sitter" / treeSitterOutputName
 
       val treeSitterScalaOutputName = "tree-sitter-scala.wasm"
-      val treeSitterScalaWasm = 
-        baseDirectory.value.getParentFile / "tree-sitter-scala" / treeSitterScalaOutputName
+      val treeSitterScalaWasm = baseDirectory.value.getParentFile / "tree-sitter-scala" / treeSitterScalaOutputName
 
       val treeSitterScalaHiglightName = "highlights.scm"
-      val treeSitterScalaHiglight = 
+      val treeSitterScalaHiglight =
         baseDirectory.value.getParentFile / "tree-sitter-scala" / "queries" / "scala" / treeSitterScalaHiglightName
 
       val outputWasmDirectory = (Compile / resourceDirectory).value / "public"
 
-      val s: TaskStreams = streams.value
+      val s: TaskStreams     = streams.value
       val shell: Seq[String] = if (sys.props("os.name").contains("Windows")) Seq("cmd", "/c") else Seq("bash", "-c")
       val updateGitSubmodule: Seq[String] = shell :+ "git submodule update --init"
-      val buildWasm: Seq[String] = shell :+ """cd tree-sitter-scala && nix-shell -p emscripten --run 'nix-shell --run "tree-sitter build-wasm"'"""
+      val buildWasm: Seq[String] =
+        shell :+ """cd tree-sitter-scala && nix-shell -p emscripten --run 'nix-shell --run "tree-sitter build-wasm"'"""
       s.log.info("building tree-sitter-scala wasm...")
-      if((updateGitSubmodule #&& buildWasm !) == 0) {
+      if ((updateGitSubmodule #&& buildWasm !) == 0) {
         s.log.success(s"$treeSitterOutputName build successfuly!")
       } else {
         throw new IllegalStateException(s"Failed to generate $treeSitterOutputName!")
@@ -231,8 +234,12 @@ lazy val server = project
       sbt.IO.copyFile(treeSitterScalaHiglight, outputWasmDirectory / treeSitterScalaHiglightName)
       sbt.IO.move(treeSitterScalaWasm, outputWasmDirectory / treeSitterScalaOutputName)
       sbt.IO.copyFile(treeSitterWasm, outputWasmDirectory / treeSitterOutputName)
-      s.log.success(s"Copied $treeSitterScalaHiglight to ${(outputWasmDirectory / treeSitterScalaHiglightName).getAbsolutePath}")
-      s.log.success(s"Copied $treeSitterScalaWasm to ${(outputWasmDirectory / treeSitterScalaOutputName).getAbsolutePath}")
+      s.log.success(
+        s"Copied $treeSitterScalaHiglight to ${(outputWasmDirectory / treeSitterScalaHiglightName).getAbsolutePath}"
+      )
+      s.log.success(
+        s"Copied $treeSitterScalaWasm to ${(outputWasmDirectory / treeSitterScalaOutputName).getAbsolutePath}"
+      )
       s.log.success(s"Copied $treeSitterWasm to ${(outputWasmDirectory / treeSitterOutputName).getAbsolutePath}")
       Seq(outputWasmDirectory / treeSitterScalaOutputName, outputWasmDirectory / treeSitterOutputName)
     },
@@ -270,7 +277,6 @@ lazy val storage = project
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
-
 
 lazy val client = project
   .enablePlugins(ScalablyTypedConverterExternalNpmPlugin)
