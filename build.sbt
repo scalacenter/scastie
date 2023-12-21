@@ -125,7 +125,7 @@ lazy val metalsRunner = project
       .dependsOn(runnerRuntimeDependencies: _*)
       .value,
     maintainer   := "scalacenter",
-    scalaVersion := ScalaVersions.stable3,
+    scalaVersion := ScalaVersions.stableLTS,
     libraryDependencies ++= Seq(
       "org.scalameta"        % "metals"              % "1.2.0" cross (CrossVersion.for3Use2_13),
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.21.1",
