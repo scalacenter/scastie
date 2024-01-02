@@ -301,8 +301,7 @@ object Scastie {
             snippetId <- CallbackOption.option(next)
             _ <- CallbackOption.require(next != current)
             _ <- backend.loadSnippet(snippetId).toCBO >> backend.setView(View.Editor)
-          } yield (
-          )
+          } yield ()
 
         setTitle(state, scope.nextProps) >> loadSnippet.toCallback
       }
