@@ -21,7 +21,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
 
   type DependencyForVersion = ScalaTarget => ScalaDependency
 
-  val testTargets = List(BuildInfo.latest3, BuildInfo.stable3).map(ScalaTarget.Scala3.apply) ++
+  val testTargets = List(BuildInfo.latestLTS, BuildInfo.stableLTS, BuildInfo.latestNext).map(ScalaTarget.Scala3.apply) ++
     List(BuildInfo.latest213, BuildInfo.latest212).map(ScalaTarget.Jvm.apply)
 
   val unsupportedVersions = List(BuildInfo.latest211, BuildInfo.latest210).map(ScalaTarget.Jvm.apply)
