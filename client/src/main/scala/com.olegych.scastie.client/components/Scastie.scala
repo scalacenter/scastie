@@ -227,14 +227,13 @@ object Scastie {
       .builder[Scastie]("Scastie")
       .initialStateFromProps { props =>
         val state = {
-          val loadedState =
-            LocalStorage.load.map(
-              _.copy(isEmbedded = props.isEmbedded, modalState = if (props.isEmbedded) ModalState.allClosed else ModalState.default)
-            ).getOrElse(ScastieState.default(props.isEmbedded)).copy(inputs = Inputs.default.copy(code = ""))
+          val scheme = LocalStorage.load.map(_.isDarkTheme)
+          val loadedState = ScastieState.default(props.isEmbedded)
+          val loadedStateWithScheme = scheme.map(theme => loadedState.copy(isDarkTheme = theme)).getOrElse(loadedState)
           if (!props.isEmbedded) {
-            loadedState
+            loadedStateWithScheme
           } else {
-            loadedState.setCleanInputs.clearOutputs
+            loadedStateWithScheme.setCleanInputs.clearOutputs
           }
         }
 
@@ -290,6 +289,7 @@ object Scastie {
           executeScalaJs(scastieId, scope.currentState)
       }
       .componentWillReceiveProps { scope =>
+        println("scope")
         val next = scope.nextProps.snippetId
         val current = scope.currentProps.snippetId
         val state = scope.state
@@ -298,9 +298,12 @@ object Scastie {
         val loadSnippet: CallbackOption[Unit] =
           for {
             snippetId <- CallbackOption.option(next)
+            _ = println("aaaaaaaaaaaaaaaa")
             _ <- CallbackOption.require(next != current)
             _ <- backend.loadSnippet(snippetId).toCBO >> backend.setView(View.Editor)
-          } yield ()
+          } yield (
+            println("loaded snippet")
+          )
 
         setTitle(state, scope.nextProps) >> loadSnippet.toCallback
       }
