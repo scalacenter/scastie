@@ -165,6 +165,8 @@ object Scastie {
     initialState >> backend.loadUser
   }
 
+  val playgroundMainRegex = "let ScastiePlaygroundMain".r
+
   private def executeScalaJs(scastieId: UUID, state: ScastieState): CallbackTo[Unit] = {
     val scalaJsRunId = "scastie-scalajs-playground-run"
 
@@ -213,7 +215,7 @@ object Scastie {
         state.snippetState.scalaJsContent.foreach { content =>
           println("== Loading Scala.js! ==")
           val scalaJsScriptElement = createScript(scalaJsId)
-          val fixedContent = content.replace("let ScastiePlaygroundMain;", "var ScastiePlaygroundMain;")
+          val fixedContent = playgroundMainRegex.replaceAllIn(content, "var ScastiePlaygroundMain")
           val scriptTextNode = dom.document.createTextNode(fixedContent)
           scalaJsScriptElement.appendChild(scriptTextNode)
           runScalaJs()
@@ -227,14 +229,13 @@ object Scastie {
       .builder[Scastie]("Scastie")
       .initialStateFromProps { props =>
         val state = {
-          val loadedState =
-            LocalStorage.load.map(
-              _.copy(isEmbedded = props.isEmbedded, modalState = if (props.isEmbedded) ModalState.allClosed else ModalState.default)
-            ).getOrElse(ScastieState.default(props.isEmbedded)).copy(inputs = Inputs.default.copy(code = ""))
+          val scheme = LocalStorage.load.map(_.isDarkTheme)
+          val loadedState = ScastieState.default(props.isEmbedded)
+          val loadedStateWithScheme = scheme.map(theme => loadedState.copy(isDarkTheme = theme)).getOrElse(loadedState)
           if (!props.isEmbedded) {
-            loadedState
+            loadedStateWithScheme
           } else {
-            loadedState.setCleanInputs.clearOutputs
+            loadedStateWithScheme.setCleanInputs.clearOutputs
           }
         }
 
