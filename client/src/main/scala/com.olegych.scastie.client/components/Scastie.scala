@@ -165,6 +165,8 @@ object Scastie {
     initialState >> backend.loadUser
   }
 
+  val playgroundMainRegex = "let ScastiePlaygroundMain".r
+
   private def executeScalaJs(scastieId: UUID, state: ScastieState): CallbackTo[Unit] = {
     val scalaJsRunId = "scastie-scalajs-playground-run"
 
@@ -213,7 +215,7 @@ object Scastie {
         state.snippetState.scalaJsContent.foreach { content =>
           println("== Loading Scala.js! ==")
           val scalaJsScriptElement = createScript(scalaJsId)
-          val fixedContent = content.replace("let ScastiePlaygroundMain;", "var ScastiePlaygroundMain;")
+          val fixedContent = playgroundMainRegex.replaceAllIn(content, "var ScastiePlaygroundMain")
           val scriptTextNode = dom.document.createTextNode(fixedContent)
           scalaJsScriptElement.appendChild(scriptTextNode)
           runScalaJs()
@@ -289,7 +291,6 @@ object Scastie {
           executeScalaJs(scastieId, scope.currentState)
       }
       .componentWillReceiveProps { scope =>
-        println("scope")
         val next = scope.nextProps.snippetId
         val current = scope.currentProps.snippetId
         val state = scope.state
@@ -298,11 +299,9 @@ object Scastie {
         val loadSnippet: CallbackOption[Unit] =
           for {
             snippetId <- CallbackOption.option(next)
-            _ = println("aaaaaaaaaaaaaaaa")
             _ <- CallbackOption.require(next != current)
             _ <- backend.loadSnippet(snippetId).toCBO >> backend.setView(View.Editor)
           } yield (
-            println("loaded snippet")
           )
 
         setTitle(state, scope.nextProps) >> loadSnippet.toCallback
