@@ -278,13 +278,17 @@ lazy val storage = project
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
 
+lazy val yarnBin =
+  if (scala.util.Properties.isWin) "yarn.cmd"
+  else "yarn"
+
 lazy val client = project
   .enablePlugins(ScalablyTypedConverterExternalNpmPlugin)
   .settings(baseNoCrossSettings)
   .settings(baseJsSettings)
   .settings(
     externalNpm := {
-      Process("yarn", baseDirectory.value.getParentFile) ! ProcessLogger(line => ())
+      Process(yarnBin, baseDirectory.value.getParentFile) ! ProcessLogger(line => ())
       baseDirectory.value.getParentFile
     },
     stFlavour := Flavour.ScalajsReact,
@@ -298,7 +302,7 @@ lazy val client = project
       scalaJSLinkerConfig.value.withModuleKind(ModuleKind.ESModule)
     },
     yarnBuild := {
-      Process("yarn build").!
+      Process(s"$yarnBin build").!
     },
     test                        := {},
     Test / loadedTestFrameworks := Map(),
