@@ -56,6 +56,10 @@
         }
       }
 
+      .selected-option {
+        outline: 2px solid $selected-radio-color;
+      }
+
       .search .search-input {
         background-color: $input-background-color;
         .close {

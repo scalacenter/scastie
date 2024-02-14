@@ -44,25 +44,32 @@ object VersionSelector {
                   onChange --> props.onChange(versionSelectors(suggestedVersion)),
                   checked := props.scalaTarget.scalaVersion == suggestedVersion
                 ),
-                label(`for` := s"scala-$suggestedVersion", cls := "radio", role := "button", renderRecommended3Versions(suggestedVersion))
+                label(`for` := s"scala-$suggestedVersion", className := "radio", role := "button", renderRecommended3Versions(suggestedVersion))
               )
             }
             .toTagMod,
           li(
             label(
-              div(cls := "select-wrapper")(
+              div(cls := "select-wrapper"){
+                val isRecommended = ScalaVersions
+                    .suggestedScalaVersions(props.scalaTarget.targetType)
+                    .contains(props.scalaTarget.scalaVersion)
+
                 select(
                   name := "scalaVersion",
                   onChange ==> { (e: ReactEventFromInput) =>
                     props.onChange(versionSelectors(e.target.value))
                   },
+                  value := {if (isRecommended) "Other" else props.scalaTarget.scalaVersion},
+                  TagMod.when(!isRecommended)(className := "selected-option")
                 )(
                   ScalaVersions
                     .allVersions(props.scalaTarget.targetType)
                     .map(version => option(version))
+                    .prepended(option("Other")(hidden := true, disabled := true))
                     .toTagMod
                 )
-              )
+              }
             )
           )
         )
