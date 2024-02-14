@@ -23,10 +23,10 @@ object SbtShared {
     val latest212  = "2.12.18"
     val latest213  = "2.13.12"
     val old3       = "3.0.2"
-    val stableLTS  = "3.3.1"
-    val stableNext = "???"
-    val latestLTS  = "3.3.2-RC3"
-    val latestNext = "3.4.0-RC4"
+    val stableLTS  = "3.3.2"
+    val stableNext = "3.4.0"
+    val latestLTS  = "3.3.2"
+    val latestNext = "3.4.1-RC1"
     val js         = latest213
     val sbt        = latest212
     val jvm        = latest213
@@ -152,7 +152,7 @@ object SbtShared {
         "latest212"             -> ScalaVersions.latest212,
         "latest213"             -> ScalaVersions.latest213,
         "stableLTS"             -> ScalaVersions.stableLTS,
-        // "stableNext"            -> ScalaVersions.stableNext,
+        "stableNext"            -> ScalaVersions.stableNext,
         "latestLTS"             -> ScalaVersions.latestLTS,
         "latestNext"            -> ScalaVersions.latestNext,
         "jsScalaVersion"        -> ScalaVersions.js,
