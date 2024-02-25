@@ -138,8 +138,7 @@ case class Js(scalaVersion: String, scalaJsVersion: String) extends SbtScalaTarg
                          else scalaJsVersion.split('.').head)
   )
 
-  def renderDependency(lib: ScalaDependency): String =
-    s"${renderSbtCross(lib)} cross CrossVersion.for3Use2_13"
+  def renderDependency(lib: ScalaDependency): String = renderSbtCross(lib)
 
   def sbtConfig: String = {
     s"""|$sbtConfigScalaVersion
