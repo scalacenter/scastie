@@ -20,8 +20,8 @@ object SbtShared {
   object ScalaVersions {
     val latest210  = "2.10.7"
     val latest211  = "2.11.12"
-    val latest212  = "2.12.18"
-    val latest213  = "2.13.12"
+    val latest212  = "2.12.19"
+    val latest213  = "2.13.13"
     val old3       = "3.0.2"
     val stableLTS  = "3.3.2"
     val stableNext = "3.4.0"
