@@ -84,9 +84,7 @@ class SbtProcess(
     run.progressActor ! p
     implicit val tm = Timeout(10.seconds)
     (run.snippetActor ? p)
-      .recover { case e =>
-        log.error(e, s"error while saving progress $p")
-      }
+      .recover { case e => log.error(e, s"error while saving progress $p") }
   }
 
   private val sbtDir: Path   = customSbtDir.getOrElse(Files.createTempDirectory("scastie"))

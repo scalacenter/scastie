@@ -99,9 +99,7 @@ object Instrument {
               case _: Term.EndMarker => false
               case _                 => true
             }
-            .collect { case term: Term =>
-              instrumentOne(term, None, offset, isScalaJs)
-            }
+            .collect { case term: Term => instrumentOne(term, None, offset, isScalaJs) }
     }.flatten
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)

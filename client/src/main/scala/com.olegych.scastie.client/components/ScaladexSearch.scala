@@ -65,9 +65,7 @@ object ScaladexSearch {
       .toSet
 
     val search: List[(Project, String, Option[String], ScalaTarget)] = projects
-      .flatMap { case (project, target) =>
-        project.artifacts.map(artifact => (project, artifact, None, target))
-      }
+      .flatMap { case (project, target) => project.artifacts.map(artifact => (project, artifact, None, target)) }
       .filter { projectAndArtifact =>
         !selectedProjectsArtifacts.contains(projectAndArtifact)
       }

@@ -49,9 +49,8 @@ object OldScastieConverter {
       val sbtConfig = content.slice(start, start + blockEndPos - start)
       val code      = content.drop(blockEndPos + blockEnd.length)
 
-      val converterFn = sbtConfig.split("\n").foldLeft(Converter.nil) { case (converter, line) =>
-        convertLine(line)(converter)
-      }
+      val converterFn =
+        sbtConfig.split("\n").foldLeft(Converter.nil) { case (converter, line) => convertLine(line)(converter) }
 
       converterFn(Inputs.default).copy(code = code.trim)
     } else {

@@ -38,15 +38,9 @@ object RuntimeErrorLogger {
     // daaamn
     Option(event.getThrown).orElse {
       for {
-        e <- Option(event.getMessage).collect { case e: ObjectMessage =>
-          e
-        }
-        e <- Option(e.getParameter).collect { case e: ObjectEvent[_] =>
-          e
-        }
-        e <- Option(e.message).collect { case e: TraceEvent =>
-          e
-        }
+        e <- Option(event.getMessage).collect { case e: ObjectMessage => e }
+        e <- Option(e.getParameter).collect { case e: ObjectEvent[_] => e }
+        e <- Option(e.message).collect { case e: TraceEvent => e }
         // since worksheet wraps the code in object we unwrap it to display clearer message
         e <- Option(e.message).collect {
           case e: ExceptionInInitializerError if e.getCause != null && e.getCause.getStackTrace.headOption.exists { e =>

@@ -41,9 +41,7 @@ trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
 
       inner.toList
         .sortBy { case (k, v) => (-v, k) }
-        .map { case (k, v) =>
-          s"$k($v)"
-        }
+        .map { case (k, v) => s"$k($v)" }
         .mkString("Multiset(", ", ", s") {$size}")
     }
 

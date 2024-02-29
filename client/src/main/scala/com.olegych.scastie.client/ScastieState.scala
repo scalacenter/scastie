@@ -431,9 +431,7 @@ case class ScastieState(
   }
 
   def setProgresses(progresses: List[SnippetProgress]): ScastieState = coalesceUpdates { self =>
-    progresses.foldLeft(self) { case (state, progress) =>
-      state.addProgress(progress)
-    }
+    progresses.foldLeft(self) { case (state, progress) => state.addProgress(progress) }
   }
 
   def setSnippetId(snippetId: SnippetId): ScastieState = copyAndSave(snippetId = Some(snippetId))
