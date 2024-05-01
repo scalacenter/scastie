@@ -21,7 +21,7 @@ object SbtShared {
     val latest210  = "2.10.7"
     val latest211  = "2.11.12"
     val latest212  = "2.12.19"
-    val latest213  = "2.13.13"
+    val latest213  = "2.13.14"
     val old3       = "3.0.2"
     val stableLTS  = "3.3.3"
     val stableNext = "3.4.1"
@@ -35,7 +35,7 @@ object SbtShared {
   }
 
   object ScalaJSVersions {
-    val current = "1.13.2"
+    val current = "1.16.0"
   }
 
   val runtimeProjectName = "runtime-scala"
