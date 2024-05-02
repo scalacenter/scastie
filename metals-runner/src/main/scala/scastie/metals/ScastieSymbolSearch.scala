@@ -18,7 +18,7 @@ class ScastieSymbolSearch(docs: Docstrings, classpathSearch: ClasspathSearch) ex
     visitor: SymbolSearchVisitor
   ): SymbolSearch.Result = {
     if query.nonEmpty then
-      classpathSearch.search(WorkspaceSymbolQuery.exact(query), visitor)
+      classpathSearch.search(WorkspaceSymbolQuery.exact(query), visitor)._1
     else SymbolSearch.Result.INCOMPLETE
   }
 
@@ -28,7 +28,7 @@ class ScastieSymbolSearch(docs: Docstrings, classpathSearch: ClasspathSearch) ex
     visitor: SymbolSearchVisitor
   ): SymbolSearch.Result = {
     if query.nonEmpty then
-      classpathSearch.search(WorkspaceSymbolQuery.exact(query), visitor)
+      classpathSearch.search(WorkspaceSymbolQuery.exact(query), visitor)._1
     else SymbolSearch.Result.INCOMPLETE
   }
 
