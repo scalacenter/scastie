@@ -1,28 +1,28 @@
 package com.olegych.scastie.client
 
-import com.olegych.scastie.api.{Inputs, Project, ScalaDependency, ScalaTarget, ScalaTargetType, ScalaVersions, SnippetId, SnippetUserPart}
-import com.olegych.scastie.client.components._
-import japgolly.scalajs.react._
-import vdom.all._
-import extra.router._
-import play.api.libs.json.Json
-
 import java.util.UUID
 
+import com.olegych.scastie.api.{Inputs, Project, ScalaDependency, ScalaTarget, ScalaTargetType, ScalaVersions, SnippetId, SnippetUserPart}
+import com.olegych.scastie.client.components._
+import extra.router._
+import japgolly.scalajs.react._
+import play.api.libs.json.Json
+import vdom.all._
+
 class Routing(defaultServerUrl: String) {
+
   val config: RouterConfig[Page] = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
-    val embedded = "embedded"
-    val alpha = string("[a-zA-Z0-9-]+")
+    val embedded  = "embedded"
+    val alpha     = string("[a-zA-Z0-9-]+")
     val snippetId = string("[a-zA-Z0-9-]{22}")
     val targetType = queryToMap.pmap { map =>
       (
         map.get("target"),
-        map.get("c"),
+        map.get("c")
       ) match {
-        case (Some(target), c) =>
-          ScalaTargetType.parse(target.toUpperCase).map(target => TargetTypePage(target, c))
-        case _ => None
+        case (Some(target), c) => ScalaTargetType.parse(target.toUpperCase).map(target => TargetTypePage(target, c))
+        case _                 => None
       }
     }(p => Map("target" -> p.targetType.toString) ++ p.code.map("c" -> _))
 
@@ -30,11 +30,14 @@ class Routing(defaultServerUrl: String) {
       map.get("inputs").flatMap { inputs =>
         Json
           .fromJson[Inputs](Json.parse(inputs))
-          .fold({ e =>
-            println(s"failed to parse ${inputs}")
-            println(e)
-            None
-          }, inputs => Some(InputsPage(inputs)))
+          .fold(
+            { e =>
+              println(s"failed to parse ${inputs}")
+              println(e)
+              None
+            },
+            inputs => Some(InputsPage(inputs))
+          )
       }
     }(p => Map("inputs" -> Json.toJson(p.inputs).toString().replace("{", "%7B").replace("}", "%7D")))
 
@@ -45,14 +48,12 @@ class Routing(defaultServerUrl: String) {
         map.get("v"),
         map.get("o"),
         map.get("r"),
-        map.get("c"),
+        map.get("c")
       ) match {
         case (Some(g), Some(a), Some(v), o, r, c) =>
           val target = map.get("t").flatMap(ScalaTargetType.parse) match {
-            case Some(t @ ScalaTargetType.Scala2) =>
-              map.get("sv").map(sv => ScalaTarget.Jvm(ScalaVersions.find(t, sv)))
-            case Some(t @ ScalaTargetType.JS) =>
-              (map.get("sv"), map.get("sjsv")) match {
+            case Some(t @ ScalaTargetType.Scala2) => map.get("sv").map(sv => ScalaTarget.Jvm(ScalaVersions.find(t, sv)))
+            case Some(t @ ScalaTargetType.JS) => (map.get("sv"), map.get("sjsv")) match {
                 case (Some(sv), sjsv) =>
                   Some(ScalaTarget.Js(ScalaVersions.find(t, sv), sjsv.getOrElse(ScalaTarget.Js.default.scalaJsVersion)))
                 case _ => None
@@ -79,45 +80,45 @@ class Routing(defaultServerUrl: String) {
         "a" -> dep.dependency.artifact,
         "v" -> dep.dependency.version,
         "r" -> dep.project.repository,
-        "o" -> dep.project.organization,
+        "o" -> dep.project.organization
       )
     }
 
     val tryLibrary = queryToMap.pmap(parseTryLibrary)(renderTryLibrary)
 
-    val anon = snippetId
-    val user = alpha / snippetId
+    val anon       = snippetId
+    val user       = alpha / snippetId
     val userUpdate = alpha / snippetId / int
-    val oldId = int
+    val oldId      = int
 
     (
       trimSlashes
         | staticRoute(root, Home) ~>
-          renderR(renderScastieDefault)
+        renderR(renderScastieDefault)
         | dynamicRouteCT("try" ~ tryLibrary) ~>
-          dynRenderR((page, router) => renderTryLibraryPage(page, router))
+        dynRenderR((page, router) => renderTryLibraryPage(page, router))
         | dynamicRouteCT(inputs) ~>
-          dynRenderR((page, router) => renderInputs(page, router))
+        dynRenderR((page, router) => renderInputs(page, router))
         | dynamicRouteCT(targetType) ~>
-          dynRenderR((page, router) => renderTargetTypePage(page, router))
+        dynRenderR((page, router) => renderTargetTypePage(page, router))
         | dynamicRouteCT(oldId.caseClass[OldSnippetIdPage]) ~>
-          dynRenderR((page, router) => renderOldSnippetIdPage(page, router))
+        dynRenderR((page, router) => renderOldSnippetIdPage(page, router))
         | dynamicRouteCT(anon.caseClass[AnonymousResource]) ~>
-          dynRenderR((page, router) => renderPage(page, router))
+        dynRenderR((page, router) => renderPage(page, router))
         | dynamicRouteCT(user.caseClass[UserResource]) ~>
-          dynRenderR((page, router) => renderPage(page, router))
+        dynRenderR((page, router) => renderPage(page, router))
         | dynamicRouteCT(userUpdate.caseClass[UserResourceUpdated]) ~>
-          dynRenderR((page, router) => renderPage(page, router))
+        dynRenderR((page, router) => renderPage(page, router))
         | staticRoute(embedded, Embedded) ~>
-          renderR(renderScastieDefaultEmbedded)
+        renderR(renderScastieDefaultEmbedded)
         | dynamicRouteCT(embedded / anon.caseClass[EmbeddedAnonymousResource]) ~>
-          dynRenderR((page, router) => renderPage(page, router))
+        dynRenderR((page, router) => renderPage(page, router))
         | dynamicRouteCT(embedded / user.caseClass[EmbeddedUserResource]) ~>
-          dynRenderR((page, router) => renderPage(page, router))
+        dynRenderR((page, router) => renderPage(page, router))
         | dynamicRouteCT(
           embedded / userUpdate.caseClass[EmbeddedUserResourceUpdated]
         ) ~>
-          dynRenderR((page, router) => renderPage(page, router))
+        dynRenderR((page, router) => renderPage(page, router))
     ).notFound(redirectToPage(Home)(SetRouteVia.HistoryReplace))
       .renderWith((page, router) => layout(page, router))
   }
@@ -144,12 +145,11 @@ class Routing(defaultServerUrl: String) {
   }
 
   private def renderScastieDefaultEmbedded(
-      router: RouterCtl[Page]
-  ): VdomElement =
-    Scastie
-      .default(router)
-      .copy(embedded = Some(EmbeddedOptions.empty(defaultServerUrl)))
-      .render
+    router: RouterCtl[Page]
+  ): VdomElement = Scastie
+    .default(router)
+    .copy(embedded = Some(EmbeddedOptions.empty(defaultServerUrl)))
+    .render
 
   private def renderPage(page: ResourcePage, router: RouterCtl[Page]): VdomElement = {
     val defaultEmbedded = Some(EmbeddedOptions.empty(defaultServerUrl))
@@ -184,7 +184,7 @@ class Routing(defaultServerUrl: String) {
       targetType = None,
       tryLibrary = None,
       code = None,
-      inputs = None,
+      inputs = None
     ).render
   }
 
