@@ -169,9 +169,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   }
 
   private def logError[T](f: Future[T]) = {
-    f.recover { case e =>
-      log.error(e, "failed future")
-    }
+    f.recover { case e => log.error(e, "failed future") }
   }
 
   def receive: Receive = event.LoggingReceive(event.Logging.InfoLevel) {
@@ -344,9 +342,7 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
             .map { _ =>
               log.info(s"pinged ${s.ref} server")
             }
-            .recover { case e =>
-              log.error(e, s"couldn't ping ${s} server")
-            }
+            .recover { case e => log.error(e, s"couldn't ping ${s} server") }
         }
       })
   }

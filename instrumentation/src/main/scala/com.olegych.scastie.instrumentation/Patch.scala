@@ -32,9 +32,7 @@ object Patch {
     verifyPatches(patches)
     // TODO(olafur) optimize, this is SUPER inefficient
     patches
-      .foldLeft(input) { case (s, p) =>
-        p.runOn(s)
-      }
+      .foldLeft(input) { case (s, p) => p.runOn(s) }
       .map(_.syntax)
       .mkString("")
   }
