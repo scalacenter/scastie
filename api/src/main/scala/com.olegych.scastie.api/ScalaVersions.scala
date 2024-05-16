@@ -20,6 +20,7 @@ object ScalaVersions {
           BuildInfo.stableNext,
           BuildInfo.latestLTS,
           BuildInfo.stableLTS,
+          "3.4.1",
           "3.4.0",
           "3.3.1",
           "3.3.0",
