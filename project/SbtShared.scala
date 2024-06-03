@@ -31,7 +31,7 @@ object SbtShared {
     val sbt        = latest212
     val jvm        = latest213
     val cross      = List(latest210, latest211, latest212, latest213, old3, js, sbt, jvm).distinct
-    val crossJS    = List(latest212, latest213, js).distinct
+    val crossJS    = List(latest212, latest213, stableLTS, js).distinct
   }
 
   object ScalaJSVersions {
