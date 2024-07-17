@@ -22,7 +22,7 @@ object Server:
 
   val config                   = ConfigFactory.load().getConfig("scastie.metals")
   val cacheExpirationInSeconds = config.getInt("cache-expire-in-seconds")
-  val serverPort = config.getInt("port")
+  val serverPort               = config.getInt("port")
 
   def stream[F[_]: Async]: Stream[F, Nothing] = {
     val cache = Cache.expiring[F, ScastieMetalsOptions, ScastiePresentationCompiler](
