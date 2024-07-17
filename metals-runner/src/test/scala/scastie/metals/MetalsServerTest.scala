@@ -21,7 +21,7 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "println",
+        "println"
       ).asRight
     )
   }
@@ -202,7 +202,7 @@ class MetalsServerTest extends CatsEffectSuite {
           |def asRight[B]: Either[B, String]
           |```
           |Wrap a value in `Right`.""".stripMargin
-      ).asRight,
+      ).asRight
     )
   }
 

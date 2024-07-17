@@ -41,7 +41,9 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     cache.use { cache =>
       val dispatcher = dispatcherF(cache)
       val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
-      val tasks = List.fill(10)(dispatcher.getCompiler(options).flatMap(_.complete(ScastieOffsetParams("prin", 4, true))).value).parSequence
+      val tasks = List
+        .fill(10)(dispatcher.getCompiler(options).flatMap(_.complete(ScastieOffsetParams("prin", 4, true))).value)
+        .parSequence
       assertIO(tasks.map(_.forall(_.isRight)), true)
     }
   }

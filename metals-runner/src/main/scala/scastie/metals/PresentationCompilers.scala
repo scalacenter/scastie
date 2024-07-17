@@ -5,13 +5,13 @@ import java.nio.file.Path
 import java.util.ServiceLoader
 import scala.collection.concurrent.TrieMap
 import scala.jdk.CollectionConverters._
+import scala.meta.dialects._
 import scala.meta.internal.metals._
 import scala.meta.internal.metals.Embedded
 import scala.meta.internal.mtags._
 import scala.meta.internal.pc.ScalaPresentationCompiler
 import scala.meta.io.AbsolutePath
 import scala.meta.pc.PresentationCompiler
-import scala.meta.dialects._
 
 import cats.effect.implicits.monadCancelOps_
 import cats.effect.std.Semaphore
@@ -72,8 +72,11 @@ class PresentationCompilers[F[_]: Async](metalsWorkingDirectory: Path) {
   private val serviceLoader: F[BlockingServiceLoader[F]] = Semaphore[F](1).map(BlockingServiceLoader.instance[F])
   private val mtagsResolver                              = MtagsResolver.default()
 
-  val index = OnDemandSymbolIndex.empty()(using EmptyReportContext)
-  val docs  = new Docstrings(index)
+  val index = OnDemandSymbolIndex.empty()(
+    using EmptyReportContext
+  )
+
+  val docs = new Docstrings(index)
 
   JdkSources().foreach(jdk => index.addSourceJar(jdk, Scala213))
 
@@ -109,7 +112,8 @@ class PresentationCompilers[F[_]: Async](metalsWorkingDirectory: Path) {
       )
     } >>= (classloader =>
       serviceLoader.flatMap(serviceLoader =>
-        val classname = if (mtags.isScala3PresentationCompiler) "dotty.tools.pc.ScalaPresentationCompiler"
+        val classname =
+          if (mtags.isScala3PresentationCompiler) "dotty.tools.pc.ScalaPresentationCompiler"
           else classOf[ScalaPresentationCompiler].getName()
 
         serviceLoader.load(classOf[PresentationCompiler], classname, classloader)
