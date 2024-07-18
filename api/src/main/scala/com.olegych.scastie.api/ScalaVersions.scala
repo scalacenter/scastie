@@ -16,6 +16,7 @@ object ScalaVersions {
     val versions = tpe match {
       case ScalaTargetType.Scala3 =>
         List(
+          "3.5.1-RC1",
           BuildInfo.latestNext,
           BuildInfo.stableNext,
           BuildInfo.latestLTS,
