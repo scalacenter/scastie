@@ -1,8 +1,8 @@
 package com.olegych.scastie.storage
 
-import play.api.libs.json.OFormat
-import play.api.libs.json.Json
 import com.olegych.scastie.api._
+import play.api.libs.json.Json
+import play.api.libs.json.OFormat
 
 sealed trait BaseMongoSnippet {
   def snippetId: SnippetId
@@ -11,9 +11,9 @@ sealed trait BaseMongoSnippet {
 }
 
 case class ShortMongoSnippet(
-    snippetId: SnippetId,
-    inputs: ShortInputs,
-    time: Long
+  snippetId: SnippetId,
+  inputs: ShortInputs,
+  time: Long
 ) extends BaseMongoSnippet
 
 object ShortMongoSnippet {
@@ -27,15 +27,15 @@ object PolicyAcceptance {
 }
 
 case class MongoSnippet(
-    simpleSnippetId: String,
-    user: Option[String],
-    snippetId: SnippetId,
-    oldId: Long,
-    inputs: Inputs,
-    progresses: List[SnippetProgress],
-    scalaJsContent: String,
-    scalaJsSourceMapContent: String,
-    time: Long
+  simpleSnippetId: String,
+  user: Option[String],
+  snippetId: SnippetId,
+  oldId: Long,
+  inputs: Inputs,
+  progresses: List[SnippetProgress],
+  scalaJsContent: String,
+  scalaJsSourceMapContent: String,
+  time: Long
 ) extends BaseMongoSnippet {
   def toFetchResult: FetchResult = FetchResult.create(inputs, progresses)
 }
