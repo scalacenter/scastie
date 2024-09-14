@@ -12,14 +12,11 @@ object TestTaskId {
 }
 
 case class TestServerRef(id: Int)
-case class TestState(state: String, ready: Boolean = true) extends ServerState {
-  def isReady: Boolean = ready
-}
 
 trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
-  type TestServer0 = Server[TestServerRef, TestState]
+  type TestServer0 = SbtServer[TestServerRef, ServerState]
 
-  type TestLoadBalancer0 = LoadBalancer[TestServerRef, TestState]
+  type TestLoadBalancer0 = LoadBalancer[TestServerRef, ServerState]
 
   @transient private var taskId = 1000
   def add(balancer: TestLoadBalancer0, config: SbtInputs): TestLoadBalancer0 = synchronized {
@@ -58,9 +55,9 @@ trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
   def server(
       c: String,
       mailbox: Vector[Task[SbtInputs]] = Vector(),
-      state: TestState = TestState("default-state")
+      state: ServerState = ServerState.Unknown
   ): TestServer0 = synchronized {
-    val t = Server(TestServerRef(serverId), sbtConfig(c), state, mailbox)
+    val t = SbtServer(TestServerRef(serverId), sbtConfig(c), state, mailbox)
     serverId += 1
     t
   }

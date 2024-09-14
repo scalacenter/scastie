@@ -3,7 +3,7 @@ package org.scastie.api
 import io.circe.generic.semiauto._
 import io.circe._
 
-case class SbtRunnerState(config: SbtInputs, tasks: Vector[TaskId], sbtState: SbtState)
+case class SbtRunnerState(config: SbtInputs, tasks: Vector[TaskId], sbtState: ServerState)
 
 object SbtRunnerState {
   implicit val sbtRunnerStateEncoder: Encoder[SbtRunnerState] = deriveEncoder[SbtRunnerState]

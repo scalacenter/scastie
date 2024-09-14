@@ -266,7 +266,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     )
 
     run(input, allowFailure = true)(assertCompilationInfo { info =>
-      assert(info.message == "Not found: printl")
+      assert(info.message == "Not found: printl - did you mean print? or perhaps printf or println?")
       assert(info.line == Some(3)) // error lines are 1-based
     })
 

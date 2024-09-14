@@ -4,7 +4,7 @@ import org.scastie.api._
 
 import scala.util.Random
 
-case class Server[R, S](
+case class SbtServer[R, S](
     ref: R,
     lastConfig: SbtInputs,
     state: S,
@@ -16,7 +16,7 @@ case class Server[R, S](
   def currentTaskId: Option[TaskId] = mailbox.headOption.map(_.taskId)
   def currentConfig: SbtInputs = mailbox.headOption.map(_.config).getOrElse(lastConfig)
 
-  def done(taskId: TaskId): Server[R, S] = {
+  def done(taskId: TaskId): SbtServer[R, S] = {
     val (newMailbox, done) = mailbox.partition(_.taskId != taskId)
     copy(
       lastConfig = done.headOption.map(_.config).getOrElse(lastConfig),
@@ -25,7 +25,7 @@ case class Server[R, S](
     )
   }
 
-  def add[T](task: Task[SbtInputs]): Server[R, S] = {
+  def add(task: Task[SbtInputs]): SbtServer[R, S] = {
     copy(mailbox = mailbox :+ task)
   }
 }

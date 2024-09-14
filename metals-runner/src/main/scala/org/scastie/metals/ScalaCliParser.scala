@@ -76,7 +76,7 @@ object ScalaCliParser:
           case versionString =>
             ScalaVersionUtil.validateStable(versionString, cache, repositories)
         }
-      case None => BuildInfo.latestNext.asRight
+      case None => BuildInfo.stableNext.asRight
     }
 
     val maybeToolkitVersion = directiveMap.get("toolkit").map(_.headOption).flatten.map {

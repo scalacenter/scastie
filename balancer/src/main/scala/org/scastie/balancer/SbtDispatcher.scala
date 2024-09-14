@@ -23,7 +23,7 @@ import akka.util.Timeout
 import java.util.concurrent.atomic.AtomicReference
 
 class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorRef)
-  extends BaseDispatcher[ActorSelection, SbtState](config) with Actor {
+  extends BaseDispatcher[ActorSelection, ServerState](config) with Actor {
 
   private val parent = context.parent
 
@@ -32,8 +32,8 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
   val balancer: AtomicReference[SbtBalancer] = {
     val sbtServers = remoteSbtSelections.to(Vector).map {
       case (_, ref) =>
-        val state: SbtState = SbtState.Unknown
-        Server(ref, SbtInputs.default, state)
+        val state: ServerState = ServerState.Unknown
+        SbtServer(ref, SbtInputs.default, state)
     }
 
     new AtomicReference(LoadBalancer(servers = sbtServers))
@@ -127,11 +127,11 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
 
         remoteSbtSelections.addOne(sel)
 
-        val state: SbtState = SbtState.Unknown
+        val state: ServerState = ServerState.Unknown
 
         updateSbtBalancer(
           balancer.get.addServer(
-            Server(ref, SbtInputs.default, state)
+            SbtServer(ref, SbtInputs.default, state)
           )
         )
       }

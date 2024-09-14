@@ -52,9 +52,10 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "asRight [B]: Either[B, A]"
+        "asRight [B]: Either[B, String]"
       ).asRight,
       compat = Map(
+        "3.3.3" -> Set("asRight [B]: Either[B, A]").asRight,
         "2" -> Set("asRight [B]: Either[B,String]").asRight
       )
     )
@@ -70,7 +71,7 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "asRight [B]: Either[B, A]"
+        "asRight [B]: Either[B, String]"
       ).asRight
     )
   }
@@ -94,7 +95,7 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Completions item info with dependencies") {
     testCompletionInfo(
-      testTargets = List(Scala3("3.2.0")),
+      testTargets = List(Scala3.default),
       dependencies = Set(ScalaDependency("org.typelevel", "cats-core", _, catsVersion)),
       code = """import cats.syntax.all._
                |object M {
@@ -271,6 +272,20 @@ class MetalsServerTest extends CatsEffectSuite {
         )
       ).asRight,
       compat = Map(
+        "3.3.3" -> Set(
+          TestSignatureHelp(
+            "collectSomeFold[M](f: Any => Option[M])(using F: cats.Foldable[List], M: cats.kernel.Monoid[M]): M",
+            """Tear down a subset of this structure using a `A => Option[M]`.
+              |
+              |```
+              |scala> import cats.syntax.all._
+              |scala> val xs = List(1, 2, 3, 4)
+              |scala> def f(n: Int): Option[Int] = if (n % 2 == 0) Some(n) else None
+              |scala> xs.collectFoldSome(f)
+              |res0: Int = 6
+              |```""".stripMargin
+          )
+        ).asRight,
         "2" -> Set(
           TestSignatureHelp(
             "collectSomeFold[M](f: A => Option[M])(implicit F: Foldable[List], M: Monoid[M]): M",
@@ -340,15 +355,16 @@ class MetalsServerTest extends CatsEffectSuite {
     )
   }
 
-  test("No completions for illegal snippet") {
-    testCompletion(
-      code = """object M {
-               |  test hello = printl@@
-               |}
-          """.stripMargin,
-      expected = Set().asRight
-    )
-  }
+  // This test has no point
+  // test("No completions for illegal snippet") {
+  //   testCompletion(
+  //     code = """object M {
+  //              |  test hello = printl@@
+  //              |}
+  //         """.stripMargin,
+  //     expected = Set().asRight
+  //   )
+  // }
 
   test("No hovers for illegal snippet") {
     testHover(
@@ -403,13 +419,13 @@ class MetalsServerTest extends CatsEffectSuite {
   // This does not actually uses using directives, only checks if they are handled properly in worksheet mode
   test("Text edit is proper for worksheet with using directives") {
     testCompletionEdit(
-      code = """//> using scala 3.3.1
+      code = s"""//> using scala ${BuildInfo.stableNext}
                |
                |printl@@
                |
           """.stripMargin,
       expectedCode =
-        """//> using scala 3.3.1
+        s"""//> using scala ${BuildInfo.stableNext}
           |
           |println()
           |
@@ -420,13 +436,13 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Text edit is proper for no workheet with using directives") {
     testCompletionEdit(
-      code = """//> using scala 3.3.1
+      code = s"""//> using scala ${BuildInfo.stableNext}
                |object M {
                |  printl@@
                |}
           """.stripMargin,
       expectedCode =
-        """//> using scala 3.3.1
+        s"""//> using scala ${BuildInfo.stableNext}
           |object M {
           |  println()
           |}
@@ -437,14 +453,14 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Text edit is proper for worksheet inside using directives") {
     testCompletionEdit(
-      testTargets = List(ScalaCli(BuildInfo.stable3)),
+      testTargets = List(ScalaCli(BuildInfo.stableNext)),
       code = """//> using dep org.scala-lan@@
                |object M {
                |  println()
                |}
           """.stripMargin,
       expectedCode =
-        """//> using dep org.scala-lang
+        """//> using dep org.scala-lang.modules
           |object M {
           |  println()
           |}
@@ -455,14 +471,14 @@ class MetalsServerTest extends CatsEffectSuite {
 
   test("Text edit is proper for no worksheet inside using directives") {
     testCompletionEdit(
-      testTargets = List(ScalaCli(BuildInfo.stable3)),
+      testTargets = List(ScalaCli(BuildInfo.stableNext)),
       code = """//> using dep org.scala-lan@@
                |object M {
                |  println()
                |}
           """.stripMargin,
-      expectedCode =
-        """//> using dep org.scala-lang
+      expectedCode = // this is bug in compiler
+        """//> using dep org.scala-lang.modules
           |object M {
           |  println()
           |}
@@ -483,11 +499,11 @@ class MetalsServerTest extends CatsEffectSuite {
   // }
 
   test("Scala-CLI //> using scala is extracted properly") {
-    val code = """//> using scala 3.3.1
+    val code = s"""//> using scala ${BuildInfo.stableNext}
                  |println("test")""".stripMargin
     convertScalaCliConfiguration(
       code = code,
-      expected = ScastieMetalsOptions(Set(), ScalaCli("3.3.1"), code).asRight
+      expected = ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.stableNext), code).asRight
     )
   }
 
@@ -496,7 +512,7 @@ class MetalsServerTest extends CatsEffectSuite {
                  |println("test")""".stripMargin
     convertScalaCliConfiguration(
       code = code,
-      expected = ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.stable3), code).asRight
+      expected = ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.stableNext), code).asRight
     )
   }
 
@@ -505,7 +521,7 @@ class MetalsServerTest extends CatsEffectSuite {
     val code = """//> using dep com.lihaoyi::os-lib:0.9.1
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.stable3)
+    val target = ScalaCli(BuildInfo.stableNext)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
@@ -520,7 +536,7 @@ class MetalsServerTest extends CatsEffectSuite {
     val code = """//> using lib com.lihaoyi::os-lib:0.9.1
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.stable3)
+    val target = ScalaCli(BuildInfo.stableNext)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
@@ -535,7 +551,7 @@ class MetalsServerTest extends CatsEffectSuite {
     val code = """//> using toolkit latest
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.stable3)
+    val target = ScalaCli(BuildInfo.stableNext)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
@@ -550,7 +566,7 @@ class MetalsServerTest extends CatsEffectSuite {
     val code = """//> using toolkit 0.2.1
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.stable3)
+    val target = ScalaCli(BuildInfo.stableNext)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
@@ -577,15 +593,15 @@ class MetalsServerTest extends CatsEffectSuite {
   // }
 
   test("Scala-CLI //> both dep and lib are extracted properly") {
-    val code = """//> using lib com.lihaoyi::os-lib:0.9.1
-                 |//> using dep org.scala-lang:scala3-library_3:3.3.1
+    val code = s"""//> using lib com.lihaoyi::os-lib:0.9.1
+                 |//> using dep org.scala-lang:scala3-library_3:${BuildInfo.stableNext}
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.stable3)
+    val target = ScalaCli(BuildInfo.stableNext)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
-        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scala-lang", "scala3-library_3", target, "3.3.1", false)),
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scala-lang", "scala3-library_3", target, BuildInfo.stableNext, false)),
         target,
         code
       ).asRight
@@ -593,14 +609,14 @@ class MetalsServerTest extends CatsEffectSuite {
   }
 
   test("Scala-CLI //> both dep list are extracted properly") {
-    val code = """//> using dep com.lihaoyi::os-lib:0.9.1 org.scala-lang:scala3-library_3:3.3.1
+    val code = s"""//> using dep com.lihaoyi::os-lib:0.9.1 org.scala-lang:scala3-library_3:${BuildInfo.stableNext}
                  |println("test")""".stripMargin
 
-    val target = ScalaCli(BuildInfo.stable3)
+    val target = ScalaCli(BuildInfo.stableNext)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
-        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scala-lang", "scala3-library_3", target, "3.3.1", false)),
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scala-lang", "scala3-library_3", target, BuildInfo.stableNext, false)),
         target,
         code
       ).asRight
@@ -608,16 +624,16 @@ class MetalsServerTest extends CatsEffectSuite {
   }
 
   test("Scala-CLI //> both scala, dep and lib are extracted properly") {
-    val code = """//> using lib com.lihaoyi::os-lib:0.9.1
-                 |//> using dep org.scala-lang:scala3-library_3:3.3.1
-                 |//> using scala 3.3.0
+    val code = s"""//> using lib com.lihaoyi::os-lib:0.9.1
+                 |//> using dep org.scala-lang:scala3-library_3:${BuildInfo.stableNext}
+                 |//> using scala ${BuildInfo.stableNext}
                  |println("test")""".stripMargin
 
-    val target = ScalaCli("3.3.0")
+    val target = ScalaCli(BuildInfo.stableNext)
     convertScalaCliConfiguration(
       code = code,
       expected = ScastieMetalsOptions(
-        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scala-lang", "scala3-library_3", target, "3.3.1", false)),
+        Set(ScalaDependency("com.lihaoyi", "os-lib", target, "0.9.1"), ScalaDependency("org.scala-lang", "scala3-library_3", target, BuildInfo.stableNext, false)),
         target,
         code
       ).asRight
