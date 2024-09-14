@@ -24,8 +24,8 @@ object TestUtils extends Assertions with CatsEffectAssertions {
   type DependencyForVersion = ScalaTarget => ScalaDependency
 
   val testTargets =
-    List(BuildInfo.latestLTS, BuildInfo.stableLTS, BuildInfo.latestNext).map(ScalaTarget.Scala3.apply) ++
-      List(BuildInfo.latest213, BuildInfo.latest212).map(ScalaTarget.Jvm.apply)
+    List(BuildInfo.latestLTS, BuildInfo.stableLTS, BuildInfo.latestNext).map(Scala3.apply) ++
+      List(BuildInfo.latest213, BuildInfo.latest212).map(Jvm.apply)
 
   val unsupportedVersions = List(BuildInfo.latest211, BuildInfo.latest210).map(Jvm.apply)
 
@@ -47,16 +47,17 @@ object TestUtils extends Assertions with CatsEffectAssertions {
   def getCompat[A](scalaTarget: ScalaTarget, compat: Map[String, A], default: A): A =
     val binaryScalaVersion = scalaTarget.binaryScalaVersion
     val majorVersion       = binaryScalaVersion.split('.').headOption
-    if (compat.keys.exists(_ == binaryScalaVersion)) then compat(binaryScalaVersion)
+    if (compat.contains(scalaTarget.scalaVersion)) then compat(scalaTarget.scalaVersion)
+    else if (compat.keys.exists(_ == binaryScalaVersion)) then compat(binaryScalaVersion)
     else if (majorVersion.forall(v => compat.keys.exists(_ == v))) compat(majorVersion.get)
     else default
 
   def convertScalaCliConfiguration(code: String, expected: Either[FailureType, ScastieMetalsOptions]): IO[Unit] =
-    val config = server.isConfigurationSupported(ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.latest3), code)).value
+    val config = server.isConfigurationSupported(ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.stableNext), code)).value
     assertIO(config, expected)
 
   def convertScalaCliConfiguration(code: String): IO[ScastieMetalsOptions] =
-    val config = server.isConfigurationSupported(ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.latest3), code)).toOption
+    val config = server.isConfigurationSupported(ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.stableNext), code)).toOption
     assertIOBoolean(config.isDefined).flatMap(_ => config.value.map(_.get))
 
   def testCompletion(

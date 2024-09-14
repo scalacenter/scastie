@@ -19,7 +19,7 @@ import scala.jdk.CollectionConverters._
 import scala.collection.concurrent.TrieMap
 
 class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorRef)
-  extends BaseDispatcher[ActorSelection, ScalaCliState](config) {
+  extends BaseDispatcher[ActorSelection, ServerState](config) {
 
   private val parent = context.parent
 

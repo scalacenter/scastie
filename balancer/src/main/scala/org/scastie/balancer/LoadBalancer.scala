@@ -18,14 +18,14 @@ case class TaskHistory(data: Vector[Task[SbtInputs]], maxSize: Int) {
     copy(data = cappedData :+ task)
   }
 }
-case class LoadBalancer[R, S <: ServerState](servers: Vector[Server[R, S]]) {
+case class LoadBalancer[R, S <: ServerState](servers: Vector[SbtServer[R, S]]) {
   private val log = LoggerFactory.getLogger(getClass)
 
   def done(taskId: TaskId): Option[LoadBalancer[R, S]] = {
     Some(copy(servers = servers.map(_.done(taskId))))
   }
 
-  def addServer(server: Server[R, S]): LoadBalancer[R, S] = {
+  def addServer(server: SbtServer[R, S]): LoadBalancer[R, S] = {
     copy(servers = server +: servers)
   }
 
@@ -33,12 +33,12 @@ case class LoadBalancer[R, S <: ServerState](servers: Vector[Server[R, S]]) {
     copy(servers = servers.filterNot(_.ref == ref))
   }
 
-  def getRandomServer: Option[Server[R, S]] = {
+  def getRandomServer: Option[SbtServer[R, S]] = {
     def random[T](xs: Seq[T]) = if (xs.nonEmpty) Some(xs(Random.nextInt(xs.size))) else None
     random(servers.filter(_.state.isReady))
   }
 
-  def add(task: Task[SbtInputs]): Option[(Server[R, S], LoadBalancer[R, S])] = {
+  def add(task: Task[SbtInputs]): Option[(SbtServer[R, S], LoadBalancer[R, S])] = {
     log.info("Task added: {}", task.taskId)
 
     val (availableServers, unavailableServers) =

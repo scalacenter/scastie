@@ -2,6 +2,7 @@ package org.scastie
 package balancer
 
 import java.time.Instant
+import org.scastie.api.ServerState
 
 class LoadBalancerTest extends LoadBalancerTestUtils {
   test("simple cache miss") {
@@ -109,7 +110,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val ref = TestServerRef(1)
 
     val balancer = LoadBalancer(
-      Vector(Server(ref, sbtConfig("c1"), TestState("default-state"))),
+      Vector(SbtServer(ref, sbtConfig("c1"), ServerState.Unknown)),
     )
     assert(balancer.removeServer(ref).servers.isEmpty)
   }
