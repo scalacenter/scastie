@@ -199,7 +199,7 @@ case class Native(scalaVersion: String, scalaNativeVersion: String) extends SbtS
 }
 
 object Scala3 {
-  def default: Scala3 = Scala3(BuildInfo.stable3)
+  def default: Scala3 = Scala3(BuildInfo.stableNext)
 
   def defaultCode: String =
     """|// You can find more examples here:
@@ -213,7 +213,7 @@ object Scala3 {
 
 case class Scala3(scalaVersion: String) extends SbtScalaTarget {
 
-  val targetType: ScalaTargetType = ScalaTargetType.stableLTS
+  val targetType: ScalaTargetType = ScalaTargetType.Scala3
 
   def scaladexRequest: Map[String, String] =
     Map("target" -> "JVM", "scalaVersion" -> binaryScalaVersion)
@@ -266,7 +266,7 @@ object ScalaCli {
   implicit val scalaCliEncoder: Encoder[ScalaCli] = deriveEncoder[ScalaCli]
   implicit val scalaCliDecoder: Decoder[ScalaCli] = deriveDecoder[ScalaCli]
 
-  def default: ScalaCli = ScalaCli(BuildInfo.latest3)
+  def default: ScalaCli = ScalaCli(BuildInfo.stableNext)
 
   def defaultCode: String =
     """|// Hello!

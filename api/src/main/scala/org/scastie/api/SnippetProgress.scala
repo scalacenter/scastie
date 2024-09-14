@@ -4,7 +4,6 @@ import io.circe.generic.semiauto._
 import io.circe._
 import io.circe.syntax._
 import org.scastie.runtime.api._
-import org.scastie.api.Error
 import RuntimeCodecs._
 
 object SnippetProgress {

@@ -22,6 +22,7 @@ import org.scastie.api.ScalaTarget._
 import coursierapi.{Dependency, Fetch}
 import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext
+import com.typesafe.config.ConfigFactory
 
 /*
  * MetalsDispatcher is responsible for managing the lifecycle of presentation compilers.
@@ -69,10 +70,8 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
    * @param configuration - scastie client configuration
    * @returns `EitherT[F, FailureType, ScastiePresentationCompiler]`
    */
-  def getCompiler(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastiePresentationCompiler] = 
-    if (configuration.scalaTarget.targetType == ScalaTargetType.ScalaCli) then
-      convertConfigurationFromScalaCli(configuration).flatMap(getCompiler(_))
-    else EitherT:
+  def getCompiler(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastiePresentationCompiler] =
+    EitherT:
       if !isSupportedVersion(configuration) then
         Async[F].delay(
           PresentationCompilerFailure(

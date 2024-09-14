@@ -18,7 +18,6 @@ configuration matrix
 object SbtShared {
 
   object ScalaVersions {
-<<<<<<< HEAD
     val latest210  = "2.10.7"
     val latest211  = "2.11.12"
     val latest212  = "2.12.20"
@@ -31,22 +30,9 @@ object SbtShared {
     val js         = latest213
     val sbt        = latest212
     val jvm        = latest213
-    val cross      = List(latest210, latest211, latest212, latest213, old3, js, sbt, jvm).distinct
+    val cross      =
+      List(latest210, latest211, latest212, latest213, old3, stableLTS, stableNext, js, sbt, jvm).distinct
     val crossJS    = List(latest212, latest213, js).distinct
-=======
-    val latest210 = "2.10.7"
-    val latest211 = "2.11.12"
-    val latest212 = "2.12.18"
-    val latest213 = "2.13.12"
-    val old3      = "3.0.2"
-    val stable3   = "3.3.1"
-    val latest3   = "3.3.2-RC1"
-    val js        = latest213
-    val sbt       = latest212
-    val jvm       = latest213
-    val cross     = List(latest210, latest211, latest212, latest213, old3, stable3, js, sbt, jvm).distinct
-    val crossJS   = List(latest212, latest213, js).distinct
->>>>>>> 8a09c1b7 (initial changes)
   }
 
   object ScalaJSVersions {
@@ -138,7 +124,7 @@ object SbtShared {
   lazy val api = projectMatrix
     .in(file("api"))
     .settings(apiSettings)
-    .jvmPlatform(Seq(ScalaVersions.jvm, ScalaVersions.latest3, ScalaVersions.sbt))
+    .jvmPlatform(Seq(ScalaVersions.jvm, ScalaVersions.stableLTS, ScalaVersions.stableNext, ScalaVersions.sbt))
     .jsPlatform(Seq(ScalaVersions.js), baseJsSettings)
     .enablePlugins(BuildInfoPlugin)
 
