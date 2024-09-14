@@ -27,7 +27,7 @@ object ScalaVersionErrors {
 
   object ScalaVersionError {
     private lazy val defaultScalaVersions =
-      Seq(BuildInfo.latest212, BuildInfo.latest213, BuildInfo.latest3)
+      Seq(BuildInfo.latest212, BuildInfo.latest213, BuildInfo.latestLTS, BuildInfo.latestNext)
 
     lazy val getTheGeneralErrorInfo: String =
       s"""

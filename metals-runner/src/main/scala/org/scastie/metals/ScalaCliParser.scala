@@ -76,7 +76,7 @@ object ScalaCliParser:
           case versionString =>
             ScalaVersionUtil.validateStable(versionString, cache, repositories)
         }
-      case None => BuildInfo.stable3.asRight
+      case None => BuildInfo.latestNext.asRight
     }
 
     val maybeToolkitVersion = directiveMap.get("toolkit").map(_.headOption).flatten.map {
@@ -90,7 +90,7 @@ object ScalaCliParser:
       val dependenciesDirectives = (directiveMap.get("dep")  ++ directiveMap.get("lib")).flatten
       val toolkitDependency = maybeToolkitVersion.map(ScalaDependency("org.scala-lang", "toolkit", scalaTarget, _))
 
-      // TODO add runtime lib
+      // TODO add runtime lib and scalac options
 
       val dependencies = dependenciesDirectives.map(_.split(":").toList).collect:
         // "groupId::artifact:version"

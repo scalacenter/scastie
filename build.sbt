@@ -142,7 +142,7 @@ lazy val metalsRunner = project
     )
   )
   .enablePlugins(JavaServerAppPackaging, sbtdocker.DockerPlugin)
-  .dependsOn(api.jvm(ScalaVersions.latest3))
+  .dependsOn(api.jvm(ScalaVersions.stableNext))
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
