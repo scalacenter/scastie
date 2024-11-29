@@ -1,37 +1,34 @@
 package com.olegych.scastie.client.components
 
+import com.olegych.scastie.client.components.editor.EditorKeymaps
 import japgolly.scalajs.react._
 import vdom.all._
-import com.olegych.scastie.client.components.editor.EditorKeymaps
 
 final case class HelpModal(isDarkTheme: Boolean, isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = HelpModal.component(this)
 }
 
 object HelpModal {
-  implicit val reusability: Reusability[HelpModal] =
-    Reusability.derive[HelpModal]
+  implicit val reusability: Reusability[HelpModal] = Reusability.derive[HelpModal]
 
   private def render(props: HelpModal): VdomElement = {
-    def generateATag(url: String, text: String) =
-      a(href := url, target := "_blank", rel := "nofollow", text)
+    def generateATag(url: String, text: String) = a(href := url, target := "_blank", rel := "nofollow", text)
 
-    val scastieGithub =
-      generateATag("https://github.com/scalacenter/scastie", "scalacenter/scastie")
+    val scastieGithub = generateATag("https://github.com/scalacenter/scastie", "scalacenter/scastie")
 
     val sublime = generateATag(
       "https://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html",
       "keyboard shortcuts."
     )
 
-    val scalafmtConfiguration =
-      generateATag("https://scalameta.org/scalafmt/docs/configuration.html#disabling-or-customizing-formatting", "configuration section")
+    val scalafmtConfiguration = generateATag(
+      "https://scalameta.org/scalafmt/docs/configuration.html#disabling-or-customizing-formatting",
+      "configuration section"
+    )
 
-    val originalScastie =
-      generateATag("https://github.com/OlegYch/scastie_old", "GitHub")
+    val originalScastie = generateATag("https://github.com/OlegYch/scastie_old", "GitHub")
 
-    val gitter =
-      generateATag("https://gitter.im/scalacenter/scastie", "Gitter")
+    val gitter = generateATag("https://gitter.im/scalacenter/scastie", "Gitter")
 
     Modal(
       title = "Help about Scastie",
@@ -41,8 +38,8 @@ object HelpModal {
       modalCss = TagMod(),
       modalId = "long-help",
       content = div(cls := "markdown-body")(
-        p( "Scastie is an interactive playground for Scala with support for sbt configuration."),
-        p( "Scastie editor supports Sublime Text ", sublime),
+        p("Scastie is an interactive playground for Scala with support for sbt configuration."),
+        p("Scastie editor supports Sublime Text ", sublime),
         h2(s"Save (${EditorKeymaps.saveOrUpdate.getName})"),
         p(
           "Run and save your code."
@@ -58,7 +55,8 @@ object HelpModal {
         h2(s"Format (${EditorKeymaps.format.getName})"),
         p(
           "The code formatting is done by scalafmt. You can configure the formatting with comments in your code. Read the ",
-          scalafmtConfiguration),
+          scalafmtConfiguration
+        ),
         h2(s"Worksheet"),
         p(
           "Enabled by default, the Worksheet Mode gives the value and the type of each line of your program. You can also add HTML blocks such as: ",
@@ -91,15 +89,14 @@ object HelpModal {
           "Your saved code fragments will appear here and you'll be able to delete or share them."
         ),
         h2("Feedback"),
-        p( "You can join our ", gitter, " channel and send issues."),
+        p("You can join our ", gitter, " channel and send issues."),
         h2("BuildInfo"),
-        p( "It's available on Github at ")(
+        p("It's available on Github at ")(
           scastieGithub,
           br,
-          " License: Apache 2",
+          " License: Apache 2"
         ),
         p(
-
           "Scastie is an original idea from Aleh Aleshka (OlegYch) "
         )(
           originalScastie
@@ -108,8 +105,8 @@ object HelpModal {
     ).render
   }
 
-  private val component =
-    ScalaFnComponent
-      .withHooks[HelpModal]
-      .renderWithReuse(render)
+  private val component = ScalaFnComponent
+    .withHooks[HelpModal]
+    .renderWithReuse(render)
+
 }
