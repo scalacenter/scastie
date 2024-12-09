@@ -24,9 +24,9 @@ object SbtShared {
     val latest213  = "2.13.15"
     val old3       = "3.0.2"
     val stableLTS  = "3.3.4"
-    val stableNext = "3.5.2"
+    val stableNext = "3.6.2"
     val latestLTS  = "3.3.4"
-    val latestNext = "3.6.2-RC3"
+    val latestNext = "3.6.2"
     val js         = latest213
     val sbt        = latest212
     val jvm        = latest213

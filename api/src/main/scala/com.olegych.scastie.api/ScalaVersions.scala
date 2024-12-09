@@ -20,7 +20,7 @@ object ScalaVersions {
           BuildInfo.stableNext,
           BuildInfo.latestLTS,
           BuildInfo.stableLTS,
-          "3.6.1", // TODO: Abandon this hot-fix release when 3.6.2 is available
+          // "3.6.1", // hotfix to 3.6.0 - abandoned
           // "3.6.0", Bad release
           "3.5.1",
           "3.5.0",
