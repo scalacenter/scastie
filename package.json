@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "sass": "^1.64.1",
-    "tree-sitter-cli": "^0.20.8"
+    "tree-sitter-cli": "0.24.3"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.11.1",
@@ -38,7 +38,7 @@
     "typescript": "^5.1.6",
     "vite": "^5.0.10",
     "vite-plugin-markdown": "^2.1.0",
-    "web-tree-sitter": "^0.20.8"
+    "web-tree-sitter": "0.24.3"
   },
   "resolutions": {
     "@codemirror/state": "^6.3.3",

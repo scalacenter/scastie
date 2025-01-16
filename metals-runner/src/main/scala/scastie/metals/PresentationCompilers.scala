@@ -81,7 +81,7 @@ class PresentationCompilers[F[_]: Async](metalsWorkingDirectory: Path) {
   JdkSources().foreach(jdk => index.addSourceJar(jdk, Scala213))
 
   def createPresentationCompiler(classpath: Seq[Path], version: String, mtags: MtagsBinaries): F[PresentationCompiler] =
-    prepareClasspathSearch(classpath) >>= { classpathSearch =>
+    prepareClasspathSearch(classpath, version) >>= { classpathSearch =>
       (mtags match {
         case MtagsBinaries.BuildIn              => Sync[F].delay(ScalaPresentationCompiler(classpath = classpath))
         case artifacts: MtagsBinaries.Artifacts => presentationCompiler(artifacts, classpath)
@@ -92,10 +92,11 @@ class PresentationCompilers[F[_]: Async](metalsWorkingDirectory: Path) {
       )
     }
 
-  private def prepareClasspathSearch(classpath: Seq[Path]): F[ClasspathSearch] = Sync[F].delay {
-    classpath.filter(isSourceJar).foreach { path =>
-      index.addSourceJar(AbsolutePath(path), ScalaVersions.dialectForDependencyJar(AbsolutePath(path).filename))
-    }
+  private def prepareClasspathSearch(classpath: Seq[Path], version: String): F[ClasspathSearch] = Sync[F].delay {
+    classpath.filter(isSourceJar).foreach { path => {
+      val libVersion = ScalaVersions.scalaBinaryVersionFromJarName(path.getFileName.toString).getOrElse(version)
+      index.addSourceJar(AbsolutePath(path), ScalaVersions.dialectForScalaVersion(libVersion, true))
+    }}
 
     ClasspathSearch.fromClasspath(classpath.filterNot(isSourceJar), ExcludedPackagesHandler.default)
   }
