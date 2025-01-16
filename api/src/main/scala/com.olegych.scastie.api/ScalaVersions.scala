@@ -20,6 +20,7 @@ object ScalaVersions {
           BuildInfo.stableNext,
           BuildInfo.latestLTS,
           BuildInfo.stableLTS,
+          "3.6.2",
           // "3.6.1", // hotfix to 3.6.0 - abandoned
           // "3.6.0", Bad release
           "3.5.2",
@@ -49,6 +50,7 @@ object ScalaVersions {
       case _ =>
         List(
           BuildInfo.latest213,
+          "2.13.15",
           "2.13.14",
           "2.13.13",
           "2.13.12",
