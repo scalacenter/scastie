@@ -319,7 +319,7 @@ lazy val client = project
     ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "core"                        % "2.1.2",
-      "com.github.japgolly.scalajs-react" %%% "extra"                       % "2.1.1",
+      "com.github.japgolly.scalajs-react" %%% "extra"                       % "2.1.2",
       "org.scala-js"                      %%% "scala-js-macrotask-executor" % "1.1.1"
     )
   )
