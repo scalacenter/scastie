@@ -45,7 +45,7 @@ lazy val scastie = project
   .settings(Deployment.settings(server, sbtRunner, metalsRunner))
 
 lazy val testSettings = Seq(
-  libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.17" % Test
+  libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % Test
 )
 
 lazy val loggingAndTest = Seq(
