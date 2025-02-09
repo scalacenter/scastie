@@ -14,19 +14,19 @@ object FormatButton {
   private def render(props: FormatButton): VdomElement = {
     li(
       title := s"Format Code (${EditorKeymaps.format.getName})",
-      role := "button",
-      cls := "btn",
-      onClick --> props.formatCode,
+      role  := "button",
+      cls   := "btn",
+      onClick --> props.formatCode
     )(
       i(cls := "fa fa-align-left"),
       span("Format")
     )
   }
 
-  private val component =
-    ScalaComponent
-      .builder[FormatButton]("FormatButton")
-      .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  private val component = ScalaComponent
+    .builder[FormatButton]("FormatButton")
+    .render_P(render)
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }
