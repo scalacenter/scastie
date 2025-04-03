@@ -11,7 +11,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
         1 * "c2",
         1 * "c3",
         1 * "c4"
-      ),
+      )
     )
 
     assertConfigs(add(balancer, sbtConfig("c8")))(
@@ -27,7 +27,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val balancer = LoadBalancer(
       servers(
         5 * "c1"
-      ),
+      )
     )
 
     assertConfigs(add(balancer, sbtConfig("c1")))(
@@ -39,7 +39,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val balancer = LoadBalancer(
       servers(
         5 * "c1"
-      ),
+      )
     )
     assertConfigs(add(balancer, sbtConfig("c2")))(
       4 * "c1",
@@ -49,7 +49,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
   test("server notify when it's done") {
     val balancer = LoadBalancer(
-      servers(1 * "c1"),
+      servers(1 * "c1")
     )
 
     val server = balancer.servers.head
@@ -69,7 +69,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
   test("run two tasks") {
     val balancer = LoadBalancer(
-      servers(1 * "c1"),
+      servers(1 * "c1")
     )
 
     val server = balancer.servers.head
@@ -77,8 +77,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server.currentTaskId.isEmpty)
 
     val taskId1 = TestTaskId(1)
-    val (assigned0, balancer0) =
-      balancer.add(Task(sbtConfig("c1"), nextIp, taskId1, Instant.now)).get
+    val (assigned0, balancer0) = balancer.add(Task(sbtConfig("c1"), nextIp, taskId1, Instant.now)).get
 
     val server0 = balancer0.servers.head
 
@@ -87,8 +86,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server0.currentTaskId.contains(taskId1))
 
     val taskId2 = TestTaskId(2)
-    val (assigned1, balancer1) =
-      balancer0.add(Task(sbtConfig("c2"), nextIp, taskId2, Instant.now)).get
+    val (assigned1, balancer1) = balancer0.add(Task(sbtConfig("c2"), nextIp, taskId2, Instant.now)).get
 
     val server1 = balancer1.servers.head
     assert(server1.mailbox.size == 2)
@@ -109,7 +107,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val ref = TestServerRef(1)
 
     val balancer = LoadBalancer(
-      Vector(Server(ref, sbtConfig("c1"), TestState("default-state"))),
+      Vector(Server(ref, sbtConfig("c1"), TestState("default-state")))
     )
     assert(balancer.removeServer(ref).servers.isEmpty)
   }
@@ -117,7 +115,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
   test("empty balancer") {
 
     val emptyBalancer = LoadBalancer(
-      servers = Vector(),
+      servers = Vector()
     )
 
     val task = Task(code("c1"), nextIp, TestTaskId(1), Instant.now)

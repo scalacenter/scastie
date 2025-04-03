@@ -1,8 +1,8 @@
 package com.olegych.scastie.storage
 
-import play.api.libs.json.OFormat
-import play.api.libs.json.Json
 import com.olegych.scastie.api._
+import play.api.libs.json.Json
+import play.api.libs.json.OFormat
 
 sealed trait BaseMongoSnippet {
   def snippetId: SnippetId

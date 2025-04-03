@@ -1,14 +1,12 @@
 package com.olegych.scastie.balancer
 
-import com.olegych.scastie.api._
-
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.stream.scaladsl.Source
 import java.util.concurrent.TimeUnit
-
 import scala.collection.mutable
 import scala.concurrent.duration._
 
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.stream.scaladsl.Source
+import com.olegych.scastie.api._
 import com.olegych.scastie.util.GraphStageForwarder
 
 case object SubscribeStatus
@@ -21,6 +19,7 @@ case class SetDispatcher(dispatchActor: ActorRef)
 object StatusActor {
   def props: Props = Props(new StatusActor)
 }
+
 class StatusActor private () extends Actor with ActorLogging {
   private var publishers = mutable.Buffer.empty[ActorRef]
 
@@ -29,16 +28,14 @@ class StatusActor private () extends Actor with ActorLogging {
   override def receive: Receive = {
     case SubscribeStatus => {
 
-      val publisherGraphStage =
-        new GraphStageForwarder("StatusActor-GraphStageForwarder", self, None)
+      val publisherGraphStage = new GraphStageForwarder("StatusActor-GraphStageForwarder", self, None)
 
-      val source =
-        Source
-          .fromGraph(publisherGraphStage)
-          .keepAlive(
-            FiniteDuration(1, TimeUnit.SECONDS),
-            () => StatusProgress.KeepAlive
-          )
+      val source = Source
+        .fromGraph(publisherGraphStage)
+        .keepAlive(
+          FiniteDuration(1, TimeUnit.SECONDS),
+          () => StatusProgress.KeepAlive
+        )
 
       sender() ! source
     }
@@ -63,14 +60,14 @@ class StatusActor private () extends Actor with ActorLogging {
 
   private def convertSbt(newSbtBalancer: SbtBalancer): StatusProgress = {
     StatusProgress.Sbt(
-      newSbtBalancer.servers.map(
-        server =>
-          SbtRunnerState(
-            config = server.lastConfig,
-            tasks = server.mailbox.map(_.taskId),
-            sbtState = server.state
+      newSbtBalancer.servers.map(server =>
+        SbtRunnerState(
+          config = server.lastConfig,
+          tasks = server.mailbox.map(_.taskId),
+          sbtState = server.state
         )
       )
     )
   }
+
 }

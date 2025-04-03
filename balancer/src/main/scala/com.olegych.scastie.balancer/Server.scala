@@ -1,8 +1,8 @@
 package com.olegych.scastie.balancer
 
-import com.olegych.scastie.api._
-
 import scala.util.Random
+
+import com.olegych.scastie.api._
 
 case class Server[R, S](
     ref: R,
@@ -10,7 +10,7 @@ case class Server[R, S](
     state: S,
     mailbox: Vector[Task] = Vector.empty,
     history: TaskHistory = TaskHistory(Vector.empty, 1000),
-    id: Int = Random.nextInt(),
+    id: Int = Random.nextInt()
 ) {
 
   def currentTaskId: Option[TaskId] = mailbox.headOption.map(_.taskId)
@@ -21,11 +21,12 @@ case class Server[R, S](
     copy(
       lastConfig = done.headOption.map(_.config).getOrElse(lastConfig),
       mailbox = newMailbox,
-      history = done.foldLeft(history)(_.add(_)),
+      history = done.foldLeft(history)(_.add(_))
     )
   }
 
   def add(task: Task): Server[R, S] = {
     copy(mailbox = mailbox :+ task)
   }
+
 }

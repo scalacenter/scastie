@@ -6,24 +6,24 @@ import com.olegych.scastie.client.HTMLFormatter
 import com.olegych.scastie.client.View
 import japgolly.scalajs.react._
 import org.scalajs.dom.raw.HTMLDivElement
-
 import vdom.all._
 
-final case class Console(isOpen: Boolean,
-                         isRunning: Boolean,
-                         isEmbedded: Boolean,
-                         consoleOutputs: Vector[ConsoleOutput],
-                         run: Reusable[Callback],
-                         setView: View ~=> Callback,
-                         close: Reusable[Callback],
-                         open: Reusable[Callback]) {
+final case class Console(
+    isOpen: Boolean,
+    isRunning: Boolean,
+    isEmbedded: Boolean,
+    consoleOutputs: Vector[ConsoleOutput],
+    run: Reusable[Callback],
+    setView: View ~=> Callback,
+    close: Reusable[Callback],
+    open: Reusable[Callback]
+) {
   @inline def render: VdomElement = Console.component(this)
 }
 
 object Console {
 
-  implicit val reusability: Reusability[Console] =
-    Reusability.derive[Console]
+  implicit val reusability: Reusability[Console] = Reusability.derive[Console]
 
   private val consoleElement = Ref[HTMLDivElement]
 
@@ -33,8 +33,7 @@ object Console {
       else (display.none, display.flex)
 
     val consoleCss =
-      if (props.isOpen)
-        TagMod(cls := "console-open")
+      if (props.isOpen) TagMod(cls := "console-open")
       else EmptyVdom
 
     val (users, systems) = props.consoleOutputs.partition {
@@ -59,7 +58,7 @@ object Console {
             isStatusOk = true,
             save = props.run,
             setView = props.setView,
-            embedded = true,
+            embedded = true
           ).render.when(props.isEmbedded),
           div(cls := "console-label")(
             i(cls := "fa fa-terminal"),
@@ -78,7 +77,7 @@ object Console {
           isStatusOk = true,
           save = props.run,
           setView = props.setView,
-          embedded = true,
+          embedded = true
         ).render.when(props.isEmbedded),
         displaySwitcher,
         div(cls := "console-label")(
@@ -90,17 +89,16 @@ object Console {
     )
   }
 
-  private val component =
-    ScalaComponent
-      .builder[Console]("Console")
-      .initialState(ConsoleState.default)
-      .render_P(render)
-      .componentDidUpdate(
-        scope =>
-          Callback {
-            consoleElement.unsafeGet().scrollTop = consoleElement.unsafeGet().scrollHeight.toDouble
-          }.when_(scope.prevProps.isRunning)
-      )
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  private val component = ScalaComponent
+    .builder[Console]("Console")
+    .initialState(ConsoleState.default)
+    .render_P(render)
+    .componentDidUpdate(scope =>
+      Callback {
+        consoleElement.unsafeGet().scrollTop = consoleElement.unsafeGet().scrollHeight.toDouble
+      }.when_(scope.prevProps.isRunning)
+    )
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }

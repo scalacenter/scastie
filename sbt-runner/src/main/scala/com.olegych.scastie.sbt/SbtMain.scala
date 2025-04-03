@@ -1,18 +1,17 @@
 package com.olegych.scastie.sbt
 
-import com.olegych.scastie.util.ScastieFileUtil.writeRunningPid
-import com.olegych.scastie.util.ReconnectInfo
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration._
+import scala.concurrent.Await
 
 import akka.actor.{ActorSystem, Props}
+import com.olegych.scastie.util.ReconnectInfo
+import com.olegych.scastie.util.ScastieFileUtil.writeRunningPid
 import com.typesafe.config.ConfigFactory
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import java.util.concurrent.TimeUnit
-
 import org.slf4j.LoggerFactory
 
 object SbtMain {
+
   def main(args: Array[String]): Unit = {
     val logger = LoggerFactory.getLogger(getClass)
 
@@ -53,13 +52,12 @@ object SbtMain {
       )
     }
 
-    val reconnectInfo =
-      ReconnectInfo(
-        serverHostname = serverConfig.getString("hostname"),
-        serverAkkaPort = serverConfig.getInt("akka-port"),
-        actorHostname = sbtConfig.getString("hostname"),
-        actorAkkaPort = sbtConfig.getInt("akka-port")
-      )
+    val reconnectInfo = ReconnectInfo(
+      serverHostname = serverConfig.getString("hostname"),
+      serverAkkaPort = serverConfig.getInt("akka-port"),
+      actorHostname = sbtConfig.getString("hostname"),
+      actorAkkaPort = sbtConfig.getInt("akka-port")
+    )
 
     logger.info("  runTimeout: {}", runTimeout)
     logger.info("  sbtReloadTimeout: {}", sbtReloadTimeout)
@@ -87,4 +85,5 @@ object SbtMain {
 
     ()
   }
+
 }

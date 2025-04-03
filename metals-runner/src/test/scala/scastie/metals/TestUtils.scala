@@ -16,7 +16,7 @@ import org.http4s._
 import JavaConverters._
 
 object TestUtils extends Assertions with CatsEffectAssertions {
-  val cache  = Cache.empty[IO, ScastieMetalsOptions, ScastiePresentationCompiler]
+  val cache = Cache.empty[IO, ScastieMetalsOptions, ScastiePresentationCompiler]
   val server = ScastieMetalsImpl.instance[IO](cache)
 
   type DependencyForVersion = ScalaTarget => ScalaDependency
@@ -38,12 +38,12 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     code: String
   ): LSPRequestDTO =
     val offsetParamsComplete = testCode(code)
-    val dependencies0        = dependencies.map(_.apply(scalaTarget))
+    val dependencies0 = dependencies.map(_.apply(scalaTarget))
     LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget), offsetParamsComplete)
 
   def getCompat[A](scalaTarget: ScalaTarget, compat: Map[String, A], default: A): A =
     val binaryScalaVersion = scalaTarget.binaryScalaVersion
-    val majorVersion       = binaryScalaVersion.split('.').headOption
+    val majorVersion = binaryScalaVersion.split('.').headOption
     if (compat.keys.exists(_ == binaryScalaVersion)) then compat(binaryScalaVersion)
     else if (majorVersion.forall(v => compat.keys.exists(_ == v))) compat(majorVersion.get)
     else default
@@ -56,7 +56,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     compat: Map[String, Either[FailureType, Set[String]]] = Map()
   ): IO[List[Unit]] = testTargets.traverse(scalaTarget =>
     val request = createRequest(scalaTarget, dependencies, code)
-    val comp    = server.complete(request).map(_.items.map(_.label)).value
+    val comp = server.complete(request).map(_.items.map(_.label)).value
     assertIO(comp, getCompat(scalaTarget, compat, expected), Left(NoResult(s"Failed for target $scalaTarget")))
   )
 
@@ -68,7 +68,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     compat: Map[String, Either[FailureType, MarkupContent]] = Map()
   ): IO[List[Unit]] = testTargets.traverse(scalaTarget =>
     val request = createRequest(scalaTarget, dependencies, code)
-    val comp    = server.hover(request).map(_.getContents().getRight()).value
+    val comp = server.hover(request).map(_.getContents().getRight()).value
     assertIO(comp, getCompat(scalaTarget, compat, expected), Left(NoResult(s"Failed for target $scalaTarget")))
   )
 

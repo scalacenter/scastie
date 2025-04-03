@@ -1,16 +1,15 @@
 package com.olegych.scastie.client.components.editor
 
-import org.scalajs.dom
-import typings.codemirrorState.anon
-import typings.codemirrorView.mod.EditorView
-import typings.codemirrorView.mod.{KeyBinding => JSKeyBinding}
-import typings.codemirrorCommands.mod._
-import typings.codemirrorAutocomplete.mod.acceptCompletion
-import typings.codemirrorState.mod._
 import com.olegych.scastie.client
-
+import org.scalajs.dom
 import scalajs.js
+import typings.codemirrorAutocomplete.mod.acceptCompletion
+import typings.codemirrorCommands.mod._
+import typings.codemirrorState.anon
+import typings.codemirrorState.mod._
 import typings.codemirrorState.mod.TransactionSpec
+import typings.codemirrorView.mod.{KeyBinding => JSKeyBinding}
+import typings.codemirrorView.mod.EditorView
 
 object EditorKeymaps {
 
@@ -33,21 +32,21 @@ object EditorKeymaps {
   val format = new Key("F6")
   val presentation = new Key("F8")
 
-  def keymapping(e: CodeEditor) =
-    typings.codemirrorView.mod.keymap.of(
-      js.Array(
-        KeyBinding.tabKeybind,
-        KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdate, true),
-        KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdateAlt, true),
-        KeyBinding(_ => e.openNewSnippetModal.runNow(), openNewSnippetModal, true),
-        KeyBinding(_ => e.clear.runNow(), clear, true),
-        KeyBinding(_ => e.clear.runNow(), clearAlt, true),
-        KeyBinding(_ => e.toggleHelp.runNow(), help, true),
-        KeyBinding(_ => e.toggleConsole.runNow(), console, true),
-        KeyBinding(_ => e.formatCode.runNow(), format, true),
-        KeyBinding(_ => presentationMode(e), presentation, true),
-      )
+  def keymapping(e: CodeEditor) = typings.codemirrorView.mod.keymap.of(
+    js.Array(
+      KeyBinding.tabKeybind,
+      KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdate, true),
+      KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdateAlt, true),
+      KeyBinding(_ => e.openNewSnippetModal.runNow(), openNewSnippetModal, true),
+      KeyBinding(_ => e.clear.runNow(), clear, true),
+      KeyBinding(_ => e.clear.runNow(), clearAlt, true),
+      KeyBinding(_ => e.toggleHelp.runNow(), help, true),
+      KeyBinding(_ => e.toggleConsole.runNow(), console, true),
+      KeyBinding(_ => e.formatCode.runNow(), format, true),
+      KeyBinding(_ => presentationMode(e), presentation, true)
     )
+  )
+
 }
 
 case class Key(default: String, linux: String, mac: String, win: String) {
@@ -63,22 +62,25 @@ case class Key(default: String, linux: String, mac: String, win: String) {
     val macAdjusted = if (client.isMac) mac.replace("Meta", "Cmd") else default
     macAdjusted.replace("Escape", "Esc")
   }
+
 }
 
 object KeyBinding {
+
   val tabKeybind: JSKeyBinding = {
     val key = new Key("Tab")
     JSKeyBinding()
       .setRun(view =>
-          if (!acceptCompletion(view)) {
-            view.dispatch(
-              TransactionSpec()
-                .setChanges(js.Dynamic.literal(from = view.state.selection.main.head, insert = "  ").asInstanceOf[ChangeSpec])
-                .setSelection(EditorSelection.single(view.state.selection.main.head + 2))
-            )
-            true
-          }
-          else false
+        if (!acceptCompletion(view)) {
+          view.dispatch(
+            TransactionSpec()
+              .setChanges(
+                js.Dynamic.literal(from = view.state.selection.main.head, insert = "  ").asInstanceOf[ChangeSpec]
+              )
+              .setSelection(EditorSelection.single(view.state.selection.main.head + 2))
+          )
+          true
+        } else false
       )
       .setKey(key.default)
       .setLinux(key.linux)
@@ -96,4 +98,5 @@ object KeyBinding {
       .setWin(key.win)
       .setPreventDefault(preventDefault)
   }
+
 }

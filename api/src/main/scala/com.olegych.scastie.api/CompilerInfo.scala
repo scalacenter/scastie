@@ -3,13 +3,14 @@ package com.olegych.scastie.api
 import play.api.libs.json._
 
 object Severity {
+
   implicit object SeverityFormat extends Format[Severity] {
-    def writes(severity: Severity): JsValue =
-      severity match {
-        case Info    => JsString("Info")
-        case Warning => JsString("Warning")
-        case Error   => JsString("Error")
-      }
+
+    def writes(severity: Severity): JsValue = severity match {
+      case Info    => JsString("Info")
+      case Warning => JsString("Warning")
+      case Error   => JsString("Error")
+    }
 
     def reads(json: JsValue): JsResult[Severity] = {
       json match {
@@ -19,7 +20,9 @@ object Severity {
         case _                   => JsError(Seq())
       }
     }
+
   }
+
 }
 
 sealed trait Severity

@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 
 object JavaConverters {
   private val logger = LoggerFactory.getLogger(getClass)
-  private val gson   = new Gson()
+  private val gson = new Gson()
 
   extension [A, B](either: JEither[A, B])
 
@@ -36,8 +36,8 @@ object JavaConverters {
   extension (range: Range) {
 
     def toScalaRange(insideWrapper: Boolean) =
-      val start      = range.getStart()
-      val end        = range.getEnd()
+      val start = range.getStart()
+      val end = range.getEnd()
       val lineOffset = if insideWrapper then 0 else 1
       val charOffset = if insideWrapper then -DTOExtensions.wrapperIndent.length else 0
       EditRange(
@@ -81,31 +81,30 @@ object JavaConverters {
         })
         .toList
 
-      val completionItems =
-        for {
-          completion         <- completions.getItems().asScala
-          filterText         <- Option(completion.getFilterText())
-          detail             <- Option(completion.getDetail())
-          kind               <- Option(completion.getKind()).map(_.toString.toLowerCase)
-          order              <- Option(completion.getSortText()).map(_.toIntOption)
-          insertInstructions <- createInsertInstructions(completion)
-          additionalInsertInstructions = createAdditionalInsertInstructions(completion)
-          data                         = parseCompletionData(completion)
-        } yield CompletionItemDTO(
-          filterText,
-          detail,
-          kind,
-          order,
-          insertInstructions,
-          additionalInsertInstructions,
-          data
-        )
+      val completionItems = for {
+        completion <- completions.getItems().asScala
+        filterText <- Option(completion.getFilterText())
+        detail <- Option(completion.getDetail())
+        kind <- Option(completion.getKind()).map(_.toString.toLowerCase)
+        order <- Option(completion.getSortText()).map(_.toIntOption)
+        insertInstructions <- createInsertInstructions(completion)
+        additionalInsertInstructions = createAdditionalInsertInstructions(completion)
+        data = parseCompletionData(completion)
+      } yield CompletionItemDTO(
+        filterText,
+        detail,
+        kind,
+        order,
+        insertInstructions,
+        additionalInsertInstructions,
+        data
+      )
       ScalaCompletionList(completionItems.toSet, completions.isIncomplete)
     }
 
-  def parseCompletionData(completion: CompletionItem): Option[String] =
-    Option(completion.getData()).map { completionData =>
+  def parseCompletionData(completion: CompletionItem): Option[String] = Option(completion.getData()).map {
+    completionData =>
       gson.fromJson(completionData.toString, classOf[CompletionItemData]).symbol
-    }
+  }
 
 }

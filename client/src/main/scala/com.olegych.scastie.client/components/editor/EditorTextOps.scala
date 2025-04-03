@@ -2,11 +2,11 @@ package com.olegych.scastie.client.components.editor
 
 import typings.codemirrorView.mod._
 
-
 object EditorTextOps {
   val regex = """\.\w*|\w+""".r
 
   implicit class EditorTextOpsOps(view: EditorView) {
+
     def lineBeforeCursor: String = {
       val pos = view.state.selection.main.from
       val line = view.state.doc.lineAt(pos)
@@ -20,4 +20,5 @@ object EditorTextOps {
     }
 
   }
+
 }

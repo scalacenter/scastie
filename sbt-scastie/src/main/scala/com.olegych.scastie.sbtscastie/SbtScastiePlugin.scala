@@ -1,11 +1,11 @@
 package com.olegych.scastie
 package sbtscastie
 
-import sbt.Keys.*
+import scala.util.{Failure, Success, Try}
+
 import sbt.*
 import sbt.internal.inc.AnalyzingCompiler
-
-import scala.util.{Success, Try, Failure}
+import sbt.Keys.*
 
 object SbtScastiePlugin extends AutoPlugin {
 
@@ -15,18 +15,17 @@ object SbtScastiePlugin extends AutoPlugin {
   override lazy val projectSettings: Seq[sbt.Def.Setting[_]] =
     (CompilerReporter.setting +: sbt.internal.util.com.olegych.scastie.sbtscastie.RuntimeErrorLogger.settings) ++
       Seq(
-        //workaround https://github.com/sbt/sbt/issues/5482
+        // workaround https://github.com/sbt/sbt/issues/5482
         Global / nio.Keys.onChangedBuildSource := nio.Keys.IgnoreSourceChanges,
         turbo := true,
         useSuperShell := false,
         autoStartServer := false,
         compilers := {
           val r = compilers.value
-          //compile bridge to init everything on reload
+          // compile bridge to init everything on reload
           r.scalac() match {
-            case c: AnalyzingCompiler =>
-              c.provider.fetchCompiledBridge(c.scalaInstance, streams.value.log)
-            case _ => ()
+            case c: AnalyzingCompiler => c.provider.fetchCompiledBridge(c.scalaInstance, streams.value.log)
+            case _                    => ()
           }
           r
         },
@@ -49,10 +48,13 @@ object SbtScastiePlugin extends AutoPlugin {
         resolvers := {
           Seq[Resolver](
             Resolver
-              .url("my-ivy-proxy-releases", url("http://scala-webapps.epfl.ch:8081/artifactory/scastie-ivy/"))(Resolver.ivyStylePatterns)
+              .url("my-ivy-proxy-releases", url("http://scala-webapps.epfl.ch:8081/artifactory/scastie-ivy/"))(
+                Resolver.ivyStylePatterns
+              )
               .withAllowInsecureProtocol(true),
-            "my-maven-proxy-releases" at "http://scala-webapps.epfl.ch:8081/artifactory/scastie-maven/" withAllowInsecureProtocol (true),
+            "my-maven-proxy-releases" at "http://scala-webapps.epfl.ch:8081/artifactory/scastie-maven/" withAllowInsecureProtocol (true)
           ) ++ resolvers.value
-        },
+        }
       )
+
 }

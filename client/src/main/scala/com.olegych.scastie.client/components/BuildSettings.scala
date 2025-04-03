@@ -3,7 +3,6 @@ package com.olegych.scastie.client.components
 import com.olegych.scastie.api._
 import com.olegych.scastie.client.components.editor.SimpleEditor
 import japgolly.scalajs.react._
-
 import vdom.all._
 
 final case class BuildSettings(
@@ -31,8 +30,7 @@ final case class BuildSettings(
 
 object BuildSettings {
 
-  implicit val reusability: Reusability[BuildSettings] =
-    Reusability.derive[BuildSettings]
+  implicit val reusability: Reusability[BuildSettings] = Reusability.derive[BuildSettings]
 
   private def render(props: BuildSettings): VdomElement = {
 
@@ -69,7 +67,7 @@ object BuildSettings {
     div(cls := "build-settings-container")(
       resetButton,
       h2(
-        span("Target"),
+        span("Target")
       ),
       TargetSelector(props.scalaTarget, props.setTarget).render,
       h2(
@@ -116,10 +114,10 @@ object BuildSettings {
     )
   }
 
-  private val component =
-    ScalaComponent
-      .builder[BuildSettings]("BuildSettings")
-      .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  private val component = ScalaComponent
+    .builder[BuildSettings]("BuildSettings")
+    .render_P(render)
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }

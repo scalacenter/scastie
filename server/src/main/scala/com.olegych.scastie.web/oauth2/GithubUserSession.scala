@@ -3,6 +3,10 @@ package com.olegych.scastie.web.oauth2
 import java.lang.System.{lineSeparator => nl}
 import java.nio.file._
 import java.util.UUID
+import scala.collection.concurrent.TrieMap
+import scala.jdk.CollectionConverters._
+import scala.util.control.NonFatal
+import scala.util.Try
 
 import akka.actor.ActorSystem
 import com.olegych.scastie.api.User
@@ -11,23 +15,14 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import play.api.libs.json.Json
 
-import scala.collection.concurrent.TrieMap
-import scala.jdk.CollectionConverters._
-import scala.util.Try
-import scala.util.control.NonFatal
-
 class GithubUserSession(system: ActorSystem) {
   val logger = Logger("GithubUserSession")
 
-  private val configuration =
-    ConfigFactory.load().getConfig("com.olegych.scastie.web")
-  private val usersFile =
-    Paths.get(configuration.getString("oauth2.users-file"))
-  private val usersSessions =
-    Paths.get(configuration.getString("oauth2.sessions-file"))
+  private val configuration = ConfigFactory.load().getConfig("com.olegych.scastie.web")
+  private val usersFile = Paths.get(configuration.getString("oauth2.users-file"))
+  private val usersSessions = Paths.get(configuration.getString("oauth2.sessions-file"))
 
-  private val sessionConfig =
-    SessionConfig.default(configuration.getString("session-secret"))
+  private val sessionConfig = SessionConfig.default(configuration.getString("session-secret"))
 
   private lazy val users = {
     val trie = TrieMap[UUID, User]()
@@ -35,11 +30,11 @@ class GithubUserSession(system: ActorSystem) {
     trie
   }
 
-  implicit def serializer: SessionSerializer[UUID, String] =
-    new SingleValueSessionSerializer(
-      _.toString(),
-      (id: String) => Try { UUID.fromString(id) }
-    )
+  implicit def serializer: SessionSerializer[UUID, String] = new SingleValueSessionSerializer(
+    _.toString(),
+    (id: String) => Try { UUID.fromString(id) }
+  )
+
   implicit val sessionManager = new SessionManager[UUID](sessionConfig)
   implicit val refreshTokenStorage = new ActorRefreshTokenStorage(system)
 
@@ -98,6 +93,5 @@ class GithubUserSession(system: ActorSystem) {
     }
   }
 
-  def getUser(id: Option[UUID]): Option[User] =
-    id.flatMap(users.get)
+  def getUser(id: Option[UUID]): Option[User] = id.flatMap(users.get)
 }

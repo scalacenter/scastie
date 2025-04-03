@@ -1,5 +1,10 @@
 package com.olegych.scastie.web
 
+import scala.concurrent.duration._
+import scala.concurrent.Await
+import scala.util.Failure
+import scala.util.Success
+
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.http.scaladsl._
@@ -11,12 +16,6 @@ import com.olegych.scastie.web.oauth2._
 import com.olegych.scastie.web.routes._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.util.Failure
-import scala.util.Success
-
 import server.Directives._
 
 object ServerMain {
@@ -34,9 +33,9 @@ object ServerMain {
     logger.info(config2.getString("hostname"))
     logger.info(config2.getInt("port").toString)
 
-    val config     = ConfigFactory.load().getConfig("com.olegych.scastie")
+    val config = ConfigFactory.load().getConfig("com.olegych.scastie")
     val production = config.getBoolean("production")
-    val hostname   = config.getString("web.hostname")
+    val hostname = config.getString("web.hostname")
 
     logger.info(s"Production: $production")
     logger.info(s"Server hostname: $hostname")
@@ -49,8 +48,8 @@ object ServerMain {
     import system.dispatcher
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    val github         = new Github()
-    val session        = new GithubUserSession(system)
+    val github = new Github()
+    val session = new GithubUserSession(system)
     val userDirectives = new UserDirectives(session)
 
     val progressActor = system.actorOf(
@@ -68,17 +67,16 @@ object ServerMain {
       name = "DispatchActor"
     )
 
-    val apiRoutes       = new ApiRoutes(dispatchActor, userDirectives).routes
-    val progressRoutes  = new ProgressRoutes(progressActor).routes
-    val downloadRoutes  = new DownloadRoutes(dispatchActor).routes
-    val statusRoutes    = new StatusRoutes(statusActor, userDirectives).routes
-    val scalaJsRoutes   = new ScalaJsRoutes(dispatchActor).routes
-    val oauthRoutes     = new OAuth2Routes(github, session).routes
+    val apiRoutes = new ApiRoutes(dispatchActor, userDirectives).routes
+    val progressRoutes = new ProgressRoutes(progressActor).routes
+    val downloadRoutes = new DownloadRoutes(dispatchActor).routes
+    val statusRoutes = new StatusRoutes(statusActor, userDirectives).routes
+    val scalaJsRoutes = new ScalaJsRoutes(dispatchActor).routes
+    val oauthRoutes = new OAuth2Routes(github, session).routes
     val scalaLangRoutes = new ScalaLangRoutes(dispatchActor, userDirectives).routes
     val frontPageRoutes = new FrontPageRoutes(dispatchActor, production, hostname).routes
 
-    val routes =
-      oauthRoutes ~
+    val routes = oauthRoutes ~
       cors() {
         pathPrefix("api") {
           apiRoutes ~

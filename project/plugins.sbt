@@ -5,6 +5,7 @@ addSbtPlugin("se.marcuslonnberg" % "sbt-docker"          % "1.11.0")
 addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo"       % "0.11.0")
 addSbtPlugin("com.eed3si9n"      % "sbt-projectmatrix"   % "0.9.1")
 addSbtPlugin("org.scala-js"      % "sbt-scalajs"         % SbtShared.ScalaJSVersions.current)
+addSbtPlugin("org.scalameta"     % "sbt-scalafmt"        % "2.5.4")
 
 addSbtPlugin("org.olegych"                %% "sbt-cached-ci"          % "1.0.4")
 addSbtPlugin("org.scalablytyped.converter" % "sbt-converter"          % "1.0.0-beta43")

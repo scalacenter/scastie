@@ -9,8 +9,7 @@ case class SbtRunnerConnect(hostname: String, port: Int)
 case object ActorConnected
 
 object SnippetSummary {
-  implicit val formatSnippetSummary: OFormat[SnippetSummary] =
-    Json.format[SnippetSummary]
+  implicit val formatSnippetSummary: OFormat[SnippetSummary] = Json.format[SnippetSummary]
 }
 
 case class SnippetSummary(
@@ -20,8 +19,7 @@ case class SnippetSummary(
 )
 
 object FormatRequest {
-  implicit val formatFormatRequest: OFormat[FormatRequest] =
-    Json.format[FormatRequest]
+  implicit val formatFormatRequest: OFormat[FormatRequest] = Json.format[FormatRequest]
 }
 
 case class FormatRequest(
@@ -31,17 +29,17 @@ case class FormatRequest(
 )
 
 object FormatResponse {
+
   implicit object FormatResponseFormat extends Format[FormatResponse] {
+
     def writes(response: FormatResponse): JsValue = {
       response.result match {
-        case Left(error) =>
-          JsObject(
+        case Left(error) => JsObject(
             Seq(
               "Left" -> JsString(error)
             )
           )
-        case Right(formatedCode) =>
-          JsObject(
+        case Right(formatedCode) => JsObject(
             Seq(
               "Right" -> JsString(formatedCode)
             )
@@ -51,43 +49,46 @@ object FormatResponse {
 
     def reads(json: JsValue): JsResult[FormatResponse] = {
       json match {
-        case JsObject(v) =>
-          v.toList match {
-            case List(("Left", JsString(error))) =>
-              JsSuccess(FormatResponse(Left(error)))
+        case JsObject(v) => v.toList match {
+            case List(("Left", JsString(error))) => JsSuccess(FormatResponse(Left(error)))
 
-            case List(("Right", JsString(formatedCode))) =>
-              JsSuccess(FormatResponse(Right(formatedCode)))
+            case List(("Right", JsString(formatedCode))) => JsSuccess(FormatResponse(Right(formatedCode)))
 
-            case _ =>
-              JsError(Seq())
+            case _ => JsError(Seq())
           }
 
-        case _ =>
-          JsError(Seq())
+        case _ => JsError(Seq())
       }
     }
-  }
-}
 
+  }
+
+}
 
 object EitherFormat {
   import play.api.libs.functional.syntax._
+
   implicit object JsEither {
 
-    implicit def eitherReads[A, B](implicit A: Reads[A], B: Reads[B]): Reads[Either[A, B]] = {
+    implicit def eitherReads[A, B](
+      implicit A: Reads[A],
+      B: Reads[B]
+    ): Reads[Either[A, B]] = {
       (JsPath \ "Left" \ "value").read[A].map(Left(_)) or
         (JsPath \ "Right" \ "value").read[B].map(Right(_))
     }
 
-    implicit def eitherWrites[A, B](implicit A: Writes[A], B: Writes[B]): Writes[Either[A, B]] = Writes[Either[A, B]] {
+    implicit def eitherWrites[A, B](
+      implicit A: Writes[A],
+      B: Writes[B]
+    ): Writes[Either[A, B]] = Writes[Either[A, B]] {
       case Left(value)  => Json.obj("Left" -> Json.toJson(value))
       case Right(value) => Json.obj("Right" -> Json.toJson(value))
     }
+
   }
+
 }
-
-
 
 case class FormatResponse(
     result: Either[String, String]
@@ -95,7 +96,8 @@ case class FormatResponse(
 
 object FetchResult {
   implicit val formatFetchResult: OFormat[FetchResult] = Json.format[FetchResult]
-  def create(inputs: Inputs, progresses: List[SnippetProgress]) = FetchResult(inputs, progresses.sortBy(p => (p.id, p.ts)))
+  def create(inputs: Inputs, progresses: List[SnippetProgress]) =
+    FetchResult(inputs, progresses.sortBy(p => (p.id, p.ts)))
 }
 
 case class FetchResult private (inputs: Inputs, progresses: List[SnippetProgress])
@@ -110,8 +112,7 @@ case class FetchScalaSource(snippetId: SnippetId)
 case class FetchResultScalaSource(content: String)
 
 object ScalaDependency {
-  implicit val formatScalaDependency: OFormat[ScalaDependency] =
-    Json.format[ScalaDependency]
+  implicit val formatScalaDependency: OFormat[ScalaDependency] = Json.format[ScalaDependency]
 }
 
 case class ScalaDependency(
@@ -120,9 +121,8 @@ case class ScalaDependency(
     target: ScalaTarget,
     version: String
 ) {
-  def matches(sd: ScalaDependency): Boolean =
-    sd.groupId == this.groupId &&
-      sd.artifact == this.artifact
+  def matches(sd: ScalaDependency): Boolean = sd.groupId == this.groupId &&
+    sd.artifact == this.artifact
 
   override def toString: String = target.renderSbt(this)
 }
@@ -151,7 +151,8 @@ object NoResult {
 }
 
 object PresentationCompilerFailure {
-  implicit val presentationCompilerFailureFormat: OFormat[PresentationCompilerFailure] = Json.format[PresentationCompilerFailure]
+  implicit val presentationCompilerFailureFormat: OFormat[PresentationCompilerFailure] =
+    Json.format[PresentationCompilerFailure]
 }
 
 object ScastieOffsetParams {
@@ -172,15 +173,14 @@ case class EditRange(startLine: Int, startChar: Int, endLine: Int, endChar: Int)
 case class ScalaCompletionList(items: Set[CompletionItemDTO], isIncomplete: Boolean)
 
 case class CompletionItemDTO(
-  label: String,
-  detail: String,
-  tpe: String,
-  order: Option[Int],
-  instructions: InsertInstructions,
-  additionalInsertInstructions: List[AdditionalInsertInstructions],
-  symbol: Option[String]
+    label: String,
+    detail: String,
+    tpe: String,
+    order: Option[Int],
+    instructions: InsertInstructions,
+    additionalInsertInstructions: List[AdditionalInsertInstructions],
+    symbol: Option[String]
 )
-
 
 case class HoverDTO(from: Int, to: Int, content: String)
 
@@ -195,7 +195,8 @@ object InsertInstructions {
 }
 
 object AdditionalInsertInstructions {
-  implicit val additionalInsertInstructionsFormat: OFormat[AdditionalInsertInstructions] = Json.format[AdditionalInsertInstructions]
+  implicit val additionalInsertInstructionsFormat: OFormat[AdditionalInsertInstructions] =
+    Json.format[AdditionalInsertInstructions]
 }
 
 object ScalaCompletionList {
@@ -219,8 +220,7 @@ object HoverDTO {
 }
 
 object Project {
-  implicit val formatProject: OFormat[Project] =
-    Json.format[Project]
+  implicit val formatProject: OFormat[Project] = Json.format[Project]
 }
 
 case class Project(

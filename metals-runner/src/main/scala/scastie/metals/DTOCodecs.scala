@@ -13,7 +13,7 @@ object DTOCodecs {
 
     final def apply(c: HCursor): Decoder.Result[ScalaTarget] =
       val res = for {
-        tpe          <- c.downField("tpe").as[String]
+        tpe <- c.downField("tpe").as[String]
         scalaVersion <- c.downField("scalaVersion").as[String]
       } yield tpe -> scalaVersion
 

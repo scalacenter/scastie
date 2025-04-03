@@ -3,6 +3,7 @@ package com.olegych.scastie.storage
 import com.olegych.scastie.api._
 
 object OldScastieConverter {
+
   private def convertLine(line: String): Converter => Converter = { converter =>
     val sv = "scalaVersion := \""
 
@@ -16,11 +17,9 @@ object OldScastieConverter {
         case """scalaOrganization in ThisBuild := "org.typelevel"""" =>
           converter.setTargetType(ScalaTargetType.Typelevel)
 
-        case "coursier.CoursierPlugin.projectSettings" =>
-          converter
+        case "coursier.CoursierPlugin.projectSettings" => converter
 
-        case _ =>
-          converter.appendSbt(line)
+        case _ => converter.appendSbt(line)
       }
     }
   }
@@ -28,11 +27,10 @@ object OldScastieConverter {
   def convertOldOutput(content: String): List[SnippetProgress] = {
     content
       .split("\n")
-      .map(
-        line =>
-          SnippetProgress.default.copy(
-            userOutput = Some(ProcessOutput(line, ProcessOutputType.StdOut, None)),
-            isDone = true
+      .map(line =>
+        SnippetProgress.default.copy(
+          userOutput = Some(ProcessOutput(line, ProcessOutputType.StdOut, None)),
+          isDone = true
         )
       )
       .toList
@@ -52,10 +50,7 @@ object OldScastieConverter {
       val code = content.drop(blockEndPos + blockEnd.length)
 
       val converterFn =
-        sbtConfig.split("\n").foldLeft(Converter.nil) {
-          case (converter, line) =>
-            convertLine(line)(converter)
-        }
+        sbtConfig.split("\n").foldLeft(Converter.nil) { case (converter, line) => convertLine(line)(converter) }
 
       converterFn(Inputs.default).copy(code = code.trim)
     } else {
@@ -64,12 +59,13 @@ object OldScastieConverter {
   }
 
   private object Converter {
-    def nil: Converter =
-      Converter(
-        scalaVersion = None,
-        targetType = None,
-        sbtExtra = ""
-      )
+
+    def nil: Converter = Converter(
+      scalaVersion = None,
+      targetType = None,
+      sbtExtra = ""
+    )
+
   }
 
   private case class Converter(
@@ -77,32 +73,26 @@ object OldScastieConverter {
       targetType: Option[ScalaTargetType],
       sbtExtra: String
   ) {
-    def appendSbt(in: String): Converter =
-      copy(sbtExtra = sbtExtra + "\n" + in)
+    def appendSbt(in: String): Converter = copy(sbtExtra = sbtExtra + "\n" + in)
 
-    def setTargetType(targetType0: ScalaTargetType): Converter =
-      copy(targetType = Some(targetType0))
+    def setTargetType(targetType0: ScalaTargetType): Converter = copy(targetType = Some(targetType0))
 
     def apply(inputs: Inputs): Inputs = {
-      val scalaTarget =
-        targetType match {
-          case Some(ScalaTargetType.Scala3) =>
-            ScalaTarget.Scala3.default
+      val scalaTarget = targetType match {
+        case Some(ScalaTargetType.Scala3) => ScalaTarget.Scala3.default
 
-          case Some(ScalaTargetType.Typelevel) =>
-            scalaVersion
-              .map(sv => ScalaTarget.Typelevel(sv))
-              .getOrElse(
-                ScalaTarget.Typelevel.default
-              )
+        case Some(ScalaTargetType.Typelevel) => scalaVersion
+            .map(sv => ScalaTarget.Typelevel(sv))
+            .getOrElse(
+              ScalaTarget.Typelevel.default
+            )
 
-          case _ =>
-            scalaVersion
-              .map(sv => ScalaTarget.Jvm(sv))
-              .getOrElse(
-                ScalaTarget.Jvm.default
-              )
-        }
+        case _ => scalaVersion
+            .map(sv => ScalaTarget.Jvm(sv))
+            .getOrElse(
+              ScalaTarget.Jvm.default
+            )
+      }
 
       inputs.copy(
         target = scalaTarget,
@@ -110,5 +100,7 @@ object OldScastieConverter {
         _isWorksheetMode = false
       )
     }
+
   }
+
 }

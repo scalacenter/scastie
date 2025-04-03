@@ -1,35 +1,42 @@
 package com.olegych.scastie.storage.mongodb
 
+import java.lang.System.{lineSeparator => nl}
+import scala.concurrent.duration._
+import scala.concurrent.Await
+import scala.concurrent.Future
+
 import com.olegych.scastie.api._
 import com.olegych.scastie.storage._
 import org.mongodb.scala._
+import org.mongodb.scala.model._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
-import org.mongodb.scala.model._
-
-import java.lang.System.{lineSeparator => nl}
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
 
 trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContainer {
+
   lazy val snippets = {
     val db = database.getCollection[Document]("snippets")
 
-    Await.result(db.createIndex(Indexes.ascending("simpleSnippetId", "oldId"), IndexOptions().unique(true)).head(), Duration.Inf)
-    Await.result(Future.sequence(Seq(
-      Indexes.hashed("simpleSnippetId"),
-      Indexes.hashed("oldId"),
-      Indexes.hashed("user"),
-      Indexes.hashed("snippetId.user.login"),
-      Indexes.hashed("inputs.isShowingInUserProfile"),
-      Indexes.hashed("time")
-    ).map(db.createIndex(_).head())), Duration.Inf)
+    Await.result(
+      db.createIndex(Indexes.ascending("simpleSnippetId", "oldId"), IndexOptions().unique(true)).head(),
+      Duration.Inf
+    )
+    Await.result(
+      Future.sequence(
+        Seq(
+          Indexes.hashed("simpleSnippetId"),
+          Indexes.hashed("oldId"),
+          Indexes.hashed("user"),
+          Indexes.hashed("snippetId.user.login"),
+          Indexes.hashed("inputs.isShowingInUserProfile"),
+          Indexes.hashed("time")
+        ).map(db.createIndex(_).head())
+      ),
+      Duration.Inf
+    )
 
     db
   }
-
 
   def toMongoSnippet(snippetId: SnippetId, inputs: Inputs): MongoSnippet = MongoSnippet(
     simpleSnippetId = snippetId.url,
@@ -94,7 +101,7 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
   def listSnippets(user: UserLogin): Future[List[SnippetSummary]] = {
     val userSnippets = and(
       Document(
-        "snippetId.user.login"          -> user.login,
+        "snippetId.user.login" -> user.login,
         "inputs.isShowingInUserProfile" -> true
       )
     )
@@ -103,10 +110,10 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
       .find(userSnippets)
       .projection(
         Document(
-          "snippetId"     -> 1,
-          "inputs.code"   -> 1,
+          "snippetId" -> 1,
+          "inputs.code" -> 1,
           "inputs.target" -> 1,
-          "time"          -> 1
+          "time" -> 1
         )
       )
       .map(fromBson[ShortMongoSnippet])

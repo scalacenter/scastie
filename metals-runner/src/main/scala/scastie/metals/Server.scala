@@ -20,9 +20,9 @@ import org.http4s.server.middleware._
 
 object Server:
 
-  val config                   = ConfigFactory.load().getConfig("scastie.metals")
+  val config = ConfigFactory.load().getConfig("scastie.metals")
   val cacheExpirationInSeconds = config.getInt("cache-expire-in-seconds")
-  val serverPort               = config.getInt("port")
+  val serverPort = config.getInt("port")
 
   def stream[F[_]: Async]: Stream[F, Nothing] = {
     val cache = Cache.expiring[F, ScastieMetalsOptions, ScastiePresentationCompiler](
@@ -31,8 +31,8 @@ object Server:
     )
 
     val finalHttpApp = (cache0: Cache[F, ScastieMetalsOptions, ScastiePresentationCompiler]) => {
-      val metalsImpl  = ScastieMetalsImpl.instance[F](cache0)
-      val httpApp     = ScastieMetalsRoutes.routes[F](metalsImpl).orNotFound
+      val metalsImpl = ScastieMetalsImpl.instance[F](cache0)
+      val httpApp = ScastieMetalsRoutes.routes[F](metalsImpl).orNotFound
       val corsService = CORS.policy.withAllowOriginAll(httpApp)
       Logger.httpApp(true, false)(corsService)
     }

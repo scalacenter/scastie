@@ -4,9 +4,9 @@ package sbt
 import scala.meta._
 
 import akka.actor.Actor
-import org.scalafmt.Scalafmt
-import org.scalafmt.config.ScalafmtConfig
 import org.scalafmt.config.NamedDialect
+import org.scalafmt.config.ScalafmtConfig
+import org.scalafmt.Scalafmt
 import org.slf4j.LoggerFactory
 
 object FormatActor {
@@ -28,11 +28,11 @@ class FormatActor() extends Actor {
   import FormatActor._
   private val log = LoggerFactory.getLogger(getClass)
 
-  override def receive: Receive = {
-    case api.FormatRequest(code, isWorksheetMode, scalaTarget) =>
-      log.info(s"format (isWorksheetMode: $isWorksheetMode)")
-      log.info(code)
+  override def receive: Receive = { case api.FormatRequest(code, isWorksheetMode, scalaTarget) =>
+    log.info(s"format (isWorksheetMode: $isWorksheetMode)")
+    log.info(code)
 
-      sender() ! api.FormatResponse(format(code, scalaTarget))
+    sender() ! api.FormatResponse(format(code, scalaTarget))
   }
+
 }

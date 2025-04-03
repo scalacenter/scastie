@@ -3,7 +3,6 @@ package client
 package components
 
 import japgolly.scalajs.react._
-
 import vdom.all._
 
 final case class WorksheetButton(
@@ -17,18 +16,14 @@ final case class WorksheetButton(
 
 object WorksheetButton {
 
-  implicit val reusability: Reusability[WorksheetButton] =
-    Reusability.derive[WorksheetButton]
+  implicit val reusability: Reusability[WorksheetButton] = Reusability.derive[WorksheetButton]
 
   private def render(props: WorksheetButton): VdomElement = {
     val isWorksheetModeSelected =
       if (props.isWorksheetMode)
-        if (props.view != View.Editor)
-          TagMod(cls := "enabled alpha")
-        else
-          TagMod(cls := "enabled")
-      else
-        EmptyVdom
+        if (props.view != View.Editor) TagMod(cls := "enabled alpha")
+        else TagMod(cls := "enabled")
+      else EmptyVdom
 
     val isWorksheetModeToggleLabel =
       if (props.isWorksheetMode) "OFF"
@@ -49,10 +44,10 @@ object WorksheetButton {
     )
   }
 
-  private val component =
-    ScalaComponent
-      .builder[WorksheetButton]("WorksheetButton")
-      .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  private val component = ScalaComponent
+    .builder[WorksheetButton]("WorksheetButton")
+    .render_P(render)
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }
