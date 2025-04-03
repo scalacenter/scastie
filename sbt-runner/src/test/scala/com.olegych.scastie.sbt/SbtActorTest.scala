@@ -84,7 +84,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("report parsing error") {
     runCode("\n4444444444444444444\n", allowFailure = true)(assertCompilationInfo { info =>
-      assert(info.message == "integer number too large")
+      assert(info.message == "integer number too large for Int")
       assert(info.line.contains(2))
     })
   }
