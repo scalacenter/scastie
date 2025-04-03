@@ -4,13 +4,13 @@ import japgolly.scalajs.react._
 import vdom.all._
 
 final case class Modal(
-  title: String,
-  isDarkTheme: Boolean,
-  isClosed: Boolean,
-  close: Reusable[Callback],
-  modalCss: TagMod,
-  modalId: String,
-  content: TagMod
+    title: String,
+    isDarkTheme: Boolean,
+    isClosed: Boolean,
+    close: Reusable[Callback],
+    modalCss: TagMod,
+    modalId: String,
+    content: TagMod
 ) {
   @inline def render: VdomElement = Modal.component(this)
 }
@@ -31,7 +31,7 @@ object Modal {
             div(
               cls := "modal-close",
               onClick ==> (e => e.stopPropagationCB >> props.close),
-              role  := "button",
+              role := "button",
               title := "close help modal"
             )
           )(

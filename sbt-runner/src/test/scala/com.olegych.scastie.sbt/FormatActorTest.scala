@@ -2,8 +2,8 @@ package com.olegych.scastie.sbt
 
 import com.olegych.scastie.api.ScalaTarget
 import com.olegych.scastie.sbt.FormatActor
-import org.scalatest.Assertions._
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.Assertions._
 
 class FormatActorTest extends AnyFunSuite {
   test("format should accept scala 2 code") {

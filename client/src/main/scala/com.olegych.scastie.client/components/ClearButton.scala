@@ -3,7 +3,6 @@ package components
 
 import com.olegych.scastie.client.components.editor.EditorKeymaps
 import japgolly.scalajs.react._
-
 import vdom.all._
 
 final case class ClearButton(clear: Reusable[Callback]) {
@@ -12,8 +11,7 @@ final case class ClearButton(clear: Reusable[Callback]) {
 
 object ClearButton {
 
-  implicit val reusability: Reusability[ClearButton] =
-    Reusability.derive[ClearButton]
+  implicit val reusability: Reusability[ClearButton] = Reusability.derive[ClearButton]
 
   private def render(props: ClearButton): VdomElement = {
     li(
@@ -29,10 +27,10 @@ object ClearButton {
     )
   }
 
-  private val component =
-    ScalaComponent
-      .builder[ClearButton]("ClearButton")
-      .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  private val component = ScalaComponent
+    .builder[ClearButton]("ClearButton")
+    .render_P(render)
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }

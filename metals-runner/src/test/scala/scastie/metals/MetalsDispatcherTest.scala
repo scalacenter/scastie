@@ -32,7 +32,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
   test("single thread metals access") {
     cache.use { cache =>
       val dispatcher = dispatcherF(cache)
-      val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
+      val options = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
       assertIO(dispatcher.getCompiler(options).isRight, true)
     }
   }
@@ -40,7 +40,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
   test("parallel metals access for same cache entry") {
     cache.use { cache =>
       val dispatcher = dispatcherF(cache)
-      val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
+      val options = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
       val tasks = List
         .fill(10)(dispatcher.getCompiler(options).flatMap(_.complete(ScastieOffsetParams("prin", 4, true))).value)
         .parSequence
@@ -57,10 +57,10 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     cache.use { cache =>
       {
         val dispatcher = dispatcherF(cache)
-        val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
+        val options = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
         val task = for {
-          pc     <- dispatcher.getCompiler(options)
-          _      <- EitherT.right(IO.sleep(4.seconds))
+          pc <- dispatcher.getCompiler(options)
+          _ <- EitherT.right(IO.sleep(4.seconds))
           result <- EitherT.right(pc.complete(ScastieOffsetParams("print", 3, true)))
         } yield { result.items }
         interceptIO[java.util.concurrent.CancellationException](task.value)
@@ -71,8 +71,8 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
   test("parallel metals access same version") {
     cache.use { cache =>
       val dispatcher = dispatcherF(cache)
-      val options    = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
-      val task       = dispatcher.getCompiler(options).value.parReplicateA(10000)
+      val options = ScastieMetalsOptions(Set.empty, ScalaTarget.Jvm(BuildInfo.latestLTS))
+      val task = dispatcher.getCompiler(options).value.parReplicateA(10000)
       assertIO(task.map(results => results.nonEmpty && results.forall(_.isRight)), true)
     }
   }

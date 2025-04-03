@@ -2,17 +2,16 @@ package com.olegych.scastie
 package client
 package components
 
-import japgolly.scalajs.react._
-
 import scala.scalajs.js.annotation.JSImport
 
-import vdom.all._
+import japgolly.scalajs.react._
 import scalajs.js
+import vdom.all._
 
 final case class MetalsStatusIndicator(
     metalsStatus: MetalsStatus,
     toggleMetalsStatus: Reusable[Callback],
-    view: View,
+    view: View
 ) {
   @inline def render: VdomElement = MetalsStatusIndicator.component(this)
 }
@@ -21,16 +20,15 @@ final case class MetalsStatusIndicator(
 @js.native
 object MetalsLogo extends js.Any
 
-
 object MetalsStatusIndicator {
   def metalsLogo: String = MetalsLogo.asInstanceOf[String]
 
   def getIndicatorIconClasses(status: MetalsStatus): String = {
     status match {
-      case MetalsLoading => "metals-loading fa-spinner fa-spin"
-      case MetalsDisabled => "metals-disabled fa-circle metals-disabled"
-      case MetalsReady => "metals-ready fa-circle metals-ready"
-      case _: NetworkError => "fa-exclamation-circle"
+      case MetalsLoading               => "metals-loading fa-spinner fa-spin"
+      case MetalsDisabled              => "metals-disabled fa-circle metals-disabled"
+      case MetalsReady                 => "metals-ready fa-circle metals-ready"
+      case _: NetworkError             => "fa-exclamation-circle"
       case _: MetalsConfigurationError => "fa-exclamation-triangle"
     }
   }
@@ -40,7 +38,7 @@ object MetalsStatusIndicator {
       title := props.metalsStatus.info,
       role := "button",
       cls := "btn editor metals-status-indicator",
-      onClick --> props.toggleMetalsStatus,
+      onClick --> props.toggleMetalsStatus
     )(
       img(src := metalsLogo),
       span("Metals Status"),
@@ -48,8 +46,8 @@ object MetalsStatusIndicator {
     )
   }
 
-  private val component =
-    ScalaFnComponent
-      .withHooks[MetalsStatusIndicator]
-      .render(props => MetalsStatusIndicator.render(props))
+  private val component = ScalaFnComponent
+    .withHooks[MetalsStatusIndicator]
+    .render(props => MetalsStatusIndicator.render(props))
+
 }

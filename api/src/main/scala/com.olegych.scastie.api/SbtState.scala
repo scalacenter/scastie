@@ -3,7 +3,9 @@ package com.olegych.scastie.api
 import play.api.libs.json._
 
 sealed trait SbtState extends ServerState
+
 object SbtState {
+
   case object Unknown extends SbtState {
     override def toString: String = "Unknown"
     def isReady: Boolean = true
@@ -15,15 +17,15 @@ object SbtState {
   }
 
   implicit object SbtStateFormat extends Format[SbtState] {
+
     def writes(state: SbtState): JsValue = {
       JsString(state.toString)
     }
 
-    private val values =
-      List(
-        Unknown,
-        Disconnected
-      ).map(v => (v.toString, v)).toMap
+    private val values = List(
+      Unknown,
+      Disconnected
+    ).map(v => (v.toString, v)).toMap
 
     def reads(json: JsValue): JsResult[SbtState] = {
       json match {
@@ -36,5 +38,7 @@ object SbtState {
         case _ => JsError(Seq())
       }
     }
+
   }
+
 }

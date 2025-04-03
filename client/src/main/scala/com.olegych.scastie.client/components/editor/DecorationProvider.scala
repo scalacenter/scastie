@@ -1,24 +1,24 @@
 package com.olegych.scastie.client.components.editor
 
+import scala.collection.mutable.ListBuffer
+
 import com.olegych.scastie.api
 import com.olegych.scastie.api.AttachedDom
 import com.olegych.scastie.api.Html
 import com.olegych.scastie.api.Value
+import hooks.Hooks.UseStateF
 import japgolly.scalajs.react._
+import js.JSConverters._
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
+import scalajs.js
 import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
-
-import scala.collection.mutable.ListBuffer
-
-import scalajs.js
-import hooks.Hooks.UseStateF
-import js.JSConverters._
 
 object DecorationProvider {
 
   final class AttachedDomDecoration(uuid: String, attachedDoms: Map[String, HTMLElement]) extends WidgetType {
+
     override def toDOM(view: EditorView): HTMLElement = {
       val wrap = dom.document.createElement("div")
       wrap.setAttribute("aria-hidden", "true")
@@ -26,9 +26,11 @@ object DecorationProvider {
       attachedDoms.get(uuid).map(wrap.append(_))
       wrap.domAsHtml
     }
+
   }
 
   final class TypeDecoration(value: String, typeName: String) extends WidgetType {
+
     override def toDOM(view: EditorView): HTMLElement = {
       val wrap = dom.document.createElement("span")
       wrap.setAttribute("aria-hidden", "true")
@@ -45,9 +47,11 @@ object DecorationProvider {
       wrap.append(textBody)
       wrap.domAsHtml
     }
+
   }
 
   final class HTMLDecoration(html: String) extends WidgetType {
+
     override def toDOM(view: EditorView): HTMLElement = {
       val wrap = dom.document.createElement("pre")
       wrap.setAttribute("aria-hidden", "true")
@@ -55,9 +59,14 @@ object DecorationProvider {
       wrap.innerHTML = html
       wrap.domAsHtml
     }
+
   }
 
-  private def createDecorations(instrumentations: Set[api.Instrumentation], attachedDoms: Map[String, HTMLElement], maxPosititon: Int): DecorationSet = {
+  private def createDecorations(
+    instrumentations: Set[api.Instrumentation],
+    attachedDoms: Map[String, HTMLElement],
+    maxPosititon: Int
+  ): DecorationSet = {
     val deco = instrumentations
       .filter(_.position.end < maxPosititon)
       .map { instrumentation =>
@@ -103,12 +112,10 @@ object DecorationProvider {
       }.asInstanceOf[RangeSetUpdate[DecorationSet]])
       .map(transaction.changes)
 
-    if (decorationsToReAdd.isEmpty)
-      newValues
-    else
-      newValues.update(new js.Object {
-        var add = decorationsToReAdd.toJSArray
-      }.asInstanceOf[RangeSetUpdate[DecorationSet]])
+    if (decorationsToReAdd.isEmpty) newValues
+    else newValues.update(new js.Object {
+      var add = decorationsToReAdd.toJSArray
+    }.asInstanceOf[RangeSetUpdate[DecorationSet]])
   }
 
   private def updateState(previousValue: DecorationSet, transaction: Transaction): DecorationSet = {
@@ -121,8 +128,7 @@ object DecorationProvider {
         val decorationSet = stateEffect.value.asInstanceOf[DecorationSet]
         if (decorationSet.size > 0) decorationSet else Decoration.none
       }
-      case _ =>
-        updateDecorationPositions(previousValue, transaction)
+      case _ => updateDecorationPositions(previousValue, transaction)
     }
   }
 
@@ -130,37 +136,36 @@ object DecorationProvider {
     !ignoredRanges.contains(from)
   }
 
-  private def stateFieldSpec(props: CodeEditor) =
-    StateFieldSpec[DecorationSet](
-      create = _ => createDecorations(props.instrumentations, props.attachedDoms, props.value.length),
-      update = updateState,
-    ).setProvide(v => EditorView.decorations.from(v))
+  private def stateFieldSpec(props: CodeEditor) = StateFieldSpec[DecorationSet](
+    create = _ => createDecorations(props.instrumentations, props.attachedDoms, props.value.length),
+    update = updateState
+  ).setProvide(v => EditorView.decorations.from(v))
 
   def updateDecorations(
-      editorView: UseStateF[CallbackTo, EditorView],
-      prevProps: Option[CodeEditor],
-      props: CodeEditor
-  ): Callback =
-    Callback {
-      val decorations = createDecorations(props.instrumentations, props.attachedDoms, editorView.value.state.doc.length.toInt + 1)
-      val addTypesEffect = addTypeDecorations.of(decorations)
-      val changes = new js.Object {
-        var desc = new js.Object {
-          var length = prevProps.map(_.value.length).getOrElse(0)
-          var newLength = props.value.length
-          var empty = newLength == length
-        }.asInstanceOf[ChangeDesc]
-      }.asInstanceOf[ChangeSpec]
+    editorView: UseStateF[CallbackTo, EditorView],
+    prevProps: Option[CodeEditor],
+    props: CodeEditor
+  ): Callback = Callback {
+    val decorations =
+      createDecorations(props.instrumentations, props.attachedDoms, editorView.value.state.doc.length.toInt + 1)
+    val addTypesEffect = addTypeDecorations.of(decorations)
+    val changes = new js.Object {
+      var desc = new js.Object {
+        var length = prevProps.map(_.value.length).getOrElse(0)
+        var newLength = props.value.length
+        var empty = newLength == length
+      }.asInstanceOf[ChangeDesc]
+    }.asInstanceOf[ChangeSpec]
 
-      editorView.value.dispatch(
-        TransactionSpec()
-          .setChanges(changes)
-          .setEffects(addTypesEffect.asInstanceOf[StateEffect[Any]])
-      )
-    }.when_(
-      prevProps.isDefined &&
-        (props.instrumentations != prevProps.get.instrumentations)
+    editorView.value.dispatch(
+      TransactionSpec()
+        .setChanges(changes)
+        .setEffects(addTypesEffect.asInstanceOf[StateEffect[Any]])
     )
+  }.when_(
+    prevProps.isDefined &&
+      (props.instrumentations != prevProps.get.instrumentations)
+  )
 
   def apply(props: CodeEditor): Extension = StateField.define(stateFieldSpec(props)).extension
 }

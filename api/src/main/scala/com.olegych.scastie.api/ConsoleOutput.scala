@@ -8,6 +8,7 @@ sealed trait ConsoleOutput {
 }
 
 object ConsoleOutput {
+
   case class SbtOutput(output: ProcessOutput) extends ConsoleOutput {
     def show: String = s"sbt: ${output.line}"
   }
@@ -27,8 +28,7 @@ object ConsoleOutput {
 
     def writes(output: ConsoleOutput): JsValue = {
       output match {
-        case sbtOutput: SbtOutput =>
-          formatSbtOutput.writes(sbtOutput) ++ JsObject(Seq("tpe" -> JsString("SbtOutput")))
+        case sbtOutput: SbtOutput => formatSbtOutput.writes(sbtOutput) ++ JsObject(Seq("tpe" -> JsString("SbtOutput")))
         case userOutput: UserOutput =>
           formatUserOutput.writes(userOutput) ++ JsObject(Seq("tpe" -> JsString("UserOutput")))
         case scastieOutput: ScastieOutput =>
@@ -41,18 +41,18 @@ object ConsoleOutput {
         case obj: JsObject =>
           val vs = obj.value
           vs.get("tpe").orElse(vs.get("$type")) match {
-            case Some(tpe) =>
-              tpe match {
-                case JsString("SbtOutput")  => formatSbtOutput.reads(json)
-                case JsString("UserOutput") => formatUserOutput.reads(json)
-                case JsString("ScastieOutput") =>
-                  formatScastieOutput.reads(json)
-                case _ => JsError(Seq())
+            case Some(tpe) => tpe match {
+                case JsString("SbtOutput")     => formatSbtOutput.reads(json)
+                case JsString("UserOutput")    => formatUserOutput.reads(json)
+                case JsString("ScastieOutput") => formatScastieOutput.reads(json)
+                case _                         => JsError(Seq())
               }
             case None => JsError(Seq())
           }
         case _ => JsError(Seq())
       }
     }
+
   }
+
 }
