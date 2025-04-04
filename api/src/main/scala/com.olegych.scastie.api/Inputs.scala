@@ -1,8 +1,7 @@
 package com.olegych.scastie.api
 
-import play.api.libs.json._
 import com.olegych.scastie.buildinfo.BuildInfo
-
+import play.api.libs.json._
 import System.{lineSeparator => nl}
 
 sealed trait BaseInputs {
@@ -56,22 +55,23 @@ object Inputs {
       f
     )
   }
+
 }
 
 case class Inputs(
-    _isWorksheetMode: Boolean,
-    code: String,
-    target: ScalaTarget,
-    libraries: Set[ScalaDependency],
-    librariesFromList: List[(ScalaDependency, Project)],
-    sbtConfigExtra: String,
-    sbtConfigSaved: Option[String],
-    sbtPluginsConfigExtra: String,
-    sbtPluginsConfigSaved: Option[String],
-    isShowingInUserProfile: Boolean,
-    forked: Option[SnippetId] = None
+  _isWorksheetMode: Boolean,
+  code: String,
+  target: ScalaTarget,
+  libraries: Set[ScalaDependency],
+  librariesFromList: List[(ScalaDependency, Project)],
+  sbtConfigExtra: String,
+  sbtConfigSaved: Option[String],
+  sbtPluginsConfigExtra: String,
+  sbtPluginsConfigSaved: Option[String],
+  isShowingInUserProfile: Boolean,
+  forked: Option[SnippetId] = None
 ) extends BaseInputs {
-  val isWorksheetMode = _isWorksheetMode && target.hasWorksheetMode
+  val isWorksheetMode                              = _isWorksheetMode && target.hasWorksheetMode
   val librariesFrom: Map[ScalaDependency, Project] = librariesFromList.toMap
 
   private lazy val sbtInputs: (String, String) = (sbtConfig, sbtPluginsConfig)
@@ -111,9 +111,11 @@ case class Inputs(
 
   lazy val isDefault: Boolean = copy(code = "").withSavedConfig == Inputs.default.copy(code = "").withSavedConfig
 
-  def modifyConfig(inputs: Inputs => Inputs): Inputs = inputs(this).copy(sbtConfigSaved = None, sbtPluginsConfigSaved = None)
+  def modifyConfig(inputs: Inputs => Inputs): Inputs =
+    inputs(this).copy(sbtConfigSaved = None, sbtPluginsConfigSaved = None)
 
-  def withSavedConfig: Inputs = copy(sbtConfigSaved = Some(sbtConfigGenerated), sbtPluginsConfigSaved = Some(sbtPluginsConfigGenerated))
+  def withSavedConfig: Inputs =
+    copy(sbtConfigSaved = Some(sbtConfigGenerated), sbtPluginsConfigSaved = Some(sbtPluginsConfigGenerated))
 
   def clearDependencies: Inputs = {
     modifyConfig {
@@ -144,11 +146,10 @@ case class Inputs(
 
   def updateScalaDependency(scalaDependency: ScalaDependency, version: String): Inputs = {
     val newScalaDependency = scalaDependency.copy(version = version)
-    val newLibraries = libraries.filterNot(_.matches(scalaDependency)) + newScalaDependency
+    val newLibraries       = libraries.filterNot(_.matches(scalaDependency)) + newScalaDependency
     val newLibrariesFromList = librariesFromList.collect {
-      case (l, p) if l.matches(scalaDependency) =>
-        newScalaDependency -> p
-      case (l, p) => l -> p
+      case (l, p) if l.matches(scalaDependency) => newScalaDependency -> p
+      case (l, p)                               => l                  -> p
     }
     modifyConfig {
       _.copy(
@@ -158,8 +159,7 @@ case class Inputs(
     }
   }
 
-  lazy val sbtConfig: String =
-    mapToConfig(sbtConfigGenerated, sbtConfigExtra)
+  lazy val sbtConfig: String = mapToConfig(sbtConfigGenerated, sbtConfigExtra)
 
   lazy val sbtConfigGenerated: String = sbtConfigSaved.getOrElse {
     val targetConfig = target.sbtConfig
@@ -168,15 +168,14 @@ case class Inputs(
       if (target.hasWorksheetMode) target.runtimeDependency
       else None
 
-    val allLibraries =
-      optionalTargetDependency.map(libraries + _).getOrElse(libraries)
+    val allLibraries = optionalTargetDependency.map(libraries + _).getOrElse(libraries)
 
     val librariesConfig =
       if (allLibraries.isEmpty) ""
       else if (allLibraries.size == 1) {
         s"libraryDependencies += " + target.renderSbt(allLibraries.head)
       } else {
-        val nl = "\n"
+        val nl  = "\n"
         val tab = "  "
         "libraryDependencies ++= " +
           allLibraries
@@ -191,31 +190,28 @@ case class Inputs(
     mapToConfig(targetConfig, librariesConfig)
   }
 
-  lazy val sbtPluginsConfig: String =
-    mapToConfig(sbtPluginsConfigGenerated, sbtPluginsConfigExtra)
+  lazy val sbtPluginsConfig: String = mapToConfig(sbtPluginsConfigGenerated, sbtPluginsConfigExtra)
 
   lazy val sbtPluginsConfigGenerated: String = sbtPluginsConfigSaved.getOrElse {
     sbtPluginsConfig0(withSbtScastie = true)
   }
 
-  private def mapToConfig(parts: String*): String =
-    parts.filter(_.nonEmpty).mkString("\n")
+  private def mapToConfig(parts: String*): String = parts.filter(_.nonEmpty).mkString("\n")
 
   private def sbtPluginsConfig0(withSbtScastie: Boolean): String = {
     val targetConfig = target.sbtPluginsConfig
 
     val sbtScastie =
-      if (withSbtScastie)
-        s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.versionRuntime}")"""
+      if (withSbtScastie) s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.versionRuntime}")"""
       else ""
 
     mapToConfig(targetConfig, sbtScastie)
   }
+
 }
 
 object EditInputs {
-  implicit val formatEditInputs: OFormat[EditInputs] =
-    Json.format[EditInputs]
+  implicit val formatEditInputs: OFormat[EditInputs] = Json.format[EditInputs]
 }
 
 case class EditInputs(snippetId: SnippetId, inputs: Inputs)
