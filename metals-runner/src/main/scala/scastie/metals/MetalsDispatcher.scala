@@ -4,6 +4,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import scala.concurrent.duration.*
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
 import scala.meta.internal.metals.Embedded
@@ -22,7 +23,6 @@ import com.olegych.scastie.api.ScalaTarget._
 import com.typesafe.config.ConfigFactory
 import coursierapi.{Dependency, Fetch}
 import org.slf4j.LoggerFactory
-import scala.concurrent.ExecutionContext
 
 /*
  * MetalsDispatcher is responsible for managing the lifecycle of presentation compilers.
@@ -52,14 +52,16 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
   private val presentationCompilers = PresentationCompilers[F](metalsWorkingDirectory)
   private val supportedVersions     = Set("2.12", "2.13", "3")
 
-  def getMtags(scalaVersion: String)=
+  def getMtags(scalaVersion: String) =
     for
       given ExecutionContext <- Sync[F].executionContext
-      mtags <- Sync[F].blocking(
-        mtagsResolver
-          .resolve(scalaVersion)
-          .toRight(PresentationCompilerFailure(s"Mtags couldn't be resolved for target: ${scalaVersion}."))
-        ).recover { case err: MatchError => PresentationCompilerFailure(err.getMessage).asLeft }
+      mtags <- Sync[F]
+        .blocking(
+          mtagsResolver
+            .resolve(scalaVersion)
+            .toRight(PresentationCompilerFailure(s"Mtags couldn't be resolved for target: ${scalaVersion}."))
+        )
+        .recover { case err: MatchError => PresentationCompilerFailure(err.getMessage).asLeft }
     yield mtags
 
   /*
@@ -87,14 +89,12 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
               .map(_.toRight(PresentationCompilerFailure("Can't extract presentation compiler from cache.")))
           else
             for
-              mtags    <- EitherT(getMtags(configuration.scalaTarget.scalaVersion))
-              compiler <- EitherT.right(
-                cache.getOrUpdateReleasable(configuration) {
-                  initializeCompiler(configuration, mtags).map: newPC =>
-                    Releasable(newPC, Sync[F].delay(newPC.underlyingPC.shutdown()))
-                })
-            yield compiler
-          .value
+              mtags <- EitherT(getMtags(configuration.scalaTarget.scalaVersion))
+              compiler <- EitherT.right(cache.getOrUpdateReleasable(configuration) {
+                initializeCompiler(configuration, mtags).map: newPC =>
+                  Releasable(newPC, Sync[F].delay(newPC.underlyingPC.shutdown()))
+              })
+            yield compiler.value
 
   /*
    * Checks if given configuration is supported. Currently it is based on scala binary version.

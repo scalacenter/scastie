@@ -4,6 +4,7 @@ package runtime
 import play.api.libs.json.Json
 
 protected[runtime] trait SharedRuntime {
+
   def write(instrumentations: List[Instrumentation]): String = {
     if (instrumentations.isEmpty) "" else Json.stringify(Json.toJson(instrumentations))
   }
@@ -26,4 +27,5 @@ protected[runtime] trait SharedRuntime {
         Value(out, typeName.replace(Instrumentation.instrumentedObject + ".", ""))
     }
   }
+
 }
