@@ -20,6 +20,7 @@ object ScalaVersions {
           BuildInfo.stableNext,
           BuildInfo.latestLTS,
           BuildInfo.stableLTS,
+          "3.6.4",
           "3.6.3",
           "3.6.2",
           // "3.6.1", // hotfix to 3.6.0 - abandoned
