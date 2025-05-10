@@ -55,7 +55,7 @@ object CopyModal {
               props.content
             ),
             div(onClick --> copyLink, title := "Copy to Clipboard", cls := "snippet-clip clipboard-copy")(
-              i(cls                         := "fa fa-clipboard")
+              i(cls := "fa fa-clipboard")
             )
           )
         )

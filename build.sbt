@@ -157,7 +157,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.9.2"
+      "org.scalameta" %% "scalafmt-core" % "3.9.6"
     ),
     docker / imageNames := Seq(
       ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some(gitHashNow)),
@@ -224,7 +224,7 @@ lazy val server = project
       val updateGitSubmodule: Seq[String] = shell :+ "git submodule update --init"
 
       val installNpmDependencies: Seq[String] = shell :+ "cd tree-sitter-scala && npm install"
-      val buildWasm: Seq[String] = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
+      val buildWasm: Seq[String]              = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
       s.log.info("building tree-sitter-scala wasm...")
 
       if ((updateGitSubmodule #&& installNpmDependencies #&& buildWasm !) == 0) {
