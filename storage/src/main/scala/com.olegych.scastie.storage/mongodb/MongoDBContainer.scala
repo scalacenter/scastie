@@ -1,13 +1,14 @@
 package com.olegych.scastie.storage.mongodb
 
+import scala.concurrent.ExecutionContext
+
 import com.typesafe.config.ConfigFactory
 import org.mongodb.scala._
 
-import scala.concurrent.ExecutionContext
-
 class MongoDBContainer(defaultConfig: Boolean = false)(
   implicit val ec: ExecutionContext
-) extends MongoDBUsersContainer with MongoDBSnippetsContainer {
+) extends MongoDBUsersContainer
+  with MongoDBSnippetsContainer {
 
   val mongoUri = {
     if (defaultConfig) s"mongodb://localhost:27017/scastie"

@@ -3,9 +3,7 @@ package components
 
 import japgolly.scalajs.react._
 import org.scalajs.dom
-
 import vdom.all._
-
 
 final case class LoginModal(
   isDarkTheme: Boolean,
@@ -20,9 +18,7 @@ object LoginModal {
 
   implicit val reusability: Reusability[LoginModal] = Reusability.derive[LoginModal]
 
-
-  def login: Callback =
-    Callback(dom.window.location.pathname = "/login")
+  def login: Callback = Callback(dom.window.location.pathname = "/login")
 
   def render(props: LoginModal): VdomElement = {
     val theme = if (props.isDarkTheme) "dark" else "light"
@@ -37,21 +33,21 @@ object LoginModal {
       content = TagMod(
         button(onClick --> (login >> props.close), cls := "github-login")(
           i(cls := "fa fa-github"),
-          "Continue with GitHub",
+          "Continue with GitHub"
         ),
         p(
           "By signing in, you agree to our ",
-          a(href := "#", onClick ==> (e => e.preventDefaultCB >> e.stopPropagationCB >> props.openPrivacyPolicyModal))("privacy policy"),
+          a(href := "#", onClick ==> (e => e.preventDefaultCB >> e.stopPropagationCB >> props.openPrivacyPolicyModal))(
+            "privacy policy"
+          ),
           "."
         )
       )
     ).render
   }
 
-  private val component =
-    ScalaFnComponent
-      .withHooks[LoginModal]
-      .renderWithReuse(render)
-
+  private val component = ScalaFnComponent
+    .withHooks[LoginModal]
+    .renderWithReuse(render)
 
 }
