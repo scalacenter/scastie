@@ -45,7 +45,7 @@ lazy val scastie = project
   .settings(Deployment.settings(server, sbtRunner, metalsRunner))
 
 lazy val testSettings = Seq(
-  libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.17" % Test
+  libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % Test
 )
 
 lazy val loggingAndTest = Seq(
@@ -224,7 +224,7 @@ lazy val server = project
       val updateGitSubmodule: Seq[String] = shell :+ "git submodule update --init"
 
       val installNpmDependencies: Seq[String] = shell :+ "cd tree-sitter-scala && npm install"
-      val buildWasm: Seq[String] = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
+      val buildWasm: Seq[String]              = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
       s.log.info("building tree-sitter-scala wasm...")
 
       if ((updateGitSubmodule #&& installNpmDependencies #&& buildWasm !) == 0) {
@@ -274,7 +274,7 @@ lazy val storage = project
   .settings(
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
-      "org.mongodb.scala" %% "mongo-scala-driver" % "4.11.1",
+      "org.mongodb.scala" %% "mongo-scala-driver" % "4.11.5",
       "net.lingala.zip4j"  % "zip4j"              % "2.11.5"
     )
   )
@@ -318,8 +318,8 @@ lazy val client = project
       "vite"
     ),
     libraryDependencies ++= Seq(
-      "com.github.japgolly.scalajs-react" %%% "core"                        % "2.1.1",
-      "com.github.japgolly.scalajs-react" %%% "extra"                       % "2.1.1",
+      "com.github.japgolly.scalajs-react" %%% "core"                        % "2.1.2",
+      "com.github.japgolly.scalajs-react" %%% "extra"                       % "2.1.2",
       "org.scala-js"                      %%% "scala-js-macrotask-executor" % "1.1.1"
     )
   )
