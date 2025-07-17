@@ -291,16 +291,32 @@ object ScaladexSearch {
       for {
         response <- dom.fetch(scaladexApiUrl + "/project" + query)
         text <- response.text()
+        
+        artifactResponse <- dom.fetch(scaladexApiUrl + s"/v1/projects/${project.organization}/${project.repository}/versions/latest")
+        artifactText <- artifactResponse.text()
+        artifactJson = Json.parse(artifactText)
+        
+        matchingArtifact = artifactJson.as[List[play.api.libs.json.JsObject]].find { artifactObj =>
+          val artifactId = (artifactObj \ "artifactId").asOpt[String].getOrElse("")
+          val targetSuffix = target.targetType match {
+            case ScalaTargetType.Scala3 => "_3"
+            case ScalaTargetType.Scala2 => s"_${target.binaryScalaVersion}"
+            case ScalaTargetType.JS => s"_sjs1_${target.binaryScalaVersion}"
+          }
+          artifactId == artifact || artifactId == s"${artifact}${targetSuffix}"
+        }
+        matchingGroupId = matchingArtifact.flatMap(obj => (obj \ "groupId").asOpt[String]).getOrElse("")
+        matchingVersion = matchingArtifact.flatMap(obj => (obj \ "version").asOpt[String]).orElse(version)
       } yield {
         Json.fromJson[ReleaseOptions](Json.parse(text)).asOpt.map { options =>
           {
             Selected(
               project = project,
               release = ScalaDependency(
-                groupId = options.groupId,
+                groupId = if (matchingGroupId.nonEmpty) matchingGroupId else options.groupId,
                 artifact = artifact,
                 target = target,
-                version = version.getOrElse(options.version),
+                version = matchingVersion.getOrElse(options.version),
               ),
               options = options,
             )
