@@ -2,6 +2,7 @@ package com.olegych.scastie.instrumentation
 
 import com.olegych.scastie.api.ScalaTarget._
 import com.olegych.scastie.api.{Inputs, Instrumentation, ScalaTarget, ScalaTargetType}
+import com.olegych.scastie.api.InstrumentationRecorder
 
 import scala.collection.immutable.Seq
 import scala.meta._
@@ -33,7 +34,6 @@ object Instrument {
 
   private val instrumentedObject = Instrumentation.instrumentedObject
   private val instrumentationMethod = "instrumentations$"
-  private val instrumentationMap = "instrumentationMap$"
 
   private val emptyMapT = "_root_.scala.collection.mutable.Map.empty"
   private val jsExportT = "_root_.scala.scalajs.js.annotation.JSExport"
@@ -44,9 +44,9 @@ object Instrument {
   private val positionT = s"$apiPackage.Position"
   private val renderT = s"$apiPackage.Render"
   private val runtimeErrorT = s"$apiPackage.RuntimeError"
-  private val instrumentationT = s"$apiPackage.Instrumentation"
   private val runtimeT = s"$apiPackage.runtime.Runtime"
   private val domhookT = s"$apiPackage.runtime.DomHook"
+  private val instrumentationRecorderT = s"$apiPackage.InstrumentationRecorder"
 
   private val elemArrayT =
     "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
@@ -68,45 +68,35 @@ object Instrument {
         case Some(tpe) => s"val $$t: $tpe = $term"
       }
 
+    val startLine = term.pos.start - offset
+    val endLine   = term.pos.end - offset
+
     val renderCall =
       if (!isScalaJs) s"$runtimeT.render($$t);"
       else s"$runtimeT.render($$t, attach _);"
 
-    val replacement =
-      Seq(
-        "scala.Predef.locally {",
-        treeQuote + "; ",
-        s"$instrumentationMap(${posToApi(term.pos, offset)}) = $renderCall",
-        "$t}"
-      ).mkString("")
+    val replacement = Seq(
+      "scala.Predef.locally {",
+      s"$$doc.startStatement($startLine, $endLine);",
+      treeQuote + "; ",
+      s"$$doc.binder($runtimeT.render($$t), $startLine, $endLine);",
+      s"$$doc.endStatement();",
+      "$t}"
+    ).mkString("\n")
 
     Patch(term.tokens.head, term.tokens.last, replacement)
   }
 
   private def instrument(source: Source, offset: Int, isScalaJs: Boolean): String = {
-    val instrumentedCodePatches =
-      source.stats.collect {
-        case c: Defn.Object if c.name.value == instrumentedObject =>
-          val openCurlyBrace = c.templ.tokens.find(_.toString == "{").get
-
-          val instrumentationMapCode = Seq(
-            s"{ private val $instrumentationMap = $emptyMapT[$positionT, $renderT]",
-            s"def $instrumentationMethod = $instrumentationMap.toList.map{ case (pos, r) => $instrumentationT(pos, r) }"
-          ).mkString("", ";", ";")
-
-          val instrumentationMapPatch =
-            Patch(openCurlyBrace, openCurlyBrace, instrumentationMapCode)
-
-          instrumentationMapPatch +:
-            c.templ.stats
-            .filter {
-              case _: Term.EndMarker => false
-              case _                 => true
-            }
-            .collect {
-              case term: Term => instrumentOne(term, None, offset, isScalaJs)
-            }
-      }.flatten
+    val instrumentedCodePatches = source.stats.collect {
+      case c: Defn.Object if c.name.value == instrumentedObject =>
+        c.templ.stats
+          .filter {
+            case _: Term.EndMarker => false
+            case _                 => true
+          }
+          .collect { case term: Term => instrumentOne(term, None, offset, isScalaJs) }
+    }.flatten
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
 
@@ -117,7 +107,7 @@ object Instrument {
             |  val playground = $instrumentedObject
             |  def main(args: Array[String]): Unit = {
             |    playground.main(Array())
-            |    scala.Predef.println("\\n" + $runtimeT.write(playground.$instrumentationMethod))
+            |    scala.Predef.println("\\n" + $runtimeT.writeStatements(playground.$$doc.getResults()))
             |  }
             |}
             |""".stripMargin
@@ -125,7 +115,7 @@ object Instrument {
         s"""|@$jsExportTopLevelT("ScastiePlaygroundMain") class ScastiePlaygroundMain {
             |  def suppressUnusedWarnsScastie = Html
             |  val playground = $runtimeErrorT.wrap($instrumentedObject)
-            |  @$jsExportT def result = $runtimeT.write(playground.map{ playground => playground.main(Array()); playground.$instrumentationMethod })
+            |  @$jsExportT def result = $runtimeT.writeStatements(playground.map{ playground => playground.main(Array()); playground.$$doc.getResults() })
             |  @$jsExportT def attachedElements: $elemArrayT =
             |    playground match {
             |      case Right(p) => p.attachedElements
@@ -160,7 +150,7 @@ object Instrument {
     }
   }
 
-  def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, String] = {
+  def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, (String, TokenEditDistance)] = {
     val runtimeImport = target match {
       case Scala3(scalaVersion) => "import _root_.com.olegych.scastie.api.runtime.*"
       case _ => "import _root_.com.olegych.scastie.api.runtime._"
@@ -169,8 +159,8 @@ object Instrument {
     val isScalaJs = target.targetType == ScalaTargetType.JS
 
     val classBegin =
-      if (!isScalaJs) s"object $instrumentedObject extends ScastieApp {"
-      else s"object $instrumentedObject extends ScastieApp with $domhookT {"
+      if (!isScalaJs) s"object $instrumentedObject extends ScastieApp with $instrumentationRecorderT {"
+      else s"object $instrumentedObject extends ScastieApp with $instrumentationRecorderT with $domhookT {"
     val prelude = s"""$runtimeImport\n$classBegin"""
     val code0 = s"""$prelude\n$code\n}"""
 
@@ -201,9 +191,17 @@ object Instrument {
         try {
           code0.parse[Source] match {
             case parsed: Parsed.Success[_] =>
-              if (!hasMainMethod(parsed.get))
-                Right(instrument(parsed.get, prelude.length + 1, isScalaJs))
-              else Left(HasMainMethod)
+              if (!hasMainMethod(parsed.get)) {
+                val instrumentedCode = instrument(parsed.get, prelude.length + 1, isScalaJs)
+
+                val originalInput     = Input.String(code)
+                val instrumentedInput = Input.String(instrumentedCode)
+                val tokenEditDistance = TokenEditDistance(originalInput, instrumentedInput).get
+
+                Right((instrumentedCode, tokenEditDistance))
+              } else {
+                Left(HasMainMethod)
+              }
             case e: Parsed.Error => Left(ParsingError(e))
           }
         } catch {

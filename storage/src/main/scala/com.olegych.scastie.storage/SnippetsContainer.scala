@@ -84,7 +84,7 @@ trait SnippetsContainer {
         snippet =>
           Instrument(snippet.inputs.code, snippet.inputs.target) match {
             case Right(instrumented) =>
-              Some(FetchResultScalaSource(instrumented))
+              Some(FetchResultScalaSource(instrumented._1))
             case _ => None
         }
       )

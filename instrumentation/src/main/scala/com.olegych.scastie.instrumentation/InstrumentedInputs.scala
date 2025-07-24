@@ -5,6 +5,7 @@ import java.time.Instant
 
 import com.olegych.scastie.api._
 
+import scala.meta.inputs.Input
 import scala.meta.parsers.Parsed
 
 case class InstrumentationFailureReport(message: String, line: Option[Int]) {
@@ -20,14 +21,18 @@ case class InstrumentationFailureReport(message: String, line: Option[Int]) {
 object InstrumentedInputs {
   def apply(inputs0: Inputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
     if (inputs0.isWorksheetMode) {
-      val instrumented = Instrument(inputs0.code, inputs0.target).map { instrumentedCode =>
-        inputs0.copy(code = instrumentedCode)
+      val instrumented = Instrument(inputs0.code, inputs0.target).map { case (instrumentedCode, tokenEditDistance) =>
+        (inputs0.copy(code = instrumentedCode), tokenEditDistance)
       }
 
       instrumented match {
-        case Right(inputs) =>
-          success(inputs)
-
+        case Right((inputs, tokenEditDistance)) => Right(
+            InstrumentedInputs(
+              inputs = inputs,
+              isForcedProgramMode = false,
+              tokenEditDistance = Some(tokenEditDistance)
+            )
+          )
         case Left(error) =>
           import InstrumentationFailure._
 
@@ -44,7 +49,8 @@ object InstrumentedInputs {
               Right(InstrumentedInputs(
                 inputs = inputs0.copy(code = error.pos.input.text),
                 isForcedProgramMode = false,
-                optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorLine)))
+                optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorLine))),
+                tokenEditDistance = None
               ))
 
             case InternalError(exception) =>
@@ -57,17 +63,15 @@ object InstrumentedInputs {
 
       }
     } else {
-      success(inputs0)
+      Right(InstrumentedInputs(inputs0, isForcedProgramMode = false))
     }
   }
 
-  private def success(inputs: Inputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
-    Right(InstrumentedInputs(inputs, isForcedProgramMode = false))
-  }
 }
 
 case class InstrumentedInputs(
     inputs: Inputs,
     isForcedProgramMode: Boolean,
-    optionalParsingError: Option[InstrumentationFailureReport] = None
+    optionalParsingError: Option[InstrumentationFailureReport] = None,
+    tokenEditDistance: Option[TokenEditDistance] = None
 )
