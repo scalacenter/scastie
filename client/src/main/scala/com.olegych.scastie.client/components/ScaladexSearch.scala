@@ -66,8 +66,24 @@ object ScaladexSearch {
       .map(selected => (selected.project, selected.release.artifact, None, selected.release.target))
       .toSet
 
-    val search: List[(Project, String, Option[String], ScalaTarget)] =
-      projects
+    private def matchScore(query: String, artifact: String, project: Project): Int = {
+      val queryLower = query.toLowerCase
+      val artifactLower = artifact.toLowerCase
+      val projectLower = project.repository.toLowerCase
+      val orgLower = project.organization.toLowerCase
+
+      (queryLower, artifactLower, projectLower, orgLower) match {
+        case (q, a, _, _) if a == q => 1000
+        case (q, a, _, _) if a.startsWith(q) => 800
+        case (q, a, _, _) if a.contains(q) => 600
+        case (q, _, p, _) if p.contains(q) => 400
+        case (q, _, _, o) if o.contains(q) => 200
+        case _ => 0
+      }
+    }
+
+    val search: List[(Project, String, Option[String], ScalaTarget)] = {
+      val results = projects
         .flatMap {
           case (project, target) => project.artifacts.map(artifact => (project, artifact, None, target))
         }
@@ -75,6 +91,16 @@ object ScaladexSearch {
           !selectedProjectsArtifacts.contains(projectAndArtifact)
         }
 
+      if (query.nonEmpty) {
+        results.sortBy({ case (project, artifact, _, _) =>
+          -matchScore(query, artifact, project)
+        })(Ordering[Int])
+      } else {
+        results.sortBy { case (project, artifact, _, _) =>
+          (project.organization, project.repository, artifact)
+        }
+      }
+    }
     def removeSelected(selected: Selected): SearchState = {
       copy(selecteds = selecteds.filterNot(_.release.matches(selected.release)))
     }
