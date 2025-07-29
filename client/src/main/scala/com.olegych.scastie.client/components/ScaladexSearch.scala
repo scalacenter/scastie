@@ -16,13 +16,15 @@ import dom.ext.KeyCode
 import dom.{HTMLInputElement, HTMLElement}
 import scalajs.js.Thenable.Implicits._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
 
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency ~=> Callback,
     updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
     addScalaDependency: (ScalaDependency, Project) ~=> Callback,
     librariesFrom: Map[ScalaDependency, Project],
-    scalaTarget: ScalaTarget
+    scalaTarget: ScalaTarget,
+    isDarkTheme: Boolean
 ) {
   @inline def render: VdomElement = ScaladexSearch.component(this)
 }
@@ -442,7 +444,41 @@ object ScaladexSearch {
       if (searchState.search.isEmpty) display.none
       else display.inlineBlock
 
+    val toolkitEnabled = props.librariesFrom.keys.exists { dep =>
+      dep.groupId == "org.scala-lang" &&
+      dep.artifact == "toolkit" &&
+      dep.target == props.scalaTarget
+    }
+
+    def handleToolkitToggle(enabled: Boolean): Callback = {
+      val toolkitProject = Project(
+        organization = "scala",
+        repository = "toolkit",
+        logo = Some("https://avatars.githubusercontent.com/u/57059?v=4"),
+        artifacts = List("toolkit", "toolkit-test")
+      )
+      val artifact = "toolkit"
+      val versionOpt: Option[String] = None
+
+      if (enabled)
+        scope.backend.addArtifact((toolkitProject, artifact, versionOpt), props.scalaTarget, searchState)
+      else {
+        searchState.selecteds.find { selected =>
+          selected.release.groupId == "org.scala-lang" &&
+          selected.release.artifact == "toolkit" &&
+          selected.release.target == props.scalaTarget
+        }.map(scope.backend.removeSelected(_)).getOrElse(Callback.empty)
+      }
+    }
+
+    val toolkitSwitchElem = toolkitSwitch(
+      isEnabled = toolkitEnabled,
+      onToggle = handleToolkitToggle,
+      isDarkTheme = props.isDarkTheme
+    )
+
     div(cls := "search", cls := "library")(
+      toolkitSwitchElem,
       added,
       div(cls := "search-input")(
         input.search.withRef(searchInputRef)(
@@ -472,7 +508,39 @@ object ScaladexSearch {
               )
             )
         }.toTagMod
-      )
+      ),
+    )
+  }
+
+  private def toolkitSwitch(
+    isEnabled: Boolean,
+    onToggle: Boolean => Callback,
+    isDarkTheme: Boolean
+  ): VdomElement = {
+    val switchId = s"switch-$label".replace(" ", "-")
+    val sliderClass =
+    if (isDarkTheme) "switch-slider dark" else "switch-slider"
+    div(
+      cls := "toolkit-switch",
+    )(
+      div(cls := "switch")(
+        input(
+          `type` := "checkbox",
+          cls := "switch-input",
+          id := switchId,
+          checked := isEnabled,
+          onChange ==> { (e: ReactEventFromInput) =>
+            onToggle(e.target.checked)
+          }
+        ),
+        label(
+          cls := sliderClass,
+          htmlFor := switchId
+        )
+      ),
+      span(
+        cls := "switch-description",
+      )("Enable Toolkit")
     )
   }
 
