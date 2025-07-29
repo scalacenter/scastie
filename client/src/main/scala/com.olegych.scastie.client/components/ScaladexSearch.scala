@@ -23,7 +23,8 @@ final case class ScaladexSearch(
     updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
     addScalaDependency: (ScalaDependency, Project) ~=> Callback,
     librariesFrom: Map[ScalaDependency, Project],
-    scalaTarget: ScalaTarget
+    scalaTarget: ScalaTarget,
+    isDarkTheme: Boolean
 ) {
   @inline def render: VdomElement = ScaladexSearch.component(this)
 }
@@ -447,6 +448,7 @@ object ScaladexSearch {
     val toolkitSwitchElem = toolkitSwitch(
       isEnabled = toolkitEnabled,
       onToggle = handleToolkitToggle,
+      isDarkTheme = props.isDarkTheme
     )
 
     div(cls := "search", cls := "library")(
@@ -487,13 +489,14 @@ object ScaladexSearch {
   private def toolkitSwitch(
     isEnabled: Boolean,
     onToggle: Boolean => Callback,
+    isDarkTheme: Boolean
   ): VdomElement = {
     val switchId = s"switch-$label".replace(" ", "-")
+    val sliderClass =
+    if (isDarkTheme) "switch-slider dark" else "switch-slider"
     div(
       cls := "toolkit-switch",
-      style := js.Dictionary("display" -> "flex", "alignItems" -> "center")
     )(
-      span(cls := "switch-label")(label),
       div(cls := "switch")(
         input(
           `type` := "checkbox",
@@ -505,13 +508,12 @@ object ScaladexSearch {
           }
         ),
         label(
-          cls := "switch-slider",
+          cls := sliderClass,
           htmlFor := switchId
         )
       ),
       span(
         cls := "switch-description",
-        style := js.Dictionary("marginLeft" -> "16px")
       )("Enable Toolkit")
     )
   }

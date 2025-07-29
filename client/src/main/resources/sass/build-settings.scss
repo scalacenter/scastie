@@ -262,21 +262,15 @@
         }
       }
 
-      .toolbox-switch {
+      .toolkit-switch {
         display: flex;
         align-items: center;
         margin: 8px 0;
       }
 
-      .switch-container {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-      }
-
-      .switch-label {
-        margin-right: 12px;
-        font-size: 14px;
+      .switch-description {
+        margin-left: 16px;
+        font-size: 15px;
       }
 
       .switch {
@@ -303,7 +297,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: #ccc;
+        background-color: #b4b4b4;
         border-radius: 24px;
         transition: .3s;
       }
@@ -321,12 +315,19 @@
       }
 
       .switch-input:checked + .switch-slider {
-        background-color: #2196F3;
+        background-color: #2196f3;
       }
 
       .switch-input:checked + .switch-slider:before {
         transform: translateX(26px);
       }
+
+      .switch-slider.dark {
+        background-color: #595959;
+      }
+      .switch-input:checked + .switch-slider.dark {
+        background-color: #0b5089;
+}
     }
   }
 }
