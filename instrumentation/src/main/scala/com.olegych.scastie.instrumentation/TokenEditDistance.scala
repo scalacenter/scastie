@@ -83,10 +83,10 @@ final class TokenEditDistance private (matching: Array[MatchingToken]) {
   def toOriginal(revisedOffset: Int): Either[EmptyResult, Position] = {
     if (isEmpty) EmptyResult.unchanged
     else {
-      val exactMatch = BinarySearch.array[MatchingToken](
-        matching,
-        mt => compare(mt.revised.pos, revisedOffset)
-      )
+      val exactMatch = matching.find { mt =>
+        val pos = toUnslicedPosition(mt.revised.pos)
+        contains(pos, revisedOffset)
+      }
 
       exactMatch match {
         case Some(m) => Right(m.original.pos)
@@ -106,28 +106,17 @@ final class TokenEditDistance private (matching: Array[MatchingToken]) {
       }
     }
   }
-
-  private def compare(
-    position: Position,
-    offset: Int
-  ): BinarySearch.ComparisonResult = {
-    val pos = toUnslicedPosition(position)
-    if (contains(pos, offset)) BinarySearch.Equal
-    else if (pos.end <= offset) BinarySearch.Smaller
-    else BinarySearch.Greater
-  }
-
 }
 
 object TokenEditDistance {
 
   /**
-    * Build utility to map offsets between two slightly different strings.
+    * Build utility to map offsets/lines between original and instrumented inputs.
     *
     * @param original
-    *   The original snapshot of a string, for example the latest semanticdb snapshot.
+    *   Original user code.
     * @param revised
-    *   The current snapshot of a string, for example open buffer in an editor.
+    *   Instrumented user code.
     */
   def apply(
     original: IndexedSeq[Token],
@@ -138,13 +127,8 @@ object TokenEditDistance {
     val buffer = Array.newBuilder[MatchingToken]
     buffer.sizeHint(math.max(filteredOriginal.length, filteredRevised.length))
     @tailrec
-    def loop(
-      i: Int,
-      j: Int,
-      ds: List[Delta[Token]]
-    ): Unit = {
-      val isDone: Boolean = i >= filteredOriginal.length ||
-        j >= filteredRevised.length
+    def loop(i: Int, j: Int, ds: List[Delta[Token]]): Unit = {
+      val isDone: Boolean = i >= filteredOriginal.length || j >= filteredRevised.length
       if (isDone) ()
       else {
         val o = filteredOriginal(i)
