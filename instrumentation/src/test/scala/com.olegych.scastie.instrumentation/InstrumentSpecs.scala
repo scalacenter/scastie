@@ -12,20 +12,20 @@ class InstrumentSpecs extends AnyFunSuite {
 
   import InstrumentationFailure._
 
-  private val testFiles = {
+  private val testDirs = {
     val path = Paths.get("instrumentation", "src", "test", "resources")
     val s = Files.newDirectoryStream(path)
-    val t = s.asScala.toList.filter(_.endsWith(".scala"))
+    val t = s.asScala.toList.filter(Files.isDirectory(_))
     s.close()
     t
   }
 
-  testFiles.foreach { path =>
-    val dirName = path.getFileName.toString
+  testDirs.foreach { dir =>
+    val dirName = dir.getFileName.toString
 
     test(dirName) {
-      val original = slurp(path.resolve("original.scala")).get
-      val expected = slurp(path.resolve("instrumented.scala")).get
+      val original = slurp(dir.resolve("original.scala")).get
+      val expected = slurp(dir.resolve("instrumented.scala")).get
 
       val target =
         if (dirName == "scalajs") ScalaTarget.Js.default
@@ -34,8 +34,8 @@ class InstrumentSpecs extends AnyFunSuite {
 
       val Right(obtained) = Instrument(original, target)
 
-      Files.write(path.resolve("obtained.scala"), obtained.getBytes(java.nio.charset.StandardCharsets.UTF_8))
-      Diff.assertNoDiff(obtained.trim, expected.trim)
+      Files.write(dir.resolve("obtained.scala"), obtained._1.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+      Diff.assertNoDiff(obtained._1.trim, expected.trim)
     }
   }
 

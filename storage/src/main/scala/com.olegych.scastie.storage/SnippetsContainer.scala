@@ -21,7 +21,7 @@ trait SnippetsContainer {
       for {
         read <- readSnippet(updateSnippetId)
         result <- read match {
-          case Some(read) =>
+          case Some(_) =>
             for {
               result <- delete(updateSnippetId)
               resultNext <- deleteUpdate(update + 1)
@@ -84,7 +84,7 @@ trait SnippetsContainer {
         snippet =>
           Instrument(snippet.inputs.code, snippet.inputs.target) match {
             case Right(instrumented) =>
-              Some(FetchResultScalaSource(instrumented))
+              Some(FetchResultScalaSource(instrumented._1))
             case _ => None
         }
       )
