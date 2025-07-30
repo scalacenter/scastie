@@ -61,7 +61,16 @@ final class TokenEditDistance private (matching: Array[MatchingToken]) {
     } else if (line > lines.length) {
       input.text.length
     } else {
-      lines.take(line - 1).map(_.length + 1).sum
+      val offset = lines.take(line - 1).map(_.length + 1).sum
+      val lineText = if (line > 0 && line <= lines.length) lines(line - 1) else ""
+      val valTPattern = "^val \\$t = ".r
+      val prefixTLength = valTPattern.findFirstIn(lineText).map(_.length).getOrElse(0)
+      if (prefixTLength > 0) {
+        offset + prefixTLength
+      } else {
+        offset
+      }
+      
     }
   }
 
@@ -124,20 +133,22 @@ object TokenEditDistance {
     original: IndexedSeq[Token],
     revised: IndexedSeq[Token]
   ): TokenEditDistance = {
+    val filteredOriginal = original.filterNot(t => t.is[Token.BOF] || t.is[Token.EOF])
+    val filteredRevised = revised.filterNot(t => t.is[Token.BOF] || t.is[Token.EOF])
     val buffer = Array.newBuilder[MatchingToken]
-    buffer.sizeHint(math.max(original.length, revised.length))
+    buffer.sizeHint(math.max(filteredOriginal.length, filteredRevised.length))
     @tailrec
     def loop(
       i: Int,
       j: Int,
       ds: List[Delta[Token]]
     ): Unit = {
-      val isDone: Boolean = i >= original.length ||
-        j >= revised.length
+      val isDone: Boolean = i >= filteredOriginal.length ||
+        j >= filteredRevised.length
       if (isDone) ()
       else {
-        val o = original(i)
-        val r = revised(j)
+        val o = filteredOriginal(i)
+        val r = filteredRevised(j)
         if (TokenEqualizer.equals(o, r)) {
           buffer += MatchingToken(o, r)
           loop(i + 1, j + 1, ds)
@@ -155,7 +166,7 @@ object TokenEditDistance {
     }
     val deltas = {
       difflib.DiffUtils
-        .diff(original.asJava, revised.asJava, TokenEqualizer)
+        .diff(filteredOriginal.asJava, filteredRevised.asJava, TokenEqualizer)
         .getDeltas
         .iterator()
         .asScala
