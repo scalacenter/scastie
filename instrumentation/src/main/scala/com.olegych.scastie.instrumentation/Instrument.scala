@@ -100,6 +100,11 @@ object Instrument {
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
 
+    println(s"""|===========================================
+            |Instrumented code:
+            |$instrumentedCode
+            |========================""".stripMargin)
+
     val entryPoint =
       if (!isScalaJs) {
         s"""|object Main {
