@@ -6,7 +6,7 @@ stdenv.mkDerivation {
   buildInputs =
     let
       sbtWithJRE = pkgs.sbt.override {
-        jre = pkgs.jdk17_headless;
+        jre = pkgs.jdk21_headless;
       };
     in
       [
