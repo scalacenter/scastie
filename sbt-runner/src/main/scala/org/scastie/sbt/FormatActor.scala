@@ -25,7 +25,10 @@ object FormatActor {
       else if (scalaTarget.scalaVersion.startsWith("3")) configFor(dialects.Scala3)
       else configFor(dialects.Scala213)
 
-    Scalafmt.format(code, style = config).toEither.left.map(_.toString)
+    Scalafmt.format(code, style = config) match {
+      case Formatted.Success(formattedCode) => Right(formattedCode)
+      case Formatted.Failure(failure)       => Left(failure.toString)
+    }
   }
 
 }
@@ -39,6 +42,9 @@ class FormatActor() extends Actor {
       log.info(s"format (isWorksheetMode: $isWorksheetMode)")
       log.info(code)
 
-      sender() ! api.FormatResponse(format(code, scalaTarget))
+      format(code, scalaTarget) match {
+        case Left(value) => sender() ! FormatResponse(code)
+        case Right(value) => sender() ! FormatResponse(value)
+      }
   }
 }

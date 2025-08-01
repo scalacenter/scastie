@@ -68,10 +68,10 @@ object ScaladexSearch {
         
         artifactResponse <- dom.fetch(scaladexApiUrl + s"/v1/projects/${project.organization}/${project.repository}/versions/latest")
         artifactText <- artifactResponse.text()
-        artifactJson = Json.parse(artifactText)
+        artifactJson = parse(artifactText).getOrElse(Json.Null)
         
-        matchingArtifact = artifactJson.as[List[play.api.libs.json.JsObject]].find { artifactObj =>
-          val artifactId = (artifactObj \ "artifactId").asOpt[String].getOrElse("")
+        matchingArtifact: Option[Json] = artifactJson.asArray.getOrElse(Vector.empty).find { artifactObj =>
+          val artifactId = artifactObj.hcursor.get[String]("artifactId").getOrElse("")
           val targetSuffix = target.targetType match {
             case ScalaTargetType.Scala3 => "_3"
             case ScalaTargetType.Scala2 => s"_${target.binaryScalaVersion}"
@@ -79,15 +79,15 @@ object ScaladexSearch {
           }
           artifactId == artifact || artifactId == s"${artifact}${targetSuffix}"
         }
-        matchingGroupId = matchingArtifact.flatMap(obj => (obj \ "groupId").asOpt[String]).getOrElse("")
-        matchingVersion = matchingArtifact.flatMap(obj => (obj \ "version").asOpt[String]).orElse(version)
+        matchingGroupId = matchingArtifact.flatMap(obj => obj.hcursor.get[String]("groupId").toOption)
+        matchingVersion = matchingArtifact.flatMap(obj => obj.hcursor.get[String]("version").toOption).orElse(version)
       } yield {
         decode[ReleaseOptions](text).toOption.map{ options =>
           {
             Selected(
               project = project,
               release = ScalaDependency(
-                groupId = if (matchingGroupId.nonEmpty) matchingGroupId else options.groupId,
+                groupId = matchingGroupId.getOrElse(options.groupId),
                 artifact = artifact,
                 target = target,
                 version = matchingVersion.getOrElse(options.version),
@@ -419,7 +419,7 @@ object ScaladexSearch {
       if (state.value.search.isEmpty) display.none
       else display.inlineBlock
 
-    val toolkitEnabled = props.librariesFrom.keys.exists { dep =>
+    val toolkitEnabled = props.libraries.exists { dep =>
       dep.groupId == "org.scala-lang" &&
       dep.artifact == "toolkit" &&
       dep.target == props.scalaTarget
@@ -436,13 +436,13 @@ object ScaladexSearch {
       val versionOpt: Option[String] = None
 
       if (enabled)
-        scope.backend.addArtifact((toolkitProject, artifact, versionOpt), props.scalaTarget, searchState)
+        addArtifact((toolkitProject, artifact, versionOpt), props.scalaTarget, state, props)
       else {
-        searchState.selecteds.find { selected =>
+        state.value.selecteds.find { selected =>
           selected.release.groupId == "org.scala-lang" &&
           selected.release.artifact == "toolkit" &&
           selected.release.target == props.scalaTarget
-        }.map(scope.backend.removeSelected(_)).getOrElse(Callback.empty)
+        }.map(removeSelected).getOrElse(Callback.empty)
       }
     }
 
