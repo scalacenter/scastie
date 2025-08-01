@@ -319,7 +319,7 @@ object ScaladexSearch {
             // If scala3 but no scala 3 versions available, offer 2.13 artifacts
             case Scala3(_) =>
               projsForThisTarget.flatMap { ls =>
-                queryAndParse(Jvm(BuildInfo.latest213), searchState.query)
+                queryAndParse(Scala2(BuildInfo.latest213), searchState.query)
                   .map(arts213 => ls ::: arts213)
               }
             case _ => projsForThisTarget

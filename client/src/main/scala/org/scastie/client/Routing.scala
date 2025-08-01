@@ -47,7 +47,7 @@ class Routing(defaultServerUrl: String) {
         case (Some(g), Some(a), Some(v), o, r, c) =>
           val target = map.get("t").flatMap(ScalaTargetType.parse) match {
             case Some(t @ ScalaTargetType.Scala2) =>
-              map.get("sv").map(sv => Jvm(ScalaVersions.find(t, sv)))
+              map.get("sv").map(sv => Scala2(ScalaVersions.find(t, sv)))
             case Some(t @ ScalaTargetType.JS) =>
               (map.get("sv"), map.get("sjsv")) match {
                 case (Some(sv), sjsv) =>
@@ -67,7 +67,7 @@ class Routing(defaultServerUrl: String) {
 
     def renderTryLibrary(dep: TryLibraryPage) = {
       val tm = dep.dependency.target match {
-        case Jvm(sv)      => Map("sv" -> sv)
+        case Scala2(sv)      => Map("sv" -> sv)
         case Js(sv, sjsv) => Map("sv" -> sv, "sjsv" -> sjsv)
         case _                        => Map[String, String]()
       }

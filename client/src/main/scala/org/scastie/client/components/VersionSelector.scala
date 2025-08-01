@@ -18,7 +18,7 @@ object VersionSelector {
       .render(props => {
         def versionSelectors(scalaVersion: String) =
           props.scalaTarget match {
-            case d: Jvm       => Jvm.apply(scalaVersion)
+            case d: Scala2       => Scala2.apply(scalaVersion)
             case d: Typelevel => Typelevel.apply(scalaVersion)
             case d: Scala3    => Scala3.apply(scalaVersion)
             case js: Js       => Js(scalaVersion, js.scalaJsVersion)

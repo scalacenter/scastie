@@ -98,9 +98,9 @@ object OldScastieConverter {
 
           case _ =>
             scalaVersion
-              .map(sv => Jvm(sv))
+              .map(sv => Scala2(sv))
               .getOrElse(
-                Jvm.default
+                Scala2.default
               )
         }
 

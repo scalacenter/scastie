@@ -109,8 +109,8 @@ object EmbeddedOptions {
         case (Some("jvm"), _, None, None) => {
           Some(
             scalaVersion
-              .map(version => Jvm(version))
-              .getOrElse(Jvm.default)
+              .map(version => Scala2(version))
+              .getOrElse(Scala2.default)
           )
         }
 

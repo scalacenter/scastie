@@ -8,7 +8,7 @@ import org.scastie.api
 sealed trait ScalaTargetType {
   def defaultScalaTarget: ScalaTarget = {
     this match {
-      case ScalaTargetType.Scala2 => api.Jvm.default
+      case ScalaTargetType.Scala2 => api.Scala2.default
       case ScalaTargetType.JS => api.Js.default
       case ScalaTargetType.Native => api.Native.default
       case ScalaTargetType.Typelevel => api.Typelevel.default

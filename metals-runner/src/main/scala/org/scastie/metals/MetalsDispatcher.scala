@@ -210,7 +210,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
     case Js(scalaVersion, scalaJsVersion) if scalaVersion.startsWith("3") =>
       Set(Dependency.of("org.scala-js", "scalajs-library_2.13", scalaJsVersion))
     case Js(scalaVersion, scalaJsVersion) => Set(
-        Dependency.of("org.scala-js", artifactWithBinaryVersion("scalajs-library", Jvm(scalaVersion)), scalaJsVersion)
+        Dependency.of("org.scala-js", artifactWithBinaryVersion("scalajs-library", Scala2(scalaVersion)), scalaJsVersion)
       )
     case _ => Set.empty
 

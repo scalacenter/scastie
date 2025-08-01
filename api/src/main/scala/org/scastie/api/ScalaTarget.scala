@@ -47,7 +47,7 @@ sealed trait SbtScalaTarget extends ScalaTarget {
 
   def withScalaVersion(newVersion: String): SbtScalaTarget = {
     this match {
-      case Jvm(scalaVersion) => Jvm(newVersion)
+      case Scala2(scalaVersion) => Scala2(newVersion)
       case Typelevel(scalaVersion) => Typelevel(newVersion)
       case Js(scalaVersion, scalaJsVersion) => Js(newVersion, scalaJsVersion)
       case Native(scalaVersion, scalaNativeVersion) => Native(newVersion, scalaNativeVersion)
@@ -56,13 +56,13 @@ sealed trait SbtScalaTarget extends ScalaTarget {
   }
 }
 
-object Jvm {
-  def default: Jvm = Jvm(scalaVersion = BuildInfo.latest213)
-  implicit val jvmEncoder: Encoder[Jvm] = deriveEncoder[Jvm]
-  implicit val jvmDecoder: Decoder[Jvm] = deriveDecoder[Jvm]
+object Scala2 {
+  def default: Scala2 = Scala2(scalaVersion = BuildInfo.latest213)
+  implicit val scala2Encoder: Encoder[Scala2] = deriveEncoder[Scala2]
+  implicit val scala2Decoder: Decoder[Scala2] = deriveDecoder[Scala2]
 }
 
-case class Jvm(scalaVersion: String) extends SbtScalaTarget {
+case class Scala2(scalaVersion: String) extends SbtScalaTarget {
 
   val targetType: ScalaTargetType = ScalaTargetType.Scala2
 
