@@ -15,15 +15,15 @@ class FormatActorTest extends AnyFunSuite {
                    |  val a: Int = 3
                    |}
                    |""".stripMargin
-    assertResult(Right(output))(FormatActor.format(code, ScalaTarget.Jvm.default))
+    assertResult(Right(output))(FormatActor.format(code, Scala2.default))
   }
 
   test("format should accept scala 2 worksheets") {
     val code = "val x:Int=41+1"
     val output = "val x: Int = 41 + 1\n"
 
-    assert(ScalaTarget.Jvm.default.hasWorksheetMode)
-    assertResult(Right(output))(FormatActor.format(code, ScalaTarget.Jvm.default))
+    assert(Scala2.default.hasWorksheetMode)
+    assertResult(Right(output))(FormatActor.format(code, Scala2.default))
   }
 
   test("format should accept scala 3 code") {
@@ -35,15 +35,15 @@ class FormatActorTest extends AnyFunSuite {
                    |  val a: Int = 3
                    |}
                    |""".stripMargin
-    assertResult(Right(output))(FormatActor.format(code, ScalaTarget.Scala3.default))
+    assertResult(Right(output))(FormatActor.format(code, Scala3.default))
   }
 
   test("format should accept scala 3 worksheets") {
     val code = "val x:Int=41+1"
     val output = "val x: Int = 41 + 1\n"
 
-    assert(ScalaTarget.Scala3.default.hasWorksheetMode)
-    assertResult(Right(output))(FormatActor.format(code, ScalaTarget.Scala3.default))
+    assert(Scala3.default.hasWorksheetMode)
+    assertResult(Right(output))(FormatActor.format(code, Scala3.default))
   }
 
   test("Longer Scala 3 snippet is accepted (from Issue #511)") {
@@ -73,7 +73,7 @@ class FormatActorTest extends AnyFunSuite {
                           |  println(actual)
                           |  assert(actual == expected)
                           |""".stripMargin
-    val res = FormatActor.format(longerSnippet, ScalaTarget.Scala3.default)
+    val res = FormatActor.format(longerSnippet, Scala3.default)
     assert(res.isRight, res)
   }
 }

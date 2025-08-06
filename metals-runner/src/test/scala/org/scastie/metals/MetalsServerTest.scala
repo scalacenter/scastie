@@ -64,7 +64,7 @@ class MetalsServerTest extends CatsEffectSuite {
   test("Completions with dependencies cross version") {
     testCompletion(
       testTargets = List(Scala3.default),
-      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", Jvm.default, catsVersion)),
+      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", Scala2.default, catsVersion)),
       code = """import cats.syntax.all._
                |object M {
                |  def test = "5".asRigh@@
@@ -111,7 +111,7 @@ class MetalsServerTest extends CatsEffectSuite {
   test("Completion infos with dependencies cross version") {
     testCompletionInfo(
       testTargets = List(Scala3.default),
-      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", Jvm.default, catsVersion)),
+      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", Scala2.default, catsVersion)),
       code = """import cats.syntax.all._
                |object M {
                |  def test = "5".asRigh@@
@@ -189,7 +189,7 @@ class MetalsServerTest extends CatsEffectSuite {
   test("Hover with dependencies cross version") {
     testHover(
       testTargets = List(Scala3.default),
-      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", Jvm.default, catsVersion)),
+      dependencies = Set(_ => ScalaDependency("org.typelevel", "cats-core", Scala2.default, catsVersion)),
       code = """import cats.syntax.all._
                |object M {
                |  def test = "5".asRigh@@t

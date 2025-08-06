@@ -25,9 +25,9 @@ object TestUtils extends Assertions with CatsEffectAssertions {
 
   val testTargets =
     List(BuildInfo.latestLTS, BuildInfo.stableLTS, BuildInfo.latestNext).map(Scala3.apply) ++
-      List(BuildInfo.latest213, BuildInfo.latest212).map(Jvm.apply)
+      List(BuildInfo.latest213, BuildInfo.latest212).map(Scala2.apply)
 
-  val unsupportedVersions = List(BuildInfo.latest211, BuildInfo.latest210).map(Jvm.apply)
+  val unsupportedVersions = List(BuildInfo.latest211, BuildInfo.latest210).map(Scala2.apply)
 
   private def testCode(code: String, isWorksheet: Boolean): ScastieOffsetParams = {
     val offset = code.indexOfSlice("@@")

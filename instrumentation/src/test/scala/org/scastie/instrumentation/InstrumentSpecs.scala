@@ -30,7 +30,7 @@ class InstrumentSpecs extends AnyFunSuite {
       val target =
         if (dirName == "scalajs") Js.default
         else if (dirName == "scala3") Scala3.default
-        else Jvm.default
+        else Scala2.default
 
       val Right(obtained) = Instrument(original, target)
 
@@ -40,31 +40,31 @@ class InstrumentSpecs extends AnyFunSuite {
   }
 
   test("top level fails") {
-    val Left(e) = Instrument("package foo { }", Jvm.default)
+    val Left(e) = Instrument("package foo { }", Scala2.default)
     assert(e.isInstanceOf[ParsingError])
   }
 
   test("main method fails") {
     val Left(HasMainMethod) =
-      Instrument("object Main { def main(args: Array[String]): Unit = () }", Jvm.default)
+      Instrument("object Main { def main(args: Array[String]): Unit = () }", Scala2.default)
   }
 
   test("extends App trait fails") {
     val Left(HasMainMethod) =
-      Instrument("object Main extends App { }", Jvm.default)
+      Instrument("object Main extends App { }", Scala2.default)
   }
 
   test("with App trait fails") {
     val Left(HasMainMethod) =
-      Instrument("trait Foo; object Main extends Foo with App { }", Jvm.default)
+      Instrument("trait Foo; object Main extends Foo with App { }", Scala2.default)
   }
 
   test("extends App primary fails") {
-    val Left(HasMainMethod) = Instrument("object Main extends App", Jvm.default)
+    val Left(HasMainMethod) = Instrument("object Main extends App", Scala2.default)
   }
 
   test("extends App secondary fails") {
-    val Left(HasMainMethod) = Instrument("object Main extends A with App", Jvm.default)
+    val Left(HasMainMethod) = Instrument("object Main extends A with App", Scala2.default)
   }
 
   test("bug #83") {
