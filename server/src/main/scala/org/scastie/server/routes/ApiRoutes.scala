@@ -7,6 +7,7 @@ import akka.http.scaladsl.server.{Directive1, Route}
 import org.scastie.api._
 import org.scastie.web._
 import org.scastie.web.oauth2._
+import org.scastie.server.utils.NightlyVersionFetcher
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 class ApiRoutes(
@@ -72,26 +73,32 @@ class ApiRoutes(
                 ),
                 path("user" / "snippets")(
                   complete(server.fetchUserSnippets())
-                )
+                ),
+                path("nightly-raw" / "scala2" / Segment) { prefix =>
+                  complete(NightlyVersionFetcher.getLatestScala2Nightly(prefix))
+                },
+                path("nightly-raw" / "scala3") {
+                  complete(NightlyVersionFetcher.getLatestScala3Nightly)
+                }
               )
             )
           ),
-        post(
-          concat(
-            path("user" / "privacyPolicyStatus")(
-              complete(server.getPrivacyPolicy())
-            ),
-            path("user" / "acceptPrivacyPolicy")(
-              complete(server.acceptPrivacyPolicy())
-            ),
-            path("user" / "removeUserFromPolicyStatus")(
-              complete(server.removeUserFromPolicyStatus())
-            ),
-            path("user" / "removeAllUserSnippets")(
-              complete(server.removeAllUserSnippets())
-            ),
+          post(
+            concat(
+              path("user" / "privacyPolicyStatus")(
+                complete(server.getPrivacyPolicy())
+              ),
+              path("user" / "acceptPrivacyPolicy")(
+                complete(server.acceptPrivacyPolicy())
+              ),
+              path("user" / "removeUserFromPolicyStatus")(
+                complete(server.removeUserFromPolicyStatus())
+              ),
+              path("user" / "removeAllUserSnippets")(
+                complete(server.removeAllUserSnippets())
+              ),
+            )
           )
         )
-      )
     )
 }

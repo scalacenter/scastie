@@ -202,7 +202,7 @@ case class ScastieState(
         scalaCliInputs.copy(libraries = newSettings.dependencies, target = newScalaCliTarget)
       case _ => inputs
     }
-    copyAndSave(inputs = inputs)
+    copyAndSave(inputs = newInputs, inputsHasChanged = inputs != newInputs)
   }
 
   private def coalesceUpdates(update: ScastieState => ScastieState) = {

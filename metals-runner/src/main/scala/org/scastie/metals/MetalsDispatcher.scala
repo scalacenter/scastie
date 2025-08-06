@@ -97,18 +97,6 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
               yield compiler
             .value
 
-  /**
-    * This converts a configuration that targets Scala-CLI
-    * It extracts directives and expose a new configurunderstandable
-    * by the runner.
-    * If it is not a Scala-CLI target, it will return the untouched configuration.
-    */
-  def convertConfigurationFromScalaCli(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastieMetalsOptions] =
-    if configuration.scalaTarget.targetType == ScalaTargetType.ScalaCli then
-      EitherT { Async[F].delay(ScalaCliParser.getScalaTarget(configuration.code)) }
-    else
-      EitherT.rightT(configuration)
-
   /*
    * Checks if given configuration is supported. Currently it is based on scala binary version.
    * We are supporting only those versions which are defined in `supportedVersions`.

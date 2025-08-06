@@ -13,7 +13,7 @@ trait ScastieMetals[F[_]]:
   def completionInfo(request: CompletionInfoRequest): EitherT[F, FailureType, String]
   def hover(request: LSPRequestDTO): EitherT[F, FailureType, Hover]
   def signatureHelp(request: LSPRequestDTO): EitherT[F, FailureType, SignatureHelp]
-  def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, ScastieMetalsOptions]
+  def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, Boolean]
 
 object ScastieMetalsImpl:
 
@@ -33,8 +33,8 @@ object ScastieMetalsImpl:
       def signatureHelp(request: LSPRequestDTO): EitherT[F, FailureType, SignatureHelp] =
         dispatcher.getCompiler(request.options) >>= (_.signatureHelp(request.offsetParams))
 
-      def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, ScastieMetalsOptions] =
-        dispatcher.convertConfigurationFromScalaCli(config) >>=
-          (config => dispatcher.areDependenciesSupported(config) >>= (_ => dispatcher.getCompiler(config).map(_ => config)))
+      def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, Boolean] =
+          dispatcher.areDependenciesSupported(config) >>=
+            (_ => dispatcher.getCompiler(config).map(_ => true))
 
     }

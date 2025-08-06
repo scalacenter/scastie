@@ -13,6 +13,7 @@ import scala.util.Try
 
 import scalajs.js
 import hooks.Hooks.UseStateF
+import org.scastie.client.scalacli.ScalaCliUtils
 
 case class InteractiveProvider(
   dependencies: Set[api.ScalaDependency],
@@ -74,6 +75,7 @@ object InteractiveProvider {
 
   import scala.concurrent.duration._
   import scala.scalajs.js.timers._
+  import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   val didDirectivesChange: (Option[CodeEditor], CodeEditor) => Unit = {
     var timeout: js.UndefOr[js.timers.SetTimeoutHandle] = js.undefined
@@ -82,12 +84,18 @@ object InteractiveProvider {
     (prev, current) =>
       if (originalPrevious.isEmpty && prev.isDefined) originalPrevious = prev
       timeout.foreach(clearTimeout)
-      timeout = setTimeout(5000.millis) {
+      timeout = setTimeout(3000.millis) {
         originalPrevious.map { prev => {
           val previousDirectives = takeDirectives(prev.value)
           val newDirectives = takeDirectives(current.value)
           originalPrevious = Some(current)
-          if (previousDirectives != newDirectives) current.setMetalsStatus(OutdatedScalaCli).runNow()
+          if (previousDirectives != newDirectives){
+            ScalaCliUtils.parse(newDirectives).foreach { case (scalaTarget, dependencies) =>
+              val options = api.ScastieMetalsOptions(dependencies, scalaTarget, current.value)
+              current.updateSettings(options).runNow()
+              current.setMetalsStatus(OutdatedScalaCli).runNow()
+            }
+          }
         }}
       }
   }

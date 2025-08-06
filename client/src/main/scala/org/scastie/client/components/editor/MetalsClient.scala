@@ -35,13 +35,14 @@ trait MetalsClient {
     if (metalsStatus == MetalsDisabled || isEmbedded) Future.successful(false)
     else {
       updateStatus(MetalsLoading).runNow()
-      val res = makeRequest(scastieMetalsOptions, "isConfigurationSupported").map(parseMetalsResponse[ScastieMetalsOptions])
+      val res = makeRequest(scastieMetalsOptions, "isConfigurationSupported").map(maybeText =>
+        parseMetalsResponse[Boolean](maybeText).getOrElse(false))
       res.onComplete {
-        case Success(Some(newScalaCliOptions)) => (updateSettings(newScalaCliOptions) >> updateStatus(MetalsReady)).runNow()
+        case Success(true) => updateStatus(MetalsReady).runNow()
         case Failure(exception) => updateStatus(NetworkError(exception.getMessage)).runNow()
         case _ =>
       }
-      res.map(_.isDefined)
+      res
     }
   }
 
