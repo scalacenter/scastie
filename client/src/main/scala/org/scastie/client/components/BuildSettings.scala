@@ -47,7 +47,7 @@ object BuildSettings {
         action = props.resetBuild
       ).render,
       div(
-        hidden := props.isBuildDefault && props.inputs.target.targetType == ScalaTargetType.ScalaCli,
+        hidden := props.isBuildDefault || props.inputs.target.targetType == ScalaTargetType.ScalaCli,
         title := "Reset your configuration",
         onClick --> props.openResetModal,
         role := "button",
