@@ -12,7 +12,7 @@
 import com.olegych.scastie.api.AttachedDom
 import com.olegych.scastie.api.Html
 import com.olegych.scastie.api.ScalaTarget.Js
-import com.olegych.scastie.api.ScalaTarget.Scala2
+import com.olegych.scastie.api.ScalaTarget.Jvm
 import com.olegych.scastie.api.ScalaTarget.Native
 import com.olegych.scastie.api.ScalaTarget.Scala3
 import com.olegych.scastie.api.ScalaTarget.Typelevel
@@ -97,7 +97,7 @@ import scala.util.Try
 
   def convertTarget(target: oldApi.ScalaTarget): newApi.SbtScalaTarget =
     target match
-      case Scala2(scalaVersion) => newApi.Scala2(scalaVersion)
+      case Jvm(scalaVersion) => newApi.Scala2(scalaVersion)
       case Typelevel(scalaVersion) => newApi.Typelevel(scalaVersion)
       case Js(scalaVersion, scalaJsVersion) => newApi.Js(scalaVersion, scalaJsVersion)
       case Native(scalaVersion, scalaNativeVersion) => newApi.Native(scalaVersion, scalaNativeVersion)
