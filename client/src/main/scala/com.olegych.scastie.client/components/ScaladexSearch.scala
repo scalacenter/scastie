@@ -18,13 +18,16 @@ import scalajs.js.Thenable.Implicits._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 
+import com.olegych.scastie.client.i18n.I18n
+
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency ~=> Callback,
     updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
     addScalaDependency: (ScalaDependency, Project) ~=> Callback,
     librariesFrom: Map[ScalaDependency, Project],
     scalaTarget: ScalaTarget,
-    isDarkTheme: Boolean
+    isDarkTheme: Boolean,
+    language: String
 ) {
   @inline def render: VdomElement = ScaladexSearch.component(this)
 }
@@ -483,7 +486,7 @@ object ScaladexSearch {
       div(cls := "search-input")(
         input.search.withRef(searchInputRef)(
           cls := "search-query",
-          placeholder := "Search for 'cats'",
+          placeholder := I18n.t("Search for 'cats'"),
           value := searchState.query,
           onChange ==> scope.backend.setQuery,
           onKeyDown ==> scope.backend.keyDown
@@ -540,7 +543,7 @@ object ScaladexSearch {
       ),
       span(
         cls := "switch-description",
-      )("Enable Toolkit")
+      )(I18n.t("Enable Toolkit"))
     )
   }
 

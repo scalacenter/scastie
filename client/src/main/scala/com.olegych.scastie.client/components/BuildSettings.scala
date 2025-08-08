@@ -6,6 +6,8 @@ import japgolly.scalajs.react._
 
 import vdom.all._
 
+import com.olegych.scastie.client.i18n.I18n
+
 final case class BuildSettings(
     visible: Boolean,
     librariesFrom: Map[ScalaDependency, Project],
@@ -23,7 +25,8 @@ final case class BuildSettings(
     sbtConfigChange: String ~=> Callback,
     removeScalaDependency: ScalaDependency ~=> Callback,
     updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
-    addScalaDependency: (ScalaDependency, Project) ~=> Callback
+    addScalaDependency: (ScalaDependency, Project) ~=> Callback,
+    language: String
 ) {
 
   @inline def render: VdomElement = BuildSettings.component(this)
@@ -39,22 +42,22 @@ object BuildSettings {
     val resetButton = TagMod(
       PromptModal(
         isDarkTheme = props.isDarkTheme,
-        modalText = "Reset Build",
+        modalText = I18n.t("Reset Build"),
         modalId = "reset-build-modal",
         isClosed = props.isResetModalClosed,
         close = props.closeResetModal,
-        actionText = "Are you sure you want to reset the build ?",
-        actionLabel = "Reset",
+        actionText = I18n.t("Are you sure you want to reset the build ?"),
+        actionLabel = I18n.t("Reset"),
         action = props.resetBuild
       ).render,
       div(
-        title := "Reset your configuration",
+        title := I18n.t("Reset your configuration"),
         onClick --> props.openResetModal,
         role := "button",
         cls := "btn",
         if (props.isBuildDefault) visibility.collapse else visibility.visible
       )(
-        "Reset"
+        I18n.t("Reset")
       )
     )
 
@@ -64,25 +67,26 @@ object BuildSettings {
       addScalaDependency = props.addScalaDependency,
       librariesFrom = props.librariesFrom,
       scalaTarget = props.scalaTarget,
-      isDarkTheme = props.isDarkTheme
+      isDarkTheme = props.isDarkTheme,
+      language = props.language
     ).render
 
     div(cls := "build-settings-container")(
       resetButton,
       h2(
-        span("Target"),
+        span(I18n.t("Target")),
       ),
       TargetSelector(props.scalaTarget, props.setTarget).render,
       h2(
-        span("Scala Version")
+        span(I18n.t("Scala Version"))
       ),
       VersionSelector(props.scalaTarget, props.setTarget).render,
       h2(
-        span("Libraries")
+        span(I18n.t("Libraries"))
       ),
       scaladexSearch,
       h2(
-        span("Extra Sbt Configuration")
+        span(I18n.t("Extra Sbt Configuration"))
       ),
       pre(cls := "configuration")(
         SimpleEditor(
@@ -93,7 +97,7 @@ object BuildSettings {
         ).render
       ),
       h2(
-        span("Base Sbt Configuration (readonly)")
+        span(I18n.t("Base Sbt Configuration (readonly)"))
       ),
       pre(cls := "configuration")(
         SimpleEditor(
@@ -104,7 +108,7 @@ object BuildSettings {
         ).render
       ),
       h2(
-        span("Base Sbt Plugins Configuration (readonly)")
+        span(I18n.t("Base Sbt Plugins Configuration (readonly)"))
       ),
       pre(cls := "configuration")(
         SimpleEditor(

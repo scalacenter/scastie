@@ -9,6 +9,8 @@ import org.scalajs.dom.raw.HTMLDivElement
 
 import vdom.all._
 
+import com.olegych.scastie.client.i18n.I18n
+
 final case class Console(isOpen: Boolean,
                          isRunning: Boolean,
                          isEmbedded: Boolean,
@@ -16,7 +18,8 @@ final case class Console(isOpen: Boolean,
                          run: Reusable[Callback],
                          setView: View ~=> Callback,
                          close: Reusable[Callback],
-                         open: Reusable[Callback]) {
+                         open: Reusable[Callback],
+                         language: String) {
   @inline def render: VdomElement = Console.component(this)
 }
 
@@ -63,7 +66,7 @@ object Console {
           ).render.when(props.isEmbedded),
           div(cls := "console-label")(
             i(cls := "fa fa-terminal"),
-            p("Console (F3)"),
+            p(s"${I18n.t("Console")} (F3)"),
             i(cls := "fa fa-caret-down")
           )
         ),
@@ -83,7 +86,7 @@ object Console {
         displaySwitcher,
         div(cls := "console-label")(
           i(cls := "fa fa-terminal"),
-          p("Console (F3)"),
+          p(s"${I18n.t("Console")} (F3)"),
           i(cls := "fa fa-caret-up")
         )
       )

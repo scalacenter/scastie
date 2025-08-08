@@ -70,6 +70,9 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   def clearCode: Callback =
     scope.modState(_.setCode(""))
 
+  val setLanguage: String ~=> Callback =
+    Reusable.fn(language => scope.modState(_.setLanguage(language)))
+
   val setViewReused: View ~=> Callback =
     Reusable.fn(setView _)
 

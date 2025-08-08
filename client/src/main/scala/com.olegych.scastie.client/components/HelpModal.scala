@@ -4,6 +4,9 @@ import japgolly.scalajs.react._
 import vdom.all._
 import com.olegych.scastie.client.components.editor.EditorKeymaps
 
+import com.olegych.scastie.client.i18n.I18n
+import japgolly.scalajs.react.hooks.HookCtx.I1
+
 final case class HelpModal(isDarkTheme: Boolean, isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = HelpModal.component(this)
 }
@@ -21,7 +24,7 @@ object HelpModal {
 
     val sublime = generateATag(
       "https://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html",
-      "keyboard shortcuts."
+      I18n.t("keyboard shortcuts.")
     )
 
     val scalafmtConfiguration =
@@ -34,92 +37,91 @@ object HelpModal {
       generateATag("https://gitter.im/scalacenter/scastie", "Gitter")
 
     Modal(
-      title = "Help about Scastie",
+      title = I18n.t("Help about Scastie"),
       isDarkTheme = props.isDarkTheme,
       isClosed = props.isClosed,
       close = props.close,
       modalCss = TagMod(),
       modalId = "long-help",
       content = div(cls := "markdown-body")(
-        p( "Scastie is an interactive playground for Scala with support for sbt configuration."),
-        p( "Scastie editor supports Sublime Text ", sublime),
-        h2("Editor Modes"),
+        p( I18n.t("Scastie is an interactive playground for Scala with support for sbt configuration.")),
+        p( s"${I18n.t("Scastie editor supports Sublime Text")} $sublime"),
+        h2(I18n.t("Editor Modes")),
         p(
-          "Scastie editor supports multiple keyboard modes. ",
-          "You can switch between Default, Vim, and Emacs modes using the selector in the sidebar. ",
-          "Each mode provides familiar keybindings and navigation for users of those editors."
+          I18n.t("Scastie editor supports multiple keyboard modes. "),
+          I18n.t("You can switch between Default, Vim, and Emacs modes using the selector in the sidebar. "),
+          I18n.t("Each mode provides familiar keybindings and navigation for users of those editors.")
         ),
-        h2(s"Save (${EditorKeymaps.saveOrUpdate.getName})"),
+        h2(s"${I18n.t("Save")} (${EditorKeymaps.saveOrUpdate.getName})"),
         p(
-          "Run and save your code."
+          I18n.t("Run and save your code.")
         ),
-        h2(s"New (${EditorKeymaps.openNewSnippetModal.getName})"),
+        h2(s"${I18n.t("New")} (${EditorKeymaps.openNewSnippetModal.getName})"),
         p(
-          "Removes all your code lines from the current editor instance and resets sbt configuration."
+          I18n.t("Removes all your code lines from the current editor instance and resets sbt configuration.")
         ),
-        h2(s"Clear Messages (${EditorKeymaps.clear.getName})"),
+        h2(s"${I18n.t("Clear Messages")} (${EditorKeymaps.clear.getName})"),
         p(
-          "Removes all messages from the current editor instance."
+          I18n.t("Removes all messages from the current editor instance.")
         ),
-        h2(s"Format (${EditorKeymaps.format.getName})"),
+        h2(s"${I18n.t("Format")} (${EditorKeymaps.format.getName})"),
         p(
-          "The code formatting is done by scalafmt. You can configure the formatting with comments in your code. Read the ",
-          scalafmtConfiguration),
-        h2(s"Worksheet"),
+          s"${I18n.t("The code formatting is done by scalafmt. You can configure the formatting with comments in your code. Read the")} $scalafmtConfiguration"),
+        h2(I18n.t("Worksheet")),
         p(
-          "Enabled by default, the Worksheet Mode gives the value and the type of each line of your program. You can also add HTML blocks such as: ",
+          I18n.t("Enabled by default, the Worksheet Mode gives the value and the type of each line of your program. You can also add HTML blocks such as: "),
           code(
             "html\"<h1>Hello</h1>\""
           ),
-          " to render it next to the declaration."
+          I18n.t(" to render it next to the declaration.")
         ),
         p(
-          "In Worksheet Mode you cannot use packages. If you want to use it, turn off the Mode and add a main method and println statements."
+          I18n.t("In Worksheet Mode you cannot use packages. If you want to use it, turn off the Mode and add a main method and println statements.")
         ),
-        h2("Download"),
+        h2(I18n.t("Download")),
         p(
-          "Create a zip package with sbt configuration for current snippet."
+          I18n.t("Create a zip package with sbt configuration for current snippet.")
         ),
-        h2("Embed"),
+        h2(I18n.t("Embed")),
         p(
-          "Create an url embeddable in external web pages."
+          I18n.t("Create an url embeddable in external web pages.")
         ),
-        h2(s"Console (${EditorKeymaps.console.getName})"),
+        h2(s"${I18n.t("Console")} (${EditorKeymaps.console.getName})"),
         p(
-          "You can see your code's output in the Scastie's console."
+          I18n.t("You can see your code's output in the Scastie's console.")
         ),
-        h2("Build Settings"),
+        h2(I18n.t("Build Settings")),
         p(
-          "In Build Settings you can change the Scala version and add libraries, choose your desired target and even add your own custom sbt configuration."
+          I18n.t("In Build Settings you can change the Scala version and add libraries, choose your desired target and even add your own custom sbt configuration.")
         ),
-        h2("User's Code Snippets"),
+        h2(I18n.t("User's Code Snippets")),
         p(
-          "Your saved code fragments will appear here and you'll be able to delete or share them."
+          I18n.t("Your saved code fragments will appear here and you'll be able to delete or share them.")
         ),
-        h2("Vim commands"),
+        h2(I18n.t("Vim commands")),
         p(
-          "If Vim mode is enabled in the editor, you can use the following commands in the Vim command bar (press ':' in normal mode):"
+          I18n.t("If Vim mode is enabled in the editor, you can use the following commands in the Vim command bar (press ':' in normal mode):")
         ),
         ul(
-          li(code(":w"), " or ", code(":run"), " — Run and save your code (same as ", code(EditorKeymaps.saveOrUpdate.getName), ")"),
-          li(code(":f"), " or ", code(":format"), " — Format code (same as ", code(EditorKeymaps.format.getName), ")"),
-          li(code(":c"), " or ", code(":clear"), " — Clear messages (same as ", code(EditorKeymaps.clear.getName), ")"),
-          li(code(":h"), " or ", code(":help"), " — Show this help dialog")
+          li(code(":w"), " / ", code(":run"), I18n.t(" — Run and save your code")),
+          li(code(":f"), " / ", code(":format"), I18n.t(" — Format code")),
+          li(code(":c"), " / ", code(":clear"), I18n.t(" — Clear messages")),
+          li(code(":h"), " / ", code(":help"), I18n.t(" — Show this help dialog"))
         ),
         p(
           "You can also use standard Vim navigation and editing commands in the editor."
         ),
-        h2("Feedback"),
-        p( "You can join our ", gitter, " channel and send issues."),
-        h2("BuildInfo"),
-        p( "It's available on Github at ")(
+        h2(I18n.t("Feedback")),
+        p( I18n.t("You can join our "), gitter, I18n.t(" channel and send issues.")),
+        h2(I18n.t("BuildInfo")),
+        p( I18n.t("It's available on Github at "))(
           scastieGithub,
           br,
-          " License: Apache 2",
+          s" ${I18n.t("License")}: Apache 2",
         ),
         p(
 
-          "Scastie is an original idea from Aleh Aleshka (OlegYch) "
+          I18n.t("Scastie is an original idea from Aleh Aleshka (OlegYch) ")
         )(
           originalScastie
         )

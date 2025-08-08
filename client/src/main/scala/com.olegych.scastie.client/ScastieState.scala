@@ -2,32 +2,34 @@ package com.olegych.scastie.client
 
 import com.olegych.scastie.api._
 import com.olegych.scastie.api.EditorMode._
+import com.olegych.scastie.client.i18n.I18n
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.{Position => _}
 import play.api.libs.json._
+import com.olegych.scastie.client.i18n.I18n
 
 sealed trait MetalsStatus {
   val info: String
 }
 
 case object MetalsLoading extends MetalsStatus {
-  val info: String = "Compiler is loading"
+  val info: String = I18n.t("Compiler is loading")
 }
 
 case object MetalsReady extends MetalsStatus {
-  val info: String = "Metals is ready"
+  val info: String = I18n.t("Metals is ready")
 }
 
 case object MetalsDisabled extends MetalsStatus {
-  val info: String = "Metals Disabled"
+  val info: String = I18n.t("Metals Disabled")
 }
 
 case class MetalsConfigurationError(msg: String) extends MetalsStatus {
-  val info: String = s"Unsupported Configuration: \n  $msg"
+  val info: String = s"${I18n.t("Unsupported Configuration")}: \n  $msg"
 }
 
 case class NetworkError(msg: String) extends MetalsStatus {
-  val info: String = s"Network Error: \n  $msg"
+  val info: String = s"${I18n.t("Network Error")}: \n  $msg"
 }
 
 object SnippetState {
@@ -69,6 +71,7 @@ object ScastieState {
       status = StatusState.empty,
       isEmbedded = isEmbedded,
       editorMode = Default,
+      language = "en"
     )
   }
 
@@ -114,6 +117,7 @@ case class ScastieState(
     isEmbedded: Boolean = false,
     transient: Boolean = false,
     editorMode: EditorMode = Default,
+    language: String = "en"
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean = snippetState.loadSnippet
@@ -140,7 +144,8 @@ case class ScastieState(
       status: StatusState = status,
       metalsStatus: MetalsStatus = metalsStatus,
       transient: Boolean = transient,
-      editorMode: EditorMode = editorMode
+      editorMode: EditorMode = editorMode,
+      language: String = language
   ): ScastieState = {
     val state0 =
       copy(
@@ -171,7 +176,8 @@ case class ScastieState(
         metalsStatus = metalsStatus,
         isEmbedded = isEmbedded,
         transient = transient,
-        editorMode = editorMode
+        editorMode = editorMode,
+        language = language
       )
 
     if (!isEmbedded && !transient) {
@@ -210,6 +216,11 @@ case class ScastieState(
 
   def setEditorMode(mode: EditorMode): ScastieState =
     copyAndSave(editorMode = mode)
+
+  def setLanguage(lang: String): ScastieState = {
+    I18n.setLanguage(lang)
+    copyAndSave(language = lang)
+  }
 
   def setMetalsStatus(status: MetalsStatus): ScastieState =
     copyAndSave(metalsStatus = status)

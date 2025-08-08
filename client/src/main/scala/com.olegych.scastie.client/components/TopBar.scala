@@ -8,7 +8,14 @@ import japgolly.scalajs.react._, vdom.all._, extra._
 
 import org.scalajs.dom
 
-final case class TopBar(view: StateSnapshot[View], user: Option[User], openLoginModal: Reusable[Callback]) {
+import com.olegych.scastie.client.i18n.I18n
+
+final case class TopBar(view: StateSnapshot[View], 
+                        user: Option[User], 
+                        openLoginModal: Reusable[Callback], 
+                        setLanguage: String ~=> Callback, 
+                        language: String,
+                        isDarkTheme: Boolean) {
   @inline def render: VdomElement = TopBar.component(this)
 }
 
@@ -60,7 +67,7 @@ object TopBar {
           )
 
         case None =>
-          li(role := "link", onClick --> props.openLoginModal, cls := "btn", i(cls := "fa fa-sign-in"), "Login")
+          li(role := "link", onClick --> props.openLoginModal, cls := "btn", i(cls := "fa fa-sign-in"), I18n.t("Login"))
       }
 
     nav(
@@ -70,22 +77,35 @@ object TopBar {
         li(
           cls := "btn dropdown",
           i(cls := "fa fa-comments"),
-          span("Feedback"),
+          span(I18n.t("Feedback")),
           i(cls := "fa fa-caret-down"),
           ul(
             cls := "subactions",
             li(onClick --> feedback,
                role := "link",
-               title := "Open Gitter.im Chat to give us feedback",
+               title := I18n.t("Open Gitter.im Chat to give us feedback"),
                cls := "btn",
                i(cls := "fa fa-gitter"),
-               span("Scastie's gitter")),
+               span(I18n.t("Scastie's gitter"))),
             li(onClick --> issue,
                role := "link",
-               title := "Create new issue on GitHub",
+               title := I18n.t("Create new issue on GitHub"),
                cls := "btn",
                i(cls := "fa fa-github"),
-               span("Github issues"))
+               span(I18n.t("Github issues")))
+          )
+        ),
+        li(
+          cls := "btn",
+          label(I18n.t("Language: ")),
+          select(
+            value := props.language,
+            cls := s"language-select ${if (props.isDarkTheme) "dark" else "light"}",
+            onChange ==> { (e: ReactEventFromInput) =>
+              val lang = e.target.value
+              props.setLanguage(lang)
+            },
+            option(value := "en", "English")
           )
         ),
         profileButton

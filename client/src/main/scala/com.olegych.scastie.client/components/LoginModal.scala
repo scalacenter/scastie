@@ -6,6 +6,9 @@ import org.scalajs.dom
 
 import vdom.all._
 
+import com.olegych.scastie.client.i18n.I18n
+import japgolly.scalajs.react.hooks.HookCtx.I1
+
 
 final case class LoginModal(
   isDarkTheme: Boolean,
@@ -28,7 +31,7 @@ object LoginModal {
     val theme = if (props.isDarkTheme) "dark" else "light"
 
     Modal(
-      title = "Login to Scastie",
+      title = I18n.t("Login to Scastie"),
       isDarkTheme = props.isDarkTheme,
       isClosed = props.isClosed,
       close = props.close,
@@ -37,11 +40,11 @@ object LoginModal {
       content = TagMod(
         button(onClick --> (login >> props.close), cls := "github-login")(
           i(cls := "fa fa-github"),
-          "Continue with GitHub",
+          I18n.t("Continue with GitHub"),
         ),
         p(
-          "By signing in, you agree to our ",
-          a(href := "#", onClick ==> (e => e.preventDefaultCB >> e.stopPropagationCB >> props.openPrivacyPolicyModal))("privacy policy"),
+          I18n.t("By signing in, you agree to our "),
+          a(href := "#", onClick ==> (e => e.preventDefaultCB >> e.stopPropagationCB >> props.openPrivacyPolicyModal))(I18n.t("privacy policy")),
           "."
         )
       )

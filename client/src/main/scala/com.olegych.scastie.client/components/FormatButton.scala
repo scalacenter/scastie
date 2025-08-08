@@ -4,7 +4,9 @@ import com.olegych.scastie.client.components.editor.EditorKeymaps
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
 
-final case class FormatButton(inputsHasChanged: Boolean, isStatusOk: Boolean, formatCode: Reusable[Callback]) {
+import com.olegych.scastie.client.i18n.I18n
+
+final case class FormatButton(inputsHasChanged: Boolean, isStatusOk: Boolean, formatCode: Reusable[Callback], language: String) {
   @inline def render: VdomElement = FormatButton.component(this)
 }
 
@@ -13,13 +15,13 @@ object FormatButton {
 
   private def render(props: FormatButton): VdomElement = {
     li(
-      title := s"Format Code (${EditorKeymaps.format.getName})",
+      title := s"${I18n.t("Format Code")} (${EditorKeymaps.format.getName})",
       role := "button",
       cls := "btn",
       onClick --> props.formatCode,
     )(
       i(cls := "fa fa-align-left"),
-      span("Format")
+      span(I18n.t("Format"))
     )
   }
 
