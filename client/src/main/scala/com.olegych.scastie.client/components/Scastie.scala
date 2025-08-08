@@ -20,7 +20,7 @@ final case class Scastie(
     private val targetType: Option[ScalaTargetType],
     private val tryLibrary: Option[(ScalaDependency, Project)],
     private val code: Option[String],
-    private val inputs: Option[Inputs],
+    private val inputs: Option[Inputs]
 ) {
 
   @inline def render = Scastie.component(serverUrl, scastieId)(this)
@@ -81,7 +81,8 @@ object Scastie {
         toggleTheme = scope.backend.toggleTheme,
         view = scope.backend.viewSnapshot(state.view),
         openHelpModal = scope.backend.openHelpModal,
-        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal
+        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal,
+        language = state.language
       ).render.unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(
         state,
