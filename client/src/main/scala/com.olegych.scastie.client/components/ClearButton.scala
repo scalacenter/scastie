@@ -19,14 +19,14 @@ object ClearButton {
 
   private def render(props: ClearButton): VdomElement = {
     li(
-      title := s"${I18n.t("Clear Messages")} (${EditorKeymaps.clear.getName})",
+      title := s"${I18n.t("editor.clear_messages")} (${EditorKeymaps.clear.getName})",
       role := "button",
       cls := "btn",
       onClick --> props.clear
     )(
       div(
         i(cls := "fa fa-eraser"),
-        span(I18n.t("Clear Messages"))
+        span(I18n.t("editor.clear_messages"))
       )
     )
   }

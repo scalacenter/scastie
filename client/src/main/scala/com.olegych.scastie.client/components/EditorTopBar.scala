@@ -105,17 +105,17 @@ object EditorTopBar {
           val embeddedModal =
             CopyModal(
               isDarkTheme = props.isDarkTheme,
-              title = I18n.t("Share your Code Snippet"),
-              subtitle = I18n.t("Copy and embed your code snippet"),
+              title = I18n.t("editor.embed_title"),
+              subtitle = I18n.t("editor.embed_subtitle"),
               modalId = "embed-modal",
               content = content,
               isClosed = props.isEmbeddedModalClosed,
               close = props.closeEmbeddedModal
             ).render
 
-          li(title := I18n.t("Embed"), role := "button", cls := "btn", onClick --> props.openEmbeddedModal)(
+          li(title := I18n.t("editor.embed"), role := "button", cls := "btn", onClick --> props.openEmbeddedModal)(
             i(cls := "fa fa-code"),
-            span(I18n.t("Embed")),
+            span(I18n.t("editor.embed")),
             embeddedModal
           )
         case _ => EmptyVdom

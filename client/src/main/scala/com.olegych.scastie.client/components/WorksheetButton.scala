@@ -33,21 +33,20 @@ object WorksheetButton {
       else
         EmptyVdom
 
-    val isWorksheetModeToggleLabel =
-      if (props.isWorksheetMode) "OFF"
-      else "ON"
-
     li(
       title := (if (props.hasWorksheetMode)
-                  I18n.t(s"Turn Worksheet mode $isWorksheetModeToggleLabel (evaluate and print each top level expression)")
-                else I18n.t("This configuration does not support Worksheet mode")),
+                  if (props.isWorksheetMode)
+                    I18n.t("editor.worksheet_off_tooltip")
+                  else
+                    I18n.t("editor.worksheet_on_tooltip")
+                else I18n.t("editor.worksheet_unsupported")),
       isWorksheetModeSelected,
       role := "button",
       cls := "btn editor",
       onClick --> props.toggleWorksheetMode
     )(
       i(cls := "fa fa-calendar"),
-      span(I18n.t("Worksheet")),
+      span(I18n.t("editor.worksheet")),
       i(cls := "workSheetIndicator", cls := "fa fa-circle", isWorksheetModeSelected)
     )
   }

@@ -62,13 +62,13 @@ object VersionSelector {
                   onChange ==> { (e: ReactEventFromInput) =>
                     props.onChange(versionSelectors(e.target.value))
                   },
-                  value := {if (isRecommended) I18n.t("Other") else props.scalaTarget.scalaVersion},
+                  value := {if (isRecommended) I18n.t("build.other") else props.scalaTarget.scalaVersion},
                   TagMod.when(!isRecommended)(className := "selected-option")
                 )(
                   ScalaVersions
                     .allVersions(props.scalaTarget.targetType)
                     .map(version => option(version))
-                    .prepended(option(I18n.t("Other"))(hidden := true, disabled := true))
+                    .prepended(option(I18n.t("build.other"))(hidden := true, disabled := true))
                     .toTagMod
                 )
               }

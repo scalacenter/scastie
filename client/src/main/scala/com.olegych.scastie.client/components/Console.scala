@@ -66,7 +66,7 @@ object Console {
           ).render.when(props.isEmbedded),
           div(cls := "console-label")(
             i(cls := "fa fa-terminal"),
-            p(s"${I18n.t("Console")} (F3)"),
+            p(s"${I18n.t("console.title")} (F3)"),
             i(cls := "fa fa-caret-down")
           )
         ),
@@ -86,7 +86,7 @@ object Console {
         displaySwitcher,
         div(cls := "console-label")(
           i(cls := "fa fa-terminal"),
-          p(s"${I18n.t("Console")} (F3)"),
+          p(s"${I18n.t("console.title")} (F3)"),
           i(cls := "fa fa-caret-up")
         )
       )

@@ -45,7 +45,7 @@ object MetalsStatusIndicator {
       onClick --> props.toggleMetalsStatus,
     )(
       img(src := metalsLogo),
-      span(I18n.t("Metals Status")),
+      span(I18n.t("editor.metals_status")),
       i(cls := "metals-status-indicator-icon fa", cls := getIndicatorIconClasses(props.metalsStatus))
     )
   }

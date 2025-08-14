@@ -486,7 +486,7 @@ object ScaladexSearch {
       div(cls := "search-input")(
         input.search.withRef(searchInputRef)(
           cls := "search-query",
-          placeholder := I18n.t("Search for 'cats'"),
+          placeholder := I18n.t("build.search_placeholder"),
           value := searchState.query,
           onChange ==> scope.backend.setQuery,
           onKeyDown ==> scope.backend.keyDown
@@ -543,7 +543,7 @@ object ScaladexSearch {
       ),
       span(
         cls := "switch-description",
-      )(I18n.t("Enable Toolkit"))
+      )(I18n.t("build.enable_toolkit"))
     )
   }
 

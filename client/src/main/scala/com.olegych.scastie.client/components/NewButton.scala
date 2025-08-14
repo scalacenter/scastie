@@ -26,21 +26,21 @@ object NewButton {
   def render(props: NewButton): VdomElement = {
 
     li(
-      title := s"${I18n.t("New code snippet")} (${EditorKeymaps.openNewSnippetModal.getName})",
+      title := s"${I18n.t("editor.new_snippet_title")} (${EditorKeymaps.openNewSnippetModal.getName})",
       role := "button",
       onClick --> props.openNewSnippetModal,
       cls := "btn"
     )(
       i(cls := "fa fa-file-o"),
-      span(I18n.t("New")),
+      span(I18n.t("editor.new")),
       PromptModal(
         isDarkTheme = props.isDarkTheme,
-        modalText = I18n.t("New Snippet"),
+        modalText = I18n.t("editor.new_snippet_title"),
         modalId = "new-snippet-modal",
         isClosed = props.isNewSnippetModalClosed,
         close = props.closeNewSnippetModal,
-        actionText = I18n.t("Are you sure you want to create a new snippet?"),
-        actionLabel = I18n.t("New"),
+        actionText = I18n.t("editor.new_confirmation"),
+        actionLabel = I18n.t("editor.new"),
         action = props.newSnippet
       ).render
     )
