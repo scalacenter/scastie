@@ -12,23 +12,23 @@ sealed trait MetalsStatus {
 }
 
 case object MetalsLoading extends MetalsStatus {
-  val info: String = I18n.t("Compiler is loading")
+  val info: String = I18n.t("editor.metals_loading")
 }
 
 case object MetalsReady extends MetalsStatus {
-  val info: String = I18n.t("Metals is ready")
+  val info: String = I18n.t("editor.metals_ready")
 }
 
 case object MetalsDisabled extends MetalsStatus {
-  val info: String = I18n.t("Metals Disabled")
+  val info: String = I18n.t("editor.metals_disabled")
 }
 
 case class MetalsConfigurationError(msg: String) extends MetalsStatus {
-  val info: String = s"${I18n.t("Unsupported Configuration")}: \n  $msg"
+  val info: String = s"${I18n.t("editor.metals_unsupported")}: \n  $msg"
 }
 
 case class NetworkError(msg: String) extends MetalsStatus {
-  val info: String = s"${I18n.t("Network Error")}: \n  $msg"
+  val info: String = s"${I18n.t("editor.metals_network_error")}: \n  $msg"
 }
 
 object SnippetState {

@@ -6,10 +6,7 @@ You are more than welcome to contribute any PR regardless if it's listed or not.
 ## Translating Scastie
 
 Scastie supports only English by default.  
-If you want to help with translations, you can prepare a `.po` file for your language (see `client/src/main/resources/locales/`).  
-
-A ready-to-use template file `template.po` is available in `client/src/main/resources/locales/`.  
-It contains all translation slots as empty entries, so you can simply fill them in with your translations.
+If you want to help with translations, you can prepare a `.po` file for your language (see `client/src/main/resources/locales/`).   
 
 **How it works:**
 - You can translate the `.po` file to your language and submit it in a Pull Request.
@@ -17,7 +14,7 @@ It contains all translation slots as empty entries, so you can simply fill them 
 - You do not need to modify the code yourself – just provide the translation.
 
 **If you want to contribute:**
-1. Copy the `template.po` file and translate it to your language.
+1. Copy the `en.po` file and translate `msgstr` elements to your language.
 2. Submit a Pull Request with the new `.po` file.
 3. Wait for review and integration.
 

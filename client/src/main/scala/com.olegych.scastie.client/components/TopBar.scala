@@ -67,7 +67,7 @@ object TopBar {
           )
 
         case None =>
-          li(role := "link", onClick --> props.openLoginModal, cls := "btn", i(cls := "fa fa-sign-in"), I18n.t("Login"))
+          li(role := "link", onClick --> props.openLoginModal, cls := "btn", i(cls := "fa fa-sign-in"), I18n.t("topbar.login"))
       }
 
     nav(
@@ -77,27 +77,27 @@ object TopBar {
         li(
           cls := "btn dropdown",
           i(cls := "fa fa-comments"),
-          span(I18n.t("Feedback")),
+          span(I18n.t("topbar.feedback")),
           i(cls := "fa fa-caret-down"),
           ul(
             cls := "subactions",
             li(onClick --> feedback,
                role := "link",
-               title := I18n.t("Open Gitter.im Chat to give us feedback"),
+               title := I18n.t("topbar.feedback_tooltip"),
                cls := "btn",
                i(cls := "fa fa-gitter"),
-               span(I18n.t("Scastie's gitter"))),
+               span(I18n.t("topbar.gitter"))),
             li(onClick --> issue,
                role := "link",
-               title := I18n.t("Create new issue on GitHub"),
+               title := I18n.t("topbar.github_tooltip"),
                cls := "btn",
                i(cls := "fa fa-github"),
-               span(I18n.t("Github issues")))
+               span(I18n.t("topbar.github_issues")))
           )
         ),
         li(
           cls := "btn",
-          label(I18n.t("Language: ")),
+          label(I18n.t("topbar.language_label")),
           select(
             value := props.language,
             cls := s"language-select ${if (props.isDarkTheme) "dark" else "light"}",

@@ -42,22 +42,22 @@ object BuildSettings {
     val resetButton = TagMod(
       PromptModal(
         isDarkTheme = props.isDarkTheme,
-        modalText = I18n.t("Reset Build"),
+        modalText = I18n.t("build.reset_title"),
         modalId = "reset-build-modal",
         isClosed = props.isResetModalClosed,
         close = props.closeResetModal,
-        actionText = I18n.t("Are you sure you want to reset the build ?"),
-        actionLabel = I18n.t("Reset"),
+        actionText = I18n.t("build.reset_confirmation"),
+        actionLabel = I18n.t("build.reset"),
         action = props.resetBuild
       ).render,
       div(
-        title := I18n.t("Reset your configuration"),
+        title := I18n.t("build.reset_tooltip"),
         onClick --> props.openResetModal,
         role := "button",
         cls := "btn",
         if (props.isBuildDefault) visibility.collapse else visibility.visible
       )(
-        I18n.t("Reset")
+        I18n.t("build.reset")
       )
     )
 
@@ -74,19 +74,19 @@ object BuildSettings {
     div(cls := "build-settings-container")(
       resetButton,
       h2(
-        span(I18n.t("Target")),
+        span(I18n.t("build.target")),
       ),
       TargetSelector(props.scalaTarget, props.setTarget).render,
       h2(
-        span(I18n.t("Scala Version"))
+        span(I18n.t("build.scala_version"))
       ),
       VersionSelector(props.scalaTarget, props.setTarget).render,
       h2(
-        span(I18n.t("Libraries"))
+        span(I18n.t("build.libraries"))
       ),
       scaladexSearch,
       h2(
-        span(I18n.t("Extra Sbt Configuration"))
+        span(I18n.t("build.sbt_config"))
       ),
       pre(cls := "configuration")(
         SimpleEditor(
@@ -97,7 +97,7 @@ object BuildSettings {
         ).render
       ),
       h2(
-        span(I18n.t("Base Sbt Configuration (readonly)"))
+        span(I18n.t("build.sbt_base_config"))
       ),
       pre(cls := "configuration")(
         SimpleEditor(
@@ -108,7 +108,7 @@ object BuildSettings {
         ).render
       ),
       h2(
-        span(I18n.t("Base Sbt Plugins Configuration (readonly)"))
+        span(I18n.t("build.sbt_plugins_config"))
       ),
       pre(cls := "configuration")(
         SimpleEditor(

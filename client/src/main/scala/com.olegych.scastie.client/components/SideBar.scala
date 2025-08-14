@@ -45,45 +45,47 @@ object SideBar {
 
   private def render(props: SideBar): VdomElement = {
     val toggleThemeLabel =
-      if (props.isDarkTheme) I18n.t("Light")
-      else I18n.t("Dark")
+      if (props.isDarkTheme) I18n.t("sidebar.theme_light")
+      else I18n.t("sidebar.theme_dark")
+
+    val theme = if (props.isDarkTheme) "dark" else "light"
 
     val selectedIcon =
       if (props.isDarkTheme) "fa fa-sun-o"
       else "fa fa-moon-o"
 
     val themeButton =
-      li(onClick --> props.toggleTheme, role := "button", title := I18n.t(s"Select $toggleThemeLabel Theme (F2)"), cls := "btn")(
+      li(onClick --> props.toggleTheme, role := "button", title := I18n.t(s"sidebar.theme_${theme}_tooltip"), cls := "btn")(
         i(cls := s"fa $selectedIcon"),
         span(toggleThemeLabel)
       )
 
     val privacyPolicyButton =
-      li(onClick --> props.openPrivacyPolicyModal, role := "button", title := I18n.t("Show privacy policy"), cls := "btn")(
+      li(onClick --> props.openPrivacyPolicyModal, role := "button", title := I18n.t("sidebar.privacy_policy_tooltip"), cls := "btn")(
         i(cls := "fa fa-user-secret"),
-        span(I18n.t("Privacy Policy"))
+        span(I18n.t("sidebar.privacy_policy"))
       )
 
     val helpButton =
-      li(onClick --> props.openHelpModal, role := "button", title := I18n.t("Show help Menu"), cls := "btn")(
+      li(onClick --> props.openHelpModal, role := "button", title := I18n.t("sidebar.help_tooltip"), cls := "btn")(
         i(cls := "fa fa-question-circle"),
-        span(I18n.t("Help"))
+        span(I18n.t("sidebar.help"))
       )
 
     val runnersStatusButton = {
       val (statusIcon, statusClass, statusLabel) =
         props.status.sbtRunnerCount match {
           case None =>
-            ("fa-times-circle", "status-unknown", I18n.t("Unknown"))
+            ("fa-times-circle", "status-unknown", I18n.t("sidebar.status_unknown"))
 
           case Some(0) =>
-            ("fa-times-circle", "status-down", I18n.t("Down"))
+            ("fa-times-circle", "status-down", I18n.t("sidebar.status_down"))
 
           case Some(_) =>
-            ("fa-check-circle", "status-up", I18n.t("Up"))
+            ("fa-check-circle", "status-up", I18n.t("sidebar.status_up"))
         }
 
-      li(onClick --> props.view.setState(View.Status), role := "button", title := I18n.t("Show runners status"), cls := s"btn $statusClass")(
+      li(onClick --> props.view.setState(View.Status), role := "button", title := I18n.t("sidebar.status_tooltip"), cls := s"btn $statusClass")(
         i(cls := s"fa $statusIcon"),
         span(statusLabel)
       )
@@ -92,7 +94,7 @@ object SideBar {
     val editorButton = ViewToggleButton(
       currentView = props.view,
       forView = View.Editor,
-      buttonTitle = I18n.t("Editor"),
+      buttonTitle = I18n.t("sidebar.editor"),
       faIcon = "fa-edit",
       onClick = reusableEmpty
     ).render
@@ -100,7 +102,7 @@ object SideBar {
     val buildSettingsButton = ViewToggleButton(
       currentView = props.view,
       forView = View.BuildSettings,
-      buttonTitle = I18n.t("Build Settings"),
+      buttonTitle = I18n.t("sidebar.build_settings"),
       faIcon = "fa-gear",
       onClick = reusableEmpty
     ).render

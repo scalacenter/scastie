@@ -21,9 +21,9 @@ object DownloadButton {
     val fullUrl = s"/api/download/$url"
 
     li(
-      a(href := fullUrl, download := url.replaceAll("/", "-") + ".zip", title := s"${I18n.t("Download")}", role := "button", cls := "btn")(
+      a(href := fullUrl, download := url.replaceAll("/", "-") + ".zip", title := s"${I18n.t("editor.download")}", role := "button", cls := "btn")(
         i(cls := "fa fa-download"),
-        span(I18n.t("Download"))
+        span(I18n.t("editor.download"))
       )
     )
   }

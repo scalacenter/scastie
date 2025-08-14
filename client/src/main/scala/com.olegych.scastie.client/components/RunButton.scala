@@ -21,18 +21,18 @@ object RunButton {
     if (!props.isRunning) {
       val runTitle =
         if (props.isStatusOk)
-          s"${I18n.t("Run")} (${EditorKeymaps.saveOrUpdate.getName})"
+          s"${I18n.t("editor.run")} (${EditorKeymaps.saveOrUpdate.getName})"
         else
-          s"${I18n.t("Run")} (${EditorKeymaps.saveOrUpdate.getName}) - ${I18n.t("warning: unknown status")}"
+          s"${I18n.t("editor.run")} (${EditorKeymaps.saveOrUpdate.getName}) - ${I18n.t("editor.status_unknown_warning")}"
 
       li(onClick ==> { e => e.stopPropagationCB >> props.save }, role := "button", title := runTitle, cls := "btn run-button")(
         i(cls := "fa fa-play"),
-        span(I18n.t("Run"))
+        span(I18n.t("editor.run"))
       )
     } else {
-      li(onClick --> props.setView(View.Editor), title := I18n.t("Running your Code..."), cls := "btn run-button")(
+      li(onClick --> props.setView(View.Editor), title := I18n.t("editor.running_tooltip"), cls := "btn run-button")(
         i(cls := "fa fa-spinner fa-spin"),
-        span(I18n.t("Running"))
+        span(I18n.t("editor.running"))
       )
     }
   }

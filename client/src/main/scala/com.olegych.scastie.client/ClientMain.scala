@@ -13,6 +13,8 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, _}
 import scala.scalajs.js.{UndefOr, |}
 
+import com.olegych.scastie.client.i18n.I18n
+
 @js.native
 @JSGlobal("ScastieSettings")
 object Settings extends js.Object {
@@ -36,6 +38,8 @@ object ScastieMain {
   @JSExport
   def main(): Unit = {
     dom.document.body.className = "scastie"
+
+    I18n.setLanguage("en")
 
     val container =
       dom.document.createElement("div").asInstanceOf[HTMLDivElement]

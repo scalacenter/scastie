@@ -15,13 +15,13 @@ object FormatButton {
 
   private def render(props: FormatButton): VdomElement = {
     li(
-      title := s"${I18n.t("Format Code")} (${EditorKeymaps.format.getName})",
+      title := s"${I18n.t("editor.format_tooltip")} (${EditorKeymaps.format.getName})",
       role := "button",
       cls := "btn",
       onClick --> props.formatCode,
     )(
       i(cls := "fa fa-align-left"),
-      span(I18n.t("Format"))
+      span(I18n.t("editor.format"))
     )
   }
 

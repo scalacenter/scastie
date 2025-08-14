@@ -25,14 +25,14 @@ object Status {
     def renderSbtTask(tasks: Vector[TaskId]): VdomElement = {
       if (props.isAdmin) {
         if (tasks.isEmpty) {
-          div(I18n.t("No Task Running"))
+          div(I18n.t("status.no_task"))
         } else {
           ul(
             tasks.zipWithIndex.map {
               case (TaskId(snippetId), j) =>
                 li(key := snippetId.toString)(
                   props.router.link(Page.fromSnippetId(snippetId))(
-                    s"${I18n.t("Task")} $j"
+                    s"${I18n.t("status.task")} $j"
                   )
                 )
             }.toTagMod
@@ -46,9 +46,9 @@ object Status {
     def renderConfiguration(serverInputs: Inputs): VdomElement = {
       val (cssConfig, label) =
         if (serverInputs.needsReload(props.inputs)) {
-          ("needs-reload", I18n.t("Different Configuration"))
+          ("needs-reload", I18n.t("status.different_config"))
         } else {
-          ("ready", I18n.t("Same Configuration"))
+          ("ready", I18n.t("status.same_config"))
         }
 
       span(cls := "runner " + cssConfig)(label)
@@ -58,7 +58,7 @@ object Status {
       props.state.sbtRunners match {
         case Some(sbtRunners) =>
           div(
-            h1(I18n.t("Sbt Runners")),
+            h1(I18n.t("status.sbt_runners")),
             ul(
               sbtRunners.zipWithIndex.map {
                 case (sbtRunner, i) =>
