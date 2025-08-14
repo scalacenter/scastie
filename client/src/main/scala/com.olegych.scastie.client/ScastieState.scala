@@ -6,7 +6,6 @@ import com.olegych.scastie.client.i18n.I18n
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.{Position => _}
 import play.api.libs.json._
-import com.olegych.scastie.client.i18n.I18n
 
 sealed trait MetalsStatus {
   val info: String
