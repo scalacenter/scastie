@@ -12,6 +12,8 @@ import vdom.all._
 import extra.router._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
+import com.olegych.scastie.client.i18n.I18n
+
 final case class CodeSnippets(
     view: View,
     user: User,
@@ -73,8 +75,8 @@ object CodeSnippets {
     div(cls := "snippet")(
       CopyModal(
         isDarkTheme = props.isDarkTheme,
-        title = "Share your Code Snippet",
-        subtitle = "Copy and share your code snippet's URL:",
+        title = I18n.t("editor.embed_title"),
+        subtitle = I18n.t("editor.share_snippet"),
         modalId = "share-modal-" + summary.snippetId.url.replace(".", "-"),
         content = snippetUrl,
         isClosed = props.isShareModalClosed(summary.snippetId),

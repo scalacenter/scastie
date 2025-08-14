@@ -14,7 +14,8 @@ final case class MobileBar(isRunning: Boolean,
                            openNewSnippetModal: Reusable[Callback],
                            closeNewSnippetModal: Reusable[Callback],
                            newSnippet: Reusable[Callback],
-                           forceDesktop: Reusable[Callback]) {
+                           forceDesktop: Reusable[Callback],
+                           language: String) {
   @inline def render: VdomElement = MobileBar.component(this)
 }
 
@@ -37,10 +38,12 @@ object MobileBar {
           isNewSnippetModalClosed = props.isNewSnippetModalClosed,
           openNewSnippetModal = props.openNewSnippetModal,
           closeNewSnippetModal = props.closeNewSnippetModal,
-          newSnippet = props.newSnippet
+          newSnippet = props.newSnippet,
+          language = props.language
         ).render,
         ClearButton(
           clear = props.clear,
+          language = props.language
         ).render,
         //this doesn't work too well, better use browsers 'request desktop site'
 //        DesktopButton(
