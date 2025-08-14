@@ -63,7 +63,8 @@ object BuildSettings {
       updateDependencyVersion = props.updateDependencyVersion,
       addScalaDependency = props.addScalaDependency,
       librariesFrom = props.librariesFrom,
-      scalaTarget = props.scalaTarget
+      scalaTarget = props.scalaTarget,
+      isDarkTheme = props.isDarkTheme
     ).render
 
     div(cls := "build-settings-container")(
