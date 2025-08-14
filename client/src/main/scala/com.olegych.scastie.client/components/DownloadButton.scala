@@ -32,6 +32,6 @@ object DownloadButton {
     ScalaComponent
       .builder[DownloadButton]("DownloadButton")
       .render_P(render)
-      // .configure(Reusability.shouldComponentUpdate)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }
