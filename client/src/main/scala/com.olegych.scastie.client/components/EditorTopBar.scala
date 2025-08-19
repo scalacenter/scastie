@@ -4,6 +4,8 @@ package components
 
 import api.{SnippetId, User, ScalaTarget}
 
+import com.olegych.scastie.client.i18n.I18n
+
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
 
 final case class EditorTopBar(clear: Reusable[Callback],
@@ -28,7 +30,8 @@ final case class EditorTopBar(clear: Reusable[Callback],
                               isWorksheetMode: Boolean,
                               metalsStatus: MetalsStatus,
                               toggleMetalsStatus: Reusable[Callback],
-                              scalaTarget: ScalaTarget) {
+                              scalaTarget: ScalaTarget,
+                              language: String) {
   @inline def render: VdomElement = EditorTopBar.component(this)
 }
 
@@ -53,24 +56,28 @@ object EditorTopBar {
       isNewSnippetModalClosed = props.isNewSnippetModalClosed,
       openNewSnippetModal = props.openNewSnippetModal,
       closeNewSnippetModal = props.closeNewSnippetModal,
-      newSnippet = props.newSnippet
+      newSnippet = props.newSnippet,
+      language = props.language
     ).render
 
     val formatButton = FormatButton(
       inputsHasChanged = props.inputsHasChanged,
       formatCode = props.formatCode,
-      isStatusOk = props.isStatusOk
+      isStatusOk = props.isStatusOk,
+      language = props.language
     ).render
 
     val clearButton = ClearButton(
-      clear = props.clear
+      clear = props.clear,
+      language = props.language
     ).render
 
     val worksheetButton = WorksheetButton(
       props.scalaTarget.hasWorksheetMode,
       props.isWorksheetMode,
       props.toggleWorksheetMode,
-      props.view.value
+      props.view.value,
+      props.language
     ).render
 
     val metalsButton = MetalsStatusIndicator(
@@ -82,7 +89,7 @@ object EditorTopBar {
     val downloadButton =
       props.snippetId match {
         case Some(sid) =>
-          DownloadButton(snippetId = sid).render
+          DownloadButton(snippetId = sid, language = props.language).render
         case _ =>
           EmptyVdom
       }
@@ -98,17 +105,17 @@ object EditorTopBar {
           val embeddedModal =
             CopyModal(
               isDarkTheme = props.isDarkTheme,
-              title = "Share your Code Snippet",
-              subtitle = "Copy and embed your code snippet",
+              title = I18n.t("editor.embed_title"),
+              subtitle = I18n.t("editor.embed_subtitle"),
               modalId = "embed-modal",
               content = content,
               isClosed = props.isEmbeddedModalClosed,
               close = props.closeEmbeddedModal
             ).render
 
-          li(title := s"Embed", role := "button", cls := "btn", onClick --> props.openEmbeddedModal)(
+          li(title := I18n.t("editor.embed"), role := "button", cls := "btn", onClick --> props.openEmbeddedModal)(
             i(cls := "fa fa-code"),
-            span("Embed"),
+            span(I18n.t("editor.embed")),
             embeddedModal
           )
         case _ => EmptyVdom
