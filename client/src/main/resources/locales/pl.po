@@ -264,7 +264,7 @@ msgstr "Formatowanie kodu jest wykonywane przez scalafmt. Możesz konfigurować 
 
 # The code must remain inside the curly brackets.
 msgid "help.worksheet_description"
-msgstr "Domyślnie włączony tryb Worksheet pokazuje wartość i typ każdej linii Twojego programu. Możesz także dodać bloki HTML, takie jak: {html\"<h1>Hello</h1>\"}, aby wyświetlić je obok deklaracji."
+msgstr "Domyślnie włączony tryb Worksheet pokazuje wartość i typ każdej linii Twojego programu. Możesz także dodać bloki HTML, takie jak: {html"<h1>Hello</h1>"}, aby wyświetlić je obok deklaracji."
 
 msgid "help.worksheet_packages_warning"
 msgstr "W trybie Worksheet nie możesz używać pakietów/paczek. Jeśli chcesz ich użyć, wyłącz ten tryb i dodaj metodę main oraz instrukcje println."
