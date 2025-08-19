@@ -1,0 +1,321 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
+
+# --- Section: Topbar ---
+msgid "topbar.feedback"
+msgstr "Zgłoś uwagę"
+
+msgid "topbar.gitter"
+msgstr "Gitter Scastie"
+
+msgid "topbar.github_issues"
+msgstr "Zgłoszenia na Githubie"
+
+msgid "topbar.language_label"
+msgstr "Język: "
+
+msgid "topbar.login"
+msgstr "Zaloguj się"
+
+msgid "topbar.feedback_tooltip"
+msgstr "Otwórz czat Gitter.im, aby przekazać nam swoje uwagi."
+
+msgid "topbar.github_tooltip"
+msgstr "Stwórz nowe zgłoszenie na Githubie"
+
+msgid "topbar.snippets"
+msgstr "Fragmenty kodu"
+
+msgid "topbar.snippets_tooltip"
+msgstr "Przejdź do Twoich fragmentów kodu"
+
+msgid "topbar.logout"
+msgstr "Wyloguj się"
+
+msgid "snippets.update"
+msgstr "Aktualizacja: "
+
+# --- Section: Code Snippets ---
+msgid "snippets.delete"
+msgstr "Usuń"
+
+msgid "snippets.share"
+msgstr "Udostępnij"
+
+msgid "snippets.empty"
+msgstr "Brak zapisanych fragmentów kodu!"
+
+msgid "snippets.saved"
+msgstr "Zapisane fragmenty kodu"
+
+# --- Section: Sidebar ---
+msgid "sidebar.theme_light"
+msgstr "Jasny"
+
+msgid "sidebar.theme_dark"
+msgstr "Ciemny"
+
+msgid "sidebar.theme_dark_tooltip"
+msgstr "Wybierz ciemny motyw (F2)"
+
+msgid "sidebar.theme_light_tooltip"
+msgstr "Wybierz jasny motyw (F2)"
+
+msgid "sidebar.privacy_policy"
+msgstr "Polityka prywatności"
+
+msgid "sidebar.privacy_policy_tooltip"
+msgstr "Pokaż politykę prywatności"
+
+msgid "sidebar.help"
+msgstr "Pomoc"
+
+msgid "sidebar.help_tooltip"
+msgstr "Pokaż menu pomocy"
+
+msgid "sidebar.status_unknown"
+msgstr "Stan nieznany"
+
+msgid "sidebar.status_up"
+msgstr "Działa"
+
+msgid "sidebar.status_down"
+msgstr "Nie działa"
+
+msgid "sidebar.status_tooltip"
+msgstr "Pokaż status procesów"
+
+msgid "sidebar.editor"
+msgstr "Edytor"
+
+msgid "sidebar.build_settings"
+msgstr "Ustawienia kompilacji"
+
+# --- Section: Login Window ---
+msgid "sidebar.login_title"
+msgstr "Zaloguj się do Scastiego"
+
+msgid "sidebar.login_github"
+msgstr "Zaloguj się przez Github"
+
+# The translation of `privacy policy` must remain inside the curly brackets.
+msgid "sidebar.login_agreement"
+msgstr "Logując się, akceptujesz naszą {politykę prywatności}."
+
+# --- Section: Editor Topbar ---
+msgid "editor.run"
+msgstr "Uruchom"
+
+msgid "editor.status_unknown_warning"
+msgstr "ostrzeżenie: nieznany status"
+
+msgid "editor.running"
+msgstr "Uruchamianie"
+
+msgid "editor.running_tooltip"
+msgstr "Uruchamianie Twojego kodu…"
+
+msgid "editor.new_snippet_title"
+msgstr "Nowy fragment kodu"
+
+msgid "editor.new"
+msgstr "Nowy"
+
+msgid "editor.new_tooltip"
+msgstr "Nowy fragment kodu"
+
+msgid "editor.new_confirmation"
+msgstr "Czy na pewno chcesz utworzyć nowy fragment kodu?"
+
+msgid "editor.format_tooltip"
+msgstr "Formatuj kod"
+
+msgid "editor.format"
+msgstr "Formatuj"
+
+msgid "editor.clear_messages"
+msgstr "Wyczyść wiadomości"
+
+msgid "editor.worksheet_on_tooltip"
+msgstr "Włącz tryb Worksheet (wykonuj i pokazuj każdą instrukcję najwyższego poziomu)"
+
+msgid "editor.worksheet_off_tooltip"
+msgstr "Wyłącz tryb Worksheet (wykonuj i pokazuj każdą instrukcję najwyższego poziomu)"
+
+msgid "editor.worksheet_unsupported"
+msgstr "Ta konfiguracja nie obsługuje trybu Worksheet"
+
+msgid "editor.worksheet"
+msgstr "Worksheet"
+
+msgid "editor.download"
+msgstr "Pobierz"
+
+msgid "editor.embed"
+msgstr "Osadź"
+
+msgid "editor.embed_title"
+msgstr "Udostępnij swój fragment kodu"
+
+msgid "editor.embed_subtitle"
+msgstr "Skopiuj i osadź swój fragment kodu"
+
+msgid "editor.share_snippet"
+msgstr "Skopiuj i udostępnij adres URL swojego fragmentu kodu:"
+
+msgid "editor.metals_status"
+msgstr "Status Metalsów"
+
+msgid "editor.metals_loading"
+msgstr "Trwa ładowanie kompilatora"
+
+msgid "editor.metals_ready"
+msgstr "Metalsy są gotowe"
+
+msgid "editor.metals_disabled"
+msgstr "Metalsy są wyłączone"
+
+msgid "editor.metals_unsupported"
+msgstr "Niewspierana konfiguracja"
+
+msgid "editor.metals_network_error"
+msgstr "Błąd sieci"
+
+# --- Section: Build Settings ---
+msgid "build.reset_title"
+msgstr "Resetuj konfigurację"
+
+msgid "build.reset_confirmation"
+msgstr "Czy na pewno chcesz zresetować konfigurację?"
+
+msgid "build.reset"
+msgstr "Resetuj"
+
+msgid "build.reset_tooltip"
+msgstr "Resetuj Twoją konfigurację"
+
+msgid "build.target"
+msgstr "Środowisko docelowe"
+
+msgid "build.scala_version"
+msgstr "Wersja Scali"
+
+msgid "build.libraries"
+msgstr "Biblioteki"
+
+msgid "build.sbt_config"
+msgstr "Dodatkowa konfiguracja SBT"
+
+msgid "build.sbt_base_config"
+msgstr "Podstawowa konfiguracja SBT (tylko do odczytu)"
+
+msgid "build.sbt_plugins_config"
+msgstr "Podstawowa konfiguracja pluginów SBT (tylko do odczytu)"
+
+msgid "build.enable_toolkit"
+msgstr "Włącz Toolkit"
+
+msgid "build.search_placeholder"
+msgstr "Szukaj np. 'cats'"
+
+msgid "build.other"
+msgstr "Inna"
+
+# --- Section: Console ---
+msgid "console.title"
+msgstr "Konsola"
+
+# --- Section: Help Window ---
+msgid "help.title"
+msgstr "Pomoc"
+
+msgid "help.description"
+msgstr "Scastie to interaktywny edytor online dla Scali z obsługą konfiguracji sbt."
+
+# The translation of `keyboard shortcuts` must remain inside the curly brackets.
+msgid "help.sublime_support"
+msgstr "Edytor Scastie obsługuje {skróty klawiszowe} Sublime Text."
+
+msgid "help.save"
+msgstr "Zapisz"
+
+msgid "help.save_description"
+msgstr "Uruchamia i zapisuje Twój kod."
+
+msgid "help.new_description"
+msgstr "Usuwa wszystkie linie kodu z bieżącej instancji edytora i resetuje konfigurację sbt."
+
+msgid "help.clear_messages_description"
+msgstr "Usuwa wszystkie wiadomości z bieżącej instancji edytora."
+
+# The translation of `configuration section` must remain inside the curly brackets.
+msgid "help.format_description"
+msgstr "Formatowanie kodu jest wykonywane przez scalafmt. Możesz konfigurować formatowanie za pomocą komentarzy w swoim kodzie. Przeczytaj {sekcję dotyczącą konfiguracji}."
+
+# The code must remain inside the curly brackets.
+msgid "help.worksheet_description"
+msgstr "Domyślnie włączony tryb Worksheet pokazuje wartość i typ każdej linii Twojego programu. Możesz także dodać bloki HTML, takie jak: {html\"<h1>Hello</h1>\"}, aby wyświetlić je obok deklaracji."
+
+msgid "help.worksheet_packages_warning"
+msgstr "W trybie Worksheet nie możesz używać pakietów/paczek. Jeśli chcesz ich użyć, wyłącz ten tryb i dodaj metodę main oraz instrukcje println."
+
+msgid "help.download_description"
+msgstr "Utwórz paczkę zip z konfiguracją sbt dla bieżącego fragmentu kodu."
+
+msgid "help.embed_description"
+msgstr "Utwórz adres URL możliwy do osadzenia na zewnętrznych stronach internetowych."
+
+msgid "help.console_description"
+msgstr "Możesz zobaczyć wynik działania swojego kodu w konsoli Scastie."
+
+msgid "help.build_settings_description"
+msgstr "W ustawieniach kompilacji możesz zmienić wersję Scali i dodać biblioteki, wybrać docelowe środowisko oraz dodać własną konfigurację sbt."
+
+msgid "help.snippets_title"
+msgstr "Fragmenty kodu użytkownika"
+
+msgid "help.snippets_description"
+msgstr "Twoje zapisane fragmenty kodu pojawią się tutaj i będziesz mógł je usuwać lub udostępniać."
+
+# The translation of `Gitter` must remain inside the curly brackets.
+msgid "help.feedback_description"
+msgstr "Możesz dołączyć do naszego kanału {Gitter} i zgłaszać problemy."
+
+msgid "help.buildinfo"
+msgstr "Informacje o buildzie"
+
+# The repository name `scalacenter/scastie` must remain inside the curly brackets.
+msgid "help.github_info"
+msgstr "Można je znaleźć na Githubie - {scalacenter/scastie}."
+
+msgid "help.license"
+msgstr "Licencja"
+
+msgid "help.original_idea"
+msgstr "Scastie to oryginalny pomysł, którego autorem jest Aleh Aleshka (OlegYch)."
+
+# --- Section: Status ---
+msgid "status.no_task"
+msgstr "Brak uruchomionych zadań"
+
+msgid "status.task"
+msgstr "Zadania"
+
+msgid "status.different_config"
+msgstr "Inna konfiguracja"
+
+msgid "status.same_config"
+msgstr "Ta sama konfiguracja"
+
+msgid "status.sbt_runners"
+msgstr "Procesy Sbt"

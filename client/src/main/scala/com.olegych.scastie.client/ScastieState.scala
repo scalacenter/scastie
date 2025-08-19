@@ -68,7 +68,7 @@ object ScastieState {
       outputs = Outputs.default,
       status = StatusState.empty,
       isEmbedded = isEmbedded,
-      language = "en"
+      language = I18n.getLanguage
     )
   }
 

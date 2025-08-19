@@ -39,7 +39,20 @@ object ScastieMain {
   def main(): Unit = {
     dom.document.body.className = "scastie"
 
-    I18n.setLanguage("en")
+    val stateJson = Option(dom.window.localStorage.getItem("state"))
+    val savedLanguage =
+      stateJson
+        .flatMap { json =>
+          import scala.scalajs.js.JSON
+          val parsed = JSON.parse(json)
+          if (js.DynamicImplicits.truthValue(parsed.selectDynamic("language")))
+            Some(parsed.selectDynamic("language").asInstanceOf[String])
+          else
+            None
+        }
+        .getOrElse("en")
+
+    I18n.setLanguage(savedLanguage)
 
     val container =
       dom.document.createElement("div").asInstanceOf[HTMLDivElement]

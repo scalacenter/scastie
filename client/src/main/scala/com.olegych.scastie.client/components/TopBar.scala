@@ -55,14 +55,14 @@ object TopBar {
               li(
                 onClick --> props.view.setState(View.CodeSnippets),
                 role := "link",
-                title := "Go to your code snippets",
+                title := I18n.t("topbar.snippets_tooltip"),
                 cls := "btn",
                 (cls := "selected").when(View.CodeSnippets == props.view.value)
               )(
                 i(cls := "fa fa-code"),
-                "Snippets"
+                I18n.t("topbar.snippets")
               ),
-              li(role := "link", onClick --> logout, cls := "btn", i(cls := "fa fa-sign-out"), "Logout")
+              li(role := "link", onClick --> logout, cls := "btn", i(cls := "fa fa-sign-out"), I18n.t("topbar.logout"))
             )
           )
 
@@ -105,7 +105,8 @@ object TopBar {
               val lang = e.target.value
               props.setLanguage(lang)
             },
-            option(value := "en", "English")
+            option(value := "en", "English"),
+            option(value := "pl", "Polski")
           )
         ),
         profileButton
