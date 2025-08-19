@@ -85,15 +85,15 @@ object CodeSnippets {
       div(cls := "header", "/" + summary.snippetId.base64UUID)(
         span(" - "),
         div(cls := "clear-mobile"),
-        span(cls := "update", "Update: " + update),
+        span(cls := "update", I18n.t("snippets.update") + update),
         div(cls := "actions")(
-          li(onClick --> props.openShareModal(summary.snippetId), cls := "btn", title := "Share", role := "button")(
+          li(onClick --> props.openShareModal(summary.snippetId), cls := "btn", title := I18n.t("snippets.share"), role := "button")(
             i(cls := "fa fa-share-alt")
           ),
           li(
             cls := "btn",
             role := "button",
-            title := "Delete",
+            title := I18n.t("snippets.delete"),
             onClick --> backend.deleteSnippet0(summary)
           )(
             i(cls := "fa fa-trash")
@@ -128,7 +128,7 @@ object CodeSnippets {
     val userLogin = props.user.login
 
     val noSummaries =
-      if (summaries.isEmpty) p("No saved snippets, yet!")
+      if (summaries.isEmpty) p(I18n.t("snippets.empty"))
       else EmptyVdom
 
     def sortSnippets(xs: List[SnippetSummary]): List[SnippetSummary] = {
@@ -152,7 +152,7 @@ object CodeSnippets {
         i(cls := "fa fa-github"),
         userLogin
       ),
-      h2("Saved Code Snippets"),
+      h2(I18n.t("snippets.saved")),
       div(cls := "snippets")(
         noSummaries,
         sortSnippets(summaries)

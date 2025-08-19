@@ -48,7 +48,7 @@ object SideBar {
       if (props.isDarkTheme) I18n.t("sidebar.theme_light")
       else I18n.t("sidebar.theme_dark")
 
-    val theme = if (props.isDarkTheme) "dark" else "light"
+    val theme = if (props.isDarkTheme) "light" else "dark"
 
     val selectedIcon =
       if (props.isDarkTheme) "fa fa-sun-o"

@@ -70,7 +70,7 @@ object ScastieState {
       status = StatusState.empty,
       isEmbedded = isEmbedded,
       editorMode = Default,
-      language = "en"
+      language = I18n.getLanguage
     )
   }
 

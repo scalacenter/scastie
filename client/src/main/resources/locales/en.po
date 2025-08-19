@@ -33,6 +33,31 @@ msgstr "Open Gitter.im Chat to give us feedback"
 msgid "topbar.github_tooltip"
 msgstr "Create new issue on GitHub"
 
+msgid "topbar.snippets"
+msgstr "Snippets"
+
+msgid "topbar.snippets_tooltip"
+msgstr "Go to your code snippets"
+
+msgid "topbar.logout"
+msgstr "Logout"
+
+# --- Section: Code Snippets ---
+msgid "snippets.delete"
+msgstr "Delete"
+
+msgid "snippets.share"
+msgstr "Share"
+
+msgid "snippets.empty"
+msgstr "No saved snippets, yet!"
+
+msgid "snippets.saved"
+msgstr "Saved Code Snippets"
+
+msgid "snippets.update"
+msgstr "Update: "
+
 # --- Section: Sidebar ---
 msgid "sidebar.theme_light"
 msgstr "Light"
@@ -240,7 +265,7 @@ msgstr "The code formatting is done by scalafmt. You can configure the formattin
 
 # The code must remain inside the curly brackets.
 msgid "help.worksheet_description"
-msgstr "Enabled by default, the Worksheet Mode gives the value and the type of each line of your program. You can also add HTML blocks such as: {html\"<h1>Hello</h1>\"} to render it next to the declaration."
+msgstr "Enabled by default, the Worksheet Mode gives the value and the type of each line of your program. You can also add HTML blocks such as: {html"<h1>Hello</h1>"} to render it next to the declaration."
 
 msgid "help.worksheet_packages_warning"
 msgstr "In Worksheet Mode you cannot use packages. If you want to use it, turn off the Mode and add a main method and println statements."
