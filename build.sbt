@@ -17,6 +17,9 @@ addCommandAlias(
 
 val yarnBuild = taskKey[Unit]("builds es modules with `yarn build`")
 
+logo := Welcome.logo
+usefulTasks := Welcome.tasks
+
 ThisBuild / packageTimestamp := None
 
 lazy val scastie = project
