@@ -13,7 +13,7 @@ object Welcome {
     val tasks = Seq(
         UsefulTask(
             "startAll",
-            "Start all backend services and build the frontend bundle (for frontend dev use 'yarn dev' in the client directory)"
+            "Start all backend services and build the frontend bundle"
         ),
         UsefulTask(
             "startAllProd",
