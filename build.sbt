@@ -235,7 +235,14 @@ lazy val server = project
 
       sbt.IO.copyFile(treeSitterScalaHiglight, outputWasmDirectory / treeSitterScalaHiglightName)
       sbt.IO.move(treeSitterScalaWasm, outputWasmDirectory / treeSitterScalaOutputName)
-      sbt.IO.copyFile(treeSitterWasm, outputWasmDirectory / treeSitterOutputName)
+      if (treeSitterWasm.exists()) {
+        sbt.IO.copyFile(treeSitterWasm, outputWasmDirectory / treeSitterOutputName)
+        s.log.success(s"Copied $treeSitterWasm to ${(outputWasmDirectory / treeSitterOutputName).getAbsolutePath}")
+      } else {
+        s.log.warn(s"$treeSitterWasm not found - skipping web-tree-sitter copy")
+        s.log.warn("This may happen if npm dependencies are not fully installed")
+      }
+
       s.log.success(
         s"Copied $treeSitterScalaHiglight to ${(outputWasmDirectory / treeSitterScalaHiglightName).getAbsolutePath}"
       )
