@@ -127,7 +127,7 @@ lazy val metalsRunner = project
     maintainer   := "scalacenter",
     scalaVersion := ScalaVersions.stableLTS,
     libraryDependencies ++= Seq(
-      "org.scalameta"        % "metals"              % "1.2.0" cross (CrossVersion.for3Use2_13),
+      "org.scalameta"        % "metals"              % "1.4.2" cross (CrossVersion.for3Use2_13),
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.21.1",
       "org.http4s"          %% "http4s-ember-server" % "0.23.24",
       "org.http4s"          %% "http4s-ember-client" % "0.23.24",
@@ -157,7 +157,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.7.17"
+      "org.scalameta" %% "scalafmt-core" % "3.9.2"
     ),
     docker / imageNames := Seq(
       ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some(gitHashNow)),
@@ -215,17 +215,19 @@ lazy val server = project
 
       val treeSitterScalaHiglightName = "highlights.scm"
       val treeSitterScalaHiglight =
-        baseDirectory.value.getParentFile / "tree-sitter-scala" / "queries" / "scala" / treeSitterScalaHiglightName
+        baseDirectory.value.getParentFile / "tree-sitter-scala" / "queries" / treeSitterScalaHiglightName
 
       val outputWasmDirectory = (Compile / resourceDirectory).value / "public"
 
       val s: TaskStreams     = streams.value
       val shell: Seq[String] = if (sys.props("os.name").contains("Windows")) Seq("cmd", "/c") else Seq("bash", "-c")
       val updateGitSubmodule: Seq[String] = shell :+ "git submodule update --init"
-      val buildWasm: Seq[String] =
-        shell :+ """cd tree-sitter-scala && nix-shell -p emscripten --run 'nix-shell --run "tree-sitter build-wasm"'"""
+
+      val installNpmDependencies: Seq[String] = shell :+ "cd tree-sitter-scala && npm install"
+      val buildWasm: Seq[String] = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
       s.log.info("building tree-sitter-scala wasm...")
-      if ((updateGitSubmodule #&& buildWasm !) == 0) {
+
+      if ((updateGitSubmodule #&& installNpmDependencies #&& buildWasm !) == 0) {
         s.log.success(s"$treeSitterOutputName build successfuly!")
       } else {
         throw new IllegalStateException(s"Failed to generate $treeSitterOutputName!")
@@ -329,7 +331,7 @@ lazy val instrumentation = project
   .settings(loggingAndTest)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalameta"                 %% "scalameta" % "4.8.14",
+      "org.scalameta"                 %% "scalameta" % "4.12.6",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
     )
   )

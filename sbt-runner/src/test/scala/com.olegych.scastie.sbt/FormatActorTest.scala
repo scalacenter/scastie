@@ -1,8 +1,6 @@
 package com.olegych.scastie.sbt
 
 import com.olegych.scastie.api.ScalaTarget
-import com.olegych.scastie.sbt.FormatActor
-import org.scalatest.Assertions._
 import org.scalatest.funsuite.AnyFunSuite
 
 class FormatActorTest extends AnyFunSuite {
@@ -15,7 +13,7 @@ class FormatActorTest extends AnyFunSuite {
                    |  val a: Int = 3
                    |}
                    |""".stripMargin
-    assert(FormatActor.format(code, false, ScalaTarget.Jvm.default) == Right(output))
+    assertResult(Right(output))(FormatActor.format(code, ScalaTarget.Jvm.default))
   }
 
   test("format should accept scala 2 worksheets") {
@@ -23,7 +21,7 @@ class FormatActorTest extends AnyFunSuite {
     val output = "val x: Int = 41 + 1\n"
 
     assert(ScalaTarget.Jvm.default.hasWorksheetMode)
-    assert(FormatActor.format(code, true, ScalaTarget.Jvm.default) == Right(output))
+    assertResult(Right(output))(FormatActor.format(code, ScalaTarget.Jvm.default))
   }
 
   test("format should accept scala 3 code") {
@@ -35,7 +33,7 @@ class FormatActorTest extends AnyFunSuite {
                    |  val a: Int = 3
                    |}
                    |""".stripMargin
-    assert(FormatActor.format(code, false, ScalaTarget.Scala3.default) == Right(output))
+    assertResult(Right(output))(FormatActor.format(code, ScalaTarget.Scala3.default))
   }
 
   test("format should accept scala 3 worksheets") {
@@ -43,7 +41,7 @@ class FormatActorTest extends AnyFunSuite {
     val output = "val x: Int = 41 + 1\n"
 
     assert(ScalaTarget.Scala3.default.hasWorksheetMode)
-    assert(FormatActor.format(code, true, ScalaTarget.Scala3.default) == Right(output))
+    assertResult(Right(output))(FormatActor.format(code, ScalaTarget.Scala3.default))
   }
 
   test("Longer Scala 3 snippet is accepted (from Issue #511)") {
@@ -73,7 +71,7 @@ class FormatActorTest extends AnyFunSuite {
                           |  println(actual)
                           |  assert(actual == expected)
                           |""".stripMargin
-    val res = FormatActor.format(longerSnippet, true, ScalaTarget.Scala3.default)
+    val res = FormatActor.format(longerSnippet, ScalaTarget.Scala3.default)
     assert(res.isRight, res)
   }
 }

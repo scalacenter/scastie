@@ -2,6 +2,7 @@ package scastie.metals
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import scala.concurrent.duration.*
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
@@ -18,10 +19,10 @@ import cats.syntax.all._
 import com.evolutiongaming.scache.{Cache, Releasable}
 import com.olegych.scastie.api._
 import com.olegych.scastie.api.ScalaTarget._
+import com.typesafe.config.ConfigFactory
 import coursierapi.{Dependency, Fetch}
 import org.slf4j.LoggerFactory
-import com.typesafe.config.ConfigFactory
-import java.nio.file.Paths
+import scala.concurrent.ExecutionContext
 
 /*
  * MetalsDispatcher is responsible for managing the lifecycle of presentation compilers.
@@ -32,21 +33,34 @@ import java.nio.file.Paths
  * @param cache - cache used for managing presentation compilers
  */
 class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, ScastiePresentationCompiler]) {
-  private val logger                = LoggerFactory.getLogger(getClass)
+  private val logger = LoggerFactory.getLogger(getClass)
 
-  private val config                 = ConfigFactory.load().getConfig("scastie.metals")
-  private val isDocker               = config.getBoolean("is-docker")
-  private val mtagsResolver          = MtagsResolver.default()
+  private val config            = ConfigFactory.load().getConfig("scastie.metals")
+  private val isDocker          = config.getBoolean("is-docker")
+  private val lastMtags3Version = "3.3.3"
+
+  private val mtagsResolver = new MtagsResolver.Default:
+    override def hasStablePresentationCompiler(scalaVersion: String): Boolean =
+      SemVer.isLaterVersion(lastMtags3Version, scalaVersion)
+
   private val metalsWorkingDirectory =
-    if isDocker then
-      Files.createDirectories(Paths.get("/home/scastie")) // temporal solution
-    else
-      Files.createTempDirectory("scastie-metals")
+    if isDocker then Files.createDirectories(Paths.get("/home/scastie")) // temporal solution
+    else Files.createTempDirectory("scastie-metals")
 
   logger.info(s"Metals working directory: $metalsWorkingDirectory")
 
   private val presentationCompilers = PresentationCompilers[F](metalsWorkingDirectory)
-  private val supportedVersions      = Set("2.12", "2.13", "3")
+  private val supportedVersions     = Set("2.12", "2.13", "3")
+
+  def getMtags(scalaVersion: String)=
+    for
+      given ExecutionContext <- Sync[F].executionContext
+      mtags <- Sync[F].blocking(
+        mtagsResolver
+          .resolve(scalaVersion)
+          .toRight(PresentationCompilerFailure(s"Mtags couldn't be resolved for target: ${scalaVersion}."))
+        ).recover { case err: MatchError => PresentationCompilerFailure(err.getMessage).asLeft }
+    yield mtags
 
   /*
    * If `configuration` is supported returns either `FailureType` in case of error during its initialization
@@ -56,31 +70,31 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
    * @param configuration - scastie client configuration
    * @returns `EitherT[F, FailureType, ScastiePresentationCompiler]`
    */
-  def getCompiler(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastiePresentationCompiler] =
-    EitherT:
-      if !isSupportedVersion(configuration) then
-        Async[F].delay(PresentationCompilerFailure(
+  def getCompiler(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastiePresentationCompiler] = EitherT:
+    if !isSupportedVersion(configuration) then
+      Async[F].delay(
+        PresentationCompilerFailure(
           s"Interactive features are not supported for Scala ${configuration.scalaTarget.binaryScalaVersion}."
-        ).asLeft)
-      else
-        cache.contains(configuration).flatMap: isCached =>
+        ).asLeft
+      )
+    else
+      cache
+        .contains(configuration)
+        .flatMap: isCached =>
           if isCached then
-            cache.get(configuration).map(_.toRight(PresentationCompilerFailure("Can't extract presentation compiler from cache.")))
+            cache
+              .get(configuration)
+              .map(_.toRight(PresentationCompilerFailure("Can't extract presentation compiler from cache.")))
           else
-            val mtags = Sync[F].delay(
-              mtagsResolver
-                .resolve(configuration.scalaTarget.scalaVersion)
-                .toRight(PresentationCompilerFailure(s"Mtags couldn't be resolved for target: ${configuration.scalaTarget.scalaVersion}."))
-            ).recover { case err: MatchError => PresentationCompilerFailure(err.getMessage).asLeft }
-
-            mtags.flatMap(_.traverse(mtags =>
-              cache.getOrUpdateReleasable(configuration) {
-                initializeCompiler(configuration, mtags).map { newPC =>
-                  Releasable(newPC, Sync[F].delay(newPC.underlyingPC.shutdown()))
-                }
-              }
-            )).recover { case NonFatal(err) => PresentationCompilerFailure(err.getMessage).asLeft }
-
+            for
+              mtags    <- EitherT(getMtags(configuration.scalaTarget.scalaVersion))
+              compiler <- EitherT.right(
+                cache.getOrUpdateReleasable(configuration) {
+                  initializeCompiler(configuration, mtags).map: newPC =>
+                    Releasable(newPC, Sync[F].delay(newPC.underlyingPC.shutdown()))
+                })
+            yield compiler
+          .value
 
   /*
    * Checks if given configuration is supported. Currently it is based on scala binary version.
@@ -104,10 +118,8 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
       SemVer.isCompatibleVersion(scalaTarget.scalaVersion, configuration.scalaTarget.scalaVersion)
 
     def checkScalaJsCompatibility(scalaTarget: ScalaTarget): Boolean =
-      if configuration.scalaTarget.targetType == ScalaTargetType.JS then
-        scalaTarget.targetType == ScalaTargetType.JS
-      else
-        scalaTarget.isJVMTarget
+      if configuration.scalaTarget.targetType == ScalaTargetType.JS then scalaTarget.targetType == ScalaTargetType.JS
+      else scalaTarget.isJVMTarget
 
     val misconfiguredLibraries = configuration.dependencies
       .filterNot(l => checkScalaVersionCompatibility(l.target) && checkScalaJsCompatibility(l.target))
