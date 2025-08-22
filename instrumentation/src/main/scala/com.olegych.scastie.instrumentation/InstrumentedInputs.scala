@@ -21,8 +21,9 @@ case class InstrumentationFailureReport(message: String, line: Option[Int]) {
 object InstrumentedInputs {
   def apply(inputs0: Inputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
     if (inputs0.isWorksheetMode) {
-      val instrumented = Instrument(inputs0.code, inputs0.target).map { case (instrumentedCode, tokenEditDistance) =>
-        (inputs0.copy(code = instrumentedCode), tokenEditDistance)
+      val instrumented = Instrument(inputs0.code, inputs0.target).map {
+        case InstrumentationSuccess(instrumentedCode, tokenEditDistance) =>
+          (inputs0.copy(code = instrumentedCode), tokenEditDistance)
       }
 
       instrumented match {

@@ -1,7 +1,7 @@
 package com.olegych.scastie.storage
 
 import com.olegych.scastie.api._
-import com.olegych.scastie.instrumentation.Instrument
+import com.olegych.scastie.instrumentation.{Instrument, InstrumentationSuccess}
 import com.olegych.scastie.util.Base64UUID
 
 import net.lingala.zip4j.ZipFile
@@ -83,8 +83,8 @@ trait SnippetsContainer {
       _.flatMap(
         snippet =>
           Instrument(snippet.inputs.code, snippet.inputs.target) match {
-            case Right(instrumented) =>
-              Some(FetchResultScalaSource(instrumented._1))
+            case Right(InstrumentationSuccess(instrumentedCode, _)) =>
+              Some(FetchResultScalaSource(instrumentedCode))
             case _ => None
         }
       )

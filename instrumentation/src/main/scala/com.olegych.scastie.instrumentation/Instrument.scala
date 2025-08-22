@@ -19,6 +19,11 @@ object InstrumentationFailure {
   case class InternalError(exception: Throwable) extends InstrumentationFailure
 }
 
+case class InstrumentationSuccess(
+    instrumentedCode: String,
+    tokenEditDistance: TokenEditDistance
+)
+
 object Instrument {
   def getParsingLineOffset(inputs: Inputs): Int = {
     if (inputs.isWorksheetMode) -1 else 0
@@ -51,6 +56,24 @@ object Instrument {
   private val elemArrayT =
     "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
 
+  private def extractExperimentalImports(code: String): (String, String) = {
+    val lines = code.linesIterator.toList
+    
+    val importRegex = """^\s*import\s+.*""".r
+    val experimentalRegex = """^\s*import\s+language\.experimental\.[^\n]+""".r
+    
+    val (importBlock, rest) = lines.span(line => line.trim.isEmpty || importRegex.matches(line))
+    val (experimentalImports, otherImports) = importBlock.partition(line => experimentalRegex.matches(line))  
+    val importBlockWithWhitespace = importBlock.map { line =>
+      if (experimentalRegex.matches(line)) " " * line.length else line
+    }
+
+    val newCode =
+      (importBlockWithWhitespace ++ rest).mkString("\n")
+    val experimental = experimentalImports.mkString("\n")
+    (experimental, newCode)
+  }
+
   private def posToApi(position: Position, offset: Int) = {
     val (x, y) = position match {
       case Position.None => (0, 0)
@@ -68,8 +91,8 @@ object Instrument {
         case Some(tpe) => s"val $$t: $tpe = $term"
       }
 
-    val startLine = term.pos.start - offset
-    val endLine   = term.pos.end - offset
+    val startPos = term.pos.start - offset
+    val endPos   = term.pos.end - offset
 
     val renderCall =
       if (!isScalaJs) s"$runtimeT.render($$t);"
@@ -77,9 +100,9 @@ object Instrument {
 
     val replacement = Seq(
       "scala.Predef.locally {",
-      s"$$doc.startStatement($startLine, $endLine);",
+      s"$$doc.startStatement($startPos, $endPos);",
       treeQuote + "; ",
-      s"$$doc.binder($runtimeT.render($$t), $startLine, $endLine);",
+      s"$$doc.binder($runtimeT.render($$t), $startPos, $endPos);",
       s"$$doc.endStatement();",
       "$t}"
     ).mkString("\n")
@@ -150,7 +173,7 @@ object Instrument {
     }
   }
 
-  def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, (String, TokenEditDistance)] = {
+  def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, InstrumentationSuccess] = {
     val runtimeImport = target match {
       case Scala3(scalaVersion) => "import _root_.com.olegych.scastie.api.runtime.*"
       case _ => "import _root_.com.olegych.scastie.api.runtime._"
@@ -161,8 +184,9 @@ object Instrument {
     val classBegin =
       if (!isScalaJs) s"object $instrumentedObject extends ScastieApp with $instrumentationRecorderT {"
       else s"object $instrumentedObject extends ScastieApp with $instrumentationRecorderT with $domhookT {"
-    val prelude = s"""$runtimeImport\n$classBegin"""
-    val code0 = s"""$prelude\n$code\n}"""
+    val (experimentalImports, codeWithoutExpImports) = extractExperimentalImports(code)
+    val prelude = s"""$runtimeImport\n$experimentalImports\n$classBegin"""
+    val code0 = s"""$prelude\n$codeWithoutExpImports\n}"""
 
     def typelevel(scalaVersion: String): Option[Dialect] = {
       if (scalaVersion.startsWith("2.12")) Some(dialects.Typelevel212)
@@ -198,7 +222,7 @@ object Instrument {
                 val instrumentedInput = Input.String(instrumentedCode)
                 val tokenEditDistance = TokenEditDistance(originalInput, instrumentedInput).get
 
-                Right((instrumentedCode, tokenEditDistance))
+                Right(InstrumentationSuccess(instrumentedCode, tokenEditDistance))
               } else {
                 Left(HasMainMethod)
               }

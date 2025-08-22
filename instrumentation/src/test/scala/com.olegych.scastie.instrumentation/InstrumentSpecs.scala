@@ -32,10 +32,13 @@ class InstrumentSpecs extends AnyFunSuite {
         else if (dirName == "scala3") ScalaTarget.Scala3.default
         else ScalaTarget.Jvm.default
 
-      val Right(obtained) = Instrument(original, target)
+      val Right(obtained) = Instrument(original, target).map {
+        case InstrumentationSuccess(instrumentedCode, _) =>
+          instrumentedCode
+      }
 
-      Files.write(dir.resolve("obtained.scala"), obtained._1.getBytes(java.nio.charset.StandardCharsets.UTF_8))
-      Diff.assertNoDiff(obtained._1.trim, expected.trim)
+      Files.write(dir.resolve("obtained.scala"), obtained.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+      Diff.assertNoDiff(obtained.trim, expected.trim)
     }
   }
 
