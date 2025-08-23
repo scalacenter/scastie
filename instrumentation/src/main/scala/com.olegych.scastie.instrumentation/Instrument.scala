@@ -21,7 +21,7 @@ object InstrumentationFailure {
 
 case class InstrumentationSuccess(
     instrumentedCode: String,
-    tokenEditDistance: TokenEditDistance
+    lineMapper: LineMapper
 )
 
 object Instrument {
@@ -57,21 +57,14 @@ object Instrument {
     "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
 
   private def extractExperimentalImports(code: String): (String, String) = {
-    val lines = code.linesIterator.toList
-    
-    val importRegex = """^\s*import\s+.*""".r
     val experimentalRegex = """^\s*import\s+language\.experimental\.[^\n]+""".r
-    
-    val (importBlock, rest) = lines.span(line => line.trim.isEmpty || importRegex.matches(line))
-    val (experimentalImports, otherImports) = importBlock.partition(line => experimentalRegex.matches(line))  
-    val importBlockWithWhitespace = importBlock.map { line =>
-      if (experimentalRegex.matches(line)) " " * line.length else line
-    }
 
-    val newCode =
-      (importBlockWithWhitespace ++ rest).mkString("\n")
-    val experimental = experimentalImports.mkString("\n")
-    (experimental, newCode)
+    val experimentalImports = experimentalRegex.findAllIn(code).toList
+    val codeWithoutExpImports = experimentalRegex.replaceAllIn(code, m => "/*" + " " * (m.matched.length - 4) + "*/")
+
+    val experimental = experimentalImports.mkString("\n") + (if (experimentalImports.nonEmpty) "\n" else "")
+    
+    (experimental, codeWithoutExpImports)
   }
 
   private def posToApi(position: Position, offset: Int) = {
@@ -98,19 +91,18 @@ object Instrument {
       if (!isScalaJs) s"$runtimeT.render($$t);"
       else s"$runtimeT.render($$t, attach _);"
 
-    val replacement = Seq(
-      "scala.Predef.locally {",
-      s"$$doc.startStatement($startPos, $endPos);",
-      treeQuote + "; ",
-      s"$$doc.binder($runtimeT.render($$t), $startPos, $endPos);",
-      s"$$doc.endStatement();",
-      "$t}"
-    ).mkString("\n")
+    val replacement =
+      s"""|scala.Predef.locally {
+          |  $$doc.startStatement($startPos, $endPos);
+          |  $treeQuote;
+          |  $$doc.binder($runtimeT.render($$t), $startPos, $endPos);
+          |  $$doc.endStatement();
+          |  $$t}""".stripMargin
 
     Patch(term.tokens.head, term.tokens.last, replacement)
   }
 
-  private def instrument(source: Source, offset: Int, isScalaJs: Boolean): String = {
+  private def instrument(source: Source, offset: Int, isScalaJs: Boolean): (String, String) = {
     val instrumentedCodePatches = source.stats.collect {
       case c: Defn.Object if c.name.value == instrumentedObject =>
         c.templ.body.stats
@@ -146,8 +138,8 @@ object Instrument {
             |    }
             |}""".stripMargin
       }
-
-    s"""$instrumentedCode\n$entryPoint"""
+    val cleanedCode = removeExcessiveNewlines(instrumentedCode)
+    (cleanedCode, entryPoint)
   }
 
   private def hasMainMethod(source: Source): Boolean = {
@@ -173,6 +165,26 @@ object Instrument {
     }
   }
 
+  private def removeExcessiveNewlines(code: String): String = {
+    code
+      .split('\n')
+      .foldLeft(List.empty[String]) { case (acc, line) =>
+        acc match {
+          case Nil => List(line)
+          case prev :: _ =>
+            if (line.trim.isEmpty && prev.trim == "$t}") {
+              acc
+            } else if (line.trim.isEmpty && prev.trim.isEmpty) {
+              acc
+            } else {
+              line :: acc
+            }
+        }
+      }
+      .reverse
+      .mkString("\n")
+  }
+
   def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, InstrumentationSuccess] = {
     val runtimeImport = target match {
       case Scala3(scalaVersion) => "import _root_.com.olegych.scastie.api.runtime.*"
@@ -185,7 +197,7 @@ object Instrument {
       if (!isScalaJs) s"object $instrumentedObject extends ScastieApp with $instrumentationRecorderT {"
       else s"object $instrumentedObject extends ScastieApp with $instrumentationRecorderT with $domhookT {"
     val (experimentalImports, codeWithoutExpImports) = extractExperimentalImports(code)
-    val prelude = s"""$runtimeImport\n$experimentalImports\n$classBegin"""
+    val prelude = s"""$runtimeImport\n$experimentalImports$classBegin"""
     val code0 = s"""$prelude\n$codeWithoutExpImports\n}"""
 
     def typelevel(scalaVersion: String): Option[Dialect] = {
@@ -216,13 +228,15 @@ object Instrument {
           code0.parse[Source] match {
             case parsed: Parsed.Success[_] =>
               if (!hasMainMethod(parsed.get)) {
-                val instrumentedCode = instrument(parsed.get, prelude.length + 1, isScalaJs)
+                val originalCode = parsed.get.text
+                val (instrumentedCode, entryPoint) = instrument(parsed.get, prelude.length + 1, isScalaJs)
 
-                val originalInput     = Input.String(code)
-                val instrumentedInput = Input.String(instrumentedCode)
-                val tokenEditDistance = TokenEditDistance(originalInput, instrumentedInput).get
+                val lineMapper = LineMapper(originalCode, instrumentedCode)
 
-                Right(InstrumentationSuccess(instrumentedCode, tokenEditDistance))
+                Right(InstrumentationSuccess(
+                  s"""$instrumentedCode\n$entryPoint""",
+                  lineMapper
+                  ))
               } else {
                 Left(HasMainMethod)
               }

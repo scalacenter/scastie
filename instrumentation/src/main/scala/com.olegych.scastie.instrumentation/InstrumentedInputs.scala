@@ -22,16 +22,16 @@ object InstrumentedInputs {
   def apply(inputs0: Inputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
     if (inputs0.isWorksheetMode) {
       val instrumented = Instrument(inputs0.code, inputs0.target).map {
-        case InstrumentationSuccess(instrumentedCode, tokenEditDistance) =>
-          (inputs0.copy(code = instrumentedCode), tokenEditDistance)
+        case InstrumentationSuccess(instrumentedCode, lineMapper) =>
+          (inputs0.copy(code = instrumentedCode), lineMapper)
       }
 
       instrumented match {
-        case Right((inputs, tokenEditDistance)) => Right(
+        case Right((inputs, lineMapper)) => Right(
             InstrumentedInputs(
               inputs = inputs,
               isForcedProgramMode = false,
-              tokenEditDistance = Some(tokenEditDistance)
+              lineMapper = Some(lineMapper)
             )
           )
         case Left(error) =>
@@ -51,7 +51,7 @@ object InstrumentedInputs {
                 inputs = inputs0.copy(code = error.pos.input.text),
                 isForcedProgramMode = false,
                 optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorLine))),
-                tokenEditDistance = None
+                lineMapper = None
               ))
 
             case InternalError(exception) =>
@@ -74,5 +74,5 @@ case class InstrumentedInputs(
     inputs: Inputs,
     isForcedProgramMode: Boolean,
     optionalParsingError: Option[InstrumentationFailureReport] = None,
-    tokenEditDistance: Option[TokenEditDistance] = None
+    lineMapper: Option[LineMapper] = None
 )

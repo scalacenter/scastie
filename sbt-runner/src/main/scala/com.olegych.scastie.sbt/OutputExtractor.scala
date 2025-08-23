@@ -166,9 +166,9 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   }
 
   private def mapLineToOriginal(instrumentedLine: Int, sbtRun: SbtRun, lineOffset: Int): Int = {
-    sbtRun.tokenEditDistance match {
-      case Some(distance) =>
-        val originalLine = distance.toOriginalLine(instrumentedLine)
+    sbtRun.lineMapper match {
+      case Some(lineMapper) =>
+        val originalLine = lineMapper.toOriginalLine(instrumentedLine)
         originalLine
 
       case None =>
