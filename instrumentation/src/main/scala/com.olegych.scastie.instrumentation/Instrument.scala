@@ -88,14 +88,14 @@ object Instrument {
     val endPos   = term.pos.end - offset
 
     val renderCall =
-      if (!isScalaJs) s"$runtimeT.render($$t);"
-      else s"$runtimeT.render($$t, attach _);"
+      if (!isScalaJs) s"$runtimeT.render($$t)"
+      else s"$runtimeT.render($$t, attach _)"
 
     val replacement =
       s"""|scala.Predef.locally {
           |  $$doc.startStatement($startPos, $endPos);
           |  $treeQuote;
-          |  $$doc.binder($runtimeT.render($$t), $startPos, $endPos);
+          |  $$doc.binder($renderCall, $startPos, $endPos);
           |  $$doc.endStatement();
           |  $$t}""".stripMargin
 
@@ -130,7 +130,12 @@ object Instrument {
         s"""|@$jsExportTopLevelT("ScastiePlaygroundMain") class ScastiePlaygroundMain {
             |  def suppressUnusedWarnsScastie = Html
             |  val playground = $runtimeErrorT.wrap($instrumentedObject)
-            |  @$jsExportT def result = $runtimeT.writeStatements(playground.map{ playground => playground.main(Array()); playground.$$doc.getResults() })
+            |  @$jsExportT def result = playground match {
+            |    case Right(p) => 
+            |      p.main(Array())
+            |      $runtimeT.writeStatements(p.$$doc.getResults())
+            |    case Left(error) => $runtimeT.writeStatements(List())
+            |  }
             |  @$jsExportT def attachedElements: $elemArrayT =
             |    playground match {
             |      case Right(p) => p.attachedElements

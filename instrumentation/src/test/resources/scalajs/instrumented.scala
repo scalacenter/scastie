@@ -6,14 +6,19 @@ import org.scalajs.dom.html.Canvas
 scala.Predef.locally {
   $doc.startStatement(59, 116);
   val $t = dom.document.createElement("canvas").asInstanceOf[Canvas];
-  $doc.binder(_root_.com.olegych.scastie.api.runtime.Runtime.render($t), 59, 116);
+  $doc.binder(_root_.com.olegych.scastie.api.runtime.Runtime.render($t, attach _), 59, 116);
   $doc.endStatement();
   $t}
 }
 @_root_.scala.scalajs.js.annotation.JSExportTopLevel("ScastiePlaygroundMain") class ScastiePlaygroundMain {
   def suppressUnusedWarnsScastie = Html
   val playground = _root_.com.olegych.scastie.api.RuntimeError.wrap(Playground)
-  @_root_.scala.scalajs.js.annotation.JSExport def result = _root_.com.olegych.scastie.api.runtime.Runtime.writeStatements(playground.map{ playground => playground.main(Array()); playground.$doc.getResults() })
+  @_root_.scala.scalajs.js.annotation.JSExport def result = playground match {
+    case Right(p) => 
+      p.main(Array())
+      _root_.com.olegych.scastie.api.runtime.Runtime.writeStatements(p.$doc.getResults())
+    case Left(error) => _root_.com.olegych.scastie.api.runtime.Runtime.writeStatements(List())
+  }
   @_root_.scala.scalajs.js.annotation.JSExport def attachedElements: _root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement] =
     playground match {
       case Right(p) => p.attachedElements
