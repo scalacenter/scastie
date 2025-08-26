@@ -20,12 +20,12 @@ object Welcome {
             "Start all backend services and build the frontend for production"
         ),
         UsefulTask(
-            "test",
-            "Run all tests"
+            "~client/fastLinkJS",
+            "Continuously compile the frontend (Scala.js) in fast mode and watch for changes"
         ),
         UsefulTask(
-            "~test",
-            "Continuous testing (reruns tests on code change)"
+            "test",
+            "Run all tests"
         ),
         UsefulTask(
             "<module>/test",
