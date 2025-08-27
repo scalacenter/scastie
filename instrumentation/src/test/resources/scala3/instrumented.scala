@@ -3,18 +3,27 @@ object Playground extends ScastieApp with _root_.com.olegych.scastie.api.Instrum
 class Animal:
 end Animal
 scala.Predef.locally {
-  $doc.startStatement(25, 26);
-  val $t = 1;
-  $doc.binder(_root_.com.olegych.scastie.api.runtime.Runtime.render($t), 25, 26);
-  $doc.endStatement();
-  $t}
+$doc.startStatement(25, 30);
+val $t = 1 + 2;
+$doc.binder(_root_.com.olegych.scastie.api.runtime.Runtime.render($t), 25, 30);
+$doc.endStatement();
+$t}
+
+
+
 scala.Predef.locally {
-  $doc.startStatement(28, 49);
-  val $t = println:
+$doc.startStatement(34, 39);
+val $t = 1 + 5;
+$doc.binder(_root_.com.olegych.scastie.api.runtime.Runtime.render($t), 34, 39);
+$doc.endStatement();
+$t}
+scala.Predef.locally {
+$doc.startStatement(40, 61);
+val $t = println:
     "animal";
-  $doc.binder(_root_.com.olegych.scastie.api.runtime.Runtime.render($t), 28, 49);
-  $doc.endStatement();
-  $t}
+$doc.binder(_root_.com.olegych.scastie.api.runtime.Runtime.render($t), 40, 61);
+$doc.endStatement();
+$t}
 }
 object Main {
   def suppressUnusedWarnsScastie = Html

@@ -4,11 +4,11 @@ import org.scalajs.dom
 import org.scalajs.dom.html.Canvas
 
 scala.Predef.locally {
-  $doc.startStatement(59, 116);
-  val $t = dom.document.createElement("canvas").asInstanceOf[Canvas];
-  $doc.binder(_root_.com.olegych.scastie.api.runtime.Runtime.render($t, attach _), 59, 116);
-  $doc.endStatement();
-  $t}
+$doc.startStatement(59, 116);
+val $t = dom.document.createElement("canvas").asInstanceOf[Canvas];
+$doc.binder(_root_.com.olegych.scastie.api.runtime.Runtime.render($t, attach _), 59, 116);
+$doc.endStatement();
+$t}
 }
 @_root_.scala.scalajs.js.annotation.JSExportTopLevel("ScastiePlaygroundMain") class ScastiePlaygroundMain {
   def suppressUnusedWarnsScastie = Html

@@ -93,11 +93,11 @@ object Instrument {
 
     val replacement =
       s"""|scala.Predef.locally {
-          |  $$doc.startStatement($startPos, $endPos);
-          |  $treeQuote;
-          |  $$doc.binder($renderCall, $startPos, $endPos);
-          |  $$doc.endStatement();
-          |  $$t}""".stripMargin
+          |$$doc.startStatement($startPos, $endPos);
+          |$treeQuote;
+          |$$doc.binder($renderCall, $startPos, $endPos);
+          |$$doc.endStatement();
+          |$$t}""".stripMargin
 
     Patch(term.tokens.head, term.tokens.last, replacement)
   }
@@ -142,8 +142,8 @@ object Instrument {
             |    }
             |}""".stripMargin
       }
-    val cleanedCode = removeExcessiveNewlines(instrumentedCode)
-    (cleanedCode, entryPoint)
+
+    (instrumentedCode, entryPoint)
   }
 
   private def hasMainMethod(source: Source): Boolean = {
@@ -167,26 +167,6 @@ object Instrument {
         }
       case _ => false
     }
-  }
-
-  private def removeExcessiveNewlines(code: String): String = {
-    code
-      .split('\n')
-      .foldLeft(List.empty[String]) { case (acc, line) =>
-        acc match {
-          case Nil => List(line)
-          case prev :: _ =>
-            if (line.trim.isEmpty && prev.trim == "$t}") {
-              acc
-            } else if (line.trim.isEmpty && prev.trim.isEmpty) {
-              acc
-            } else {
-              line :: acc
-            }
-        }
-      }
-      .reverse
-      .mkString("\n")
   }
 
   def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, InstrumentationSuccess] = {
