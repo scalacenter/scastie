@@ -90,6 +90,19 @@ object HelpModal {
         p(
           "Your saved code fragments will appear here and you'll be able to delete or share them."
         ),
+        h2("Vim commands"),
+        p(
+          "If Vim mode is enabled in the editor, you can use the following commands in the Vim command bar (press ':' in normal mode):"
+        ),
+        ul(
+          li(code(":w"), " or ", code(":run"), " — Run and save your code (same as ", code(EditorKeymaps.saveOrUpdate.getName), ")"),
+          li(code(":f"), " or ", code(":format"), " — Format code (same as ", code(EditorKeymaps.format.getName), ")"),
+          li(code(":c"), " or ", code(":clear"), " — Clear messages (same as ", code(EditorKeymaps.clear.getName), ")"),
+          li(code(":h"), " or ", code(":help"), " — Show this help dialog")
+        ),
+        p(
+          "You can also use standard Vim navigation and editing commands in the editor."
+        ),
         h2("Feedback"),
         p( "You can join our ", gitter, " channel and send issues."),
         h2("BuildInfo"),

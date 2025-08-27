@@ -66,7 +66,8 @@ object ScastieState {
       inputs = Inputs.default,
       outputs = Outputs.default,
       status = StatusState.empty,
-      isEmbedded = isEmbedded
+      isEmbedded = isEmbedded,
+      isVimMode = false,
     )
   }
 
@@ -111,6 +112,7 @@ case class ScastieState(
     metalsStatus: MetalsStatus = MetalsLoading,
     isEmbedded: Boolean = false,
     transient: Boolean = false,
+    isVimMode: Boolean = false,
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean = snippetState.loadSnippet
@@ -137,6 +139,7 @@ case class ScastieState(
       status: StatusState = status,
       metalsStatus: MetalsStatus = metalsStatus,
       transient: Boolean = transient,
+      isVimMode: Boolean = isVimMode
   ): ScastieState = {
     val state0 =
       copy(
@@ -167,6 +170,7 @@ case class ScastieState(
         metalsStatus = metalsStatus,
         isEmbedded = isEmbedded,
         transient = transient,
+        isVimMode = isVimMode
       )
 
     if (!isEmbedded && !transient) {
@@ -202,6 +206,9 @@ case class ScastieState(
 
   def setTheme(dark: Boolean): ScastieState =
     copyAndSave(isDarkTheme = dark)
+
+  def toggleVimMode: ScastieState =
+    copyAndSave(isVimMode = !isVimMode)
 
   def setMetalsStatus(status: MetalsStatus): ScastieState =
     copyAndSave(metalsStatus = status)

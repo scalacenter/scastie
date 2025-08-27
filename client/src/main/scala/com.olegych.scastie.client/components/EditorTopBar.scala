@@ -26,6 +26,8 @@ final case class EditorTopBar(clear: Reusable[Callback],
                               user: Option[User],
                               view: StateSnapshot[View],
                               isWorksheetMode: Boolean,
+                              isVimMode: Boolean,
+                              toggleVimMode: Reusable[Callback],
                               metalsStatus: MetalsStatus,
                               toggleMetalsStatus: Reusable[Callback],
                               scalaTarget: ScalaTarget) {
@@ -71,6 +73,12 @@ object EditorTopBar {
       props.isWorksheetMode,
       props.toggleWorksheetMode,
       props.view.value
+    ).render
+
+    val vimModeButton = VimModeButton(
+      isVimMode = props.isVimMode,
+      toggleVimMode = props.toggleVimMode,
+      view = props.view.value
     ).render
 
     val metalsButton = MetalsStatusIndicator(
@@ -121,6 +129,7 @@ object EditorTopBar {
         formatButton,
         clearButton,
         worksheetButton,
+        vimModeButton,
         downloadButton,
         embeddedModalButton,
         metalsButton,

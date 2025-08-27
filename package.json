@@ -23,6 +23,7 @@
     "@lezer/common": "^1.0.3",
     "@lezer/highlight": "^1.1.6",
     "@replit/codemirror-indentation-markers": "^6.5.0",
+    "@replit/codemirror-vim": "^6.3.0",
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
     "@sentry/browser": "^7.84.0",
     "@sentry/tracing": "^7.60.1",

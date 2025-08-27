@@ -63,6 +63,7 @@ object MainPanel {
         isPresentationMode = state.isPresentationMode,
         isWorksheetMode = state.inputs.isWorksheetMode,
         isEmbedded = props.isEmbedded,
+        isVimMode = state.isVimMode,
         showLineNumbers = state.showLineNumbers,
         value = state.inputs.code,
         attachedDoms = state.attachedDoms,
@@ -161,6 +162,8 @@ object MainPanel {
         user = state.user,
         view = backend.viewSnapshot(state.view),
         isWorksheetMode = state.inputs.isWorksheetMode,
+        isVimMode = state.isVimMode,
+        toggleVimMode = backend.toggleVimMode,
         metalsStatus = state.metalsStatus,
         toggleMetalsStatus = backend.toggleMetalsStatus,
         scalaTarget = state.inputs.target

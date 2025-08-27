@@ -15,6 +15,7 @@ import typings.codemirrorLint.mod._
 import typings.codemirrorSearch.mod._
 import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
+import typings.replitCodemirrorVim.mod.vim
 
 import scalajs.js
 import vdom.all._
@@ -27,6 +28,7 @@ final case class CodeEditor(visible: Boolean,
                             isPresentationMode: Boolean,
                             isWorksheetMode: Boolean,
                             isEmbedded: Boolean,
+                            isVimMode: Boolean,
                             showLineNumbers: Boolean,
                             value: String,
                             attachedDoms: Map[String, HTMLElement],
@@ -52,38 +54,49 @@ final case class CodeEditor(visible: Boolean,
 
 object CodeEditor {
 
-  private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback =
+  private def buildExtensions(props: CodeEditor, syntaxHighlighting: SyntaxHighlightingPlugin): js.Array[Any] = {
+    val base = js.Array[Any](
+      Editor.editorTheme.of(props.codemirrorTheme),
+      lineNumbers(),
+      highlightSpecialChars(),
+      history(),
+      drawSelection(),
+      dropCursor(),
+      EditorState.allowMultipleSelections.of(true),
+      indentOnInput(),
+      bracketMatching(),
+      closeBrackets(),
+      rectangularSelection(),
+      crosshairCursor(),
+      highlightSelectionMatches(),
+      Editor.indentationMarkersExtension,
+      keymap.of(closeBracketsKeymap ++ defaultKeymap ++ historyKeymap ++ foldKeymap ++ completionKeymap ++ lintKeymap ++ searchKeymap),
+      StateField
+        .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
+        .extension,
+      DecorationProvider(props),
+      EditorState.tabSize.of(2),
+      Prec.highest(EditorKeymaps.keymapping(props)),
+      InteractiveProvider.interactive.of(InteractiveProvider(props).extension),
+      SyntaxHighlightingTheme.highlightingTheme,
+      lintGutter(),
+      OnChangeHandler(props.codeChange),
+      syntaxHighlighting.syntaxHighlightingExtension.of(syntaxHighlighting.fallbackExtension)
+    )
+    if (props.isVimMode) js.Array(vim()) ++ base
+    else base
+  }
+  
+  private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback = {
+    
+    if(props.isVimMode) {
+      EditorKeymaps.registerVimCommands(props)
+    }
+    
     ref.foreachCB(divRef => {
 
       val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
-      val extensions = js.Array[Any](
-        Editor.editorTheme.of(props.codemirrorTheme),
-        lineNumbers(),
-        highlightSpecialChars(),
-        history(),
-        drawSelection(),
-        dropCursor(),
-        EditorState.allowMultipleSelections.of(true),
-        indentOnInput(),
-        bracketMatching(),
-        closeBrackets(),
-        rectangularSelection(),
-        crosshairCursor(),
-        highlightSelectionMatches(),
-        Editor.indentationMarkersExtension,
-        keymap.of(closeBracketsKeymap ++ defaultKeymap ++ historyKeymap ++ foldKeymap ++ completionKeymap ++ lintKeymap ++ searchKeymap),
-        StateField
-          .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
-          .extension,
-        DecorationProvider(props),
-        EditorState.tabSize.of(2),
-        Prec.highest(EditorKeymaps.keymapping(props)),
-        InteractiveProvider.interactive.of(InteractiveProvider(props).extension),
-        SyntaxHighlightingTheme.highlightingTheme,
-        lintGutter(),
-        OnChangeHandler(props.codeChange),
-        syntaxHighlighting.syntaxHighlightingExtension.of(syntaxHighlighting.fallbackExtension),
-      )
+      val extensions = buildExtensions(props, syntaxHighlighting)
 
       val editorStateConfig = EditorStateConfig()
         .setExtensions(extensions)
@@ -96,6 +109,7 @@ object CodeEditor {
 
       editorView.setState(editor)
     })
+  }
 
   private def getDecorations(props: CodeEditor, doc: Text): js.Array[Diagnostic] = {
     val errors = props.compilationInfos
@@ -156,7 +170,20 @@ object CodeEditor {
       .useState(new EditorView())
       .useEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
       .useEffectBy(
-        (props, ref, prevProps, editorView) => updateComponent(props, ref.value, prevProps.value, editorView) >> prevProps.set(Some(props))
+        (props, ref, prevProps, editorView) =>
+          Callback {
+            if (prevProps.value.exists(_.isVimMode != props.isVimMode)) {
+              val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
+              val extensions = buildExtensions(props, syntaxHighlighting)
+              editorView.value.dispatch(
+                js.Dynamic.literal(
+                  "effects" -> StateEffect.reconfigure.of(extensions)
+                ).asInstanceOf[typings.codemirrorState.mod.TransactionSpec]
+              )
+            }
+          } >>
+          updateComponent(props, ref.value, prevProps.value, editorView) >>
+          prevProps.set(Some(props))
       )
       .render((_, ref, _, _) => Editor.render(ref.value))
 
