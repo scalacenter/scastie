@@ -208,8 +208,7 @@ object ScalaTarget {
                            else scalaJsVersion.split('.').head)
     )
 
-    def renderSbt(lib: ScalaDependency): String =
-      s"${renderSbtCross(lib)} cross CrossVersion.for3Use2_13"
+    def renderSbt(lib: ScalaDependency): String = renderSbtCross(lib)
 
     def sbtConfig: String = {
       s"""|$sbtConfigScalaVersion
