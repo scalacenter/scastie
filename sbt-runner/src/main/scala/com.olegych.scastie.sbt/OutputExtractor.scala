@@ -131,7 +131,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     val problemsWithMappedLines = problems.map {
       _.map(problem =>
         problem.copy(line =
-          problem.line.map(instrumentedLine => mapLineToOriginal(instrumentedLine, sbtRun, lineOffset))
+          problem.line.map(instrumentedLine => sbtRun.lineMapping(instrumentedLine))
         )
       )
     }
@@ -150,7 +150,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
       _.error.map { error =>
         val noStackTraceError = if (error.message.contains("No main class detected.")) error.copy(fullStack = "") else error
         val errorWithMappedLine = noStackTraceError.copy(
-          line = noStackTraceError.line.map(instrumentedLine => mapLineToOriginal(instrumentedLine, sbtRun, lineOffset))
+          line = noStackTraceError.line.map(instrumentedLine => sbtRun.lineMapping(instrumentedLine))
         )
         errorWithMappedLine
       }
@@ -162,19 +162,6 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
       Json.fromJson[T](Json.parse(line)).asOpt
     } catch {
       case NonFatal(e) => None
-    }
-  }
-
-  private def mapLineToOriginal(instrumentedLine: Int, sbtRun: SbtRun, lineOffset: Int): Int = {
-    sbtRun.lineMapper match {
-      case Some(lineMapper) =>
-        val originalLine = lineMapper.toOriginalLine(instrumentedLine)
-        originalLine
-
-      case None =>
-        val lineOffset = Instrument.getMessageLineOffset(sbtRun.inputs)
-        val mappedLine = (instrumentedLine + lineOffset) max 1
-        mappedLine
     }
   }
 

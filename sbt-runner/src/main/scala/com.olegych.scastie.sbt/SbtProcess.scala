@@ -31,7 +31,7 @@ object SbtProcess {
       progressActor: ActorRef,
       snippetActor: ActorRef,
       timeoutEvent: Option[Cancellable],
-      lineMapper: Option[LineMapper] = None
+      lineMapping: Int => Int = identity
   ) extends Data
   case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
     def message: String = {
@@ -195,7 +195,7 @@ class SbtProcess(runTimeout: FiniteDuration,
           val sbtRun = _sbtRun.copy(
             inputs = instrumented.inputs, 
             isForcedProgramMode = instrumented.isForcedProgramMode,
-            lineMapper = instrumented.lineMapper
+            lineMapping = instrumented.lineMapping
           )
           val isReloading = stateInputs.needsReload(sbtRun.inputs)
           setInputs(sbtRun.inputs)

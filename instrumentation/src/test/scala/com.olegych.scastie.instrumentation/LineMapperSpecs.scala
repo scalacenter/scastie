@@ -15,10 +15,10 @@ class LineMapperSpecs extends AnyFunSuite {
                    |val y = x + 1
                    |""".stripMargin
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapper = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(1) == 1) // val x = 42
-    assert(mapper.toOriginalLine(2) == 2) // val y = x + 1
+    assert(lineMapper(1) == 1) // val x = 42
+    assert(lineMapper(2) == 2) // val y = x + 1
   }
 
   test("mapping with simple instrumentation") {
@@ -45,11 +45,11 @@ class LineMapperSpecs extends AnyFunSuite {
                    |}
                    |""".stripMargin
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapping = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(5) == 1)  // val $t = println("test1");
-    assert(mapper.toOriginalLine(9) == 2)  // val y = 1
-    assert(mapper.toOriginalLine(12) == 3) // val $t = println("test2");
+    assert(lineMapping(5) == 1)  // val $t = println("test1");
+    assert(lineMapping(9) == 2)  // val y = 1
+    assert(lineMapping(12) == 3) // val $t = println("test2");
   }
 
   test("mapping with experimental imports extracted") {
@@ -73,11 +73,11 @@ class LineMapperSpecs extends AnyFunSuite {
          |}
          |""".stripMargin
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapping = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(2) == 1)  // experimental import
-    assert(mapper.toOriginalLine(7) == 2)  // val $t = println("test");
-    assert(mapper.toOriginalLine(11) == 3) // val x = 1
+    assert(lineMapping(2) == 1)  // experimental import
+    assert(lineMapping(7) == 2)  // val $t = println("test");
+    assert(lineMapping(11) == 3) // val x = 1
   }
 
   test("mapping with multiline expressions") {
@@ -99,11 +99,11 @@ class LineMapperSpecs extends AnyFunSuite {
                    |}
                    |""".stripMargin
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapping = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(5) == 1)  // val $t = println:
-    assert(mapper.toOriginalLine(6) == 2)  // "multiline";
-    assert(mapper.toOriginalLine(10) == 3) // val x = 1
+    assert(lineMapping(5) == 1)  // val $t = println:
+    assert(lineMapping(6) == 2)  // "multiline";
+    assert(lineMapping(10) == 3) // val x = 1
   }
 
   test("mapping with empty lines and comments") {
@@ -129,13 +129,13 @@ class LineMapperSpecs extends AnyFunSuite {
                    |}
                    |""".stripMargin
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapping = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(3) == 1)  // Comment 1
-    assert(mapper.toOriginalLine(4) == 2)  // empty line
-    assert(mapper.toOriginalLine(7) == 3)  // val $t = println("test");
-    assert(mapper.toOriginalLine(11) == 4) // Comment 2
-    assert(mapper.toOriginalLine(12) == 5) // val x = 1
+    assert(lineMapping(3) == 1)  // Comment 1
+    assert(lineMapping(4) == 2)  // empty line
+    assert(lineMapping(7) == 3)  // val $t = println("test");
+    assert(lineMapping(11) == 4) // Comment 2
+    assert(lineMapping(12) == 5) // val x = 1
   }
 
   test("mapping with mixed imports") {
@@ -153,10 +153,10 @@ class LineMapperSpecs extends AnyFunSuite {
                    |}
                    |""".stripMargin
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapping = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(4) == 1) // import scala.util.Random
-    assert(mapper.toOriginalLine(6) == 3) // val r = Random.nextInt();
+    assert(lineMapping(4) == 1) // import scala.util.Random
+    assert(lineMapping(6) == 3) // val r = Random.nextInt();
   }
 
   test("empty original code") {
@@ -166,11 +166,11 @@ class LineMapperSpecs extends AnyFunSuite {
                    |}
                    |""".stripMargin
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapping = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(1) == 1)
-    assert(mapper.toOriginalLine(2) == 1)
-    assert(mapper.toOriginalLine(3) == 1)
+    assert(lineMapping(1) == 1)
+    assert(lineMapping(2) == 1)
+    assert(lineMapping(3) == 1)
   }
 
   test("single line code") {
@@ -187,19 +187,19 @@ class LineMapperSpecs extends AnyFunSuite {
                    |}
                    |""".stripMargin
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapping = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(5) == 1) // val $t = println(42);
+    assert(lineMapping(5) == 1) // val $t = println(42);
   }
 
   test("line numbers beyond input") {
     val code0 = "val x = 1"
     val code1 = "val x = 1"
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapping = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(10) == 10)
-    assert(mapper.toOriginalLine(100) == 100)
+    assert(lineMapping(10) == 10)
+    assert(lineMapping(100) == 100)
   }
 
   test("complex real-world example") {
@@ -247,15 +247,15 @@ class LineMapperSpecs extends AnyFunSuite {
                    |}
                    |""".stripMargin
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapping = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(4) == 1)   // import scala.concurrent.Future
-    assert(mapper.toOriginalLine(7) == 4)   // Setup comment
-    assert(mapper.toOriginalLine(8) == 5)   // val data = List(1, 2, 3) - nieotoczone!
-    assert(mapper.toOriginalLine(10) == 7)  // Processing comment
-    assert(mapper.toOriginalLine(13) == 8)  // val $t = data.foreach...
-    assert(mapper.toOriginalLine(20) == 12) // val result = data.map(_ * 2) - nieotoczone!
-    assert(mapper.toOriginalLine(23) == 13) // val $t = println(result);
+    assert(lineMapping(4) == 1)   // import scala.concurrent.Future
+    assert(lineMapping(7) == 4)   // Setup comment
+    assert(lineMapping(8) == 5)   // val data = List(1, 2, 3)
+    assert(lineMapping(10) == 7)  // Processing comment
+    assert(lineMapping(13) == 8)  // val $t = data.foreach...
+    assert(lineMapping(20) == 12) // val result = data.map(_ * 2)
+    assert(lineMapping(23) == 13) // val $t = println(result);
   }
 
   test("mapping with multiple identical expressions") {
@@ -284,11 +284,11 @@ class LineMapperSpecs extends AnyFunSuite {
                    |}
                    |""".stripMargin
 
-    val mapper = LineMapper(code0, code1)
+    val lineMapping = LineMapper(code1)
 
-    assert(mapper.toOriginalLine(5) == 1)  // val $t = println("test"); #1
-    assert(mapper.toOriginalLine(12) == 3) // val $t = println("test"); #2
-    assert(mapper.toOriginalLine(9) == 2)  // val y = 2
-    assert(mapper.toOriginalLine(16) == 4) // val z = 3
+    assert(lineMapping(5) == 1)  // val $t = println("test"); #1
+    assert(lineMapping(12) == 3) // val $t = println("test"); #2
+    assert(lineMapping(9) == 2)  // val y = 2
+    assert(lineMapping(16) == 4) // val z = 3
   }
 }

@@ -1,44 +1,17 @@
 package com.olegych.scastie.instrumentation
 
-/**
-  * Maps line numbers from Scastie instrumented code back to original user code lines.
-  *
-  * This class handles the mapping between code that has been processed by Scastie's instrumentation (which wraps
-  * expressions in `scala.Predef.locally` blocks with binders for worksheet output) and the original user code.
-  *
-  * @param lineMapping
-  *   function that maps instrumented line numbers to original line numbers
-  */
-class LineMapper private (
-  lineMapping: Int => Int
-) {
-
-  /**
-    * Maps a line number from instrumented code to the corresponding line in original code.
-    *
-    * @param instrumentedLine
-    *   line number in the instrumented code
-    * @return
-    *   corresponding line number in the original code
-    */
-  def toOriginalLine(instrumentedLine: Int): Int = lineMapping(instrumentedLine)
-}
-
 object LineMapper {
 
   /**
-    * Creates a LineMapper that maps lines from instrumented Scastie code back to original code.
+    * Creates a lineMapping that maps lines from instrumented Scastie code back to original code.
     *
-    * @param originalCode
-    *   the original user code before instrumentation
     * @param instrumentedCode
     *   the code after Scastie instrumentation has been applied
     * @return
-    *   a LineMapper instance for mapping line numbers
+    *   a lineMapping function for mapping line numbers
     */
-  def apply(originalCode: String, instrumentedCode: String): LineMapper = {
-    val mapping = buildSequentialMapping(instrumentedCode)
-    new LineMapper(mapping)
+  def apply(instrumentedCode: String): Int => Int = {
+    buildSequentialMapping(instrumentedCode)
   }
 
   private def buildSequentialMapping(instrumentedCode: String): Int => Int = {

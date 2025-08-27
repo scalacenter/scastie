@@ -27,11 +27,11 @@ object InstrumentedInputs {
       }
 
       instrumented match {
-        case Right((inputs, lineMapper)) => Right(
+        case Right((inputs, lineMapping)) => Right(
             InstrumentedInputs(
               inputs = inputs,
               isForcedProgramMode = false,
-              lineMapper = Some(lineMapper)
+              lineMapping = lineMapping
             )
           )
         case Left(error) =>
@@ -51,7 +51,6 @@ object InstrumentedInputs {
                 inputs = inputs0.copy(code = error.pos.input.text),
                 isForcedProgramMode = false,
                 optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorLine))),
-                lineMapper = None
               ))
 
             case InternalError(exception) =>
@@ -74,5 +73,5 @@ case class InstrumentedInputs(
     inputs: Inputs,
     isForcedProgramMode: Boolean,
     optionalParsingError: Option[InstrumentationFailureReport] = None,
-    lineMapper: Option[LineMapper] = None
+    lineMapping: Int => Int = identity
 )

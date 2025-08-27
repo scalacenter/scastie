@@ -21,7 +21,7 @@ object InstrumentationFailure {
 
 case class InstrumentationSuccess(
     instrumentedCode: String,
-    lineMapper: LineMapper
+    lineMapping: Int => Int
 )
 
 object Instrument {
@@ -233,14 +233,13 @@ object Instrument {
           code0.parse[Source] match {
             case parsed: Parsed.Success[_] =>
               if (!hasMainMethod(parsed.get)) {
-                val originalCode = parsed.get.text
                 val (instrumentedCode, entryPoint) = instrument(parsed.get, prelude.length + 1, isScalaJs)
 
-                val lineMapper = LineMapper(originalCode, instrumentedCode)
+                val lineMapping = LineMapper(instrumentedCode)
 
                 Right(InstrumentationSuccess(
                   s"""$instrumentedCode\n$entryPoint""",
-                  lineMapper
+                  lineMapping
                   ))
               } else {
                 Left(HasMainMethod)
