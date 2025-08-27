@@ -1,14 +1,5 @@
 package com.olegych.scastie.instrumentation
 
-import scala.annotation.tailrec
-import scala.collection.Seq
-import scala.jdk.CollectionConverters._
-import scala.meta._
-import scala.meta.tokens.Tokens.tokensToInput
-
-import difflib._
-import difflib.myers.Equalizer
-
 /**
   * Maps line numbers from Scastie instrumented code back to original user code lines.
   *
