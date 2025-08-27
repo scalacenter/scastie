@@ -106,11 +106,10 @@ object Instrument {
     val instrumentedCodePatches = source.stats.collect {
       case c: Defn.Object if c.name.value == instrumentedObject =>
         c.templ.body.stats
-          .filter {
-            case _: Term.EndMarker => false
-            case _                 => true
-          }
-          .collect { case term: Term => instrumentOne(term, None, offset, isScalaJs) }
+          .collect {
+            case term: Term if !term.isInstanceOf[Term.EndMarker] =>
+              instrumentOne(term, None, offset, isScalaJs)
+            }
     }.flatten
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
