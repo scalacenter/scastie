@@ -28,7 +28,7 @@ final case class CodeEditor(visible: Boolean,
                             isPresentationMode: Boolean,
                             isWorksheetMode: Boolean,
                             isEmbedded: Boolean,
-                            isVimMode: Boolean,
+                            editorMode: api.EditorMode,
                             showLineNumbers: Boolean,
                             value: String,
                             attachedDoms: Map[String, HTMLElement],
@@ -83,13 +83,13 @@ object CodeEditor {
       OnChangeHandler(props.codeChange),
       syntaxHighlighting.syntaxHighlightingExtension.of(syntaxHighlighting.fallbackExtension)
     )
-    if (props.isVimMode) js.Array(vim()) ++ base
+    if (props.editorMode == api.Vim) js.Array(vim()) ++ base
     else base
   }
   
   private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback = {
-    
-    if(props.isVimMode) {
+
+    if(props.editorMode == api.Vim) {
       EditorKeymaps.registerVimCommands(props)
     }
     
@@ -172,7 +172,7 @@ object CodeEditor {
       .useEffectBy(
         (props, ref, prevProps, editorView) =>
           Callback {
-            if (prevProps.value.exists(_.isVimMode != props.isVimMode)) {
+            if (prevProps.value.exists(_.editorMode != props.editorMode)) {
               val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
               val extensions = buildExtensions(props, syntaxHighlighting)
               editorView.value.dispatch(

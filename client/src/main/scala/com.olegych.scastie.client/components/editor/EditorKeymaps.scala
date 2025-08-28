@@ -8,6 +8,7 @@ import typings.codemirrorCommands.mod._
 import typings.codemirrorAutocomplete.mod.acceptCompletion
 import typings.codemirrorState.mod._
 import typings.replitCodemirrorVim.mod.Vim_
+import com.olegych.scastie.api
 import com.olegych.scastie.client
 
 import scalajs.js
@@ -89,7 +90,7 @@ object EditorKeymaps {
       KeyBinding(_ => e.formatCode.runNow(), format, true),
       KeyBinding(_ => presentationMode(e), presentation, true),
     )
-    if (!e.isVimMode) {
+    if (e.editorMode != api.Vim) {
       base.push(KeyBinding(_ => e.clear.runNow(), clear, true))
     }
     typings.codemirrorView.mod.keymap.of(base)

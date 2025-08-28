@@ -1,6 +1,7 @@
 package com.olegych.scastie.client
 
 import com.olegych.scastie.api._
+import com.olegych.scastie.api.EditorMode._
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.{Position => _}
 import play.api.libs.json._
@@ -67,7 +68,7 @@ object ScastieState {
       outputs = Outputs.default,
       status = StatusState.empty,
       isEmbedded = isEmbedded,
-      isVimMode = false,
+      editorMode = Default,
     )
   }
 
@@ -112,7 +113,7 @@ case class ScastieState(
     metalsStatus: MetalsStatus = MetalsLoading,
     isEmbedded: Boolean = false,
     transient: Boolean = false,
-    isVimMode: Boolean = false,
+    editorMode: EditorMode = Default,
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean = snippetState.loadSnippet
@@ -139,7 +140,7 @@ case class ScastieState(
       status: StatusState = status,
       metalsStatus: MetalsStatus = metalsStatus,
       transient: Boolean = transient,
-      isVimMode: Boolean = isVimMode
+      editorMode: EditorMode = editorMode
   ): ScastieState = {
     val state0 =
       copy(
@@ -170,7 +171,7 @@ case class ScastieState(
         metalsStatus = metalsStatus,
         isEmbedded = isEmbedded,
         transient = transient,
-        isVimMode = isVimMode
+        editorMode = editorMode
       )
 
     if (!isEmbedded && !transient) {
@@ -207,8 +208,8 @@ case class ScastieState(
   def setTheme(dark: Boolean): ScastieState =
     copyAndSave(isDarkTheme = dark)
 
-  def toggleVimMode: ScastieState =
-    copyAndSave(isVimMode = !isVimMode)
+  def setEditorMode(mode: EditorMode): ScastieState =
+    copyAndSave(editorMode = mode)
 
   def setMetalsStatus(status: MetalsStatus): ScastieState =
     copyAndSave(metalsStatus = status)

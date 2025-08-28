@@ -30,7 +30,10 @@ final case class SideBar(isDarkTheme: Boolean,
                          toggleTheme: Reusable[Callback],
                          view: StateSnapshot[View],
                          openHelpModal: Reusable[Callback],
-                         openPrivacyPolicyModal: Reusable[Callback]) {
+                         openPrivacyPolicyModal: Reusable[Callback],
+                         editorMode: EditorMode,
+                         setEditorMode: EditorMode => Callback
+                         ) {
   @inline def render: VdomElement = SideBar.component(this)
 }
 
@@ -101,6 +104,26 @@ object SideBar {
       onClick = reusableEmpty
     ).render
 
+    val editorModeSelector =
+      li(
+        cls := "btn",
+        i(cls := "fa fa-keyboard-o"),
+        select(
+          value := props.editorMode.toString,
+          cls := s"editor-mode-select ${if (props.isDarkTheme) "dark" else "light"}",
+          onChange ==> { (e: ReactEventFromInput) =>
+            val mode = e.target.value match {
+              case "Vim"     => Vim
+              case "Default" => Default
+              case _         => Default
+            }
+            props.setEditorMode(mode)
+          },
+          option(value := "Default", "Default"),
+          option(value := "Vim", "Vim")
+        )
+      )
+
     nav(cls := "sidebar")(
       div(cls := "actions-container")(
         div(cls := "logo")(
@@ -112,6 +135,7 @@ object SideBar {
           buildSettingsButton
         ),
         ul(cls := "actions-bottom")(
+          editorModeSelector,
           themeButton,
           privacyPolicyButton,
           helpButton,
