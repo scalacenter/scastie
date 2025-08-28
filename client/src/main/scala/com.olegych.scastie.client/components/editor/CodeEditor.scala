@@ -53,39 +53,6 @@ final case class CodeEditor(visible: Boolean,
 }
 
 object CodeEditor {
-
-  private def buildExtensions(props: CodeEditor, syntaxHighlighting: SyntaxHighlightingPlugin): js.Array[Any] = {
-    val base = js.Array[Any](
-      Editor.editorTheme.of(props.codemirrorTheme),
-      lineNumbers(),
-      highlightSpecialChars(),
-      history(),
-      drawSelection(),
-      dropCursor(),
-      EditorState.allowMultipleSelections.of(true),
-      indentOnInput(),
-      bracketMatching(),
-      closeBrackets(),
-      rectangularSelection(),
-      crosshairCursor(),
-      highlightSelectionMatches(),
-      Editor.indentationMarkersExtension,
-      keymap.of(closeBracketsKeymap ++ defaultKeymap ++ historyKeymap ++ foldKeymap ++ completionKeymap ++ lintKeymap ++ searchKeymap),
-      StateField
-        .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
-        .extension,
-      DecorationProvider(props),
-      EditorState.tabSize.of(2),
-      Prec.highest(EditorKeymaps.keymapping(props)),
-      InteractiveProvider.interactive.of(InteractiveProvider(props).extension),
-      SyntaxHighlightingTheme.highlightingTheme,
-      lintGutter(),
-      OnChangeHandler(props.codeChange),
-      syntaxHighlighting.syntaxHighlightingExtension.of(syntaxHighlighting.fallbackExtension)
-    )
-    if (props.editorMode == api.Vim) js.Array(vim()) ++ base
-    else base
-  }
   
   private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback = {
 
@@ -96,7 +63,39 @@ object CodeEditor {
     ref.foreachCB(divRef => {
 
       val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
-      val extensions = buildExtensions(props, syntaxHighlighting)
+      val modeExtension: Extension =
+        if (props.editorMode == api.Vim) vim()
+        else js.Array[Any]()
+      val extensions =
+        js.Array[Any](
+        Editor.editorTheme.of(props.codemirrorTheme),
+        Editor.editorModeCompartment.of(modeExtension),
+        lineNumbers(),
+        highlightSpecialChars(),
+        history(),
+        drawSelection(),
+        dropCursor(),
+        EditorState.allowMultipleSelections.of(true),
+        indentOnInput(),
+        bracketMatching(),
+        closeBrackets(),
+        rectangularSelection(),
+        crosshairCursor(),
+        highlightSelectionMatches(),
+        Editor.indentationMarkersExtension,
+        keymap.of(closeBracketsKeymap ++ defaultKeymap ++ historyKeymap ++ foldKeymap ++ completionKeymap ++ lintKeymap ++ searchKeymap),
+        StateField
+          .define(StateFieldSpec[Set[api.Instrumentation]](_ => props.instrumentations, (value, _) => value))
+          .extension,
+        DecorationProvider(props),
+        EditorState.tabSize.of(2),
+        Prec.highest(EditorKeymaps.keymapping(props)),
+        InteractiveProvider.interactive.of(InteractiveProvider(props).extension),
+        SyntaxHighlightingTheme.highlightingTheme,
+        lintGutter(),
+        OnChangeHandler(props.codeChange),
+        syntaxHighlighting.syntaxHighlightingExtension.of(syntaxHighlighting.fallbackExtension)
+      )
 
       val editorStateConfig = EditorStateConfig()
         .setExtensions(extensions)
@@ -173,12 +172,13 @@ object CodeEditor {
         (props, ref, prevProps, editorView) =>
           Callback {
             if (prevProps.value.exists(_.editorMode != props.editorMode)) {
-              val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
-              val extensions = buildExtensions(props, syntaxHighlighting)
+              val modeExtension: Extension =
+                if (props.editorMode == api.Vim) vim()
+                else js.Array[Any]()
               editorView.value.dispatch(
-                js.Dynamic.literal(
-                  "effects" -> StateEffect.reconfigure.of(extensions)
-                ).asInstanceOf[typings.codemirrorState.mod.TransactionSpec]
+                TransactionSpec().setEffects(
+                  Editor.editorModeCompartment.reconfigure(modeExtension)
+                )
               )
             }
           } >>
