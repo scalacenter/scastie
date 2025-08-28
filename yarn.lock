@@ -923,11 +923,12 @@ uc.micro@^1.0.1, uc.micro@^1.0.5:
   resolved "https://registry.yarnpkg.com/uc.micro/-/uc.micro-1.0.6.tgz#9c411a802a409a91fc6cf74081baba34b24499ac"
   integrity sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==
 
-vite-plugin-markdown@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/vite-plugin-markdown/-/vite-plugin-markdown-2.1.0.tgz#3c90b91eb8c05a5701d944e9948739f514c79af1"
-  integrity sha512-eWLlrWzYZXEX3/HaXZo/KLjRpO72IUhbgaoFrbwB07ueXi6QfwqrgdZQfUcXTSofJCkN7GhErMC1K1RTAE0gGQ==
+vite-plugin-markdown@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/vite-plugin-markdown/-/vite-plugin-markdown-2.2.0.tgz#a0c5bd7bb88f385fa4ea983bf51b1ee35057c90a"
+  integrity sha512-eH2tXMZcx3EHb5okd+/0VIyoR8Gp9pGe24UXitOOcGkzObbJ1vl48aGOAbakoT88FBdzC8MXNkMfBIB9VK0Ndg==
   dependencies:
+    domhandler "^4.0.0"
     front-matter "^4.0.0"
     htmlparser2 "^6.0.0"
     markdown-it "^12.0.0"
