@@ -240,27 +240,40 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
                  |  "Hello world!"
                  |""".stripMargin,
     )
-    run(dotty)(assertUserOutput("Hello world!"))
+    var outputOk = false
+    var instrOk = false
+    run(dotty) { progress =>
+      if (assertUserOutput("Hello world!")(progress)) outputOk = true
+      if (assertInstrumentation(Value("()", "scala.Unit"), Position(0, 25))(progress)) instrOk = true
+      outputOk && instrOk
+    }
   }
 
   test("top-level match expression") {
     val dotty = Inputs.default.copy(
-      code = """1 match
-                 |  case a: Int => "Hi"
-                 |""".stripMargin
+      code = """|1 match
+                |  case a: Int => "Hi"
+                |""".stripMargin
     )
-    run(dotty) { progress =>
-      progress.instrumentations.exists(_.render == Value("Hi", "java.lang.String"))
+
+    run(dotty) {
+      assertInstrumentation(Value("Hi", "java.lang.String"), Position(0, 29))
     }
   }
 
   test("string interpolation in match pattern with println") {
     val dotty = Inputs.default.copy(
       code = """|"hello" match
-                 |  case s"hel$lo" => println(lo)
-                 |""".stripMargin
+                |  case s"hel$lo" => println(lo)
+                |""".stripMargin
     )
-    run(dotty)(assertUserOutput("lo"))
+    var outputOk = false
+    var instrOk = false
+    run(dotty) { progress =>
+      if (assertUserOutput("lo")(progress)) outputOk = true
+      if (assertInstrumentation(Value("()", "scala.Unit"), Position(0, 45))(progress)) instrOk = true
+      outputOk && instrOk
+    }
   }
 
   test("pattern match with custom unapplySeq extractor and println") {
@@ -273,7 +286,13 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
                 |    println(s"$c1,$c2,$c3,$c4")
                 |""".stripMargin
     )
-    run(dotty)(assertUserOutput("e,x,a,m"))
+    var outputOk = false
+    var instrOk = false
+    run(dotty) { progress =>
+      if (assertUserOutput("e,x,a,m")(progress)) outputOk = true
+      if (assertInstrumentation(Value("()", "scala.Unit"), Position(82, 173))(progress)) instrOk = true
+      outputOk && instrOk
+    }
   }
 
   test("braceless while loop") {
@@ -287,7 +306,13 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
                 |  x += 1
                 |""".stripMargin
     )
-    run(dotty)(assertUserOutput("2"))
+    var outputOk = false
+    var instrOk = false
+    run(dotty) { progress =>
+      if (assertUserOutput("2")(progress)) outputOk = true
+      if (assertInstrumentation(Value("()", "scala.Unit"), Position(11, 65))(progress)) instrOk = true
+      outputOk && instrOk
+    }
   }
 
   test("report warning for extension method conflict") {
@@ -312,7 +337,13 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
                 |    println("yes")
                 |""".stripMargin,
     )
-    run(dotty)(assertUserOutput("yes"))
+    var outputOk = false
+    var instrOk = false
+    run(dotty) { progress =>
+      if (assertUserOutput("yes")(progress)) outputOk = true
+      if (assertInstrumentation(Value("()", "scala.Unit"), Position(0, 47))(progress)) instrOk = true
+      outputOk && instrOk
+    }
   }
 
   test("List.map with case in braceless syntax") {
@@ -322,9 +353,31 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
                 |""".stripMargin,
     )
     run(dotty) { progress =>
-      progress.instrumentations.exists(
-        _.render == Value("List(1, 2, 3)", "scala.collection.immutable.List[scala.Int]")
-        )
+      assertInstrumentation(
+        Value("List(1, 2, 3)", "scala.collection.immutable.List[scala.Int]"),
+        Position(0, 30)
+      )(progress)
+    }
+  }
+
+  test("properly instrumented whitespaces") {
+    val dotty = Inputs.default.copy(
+      code = """|1 + 1
+                |
+                |
+                |
+                |1 + 5
+                |""".stripMargin,
+    )
+    run(dotty) { progress =>
+      assertInstrumentation(
+        Value("2", "scala.Int"),
+        Position(0, 5)
+      )(progress) &&
+      assertInstrumentation(
+        Value("6", "scala.Int"),
+        Position(9, 14)
+      )(progress)
     }
   }
 
@@ -412,6 +465,15 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       fish: SnippetProgress => Boolean
   ): Unit = {
     run(Inputs.default.copy(code = code, target = target), allowFailure)(fish)
+  }
+
+  private def assertInstrumentation(
+    expected: Value,
+    position: Position
+  )(progress: SnippetProgress): Boolean = {
+    progress.instrumentations.exists(instr =>
+      instr.render == expected && instr.position == position
+    )
   }
 
   private def assertUserOutput(
