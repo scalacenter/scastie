@@ -81,7 +81,9 @@ object Scastie {
         toggleTheme = scope.backend.toggleTheme,
         view = scope.backend.viewSnapshot(state.view),
         openHelpModal = scope.backend.openHelpModal,
-        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal
+        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal,
+        editorMode = state.editorMode,
+        setEditorMode = scope.backend.setEditorMode
       ).render.unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(
         state,
@@ -230,8 +232,10 @@ object Scastie {
       .initialStateFromProps { props =>
         val state = {
           val scheme = LocalStorage.load.map(_.isDarkTheme)
+          val editorMode = LocalStorage.load.map(_.editorMode)
           val loadedState = ScastieState.default(props.isEmbedded)
-          val loadedStateWithScheme = scheme.map(theme => loadedState.copy(isDarkTheme = theme)).getOrElse(loadedState)
+          val loadedStateWithMode = editorMode.map(mode => loadedState.copy(editorMode = mode)).getOrElse(loadedState)
+          val loadedStateWithScheme = scheme.map(theme => loadedStateWithMode.copy(isDarkTheme = theme)).getOrElse(loadedStateWithMode)
           if (!props.isEmbedded) {
             loadedStateWithScheme
           } else {
