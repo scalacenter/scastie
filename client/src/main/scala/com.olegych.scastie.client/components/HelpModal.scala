@@ -43,6 +43,12 @@ object HelpModal {
       content = div(cls := "markdown-body")(
         p( "Scastie is an interactive playground for Scala with support for sbt configuration."),
         p( "Scastie editor supports Sublime Text ", sublime),
+        h2("Editor Modes"),
+        p(
+          "Scastie editor supports multiple keyboard modes. ",
+          "You can switch between Default, Vim, and Emacs modes using the selector in the sidebar. ",
+          "Each mode provides familiar keybindings and navigation for users of those editors."
+        ),
         h2(s"Save (${EditorKeymaps.saveOrUpdate.getName})"),
         p(
           "Run and save your code."

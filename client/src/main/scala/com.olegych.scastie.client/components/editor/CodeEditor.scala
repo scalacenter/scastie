@@ -15,6 +15,7 @@ import typings.codemirrorLint.mod._
 import typings.codemirrorSearch.mod._
 import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
+import typings.replitCodemirrorEmacs.mod.emacs
 import typings.replitCodemirrorVim.mod.vim
 
 import scalajs.js
@@ -64,8 +65,7 @@ object CodeEditor {
 
       val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
       val modeExtension: Extension =
-        if (props.editorMode == api.Vim) vim()
-        else js.Array[Any]()
+        getExtension(props.editorMode)
       val extensions =
         js.Array[Any](
         Editor.editorTheme.of(props.codemirrorTheme),
@@ -136,6 +136,14 @@ object CodeEditor {
     (errors ++ runtimeErrors).toJSArray
   }
 
+  private def getExtension(editorMode: api.EditorMode): Extension = {
+    editorMode match {
+      case api.Default => js.Array[Any]()
+      case api.Vim     => vim()
+      case api.Emacs   => emacs()
+    }
+  }
+
   private def updateDiagnostics(editorView: UseStateF[CallbackTo, EditorView], prevProps: Option[CodeEditor], props: CodeEditor): Callback = {
     Callback {
       editorView.value.dispatch(setDiagnostics(editorView.value.state, getDecorations(props, editorView.value.state.doc)))
@@ -173,8 +181,7 @@ object CodeEditor {
           Callback {
             if (prevProps.value.exists(_.editorMode != props.editorMode)) {
               val modeExtension: Extension =
-                if (props.editorMode == api.Vim) vim()
-                else js.Array[Any]()
+                getExtension(props.editorMode)
               editorView.value.dispatch(
                 TransactionSpec().setEffects(
                   Editor.editorModeCompartment.reconfigure(modeExtension)

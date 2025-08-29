@@ -113,14 +113,16 @@ object SideBar {
           cls := s"editor-mode-select ${if (props.isDarkTheme) "dark" else "light"}",
           onChange ==> { (e: ReactEventFromInput) =>
             val mode = e.target.value match {
-              case "Vim"     => Vim
               case "Default" => Default
+              case "Vim"     => Vim
+              case "Emacs"   => Emacs
               case _         => Default
             }
             props.setEditorMode(mode)
           },
           option(value := "Default", "Default"),
-          option(value := "Vim", "Vim")
+          option(value := "Vim", "Vim"),
+          option(value := "Emacs", "Emacs")
         )
       )
 
