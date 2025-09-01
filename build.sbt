@@ -229,13 +229,13 @@ lazy val server = project
       val installNpmDependencies: Seq[String] = shell :+ "cd tree-sitter-scala && npm install"
       val buildWasm: Seq[String] = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
       s.log.info("building tree-sitter-scala wasm...")
-      val buildWasmExitCode = Process(buildWasm, baseDirectory.value.getParentFile)
-        .!(ProcessLogger(line => s.log.info(s"[tree-sitter build] $line"), err => s.log.error(s"[tree-sitter build][err] $err")))
-      if (buildWasmExitCode != 0) {
-        throw new IllegalStateException("tree-sitter build failed!")
-      }
 
-      if ((updateGitSubmodule #&& installNpmDependencies #&& buildWasm !) == 0) {
+      if ((updateGitSubmodule #&& installNpmDependencies) == 0) {
+        val buildWasmExitCode = Process(buildWasm, baseDirectory.value.getParentFile)
+          .!(ProcessLogger(line => s.log.info(s"[tree-sitter build] $line"), err => s.log.error(s"[tree-sitter build][err] $err")))
+        if (buildWasmExitCode != 0) {
+          throw new IllegalStateException("tree-sitter build failed!")
+        }
         s.log.success(s"$treeSitterOutputName build successfuly!")
         val webTreeSitterDir = baseDirectory.value.getParentFile / "node_modules" / "web-tree-sitter"
         s.log.info(s"Listing contents of ${webTreeSitterDir}.")
