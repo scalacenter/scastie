@@ -229,6 +229,11 @@ lazy val server = project
       val installNpmDependencies: Seq[String] = shell :+ "cd tree-sitter-scala && npm install"
       val buildWasm: Seq[String] = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
       s.log.info("building tree-sitter-scala wasm...")
+      val buildWasmExitCode = Process(buildWasmCmd, baseDirectory.value.getParentFile)
+        .!(ProcessLogger(line => s.log.info(s"[tree-sitter build] $line"), err => s.log.error(s"[tree-sitter build][err] $err")))
+      if (buildWasmExitCode != 0) {
+        throw new IllegalStateException("tree-sitter build failed!")
+      }
 
       if ((updateGitSubmodule #&& installNpmDependencies #&& buildWasm !) == 0) {
         s.log.success(s"$treeSitterOutputName build successfuly!")
@@ -241,6 +246,11 @@ lazy val server = project
 
       sbt.IO.copyFile(treeSitterScalaHiglight, outputWasmDirectory / treeSitterScalaHiglightName)
       sbt.IO.move(treeSitterScalaWasm, outputWasmDirectory / treeSitterScalaOutputName)
+      if (!treeSitterWasm.exists()) {
+        s.log.error(s"tree-sitter.wasm does not exist at: ${treeSitterWasm.getAbsolutePath}")
+      } else {
+        s.log.info(s"tree-sitter.wasm found at: ${treeSitterWasm.getAbsolutePath}")
+      }
       sbt.IO.copyFile(treeSitterWasm, outputWasmDirectory / treeSitterOutputName)
       s.log.success(
         s"Copied $treeSitterScalaHiglight to ${(outputWasmDirectory / treeSitterScalaHiglightName).getAbsolutePath}"
