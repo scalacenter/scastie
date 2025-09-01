@@ -232,6 +232,9 @@ lazy val server = project
 
       if ((updateGitSubmodule #&& installNpmDependencies #&& buildWasm !) == 0) {
         s.log.success(s"$treeSitterOutputName build successfuly!")
+        val webTreeSitterDir = baseDirectory.value.getParentFile / "node_modules" / "web-tree-sitter"
+        s.log.info(s"Listing contents of ${webTreeSitterDir}.")
+        webTreeSitterDir.listFiles().foreach(f => s.log.info(f.getAbsolutePath))
       } else {
         throw new IllegalStateException(s"Failed to generate $treeSitterOutputName!")
       }
