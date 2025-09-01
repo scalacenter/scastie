@@ -123,7 +123,7 @@ object SideBar {
             }
             props.setEditorMode(mode)
           },
-          option(value := "Default", "Default"),
+          option(value := "Default", I18n.t("sidebar.editor_mode_default")),
           option(value := "Vim", "Vim"),
           option(value := "Emacs", "Emacs")
         )

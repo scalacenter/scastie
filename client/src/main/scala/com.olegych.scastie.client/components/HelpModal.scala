@@ -55,9 +55,9 @@ object HelpModal {
         ),
         h2(I18n.t("help.editor_modes")),
         p(
-          I18n.t("help.editor_modes_1"), // "Scastie editor supports multiple keyboard modes. "
-          I18n.t("help.editor_modes_2"), // "You can switch between Default, Vim, and Emacs modes using the selector in the sidebar. "
-          I18n.t("help.editor_modes_3") // "Each mode provides familiar keybindings and navigation for users of those editors."
+          I18n.t("help.editor_modes_1"),
+          I18n.t("help.editor_modes_2"),
+          I18n.t("help.editor_modes_3")
         ),
         h2(s"${I18n.t("help.save")} (${EditorKeymaps.saveOrUpdate.getName})"),
         p(
@@ -108,18 +108,18 @@ object HelpModal {
         p(
           I18n.t("help.snippets_description")
         ),
-        h2(I18n.t("Vim commands")),
+        h2(I18n.t("help.vim_commands")),
         p(
-          I18n.t("If Vim mode is enabled in the editor, you can use the following commands in the Vim command bar (press ':' in normal mode):")
+          I18n.t("help.vim_description")
         ),
         ul(
-          li(code(":w"), " / ", code(":run"), I18n.t("help.vim_run")), // " — Run and save your code"
-          li(code(":f"), " / ", code(":format"), I18n.t("help.vim_format")), // " — Format code"
-          li(code(":c"), " / ", code(":clear"), I18n.t("help.vim_clear")), // " — Clear messages"
-          li(code(":h"), " / ", code(":help"), I18n.t("help.vim_help")) // " — Show this help dialog"
+          li(code(":w"), " / ", code(":run"), I18n.t("help.vim_run")),
+          li(code(":f"), " / ", code(":format"), I18n.t("help.vim_format")),
+          li(code(":c"), " / ", code(":clear"), I18n.t("help.vim_clear")),
+          li(code(":h"), " / ", code(":help"), I18n.t("help.vim_help"))
         ),
         p(
-          I18n.t("help.vim_navigation") // "You can also use standard Vim navigation and editing commands in the editor."
+          I18n.t("help.vim_navigation")
         ),
         h2(I18n.t("topbar.feedback")),
         p(

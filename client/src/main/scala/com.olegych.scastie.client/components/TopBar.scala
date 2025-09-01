@@ -105,8 +105,7 @@ object TopBar {
               val lang = e.target.value
               props.setLanguage(lang)
             },
-            option(value := "en", "English"),
-            option(value := "pl", "Polski")
+            option(value := "en", "English")
           )
         ),
         profileButton

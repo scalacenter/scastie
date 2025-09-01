@@ -59,6 +59,9 @@ msgid "snippets.update"
 msgstr "Update: "
 
 # --- Section: Sidebar ---
+msgid "sidebar.editor_mode_default"
+msgstr "Default"
+
 msgid "sidebar.theme_light"
 msgstr "Light"
 
@@ -247,6 +250,18 @@ msgstr "Scastie is an interactive playground for Scala with support for sbt conf
 msgid "help.sublime_support"
 msgstr "Scastie editor supports Sublime Text {keyboard shortcuts}."
 
+msgid "help.editor_modes"
+msgstr "Editor modes"
+
+msgid "help.editor_modes_1"
+msgstr "Scastie editor supports multiple keyboard modes. "
+
+msgid "help.editor_modes_2"
+msgstr "You can switch between Default, Vim, and Emacs modes using the selector in the sidebar. "
+
+msgid "help.editor_modes_3"
+msgstr "Each mode provides familiar keybindings and navigation for users of those editors."
+
 msgid "help.save"
 msgstr "Save"
 
@@ -287,6 +302,27 @@ msgstr "User's Code Snippets"
 
 msgid "help.snippets_description"
 msgstr "Your saved code fragments will appear here and you'll be able to delete or share them."
+
+msgid "help.vim_commands"
+msgstr "Vim commands"
+
+msgid "help.vim_description"
+msgstr "If Vim mode is enabled in the editor, you can use the following commands in the Vim command bar (press ':' in normal mode):"
+
+msgid "help.vim_run"
+msgstr " — Run and save your code"
+
+msgid "help.vim_format"
+msgstr " — Format code"
+
+msgid "help.vim_clear"
+msgstr " — Clear messages"
+
+msgid "help.vim_help"
+msgstr " — Show this help dialog"
+
+msgid "help.vim_navigation"
+msgstr "You can also use standard Vim navigation and editing commands in the editor."
 
 # The translation of `Gitter` must remain inside the curly brackets.
 msgid "help.feedback_description"
