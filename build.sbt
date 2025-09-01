@@ -226,24 +226,24 @@ lazy val server = project
       val shell: Seq[String] = if (sys.props("os.name").contains("Windows")) Seq("cmd", "/c") else Seq("bash", "-c")
       val updateGitSubmodule: Seq[String] = shell :+ "git submodule update --init"
 
-      val installNpmDependencies: Seq[String] = shell :+ "cd tree-sitter-scala && npm install"
+      val installNpmDependencies: Seq[String] = shell :+ "npm install && cd tree-sitter-scala && npm install"
       val buildWasm: Seq[String] = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
       s.log.info("building tree-sitter-scala wasm...")
 
       val updateGitSubmoduleExit = Process(updateGitSubmodule, baseDirectory.value.getParentFile)
-        .!(ProcessLogger(line => s.log.info(s"[git submodule] $line"), err => s.log.error(s"[git submodule][err] $err")))
+        .!(ProcessLogger(line => s.log.info(s"[git submodule] $line"), err => s.log.error(s"[git submodule] $err")))
       if (updateGitSubmoduleExit != 0) {
         throw new IllegalStateException(s"Failed to update git submodule!")
       }
 
       val installNpmDependenciesExit = Process(installNpmDependencies, baseDirectory.value.getParentFile)
-        .!(ProcessLogger(line => s.log.info(s"[npm install] $line"), err => s.log.error(s"[npm install][err] $err")))
+        .!(ProcessLogger(line => s.log.info(s"[npm install] $line"), err => s.log.error(s"[npm install] $err")))
       if (installNpmDependenciesExit != 0) {
         throw new IllegalStateException(s"Failed to install npm dependencies!")
       }
 
       val buildWasmExitCode = Process(buildWasm, baseDirectory.value.getParentFile)
-        .!(ProcessLogger(line => s.log.info(s"[tree-sitter build] $line"), err => s.log.error(s"[tree-sitter build][err] $err")))
+        .!(ProcessLogger(line => s.log.info(s"[tree-sitter build] $line"), err => s.log.error(s"[tree-sitter build] $err")))
       if (buildWasmExitCode != 0) {
         throw new IllegalStateException("tree-sitter build failed!")
       } else {
