@@ -231,7 +231,7 @@ lazy val server = project
       s.log.info("building tree-sitter-scala wasm...")
 
       val updateGitSubmoduleExit = Process(updateGitSubmodule, baseDirectory.value.getParentFile)
-        .!(ProcessLogger(line => s.log.info(s"[git submodule] $line"), err => s.log.error(s"[git submodule] $err")))
+        .!(ProcessLogger(line => s.log.info(s"[git submodule] $line"), err => s.log.info(s"[git submodule] $err")))
       if (updateGitSubmoduleExit != 0) {
         throw new IllegalStateException(s"Failed to update git submodule!")
       }
