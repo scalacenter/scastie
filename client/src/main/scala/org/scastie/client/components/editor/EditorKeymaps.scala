@@ -72,10 +72,27 @@ object EditorKeymaps {
   val openNewSnippetModal = new Key("Ctrl-m", "Meta-m")
   val clear               = new Key("Escape")
   val clearAlt            = new Key("F1")
-  val console             = new Key("F3")
+  val console             = new Key("Ctrl-/", "Meta-/")
   val help                = new Key("F5")
   val format              = new Key("F6")
   val presentation        = new Key("F8")
+
+  def setupGlobalKeybinds(e: CodeEditor): Unit = {
+    val handleGlobalKeydown = (event: dom.KeyboardEvent) => {
+      val actions: List[(Key, () => Unit)] = List(
+        console -> (() => e.toggleConsole.runNow())
+      )
+
+      actions.collectFirst {
+        case (key, action) if key.matches(event) => action
+      }.foreach { action =>
+        event.preventDefault()
+        action()
+      }
+    }
+
+    dom.document.addEventListener("keydown", handleGlobalKeydown)
+  }
 
   def keymapping(e: CodeEditor) = {
     val base = js.Array(
@@ -85,7 +102,6 @@ object EditorKeymaps {
       KeyBinding(_ => e.openNewSnippetModal.runNow(), openNewSnippetModal, true),
       KeyBinding(_ => e.clear.runNow(), clearAlt, true),
       KeyBinding(_ => e.toggleHelp.runNow(), help, true),
-      KeyBinding(_ => e.toggleConsole.runNow(), console, true),
       KeyBinding(_ => e.formatCode.runNow(), format, true),
       KeyBinding(_ => presentationMode(e), presentation, true)
     )
@@ -111,6 +127,30 @@ case class Key(default: String, linux: String, mac: String, win: String) {
     macAdjusted.replace("Escape", "Esc")
   }
 
+  def getKey: String = {
+    if (client.isMac) mac else default
+  }
+
+  def matches(event: dom.KeyboardEvent): Boolean = {
+    val keyString = getKey.toLowerCase
+    val ctrl = event.ctrlKey
+    val meta = event.metaKey
+    val shift = event.shiftKey
+    val alt = event.altKey
+    val key = event.key.toLowerCase
+
+    val parts = keyString.split("-").toList
+    val (requiredMods, mainKey) = (parts.init.toSet, parts.last)
+
+    val presentMods = List(
+      if (ctrl) "ctrl" else "",
+      if (meta) "meta" else "",
+      if (shift) "shift" else "",
+      if (alt) "alt" else ""
+    ).filter(_.nonEmpty).toSet
+
+    presentMods == requiredMods && key == mainKey
+  }
 }
 
 object KeyBinding {
