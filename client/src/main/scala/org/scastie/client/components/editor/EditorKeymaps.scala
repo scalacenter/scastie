@@ -72,7 +72,7 @@ object EditorKeymaps {
   val openNewSnippetModal = new Key("Ctrl-m", "Meta-m")
   val clear               = new Key("Escape")
   val clearAlt            = new Key("F1")
-  val console             = new Key("Ctrl-/", "Meta-/")
+  val console             = new Key("Ctrl-j", "Meta-j")
   val help                = new Key("F5")
   val format              = new Key("F6")
   val presentation        = new Key("F8")
