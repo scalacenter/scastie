@@ -106,7 +106,11 @@ object CodeEditor {
         .setParent(divRef)
       )
 
-      editorView.setState(editor)
+      val initResult = editorView.setState(editor)
+      
+      EditorKeymaps.setupGlobalKeybinds(props)
+
+      initResult
     })
   }
 
