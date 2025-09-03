@@ -94,7 +94,8 @@ object MainPanel {
         run = backend.run,
         setView = backend.setViewReused,
         close = backend.closeConsole,
-        open = backend.openConsole
+        open = backend.openConsole,
+        language = state.language
       ).render
 
     val buildSettings =
@@ -115,7 +116,8 @@ object MainPanel {
         sbtConfigChange = backend.sbtConfigChange,
         removeScalaDependency = backend.removeScalaDependency,
         updateDependencyVersion = backend.updateDependencyVersion,
-        addScalaDependency = backend.addScalaDependency
+        addScalaDependency = backend.addScalaDependency,
+        language = state.language
       ).render
 
     val mobileBar =
@@ -130,14 +132,18 @@ object MainPanel {
         openNewSnippetModal = backend.openNewSnippetModal,
         closeNewSnippetModal = backend.closeNewSnippetModal,
         newSnippet = backend.newSnippet,
-        forceDesktop = backend.forceDesktop
+        forceDesktop = backend.forceDesktop,
+        language = state.language
       ).render
 
     val topBar =
       TopBar(
         backend.viewSnapshot(state.view),
         state.user,
-        backend.openLoginModal
+        backend.openLoginModal,
+        backend.setLanguage,
+        state.language,
+        state.isDarkTheme
       ).render.unless(props.isEmbedded || state.isPresentationMode)
 
     val editorTopBar =
@@ -164,7 +170,8 @@ object MainPanel {
         isWorksheetMode = state.inputs.isWorksheetMode,
         metalsStatus = state.metalsStatus,
         toggleMetalsStatus = backend.toggleMetalsStatus,
-        scalaTarget = state.inputs.target
+        scalaTarget = state.inputs.target,
+        language = state.language
       ).render.unless(props.isEmbedded || state.isPresentationMode)
 
     val statusView =
@@ -174,7 +181,8 @@ object MainPanel {
             state = state.status,
             router = router,
             isAdmin = state.user.exists(_.isAdmin),
-            inputs = state.inputs
+            inputs = state.inputs,
+            language = state.language
           ).render
         case _ => EmptyVdom
       }
