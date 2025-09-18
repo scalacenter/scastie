@@ -16,6 +16,8 @@ import typings.codemirrorLint.mod._
 import typings.codemirrorSearch.mod._
 import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
+import typings.replitCodemirrorEmacs.mod.emacs
+import typings.replitCodemirrorVim.mod.vim
 
 import scalajs.js
 import vdom.all._
@@ -28,6 +30,7 @@ final case class CodeEditor(visible: Boolean,
                             isPresentationMode: Boolean,
                             isWorksheetMode: Boolean,
                             isEmbedded: Boolean,
+                            editorMode: api.EditorMode,
                             showLineNumbers: Boolean,
                             value: String,
                             attachedDoms: Map[String, HTMLElement],
@@ -53,13 +56,22 @@ final case class CodeEditor(visible: Boolean,
 }
 
 object CodeEditor {
+  
+  private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback = {
 
-  private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback =
+    if(props.editorMode == api.Vim) {
+      EditorKeymaps.registerVimCommands(props)
+    }
+    
     ref.foreachCB(divRef => {
 
       val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
-      val extensions = js.Array[Any](
+      val modeExtension: Extension =
+        getExtension(props.editorMode)
+      val extensions =
+        js.Array[Any](
         Editor.editorTheme.of(props.codemirrorTheme),
+        Editor.editorModeCompartment.of(modeExtension),
         lineNumbers(),
         highlightSpecialChars(),
         history(),
@@ -84,7 +96,7 @@ object CodeEditor {
         SyntaxHighlightingTheme.highlightingTheme,
         lintGutter(),
         OnChangeHandler(props.codeChange),
-        syntaxHighlighting.syntaxHighlightingExtension.of(syntaxHighlighting.fallbackExtension),
+        syntaxHighlighting.syntaxHighlightingExtension.of(syntaxHighlighting.fallbackExtension)
       )
 
       val editorStateConfig = EditorStateConfig()
@@ -98,6 +110,7 @@ object CodeEditor {
 
       editorView.setState(editor)
     })
+  }
 
   private def getDecorations(props: CodeEditor, doc: Text): js.Array[Diagnostic] = {
     val errors = props.compilationInfos
@@ -129,6 +142,14 @@ object CodeEditor {
     })
 
     (errors ++ runtimeErrors).toJSArray
+  }
+
+  private def getExtension(editorMode: api.EditorMode): Extension = {
+    editorMode match {
+      case api.Default => js.Array[Any]()
+      case api.Vim     => vim()
+      case api.Emacs   => emacs()
+    }
   }
 
   private def updateDiagnostics(editorView: UseStateF[CallbackTo, EditorView], prevProps: Option[CodeEditor], props: CodeEditor): Callback = {
@@ -164,7 +185,20 @@ object CodeEditor {
       .useState(new EditorView())
       .useEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
       .useEffectBy(
-        (props, ref, prevProps, editorView) => updateComponent(props, ref.value, prevProps.value, editorView) >> prevProps.set(Some(props))
+        (props, ref, prevProps, editorView) =>
+          Callback {
+            if (prevProps.value.exists(_.editorMode != props.editorMode)) {
+              val modeExtension: Extension =
+                getExtension(props.editorMode)
+              editorView.value.dispatch(
+                TransactionSpec().setEffects(
+                  Editor.editorModeCompartment.reconfigure(modeExtension)
+                )
+              )
+            }
+          } >>
+          updateComponent(props, ref.value, prevProps.value, editorView) >>
+          prevProps.set(Some(props))
       )
       .render((_, ref, _, _) => Editor.render(ref.value))
 

@@ -111,6 +111,9 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val toggleTheme: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleTheme))
 
+  val setEditorMode: EditorMode ~=> Callback =
+    Reusable.fn(mode => scope.modState(_.setEditorMode(mode)))
+
   val setMetalsStatus: MetalsStatus ~=> Callback =
     Reusable.fn(status => scope.modState(_.setMetalsStatus(status)))
 

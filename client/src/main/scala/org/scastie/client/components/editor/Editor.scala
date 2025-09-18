@@ -21,6 +21,7 @@ trait Editor {
 
 object Editor {
   val editorTheme = new Compartment()
+  val editorModeCompartment = new Compartment()
 
   private val indentationMarkersColors = ActiveDark()
     .setDark("#2a4c55")

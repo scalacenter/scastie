@@ -97,6 +97,12 @@ package object components {
   implicit val metalsStatusReuse: Reusability[MetalsStatus] =
     Reusability.byRefOr_==
 
+  implicit val editorModeReuse: Reusability[EditorMode] =
+    Reusability.byRefOr_==
+
+  implicit val reusabilityEditorModeToCallback: Reusability[EditorMode => Callback] =
+    Reusability.byRefOr_==
+
   implicit val scastieStateReuse: Reusability[ScastieState] =
     Reusability.derive[ScastieState]
 

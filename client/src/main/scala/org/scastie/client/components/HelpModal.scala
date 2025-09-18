@@ -43,6 +43,12 @@ object HelpModal {
       content = div(cls := "markdown-body")(
         p( "Scastie is an interactive playground for Scala with support for sbt configuration."),
         p( "Scastie editor supports Sublime Text ", sublime),
+        h2("Editor Modes"),
+        p(
+          "Scastie editor supports multiple keyboard modes. ",
+          "You can switch between Default, Vim, and Emacs modes using the selector in the sidebar. ",
+          "Each mode provides familiar keybindings and navigation for users of those editors."
+        ),
         h2(s"Save (${EditorKeymaps.saveOrUpdate.getName})"),
         p(
           "Run and save your code."
@@ -89,6 +95,19 @@ object HelpModal {
         h2("User's Code Snippets"),
         p(
           "Your saved code fragments will appear here and you'll be able to delete or share them."
+        ),
+        h2("Vim commands"),
+        p(
+          "If Vim mode is enabled in the editor, you can use the following commands in the Vim command bar (press ':' in normal mode):"
+        ),
+        ul(
+          li(code(":w"), " or ", code(":run"), " — Run and save your code (same as ", code(EditorKeymaps.saveOrUpdate.getName), ")"),
+          li(code(":f"), " or ", code(":format"), " — Format code (same as ", code(EditorKeymaps.format.getName), ")"),
+          li(code(":c"), " or ", code(":clear"), " — Clear messages (same as ", code(EditorKeymaps.clear.getName), ")"),
+          li(code(":h"), " or ", code(":help"), " — Show this help dialog")
+        ),
+        p(
+          "You can also use standard Vim navigation and editing commands in the editor."
         ),
         h2("Feedback"),
         p( "You can join our ", gitter, " channel and send issues."),

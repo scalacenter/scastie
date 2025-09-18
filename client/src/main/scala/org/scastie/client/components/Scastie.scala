@@ -1,52 +1,50 @@
 package org.scastie.client.components
 
-import org.scastie.api._
-import org.scastie.client._
+import java.util.UUID
+
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom.HTMLScriptElement
-
-import java.util.UUID
+import org.scastie.api._
+import org.scastie.client._
 
 final case class Scastie(
-    router: Option[RouterCtl[Page]],
-    private val scastieId: UUID,
-    private val snippetId: Option[SnippetId],
-    private val oldSnippetId: Option[Int],
-    private val embedded: Option[EmbeddedOptions],
-    private val targetType: Option[ScalaTargetType],
-    private val tryLibrary: Option[(ScalaDependency, Project)],
-    private val code: Option[String],
-    private val inputs: Option[BaseInputs],
+  router: Option[RouterCtl[Page]],
+  private val scastieId: UUID,
+  private val snippetId: Option[SnippetId],
+  private val oldSnippetId: Option[Int],
+  private val embedded: Option[EmbeddedOptions],
+  private val targetType: Option[ScalaTargetType],
+  private val tryLibrary: Option[(ScalaDependency, Project)],
+  private val code: Option[String],
+  private val inputs: Option[BaseInputs]
 ) {
 
   @inline def render = Scastie.component(serverUrl, scastieId)(this)
 
   def serverUrl: Option[String] = embedded.map(_.serverUrl)
-  def isEmbedded: Boolean = embedded.isDefined
-  //todo not sure how is it different from regular snippet id
+  def isEmbedded: Boolean       = embedded.isDefined
+  // todo not sure how is it different from regular snippet id
   def embeddedSnippetId: Option[SnippetId] = embedded.flatMap(_.snippetId)
 }
 
 object Scastie {
-  implicit val scastieReuse: Reusability[Scastie] =
-    Reusability.derive[Scastie]
+  implicit val scastieReuse: Reusability[Scastie] = Reusability.derive[Scastie]
 
-  def default(router: RouterCtl[Page]): Scastie =
-    Scastie(
-      scastieId = UUID.randomUUID(),
-      router = Some(router),
-      snippetId = None,
-      oldSnippetId = None,
-      embedded = None,
-      targetType = None,
-      tryLibrary = None,
-      code = None,
-      inputs = None,
-    )
+  def default(router: RouterCtl[Page]): Scastie = Scastie(
+    scastieId = UUID.randomUUID(),
+    router = Some(router),
+    snippetId = None,
+    oldSnippetId = None,
+    embedded = None,
+    targetType = None,
+    tryLibrary = None,
+    code = None,
+    inputs = None
+  )
 
   private def setTitle(state: ScastieState, props: Scastie) = {
     def scastieCode = if (state.inputs.code.isEmpty) "Scastie" else state.inputs.code + " - Scastie"
@@ -62,16 +60,15 @@ object Scastie {
   }
 
   private def render(
-      scope: RenderScope[Scastie, ScastieState, ScastieBackend],
-      props: Scastie,
-      state: ScastieState
+    scope: RenderScope[Scastie, ScastieState, ScastieBackend],
+    props: Scastie,
+    state: ScastieState
   ): VdomElement = {
     val theme =
       if (state.isDarkTheme) "dark"
       else "light"
 
-    val forceDesktopClass =
-      (cls := "force-desktop").when(state.isDesktopForced)
+    val forceDesktopClass = (cls := "force-desktop").when(state.isDesktopForced)
 
     div(cls := s"app $theme", forceDesktopClass)(
       SideBar(
@@ -81,7 +78,9 @@ object Scastie {
         toggleTheme = scope.backend.toggleTheme,
         view = scope.backend.viewSnapshot(state.view),
         openHelpModal = scope.backend.openHelpModal,
-        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal
+        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal,
+        editorMode = state.editorMode,
+        setEditorMode = scope.backend.setEditorMode
       ).render.unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(
         state,
@@ -97,70 +96,61 @@ object Scastie {
         isDarkTheme = state.isDarkTheme,
         isClosed = state.modalState.isLoginModalClosed,
         close = scope.backend.closeLoginModal,
-        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal,
+        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal
       ).render,
       PrivacyPolicyPrompt(
         isDarkTheme = state.isDarkTheme,
         isClosed = state.modalState.isPrivacyPolicyPromptClosed,
         acceptPrivacyPolicy = scope.backend.acceptPolicy,
         refusePrivacyPolicy = scope.backend.refusePrivacyPolicy,
-        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal,
+        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal
       ).render,
       PrivacyPolicyModal(
         isDarkTheme = state.isDarkTheme,
         isClosed = state.modalState.isPrivacyPolicyModalClosed,
         close = scope.backend.closePrivacyPolicyModal
-      ).render,
+      ).render
     )
   }
 
   private def start(props: Scastie, backend: ScastieBackend): Callback = {
-    val initialState =
-      props.embedded match {
-        case None => {
-          props.snippetId match {
-            case Some(snippetId) =>
-              backend.loadSnippet(snippetId)
+    val initialState = props.embedded match {
+      case None => {
+        props.snippetId match {
+          case Some(snippetId) => backend.loadSnippet(snippetId)
 
-            case None =>
-              props.oldSnippetId match {
-                case Some(id) =>
-                  backend.loadOldSnippet(id)
+          case None => props.oldSnippetId match {
+              case Some(id) => backend.loadOldSnippet(id)
 
-                case None =>
-                  Callback.traverseOption(LocalStorage.load) { state =>
-                    backend.scope.modState { _ =>
-                      state
-                        .setRunning(false)
-                        .setCleanInputs
-                        .resetScalajs
-                    }
+              case None => Callback.traverseOption(LocalStorage.load) { state =>
+                  backend.scope.modState { _ =>
+                    state
+                      .setRunning(false)
+                      .setCleanInputs
+                      .resetScalajs
                   }
-              }
-          }
-        }
-        case Some(embededOptions) => {
-          val setInputs =
-            (embededOptions.snippetId, embededOptions.inputs) match {
-              case (Some(snippetId), _) =>
-                backend.loadSnippet(snippetId)
-
-              case (_, Some(inputs)) =>
-                backend.scope.modState(_.setInputs(inputs))
-
-              case _ => Callback.empty
+                }
             }
-
-          val setTheme =
-            embededOptions.theme match {
-              case Some("dark")  => backend.scope.modState(_.setTheme(dark = true))
-              case Some("light") => backend.scope.modState(_.setTheme(dark = false))
-              case _             => Callback(())
-            }
-
-          setInputs >> setTheme
         }
       }
+      case Some(embededOptions) => {
+        val setInputs = (embededOptions.snippetId, embededOptions.inputs) match {
+          case (Some(snippetId), _) => backend.loadSnippet(snippetId)
+
+          case (_, Some(inputs)) => backend.scope.modState(_.setInputs(inputs))
+
+          case _ => Callback.empty
+        }
+
+        val setTheme = embededOptions.theme match {
+          case Some("dark")  => backend.scope.modState(_.setTheme(dark = true))
+          case Some("light") => backend.scope.modState(_.setTheme(dark = false))
+          case _             => Callback(())
+        }
+
+        setInputs >> setTheme
+      }
+    }
 
     initialState >> backend.loadUser
   }
@@ -190,20 +180,19 @@ object Scastie {
       val scalaJsRunScriptElement = createScript(scalaJsRunId)
       println("== Running Scala.js ==")
 
-      val scalaJsScript =
-        s"""|try {
-            |  var main = new ScastiePlaygroundMain();
-            |  scastie.ClientMain.signal(
-            |    main.result,
-            |    main.attachedElements,
-            |    "$scastieId"
-            |  );
-            |} catch (e) {
-            |  scastie.ClientMain.error(
-            |    e,
-            |    "$scastieId"
-            |  );
-            |}""".stripMargin
+      val scalaJsScript = s"""|try {
+                              |  var main = new ScastiePlaygroundMain();
+                              |  scastie.ClientMain.signal(
+                              |    main.result,
+                              |    main.attachedElements,
+                              |    "$scastieId"
+                              |  );
+                              |} catch (e) {
+                              |  scastie.ClientMain.error(
+                              |    e,
+                              |    "$scastieId"
+                              |  );
+                              |}""".stripMargin
 
       scalaJsRunScriptElement.innerHTML = scalaJsScript
     }
@@ -215,8 +204,8 @@ object Scastie {
         state.snippetState.scalaJsContent.foreach { content =>
           println("== Loading Scala.js! ==")
           val scalaJsScriptElement = createScript(scalaJsId)
-          val fixedContent = playgroundMainRegex.replaceAllIn(content, "var ScastiePlaygroundMain")
-          val scriptTextNode = dom.document.createTextNode(fixedContent)
+          val fixedContent         = playgroundMainRegex.replaceAllIn(content, "var ScastiePlaygroundMain")
+          val scriptTextNode       = dom.document.createTextNode(fixedContent)
           scalaJsScriptElement.appendChild(scriptTextNode)
           runScalaJs()
         }
@@ -224,86 +213,86 @@ object Scastie {
     }
   }
 
-  private def component(serverUrl: Option[String], scastieId: UUID) =
-    ScalaComponent
-      .builder[Scastie]("Scastie")
-      .initialStateFromProps { props =>
-        val state = {
-          val scheme = LocalStorage.load.map(_.isDarkTheme)
-          val loadedState = ScastieState.default(props.isEmbedded).copy(inputs = SbtInputs.default.copy(code = ""))
-          val loadedStateWithScheme = scheme.map(theme => loadedState.copy(isDarkTheme = theme)).getOrElse(loadedState)
-          if (!props.isEmbedded) {
-            loadedStateWithScheme
+  private def component(serverUrl: Option[String], scastieId: UUID) = ScalaComponent
+    .builder[Scastie]("Scastie")
+    .initialStateFromProps { props =>
+      val state = {
+        val scheme      = LocalStorage.load.map(_.isDarkTheme)
+        val editorMode  = LocalStorage.load.map(_.editorMode)
+        val loadedState = ScastieState.default(props.isEmbedded).copy(inputs = SbtInputs.default.copy(code = ""))
+        val loadedStateWithMode = editorMode.map(mode => loadedState.copy(editorMode = mode)).getOrElse(loadedState)
+        val loadedStateWithScheme =
+          scheme.map(theme => loadedStateWithMode.copy(isDarkTheme = theme)).getOrElse(loadedStateWithMode)
+        if (!props.isEmbedded) {
+          loadedStateWithScheme
+        } else {
+          loadedStateWithScheme.setCleanInputs.clearOutputs
+        }
+      }
+
+      val state1 = props.targetType match {
+        case Some(targetType) => {
+          val state0 = state.setTarget(targetType.defaultScalaTarget)
+
+          if (targetType == ScalaTargetType.Scala3) {
+            state0.setCode(Scala3.defaultCode)
           } else {
-            loadedStateWithScheme.setCleanInputs.clearOutputs
+            state0
           }
         }
-
-        val state1 =
-          props.targetType match {
-            case Some(targetType) => {
-              val state0 = state.setTarget(targetType.defaultScalaTarget)
-
-              if (targetType == ScalaTargetType.Scala3) {
-                state0.setCode(Scala3.defaultCode)
-              } else {
-                state0
-              }
-            }
-            case _ => state
-          }
-
-        val state2 = props.tryLibrary match {
-          case Some(dependency) =>
-            state1
-              .setTarget(dependency._1.target)
-              .addScalaDependency(dependency._1, dependency._2)
-          case _ => state1
-        }
-
-        val state3 = props.code match {
-          case Some(code) => state2.setCode(code)
-          case _          => state2
-        }
-
-        props.inputs match {
-          case Some(inputs) => state3.setInputs(inputs)
-          case _            => state3
-        }
+        case _ => state
       }
-      .backend(ScastieBackend(scastieId, serverUrl, _))
-      .renderPS(render)
-      .componentWillMount { current =>
-        start(current.props, current.backend) >>
-          setTitle(current.state, current.props) >>
-          current.backend.closeNewSnippetModal >>
-          current.backend.closeResetModal >>
-          current.backend.connectStatus.when_(!current.props.isEmbedded)
-      }
-      .componentWillUnmount { current =>
-        current.backend.disconnectStatus.when_(!current.props.isEmbedded) >>
-          current.backend.unsubscribeGlobal
-      }
-      .componentDidUpdate { scope =>
-        setTitle(scope.prevState, scope.currentProps) >>
-          scope.modState(_.scalaJsScriptLoaded) >>
-          executeScalaJs(scastieId, scope.currentState)
-      }
-      .componentWillReceiveProps { scope =>
-        val next = scope.nextProps.snippetId
-        val current = scope.currentProps.snippetId
-        val state = scope.state
-        val backend = scope.backend
 
-        val loadSnippet: CallbackOption[Unit] =
-          for {
-            snippetId <- CallbackOption.option(next)
-            _ <- CallbackOption.require(next != current)
-            _ <- backend.loadSnippet(snippetId).toCBO >> backend.setView(View.Editor)
-          } yield ()
-
-        setTitle(state, scope.nextProps) >> loadSnippet.toCallback
+      val state2 = props.tryLibrary match {
+        case Some(dependency) => state1
+            .setTarget(dependency._1.target)
+            .addScalaDependency(dependency._1, dependency._2)
+        case _ => state1
       }
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+
+      val state3 = props.code match {
+        case Some(code) => state2.setCode(code)
+        case _          => state2
+      }
+
+      props.inputs match {
+        case Some(inputs) => state3.setInputs(inputs)
+        case _            => state3
+      }
+    }
+    .backend(ScastieBackend(scastieId, serverUrl, _))
+    .renderPS(render)
+    .componentWillMount { current =>
+      start(current.props, current.backend) >>
+        setTitle(current.state, current.props) >>
+        current.backend.closeNewSnippetModal >>
+        current.backend.closeResetModal >>
+        current.backend.connectStatus.when_(!current.props.isEmbedded)
+    }
+    .componentWillUnmount { current =>
+      current.backend.disconnectStatus.when_(!current.props.isEmbedded) >>
+        current.backend.unsubscribeGlobal
+    }
+    .componentDidUpdate { scope =>
+      setTitle(scope.prevState, scope.currentProps) >>
+        scope.modState(_.scalaJsScriptLoaded) >>
+        executeScalaJs(scastieId, scope.currentState)
+    }
+    .componentWillReceiveProps { scope =>
+      val next    = scope.nextProps.snippetId
+      val current = scope.currentProps.snippetId
+      val state   = scope.state
+      val backend = scope.backend
+
+      val loadSnippet: CallbackOption[Unit] = for {
+        snippetId <- CallbackOption.option(next)
+        _         <- CallbackOption.require(next != current)
+        _         <- backend.loadSnippet(snippetId).toCBO >> backend.setView(View.Editor)
+      } yield ()
+
+      setTitle(state, scope.nextProps) >> loadSnippet.toCallback
+    }
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }

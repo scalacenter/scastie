@@ -1,12 +1,13 @@
 package org.scastie.client
 
-import org.scastie.api._
-import org.scalajs.dom.HTMLElement
-import org.scalajs.dom.{Position => _}
-import org.scastie.client.scalacli.ScalaCliUtils._
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.syntax._
+import org.scalajs.dom.{Position => _}
+import org.scalajs.dom.HTMLElement
+import org.scastie.api._
+import org.scastie.api.EditorMode._
+import org.scastie.client.scalacli.ScalaCliUtils._
 import org.scastie.runtime.api._
 import RuntimeCodecs._
 
@@ -44,12 +45,13 @@ object SnippetState {
 }
 
 case class SnippetState(
-    snippetId: Option[SnippetId],
-    loadSnippet: Boolean,
-    scalaJsContent: Option[String],
+  snippetId: Option[SnippetId],
+  loadSnippet: Boolean,
+  scalaJsContent: Option[String]
 )
 
 object ScastieState {
+
   def default(isEmbedded: Boolean): ScastieState = {
     ScastieState(
       view = View.Editor,
@@ -68,22 +70,22 @@ object ScastieState {
       snippetState = SnippetState(
         snippetId = None,
         loadSnippet = true,
-        scalaJsContent = None,
+        scalaJsContent = None
       ),
       user = None,
       attachedDoms = Map(),
       inputs = ScalaCliInputs.default,
       outputs = Outputs.default,
       status = StatusState.empty,
-      isEmbedded = isEmbedded
+      isEmbedded = isEmbedded,
+      editorMode = Default
     )
   }
 
   implicit val dontSerializeAttachedDoms: Codec[Map[String, HTMLElement]] =
     dontSerialize[Map[String, HTMLElement]](Map())
 
-  implicit val dontSerializeStatusState: Codec[StatusState] =
-    dontSerialize[StatusState](StatusState.empty)
+  implicit val dontSerializeStatusState: Codec[StatusState] = dontSerialize[StatusState](StatusState.empty)
 
   implicit val dontSerializeEventStream: Codec[EventStream[StatusProgress]] =
     dontSerializeOption[EventStream[StatusProgress]]
@@ -91,8 +93,7 @@ object ScastieState {
   implicit val dontSerializeProgressStream: Codec[EventStream[SnippetProgress]] =
     dontSerializeOption[EventStream[SnippetProgress]]
 
-  implicit val dontSerializeMetalsStatus: Codec[MetalsStatus] =
-    dontSerialize[MetalsStatus](MetalsLoading)
+  implicit val dontSerializeMetalsStatus: Codec[MetalsStatus] = dontSerialize[MetalsStatus](MetalsLoading)
 
   implicit val scastieStateEncoder: Encoder[ScastieState] = deriveEncoder[ScastieState]
   implicit val scastieStateDecoder: Decoder[ScastieState] = deriveDecoder[ScastieState]
@@ -100,84 +101,85 @@ object ScastieState {
 }
 
 case class ScastieState(
-    view: View,
-    isRunning: Boolean,
-    statusStream: Option[EventStream[StatusProgress]],
-    progressStream: Option[EventStream[SnippetProgress]],
-    modalState: ModalState,
-    isDarkTheme: Boolean,
-    isDesktopForced: Boolean,
-    isPresentationMode: Boolean,
-    showLineNumbers: Boolean,
-    consoleState: ConsoleState,
-    inputsHasChanged: Boolean,
-    snippetState: SnippetState,
-    user: Option[User],
-    attachedDoms: Map[String, HTMLElement],
-    inputs: BaseInputs,
-    outputs: Outputs,
-    status: StatusState,
-    metalsStatus: MetalsStatus = MetalsLoading,
-    isEmbedded: Boolean = false,
-    transient: Boolean = false,
-
-    scalaCliConversionError: Option[String] = None
+  view: View,
+  isRunning: Boolean,
+  statusStream: Option[EventStream[StatusProgress]],
+  progressStream: Option[EventStream[SnippetProgress]],
+  modalState: ModalState,
+  isDarkTheme: Boolean,
+  isDesktopForced: Boolean,
+  isPresentationMode: Boolean,
+  showLineNumbers: Boolean,
+  consoleState: ConsoleState,
+  inputsHasChanged: Boolean,
+  snippetState: SnippetState,
+  user: Option[User],
+  attachedDoms: Map[String, HTMLElement],
+  inputs: BaseInputs,
+  outputs: Outputs,
+  status: StatusState,
+  metalsStatus: MetalsStatus = MetalsLoading,
+  isEmbedded: Boolean = false,
+  transient: Boolean = false,
+  scalaCliConversionError: Option[String] = None,
+  editorMode: EditorMode = Default
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
-  def loadSnippet: Boolean = snippetState.loadSnippet
+  def loadSnippet: Boolean         = snippetState.loadSnippet
 
   def copyAndSave(
-      attachedDoms: Map[String, HTMLElement] = attachedDoms,
-      view: View = view,
-      isRunning: Boolean = isRunning,
-      statusStream: Option[EventStream[StatusProgress]] = statusStream,
-      progressStream: Option[EventStream[SnippetProgress]] = progressStream,
-      modalState: ModalState = modalState,
-      isDarkTheme: Boolean = isDarkTheme,
-      isPresentationMode: Boolean = isPresentationMode,
-      isDesktopForced: Boolean = isDesktopForced,
-      showLineNumbers: Boolean = showLineNumbers,
-      consoleState: ConsoleState = consoleState,
-      inputsHasChanged: Boolean = inputsHasChanged,
-      snippetId: Option[SnippetId] = snippetId,
-      loadSnippet: Boolean = loadSnippet,
-      scalaJsContent: Option[String] = snippetState.scalaJsContent,
-      user: Option[User] = user,
-      inputs: BaseInputs = inputs,
-      outputs: Outputs = outputs,
-      status: StatusState = status,
-      metalsStatus: MetalsStatus = metalsStatus,
-      transient: Boolean = transient,
-      scalaCliConversionError: Option[String] = scalaCliConversionError
+    attachedDoms: Map[String, HTMLElement] = attachedDoms,
+    view: View = view,
+    isRunning: Boolean = isRunning,
+    statusStream: Option[EventStream[StatusProgress]] = statusStream,
+    progressStream: Option[EventStream[SnippetProgress]] = progressStream,
+    modalState: ModalState = modalState,
+    isDarkTheme: Boolean = isDarkTheme,
+    isPresentationMode: Boolean = isPresentationMode,
+    isDesktopForced: Boolean = isDesktopForced,
+    showLineNumbers: Boolean = showLineNumbers,
+    consoleState: ConsoleState = consoleState,
+    inputsHasChanged: Boolean = inputsHasChanged,
+    snippetId: Option[SnippetId] = snippetId,
+    loadSnippet: Boolean = loadSnippet,
+    scalaJsContent: Option[String] = snippetState.scalaJsContent,
+    user: Option[User] = user,
+    inputs: BaseInputs = inputs,
+    outputs: Outputs = outputs,
+    status: StatusState = status,
+    metalsStatus: MetalsStatus = metalsStatus,
+    transient: Boolean = transient,
+    scalaCliConversionError: Option[String] = scalaCliConversionError,
+    editorMode: EditorMode = editorMode
   ): ScastieState = {
-    val state0 =
-      copy(
-        view = view,
-        isRunning = isRunning,
-        statusStream = statusStream,
-        progressStream = progressStream,
-        modalState = modalState,
-        isDarkTheme = isDarkTheme,
-        isDesktopForced = isDesktopForced,
-        isPresentationMode = isPresentationMode,
-        showLineNumbers = showLineNumbers,
-        consoleState = consoleState,
-        inputsHasChanged = inputsHasChanged,
-        snippetState = SnippetState(
-          snippetId = snippetId,
-          loadSnippet = loadSnippet,
-          scalaJsContent = scalaJsContent,
-        ),
-        user = user,
-        attachedDoms = attachedDoms,
-        inputs = inputs.markAsCopied,
-        outputs = outputs,
-        status = status,
-        metalsStatus = metalsStatus,
-        isEmbedded = isEmbedded,
-        transient = transient,
-        scalaCliConversionError = scalaCliConversionError,
-      )
+    val state0 = copy(
+      view = view,
+      isRunning = isRunning,
+      statusStream = statusStream,
+      progressStream = progressStream,
+      modalState = modalState,
+      isDarkTheme = isDarkTheme,
+      isDesktopForced = isDesktopForced,
+      isPresentationMode = isPresentationMode,
+      showLineNumbers = showLineNumbers,
+      consoleState = consoleState,
+      inputsHasChanged = inputsHasChanged,
+      snippetState = SnippetState(
+        snippetId = snippetId,
+        loadSnippet = loadSnippet,
+        scalaJsContent = scalaJsContent
+      ),
+      user = user,
+      attachedDoms = attachedDoms,
+      inputs = inputs.markAsCopied,
+      outputs = outputs,
+      status = status,
+      metalsStatus = metalsStatus,
+      isEmbedded = isEmbedded,
+      transient = transient,
+      scalaCliConversionError = scalaCliConversionError,
+      editorMode = editorMode
+    )
 
     if (!isEmbedded && !transient) {
       LocalStorage.save(state0)
@@ -186,14 +188,13 @@ case class ScastieState(
     state0
   }
 
-  def modifySbtInputs(inputsModification: SbtInputs => SbtInputs): ScastieState =
-    inputs match {
-      case sbtInputs: SbtInputs => {
-        val newInputs = inputsModification(sbtInputs)
-        copyAndSave(inputs = newInputs, inputsHasChanged = inputs != newInputs)
-      }
-      case _ => this
+  def modifySbtInputs(inputsModification: SbtInputs => SbtInputs): ScastieState = inputs match {
+    case sbtInputs: SbtInputs => {
+      val newInputs = inputsModification(sbtInputs)
+      copyAndSave(inputs = newInputs, inputsHasChanged = inputs != newInputs)
     }
+    case _ => this
+  }
 
   def updateScalaCliSettings(newSettings: ScastieMetalsOptions): ScastieState = {
     val newInputs = inputs match {
@@ -211,11 +212,10 @@ case class ScastieState(
 
   def isBuildDefault: Boolean = inputs match {
     case sbtInputs: SbtInputs => sbtInputs.isDefault
-    case _ => true
+    case _                    => true
   }
 
-  def isClearable: Boolean =
-    outputs.isClearable
+  def isClearable: Boolean = outputs.isClearable
 
   def run(snippetId: SnippetId): ScastieState = {
     clearOutputs.resetScalajs
@@ -229,82 +229,65 @@ case class ScastieState(
     copyAndSave(isRunning = isRunning).autoOpen(openConsole)
   }
 
-  def toggleTheme: ScastieState =
-    copyAndSave(isDarkTheme = !isDarkTheme)
+  def toggleTheme: ScastieState = copyAndSave(isDarkTheme = !isDarkTheme)
 
-  def setTheme(dark: Boolean): ScastieState =
-    copyAndSave(isDarkTheme = dark)
+  def setTheme(dark: Boolean): ScastieState = copyAndSave(isDarkTheme = dark)
 
-  def setMetalsStatus(status: MetalsStatus): ScastieState =
-    copyAndSave(metalsStatus = status)
+  def setEditorMode(mode: EditorMode): ScastieState = copyAndSave(editorMode = mode)
+
+  def setMetalsStatus(status: MetalsStatus): ScastieState = copyAndSave(metalsStatus = status)
 
   def toggleMetalsStatus: ScastieState =
     copyAndSave(metalsStatus = if (metalsStatus != MetalsDisabled) MetalsDisabled else MetalsLoading)
 
-  def toggleLineNumbers: ScastieState =
-    copyAndSave(showLineNumbers = !showLineNumbers)
+  def toggleLineNumbers: ScastieState = copyAndSave(showLineNumbers = !showLineNumbers)
 
-  def togglePresentationMode: ScastieState =
-    copyAndSave(isPresentationMode = !isPresentationMode)
+  def togglePresentationMode: ScastieState = copyAndSave(isPresentationMode = !isPresentationMode)
 
-  def toggleWorksheetMode: ScastieState =
-    copyAndSave(
-      inputs = inputs.toggleWorksheet,
-      inputsHasChanged = true
-    )
+  def toggleWorksheetMode: ScastieState = copyAndSave(
+    inputs = inputs.toggleWorksheet,
+    inputsHasChanged = true
+  )
 
-  def toggleHelpModal: ScastieState =
-    copyAndSave(
-      modalState = modalState.copy(isHelpModalClosed = !modalState.isHelpModalClosed)
-    )
+  def toggleHelpModal: ScastieState = copyAndSave(
+    modalState = modalState.copy(isHelpModalClosed = !modalState.isHelpModalClosed)
+  )
 
-  def togglePrivacyPolicyModal: ScastieState =
-    copyAndSave(
-      modalState = modalState.copy(isPrivacyPolicyModalClosed = !modalState.isPrivacyPolicyModalClosed)
-    )
+  def togglePrivacyPolicyModal: ScastieState = copyAndSave(
+    modalState = modalState.copy(isPrivacyPolicyModalClosed = !modalState.isPrivacyPolicyModalClosed)
+  )
 
-  def setPrivacyPolicyPromptClosed(status: Boolean): ScastieState =
-    copyAndSave(
-      modalState = modalState.copy(isPrivacyPolicyPromptClosed = status)
-    )
+  def setPrivacyPolicyPromptClosed(status: Boolean): ScastieState = copyAndSave(
+    modalState = modalState.copy(isPrivacyPolicyPromptClosed = status)
+  )
 
-  def setLoginModalClosed(status: Boolean): ScastieState =
-    copyAndSave(
-      modalState = modalState.copy(isLoginModalClosed = status)
-    )
+  def setLoginModalClosed(status: Boolean): ScastieState = copyAndSave(
+    modalState = modalState.copy(isLoginModalClosed = status)
+  )
 
-  def openHelpModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(isHelpModalClosed = false))
+  def openHelpModal: ScastieState = copyAndSave(modalState = modalState.copy(isHelpModalClosed = false))
 
   def openPrivacyPolicyModal: ScastieState =
     copyAndSave(modalState = modalState.copy(isPrivacyPolicyModalClosed = false))
 
-  def closeHelpModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(isHelpModalClosed = true))
+  def closeHelpModal: ScastieState = copyAndSave(modalState = modalState.copy(isHelpModalClosed = true))
 
-  def openResetModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(isResetModalClosed = false))
+  def openResetModal: ScastieState = copyAndSave(modalState = modalState.copy(isResetModalClosed = false))
 
-  def closeResetModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(isResetModalClosed = true))
+  def closeResetModal: ScastieState = copyAndSave(modalState = modalState.copy(isResetModalClosed = true))
 
-  def openNewSnippetModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(isNewSnippetModalClosed = false))
+  def openNewSnippetModal: ScastieState = copyAndSave(modalState = modalState.copy(isNewSnippetModalClosed = false))
 
-  def closeNewSnippetModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(isNewSnippetModalClosed = true))
+  def closeNewSnippetModal: ScastieState = copyAndSave(modalState = modalState.copy(isNewSnippetModalClosed = true))
 
   def openShareModal(snippetId: Option[SnippetId]): ScastieState =
     copyAndSave(modalState = modalState.copy(shareModalSnippetId = snippetId))
 
-  def closeShareModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(shareModalSnippetId = None))
+  def closeShareModal: ScastieState = copyAndSave(modalState = modalState.copy(shareModalSnippetId = None))
 
-  def openEmbeddedModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(isEmbeddedClosed = false))
+  def openEmbeddedModal: ScastieState = copyAndSave(modalState = modalState.copy(isEmbeddedClosed = false))
 
-  def closeEmbeddedModal: ScastieState =
-    copyAndSave(modalState = modalState.copy(isEmbeddedClosed = true))
+  def closeEmbeddedModal: ScastieState = copyAndSave(modalState = modalState.copy(isEmbeddedClosed = true))
 
   def forceDesktop: ScastieState = copyAndSave(isDesktopForced = true)
 
@@ -337,16 +320,14 @@ case class ScastieState(
   def toggleConsole: ScastieState = {
     copyAndSave(
       consoleState =
-        if (consoleState.consoleIsOpen)
-          consoleState.copy(
-            consoleIsOpen = false,
-            userOpenedConsole = false
-          )
-        else
-          consoleState.copy(
-            consoleIsOpen = true,
-            userOpenedConsole = true
-          )
+        if (consoleState.consoleIsOpen) consoleState.copy(
+          consoleIsOpen = false,
+          userOpenedConsole = false
+        )
+        else consoleState.copy(
+          consoleIsOpen = true,
+          userOpenedConsole = true
+        )
     )
   }
 
@@ -354,11 +335,9 @@ case class ScastieState(
     copyAndSave(consoleState = consoleState.copy(consoleHasUserOutput = true))
   }
 
-  def setLoadSnippet(value: Boolean): ScastieState =
-    copy(snippetState = snippetState.copy(loadSnippet = value))
+  def setLoadSnippet(value: Boolean): ScastieState = copy(snippetState = snippetState.copy(loadSnippet = value))
 
-  def setUser(user: Option[User]): ScastieState =
-    copyAndSave(user = user)
+  def setUser(user: Option[User]): ScastieState = copyAndSave(user = user)
 
   def setCode(code: String): ScastieState = {
     if (inputs.code != code) {
@@ -371,32 +350,25 @@ case class ScastieState(
     }
   }
 
-  def setInputs(inputs: BaseInputs): ScastieState =
-    copyAndSave(inputs = inputs)
+  def setInputs(inputs: BaseInputs): ScastieState = copyAndSave(inputs = inputs)
 
-  def setSbtConfigExtra(config: String): ScastieState =
-    modifySbtInputs(_.copy(sbtConfigExtra = config))
+  def setSbtConfigExtra(config: String): ScastieState = modifySbtInputs(_.copy(sbtConfigExtra = config))
 
-  def setChangedInputs: ScastieState =
-    copyAndSave(inputsHasChanged = true)
+  def setChangedInputs: ScastieState = copyAndSave(inputsHasChanged = true)
 
-  def setCleanInputs: ScastieState =
-    copyAndSave(inputsHasChanged = false)
+  def setCleanInputs: ScastieState = copyAndSave(inputsHasChanged = false)
 
-  def setView(newView: View): ScastieState =
-    copyAndSave(view = newView)
+  def setView(newView: View): ScastieState = copyAndSave(view = newView)
 
   def setTarget(target: ScalaTarget): ScastieState =
     copyAndSave(inputs = inputs.setTarget(target), inputsHasChanged = true)
 
-  def clearDependencies: ScastieState =
-    modifySbtInputs(_.clearDependencies)
+  def clearDependencies: ScastieState = modifySbtInputs(_.clearDependencies)
 
   def addScalaDependency(scalaDependency: ScalaDependency, project: Project): ScastieState =
     modifySbtInputs(_.addScalaDependency(scalaDependency, project))
 
-  def setScalaDependencies(deps: List[(ScalaDependency, Project)]) =
-    modifySbtInputs(_.copy(librariesFromList = deps))
+  def setScalaDependencies(deps: List[(ScalaDependency, Project)]) = modifySbtInputs(_.copy(librariesFromList = deps))
 
   def removeScalaDependency(scalaDependency: ScalaDependency): ScastieState =
     modifySbtInputs(_.removeScalaDependency(scalaDependency))
@@ -420,20 +392,17 @@ case class ScastieState(
   def clearOutputsPreserveConsole: ScastieState =
     copyAndSave(outputs = Outputs.default.copy(consoleOutputs = outputs.consoleOutputs))
 
-  def closeModals: ScastieState =
-    copyAndSave(modalState = ModalState.allClosed)
+  def closeModals: ScastieState = copyAndSave(modalState = ModalState.allClosed)
 
   def setRuntimeError(runtimeError: Option[RuntimeError]): ScastieState =
     if (runtimeError.isEmpty) this
     else copyAndSave(outputs = outputs.copy(runtimeError = runtimeError))
 
-  def setSbtError(err: Boolean): ScastieState =
-    copyAndSave(outputs = outputs.copy(sbtError = err))
+  def setSbtError(err: Boolean): ScastieState = copyAndSave(outputs = outputs.copy(sbtError = err))
 
   def logOutput(line: Option[ProcessOutput], wrap: ProcessOutput => ConsoleOutput): ScastieState = {
     line match {
-      case Some(l) =>
-        copyAndSave(
+      case Some(l) => copyAndSave(
           outputs = outputs.copy(
             consoleOutputs = outputs.consoleOutputs ++ Vector(wrap(l))
           )
@@ -469,10 +438,8 @@ case class ScastieState(
 
   def addStatus(statusUpdate: StatusProgress): ScastieState = {
     statusUpdate match {
-      case StatusProgress.KeepAlive =>
-        this
-      case StatusProgress.Sbt(sbtRunners) =>
-        copyAndSave(status = status.copy(sbtRunners = Some(sbtRunners)))
+      case StatusProgress.KeepAlive       => this
+      case StatusProgress.Sbt(sbtRunners) => copyAndSave(status = status.copy(sbtRunners = Some(sbtRunners)))
     }
   }
 
@@ -481,8 +448,8 @@ case class ScastieState(
   }
 
   def setProgresses(progresses: List[SnippetProgress]): ScastieState = coalesceUpdates { self =>
-    progresses.foldLeft(self) {
-      case (state, progress) => state.addProgress(progress)
+    progresses.foldLeft(self) { case (state, progress) =>
+      state.addProgress(progress)
     }
   }
 
@@ -515,20 +482,18 @@ case class ScastieState(
 
     val useWorksheetModeTip =
       if (compilationInfos.exists(ci => topDef(ci)))
-        if (inputs.isWorksheetMode)
-          Set(
-            info(
-              """|It seems you're writing code without an enclosing class/object.
-                 |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin
-            )
+        if (inputs.isWorksheetMode) Set(
+          info(
+            """|It seems you're writing code without an enclosing class/object.
+               |Switch to Worksheet mode if you want to use scastie more like a REPL.""".stripMargin
           )
-        else
-          Set(
-            info(
-              """|It seems you're writing code without an enclosing class/object.
-                 |This configuration does not support Worksheet mode.""".stripMargin
-            )
+        )
+        else Set(
+          info(
+            """|It seems you're writing code without an enclosing class/object.
+               |This configuration does not support Worksheet mode.""".stripMargin
           )
+        )
       else Set()
 
     copyAndSave(

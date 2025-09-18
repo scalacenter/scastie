@@ -1,16 +1,17 @@
 package org.scastie.client.components.editor
 
 import org.scalajs.dom
-import typings.codemirrorState.anon
-import typings.codemirrorView.mod.EditorView
-import typings.codemirrorView.mod.{KeyBinding => JSKeyBinding}
-import typings.codemirrorCommands.mod._
-import typings.codemirrorAutocomplete.mod.acceptCompletion
-import typings.codemirrorState.mod._
+import org.scastie.api
 import org.scastie.client
-
 import scalajs.js
+import typings.codemirrorAutocomplete.mod.acceptCompletion
+import typings.codemirrorCommands.mod._
+import typings.codemirrorState.anon
+import typings.codemirrorState.mod._
 import typings.codemirrorState.mod.TransactionSpec
+import typings.codemirrorView.mod.{KeyBinding => JSKeyBinding}
+import typings.codemirrorView.mod.EditorView
+import typings.replitCodemirrorVim.mod.Vim_
 
 object EditorKeymaps {
 
@@ -23,31 +24,77 @@ object EditorKeymaps {
     }
   }
 
-  val saveOrUpdate = new Key("Ctrl-Enter", "Meta-Enter")
-  val saveOrUpdateAlt = new Key("Ctrl-s", "Meta-s")
-  val openNewSnippetModal = new Key("Ctrl-m", "Meta-m")
-  val clear = new Key("Escape")
-  val clearAlt = new Key("F1")
-  val console = new Key("F3")
-  val help = new Key("F5")
-  val format = new Key("F6")
-  val presentation = new Key("F8")
-
-  def keymapping(e: CodeEditor) =
-    typings.codemirrorView.mod.keymap.of(
-      js.Array(
-        KeyBinding.tabKeybind,
-        KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdate, true),
-        KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdateAlt, true),
-        KeyBinding(_ => e.openNewSnippetModal.runNow(), openNewSnippetModal, true),
-        KeyBinding(_ => e.clear.runNow(), clear, true),
-        KeyBinding(_ => e.clear.runNow(), clearAlt, true),
-        KeyBinding(_ => e.toggleHelp.runNow(), help, true),
-        KeyBinding(_ => e.toggleConsole.runNow(), console, true),
-        KeyBinding(_ => e.formatCode.runNow(), format, true),
-        KeyBinding(_ => presentationMode(e), presentation, true),
-      )
+  def registerVimCommands(e: CodeEditor): Unit = {
+    Vim_.defineEx(
+      "w",
+      "",
+      (_, _) => e.saveOrUpdate.runNow()
     )
+    Vim_.defineEx(
+      "run",
+      "",
+      (_, _) => e.saveOrUpdate.runNow()
+    )
+    Vim_.defineEx(
+      "f",
+      "",
+      (_, _) => e.formatCode.runNow()
+    )
+    Vim_.defineEx(
+      "format",
+      "",
+      (_, _) => e.formatCode.runNow()
+    )
+    Vim_.defineEx(
+      "c",
+      "",
+      (_, _) => e.clear.runNow()
+    )
+    Vim_.defineEx(
+      "clear",
+      "",
+      (_, _) => e.clear.runNow()
+    )
+    Vim_.defineEx(
+      "h",
+      "",
+      (_, _) => e.toggleHelp.runNow()
+    )
+    Vim_.defineEx(
+      "help",
+      "",
+      (_, _) => e.toggleHelp.runNow()
+    )
+  }
+
+  val saveOrUpdate        = new Key("Ctrl-Enter", "Meta-Enter")
+  val saveOrUpdateAlt     = new Key("Ctrl-s", "Meta-s")
+  val openNewSnippetModal = new Key("Ctrl-m", "Meta-m")
+  val clear               = new Key("Escape")
+  val clearAlt            = new Key("F1")
+  val console             = new Key("F3")
+  val help                = new Key("F5")
+  val format              = new Key("F6")
+  val presentation        = new Key("F8")
+
+  def keymapping(e: CodeEditor) = {
+    val base = js.Array(
+      KeyBinding.tabKeybind,
+      KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdate, true),
+      KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdateAlt, true),
+      KeyBinding(_ => e.openNewSnippetModal.runNow(), openNewSnippetModal, true),
+      KeyBinding(_ => e.clear.runNow(), clearAlt, true),
+      KeyBinding(_ => e.toggleHelp.runNow(), help, true),
+      KeyBinding(_ => e.toggleConsole.runNow(), console, true),
+      KeyBinding(_ => e.formatCode.runNow(), format, true),
+      KeyBinding(_ => presentationMode(e), presentation, true)
+    )
+    if (e.editorMode != api.Vim) {
+      base.push(KeyBinding(_ => e.clear.runNow(), clear, true))
+    }
+    typings.codemirrorView.mod.keymap.of(base)
+  }
+
 }
 
 case class Key(default: String, linux: String, mac: String, win: String) {
@@ -63,22 +110,25 @@ case class Key(default: String, linux: String, mac: String, win: String) {
     val macAdjusted = if (client.isMac) mac.replace("Meta", "Cmd") else default
     macAdjusted.replace("Escape", "Esc")
   }
+
 }
 
 object KeyBinding {
+
   val tabKeybind: JSKeyBinding = {
     val key = new Key("Tab")
     JSKeyBinding()
       .setRun(view =>
-          if (!acceptCompletion(view)) {
-            view.dispatch(
-              TransactionSpec()
-                .setChanges(js.Dynamic.literal(from = view.state.selection.main.head, insert = "  ").asInstanceOf[ChangeSpec])
-                .setSelection(EditorSelection.single(view.state.selection.main.head + 2))
-            )
-            true
-          }
-          else false
+        if (!acceptCompletion(view)) {
+          view.dispatch(
+            TransactionSpec()
+              .setChanges(
+                js.Dynamic.literal(from = view.state.selection.main.head, insert = "  ").asInstanceOf[ChangeSpec]
+              )
+              .setSelection(EditorSelection.single(view.state.selection.main.head + 2))
+          )
+          true
+        } else false
       )
       .setKey(key.default)
       .setLinux(key.linux)
@@ -96,4 +146,5 @@ object KeyBinding {
       .setWin(key.win)
       .setPreventDefault(preventDefault)
   }
+
 }

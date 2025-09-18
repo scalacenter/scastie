@@ -63,6 +63,7 @@ object MainPanel {
         isPresentationMode = state.isPresentationMode,
         isWorksheetMode = state.inputs.isWorksheetMode,
         isEmbedded = props.isEmbedded,
+        editorMode = state.editorMode,
         showLineNumbers = state.showLineNumbers,
         value = state.inputs.code,
         attachedDoms = state.attachedDoms,
