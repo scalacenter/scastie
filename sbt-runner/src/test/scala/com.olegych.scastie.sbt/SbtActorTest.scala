@@ -234,6 +234,153 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     run(dotty)(assertUserOutput("Hello world!"))
   }
 
+  test("Scala 3 braceless syntax: print statement") {
+    val dotty = Inputs.default.copy(
+      code = s"""|println:
+                 |  "Hello world!"
+                 |""".stripMargin,
+    )
+    var outputOk = false
+    var instrOk = false
+    run(dotty) { progress =>
+      if (assertUserOutput("Hello world!")(progress)) outputOk = true
+      if (assertInstrumentation(Value("()", "scala.Unit"), Position(0, 25))(progress)) instrOk = true
+      outputOk && instrOk
+    }
+  }
+
+  test("top-level match expression") {
+    val dotty = Inputs.default.copy(
+      code = """|1 match
+                |  case a: Int => "Hi"
+                |""".stripMargin
+    )
+
+    run(dotty) {
+      assertInstrumentation(Value("Hi", "java.lang.String"), Position(0, 29))
+    }
+  }
+
+  test("string interpolation in match pattern with println") {
+    val dotty = Inputs.default.copy(
+      code = """|"hello" match
+                |  case s"hel$lo" => println(lo)
+                |""".stripMargin
+    )
+    var outputOk = false
+    var instrOk = false
+    run(dotty) { progress =>
+      if (assertUserOutput("lo")(progress)) outputOk = true
+      if (assertInstrumentation(Value("()", "scala.Unit"), Position(0, 45))(progress)) instrOk = true
+      outputOk && instrOk
+    }
+  }
+
+  test("pattern match with custom unapplySeq extractor and println") {
+    val dotty = Inputs.default.copy(
+      code = """|object CharList:
+                |  def unapplySeq(s: String): Option[Seq[Char]] = Some(s.toList)
+                |
+                |"example" match
+                |  case CharList(c1, c2, c3, c4, _, _, _) =>
+                |    println(s"$c1,$c2,$c3,$c4")
+                |""".stripMargin
+    )
+    var outputOk = false
+    var instrOk = false
+    run(dotty) { progress =>
+      if (assertUserOutput("e,x,a,m")(progress)) outputOk = true
+      if (assertInstrumentation(Value("()", "scala.Unit"), Position(82, 173))(progress)) instrOk = true
+      outputOk && instrOk
+    }
+  }
+
+  test("braceless while loop") {
+    val dotty = Inputs.default.copy(
+      code = """|var x = 1
+                |
+                |while
+                |  x < 3
+                |do
+                |  if (x != 1) { println(x) }
+                |  x += 1
+                |""".stripMargin
+    )
+    var outputOk = false
+    var instrOk = false
+    run(dotty) { progress =>
+      if (assertUserOutput("2")(progress)) outputOk = true
+      if (assertInstrumentation(Value("()", "scala.Unit"), Position(11, 65))(progress)) instrOk = true
+      outputOk && instrOk
+    }
+  }
+
+  test("report warning for extension method conflict") {
+    val dotty = Inputs.default.copy(
+      code = """|class Json:
+                |  def foo[A](bar: AnyRef): Unit = ()
+                |
+                |extension (j: Json)
+                |  def foo[A](bar: String): Unit = ()
+                |""".stripMargin
+    )
+    run(dotty)(assertCompilationInfo { info =>
+      assert(info.message.contains("Extension method foo will never be selected from type Json"))
+      assert(info.line.contains(5))
+    })
+  }
+
+  test("nested if-then with println") {
+    val dotty = Inputs.default.copy(
+      code = """|if true then
+                |  if true then 
+                |    println("yes")
+                |""".stripMargin,
+    )
+    var outputOk = false
+    var instrOk = false
+    run(dotty) { progress =>
+      if (assertUserOutput("yes")(progress)) outputOk = true
+      if (assertInstrumentation(Value("()", "scala.Unit"), Position(0, 47))(progress)) instrOk = true
+      outputOk && instrOk
+    }
+  }
+
+  test("List.map with case in braceless syntax") {
+    val dotty = Inputs.default.copy(
+      code = """|List(1,2,3).map:
+                |  case x => x
+                |""".stripMargin,
+    )
+    run(dotty) { progress =>
+      assertInstrumentation(
+        Value("List(1, 2, 3)", "scala.collection.immutable.List[scala.Int]"),
+        Position(0, 30)
+      )(progress)
+    }
+  }
+
+  test("properly instrumented whitespaces") {
+    val dotty = Inputs.default.copy(
+      code = """|1 + 1
+                |
+                |
+                |
+                |1 + 5
+                |""".stripMargin,
+    )
+    run(dotty) { progress =>
+      assertInstrumentation(
+        Value("2", "scala.Int"),
+        Position(0, 5)
+      )(progress) &&
+      assertInstrumentation(
+        Value("6", "scala.Int"),
+        Position(9, 14)
+      )(progress)
+    }
+  }
+
   test("hide Playground from types") {
     runCode("case class A(i:Int) extends AnyVal; A(1)")(_.instrumentations.headOption.exists(_.render == Value("A(1)", "A")))
   }
@@ -318,6 +465,15 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       fish: SnippetProgress => Boolean
   ): Unit = {
     run(Inputs.default.copy(code = code, target = target), allowFailure)(fish)
+  }
+
+  private def assertInstrumentation(
+    expected: Value,
+    position: Position
+  )(progress: SnippetProgress): Boolean = {
+    progress.instrumentations.exists(instr =>
+      instr.render == expected && instr.position == position
+    )
   }
 
   private def assertUserOutput(

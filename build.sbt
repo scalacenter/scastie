@@ -335,7 +335,7 @@ lazy val instrumentation = project
   .settings(
     libraryDependencies ++= Seq(
       "org.scalameta"                 %% "scalameta" % "4.12.6",
-      "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
+      "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils)
