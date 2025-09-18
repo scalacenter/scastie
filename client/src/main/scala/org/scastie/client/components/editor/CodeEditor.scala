@@ -30,7 +30,7 @@ final case class CodeEditor(visible: Boolean,
                             isPresentationMode: Boolean,
                             isWorksheetMode: Boolean,
                             isEmbedded: Boolean,
-                            editorMode: api.EditorMode,
+                            editorMode: EditorMode,
                             showLineNumbers: Boolean,
                             value: String,
                             attachedDoms: Map[String, HTMLElement],
@@ -59,7 +59,7 @@ object CodeEditor {
   
   private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback = {
 
-    if(props.editorMode == api.Vim) {
+    if(props.editorMode == Vim) {
       EditorKeymaps.registerVimCommands(props)
     }
     
@@ -144,11 +144,11 @@ object CodeEditor {
     (errors ++ runtimeErrors).toJSArray
   }
 
-  private def getExtension(editorMode: api.EditorMode): Extension = {
+  private def getExtension(editorMode: EditorMode): Extension = {
     editorMode match {
-      case api.Default => js.Array[Any]()
-      case api.Vim     => vim()
-      case api.Emacs   => emacs()
+      case Default => js.Array[Any]()
+      case Vim     => vim()
+      case Emacs   => emacs()
     }
   }
 

@@ -196,3 +196,22 @@ case class Project(
 
 // Keep websocket connection
 case class KeepAlive(msg: String = "") extends AnyVal
+
+sealed trait EditorMode
+case object Default extends EditorMode
+case object Vim     extends EditorMode
+case object Emacs   extends EditorMode
+
+object EditorMode {
+  implicit val editorModeFormat: Encoder[EditorMode] = Encoder.encodeString.contramap {
+    case Default => "Default"
+    case Vim     => "Vim"
+    case Emacs   => "Emacs"
+  }
+  implicit val editorModeDecoder: Decoder[EditorMode] = Decoder.decodeString.emap {
+    case "Default" => Right(Default)
+    case "Vim"     => Right(Vim)
+    case "Emacs"   => Right(Emacs)
+    case other     => Left(s"Unknown EditorMode: $other")
+  }
+}
