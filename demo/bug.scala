@@ -13,7 +13,7 @@ import doodle.syntax._
 import doodle.jvm._
 import doodle.backend._
 import doodle.examples._
-import com.olegych.scastie.api.Html
+import org.scastie.api.Html
 import de.erichseifert.vectorgraphics2d.SVGGraphics2D
 import java.io.ByteArrayOutputStream
 
