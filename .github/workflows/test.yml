@@ -25,4 +25,4 @@ jobs:
         apps: sbtn bloop
     - name: Run tests
       run: |
-        nix-shell --command "yarn install && sbt -DSnippetsContainerTest.mongo=true cachedCiTest"
+        nix-shell --command "yarn install && sbtn -DSnippetsContainerTest.mongo=true cachedCiTest"
