@@ -6,6 +6,9 @@ import org.scalajs.dom
 
 import vdom.all._
 
+import com.olegych.scastie.client.i18n.I18n
+import japgolly.scalajs.react.hooks.HookCtx.I1
+
 
 final case class LoginModal(
   isDarkTheme: Boolean,
@@ -24,11 +27,30 @@ object LoginModal {
   def login: Callback =
     Callback(dom.window.location.pathname = "/login")
 
+  private def renderWithLink(template: String, linkAction: Callback): VdomElement = {
+    val linkRegex = """\{([^}]+)\}""".r
+    
+    linkRegex.findFirstMatchIn(template) match {
+      case Some(m) =>
+        val before = template.substring(0, m.start)
+        val linkText = m.group(1)
+        val after = template.substring(m.end)
+        
+        p(
+          before,
+          a(href := "#", onClick ==> (e => e.preventDefaultCB >> e.stopPropagationCB >> linkAction))(linkText),
+          after
+        )
+      case None =>
+        p(template)
+    }
+  }
+
   def render(props: LoginModal): VdomElement = {
     val theme = if (props.isDarkTheme) "dark" else "light"
 
     Modal(
-      title = "Login to Scastie",
+      title = I18n.t("sidebar.login_title"),
       isDarkTheme = props.isDarkTheme,
       isClosed = props.isClosed,
       close = props.close,
@@ -37,12 +59,11 @@ object LoginModal {
       content = TagMod(
         button(onClick --> (login >> props.close), cls := "github-login")(
           i(cls := "fa fa-github"),
-          "Continue with GitHub",
+          I18n.t("sidebar.login_github"),
         ),
-        p(
-          "By signing in, you agree to our ",
-          a(href := "#", onClick ==> (e => e.preventDefaultCB >> e.stopPropagationCB >> props.openPrivacyPolicyModal))("privacy policy"),
-          "."
+        renderWithLink(
+          I18n.t("sidebar.login_agreement"),
+          props.openPrivacyPolicyModal
         )
       )
     ).render

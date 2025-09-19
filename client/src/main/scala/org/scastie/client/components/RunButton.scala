@@ -4,6 +4,8 @@ package components
 import org.scastie.client.components.editor.EditorKeymaps
 import japgolly.scalajs.react._
 
+import com.olegych.scastie.client.i18n.I18n
+
 import vdom.all._
 
 final case class RunButton(isRunning: Boolean, isStatusOk: Boolean, save: Reusable[Callback], setView: View ~=> Callback, embedded: Boolean) {
@@ -19,18 +21,18 @@ object RunButton {
     if (!props.isRunning) {
       val runTitle =
         if (props.isStatusOk)
-          s"Run (${EditorKeymaps.saveOrUpdate.getName})"
+          s"${I18n.t("editor.run")} (${EditorKeymaps.saveOrUpdate.getName})"
         else
-          s"Run (${EditorKeymaps.saveOrUpdate.getName}) - warning: unknown status"
+          s"${I18n.t("editor.run")} (${EditorKeymaps.saveOrUpdate.getName}) - ${I18n.t("editor.status_unknown_warning")}"
 
       li(onClick ==> { e => e.stopPropagationCB >> props.save }, role := "button", title := runTitle, cls := "btn run-button")(
         i(cls := "fa fa-play"),
-        span("Run")
+        span(I18n.t("editor.run"))
       )
     } else {
-      li(onClick --> props.setView(View.Editor), title := "Running your Code...", cls := "btn run-button")(
+      li(onClick --> props.setView(View.Editor), title := I18n.t("editor.running_tooltip"), cls := "btn run-button")(
         i(cls := "fa fa-spinner fa-spin"),
-        span("Running")
+        span(I18n.t("editor.running"))
       )
     }
   }

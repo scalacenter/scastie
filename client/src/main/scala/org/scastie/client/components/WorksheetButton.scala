@@ -6,11 +6,14 @@ import japgolly.scalajs.react._
 
 import vdom.all._
 
+import com.olegych.scastie.client.i18n.I18n
+
 final case class WorksheetButton(
     hasWorksheetMode: Boolean,
     isWorksheetMode: Boolean,
     toggleWorksheetMode: Reusable[Callback],
-    view: View
+    view: View,
+    language: String
 ) {
   @inline def render: VdomElement = WorksheetButton.component(this)
 }
@@ -30,21 +33,20 @@ object WorksheetButton {
       else
         EmptyVdom
 
-    val isWorksheetModeToggleLabel =
-      if (props.isWorksheetMode) "OFF"
-      else "ON"
-
     li(
       title := (if (props.hasWorksheetMode)
-                  s"Turn Worksheet mode $isWorksheetModeToggleLabel (evaluate and print each top level expression)"
-                else "This configuration does not support Worksheet mode"),
+                  if (props.isWorksheetMode)
+                    I18n.t("editor.worksheet_off_tooltip")
+                  else
+                    I18n.t("editor.worksheet_on_tooltip")
+                else I18n.t("editor.worksheet_unsupported")),
       isWorksheetModeSelected,
       role := "button",
       cls := "btn editor",
       onClick --> props.toggleWorksheetMode
     )(
       i(cls := "fa fa-calendar"),
-      span("Worksheet"),
+      span(I18n.t("editor.worksheet")),
       i(cls := "workSheetIndicator", cls := "fa fa-circle", isWorksheetModeSelected)
     )
   }

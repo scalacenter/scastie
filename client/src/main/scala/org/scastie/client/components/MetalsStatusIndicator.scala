@@ -9,6 +9,8 @@ import scala.scalajs.js.annotation.JSImport
 import vdom.all._
 import scalajs.js
 
+import com.olegych.scastie.client.i18n.I18n
+
 final case class MetalsStatusIndicator(
     metalsStatus: MetalsStatus,
     toggleMetalsStatus: Reusable[Callback],
@@ -44,7 +46,7 @@ object MetalsStatusIndicator {
       onClick --> props.toggleMetalsStatus,
     )(
       img(src := metalsLogo),
-      span("Metals Status"),
+      span(I18n.t("editor.metals_status")),
       i(cls := "metals-status-indicator-icon fa", cls := getIndicatorIconClasses(props.metalsStatus))
     )
   }

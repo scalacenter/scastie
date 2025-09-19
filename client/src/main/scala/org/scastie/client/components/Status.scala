@@ -13,7 +13,10 @@ import org.scastie.api.SbtInputs
 import org.scastie.api.ScalaCliInputs
 import org.scastie.api.ShortInputs
 
-final case class Status(state: StatusState, router: RouterCtl[Page], isAdmin: Boolean, inputs: BaseInputs) {
+import org.scastie.client.i18n.I18n
+import japgolly.scalajs.react.hooks.HookCtx.I18
+
+final case class Status(state: StatusState, router: RouterCtl[Page], isAdmin: Boolean, inputs: BaseInputs, language: String) {
   @inline def render: VdomElement = Status.component(this)
 }
 
@@ -26,14 +29,14 @@ object Status {
     def renderSbtTask(tasks: Vector[TaskId]): VdomElement = {
       if (props.isAdmin) {
         if (tasks.isEmpty) {
-          div("No Task Running")
+          div(I18n.t("status.no_task"))
         } else {
           ul(
             tasks.zipWithIndex.map {
               case (TaskId(snippetId), j) =>
                 li(key := snippetId.toString)(
                   props.router.link(Page.fromSnippetId(snippetId))(
-                    s"Task $j"
+                    s"${I18n.t("status.task")} $j"
                   )
                 )
             }.toTagMod
@@ -47,9 +50,9 @@ object Status {
     def renderConfiguration(serverInputs: SbtInputs): VdomElement = {
       val (cssConfig, label) =
         props.inputs match {
-          case sbtInputs: SbtInputs if (serverInputs.needsReload(sbtInputs)) => ("needs-reload", "Different Configuration")
-          case _: ScalaCliInputs => ("different-target", "sbt runner")
-          case _ => ("ready", "Ready sbt runner")
+          case sbtInputs: SbtInputs if (serverInputs.needsReload(sbtInputs)) => ("needs-reload", I18n.t("status.different_config"))
+          case _: ScalaCliInputs => ("different-target", I18n.t("status.sbt_runner_config"))
+          case _ => ("ready", I18n.t("status.same_config"))
         }
 
       span(cls := "runner " + cssConfig)(label)
@@ -59,7 +62,7 @@ object Status {
       props.state.sbtRunners match {
         case Some(sbtRunners) =>
           div(
-            h1("Sbt Runners"),
+            h1(I18n.t("status.sbt_runners")),
             ul(
               sbtRunners.zipWithIndex.map {
                 case (sbtRunner, i) =>

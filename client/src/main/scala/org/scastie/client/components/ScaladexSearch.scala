@@ -18,6 +18,7 @@ import scala.scalajs.js
 import io.circe._
 import io.circe.syntax._
 import io.circe.parser._
+import org.scastie.client.i18n.I18n
 
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency ~=> Callback,
@@ -25,7 +26,8 @@ final case class ScaladexSearch(
     addScalaDependency: (ScalaDependency, Project) ~=> Callback,
     libraries: Set[ScalaDependency],
     scalaTarget: SbtScalaTarget,
-    isDarkTheme: Boolean
+    isDarkTheme: Boolean,
+    language: String
 ) {
   @inline def render: VdomElement = ScaladexSearch.component(this)
 }
@@ -458,7 +460,7 @@ object ScaladexSearch {
       div(cls := "search-input")(
         input.search.withRef(searchInputRef)(
           cls := "search-query",
-          placeholder := "Search for 'cats'",
+          placeholder := I18n.t("build.search_placeholder"),
           value := state.value.query,
           onChange ==> setQuery,
           onKeyDown ==> keyDown
@@ -515,7 +517,7 @@ object ScaladexSearch {
       ),
       span(
         cls := "switch-description",
-      )("Enable Toolkit")
+      )(I18n.t("build.enable_toolkit"))
     )
   }
 

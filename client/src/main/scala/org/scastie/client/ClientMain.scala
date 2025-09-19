@@ -13,6 +13,8 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, _}
 import scala.scalajs.js.{UndefOr, |}
 
+import com.olegych.scastie.client.i18n.I18n
+
 @js.native
 @JSGlobal("ScastieSettings")
 object Settings extends js.Object {
@@ -36,6 +38,21 @@ object ScastieMain {
   @JSExport
   def main(): Unit = {
     dom.document.body.className = "scastie"
+
+    val stateJson = Option(dom.window.localStorage.getItem("state"))
+    val savedLanguage =
+      stateJson
+        .flatMap { json =>
+          import scala.scalajs.js.JSON
+          val parsed = JSON.parse(json)
+          if (js.DynamicImplicits.truthValue(parsed.selectDynamic("language")))
+            Some(parsed.selectDynamic("language").asInstanceOf[String])
+          else
+            None
+        }
+        .getOrElse("en")
+
+    I18n.setLanguage(savedLanguage)
 
     val container =
       dom.document.createElement("div").asInstanceOf[HTMLDivElement]

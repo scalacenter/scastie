@@ -1,6 +1,7 @@
 package org.scastie.client.components
 
 import org.scastie.api._
+import org.scastie.client.i18n.I18n
 import japgolly.scalajs.react._
 
 import vdom.all._
@@ -60,13 +61,13 @@ object VersionSelector {
                   onChange ==> { (e: ReactEventFromInput) =>
                     props.onChange(versionSelectors(e.target.value))
                   },
-                  value := {if (isRecommended) "Other" else props.scalaTarget.scalaVersion},
+                  value := {if (isRecommended) I18n.t("build.other") else props.scalaTarget.scalaVersion},
                   TagMod.when(!isRecommended)(className := "selected-option")
                 )(
                   ScalaVersions
                     .allVersions(props.scalaTarget.targetType)
                     .map(version => option(version))
-                    .prepended(option("Other")(hidden := true, disabled := true))
+                    .prepended(option(I18n.t("build.other"))(hidden := true, disabled := true))
                     .toTagMod
                 )
               }
