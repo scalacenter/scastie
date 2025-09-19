@@ -31,3 +31,6 @@ case class Instrumentation(position: Position, render: Render) {
 case class Position(start: Int, end: Int) {
   def asJsonString: String = s"""{"start":$start,"end":$end}"""
 }
+
+case class Binder(pos: Position, render: Render)
+case class Statement(binders: List[Binder], position: Position)

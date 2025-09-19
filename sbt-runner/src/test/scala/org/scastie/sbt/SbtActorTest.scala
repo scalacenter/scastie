@@ -236,7 +236,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("Scala 3 braceless syntax: print statement") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = s"""|println:
                  |  "Hello world!"
                  |""".stripMargin,
@@ -251,7 +251,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("top-level match expression") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = """|1 match
                 |  case a: Int => "Hi"
                 |""".stripMargin
@@ -263,7 +263,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("string interpolation in match pattern with println") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = """|"hello" match
                 |  case s"hel$lo" => println(lo)
                 |""".stripMargin
@@ -278,7 +278,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("pattern match with custom unapplySeq extractor and println") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = """|object CharList:
                 |  def unapplySeq(s: String): Option[Seq[Char]] = Some(s.toList)
                 |
@@ -297,7 +297,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("braceless while loop") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = """|var x = 1
                 |
                 |while
@@ -317,7 +317,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("report warning for extension method conflict") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = """|class Json:
                 |  def foo[A](bar: AnyRef): Unit = ()
                 |
@@ -332,7 +332,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("nested if-then with println") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = """|if true then
                 |  if true then 
                 |    println("yes")
@@ -348,7 +348,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("List.map with case in braceless syntax") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = """|List(1,2,3).map:
                 |  case x => x
                 |""".stripMargin,
@@ -362,7 +362,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("properly instrumented whitespaces") {
-    val dotty = Inputs.default.copy(
+    val dotty = SbtInputs.default.copy(
       code = """|1 + 1
                 |
                 |
