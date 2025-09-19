@@ -235,6 +235,14 @@ msgstr "Search for 'cats'"
 msgid "build.other"
 msgstr "Other"
 
+# The translation of `Scala version directive on Scala-CLI documentation` must remain inside the curly brackets.
+msgid "build.scala_cli_version_doc"
+msgstr "To use a specific version of Scala with Scala-CLI, use directives. See {Scala version directive on Scala-CLI documentation}."
+
+# The translation of `Dependency directive on Scala-CLI documentation` must remain inside the curly brackets.
+msgid "build.scala_cli_dependency_doc"
+msgstr "To use libraries with Scala-CLI, use directives. See {Dependency directive on Scala-CLI documentation}."
+
 # --- Section: Console ---
 msgid "console.title"
 msgstr "Console"

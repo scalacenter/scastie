@@ -30,6 +30,19 @@ final case class BuildSettings(
 }
 
 object BuildSettings {
+  private def renderWithElement(template: String, elementBuilder: String => VdomElement): VdomElement = {
+    val elementRegex = """\{([^}]+)\}""".r
+    elementRegex.findFirstMatchIn(template) match {
+      case Some(m) =>
+        val before = template.substring(0, m.start)
+        val elementContent = m.group(1)
+        val element = elementBuilder(elementContent)
+        val after = template.substring(m.end)
+        span(before, element, after)
+      case None =>
+        span(template)
+    }
+  }
   var mutableList: List[(ScalaDependency, Project)] = List.empty[(ScalaDependency, Project)]
 
   implicit val reusability: Reusability[BuildSettings] = Reusability.derive[BuildSettings]
@@ -132,19 +145,17 @@ object BuildSettings {
 
   private def scalaCliBuildSettingsPanel(props: BuildSettings, scalaCliInputs: ScalaCliInputs): TagMod = {
     div()(
-      p()(
-        "To use a specific version of Scala with Scala-CLI, use directives. See ",
-        a(href := "https://scala-cli.virtuslab.org/docs/reference/directives/#scala-version", target := "_blank")(
-          "Scala version directive on Scala-CLI documentation"
-        ),
-        "."
+      p(
+        renderWithElement(
+          I18n.t("build.scala_cli_version_doc"),
+          content => a(href := "https://scala-cli.virtuslab.org/docs/reference/directives/#scala-version", target := "_blank")(content)
+        )
       ),
-      p()(
-        "To use libraries with Scala-CLI, use directives. See ",
-        a(href := "https://scala-cli.virtuslab.org/docs/reference/directives#dependency", target := "_blank")(
-          "Dependency directive on Scala-CLI documentation"
-        ),
-        "."
+      p(
+        renderWithElement(
+          I18n.t("build.scala_cli_dependency_doc"),
+          content => a(href := "https://scala-cli.virtuslab.org/docs/reference/directives#dependency", target := "_blank")(content)
+        )
       )
     )
   }
