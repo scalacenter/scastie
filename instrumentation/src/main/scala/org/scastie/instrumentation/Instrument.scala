@@ -118,8 +118,6 @@ object Instrument {
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
 
-    println(s"\n\nInstrumentedCode:\n$instrumentedCode\n\n")
-
     val entryPoint =
       if (!isScalaJs) {
         s"""|object $entryPointName {
@@ -211,8 +209,6 @@ object Instrument {
     val (experimentalImports, codeWithoutExpImports) = extractExperimentalImports(remainingCode)
     val prelude = s"""$runtimeImport\n$experimentalImports$classBegin"""
     val code0 = s"""$usingDirectives$prelude\n$codeWithoutExpImports\n}"""
-
-    println(s"\n\nCode0:\n$code0\n\n")
 
     def typelevel(scalaVersion: String): Option[Dialect] = {
       if (scalaVersion.startsWith("2.12")) Some(dialects.Typelevel212)
