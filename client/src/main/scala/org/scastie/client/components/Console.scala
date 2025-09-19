@@ -9,7 +9,7 @@ import org.scalajs.dom.raw.HTMLDivElement
 
 import vdom.all._
 
-import com.olegych.scastie.client.i18n.I18n
+import org.scastie.client.i18n.I18n
 
 final case class Console(isOpen: Boolean,
                          isRunning: Boolean,

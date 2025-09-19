@@ -13,7 +13,7 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, _}
 import scala.scalajs.js.{UndefOr, |}
 
-import com.olegych.scastie.client.i18n.I18n
+import org.scastie.client.i18n.I18n
 
 @js.native
 @JSGlobal("ScastieSettings")

@@ -4,7 +4,7 @@ import japgolly.scalajs.react._
 import vdom.all._
 import org.scastie.client.components.editor.EditorKeymaps
 
-import com.olegych.scastie.client.i18n.I18n
+import org.scastie.client.i18n.I18n
 import japgolly.scalajs.react.hooks.HookCtx.I1
 
 final case class HelpModal(isDarkTheme: Boolean, isClosed: Boolean, close: Reusable[Callback]) {

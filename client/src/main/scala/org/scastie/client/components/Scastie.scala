@@ -80,7 +80,8 @@ object Scastie {
         openHelpModal = scope.backend.openHelpModal,
         openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal,
         editorMode = state.editorMode,
-        setEditorMode = scope.backend.setEditorMode
+        setEditorMode = scope.backend.setEditorMode,
+        language = state.language
       ).render.unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(
         state,

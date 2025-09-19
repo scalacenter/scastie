@@ -1,4 +1,4 @@
-package com.olegych.scastie.client.i18n
+package org.scastie.client.i18n
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation._

@@ -4,7 +4,7 @@ package components
 import org.scastie.client.components.editor.EditorKeymaps
 import japgolly.scalajs.react._
 
-import com.olegych.scastie.client.i18n.I18n
+import org.scastie.client.i18n.I18n
 
 import vdom.all._
 import japgolly.scalajs.react.hooks.HookCtx.I18

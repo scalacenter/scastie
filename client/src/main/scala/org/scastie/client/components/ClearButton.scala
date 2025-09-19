@@ -6,7 +6,7 @@ import japgolly.scalajs.react._
 
 import vdom.all._
 
-import com.olegych.scastie.client.i18n.I18n
+import org.scastie.client.i18n.I18n
 
 final case class ClearButton(clear: Reusable[Callback], language: String) {
   @inline def render: VdomElement = ClearButton.component(this)

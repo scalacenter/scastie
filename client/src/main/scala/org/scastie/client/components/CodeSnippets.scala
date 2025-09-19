@@ -12,7 +12,7 @@ import vdom.all._
 import extra.router._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-import com.olegych.scastie.client.i18n.I18n
+import org.scastie.client.i18n.I18n
 
 final case class CodeSnippets(
     view: View,

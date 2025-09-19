@@ -7,6 +7,7 @@ import org.scalajs.dom.{Position => _}
 import org.scalajs.dom.HTMLElement
 import org.scastie.api._
 import org.scastie.api.EditorMode._
+import org.scastie.client.i18n.I18n
 import org.scastie.client.scalacli.ScalaCliUtils._
 import org.scastie.runtime.api._
 import RuntimeCodecs._
@@ -16,23 +17,23 @@ sealed trait MetalsStatus {
 }
 
 case object MetalsLoading extends MetalsStatus {
-  val info: String = "Compiler is loading"
+  val info: String = I18n.t("editor.metals_loading")
 }
 
 case object MetalsReady extends MetalsStatus {
-  val info: String = "Metals is ready"
+  val info: String = I18n.t("editor.metals_ready")
 }
 
 case object MetalsDisabled extends MetalsStatus {
-  val info: String = "Metals Disabled"
+  val info: String = I18n.t("editor.metals_disabled")
 }
 
 case class MetalsConfigurationError(msg: String) extends MetalsStatus {
-  val info: String = s"Unsupported Configuration: \n  $msg"
+  val info: String = s"${I18n.t("editor.metals_unsupported")}: \n  $msg"
 }
 
 case class NetworkError(msg: String) extends MetalsStatus {
-  val info: String = s"Network Error: \n  $msg"
+  val info: String = s"${I18n.t("editor.metals_network_error")}: \n  $msg"
 }
 
 case object OutdatedScalaCli extends MetalsStatus {
@@ -78,7 +79,8 @@ object ScastieState {
       outputs = Outputs.default,
       status = StatusState.empty,
       isEmbedded = isEmbedded,
-      editorMode = Default
+      editorMode = Default,
+      language = I18n.getLanguage
     )
   }
 
@@ -122,7 +124,8 @@ case class ScastieState(
   isEmbedded: Boolean = false,
   transient: Boolean = false,
   scalaCliConversionError: Option[String] = None,
-  editorMode: EditorMode = Default
+  editorMode: EditorMode = Default,
+  language: String = "en"
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean         = snippetState.loadSnippet
@@ -150,7 +153,8 @@ case class ScastieState(
     metalsStatus: MetalsStatus = metalsStatus,
     transient: Boolean = transient,
     scalaCliConversionError: Option[String] = scalaCliConversionError,
-    editorMode: EditorMode = editorMode
+    editorMode: EditorMode = editorMode,
+    language: String = language
   ): ScastieState = {
     val state0 = copy(
       view = view,
@@ -178,7 +182,8 @@ case class ScastieState(
       isEmbedded = isEmbedded,
       transient = transient,
       scalaCliConversionError = scalaCliConversionError,
-      editorMode = editorMode
+      editorMode = editorMode,
+      language = language
     )
 
     if (!isEmbedded && !transient) {
@@ -234,6 +239,11 @@ case class ScastieState(
   def setTheme(dark: Boolean): ScastieState = copyAndSave(isDarkTheme = dark)
 
   def setEditorMode(mode: EditorMode): ScastieState = copyAndSave(editorMode = mode)
+
+  def setLanguage(lang: String): ScastieState = {
+      I18n.setLanguage(lang)
+      copyAndSave(language = lang)
+    }
 
   def setMetalsStatus(status: MetalsStatus): ScastieState = copyAndSave(metalsStatus = status)
 

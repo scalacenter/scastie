@@ -6,7 +6,7 @@ import org.scalajs.dom
 
 import vdom.all._
 
-import com.olegych.scastie.client.i18n.I18n
+import org.scastie.client.i18n.I18n
 import japgolly.scalajs.react.hooks.HookCtx.I1
 
 

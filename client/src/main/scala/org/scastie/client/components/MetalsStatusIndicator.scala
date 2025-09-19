@@ -9,7 +9,7 @@ import scala.scalajs.js.annotation.JSImport
 import vdom.all._
 import scalajs.js
 
-import com.olegych.scastie.client.i18n.I18n
+import org.scastie.client.i18n.I18n
 
 final case class MetalsStatusIndicator(
     metalsStatus: MetalsStatus,

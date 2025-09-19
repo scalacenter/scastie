@@ -4,7 +4,7 @@ package components
 
 import org.scastie.api.{SnippetId, User, ScalaTarget}
 
-import com.olegych.scastie.client.i18n.I18n
+import org.scastie.client.i18n.I18n
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
 import org.scastie.api.ScalaTargetType

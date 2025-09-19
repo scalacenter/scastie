@@ -8,7 +8,7 @@ import japgolly.scalajs.react._, vdom.all._, extra._
 
 import org.scalajs.dom
 
-import com.olegych.scastie.client.i18n.I18n
+import org.scastie.client.i18n.I18n
 
 final case class TopBar(view: StateSnapshot[View], 
                         user: Option[User], 
