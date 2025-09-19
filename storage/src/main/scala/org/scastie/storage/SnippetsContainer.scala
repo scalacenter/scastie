@@ -1,7 +1,7 @@
 package org.scastie.storage
 
 import org.scastie.api._
-import org.scastie.instrumentation.Instrument
+import org.scastie.instrumentation._
 import org.scastie.util.Base64UUID
 
 import net.lingala.zip4j.ZipFile
@@ -83,8 +83,8 @@ trait SnippetsContainer {
       _.flatMap(
         snippet =>
           Instrument(snippet.inputs.code, snippet.inputs.target) match {
-            case Right(instrumented) =>
-              Some(FetchResultScalaSource(instrumented))
+            case Right(InstrumentationSuccess(instrumentedCode, _)) =>
+              Some(FetchResultScalaSource(instrumentedCode))
             case _ => None
         }
       )

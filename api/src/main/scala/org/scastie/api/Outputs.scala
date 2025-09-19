@@ -42,4 +42,3 @@ case class Outputs(
       instrumentations.nonEmpty ||
       runtimeError.isDefined
 }
-
