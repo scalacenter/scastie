@@ -50,17 +50,39 @@ import java.lang
 object BspClient {
   case class BuildOutput(process: ProcessBuilder, diagnostics: List[Problem])
 
-  val runner212 = Fetch().addDependencies(
-    Dependency(Module(Organization("org.scastie"), ModuleName("runner_2.12")), BuildInfo.versionRuntime)
-  ).run()
+  sealed trait Runner {
+    def moduleName: String
+    def matches(scalaBinaryVersion: String): Boolean
+  }
 
-  val runner213 = Fetch().addDependencies(
-    Dependency(Module(Organization("org.scastie"), ModuleName("runner_2.13")), BuildInfo.versionRuntime)
-  ).run()
+  case object Runner212 extends Runner {
+    val moduleName = "runner_2.12"
+    def matches(scalaBinaryVersion: String): Boolean = scalaBinaryVersion == "2.12"
+  }
 
-  val runner3 = Fetch().addDependencies(
-    Dependency(Module(Organization("org.scastie"), ModuleName("runner_3")), BuildInfo.versionRuntime)
-  ).run()
+  case object Runner213 extends Runner {
+    val moduleName = "runner_2.13" 
+    def matches(scalaBinaryVersion: String): Boolean = scalaBinaryVersion == "2.13"
+  }
+
+  case object Runner3 extends Runner {
+    val moduleName = "runner_3"
+    def matches(scalaBinaryVersion: String): Boolean = scalaBinaryVersion.startsWith("3")
+  }
+
+  object Runner {
+    val all = List(Runner212, Runner213, Runner3)
+
+    def forScalaVersion(scalaBinaryVersion: String): Either[BuildError, Runner] =
+      all.find(_.matches(scalaBinaryVersion))
+      .toRight(InternalBspError(s"Unsupported Scala version: $scalaBinaryVersion"))
+  }
+
+  private def getRunner(runner: Runner) = {
+    Fetch().addDependencies(
+      Dependency(Module(Organization("org.scastie"), ModuleName(runner.moduleName)), BuildInfo.versionRuntime)
+    ).run().filter(_.getName.contains(runner.moduleName)).map(_.toURI.toString).asRight
+  }
 
   private def diagSeverityToSeverity(severity: DiagnosticSeverity): Severity = {
     if (severity == DiagnosticSeverity.ERROR) api.Error
@@ -211,23 +233,16 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
     buildTarget: ScalaCliBuildTarget,
     isWorksheet: Boolean
   ): BspTask[ProcessBuilder] = EitherT.fromEither {
-
-    val maybeRunnerClasspath: Either[BuildError, Seq[String]] = buildTarget.scalabuildTarget.getScalaBinaryVersion match {
-      case "2.12" => runner212.map(_.toURI.toString).asRight
-      case "2.13" => runner213.map(_.toURI.toString).asRight
-      case v if v.startsWith("3") => runner3.map(_.toURI.toString).asRight
-      case err => InternalBspError(s"Unsupported Scala version: $err").asLeft
-    }
-
     val javaBinURI = URI.create(buildTarget.scalabuildTarget.getJvmBuildTarget.getJavaHome())
     val javaBinPath = Try { Paths.get(javaBinURI).resolve("bin/java").toString }
       .toEither
       .leftMap(err => InternalBspError(s"Can't find java binary: $err"))
 
     for {
+      runner <- Runner.forScalaVersion(buildTarget.scalabuildTarget.getScalaBinaryVersion())
+      runnerClasspath <- getRunner(runner)
       mainClass <- getMainClass(runSettings.getMainClasses.asScala.toList, isWorksheet)
       javaBin <- javaBinPath
-      runnerClasspath <- maybeRunnerClasspath
     } yield {
       val classpath = (runnerClasspath ++ runSettings.getClasspath.asScala)
         .map(uri => Paths.get(new URI(uri))).mkString(":")
