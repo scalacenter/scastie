@@ -39,7 +39,7 @@ object SbtShared {
     val current = "1.19.0"
   }
 
-  val scalaCliVersion = "1.0.4"
+  val scalaCliVersion = "1.9.1"
   val runtimeProjectName = "runtime-scala"
 
   def gitIsDirty(): Boolean = {
