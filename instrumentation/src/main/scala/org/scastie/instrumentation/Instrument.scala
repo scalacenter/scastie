@@ -181,8 +181,8 @@ object Instrument {
       val directivesStr = directives.mkString
       val replaced = lines.map { line =>
         if (directiveRegex.pattern.matcher(line).matches) {
-          val len = line.length
-          "/**" + (" " * (len - 4).max(0)) + "*/" + (if (line.endsWith("\n")) "\n" else "")
+          val len = line.strip.length
+          "/**" + (" " * (len - 5).max(0)) + "*/" + (if (line.endsWith("\n")) "\n" else "")
         } else line
       }.mkString
       val allDirectives = directivesStr + additionalDirectives.mkString
@@ -231,7 +231,7 @@ object Instrument {
     }
 
     val offset = target match {
-      case _: ScalaCli => scalaCliRuntime.length + prelude.length + 1
+      case _: ScalaCli => usingDirectives.length + prelude.length + 1
       case _ => prelude.length + 1
     }
 
