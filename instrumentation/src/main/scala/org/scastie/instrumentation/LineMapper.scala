@@ -48,7 +48,7 @@ object LineMapper {
     line == "scala.Predef.locally {" ||
     line == "$t}" ||
     line.startsWith("import _root_.org.scastie.runtime") ||
-    line.startsWith("object Playground extends ScastieApp with _root_.org.scastie.runtime.api.InstrumentationRecorder {") ||
+    line.startsWith("object Playground extends ScastieApp with _root_.org.scastie.runtime.InstrumentationRecorder {") ||
     line.startsWith("//> using")
   }
 

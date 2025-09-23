@@ -89,11 +89,16 @@ final case class StackTracePrinter(
   def printException(ex: Throwable): Unit = {
     val q          = "\""
     val threadName = Thread.currentThread().getName
+    val lineOpt = ex.getCause() match {
+      case null => None
+      case cause => 
+        cause.getStackTrace.headOption.map(_.getLineNumber)
+    }
     truncateStackTrace(ex)
     stringBuilder.append(s"Exception in thread $q$threadName$q $ex\n")
     printStackTrace(ex.getStackTrace)
     printCause(ex.getCause, ex.getStackTrace)
-    System.err.println(RuntimeError(stringBuilder.toString, None, "").asJsonString)
+    System.err.println(RuntimeError(stringBuilder.toString, lineOpt, "").asJsonString)
   }
 }
 

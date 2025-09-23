@@ -75,7 +75,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
   def runTask(snippetId: SnippetId, inputs: ScalaCliInputs, timeout: FiniteDuration, onOutput: ProcessOutput => Any): Future[Either[ScalaCliError, RunOutput]] = {
     log.info(s"Running task with snippetId=$snippetId")
     build(snippetId, inputs).flatMap {
-      case Right(value) => runForked(value, inputs.isWorksheetMode, onOutput)
+      case Right((value, lineMapping)) => runForked(value, inputs.isWorksheetMode, onOutput, lineMapping)
       case Left(value) => Future.successful(Left[ScalaCliError, RunOutput](value))
     }
   }
@@ -83,7 +83,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
   def build(
     snippetId: SnippetId,
     inputs: BaseInputs,
-  ): Future[Either[ScalaCliError, BspClient.BuildOutput]] = {
+  ): Future[Either[ScalaCliError, (BspClient.BuildOutput, Int => Int)]] = {
 
     val (instrumentedInput, lineMapping) = InstrumentedInputs(inputs) match {
       case Right(value) => (value.inputs, value.lineMapping)
@@ -98,7 +98,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
       case err => InternalBspError(err.getMessage).asLeft
     }
     .map {
-        case Right(buildOutput) => Right(buildOutput)
+        case Right(buildOutput) => Right((buildOutput, lineMapping))
         case Left(CompilationError(diagnostics)) =>
           val mapped = diagnostics.map { p =>
             val orig = p.line
@@ -110,7 +110,12 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
       }
   }
 
-  def runForked(bspRun: BspClient.BuildOutput, isWorksheet: Boolean, onOutput: ProcessOutput => Any): Future[Either[ScastieRuntimeError, RunOutput]] = {
+  def runForked(
+    bspRun: BspClient.BuildOutput,
+    isWorksheet: Boolean,
+    onOutput: ProcessOutput => Any,
+    lineMapping: Int => Int = identity
+  ): Future[Either[ScastieRuntimeError, RunOutput]] = {
     val outputBuffer: ListBuffer[String] = ListBuffer()
     val instrumentations: AtomicReference[List[Instrumentation]] = new AtomicReference(List())
     val runtimeError: AtomicReference[Option[org.scastie.runtime.api.RuntimeError]] = new AtomicReference(None)
@@ -119,7 +124,10 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
       val maybeRuntimeError = decode[org.scastie.runtime.api.RuntimeError](str)
       val maybeInstrumentation = decode[List[Instrumentation]](str)
 
-      maybeRuntimeError.foreach(error => runtimeError.set(Some(error)))
+      maybeRuntimeError.foreach { error =>
+        val mappedLine = error.line.map(lineMapping)
+        runtimeError.set(Some(error.copy(line = mappedLine)))
+      }
       maybeInstrumentation.foreach(instrumentations.set(_))
 
       if (maybeRuntimeError.isLeft && maybeInstrumentation.isLeft) {
