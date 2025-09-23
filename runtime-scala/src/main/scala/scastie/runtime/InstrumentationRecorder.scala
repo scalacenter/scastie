@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import scala.collection.mutable.ArrayBuffer
 
+import org.scastie.runtime.api._
+
 trait InstrumentationRecorder {
 
   private val myBinders         = ArrayBuffer.empty[Binder]
