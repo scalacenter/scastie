@@ -95,7 +95,7 @@ object BspClient {
   def diagnosticToProblem(isWorksheet: Boolean)(diag: Diagnostic): Problem =
     Problem(
       diagSeverityToSeverity(diag.getSeverity()),
-      Option(diag.getRange.getStart.getLine + Instrument.getMessageLineOffset(isWorksheet, isScalaCli = true)),
+      Option(diag.getRange.getStart.getLine + 1),
       diag.getMessage()
     )
 

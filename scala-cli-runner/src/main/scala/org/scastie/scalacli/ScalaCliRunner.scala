@@ -85,11 +85,11 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     inputs: BaseInputs,
   ): Future[Either[ScalaCliError, BspClient.BuildOutput]] = {
 
-    val instrumentedInput = InstrumentedInputs(inputs) match {
-      case Right(value) => value.inputs
+    val (instrumentedInput, lineMapping) = InstrumentedInputs(inputs) match {
+      case Right(value) => (value.inputs, value.lineMapping)
       case Left(value) =>
         log.error(s"Error while instrumenting: $value")
-        inputs
+        (inputs, identity: Int => Int)
     }
 
     Files.write(scalaMain, instrumentedInput.code.getBytes)
@@ -97,6 +97,17 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
       case timeout: TimeoutException => BspTaskTimeout("Build Server Timeout Exception").asLeft
       case err => InternalBspError(err.getMessage).asLeft
     }
+    .map {
+        case Right(buildOutput) => Right(buildOutput)
+        case Left(CompilationError(diagnostics)) =>
+          val mapped = diagnostics.map { p =>
+            val orig = p.line
+            val mapped = orig.map(lineMapping)
+            p.copy(line = mapped)
+          }
+          Left(CompilationError(mapped))
+        case Left(other) => Left(other)
+      }
   }
 
   def runForked(bspRun: BspClient.BuildOutput, isWorksheet: Boolean, onOutput: ProcessOutput => Any): Future[Either[ScastieRuntimeError, RunOutput]] = {
