@@ -1,5 +1,5 @@
 import _root_.org.scastie.runtime.*
-object Playground extends ScastieApp with _root_.org.scastie.runtime.api.InstrumentationRecorder {
+object Playground extends ScastieApp with _root_.org.scastie.runtime.InstrumentationRecorder {
 class Animal:
 end Animal
 scala.Predef.locally {

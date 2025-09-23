@@ -1,5 +1,5 @@
 import _root_.org.scastie.runtime._
-object Playground extends ScastieApp with _root_.org.scastie.runtime.api.InstrumentationRecorder {
+object Playground extends ScastieApp with _root_.org.scastie.runtime.InstrumentationRecorder {
 scala.Predef.locally {
 $doc.startStatement(0, 5);
 val $t = 1 + 1;

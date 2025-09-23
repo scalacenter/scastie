@@ -1,4 +1,4 @@
-package org.scastie.runtime.api
+package org.scastie.runtime
 
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream

@@ -1,5 +1,5 @@
 import _root_.org.scastie.runtime._
-object Playground extends ScastieApp with _root_.org.scastie.runtime.api.InstrumentationRecorder with _root_.org.scastie.runtime.DomHook {
+object Playground extends ScastieApp with _root_.org.scastie.runtime.InstrumentationRecorder with _root_.org.scastie.runtime.DomHook {
 import org.scalajs.dom
 import org.scalajs.dom.html.Canvas
 

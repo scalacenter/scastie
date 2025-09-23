@@ -53,7 +53,7 @@ object Instrument {
   private val instrumentationT = s"$runtimeApiPackage.Instrumentation"
   private val runtimeT = s"$runtimePackage.Runtime"
   private val domhookT = s"$runtimePackage.DomHook"
-  private val instrumentationRecorderT = s"$runtimeApiPackage.InstrumentationRecorder"
+  private val instrumentationRecorderT = s"$runtimePackage.InstrumentationRecorder"
 
   val entryPointName = "Main"
 
