@@ -2,6 +2,7 @@ package org.scastie.instrumentation
 
 import org.scastie.api._
 import org.scastie.runtime.api._
+import RuntimeConstants._
 
 import scala.collection.immutable.Seq
 import scala.meta._
@@ -36,24 +37,6 @@ object Instrument {
   }
 
   import InstrumentationFailure._
-
-  private val instrumentedObject = Instrumentation.instrumentedObject
-  private val instrumentationMethod = "instrumentations$"
-
-  private val emptyMapT = "_root_.scala.collection.mutable.Map.empty"
-  private val jsExportT = "_root_.scala.scalajs.js.annotation.JSExport"
-  private val jsExportTopLevelT =
-    "_root_.scala.scalajs.js.annotation.JSExportTopLevel"
-
-  private val runtimePackage= "_root_.org.scastie.runtime"
-  private val runtimeApiPackage = "_root_.org.scastie.runtime.api"
-  private val positionT = s"$runtimeApiPackage.Position"
-  private val renderT = s"$runtimeApiPackage.Render"
-  private val runtimeErrorT = s"$runtimeApiPackage.RuntimeError"
-  private val instrumentationT = s"$runtimeApiPackage.Instrumentation"
-  private val runtimeT = s"$runtimePackage.Runtime"
-  private val domhookT = s"$runtimePackage.DomHook"
-  private val instrumentationRecorderT = s"$runtimePackage.InstrumentationRecorder"
 
   val entryPointName = "Main"
 
@@ -194,8 +177,8 @@ object Instrument {
 
   def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, InstrumentationSuccess] = {
     val runtimeImport = target match {
-      case Scala3(scalaVersion) => "import _root_.org.scastie.runtime.*"
-      case _ => "import _root_.org.scastie.runtime._"
+      case Scala3(scalaVersion) => s"import $runtimePackage.*"
+      case _ => s"import $runtimePackage._"
     }
 
     val isScalaJs = target.targetType == ScalaTargetType.JS

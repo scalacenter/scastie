@@ -1,5 +1,7 @@
 package org.scastie.instrumentation
 
+import RuntimeConstants._
+
 object LineMapper {
 
   /**
@@ -47,8 +49,8 @@ object LineMapper {
     line.matches("""\$doc\.binder\(.+,\s*\d+,\s*\d+\);""") ||
     line == "scala.Predef.locally {" ||
     line == "$t}" ||
-    line.startsWith("import _root_.org.scastie.runtime") ||
-    line.startsWith("object Playground extends ScastieApp with _root_.org.scastie.runtime.InstrumentationRecorder {") ||
+    line.startsWith(s"import $runtimePackage") ||
+    line.startsWith(s"object $instrumentedObject extends ScastieApp with $instrumentationRecorderT") ||
     line.startsWith("//> using")
   }
 
