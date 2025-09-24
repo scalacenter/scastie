@@ -232,3 +232,25 @@ case class Project(
 
 // Keep websocket connection
 case class KeepAlive(msg: String = "") extends AnyVal
+
+sealed trait EditorMode
+case object Default extends EditorMode
+case object Vim extends EditorMode
+case object Emacs extends EditorMode
+
+object EditorMode {
+  implicit val editorModeFormat: Format[EditorMode] = new Format[EditorMode] {
+    def writes(mode: EditorMode): JsValue = mode match {
+      case Default => JsString("Default")
+      case Vim     => JsString("Vim")
+      case Emacs   => JsString("Emacs")
+    }
+    def reads(json: JsValue): JsResult[EditorMode] = json match {
+      case JsString("Default") => JsSuccess(Default)
+      case JsString("Vim")     => JsSuccess(Vim)
+      case JsString("Emacs")   => JsSuccess(Emacs)
+      case _                   => JsError("Unknown EditorMode")
+    }
+  }
+}
+

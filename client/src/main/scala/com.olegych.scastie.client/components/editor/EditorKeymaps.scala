@@ -7,6 +7,8 @@ import typings.codemirrorView.mod.{KeyBinding => JSKeyBinding}
 import typings.codemirrorCommands.mod._
 import typings.codemirrorAutocomplete.mod.acceptCompletion
 import typings.codemirrorState.mod._
+import typings.replitCodemirrorVim.mod.Vim_
+import com.olegych.scastie.api
 import com.olegych.scastie.client
 
 import scalajs.js
@@ -23,6 +25,49 @@ object EditorKeymaps {
     }
   }
 
+  def registerVimCommands(e: CodeEditor): Unit = {
+    Vim_.defineEx(
+      "w",
+      "",
+      (_, _) => e.saveOrUpdate.runNow()
+    )
+    Vim_.defineEx(
+      "run",
+      "",
+      (_, _) => e.saveOrUpdate.runNow()
+    )
+    Vim_.defineEx(
+      "f",
+      "",
+      (_, _) => e.formatCode.runNow()
+    )
+    Vim_.defineEx(
+      "format",
+      "",
+      (_, _) => e.formatCode.runNow()
+    )
+    Vim_.defineEx(
+      "c",
+      "",
+      (_, _) => e.clear.runNow()
+    )
+    Vim_.defineEx(
+      "clear",
+      "",
+      (_, _) => e.clear.runNow()
+    )
+    Vim_.defineEx(
+      "h",
+      "",
+      (_, _) => e.toggleHelp.runNow()
+    )
+    Vim_.defineEx(
+      "help",
+      "",
+      (_, _) => e.toggleHelp.runNow()
+    )
+  }
+
   val saveOrUpdate = new Key("Ctrl-Enter", "Meta-Enter")
   val saveOrUpdateAlt = new Key("Ctrl-s", "Meta-s")
   val openNewSnippetModal = new Key("Ctrl-m", "Meta-m")
@@ -33,21 +78,23 @@ object EditorKeymaps {
   val format = new Key("F6")
   val presentation = new Key("F8")
 
-  def keymapping(e: CodeEditor) =
-    typings.codemirrorView.mod.keymap.of(
-      js.Array(
-        KeyBinding.tabKeybind,
-        KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdate, true),
-        KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdateAlt, true),
-        KeyBinding(_ => e.openNewSnippetModal.runNow(), openNewSnippetModal, true),
-        KeyBinding(_ => e.clear.runNow(), clear, true),
-        KeyBinding(_ => e.clear.runNow(), clearAlt, true),
-        KeyBinding(_ => e.toggleHelp.runNow(), help, true),
-        KeyBinding(_ => e.toggleConsole.runNow(), console, true),
-        KeyBinding(_ => e.formatCode.runNow(), format, true),
-        KeyBinding(_ => presentationMode(e), presentation, true),
-      )
+  def keymapping(e: CodeEditor) = {
+    val base = js.Array(
+      KeyBinding.tabKeybind,
+      KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdate, true),
+      KeyBinding(_ => e.saveOrUpdate.runNow(), saveOrUpdateAlt, true),
+      KeyBinding(_ => e.openNewSnippetModal.runNow(), openNewSnippetModal, true),
+      KeyBinding(_ => e.clear.runNow(), clearAlt, true),
+      KeyBinding(_ => e.toggleHelp.runNow(), help, true),
+      KeyBinding(_ => e.toggleConsole.runNow(), console, true),
+      KeyBinding(_ => e.formatCode.runNow(), format, true),
+      KeyBinding(_ => presentationMode(e), presentation, true),
     )
+    if (e.editorMode != api.Vim) {
+      base.push(KeyBinding(_ => e.clear.runNow(), clear, true))
+    }
+    typings.codemirrorView.mod.keymap.of(base)
+  }
 }
 
 case class Key(default: String, linux: String, mac: String, win: String) {

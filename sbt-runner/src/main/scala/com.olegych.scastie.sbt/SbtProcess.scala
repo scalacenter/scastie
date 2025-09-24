@@ -10,6 +10,7 @@ import com.olegych.scastie.api._
 import com.olegych.scastie.instrumentation.InstrumentedInputs
 import com.olegych.scastie.util.ScastieFileUtil.{slurp, write}
 import com.olegych.scastie.util._
+import com.olegych.scastie.instrumentation.LineMapper
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -29,7 +30,8 @@ object SbtProcess {
       isForcedProgramMode: Boolean,
       progressActor: ActorRef,
       snippetActor: ActorRef,
-      timeoutEvent: Option[Cancellable]
+      timeoutEvent: Option[Cancellable],
+      lineMapping: Int => Int = identity
   ) extends Data
   case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
     def message: String = {
@@ -190,7 +192,11 @@ class SbtProcess(runTimeout: FiniteDuration,
 
       InstrumentedInputs(taskInputs) match {
         case Right(instrumented) =>
-          val sbtRun = _sbtRun.copy(inputs = instrumented.inputs, isForcedProgramMode = instrumented.isForcedProgramMode)
+          val sbtRun = _sbtRun.copy(
+            inputs = instrumented.inputs, 
+            isForcedProgramMode = instrumented.isForcedProgramMode,
+            lineMapping = instrumented.lineMapping
+          )
           val isReloading = stateInputs.needsReload(sbtRun.inputs)
           setInputs(sbtRun.inputs)
 

@@ -6,7 +6,9 @@ import japgolly.scalajs.react._
 
 import vdom.all._
 
-final case class DownloadButton(snippetId: SnippetId) {
+import com.olegych.scastie.client.i18n.I18n
+
+final case class DownloadButton(snippetId: SnippetId, language: String) {
   @inline def render: VdomElement = DownloadButton.component(this)
 }
 
@@ -19,9 +21,9 @@ object DownloadButton {
     val fullUrl = s"/api/download/$url"
 
     li(
-      a(href := fullUrl, download := url.replaceAll("/", "-") + ".zip", title := s"Download", role := "button", cls := "btn")(
+      a(href := fullUrl, download := url.replaceAll("/", "-") + ".zip", title := s"${I18n.t("editor.download")}", role := "button", cls := "btn")(
         i(cls := "fa fa-download"),
-        span("Download")
+        span(I18n.t("editor.download"))
       )
     )
   }
