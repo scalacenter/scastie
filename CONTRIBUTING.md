@@ -3,6 +3,21 @@
 Take a look at the Backlog in the [Project Page](https://github.com/scalacenter/scastie/projects/1) to see our priorities.
 You are more than welcome to contribute any PR regardless if it's listed or not.
 
+## Translating Scastie
+
+Scastie supports only English by default.  
+If you want to help with translations, you can prepare a `.po` file for your language (see `client/src/main/resources/locales/`).   
+
+**How it works:**
+- You can translate the `.po` file to your language and submit it in a Pull Request.
+- After your translation is submitted, it can be added to the application in a future update.
+- You do not need to modify the code yourself – just provide the translation.
+
+**If you want to contribute:**
+1. Copy the `en.po` file and translate `msgstr` elements to your language.
+2. Submit a Pull Request with the new `.po` file.
+3. Wait for review and integration.
+
 ## How to run locally
 
 ### How to install prerequisites via nix
