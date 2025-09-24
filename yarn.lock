@@ -317,10 +317,20 @@
   dependencies:
     "@lezer/common" "^1.0.0"
 
+"@replit/codemirror-emacs@^6.1.0":
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/@replit/codemirror-emacs/-/codemirror-emacs-6.1.0.tgz#662dffc3b354c47cbf930219f8cb75cfc9e7f6fe"
+  integrity sha512-74DITnht6Cs6sHg02PQ169IKb1XgtyhI9sLD0JeOFco6Ds18PT+dkD8+DgXBDokne9UIFKsBbKPnpFRAz60/Lw==
+
 "@replit/codemirror-indentation-markers@^6.5.0":
   version "6.5.0"
   resolved "https://registry.yarnpkg.com/@replit/codemirror-indentation-markers/-/codemirror-indentation-markers-6.5.0.tgz#e853e406cf05fea13449578c6c9c1383c6feb219"
   integrity sha512-5RgeuQ6erfROi1EVI2X7G4UR+KByjb07jhYMynvpvlrV22JlnARifmKMGEUKy0pKcxBNfwbFqoUlTYHPgyZNlg==
+
+"@replit/codemirror-vim@^6.3.0":
+  version "6.3.0"
+  resolved "https://registry.yarnpkg.com/@replit/codemirror-vim/-/codemirror-vim-6.3.0.tgz#1bcde09f25bcb1c4f96d2cd50ea07f9f71fc9ec4"
+  integrity sha512-aTx931ULAMuJx6xLf7KQDOL7CxD+Sa05FktTDrtLaSy53uj01ll3Zf17JdKsriER248oS55GBzg0CfCTjEneAQ==
 
 "@rollup/rollup-android-arm-eabi@4.9.1":
   version "4.9.1"
@@ -903,10 +913,10 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
-tree-sitter-cli@^0.20.8:
-  version "0.20.8"
-  resolved "https://registry.yarnpkg.com/tree-sitter-cli/-/tree-sitter-cli-0.20.8.tgz#06a81cea8d6d82f93d67eed7d28b6bc04a4a8916"
-  integrity sha512-XjTcS3wdTy/2cc/ptMLc/WRyOLECRYcMTrSWyhZnj1oGSOWbHLTklgsgRICU3cPfb0vy+oZCC33M43u6R1HSCA==
+tree-sitter-cli@0.24.3:
+  version "0.24.3"
+  resolved "https://registry.yarnpkg.com/tree-sitter-cli/-/tree-sitter-cli-0.24.3.tgz#30da38468ec327f88b5ccf5b862b857068896210"
+  integrity sha512-5vS0SiJf31tMTn9CYLsu5l18qXaw5MLFka3cuGxOB5f4TtgoUSK1Sog6rKmqBc7PvFJq37YcQBjj9giNy2cJPw==
 
 typescript@^5.1.6:
   version "5.3.3"
@@ -918,11 +928,12 @@ uc.micro@^1.0.1, uc.micro@^1.0.5:
   resolved "https://registry.yarnpkg.com/uc.micro/-/uc.micro-1.0.6.tgz#9c411a802a409a91fc6cf74081baba34b24499ac"
   integrity sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==
 
-vite-plugin-markdown@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/vite-plugin-markdown/-/vite-plugin-markdown-2.1.0.tgz#3c90b91eb8c05a5701d944e9948739f514c79af1"
-  integrity sha512-eWLlrWzYZXEX3/HaXZo/KLjRpO72IUhbgaoFrbwB07ueXi6QfwqrgdZQfUcXTSofJCkN7GhErMC1K1RTAE0gGQ==
+vite-plugin-markdown@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/vite-plugin-markdown/-/vite-plugin-markdown-2.2.0.tgz#a0c5bd7bb88f385fa4ea983bf51b1ee35057c90a"
+  integrity sha512-eH2tXMZcx3EHb5okd+/0VIyoR8Gp9pGe24UXitOOcGkzObbJ1vl48aGOAbakoT88FBdzC8MXNkMfBIB9VK0Ndg==
   dependencies:
+    domhandler "^4.0.0"
     front-matter "^4.0.0"
     htmlparser2 "^6.0.0"
     markdown-it "^12.0.0"
@@ -954,7 +965,7 @@ w3c-keyname@^2.2.4:
   resolved "https://registry.yarnpkg.com/w3c-keyname/-/w3c-keyname-2.2.8.tgz#7b17c8c6883d4e8b86ac8aba79d39e880f8869c5"
   integrity sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==
 
-web-tree-sitter@^0.20.8:
-  version "0.20.8"
-  resolved "https://registry.yarnpkg.com/web-tree-sitter/-/web-tree-sitter-0.20.8.tgz#1e371cb577584789cadd75cb49c7ddfbc99d04c8"
-  integrity sha512-weOVgZ3aAARgdnb220GqYuh7+rZU0Ka9k9yfKtGAzEYMa6GgiCzW9JjQRJyCJakvibQW+dfjJdihjInKuuCAUQ==
+web-tree-sitter@0.24.3:
+  version "0.24.3"
+  resolved "https://registry.yarnpkg.com/web-tree-sitter/-/web-tree-sitter-0.24.3.tgz#e6ea923b5e63a47a2209c166fa2e1967d8427a0e"
+  integrity sha512-uR9YNewr1S2EzPKE+y39nAwaTyobBaZRG/IsfkB/OT4v0lXtNj5WjtHKgn2h7eOYUWIZh5rK9Px7tI6S9CRKdA==
