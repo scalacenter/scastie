@@ -460,7 +460,7 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expectedCode =
-        """//> using dep org.scala-lang.modules
+        """//> using dep org.scala-lang
           |object M {
           |  println()
           |}
@@ -477,8 +477,8 @@ class MetalsServerTest extends CatsEffectSuite {
                |  println()
                |}
           """.stripMargin,
-      expectedCode = // this is bug in compiler
-        """//> using dep org.scala-lang.modules
+      expectedCode =
+        """//> using dep org.scala-lang
           |object M {
           |  println()
           |}
