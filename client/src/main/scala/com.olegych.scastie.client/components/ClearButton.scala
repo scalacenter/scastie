@@ -6,7 +6,9 @@ import japgolly.scalajs.react._
 
 import vdom.all._
 
-final case class ClearButton(clear: Reusable[Callback]) {
+import com.olegych.scastie.client.i18n.I18n
+
+final case class ClearButton(clear: Reusable[Callback], language: String) {
   @inline def render: VdomElement = ClearButton.component(this)
 }
 
@@ -17,14 +19,14 @@ object ClearButton {
 
   private def render(props: ClearButton): VdomElement = {
     li(
-      title := s"Clear Messages (${EditorKeymaps.clear.getName})",
+      title := s"${I18n.t("editor.clear_messages")} (${EditorKeymaps.clear.getName})",
       role := "button",
       cls := "btn",
       onClick --> props.clear
     )(
       div(
         i(cls := "fa fa-eraser"),
-        span("Clear Messages")
+        span(I18n.t("editor.clear_messages"))
       )
     )
   }

@@ -13,6 +13,13 @@
     }
   }
 
+  .vimModeIndicator {
+    color: $topbar-background;
+    &.enabled {
+      color: $worksheet-enabled;
+    }
+  }
+
   .editor-buttons {
     .btn {
       color: $editor-button-color;
