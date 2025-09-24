@@ -70,6 +70,9 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   def clearCode: Callback =
     scope.modState(_.setCode(""))
 
+  val setLanguage: String ~=> Callback =
+    Reusable.fn(language => scope.modState(_.setLanguage(language)))
+
   val setViewReused: View ~=> Callback =
     Reusable.fn(setView _)
 
@@ -101,6 +104,9 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
 
   val toggleTheme: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleTheme))
+
+  val setEditorMode: EditorMode ~=> Callback =
+    Reusable.fn(mode => scope.modState(_.setEditorMode(mode)))
 
   val setMetalsStatus: MetalsStatus ~=> Callback =
     Reusable.fn(status => scope.modState(_.setMetalsStatus(status)))

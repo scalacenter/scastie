@@ -17,6 +17,9 @@ addCommandAlias(
 
 val yarnBuild = taskKey[Unit]("builds es modules with `yarn build`")
 
+logo := Welcome.logo
+usefulTasks := Welcome.tasks
+
 ThisBuild / packageTimestamp := None
 
 lazy val scastie = project
@@ -157,7 +160,7 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.7.17"
+      "org.scalameta" %% "scalafmt-core" % "3.9.2"
     ),
     docker / imageNames := Seq(
       ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some(gitHashNow)),
@@ -223,14 +226,28 @@ lazy val server = project
       val shell: Seq[String] = if (sys.props("os.name").contains("Windows")) Seq("cmd", "/c") else Seq("bash", "-c")
       val updateGitSubmodule: Seq[String] = shell :+ "git submodule update --init"
 
-      val installNpmDependencies: Seq[String] = shell :+ "cd tree-sitter-scala && npm install"
+      val installNpmDependencies: Seq[String] = shell :+ "npm install && cd tree-sitter-scala && npm install"
       val buildWasm: Seq[String]              = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
       s.log.info("building tree-sitter-scala wasm...")
 
-      if ((updateGitSubmodule #&& installNpmDependencies #&& buildWasm !) == 0) {
-        s.log.success(s"$treeSitterOutputName build successfuly!")
+      val updateGitSubmoduleExit = Process(updateGitSubmodule, baseDirectory.value.getParentFile)
+        .!(ProcessLogger(line => s.log.info(s"[git submodule] $line"), err => s.log.info(s"[git submodule] $err")))
+      if (updateGitSubmoduleExit != 0) {
+        throw new IllegalStateException(s"Failed to update git submodule!")
+      }
+
+      val installNpmDependenciesExit = Process(installNpmDependencies, baseDirectory.value.getParentFile)
+        .!(ProcessLogger(line => s.log.info(s"[npm install] $line"), err => s.log.info(s"[npm install] $err")))
+      if (installNpmDependenciesExit != 0) {
+        throw new IllegalStateException(s"Failed to install npm dependencies!")
+      }
+
+      val buildWasmExitCode = Process(buildWasm, baseDirectory.value.getParentFile)
+        .!(ProcessLogger(line => s.log.info(s"[tree-sitter build] $line"), err => s.log.info(s"[tree-sitter build] $err")))
+      if (buildWasmExitCode != 0) {
+        throw new IllegalStateException("tree-sitter build failed!")
       } else {
-        throw new IllegalStateException(s"Failed to generate $treeSitterOutputName!")
+        s.log.success(s"$treeSitterOutputName build successfuly!")
       }
 
       sbt.IO.copyFile(treeSitterScalaHiglight, outputWasmDirectory / treeSitterScalaHiglightName)
@@ -332,7 +349,7 @@ lazy val instrumentation = project
   .settings(
     libraryDependencies ++= Seq(
       "org.scalameta"                 %% "scalameta" % "4.12.6",
-      "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % Test
+      "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils)

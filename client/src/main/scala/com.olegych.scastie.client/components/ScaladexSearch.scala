@@ -16,13 +16,18 @@ import dom.ext.KeyCode
 import dom.{HTMLInputElement, HTMLElement}
 import scalajs.js.Thenable.Implicits._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
+
+import com.olegych.scastie.client.i18n.I18n
 
 final case class ScaladexSearch(
     removeScalaDependency: ScalaDependency ~=> Callback,
     updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
     addScalaDependency: (ScalaDependency, Project) ~=> Callback,
     librariesFrom: Map[ScalaDependency, Project],
-    scalaTarget: ScalaTarget
+    scalaTarget: ScalaTarget,
+    isDarkTheme: Boolean,
+    language: String
 ) {
   @inline def render: VdomElement = ScaladexSearch.component(this)
 }
@@ -66,8 +71,24 @@ object ScaladexSearch {
       .map(selected => (selected.project, selected.release.artifact, None, selected.release.target))
       .toSet
 
-    val search: List[(Project, String, Option[String], ScalaTarget)] =
-      projects
+    private def matchScore(query: String, artifact: String, project: Project): Int = {
+      val queryLower = query.toLowerCase
+      val artifactLower = artifact.toLowerCase
+      val projectLower = project.repository.toLowerCase
+      val orgLower = project.organization.toLowerCase
+
+      (queryLower, artifactLower, projectLower, orgLower) match {
+        case (q, a, _, _) if a == q => 1000
+        case (q, a, _, _) if a.startsWith(q) => 800
+        case (q, a, _, _) if a.contains(q) => 600
+        case (q, _, p, _) if p.contains(q) => 400
+        case (q, _, _, o) if o.contains(q) => 200
+        case _ => 0
+      }
+    }
+
+    val search: List[(Project, String, Option[String], ScalaTarget)] = {
+      val results = projects
         .flatMap {
           case (project, target) => project.artifacts.map(artifact => (project, artifact, None, target))
         }
@@ -75,6 +96,16 @@ object ScaladexSearch {
           !selectedProjectsArtifacts.contains(projectAndArtifact)
         }
 
+      if (query.nonEmpty) {
+        results.sortBy({ case (project, artifact, _, _) =>
+          -matchScore(query, artifact, project)
+        })(Ordering[Int])
+      } else {
+        results.sortBy { case (project, artifact, _, _) =>
+          (project.organization, project.repository, artifact)
+        }
+      }
+    }
     def removeSelected(selected: Selected): SearchState = {
       copy(selecteds = selecteds.filterNot(_.release.matches(selected.release)))
     }
@@ -291,16 +322,32 @@ object ScaladexSearch {
       for {
         response <- dom.fetch(scaladexApiUrl + "/project" + query)
         text <- response.text()
+        
+        artifactResponse <- dom.fetch(scaladexApiUrl + s"/v1/projects/${project.organization}/${project.repository}/versions/latest")
+        artifactText <- artifactResponse.text()
+        artifactJson = Json.parse(artifactText)
+        
+        matchingArtifact = artifactJson.as[List[play.api.libs.json.JsObject]].find { artifactObj =>
+          val artifactId = (artifactObj \ "artifactId").asOpt[String].getOrElse("")
+          val targetSuffix = target.targetType match {
+            case ScalaTargetType.Scala3 => "_3"
+            case ScalaTargetType.Scala2 => s"_${target.binaryScalaVersion}"
+            case ScalaTargetType.JS => s"_sjs1_${target.binaryScalaVersion}"
+          }
+          artifactId == artifact || artifactId == s"${artifact}${targetSuffix}"
+        }
+        matchingGroupId = matchingArtifact.flatMap(obj => (obj \ "groupId").asOpt[String]).getOrElse("")
+        matchingVersion = matchingArtifact.flatMap(obj => (obj \ "version").asOpt[String]).orElse(version)
       } yield {
         Json.fromJson[ReleaseOptions](Json.parse(text)).asOpt.map { options =>
           {
             Selected(
               project = project,
               release = ScalaDependency(
-                groupId = options.groupId,
+                groupId = if (matchingGroupId.nonEmpty) matchingGroupId else options.groupId,
                 artifact = artifact,
                 target = target,
-                version = version.getOrElse(options.version),
+                version = matchingVersion.getOrElse(options.version),
               ),
               options = options,
             )
@@ -400,12 +447,46 @@ object ScaladexSearch {
       if (searchState.search.isEmpty) display.none
       else display.inlineBlock
 
+    val toolkitEnabled = props.librariesFrom.keys.exists { dep =>
+      dep.groupId == "org.scala-lang" &&
+      dep.artifact == "toolkit" &&
+      dep.target == props.scalaTarget
+    }
+
+    def handleToolkitToggle(enabled: Boolean): Callback = {
+      val toolkitProject = Project(
+        organization = "scala",
+        repository = "toolkit",
+        logo = Some("https://avatars.githubusercontent.com/u/57059?v=4"),
+        artifacts = List("toolkit", "toolkit-test")
+      )
+      val artifact = "toolkit"
+      val versionOpt: Option[String] = None
+
+      if (enabled)
+        scope.backend.addArtifact((toolkitProject, artifact, versionOpt), props.scalaTarget, searchState)
+      else {
+        searchState.selecteds.find { selected =>
+          selected.release.groupId == "org.scala-lang" &&
+          selected.release.artifact == "toolkit" &&
+          selected.release.target == props.scalaTarget
+        }.map(scope.backend.removeSelected(_)).getOrElse(Callback.empty)
+      }
+    }
+
+    val toolkitSwitchElem = toolkitSwitch(
+      isEnabled = toolkitEnabled,
+      onToggle = handleToolkitToggle,
+      isDarkTheme = props.isDarkTheme
+    )
+
     div(cls := "search", cls := "library")(
+      toolkitSwitchElem,
       added,
       div(cls := "search-input")(
         input.search.withRef(searchInputRef)(
           cls := "search-query",
-          placeholder := "Search for 'cats'",
+          placeholder := I18n.t("build.search_placeholder"),
           value := searchState.query,
           onChange ==> scope.backend.setQuery,
           onKeyDown ==> scope.backend.keyDown
@@ -430,7 +511,39 @@ object ScaladexSearch {
               )
             )
         }.toTagMod
-      )
+      ),
+    )
+  }
+
+  private def toolkitSwitch(
+    isEnabled: Boolean,
+    onToggle: Boolean => Callback,
+    isDarkTheme: Boolean
+  ): VdomElement = {
+    val switchId = s"switch-$label".replace(" ", "-")
+    val sliderClass =
+    if (isDarkTheme) "switch-slider dark" else "switch-slider"
+    div(
+      cls := "toolkit-switch",
+    )(
+      div(cls := "switch")(
+        input(
+          `type` := "checkbox",
+          cls := "switch-input",
+          id := switchId,
+          checked := isEnabled,
+          onChange ==> { (e: ReactEventFromInput) =>
+            onToggle(e.target.checked)
+          }
+        ),
+        label(
+          cls := sliderClass,
+          htmlFor := switchId
+        )
+      ),
+      span(
+        cls := "switch-description",
+      )(I18n.t("build.enable_toolkit"))
     )
   }
 
