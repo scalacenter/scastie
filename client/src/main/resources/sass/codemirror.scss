@@ -144,4 +144,31 @@
     -o-transition: opacity .6s;
     -ms-transition: opacity .6s;
   }
+
+  .cm-vim-panel {
+    background-color: #c4c6c7;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    color: #2d3748;
+    font-family: $code-font-family;
+    padding: 8px 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .cm-vim-panel input {
+    color: inherit;
+    font-family: inherit;
+  }
+
+  .dark .cm-vim-panel {
+    background-color: #1a202c !important;
+    border-color: #2d3748 !important;
+    color: #f7fafc !important;
+  }
+
+  .cm-editor:has(.cm-vim-panel) .cm-cursor,
+  .cm-editor:has(.cm-vim-panel) .cm-cursor-primary,
+  .cm-editor:has(.cm-vim-panel) .cm-vimCursorLayer {
+    display: none !important;
+  }
 }
