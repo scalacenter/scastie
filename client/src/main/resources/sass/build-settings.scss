@@ -170,6 +170,7 @@
         .search-input {
           height: 36px;
           width: 100%;
+          margin-top: 10px;
           .search-query {
             display: inline-block;
             width: 100%;
@@ -260,6 +261,73 @@
           }
         }
       }
+
+      .toolkit-switch {
+        display: flex;
+        align-items: center;
+        margin: 8px 0;
+      }
+
+      .switch-description {
+        margin-left: 16px;
+        font-size: 15px;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-flex;
+        width: 50px;
+        height: 24px;
+      }
+
+      .switch-input {
+        opacity: 0;
+        width: 50px;
+        height: 24px;
+        position: absolute;
+        left: 0;
+        top: 0;
+        cursor: pointer;
+      }
+
+      .switch-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #b4b4b4;
+        border-radius: 24px;
+        transition: .3s;
+      }
+
+      .switch-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        border-radius: 50%;
+        transition: .3s;
+      }
+
+      .switch-input:checked + .switch-slider {
+        background-color: #2196f3;
+      }
+
+      .switch-input:checked + .switch-slider:before {
+        transform: translateX(26px);
+      }
+
+      .switch-slider.dark {
+        background-color: #595959;
+      }
+      .switch-input:checked + .switch-slider.dark {
+        background-color: #0b5089;
+}
     }
   }
 }

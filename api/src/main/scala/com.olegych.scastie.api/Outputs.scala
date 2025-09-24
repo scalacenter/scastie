@@ -46,3 +46,5 @@ object Position {
 }
 
 case class Position(start: Int, end: Int)
+case class Binder(pos: Position, render: Render)
+case class Statement(binders: List[Binder], position: Position)

@@ -10,6 +10,27 @@
       
     }
 
+    .editor-mode-select {
+      background: $sidebar-background;
+      color: $submenu-text-color;
+      border: 2px solid $submenu-border-color;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      width: 100px;
+
+      &.dark {
+        background: $topbar-background;
+        color: $hover-dropdown-color;
+        border: 2px solid $selected-dropdown-background;
+      }
+      &.light {
+        background: #fff;
+        color: #222;
+        border: 2px solid #ccc;
+      }
+    }
+
     .actions-top {
       .btn.selected {
         background: $selected-option-background;
