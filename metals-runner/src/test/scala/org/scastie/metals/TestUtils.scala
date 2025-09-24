@@ -52,14 +52,6 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     else if (majorVersion.forall(v => compat.keys.exists(_ == v))) compat(majorVersion.get)
     else default
 
-  def convertScalaCliConfiguration(code: String, expected: Either[FailureType, ScastieMetalsOptions]): IO[Unit] =
-    val config = server.isConfigurationSupported(ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.stableNext), code)).value
-    assertIO(config, expected)
-
-  def convertScalaCliConfiguration(code: String): IO[ScastieMetalsOptions] =
-    val config = server.isConfigurationSupported(ScastieMetalsOptions(Set(), ScalaCli(BuildInfo.stableNext), code)).toOption
-    assertIOBoolean(config.isDefined).flatMap(_ => config.value.map(_.get))
-
   def testCompletion(
     testTargets: List[ScalaTarget] = testTargets,
     dependencies: Set[DependencyForVersion] = Set(),
