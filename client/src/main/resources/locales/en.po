@@ -1,0 +1,358 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
+
+# --- Section: Topbar ---
+msgid "topbar.feedback"
+msgstr "Feedback"
+
+msgid "topbar.gitter"
+msgstr "Scastie's gitter"
+
+msgid "topbar.github_issues"
+msgstr "Github issues"
+
+msgid "topbar.language_label"
+msgstr "Language: "
+
+msgid "topbar.login"
+msgstr "Login"
+
+msgid "topbar.feedback_tooltip"
+msgstr "Open Gitter.im Chat to give us feedback"
+
+msgid "topbar.github_tooltip"
+msgstr "Create new issue on GitHub"
+
+msgid "topbar.snippets"
+msgstr "Snippets"
+
+msgid "topbar.snippets_tooltip"
+msgstr "Go to your code snippets"
+
+msgid "topbar.logout"
+msgstr "Logout"
+
+# --- Section: Code Snippets ---
+msgid "snippets.delete"
+msgstr "Delete"
+
+msgid "snippets.share"
+msgstr "Share"
+
+msgid "snippets.empty"
+msgstr "No saved snippets, yet!"
+
+msgid "snippets.saved"
+msgstr "Saved Code Snippets"
+
+msgid "snippets.update"
+msgstr "Update: "
+
+# --- Section: Sidebar ---
+msgid "sidebar.editor_mode_default"
+msgstr "Default"
+
+msgid "sidebar.theme_light"
+msgstr "Light"
+
+msgid "sidebar.theme_dark"
+msgstr "Dark"
+
+msgid "sidebar.theme_dark_tooltip"
+msgstr "Select Dark Theme (F2)"
+
+msgid "sidebar.theme_light_tooltip"
+msgstr "Select Light Theme (F2)"
+
+msgid "sidebar.privacy_policy"
+msgstr "Privacy Policy"
+
+msgid "sidebar.privacy_policy_tooltip"
+msgstr "Show privacy policy"
+
+msgid "sidebar.help"
+msgstr "Help"
+
+msgid "sidebar.help_tooltip"
+msgstr "Show help Menu"
+
+msgid "sidebar.status_unknown"
+msgstr "Unknown"
+
+msgid "sidebar.status_up"
+msgstr "Up"
+
+msgid "sidebar.status_down"
+msgstr "Down"
+
+msgid "sidebar.status_tooltip"
+msgstr "Show runners status"
+
+msgid "sidebar.editor"
+msgstr "Editor"
+
+msgid "sidebar.build_settings"
+msgstr "Build Settings"
+
+# --- Section: Login Window ---
+
+msgid "sidebar.login_title"
+msgstr "Login to Scastie"
+
+msgid "sidebar.login_github"
+msgstr "Continue with GitHub"
+
+# The translation of `privacy policy` must remain inside the curly brackets.
+msgid "sidebar.login_agreement"
+msgstr "By signing in, you agree to our {privacy policy}."
+
+# --- Section: Editor Topbar ---
+msgid "editor.run"
+msgstr "Run"
+
+msgid "editor.status_unknown_warning"
+msgstr "warning: unknown status"
+
+msgid "editor.running"
+msgstr "Running"
+
+msgid "editor.running_tooltip"
+msgstr "Running your Code..."
+
+msgid "editor.new_snippet_title"
+msgstr "New code snippet"
+
+msgid "editor.new"
+msgstr "New"
+
+msgid "editor.new_tooltip"
+msgstr "New Snippet"
+
+msgid "editor.new_confirmation"
+msgstr "Are you sure you want to create a new snippet?"
+
+msgid "editor.format_tooltip"
+msgstr "Format Code"
+
+msgid "editor.format"
+msgstr "Format"
+
+msgid "editor.clear_messages"
+msgstr "Clear Messages"
+
+msgid "editor.worksheet_on_tooltip"
+msgstr "Turn Worksheet mode ON (evaluate and print each top level expression)"
+
+msgid "editor.worksheet_off_tooltip"
+msgstr "Turn Worksheet mode OFF (evaluate and print each top level expression)"
+
+msgid "editor.worksheet_unsupported"
+msgstr "This configuration does not support Worksheet mode"
+
+msgid "editor.worksheet"
+msgstr "Worksheet"
+
+msgid "editor.download"
+msgstr "Download"
+
+msgid "editor.embed"
+msgstr "Embed"
+
+msgid "editor.embed_title"
+msgstr "Share your Code Snippet"
+
+msgid "editor.embed_subtitle"
+msgstr "Copy and embed your code snippet"
+
+msgid "editor.share_snippet"
+msgstr "Copy and share your code snippet's URL:"
+
+msgid "editor.metals_status"
+msgstr "Metals Status"
+
+msgid "editor.metals_loading"
+msgstr "Compiler is loading"
+
+msgid "editor.metals_ready"
+msgstr "Metals is ready"
+
+msgid "editor.metals_disabled"
+msgstr "Metals Disabled"
+
+msgid "editor.metals_unsupported"
+msgstr "Unsupported Configuration"
+
+msgid "editor.metals_network_error"
+msgstr "Network Error"
+
+# --- Section: Build Settings ---
+msgid "build.reset_title"
+msgstr "Reset Build"
+
+msgid "build.reset_confirmation"
+msgstr "Are you sure you want to reset the build?"
+
+msgid "build.reset"
+msgstr "Reset"
+
+msgid "build.reset_tooltip"
+msgstr "Reset your configuration"
+
+msgid "build.target"
+msgstr "Target"
+
+msgid "build.scala_version"
+msgstr "Scala Version"
+
+msgid "build.libraries"
+msgstr "Libraries"
+
+msgid "build.sbt_config"
+msgstr "Extra Sbt Configuration"
+
+msgid "build.sbt_base_config"
+msgstr "Base Sbt Configuration (readonly)"
+
+msgid "build.sbt_plugins_config"
+msgstr "Base Sbt Plugins Configuration (readonly)"
+
+msgid "build.enable_toolkit"
+msgstr "Enable Toolkit"
+
+msgid "build.search_placeholder"
+msgstr "Search for 'cats'"
+
+msgid "build.other"
+msgstr "Other"
+
+# --- Section: Console ---
+msgid "console.title"
+msgstr "Console"
+
+# --- Section: Help Window ---
+msgid "help.title"
+msgstr "Help about Scastie"
+
+msgid "help.description"
+msgstr "Scastie is an interactive playground for Scala with support for sbt configuration."
+
+# The translation of `keyboard shortcuts` must remain inside the curly brackets.
+msgid "help.sublime_support"
+msgstr "Scastie editor supports Sublime Text {keyboard shortcuts}."
+
+msgid "help.editor_modes"
+msgstr "Editor modes"
+
+msgid "help.editor_modes_1"
+msgstr "Scastie editor supports multiple keyboard modes. "
+
+msgid "help.editor_modes_2"
+msgstr "You can switch between Default, Vim, and Emacs modes using the selector in the sidebar. "
+
+msgid "help.editor_modes_3"
+msgstr "Each mode provides familiar keybindings and navigation for users of those editors."
+
+msgid "help.save"
+msgstr "Save"
+
+msgid "help.save_description"
+msgstr "Run and save your code."
+
+msgid "help.new_description"
+msgstr "Removes all your code lines from the current editor instance and resets sbt configuration."
+
+msgid "help.clear_messages_description"
+msgstr "Removes all messages from the current editor instance."
+
+# The translation of `configuration section` must remain inside the curly brackets.
+msgid "help.format_description"
+msgstr "The code formatting is done by scalafmt. You can configure the formatting with comments in your code. Read the {configuration section}."
+
+# The code must remain inside the curly brackets.
+msgid "help.worksheet_description"
+msgstr "Enabled by default, the Worksheet Mode gives the value and the type of each line of your program. You can also add HTML blocks such as: {html"<h1>Hello</h1>"} to render it next to the declaration."
+
+msgid "help.worksheet_packages_warning"
+msgstr "In Worksheet Mode you cannot use packages. If you want to use it, turn off the Mode and add a main method and println statements."
+
+msgid "help.download_description"
+msgstr "Create a zip package with sbt configuration for current snippet."
+
+msgid "help.embed_description"
+msgstr "Create an url embeddable in external web pages."
+
+msgid "help.console_description"
+msgstr "You can see your code's output in the Scastie's console."
+
+msgid "help.build_settings_description"
+msgstr "In Build Settings you can change the Scala version and add libraries, choose your desired target and even add your own custom sbt configuration."
+
+msgid "help.snippets_title"
+msgstr "User's Code Snippets"
+
+msgid "help.snippets_description"
+msgstr "Your saved code fragments will appear here and you'll be able to delete or share them."
+
+msgid "help.vim_commands"
+msgstr "Vim commands"
+
+msgid "help.vim_description"
+msgstr "If Vim mode is enabled in the editor, you can use the following commands in the Vim command bar (press ':' in normal mode):"
+
+msgid "help.vim_run"
+msgstr " — Run and save your code"
+
+msgid "help.vim_format"
+msgstr " — Format code"
+
+msgid "help.vim_clear"
+msgstr " — Clear messages"
+
+msgid "help.vim_help"
+msgstr " — Show this help dialog"
+
+msgid "help.vim_navigation"
+msgstr "You can also use standard Vim navigation and editing commands in the editor."
+
+# The translation of `Gitter` must remain inside the curly brackets.
+msgid "help.feedback_description"
+msgstr "You can join our {Gitter} channel and send issues."
+
+msgid "help.buildinfo"
+msgstr "BuildInfo"
+
+# The repository name `scalacenter/scastie` must remain inside the curly brackets.
+msgid "help.github_info"
+msgstr "It's available on Github at {scalacenter/scastie}."
+
+msgid "help.license"
+msgstr "License"
+
+msgid "help.original_idea"
+msgstr "Scastie is an original idea from Aleh Aleshka (OlegYch)"
+
+# --- Section: Status ---
+msgid "status.no_task"
+msgstr "No Task Running"
+
+msgid "status.task"
+msgstr "Task"
+
+msgid "status.different_config"
+msgstr "Different Configuration"
+
+msgid "status.same_config"
+msgstr "Same Configuration"
+
+msgid "status.sbt_runners"
+msgstr "Sbt Runners"

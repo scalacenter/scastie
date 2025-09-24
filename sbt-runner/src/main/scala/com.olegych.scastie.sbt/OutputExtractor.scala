@@ -8,6 +8,7 @@ import com.olegych.scastie.sbt.SbtProcess._
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
 
+import scala.meta.inputs.Input
 import scala.util.control.NonFatal
 
 class OutputExtractor(getScalaJsContent: () => Option[String],
@@ -17,9 +18,9 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   def extractProgress(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
     import sbtRun._
 
-    val problems = extractProblems(output.line, Instrument.getMessageLineOffset(inputs), inputs.isWorksheetMode)
+    val problems = extractProblems(output.line, sbtRun, Instrument.getMessageLineOffset(inputs))
     val instrumentations = extract[List[Instrumentation]](output.line)
-    val runtimeError = extractRuntimeError(output.line, Instrument.getExceptionLineOffset(inputs))
+    val runtimeError = extractRuntimeError(output.line, sbtRun, Instrument.getExceptionLineOffset(inputs))
     val sbtOutput = extract[ConsoleOutput.SbtOutput](output.line)
     // sbt plugin is not loaded at this stage. we need to drop those messages
     val hiddenInitializationMessages = List(
@@ -122,13 +123,17 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
 
   private def extractProblems(
       line: String,
-      lineOffset: Int,
-      isWorksheetMode: Boolean
+      sbtRun: SbtRun,
+      lineOffset: Int
   ): Option[List[Problem]] = {
     val problems = extract[List[Problem]](line)
 
-    val problemsWithOffset = problems.map {
-      _.map(problem => problem.copy(line = problem.line.map(lineNumber => (lineNumber + lineOffset) max 1)))
+    val problemsWithMappedLines = problems.map {
+      _.map(problem =>
+        problem.copy(line =
+          problem.line.map(instrumentedLine => sbtRun.lineMapping(instrumentedLine))
+        )
+      )
     }
 
     def annoying(in: Problem): Boolean = {
@@ -136,18 +141,18 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
       in.message == "a pure expression does nothing in statement position; you may be omitting necessary parentheses"
     }
 
-    if (isWorksheetMode) problemsWithOffset.map(_.filterNot(annoying))
-    else problemsWithOffset
+    if (sbtRun.inputs.isWorksheetMode) problemsWithMappedLines.map(_.filterNot(annoying))
+    else problemsWithMappedLines
   }
 
-  private def extractRuntimeError(line: String, lineOffset: Int): Option[RuntimeError] = {
+  private def extractRuntimeError(line: String, sbtRun: SbtRun, lineOffset: Int): Option[RuntimeError] = {
     extract[RuntimeErrorWrap](line).flatMap {
       _.error.map { error =>
         val noStackTraceError = if (error.message.contains("No main class detected.")) error.copy(fullStack = "") else error
-        val errorWithOffset = noStackTraceError.copy(
-          line = noStackTraceError.line.map(lineNumber => (lineNumber + lineOffset) max 1)
+        val errorWithMappedLine = noStackTraceError.copy(
+          line = noStackTraceError.line.map(instrumentedLine => sbtRun.lineMapping(instrumentedLine))
         )
-        errorWithOffset
+        errorWithMappedLine
       }
     }
   }

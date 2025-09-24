@@ -4,6 +4,9 @@ import com.olegych.scastie.api._
 import japgolly.scalajs.react._
 
 import vdom.all._
+import com.olegych.scastie.buildinfo.BuildInfo
+
+import com.olegych.scastie.client.i18n.I18n
 
 case class VersionSelector(scalaTarget: ScalaTarget, onChange: ScalaTarget ~=> Callback) {
   @inline def render: VdomElement = VersionSelector.versionSelectorHook(this)
@@ -24,6 +27,12 @@ object VersionSelector {
             case n: ScalaTarget.Native    => ScalaTarget.Native(n.scalaNativeVersion, n.scalaVersion)
           }
 
+        def renderRecommended3Versions(scalaVersion: String) = {
+          if (scalaVersion == BuildInfo.stableLTS) s"$scalaVersion LTS"
+          else if (scalaVersion == BuildInfo.stableNext) s"$scalaVersion Next"
+          else scalaVersion
+        }
+
         ul(cls := "suggestedVersions")(
           ScalaVersions
             .suggestedScalaVersions(props.scalaTarget.targetType)
@@ -37,25 +46,32 @@ object VersionSelector {
                   onChange --> props.onChange(versionSelectors(suggestedVersion)),
                   checked := props.scalaTarget.scalaVersion == suggestedVersion
                 ),
-                label(`for` := s"scala-$suggestedVersion", cls := "radio", role := "button", suggestedVersion)
+                label(`for` := s"scala-$suggestedVersion", className := "radio", role := "button", renderRecommended3Versions(suggestedVersion))
               )
             }
             .toTagMod,
           li(
             label(
-              div(cls := "select-wrapper")(
+              div(cls := "select-wrapper"){
+                val isRecommended = ScalaVersions
+                    .suggestedScalaVersions(props.scalaTarget.targetType)
+                    .contains(props.scalaTarget.scalaVersion)
+
                 select(
                   name := "scalaVersion",
                   onChange ==> { (e: ReactEventFromInput) =>
                     props.onChange(versionSelectors(e.target.value))
                   },
+                  value := {if (isRecommended) I18n.t("build.other") else props.scalaTarget.scalaVersion},
+                  TagMod.when(!isRecommended)(className := "selected-option")
                 )(
                   ScalaVersions
                     .allVersions(props.scalaTarget.targetType)
                     .map(version => option(version))
+                    .prepended(option(I18n.t("build.other"))(hidden := true, disabled := true))
                     .toTagMod
                 )
-              )
+              }
             )
           )
         )
