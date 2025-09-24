@@ -6,6 +6,8 @@ import japgolly.scalajs.react._
 
 import vdom.all._
 
+import com.olegych.scastie.client.i18n.I18n
+
 final case class PromptModal(
                              isDarkTheme: Boolean,
                              modalText: String,
@@ -45,7 +47,7 @@ object PromptModal {
             props.actionLabel
           ),
           li(onClick ==> (e => e.stopPropagationCB >> props.close), cls := "btn")(
-            "Cancel"
+            I18n.t("Cancel")
           )
         )
       )

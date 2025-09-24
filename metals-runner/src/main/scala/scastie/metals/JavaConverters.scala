@@ -34,9 +34,10 @@ object JavaConverters {
       HoverDTO(0, 0, doc)
 
   extension (range: Range) {
+
     def toScalaRange(insideWrapper: Boolean) =
-      val start = range.getStart()
-      val end = range.getEnd()
+      val start      = range.getStart()
+      val end        = range.getEnd()
       val lineOffset = if insideWrapper then 0 else 1
       val charOffset = if insideWrapper then -DTOExtensions.wrapperIndent.length else 0
       EditRange(
@@ -45,6 +46,7 @@ object JavaConverters {
         end.getLine + lineOffset,
         end.getCharacter + charOffset
       )
+
   }
 
   extension (completions: CompletionList)
@@ -53,11 +55,10 @@ object JavaConverters {
 
       def createInsertInstructions(completion: CompletionItem): Option[InsertInstructions] = {
         completion.getTextEdit().asScala match {
-          case Left(textEdit) =>
-            Some(
+          case Left(textEdit) => Some(
               InsertInstructions(
                 textEdit.getNewText,
-                textEdit.getRange.toScalaRange(isWorksheetMode),
+                textEdit.getRange.toScalaRange(isWorksheetMode)
               )
             )
           case Right(insertReplace) =>
@@ -75,30 +76,30 @@ object JavaConverters {
         .map(edit => {
           AdditionalInsertInstructions(
             edit.getNewText(),
-            edit.getRange().toScalaRange(false),
+            edit.getRange().toScalaRange(false)
           )
         })
         .toList
 
-
-      val completionItems = for {
-        completion         <- completions.getItems().asScala
-        filterText         <- Option(completion.getFilterText())
-        detail             <- Option(completion.getDetail())
-        kind               <- Option(completion.getKind()).map(_.toString.toLowerCase)
-        order              <- Option(completion.getSortText()).map(_.toIntOption)
-        insertInstructions <- createInsertInstructions(completion)
-        additionalInsertInstructions = createAdditionalInsertInstructions(completion)
-        data                         = parseCompletionData(completion)
-      } yield CompletionItemDTO(
-        filterText,
-        detail,
-        kind,
-        order,
-        insertInstructions,
-        additionalInsertInstructions,
-        data
-      )
+      val completionItems =
+        for {
+          completion         <- completions.getItems().asScala
+          filterText         <- Option(completion.getFilterText())
+          detail             <- Option(completion.getDetail())
+          kind               <- Option(completion.getKind()).map(_.toString.toLowerCase)
+          order              <- Option(completion.getSortText()).map(_.toIntOption)
+          insertInstructions <- createInsertInstructions(completion)
+          additionalInsertInstructions = createAdditionalInsertInstructions(completion)
+          data                         = parseCompletionData(completion)
+        } yield CompletionItemDTO(
+          filterText,
+          detail,
+          kind,
+          order,
+          insertInstructions,
+          additionalInsertInstructions,
+          data
+        )
       ScalaCompletionList(completionItems.toSet, completions.isIncomplete)
     }
 

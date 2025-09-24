@@ -21,7 +21,7 @@ class MetalsServerTest extends CatsEffectSuite {
                |}
           """.stripMargin,
       expected = Set(
-        "println",
+        "println"
       ).asRight
     )
   }
@@ -202,7 +202,7 @@ class MetalsServerTest extends CatsEffectSuite {
           |def asRight[B]: Either[B, String]
           |```
           |Wrap a value in `Right`.""".stripMargin
-      ).asRight,
+      ).asRight
     )
   }
 
@@ -255,7 +255,7 @@ class MetalsServerTest extends CatsEffectSuite {
           """.stripMargin,
       expected = Set(
         TestSignatureHelp(
-          "collectSomeFold[M](f: Any => Option[M])(using F: cats.Foldable[List], M: cats.kernel.Monoid[M]): M",
+          "collectSomeFold[M](f: Any => Option[M])(using F: Foldable[List], M: Monoid[M]): M",
           """Tear down a subset of this structure using a `A => Option[M]`.
             |
             |```
