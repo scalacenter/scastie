@@ -9,11 +9,8 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.19"
 
 val akkaHttpVersion = "10.2.9"
 
-addCommandAlias("startAll", "sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
-addCommandAlias(
-  "startAllProd",
-  "sbtRunner/reStart;metalsRunner/reStart;server/buildTreesitterWasm;server/fullLinkJS/reStart"
-)
+addCommandAlias("startAll", "scalaCliRunner/reStart;sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
+addCommandAlias("startAllProd", "scalaCliRunner/reStart;sbtRunner/reStart;metalsRunner/reStart;server/buildTreesitterWasm;server/fullLinkJS/reStart")
 
 val yarnBuild = taskKey[Unit]("builds es modules with `yarn build`")
 
@@ -34,18 +31,21 @@ lazy val scastie = project
       server,
       storage,
       utils,
-      metalsRunner
+      metalsRunner,
+      scalaCliRunner
     ).map(_.project)): _*
   )
   .settings(baseSettings)
   .settings(
     cachedCiTestFull := {
-      val _   = cachedCiTestFull.value
-      val __  = (sbtRunner / docker / dockerfile).value
-      val ___ = (server / Universal / packageBin).value
+      val _     = cachedCiTestFull.dependsOn(publishLocal).value
+      val __    = (sbtRunner / docker / dockerfile).value
+      val ___   = (scalaCliRunner / docker / dockerfile).value
+      val ____  = (metalsRunner / docker / dockerfile).value
+      val _____ = (server / Universal / packageBin).value
     }
   )
-  .settings(Deployment.settings(server, sbtRunner, metalsRunner))
+  .settings(Deployment.settings(server, sbtRunner, scalaCliRunner, metalsRunner))
 
 lazy val testSettings = Seq(
   libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.17" % Test
@@ -76,7 +76,7 @@ lazy val utils = project
   )
   .dependsOn(api.jvm(ScalaVersions.jvm))
 
-lazy val runnerRuntimeDependencies = (api.projectRefs ++ runtimeScala.projectRefs ++ Seq(
+lazy val runnerRuntimeDependencies = (api.projectRefs ++ runtimeScala.projectRefs ++ runner.projectRefs ++ Seq(
   sbtScastie.project
 )).map(_ / publishLocal)
 
@@ -88,8 +88,7 @@ lazy val runnerRuntimeDependenciesInTest = Seq(
 )
 
 lazy val smallRunnerRuntimeDependenciesInTest = {
-  lazy val smallRunnerRuntimeDependencies = Seq(
-    api.jvm(ScalaVersions.jvm),
+  lazy val smallRunnerRuntimeDependencies = Seq(api.jvm(ScalaVersions.jvm),
     api.jvm(ScalaVersions.sbt),
     runtimeScala.jvm(ScalaVersions.jvm),
     runtimeScala.jvm(ScalaVersions.sbt),
@@ -139,11 +138,14 @@ lazy val metalsRunner = project
       "io.circe"            %% "circe-generic"       % "0.14.6",
       "com.evolutiongaming" %% "scache"              % "4.2.3",
       "org.scalameta"       %% "munit"               % "0.7.29" % Test,
-      "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test
+      "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test,
+      "org.virtuslab"        % "using_directives"    % "1.1.0",
+      "io.circe" %% "circe-parser" % "0.14.6",
+      "io.get-coursier" %% "coursier" % "2.1.6" cross (CrossVersion.for3Use2_13),
     )
   )
   .enablePlugins(JavaServerAppPackaging, sbtdocker.DockerPlugin)
-  .dependsOn(api.jvm(ScalaVersions.old3))
+  .dependsOn(api.jvm(ScalaVersions.stableNext))
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))
@@ -160,7 +162,8 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
-      "org.scalameta" %% "scalafmt-core" % "3.9.2"
+      "org.scalameta" %% "scalafmt-core" % "3.9.2",
+      "io.circe" %% "circe-parser" % "0.14.6"
     ),
     docker / imageNames := Seq(
       ImageName(namespace = Some(dockerOrg), repository = "scastie-sbt-runner", tag = Some(gitHashNow)),
@@ -267,6 +270,7 @@ lazy val server = project
       "com.typesafe.akka"                  %% "akka-http"      % akkaHttpVersion,
       "com.softwaremill.akka-http-session" %% "core"           % "0.7.1",
       "ch.megard"                          %% "akka-http-cors" % "1.2.0",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.39.2",
       akka("cluster"),
       akka("slf4j"),
       akka("testkit")      % Test,
@@ -292,7 +296,8 @@ lazy val storage = project
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
       "org.mongodb.scala" %% "mongo-scala-driver" % "4.11.1",
-      "net.lingala.zip4j"  % "zip4j"              % "2.11.5"
+      "net.lingala.zip4j"  % "zip4j"              % "2.11.5",
+      "io.circe" %% "circe-parser" % "0.14.6"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
@@ -337,10 +342,12 @@ lazy val client = project
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "core"                        % "2.1.1",
       "com.github.japgolly.scalajs-react" %%% "extra"                       % "2.1.1",
-      "org.scala-js"                      %%% "scala-js-macrotask-executor" % "1.1.1"
+      "org.scala-js"                      %%% "scala-js-macrotask-executor" % "1.1.1",
+      "io.circe"                          %%% "circe-parser"                % "0.14.6",
     )
   )
   .enablePlugins(ScalaJSPlugin)
+  .dependsOn(runtimeApi.js(ScalaVersions.js))
   .dependsOn(api.js(ScalaVersions.js))
 
 lazy val instrumentation = project
@@ -354,15 +361,74 @@ lazy val instrumentation = project
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils)
 
-lazy val api          = SbtShared.api
+lazy val runtimeApi   = SbtShared.`runtime-api`
 lazy val runtimeScala = SbtShared.`runtime-scala`
+lazy val api          = SbtShared.api
 
 lazy val sbtScastie = project
   .in(file("sbt-scastie"))
   .settings(orgSettings)
   .settings(
     moduleName := "sbt-scastie",
-    sbtPlugin  := true
+    sbtPlugin  := true,
+    libraryDependencies += "io.circe" %% "circe-parser" % "0.14.6"
   )
   .settings(version := versionRuntime)
   .dependsOn(api.jvm(ScalaVersions.sbt))
+
+lazy val runner = projectMatrix
+  .in(file("runner"))
+  .jvmPlatform(Seq(ScalaVersions.latest213, ScalaVersions.latest212, ScalaVersions.old3))
+  .settings(SbtShared.baseSettings)
+  .settings(
+     version := SbtShared.versionRuntime,
+     Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "runtime-api",
+  )
+
+lazy val scalaCliRunner = project
+  .in(file("scala-cli-runner"))
+  .settings(baseNoCrossSettings)
+  .settings(loggingAndTest)
+  .settings(runnerRuntimeDependenciesInTest)
+  .settings(
+    reStart / javaOptions += "-Xmx256m",
+    Test / parallelExecution := false,
+    reStart                  := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
+    resolvers ++= Resolver.sonatypeOssRepos("public"),
+    libraryDependencies ++= Seq(
+      akka("actor"),
+      akka("testkit") % Test,
+      akka("cluster"),
+      akka("slf4j"),
+      "ch.epfl.scala" % "bsp4j" % "2.1.0-M7",
+      "org.typelevel" %% "cats-core" % "2.10.0",
+      "io.circe" %% "circe-parser" % "0.14.6",
+      "io.get-coursier" %% "coursier" % "2.1.6",
+    ),
+    docker / imageNames := Seq(
+      ImageName(namespace = Some(dockerOrg), repository = "scastie-scala-cli-runner", tag = Some(gitHashNow)),
+      ImageName(namespace = Some(dockerOrg), repository = "scastie-scala-cli-runner", tag = Some("latest"))
+    ),
+    docker / dockerfile := Def
+      .task {
+        DockerHelper.scalaCliRunner(
+          baseDirectory = (ThisBuild / baseDirectory).value.toPath,
+          scalaCliTargetDir = target.value.toPath,
+          ivyHome = ivyPaths.value.ivyHome.get.toPath,
+          organization = organization.value,
+          artifact = assembly.value.toPath,
+        )
+      }
+      .dependsOn(runnerRuntimeDependencies: _*)
+      .value,
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case in @ PathList("reference.conf", xs @ _*) => {
+        val old = (assembly / assemblyMergeStrategy).value
+        old(in)
+      }
+      case x => MergeStrategy.first
+    }
+  )
+  .enablePlugins(BuildInfoPlugin, sbtdocker.DockerPlugin)
+  .dependsOn(api.jvm(ScalaVersions.jvm), instrumentation, utils)

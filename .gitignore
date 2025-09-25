@@ -28,3 +28,4 @@ generated-scripts*
 dump*
 *.wasm
 *.scm
+.scala-build
