@@ -18,7 +18,11 @@ jobs:
 
     - uses: cachix/install-nix-action@v24
       with:
-        nix_path: nixpkgs=channel:nixos-22.11
+        nix_path: nixpkgs=channel:nixos-23.11
+    - uses: VirtusLab/scala-cli-setup@main
+      with:
+        jvm: temurin:17
+        apps: sbt bloop
     - name: Run tests
       run: |
-        nix-shell --command "sbt -DSnippetsContainerTest.mongo=true cachedCiTest"
+        nix-shell --command "yarn install && sbt -DSnippetsContainerTest.mongo=true cachedCiTest"
