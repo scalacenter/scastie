@@ -26,10 +26,28 @@ elif [[ $1 = "SBT" ]]; then
 
   if [[ $2 = "Staging" ]]; then
     container_name_regex="^scastie-sbt-runner-staging-\d+$"
-    script=./start-runners-staging.sh
+    script=./start-sbt-runners-staging.sh
   elif [[ $2 = "Production" ]]; then
     container_name_regex="^scastie-sbt-runner-\d+$"
-    script=./start-runners.sh
+    script=./start-sbt-runners.sh
+  else
+    echo "Illegal argument: $2"
+    exit
+  fi
+else
+  echo "Illegal argument: $1"
+  exit
+fi
+
+elif [[ $1 = "Scala-CLI" ]]; then
+  repository_name="scalacenter/scastie-scala-cli-runner"
+
+  if [[ $2 = "Staging" ]]; then
+    container_name_regex="^scastie-scala-cli-runner-staging-\d+$"
+    script=./start-scala-cli-runners-staging.sh
+  elif [[ $2 = "Production" ]]; then
+    container_name_regex="^scastie-scala-cli-runner-\d+$"
+    script=./start-scala-cli-runners.sh
   else
     echo "Illegal argument: $2"
     exit
