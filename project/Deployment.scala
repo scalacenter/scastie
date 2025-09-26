@@ -148,6 +148,10 @@ class Deployment(
   val scalaCliContainerName = "scastie-scala-cli-runner"
   val sbtContainerName = "scastie-sbt-runner"
 
+  val sharedCacheName = "scastie-cache"
+  def sharedCacheFlag(directory: String) = s"-v $sharedCacheName:/$sharedCacheName/$directory"
+  def sharedCacheDirectory(directory: String) = s"/$sharedCacheName/$directory"
+
   def deploy(serverZip: Path) = {
     val time = LocalDateTime.now()
     val outputPath = deploymentFolder.toPath.resolve(s"generated-scripts-$time")
@@ -185,20 +189,24 @@ class Deployment(
 
     val runnersStartupScriptContent: String =
       s"""#!/usr/bin/env bash
+         |docker volume create ${sharedCacheName} || true
+         |
          |for port in `seq $startPort $endPort`;
          |do
-         |  echo "Starting Runner: Port $$port / $endPort"
+         |  echo "Starting Runner: Port $$port / $endPort (with shared cache)"
          |  docker run \\
          |    --add-host jenkins.scala-sbt.org:127.0.0.1 \\
          |    --restart=always \\
          |    --name=${containerName0}-$$port \\
          |    --network=host \\
+         |    ${sharedCacheFlag("coursier")} \\
          |    -d \\
          |    -e RUNNER_PRODUCTION=true \\
          |    -e RUNNER_PORT=$$port \\
          |    -e SERVER_HOSTNAME=${config.serverHostname} \\
          |    -e SERVER_AKKA_PORT=${config.serverAkkaPort} \\
          |    -e RUNNER_HOSTNAME=${config.runnersHostname} \\
+         |    -e COURSIER_CACHE=${sharedCacheDirectory("coursier")} \\
          |    $dockerImagePath
          |done""".stripMargin
 
@@ -224,12 +232,16 @@ class Deployment(
 
     val metalsRunnerStartupScriptContent: String =
       s"""#!/usr/bin/env bash
-         |echo "Starting Metals: Port ${config.metalsPort}"
+         |echo "Starting Metals: Port ${config.metalsPort} (with shared cache)"
+         |docker volume create ${sharedCacheName} || true
+         |
          |docker run \\
          |  --restart=always \\
          |  --name=$containerName \\
          |  -p ${config.metalsPort}:${config.metalsPort} \\
+         |  ${sharedCacheFlag("coursier")} \\
          |  -d \\
+         |  -e COURSIER_CACHE=${sharedCacheDirectory("coursier")} \\
          |  -e PORT=${config.metalsPort} \\
          |  -e CACHE_EXPIRE_IN_SECONDS=${config.cacheExpireInSeconds} \\
          |  -e IS_DOCKER=true \\
