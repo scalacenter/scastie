@@ -30,7 +30,8 @@ object SbtShared {
     val js         = latest213
     val sbt        = latest212
     val jvm        = latest213
-    val cross      = List(latest210, latest211, latest212, latest213, old3, js, sbt, jvm).distinct
+    val cross      =
+      List(latest210, latest211, latest212, latest213, old3, stableLTS, stableNext, js, sbt, jvm).distinct
     val crossJS    = List(latest212, latest213, js).distinct
   }
 
@@ -38,6 +39,7 @@ object SbtShared {
     val current = "1.19.0"
   }
 
+  val scalaCliVersion = "1.9.1"
   val runtimeProjectName = "runtime-scala"
 
   def gitIsDirty(): Boolean = {
@@ -61,7 +63,7 @@ object SbtShared {
   val gitIsDirtyNow = gitIsDirty()
 
   val versionNow = {
-    val base = "0.30.0"
+    val base = "1.0.0"
     if (gitIsDirtyNow) base + "-SNAPSHOT"
     else {
       val hash = gitHashNow
@@ -122,26 +124,29 @@ object SbtShared {
   lazy val api = projectMatrix
     .in(file("api"))
     .settings(apiSettings)
-    .jvmPlatform(ScalaVersions.cross)
-    .jsPlatform(ScalaVersions.crossJS, baseJsSettings)
+    .jvmPlatform(Seq(ScalaVersions.jvm, ScalaVersions.stableLTS, ScalaVersions.stableNext, ScalaVersions.sbt))
+    .jsPlatform(Seq(ScalaVersions.js), baseJsSettings)
     .enablePlugins(BuildInfoPlugin)
 
-  lazy val sbtApiProject: Project = Project(id = "api-sbt", base = file("api-sbt"))
-    .settings(sourceDirectory := baseDirectory.value / ".." / ".." / "api" / "src")
-    .settings(apiSettings)
-    .settings(scalaVersion := ScalaVersions.sbt)
-    .enablePlugins(BuildInfoPlugin)
+  lazy val `runtime-api` = projectMatrix
+    .in(file("runtime-api"))
+    .settings(
+      semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
+    )
+    .jvmPlatform(ScalaVersions.cross)
+    .jsPlatform(ScalaVersions.crossJS, baseJsSettings)
 
   private def apiSettings = {
     baseSettings ++ List(
       name := "api",
-      libraryDependencies += {
+      libraryDependencies ++= {
         scalaVersion.value match {
-          case v if v.startsWith("2.10") => "com.typesafe.play" %%% "play-json" % "2.6.14"
-          case v if v.startsWith("2.11") => "com.typesafe.play" %%% "play-json" % "2.7.4"
-          case _                         => "com.typesafe.play" %%% "play-json" % "2.10.0-RC5"
+          case v if v.startsWith("2.10") => Seq("io.circe" %% "circe-core" % "0.9.3", "io.circe" %%% "circe-generic" % "0.9.3")
+          case v if v.startsWith("2.11") => Seq("io.circe" %% "circe-core" % "0.11.2", "io.circe" %%% "circe-generic" % "0.11.2")
+          case _                         => Seq("io.circe" %% "circe-core" % "0.14.6", "io.circe" %%% "circe-generic" % "0.14.6")
         }
       },
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "runtime-api",
       semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
       buildInfoKeys := Seq[BuildInfoKey](
         organization,
@@ -157,9 +162,10 @@ object SbtShared {
         "latestNext"            -> ScalaVersions.latestNext,
         "jsScalaVersion"        -> ScalaVersions.js,
         "defaultScalaJsVersion" -> ScalaJSVersions.current,
-        "sbtVersion"            -> sbtVersion.value
+        "sbtVersion"            -> sbtVersion.value,
+        "scalaCliVersion"       -> scalaCliVersion
       ),
-      buildInfoPackage := "com.olegych.scastie.buildinfo"
+      buildInfoPackage := "org.scastie.buildinfo"
     )
   }
 
@@ -171,12 +177,18 @@ object SbtShared {
       baseSettings,
       version           := versionRuntime,
       name              := runtimeProjectName,
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "runtime-api",
       semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
+      libraryDependencies ++= {
+        scalaVersion.value match {
+          case v if v.startsWith("2") => Seq("org.scala-lang" % "scala-reflect" % v)
+          case _                      => Seq()
+        }
+      },
       inConfig(Compile)(
         unmanagedSourceDirectories ++= scala2MajorSourceDirs(scalaSource.value, virtualAxes.value)
       )
     )
-    .dependsOn(api)
 
   /**
     * A sub project in projectMatrix, ex with scala 2.13.x, is already configured with unmanagedSourceDirectories:

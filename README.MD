@@ -185,12 +185,12 @@ https://scastie.scala-lang.org/?inputs=%7B%0A%20%20%20%20%22_isWorksheetMode%22%
 See the format here:
 https://github.com/scalacenter/scastie/blob/b5feb3278837cbe3393e4598f32ab84f16aa25ba/api/src/main/scala/com.olegych.scastie.api/Inputs.scala#L61
 
+# Acknowledgements
+
+Huge thanks to original author [`@OlegYch`](https://github.com/OlegYch) for his contributions to the ecosystem.
+
 # Supports
 
 Scastie is supported by the Scala Center
 
 [![Scala Center Logo](https://i.imgur.com/kvoAElp.jpg)](https://scala.epfl.ch/)
-
-with the help of Browser Stack for end-to-end testing
-
-[![Browser Stack Logo](http://www.diogonunes.com/blog/wp-content/uploads/2016/07/browserstack-logo.png)](https://browserstack.com)
