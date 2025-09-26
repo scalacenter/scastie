@@ -17,12 +17,12 @@ import java.time.LocalDateTime
 import com.typesafe
 
 object Deployment {
-  def settings(server: Project, sbtRunner: Project, metalsRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
-    deploy := deployTask(server, sbtRunner, metalsRunner, Production).value,
-    deployStaging := deployTask(server, sbtRunner, metalsRunner, Staging).value,
-    publishContainers := publishContainers(sbtRunner, metalsRunner).value,
-    generateDeploymentScripts := generateDeploymentScriptsTask(server, sbtRunner, metalsRunner).value,
-    deployLocal := deployLocalTask(server, sbtRunner, metalsRunner).value
+  def settings(server: Project, sbtRunner: Project, scalaCliRunner: Project, metalsRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
+    deploy := deployTask(server, sbtRunner, scalaCliRunner, metalsRunner, Production).value,
+    deployStaging := deployTask(server, sbtRunner, scalaCliRunner, metalsRunner, Staging).value,
+    publishContainers := publishContainers(sbtRunner, scalaCliRunner, metalsRunner).value,
+    generateDeploymentScripts := generateDeploymentScriptsTask(server, sbtRunner, scalaCliRunner, metalsRunner).value,
+    deployLocal := deployLocalTask(server, sbtRunner, scalaCliRunner, metalsRunner).value
   )
 
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
@@ -31,43 +31,46 @@ object Deployment {
   lazy val generateDeploymentScripts = taskKey[Unit]("Generates deployment scripts with production configuration.")
   lazy val deployLocal = taskKey[Unit]("Deploy locally")
 
-  def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project, deploymentType: DeploymentType): Def.Initialize[Task[Unit]] =
+  def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project, scalaCliRunner: Project, deploymentType: DeploymentType): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, metalsRunner, deploymentType).value
+      val deployment = deploymentTask(sbtRunner, scalaCliRunner, metalsRunner, deploymentType).value
       val serverZip = (server / Universal / packageBin).value.toPath
 
       deployment.deploy(serverZip)
     }
 
-  def publishContainers(sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
+  def publishContainers(sbtRunner: Project, scalaCliRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
       (sbtRunner / dockerBuildAndPush).value
+      (scalaCliRunner / dockerBuildAndPush).value
       (metalsRunner / dockerBuildAndPush).value
     }
 
-  def generateDeploymentScriptsTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
+  def generateDeploymentScriptsTask(server: Project, sbtRunner: Project, scalaCliRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, metalsRunner, Production).value
+      val deployment = deploymentTask(sbtRunner, scalaCliRunner, metalsRunner, Production).value
       deployment.generateDeploymentScripts()
     }
 
 
-  def deployLocalTask(server: Project, sbtRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
+  def deployLocalTask(server: Project, sbtRunner: Project, scalaCliRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, metalsRunner, Local).value
+      val deployment = deploymentTask(sbtRunner, scalaCliRunner, metalsRunner, Local).value
       val serverZip = (server / Universal / packageBin).value.toPath
       (sbtRunner / docker).value
+      (scalaCliRunner / docker).value
       (metalsRunner / docker).value
 
       deployment.deployLocal(serverZip)
     }
 
-  private def deploymentTask(sbtRunner: Project, metalsRunner: Project, deploymentType: DeploymentType): Def.Initialize[Task[Deployment]] =
+  private def deploymentTask(sbtRunner: Project, scalaCliRunner: Project, metalsRunner: Project, deploymentType: DeploymentType): Def.Initialize[Task[Deployment]] =
     Def.task {
       new Deployment(
         rootFolder = (ThisBuild / baseDirectory).value,
         version = version.value,
         sbtDockerImage = (sbtRunner / docker / imageNames).value.head,
+        scalaCliDockerImage = (scalaCliRunner / docker / imageNames).value.head,
         metalsDockerImage = (metalsRunner / docker / imageNames).value.head,
         deploymentType = deploymentType,
         logger = streams.value.log
@@ -80,25 +83,39 @@ case object Local extends DeploymentType
 case object Staging extends DeploymentType
 case object Production extends DeploymentType
 
+trait RemoteService
+case object SBT extends RemoteService {
+  override def toString(): String = "SBT"
+}
+case object ScalaCLI extends RemoteService {
+  override def toString(): String = "Scala-CLI"
+}
+case object Metals extends RemoteService {
+  override def toString(): String = "Metals"
+}
+
 class ScastieConfig(val configurationFile: File) {
   val config = ConfigFactory.parseFile(configurationFile)
   val userName = "scastie"
 
-  val serverConfig = config.getConfig("com.olegych.scastie.web")
+  val serverConfig = config.getConfig("org.scastie.web")
   val serverHostname = serverConfig.getString("hostname")
   val serverAkkaPort = serverConfig.getInt("akka-port")
 
-  val metalsConfig = config.getConfig("scastie.metals")
+  val metalsConfig = config.getConfig("org.scastie.metals")
   val metalsPort = metalsConfig.getInt("port")
   val cacheExpireInSeconds = metalsConfig.getInt("cache-expire-in-seconds")
 
-  val balancerConfig = config.getConfig("com.olegych.scastie.balancer")
+  val balancerConfig = config.getConfig("org.scastie.balancer")
   val runnersHostname = balancerConfig.getString("remote-hostname")
   val sbtRunnersPortsStart = balancerConfig.getInt("remote-sbt-ports-start")
+  val scalaCliRunnersPortsStart = balancerConfig.getInt("remote-scala-cli-ports-start")
   val containerType = balancerConfig.getString("snippets-storage")
 
   private val sbtRunnersPortsSize = balancerConfig.getInt("remote-sbt-ports-size")
   val sbtRunnersPortsEnd = sbtRunnersPortsStart + sbtRunnersPortsSize - 1
+  private val scalaCliRunnersPortsSize = balancerConfig.getInt("remote-scala-cli-ports-size")
+  val scalaCliRunnersPortsEnd = scalaCliRunnersPortsStart + scalaCliRunnersPortsSize - 1
 }
 
 object ScastieConfig {
@@ -117,6 +134,7 @@ class Deployment(
   rootFolder: File,
   version: String,
   sbtDockerImage: ImageName,
+  scalaCliDockerImage: ImageName,
   metalsDockerImage: ImageName,
   deploymentType: DeploymentType,
   val logger: Logger
@@ -124,11 +142,11 @@ class Deployment(
   val deploymentFolder = rootFolder / "deployment"
   val config = ScastieConfig.ofType(deploymentType, deploymentFolder)
 
-  val sbtDockerNamespace = sbtDockerImage.namespace.get
-  val sbtDockerRepository = sbtDockerImage.repository
-
   val metalsDockerNamespace = metalsDockerImage.namespace.get
   val metalsDockerRepository = metalsDockerImage.repository
+
+  val scalaCliContainerName = "scastie-scala-cli-runner"
+  val sbtContainerName = "scastie-sbt-runner"
 
   def deploy(serverZip: Path) = {
     val time = LocalDateTime.now()
@@ -141,35 +159,39 @@ class Deployment(
     // the deployment will be sequential so if anything fails, other services will keep working.
     val success =
       createAndVerifyDeploymentScriptsData(outputPath) &&
-      deployRunners() &&
-      deployMetalsRunner() &&
+      deployService(SBT) &&
+      deployService(ScalaCLI) &&
+      deployService(Metals) &&
       deployServer(serverZip)
 
     if (!success) logger.error("Deployment process stopped.")
   }
 
   /* Create runner script which will be used during deployment to start SBT runners docker containers */
-  def createRunnersStartupScript(scriptOutputDirectory: Path): Path = {
-    val fileName = if (deploymentType == Staging) "start-runners-staging.sh" else "start-runners.sh"
+  def createRunnersStartupScript(scriptOutputDirectory: Path, dockerImage: ImageName, startPort: Int, endPort: Int, containerName: String): Path = {
+    val fileName = if (deploymentType == Staging) s"start-${containerName}s-staging.sh" else s"start-${containerName}s.sh"
     val scriptPath = scriptOutputDirectory.resolve(fileName)
 
+    val imageNamespace = dockerImage.namespace.get
+    val imageRepository = dockerImage.repository
+
     val dockerImagePath = deploymentType match {
-      case Local => s"$sbtDockerNamespace/$sbtDockerRepository:$gitHashNow"
-      case Production => s"$sbtDockerNamespace/$sbtDockerRepository:latest"
-      case Staging => s"$sbtDockerNamespace/$sbtDockerRepository:latest"
+      case Local => s"$imageNamespace/$imageRepository:$gitHashNow"
+      case Production => s"$imageNamespace/$imageRepository:latest"
+      case Staging => s"$imageNamespace/$imageRepository:latest"
     }
 
-    val containerName = if (deploymentType == Staging) "scastie-sbt-runner-staging" else "scastie-sbt-runner"
+    val containerName0 = if (deploymentType == Staging) s"$containerName-staging" else containerName
 
     val runnersStartupScriptContent: String =
       s"""#!/usr/bin/env bash
-         |for port in `seq ${config.sbtRunnersPortsStart} ${config.sbtRunnersPortsEnd}`;
+         |for port in `seq $startPort $endPort`;
          |do
-         |  echo "Starting Runner: Port $$port / ${config.sbtRunnersPortsEnd}"
+         |  echo "Starting Runner: Port $$port / $endPort"
          |  docker run \\
          |    --add-host jenkins.scala-sbt.org:127.0.0.1 \\
          |    --restart=always \\
-         |    --name=$containerName-$$port \\
+         |    --name=${containerName0}-$$port \\
          |    --network=host \\
          |    -d \\
          |    -e RUNNER_PRODUCTION=true \\
@@ -236,7 +258,8 @@ class Deployment(
       Files.createDirectory(outputPath)
     }
 
-    createRunnersStartupScript(outputPath)
+    createRunnersStartupScript(outputPath, sbtDockerImage, config.sbtRunnersPortsStart, config.sbtRunnersPortsEnd, sbtContainerName)
+    createRunnersStartupScript(outputPath, scalaCliDockerImage, config.scalaCliRunnersPortsStart, config.scalaCliRunnersPortsEnd, scalaCliContainerName)
     createMetalsStartupScript(outputPath)
   }
 
@@ -251,10 +274,15 @@ class Deployment(
    */
   def createAndVerifyDeploymentScriptsData(scriptOutputDirectory: Path): Boolean = {
     val deploymentScript : Path = (deploymentFolder / "deploy.sh").toPath
-    val runnerContainersStartupScript: Path = createRunnersStartupScript(scriptOutputDirectory)
+    val sbtRunnerContainersStartupScript = createRunnersStartupScript(
+      scriptOutputDirectory, sbtDockerImage, config.sbtRunnersPortsStart, config.sbtRunnersPortsEnd, sbtContainerName
+    )
+    val scalaCliRunnerContainersStartupScript = createRunnersStartupScript(
+      scriptOutputDirectory, scalaCliDockerImage, config.scalaCliRunnersPortsStart, config.scalaCliRunnersPortsEnd, scalaCliContainerName
+    )
     val metalsContainerStartupScript: Path = createMetalsStartupScript(scriptOutputDirectory)
 
-    List(deploymentScript, runnerContainersStartupScript, metalsContainerStartupScript).map { script =>
+    List(deploymentScript, sbtRunnerContainersStartupScript, scalaCliRunnerContainersStartupScript, metalsContainerStartupScript).map { script =>
       val isUpToDate: Boolean = compareScriptWithRemote(script)
       if (!isUpToDate) {
         val remoteScriptPath = script.getFileName().toString()
@@ -264,15 +292,9 @@ class Deployment(
     }.forall(_ == true)
   }
 
-  def deployRunners(): Boolean = {
+  def deployService(service: RemoteService): Boolean = {
     val uri = s"${config.userName}@${config.runnersHostname}"
-    val exitCode = Process(s"ssh $uri ./deploy.sh SBT $deploymentType") ! logger
-    exitCode == 0
-  }
-
-  def deployMetalsRunner(): Boolean = {
-    val uri = s"${config.userName}@${config.runnersHostname}"
-    val exitCode = Process(s"ssh $uri ./deploy.sh Metals $deploymentType") ! logger
+    val exitCode = Process(s"ssh $uri ./deploy.sh $service $deploymentType") ! logger
     exitCode == 0
   }
 
@@ -290,7 +312,13 @@ class Deployment(
     }
 
     logger.info("Generate SBT runners startup script.")
-    val runnerContainersStartupScript: Path = createRunnersStartupScript(destination)
+    val sbtRunnerContainersStartupScript = createRunnersStartupScript(
+      destination, sbtDockerImage, config.sbtRunnersPortsStart, config.sbtRunnersPortsEnd, sbtContainerName
+    )
+    logger.info("Generate Scala-CLI runners startup script.")
+    val scalaCliRunnerContainersStartupScript = createRunnersStartupScript(
+      destination, scalaCliDockerImage, config.scalaCliRunnersPortsStart, config.scalaCliRunnersPortsEnd, scalaCliContainerName
+    )
     logger.info("Generate Metals runner startup script.")
     val metalsContainerStartupScript: Path = createMetalsStartupScript(destination)
 
