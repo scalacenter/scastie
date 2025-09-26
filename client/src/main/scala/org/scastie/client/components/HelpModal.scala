@@ -29,9 +29,9 @@ object HelpModal {
           val element = elementBuilder(elementContent)
           val after = template.substring(m.end)
           
-          p(before, element, after)
+          span(before, element, after)
         case None =>
-          p(template)
+          span(template)
       }
     }
 
