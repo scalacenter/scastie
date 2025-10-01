@@ -75,7 +75,7 @@ open `http://localhost:9000`
 
 ## Scalafmt
 
-Make sure to run `bin/scalafmt` to format your code.
+Make sure to run `sbt scalafmtAll` to format your code.
 
 You can install a pre-commit hook with `bin/hooks.sh`
 
