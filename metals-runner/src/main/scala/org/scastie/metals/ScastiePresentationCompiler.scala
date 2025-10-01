@@ -13,8 +13,8 @@ import scala.meta.pc.PresentationCompiler
 import cats.data.EitherT
 import cats.effect.Async
 import cats.syntax.all._
-import org.scastie.api._
 import org.eclipse.lsp4j._
+import org.scastie.api._
 import org.slf4j.LoggerFactory
 import DTOExtensions._
 import JavaConverters._

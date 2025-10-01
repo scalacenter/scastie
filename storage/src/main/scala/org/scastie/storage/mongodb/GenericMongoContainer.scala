@@ -1,9 +1,9 @@
 package org.scastie.storage.mongodb
 
-import org.mongodb.scala._
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
+import org.mongodb.scala._
 
 trait GenericMongoContainer {
   val mongoUri: String
@@ -25,4 +25,5 @@ trait GenericMongoContainer {
   ): Option[T] = {
     decode[T](obj.toJson()).toOption
   }
+
 }

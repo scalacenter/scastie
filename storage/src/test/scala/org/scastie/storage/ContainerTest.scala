@@ -1,25 +1,25 @@
 package org.scastie.storage
 
-import org.scastie.api._
-import org.scastie.storage.filesystem.FilesystemContainer
-import org.scastie.storage.mongodb.MongoDBContainer
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.OptionValues
-import org.scalatest.funsuite.AnyFunSuite
-
 import java.io.IOException
+import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes
 import java.util.concurrent.Executors
+import scala.concurrent.duration._
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.util.Random
+
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.OptionValues
+import org.scastie.api._
+import org.scastie.storage.filesystem.FilesystemContainer
+import org.scastie.storage.mongodb.MongoDBContainer
 
 class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues {
   val mongo = sys.props.get("SnippetsContainerTest.mongo").flatMap(_.toBooleanOption).contains(true)
@@ -28,11 +28,10 @@ class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues
   val oldRoot = Files.createTempDirectory("old-test")
 
   private val testContainer: SnippetsContainer with UsersContainer = {
-    if (mongo)
-      new MongoDBContainer(defaultConfig = true)
+    if (mongo) new MongoDBContainer(defaultConfig = true)
     else {
       new FilesystemContainer(root, oldRoot)(
-       ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
+        ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
       )
     }
   }
@@ -62,13 +61,13 @@ class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues
       }
     )
   }
+
   Seq(SbtInputs.default.withSavedConfig, ScalaCliInputs.default).map { inputType =>
     val typeName = inputType.getClass.getSimpleName.stripSuffix("$")
 
     test(s"[$typeName] create snippet with logged in user") {
       val bob = "bob"
-      val snippetId =
-        testContainer.create(inputType, user = Some(UserLogin(bob)))
+      val snippetId = testContainer.create(inputType, user = Some(UserLogin(bob)))
       assert(snippetId.await.user.get.login == bob)
     }
 
@@ -87,14 +86,11 @@ class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues
     }
 
     test(s"[$typeName] fork") {
-      val inputs =
-        inputType.copyBaseInput(code = "source", isShowingInUserProfile = true)
+      val inputs = inputType.copyBaseInput(code = "source", isShowingInUserProfile = true)
       val snippetId = testContainer.save(inputs, user = None).await
 
-      val forkedInputs =
-        inputType.copyBaseInput(code = "forked", isShowingInUserProfile = true)
-      val forkedSnippetId =
-        testContainer.fork(snippetId, forkedInputs, user = None).await
+      val forkedInputs = inputType.copyBaseInput(code = "forked", isShowingInUserProfile = true)
+      val forkedSnippetId = testContainer.fork(snippetId, forkedInputs, user = None).await
 
       val forkedBis = testContainer.readSnippet(forkedSnippetId).await.get
 
@@ -104,13 +100,11 @@ class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues
 
     test(s"[$typeName] update") {
       val user = UserLogin("github-user-update" + Random.nextInt())
-      val inputs1 =
-        inputType.copyBaseInput(code = "inputs1", isShowingInUserProfile = true)
+      val inputs1 = inputType.copyBaseInput(code = "inputs1", isShowingInUserProfile = true)
       val snippetId1 = testContainer.save(inputs1, Some(user)).await
       assert(snippetId1.user.get.update == 0)
 
-      val inputs2 =
-        inputType.copyBaseInput(code = "inputs2", isShowingInUserProfile = true)
+      val inputs2 = inputType.copyBaseInput(code = "inputs2", isShowingInUserProfile = true)
       val snippetId2 = testContainer.update(snippetId1, inputs2).await.get
       assert(snippetId2.user.get.update == 1, "we get a new update id")
 
@@ -140,8 +134,7 @@ class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues
       val user2inputs = inputType.copyBaseInput(code = "inputs3")
       testContainer.save(user2inputs, Some(user2)).await
 
-      val inputs4 =
-        inputType.copyBaseInput(code = "inputs4", isShowingInUserProfile = false)
+      val inputs4 = inputType.copyBaseInput(code = "inputs4", isShowingInUserProfile = false)
       testContainer.create(inputs4, Some(user)).await
 
       val snippets = testContainer.listSnippets(user).await
@@ -217,27 +210,36 @@ class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues
     }
 
     test(s"[$typeName] add new user") {
-      ensureUserCleanup("bob", { username =>
-        val snippetId = testContainer.addNewUser(UserLogin(username)).await
-        assert(snippetId)
-      })
+      ensureUserCleanup(
+        "bob",
+        { username =>
+          val snippetId = testContainer.addNewUser(UserLogin(username)).await
+          assert(snippetId)
+        }
+      )
     }
 
     test(s"[$typeName] get user privacy policy acceptance") {
-      ensureUserCleanup("bob", { username =>
-        val snippetId = testContainer.addNewUser(UserLogin(username)).await
-        val response = testContainer.getPrivacyPolicyResponse(UserLogin(username)).await
-        assert(testContainer.deleteUser(UserLogin(username)).await == true)
-      })
+      ensureUserCleanup(
+        "bob",
+        { username =>
+          val snippetId = testContainer.addNewUser(UserLogin(username)).await
+          val response = testContainer.getPrivacyPolicyResponse(UserLogin(username)).await
+          assert(testContainer.deleteUser(UserLogin(username)).await == true)
+        }
+      )
     }
 
     test(s"[$typeName] set user privacy policy acceptance") {
-      ensureUserCleanup("bob", { username =>
-        val snippetId = testContainer.addNewUser(UserLogin(username)).await
-        val updatePrivacyPolicy = testContainer.setPrivacyPolicyResponse(UserLogin(username), false).await
-        val response = testContainer.getPrivacyPolicyResponse(UserLogin(username)).await
-        assert(response == false)
-      })
+      ensureUserCleanup(
+        "bob",
+        { username =>
+          val snippetId = testContainer.addNewUser(UserLogin(username)).await
+          val updatePrivacyPolicy = testContainer.setPrivacyPolicyResponse(UserLogin(username), false).await
+          val response = testContainer.getPrivacyPolicyResponse(UserLogin(username)).await
+          assert(response == false)
+        }
+      )
     }
 
     test(s"[$typeName] remove user from privacy policy list") {

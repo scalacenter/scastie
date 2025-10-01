@@ -1,9 +1,8 @@
 package org.scastie.storage
 
-import org.scastie.api._
-
 import io.circe._
 import io.circe.generic.semiauto._
+import org.scastie.api._
 
 sealed trait BaseMongoSnippet {
   def snippetId: SnippetId

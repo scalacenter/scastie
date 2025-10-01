@@ -1,9 +1,10 @@
 package org.scastie.api
 
-import io.circe.generic.semiauto._
 import io.circe._
+import io.circe.generic.semiauto._
 
 sealed trait ProcessOutputType
+
 object ProcessOutputType {
   case object StdOut extends ProcessOutputType
   case object StdErr extends ProcessOutputType

@@ -67,15 +67,15 @@ object EditorKeymaps {
     )
   }
 
-  val saveOrUpdate        = new Key("Ctrl-Enter", "Meta-Enter")
-  val saveOrUpdateAlt     = new Key("Ctrl-s", "Meta-s")
+  val saveOrUpdate = new Key("Ctrl-Enter", "Meta-Enter")
+  val saveOrUpdateAlt = new Key("Ctrl-s", "Meta-s")
   val openNewSnippetModal = new Key("Ctrl-m", "Meta-m")
-  val clear               = new Key("Escape")
-  val clearAlt            = new Key("F1")
-  val console             = new Key("F3")
-  val help                = new Key("F5")
-  val format              = new Key("F6")
-  val presentation        = new Key("F8")
+  val clear = new Key("Escape")
+  val clearAlt = new Key("F1")
+  val console = new Key("F3")
+  val help = new Key("F5")
+  val format = new Key("F6")
+  val presentation = new Key("F8")
 
   def keymapping(e: CodeEditor) = {
     val base = js.Array(

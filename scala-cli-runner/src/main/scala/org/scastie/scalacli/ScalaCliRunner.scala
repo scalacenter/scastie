@@ -1,38 +1,38 @@
 package org.scastie.scalacli
 
-import org.scastie.api._
-import org.scastie.runtime.api._
-import RuntimeCodecs._
-import org.scastie.instrumentation.{InstrumentedInputs, InstrumentationFailureReport}
-import com.typesafe.scalalogging.Logger
-import java.nio.file.{Files, Path, StandardOpenOption}
-import java.util.concurrent.CompletableFuture
 import java.io.{InputStream, OutputStream}
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.sys.process._
-import org.scastie.instrumentation.InstrumentationFailure
-import org.scastie.instrumentation.Instrument
-import scala.util.control.NonFatal
-import scala.concurrent.duration.Duration
+import java.lang
+import java.nio.file.{Files, Path, StandardOpenOption}
+import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
 import java.util.concurrent.TimeoutException
 import scala.collection.concurrent.TrieMap
-import org.scastie.buildinfo.BuildInfo
+import scala.collection.mutable.ListBuffer
+import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.jdk.FutureConverters._
+import scala.sys.process._
+import scala.util.control.NonFatal
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import akka.pattern.after
+import cats.syntax.all._
+import com.typesafe.scalalogging.Logger
 import io.circe._
 import io.circe.parser._
-import scala.collection.mutable.ListBuffer
-import akka.pattern.after
-import java.lang
-import java.util.concurrent.atomic.AtomicReference
-import cats.syntax.all._
-import scala.jdk.FutureConverters._
-
+import org.scastie.api._
+import org.scastie.buildinfo.BuildInfo
+import org.scastie.instrumentation.{InstrumentationFailureReport, InstrumentedInputs}
+import org.scastie.instrumentation.Instrument
+import org.scastie.instrumentation.InstrumentationFailure
+import org.scastie.runtime.api._
+import RuntimeCodecs._
 
 sealed trait ScalaCliError {
   val msg: String
@@ -44,6 +44,7 @@ sealed trait ScastieRuntimeError extends ScalaCliError
 case class InvalidScalaVersion(version: String) extends BuildError {
   val msg = s"Invalid Scala version: $version"
 }
+
 case class InstrumentationFailure(failure: InstrumentationFailureReport) extends BuildError {
   val msg = s"Instrumentation failure: $failure"
 }
@@ -59,46 +60,59 @@ case class RuntimeTimeout(msg: String) extends ScastieRuntimeError
 case class BspTaskTimeout(msg: String) extends BuildError
 
 case class RunOutput(
-  instrumentation: List[Instrumentation],
-  diagnostics: List[Problem],
-  runtimeError: Option[org.scastie.runtime.api.RuntimeError],
-  exitCode: Int
+    instrumentation: List[Instrumentation],
+    diagnostics: List[Problem],
+    runtimeError: Option[org.scastie.runtime.api.RuntimeError],
+    exitCode: Int
 )
 
-class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout: FiniteDuration, reloadTimeout: FiniteDuration) {
+class ScalaCliRunner(
+    coloredStackTrace: Boolean,
+    workingDir: Path,
+    compilationTimeout: FiniteDuration,
+    reloadTimeout: FiniteDuration
+) {
 
   private val log = Logger("ScalaCliRunner")
   private var bspClient = new BspClient(coloredStackTrace, workingDir, compilationTimeout, reloadTimeout)
   private val scalaMain = workingDir.resolve("Main.scala")
   Files.createDirectories(scalaMain.getParent())
 
-  def runTask(snippetId: SnippetId, inputs: ScalaCliInputs, timeout: FiniteDuration, onOutput: ProcessOutput => Any): Future[Either[ScalaCliError, RunOutput]] = {
+  def runTask(
+    snippetId: SnippetId,
+    inputs: ScalaCliInputs,
+    timeout: FiniteDuration,
+    onOutput: ProcessOutput => Any
+  ): Future[Either[ScalaCliError, RunOutput]] = {
     log.info(s"Running task with snippetId=$snippetId")
     build(snippetId, inputs).flatMap {
       case Right((value, lineMapping)) => runForked(value, inputs.isWorksheetMode, onOutput, lineMapping)
-      case Left(value) => Future.successful(Left[ScalaCliError, RunOutput](value))
+      case Left(value)                 => Future.successful(Left[ScalaCliError, RunOutput](value))
     }
   }
 
   def build(
     snippetId: SnippetId,
-    inputs: BaseInputs,
+    inputs: BaseInputs
   ): Future[Either[ScalaCliError, (BspClient.BuildOutput, Int => Int)]] = {
 
     val (instrumentedInput, lineMapping) = InstrumentedInputs(inputs) match {
       case Right(value) => (value.inputs, value.lineMapping)
-      case Left(value) =>
+      case Left(value)  =>
         log.error(s"Error while instrumenting: $value")
         (inputs, identity: Int => Int)
     }
 
     Files.write(scalaMain, instrumentedInput.code.getBytes)
-    bspClient.build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target).value.recover {
-      case timeout: TimeoutException => BspTaskTimeout("Build Server Timeout Exception").asLeft
-      case err => InternalBspError(err.getMessage).asLeft
-    }
-    .map {
-        case Right(buildOutput) => Right((buildOutput, lineMapping))
+    bspClient
+      .build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target)
+      .value
+      .recover {
+        case timeout: TimeoutException => BspTaskTimeout("Build Server Timeout Exception").asLeft
+        case err                       => InternalBspError(err.getMessage).asLeft
+      }
+      .map {
+        case Right(buildOutput)                  => Right((buildOutput, lineMapping))
         case Left(CompilationError(diagnostics)) =>
           val mapped = diagnostics.map { p =>
             val orig = p.line
@@ -136,23 +150,28 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
       }
     }
 
-    val runProcess = bspRun.process.run(ProcessLogger.apply(
-      (fout: String) => forwardAndStorePrint(fout, ProcessOutputType.StdOut),
-      (ferr: String) => forwardAndStorePrint(ferr, ProcessOutputType.StdErr)
-    ))
+    val runProcess = bspRun.process.run(
+      ProcessLogger.apply(
+        (fout: String) => forwardAndStorePrint(fout, ProcessOutputType.StdOut),
+        (ferr: String) => forwardAndStorePrint(ferr, ProcessOutputType.StdErr)
+      )
+    )
 
-    val processResult = CompletableFuture.supplyAsync { () => runProcess.exitValue() }.orTimeout(10, TimeUnit.SECONDS).asScala
+    val processResult =
+      CompletableFuture.supplyAsync { () => runProcess.exitValue() }.orTimeout(10, TimeUnit.SECONDS).asScala
     processResult.onComplete(_ => runProcess.destroy())
-    processResult.map { exitCode =>
-      Right(RunOutput(instrumentations.get, bspRun.diagnostics, runtimeError.get, exitCode))
-    }.recover {
-      case _: TimeoutException =>
-        forwardAndStorePrint("Timeout exceeded.", ProcessOutputType.StdErr)
-        Left(RuntimeTimeout("Timeout exceeded."))
-      case err =>
-        forwardAndStorePrint(s"Unknown exception $err", ProcessOutputType.StdErr)
-        Left(InternalRuntimeError(s"Unknown exception $err"))
-    }
+    processResult
+      .map { exitCode =>
+        Right(RunOutput(instrumentations.get, bspRun.diagnostics, runtimeError.get, exitCode))
+      }
+      .recover {
+        case _: TimeoutException =>
+          forwardAndStorePrint("Timeout exceeded.", ProcessOutputType.StdErr)
+          Left(RuntimeTimeout("Timeout exceeded."))
+        case err =>
+          forwardAndStorePrint(s"Unknown exception $err", ProcessOutputType.StdErr)
+          Left(InternalRuntimeError(s"Unknown exception $err"))
+      }
   }
 
   def restart(): Unit = {
@@ -160,6 +179,5 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     bspClient = new BspClient(coloredStackTrace, workingDir, compilationTimeout, reloadTimeout)
   }
 
-  def end(): Unit =
-    bspClient.end()
+  def end(): Unit = bspClient.end()
 }

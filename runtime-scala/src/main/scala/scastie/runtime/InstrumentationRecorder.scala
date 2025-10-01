@@ -8,8 +8,8 @@ import org.scastie.runtime.api._
 
 trait InstrumentationRecorder {
 
-  private val myBinders         = ArrayBuffer.empty[Binder]
-  val myStatements              = ArrayBuffer.empty[Statement]
+  private val myBinders = ArrayBuffer.empty[Binder]
+  val myStatements = ArrayBuffer.empty[Statement]
   private var statementPosition = Position(0, 0)
 
   object $doc {

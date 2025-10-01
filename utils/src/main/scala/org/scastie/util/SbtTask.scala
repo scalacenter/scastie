@@ -1,8 +1,7 @@
 package org.scastie.util
 
-import org.scastie.api._
-
 import akka.actor.ActorRef
+import org.scastie.api._
 
 case class SbtTask(snippetId: SnippetId, inputs: SbtInputs, ip: String, login: Option[String], progressActor: ActorRef)
 

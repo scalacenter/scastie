@@ -1,18 +1,16 @@
 package org.scastie.client
 
 import java.util.UUID
+import scala.scalajs.js
+import scala.scalajs.js.{|, UndefOr}
+import scala.scalajs.js.annotation.{JSExport, _}
 
-import org.scastie.api.SnippetId
-import org.scastie.client.components._
 import japgolly.scalajs.react.component.Generic
 import japgolly.scalajs.react.extra.router._
 import org.scalajs.dom
-import org.scalajs.dom.{HTMLElement, HTMLDivElement, HTMLLinkElement, Node}
-
-import scala.scalajs.js
-import scala.scalajs.js.annotation.{JSExport, _}
-import scala.scalajs.js.{UndefOr, |}
-
+import org.scalajs.dom.{HTMLDivElement, HTMLElement, HTMLLinkElement, Node}
+import org.scastie.api.SnippetId
+import org.scastie.client.components._
 import org.scastie.client.i18n.I18n
 
 @js.native
@@ -27,35 +25,37 @@ object Exports {
   val ScastieMain = org.scastie.client.ScastieMain
   @JSExport
   val ClientMain = org.scastie.client.ScastieClientMain
+
   @JSExport
-  def Embedded(selector: UndefOr[String | Node], options: UndefOr[EmbeddedOptionsJs]) = ScastieEmbedded.embedded(selector, options)
+  def Embedded(selector: UndefOr[String | Node], options: UndefOr[EmbeddedOptionsJs]) =
+    ScastieEmbedded.embedded(selector, options)
+
   @JSExport
   def EmbeddedResource(options: UndefOr[EmbeddedResourceOptionsJs]) = ScastieEmbedded.embeddedResource(options)
 }
+
 /* Entry point for the website
  */
 object ScastieMain {
+
   @JSExport
   def main(): Unit = {
     dom.document.body.className = "scastie"
 
     val stateJson = Option(dom.window.localStorage.getItem("state"))
-    val savedLanguage =
-      stateJson
-        .flatMap { json =>
-          import scala.scalajs.js.JSON
-          val parsed = JSON.parse(json)
-          if (js.DynamicImplicits.truthValue(parsed.selectDynamic("language")))
-            Some(parsed.selectDynamic("language").asInstanceOf[String])
-          else
-            None
-        }
-        .getOrElse("en")
+    val savedLanguage = stateJson
+      .flatMap { json =>
+        import scala.scalajs.js.JSON
+        val parsed = JSON.parse(json)
+        if (js.DynamicImplicits.truthValue(parsed.selectDynamic("language")))
+          Some(parsed.selectDynamic("language").asInstanceOf[String])
+        else None
+      }
+      .getOrElse("en")
 
     I18n.setLanguage(savedLanguage)
 
-    val container =
-      dom.document.createElement("div").asInstanceOf[HTMLDivElement]
+    val container = dom.document.createElement("div").asInstanceOf[HTMLDivElement]
     container.className = "scastie"
     dom.document.body.appendChild(container)
 
@@ -71,11 +71,13 @@ object ScastieMain {
 
     ()
   }
+
 }
 
 /* Entry point for Scala.js runtime
  */
 object ScastieClientMain {
+
   @JSExport
   def signal(instrumentations: String, attachedDoms: js.Array[HTMLElement], rawId: String): Unit = {
     Global.signal(instrumentations, attachedDoms, rawId)
@@ -85,30 +87,28 @@ object ScastieClientMain {
   def error(er: js.Error, rawId: String): Unit = {
     Global.error(er, rawId)
   }
+
 }
 
 /* Entry point for ressource embedding and code embedding
  */
 object ScastieEmbedded {
+
   def embedded(selector: UndefOr[String | Node], options: UndefOr[EmbeddedOptionsJs]): Unit = {
 
-    val embeddedOptions =
-      options.toOption
-        .map(EmbeddedOptions.fromJs(Settings.defaultServerUrl))
-        .getOrElse(EmbeddedOptions.empty(Settings.defaultServerUrl))
+    val embeddedOptions = options.toOption
+      .map(EmbeddedOptions.fromJs(Settings.defaultServerUrl))
+      .getOrElse(EmbeddedOptions.empty(Settings.defaultServerUrl))
 
-    val nodes =
-      selector.toOption match {
-        case Some(sel) => {
-          (sel: Any) match {
-            case cssSelector: String =>
-              dom.document.querySelectorAll(cssSelector).toList
-            case node: Node =>
-              List(node)
-          }
+    val nodes = selector.toOption match {
+      case Some(sel) => {
+        (sel: Any) match {
+          case cssSelector: String => dom.document.querySelectorAll(cssSelector).toList
+          case node: Node          => List(node)
         }
-        case None => List()
       }
+      case None => List()
+    }
 
     if (nodes.nonEmpty) {
       addStylesheet(embeddedOptions.serverUrl)
@@ -135,16 +135,14 @@ object ScastieEmbedded {
   }
 
   def embeddedResource(options: UndefOr[EmbeddedResourceOptionsJs]): Unit = {
-    val embeddedOptions =
-      options.toOption
-        .map(EmbeddedOptions.fromJsRessource(Settings.defaultServerUrl))
-        .getOrElse(EmbeddedOptions.empty(Settings.defaultServerUrl))
+    val embeddedOptions = options.toOption
+      .map(EmbeddedOptions.fromJsRessource(Settings.defaultServerUrl))
+      .getOrElse(EmbeddedOptions.empty(Settings.defaultServerUrl))
 
-    val container =
-      renderScastie(
-        embeddedOptions = embeddedOptions,
-        snippetId = embeddedOptions.snippetId
-      )
+    val container = renderScastie(
+      embeddedOptions = embeddedOptions,
+      snippetId = embeddedOptions.snippetId
+    )
 
     embeddedOptions.injectId match {
       case Some(id) => {
@@ -163,6 +161,7 @@ object ScastieEmbedded {
       }
     }
   }
+
   def addStylesheet(baseUrl: String): Unit = {
     val link = dom.document
       .createElement("link")
@@ -192,9 +191,10 @@ object ScastieEmbedded {
       targetType = None,
       tryLibrary = None,
       code = None,
-      inputs = None,
+      inputs = None
     ).render.renderIntoDOM(container)
 
     container
   }
+
 }

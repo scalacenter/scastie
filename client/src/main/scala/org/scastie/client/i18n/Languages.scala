@@ -8,7 +8,9 @@ import scala.scalajs.js.annotation.JSImport
 object EnPo extends js.Any
 
 object Languages {
+
   val available: Map[String, String] = Map(
     "en" -> (EnPo.asInstanceOf[String])
   )
+
 }

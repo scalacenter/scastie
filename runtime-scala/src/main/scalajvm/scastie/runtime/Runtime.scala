@@ -1,12 +1,14 @@
 package org.scastie.runtime
 
-import javax.imageio.ImageIO
+import java.awt.image.BufferedImage
 import java.io.{ByteArrayOutputStream, File}
 import java.util.Base64
-import java.awt.image.BufferedImage
+
+import javax.imageio.ImageIO
 import org.scastie.runtime.api._
 
 protected[runtime] trait JvmRuntime extends SharedRuntime {
+
   def image(path: String): Html = {
     val in = ImageIO.read(new File(path))
     toBase64(in)
@@ -28,4 +30,5 @@ protected[runtime] trait JvmRuntime extends SharedRuntime {
       folded = true
     )
   }
+
 }

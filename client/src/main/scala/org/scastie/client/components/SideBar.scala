@@ -2,15 +2,14 @@ package org.scastie
 package client
 package components
 
+import scala.scalajs.js
+
+import extra._
+import japgolly.scalajs.react._
+import js.annotation._
 import org.scastie.api._
 import org.scastie.client.i18n.I18n
-
-import japgolly.scalajs.react._
 import vdom.all._
-import extra._
-
-import scala.scalajs.js
-import js.annotation._
 
 @JSImport("@resources/images/icon-scastie.png", JSImport.Default)
 @js.native
@@ -25,23 +24,24 @@ object Assets {
   def placeholder: String = Placeholder.asInstanceOf[String]
 }
 
-final case class SideBar(isDarkTheme: Boolean,
-                         status: StatusState,
-                         inputs: BaseInputs,
-                         toggleTheme: Reusable[Callback],
-                         view: StateSnapshot[View],
-                         openHelpModal: Reusable[Callback],
-                         openPrivacyPolicyModal: Reusable[Callback],
-                         editorMode: EditorMode,
-                         setEditorMode: EditorMode => Callback,
-                         language: String) {
+final case class SideBar(
+    isDarkTheme: Boolean,
+    status: StatusState,
+    inputs: BaseInputs,
+    toggleTheme: Reusable[Callback],
+    view: StateSnapshot[View],
+    openHelpModal: Reusable[Callback],
+    openPrivacyPolicyModal: Reusable[Callback],
+    editorMode: EditorMode,
+    setEditorMode: EditorMode => Callback,
+    language: String
+) {
   @inline def render: VdomElement = SideBar.component(this)
 }
 
 object SideBar {
 
-  implicit val reusability: Reusability[SideBar] =
-    Reusability.derive[SideBar]
+  implicit val reusability: Reusability[SideBar] = Reusability.derive[SideBar]
 
   private def render(props: SideBar): VdomElement = {
     val toggleThemeLabel =
@@ -54,17 +54,25 @@ object SideBar {
       if (props.isDarkTheme) "fa fa-sun-o"
       else "fa fa-moon-o"
 
-    val themeButton =
-      li(onClick --> props.toggleTheme, role := "button", title := I18n.t(s"sidebar.theme_${theme}_tooltip"), cls := "btn")(
-        i(cls := s"fa $selectedIcon"),
-        span(toggleThemeLabel)
-      )
+    val themeButton = li(
+      onClick --> props.toggleTheme,
+      role := "button",
+      title := I18n.t(s"sidebar.theme_${theme}_tooltip"),
+      cls := "btn"
+    )(
+      i(cls := s"fa $selectedIcon"),
+      span(toggleThemeLabel)
+    )
 
-    val privacyPolicyButton =
-      li(onClick --> props.openPrivacyPolicyModal, role := "button", title := I18n.t("sidebar.privacy_policy_tooltip"), cls := "btn")(
-        i(cls := "fa fa-user-secret"),
-        span(I18n.t("sidebar.privacy_policy"))
-      )
+    val privacyPolicyButton = li(
+      onClick --> props.openPrivacyPolicyModal,
+      role := "button",
+      title := I18n.t("sidebar.privacy_policy_tooltip"),
+      cls := "btn"
+    )(
+      i(cls := "fa fa-user-secret"),
+      span(I18n.t("sidebar.privacy_policy"))
+    )
 
     val helpButton =
       li(onClick --> props.openHelpModal, role := "button", title := I18n.t("sidebar.help_tooltip"), cls := "btn")(
@@ -73,19 +81,20 @@ object SideBar {
       )
 
     val runnersStatusButton = {
-      val (statusIcon, statusClass, statusLabel) =
-        props.status.sbtRunnerCount match {
-          case None =>
-            ("fa-times-circle", "status-unknown", I18n.t("sidebar.status_unknown"))
+      val (statusIcon, statusClass, statusLabel) = props.status.sbtRunnerCount match {
+        case None => ("fa-times-circle", "status-unknown", I18n.t("sidebar.status_unknown"))
 
-          case Some(0) =>
-            ("fa-times-circle", "status-down", I18n.t("sidebar.status_down"))
+        case Some(0) => ("fa-times-circle", "status-down", I18n.t("sidebar.status_down"))
 
-          case Some(_) =>
-            ("fa-check-circle", "status-up", I18n.t("sidebar.status_up"))
-        }
+        case Some(_) => ("fa-check-circle", "status-up", I18n.t("sidebar.status_up"))
+      }
 
-      li(onClick --> props.view.setState(View.Status), role := "button", title := I18n.t("sidebar.status_tooltip"), cls := s"btn $statusClass")(
+      li(
+        onClick --> props.view.setState(View.Status),
+        role := "button",
+        title := I18n.t("sidebar.status_tooltip"),
+        cls := s"btn $statusClass"
+      )(
         i(cls := s"fa $statusIcon"),
         span(statusLabel)
       )
@@ -107,27 +116,26 @@ object SideBar {
       onClick = reusableEmpty
     ).render
 
-    val editorModeSelector =
-      li(
-        cls := "btn",
-        i(cls := "fa fa-keyboard-o"),
-        select(
-          value := props.editorMode.toString,
-          cls := s"editor-mode-select ${if (props.isDarkTheme) "dark" else "light"}",
-          onChange ==> { (e: ReactEventFromInput) =>
-            val mode = e.target.value match {
-              case "Default" => Default
-              case "Vim"     => Vim
-              case "Emacs"   => Emacs
-              case _         => Default
-            }
-            props.setEditorMode(mode)
-          },
-          option(value := "Default", I18n.t("sidebar.editor_mode_default")),
-          option(value := "Vim", "Vim"),
-          option(value := "Emacs", "Emacs")
-        )
+    val editorModeSelector = li(
+      cls := "btn",
+      i(cls := "fa fa-keyboard-o"),
+      select(
+        value := props.editorMode.toString,
+        cls := s"editor-mode-select ${if (props.isDarkTheme) "dark" else "light"}",
+        onChange ==> { (e: ReactEventFromInput) =>
+          val mode = e.target.value match {
+            case "Default" => Default
+            case "Vim"     => Vim
+            case "Emacs"   => Emacs
+            case _         => Default
+          }
+          props.setEditorMode(mode)
+        },
+        option(value := "Default", I18n.t("sidebar.editor_mode_default")),
+        option(value := "Vim", "Vim"),
+        option(value := "Emacs", "Emacs")
       )
+    )
 
     nav(cls := "sidebar")(
       div(cls := "actions-container")(
@@ -150,10 +158,10 @@ object SideBar {
     )
   }
 
-  private val component =
-    ScalaComponent
-      .builder[SideBar]("SideBar")
-      .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  private val component = ScalaComponent
+    .builder[SideBar]("SideBar")
+    .render_P(render)
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }

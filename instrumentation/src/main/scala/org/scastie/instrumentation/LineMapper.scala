@@ -17,7 +17,7 @@ object LineMapper {
   }
 
   private def buildSequentialMapping(instrumentedCode: String): Int => Int = {
-    val lines    = instrumentedCode.split('\n')
+    val lines = instrumentedCode.split('\n')
     val mappings = calculateSequentialMappings(lines)
 
     instrumentedLineNumber => mappings.getOrElse(instrumentedLineNumber, instrumentedLineNumber)
@@ -30,7 +30,7 @@ object LineMapper {
     lines.zipWithIndex
       .foldLeft(State()) { case (State(userCodeLinesSeen, mappings), (line, index)) =>
         val instrumentedLineNumber = index + 1
-        val trimmed                = line.trim
+        val trimmed = line.trim
 
         if (!isExperimentalImport(trimmed) && !isInstrumentationLine(trimmed)) {
           val newCount = userCodeLinesSeen + 1

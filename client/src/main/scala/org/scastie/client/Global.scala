@@ -1,22 +1,18 @@
 package org.scastie.client
 
-import org.scastie.api._
-import org.scastie.runtime.api._
+import java.util.UUID
+import scala.collection.mutable.{Map => MMap}
+import scala.scalajs.js
+import scala.util.{Failure, Success, Try}
+
 import io.circe._
 import io.circe.parser._
-
-import org.scastie.client.components.Scastie
-import RuntimeCodecs._
-
-import scala.scalajs.js
-import scala.collection.mutable.{Map => MMap}
-import scala.util.{Try, Failure, Success}
-
-import org.scalajs.dom.HTMLElement
-
 import japgolly.scalajs.react._
-
-import java.util.UUID
+import org.scalajs.dom.HTMLElement
+import org.scastie.api._
+import org.scastie.client.components.Scastie
+import org.scastie.runtime.api._
+import RuntimeCodecs._
 
 object Global {
   type Scope = BackendScope[Scastie, ScastieState]
@@ -33,21 +29,20 @@ object Global {
 
   def error(er: js.Error, rawId: String): Unit = {
     withScope(rawId)(
-      _.withEffectsImpure.modState(
-        state =>
-          state
-            .copyAndSave(
-              outputs = state.outputs.copy(
-                runtimeError = Some(
-                  RuntimeError(
-                    message = er.toString,
-                    line = None,
-                    fullStack = ""
-                  )
+      _.withEffectsImpure.modState(state =>
+        state
+          .copyAndSave(
+            outputs = state.outputs.copy(
+              runtimeError = Some(
+                RuntimeError(
+                  message = er.toString,
+                  line = None,
+                  fullStack = ""
                 )
               )
             )
-            .setRunning(false)
+          )
+          .setRunning(false)
       )
     )
   }
@@ -59,18 +54,17 @@ object Global {
     val ScalaJsResult(instr, runtimeError) = result.getOrElse(ScalaJsResult(Nil, None))
 
     withScope(rawId)(
-      _.withEffectsImpure.modState(
-        state =>
-          state
-            .copyAndSave(
-              outputs = state.outputs.copy(
-                instrumentations = state.outputs.instrumentations ++ instr.toSet,
-                runtimeError = runtimeError
-              )
+      _.withEffectsImpure.modState(state =>
+        state
+          .copyAndSave(
+            outputs = state.outputs.copy(
+              instrumentations = state.outputs.instrumentations ++ instr.toSet,
+              runtimeError = runtimeError
             )
-            .setRunning(false)
-            .copy(
-              attachedDoms = attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap
+          )
+          .setRunning(false)
+          .copy(
+            attachedDoms = attachedDoms.map(dom => (dom.getAttribute("uuid"), dom)).toMap
           )
       )
     )
@@ -86,4 +80,5 @@ object Global {
       case Failure(e) => e.printStackTrace()
     }
   }
+
 }

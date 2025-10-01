@@ -1,12 +1,12 @@
 package org.scastie
 package instrumentation
 
-import org.scastie.api._
-import org.scastie.util.ScastieFileUtil.slurp
-import org.scalatest.funsuite.AnyFunSuite
-
 import java.nio.file._
 import scala.jdk.CollectionConverters._
+
+import org.scalatest.funsuite.AnyFunSuite
+import org.scastie.api._
+import org.scastie.util.ScastieFileUtil.slurp
 
 class InstrumentSpecs extends AnyFunSuite {
 
@@ -32,9 +32,8 @@ class InstrumentSpecs extends AnyFunSuite {
         else if (dirName == "scala3") Scala3.default
         else Scala2.default
 
-      val Right(obtained) = Instrument(original, target).map {
-        case InstrumentationSuccess(instrumentedCode, _) =>
-          instrumentedCode
+      val Right(obtained) = Instrument(original, target).map { case InstrumentationSuccess(instrumentedCode, _) =>
+        instrumentedCode
       }
 
       Files.write(dir.resolve("obtained.scala"), obtained.getBytes(java.nio.charset.StandardCharsets.UTF_8))
@@ -48,18 +47,15 @@ class InstrumentSpecs extends AnyFunSuite {
   }
 
   test("main method fails") {
-    val Left(HasMainMethod) =
-      Instrument("object Main { def main(args: Array[String]): Unit = () }", Scala2.default)
+    val Left(HasMainMethod) = Instrument("object Main { def main(args: Array[String]): Unit = () }", Scala2.default)
   }
 
   test("extends App trait fails") {
-    val Left(HasMainMethod) =
-      Instrument("object Main extends App { }", Scala2.default)
+    val Left(HasMainMethod) = Instrument("object Main extends App { }", Scala2.default)
   }
 
   test("with App trait fails") {
-    val Left(HasMainMethod) =
-      Instrument("trait Foo; object Main extends Foo with App { }", Scala2.default)
+    val Left(HasMainMethod) = Instrument("trait Foo; object Main extends Foo with App { }", Scala2.default)
   }
 
   test("extends App primary fails") {

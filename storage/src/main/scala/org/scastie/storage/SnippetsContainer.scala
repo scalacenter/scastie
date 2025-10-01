@@ -1,28 +1,26 @@
 package org.scastie.storage
 
-import org.scastie.api._
-import org.scastie.instrumentation._
-import org.scastie.util.Base64UUID
-
-import net.lingala.zip4j.ZipFile
-import net.lingala.zip4j.model.ZipParameters
-
 import java.nio.file.{Files, Path, Paths}
 import scala.concurrent.{ExecutionContext, Future}
 
+import net.lingala.zip4j.model.ZipParameters
+import net.lingala.zip4j.ZipFile
+import org.scastie.api._
+import org.scastie.instrumentation._
+import org.scastie.util.Base64UUID
 
 trait SnippetsContainer {
   protected implicit val ec: ExecutionContext
 
   def appendOutput(progress: SnippetProgress): Future[Unit]
+
   def deleteAll(snippetId: SnippetId): Future[Boolean] = {
     def deleteUpdate(update: Int): Future[Boolean] = {
       val updateSnippetId = snippetId.copy(user = snippetId.user.map(_.copy(update = update)))
       for {
         read <- readSnippet(updateSnippetId)
         result <- read match {
-          case Some(_) =>
-            for {
+          case Some(_) => for {
               result <- delete(updateSnippetId)
               resultNext <- deleteUpdate(update + 1)
             } yield result || resultNext
@@ -32,22 +30,28 @@ trait SnippetsContainer {
     }
     deleteUpdate(0)
   }
+
   protected def delete(snippetId: SnippetId): Future[Boolean]
+
   def removeUserSnippets(user: UserLogin): Future[Boolean] = {
     listSnippets(user).flatMap(snippets => {
-      Future.sequence(
-        snippets
-          .map(snippet => deleteAll(snippet.snippetId)))
-          .map(_.fold(true)(_ && _)
-      )
+      Future
+        .sequence(
+          snippets
+            .map(snippet => deleteAll(snippet.snippetId))
+        )
+        .map(_.fold(true)(_ && _))
     })
   }
+
   def listSnippets(user: UserLogin): Future[List[SnippetSummary]]
   def readOldSnippet(id: Int): Future[Option[FetchResult]]
   def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]]
+
   def readScalaJsSourceMap(
-      snippetId: SnippetId
+    snippetId: SnippetId
   ): Future[Option[FetchResultScalaJsSourceMap]]
+
   def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]]
   protected def insert(snippetId: SnippetId, inputs: BaseInputs): Future[Unit]
   protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit]
@@ -64,8 +68,7 @@ trait SnippetsContainer {
 
   final def update(snippetId: SnippetId, inputs: BaseInputs): Future[Option[SnippetId]] = {
     updateSnippetId(snippetId).flatMap {
-      case Some(nextSnippetId) =>
-        for {
+      case Some(nextSnippetId) => for {
           r <- insert0(nextSnippetId, inputs.copyBaseInput(forked = Some(snippetId), isShowingInUserProfile = true))
           _ <- hideFromUserProfile(snippetId)
         } yield Some(r)
@@ -77,24 +80,20 @@ trait SnippetsContainer {
     create(inputs.copyBaseInput(forked = Some(snippetId), isShowingInUserProfile = true), user)
 
   final def readScalaSource(
-      snippetId: SnippetId
-  ): Future[Option[FetchResultScalaSource]] =
-    readSnippet(snippetId).map(
-      _.flatMap(
-        snippet =>
-          Instrument(snippet.inputs.code, snippet.inputs.target) match {
-            case Right(InstrumentationSuccess(instrumentedCode, _)) =>
-              Some(FetchResultScalaSource(instrumentedCode))
-            case _ => None
-        }
-      )
+    snippetId: SnippetId
+  ): Future[Option[FetchResultScalaSource]] = readSnippet(snippetId).map(
+    _.flatMap(snippet =>
+      Instrument(snippet.inputs.code, snippet.inputs.target) match {
+        case Right(InstrumentationSuccess(instrumentedCode, _)) => Some(FetchResultScalaSource(instrumentedCode))
+        case _                                                  => None
+      }
     )
+  )
 
-  final def downloadSnippet(snippetId: SnippetId): Future[Option[Path]] =
-    readSnippet(snippetId).map(_.flatMap {
-      case FetchResult(sbtInputs: SbtInputs, _) => Option(asZip(snippetId)(sbtInputs))
-      case _ => None
-    })
+  final def downloadSnippet(snippetId: SnippetId): Future[Option[Path]] = readSnippet(snippetId).map(_.flatMap {
+    case FetchResult(sbtInputs: SbtInputs, _) => Option(asZip(snippetId)(sbtInputs))
+    case _                                    => None
+  })
 
   protected final def newSnippetId(user: Option[UserLogin]): SnippetId = {
     val uuid = Base64UUID.create
@@ -131,11 +130,17 @@ trait SnippetsContainer {
       Files.createDirectories(projectDir)
 
       val buildFile = projectDir.resolve("build.sbt")
-      Files.write(buildFile, inputs.sbtConfig.linesIterator.filterNot(_.contains("org.scastie")).mkString("\n").getBytes())
+      Files.write(
+        buildFile,
+        inputs.sbtConfig.linesIterator.filterNot(_.contains("org.scastie")).mkString("\n").getBytes()
+      )
 
       val projectFile = projectDir.resolve("project/plugins.sbt")
       Files.createDirectories(projectFile.getParent)
-      Files.write(projectFile, inputs.sbtPluginsConfig.linesIterator.filterNot(_.contains("org.scastie")).mkString("\n").getBytes())
+      Files.write(
+        projectFile,
+        inputs.sbtPluginsConfig.linesIterator.filterNot(_.contains("org.scastie")).mkString("\n").getBytes()
+      )
 
       val codeFile = projectDir.resolve(s"src/main/scala/main.${if (inputs.isWorksheetMode) "sc" else "scala"}")
       Files.createDirectories(codeFile.getParent)

@@ -1,7 +1,7 @@
 package org.scastie.api
 
-import io.circe.generic.semiauto._
 import io.circe._
+import io.circe.generic.semiauto._
 
 case class SbtRunnerState(config: SbtInputs, tasks: Vector[TaskId], sbtState: ServerState)
 

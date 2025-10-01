@@ -1,9 +1,9 @@
 package org.scastie.sbt
 
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.Assertions._
 import org.scastie.api._
 import org.scastie.sbt.FormatActor
-import org.scalatest.Assertions._
-import org.scalatest.funsuite.AnyFunSuite
 
 class FormatActorTest extends AnyFunSuite {
   test("format should accept scala 2 code") {

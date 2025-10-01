@@ -1,9 +1,8 @@
 package org.scastie.client.components.editor
 
+import scalajs.js
 import typings.codemirrorLanguage.mod
 import typings.lezerHighlight.mod.tags
-
-import scalajs.js
 
 object SyntaxHighlightingTheme {
 
@@ -63,7 +62,7 @@ object SyntaxHighlightingTheme {
       mod.TagStyle(tags.typeName).setClass("type"),
       mod.TagStyle(tags.typeOperator).setClass("type-qualifier"),
       mod.TagStyle(tags.unit).setClass("none"),
-      mod.TagStyle(tags.variableName).setClass("function"),
+      mod.TagStyle(tags.variableName).setClass("function")
     )
   )
 

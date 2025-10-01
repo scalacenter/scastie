@@ -1,10 +1,9 @@
 package org.scastie.client
 
-import org.scastie.api.SnippetId
 import io.circe._
 import io.circe.generic.semiauto._
-
 import japgolly.scalajs.react._
+import org.scastie.api.SnippetId
 
 object ModalState {
   implicit val modalStateEncoder: Encoder[ModalState] = deriveEncoder[ModalState]
@@ -31,6 +30,7 @@ object ModalState {
     isEmbeddedClosed = true,
     isLoginModalClosed = true
   )
+
 }
 
 case class ModalState(
@@ -45,8 +45,6 @@ case class ModalState(
     isLoginModalClosed: Boolean
 ) {
   val isShareModalClosed: SnippetId ~=> Boolean =
-    Reusable.fn(
-      shareModalSnippetId2 => !shareModalSnippetId.contains(shareModalSnippetId2)
-    )
+    Reusable.fn(shareModalSnippetId2 => !shareModalSnippetId.contains(shareModalSnippetId2))
 
 }

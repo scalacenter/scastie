@@ -4,13 +4,12 @@ import scala.jdk.CollectionConverters._
 
 import cats.effect._
 import cats.syntax.all._
-import org.scastie.api._
-import org.scastie.buildinfo.BuildInfo
 import munit.CatsEffectSuite
 import org.eclipse.lsp4j.MarkupContent
 import org.http4s._
-import TestUtils._
+import org.scastie.api._
 import org.scastie.buildinfo.BuildInfo
+import TestUtils._
 
 class MetalsServerTest extends CatsEffectSuite {
   private val catsVersion = "2.8.0"
@@ -392,10 +391,9 @@ class MetalsServerTest extends CatsEffectSuite {
                |  printl@@
                |}
           """.stripMargin,
-      expectedCode =
-        """object M {
-          |  println()
-          |}
+      expectedCode = """object M {
+                       |  println()
+                       |}
           """.stripMargin,
       isWorksheet = false
     )
@@ -407,10 +405,9 @@ class MetalsServerTest extends CatsEffectSuite {
                |  printl@@
                |}
           """.stripMargin,
-      expectedCode =
-        """object M {
-          |  println()
-          |}
+      expectedCode = """object M {
+                       |  println()
+                       |}
           """.stripMargin,
       isWorksheet = true
     )
@@ -420,15 +417,14 @@ class MetalsServerTest extends CatsEffectSuite {
   test("Text edit is proper for worksheet with using directives") {
     testCompletionEdit(
       code = s"""//> using scala ${BuildInfo.stableNext}
-               |
-               |printl@@
-               |
+                |
+                |printl@@
+                |
           """.stripMargin,
-      expectedCode =
-        s"""//> using scala ${BuildInfo.stableNext}
-          |
-          |println()
-          |
+      expectedCode = s"""//> using scala ${BuildInfo.stableNext}
+                        |
+                        |println()
+                        |
           """.stripMargin,
       isWorksheet = true
     )
@@ -437,15 +433,14 @@ class MetalsServerTest extends CatsEffectSuite {
   test("Text edit is proper for no workheet with using directives") {
     testCompletionEdit(
       code = s"""//> using scala ${BuildInfo.stableNext}
-               |object M {
-               |  printl@@
-               |}
+                |object M {
+                |  printl@@
+                |}
           """.stripMargin,
-      expectedCode =
-        s"""//> using scala ${BuildInfo.stableNext}
-          |object M {
-          |  println()
-          |}
+      expectedCode = s"""//> using scala ${BuildInfo.stableNext}
+                        |object M {
+                        |  println()
+                        |}
           """.stripMargin,
       isWorksheet = false
     )
@@ -459,11 +454,10 @@ class MetalsServerTest extends CatsEffectSuite {
                |  println()
                |}
           """.stripMargin,
-      expectedCode =
-        """//> using dep org.scala-lang
-          |object M {
-          |  println()
-          |}
+      expectedCode = """//> using dep org.scala-lang
+                       |object M {
+                       |  println()
+                       |}
           """.stripMargin,
       isWorksheet = true
     )
@@ -477,11 +471,10 @@ class MetalsServerTest extends CatsEffectSuite {
                |  println()
                |}
           """.stripMargin,
-      expectedCode =
-        """//> using dep org.scala-lang
-          |object M {
-          |  println()
-          |}
+      expectedCode = """//> using dep org.scala-lang
+                       |object M {
+                       |  println()
+                       |}
           """.stripMargin,
       isWorksheet = false
     )

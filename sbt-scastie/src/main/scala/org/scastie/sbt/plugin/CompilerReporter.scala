@@ -1,20 +1,18 @@
 package org.scastie.sbtplugin
 
+import java.util.Optional
+
 import io.circe.syntax._
-
 import org.scastie.api
-
+import org.scastie.api.{Error, Info, Warning}
 import sbt._
-import Keys._
+import xsbti.{Position, Problem, Reporter, Severity}
 import KeyRanks.DTask
-
+import Keys._
 import System.{lineSeparator => nl}
 
-import xsbti.{Reporter, Problem, Position, Severity}
-import java.util.Optional
-import org.scastie.api.{Info, Error, Warning}
-
 object CompilerReporter {
+
   // compilerReporter is marked private in sbt
   private lazy val compilerReporter = TaskKey[xsbti.Reporter](
     "compilerReporter",
@@ -22,44 +20,43 @@ object CompilerReporter {
     DTask
   )
 
-  val setting: sbt.Def.Setting[_] =
-    Compile / compile / compilerReporter := new xsbti.Reporter {
-      private val buffer = collection.mutable.ArrayBuffer.empty[Problem]
-      def reset(): Unit = buffer.clear()
-      def hasErrors: Boolean = buffer.exists(_.severity == Severity.Error)
-      def hasWarnings: Boolean = buffer.exists(_.severity == Severity.Warn)
+  val setting: sbt.Def.Setting[_] = Compile / compile / compilerReporter := new xsbti.Reporter {
+    private val buffer = collection.mutable.ArrayBuffer.empty[Problem]
+    def reset(): Unit = buffer.clear()
+    def hasErrors: Boolean = buffer.exists(_.severity == Severity.Error)
+    def hasWarnings: Boolean = buffer.exists(_.severity == Severity.Warn)
 
-      def printSummary(): Unit = {
-        def toApi(p: Problem): api.Problem = {
-          def toOption[T](m: Optional[T]): Option[T] = {
-            if (!m.isPresent) None
-            else Some(m.get)
-          }
-          val severity =
-            p.severity match {
-              case xsbti.Severity.Info  => api.Info
-              case xsbti.Severity.Warn  => api.Warning
-              case xsbti.Severity.Error => api.Error
-            }
-          api.Problem(severity, toOption(p.position.line).map(_.toInt), p.message)
+    def printSummary(): Unit = {
+      def toApi(p: Problem): api.Problem = {
+        def toOption[T](m: Optional[T]): Option[T] = {
+          if (!m.isPresent) None
+          else Some(m.get)
         }
-        if (problems.nonEmpty) {
-          val apiProblems = problems.map(toApi)
-          println(apiProblems.asJson.noSpaces)
+        val severity = p.severity match {
+          case xsbti.Severity.Info  => api.Info
+          case xsbti.Severity.Warn  => api.Warning
+          case xsbti.Severity.Error => api.Error
         }
+        api.Problem(severity, toOption(p.position.line).map(_.toInt), p.message)
       }
-      def problems: Array[Problem] = buffer.toArray
-//        def log(pos: Position, msg: String, sev: Severity): Unit = {
-      def log(problem: Problem): Unit = {
-        object MyProblem extends Problem {
-          def category: String = "foo"
-          def severity: Severity = problem.severity()
-          def message: String = problem.message()
-          def position: Position = problem.position()
-          override def toString = s"$position:$severity: $message"
-        }
-        buffer.append(MyProblem)
+      if (problems.nonEmpty) {
+        val apiProblems = problems.map(toApi)
+        println(apiProblems.asJson.noSpaces)
       }
-      def comment(pos: xsbti.Position, msg: String): Unit = ()
     }
+    def problems: Array[Problem] = buffer.toArray
+//        def log(pos: Position, msg: String, sev: Severity): Unit = {
+    def log(problem: Problem): Unit = {
+      object MyProblem extends Problem {
+        def category: String = "foo"
+        def severity: Severity = problem.severity()
+        def message: String = problem.message()
+        def position: Position = problem.position()
+        override def toString = s"$position:$severity: $message"
+      }
+      buffer.append(MyProblem)
+    }
+    def comment(pos: xsbti.Position, msg: String): Unit = ()
+  }
+
 }

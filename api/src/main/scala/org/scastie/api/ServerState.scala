@@ -1,13 +1,14 @@
 package org.scastie.api
 
-import io.circe.generic.semiauto._
 import io.circe._
+import io.circe.generic.semiauto._
 
 sealed trait ServerState {
   def isReady: Boolean
 }
 
 object ServerState {
+
   case object Unknown extends ServerState {
     override def toString: String = "Unknown"
     def isReady: Boolean = true

@@ -5,8 +5,8 @@ import cats.data.OptionT
 import cats.effect.Async
 import cats.syntax.all._
 import com.evolutiongaming.scache.Cache
-import org.scastie.api._
 import org.eclipse.lsp4j._
+import org.scastie.api._
 
 trait ScastieMetals[F[_]]:
   def complete(request: LSPRequestDTO): EitherT[F, FailureType, ScalaCompletionList]
@@ -34,7 +34,7 @@ object ScastieMetalsImpl:
         dispatcher.getCompiler(request.options) >>= (_.signatureHelp(request.offsetParams))
 
       def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, Boolean] =
-          dispatcher.areDependenciesSupported(config) >>=
-            (_ => dispatcher.getCompiler(config).map(_ => true))
+        dispatcher.areDependenciesSupported(config) >>=
+          (_ => dispatcher.getCompiler(config).map(_ => true))
 
     }

@@ -1,11 +1,11 @@
 package org.scastie.storage.inmemory
 
+import scala.collection.mutable
+import scala.concurrent.Future
+
 import org.scastie.storage.PolicyAcceptance
 import org.scastie.storage.UserLogin
 import org.scastie.storage.UsersContainer
-
-import scala.collection.mutable
-import scala.concurrent.Future
 
 trait InMemoryUsersContainer extends UsersContainer {
   val users: mutable.Set[PolicyAcceptance] = mutable.Set[PolicyAcceptance]()
@@ -29,4 +29,5 @@ trait InMemoryUsersContainer extends UsersContainer {
     // All user containers will be removed after said period of time
     maybeUser.map(_.acceptedPrivacyPolicy).getOrElse(true)
   }
+
 }

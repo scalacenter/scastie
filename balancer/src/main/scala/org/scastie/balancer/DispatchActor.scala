@@ -1,29 +1,29 @@
 package org.scastie.balancer
 
+import java.nio.file.Paths
+import java.time.Instant
+import java.util.concurrent.Executors
+import scala.concurrent._
+import scala.concurrent.duration._
+
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ActorSelection
 import akka.actor.OneForOneStrategy
-import akka.actor.SupervisorStrategy
 import akka.actor.Props
+import akka.actor.SupervisorStrategy
 import akka.event
 import akka.pattern.ask
 import akka.remote.DisassociatedEvent
 import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
 import org.scastie.api._
 import org.scastie.storage._
 import org.scastie.storage.filesystem._
 import org.scastie.storage.inmemory._
 import org.scastie.storage.mongodb._
 import org.scastie.util._
-import com.typesafe.config.ConfigFactory
-
-import java.nio.file.Paths
-import java.time.Instant
-import java.util.concurrent.Executors
-import scala.concurrent._
-import scala.concurrent.duration._
 
 case class Address(host: String, port: Int)
 case class SbtConfig(config: String)
@@ -62,19 +62,18 @@ case class Done(progress: SnippetProgress, retries: Int)
 case object Ping
 
 /**
-  * This Actor creates and takes care of two dispatchers: SbtDispatcher and ScalaCliDispatcher.
-  * It will receive every request and forward to the proper dispatcher every request.
+  * This Actor creates and takes care of two dispatchers: SbtDispatcher and ScalaCliDispatcher. It will receive every
+  * request and forward to the proper dispatcher every request.
   *
   * @param progressActor
   * @param statusActor
   */
 class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 // extends PersistentActor with AtLeastOnceDelivery
-    extends Actor
-    with ActorLogging {
+  extends Actor
+  with ActorLogging {
 
-  private val config =
-    ConfigFactory.load().getConfig("org.scastie.balancer")
+  private val config = ConfigFactory.load().getConfig("org.scastie.balancer")
 
   // Dispatchers
   val sbtDispatcher: ActorRef = context.actorOf(
@@ -87,10 +86,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     "ScalaCliDispatcher"
   )
 
-  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {
-    case e =>
-      log.error(e, "failure")
-      SupervisorStrategy.resume
+  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() { case e =>
+    log.error(e, "failure")
+    SupervisorStrategy.resume
   }
 
   import context._
@@ -112,34 +110,32 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   val containerType = config.getString("snippets-storage")
 
-  private val container =
-    containerType match {
-      case "memory" => new InMemoryContainer()
-      case "mongo"  => new MongoDBContainer()(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
-      case "mongo-local"  => new MongoDBContainer(defaultConfig = false)(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
-      case "files" => new FilesystemContainer(
+  private val container = containerType match {
+    case "memory"      => new InMemoryContainer()
+    case "mongo"       => new MongoDBContainer()(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
+    case "mongo-local" =>
+      new MongoDBContainer(defaultConfig = false)(ExecutionContext.fromExecutor(Executors.newWorkStealingPool()))
+    case "files" => new FilesystemContainer(
         Paths.get(config.getString("snippets-dir")),
         Paths.get(config.getString("old-snippets-dir"))
       )(ExecutionContext.fromExecutorService(Executors.newCachedThreadPool()))
-      case _ =>
-        println("fallback to in-memory container")
-        new InMemoryContainer
-    }
+    case _ =>
+      println("fallback to in-memory container")
+      new InMemoryContainer
+  }
 
-  def run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId) =
-    self ! Run(inputsWithIpAndUser, snippetId)
+  def run(inputsWithIpAndUser: InputsWithIpAndUser, snippetId: SnippetId) = self ! Run(inputsWithIpAndUser, snippetId)
 
   private def logError[T](f: Future[T]) = {
-    f.recover {
-      case e => log.error(e, "failed future")
+    f.recover { case e =>
+      log.error(e, "failed future")
     }
   }
 
   def receive: Receive = event.LoggingReceive(event.Logging.InfoLevel) {
     case RunnerPong => ()
 
-    case format: FormatRequest =>
-      sbtDispatcher.tell(format, sender())
+    case format: FormatRequest => sbtDispatcher.tell(format, sender())
 
     case x @ RunSnippet(inputsWithIpAndUser) =>
       log.info(s"starting ${x}")
@@ -163,14 +159,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       val sender = this.sender()
       logError(container.update(snippetId, inputsWithIpAndUser.inputs).map { updatedSnippetId =>
         sender ! updatedSnippetId
-        updatedSnippetId.foreach(
-          snippetIdU => run(inputsWithIpAndUser, snippetIdU)
-        )
+        updatedSnippetId.foreach(snippetIdU => run(inputsWithIpAndUser, snippetIdU))
       })
 
     case ForkSnippet(snippetId, inputsWithIpAndUser) =>
-      val InputsWithIpAndUser(inputs, UserTrace(_, user)) =
-        inputsWithIpAndUser
+      val InputsWithIpAndUser(inputs, UserTrace(_, user)) = inputsWithIpAndUser
       val sender = this.sender()
       logError(
         container
@@ -227,19 +220,17 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
     case x @ ReceiveStatus(requester) => sbtDispatcher.tell(x, sender())
 
-    case statusProgress: StatusProgress =>
-      statusActor ! statusProgress
+    case statusProgress: StatusProgress => statusActor ! statusProgress
 
     case progress: SnippetProgress =>
       val sender = this.sender()
 
-
       logError(
-        container.appendOutput(progress)
-          .recover {
-            case e =>
-              log.error(e, s"failed to save $progress from $sender")
-              e
+        container
+          .appendOutput(progress)
+          .recover { case e =>
+            log.error(e, s"failed to save $progress from $sender")
+            e
           }
           .map(sender ! _)
       )
@@ -258,15 +249,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case ping: Ping.type =>
       implicit val timeout: Timeout = Timeout(10.seconds)
       val seq = Future.sequence(
-        List(scliDispatcher, sbtDispatcher).map {
-          s => (s ? Ping).map(_ =>
-              log.info(s"Pinged ${s}")
-            ).recover(_ =>
-              log.info(s"Failed to ping ${s}")
-            )
+        List(scliDispatcher, sbtDispatcher).map { s =>
+          (s ? Ping).map(_ => log.info(s"Pinged ${s}")).recover(_ => log.info(s"Failed to ping ${s}"))
         }
       )
   }
-
 
 }
