@@ -24,17 +24,13 @@ object InstrumentationFailure {
 
 case class InstrumentationSuccess(
     instrumentedCode: String,
-    lineMapping: Int => Int
+    positionMapper: Option[PositionMapper] = None
 )
 
 object Instrument {
   def getParsingLineOffset(isWorksheet: Boolean): Int = if (isWorksheet) -1 else 0
   def getExceptionLineOffset(isWorksheet: Boolean): Int = if (isWorksheet) -2 else 0
-  def getMessageLineOffset(isWorksheet: Boolean, isScalaCli: Boolean): Int = (isWorksheet, isScalaCli) match {
-      case (true, _) => -2
-      case (false, true) => 1
-      case (false, false) => 0
-  }
+  def getMessageLineOffset(isWorksheet: Boolean): Int = if (isWorksheet) -2 else 0
 
   import InstrumentationFailure._
 
@@ -213,9 +209,14 @@ object Instrument {
       case target                  => scala(target.scalaVersion)
     }
 
-    val offset = target match {
-      case _: ScalaCli => usingDirectives.length + prelude.length + 1
-      case _ => prelude.length + 1
+    val isScalaCli = target match {
+      case _: ScalaCli => true
+      case _ => false
+    }
+
+    val offset = isScalaCli match {
+      case true  => usingDirectives.length + prelude.length + 1
+      case false => prelude.length + 1
     }
 
     maybeDialect match {
@@ -228,11 +229,11 @@ object Instrument {
               if (!hasMainMethod(parsed.get)) {
                 val (instrumentedCode, entryPoint) = instrument(parsed.get, offset, isScalaJs)
 
-                val lineMapping = LineMapper(instrumentedCode)
+                val positionMapper = PositionMapper(instrumentedCode, isScalaCli)
 
                 Right(InstrumentationSuccess(
                   s"""$instrumentedCode\n$entryPoint""",
-                  lineMapping
+                  Some(positionMapper)
                   ))
               } else {
                 Left(HasMainMethod)

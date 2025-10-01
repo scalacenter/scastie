@@ -45,6 +45,7 @@ import scala.util.control.NonFatal
 import org.apache.commons.io.IOUtils
 import java.io.PrintWriter
 import java.lang
+import org.scastie.instrumentation.PositionMapper
 
 
 object BspClient {
@@ -92,12 +93,34 @@ object BspClient {
     else api.Error
   }
 
-  def diagnosticToProblem(isWorksheet: Boolean)(diag: Diagnostic): Problem =
+  def diagnosticToProblem(isWorksheet: Boolean, positionMapper: Option[PositionMapper] = None)(diag: Diagnostic): Problem = {
+    val offset = Instrument.getMessageLineOffset(isWorksheet)
+    
+    val startLine = diag.getRange.getStart.getLine + 1
+    val endLine = diag.getRange.getEnd.getLine + 1
+
+    val startColumn = Some(diag.getRange.getStart.getCharacter + 1)
+    val endColumn = Some(diag.getRange.getEnd.getCharacter + 1)
+
+    val (mappedStartCol, mappedEndCol, mappedStartLine) = positionMapper match {
+      case Some(mapper) =>
+        (
+          startColumn.map(col => mapper.mapColumn(startLine, col)),
+          endColumn.map(col => mapper.mapColumn(startLine, col)),
+          mapper.mapLine(startLine)
+        )
+      case None =>
+        (startColumn, endColumn, startLine + offset)
+    }
+
     Problem(
       diagSeverityToSeverity(diag.getSeverity()),
-      Option(diag.getRange.getStart.getLine + 1),
+      Option(mappedStartLine),
+      mappedStartCol,
+      mappedEndCol,
       diag.getMessage()
     )
+  }
 
   val scalaCliExec = Seq("cs", "launch", "org.virtuslab.scala-cli:cliBootstrapped:latest.release", "-M", "scala.cli.ScalaCli", "--")
 }
@@ -200,12 +223,12 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
     }
   }
 
-  private def compile(id: String, isWorksheet: Boolean, buildTargetId: BuildTargetIdentifier): BspTask[CompileResult] = EitherT {
+  private def compile(id: String, isWorksheet: Boolean, buildTargetId: BuildTargetIdentifier, positionMapper: Option[PositionMapper]): BspTask[CompileResult] = EitherT {
     val params: CompileParams = new CompileParams(Collections.singletonList(buildTargetId))
     requestWithTimeout(_.buildTargetCompile(params))(using compilationTimeout).map(compileResult =>
       compileResult.getStatusCode match {
         case StatusCode.OK => Right(compileResult)
-        case StatusCode.ERROR => Left(CompilationError(diagnostics.getAndSet(Nil).map(diagnosticToProblem(isWorksheet))))
+        case StatusCode.ERROR => Left(CompilationError(diagnostics.getAndSet(Nil).map(diagnosticToProblem(isWorksheet, positionMapper))))
         case StatusCode.CANCELLED => Left(InternalBspError("Compilation cancelled"))
     })
   }
@@ -258,19 +281,19 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
     }
   }
 
-  def build(taskId: String, isWorksheet: Boolean, target: ScalaTarget): BspTask[BuildOutput] = {
+  def build(taskId: String, isWorksheet: Boolean, target: ScalaTarget, positionMapper: Option[PositionMapper]): BspTask[BuildOutput] = {
     println("Reloading")
     for {
       _ <- reloadWorkspace()
       _ = println("Build target")
       buildTarget <- getFirstBuildTarget()
       _ = println("Compile")
-      compileResult <- compile(taskId, isWorksheet, buildTarget.id)
+      compileResult <- compile(taskId, isWorksheet, buildTarget.id, positionMapper)
       _ = println("Get jvm")
       jvmRunEnvironment <- getJvmRunEnvironment(buildTarget.id)
       _ = println("Create process")
       process <- makeProcess(jvmRunEnvironment, buildTarget, isWorksheet)
-    } yield BuildOutput(process, diagnostics.getAndSet(Nil).map(diagnosticToProblem(isWorksheet)))
+    } yield BuildOutput(process, diagnostics.getAndSet(Nil).map(diagnosticToProblem(isWorksheet, positionMapper)))
   }
 
   // Kills the BSP connection and makes this object

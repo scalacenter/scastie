@@ -17,6 +17,8 @@ import RuntimeCodecs._
 
 import scala.meta.inputs.Input
 import scala.util.control.NonFatal
+import org.scastie.sbt
+import org.scastie.instrumentation.PositionMapper
 
 class OutputExtractor(getScalaJsContent: () => Option[String],
                       getScalaJsSourceMapContent: () => Option[String],
@@ -25,7 +27,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   def extractProgress(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
     import sbtRun._
 
-    val problems = extractProblems(output.line, sbtRun, Instrument.getMessageLineOffset(inputs.isWorksheetMode, isScalaCli = false))
+    val problems = extractProblems(output.line, sbtRun, Instrument.getMessageLineOffset(inputs.isWorksheetMode))
     val instrumentations = extract[List[Instrumentation]](output.line)
     val runtimeError = extractRuntimeError(output.line, sbtRun, Instrument.getExceptionLineOffset(inputs.isWorksheetMode))
     val consoleOutput = extract[ConsoleOutput](output.line)
@@ -128,6 +130,24 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
       .getOrElse(sourceMapRaw)
   }
 
+  private def mapColumn(column: Option[Int], line: Option[Int], positionMapper: Option[PositionMapper] = None): Option[Int] = {
+    positionMapper match {
+      case Some(mapper) => 
+        (column, line) match {
+          case (Some(c), Some(l)) => Some(mapper.mapColumn(l, c))
+          case _ => column
+        }
+      case None => column
+    }
+  }
+
+  private def mapLine(line: Option[Int], positionMapper: Option[PositionMapper] = None, offset: Int = 0): Option[Int] = {
+    positionMapper match {
+      case Some(mapper) => line.map(mapper.mapLine)
+      case None => line.map(_ + offset)
+    }
+  }
+
   private def extractProblems(
       line: String,
       sbtRun: SbtRun,
@@ -135,10 +155,12 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   ): Option[List[Problem]] = {
     val problems = extract[List[Problem]](line)
 
-    val problemsWithMappedLines = problems.map {
+    val problemsWithMappedPositions = problems.map {
       _.map(problem =>
-        problem.copy(line =
-          problem.line.map(instrumentedLine => sbtRun.lineMapping(instrumentedLine))
+        problem.copy(
+          line = mapLine(problem.line, sbtRun.positionMapper, lineOffset),
+          startColumn = mapColumn(problem.startColumn.map(_ + 1), problem.line, sbtRun.positionMapper),
+          endColumn = mapColumn(problem.endColumn.map(_ + 1), problem.line, sbtRun.positionMapper)
         )
       )
     }
@@ -148,8 +170,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
       in.message == "a pure expression does nothing in statement position; you may be omitting necessary parentheses"
     }
 
-    if (sbtRun.inputs.isWorksheetMode) problemsWithMappedLines.map(_.filterNot(annoying))
-    else problemsWithMappedLines
+    if (sbtRun.inputs.isWorksheetMode) problemsWithMappedPositions.map(_.filterNot(annoying))
+    else problemsWithMappedPositions
   }
 
   private def extractRuntimeError(line: String, sbtRun: SbtRun, lineOffset: Int): Option[RuntimeError] = {
@@ -157,7 +179,9 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
       _.error.map { error =>
         val noStackTraceError = if (error.message.contains("No main class detected.")) error.copy(fullStack = "") else error
         val errorWithMappedLine = noStackTraceError.copy(
-          line = noStackTraceError.line.map(instrumentedLine => sbtRun.lineMapping(instrumentedLine))
+          line = noStackTraceError.line.map(
+            line => mapLine(Some(line), sbtRun.positionMapper, lineOffset).getOrElse(line)
+          )
         )
         errorWithMappedLine
       }
