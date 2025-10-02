@@ -1,9 +1,9 @@
 package org.scastie.client
 
-import org.scastie.api._
-
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
+
+import org.scastie.api._
 
 trait SharedEmbeddedOptions extends js.Object {
   val serverUrl: UndefOr[String]
@@ -33,19 +33,23 @@ trait EmbeddedOptionsJs extends js.Object with SharedEmbeddedOptions {
   // val scalaNativeVersion: UndefOr[String] not yet supported
 }
 
-case class EmbeddedOptions(snippetId: Option[SnippetId],
-                           injectId: Option[String],
-                           inputs: Option[BaseInputs],
-                           theme: Option[String],
-                           serverUrl: String) {
+case class EmbeddedOptions(
+    snippetId: Option[SnippetId],
+    injectId: Option[String],
+    inputs: Option[BaseInputs],
+    theme: Option[String],
+    serverUrl: String
+) {
 
   def setCode(code: String): EmbeddedOptions = {
     val inputs0: BaseInputs = inputs.getOrElse(ScalaCliInputs.default)
     copy(inputs = Some(inputs0.copyBaseInput(code = code)))
   }
+
 }
 
 object EmbeddedOptions {
+
   def empty(defaultServerUrl: String): EmbeddedOptions = {
     EmbeddedOptions(
       snippetId = None,
@@ -57,22 +61,21 @@ object EmbeddedOptions {
   }
 
   private def extractSnippetId(
-      options: SharedEmbeddedOptions
+    options: SharedEmbeddedOptions
   ): Option[SnippetId] = {
     import options._
 
-    base64UUID.toOption.map(
-      uuid =>
-        SnippetId(
-          uuid,
-          user.toOption
-            .map(u => SnippetUserPart(u, update.toOption.getOrElse(0)))
+    base64UUID.toOption.map(uuid =>
+      SnippetId(
+        uuid,
+        user.toOption
+          .map(u => SnippetUserPart(u, update.toOption.getOrElse(0)))
       )
     )
   }
 
   def fromJsRessource(
-      defaultServerUrl: String
+    defaultServerUrl: String
   )(options: EmbeddedResourceOptionsJs): EmbeddedOptions = {
 
     import options._
@@ -95,85 +98,83 @@ object EmbeddedOptions {
   }
 
   def fromJs(
-      defaultServerUrl: String
+    defaultServerUrl: String
   )(options: EmbeddedOptionsJs): EmbeddedOptions = {
     import options._
 
-    val scalaTarget =
-      (targetType.toOption,
-       scalaVersion.toOption,
-       None: Option[String], // scalaJsVersion.toOption,
-       None: Option[String] // scalaNativeVersion.toOption
-      ) match {
+    val scalaTarget = (
+      targetType.toOption,
+      scalaVersion.toOption,
+      None: Option[String], // scalaJsVersion.toOption,
+      None: Option[String] // scalaNativeVersion.toOption
+    ) match {
 
-        case (Some("jvm"), _, None, None) => {
-          Some(
-            scalaVersion
-              .map(version => Scala2(version))
-              .getOrElse(Scala2.default)
-          )
-        }
-
-        case (Some("dotty" | "scala3"), _, None, None) => {
-          Some(
-            scalaVersion
-              .map(version => Scala3(version))
-              .getOrElse(Scala3.default)
-          )
-        }
-
-        case (Some("typelevel"), _, None, None) => {
-          Some(
-            scalaVersion
-              .map(version => Typelevel(version))
-              .getOrElse(Typelevel.default)
-          )
-        }
-
-        case (Some("js"), None, None, None) => {
-          Some(Js.default)
-        }
-
-        case (tpe, Some(scalaV), Some(jsV), None) if (tpe.contains("js") || tpe.isEmpty) => {
-
-          Some(Js(scalaV, jsV))
-        }
-
-        case (Some("native"), None, None, None) => {
-          Some(Native.default)
-        }
-
-        case (tpe, Some(scalaV), None, Some(nativeV)) if (tpe.contains("native") || tpe.isEmpty) => {
-          Some(Native(scalaV, nativeV))
-        }
-
-        case (None, None, None, None) => None
-
-        case (a, b, c, d) => {
-          sys.error(
-            s"invalid scala target combination: $a | $b | $c | $d"
-          )
-        }
+      case (Some("jvm"), _, None, None) => {
+        Some(
+          scalaVersion
+            .map(version => Scala2(version))
+            .getOrElse(Scala2.default)
+        )
       }
+
+      case (Some("dotty" | "scala3"), _, None, None) => {
+        Some(
+          scalaVersion
+            .map(version => Scala3(version))
+            .getOrElse(Scala3.default)
+        )
+      }
+
+      case (Some("typelevel"), _, None, None) => {
+        Some(
+          scalaVersion
+            .map(version => Typelevel(version))
+            .getOrElse(Typelevel.default)
+        )
+      }
+
+      case (Some("js"), None, None, None) => {
+        Some(Js.default)
+      }
+
+      case (tpe, Some(scalaV), Some(jsV), None) if (tpe.contains("js") || tpe.isEmpty) => {
+
+        Some(Js(scalaV, jsV))
+      }
+
+      case (Some("native"), None, None, None) => {
+        Some(Native.default)
+      }
+
+      case (tpe, Some(scalaV), None, Some(nativeV)) if (tpe.contains("native") || tpe.isEmpty) => {
+        Some(Native(scalaV, nativeV))
+      }
+
+      case (None, None, None, None) => None
+
+      case (a, b, c, d) => {
+        sys.error(
+          s"invalid scala target combination: $a | $b | $c | $d"
+        )
+      }
+    }
 
     val inputs =
       if (scalaTarget.isDefined || code.isDefined) {
         val default = ScalaCliInputs.default
 
-        val isScala3 =
-          scalaTarget
-            .map(_.targetType == ScalaTargetType.Scala3)
-            .getOrElse(false)
+        val isScala3 = scalaTarget
+          .map(_.targetType == ScalaTargetType.Scala3)
+          .getOrElse(false)
 
         val defaultCode =
           if (isScala3) Scala3.defaultCode
           else default.code
 
-        val inputs0 =
-          default.copy(
-            isWorksheetMode = isWorksheetMode.getOrElse(default.isWorksheetMode),
-            code = code.getOrElse(defaultCode),
-          )
+        val inputs0 = default.copy(
+          isWorksheetMode = isWorksheetMode.getOrElse(default.isWorksheetMode),
+          code = code.getOrElse(defaultCode)
+        )
         Some(inputs0)
       } else {
         None
@@ -195,4 +196,5 @@ object EmbeddedOptions {
       serverUrl = serverUrl.toOption.getOrElse(defaultServerUrl)
     )
   }
+
 }

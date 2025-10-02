@@ -1,8 +1,9 @@
 package org.scastie.api
 
 import org.scastie.buildinfo.BuildInfo
-import io.circe.generic.semiauto._
+
 import io.circe._
+import io.circe.generic.semiauto._
 
 sealed trait ScalaTarget {
   val targetType: ScalaTargetType
@@ -17,7 +18,6 @@ sealed trait ScalaTarget {
   def runtimeDependency: ScalaDependency =
     ScalaDependency(BuildInfo.organization, BuildInfo.runtimeProjectName, this, BuildInfo.versionRuntime)
 
-
 }
 
 sealed trait SbtScalaTarget extends ScalaTarget {
@@ -30,8 +30,7 @@ sealed trait SbtScalaTarget extends ScalaTarget {
 
   def renderDependency(lib: ScalaDependency): String
 
-  protected def sbtConfigScalaVersion: String =
-    s"""scalaVersion := "$scalaVersion""""
+  protected def sbtConfigScalaVersion: String = s"""scalaVersion := "$scalaVersion""""
 
   protected def renderSbtDouble(lib: ScalaDependency): String = {
     import lib._
@@ -47,13 +46,14 @@ sealed trait SbtScalaTarget extends ScalaTarget {
 
   def withScalaVersion(newVersion: String): SbtScalaTarget = {
     this match {
-      case Scala2(scalaVersion) => Scala2(newVersion)
-      case Typelevel(scalaVersion) => Typelevel(newVersion)
-      case Js(scalaVersion, scalaJsVersion) => Js(newVersion, scalaJsVersion)
+      case Scala2(scalaVersion)                     => Scala2(newVersion)
+      case Typelevel(scalaVersion)                  => Typelevel(newVersion)
+      case Js(scalaVersion, scalaJsVersion)         => Js(newVersion, scalaJsVersion)
       case Native(scalaVersion, scalaNativeVersion) => Native(newVersion, scalaNativeVersion)
-      case Scala3(scalaVersion) => Scala3(newVersion)
+      case Scala3(scalaVersion)                     => Scala3(newVersion)
     }
   }
+
 }
 
 object Scala2 {
@@ -66,15 +66,14 @@ case class Scala2(scalaVersion: String) extends SbtScalaTarget {
 
   val targetType: ScalaTargetType = ScalaTargetType.Scala2
 
-  def scaladexRequest: Map[String, String] =
-    Map("target" -> "JVM", "scalaVersion" -> binaryScalaVersion)
+  def scaladexRequest: Map[String, String] = Map("target" -> "JVM", "scalaVersion" -> binaryScalaVersion)
 
   def renderDependency(lib: ScalaDependency): String = renderSbtDouble(lib)
 
   def sbtConfig: String = {
     val base = sbtConfigScalaVersion + "\n" + SbtScalaTarget.hktScalacOptions(scalaVersion)
     if (scalaVersion.startsWith("2.13") || scalaVersion.startsWith("2.12"))
-      base + "\n" + "scalacOptions += \"-Ydelambdafy:inline\"" //workaround https://github.com/scala/bug/issues/10782
+      base + "\n" + "scalacOptions += \"-Ydelambdafy:inline\"" // workaround https://github.com/scala/bug/issues/10782
     else base
   }
 
@@ -97,8 +96,7 @@ case class Typelevel(scalaVersion: String) extends SbtScalaTarget {
 
   val targetType: ScalaTargetType = ScalaTargetType.Typelevel
 
-  def scaladexRequest: Map[String, String] =
-    Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
+  def scaladexRequest: Map[String, String] = Map("target" -> "JVM", "scalaVersion" -> scalaVersion)
 
   def renderDependency(lib: ScalaDependency): String = renderSbtDouble(lib)
 
@@ -138,8 +136,7 @@ case class Js(scalaVersion: String, scalaJsVersion: String) extends SbtScalaTarg
                          else scalaJsVersion.split('.').head)
   )
 
-  def renderDependency(lib: ScalaDependency): String =
-    s"${renderSbtCross(lib)} cross CrossVersion.for3Use2_13"
+  def renderDependency(lib: ScalaDependency): String = s"${renderSbtCross(lib)} cross CrossVersion.for3Use2_13"
 
   def sbtConfig: String = {
     s"""|$sbtConfigScalaVersion
@@ -149,13 +146,13 @@ case class Js(scalaVersion: String, scalaJsVersion: String) extends SbtScalaTarg
         |scalacOptions += {
         |  val from = (LocalRootProject / baseDirectory).value.toURI.toString
         |  val to = "${Js.sourceUUID}/"
-        |  "-${if (scalaVersion.startsWith("3")) "scalajs-mapSourceURI" else "P:scalajs:mapSourceURI"}:" + from + "->" + to
+        |  "-${if (scalaVersion.startsWith("3")) "scalajs-mapSourceURI"
+       else "P:scalajs:mapSourceURI"}:" + from + "->" + to
         |}""".stripMargin
   }
 
-  def sbtPluginsConfig: String =
-    s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")""" + "\n" +
-      (if (!scalaVersion.startsWith("3")) SbtScalaTarget.partialUnificationSbtPlugin else "")
+  def sbtPluginsConfig: String = s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")""" + "\n" +
+    (if (!scalaVersion.startsWith("3")) SbtScalaTarget.partialUnificationSbtPlugin else "")
 
   def sbtRunCommand(worksheetMode: Boolean): String = "fastOptJS"
 
@@ -170,42 +167,36 @@ object Native {
   implicit val nativeDecoder: Decoder[Native] = deriveDecoder[Native]
 }
 
-
 case class Native(scalaVersion: String, scalaNativeVersion: String) extends SbtScalaTarget {
 
   val targetType: ScalaTargetType = ScalaTargetType.Native
 
-  def scaladexRequest: Map[String, String] =
-    Map(
-      "target" -> "NATIVE",
-      "scalaVersion" -> binaryScalaVersion,
-      "scalaNativeVersion" -> scalaNativeVersion
-    )
+  def scaladexRequest: Map[String, String] = Map(
+    "target" -> "NATIVE",
+    "scalaVersion" -> binaryScalaVersion,
+    "scalaNativeVersion" -> scalaNativeVersion
+  )
 
-  def renderDependency(lib: ScalaDependency): String =
-    renderSbtCross(lib)
+  def renderDependency(lib: ScalaDependency): String = renderSbtCross(lib)
 
   def sbtConfig: String = sbtConfigScalaVersion
 
-  def sbtPluginsConfig: String =
-    s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
+  def sbtPluginsConfig: String = s"""addSbtPlugin("org.scala-native" % "sbt-scala-native"  % "$scalaNativeVersion")"""
 
   def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
   def isJVMTarget: Boolean = false
 
-  override def toString: String =
-    s"Scala-Native $scalaVersion $scalaNativeVersion"
+  override def toString: String = s"Scala-Native $scalaVersion $scalaNativeVersion"
 }
 
 object Scala3 {
   def default: Scala3 = Scala3(BuildInfo.stableNext)
 
-  def defaultCode: String =
-    """|// You can find more examples here:
-       |//   https://github.com/lampepfl/dotty-example-project
-       |println("Hi Scala 3!")
-       |""".stripMargin
+  def defaultCode: String = """|// You can find more examples here:
+                               |//   https://github.com/lampepfl/dotty-example-project
+                               |println("Hi Scala 3!")
+                               |""".stripMargin
 
   implicit val scala3Encoder: Encoder[Scala3] = deriveEncoder[Scala3]
   implicit val scala3Decoder: Decoder[Scala3] = deriveDecoder[Scala3]
@@ -215,13 +206,11 @@ case class Scala3(scalaVersion: String) extends SbtScalaTarget {
 
   val targetType: ScalaTargetType = ScalaTargetType.Scala3
 
-  def scaladexRequest: Map[String, String] =
-    Map("target" -> "JVM", "scalaVersion" -> binaryScalaVersion)
+  def scaladexRequest: Map[String, String] = Map("target" -> "JVM", "scalaVersion" -> binaryScalaVersion)
 
   def renderDependency(lib: ScalaDependency): String = {
     if (lib == runtimeDependency) renderSbtDouble(lib)
-    else if (lib.target.binaryScalaVersion.startsWith("2.13"))
-      s"${renderSbtDouble(lib)} cross CrossVersion.for3Use2_13"
+    else if (lib.target.binaryScalaVersion.startsWith("2.13")) s"${renderSbtDouble(lib)} cross CrossVersion.for3Use2_13"
     else renderSbtDouble(lib)
   }
 
@@ -233,17 +222,15 @@ case class Scala3(scalaVersion: String) extends SbtScalaTarget {
 
   def isJVMTarget: Boolean = true
 
-  override def toString: String =
-    s"Scala $scalaVersion"
+  override def toString: String = s"Scala $scalaVersion"
 }
-
-
 
 object SbtScalaTarget {
   implicit val sbtScalaTargetEncoder: Encoder[SbtScalaTarget] = deriveEncoder[SbtScalaTarget]
   implicit val sbtScalaTargetDecoder: Decoder[SbtScalaTarget] = deriveDecoder[SbtScalaTarget]
 
   def partialUnificationSbtPlugin = """addSbtPlugin("org.lyranthe.sbt" % "partial-unification" % "1.1.2")"""
+
   def hktScalacOptions(scalaVersion: String) = {
     val (kpOrg, kpVersion, kpCross) =
       if (scalaVersion == "2.13.0-M5") ("org.spire-math", "0.9.9", "binary")
@@ -260,6 +247,7 @@ object SbtScalaTarget {
         |addCompilerPlugin("${kpOrg}" %% "kind-projector" % "${kpVersion}" cross CrossVersion.${kpCross})
         |$paradise""".stripMargin
   }
+
 }
 
 object ScalaCli {
@@ -268,13 +256,13 @@ object ScalaCli {
 
   def default: ScalaCli = ScalaCli(BuildInfo.stableNext)
 
-  def defaultCode: String =
-    """|// Hello!
-       |// Scastie is compatible with Scala CLI! You can use
-       |// directives: https://scala-cli.virtuslab.org/docs/guides/using-directives/
-       |
-       |println("Hi Scala CLI <3")
+  def defaultCode: String = """|// Hello!
+                               |// Scastie is compatible with Scala CLI! You can use
+                               |// directives: https://scala-cli.virtuslab.org/docs/guides/using-directives/
+                               |
+                               |println("Hi Scala CLI <3")
     """.stripMargin
+
 }
 
 case class ScalaCli(scalaVersion: String) extends ScalaTarget {
@@ -287,4 +275,3 @@ object ScalaTarget {
   implicit val scalaTargetEncoder: Encoder[ScalaTarget] = deriveEncoder[ScalaTarget]
   implicit val scalaTargetDecoder: Decoder[ScalaTarget] = deriveDecoder[ScalaTarget]
 }
-

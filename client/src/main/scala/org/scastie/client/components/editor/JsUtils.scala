@@ -1,6 +1,7 @@
 package org.scastie.client.components.editor
 
 import org.scastie.api
+
 import typings.codemirrorLint.mod.Severity
 
 object JsUtils {

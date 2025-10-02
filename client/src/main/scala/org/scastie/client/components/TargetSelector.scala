@@ -1,11 +1,12 @@
 package org.scastie.client.components
 
 import org.scastie.api._
+import org.scastie.api.ScalaTargetType.JS
+import org.scastie.api.ScalaTargetType.Scala2
+
 import japgolly.scalajs.react._
 
 import vdom.all._
-import org.scastie.api.ScalaTargetType.Scala2
-import org.scastie.api.ScalaTargetType.JS
 
 case class TargetSelector(scalaTarget: ScalaTarget, onChange: ScalaTarget ~=> Callback) {
   @inline def render: VdomElement = TargetSelector.targetSelector(this)
@@ -32,28 +33,27 @@ object TargetSelector {
     }
   }
 
-
-  val targetSelector =
-    ScalaFnComponent
-      .withHooks[TargetSelector]
-      .render(props => {
-        div(
-          ul(cls := "target")(
-            targetTypes.map { targetType =>
-              val targetLabel = labelFor(targetType)
-              li(
-                input(
-                  `type` := "radio",
-                  id := targetLabel,
-                  value := targetLabel,
-                  name := "target",
-                  onChange --> props.onChange(targetType.defaultScalaTarget),
-                  checked := targetType == props.scalaTarget.targetType
-                ),
-                label(`for` := targetLabel, role := "button", cls := "radio", targetLabel)
-              )
-            }.toTagMod
-          )
+  val targetSelector = ScalaFnComponent
+    .withHooks[TargetSelector]
+    .render(props => {
+      div(
+        ul(cls := "target")(
+          targetTypes.map { targetType =>
+            val targetLabel = labelFor(targetType)
+            li(
+              input(
+                `type` := "radio",
+                id := targetLabel,
+                value := targetLabel,
+                name := "target",
+                onChange --> props.onChange(targetType.defaultScalaTarget),
+                checked := targetType == props.scalaTarget.targetType
+              ),
+              label(`for` := targetLabel, role := "button", cls := "radio", targetLabel)
+            )
+          }.toTagMod
         )
-      })
+      )
+    })
+
 }

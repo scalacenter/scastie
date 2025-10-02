@@ -10,10 +10,11 @@ import scala.jdk.FutureConverters._
 import scala.jdk.OptionConverters._
 import scala.meta.pc.PresentationCompiler
 
+import org.scastie.api._
+
 import cats.data.EitherT
 import cats.effect.Async
 import cats.syntax.all._
-import org.scastie.api._
 import org.eclipse.lsp4j._
 import org.slf4j.LoggerFactory
 import DTOExtensions._

@@ -30,7 +30,7 @@ protected[runtime] trait SharedRuntime {
   protected[runtime] def render[T](a: T, typeName: String): Render = {
     a match {
       case html: Html => html
-      case v =>
+      case v          =>
         val vs = show(v)
         val out =
           if (vs.size > maxValueLength) vs.take(maxValueLength) + "..."
@@ -39,4 +39,5 @@ protected[runtime] trait SharedRuntime {
         Value(out, typeName.replace(Instrumentation.instrumentedObject + ".", ""))
     }
   }
+
 }

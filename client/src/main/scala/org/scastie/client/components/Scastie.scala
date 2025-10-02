@@ -2,31 +2,33 @@ package org.scastie.client.components
 
 import java.util.UUID
 
+import org.scalajs.dom
+import org.scalajs.dom.HTMLScriptElement
+
+import org.scastie.api._
+import org.scastie.client._
+
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.all._
-import org.scalajs.dom
-import org.scalajs.dom.HTMLScriptElement
-import org.scastie.api._
-import org.scastie.client._
 
 final case class Scastie(
-  router: Option[RouterCtl[Page]],
-  private val scastieId: UUID,
-  private val snippetId: Option[SnippetId],
-  private val oldSnippetId: Option[Int],
-  private val embedded: Option[EmbeddedOptions],
-  private val targetType: Option[ScalaTargetType],
-  private val tryLibrary: Option[(ScalaDependency, Project)],
-  private val code: Option[String],
-  private val inputs: Option[BaseInputs]
+    router: Option[RouterCtl[Page]],
+    private val scastieId: UUID,
+    private val snippetId: Option[SnippetId],
+    private val oldSnippetId: Option[Int],
+    private val embedded: Option[EmbeddedOptions],
+    private val targetType: Option[ScalaTargetType],
+    private val tryLibrary: Option[(ScalaDependency, Project)],
+    private val code: Option[String],
+    private val inputs: Option[BaseInputs]
 ) {
 
   @inline def render = Scastie.component(serverUrl, scastieId)(this)
 
   def serverUrl: Option[String] = embedded.map(_.serverUrl)
-  def isEmbedded: Boolean       = embedded.isDefined
+  def isEmbedded: Boolean = embedded.isDefined
   // todo not sure how is it different from regular snippet id
   def embeddedSnippetId: Option[SnippetId] = embedded.flatMap(_.snippetId)
 }
@@ -205,8 +207,8 @@ object Scastie {
         state.snippetState.scalaJsContent.foreach { content =>
           println("== Loading Scala.js! ==")
           val scalaJsScriptElement = createScript(scalaJsId)
-          val fixedContent         = playgroundMainRegex.replaceAllIn(content, "var ScastiePlaygroundMain")
-          val scriptTextNode       = dom.document.createTextNode(fixedContent)
+          val fixedContent = playgroundMainRegex.replaceAllIn(content, "var ScastiePlaygroundMain")
+          val scriptTextNode = dom.document.createTextNode(fixedContent)
           scalaJsScriptElement.appendChild(scriptTextNode)
           runScalaJs()
         }
@@ -218,8 +220,8 @@ object Scastie {
     .builder[Scastie]("Scastie")
     .initialStateFromProps { props =>
       val state = {
-        val scheme      = LocalStorage.load.map(_.isDarkTheme)
-        val editorMode  = LocalStorage.load.map(_.editorMode)
+        val scheme = LocalStorage.load.map(_.isDarkTheme)
+        val editorMode = LocalStorage.load.map(_.editorMode)
         val loadedState = ScastieState.default(props.isEmbedded).copy(inputs = SbtInputs.default.copy(code = ""))
         val loadedStateWithMode = editorMode.map(mode => loadedState.copy(editorMode = mode)).getOrElse(loadedState)
         val loadedStateWithScheme =
@@ -280,15 +282,15 @@ object Scastie {
         executeScalaJs(scastieId, scope.currentState)
     }
     .componentWillReceiveProps { scope =>
-      val next    = scope.nextProps.snippetId
+      val next = scope.nextProps.snippetId
       val current = scope.currentProps.snippetId
-      val state   = scope.state
+      val state = scope.state
       val backend = scope.backend
 
       val loadSnippet: CallbackOption[Unit] = for {
         snippetId <- CallbackOption.option(next)
-        _         <- CallbackOption.require(next != current)
-        _         <- backend.loadSnippet(snippetId).toCBO >> backend.setView(View.Editor)
+        _ <- CallbackOption.require(next != current)
+        _ <- backend.loadSnippet(snippetId).toCBO >> backend.setView(View.Editor)
       } yield ()
 
       setTitle(state, scope.nextProps) >> loadSnippet.toCallback

@@ -1,11 +1,12 @@
 package org.scastie.metals
 
+import org.scastie.api._
+
 import cats.data.EitherT
 import cats.data.OptionT
 import cats.effect.Async
 import cats.syntax.all._
 import com.evolutiongaming.scache.Cache
-import org.scastie.api._
 import org.eclipse.lsp4j._
 
 trait ScastieMetals[F[_]]:
@@ -34,7 +35,7 @@ object ScastieMetalsImpl:
         dispatcher.getCompiler(request.options) >>= (_.signatureHelp(request.offsetParams))
 
       def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[F, FailureType, Boolean] =
-          dispatcher.areDependenciesSupported(config) >>=
-            (_ => dispatcher.getCompiler(config).map(_ => true))
+        dispatcher.areDependenciesSupported(config) >>=
+          (_ => dispatcher.getCompiler(config).map(_ => true))
 
     }

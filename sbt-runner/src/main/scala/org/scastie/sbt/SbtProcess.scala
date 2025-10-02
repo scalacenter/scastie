@@ -2,18 +2,18 @@ package org.scastie.sbt
 
 import java.nio.file._
 import java.time.Instant
+import scala.concurrent.duration._
+import scala.util.Random
+
+import org.scastie.api._
+import org.scastie.instrumentation.InstrumentedInputs
+import org.scastie.instrumentation.LineMapper
+import org.scastie.util._
+import org.scastie.util.ScastieFileUtil.{slurp, write}
 
 import akka.actor.{ActorRef, Cancellable, FSM, Stash}
 import akka.pattern.ask
 import akka.util.Timeout
-import org.scastie.api._
-import org.scastie.instrumentation.InstrumentedInputs
-import org.scastie.util.ScastieFileUtil.{slurp, write}
-import org.scastie.util._
-import org.scastie.instrumentation.LineMapper
-
-import scala.concurrent.duration._
-import scala.util.Random
 
 object SbtProcess {
   sealed trait SbtState
@@ -24,6 +24,7 @@ object SbtProcess {
 
   sealed trait Data
   case class SbtData(currentInputs: SbtInputs) extends Data
+
   case class SbtRun(
       snippetId: SnippetId,
       inputs: SbtInputs,
@@ -33,14 +34,15 @@ object SbtProcess {
       timeoutEvent: Option[Cancellable],
       lineMapping: Int => Int = identity
   ) extends Data
+
   case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
+
     def message: String = {
-      val stateMsg =
-        state match {
-          case Reloading => "updating build configuration"
-          case Running   => "running code"
-          case _         => sys.error(s"unexpected timeout in state $state")
-        }
+      val stateMsg = state match {
+        case Reloading => "updating build configuration"
+        case Running   => "running code"
+        case _         => sys.error(s"unexpected timeout in state $state")
+      }
 
       s"timed out after $duration when $stateMsg"
     }
@@ -60,19 +62,22 @@ object SbtProcess {
         )
       )
     }
+
   }
+
 }
 
-class SbtProcess(runTimeout: FiniteDuration,
-                 reloadTimeout: FiniteDuration,
-                 isProduction: Boolean,
-                 javaOptions: Seq[String],
-                 customSbtDir: Option[Path] = None)
-    extends FSM[SbtProcess.SbtState, SbtProcess.Data]
-    with Stash {
+class SbtProcess(
+    runTimeout: FiniteDuration,
+    reloadTimeout: FiniteDuration,
+    isProduction: Boolean,
+    javaOptions: Seq[String],
+    customSbtDir: Option[Path] = None
+) extends FSM[SbtProcess.SbtState, SbtProcess.Data]
+  with Stash {
+  import context.dispatcher
   import ProcessActor._
   import SbtProcess._
-  import context.dispatcher
 
   private var progressId = 0L
 
@@ -82,14 +87,12 @@ class SbtProcess(runTimeout: FiniteDuration,
     run.progressActor ! p
     implicit val tm = Timeout(10.seconds)
     (run.snippetActor ? p)
-      .recover {
-        case e =>
-          log.error(e, s"error while saving progress $p")
+      .recover { case e =>
+        log.error(e, s"error while saving progress $p")
       }
   }
 
-  private val sbtDir: Path =
-    customSbtDir.getOrElse(Files.createTempDirectory("scastie"))
+  private val sbtDir: Path = customSbtDir.getOrElse(Files.createTempDirectory("scastie"))
   private val buildFile = sbtDir.resolve("build.sbt")
   private val promptUniqueId = Random.alphanumeric.take(10).mkString
 
@@ -125,21 +128,19 @@ class SbtProcess(runTimeout: FiniteDuration,
   )
 
   private lazy val process = {
-    val sbtOpts =
-      (javaOptions ++ Seq(
-        "-Djline.terminal=jline.UnsupportedTerminal",
-        "-Dsbt.log.noformat=true",
-        "-Dsbt.banner=false",
-      )).mkString(" ")
+    val sbtOpts = (javaOptions ++ Seq(
+      "-Djline.terminal=jline.UnsupportedTerminal",
+      "-Dsbt.log.noformat=true",
+      "-Dsbt.banner=false"
+    )).mkString(" ")
 
-    val props =
-      ProcessActor.props(
-        command = List("sbt"),
-        workingDir = sbtDir,
-        environment = Map(
-          "SBT_OPTS" -> sbtOpts
-        )
+    val props = ProcessActor.props(
+      command = List("sbt"),
+      workingDir = sbtDir,
+      environment = Map(
+        "SBT_OPTS" -> sbtOpts
       )
+    )
 
     context.actorOf(props, name = s"sbt-process-$promptUniqueId")
   }
@@ -160,65 +161,63 @@ class SbtProcess(runTimeout: FiniteDuration,
     case _ -> Ready =>
       println("-- Ready --")
       unstashAll()
-    case _ -> Initializing =>
-      println("-- Initializing --")
-    case _ -> Reloading =>
-      println("-- Reloading --")
-    case _ -> Running =>
-      println("-- Running --")
+    case _ -> Initializing => println("-- Initializing --")
+    case _ -> Reloading    => println("-- Reloading --")
+    case _ -> Running      => println("-- Running --")
   }
 
-  when(Initializing) {
-    case Event(out: ProcessOutput, _) =>
-      if (isPrompt(out.line)) {
+  when(Initializing) { case Event(out: ProcessOutput, _) =>
+    if (isPrompt(out.line)) {
+      goto(Ready)
+    } else {
+      stay()
+    }
+  }
+
+  when(Ready) { case Event(task @ SbtTask(snippetId, taskInputs, ip, login, progressActor), SbtData(stateInputs)) =>
+    println(s"Running: (login: $login, ip: $ip) \n ${taskInputs.code.take(30)}")
+
+    val _sbtRun = SbtRun(
+      snippetId = snippetId,
+      inputs = taskInputs,
+      isForcedProgramMode = false,
+      progressActor = progressActor,
+      snippetActor = sender(),
+      timeoutEvent = None
+    )
+    sendProgress(
+      _sbtRun,
+      SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snippetId))
+    )
+
+    InstrumentedInputs(taskInputs) match {
+      case Right(instrumented) =>
+        val sbtRun = _sbtRun.copy(
+          inputs = instrumented.inputs.asInstanceOf[SbtInputs],
+          isForcedProgramMode = instrumented.isForcedProgramMode,
+          lineMapping = instrumented.lineMapping
+        )
+        val isReloading = stateInputs.needsReload(sbtRun.inputs)
+        setInputs(sbtRun.inputs)
+
+        instrumented.optionalParsingError.foreach { error =>
+          sendProgress(sbtRun, error.toProgress(snippetId).copy(isDone = false))
+        }
+
+        if (isReloading) {
+          process ! Input("reload;compile/compileInputs")
+          gotoWithTimeout(sbtRun, Reloading, reloadTimeout)
+        } else {
+          gotoRunning(sbtRun)
+        }
+
+      case Left(report) =>
+        log.info(s"Instrumentation error: ${report.message}")
+        val sbtRun = _sbtRun
+        setInputs(sbtRun.inputs)
+        sendProgress(sbtRun, report.toProgress(snippetId))
         goto(Ready)
-      } else {
-        stay()
-      }
-  }
-
-  when(Ready) {
-    case Event(task @ SbtTask(snippetId, taskInputs, ip, login, progressActor), SbtData(stateInputs)) =>
-      println(s"Running: (login: $login, ip: $ip) \n ${taskInputs.code.take(30)}")
-
-      val _sbtRun = SbtRun(
-        snippetId = snippetId,
-        inputs = taskInputs,
-        isForcedProgramMode = false,
-        progressActor = progressActor,
-        snippetActor = sender(),
-        timeoutEvent = None
-      )
-      sendProgress(_sbtRun, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snippetId)))
-
-      InstrumentedInputs(taskInputs) match {
-        case Right(instrumented) =>
-          val sbtRun = _sbtRun.copy(
-            inputs = instrumented.inputs.asInstanceOf[SbtInputs], 
-            isForcedProgramMode = instrumented.isForcedProgramMode,
-            lineMapping = instrumented.lineMapping
-          )
-          val isReloading = stateInputs.needsReload(sbtRun.inputs)
-          setInputs(sbtRun.inputs)
-
-          instrumented.optionalParsingError.foreach { error =>
-            sendProgress(sbtRun, error.toProgress(snippetId).copy(isDone = false))
-          }
-
-          if (isReloading) {
-            process ! Input("reload;compile/compileInputs")
-            gotoWithTimeout(sbtRun, Reloading, reloadTimeout)
-          } else {
-            gotoRunning(sbtRun)
-          }
-
-        case Left(report) =>
-          log.info(s"Instrumentation error: ${report.message}")
-          val sbtRun = _sbtRun
-          setInputs(sbtRun.inputs)
-          sendProgress(sbtRun, report.toProgress(snippetId))
-          goto(Ready)
-      }
+    }
   }
 
   val extractor = new OutputExtractor(
@@ -228,45 +227,42 @@ class SbtProcess(runTimeout: FiniteDuration,
     promptUniqueId
   )
 
-  when(Reloading) {
-    case Event(output: ProcessOutput, sbtRun: SbtRun) =>
-      val progress = extractor.extractProgress(output, sbtRun, isReloading = true)
-      sendProgress(sbtRun, progress)
+  when(Reloading) { case Event(output: ProcessOutput, sbtRun: SbtRun) =>
+    val progress = extractor.extractProgress(output, sbtRun, isReloading = true)
+    sendProgress(sbtRun, progress)
 
-      if (progress.isSbtError) {
-        throw new Exception("sbt error: " + output.line)
-      }
+    if (progress.isSbtError) {
+      throw new Exception("sbt error: " + output.line)
+    }
 
-      if (isPrompt(output.line)) {
-        gotoRunning(sbtRun)
-      } else {
-        stay()
-      }
+    if (isPrompt(output.line)) {
+      gotoRunning(sbtRun)
+    } else {
+      stay()
+    }
   }
 
-  when(Running) {
-    case Event(output: ProcessOutput, sbtRun: SbtRun) =>
-      val progress = extractor.extractProgress(output, sbtRun, isReloading = false)
-      sendProgress(sbtRun, progress)
+  when(Running) { case Event(output: ProcessOutput, sbtRun: SbtRun) =>
+    val progress = extractor.extractProgress(output, sbtRun, isReloading = false)
+    sendProgress(sbtRun, progress)
 
-      if (progress.isDone) {
-        sbtRun.timeoutEvent.foreach(_.cancel())
-        goto(Ready).using(SbtData(sbtRun.inputs))
-      } else {
-        stay()
-      }
+    if (progress.isDone) {
+      sbtRun.timeoutEvent.foreach(_.cancel())
+      goto(Ready).using(SbtData(sbtRun.inputs))
+    } else {
+      stay()
+    }
   }
 
   private def gotoWithTimeout(sbtRun: SbtRun, nextState: SbtState, duration: FiniteDuration): this.State = {
 
     sbtRun.timeoutEvent.foreach(_.cancel())
 
-    val timeout =
-      context.system.scheduler.scheduleOnce(
-        duration,
-        self,
-        SbtStateTimeout(duration, nextState)
-      )
+    val timeout = context.system.scheduler.scheduleOnce(
+      duration,
+      self,
+      SbtStateTimeout(duration, nextState)
+    )
 
     goto(nextState).using(sbtRun.copy(timeoutEvent = Some(timeout)))
   }
@@ -283,8 +279,7 @@ class SbtProcess(runTimeout: FiniteDuration,
   // Sbt files setup
 
   private def setInputs(inputs: SbtInputs): Unit = {
-    val prompt =
-      s"""shellPrompt := {_ => println(""); "$promptUniqueId" + "\\n "}"""
+    val prompt = s"""shellPrompt := {_ => println(""); "$promptUniqueId" + "\\n "}"""
 
     writeFile(pluginFile, inputs.sbtPluginsConfig + "\n")
     writeFile(buildFile, prompt + "\n" + inputs.sbtConfig)

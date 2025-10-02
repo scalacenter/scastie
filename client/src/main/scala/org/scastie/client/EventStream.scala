@@ -1,20 +1,20 @@
 package org.scastie.client
 
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
+import scala.util.Failure
+import scala.util.Success
 
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.CallbackTo
+import org.scalajs.dom.window
 import org.scalajs.dom.CloseEvent
 import org.scalajs.dom.Event
 import org.scalajs.dom.EventSource
 import org.scalajs.dom.MessageEvent
 import org.scalajs.dom.WebSocket
-import org.scalajs.dom.window
 
-import scala.util.Failure
-import scala.util.Success
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
+import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.CallbackTo
 
 abstract class EventStream[T: Decoder](handler: EventStreamHandler[T]) {
   var closing = false
@@ -29,6 +29,7 @@ abstract class EventStream[T: Decoder](handler: EventStreamHandler[T]) {
       }
     }
   }
+
   def onOpen(): Unit = handler.onOpen()
   def onError(error: String): Unit = handler.onError(error)
   def onClose(reason: Option[String]): Unit = handler.onClose(reason)
@@ -39,6 +40,7 @@ abstract class EventStream[T: Decoder](handler: EventStreamHandler[T]) {
       onClose(None)
     }
   }
+
 }
 
 trait EventStreamHandler[T] {
@@ -52,17 +54,16 @@ trait EventStreamHandler[T] {
 }
 
 object EventStream {
+
   def connect[T: Decoder](eventSourceUri: String, websocketUri: String, handler: EventStreamHandler[T]): Callback = {
 
-    def connectEventSource =
-      CallbackTo[EventStream[T]](
-        new EventSourceStream(eventSourceUri, handler)
-      )
+    def connectEventSource = CallbackTo[EventStream[T]](
+      new EventSourceStream(eventSourceUri, handler)
+    )
 
-    def connectWebSocket =
-      CallbackTo[EventStream[T]](
-        new WebSocketStream(websocketUri, handler)
-      )
+    def connectWebSocket = CallbackTo[EventStream[T]](
+      new WebSocketStream(websocketUri, handler)
+    )
 
     connectEventSource.attemptTry.flatMap {
       case Success(eventSource) => {
@@ -81,6 +82,7 @@ object EventStream {
       }
     }
   }
+
 }
 
 class WebSocketStream[T: Decoder](uri: String, handler: EventStreamHandler[T]) extends EventStream[T](handler) {
@@ -102,8 +104,7 @@ class WebSocketStream[T: Decoder](uri: String, handler: EventStreamHandler[T]) e
     socket.close()
   }
 
-  val protocol: String =
-    if (window.location.protocol == "https:") "wss" else "ws"
+  val protocol: String = if (window.location.protocol == "https:") "wss" else "ws"
   val fullUri: String = s"$protocol://${window.location.host}${uri}"
   val socket: WebSocket = new WebSocket(uri)
 

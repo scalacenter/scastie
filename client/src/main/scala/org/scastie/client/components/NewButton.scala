@@ -2,26 +2,26 @@ package org.scastie.client
 package components
 
 import org.scastie.client.components.editor.EditorKeymaps
-import japgolly.scalajs.react._
-
 import org.scastie.client.i18n.I18n
 
-import vdom.all._
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.hooks.HookCtx.I18
 
+import vdom.all._
+
 final case class NewButton(
-                           isDarkTheme: Boolean,
-                           isNewSnippetModalClosed: Boolean,
-                           openNewSnippetModal: Reusable[Callback],
-                           closeNewSnippetModal: Reusable[Callback],
-                           newSnippet: Reusable[Callback],
-                           language: String) {
+    isDarkTheme: Boolean,
+    isNewSnippetModalClosed: Boolean,
+    openNewSnippetModal: Reusable[Callback],
+    closeNewSnippetModal: Reusable[Callback],
+    newSnippet: Reusable[Callback],
+    language: String
+) {
   @inline def render: VdomElement = NewButton.component(this)
 }
 
 object NewButton {
-  implicit val reusability: Reusability[NewButton] =
-    Reusability.derive[NewButton]
+  implicit val reusability: Reusability[NewButton] = Reusability.derive[NewButton]
 
   def render(props: NewButton): VdomElement = {
 
@@ -46,10 +46,10 @@ object NewButton {
     )
   }
 
-  private val component =
-    ScalaComponent
-      .builder[NewButton]("NewButton")
-      .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  private val component = ScalaComponent
+    .builder[NewButton]("NewButton")
+    .render_P(render)
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }

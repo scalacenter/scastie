@@ -1,22 +1,24 @@
 package org.scastie.balancer
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import com.typesafe.config.Config
-import akka.actor.ActorRef
-import akka.actor.ActorSelection
 import java.time.Instant
+import java.util.concurrent.ConcurrentLinkedQueue
+import scala.collection.concurrent.TrieMap
 import scala.collection.immutable.Queue
+import scala.concurrent.duration._
+import scala.jdk.CollectionConverters._
+
+import org.scastie.api._
 import org.scastie.util.SbtTask
 import org.scastie.util.ScalaCliActorTask
-import org.scastie.api._
-import akka.util.Timeout
-import scala.concurrent.duration._
+
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.ActorRef
+import akka.actor.ActorSelection
 import akka.pattern.ask
 import akka.remote.DisassociatedEvent
-import java.util.concurrent.ConcurrentLinkedQueue
-import scala.jdk.CollectionConverters._
-import scala.collection.concurrent.TrieMap
+import akka.util.Timeout
+import com.typesafe.config.Config
 
 class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorRef)
   extends BaseDispatcher[ActorSelection, ServerState](config) {
@@ -40,21 +42,24 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
     giveTask()
   }
 
-  private def enqueueAvailableServer(addr: SocketAddress, server: ActorSelection) =
-    if (remoteServers.contains(addr)) {
-      availableServersQueue.add(addr, server)
-      giveTask()
-    }
-
+  private def enqueueAvailableServer(addr: SocketAddress, server: ActorSelection) = if (remoteServers.contains(addr)) {
+    availableServersQueue.add(addr, server)
+    giveTask()
+  }
 
   private def giveTask() = {
     val maybeTask = Option(taskQueue.poll())
     maybeTask.map { task =>
       Option(availableServersQueue.poll) match {
-        case None => ()
+        case None                 => ()
         case Some((addr, server)) => {
           log.info(s"Giving task ${task.taskId} to ${server.pathString}")
-          server ! ScalaCliActorTask(task.taskId.snippetId, task.config.asInstanceOf[ScalaCliInputs], task.ip.v, progressActor)
+          server ! ScalaCliActorTask(
+            task.taskId.snippetId,
+            task.config.asInstanceOf[ScalaCliInputs],
+            task.ip.v,
+            progressActor
+          )
           processedSnippetsId.addOne(task.taskId.snippetId, (addr, server))
         }
       }
@@ -90,8 +95,7 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
       }
       (parent ? progress).map(sender ! _)
 
-    case done: Done =>
-      done.progress.snippetId.foreach { sid =>
+    case done: Done => done.progress.snippetId.foreach { sid =>
         val (addr, server) = processedSnippetsId(sid)
         log.info(s"Runner $addr has finished processing $sid.")
         processedSnippetsId.remove(sid)
@@ -101,8 +105,7 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
     case Run(InputsWithIpAndUser(scalaCliInputs: ScalaCliInputs, userTrace), snippetId) =>
       run0(scalaCliInputs, userTrace, snippetId)
 
-    case event: DisassociatedEvent =>
-      for {
+    case event: DisassociatedEvent => for {
         host <- event.remoteAddress.host
         port <- event.remoteAddress.port
         ref <- remoteServers.get(SocketAddress(host, port))
@@ -113,4 +116,5 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
 
     case _ => ()
   }
+
 }

@@ -1,23 +1,22 @@
 package org.scastie.web.routes
 
+import org.scastie.api.{SnippetId, SnippetUserPart}
+
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import org.scastie.api.{SnippetId, SnippetUserPart}
-import org.scalatest.funsuite.AnyFunSuite
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-
+import org.scalatest.funsuite.AnyFunSuite
 
 class SnippetIdMatcherTests extends AnyFunSuite with ScalatestRouteTest {
   import FailFastCirceSupport._
 
   def testRoute(snippetIdRoute: Route, f1: String => String, f2: String => String, checkEnd: Boolean = true): Unit = {
 
-    val expectedBase =
-      SnippetId(
-        "GIbgJuUFSKaVzLDGK4kxdw",
-        None
-      )
+    val expectedBase = SnippetId(
+      "GIbgJuUFSKaVzLDGK4kxdw",
+      None
+    )
 
     println(f1("/GIbgJuUFSKaVzLDGK4kxdw"))
     Get(f1("/GIbgJuUFSKaVzLDGK4kxdw")) ~> snippetIdRoute ~> check {
@@ -32,11 +31,10 @@ class SnippetIdMatcherTests extends AnyFunSuite with ScalatestRouteTest {
       }
     }
 
-    val expectedUser =
-      SnippetId(
-        "GIbgJuUFSKaVzLDGK4kxdw",
-        Some(SnippetUserPart("MasseGuillaume", 0))
-      )
+    val expectedUser = SnippetId(
+      "GIbgJuUFSKaVzLDGK4kxdw",
+      Some(SnippetUserPart("MasseGuillaume", 0))
+    )
 
     Get(f1("/MasseGuillaume/GIbgJuUFSKaVzLDGK4kxdw")) ~> snippetIdRoute ~> check {
       val obtained = responseAs[SnippetId]
@@ -50,11 +48,10 @@ class SnippetIdMatcherTests extends AnyFunSuite with ScalatestRouteTest {
       }
     }
 
-    val expectedFull =
-      SnippetId(
-        "GIbgJuUFSKaVzLDGK4kxdw",
-        Some(SnippetUserPart("MasseGuillaume", 2))
-      )
+    val expectedFull = SnippetId(
+      "GIbgJuUFSKaVzLDGK4kxdw",
+      Some(SnippetUserPart("MasseGuillaume", 2))
+    )
 
     Get(f1("/MasseGuillaume/GIbgJuUFSKaVzLDGK4kxdw/2")) ~> snippetIdRoute ~> check {
       val obtained = responseAs[SnippetId]
@@ -70,10 +67,9 @@ class SnippetIdMatcherTests extends AnyFunSuite with ScalatestRouteTest {
   }
 
   test("snippetId") {
-    val snippetIdRoute =
-      get(
-        snippetId(sid => complete(sid))
-      )
+    val snippetIdRoute = get(
+      snippetId(sid => complete(sid))
+    )
 
     testRoute(
       snippetIdRoute,
@@ -85,10 +81,9 @@ class SnippetIdMatcherTests extends AnyFunSuite with ScalatestRouteTest {
   test("snippetIdStart") {
     val start = "snippets"
 
-    val snippetIdRoute =
-      get(
-        snippetIdStart(start)(sid => complete(sid))
-      )
+    val snippetIdRoute = get(
+      snippetIdStart(start)(sid => complete(sid))
+    )
 
     testRoute(
       snippetIdRoute,
@@ -101,10 +96,9 @@ class SnippetIdMatcherTests extends AnyFunSuite with ScalatestRouteTest {
     val start = "api"
     val end = "foo"
 
-    val snippetIdRoute =
-      get(
-        snippetIdEnd(start, end)(sid => complete(sid))
-      )
+    val snippetIdRoute = get(
+      snippetIdEnd(start, end)(sid => complete(sid))
+    )
 
     testRoute(
       snippetIdRoute,
@@ -116,10 +110,9 @@ class SnippetIdMatcherTests extends AnyFunSuite with ScalatestRouteTest {
   test("snippetIdExtension") {
     val extension = ".js"
 
-    val snippetIdRoute =
-      get(
-        snippetIdExtension(extension)(sid => complete(sid))
-      )
+    val snippetIdRoute = get(
+      snippetIdExtension(extension)(sid => complete(sid))
+    )
 
     testRoute(
       snippetIdRoute,

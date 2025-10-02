@@ -1,17 +1,22 @@
 package org.scastie.sbt
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.testkit.TestActor.AutoPilot
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import org.scastie.runtime.api._
-import org.scastie.api._
-import org.scastie.util.SbtTask
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.funsuite.AnyFunSuiteLike
-
 import scala.concurrent.duration._
 
-class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
+import org.scastie.api._
+import org.scastie.runtime.api._
+import org.scastie.util.SbtTask
+
+import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.TestActor.AutoPilot
+import org.scalatest.funsuite.AnyFunSuiteLike
+import org.scalatest.BeforeAndAfterAll
+
+class SbtActorTest()
+  extends TestKit(ActorSystem("SbtActorTest"))
+  with ImplicitSender
+  with AnyFunSuiteLike
+  with BeforeAndAfterAll {
   setAutoPilot(new AutoPilot {
     def run(sender: ActorRef, msg: Any): AutoPilot = {
       sender ! s"reply to $msg"
@@ -77,7 +82,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val message = "Hello"
     runCode(
       s"""object Main { def main(args: Array[String]): Unit = println("$message") }""",
-      allowFailure = true,
+      allowFailure = true
     ) { progress =>
       if (progress.isDone) progress.isForcedProgramMode else false
     }
@@ -116,15 +121,13 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("Scala.js support") {
-    val scalaJs =
-      SbtInputs.default.copy(code = "1 + 1", target = Js.default)
+    val scalaJs = SbtInputs.default.copy(code = "1 + 1", target = Js.default)
     run(scalaJs)(_.isDone)
   }
 
   test("Scala.js 3 support") {
-    val scalaJs =
-      SbtInputs.default.copy(code = "1 + 1",
-                             target = Js.default.copy(scalaVersion = org.scastie.buildinfo.BuildInfo.latestLTS))
+    val scalaJs = SbtInputs.default
+      .copy(code = "1 + 1", target = Js.default.copy(scalaVersion = org.scastie.buildinfo.BuildInfo.latestLTS))
     run(scalaJs)(_.isDone)
   }
 
@@ -147,9 +150,10 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("avoid https://github.com/scala/bug/issues/8119") {
-    val scala =
-      SbtInputs.default.copy(code = "val n = 0; val m = List(1).par.foreach(_ => n); println(1)",
-                          target = Scala2(org.scastie.buildinfo.BuildInfo.latest212))
+    val scala = SbtInputs.default.copy(
+      code = "val n = 0; val m = List(1).par.foreach(_ => n); println(1)",
+      target = Scala2(org.scastie.buildinfo.BuildInfo.latest212)
+    )
     run(scala)(assertUserOutput("1"))
   }
 
@@ -166,10 +170,11 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("no warnings on 2.12") {
-    val scala =
-      SbtInputs.default.copy(code = "println(1 + 1)",
-                          sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""",
-                          target = Scala2("2.12.10"))
+    val scala = SbtInputs.default.copy(
+      code = "println(1 + 1)",
+      sbtConfigExtra = """scalacOptions ++= List("-Xlint", "-Xfatal-warnings")""",
+      target = Scala2("2.12.10")
+    )
     run(scala)(assertUserOutput("2"))
   }
 
@@ -192,7 +197,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val message = "Hello, Scala 3 worksheet!"
     val dotty = SbtInputs.default.copy(
       code = s"""println("$message")""",
-      target = Scala3.default,
+      target = Scala3.default
     )
     run(dotty)(assertUserOutput("Hello, Scala 3 worksheet!"))
   }
@@ -201,7 +206,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val message = "Hello, Scala 3.0 worksheet!"
     val dotty = SbtInputs.default.copy(
       code = s"""println("$message")""",
-      target = Scala3("3.0.0"),
+      target = Scala3("3.0.0")
     )
     run(dotty)(assertUserOutput("Hello, Scala 3.0 worksheet!"))
   }
@@ -221,7 +226,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val dotty = SbtInputs.default.copy(
       code = s"""|println("Hello world!")
                  |// test comment""".stripMargin,
-      target = Scala2.default,
+      target = Scala2.default
     )
     run(dotty)(assertUserOutput("Hello world!"))
   }
@@ -230,7 +235,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val dotty = SbtInputs.default.copy(
       code = s"""|println("Hello world!")
                  |// test comment""".stripMargin,
-      target = Scala3.default,
+      target = Scala3.default
     )
     run(dotty)(assertUserOutput("Hello world!"))
   }
@@ -239,7 +244,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val dotty = SbtInputs.default.copy(
       code = s"""|println:
                  |  "Hello world!"
-                 |""".stripMargin,
+                 |""".stripMargin
     )
     var outputOk = false
     var instrOk = false
@@ -336,7 +341,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       code = """|if true then
                 |  if true then 
                 |    println("yes")
-                |""".stripMargin,
+                |""".stripMargin
     )
     var outputOk = false
     var instrOk = false
@@ -351,7 +356,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     val dotty = SbtInputs.default.copy(
       code = """|List(1,2,3).map:
                 |  case x => x
-                |""".stripMargin,
+                |""".stripMargin
     )
     run(dotty) { progress =>
       assertInstrumentation(
@@ -368,7 +373,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
                 |
                 |
                 |1 + 5
-                |""".stripMargin,
+                |""".stripMargin
     )
     run(dotty) { progress =>
       assertInstrumentation(
@@ -383,7 +388,9 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("hide Playground from types") {
-    runCode("case class A(i:Int) extends AnyVal; A(1)")(_.instrumentations.headOption.exists(_.render == Value("A(1)", "A")))
+    runCode("case class A(i:Int) extends AnyVal; A(1)")(
+      _.instrumentations.headOption.exists(_.render == Value("A(1)", "A"))
+    )
   }
 
   test("#304 null pointer") {
@@ -437,7 +444,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   def assertCompilationInfo(
-      infoAssert: Problem => Any
+    infoAssert: Problem => Any
   )(progress: SnippetProgress): Boolean = {
 
     val gotCompilationError = progress.compilationInfos.nonEmpty
@@ -470,12 +477,15 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   )
 
   private var currentId = 0
+
   private def snippetId = {
     val t = currentId
     currentId += 1
     SnippetId(t.toString, None)
   }
+
   private var firstRun = true
+
   private def run(inputs: SbtInputs, allowFailure: Boolean = false)(fish: SnippetProgress => Boolean): Unit = {
     val ip = "my-ip"
     val progressActor = TestProbe()
@@ -486,19 +496,18 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
       if (firstRun) timeout + 10.second
       else timeout
 
-    progressActor.fishForMessage(totalTimeout + 100.seconds) {
-      case progress: SnippetProgress =>
-        val fishResult = fish(progress)
-        //        println(progress -> fishResult)
-        if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
-          throw new Exception(s"Fail to meet expectation at ${progress}")
-        else fishResult
+    progressActor.fishForMessage(totalTimeout + 100.seconds) { case progress: SnippetProgress =>
+      val fishResult = fish(progress)
+      //        println(progress -> fishResult)
+      if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
+        throw new Exception(s"Fail to meet expectation at ${progress}")
+      else fishResult
     }
     firstRun = false
   }
 
   private def runCode(code: String, target: SbtScalaTarget = Scala2.default, allowFailure: Boolean = false)(
-      fish: SnippetProgress => Boolean
+    fish: SnippetProgress => Boolean
   ): Unit = {
     run(SbtInputs.default.copy(code = code, target = target), allowFailure)(fish)
   }
@@ -507,14 +516,12 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     expected: Value,
     position: Position
   )(progress: SnippetProgress): Boolean = {
-    progress.instrumentations.exists(instr =>
-      instr.render == expected && instr.position == position
-    )
+    progress.instrumentations.exists(instr => instr.render == expected && instr.position == position)
   }
 
   private def assertUserOutput(
-      message: String,
-      outputType: ProcessOutputType = ProcessOutputType.StdOut
+    message: String,
+    outputType: ProcessOutputType = ProcessOutputType.StdOut
   )(progress: SnippetProgress): Boolean = {
     val gotHelloMessage = progress.userOutput.exists(out => out.line == message && out.tpe == outputType)
 //    if (!gotHelloMessage) assert(progress.userOutput.isEmpty)

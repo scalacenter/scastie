@@ -1,35 +1,38 @@
 package org.scastie.client.components
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.feature.ReactFragment
 import org.scastie.api._
 import org.scastie.api.ScalaTarget._
 import org.scastie.client.components.editor.SimpleEditor
 import org.scastie.client.i18n.I18n
+
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.feature.ReactFragment
+
 import vdom.all._
 
 final case class BuildSettings(
-  visible: Boolean,
-  inputs: BaseInputs,
-  isDarkTheme: Boolean,
-  isBuildDefault: Boolean,
-  isResetModalClosed: Boolean,
-  setTarget: ScalaTarget ~=> Callback,
-  closeResetModal: Reusable[Callback],
-  resetBuild: Reusable[Callback],
-  openResetModal: Reusable[Callback],
-  sbtConfigChange: String ~=> Callback,
-  removeScalaDependency: ScalaDependency ~=> Callback,
-  updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
-  addScalaDependency: (ScalaDependency, Project) ~=> Callback,
-  scalaCliConversionError: Option[String],
-  language: String
+    visible: Boolean,
+    inputs: BaseInputs,
+    isDarkTheme: Boolean,
+    isBuildDefault: Boolean,
+    isResetModalClosed: Boolean,
+    setTarget: ScalaTarget ~=> Callback,
+    closeResetModal: Reusable[Callback],
+    resetBuild: Reusable[Callback],
+    openResetModal: Reusable[Callback],
+    sbtConfigChange: String ~=> Callback,
+    removeScalaDependency: ScalaDependency ~=> Callback,
+    updateDependencyVersion: (ScalaDependency, String) ~=> Callback,
+    addScalaDependency: (ScalaDependency, Project) ~=> Callback,
+    scalaCliConversionError: Option[String],
+    language: String
 ) {
 
   @inline def render: VdomElement = BuildSettings.component(this)
 }
 
 object BuildSettings {
+
   private def renderWithElement(template: String, elementBuilder: String => VdomElement): VdomElement = {
     val elementRegex = """\{([^}]+)\}""".r
     elementRegex.findFirstMatchIn(template) match {
@@ -39,10 +42,10 @@ object BuildSettings {
         val element = elementBuilder(elementContent)
         val after = template.substring(m.end)
         span(before, element, after)
-      case None =>
-        span(template)
+      case None => span(template)
     }
   }
+
   var mutableList: List[(ScalaDependency, Project)] = List.empty[(ScalaDependency, Project)]
 
   implicit val reusability: Reusability[BuildSettings] = Reusability.derive[BuildSettings]
@@ -61,10 +64,10 @@ object BuildSettings {
       ).render,
       div(
         hidden := props.isBuildDefault || props.inputs.target.targetType == ScalaTargetType.ScalaCli,
-        title  := I18n.t("build.reset_tooltip"),
+        title := I18n.t("build.reset_tooltip"),
         onClick --> props.openResetModal,
         role := "button",
-        cls  := "btn"
+        cls := "btn"
       )(
         I18n.t("build.reset")
       )
@@ -148,13 +151,19 @@ object BuildSettings {
       p(
         renderWithElement(
           I18n.t("build.scala_cli_version_doc"),
-          content => a(href := "https://scala-cli.virtuslab.org/docs/reference/directives/#scala-version", target := "_blank")(content)
+          content =>
+            a(href := "https://scala-cli.virtuslab.org/docs/reference/directives/#scala-version", target := "_blank")(
+              content
+            )
         )
       ),
       p(
         renderWithElement(
           I18n.t("build.scala_cli_dependency_doc"),
-          content => a(href := "https://scala-cli.virtuslab.org/docs/reference/directives#dependency", target := "_blank")(content)
+          content =>
+            a(href := "https://scala-cli.virtuslab.org/docs/reference/directives#dependency", target := "_blank")(
+              content
+            )
         )
       )
     )

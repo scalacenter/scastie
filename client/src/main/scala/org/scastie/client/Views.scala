@@ -4,6 +4,7 @@ import io.circe._
 import io.circe.generic.semiauto._
 
 sealed trait View
+
 object View {
   case object Editor extends View
   case object BuildSettings extends View

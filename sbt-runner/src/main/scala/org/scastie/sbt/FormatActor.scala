@@ -3,16 +3,15 @@ package sbt
 
 import scala.meta._
 
-import akka.actor.Actor
-
 import org.scastie.api.FormatRequest
 import org.scastie.api.FormatResponse
 import org.scastie.api.ScalaTarget
-import org.scalafmt.Formatted
 
-import org.scalafmt.Scalafmt
-import org.scalafmt.config.ScalafmtConfig
+import akka.actor.Actor
 import org.scalafmt.config.NamedDialect
+import org.scalafmt.config.ScalafmtConfig
+import org.scalafmt.Formatted
+import org.scalafmt.Scalafmt
 import org.slf4j.LoggerFactory
 
 object FormatActor {
@@ -37,14 +36,14 @@ class FormatActor() extends Actor {
   import FormatActor._
   private val log = LoggerFactory.getLogger(getClass)
 
-  override def receive: Receive = {
-    case api.FormatRequest(code, isWorksheetMode, scalaTarget) =>
-      log.info(s"format (isWorksheetMode: $isWorksheetMode)")
-      log.info(code)
+  override def receive: Receive = { case api.FormatRequest(code, isWorksheetMode, scalaTarget) =>
+    log.info(s"format (isWorksheetMode: $isWorksheetMode)")
+    log.info(code)
 
-      format(code, scalaTarget) match {
-        case Left(value) => sender() ! FormatResponse(code)
-        case Right(value) => sender() ! FormatResponse(value)
-      }
+    format(code, scalaTarget) match {
+      case Left(value)  => sender() ! FormatResponse(code)
+      case Right(value) => sender() ! FormatResponse(value)
+    }
   }
+
 }

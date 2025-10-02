@@ -1,22 +1,24 @@
 package org.scastie.sbt
 
+import scala.concurrent.duration._
+
 import org.scastie.api._
 import org.scastie.util._
-import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 
-import scala.concurrent.duration._
+import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 
 case object SbtActorReady
 
-class SbtActor(system: ActorSystem,
-               runTimeout: FiniteDuration,
-               reloadTimeout: FiniteDuration,
-               isProduction: Boolean,
-               readyRef: Option[ActorRef],
-               override val reconnectInfo: Option[ReconnectInfo])
-    extends Actor
-    with ActorLogging
-    with ActorReconnecting {
+class SbtActor(
+    system: ActorSystem,
+    runTimeout: FiniteDuration,
+    reloadTimeout: FiniteDuration,
+    isProduction: Boolean,
+    readyRef: Option[ActorRef],
+    override val reconnectInfo: Option[ReconnectInfo]
+) extends Actor
+  with ActorLogging
+  with ActorReconnecting {
 
   def balancer(context: ActorContext, info: ReconnectInfo): ActorSelection = {
     import info._
@@ -47,21 +49,19 @@ class SbtActor(system: ActorSystem,
     super.postStop()
   }
 
-  private val formatActor =
-    context.actorOf(Props(new FormatActor()), name = "FormatActor")
+  private val formatActor = context.actorOf(Props(new FormatActor()), name = "FormatActor")
 
-  private val sbtRunner =
-    context.actorOf(
-      Props(
-        new SbtProcess(
-          runTimeout,
-          reloadTimeout,
-          isProduction,
-          javaOptions = Seq("-Xms512m", "-Xmx1g")
-        )
-      ),
-      name = "SbtRunner"
-    )
+  private val sbtRunner = context.actorOf(
+    Props(
+      new SbtProcess(
+        runTimeout,
+        reloadTimeout,
+        isProduction,
+        javaOptions = Seq("-Xms512m", "-Xmx1g")
+      )
+    ),
+    name = "SbtRunner"
+  )
 
   override def receive: Receive = reconnectBehavior orElse [Any, Unit] {
     case RunnerPing => {
@@ -92,4 +92,5 @@ class SbtActor(system: ActorSystem,
       }
     }
   }
+
 }

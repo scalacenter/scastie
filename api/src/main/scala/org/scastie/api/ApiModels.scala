@@ -1,7 +1,7 @@
 package org.scastie.api
 
-import io.circe.generic.semiauto._
 import io.circe._
+import io.circe.generic.semiauto._
 
 case object RunnerPing
 case object RunnerPong
@@ -37,7 +37,8 @@ case class FormatResponse(result: String)
 object FetchResult {
   implicit val fetchResultEncoder: Encoder[FetchResult] = deriveEncoder[FetchResult]
   implicit val fetchResultDecoder: Decoder[FetchResult] = deriveDecoder[FetchResult]
-  def create(inputs: BaseInputs, progresses: List[SnippetProgress]) = FetchResult(inputs, progresses.sortBy(p => (p.id, p.ts)))
+  def create(inputs: BaseInputs, progresses: List[SnippetProgress]) =
+    FetchResult(inputs, progresses.sortBy(p => (p.id, p.ts)))
 }
 
 case class FetchResult private (inputs: BaseInputs, progresses: List[SnippetProgress])
@@ -56,7 +57,13 @@ object ScalaDependency {
   implicit val scalaDependencyDecoder: Decoder[ScalaDependency] = deriveDecoder[ScalaDependency]
 }
 
-case class ScalaDependency(groupId: String, artifact: String, target: ScalaTarget, version: String, isAutoResolve: Boolean = true) {
+case class ScalaDependency(
+    groupId: String,
+    artifact: String,
+    target: ScalaTarget,
+    version: String,
+    isAutoResolve: Boolean = true
+) {
   def matches(sd: ScalaDependency): Boolean = sd.groupId == this.groupId && sd.artifact == this.artifact
 
   def renderSbt: String = {
@@ -68,6 +75,7 @@ case class ScalaDependency(groupId: String, artifact: String, target: ScalaTarge
     val resolveSymbol = if (isAutoResolve) "::" else ":"
     s"//> using dep $groupId$resolveSymbol$artifact:$version"
   }
+
 }
 
 case class ScastieMetalsOptions(dependencies: Set[ScalaDependency], scalaTarget: ScalaTarget, code: String)
@@ -87,7 +95,6 @@ case class NoResult(msg: String) extends FailureType
 case class PresentationCompilerFailure(msg: String) extends FailureType
 case class InvalidScalaVersion(msg: String) extends FailureType
 
-
 object FailureType {
   implicit val failureTypeEncoder: Encoder[FailureType] = deriveEncoder[FailureType]
   implicit val noResultDecoder: Decoder[FailureType] = deriveDecoder[FailureType]
@@ -99,8 +106,10 @@ object NoResult {
 }
 
 object PresentationCompilerFailure {
-  implicit val presentationCompilerFailureEncoder: Encoder[PresentationCompilerFailure] = deriveEncoder[PresentationCompilerFailure]
-  implicit val presentationCompilerFailureDecoder: Decoder[PresentationCompilerFailure] = deriveDecoder[PresentationCompilerFailure]
+  implicit val presentationCompilerFailureEncoder: Encoder[PresentationCompilerFailure] =
+    deriveEncoder[PresentationCompilerFailure]
+  implicit val presentationCompilerFailureDecoder: Decoder[PresentationCompilerFailure] =
+    deriveDecoder[PresentationCompilerFailure]
 }
 
 object ScastieOffsetParams {
@@ -128,15 +137,14 @@ case class EditRange(startLine: Int, startChar: Int, endLine: Int, endChar: Int)
 case class ScalaCompletionList(items: Set[CompletionItemDTO], isIncomplete: Boolean)
 
 case class CompletionItemDTO(
-  label: String,
-  detail: String,
-  tpe: String,
-  order: Option[Int],
-  instructions: InsertInstructions,
-  additionalInsertInstructions: List[AdditionalInsertInstructions],
-  symbol: Option[String]
+    label: String,
+    detail: String,
+    tpe: String,
+    order: Option[Int],
+    instructions: InsertInstructions,
+    additionalInsertInstructions: List[AdditionalInsertInstructions],
+    symbol: Option[String]
 )
-
 
 case class HoverDTO(from: Int, to: Int, content: String)
 
@@ -153,8 +161,10 @@ object InsertInstructions {
 }
 
 object AdditionalInsertInstructions {
-  implicit val additionalInsertInstructionsEncoder: Encoder[AdditionalInsertInstructions] = deriveEncoder[AdditionalInsertInstructions]
-  implicit val additionalInsertInstructionsDecoder: Decoder[AdditionalInsertInstructions] = deriveDecoder[AdditionalInsertInstructions]
+  implicit val additionalInsertInstructionsEncoder: Encoder[AdditionalInsertInstructions] =
+    deriveEncoder[AdditionalInsertInstructions]
+  implicit val additionalInsertInstructionsDecoder: Decoder[AdditionalInsertInstructions] =
+    deriveDecoder[AdditionalInsertInstructions]
 }
 
 object ScalaCompletionList {
@@ -199,19 +209,22 @@ case class KeepAlive(msg: String = "") extends AnyVal
 
 sealed trait EditorMode
 case object Default extends EditorMode
-case object Vim     extends EditorMode
-case object Emacs   extends EditorMode
+case object Vim extends EditorMode
+case object Emacs extends EditorMode
 
 object EditorMode {
+
   implicit val editorModeFormat: Encoder[EditorMode] = Encoder.encodeString.contramap {
     case Default => "Default"
     case Vim     => "Vim"
     case Emacs   => "Emacs"
   }
+
   implicit val editorModeDecoder: Decoder[EditorMode] = Decoder.decodeString.emap {
     case "Default" => Right(Default)
     case "Vim"     => Right(Vim)
     case "Emacs"   => Right(Emacs)
     case other     => Left(s"Unknown EditorMode: $other")
   }
+
 }

@@ -1,14 +1,13 @@
 package org.scastie.storage.inmemory
 
+import scala.collection.mutable
+import scala.concurrent.Future
+
 import org.scastie.api._
 import org.scastie.storage.SnippetsContainer
 import org.scastie.storage.UserLogin
 
-import scala.collection.mutable
-import scala.concurrent.Future
-
 import System.{lineSeparator => nl}
-
 
 trait InMemorySnippetsContainer extends SnippetsContainer {
 
@@ -24,10 +23,9 @@ trait InMemorySnippetsContainer extends SnippetsContainer {
   )
 
   def appendOutput(progress: SnippetProgress): Future[Unit] = Future {
-    progress.snippetId.foreach(
-      id => snippets.get(id).foreach(storage => storage.progresses += progress)
-    )
+    progress.snippetId.foreach(id => snippets.get(id).foreach(storage => storage.progresses += progress))
   }
+
   def delete(snippetId: SnippetId): Future[Boolean] = Future {
     val found = snippets.contains(snippetId)
     snippets -= snippetId
@@ -48,13 +46,12 @@ trait InMemorySnippetsContainer extends SnippetsContainer {
       .toList
   }
 
-  def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] =
-    Future {
-      snippets.get(snippetId).map(m => FetchResultScalaJs(m.scalaJsContent))
-    }
+  def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] = Future {
+    snippets.get(snippetId).map(m => FetchResultScalaJs(m.scalaJsContent))
+  }
 
   def readScalaJsSourceMap(
-      snippetId: SnippetId
+    snippetId: SnippetId
   ): Future[Option[FetchResultScalaJsSourceMap]] = Future {
     snippets
       .get(snippetId)
@@ -70,7 +67,7 @@ trait InMemorySnippetsContainer extends SnippetsContainer {
   protected def insert(snippetId: SnippetId, inputs: BaseInputs): Future[Unit] = {
     val adjustedInputs = inputs match {
       case sbtInputs: SbtInputs => sbtInputs.withSavedConfig
-      case _ => inputs
+      case _                    => inputs
     }
     Future {
       snippets.update(snippetId, Storage(snippetId, adjustedInputs))
@@ -82,4 +79,5 @@ trait InMemorySnippetsContainer extends SnippetsContainer {
       old <- snippets.get(snippetId)
     } yield snippets.update(snippetId, old.copy(inputs = old.inputs.copyBaseInput(isShowingInUserProfile = false)))
   }
+
 }

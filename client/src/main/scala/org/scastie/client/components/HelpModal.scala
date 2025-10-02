@@ -1,42 +1,39 @@
 package org.scastie.client.components
 
-import japgolly.scalajs.react._
-import vdom.all._
 import org.scastie.client.components.editor.EditorKeymaps
-
 import org.scastie.client.i18n.I18n
+
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.hooks.HookCtx.I1
+
+import vdom.all._
 
 final case class HelpModal(isDarkTheme: Boolean, isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = HelpModal.component(this)
 }
 
 object HelpModal {
-  implicit val reusability: Reusability[HelpModal] =
-    Reusability.derive[HelpModal]
+  implicit val reusability: Reusability[HelpModal] = Reusability.derive[HelpModal]
 
   private def render(props: HelpModal): VdomElement = {
-    def generateATag(url: String, text: String) =
-      a(href := url, target := "_blank", rel := "nofollow", text)
+    def generateATag(url: String, text: String) = a(href := url, target := "_blank", rel := "nofollow", text)
 
     def renderWithElement(template: String, elementBuilder: String => VdomElement): VdomElement = {
       val elementRegex = """\{([^}]+)\}""".r
-      
+
       elementRegex.findFirstMatchIn(template) match {
         case Some(m) =>
           val before = template.substring(0, m.start)
           val elementContent = m.group(1)
           val element = elementBuilder(elementContent)
           val after = template.substring(m.end)
-          
+
           p(before, element, after)
-        case None =>
-          p(template)
+        case None => p(template)
       }
     }
 
-    val originalScastie =
-      generateATag("https://github.com/OlegYch/scastie_old", "GitHub")
+    val originalScastie = generateATag("https://github.com/OlegYch/scastie_old", "GitHub")
 
     Modal(
       title = I18n.t("help.title"),
@@ -46,11 +43,15 @@ object HelpModal {
       modalCss = TagMod(),
       modalId = "long-help",
       content = div(cls := "markdown-body")(
-        p( I18n.t("help.description")),
+        p(I18n.t("help.description")),
         p(
           renderWithElement(
             I18n.t("help.sublime_support"),
-            content => generateATag("https://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html", content)
+            content =>
+              generateATag(
+                "https://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/keyboard_shortcuts_osx.html",
+                content
+              )
           )
         ),
         h2(I18n.t("help.editor_modes")),
@@ -75,7 +76,11 @@ object HelpModal {
         p(
           renderWithElement(
             I18n.t("help.format_description"),
-            content => generateATag("https://scalameta.org/scalafmt/docs/configuration.html#disabling-or-customizing-formatting", content)
+            content =>
+              generateATag(
+                "https://scalameta.org/scalafmt/docs/configuration.html#disabling-or-customizing-formatting",
+                content
+              )
           )
         ),
         h2(I18n.t("editor.worksheet")),
@@ -147,8 +152,8 @@ object HelpModal {
     ).render
   }
 
-  private val component =
-    ScalaFnComponent
-      .withHooks[HelpModal]
-      .renderWithReuse(render)
+  private val component = ScalaFnComponent
+    .withHooks[HelpModal]
+    .renderWithReuse(render)
+
 }

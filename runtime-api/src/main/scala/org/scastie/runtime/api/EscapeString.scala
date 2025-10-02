@@ -10,13 +10,14 @@ object StringUtils {
     case '\n' => "\\n"
     case '\f' => "\\f"
     case '\r' => "\\r"
-    case '"' => "\\\""
+    case '"'  => "\\\""
     // case '\'' => "\\\'"
     case '\\' => "\\\\"
-    case _ => if (ch.isControl) f"${"\\"}u${ch.toInt}%04x" else String.valueOf(ch)
+    case _    => if (ch.isControl) f"${"\\"}u${ch.toInt}%04x" else String.valueOf(ch)
   }
 
   implicit class EscapedString(val s: String) {
     def escaped: String = s.flatMap(escapedChar)
   }
+
 }

@@ -1,9 +1,9 @@
 package org.scastie.api
 
-import io.circe.generic.semiauto._
-import io.circe._
 import org.scastie.buildinfo.BuildInfo
 
+import io.circe._
+import io.circe.generic.semiauto._
 import System.{lineSeparator => nl}
 
 sealed trait BaseInputs {
@@ -16,7 +16,7 @@ sealed trait BaseInputs {
 
   def markAsCopied: BaseInputs = {
     this match {
-      case s: SbtInputs => s.copy(isShowingInUserProfile = false, forked = None)
+      case s: SbtInputs      => s.copy(isShowingInUserProfile = false, forked = None)
       case s: ScalaCliInputs => s.copy(isShowingInUserProfile = false, forked = None)
     }
   }
@@ -33,23 +33,24 @@ sealed trait BaseInputs {
     isShowingInUserProfile: Boolean = this.isShowingInUserProfile,
     code: String = this.code,
     libraries: Set[ScalaDependency] = this.libraries,
-    forked: Option[SnippetId] = this.forked,
+    forked: Option[SnippetId] = this.forked
   ): BaseInputs = this match {
     case scalaCliInputs: ScalaCliInputs => scalaCliInputs.copy(
-      isWorksheetMode = isWorksheetMode,
-      isShowingInUserProfile = isShowingInUserProfile,
-      code = code,
-      forked = forked,
-      libraries = libraries
-    )
+        isWorksheetMode = isWorksheetMode,
+        isShowingInUserProfile = isShowingInUserProfile,
+        code = code,
+        forked = forked,
+        libraries = libraries
+      )
     case sbtInputs: SbtInputs => sbtInputs.copy(
-      isWorksheetMode = isWorksheetMode,
-      isShowingInUserProfile = isShowingInUserProfile,
-      code = code,
-      libraries = libraries,
-      forked = forked
-    )
+        isWorksheetMode = isWorksheetMode,
+        isShowingInUserProfile = isShowingInUserProfile,
+        code = code,
+        libraries = libraries,
+        forked = forked
+      )
   }
+
 }
 
 object BaseInputs {
@@ -92,15 +93,13 @@ object SbtInputs {
 }
 
 case class ScalaCliInputs(
-  isWorksheetMode: Boolean,
-  code: String,
-  target: ScalaCli,
-  isShowingInUserProfile: Boolean,
-  forked: Option[SnippetId] = None,
-  libraries: Set[ScalaDependency] = Set.empty
-) extends BaseInputs {
-
-}
+    isWorksheetMode: Boolean,
+    code: String,
+    target: ScalaCli,
+    isShowingInUserProfile: Boolean,
+    forked: Option[SnippetId] = None,
+    libraries: Set[ScalaDependency] = Set.empty
+) extends BaseInputs {}
 
 object ScalaCliInputs {
   val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
@@ -169,9 +168,11 @@ case class SbtInputs(
 
   lazy val isDefault: Boolean = copy(code = "").withSavedConfig == SbtInputs.default.copy(code = "").withSavedConfig
 
-  def modifyConfig(inputs: SbtInputs => SbtInputs): SbtInputs = inputs(this).copy(sbtConfigSaved = None, sbtPluginsConfigSaved = None)
+  def modifyConfig(inputs: SbtInputs => SbtInputs): SbtInputs =
+    inputs(this).copy(sbtConfigSaved = None, sbtPluginsConfigSaved = None)
 
-  def withSavedConfig: SbtInputs = copy(sbtConfigSaved = Some(sbtConfigGenerated), sbtPluginsConfigSaved = Some(sbtPluginsConfigGenerated))
+  def withSavedConfig: SbtInputs =
+    copy(sbtConfigSaved = Some(sbtConfigGenerated), sbtPluginsConfigSaved = Some(sbtPluginsConfigGenerated))
 
   def clearDependencies: SbtInputs = {
     modifyConfig {
@@ -204,9 +205,8 @@ case class SbtInputs(
     val newScalaDependency = scalaDependency.copy(version = version)
     val newLibraries = libraries.filterNot(_.matches(scalaDependency)) + newScalaDependency
     val newLibrariesFromList = librariesFromList.collect {
-      case (l, p) if l.matches(scalaDependency) =>
-        newScalaDependency -> p
-      case (l, p) => l -> p
+      case (l, p) if l.matches(scalaDependency) => newScalaDependency -> p
+      case (l, p)                               => l -> p
     }
     modifyConfig {
       _.copy(
@@ -216,8 +216,7 @@ case class SbtInputs(
     }
   }
 
-  lazy val sbtConfig: String =
-    mapToConfig(sbtConfigGenerated, sbtConfigExtra)
+  lazy val sbtConfig: String = mapToConfig(sbtConfigGenerated, sbtConfigExtra)
 
   lazy val sbtConfigGenerated: String = sbtConfigSaved.getOrElse {
     val targetConfig = target.sbtConfig
@@ -226,8 +225,7 @@ case class SbtInputs(
       if (target.hasWorksheetMode) Some(target.runtimeDependency)
       else None
 
-    val allLibraries =
-      optionalTargetDependency.map(libraries + _).getOrElse(libraries)
+    val allLibraries = optionalTargetDependency.map(libraries + _).getOrElse(libraries)
 
     val librariesConfig =
       if (allLibraries.isEmpty) ""
@@ -249,26 +247,24 @@ case class SbtInputs(
     mapToConfig(targetConfig, librariesConfig)
   }
 
-  lazy val sbtPluginsConfig: String =
-    mapToConfig(sbtPluginsConfigGenerated, sbtPluginsConfigExtra)
+  lazy val sbtPluginsConfig: String = mapToConfig(sbtPluginsConfigGenerated, sbtPluginsConfigExtra)
 
   lazy val sbtPluginsConfigGenerated: String = sbtPluginsConfigSaved.getOrElse {
     sbtPluginsConfig0(withSbtScastie = true)
   }
 
-  private def mapToConfig(parts: String*): String =
-    parts.filter(_.nonEmpty).mkString("\n")
+  private def mapToConfig(parts: String*): String = parts.filter(_.nonEmpty).mkString("\n")
 
   private def sbtPluginsConfig0(withSbtScastie: Boolean): String = {
     val targetConfig = target.sbtPluginsConfig
 
     val sbtScastie =
-      if (withSbtScastie)
-        s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.versionRuntime}")"""
+      if (withSbtScastie) s"""addSbtPlugin("org.scastie" % "sbt-scastie" % "${BuildInfo.versionRuntime}")"""
       else ""
 
     mapToConfig(targetConfig, sbtScastie)
   }
+
 }
 
 object EditInputs {
