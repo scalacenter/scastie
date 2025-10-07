@@ -56,6 +56,7 @@ object ScalaVersions {
       case _ =>
         List(
           BuildInfo.latest213,
+          "2.13.16",
           "2.13.15",
           "2.13.14",
           "2.13.13",
