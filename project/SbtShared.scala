@@ -36,7 +36,7 @@ object SbtShared {
   }
 
   object ScalaJSVersions {
-    val current = "1.19.0"
+    val current = "1.20.1"
   }
 
   val scalaCliVersion = "1.9.1"
