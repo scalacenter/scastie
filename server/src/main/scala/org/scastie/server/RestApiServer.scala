@@ -106,48 +106,4 @@ class RestApiServer(
       case _ => Future.successful(Nil)
     }
   }
-
-  @deprecated("Scheduled for removal", "2023-04-30")
-  def getPrivacyPolicy(): Future[Boolean] = {
-    maybeUser match {
-      case Some(user) =>
-        dispatchActor
-          .ask(GetPrivacyPolicy(user))
-          .mapTo[Boolean]
-      case _ => Future.successful(true)
-    }
-  }
-
-  @deprecated("Scheduled for removal", "2023-04-30")
-  def acceptPrivacyPolicy(): Future[Boolean] = {
-    maybeUser match {
-      case Some(user) =>
-        dispatchActor
-          .ask(SetPrivacyPolicy(user, true))
-          .mapTo[Boolean]
-      case _ => Future.successful(true)
-    }
-  }
-
-  @deprecated("Scheduled for removal", "2023-04-30")
-  def removeUserFromPolicyStatus(): Future[Boolean] = {
-    maybeUser match {
-      case Some(user) =>
-        dispatchActor
-          .ask(RemovePrivacyPolicy(user))
-          .mapTo[Boolean]
-      case _ => Future.successful(true)
-    }
-  }
-
-  @deprecated("Scheduled for removal", "2023-04-30")
-  def removeAllUserSnippets(): Future[Boolean] = {
-    maybeUser match {
-      case Some(user) =>
-        dispatchActor
-          .ask(RemoveAllUserSnippets(user))
-          .mapTo[Boolean]
-      case _ => Future.successful(true)
-    }
-  }
 }

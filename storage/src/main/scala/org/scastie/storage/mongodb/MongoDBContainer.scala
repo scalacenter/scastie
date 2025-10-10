@@ -7,7 +7,7 @@ import scala.concurrent.ExecutionContext
 
 class MongoDBContainer(defaultConfig: Boolean = false)(
   implicit val ec: ExecutionContext
-) extends MongoDBUsersContainer with MongoDBSnippetsContainer {
+) extends MongoDBSnippetsContainer {
 
   val (client0, database0) = {
     if (defaultConfig) {
@@ -15,7 +15,7 @@ class MongoDBContainer(defaultConfig: Boolean = false)(
       val client: MongoClient = MongoClient(mongoUri)
       (client, client.getDatabase("snippets"))
     } else {
-      val config       = ConfigFactory.load().getConfig("scastie.mongodb")
+      val config       = ConfigFactory.load().getConfig("org.scastie.mongodb")
       val user         = config.getString("user")
       val password     = config.getString("password")
       val databaseName = config.getString("database")

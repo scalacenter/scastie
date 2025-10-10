@@ -43,7 +43,6 @@ trait SnippetsContainer {
     })
   }
   def listSnippets(user: UserLogin): Future[List[SnippetSummary]]
-  def readOldSnippet(id: Int): Future[Option[FetchResult]]
   def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]]
   def readScalaJsSourceMap(
       snippetId: SnippetId

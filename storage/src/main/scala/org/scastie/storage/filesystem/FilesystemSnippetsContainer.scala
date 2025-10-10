@@ -128,30 +128,6 @@ trait FilesystemSnippetsContainer extends SnippetsContainer with GenericFilesyst
     }
   }
 
-  def readOldSnippet(id: Int): Future[Option[FetchResult]] = {
-
-    def oldPath(id: Int): Path =
-      oldRoot
-        .resolve("paste%20d".format(id).replaceAll(" ", "0"))
-        .resolve("src/main/scala/")
-
-    def readOldInputs(id: Int): Option[BaseInputs] = {
-      slurp(oldPath(id).resolve("test.scala"))
-        .map(OldScastieConverter.convertOldInput)
-    }
-
-    def readOldOutputs(id: Int): Option[List[SnippetProgress]] = {
-      slurp(oldPath(id).resolve("output.txt"))
-        .map(OldScastieConverter.convertOldOutput)
-    }
-
-    Future {
-      readOldInputs(id).map(
-        inputs => FetchResult.create(inputs, readOldOutputs(id).getOrElse(Nil))
-      )
-    }
-  }
-
   def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] =
     Future {
       slurp(scalaJsFile(snippetId)).map(content => FetchResultScalaJs(content))
