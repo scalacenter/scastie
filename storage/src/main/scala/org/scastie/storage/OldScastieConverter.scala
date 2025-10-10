@@ -3,6 +3,7 @@ package org.scastie.storage
 import org.scastie.api._
 
 object OldScastieConverter {
+
   private def convertLine(line: String): Converter => Converter = { converter =>
     val sv = "scalaVersion := \""
 
@@ -16,11 +17,9 @@ object OldScastieConverter {
         case """scalaOrganization in ThisBuild := "org.typelevel"""" =>
           converter.setTargetType(ScalaTargetType.Typelevel)
 
-        case "coursier.CoursierPlugin.projectSettings" =>
-          converter
+        case "coursier.CoursierPlugin.projectSettings" => converter
 
-        case _ =>
-          converter.appendSbt(line)
+        case _ => converter.appendSbt(line)
       }
     }
   }
@@ -28,11 +27,10 @@ object OldScastieConverter {
   def convertOldOutput(content: String): List[SnippetProgress] = {
     content
       .split("\n")
-      .map(
-        line =>
-          SnippetProgress.default.copy(
-            userOutput = Some(ProcessOutput(line, ProcessOutputType.StdOut, None)),
-            isDone = true
+      .map(line =>
+        SnippetProgress.default.copy(
+          userOutput = Some(ProcessOutput(line, ProcessOutputType.StdOut, None)),
+          isDone = true
         )
       )
       .toList
@@ -51,11 +49,9 @@ object OldScastieConverter {
       val sbtConfig = content.slice(start, start + blockEndPos - start)
       val code = content.drop(blockEndPos + blockEnd.length).trim
 
-      val converterFn =
-        sbtConfig.split("\n").foldLeft(Converter.nil) {
-          case (converter, line) =>
-            convertLine(line)(converter)
-        }
+      val converterFn = sbtConfig.split("\n").foldLeft(Converter.nil) { case (converter, line) =>
+        convertLine(line)(converter)
+      }
 
       converterFn(SbtInputs.default).copyBaseInput(code = code)
     } else {
@@ -64,12 +60,13 @@ object OldScastieConverter {
   }
 
   private object Converter {
-    def nil: Converter =
-      Converter(
-        scalaVersion = None,
-        targetType = None,
-        sbtExtra = ""
-      )
+
+    def nil: Converter = Converter(
+      scalaVersion = None,
+      targetType = None,
+      sbtExtra = ""
+    )
+
   }
 
   private case class Converter(
@@ -77,44 +74,40 @@ object OldScastieConverter {
       targetType: Option[ScalaTargetType],
       sbtExtra: String
   ) {
-    def appendSbt(in: String): Converter =
-      copy(sbtExtra = sbtExtra + "\n" + in)
+    def appendSbt(in: String): Converter = copy(sbtExtra = sbtExtra + "\n" + in)
 
-    def setTargetType(targetType0: ScalaTargetType): Converter =
-      copy(targetType = Some(targetType0))
+    def setTargetType(targetType0: ScalaTargetType): Converter = copy(targetType = Some(targetType0))
 
     def apply(inputs: BaseInputs): BaseInputs = {
-      val scalaTarget =
-        targetType match {
-          case Some(ScalaTargetType.Scala3) =>
-            Scala3.default
+      val scalaTarget = targetType match {
+        case Some(ScalaTargetType.Scala3) => Scala3.default
 
-          case Some(ScalaTargetType.Typelevel) =>
-            scalaVersion
-              .map(sv => Typelevel(sv))
-              .getOrElse(
-                Typelevel.default
-              )
+        case Some(ScalaTargetType.Typelevel) => scalaVersion
+            .map(sv => Typelevel(sv))
+            .getOrElse(
+              Typelevel.default
+            )
 
-          case _ =>
-            scalaVersion
-              .map(sv => Scala2(sv))
-              .getOrElse(
-                Scala2.default
-              )
-        }
+        case _ => scalaVersion
+            .map(sv => Scala2(sv))
+            .getOrElse(
+              Scala2.default
+            )
+      }
 
       inputs match {
         case sbtInputs: SbtInputs => sbtInputs.copy(
-          target = scalaTarget,
-          sbtConfigExtra = sbtExtra.trim,
-          isWorksheetMode = false
-        )
+            target = scalaTarget,
+            sbtConfigExtra = sbtExtra.trim,
+            isWorksheetMode = false
+          )
         case _ => inputs.copyBaseInput(
-          isWorksheetMode = false,
-        )
+            isWorksheetMode = false
+          )
       }
 
     }
+
   }
+
 }

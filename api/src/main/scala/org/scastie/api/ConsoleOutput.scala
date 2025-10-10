@@ -1,7 +1,7 @@
 package org.scastie.api
 
-import io.circe.generic.semiauto._
 import io.circe._
+import io.circe.generic.semiauto._
 
 sealed trait ConsoleOutput {
   def show: String
@@ -27,9 +27,9 @@ object ConsoleOutput {
   implicit val consoleOutputEncoder: Encoder[ConsoleOutput] = deriveEncoder[ConsoleOutput]
   implicit val consoleOutputDecoder: Decoder[ConsoleOutput] = deriveDecoder[ConsoleOutput]
 
-  def systemOutput(target: ScalaTarget)(output: ProcessOutput): ConsoleOutput =
-    target.targetType match {
-      case ScalaTargetType.ScalaCli => ScalaCliOutput(output)
-      case _ => SbtOutput(output)
-    }
+  def systemOutput(target: ScalaTarget)(output: ProcessOutput): ConsoleOutput = target.targetType match {
+    case ScalaTargetType.ScalaCli => ScalaCliOutput(output)
+    case _                        => SbtOutput(output)
+  }
+
 }

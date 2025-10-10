@@ -1,31 +1,32 @@
 package org.scastie.scalacli
 
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.BeforeAndAfterAll
-import org.scastie.util.ScastieFileUtil
-import java.nio.file.Paths
 import java.nio.file.Files
-import org.scastie.api.SnippetId
-import org.scastie.api._
-import org.scastie.runtime.api._
+import java.nio.file.Paths
+import scala.concurrent.duration._
 import scala.concurrent.Future
-import scala.concurrent.duration._
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.testkit.TestActor.AutoPilot
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import org.scastie.runtime.api._
+
 import org.scastie.api._
-import org.scastie.util.SbtTask
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.funsuite.AnyFunSuiteLike
-
-import scala.concurrent.duration._
-import akka.testkit.TestActorRef
-import org.scastie.util.ScalaCliActorTask
-import org.scastie.util.StopRunner
+import org.scastie.api.SnippetId
+import org.scastie.runtime.api._
 import org.scastie.util.RunnerTerminated
+import org.scastie.util.SbtTask
+import org.scastie.util.ScalaCliActorTask
+import org.scastie.util.ScastieFileUtil
+import org.scastie.util.StopRunner
 
-class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
+import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.TestActor.AutoPilot
+import akka.testkit.TestActorRef
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.funsuite.AnyFunSuiteLike
+import org.scalatest.BeforeAndAfterAll
+
+class ScalaCliRunnerTest
+  extends TestKit(ActorSystem("ScalaCliRunnerTest"))
+  with ImplicitSender
+  with AnyFunSuiteLike
+  with BeforeAndAfterAll {
   val workingDir = Files.createTempDirectory("scastie")
   println(workingDir)
 
@@ -104,38 +105,33 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
 
   test("Disable Predef #357") {
     val message = "No Predef!"
-    val testCode =
-      s"""//> using option -Yno-predef
-         |scala.Predef.println("$message")""".stripMargin
-    val verificationCode =
-      s"""//> using option -Yno-predef
-         |println("$message")""".stripMargin
+    val testCode = s"""//> using option -Yno-predef
+                      |scala.Predef.println("$message")""".stripMargin
+    val verificationCode = s"""//> using option -Yno-predef
+                              |println("$message")""".stripMargin
 
     runCode(testCode)(assertUserOutput(message))
     runCode(verificationCode, allowFailure = true)(assertCompilationInfo { info =>
-       assert(info.message == "Not found: println")
+      assert(info.message == "Not found: println")
     })
   }
 
   test("Scala 2.12 support") {
-    val code =
-      s"""//> using scala 2.12
-         |object Main extends App {
-         |  println(util.Properties.versionNumberString)
-         |}""".stripMargin
+    val code = s"""//> using scala 2.12
+                  |object Main extends App {
+                  |  println(util.Properties.versionNumberString)
+                  |}""".stripMargin
     runCode(code, isWorksheet = false)(assertUserOutput(output => assert(output.line.startsWith("2.12"))))
   }
 
   test("Scala 2.13 support") {
-    val code =
-      s"""//> using scala 2.13
-         |object Main extends App {
-         |  println(util.Properties.versionNumberString)
-         |}""".stripMargin
+    val code = s"""//> using scala 2.13
+                  |object Main extends App {
+                  |  println(util.Properties.versionNumberString)
+                  |}""".stripMargin
 
-    val verificationCode =
-      s"""//> using scala 2.13
-         |@main def hello = println("?")""".stripMargin
+    val verificationCode = s"""//> using scala 2.13
+                              |@main def hello = println("?")""".stripMargin
 
     runCode(code, isWorksheet = false)(assertUserOutput(output => assert(output.line.startsWith("2.13"))))
     runCode(verificationCode, allowFailure = true)(assertCompilationInfo { info =>
@@ -144,35 +140,29 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   }
 
   test("Scala 3.0 support") {
-    val code =
-      s"""//> using scala 3
-         |@main def hello = println(1 + 1)""".stripMargin
+    val code = s"""//> using scala 3
+                  |@main def hello = println(1 + 1)""".stripMargin
     runCode(code, isWorksheet = false)(assertUserOutput("2"))
   }
 
   test("Scala 3 support") {
-    val code =
-      s"""//> using scala 3
-         |@main def hello = println(1 + 1)""".stripMargin
+    val code = s"""//> using scala 3
+                  |@main def hello = println(1 + 1)""".stripMargin
     runCode(code, isWorksheet = false)(assertUserOutput("2"))
   }
 
-
   test("Scala 2.12 worksheet support") {
-    val code =
-      s"""//> using scala 2.12
-         |println(util.Properties.versionNumberString)""".stripMargin
-   runCode(code)(assertUserOutput(output => assert(output.line.startsWith("2.12"))))
+    val code = s"""//> using scala 2.12
+                  |println(util.Properties.versionNumberString)""".stripMargin
+    runCode(code)(assertUserOutput(output => assert(output.line.startsWith("2.12"))))
   }
 
   test("Scala 2.13 worksheet support") {
-    val code =
-      s"""//> using scala 2.13
-         |println(util.Properties.versionNumberString)""".stripMargin
+    val code = s"""//> using scala 2.13
+                  |println(util.Properties.versionNumberString)""".stripMargin
 
-    val verificationCode =
-      s"""//> using scala 2.13
-         |@main def hello = println("?")""".stripMargin
+    val verificationCode = s"""//> using scala 2.13
+                              |@main def hello = println("?")""".stripMargin
 
     runCode(code)(assertUserOutput(output => assert(output.line.startsWith("2.13"))))
     runCode(verificationCode, allowFailure = true)(assertCompilationInfo { info =>
@@ -181,75 +171,65 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   }
 
   test("Scala 3.0 worksheet support") {
-    val code =
-      s"""//> using scala 3.0
-         |if true then println(1 + 1)""".stripMargin
+    val code = s"""//> using scala 3.0
+                  |if true then println(1 + 1)""".stripMargin
     runCode(code)(assertUserOutput("2"))
   }
 
   test("Scala 3 worksheet support") {
-    val code =
-      s"""//> using scala 3
-         |if true then println(1 + 1)""".stripMargin
+    val code = s"""//> using scala 3
+                  |if true then println(1 + 1)""".stripMargin
     runCode(code)(assertUserOutput("2"))
   }
 
   test("avoid https://github.com/scala/bug/issues/8119") {
-    val code =
-      s"""//> using scala 2.12
-         |val n = 0; val m = List(1).par.foreach(_ => n); println(1)""".stripMargin
+    val code = s"""//> using scala 2.12
+                  |val n = 0; val m = List(1).par.foreach(_ => n); println(1)""".stripMargin
     runCode(code)(assertUserOutput("1"))
   }
 
   test("no warnings on scala 3") {
-    val code =
-      s"""//> using option -Xfatal-warnings
-         |//> using scala 3
-         |println(1 + 1)""".stripMargin
+    val code = s"""//> using option -Xfatal-warnings
+                  |//> using scala 3
+                  |println(1 + 1)""".stripMargin
     runCode(code)(progress => progress.compilationInfos.isEmpty)
   }
 
   test("no warnings on 2.13") {
-    val code =
-      s"""//> using options -Xfatal-warnings -Xlint
-         |//> using scala 2.13
-         |println(1 + 1)""".stripMargin
+    val code = s"""//> using options -Xfatal-warnings -Xlint
+                  |//> using scala 2.13
+                  |println(1 + 1)""".stripMargin
     runCode(code)(progress => progress.compilationInfos.isEmpty)
   }
 
   test("no warnings on 2.12") {
-    val code =
-      s"""//> using options -Xfatal-warnings -Xlint
-         |//> using scala 2.12
-         |println(1 + 1)""".stripMargin
+    val code = s"""//> using options -Xfatal-warnings -Xlint
+                  |//> using scala 2.12
+                  |println(1 + 1)""".stripMargin
     runCode(code)(progress => progress.compilationInfos.isEmpty)
   }
 
   test("JVM 8") {
-    val code =
-      s"""//> using jvm 8
-         |println(1 + 1)""".stripMargin
+    val code = s"""//> using jvm 8
+                  |println(1 + 1)""".stripMargin
     runCode(code)(assertUserOutput("2"))
   }
 
   test("JVM 11") {
-    val code =
-      s"""//> using jvm 11
-         |println(1 + 1)""".stripMargin
+    val code = s"""//> using jvm 11
+                  |println(1 + 1)""".stripMargin
     runCode(code)(assertUserOutput("2"))
   }
 
   test("JVM 17") {
-    val code =
-      s"""//> using jvm 17
-         |println(1 + 1)""".stripMargin
+    val code = s"""//> using jvm 17
+                  |println(1 + 1)""".stripMargin
     runCode(code)(assertUserOutput("2"))
   }
 
   test("JVM 21") {
-    val code =
-      s"""//> using jvm 21
-         |println(1 + 1)""".stripMargin
+    val code = s"""//> using jvm 21
+                  |println(1 + 1)""".stripMargin
     runCode(code)(assertUserOutput("2"))
   }
 
@@ -266,20 +246,22 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
 
   test("last line comment should not fail compilation in worksheet Scala 2") {
     val code = s"""//> using scala 2
-              |println("Hello world!")
-              |// test comment""".stripMargin
+                  |println("Hello world!")
+                  |// test comment""".stripMargin
     runCode(code)(assertUserOutput("Hello world!"))
   }
 
   test("last line comment should not fail compilation in worksheet Scala 3") {
     val code = s"""//> using scala 3
-              |println("Hello world!")
-              |// test comment""".stripMargin
+                  |println("Hello world!")
+                  |// test comment""".stripMargin
     runCode(code)(assertUserOutput("Hello world!"))
   }
 
   test("hide Playground from types") {
-    runCode("case class A(i:Int) extends AnyVal; A(1)")(_.instrumentations.headOption.exists(_.render == Value("A(1)", "A")))
+    runCode("case class A(i:Int) extends AnyVal; A(1)")(
+      _.instrumentations.headOption.exists(_.render == Value("A(1)", "A"))
+    )
   }
 
   test("#304 null pointer") {
@@ -298,12 +280,11 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   }
 
   test("Scala-CLI worksheet correct error position") {
-    val code =
-      s"""
-         |
-         |printl
-         |
-         |""".stripMargin
+    val code = s"""
+                  |
+                  |printl
+                  |
+                  |""".stripMargin
 
     runCode(code, allowFailure = true, isWorksheet = true)(assertCompilationInfo { info =>
       assert(info.message == "Not found: printl - did you mean print? or perhaps printf or println?")
@@ -313,12 +294,11 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   }
 
   test("Scala-CLI non-worksheet correct error position") {
-    val code =
-      s"""
-         |
-         |printl
-         |
-         |""".stripMargin
+    val code = s"""
+                  |
+                  |printl
+                  |
+                  |""".stripMargin
 
     runCode(code, allowFailure = true, isWorksheet = false)(assertCompilationInfo { info =>
       assert(info.message == "Illegal start of toplevel definition")
@@ -326,17 +306,16 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
     })
   }
 
-  private val macroCode =
-    """import scala.quoted._
-      |
-      |object SleepMacro:
-      |  inline def sleep(inline time: Int) =
-      |    ${ wait('time) }
-      |
-      |  def wait(x: Expr[Int])(using Quotes): Expr[Any] =
-      |    Thread.sleep(x.valueOrAbort)
-      |    x
-      |""".stripMargin
+  private val macroCode = """import scala.quoted._
+                            |
+                            |object SleepMacro:
+                            |  inline def sleep(inline time: Int) =
+                            |    ${ wait('time) }
+                            |
+                            |  def wait(x: Expr[Int])(using Quotes): Expr[Any] =
+                            |    Thread.sleep(x.valueOrAbort)
+                            |    x
+                            |""".stripMargin
 
   test("No bsp timeout") {
     Files.writeString(workingDir.resolve("SleepMacro.scala"), macroCode)
@@ -346,31 +325,36 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
 
   test("BSP Timeout") {
     Files.writeString(workingDir.resolve("SleepMacro.scala"), macroCode)
-    runCode(longCompilation(compilationTimeout.toMillis + 5000), isWorksheet = false, allowFailure = true)(assertCompilationInfo { info =>
-      assert(info.message == "Build Server Timeout Exception" )
-    })
+    runCode(longCompilation(compilationTimeout.toMillis + 5000), isWorksheet = false, allowFailure = true)(
+      assertCompilationInfo { info =>
+        assert(info.message == "Build Server Timeout Exception")
+      }
+    )
     Files.delete(workingDir.resolve("SleepMacro.scala"))
   }
 
-  def longCompilation(time: Long): String =
-    s"""//> using scala 3
-       |//> using file SleepMacro.scala
-       |
-       |@main def hello =
-       |  SleepMacro.sleep($time)
-       |  println("test")
-       |""".stripMargin
+  def longCompilation(time: Long): String = s"""//> using scala 3
+                                               |//> using file SleepMacro.scala
+                                               |
+                                               |@main def hello =
+                                               |  SleepMacro.sleep($time)
+                                               |  println("test")
+                                               |""".stripMargin
 
   test("BSP Timeout Multiple snippets") {
     Files.writeString(workingDir.resolve("SleepMacro.scala"), macroCode)
-    runCode(longCompilation(compilationTimeout.toMillis + 5000), isWorksheet = false, allowFailure = true)(assertCompilationInfo { info =>
-      assert(info.message == "Build Server Timeout Exception" )
-    })
+    runCode(longCompilation(compilationTimeout.toMillis + 5000), isWorksheet = false, allowFailure = true)(
+      assertCompilationInfo { info =>
+        assert(info.message == "Build Server Timeout Exception")
+      }
+    )
     runCode(longCompilation(100), isWorksheet = false, allowFailure = false)(assertUserOutput("test"))
 
-    runCode(longCompilation(compilationTimeout.toMillis + 5000), isWorksheet = false, allowFailure = true)(assertCompilationInfo { info =>
-      assert(info.message == "Build Server Timeout Exception" )
-    })
+    runCode(longCompilation(compilationTimeout.toMillis + 5000), isWorksheet = false, allowFailure = true)(
+      assertCompilationInfo { info =>
+        assert(info.message == "Build Server Timeout Exception")
+      }
+    )
 
     runCode(longCompilation(100), isWorksheet = false, allowFailure = false)(assertUserOutput("test"))
     Files.delete(workingDir.resolve("SleepMacro.scala"))
@@ -399,7 +383,7 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
 
     fishForMessage(1.minute, "RunnerTerminated") {
       case RunnerTerminated => true
-      case _ => false
+      case _                => false
     }
 
     TestKit.shutdownActorSystem(system, 1.minute, true)
@@ -408,14 +392,27 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   private val timeout = 45.seconds
   private val compilationTimeout = 25.seconds
 
-  val scalaCliActor = system.actorOf(Props(new ScalaCliActor(runTimeout = timeout, isProduction = false, reconnectInfo = None, coloredStackTrace = false, compilationTimeout = compilationTimeout, workingDir = workingDir)))
+  val scalaCliActor = system.actorOf(
+    Props(
+      new ScalaCliActor(
+        runTimeout = timeout,
+        isProduction = false,
+        reconnectInfo = None,
+        coloredStackTrace = false,
+        compilationTimeout = compilationTimeout,
+        workingDir = workingDir
+      )
+    )
+  )
 
   private var currentId = 0
+
   private def snippetId = {
     val t = currentId
     currentId += 1
     SnippetId(t.toString, None)
   }
+
   private var firstRun = true
 
   private def run(inputs: ScalaCliInputs, allowFailure: Boolean = false)(fish: SnippetProgress => Boolean): Unit = {
@@ -428,24 +425,25 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
       if (firstRun) timeout + 10.second
       else timeout
 
-    progressActor.fishForMessage(totalTimeout + 100.seconds) {
-      case progress: SnippetProgress =>
-        val fishResult = fish(progress)
-        //        println(progress -> fishResult)
-        if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
-          throw new Exception(s"Fail to meet expectation at ${progress}")
-        else fishResult
+    progressActor.fishForMessage(totalTimeout + 100.seconds) { case progress: SnippetProgress =>
+      val fishResult = fish(progress)
+      //        println(progress -> fishResult)
+      if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
+        throw new Exception(s"Fail to meet expectation at ${progress}")
+      else fishResult
     }
     firstRun = false
   }
 
-  private def runCode(code: String, allowFailure: Boolean = false, isWorksheet: Boolean = true)(fish: SnippetProgress => Boolean): Unit = {
+  private def runCode(code: String, allowFailure: Boolean = false, isWorksheet: Boolean = true)(
+    fish: SnippetProgress => Boolean
+  ): Unit = {
     run(ScalaCliInputs.default.copy(code = code, isWorksheetMode = isWorksheet), allowFailure)(fish)
   }
 
   private def assertUserOutput(
-      message: String,
-      outputType: ProcessOutputType = ProcessOutputType.StdOut
+    message: String,
+    outputType: ProcessOutputType = ProcessOutputType.StdOut
   )(progress: SnippetProgress): Boolean = {
     val gotHelloMessage = progress.userOutput.exists(out => out.line == message && out.tpe == outputType)
 //    if (!gotHelloMessage) assert(progress.userOutput.isEmpty)

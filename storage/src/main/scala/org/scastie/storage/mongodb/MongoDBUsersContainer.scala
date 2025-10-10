@@ -1,15 +1,17 @@
 package org.scastie.storage.mongodb
 
-import org.scastie.storage._
-import org.mongodb.scala._
-import org.mongodb.scala.model.Updates._
-import org.mongodb.scala.model._
-
+import scala.concurrent.duration._
 import scala.concurrent.Await
 import scala.concurrent.Future
-import scala.concurrent.duration._
+
+import org.scastie.storage._
+
+import org.mongodb.scala._
+import org.mongodb.scala.model._
+import org.mongodb.scala.model.Updates._
 
 trait MongoDBUsersContainer extends UsersContainer with GenericMongoContainer {
+
   lazy val users = {
     val db = database.getCollection[Document]("users")
     Await.result(db.createIndex(Indexes.ascending("user"), IndexOptions().unique(true)).head(), Duration.Inf)

@@ -1,6 +1,7 @@
 package org.scastie.runtime.api
 
 import java.io.{PrintWriter, StringWriter}
+
 import StringUtils._
 
 case class RuntimeError(
@@ -8,9 +9,11 @@ case class RuntimeError(
     line: Option[Int],
     fullStack: String
 ) {
+
   def asJsonString: String = {
     s"""{"message":"${message.escaped}","line":${line.getOrElse(null)},"fullStack":"${fullStack.escaped}"}"""
   }
+
 }
 
 object RuntimeError {
@@ -19,19 +22,16 @@ object RuntimeError {
     try {
       Right(in)
     } catch {
-      case ex: Exception =>
-        Left(RuntimeError.fromThrowable(ex, fromScala = false))
+      case ex: Exception => Left(RuntimeError.fromThrowable(ex, fromScala = false))
     }
   }
 
   def fromThrowable(t: Throwable, fromScala: Boolean = true): Option[RuntimeError] = {
     def search(e: Throwable) = {
       e.getStackTrace
-        .find(
-          trace =>
-            if (fromScala)
-              trace.getFileName == "main.scala" && trace.getLineNumber != -1
-            else true
+        .find(trace =>
+          if (fromScala) trace.getFileName == "main.scala" && trace.getLineNumber != -1
+          else true
         )
         .map(v => (e, Some(v.getLineNumber)))
     }
@@ -43,15 +43,15 @@ object RuntimeError {
       else s
     }
 
-    loop(t).map {
-      case (err, line) =>
-        val errors = new StringWriter()
-        t.printStackTrace(new PrintWriter(errors))
-        val fullStack = errors.toString
+    loop(t).map { case (err, line) =>
+      val errors = new StringWriter()
+      t.printStackTrace(new PrintWriter(errors))
+      val fullStack = errors.toString
 
-        RuntimeError(err.toString, line, fullStack)
+      RuntimeError(err.toString, line, fullStack)
     }
   }
+
 }
 
 case class RuntimeErrorWrap(error: Option[RuntimeError])

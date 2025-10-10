@@ -48,8 +48,8 @@ class LineMapperSpecs extends AnyFunSuite {
 
     val lineMapping = LineMapper(code1)
 
-    assert(lineMapping(5) == 1)  // val $t = println("test1");
-    assert(lineMapping(9) == 2)  // val y = 1
+    assert(lineMapping(5) == 1) // val $t = println("test1");
+    assert(lineMapping(9) == 2) // val y = 1
     assert(lineMapping(12) == 3) // val $t = println("test2");
   }
 
@@ -59,25 +59,24 @@ class LineMapperSpecs extends AnyFunSuite {
                     |val x = 1
                     |""".stripMargin
 
-    val code1 =
-      s"""|import $runtimePackage.*
-          |import language.experimental.captureChecking
-          |object $instrumentedObject extends ScastieApp with $instrumentationRecorderT {                                               
-          |
-          |scala.Predef.locally {
-          |$$doc.startStatement(0, 15);
-          |val $$t = println("test"); 
-          |$$doc.binder($runtimeT.render($$t), 0, 15);
-          |$$doc.endStatement();
-          |$$t}
-          |val x = 1
-          |}
-          |""".stripMargin
+    val code1 = s"""|import $runtimePackage.*
+                    |import language.experimental.captureChecking
+                    |object $instrumentedObject extends ScastieApp with $instrumentationRecorderT {                                               
+                    |
+                    |scala.Predef.locally {
+                    |$$doc.startStatement(0, 15);
+                    |val $$t = println("test"); 
+                    |$$doc.binder($runtimeT.render($$t), 0, 15);
+                    |$$doc.endStatement();
+                    |$$t}
+                    |val x = 1
+                    |}
+                    |""".stripMargin
 
     val lineMapping = LineMapper(code1)
 
-    assert(lineMapping(2) == 1)  // experimental import
-    assert(lineMapping(7) == 2)  // val $t = println("test");
+    assert(lineMapping(2) == 1) // experimental import
+    assert(lineMapping(7) == 2) // val $t = println("test");
     assert(lineMapping(11) == 3) // val x = 1
   }
 
@@ -102,8 +101,8 @@ class LineMapperSpecs extends AnyFunSuite {
 
     val lineMapping = LineMapper(code1)
 
-    assert(lineMapping(5) == 1)  // val $t = println:
-    assert(lineMapping(6) == 2)  // "multiline";
+    assert(lineMapping(5) == 1) // val $t = println:
+    assert(lineMapping(6) == 2) // "multiline";
     assert(lineMapping(10) == 3) // val x = 1
   }
 
@@ -132,9 +131,9 @@ class LineMapperSpecs extends AnyFunSuite {
 
     val lineMapping = LineMapper(code1)
 
-    assert(lineMapping(3) == 1)  // Comment 1
-    assert(lineMapping(4) == 2)  // empty line
-    assert(lineMapping(7) == 3)  // val $t = println("test");
+    assert(lineMapping(3) == 1) // Comment 1
+    assert(lineMapping(4) == 2) // empty line
+    assert(lineMapping(7) == 3) // val $t = println("test");
     assert(lineMapping(11) == 4) // Comment 2
     assert(lineMapping(12) == 5) // val x = 1
   }
@@ -250,11 +249,11 @@ class LineMapperSpecs extends AnyFunSuite {
 
     val lineMapping = LineMapper(code1)
 
-    assert(lineMapping(4) == 1)   // import scala.concurrent.Future
-    assert(lineMapping(7) == 4)   // Setup comment
-    assert(lineMapping(8) == 5)   // val data = List(1, 2, 3)
-    assert(lineMapping(10) == 7)  // Processing comment
-    assert(lineMapping(13) == 8)  // val $t = data.foreach...
+    assert(lineMapping(4) == 1) // import scala.concurrent.Future
+    assert(lineMapping(7) == 4) // Setup comment
+    assert(lineMapping(8) == 5) // val data = List(1, 2, 3)
+    assert(lineMapping(10) == 7) // Processing comment
+    assert(lineMapping(13) == 8) // val $t = data.foreach...
     assert(lineMapping(20) == 12) // val result = data.map(_ * 2)
     assert(lineMapping(23) == 13) // val $t = println(result);
   }
@@ -287,9 +286,9 @@ class LineMapperSpecs extends AnyFunSuite {
 
     val lineMapping = LineMapper(code1)
 
-    assert(lineMapping(5) == 1)  // val $t = println("test"); #1
+    assert(lineMapping(5) == 1) // val $t = println("test"); #1
     assert(lineMapping(12) == 3) // val $t = println("test"); #2
-    assert(lineMapping(9) == 2)  // val y = 2
+    assert(lineMapping(9) == 2) // val y = 2
     assert(lineMapping(16) == 4) // val z = 3
   }
 

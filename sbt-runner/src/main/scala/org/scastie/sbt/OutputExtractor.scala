@@ -1,40 +1,43 @@
 package org.scastie.sbt
 
 import java.time.Instant
-
-import org.scastie.api._
-import org.scastie.runtime.api._
-import org.scastie.instrumentation.Instrument
-import org.scastie.sbt.SbtProcess._
-import org.slf4j.LoggerFactory
-
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-import io.circe.parser._
-
-import RuntimeCodecs._
-
 import scala.meta.inputs.Input
 import scala.util.control.NonFatal
 
-class OutputExtractor(getScalaJsContent: () => Option[String],
-                      getScalaJsSourceMapContent: () => Option[String],
-                      isProduction: Boolean,
-                      promptUniqueId: String) {
+import org.scastie.api._
+import org.scastie.instrumentation.Instrument
+import org.scastie.runtime.api._
+import org.scastie.sbt.SbtProcess._
+
+import io.circe._
+import io.circe.generic.semiauto._
+import io.circe.parser._
+import io.circe.syntax._
+import org.slf4j.LoggerFactory
+import RuntimeCodecs._
+
+class OutputExtractor(
+    getScalaJsContent: () => Option[String],
+    getScalaJsSourceMapContent: () => Option[String],
+    isProduction: Boolean,
+    promptUniqueId: String
+) {
+
   def extractProgress(output: ProcessOutput, sbtRun: SbtRun, isReloading: Boolean): SnippetProgress = {
     import sbtRun._
 
-    val problems = extractProblems(output.line, sbtRun, Instrument.getMessageLineOffset(inputs.isWorksheetMode, isScalaCli = false))
+    val problems =
+      extractProblems(output.line, sbtRun, Instrument.getMessageLineOffset(inputs.isWorksheetMode, isScalaCli = false))
     val instrumentations = extract[List[Instrumentation]](output.line)
-    val runtimeError = extractRuntimeError(output.line, sbtRun, Instrument.getExceptionLineOffset(inputs.isWorksheetMode))
+    val runtimeError =
+      extractRuntimeError(output.line, sbtRun, Instrument.getExceptionLineOffset(inputs.isWorksheetMode))
     val consoleOutput = extract[ConsoleOutput](output.line)
     // sbt plugin is not loaded at this stage. we need to drop those messages
     val hiddenInitializationMessages = List(
       "WARNING: A terminally deprecated method in java.lang.System has been called",
       "WARNING: System::setSecurityManager has been called",
       "WARNING: Please consider reporting this to the maintainers",
-      "WARNING: System::setSecurityManager will be removed in a future release",
+      "WARNING: System::setSecurityManager will be removed in a future release"
     )
 
     val isHiddenSbtMessage =
@@ -45,14 +48,15 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     val isScalaJs = inputs.target.targetType == ScalaTargetType.JS
 
     val userOutput =
-      if (problems.toList.flatten.isEmpty
-          && instrumentations.toList.flatten.isEmpty
-          && runtimeError.isEmpty
-          && !isDone
-          && !isHiddenSbtMessage
-          && !isReloading
-          && consoleOutput.isEmpty)
-        Some(output)
+      if (
+        problems.toList.flatten.isEmpty
+        && instrumentations.toList.flatten.isEmpty
+        && runtimeError.isEmpty
+        && !isDone
+        && !isHiddenSbtMessage
+        && !isReloading
+        && consoleOutput.isEmpty
+      ) Some(output)
       else None
 
     val (scalaJsContent, scalaJsSourceMapContent) =
@@ -66,11 +70,10 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
 
     val isReallyDone = (isDone && !isReloading) || isSbtError
 
-    val sbtProcessOutput =
-      consoleOutput match {
-        case Some(SbtOutput(output)) if !isHiddenSbtMessage => Some(output)
-        case _ => None
-      }
+    val sbtProcessOutput = consoleOutput match {
+      case Some(SbtOutput(output)) if !isHiddenSbtMessage => Some(output)
+      case _                                              => None
+    }
 
     SnippetProgress(
       ts = Some(Instant.now.toEpochMilli),
@@ -105,23 +108,21 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   )
 
   private def remapSourceMap(
-      snippetId: SnippetId
+    snippetId: SnippetId
   )(sourceMapRaw: String): String = {
     decode[SourceMap](sourceMapRaw).toOption
       .map { sourceMap =>
-        val sourceMap0 =
-          sourceMap.copy(
-            sources = sourceMap.sources.map(
-              source =>
-                if (source.startsWith(Js.sourceUUID)) {
-                  val host =
-                    if (isProduction) "https://scastie.scala-lang.org"
-                    else "http://localhost:9000"
+        val sourceMap0 = sourceMap.copy(
+          sources = sourceMap.sources.map(source =>
+            if (source.startsWith(Js.sourceUUID)) {
+              val host =
+                if (isProduction) "https://scastie.scala-lang.org"
+                else "http://localhost:9000"
 
-                  host + snippetId.scalaJsUrl(Js.sourceFilename)
-                } else source
-            )
+              host + snippetId.scalaJsUrl(Js.sourceFilename)
+            } else source
           )
+        )
 
         sourceMap0.asJson.noSpaces
       }
@@ -129,18 +130,14 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   }
 
   private def extractProblems(
-      line: String,
-      sbtRun: SbtRun,
-      lineOffset: Int
+    line: String,
+    sbtRun: SbtRun,
+    lineOffset: Int
   ): Option[List[Problem]] = {
     val problems = extract[List[Problem]](line)
 
     val problemsWithMappedLines = problems.map {
-      _.map(problem =>
-        problem.copy(line =
-          problem.line.map(instrumentedLine => sbtRun.lineMapping(instrumentedLine))
-        )
-      )
+      _.map(problem => problem.copy(line = problem.line.map(instrumentedLine => sbtRun.lineMapping(instrumentedLine))))
     }
 
     def annoying(in: Problem): Boolean = {
@@ -155,7 +152,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
   private def extractRuntimeError(line: String, sbtRun: SbtRun, lineOffset: Int): Option[RuntimeError] = {
     extract[RuntimeErrorWrap](line).flatMap {
       _.error.map { error =>
-        val noStackTraceError = if (error.message.contains("No main class detected.")) error.copy(fullStack = "") else error
+        val noStackTraceError =
+          if (error.message.contains("No main class detected.")) error.copy(fullStack = "") else error
         val errorWithMappedLine = noStackTraceError.copy(
           line = noStackTraceError.line.map(instrumentedLine => sbtRun.lineMapping(instrumentedLine))
         )

@@ -1,15 +1,16 @@
 package org.scastie.client.components.editor
 
-import typings.codemirrorState.mod.ChangeSet
-import typings.codemirrorState.mod._
-import typings.codemirrorView.mod._
-import typings.webTreeSitter.mod._
-
 import scala.collection.mutable.ListBuffer
 
 import scalajs.js
 
-class SyntaxHighlightingHandler(parser: Parser, language: Language, query: Query, initialState: String) extends js.Object {
+import typings.codemirrorState.mod._
+import typings.codemirrorState.mod.ChangeSet
+import typings.codemirrorView.mod._
+import typings.webTreeSitter.mod._
+
+class SyntaxHighlightingHandler(parser: Parser, language: Language, query: Query, initialState: String)
+  extends js.Object {
   val queryCaptureNames = query.captureNames
 
   var tree = parser.parse(initialState)
@@ -19,7 +20,7 @@ class SyntaxHighlightingHandler(parser: Parser, language: Language, query: Query
     val rangeSetBuilder = new RangeSetBuilder[Decoration]()
     val captures = query.captures(tree.rootNode)
 
-    captures.foldLeft(Option.empty[QueryCapture]){ (previousCapture, currentCapture) =>
+    captures.foldLeft(Option.empty[QueryCapture]) { (previousCapture, currentCapture) =>
       if (!previousCapture.exists(_ == currentCapture)) {
         val startPosition = currentCapture.node.startIndex
         val endPosition = currentCapture.node.endIndex
@@ -27,7 +28,8 @@ class SyntaxHighlightingHandler(parser: Parser, language: Language, query: Query
         val mark = Decoration.mark(
           MarkDecorationSpec()
             .setInclusive(true)
-            .setClass(currentCapture.name.replace(".", "-")))
+            .setClass(currentCapture.name.replace(".", "-"))
+        )
         rangeSetBuilder.add(startPosition, endPosition, mark)
 
       }
@@ -45,12 +47,14 @@ class SyntaxHighlightingHandler(parser: Parser, language: Language, query: Query
   private def mapChangesToTSEdits(changes: ChangeSet, originalText: Text, newText: Text): List[Edit] = {
     val editBuffer = new ListBuffer[Edit]()
 
-    changes.iterChanges { (fromA: Double, toA: Double, _, toB: Double, _) => {
-      val oldEndPosition = indexToTSPoint(originalText, toA)
-      val newEndPosition = indexToTSPoint(newText, toB)
-      val startPosition = indexToTSPoint(originalText, fromA)
-      editBuffer.addOne(Edit(toB, newEndPosition, toA, oldEndPosition, fromA, startPosition))
-    }}
+    changes.iterChanges { (fromA: Double, toA: Double, _, toB: Double, _) =>
+      {
+        val oldEndPosition = indexToTSPoint(originalText, toA)
+        val newEndPosition = indexToTSPoint(newText, toB)
+        val startPosition = indexToTSPoint(originalText, fromA)
+        editBuffer.addOne(Edit(toB, newEndPosition, toA, oldEndPosition, fromA, startPosition))
+      }
+    }
 
     editBuffer.toList
 
@@ -65,4 +69,5 @@ class SyntaxHighlightingHandler(parser: Parser, language: Language, query: Query
       decorations = computeDecorations()
     }
   }
+
 }

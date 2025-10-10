@@ -2,11 +2,11 @@ package org.scastie
 package client
 package components
 
+import org.scastie.client.i18n.I18n
+
 import japgolly.scalajs.react._
 
 import vdom.all._
-
-import org.scastie.client.i18n.I18n
 
 final case class WorksheetButton(
     hasWorksheetMode: Boolean,
@@ -20,25 +20,19 @@ final case class WorksheetButton(
 
 object WorksheetButton {
 
-  implicit val reusability: Reusability[WorksheetButton] =
-    Reusability.derive[WorksheetButton]
+  implicit val reusability: Reusability[WorksheetButton] = Reusability.derive[WorksheetButton]
 
   private def render(props: WorksheetButton): VdomElement = {
     val isWorksheetModeSelected =
       if (props.isWorksheetMode)
-        if (props.view != View.Editor)
-          TagMod(cls := "enabled alpha")
-        else
-          TagMod(cls := "enabled")
-      else
-        EmptyVdom
+        if (props.view != View.Editor) TagMod(cls := "enabled alpha")
+        else TagMod(cls := "enabled")
+      else EmptyVdom
 
     li(
       title := (if (props.hasWorksheetMode)
-                  if (props.isWorksheetMode)
-                    I18n.t("editor.worksheet_off_tooltip")
-                  else
-                    I18n.t("editor.worksheet_on_tooltip")
+                  if (props.isWorksheetMode) I18n.t("editor.worksheet_off_tooltip")
+                  else I18n.t("editor.worksheet_on_tooltip")
                 else I18n.t("editor.worksheet_unsupported")),
       isWorksheetModeSelected,
       role := "button",
@@ -51,10 +45,10 @@ object WorksheetButton {
     )
   }
 
-  private val component =
-    ScalaComponent
-      .builder[WorksheetButton]("WorksheetButton")
-      .render_P(render)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  private val component = ScalaComponent
+    .builder[WorksheetButton]("WorksheetButton")
+    .render_P(render)
+    .configure(Reusability.shouldComponentUpdate)
+    .build
+
 }

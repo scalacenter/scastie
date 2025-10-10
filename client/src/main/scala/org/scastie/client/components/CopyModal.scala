@@ -2,21 +2,23 @@ package org.scastie
 package client
 package components
 
-import japgolly.scalajs.react._
 import org.scalajs.dom
 import org.scalajs.dom.document
 import org.scalajs.dom.html
 import org.scalajs.dom.window
+
+import japgolly.scalajs.react._
+
 import vdom.all._
 
 final case class CopyModal(
-  isDarkTheme: Boolean,
-  title: String,
-  subtitle: String,
-  content: String,
-  modalId: String,
-  isClosed: Boolean,
-  close: Reusable[Callback]
+    isDarkTheme: Boolean,
+    title: String,
+    subtitle: String,
+    content: String,
+    modalId: String,
+    isClosed: Boolean,
+    close: Reusable[Callback]
 ) {
   @inline def render: VdomElement = new CopyModal.ShareModalComponent().build(this)
 }
@@ -30,7 +32,7 @@ object CopyModal {
 
     private def render(props: CopyModal): VdomElement = {
       def copyLink: Callback = divRef.get.map { divRef =>
-        val range     = dom.document.createRange()
+        val range = dom.document.createRange()
         val selection = dom.window.getSelection()
         divRef.foreach(range.selectNodeContents)
         selection.addRange(range)
@@ -55,7 +57,7 @@ object CopyModal {
               props.content
             ),
             div(onClick --> copyLink, title := "Copy to Clipboard", cls := "snippet-clip clipboard-copy")(
-              i(cls                         := "fa fa-clipboard")
+              i(cls := "fa fa-clipboard")
             )
           )
         )

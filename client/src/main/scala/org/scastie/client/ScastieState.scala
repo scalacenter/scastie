@@ -1,15 +1,17 @@
 package org.scastie.client
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
 import org.scalajs.dom.{Position => _}
 import org.scalajs.dom.HTMLElement
+
 import org.scastie.api._
 import org.scastie.api.EditorMode._
 import org.scastie.client.i18n.I18n
 import org.scastie.client.scalacli.ScalaCliUtils._
 import org.scastie.runtime.api._
+
+import io.circe._
+import io.circe.generic.semiauto._
+import io.circe.syntax._
 import RuntimeCodecs._
 
 sealed trait MetalsStatus {
@@ -46,9 +48,9 @@ object SnippetState {
 }
 
 case class SnippetState(
-  snippetId: Option[SnippetId],
-  loadSnippet: Boolean,
-  scalaJsContent: Option[String]
+    snippetId: Option[SnippetId],
+    loadSnippet: Boolean,
+    scalaJsContent: Option[String]
 )
 
 object ScastieState {
@@ -103,32 +105,32 @@ object ScastieState {
 }
 
 case class ScastieState(
-  view: View,
-  isRunning: Boolean,
-  statusStream: Option[EventStream[StatusProgress]],
-  progressStream: Option[EventStream[SnippetProgress]],
-  modalState: ModalState,
-  isDarkTheme: Boolean,
-  isDesktopForced: Boolean,
-  isPresentationMode: Boolean,
-  showLineNumbers: Boolean,
-  consoleState: ConsoleState,
-  inputsHasChanged: Boolean,
-  snippetState: SnippetState,
-  user: Option[User],
-  attachedDoms: Map[String, HTMLElement],
-  inputs: BaseInputs,
-  outputs: Outputs,
-  status: StatusState,
-  metalsStatus: MetalsStatus = MetalsLoading,
-  isEmbedded: Boolean = false,
-  transient: Boolean = false,
-  scalaCliConversionError: Option[String] = None,
-  editorMode: EditorMode = Default,
-  language: String = "en"
+    view: View,
+    isRunning: Boolean,
+    statusStream: Option[EventStream[StatusProgress]],
+    progressStream: Option[EventStream[SnippetProgress]],
+    modalState: ModalState,
+    isDarkTheme: Boolean,
+    isDesktopForced: Boolean,
+    isPresentationMode: Boolean,
+    showLineNumbers: Boolean,
+    consoleState: ConsoleState,
+    inputsHasChanged: Boolean,
+    snippetState: SnippetState,
+    user: Option[User],
+    attachedDoms: Map[String, HTMLElement],
+    inputs: BaseInputs,
+    outputs: Outputs,
+    status: StatusState,
+    metalsStatus: MetalsStatus = MetalsLoading,
+    isEmbedded: Boolean = false,
+    transient: Boolean = false,
+    scalaCliConversionError: Option[String] = None,
+    editorMode: EditorMode = Default,
+    language: String = "en"
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
-  def loadSnippet: Boolean         = snippetState.loadSnippet
+  def loadSnippet: Boolean = snippetState.loadSnippet
 
   def copyAndSave(
     attachedDoms: Map[String, HTMLElement] = attachedDoms,
@@ -241,9 +243,9 @@ case class ScastieState(
   def setEditorMode(mode: EditorMode): ScastieState = copyAndSave(editorMode = mode)
 
   def setLanguage(lang: String): ScastieState = {
-      I18n.setLanguage(lang)
-      copyAndSave(language = lang)
-    }
+    I18n.setLanguage(lang)
+    copyAndSave(language = lang)
+  }
 
   def setMetalsStatus(status: MetalsStatus): ScastieState = copyAndSave(metalsStatus = status)
 
@@ -458,9 +460,7 @@ case class ScastieState(
   }
 
   def setProgresses(progresses: List[SnippetProgress]): ScastieState = coalesceUpdates { self =>
-    progresses.foldLeft(self) { case (state, progress) =>
-      state.addProgress(progress)
-    }
+    progresses.foldLeft(self) { case (state, progress) => state.addProgress(progress) }
   }
 
   def setSnippetId(snippetId: SnippetId): ScastieState = copyAndSave(snippetId = Some(snippetId))

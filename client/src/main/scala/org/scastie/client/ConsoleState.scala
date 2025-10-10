@@ -12,6 +12,7 @@ object ConsoleState {
     consoleHasUserOutput = false,
     userOpenedConsole = false
   )
+
 }
 
 case class ConsoleState(

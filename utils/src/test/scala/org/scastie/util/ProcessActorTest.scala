@@ -2,18 +2,22 @@ package org.scastie.util
 
 import java.io.File
 import java.nio.file.{Files, StandardCopyOption}
+import scala.concurrent.duration._
 
-import akka.actor.{Actor, ActorRef, ActorSystem}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import org.scastie.api.ProcessOutput
 import org.scastie.api.ProcessOutputType._
 import org.scastie.util.ProcessActor._
-import org.scalatest.BeforeAndAfterAll
+
+import akka.actor.{Actor, ActorRef, ActorSystem}
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import org.scalatest.funsuite.AnyFunSuiteLike
+import org.scalatest.BeforeAndAfterAll
 
-import scala.concurrent.duration._
-
-class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
+class ProcessActorTest()
+  extends TestKit(ActorSystem("ProcessActorTest"))
+  with ImplicitSender
+  with AnyFunSuiteLike
+  with BeforeAndAfterAll {
 
   test("do it") {
     (1 to 10).foreach { i =>
@@ -34,7 +38,7 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
       def expected(msg0: String): Unit = {
         probe.expectMsgPF(8000.milliseconds) {
           case ProcessOutput(msg1, StdOut, _) if msg0.trim == msg1.trim => true
-          case ProcessOutput(msg1, StdOut, _) =>
+          case ProcessOutput(msg1, StdOut, _)                           =>
             println(s""""$msg1" != "$msg0"""")
             false
         }
@@ -48,15 +52,16 @@ class ProcessActorTest() extends TestKit(ActorSystem("ProcessActorTest")) with I
   override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
   }
+
 }
 
 class ProcessReceiver(command: String, probe: ActorRef) extends Actor {
-  private val props =
-    ProcessActor.props(command = List("bash", "-c", command.replace("\\", "/")), killOnExit = false)
+  private val props = ProcessActor.props(command = List("bash", "-c", command.replace("\\", "/")), killOnExit = false)
   private val process = context.actorOf(props, name = "process-receiver")
 
   override def receive: Receive = {
     case output: ProcessOutput => probe ! output
     case input: Input          => process ! input
   }
+
 }

@@ -34,6 +34,14 @@ object Welcome {
         UsefulTask(
             "<module>/testOnly [ClassName] -- -z \"test description\"",
             "Run a specific test case in a module."
+        ),
+        UsefulTask(
+            "scalafmtCheckAll",
+            "Check that all Scala code is properly formatted"
+        ),
+        UsefulTask(
+            "scalafmtAll",
+            "Format all Scala code"
         )
     )
 }

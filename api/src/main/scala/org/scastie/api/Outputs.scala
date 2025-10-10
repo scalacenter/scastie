@@ -1,8 +1,9 @@
 package org.scastie.api
 
-import io.circe.generic.semiauto._
-import io.circe._
 import org.scastie.runtime.api._
+
+import io.circe._
+import io.circe.generic.semiauto._
 import RuntimeCodecs._
 
 object ReleaseOptions {
@@ -25,7 +26,9 @@ object Outputs {
     runtimeError = None,
     sbtError = false
   )
+
 }
+
 case class Outputs(
     consoleOutputs: Vector[ConsoleOutput],
     compilationInfos: Set[Problem],
@@ -36,9 +39,9 @@ case class Outputs(
 
   def console: String = consoleOutputs.mkString("\n")
 
-  def isClearable: Boolean =
-    consoleOutputs.nonEmpty ||
-      compilationInfos.nonEmpty ||
-      instrumentations.nonEmpty ||
-      runtimeError.isDefined
+  def isClearable: Boolean = consoleOutputs.nonEmpty ||
+    compilationInfos.nonEmpty ||
+    instrumentations.nonEmpty ||
+    runtimeError.isDefined
+
 }

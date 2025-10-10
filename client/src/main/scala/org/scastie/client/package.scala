@@ -1,9 +1,8 @@
 package org.scastie
 
+import org.scalajs.dom.window
 
 import io.circe._
-
-import org.scalajs.dom.window
 
 package object client {
 
@@ -17,8 +16,7 @@ package object client {
     def apply(a: T): Json = io.circe.Json.Null
   }
 
-  def dontSerializeList[T]: Codec[List[T]] =
-    dontSerialize(List())
+  def dontSerializeList[T]: Codec[List[T]] = dontSerialize(List())
 
   val isMac: Boolean = window.navigator.userAgent.contains("Mac")
   val isMobile: Boolean = "Android|webOS|Mobi|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Samsung".r.unanchored

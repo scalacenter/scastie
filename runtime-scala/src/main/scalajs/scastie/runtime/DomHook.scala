@@ -1,11 +1,10 @@
 package org.scastie.runtime
 
-import org.scalajs.dom.HTMLElement
+import java.util.UUID
+import scala.collection.mutable.Buffer
 import scala.scalajs.js
 
-import scala.collection.mutable.Buffer
-
-import java.util.UUID
+import org.scalajs.dom.HTMLElement
 
 trait DomHook {
   private val elements = Buffer.empty[HTMLElement]

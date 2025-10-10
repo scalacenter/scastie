@@ -1,36 +1,39 @@
 package org.scastie.web.oauth2
 
+import scala.concurrent.Future
+
+import org.scastie.api.User
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl._
-import akka.http.scaladsl.model.HttpMethods.POST
-import akka.http.scaladsl.model.Uri._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.model.HttpMethods.POST
+import akka.http.scaladsl.model.Uri._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import org.scastie.api.User
-import io.circe._
-import io.circe.generic.semiauto._
 import com.typesafe.config.ConfigFactory
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-
-import scala.concurrent.Future
+import io.circe._
+import io.circe.generic.semiauto._
 
 case class AccessToken(access_token: String)
 
-class Github(implicit system: ActorSystem) extends FailFastCirceSupport {
+class Github(
+    implicit system: ActorSystem
+) extends FailFastCirceSupport {
   import system.dispatcher
 
   implicit val userEncoder: Encoder[User] = deriveEncoder[User]
   implicit val userDecoder: Decoder[User] = deriveDecoder[User]
   implicit val readAccessToken: Decoder[AccessToken] = deriveDecoder[AccessToken]
 
-  private val config =
-    ConfigFactory.load().getConfig("org.scastie.web.oauth2")
+  private val config = ConfigFactory.load().getConfig("org.scastie.web.oauth2")
   val clientId: String = config.getString("client-id")
   private val clientSecret = config.getString("client-secret")
   private val redirectUri = config.getString("uri") + "/callback"
 
   def getUserWithToken(token: String): Future[User] = info(token)
+
   def getUserWithOauth2(code: String): Future[User] = {
     def access = {
       Http()
@@ -48,9 +51,7 @@ class Github(implicit system: ActorSystem) extends FailFastCirceSupport {
             headers = List(Accept(MediaTypes.`application/json`))
           )
         )
-        .flatMap(
-          response => Unmarshal(response).to[AccessToken].map(_.access_token)
-        )
+        .flatMap(response => Unmarshal(response).to[AccessToken].map(_.access_token))
     }
 
     access.flatMap(info)
@@ -68,4 +69,5 @@ class Github(implicit system: ActorSystem) extends FailFastCirceSupport {
       .singleRequest(fetchGithub(Path.Empty / "user"))
       .flatMap(response => Unmarshal(response).to[User])
   }
+
 }

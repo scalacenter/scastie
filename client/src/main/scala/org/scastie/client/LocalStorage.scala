@@ -1,12 +1,12 @@
 package org.scastie
 package client
 
-
-import io.circe.syntax._
-import io.circe._
-import io.circe.parser._
 import org.scalajs.dom
 import org.scalajs.dom.window.localStorage
+
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
 
 object LocalStorage {
   private val stateKey = "state"
@@ -25,4 +25,5 @@ object LocalStorage {
         None
     }
   }
+
 }

@@ -1,11 +1,12 @@
 package org.scastie.util
 
-import akka.actor.{Actor, ActorContext, ActorLogging, Cancellable}
-import akka.remote.DisassociatedEvent
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import org.scastie.api.ActorConnected
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import akka.actor.{Actor, ActorContext, ActorLogging, Cancellable}
+import akka.remote.DisassociatedEvent
 
 case class ReconnectInfo(serverHostname: String, serverAkkaPort: Int, actorHostname: String, actorAkkaPort: Int)
 
@@ -49,15 +50,13 @@ trait ActorReconnecting extends Actor with ActorLogging {
     case ev: DisassociatedEvent => {
       println("DisassociatedEvent " + ev)
 
-      val isServerHostname =
-        reconnectInfo
-          .map(info => ev.remoteAddress.host.contains(info.serverHostname))
-          .getOrElse(false)
+      val isServerHostname = reconnectInfo
+        .map(info => ev.remoteAddress.host.contains(info.serverHostname))
+        .getOrElse(false)
 
-      val isServerAkkaPort =
-        reconnectInfo
-          .map(info => ev.remoteAddress.port.contains(info.serverAkkaPort))
-          .getOrElse(false)
+      val isServerAkkaPort = reconnectInfo
+        .map(info => ev.remoteAddress.port.contains(info.serverAkkaPort))
+        .getOrElse(false)
 
       if (isServerHostname && isServerAkkaPort && ev.inbound) {
         log.warning("Disconnected from server")
@@ -66,4 +65,5 @@ trait ActorReconnecting extends Actor with ActorLogging {
       }
     }
   }
+
 }

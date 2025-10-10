@@ -1,22 +1,22 @@
 package org.scastie.scalacli
 
-import org.scastie.util.ScastieFileUtil.writeRunningPid
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration._
+import scala.concurrent.Await
+
 import org.scastie.util.ReconnectInfo
+import org.scastie.util.ScastieFileUtil.writeRunningPid
 
 import akka.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import java.util.concurrent.TimeUnit
-
 import org.slf4j.LoggerFactory
 
 /**
-  * This object provides the main endpoint for the Scala-CLI runner.
-  * Its role is to create and setup the ActorSystem and create the ScalaCli Actor
+  * This object provides the main endpoint for the Scala-CLI runner. Its role is to create and setup the ActorSystem and
+  * create the ScalaCli Actor
   */
 object ScalaCliMain {
+
   def main(args: Array[String]): Unit = {
     val logger = LoggerFactory.getLogger(getClass)
 
@@ -102,4 +102,5 @@ object ScalaCliMain {
 
     ()
   }
+
 }

@@ -26,3 +26,6 @@ jobs:
     - name: Run tests
       run: |
         nix-shell --command "yarn install && sbt -DSnippetsContainerTest.mongo=true cachedCiTest"
+    - name: Check formatting
+      run: |
+        nix-shell --command "sbt scalafmtCheckAll"

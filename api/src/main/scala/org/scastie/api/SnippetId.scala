@@ -1,7 +1,7 @@
-package org.scastie.api 
+package org.scastie.api
 
-import io.circe.generic.semiauto._
 import io.circe._
+import io.circe.generic.semiauto._
 
 object User {
   // low tech solution
@@ -28,11 +28,11 @@ object SnippetId {
 }
 
 case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
+
   def isOwnedBy(user2: Option[User]): Boolean = {
     (user, user2) match {
-      case (Some(SnippetUserPart(snippetLogin, _)), Some(User(userLogin, _, _))) =>
-        snippetLogin == userLogin
-      case _ => false
+      case (Some(SnippetUserPart(snippetLogin, _)), Some(User(userLogin, _, _))) => snippetLogin == userLogin
+      case _                                                                     => false
     }
   }
 
@@ -40,9 +40,8 @@ case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
 
   def url: String = {
     this match {
-      case SnippetId(uuid, None) => uuid
-      case SnippetId(uuid, Some(SnippetUserPart(login, update))) =>
-        s"$login/$uuid/$update"
+      case SnippetId(uuid, None)                                 => uuid
+      case SnippetId(uuid, Some(SnippetUserPart(login, update))) => s"$login/$uuid/$update"
     }
   }
 
@@ -50,4 +49,5 @@ case class SnippetId(base64UUID: String, user: Option[SnippetUserPart]) {
     val middle = url
     s"/api/${Shared.scalaJsHttpPathPrefix}/$middle/$end"
   }
+
 }

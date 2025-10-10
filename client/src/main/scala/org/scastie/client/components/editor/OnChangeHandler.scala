@@ -1,10 +1,10 @@
 package org.scastie.client.components.editor
 
+import scalajs.js
+
 import japgolly.scalajs.react._
 import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
-
-import scalajs.js
 
 class OnChangeHandler(onChange: String ~=> Callback) extends js.Object {
 
@@ -19,6 +19,5 @@ class OnChangeHandler(onChange: String ~=> Callback) extends js.Object {
 }
 
 object OnChangeHandler {
-  def apply(onChange: String ~=> Callback): Extension =
-    ViewPlugin.define(_ => new OnChangeHandler(onChange)).extension
+  def apply(onChange: String ~=> Callback): Extension = ViewPlugin.define(_ => new OnChangeHandler(onChange)).extension
 }

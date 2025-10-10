@@ -5,12 +5,13 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import scala.concurrent.duration.*
 
+import org.scastie.api.ScastieMetalsOptions
+
 import cats.effect.{Async, Resource}
 import cats.effect.implicits.*
 import cats.syntax.all._
 import com.comcast.ip4s._
 import com.evolutiongaming.scache.{Cache, ExpiringCache}
-import org.scastie.api.ScastieMetalsOptions
 import com.typesafe.config.ConfigFactory
 import fs2.Stream
 import org.http4s.ember.client.EmberClientBuilder
@@ -20,9 +21,9 @@ import org.http4s.server.middleware._
 
 object Server:
 
-  val config                   = ConfigFactory.load().getConfig("scastie.metals")
+  val config = ConfigFactory.load().getConfig("scastie.metals")
   val cacheExpirationInSeconds = config.getInt("cache-expire-in-seconds")
-  val serverPort               = config.getInt("port")
+  val serverPort = config.getInt("port")
 
   def stream[F[_]: Async]: Stream[F, Nothing] = {
     val cache = Cache.expiring[F, ScastieMetalsOptions, ScastiePresentationCompiler](
@@ -31,8 +32,8 @@ object Server:
     )
 
     val finalHttpApp = (cache0: Cache[F, ScastieMetalsOptions, ScastiePresentationCompiler]) => {
-      val metalsImpl  = ScastieMetalsImpl.instance[F](cache0)
-      val httpApp     = ScastieMetalsRoutes.routes[F](metalsImpl).orNotFound
+      val metalsImpl = ScastieMetalsImpl.instance[F](cache0)
+      val httpApp = ScastieMetalsRoutes.routes[F](metalsImpl).orNotFound
       val corsService = CORS.policy.withAllowOriginAll(httpApp)
       Logger.httpApp(true, false)(corsService)
     }

@@ -3,18 +3,17 @@ package org.scastie.client
 import org.scastie.api._
 
 object Page {
+
   def fromSnippetId(snippetId: SnippetId): ResourcePage = {
     snippetId match {
-      case SnippetId(uuid, None) =>
-        AnonymousResource(uuid)
+      case SnippetId(uuid, None) => AnonymousResource(uuid)
 
-      case SnippetId(uuid, Some(SnippetUserPart(login, 0))) =>
-        UserResource(login, uuid)
+      case SnippetId(uuid, Some(SnippetUserPart(login, 0))) => UserResource(login, uuid)
 
-      case SnippetId(uuid, Some(SnippetUserPart(login, update))) =>
-        UserResourceUpdated(login, uuid, update)
+      case SnippetId(uuid, Some(SnippetUserPart(login, update))) => UserResourceUpdated(login, uuid, update)
     }
   }
+
 }
 
 sealed trait Page

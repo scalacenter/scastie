@@ -1,7 +1,7 @@
 package org.scastie.api
 
-import io.circe.generic.semiauto._
 import io.circe._
+import io.circe.generic.semiauto._
 
 object Severity {
   implicit val severityEncoder: Encoder[Severity] = deriveEncoder[Severity]

@@ -39,7 +39,7 @@ object BlockingServiceLoader {
           // NOTE(olafur): ServiceLoader doesn't find the service on Appveyor for
           // some reason, I'm unable to reproduce on my computer. Here below we
           // fallback to manual classloading.
-          val cls  = classloader.loadClass(className)
+          val cls = classloader.loadClass(className)
           val ctor = cls.getDeclaredConstructor()
           ctor.setAccessible(true)
           ctor.newInstance().asInstanceOf[T]
@@ -92,10 +92,12 @@ class PresentationCompilers[F[_]: Async](metalsWorkingDirectory: Path) {
     }
 
   private def prepareClasspathSearch(classpath: Seq[Path], version: String): F[ClasspathSearch] = Sync[F].delay {
-    classpath.filter(isSourceJar).foreach { path => {
-      val libVersion = ScalaVersions.scalaBinaryVersionFromJarName(path.getFileName.toString).getOrElse(version)
-      index.addSourceJar(AbsolutePath(path), ScalaVersions.dialectForScalaVersion(libVersion, true))
-    }}
+    classpath.filter(isSourceJar).foreach { path =>
+      {
+        val libVersion = ScalaVersions.scalaBinaryVersionFromJarName(path.getFileName.toString).getOrElse(version)
+        index.addSourceJar(AbsolutePath(path), ScalaVersions.dialectForScalaVersion(libVersion, true))
+      }
+    }
 
     ClasspathSearch.fromClasspath(classpath.filterNot(isSourceJar), ExcludedPackagesHandler.default)
   }

@@ -1,17 +1,18 @@
 package org.scastie.instrumentation
 
-import org.scastie.api._
-import org.scastie.runtime.api._
-import RuntimeConstants._
-
 import scala.collection.immutable.Seq
 import scala.meta._
 import scala.meta.inputs.Position
 import scala.meta.parsers.Parsed
 import scala.util.control.NonFatal
-import org.scastie.buildinfo.BuildInfo
-import org.scastie.api.ScalaTargetType.Scala2
+
+import org.scastie.api._
 import org.scastie.api.ScalaTargetType.JS
+import org.scastie.api.ScalaTargetType.Scala2
+import org.scastie.buildinfo.BuildInfo
+import org.scastie.runtime.api._
+
+import RuntimeConstants._
 
 sealed trait InstrumentationFailure
 
@@ -30,18 +31,18 @@ case class InstrumentationSuccess(
 object Instrument {
   def getParsingLineOffset(isWorksheet: Boolean): Int = if (isWorksheet) -1 else 0
   def getExceptionLineOffset(isWorksheet: Boolean): Int = if (isWorksheet) -2 else 0
+
   def getMessageLineOffset(isWorksheet: Boolean, isScalaCli: Boolean): Int = (isWorksheet, isScalaCli) match {
-      case (true, _) => -2
-      case (false, true) => 1
-      case (false, false) => 0
+    case (true, _)      => -2
+    case (false, true)  => 1
+    case (false, false) => 0
   }
 
   import InstrumentationFailure._
 
   val entryPointName = "Main"
 
-  private val elemArrayT =
-    "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
+  private val elemArrayT = "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
 
   private def extractExperimentalImports(code: String): (String, String) = {
     val experimentalRegex = """^\s*import\s+language\.experimental\.[^\n]+""".r
@@ -50,41 +51,38 @@ object Instrument {
     val codeWithoutExpImports = experimentalRegex.replaceAllIn(code, m => "/*" + " " * (m.matched.length - 4) + "*/")
 
     val experimental = experimentalImports.mkString("\n") + (if (experimentalImports.nonEmpty) "\n" else "")
-    
+
     (experimental, codeWithoutExpImports)
   }
 
   private def posToApi(position: Position, offset: Int) = {
     val (x, y) = position match {
-      case Position.None => (0, 0)
-      case Position.Range(_, start, end) =>
-        (start - offset, end - offset)
+      case Position.None                 => (0, 0)
+      case Position.Range(_, start, end) => (start - offset, end - offset)
     }
     s"$positionT($x, $y)"
   }
 
   def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int, isScalaJs: Boolean): Patch = {
 
-    val treeQuote =
-      tpeTree match {
-        case None      => s"val $$t = $term"
-        case Some(tpe) => s"val $$t: $tpe = $term"
-      }
+    val treeQuote = tpeTree match {
+      case None      => s"val $$t = $term"
+      case Some(tpe) => s"val $$t: $tpe = $term"
+    }
 
     val startPos = term.pos.start - offset
-    val endPos   = term.pos.end - offset
+    val endPos = term.pos.end - offset
 
     val renderCall =
       if (!isScalaJs) s"$runtimeT.render($$t)"
       else s"$runtimeT.render($$t, attach _)"
 
-    val replacement =
-      s"""|scala.Predef.locally {
-          |$$doc.startStatement($startPos, $endPos);
-          |$treeQuote;
-          |$$doc.binder($renderCall, $startPos, $endPos);
-          |$$doc.endStatement();
-          |$$t}""".stripMargin
+    val replacement = s"""|scala.Predef.locally {
+                          |$$doc.startStatement($startPos, $endPos);
+                          |$treeQuote;
+                          |$$doc.binder($renderCall, $startPos, $endPos);
+                          |$$doc.endStatement();
+                          |$$t}""".stripMargin
 
     Patch(term.tokens.head, term.tokens.last, replacement)
   }
@@ -94,9 +92,8 @@ object Instrument {
       case c: Defn.Object if c.name.value == instrumentedObject =>
         c.templ.body.stats
           .collect {
-            case term: Term if !term.isInstanceOf[Term.EndMarker] =>
-              instrumentOne(term, None, offset, isScalaJs)
-            }
+            case term: Term if !term.isInstanceOf[Term.EndMarker] => instrumentOne(term, None, offset, isScalaJs)
+          }
     }.flatten
 
     val instrumentedCode = Patch(source.tokens, instrumentedCodePatches)
@@ -141,8 +138,7 @@ object Instrument {
       }
     }
     val apps = Set("App", "IOApp")
-    def hasApp(templ: Template): Boolean =
-      templ.inits.exists(p => apps(p.syntax))
+    def hasApp(templ: Template): Boolean = templ.inits.exists(p => apps(p.syntax))
 
     source.stats.exists {
       case c: Defn.Object if c.name.value == instrumentedObject =>
@@ -156,7 +152,11 @@ object Instrument {
     }
   }
 
-  def separateDirectives(code: String, targetType: ScalaTargetType, additionalDirectives: Seq[String]): (String, String) = {
+  def separateDirectives(
+    code: String,
+    targetType: ScalaTargetType,
+    additionalDirectives: Seq[String]
+  ): (String, String) = {
     if (targetType == ScalaTargetType.ScalaCli) {
       val directiveRegex = """^//>.*(?:\n|$)""".r
       val lines = code.linesWithSeparators.toList
@@ -178,7 +178,7 @@ object Instrument {
   def apply(code: String, target: ScalaTarget): Either[InstrumentationFailure, InstrumentationSuccess] = {
     val runtimeImport = target match {
       case Scala3(scalaVersion) => s"import $runtimePackage.*"
-      case _ => s"import $runtimePackage._"
+      case _                    => s"import $runtimePackage._"
     }
 
     val isScalaJs = target.targetType == ScalaTargetType.JS
@@ -215,7 +215,7 @@ object Instrument {
 
     val offset = target match {
       case _: ScalaCli => usingDirectives.length + prelude.length + 1
-      case _ => prelude.length + 1
+      case _           => prelude.length + 1
     }
 
     maybeDialect match {
@@ -230,20 +230,22 @@ object Instrument {
 
                 val lineMapping = LineMapper(instrumentedCode)
 
-                Right(InstrumentationSuccess(
-                  s"""$instrumentedCode\n$entryPoint""",
-                  lineMapping
-                  ))
+                Right(
+                  InstrumentationSuccess(
+                    s"""$instrumentedCode\n$entryPoint""",
+                    lineMapping
+                  )
+                )
               } else {
                 Left(HasMainMethod)
               }
             case e: Parsed.Error => Left(ParsingError(e))
           }
         } catch {
-          case NonFatal(e) =>
-            Left(InternalError(e))
+          case NonFatal(e) => Left(InternalError(e))
         }
       case None => Left(UnsupportedDialect)
     }
   }
+
 }

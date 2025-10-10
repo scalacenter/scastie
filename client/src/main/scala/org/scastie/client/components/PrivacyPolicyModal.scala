@@ -1,17 +1,19 @@
 package org.scastie.client.components
 
-import japgolly.scalajs.react._
-import scalajs.js
-import vdom.all._
 import scala.scalajs.js.annotation.JSImport
+
+import scalajs.js
+
+import japgolly.scalajs.react._
+
+import vdom.all._
 
 final case class PrivacyPolicyModal(isDarkTheme: Boolean, isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = PrivacyPolicyModal.component(this)
 }
 
 object PrivacyPolicyModal {
-  implicit val reusability: Reusability[PrivacyPolicyModal] =
-    Reusability.derive[PrivacyPolicyModal]
+  implicit val reusability: Reusability[PrivacyPolicyModal] = Reusability.derive[PrivacyPolicyModal]
 
   @js.native
   @JSImport("@scastieRoot/privacy-policy.md", "html")
@@ -31,8 +33,8 @@ object PrivacyPolicyModal {
     ).render
   }
 
-  private val component =
-    ScalaFnComponent
-      .withHooks[PrivacyPolicyModal]
-      .renderWithReuse(render)
+  private val component = ScalaFnComponent
+    .withHooks[PrivacyPolicyModal]
+    .renderWithReuse(render)
+
 }
