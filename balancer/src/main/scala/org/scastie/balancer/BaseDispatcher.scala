@@ -23,7 +23,7 @@ abstract class BaseDispatcher[R, S](config: Config) extends Actor with ActorLogg
     runnerName: String,
     actorName: String
   ): TrieMap[SocketAddress, String] = {
-    val host = config.getString(s"remote-$key-hostname")
+    val host = config.getString(s"remote-hostname")
     val portStart = config.getInt(s"remote-$key-ports-start")
     val portSize = config.getInt(s"remote-$key-ports-size")
     val result = (0 until portSize).map(_ + portStart)
