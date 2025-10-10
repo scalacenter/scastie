@@ -23,6 +23,17 @@ object SnippetUserPart {
 case class SnippetUserPart(login: String, update: Int = 0)
 
 object SnippetId {
+  def fromString(s: String): SnippetId = {
+    s.split('/') match {
+      case Array(uuid) => SnippetId(uuid, None)
+      case Array(login, uuid) =>
+        SnippetId(uuid, Some(SnippetUserPart(login, 0)))
+      case Array(login, uuid, update) =>
+        SnippetId(uuid, Some(SnippetUserPart(login, update.toInt)))
+      case _ => throw new IllegalArgumentException(s"Invalid snippet id: $s")
+    }
+  }
+
   implicit val snippetIdEncoder: Encoder[SnippetId] = deriveEncoder[SnippetId]
   implicit val snippetIdDecoder: Decoder[SnippetId] = deriveDecoder[SnippetId]
 }
