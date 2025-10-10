@@ -49,7 +49,7 @@ class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues
   override protected def afterAll(): Unit = {
     deleteRecursively(root)
     deleteRecursively(oldRoot)
-    if (postgres) testContainer.close()
+    if (postgres || mongo) testContainer.close()
   }
 
   private implicit class FAwait[T](f: Future[T]) {
