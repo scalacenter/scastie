@@ -263,7 +263,7 @@ private class ProcessDestroyer(process: JavaProcess, exitValueReceiver: ActorRef
   def pkill(): Unit = {
     import sys.process._
     import scala.jdk.CollectionConverters._
-    val all = process.descendants().iterator().asScala.toList :+ process.toHandle
+    val all = process.descendants().toList.asScala :+ process.toHandle
     all.foreach { process =>
       if (Helpers.isWindows) {
         s"taskkill /F /PID ${process.pid()}".!
