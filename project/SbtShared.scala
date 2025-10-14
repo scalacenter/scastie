@@ -23,6 +23,7 @@ object SbtShared {
     val latest212  = "2.12.20"
     val latest213  = "2.13.17"
     val old3       = "3.0.2"
+    val scala313   = "3.1.3"
     val stableLTS  = "3.3.7"
     val stableNext = "3.7.3"
     val latestLTS  = "3.3.7"
@@ -32,7 +33,7 @@ object SbtShared {
     val jvm        = latest213
     val cross      =
       List(latest210, latest211, latest212, latest213, old3, stableLTS, stableNext, js, sbt, jvm).distinct
-    val crossJS    = List(latest212, latest213, old3, js).distinct
+    val crossJS    = List(latest212, latest213, old3, scala313, js).distinct
   }
 
   object ScalaJSVersions {
@@ -112,13 +113,19 @@ object SbtShared {
     scalaVersion := ScalaVersions.jvm
   )
 
-  lazy val baseJsSettings = Seq(
-    test := {},
-    libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom"               % "2.8.0",
+lazy val baseJsSettings = Seq(
+  test := {},
+  libraryDependencies ++= {
+    val scalaJsDomVersion = scalaVersion.value match {
+      case v if v.startsWith("3.0") || (v.startsWith("3.1") && v < "3.1.3") => "2.2.0"
+      case _ => "2.8.0"
+    }
+    Seq(
+      "org.scala-js" %%% "scalajs-dom"               % scalaJsDomVersion,
       "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0" cross (CrossVersion.for3Use2_13)
     )
-  )
+  }
+)
 
   /* api is for the communication between sbt <=> server <=> frontend */
   lazy val api = projectMatrix
@@ -172,7 +179,10 @@ object SbtShared {
   /* runtime* pretty print values and type */
   lazy val `runtime-scala` = (projectMatrix in file(runtimeProjectName))
     .jvmPlatform(ScalaVersions.cross)
-    .jsPlatform(ScalaVersions.crossJS, baseJsSettings)
+    .jsPlatform(
+      scalaVersions = ScalaVersions.crossJS,
+      crossVersion = CrossVersion.fullWith(s"sjs${SbtShared.ScalaJSVersions.current.split('.').head}_", "")
+    )
     .settings(
       baseSettings,
       version           := versionRuntime,
@@ -180,10 +190,25 @@ object SbtShared {
       Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "runtime-api",
       semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
       libraryDependencies ++= {
-        scalaVersion.value match {
+        val scalaDeps = scalaVersion.value match {
           case v if v.startsWith("2") => Seq("org.scala-lang" % "scala-reflect" % v)
           case _                      => Seq()
         }
+        
+        val platformDeps = virtualAxes.value.collectFirst {
+          case _: VirtualAxis.js.type =>
+            val scalaJsDomVersion = scalaVersion.value match {
+              case v if v.startsWith("3.0") => "2.2.0"
+              case v if v.startsWith("3.1") && v < "3.1.3" => "2.2.0"
+              case _ => "2.8.0"
+            }
+            Seq(
+              "org.scala-js" %%% "scalajs-dom"               % scalaJsDomVersion,
+              "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0" cross (CrossVersion.for3Use2_13)
+            )
+        }.getOrElse(Seq.empty)
+        
+        scalaDeps ++ platformDeps
       },
       inConfig(Compile)(
         unmanagedSourceDirectories ++= scala2MajorSourceDirs(scalaSource.value, virtualAxes.value)
