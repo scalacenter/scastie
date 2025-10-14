@@ -194,8 +194,11 @@ lazy val baseJsSettings = Seq(
   lazy val `runtime-scala` = (projectMatrix in file(runtimeProjectName))
     .jvmPlatform(ScalaVersions.cross)
     .jsPlatform(
+      autoScalaLibrary = true,
       scalaVersions = ScalaVersions.crossJS,
-      crossVersion = CrossVersion.fullWith(s"sjs${SbtShared.ScalaJSVersions.current.split('.').head}_", "")
+      crossVersion = CrossVersion.fullWith(s"sjs${SbtShared.ScalaJSVersions.current.split('.').head}_", ""),
+      axisValues = Nil,
+      settings = baseJsSettings
     )
     .settings(
       baseSettings,
@@ -204,25 +207,10 @@ lazy val baseJsSettings = Seq(
       Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "runtime-api",
       semanticdbEnabled := { if (scalaVersion.value.startsWith("2.10")) false else semanticdbEnabled.value },
       libraryDependencies ++= {
-        val scalaDeps = scalaVersion.value match {
+        scalaVersion.value match {
           case v if v.startsWith("2") => Seq("org.scala-lang" % "scala-reflect" % v)
           case _                      => Seq()
         }
-        
-        val platformDeps = virtualAxes.value.collectFirst {
-          case _: VirtualAxis.js.type =>
-            val scalaJsDomVersion = scalaVersion.value match {
-              case v if v.startsWith("3.0") => "2.2.0"
-              case v if v.startsWith("3.1") && v < "3.1.3" => "2.2.0"
-              case _ => "2.8.0"
-            }
-            Seq(
-              "org.scala-js" %%% "scalajs-dom"               % scalaJsDomVersion,
-              "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0" cross (CrossVersion.for3Use2_13)
-            )
-        }.getOrElse(Seq.empty)
-        
-        scalaDeps ++ platformDeps
       },
       inConfig(Compile)(
         unmanagedSourceDirectories ++= scala2MajorSourceDirs(scalaSource.value, virtualAxes.value)
