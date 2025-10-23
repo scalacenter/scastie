@@ -107,6 +107,7 @@ object DockerHelper {
       runRaw("apk add openssl")
       runRaw("apk add bash")
       runRaw("apk add curl")
+      runRaw("curl -fLo /usr/local/bin/cs https://git.io/coursier-cli && chmod +x /usr/local/bin/cs")
 
       val userHome = s"/home/$containerUsername"
       val scalaCliInstallScript = "/tmp/scala-cli-install.sh"

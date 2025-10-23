@@ -109,12 +109,12 @@ class ScastieConfig(val configurationFile: File) {
   val balancerConfig = config.getConfig("org.scastie.balancer")
   val runnersHostname = balancerConfig.getString("remote-hostname")
   val sbtRunnersPortsStart = balancerConfig.getInt("remote-sbt-ports-start")
-  val scalaCliRunnersPortsStart = balancerConfig.getInt("remote-scala-cli-ports-start")
+  val scalaCliRunnersPortsStart = balancerConfig.getInt("remote-scli-ports-start")
   val containerType = balancerConfig.getString("snippets-storage")
 
   private val sbtRunnersPortsSize = balancerConfig.getInt("remote-sbt-ports-size")
   val sbtRunnersPortsEnd = sbtRunnersPortsStart + sbtRunnersPortsSize - 1
-  private val scalaCliRunnersPortsSize = balancerConfig.getInt("remote-scala-cli-ports-size")
+  private val scalaCliRunnersPortsSize = balancerConfig.getInt("remote-scli-ports-size")
   val scalaCliRunnersPortsEnd = scalaCliRunnersPortsStart + scalaCliRunnersPortsSize - 1
 }
 
