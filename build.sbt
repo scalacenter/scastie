@@ -186,6 +186,7 @@ lazy val sbtRunner = project
       .dependsOn(runnerRuntimeDependencies: _*)
       .value,
     assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
       case PathList("META-INF", xs @ _*) => MergeStrategy.discard
       case in @ PathList("reference.conf", xs @ _*) => {
         val old = (assembly / assemblyMergeStrategy).value
@@ -422,6 +423,7 @@ lazy val scalaCliRunner = project
       .dependsOn(runnerRuntimeDependencies: _*)
       .value,
     assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
       case PathList("META-INF", xs @ _*) => MergeStrategy.discard
       case in @ PathList("reference.conf", xs @ _*) => {
         val old = (assembly / assemblyMergeStrategy).value
