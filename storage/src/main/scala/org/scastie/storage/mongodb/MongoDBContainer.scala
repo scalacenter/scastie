@@ -7,12 +7,12 @@ import scala.concurrent.ExecutionContext
 
 class MongoDBContainer(defaultConfig: Boolean = false)(
   implicit val ec: ExecutionContext
-) extends MongoDBUsersContainer with MongoDBSnippetsContainer {
+) extends MongoDBSnippetsContainer {
 
   val mongoUri = {
     if (defaultConfig) s"mongodb://localhost:27017/scastie"
     else {
-      val config       = ConfigFactory.load().getConfig("scastie.mongodb")
+      val config       = ConfigFactory.load().getConfig("org.scastie.mongodb")
       val user         = config.getString("user")
       val password     = config.getString("password")
       val databaseName = config.getString("database")
