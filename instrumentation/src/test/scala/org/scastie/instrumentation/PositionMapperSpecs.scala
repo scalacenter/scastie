@@ -6,7 +6,7 @@ import scala.meta._
 import org.scalatest.funsuite.AnyFunSuite
 import RuntimeConstants._
 
-class LineMapperSpecs extends AnyFunSuite {
+class PositionMapperSpecs extends AnyFunSuite {
 
   test("identity mapping for identical input") {
     val code0 = s"""|val x = 42
@@ -16,10 +16,13 @@ class LineMapperSpecs extends AnyFunSuite {
                     |val y = x + 1
                     |""".stripMargin
 
-    val lineMapper = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapper(1) == 1) // val x = 42
-    assert(lineMapper(2) == 2) // val y = x + 1
+    assert(positionMapper.mapLine(1) == 1)        // val x = 42
+    assert(positionMapper.mapLine(2) == 2)        // val y = x + 1
+
+    assert(positionMapper.mapColumn(1, 5) == 5)   // no offset
+    assert(positionMapper.mapColumn(2, 10) == 10) // no offset
   }
 
   test("mapping with simple instrumentation") {
@@ -46,11 +49,14 @@ class LineMapperSpecs extends AnyFunSuite {
                     |}
                     |""".stripMargin
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapping(5) == 1)  // val $t = println("test1");
-    assert(lineMapping(9) == 2)  // val y = 1
-    assert(lineMapping(12) == 3) // val $t = println("test2");
+    assert(positionMapper.mapLine(5) == 1)  // val $t = println("test1");
+    assert(positionMapper.mapLine(9) == 2)  // val y = 1
+    assert(positionMapper.mapLine(12) == 3) // val $t = println("test2");
+
+    assert(positionMapper.mapColumn(9, 5) == 5)   // no offset
+    assert(positionMapper.mapColumn(12, 15) == 6) // offset of 9
   }
 
   test("mapping with experimental imports extracted") {
@@ -74,11 +80,14 @@ class LineMapperSpecs extends AnyFunSuite {
           |}
           |""".stripMargin
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapping(2) == 1)  // experimental import
-    assert(lineMapping(7) == 2)  // val $t = println("test");
-    assert(lineMapping(11) == 3) // val x = 1
+    assert(positionMapper.mapLine(2) == 1)  // experimental import
+    assert(positionMapper.mapLine(7) == 2)  // val $t = println("test");
+    assert(positionMapper.mapLine(11) == 3) // val x = 1
+
+    assert(positionMapper.mapColumn(7, 15) == 6) // offset of 9
+    assert(positionMapper.mapColumn(11, 3) == 3) // no offset
   }
 
   test("mapping with multiline expressions") {
@@ -100,11 +109,15 @@ class LineMapperSpecs extends AnyFunSuite {
                     |}
                     |""".stripMargin
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapping(5) == 1)  // val $t = println:
-    assert(lineMapping(6) == 2)  // "multiline";
-    assert(lineMapping(10) == 3) // val x = 1
+    assert(positionMapper.mapLine(5) == 1)  // val $t = println:
+    assert(positionMapper.mapLine(6) == 2)  // "multiline";
+    assert(positionMapper.mapLine(10) == 3) // val x = 1
+
+    // Test column mapping
+    assert(positionMapper.mapColumn(5, 12) == 3) // offset of 9
+    assert(positionMapper.mapColumn(6, 5) == 5)  // no offset
   }
 
   test("mapping with empty lines and comments") {
@@ -130,13 +143,15 @@ class LineMapperSpecs extends AnyFunSuite {
                     |}
                     |""".stripMargin
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapping(3) == 1)  // Comment 1
-    assert(lineMapping(4) == 2)  // empty line
-    assert(lineMapping(7) == 3)  // val $t = println("test");
-    assert(lineMapping(11) == 4) // Comment 2
-    assert(lineMapping(12) == 5) // val x = 1
+    assert(positionMapper.mapLine(3) == 1)  // Comment 1
+    assert(positionMapper.mapLine(4) == 2)  // empty line
+    assert(positionMapper.mapLine(7) == 3)  // val $t = println("test");
+    assert(positionMapper.mapLine(11) == 4) // Comment 2
+    assert(positionMapper.mapLine(12) == 5) // val x = 1
+
+    assert(positionMapper.mapColumn(7, 20) == 11) // offset of 9
   }
 
   test("mapping with mixed imports") {
@@ -154,10 +169,12 @@ class LineMapperSpecs extends AnyFunSuite {
                     |}
                     |""".stripMargin
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapping(4) == 1) // import scala.util.Random
-    assert(lineMapping(6) == 3) // val r = Random.nextInt();
+    assert(positionMapper.mapLine(4) == 1) // import scala.util.Random
+    assert(positionMapper.mapLine(6) == 3) // val r = Random.nextInt();
+
+    assert(positionMapper.mapColumn(6, 10) == 10) // no offset
   }
 
   test("empty original code") {
@@ -167,11 +184,13 @@ class LineMapperSpecs extends AnyFunSuite {
                     |}
                     |""".stripMargin
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapping(1) == 1)
-    assert(lineMapping(2) == 1)
-    assert(lineMapping(3) == 1)
+    assert(positionMapper.mapLine(1) == 1)
+    assert(positionMapper.mapLine(2) == 1)
+    assert(positionMapper.mapLine(3) == 1)
+
+    assert(positionMapper.mapColumn(1, 5) == 5)
   }
 
   test("single line code") {
@@ -188,19 +207,25 @@ class LineMapperSpecs extends AnyFunSuite {
                     |}
                     |""".stripMargin
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapping(5) == 1) // val $t = println(42);
+    assert(positionMapper.mapLine(5) == 1) // val $t = println(42);
+
+    assert(positionMapper.mapColumn(5, 15) == 6) // offset of 9
   }
 
   test("line numbers beyond input") {
     val code0 = "val x = 1"
     val code1 = "val x = 1"
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapping(10) == 10)
-    assert(lineMapping(100) == 100)
+    assert(positionMapper.mapLine(10) == 10)
+    assert(positionMapper.mapLine(100) == 100)
+
+    // Test column mapping for lines beyond input
+    assert(positionMapper.mapColumn(10, 5) == 5)
+    assert(positionMapper.mapColumn(100, 20) == 20)
   }
 
   test("complex real-world example") {
@@ -248,15 +273,18 @@ class LineMapperSpecs extends AnyFunSuite {
                     |}
                     |""".stripMargin
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapping(4) == 1)   // import scala.concurrent.Future
-    assert(lineMapping(7) == 4)   // Setup comment
-    assert(lineMapping(8) == 5)   // val data = List(1, 2, 3)
-    assert(lineMapping(10) == 7)  // Processing comment
-    assert(lineMapping(13) == 8)  // val $t = data.foreach...
-    assert(lineMapping(20) == 12) // val result = data.map(_ * 2)
-    assert(lineMapping(23) == 13) // val $t = println(result);
+    assert(positionMapper.mapLine(4) == 1)   // import scala.concurrent.Future
+    assert(positionMapper.mapLine(7) == 4)   // Setup comment
+    assert(positionMapper.mapLine(8) == 5)   // val data = List(1, 2, 3)
+    assert(positionMapper.mapLine(10) == 7)  // Processing comment
+    assert(positionMapper.mapLine(13) == 8)  // val $t = data.foreach...
+    assert(positionMapper.mapLine(20) == 12) // val result = data.map(_ * 2)
+    assert(positionMapper.mapLine(23) == 13) // val $t = println(result);
+
+    assert(positionMapper.mapColumn(13, 15) == 6)  // offset of 9
+    assert(positionMapper.mapColumn(23, 20) == 11) // offset of 9
   }
 
   test("mapping with multiple identical expressions") {
@@ -285,12 +313,15 @@ class LineMapperSpecs extends AnyFunSuite {
                     |}
                     |""".stripMargin
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1)
 
-    assert(lineMapping(5) == 1)  // val $t = println("test"); #1
-    assert(lineMapping(12) == 3) // val $t = println("test"); #2
-    assert(lineMapping(9) == 2)  // val y = 2
-    assert(lineMapping(16) == 4) // val z = 3
+    assert(positionMapper.mapLine(5) == 1)  // val $t = println("test"); #1
+    assert(positionMapper.mapLine(12) == 3) // val $t = println("test"); #2
+    assert(positionMapper.mapLine(9) == 2)  // val y = 2
+    assert(positionMapper.mapLine(16) == 4) // val z = 3
+
+    assert(positionMapper.mapColumn(5, 18) == 9)  // offset of 9
+    assert(positionMapper.mapColumn(12, 18) == 9) // offset of 9
   }
 
   test("mapping for scala-cli") {
@@ -314,8 +345,10 @@ class LineMapperSpecs extends AnyFunSuite {
                     |}
                     |""".stripMargin
 
-    val lineMapping = LineMapper(code1)
+    val positionMapper = PositionMapper(code1, true)
 
-    assert(lineMapping(9) == 3) // val $t = 1/0;
+    assert(positionMapper.mapLine(9) == 3) // val $t = 1/0;
+
+    assert(positionMapper.mapColumn(9, 12) == 3) // offset of 9
   }
 }

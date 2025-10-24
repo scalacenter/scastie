@@ -10,7 +10,7 @@ import org.scastie.api._
 import org.scastie.instrumentation.InstrumentedInputs
 import org.scastie.util.ScastieFileUtil.{slurp, write}
 import org.scastie.util._
-import org.scastie.instrumentation.LineMapper
+import org.scastie.instrumentation.PositionMapper
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -31,7 +31,7 @@ object SbtProcess {
       progressActor: ActorRef,
       snippetActor: ActorRef,
       timeoutEvent: Option[Cancellable],
-      lineMapping: Int => Int = identity
+      positionMapper: Option[PositionMapper] = None
   ) extends Data
   case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
     def message: String = {
@@ -55,6 +55,8 @@ object SbtProcess {
           Problem(
             Error,
             line = None,
+            startColumn = None,
+            endColumn = None,
             message = message
           )
         )
@@ -196,7 +198,7 @@ class SbtProcess(runTimeout: FiniteDuration,
           val sbtRun = _sbtRun.copy(
             inputs = instrumented.inputs.asInstanceOf[SbtInputs], 
             isForcedProgramMode = instrumented.isForcedProgramMode,
-            lineMapping = instrumented.lineMapping
+            positionMapper = instrumented.positionMapper
           )
           val isReloading = stateInputs.needsReload(sbtRun.inputs)
           setInputs(sbtRun.inputs)

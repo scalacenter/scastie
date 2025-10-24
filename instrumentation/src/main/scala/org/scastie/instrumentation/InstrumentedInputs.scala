@@ -8,12 +8,12 @@ import org.scastie.api._
 import scala.meta.inputs.Input
 import scala.meta.parsers.Parsed
 
-case class InstrumentationFailureReport(message: String, line: Option[Int]) {
+case class InstrumentationFailureReport(message: String, line: Option[Int], startColumn: Option[Int] = None, endColumn: Option[Int] = None) {
   def toProgress(snippetId: SnippetId): SnippetProgress = {
     SnippetProgress.default.copy(
       ts = Some(Instant.now.toEpochMilli),
       snippetId = Some(snippetId),
-      compilationInfos = List(Problem(Error, line, message))
+      compilationInfos = List(Problem(Error, line, startColumn, endColumn, message))
     )
   }
 }
@@ -22,16 +22,16 @@ object InstrumentedInputs {
   def apply(inputs0: BaseInputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
     if (inputs0.isWorksheetMode) {
       val instrumented = Instrument(inputs0.code, inputs0.target).map {
-        case InstrumentationSuccess(instrumentedCode, lineMapper) =>
-          (inputs0.copyBaseInput(code = instrumentedCode), lineMapper)
+        case InstrumentationSuccess(instrumentedCode, positionMapper) =>
+          (inputs0.copyBaseInput(code = instrumentedCode), positionMapper)
       }
 
       instrumented match {
-        case Right((inputs, lineMapping)) => Right(
+        case Right((inputs, positionMapper)) => Right(
             InstrumentedInputs(
               inputs = inputs,
               isForcedProgramMode = false,
-              lineMapping = lineMapping
+              positionMapper = positionMapper
             )
           )
         case Left(error) =>
@@ -45,12 +45,20 @@ object InstrumentedInputs {
               Left(InstrumentationFailureReport("This Scala target does not have a worksheet mode", None))
 
             case ParsingError(error) =>
-              val lineOffset = Instrument.getParsingLineOffset(inputs0.isWorksheetMode)
-              val errorLine = (error.pos.startLine + lineOffset) max 1
+              val isScalaCli = inputs0.target match {
+                case _: ScalaCli => true
+                case _ => false
+              }
+              val positionMapper = PositionMapper(error.pos.input.text, isScalaCli)
+              val errorLine = positionMapper.mapLine(error.pos.startLine + 1) max 1
+              val errorStartCol = error.pos.startColumn + 1
+              val errorEndCol = error.pos.endColumn + 1
+
               Right(InstrumentedInputs(
                 inputs = inputs0.copyBaseInput(code = error.pos.input.text),
                 isForcedProgramMode = false,
-                optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorLine))),
+                optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorLine), Some(errorStartCol), Some(errorEndCol))),
+                positionMapper = Some(positionMapper)
               ))
 
             case InternalError(exception) =>
@@ -73,5 +81,5 @@ case class InstrumentedInputs(
     inputs: BaseInputs,
     isForcedProgramMode: Boolean,
     optionalParsingError: Option[InstrumentationFailureReport] = None,
-    lineMapping: Int => Int = identity
+    positionMapper: Option[PositionMapper] = None
 )
