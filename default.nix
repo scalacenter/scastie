@@ -4,10 +4,16 @@ stdenv.mkDerivation {
   name = "scastie";
 
   buildInputs =
-    [
-      pkgs.nodejs
-      pkgs.yarn
-      pkgs.bash
-      pkgs.emscripten
-    ];
+    let
+      sbtWithJRE = pkgs.sbt.override {
+        jre = pkgs.jdk17_headless;
+      };
+    in
+      [
+        pkgs.nodejs
+        pkgs.yarn
+        pkgs.bash
+        pkgs.emscripten
+        sbtWithJRE
+      ];
 }
