@@ -121,23 +121,27 @@ object CodeEditor {
         val lineInfo = doc.line(line)
         val lineLength = lineInfo.length.toInt
 
-        val (startColumn, endColumn) =
+        val preciseRangeOpt: Option[(Double, Double)] =
           if (problem.line.get > maxLine) {
             val endPos = lineInfo.to
-            (endPos, endPos)
+            Some((endPos, endPos))
           } else {
             (problem.startColumn, problem.endColumn) match {
               case (Some(start), Some(end)) if start > 0 && end >= start =>
                 val clampedStart = (start min (lineLength + 1)) max 1
                 val clampedEnd = (end min (lineLength + 1)) max clampedStart
-                (lineInfo.from + clampedStart - 1, lineInfo.from + clampedEnd - 1)
-              case (Some(start), _) if start > 0 =>
-                val clampedStart = (start min (lineLength + 1)) max 1
-                (lineInfo.from + clampedStart - 1, lineInfo.from + clampedStart)
+                Some((lineInfo.from + clampedStart - 1, lineInfo.from + clampedEnd - 1))
               case _ =>
-                (lineInfo.from, lineInfo.to)
+                None
             }
           }
+        
+        val (startColumn, endColumn) = preciseRangeOpt match {
+          case Some((start, end)) =>
+            (start, end)
+          case None =>
+            (lineInfo.from, lineInfo.to)
+        }
 
         Diagnostic(startColumn, problem.message, parseSeverity(problem.severity), endColumn)
           .setRenderMessage(CallbackTo {
