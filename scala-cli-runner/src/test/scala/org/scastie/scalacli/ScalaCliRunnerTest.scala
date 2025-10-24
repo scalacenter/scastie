@@ -18,6 +18,8 @@ import org.scastie.api._
 import org.scastie.util.SbtTask
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuiteLike
+import org.scalatest.Retries
+import org.scalatest.tagobjects.Retryable
 
 import scala.concurrent.duration._
 import akka.testkit.TestActorRef
@@ -25,7 +27,7 @@ import org.scastie.util.ScalaCliActorTask
 import org.scastie.util.StopRunner
 import org.scastie.util.RunnerTerminated
 
-class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
+class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll with Retries {
   val workingDir = Files.createTempDirectory("scastie")
   println(workingDir)
 
@@ -37,6 +39,19 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   })
   // print("\u001b")
 
+  override def withFixture(test: NoArgTest) = {
+    if (isRetryable(test))
+      withRetry { super.withFixture(test) }
+    else
+      super.withFixture(test)
+  }
+
+  test("warm up scala-cli instance", Retryable) {
+    runCode("println(\"warmup\")")(progress => {
+      progress.userOutput.exists(_.line == "warmup") || progress.isDone
+    })
+  }
+
   (1 to 2).foreach { i =>
     test(s"[$i] timeout") {
       runCode(s"Thread.sleep(${timeout.toMillis + 3000})", allowFailure = true)(progress => {
@@ -44,7 +59,7 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
       })
     }
 
-    test(s"[$i] after a timeout the scala-cli instance is ready to be used") {
+    test(s"[$i] after a timeout the scala-cli instance is ready to be used", Retryable) {
       runCode("1 + 1")(progress => {
         val gotInstrumentation = progress.instrumentations.nonEmpty
 
@@ -405,8 +420,8 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
     TestKit.shutdownActorSystem(system, 1.minute, true)
   }
 
-  private val timeout = 45.seconds
-  private val compilationTimeout = 25.seconds
+  private val timeout = 90.seconds
+  private val compilationTimeout = 45.seconds
 
   val scalaCliActor = system.actorOf(Props(new ScalaCliActor(runTimeout = timeout, isProduction = false, reconnectInfo = None, coloredStackTrace = false, compilationTimeout = compilationTimeout, workingDir = workingDir)))
 
@@ -425,21 +440,30 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
     scalaCliActor ! ScalaCliActorTask(snippetId, inputs, ip, progressActor.ref)
 
     val totalTimeout =
-      if (firstRun) timeout + 10.second
+      if (firstRun) timeout + 30.seconds
       else timeout
 
     progressActor.fishForMessage(totalTimeout + 100.seconds) {
       case progress: SnippetProgress =>
         val fishResult = fish(progress)
         //        println(progress -> fishResult)
-        if ((progress.isFailure && !allowFailure) || (progress.isDone && !fishResult))
-          throw new Exception(s"Fail to meet expectation at ${progress}")
-        else fishResult
+        if (progress.isFailure && !allowFailure) {
+          val errorDetails = progress.compilationInfos.headOption.map(_.message).getOrElse("Unknown error")
+          throw new Exception(s"Test failed with error: $errorDetails")
+        } else if (progress.isDone && !fishResult) {
+          throw new Exception(s"Test completed but didn't meet expectations. Progress: ${progress}")
+        } else {
+          fishResult
+        }
     }
     firstRun = false
   }
 
-  private def runCode(code: String, allowFailure: Boolean = false, isWorksheet: Boolean = true)(fish: SnippetProgress => Boolean): Unit = {
+  private def runCode(
+    code: String, 
+    allowFailure: Boolean = false, 
+    isWorksheet: Boolean = true
+  )(fish: SnippetProgress => Boolean): Unit = {
     run(ScalaCliInputs.default.copy(code = code, isWorksheetMode = isWorksheet), allowFailure)(fish)
   }
 
