@@ -18,6 +18,8 @@ import org.scastie.api._
 import org.scastie.util.SbtTask
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuiteLike
+import org.scalatest.Retries
+import org.scalatest.tagobjects.Retryable
 
 import scala.concurrent.duration._
 import akka.testkit.TestActorRef
@@ -25,7 +27,7 @@ import org.scastie.util.ScalaCliActorTask
 import org.scastie.util.StopRunner
 import org.scastie.util.RunnerTerminated
 
-class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll {
+class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with ImplicitSender with AnyFunSuiteLike with BeforeAndAfterAll with Retries {
   val workingDir = Files.createTempDirectory("scastie")
   println(workingDir)
 
@@ -37,8 +39,15 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   })
   // print("\u001b")
 
-  test("warm up scala-cli instance") {
-    runCode("println(\"warmup\")", retryOnFailure = true)(progress => {
+  override def withFixture(test: NoArgTest) = {
+    if (isRetryable(test))
+      withRetry { super.withFixture(test) }
+    else
+      super.withFixture(test)
+  }
+
+  test("warm up scala-cli instance", Retryable) {
+    runCode("println(\"warmup\")")(progress => {
       progress.userOutput.exists(_.line == "warmup") || progress.isDone
     })
   }
@@ -50,8 +59,8 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
       })
     }
 
-    test(s"[$i] after a timeout the scala-cli instance is ready to be used") {
-      runCode("1 + 1", retryOnFailure = true)(progress => {
+    test(s"[$i] after a timeout the scala-cli instance is ready to be used", Retryable) {
+      runCode("1 + 1")(progress => {
         val gotInstrumentation = progress.instrumentations.nonEmpty
 
         if (gotInstrumentation) {
@@ -453,37 +462,9 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   private def runCode(
     code: String, 
     allowFailure: Boolean = false, 
-    isWorksheet: Boolean = true, 
-    retryOnFailure: Boolean = false
+    isWorksheet: Boolean = true
   )(fish: SnippetProgress => Boolean): Unit = {
-    
-    def attempt(): Unit = run(ScalaCliInputs.default.copy(code = code, isWorksheetMode = isWorksheet), allowFailure)(fish)
-    
-    if (retryOnFailure) {
-      retryWithBackoff(attempt, maxAttempts = 3, delay = 2000)
-    } else {
-      attempt()
-    }
-  }
-
-  private def retryWithBackoff[T](operation: () => T, maxAttempts: Int, delay: Long): T = {
-    @scala.annotation.tailrec
-    def retry(attempt: Int, lastException: Option[Exception]): T = {
-      if (attempt >= maxAttempts) {
-        throw lastException.getOrElse(new Exception("All retry attempts failed"))
-      }
-      
-      try {
-        operation()
-      } catch {
-        case e: Exception =>
-          println(s"Test attempt ${attempt + 1} failed, retrying... ${e.getMessage}")
-          if (attempt < maxAttempts - 1) Thread.sleep(delay)
-          retry(attempt + 1, Some(e))
-      }
-    }
-    
-    retry(0, None)
+    run(ScalaCliInputs.default.copy(code = code, isWorksheetMode = isWorksheet), allowFailure)(fish)
   }
 
   private def assertUserOutput(
