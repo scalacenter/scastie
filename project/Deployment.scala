@@ -149,7 +149,7 @@ class Deployment(
   val sbtContainerName = "scastie-sbt-runner"
 
   val sharedCacheName = "scastie-cache"
-  def sharedCacheFlag(directory: String) = s"-v $sharedCacheName:/$sharedCacheName/$directory"
+  def sharedCacheFlag(directory: String) = s"-v $sharedCacheName:${sharedCacheDirectory(directory)}"
   def sharedCacheDirectory(directory: String) = s"/$sharedCacheName/$directory"
 
   def deploy(serverZip: Path) = {
