@@ -31,7 +31,8 @@ object SbtProcess {
       progressActor: ActorRef,
       snippetActor: ActorRef,
       timeoutEvent: Option[Cancellable],
-      positionMapper: Option[PositionMapper] = None
+      positionMapper: Option[PositionMapper] = None,
+      inputsHash: String
   ) extends Data
   case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
     def message: String = {
@@ -77,16 +78,35 @@ class SbtProcess(runTimeout: FiniteDuration,
   import context.dispatcher
 
   private var progressId = 0L
+  private var lastCompilationInfos = List.empty[Problem]
+  private var lastInputsHash: Option[String] = None
 
   def sendProgress(run: SbtRun, _p: SnippetProgress): Unit = {
+    if (_p.compilationInfos.nonEmpty && !_p.isTimeout) {
+      lastCompilationInfos = _p.compilationInfos
+      lastInputsHash = Some(run.inputsHash)
+    }
+
+    val shouldCopyWarnings =
+      _p.compilationInfos.isEmpty &&
+      lastInputsHash.contains(run.inputsHash) &&
+      lastCompilationInfos.nonEmpty &&
+      _p.runtimeError.isEmpty &&
+      !_p.isTimeout
+
+    val p = if (shouldCopyWarnings)
+      _p.copy(compilationInfos = lastCompilationInfos)
+    else
+      _p
+
     progressId += 1
-    val p = _p.copy(id = Some(progressId))
-    run.progressActor ! p
+    val pWithId = p.copy(id = Some(progressId))
+    run.progressActor ! pWithId
     implicit val tm = Timeout(10.seconds)
-    (run.snippetActor ? p)
+    (run.snippetActor ? pWithId)
       .recover {
         case e =>
-          log.error(e, s"error while saving progress $p")
+          log.error(e, s"error while saving progress $pWithId")
       }
   }
 
@@ -189,7 +209,8 @@ class SbtProcess(runTimeout: FiniteDuration,
         isForcedProgramMode = false,
         progressActor = progressActor,
         snippetActor = sender(),
-        timeoutEvent = None
+        timeoutEvent = None,
+        inputsHash = taskInputs.toHash
       )
       sendProgress(_sbtRun, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snippetId)))
 

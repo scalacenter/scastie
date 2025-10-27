@@ -446,6 +446,14 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     })
   }
 
+  (1 to 2).foreach { i =>
+    test(s"[$i] warnings persist (issue #1144)") {
+      runCode("Nil match { case Seq(xs*) => println(\"test\") }")( progress =>
+        progress.compilationInfos.nonEmpty
+      )
+    }
+  }
+
   def assertCompilationInfo(
       infoAssert: Problem => Any
   )(progress: SnippetProgress): Boolean = {
