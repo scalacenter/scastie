@@ -423,8 +423,7 @@ object ScaladexSearch {
 
     val toolkitEnabled = props.libraries.exists { dep =>
       dep.groupId == "org.scala-lang" &&
-      dep.artifact == "toolkit" &&
-      dep.target == props.scalaTarget
+      dep.artifact == "toolkit"
     }
 
     def handleToolkitToggle(enabled: Boolean): Callback = {
@@ -440,11 +439,11 @@ object ScaladexSearch {
       if (enabled)
         addArtifact((toolkitProject, artifact, versionOpt), props.scalaTarget, state, props)
       else {
-        state.value.selecteds.find { selected =>
+        val toolkitSelecteds = state.value.selecteds.filter { selected =>
           selected.release.groupId == "org.scala-lang" &&
-          selected.release.artifact == "toolkit" &&
-          selected.release.target == props.scalaTarget
-        }.map(removeSelected).getOrElse(Callback.empty)
+          selected.release.artifact == "toolkit"
+        }
+        Callback.traverse(toolkitSelecteds)(removeSelected)
       }
     }
 
