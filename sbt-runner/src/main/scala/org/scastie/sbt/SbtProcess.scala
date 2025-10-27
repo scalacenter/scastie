@@ -24,6 +24,22 @@ object SbtProcess {
 
   sealed trait Data
   case class SbtData(currentInputs: SbtInputs) extends Data
+
+  case class CompilationInfoCache(
+      infos: List[Problem] = Nil,
+      inputsHash: Option[String] = None
+  ) {
+    def refreshIfValid(
+        progress: SnippetProgress,
+        newInputsHash: String
+    ): CompilationInfoCache = {
+      if (progress.compilationInfos.nonEmpty && !progress.isTimeout) {
+        this.copy(infos = progress.compilationInfos, inputsHash = Some(newInputsHash))
+      } else {
+        this
+      }
+    }
+  }
   case class SbtRun(
       snippetId: SnippetId,
       inputs: SbtInputs,
@@ -31,7 +47,8 @@ object SbtProcess {
       progressActor: ActorRef,
       snippetActor: ActorRef,
       timeoutEvent: Option[Cancellable],
-      lineMapping: Int => Int = identity
+      lineMapping: Int => Int = identity,
+      inputsHash: String
   ) extends Data
   case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
     def message: String = {
@@ -75,16 +92,31 @@ class SbtProcess(runTimeout: FiniteDuration,
   import context.dispatcher
 
   private var progressId = 0L
+  private var compilationInfoCache = CompilationInfoCache()
 
   def sendProgress(run: SbtRun, _p: SnippetProgress): Unit = {
+     compilationInfoCache = compilationInfoCache.refreshIfValid(_p, run.inputsHash)
+
+    val shouldCopyWarnings =
+      _p.compilationInfos.isEmpty &&
+      compilationInfoCache.inputsHash.contains(run.inputsHash) &&
+      compilationInfoCache.infos.nonEmpty &&
+      _p.runtimeError.isEmpty &&
+      !_p.isTimeout
+
+    val p = if (shouldCopyWarnings)
+      _p.copy(compilationInfos = compilationInfoCache.infos)
+    else
+      _p
+
     progressId += 1
-    val p = _p.copy(id = Some(progressId))
-    run.progressActor ! p
+    val pWithId = p.copy(id = Some(progressId))
+    run.progressActor ! pWithId
     implicit val tm = Timeout(10.seconds)
-    (run.snippetActor ? p)
+    (run.snippetActor ? pWithId)
       .recover {
         case e =>
-          log.error(e, s"error while saving progress $p")
+          log.error(e, s"error while saving progress $pWithId")
       }
   }
 
@@ -187,7 +219,8 @@ class SbtProcess(runTimeout: FiniteDuration,
         isForcedProgramMode = false,
         progressActor = progressActor,
         snippetActor = sender(),
-        timeoutEvent = None
+        timeoutEvent = None,
+        inputsHash = taskInputs.toHash
       )
       sendProgress(_sbtRun, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snippetId)))
 
