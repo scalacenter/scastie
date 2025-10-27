@@ -24,6 +24,22 @@ object SbtProcess {
 
   sealed trait Data
   case class SbtData(currentInputs: SbtInputs) extends Data
+
+  case class CompilationInfoCache(
+      infos: List[Problem] = Nil,
+      inputsHash: Option[String] = None
+  ) {
+    def refreshIfValid(
+        progress: SnippetProgress,
+        newInputsHash: String
+    ): CompilationInfoCache = {
+      if (progress.compilationInfos.nonEmpty && !progress.isTimeout) {
+        this.copy(infos = progress.compilationInfos, inputsHash = Some(newInputsHash))
+      } else {
+        this
+      }
+    }
+  }
   case class SbtRun(
       snippetId: SnippetId,
       inputs: SbtInputs,
@@ -78,24 +94,20 @@ class SbtProcess(runTimeout: FiniteDuration,
   import context.dispatcher
 
   private var progressId = 0L
-  private var lastCompilationInfos = List.empty[Problem]
-  private var lastInputsHash: Option[String] = None
+  private var compilationInfoCache = CompilationInfoCache()
 
   def sendProgress(run: SbtRun, _p: SnippetProgress): Unit = {
-    if (_p.compilationInfos.nonEmpty && !_p.isTimeout) {
-      lastCompilationInfos = _p.compilationInfos
-      lastInputsHash = Some(run.inputsHash)
-    }
+     compilationInfoCache = compilationInfoCache.refreshIfValid(_p, run.inputsHash)
 
     val shouldCopyWarnings =
       _p.compilationInfos.isEmpty &&
-      lastInputsHash.contains(run.inputsHash) &&
-      lastCompilationInfos.nonEmpty &&
+      compilationInfoCache.inputsHash.contains(run.inputsHash) &&
+      compilationInfoCache.infos.nonEmpty &&
       _p.runtimeError.isEmpty &&
       !_p.isTimeout
 
     val p = if (shouldCopyWarnings)
-      _p.copy(compilationInfos = lastCompilationInfos)
+      _p.copy(compilationInfos = compilationInfoCache.infos)
     else
       _p
 
