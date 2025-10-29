@@ -50,7 +50,9 @@ object MainPanel {
               closeShareModal = backend.closeShareModal,
               openShareModal = backend.openShareModal,
               loadProfile = backend.loadProfile,
-              deleteSnippet = backend.deleteSnippet
+              deleteSnippet = backend.deleteSnippet,
+              switchableUsers = state.switchableUsers,
+              changeUser = backend.changeUser
             ).render
           )
         case _ => EmptyVdom

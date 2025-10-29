@@ -15,13 +15,13 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import scala.concurrent.Future
 
+import org.scastie.api.UserData
+
 case class AccessToken(access_token: String)
 
 class Github(implicit system: ActorSystem) extends FailFastCirceSupport {
   import system.dispatcher
 
-  implicit val userEncoder: Encoder[User] = deriveEncoder[User]
-  implicit val userDecoder: Decoder[User] = deriveDecoder[User]
   implicit val readAccessToken: Decoder[AccessToken] = deriveDecoder[AccessToken]
 
   private val config =
@@ -30,8 +30,7 @@ class Github(implicit system: ActorSystem) extends FailFastCirceSupport {
   private val clientSecret = config.getString("client-secret")
   private val redirectUri = config.getString("uri") + "/callback"
 
-  def getUserWithToken(token: String): Future[User] = info(token)
-  def getUserWithOauth2(code: String): Future[User] = {
+  def getUserDataWithOauth2(code: String): Future[UserData] = {
     def access = {
       Http()
         .singleRequest(
@@ -56,7 +55,7 @@ class Github(implicit system: ActorSystem) extends FailFastCirceSupport {
     access.flatMap(info)
   }
 
-  private def info(token: String): Future[User] = {
+  private def info(token: String): Future[UserData] = {
     def fetchGithub(path: Path, query: Query = Query.Empty) = {
       HttpRequest(
         uri = Uri(s"https://api.github.com").withPath(path).withQuery(query),
@@ -64,8 +63,21 @@ class Github(implicit system: ActorSystem) extends FailFastCirceSupport {
       )
     }
 
-    Http()
+    val userData = 
+      Http()
       .singleRequest(fetchGithub(Path.Empty / "user"))
       .flatMap(response => Unmarshal(response).to[User])
+
+    val userOrgs = 
+      Http()
+        .singleRequest(fetchGithub(Path.Empty / "user" / "orgs"))
+        .flatMap(response => Unmarshal(response).to[List[User]])
+
+    for {
+      user <- userData
+      switchableUsers <- userOrgs
+    } yield {
+      UserData(user, switchableUsers)
+    }
   }
 }

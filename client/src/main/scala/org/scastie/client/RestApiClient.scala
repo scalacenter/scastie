@@ -101,8 +101,11 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
   def fetchOld(id: Int): Future[Option[FetchResult]] =
     get[FetchResult](s"/old-snippets/$id")
 
-  def fetchUser(): Future[Option[User]] =
-    get[User]("/user/settings")
+  def fetchUserData(): Future[Option[UserData]] =
+    get[UserData]("/user/settings")
+
+  def changeUser(user: User): Future[Option[UserData]] =
+    post[UserData].using("/changeUser", user, async=false)
 
   @deprecated("Scheduled for removal", "2023-04-30")
   def getPrivacyPolicyStatus(): Future[Boolean] =
