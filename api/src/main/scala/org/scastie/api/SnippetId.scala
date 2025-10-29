@@ -15,6 +15,18 @@ case class User(login: String, name: Option[String], avatar_url: String) {
   def isAdmin: Boolean = User.admins.contains(login)
 }
 
+case class UserData(
+  user: User,
+  switchableUsers: List[User] = List.empty
+) {
+  def isAdmin: Boolean = user.isAdmin
+}
+
+object UserData {
+  implicit val userDataEncoder: Encoder[UserData] = deriveEncoder[UserData]
+  implicit val userDataDecoder: Decoder[UserData] = deriveDecoder[UserData]
+}
+
 object SnippetUserPart {
   implicit val snippetUserPartEncoder: Encoder[SnippetUserPart] = deriveEncoder[SnippetUserPart]
   implicit val snippetUserPartDecoder: Decoder[SnippetUserPart] = deriveDecoder[SnippetUserPart]

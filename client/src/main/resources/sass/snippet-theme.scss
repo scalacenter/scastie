@@ -10,6 +10,14 @@
         color: $snippets-text-color;
       }
 
+      .switch-btn {
+        color: $snippets-text-color;
+        background-color: $user-switch-button-background;
+        &:hover {
+          background-color: $user-switch-button-background-hover;
+        }
+      }
+
       .snippets {
         .group {
           &:before {
