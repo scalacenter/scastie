@@ -5,7 +5,7 @@ import org.scastie.client.ConsoleState
 import org.scastie.client.HTMLFormatter
 import org.scastie.client.View
 import japgolly.scalajs.react._
-import org.scalajs.dom.raw.HTMLDivElement
+import org.scalajs.dom.HTMLDivElement
 
 import vdom.all._
 
