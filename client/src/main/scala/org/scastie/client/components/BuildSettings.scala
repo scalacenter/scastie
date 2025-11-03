@@ -133,7 +133,7 @@ object BuildSettings {
 
   private def sbtBuildSettingsPanel(props: BuildSettings, sbtInputs: SbtInputs): TagMod = {
     div()(
-      h2(I18n.t("build.scala_version")),
+      h2(span(I18n.t("build.scala_version"))),
       VersionSelector(sbtInputs.target, props.setTarget).render,
       h2(span(I18n.t("build.libraries"))),
       scaladexSearch(props, sbtInputs),
