@@ -24,9 +24,9 @@ case class InteractiveProvider(
   updateSettings: api.ScastieMetalsOptions ~=> Callback,
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
-) extends MetalsClient with MetalsAutocompletion with MetalsHover {
+) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsSignatureHelp {
 
-  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete)
+  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete, metalsSignatureHelp)
 
 }
 
