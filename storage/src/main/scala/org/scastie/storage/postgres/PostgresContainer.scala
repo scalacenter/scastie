@@ -13,7 +13,8 @@ import scalasql.dialects.PostgresDialect
 class PostgresContainer(
     defaultConfig: Boolean = false,
     useConnectionPool: Boolean = true,
-    runMigrations: Boolean = true
+    runMigrations: Boolean = true,
+    maxPoolSize: Int = 20
 )(
     implicit val ec: ExecutionContext
 ) extends PostgresSnippetsContainer {
@@ -50,6 +51,7 @@ class PostgresContainer(
       ds.setUsername(user)
       ds.setPassword(password)
       ds.setPoolName("PostgresPool")
+      ds.setMaximumPoolSize(maxPoolSize)
       ds
     case false =>
       val ds = new PGSimpleDataSource()
