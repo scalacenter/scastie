@@ -169,12 +169,6 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val closePrivacyPolicyModal: Reusable[Callback] =
     Reusable.always(scope.modState(_.togglePrivacyPolicyModal))
 
-  val closePrivacyPolicyPrompt: Reusable[Callback] =
-    Reusable.always(scope.modState(_.setPrivacyPolicyPromptClosed(true)))
-
-  val openPrivacyPolicyPrompt: Reusable[Callback] =
-    Reusable.always(scope.modState(_.setPrivacyPolicyPromptClosed(false)))
-
   val openLoginModal: Reusable[Callback] =
     Reusable.always(scope.modState(_.setLoginModalClosed(false)))
 
@@ -315,37 +309,6 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       )
     )
 
-  val acceptPolicy: Reusable[Callback] =
-    Reusable.always(
-      Callback.future {
-        restApiClient.acceptPrivacyPolicy().map { result =>
-          scope.modState(_.setPrivacyPolicyPromptClosed(result))
-        }
-      }
-    )
-
-  val removeUserFromPolicyStatus: Reusable[Callback] =
-    Reusable.always(
-      Callback.future {
-        restApiClient.removeUserFromPolicyStatus().map { result =>
-          scope.modState(_.setPrivacyPolicyPromptClosed(result)).map(_ => {
-            if (result) document.location.reload()
-          })
-        }
-      }
-    )
-
-  val removeAllUserSnippets: Reusable[Callback] =
-    Reusable.always(
-      Callback.future {
-        restApiClient.removeAllUserSnippets().map(Callback(_))
-      }
-    )
-
-  val refusePrivacyPolicy: Reusable[Callback] = Reusable.always(
-    removeAllUserSnippets >> removeUserFromPolicyStatus
-  )
-
   private def saveCallback(sId: SnippetId): Callback = {
     val setState = scope.modState(_.setCleanInputs.setSnippetId(sId).setLoadSnippet(false))
     val page = Page.fromSnippetId(sId)
@@ -472,10 +435,6 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       restApiClient
         .fetchUser()
         .map(result => scope.modState(_.setUser(result)))
-    ) >> Callback.future(
-      restApiClient
-        .getPrivacyPolicyStatus()
-        .map(result => scope.modState(_.setPrivacyPolicyPromptClosed(result)))
     )
 
   val formatCode: Reusable[Callback] = Reusable.always {
