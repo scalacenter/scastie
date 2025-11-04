@@ -38,6 +38,10 @@ trait PostgresSnippetsContainer extends SnippetsContainer with PostgresConverter
     Future.unit
   }
 
+  def insertWithExistingId(snippetId: SnippetId, inputs: BaseInputs): Future[Unit] = {
+    insert(snippetId, inputs)
+  }
+
   private def readProgresses(snippetId: SnippetId): List[SnippetProgress] = {
     val query = PostgresProgresses.select
       .filter(_.snippetId === snippetId.url)
