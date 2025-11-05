@@ -18,11 +18,11 @@ import com.typesafe
 
 object Deployment {
   def settings(server: Project, sbtRunner: Project, scalaCliRunner: Project, metalsRunner: Project): Seq[Def.Setting[Task[Unit]]] = Seq(
-    deploy := deployTask(server, sbtRunner, scalaCliRunner, metalsRunner, Production).value,
-    deployStaging := deployTask(server, sbtRunner, scalaCliRunner, metalsRunner, Staging).value,
-    publishContainers := publishContainers(sbtRunner, scalaCliRunner, metalsRunner).value,
-    generateDeploymentScripts := generateDeploymentScriptsTask(server, sbtRunner, scalaCliRunner, metalsRunner).value,
-    deployLocal := deployLocalTask(server, sbtRunner, scalaCliRunner, metalsRunner).value
+    deploy := deployTask(server = server, sbtRunner = sbtRunner,  scalaCliRunner = scalaCliRunner, metalsRunner = metalsRunner, deploymentType = Production).value,
+    deployStaging := deployTask(server = server, sbtRunner = sbtRunner, scalaCliRunner = scalaCliRunner, metalsRunner = metalsRunner, deploymentType = Staging).value,
+    publishContainers := publishContainers(sbtRunner = sbtRunner, scalaCliRunner = scalaCliRunner, metalsRunner = metalsRunner).value,
+    generateDeploymentScripts := generateDeploymentScriptsTask(server = server, sbtRunner = sbtRunner, scalaCliRunner = scalaCliRunner, metalsRunner = metalsRunner).value,
+    deployLocal := deployLocalTask(server = server, sbtRunner = sbtRunner, scalaCliRunner = scalaCliRunner, metalsRunner = metalsRunner).value
   )
 
   lazy val deploy = taskKey[Unit]("Deploy server and sbt instances")
@@ -31,9 +31,9 @@ object Deployment {
   lazy val generateDeploymentScripts = taskKey[Unit]("Generates deployment scripts with production configuration.")
   lazy val deployLocal = taskKey[Unit]("Deploy locally")
 
-  def deployTask(server: Project, sbtRunner: Project, metalsRunner: Project, scalaCliRunner: Project, deploymentType: DeploymentType): Def.Initialize[Task[Unit]] =
+  def deployTask(server: Project, sbtRunner: Project, scalaCliRunner: Project, metalsRunner: Project, deploymentType: DeploymentType): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, scalaCliRunner, metalsRunner, deploymentType).value
+      val deployment = deploymentTask(sbtRunner = sbtRunner, scalaCliRunner = scalaCliRunner, metalsRunner = metalsRunner, deploymentType = deploymentType).value
       val serverZip = (server / Universal / packageBin).value.toPath
 
       deployment.deploy(serverZip)
@@ -48,14 +48,14 @@ object Deployment {
 
   def generateDeploymentScriptsTask(server: Project, sbtRunner: Project, scalaCliRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, scalaCliRunner, metalsRunner, Production).value
+      val deployment = deploymentTask(sbtRunner = sbtRunner, scalaCliRunner = scalaCliRunner, metalsRunner = metalsRunner, deploymentType = Production).value
       deployment.generateDeploymentScripts()
     }
 
 
   def deployLocalTask(server: Project, sbtRunner: Project, scalaCliRunner: Project, metalsRunner: Project): Def.Initialize[Task[Unit]] =
     Def.task {
-      val deployment = deploymentTask(sbtRunner, scalaCliRunner, metalsRunner, Local).value
+      val deployment = deploymentTask(sbtRunner = sbtRunner, scalaCliRunner = scalaCliRunner, metalsRunner = metalsRunner, deploymentType = Local).value
       val serverZip = (server / Universal / packageBin).value.toPath
       (sbtRunner / docker).value
       (scalaCliRunner / docker).value
@@ -200,7 +200,8 @@ class Deployment(
          |    -e SERVER_AKKA_PORT=${config.serverAkkaPort} \\
          |    -e RUNNER_HOSTNAME=${config.runnersHostname} \\
          |    $dockerImagePath
-         |done""".stripMargin
+         |done
+         |""".stripMargin
 
 
     Files.write(scriptPath, runnersStartupScriptContent.getBytes())
@@ -233,7 +234,8 @@ class Deployment(
          |  -e PORT=${config.metalsPort} \\
          |  -e CACHE_EXPIRE_IN_SECONDS=${config.cacheExpireInSeconds} \\
          |  -e IS_DOCKER=true \\
-         |  $dockerImagePath""".stripMargin
+         |  $dockerImagePath
+         |""".stripMargin
 
     Files.write(scriptPath, metalsRunnerStartupScriptContent.getBytes())
     setPosixFilePermissions(scriptPath, executablePermissions)
@@ -245,7 +247,7 @@ class Deployment(
   def compareScriptWithRemote(scriptPath: Path): Boolean = {
     val uri = s"${config.userName}@${config.runnersHostname}"
     val remoteScriptPath = scriptPath.getFileName().toString()
-    val exitCode = Process(s"ssh $uri cat $remoteScriptPath") #| (s"diff - $scriptPath") ! logger
+    val exitCode = Process(s"ssh $uri cat $remoteScriptPath") #| (s"diff -B - $scriptPath") ! logger
     logger.info(s"EXIT CODE $exitCode")
     exitCode == 0
   }
