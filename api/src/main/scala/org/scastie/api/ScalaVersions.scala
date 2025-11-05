@@ -20,6 +20,7 @@ object ScalaVersions {
           BuildInfo.stableNext,
           BuildInfo.latestLTS,
           BuildInfo.stableLTS,
+          "3.7.2",
           "3.7.1",
           "3.7.0",
           "3.6.4",
@@ -56,6 +57,7 @@ object ScalaVersions {
       case _ =>
         List(
           BuildInfo.latest213,
+          "2.13.16",
           "2.13.15",
           "2.13.14",
           "2.13.13",
