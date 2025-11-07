@@ -11,10 +11,11 @@ import scalajs.js
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scalajs.js.Thenable.Implicits._
 import js.JSConverters._
+import org.scastie.api._
 
 trait MetalsSignatureHelp extends MetalsClient {
 
-  private var currentSignature: Option[api.SignatureHelpDTO] = None
+  private var currentSignature: Option[SignatureHelpDTO] = None
 
   private def isCursorInParens(doc: String, cursorPos: Int): Boolean = {
     val openParenPos = doc.lastIndexOf('(', cursorPos - 1)
@@ -86,11 +87,17 @@ trait MetalsSignatureHelp extends MetalsClient {
     }
   })
 
-  private def requestSignatureHelp(code: String, pos: Int): js.Promise[Option[api.SignatureHelpDTO]] = {
+
+  private def requestSignatureHelp(code: String, pos: Int): js.Promise[Option[SignatureHelpDTO]] = {
+    /* FIXME: For overloaded methods like:
+     *   def add(x: Int, y: Int): Int = x + y
+     *   def add(x: Int, y: Int)(z: Int): Int = x + y + z
+     * always the second signature is selected, even though it's supposed to be the first one.
+     */
     ifSupported {
       val request = toLSPRequest(code, pos)
       makeRequest(request, "signatureHelp").map { maybeText =>
-        parseMetalsResponse[api.SignatureHelpDTO](maybeText).filter(_.signatures.nonEmpty)
+        parseMetalsResponse[SignatureHelpDTO](maybeText).filter(_.signatures.nonEmpty)
       }.toJSPromise
     }
   }
@@ -107,19 +114,20 @@ trait MetalsSignatureHelp extends MetalsClient {
     }
   }
 
-  private def getSignatureHelpNode(sigHelp: api.SignatureHelpDTO): dom.Node = {
-    val sig = sigHelp.signatures(sigHelp.activeSignature)
+  private def getSignatureHelpNode(sigHelp: SignatureHelpDTO): dom.Node = {
+  val sigIdx = sigHelp.activeSignature
+    val paramIdx = sigHelp.activeParameter
+    val sig = sigHelp.signatures(sigIdx)
     val doc = sig.documentation
+    val label = sig.label
 
-    val markdown =
-      s"""```scala
-         |${sig.label}
-         |```
-       """.stripMargin
+    // TODO: highlight active parameter
+
+    val highlighted = InteractiveProvider.highlightScala(label)
 
     val node = dom.document.createElement("div")
     node.setAttribute("class", "cm-tooltip-signature-help")
-    node.innerHTML = InteractiveProvider.marked(markdown)
+    node.innerHTML = s"<pre>$highlighted</pre>"
     node
   }
 

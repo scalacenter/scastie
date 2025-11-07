@@ -12,6 +12,8 @@ import org.scalajs.dom
 class SyntaxHighlightingPlugin(editorView: hooks.Hooks.UseStateF[CallbackTo, EditorView]) {
   val syntaxHighlightingExtension = new Compartment()
   val fallbackExtension = typings.codemirrorLanguage.mod.StreamLanguage.define(typings.codemirrorLegacyModes.modeClikeMod.scala_).extension
+  
+  var syntaxHighlighter: Option[SyntaxHighlighter] = None
 
   val location = dom.window.location
   // this is workaround until we migrate all services to proper docker setup or unify the servers
@@ -48,6 +50,10 @@ class SyntaxHighlightingPlugin(editorView: hooks.Hooks.UseStateF[CallbackTo, Edi
   }
 
   def switchToTreesitterParser(scalaParser: Parser, language: Language, query: Query): Unit = {
+    val highlighter = new SyntaxHighlighter(scalaParser, language, query)
+    syntaxHighlighter = Some(highlighter)
+    InteractiveProvider.syntaxHighlighter = Some(highlighter)
+    
     val extension = ViewPlugin.define(editorView =>
       new SyntaxHighlightingHandler(scalaParser, language, query, editorView.state.doc.toString),
       PluginSpec[SyntaxHighlightingHandler]().setDecorations(_.decorations)

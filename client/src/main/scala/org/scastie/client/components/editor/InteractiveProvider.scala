@@ -63,6 +63,19 @@ object InteractiveProvider {
     .setMangle(false)
   )
 
+  var syntaxHighlighter: Option[SyntaxHighlighter] = None
+  
+  def highlightScala(code: String): String = {
+    syntaxHighlighter match {
+      case Some(highlighter) => highlighter.highlightScalaLabel(code)
+      case None =>
+        val markdown = s"""```scala
+                          |$code
+                          |```""".stripMargin
+        marked(markdown)
+    }
+  }
+
   private def wasMetalsToggled(prevProps: CodeEditor, props: CodeEditor): Boolean =
     (prevProps.metalsStatus == MetalsDisabled && props.metalsStatus == MetalsLoading) ||
     (prevProps.metalsStatus != MetalsDisabled && props.metalsStatus == MetalsDisabled)
