@@ -130,6 +130,14 @@ object EmbeddedOptions {
           )
         }
 
+        case (Some("scala-cli"), _, None, None) => {
+          Some(
+            scalaVersion
+              .map(version => ScalaCli(version))
+              .getOrElse(ScalaCli.default)
+          )
+        }
+
         case (Some("js"), None, None, None) => {
           Some(Js.default)
         }
@@ -158,19 +166,27 @@ object EmbeddedOptions {
 
     val inputs =
       if (scalaTarget.isDefined || code.isDefined) {
-        val default = ScalaCliInputs.default
 
-        val isScala3 =
-          scalaTarget
-            .map(_.targetType == ScalaTargetType.Scala3)
-            .getOrElse(false)
+        val sbtConfigExtraOption = sbtConfig.toOption
 
-        val defaultCode =
-          if (isScala3) Scala3.defaultCode
-          else default.code
+        val default: BaseInputs =
+          scalaTarget match {
+            case Some(target: ScalaCli) => 
+              ScalaCliInputs.default.copy(target = target)
+            case Some(target: SbtScalaTarget) =>
+              SbtInputs.default.copy(target = target, sbtConfigExtra = sbtConfigExtraOption.getOrElse(SbtInputs.default.sbtConfigExtra))
+            case None => ScalaCliInputs.default
+          }
+
+        val defaultCode = 
+          scalaTarget match {
+            case Some(_: ScalaCli) => ScalaCli.defaultCode
+            case Some(_: Scala3) => Scala3.defaultCode
+            case _ => default.code
+          }
 
         val inputs0 =
-          default.copy(
+          default.copyBaseInput(
             isWorksheetMode = isWorksheetMode.getOrElse(default.isWorksheetMode),
             code = code.getOrElse(defaultCode),
           )
