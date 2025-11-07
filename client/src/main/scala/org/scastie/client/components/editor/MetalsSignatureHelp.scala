@@ -20,10 +20,16 @@ trait MetalsSignatureHelp extends MetalsClient {
   private def isCursorInParens(doc: String, cursorPos: Int): Boolean = {
     val openParenPos = doc.lastIndexOf('(', cursorPos - 1)
     val closeParenPos = doc.indexOf(')', cursorPos)
-    openParenPos != -1 &&
-    closeParenPos != -1 &&
-    cursorPos > openParenPos &&
-    cursorPos <= closeParenPos
+    val nextOpenParen = doc.indexOf('(', cursorPos)
+
+    val isInParens =
+      openParenPos != -1 &&
+      closeParenPos != -1 &&
+      cursorPos > openParenPos &&
+      cursorPos <= closeParenPos &&
+      (nextOpenParen == -1 || nextOpenParen > closeParenPos)
+
+    isInParens
   }
 
   private def getSignatureTooltips(state: EditorState): js.Array[Tooltip] = {
