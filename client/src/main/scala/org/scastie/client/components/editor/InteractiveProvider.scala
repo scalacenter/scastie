@@ -64,10 +64,10 @@ object InteractiveProvider {
   )
 
   var syntaxHighlighter: Option[SyntaxHighlighter] = None
-  
-  def highlightScala(code: String): String = {
+
+  def highlightSignatureHelp(code: String, activeParameter: Option[Int] = None): String = {
     syntaxHighlighter match {
-      case Some(highlighter) => highlighter.highlightScalaLabel(code)
+      case Some(highlighter) => highlighter.highlightSignatureHelp(code, activeParameter)
       case None =>
         val markdown = s"""```scala
                           |$code

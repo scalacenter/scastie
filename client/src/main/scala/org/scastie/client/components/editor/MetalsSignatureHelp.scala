@@ -115,7 +115,7 @@ trait MetalsSignatureHelp extends MetalsClient {
   }
 
   private def getSignatureHelpNode(sigHelp: SignatureHelpDTO): dom.Node = {
-  val sigIdx = sigHelp.activeSignature
+    val sigIdx = sigHelp.activeSignature
     val paramIdx = sigHelp.activeParameter
     val sig = sigHelp.signatures(sigIdx)
     val doc = sig.documentation
@@ -123,7 +123,7 @@ trait MetalsSignatureHelp extends MetalsClient {
 
     // TODO: highlight active parameter
 
-    val highlighted = InteractiveProvider.highlightScala(label)
+    val highlighted = InteractiveProvider.highlightSignatureHelp(label, Some(paramIdx))
 
     val node = dom.document.createElement("div")
     node.setAttribute("class", "cm-tooltip-signature-help")
