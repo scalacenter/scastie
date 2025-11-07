@@ -121,8 +121,6 @@ trait MetalsSignatureHelp extends MetalsClient {
     val doc = sig.documentation
     val label = sig.label
 
-    // TODO: highlight active parameter
-
     val highlighted = InteractiveProvider.highlightSignatureHelp(label, Some(paramIdx))
 
     val node = dom.document.createElement("div")
