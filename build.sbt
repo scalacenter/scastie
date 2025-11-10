@@ -230,7 +230,7 @@ lazy val server = project
       val shell: Seq[String] = if (sys.props("os.name").contains("Windows")) Seq("cmd", "/c") else Seq("bash", "-c")
       val updateGitSubmodule: Seq[String] = shell :+ "git submodule update --init"
 
-      val installNpmDependencies: Seq[String] = shell :+ "npm install && cd tree-sitter-scala && npm install"
+      val installNpmDependencies: Seq[String] = shell :+ "cd tree-sitter-scala && npm install"
       val buildWasm: Seq[String] = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
       s.log.info("building tree-sitter-scala wasm...")
 
