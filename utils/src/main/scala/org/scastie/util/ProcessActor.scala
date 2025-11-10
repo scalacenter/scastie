@@ -122,8 +122,9 @@ class ProcessActor(command: List[String], workingDir: Path, environment: Map[Str
       stdin ! input
 
     case Exited(exitValue) =>
-      if (killOnExit) {
-        throw new Exception("process exited: " + exitValue)
+      println(s"Process exited with code: $exitValue")
+      if (exitValue != 0) {
+        throw new Exception(s"sbt shell failed (exit code: $exitValue)")
       }
   }
 }
