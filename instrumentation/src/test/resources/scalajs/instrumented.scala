@@ -6,7 +6,7 @@ import org.scalajs.dom.html.Canvas
 scala.Predef.locally {
 $doc.startStatement(59, 116);
 val $t = dom.document.createElement("canvas").asInstanceOf[Canvas];
-$doc.binder(_root_.org.scastie.runtime.Runtime.render($t, attach _), 59, 116);
+$doc.binder(_root_.org.scastie.runtime.Runtime.render($t, attach), 59, 116);
 $doc.endStatement();
 $t}
 }
