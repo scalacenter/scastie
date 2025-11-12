@@ -362,8 +362,11 @@ msgstr "Different Configuration"
 msgid "status.same_config"
 msgstr "Same Configuration"
 
-msgid "status.sbt_runner_config"
-msgstr "Sbt runner"
+msgid "status.different_target"
+msgstr "Different Target"
 
 msgid "status.sbt_runners"
-msgstr "Sbt Runners"
+msgstr "SBT Runners"
+
+msgid "status.scala_cli_runners"
+msgstr "Scala-CLI Runners"

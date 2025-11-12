@@ -17,6 +17,7 @@ import akka.remote.DisassociatedEvent
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.jdk.CollectionConverters._
 import scala.collection.concurrent.TrieMap
+import java.util.concurrent.atomic.AtomicReference
 
 class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorRef)
   extends BaseDispatcher[ActorSelection, ServerState](config) {
@@ -25,9 +26,23 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
 
   val remoteServers = getRemoteServers("scli", "ScalaCliRunner", "ScalaCliActor")
 
-  val availableServersQueue = new ConcurrentLinkedQueue[(SocketAddress, ActorSelection)](remoteServers.toSeq.asJava)
-  val taskQueue = new ConcurrentLinkedQueue[Task[ScalaCliInputs]]()
-  val processedSnippetsId: TrieMap[SnippetId, (SocketAddress, ActorSelection)] = TrieMap.empty
+  val balancer: AtomicReference[ScalaCliBalancer] = {
+    val scalaCliServers = remoteServers.to(Vector).map {
+      case (_, ref) =>
+        val state: ServerState = ServerState.Unknown
+        ScalaCliServer(ref, ScalaCliInputs.default, state)
+    }
+
+    new AtomicReference(ScalaCliLoadBalancer(servers = scalaCliServers))
+  }
+
+  private def updateScalaCliBalancer(newBalancer: ScalaCliBalancer): Unit = {
+    if (balancer.get != newBalancer) {
+      statusActor ! ScalaCliLoadBalancerUpdate(newBalancer)
+    }
+    balancer.set(newBalancer)
+    ()
+  }
 
   private def run0(scalaCliInputs: ScalaCliInputs, userTrace: UserTrace, snippetId: SnippetId) = {
     val UserTrace(ip, user) = userTrace
@@ -35,29 +50,16 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
     log.info("id: {}, ip: {} run inputs: {}", snippetId, ip, scalaCliInputs)
 
     val task = Task[ScalaCliInputs](scalaCliInputs, Ip(ip), TaskId(snippetId), Instant.now)
-    taskQueue.add(task)
 
-    giveTask()
-  }
+    balancer.get.add(task) match {
+      case Some((server, newBalancer)) =>
+        updateScalaCliBalancer(newBalancer)
 
-  private def enqueueAvailableServer(addr: SocketAddress, server: ActorSelection) =
-    if (remoteServers.contains(addr)) {
-      availableServersQueue.add(addr, server)
-      giveTask()
-    }
-
-
-  private def giveTask() = {
-    val maybeTask = Option(taskQueue.poll())
-    maybeTask.map { task =>
-      Option(availableServersQueue.poll) match {
-        case None => ()
-        case Some((addr, server)) => {
-          log.info(s"Giving task ${task.taskId} to ${server.pathString}")
-          server ! ScalaCliActorTask(task.taskId.snippetId, task.config.asInstanceOf[ScalaCliInputs], task.ip.v, progressActor)
-          processedSnippetsId.addOne(task.taskId.snippetId, (addr, server))
-        }
-      }
+        server.ref.tell(
+          ScalaCliActorTask(snippetId, scalaCliInputs, ip, progressActor),
+          self
+        )
+      case _ => ()
     }
   }
 
@@ -78,8 +80,14 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
         val ref = connectRunner(getRemoteActorPath("ScalaCliRunner", address, "ScalaCliActor"))
 
         remoteServers.addOne(address -> ref)
-        enqueueAvailableServer(address, ref)
-        giveTask()
+
+        val state: ServerState = ServerState.Unknown
+
+        updateScalaCliBalancer(
+          balancer.get.addServer(
+            ScalaCliServer(ref, ScalaCliInputs.default, state)
+          )
+        )
       }
 
     case progress: SnippetProgress =>
@@ -92,14 +100,19 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
 
     case done: Done =>
       done.progress.snippetId.foreach { sid =>
-        val (addr, server) = processedSnippetsId(sid)
-        log.info(s"Runner $addr has finished processing $sid.")
-        processedSnippetsId.remove(sid)
-        enqueueAvailableServer(addr, server)
+        val newBalancer = balancer.get.done(TaskId(sid))
+        newBalancer match {
+          case Some(newBalancer) =>
+            updateScalaCliBalancer(newBalancer)
+          case None => ()
+        }
       }
 
     case Run(InputsWithIpAndUser(scalaCliInputs: ScalaCliInputs, userTrace), snippetId) =>
       run0(scalaCliInputs, userTrace, snippetId)
+
+    case ReceiveStatus(requester) =>
+      sender() ! ScalaCliLoadBalancerInfo(balancer.get, requester)
 
     case event: DisassociatedEvent =>
       for {
@@ -108,7 +121,11 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
         ref <- remoteServers.get(SocketAddress(host, port))
       } {
         log.warning("removing disconnected: {}", ref)
+        val previousRemoteServers = remoteServers
         remoteServers.remove(SocketAddress(host, port))
+        if (previousRemoteServers != remoteServers) {
+          updateScalaCliBalancer(balancer.get.removeServer(ref))
+        }
       }
 
     case _ => ()

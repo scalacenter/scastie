@@ -36,7 +36,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
         SbtServer(ref, SbtInputs.default, state)
     }
 
-    new AtomicReference(LoadBalancer(servers = sbtServers))
+    new AtomicReference(SbtLoadBalancer(servers = sbtServers))
   }
 
   private def updateSbtBalancer(newBalancer: SbtBalancer): Unit = {

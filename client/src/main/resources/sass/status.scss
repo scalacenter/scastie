@@ -14,7 +14,10 @@
 
     .ready {
       background-color: green;
-      color: white;
+    }
+
+    .different-target {
+      background-color: #7c7c7c; 
     }
 
     .unknown,
@@ -23,7 +26,7 @@
     .connecting,
     .indexing,
     .needs-reload {
-      background-color: yellow; 
+      background-color: #dc9f12; 
     }
 
 
