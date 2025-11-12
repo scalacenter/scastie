@@ -14,7 +14,9 @@ import org.scastie.util.GraphStageForwarder
 case object SubscribeStatus
 
 case class SbtLoadBalancerUpdate(newSbtBalancer: SbtBalancer)
+case class ScalaCliLoadBalancerUpdate(newScalaCliBalancer: ScalaCliBalancer)
 case class LoadBalancerInfo(sbtBalancer: SbtBalancer, requester: ActorRef)
+case class ScalaCliLoadBalancerInfo(scalaCliBalancer: ScalaCliBalancer, requester: ActorRef)
 
 case class SetDispatcher(dispatchActor: ActorRef)
 
@@ -52,8 +54,16 @@ class StatusActor private () extends Actor with ActorLogging {
       publishers.foreach(_ ! convertSbt(newSbtBalancer))
     }
 
+    case ScalaCliLoadBalancerUpdate(newScalaCliBalancer) => {
+      publishers.foreach(_ ! convertScalaCli(newScalaCliBalancer))
+    }
+
     case LoadBalancerInfo(sbtBalancer, requester) => {
       requester ! convertSbt(sbtBalancer)
+    }
+
+    case ScalaCliLoadBalancerInfo(scalaCliBalancer, requester) => {
+      requester ! convertScalaCli(scalaCliBalancer)
     }
 
     case SetDispatcher(dispatchActorReference) => {
@@ -69,6 +79,21 @@ class StatusActor private () extends Actor with ActorLogging {
             config = server.lastConfig,
             tasks = server.mailbox.map(_.taskId),
             sbtState = server.state
+        )
+      )
+    )
+  }
+
+  private def convertScalaCli(
+      newScalaCliBalancer: ScalaCliBalancer
+  ): StatusProgress = {
+    StatusProgress.ScalaCli(
+      newScalaCliBalancer.servers.map(
+        server =>
+          ScalaCliRunnerState(
+            config = server.lastConfig,
+            tasks = server.mailbox.map(_.taskId),
+            scalaCliState = server.state
         )
       )
     )

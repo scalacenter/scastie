@@ -230,7 +230,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       val sender = this.sender()
       logError(container.removeUserSnippets(UserLogin(user.login)).map(sender ! _))
 
-    case x @ ReceiveStatus(requester) => sbtDispatcher.tell(x, sender())
+    case x @ ReceiveStatus(requester) =>
+      sbtDispatcher.tell(x, sender())
+      scliDispatcher.tell(x, sender())
 
     case statusProgress: StatusProgress =>
       statusActor ! statusProgress

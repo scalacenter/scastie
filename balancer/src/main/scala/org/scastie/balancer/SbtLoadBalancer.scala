@@ -18,18 +18,18 @@ case class TaskHistory(data: Vector[Task[SbtInputs]], maxSize: Int) {
     copy(data = cappedData :+ task)
   }
 }
-case class LoadBalancer[R, S <: ServerState](servers: Vector[SbtServer[R, S]]) {
+case class SbtLoadBalancer[R, S <: ServerState](servers: Vector[SbtServer[R, S]]) {
   private val log = LoggerFactory.getLogger(getClass)
 
-  def done(taskId: TaskId): Option[LoadBalancer[R, S]] = {
+  def done(taskId: TaskId): Option[SbtLoadBalancer[R, S]] = {
     Some(copy(servers = servers.map(_.done(taskId))))
   }
 
-  def addServer(server: SbtServer[R, S]): LoadBalancer[R, S] = {
+  def addServer(server: SbtServer[R, S]): SbtLoadBalancer[R, S] = {
     copy(servers = server +: servers)
   }
 
-  def removeServer(ref: R): LoadBalancer[R, S] = {
+  def removeServer(ref: R): SbtLoadBalancer[R, S] = {
     copy(servers = servers.filterNot(_.ref == ref))
   }
 
@@ -38,7 +38,7 @@ case class LoadBalancer[R, S <: ServerState](servers: Vector[SbtServer[R, S]]) {
     random(servers.filter(_.state.isReady))
   }
 
-  def add(task: Task[SbtInputs]): Option[(SbtServer[R, S], LoadBalancer[R, S])] = {
+  def add(task: Task[SbtInputs]): Option[(SbtServer[R, S], SbtLoadBalancer[R, S])] = {
     log.info("Task added: {}", task.taskId)
 
     val (availableServers, unavailableServers) =
