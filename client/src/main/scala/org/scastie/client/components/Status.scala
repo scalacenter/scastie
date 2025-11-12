@@ -47,27 +47,56 @@ object Status {
       }
     }
 
-    def renderConfiguration(serverInputs: SbtInputs): VdomElement = {
+    def renderConfigurationSbt(serverInputs: SbtInputs): VdomElement = {
       val (cssConfig, label) =
         props.inputs match {
           case sbtInputs: SbtInputs if (serverInputs.needsReload(sbtInputs)) => ("needs-reload", I18n.t("status.different_config"))
-          case _: ScalaCliInputs => ("different-target", I18n.t("status.sbt_runner_config"))
+          case _: ScalaCliInputs => ("different-target", I18n.t("status.different_target"))
           case _ => ("ready", I18n.t("status.same_config"))
         }
 
       span(cls := "runner " + cssConfig)(label)
     }
 
+    def renderConfigurationCli(serverInputs: ScalaCliInputs): VdomElement = {
+      val (cssConfig, label) =
+        props.inputs match {
+          case _: SbtInputs => ("different-target", I18n.t("status.different_target"))
+          case _ => ("ready", I18n.t("status.same_config"))
+        }
+
+      span(cls := "runner " + cssConfig)(label)
+    }
+
+    val scalaCliRunnersStatus =
+      props.state.scalaCliRunners match {
+        case Some(scalaCliRunners) =>
+          div(
+            h1(I18n.t("status.scala_cli_runners")),
+            ul(
+              scalaCliRunners.zipWithIndex.map {
+                case (scalaCliRunner, i) =>
+                  li(key := i)(
+                    renderConfigurationCli(scalaCliRunner.config),
+                    renderSbtTask(scalaCliRunner.tasks)
+                  )
+              }.toTagMod
+            )
+          )
+        case _ => div()
+      }
+
     val sbtRunnersStatus =
       props.state.sbtRunners match {
         case Some(sbtRunners) =>
           div(
+            marginBottom := "4rem",
             h1(I18n.t("status.sbt_runners")),
             ul(
               sbtRunners.zipWithIndex.map {
                 case (sbtRunner, i) =>
                   li(key := i)(
-                    renderConfiguration(sbtRunner.config),
+                    renderConfigurationSbt(sbtRunner.config),
                     renderSbtTask(sbtRunner.tasks)
                   )
               }.toTagMod
@@ -76,7 +105,10 @@ object Status {
         case _ => div()
       }
 
-    div(sbtRunnersStatus)
+    div(
+      sbtRunnersStatus,
+      scalaCliRunnersStatus
+    )
   }
 
   private val component =

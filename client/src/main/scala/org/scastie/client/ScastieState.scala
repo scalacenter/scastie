@@ -459,6 +459,7 @@ case class ScastieState(
     statusUpdate match {
       case StatusProgress.KeepAlive       => this
       case StatusProgress.Sbt(sbtRunners) => copyAndSave(status = status.copy(sbtRunners = Some(sbtRunners)))
+      case StatusProgress.ScalaCli(scalaCliRunners) => copyAndSave(status = status.copy(scalaCliRunners = Some(scalaCliRunners)))
     }
   }
 
