@@ -19,7 +19,9 @@ object ScalaCliUtils {
       case ScalaVersionRegex(v) => ScalaVersionUtil.resolveVersion(v)
     }
     val dependencies = codeHeader.collect {
-      case DepRegex(_, dep) => dep
+      case DepRegex(_, dep) => 
+        val cleanDep = dep.trim.stripPrefix("\"").stripSuffix("\"")
+        cleanDep
     }.toSet
     val maybeToolkitVersion = codeHeader.collectFirst {
       case ToolkitRegex(v) => if (v == "latest") "latest.stable" else v
