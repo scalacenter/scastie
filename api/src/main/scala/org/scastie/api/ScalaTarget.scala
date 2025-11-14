@@ -43,6 +43,11 @@ sealed trait SbtScalaTarget extends ScalaTarget {
     s""""$groupId" %%% "$artifact" % "$version""""
   }
 
+  protected def renderSbtSingle(lib: ScalaDependency): String = {
+    import lib._
+    s""""$groupId" % "$artifact" % "$version""""
+  }
+
   def isJVMTarget: Boolean
 
   def withScalaVersion(newVersion: String): SbtScalaTarget = {
@@ -138,8 +143,35 @@ case class Js(scalaVersion: String, scalaJsVersion: String) extends SbtScalaTarg
                          else scalaJsVersion.split('.').head)
   )
 
-  def renderDependency(lib: ScalaDependency): String =
-    s"${renderSbtCross(lib)} cross CrossVersion.for3Use2_13"
+  def renderDependency(lib: ScalaDependency): String = {
+    import lib._
+
+    val scalaJsVersionPrefix = s"sjs${BuildInfo.scalaJsVersion.split('.').head}"
+
+    def renderLibWithSuffix(lib: ScalaDependency, suffix: String): String = {
+      val artifactWithSuffix = s"${artifact}_${suffix}"
+      val newLib = lib.copy(artifact = artifactWithSuffix)
+      renderSbtSingle(newLib)
+    }
+
+    lib match {
+      case ScalaDependency(groupId, artifact, _, _, _) if groupId == "org.scastie" && artifact == "runtime-scala" =>
+        scalaVersion match {
+          /* 3.0.0 <= _ <= 3.1.2 */
+          case v if v.startsWith("3.0") || (v.startsWith("3.1") && v != "3.1.3") =>
+            renderLibWithSuffix(lib, s"${scalaJsVersionPrefix}_3.0.2")
+          /* >= 3.1.3 */
+          case v if v.startsWith("3") =>
+            renderLibWithSuffix(lib, s"${scalaJsVersionPrefix}_3.1.3")
+          case v if v.startsWith("2.13") =>
+            renderLibWithSuffix(lib, s"${scalaJsVersionPrefix}_2.13")
+          case v if v.startsWith("2.12") =>
+            renderLibWithSuffix(lib, s"${scalaJsVersionPrefix}_2.12")
+          case _ => renderSbtCross(lib)
+        }
+      case _ => renderSbtCross(lib)
+    }
+  }
 
   def sbtConfig: String = {
     s"""|$sbtConfigScalaVersion
