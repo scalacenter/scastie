@@ -19,7 +19,7 @@ import cats.data.OptionT
 
 object TestUtils extends Assertions with CatsEffectAssertions {
   val cache  = Cache.empty[IO, ScastieMetalsOptions, ScastiePresentationCompiler]
-  val server = ScastieMetalsImpl.instance[IO](cache)
+  val server = ScastieMetalsImpl.instance(cache)
 
   type DependencyForVersion = ScalaTarget => ScalaDependency
 
