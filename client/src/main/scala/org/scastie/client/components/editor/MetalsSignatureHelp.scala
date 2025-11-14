@@ -125,7 +125,7 @@ trait MetalsSignatureHelp extends MetalsClient {
     val paramIdx = sigHelp.activeParameter
     val sig = sigHelp.signatures(sigIdx)
     val doc = sig.documentation
-    val label = sig.label
+    val label = sig.label.replaceAll("\\[|\\]", "")
 
     val highlighted = InteractiveProvider.highlightSignatureHelp(label, Some(paramIdx))
 
