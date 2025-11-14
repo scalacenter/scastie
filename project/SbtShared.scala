@@ -184,7 +184,8 @@ lazy val baseJsSettings = Seq(
         "jsScalaVersion"        -> ScalaVersions.js,
         "defaultScalaJsVersion" -> ScalaJSVersions.current,
         "sbtVersion"            -> sbtVersion.value,
-        "scalaCliVersion"       -> scalaCliVersion
+        "scalaCliVersion"       -> scalaCliVersion,
+        "scalaJsVersion"        -> ScalaJSVersions.current
       ),
       buildInfoPackage := "org.scastie.buildinfo"
     )
