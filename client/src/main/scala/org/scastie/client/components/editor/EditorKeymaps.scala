@@ -143,11 +143,11 @@ case class Key(default: String, linux: String, mac: String, win: String) {
     val (requiredMods, mainKey) = (parts.init.toSet, parts.last)
 
     val presentMods = List(
-      if (ctrl) "ctrl" else "",
-      if (meta) "meta" else "",
-      if (shift) "shift" else "",
-      if (alt) "alt" else ""
-    ).filter(_.nonEmpty).toSet
+      Option.when(ctrl)("ctrl"),
+      Option.when(meta)("meta"),
+      Option.when(shift)("shift"),
+      Option.when(alt)("alt")
+    ).flatten.toSet
 
     presentMods == requiredMods && key == mainKey
   }
