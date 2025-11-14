@@ -9,19 +9,26 @@ class MongoDBContainer(defaultConfig: Boolean = false)(
   implicit val ec: ExecutionContext
 ) extends MongoDBUsersContainer with MongoDBSnippetsContainer {
 
-  val mongoUri = {
-    if (defaultConfig) s"mongodb://localhost:27017/scastie"
-    else {
+  val (client0, database0) = {
+    if (defaultConfig) {
+      val mongoUri = s"mongodb://localhost:27017/scastie"
+      val client: MongoClient = MongoClient(mongoUri)
+      (client, client.getDatabase("snippets"))
+    } else {
       val config       = ConfigFactory.load().getConfig("scastie.mongodb")
       val user         = config.getString("user")
       val password     = config.getString("password")
       val databaseName = config.getString("database")
       val host         = config.getString("host")
       val port         = config.getInt("port")
-      s"mongodb://$user:$password@$host:$port/$databaseName"
+
+      val mongoUri = s"mongodb://$user:$password@$host:$port/$databaseName"
+      val client: MongoClient = MongoClient(mongoUri)
+      (client, client.getDatabase(databaseName))
     }
   }
 
-  protected val client: MongoClient = MongoClient(mongoUri)
-  val database: MongoDatabase       = client.getDatabase("snippets")
+  protected val client: MongoClient = client0
+  protected val database: MongoDatabase = database0
+
 }

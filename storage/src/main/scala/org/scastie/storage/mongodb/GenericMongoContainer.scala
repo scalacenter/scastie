@@ -6,8 +6,7 @@ import io.circe.parser._
 import io.circe.syntax._
 
 trait GenericMongoContainer {
-  val mongoUri: String
-  val database: MongoDatabase
+  protected val database: MongoDatabase
   protected val client: MongoClient
 
   // TODO: Change client logic to use provided codecs

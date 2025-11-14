@@ -41,7 +41,7 @@ object Instrument {
   val entryPointName = "Main"
 
   private val elemArrayT =
-    "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.raw.HTMLElement]"
+    "_root_.scala.scalajs.js.Array[_root_.org.scalajs.dom.HTMLElement]"
 
   private def extractExperimentalImports(code: String): (String, String) = {
     val experimentalRegex = """^\s*import\s+language\.experimental\.[^\n]+""".r
@@ -76,7 +76,7 @@ object Instrument {
 
     val renderCall =
       if (!isScalaJs) s"$runtimeT.render($$t)"
-      else s"$runtimeT.render($$t, attach _)"
+      else s"$runtimeT.render($$t, attach)"
 
     val replacement =
       s"""|scala.Predef.locally {
@@ -116,12 +116,7 @@ object Instrument {
         s"""|@$jsExportTopLevelT("ScastiePlaygroundMain") class ScastiePlaygroundMain {
             |  def suppressUnusedWarnsScastie = Html
             |  val playground = $runtimeErrorT.wrap($instrumentedObject)
-            |  @$jsExportT def result = playground match {
-            |    case Right(p) => 
-            |      p.main(Array())
-            |      $runtimeT.writeStatements(p.$$doc.getResults())
-            |    case Left(error) => $runtimeT.writeStatements(List())
-            |  }
+            |  @$jsExportT def result = $runtimeT.writeStatements(playground.map { playground => playground.main(Array()); playground.$$doc.getResults() })
             |  @$jsExportT def attachedElements: $elemArrayT =
             |    playground match {
             |      case Right(p) => p.attachedElements
