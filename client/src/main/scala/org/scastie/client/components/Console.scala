@@ -4,6 +4,8 @@ import org.scastie.api._
 import org.scastie.client.ConsoleState
 import org.scastie.client.HTMLFormatter
 import org.scastie.client.View
+import org.scastie.client.components.editor.EditorKeymaps
+
 import japgolly.scalajs.react._
 import org.scalajs.dom.HTMLDivElement
 
@@ -66,7 +68,7 @@ object Console {
           ).render.when(props.isEmbedded),
           div(cls := "console-label")(
             i(cls := "fa fa-terminal"),
-            p(s"${I18n.t("console.title")} (F3)"),
+            p(s"${I18n.t("console.title")} (${EditorKeymaps.console.getName})"),
             i(cls := "fa fa-caret-down")
           )
         ),
@@ -86,7 +88,7 @@ object Console {
         displaySwitcher,
         div(cls := "console-label")(
           i(cls := "fa fa-terminal"),
-          p(s"${I18n.t("console.title")} (F3)"),
+          p(s"${I18n.t("console.title")} (${EditorKeymaps.console.getName})"),
           i(cls := "fa fa-caret-up")
         )
       )
