@@ -22,7 +22,7 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives)(implic
 
   val isAdminUser: Directive1[Boolean] =
     userDirectives.optionalLogin.map(
-      user => user.exists(_.isAdmin)
+      userData => userData.exists(_.isAdmin)
     )
 
   val routes: Route =
