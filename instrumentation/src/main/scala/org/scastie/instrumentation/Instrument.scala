@@ -76,7 +76,7 @@ object Instrument {
 
     val renderCall =
       if (!isScalaJs) s"$runtimeT.render($$t)"
-      else s"$runtimeT.render($$t, attach _)"
+      else s"$runtimeT.render($$t, attach)"
 
     val replacement =
       s"""|scala.Predef.locally {
