@@ -6,6 +6,11 @@ import java.time.Instant
 import akka.actor.{ActorRef, Cancellable, FSM, Stash}
 import akka.pattern.ask
 import akka.util.Timeout
+import com.google.common.cache.CacheBuilder
+import scalacache._
+import scalacache.guava._
+import scalacache.modes.sync._
+
 import org.scastie.api._
 import org.scastie.instrumentation.InstrumentedInputs
 import org.scastie.util.ScastieFileUtil.{slurp, write}
@@ -25,21 +30,6 @@ object SbtProcess {
   sealed trait Data
   case class SbtData(currentInputs: SbtInputs) extends Data
 
-  case class CompilationInfoCache(
-      infos: List[Problem] = Nil,
-      inputsHash: Option[String] = None
-  ) {
-    def refreshIfValid(
-        progress: SnippetProgress,
-        newInputsHash: String
-    ): CompilationInfoCache = {
-      if (progress.compilationInfos.nonEmpty && !progress.isTimeout) {
-        this.copy(infos = progress.compilationInfos, inputsHash = Some(newInputsHash))
-      } else {
-        this
-      }
-    }
-  }
   case class SbtRun(
       snippetId: SnippetId,
       inputs: SbtInputs,
@@ -94,22 +84,28 @@ class SbtProcess(runTimeout: FiniteDuration,
   import context.dispatcher
 
   private var progressId = 0L
-  private var compilationInfoCache = CompilationInfoCache()
+  
+  val underlyingGuavaCache = CacheBuilder
+    .newBuilder()
+    .maximumSize(10000)
+    .expireAfterAccess(30, MINUTES)
+    .build[String, Entry[Set[Problem]]]()
+
+  implicit val sbtCache: Cache[Set[Problem]] =
+    GuavaCache(underlyingGuavaCache)
 
   def sendProgress(run: SbtRun, _p: SnippetProgress): Unit = {
-     compilationInfoCache = compilationInfoCache.refreshIfValid(_p, run.inputsHash)
+    val warnings = _p.compilationInfos.filter(_.severity == Warning)
 
-    val shouldCopyWarnings =
-      _p.compilationInfos.isEmpty &&
-      compilationInfoCache.inputsHash.contains(run.inputsHash) &&
-      compilationInfoCache.infos.nonEmpty &&
-      _p.runtimeError.isEmpty &&
-      !_p.isTimeout
+    val cachedWarnings: Set[Problem] = get(run.inputsHash).getOrElse {
+      if (warnings.nonEmpty) {
+        put(run.inputsHash)(warnings.toSet)
+        warnings.toSet
+      } else Set.empty
+    }
 
-    val p = if (shouldCopyWarnings)
-      _p.copy(compilationInfos = compilationInfoCache.infos)
-    else
-      _p
+    val mergedInfos = (_p.compilationInfos.toSet ++ cachedWarnings).toList
+    val p = _p.copy(compilationInfos = mergedInfos)
 
     progressId += 1
     val pWithId = p.copy(id = Some(progressId))
