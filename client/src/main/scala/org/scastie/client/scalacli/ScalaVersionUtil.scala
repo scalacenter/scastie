@@ -5,6 +5,7 @@ import scala.scalajs.js
 import org.scalajs.dom
 import scala.util.matching.Regex
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import org.scastie.buildinfo.BuildInfo
 
 object ScalaVersionUtil {
     val location = dom.window.location
@@ -38,8 +39,8 @@ object ScalaVersionUtil {
                 .toFuture
                 .flatMap(_.text().toFuture)
                 .map { str =>
-                    val trimmed = str.trim
-                    if (trimmed.nonEmpty) Some(trimmed) else None
+                    val cleaned = str.trim.replace("\"", "")
+                    if (cleaned.nonEmpty) Some(cleaned) else None
                 }
         }
     }
@@ -52,8 +53,8 @@ object ScalaVersionUtil {
                 .toFuture
                 .flatMap(_.text().toFuture)
                 .map { str =>
-                    val trimmed = str.trim
-                    if (trimmed.nonEmpty) Some(trimmed) else None
+                    val cleaned = str.trim.replace("\"", "")
+                    if (cleaned.nonEmpty) Some(cleaned) else None
                 }
         }
     }
@@ -71,15 +72,33 @@ object ScalaVersionUtil {
         }
     }
 
-    def resolveVersion(version: String): Future[String] =
-        version match {
-            case v if v == scala212Nightly =>
-                resolveNightly(Scala2Nightly, "2.12").map(_.getOrElse(v))
-            case v if scala213Nightly.contains(v) =>
-                resolveNightly(Scala2Nightly, "2.13").map(_.getOrElse(v))
-            case v if v == scala3Nightly =>
-                resolveNightly(Scala3Nightly, "3").map(_.getOrElse(v))
+    def resolveVersion(version: String): Future[String] = {
+        val stableVersions = Map(
+            "2"    -> BuildInfo.latest213,
+            "2.10" -> BuildInfo.latest210,
+            "2.11" -> BuildInfo.latest211,
+            "2.12" -> BuildInfo.latest212,
+            "2.13" -> BuildInfo.latest213,
+            "3"    -> BuildInfo.stableNext,
+            "3.1"  -> BuildInfo.latest31,
+            "3.2"  -> BuildInfo.latest32,
+            "3.3"  -> BuildInfo.latest33,
+            "3.4"  -> BuildInfo.latest34,
+            "3.5"  -> BuildInfo.latest35,
+            "3.6"  -> BuildInfo.latest36,
+            "3.7"  -> BuildInfo.latest37
+          )
+
+        stableVersions.get(version) match {
+            case Some(stable) => Future.successful(stable)
+            case None if version == scala212Nightly =>
+              resolveNightly(Scala2Nightly, "2.12").map(_.getOrElse(version))
+            case None if scala213Nightly.contains(version) =>
+              resolveNightly(Scala2Nightly, "2.13").map(_.getOrElse(version))
+            case None if version == scala3Nightly =>
+              resolveNightly(Scala3Nightly, "3").map(_.getOrElse(version))
             case _ =>
-                Future.successful(version)
-        }
+              Future.successful(version)
+          }
+    }
 }
