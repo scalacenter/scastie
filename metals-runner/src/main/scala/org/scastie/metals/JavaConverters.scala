@@ -33,6 +33,25 @@ object JavaConverters {
       val doc = Option(item.getContents).fold("")(_.getRight.getValue)
       HoverDTO(0, 0, doc)
 
+  extension (item: SignatureHelp)
+    def toSignatureHelpDTO =
+      val signatures = item.getSignatures().asScala.map { sig =>
+        val params = sig.getParameters().asScala.map { param =>
+          val doc = Option(param.getDocumentation).fold("")(_.toDocstring)
+          ParameterInformationDTO(
+            param.getLabel().toString,
+            doc
+          )
+        }.toList
+        val doc = Option(sig.getDocumentation).fold("")(_.toDocstring)
+        SignatureInformationDTO(sig.getLabel(), doc, params)
+      }.toList
+      SignatureHelpDTO(
+        signatures,
+        item.getActiveSignature(),
+        item.getActiveParameter()
+      )
+
   extension (range: Range) {
 
     def toScalaRange(insideWrapper: Boolean) =

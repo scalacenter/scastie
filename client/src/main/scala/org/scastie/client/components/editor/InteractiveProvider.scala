@@ -24,9 +24,9 @@ case class InteractiveProvider(
   updateSettings: api.ScastieMetalsOptions ~=> Callback,
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
-) extends MetalsClient with MetalsAutocompletion with MetalsHover {
+) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsSignatureHelp {
 
-  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete)
+  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete, metalsSignatureHelp)
 
 }
 
@@ -62,6 +62,19 @@ object InteractiveProvider {
     .setHeaderIds(false)
     .setMangle(false)
   )
+
+  var syntaxHighlighter: Option[SyntaxHighlighter] = None
+
+  def highlightSignatureHelp(code: String, activeParameter: Option[Int] = None): String = {
+    syntaxHighlighter match {
+      case Some(highlighter) => highlighter.highlightSignatureHelp(code, activeParameter)
+      case None =>
+        val markdown = s"""```scala
+                          |$code
+                          |```""".stripMargin
+        marked(markdown)
+    }
+  }
 
   private def wasMetalsToggled(prevProps: CodeEditor, props: CodeEditor): Boolean =
     (prevProps.metalsStatus == MetalsDisabled && props.metalsStatus == MetalsLoading) ||
