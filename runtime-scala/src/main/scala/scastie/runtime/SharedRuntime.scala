@@ -4,12 +4,8 @@ import org.scastie.runtime.api._
 
 protected[runtime] trait SharedRuntime {
 
-  def write(instrumentations: List[Instrumentation]): String = {
-    if (instrumentations.isEmpty) "" else instrumentations.map(_.asJsonString).mkString("[", ",", "]")
-  }
-
-  def writeStatements(statements: List[Statement]): String = {
-    val instrumentations = statements.flatMap { statement =>
+  def convertToInstrumentations(statements: List[Statement]): List[Instrumentation] = {
+    statements.flatMap { statement =>
       statement.binders.map { binder =>
         Instrumentation(
           position = binder.pos,
@@ -17,8 +13,14 @@ protected[runtime] trait SharedRuntime {
         )
       }
     }
+  }
 
-    write(instrumentations)
+  def write(instrumentations: List[Instrumentation]): String = {
+    if (instrumentations.isEmpty) "" else instrumentations.map(_.asJsonString).mkString("[", ",", "]")
+  }
+
+  def writeStatements(statements: List[Statement]): String = {
+    write(convertToInstrumentations(statements))
   }
 
   private val maxValueLength = 500

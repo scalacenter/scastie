@@ -75,6 +75,8 @@ class PresentationCompilers[F[_]: Async](metalsWorkingDirectory: Path) {
     using EmptyReportContext
   )
 
+  given reportContext: ReportContext = EmptyReportContext
+
   val docs = new Docstrings(index)
 
   JdkSources().foreach(jdk => index.addSourceJar(jdk, Scala213))

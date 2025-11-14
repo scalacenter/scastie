@@ -8,9 +8,11 @@ import org.scastie.runtime.api._
 
 object Runtime extends SharedRuntime {
 
-  def write(in: Either[Option[RuntimeError], List[Instrumentation]]): String = {
+  def writeStatements(in: Either[Option[RuntimeError], List[Statement]]): String = {
     in match {
-      case Right(instrumentations) => ScalaJsResult(instrumentations, None).asJsonString
+      case Right(statements) =>
+        val instrumentations = convertToInstrumentations(statements)
+        ScalaJsResult(instrumentations, None).asJsonString
       case Left(error) => ScalaJsResult(Nil, error).asJsonString
     }
   }

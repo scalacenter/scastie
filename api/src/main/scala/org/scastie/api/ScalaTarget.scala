@@ -72,13 +72,13 @@ case class Scala2(scalaVersion: String) extends SbtScalaTarget {
   def renderDependency(lib: ScalaDependency): String = renderSbtDouble(lib)
 
   def sbtConfig: String = {
-    val base = sbtConfigScalaVersion + "\n" + SbtScalaTarget.hktScalacOptions(scalaVersion)
+    val base = sbtConfigScalaVersion + "\n"
     if (scalaVersion.startsWith("2.13") || scalaVersion.startsWith("2.12"))
       base + "\n" + "scalacOptions += \"-Ydelambdafy:inline\"" //workaround https://github.com/scala/bug/issues/10782
     else base
   }
 
-  def sbtPluginsConfig: String = SbtScalaTarget.partialUnificationSbtPlugin
+  def sbtPluginsConfig: String = ""
 
   def sbtRunCommand(worksheetMode: Boolean): String = if (worksheetMode) "fgRunMain Main" else "fgRun"
 
@@ -143,7 +143,6 @@ case class Js(scalaVersion: String, scalaJsVersion: String) extends SbtScalaTarg
 
   def sbtConfig: String = {
     s"""|$sbtConfigScalaVersion
-        |${if (scalaVersion.startsWith("3")) "" else SbtScalaTarget.hktScalacOptions(scalaVersion)}
         |enablePlugins(ScalaJSPlugin)
         |Compile / fastOptJS / artifactPath := baseDirectory.value / "${Js.targetFilename}"
         |scalacOptions += {
@@ -154,8 +153,7 @@ case class Js(scalaVersion: String, scalaJsVersion: String) extends SbtScalaTarg
   }
 
   def sbtPluginsConfig: String =
-    s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")""" + "\n" +
-      (if (!scalaVersion.startsWith("3")) SbtScalaTarget.partialUnificationSbtPlugin else "")
+    s"""addSbtPlugin("org.scala-js" % "sbt-scalajs" % "$scalaJsVersion")"""
 
   def sbtRunCommand(worksheetMode: Boolean): String = "fastOptJS"
 
@@ -242,24 +240,6 @@ case class Scala3(scalaVersion: String) extends SbtScalaTarget {
 object SbtScalaTarget {
   implicit val sbtScalaTargetEncoder: Encoder[SbtScalaTarget] = deriveEncoder[SbtScalaTarget]
   implicit val sbtScalaTargetDecoder: Decoder[SbtScalaTarget] = deriveDecoder[SbtScalaTarget]
-
-  def partialUnificationSbtPlugin = """addSbtPlugin("org.lyranthe.sbt" % "partial-unification" % "1.1.2")"""
-  def hktScalacOptions(scalaVersion: String) = {
-    val (kpOrg, kpVersion, kpCross) =
-      if (scalaVersion == "2.13.0-M5") ("org.spire-math", "0.9.9", "binary")
-      else if (scalaVersion == "2.13.0-RC1") ("org.spire-math", "0.9.10", "binary")
-      else if (scalaVersion == "2.13.0-RC2") ("org.typelevel", "0.10.1", "binary")
-      else if (scalaVersion == "2.13.0-RC3") ("org.typelevel", "0.10.2", "binary")
-      else if (scalaVersion >= "2.13.0") ("org.typelevel", "0.13.3", "full")
-      else ("org.typelevel", "0.10.3", "binary")
-    val paradise =
-      if (scalaVersion.startsWith("2.10"))
-        """libraryDependencies += compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)"""
-      else ""
-    s"""|scalacOptions += "-language:higherKinds"
-        |addCompilerPlugin("${kpOrg}" %% "kind-projector" % "${kpVersion}" cross CrossVersion.${kpCross})
-        |$paradise""".stripMargin
-  }
 }
 
 object ScalaCli {

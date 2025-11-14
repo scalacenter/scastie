@@ -121,7 +121,7 @@ every time it's accessed.
 
 <pre class="scala-js">
 import org.scalajs.dom
-import org.scalajs.dom.raw.HTMLImageElement
+import org.scalajs.dom.HTMLImageElement
 
 val img = dom.document.createElement("img").asInstanceOf[HTMLImageElement]
 img.alt = "such dog" 

@@ -129,7 +129,7 @@ lazy val metalsRunner = project
     maintainer   := "scalacenter",
     scalaVersion := ScalaVersions.stableLTS,
     libraryDependencies ++= Seq(
-      "org.scalameta"        % "metals"              % "1.4.2" cross (CrossVersion.for3Use2_13),
+      "org.scalameta"        % "metals"              % "1.6.3" cross (CrossVersion.for3Use2_13),
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.21.1",
       "org.http4s"          %% "http4s-ember-server" % "0.23.24",
       "org.http4s"          %% "http4s-ember-client" % "0.23.24",
@@ -186,6 +186,7 @@ lazy val sbtRunner = project
       .dependsOn(runnerRuntimeDependencies: _*)
       .value,
     assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
       case PathList("META-INF", xs @ _*) => MergeStrategy.discard
       case in @ PathList("reference.conf", xs @ _*) => {
         val old = (assembly / assemblyMergeStrategy).value
@@ -229,7 +230,7 @@ lazy val server = project
       val shell: Seq[String] = if (sys.props("os.name").contains("Windows")) Seq("cmd", "/c") else Seq("bash", "-c")
       val updateGitSubmodule: Seq[String] = shell :+ "git submodule update --init"
 
-      val installNpmDependencies: Seq[String] = shell :+ "npm install && cd tree-sitter-scala && npm install"
+      val installNpmDependencies: Seq[String] = shell :+ "cd tree-sitter-scala && npm install"
       val buildWasm: Seq[String] = shell :+ "cd tree-sitter-scala && npx tree-sitter build --wasm ."
       s.log.info("building tree-sitter-scala wasm...")
 
@@ -422,6 +423,7 @@ lazy val scalaCliRunner = project
       .dependsOn(runnerRuntimeDependencies: _*)
       .value,
     assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
       case PathList("META-INF", xs @ _*) => MergeStrategy.discard
       case in @ PathList("reference.conf", xs @ _*) => {
         val old = (assembly / assemblyMergeStrategy).value
