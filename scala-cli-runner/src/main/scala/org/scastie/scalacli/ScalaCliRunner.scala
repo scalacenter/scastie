@@ -32,6 +32,7 @@ import java.lang
 import java.util.concurrent.atomic.AtomicReference
 import cats.syntax.all._
 import scala.jdk.FutureConverters._
+import org.scastie.instrumentation.PositionMapper
 
 
 sealed trait ScalaCliError {
@@ -75,7 +76,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
   def runTask(snippetId: SnippetId, inputs: ScalaCliInputs, timeout: FiniteDuration, onOutput: ProcessOutput => Any): Future[Either[ScalaCliError, RunOutput]] = {
     log.info(s"Running task with snippetId=$snippetId")
     build(snippetId, inputs).flatMap {
-      case Right((value, lineMapping)) => runForked(value, inputs.isWorksheetMode, onOutput, lineMapping)
+      case Right((value, positionMapper)) => runForked(value, inputs.isWorksheetMode, onOutput, positionMapper)
       case Left(value) => Future.successful(Left[ScalaCliError, RunOutput](value))
     }
   }
@@ -83,29 +84,23 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
   def build(
     snippetId: SnippetId,
     inputs: BaseInputs,
-  ): Future[Either[ScalaCliError, (BspClient.BuildOutput, Int => Int)]] = {
+  ): Future[Either[ScalaCliError, (BspClient.BuildOutput, Option[PositionMapper])]] = {
 
-    val (instrumentedInput, lineMapping) = InstrumentedInputs(inputs) match {
-      case Right(value) => (value.inputs, value.lineMapping)
+    val (instrumentedInput, positionMapper) = InstrumentedInputs(inputs) match {
+      case Right(value) => (value.inputs, value.positionMapper)
       case Left(value) =>
         log.error(s"Error while instrumenting: $value")
-        (inputs, identity: Int => Int)
+        (inputs, None)
     }
 
     Files.write(scalaMain, instrumentedInput.code.getBytes)
-    bspClient.build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target).value.recover {
+    bspClient.build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target, positionMapper).value.recover {
       case timeout: TimeoutException => BspTaskTimeout("Build Server Timeout Exception").asLeft
       case err => InternalBspError(err.getMessage).asLeft
     }
     .map {
-        case Right(buildOutput) => Right((buildOutput, lineMapping))
-        case Left(CompilationError(diagnostics)) =>
-          val mapped = diagnostics.map { p =>
-            val orig = p.line
-            val mapped = orig.map(lineMapping)
-            p.copy(line = mapped)
-          }
-          Left(CompilationError(mapped))
+        case Right(buildOutput) => Right((buildOutput, positionMapper))
+        case Left(CompilationError(diagnostics)) => Left(CompilationError(diagnostics))
         case Left(other) => Left(other)
       }
   }
@@ -114,7 +109,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     bspRun: BspClient.BuildOutput,
     isWorksheet: Boolean,
     onOutput: ProcessOutput => Any,
-    lineMapping: Int => Int = identity
+    positionMapper: Option[PositionMapper] = None
   ): Future[Either[ScastieRuntimeError, RunOutput]] = {
     val outputBuffer: ListBuffer[String] = ListBuffer()
     val instrumentations: AtomicReference[List[Instrumentation]] = new AtomicReference(List())
@@ -125,7 +120,10 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
       val maybeInstrumentation = decode[List[Instrumentation]](str)
 
       maybeRuntimeError.foreach { error =>
-        val mappedLine = error.line.map(lineMapping)
+        val mappedLine = positionMapper match {
+          case Some(mapper) => error.line.map(mapper.mapLine)
+          case None => error.line
+        }
         runtimeError.set(Some(error.copy(line = mappedLine)))
       }
       maybeInstrumentation.foreach(instrumentations.set(_))

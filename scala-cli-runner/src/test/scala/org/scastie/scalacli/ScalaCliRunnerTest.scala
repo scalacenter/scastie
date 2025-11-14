@@ -79,7 +79,9 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   test("capture runtime errors") {
     runCode("1/0", allowFailure = true) { progress =>
       progress.runtimeError.forall { error =>
-        error.message.nonEmpty && error.message.contains("java.lang.ArithmeticException: / by zero")
+        error.message.nonEmpty &&
+        error.message.contains("java.lang.ArithmeticException: / by zero") &&
+        error.line.contains(1)
       }
     }
   }
@@ -98,16 +100,27 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   }
 
   test("report parsing error") {
-    runCode("\n4444444444444444444\n", allowFailure = true)(assertCompilationInfo { info =>
-      assert(info.message == "number too large")
-    })
+    runCode("\nval x = 4444444444444444444\n", allowFailure = true)(
+      assertCompilationInfo (
+        assertProblemInfo("number too large", Some(2), Some(9), Some(28))(_)
+      )
+    )
+  }
+
+  test("report parsing error 2") {
+    runCode("val x = 1a", allowFailure = true)(
+      assertCompilationInfo(
+        assertProblemInfo("Invalid literal number, followed by identifier character", Some(1), Some(10), Some(10))(_)
+      )
+    )
   }
 
   test("report compilation error") {
-    runCode("err", allowFailure = true)(assertCompilationInfo { info =>
-      assert(info.message == "Not found: err")
-      assert(info.line.contains(1))
-    })
+    runCode("val x = err", allowFailure = true)(
+      assertCompilationInfo (
+        assertProblemInfo("Not found: err", Some(1), Some(9), Some(12))(_)
+      )
+    )
   }
 
   test("Encoding issues #100") {
@@ -465,6 +478,18 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
     isWorksheet: Boolean = true
   )(fish: SnippetProgress => Boolean): Unit = {
     run(ScalaCliInputs.default.copy(code = code, isWorksheetMode = isWorksheet), allowFailure)(fish)
+  }
+
+  private def assertProblemInfo(
+    message: String = "",
+    line: Option[Int] = None,
+    startColumn: Option[Int] = None,
+    endColumn: Option[Int] = None
+  )(info: Problem): Unit = {
+    assert(info.message == message)
+    assert(info.line == line)
+    assert(info.startColumn == startColumn)
+    assert(info.endColumn == endColumn)
   }
 
   private def assertUserOutput(

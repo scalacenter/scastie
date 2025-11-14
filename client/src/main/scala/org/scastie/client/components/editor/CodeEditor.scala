@@ -114,12 +114,36 @@ object CodeEditor {
 
   private def getDecorations(props: CodeEditor, doc: Text): js.Array[Diagnostic] = {
     val errors = props.compilationInfos
-      .filter(prob => prob.line.isDefined && prob.line.get <= doc.lines)
+      .filter(prob => prob.line.isDefined)
       .map(problem => {
-        val line = problem.line.get max 1
+        val maxLine = doc.lines.toInt
+        val line = problem.line.get.max(1).min(maxLine)
         val lineInfo = doc.line(line)
+        val lineLength = lineInfo.length.toInt
 
-        Diagnostic(lineInfo.from, problem.message, parseSeverity(problem.severity), lineInfo.to)
+        val preciseRangeOpt: Option[(Double, Double)] =
+          if (problem.line.get > maxLine) {
+            val endPos = lineInfo.to
+            Some((endPos, endPos))
+          } else {
+            (problem.startColumn, problem.endColumn) match {
+              case (Some(start), Some(end)) if start > 0 && end >= start =>
+                val clampedStart = (start min (lineLength + 1)) max 1
+                val clampedEnd = (end min (lineLength + 1)) max clampedStart
+                Some((lineInfo.from + clampedStart - 1, lineInfo.from + clampedEnd - 1))
+              case _ =>
+                None
+            }
+          }
+        
+        val (startColumn, endColumn) = preciseRangeOpt match {
+          case Some((start, end)) =>
+            (start, end)
+          case None =>
+            (lineInfo.from, lineInfo.to)
+        }
+
+        Diagnostic(startColumn, problem.message, parseSeverity(problem.severity), endColumn)
           .setRenderMessage(CallbackTo {
             val wrapper = dom.document.createElement("pre")
             wrapper.innerHTML = HTMLFormatter.format(problem.message)

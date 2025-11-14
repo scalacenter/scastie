@@ -84,17 +84,27 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   }
 
   test("report parsing error") {
-    runCode("\n4444444444444444444\n", allowFailure = true)(assertCompilationInfo { info =>
-      assert(info.message == "integer number too large for Int")
-      assert(info.line.contains(2))
-    })
+    runCode("\nval x = 4444444444444444444\n", allowFailure = true)(
+      assertCompilationInfo(
+        assertProblemInfo("integer number too large for Int", Some(2), Some(9), Some(28))(_)
+      )
+    )
+  }
+
+  test("report parsing error 2") {
+    runCode("val x = 1a", allowFailure = true)(
+      assertCompilationInfo(
+        assertProblemInfo("Invalid literal number, followed by identifier character", Some(1), Some(10), Some(10))(_)
+      )
+    )
   }
 
   test("report compilation error") {
-    runCode("err", allowFailure = true)(assertCompilationInfo { info =>
-      assert(info.message == "not found: value err")
-      assert(info.line.contains(1))
-    })
+    runCode("val x = err", allowFailure = true)(
+      assertCompilationInfo (
+        assertProblemInfo("not found: value err", Some(1), Some(9), Some(12))(_)
+      )
+    )
   }
 
   test("Encoding issues #100") {
@@ -510,6 +520,18 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     progress.instrumentations.exists(instr =>
       instr.render == expected && instr.position == position
     )
+  }
+
+  private def assertProblemInfo(
+    message: String = "",
+    line: Option[Int] = None,
+    startColumn: Option[Int] = None,
+    endColumn: Option[Int] = None
+  )(info: Problem): Unit = {
+    assert(info.message == message)
+    assert(info.line == line)
+    assert(info.startColumn == startColumn)
+    assert(info.endColumn == endColumn)
   }
 
   private def assertUserOutput(
