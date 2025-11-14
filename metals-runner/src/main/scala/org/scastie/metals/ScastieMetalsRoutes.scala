@@ -11,19 +11,20 @@ import org.http4s.circe._
 import org.http4s.dsl.io._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.server._
+import cats.effect.IO
 
 object ScastieMetalsRoutes {
 
-  def routes[F[_]: Async](metals: ScastieMetals[F]): HttpRoutes[F] =
-    val dsl = new Http4sDsl[F] {}
+  def routes(metals: ScastieMetals): HttpRoutes[IO] =
+    val dsl = new Http4sDsl[IO] {}
     import dsl._
     import JavaConverters._
 
-    implicit val lspRequestDecoder: EntityDecoder[F, LSPRequestDTO]                  = jsonOf[F, LSPRequestDTO]
-    implicit val scastieMetalsOptionsDecoder: EntityDecoder[F, ScastieMetalsOptions] = jsonOf[F, ScastieMetalsOptions]
-    implicit val completionInfoDecoder: EntityDecoder[F, CompletionInfoRequest]      = jsonOf[F, CompletionInfoRequest]
+    implicit val lspRequestDecoder: EntityDecoder[IO, LSPRequestDTO]                  = jsonOf[IO, LSPRequestDTO]
+    implicit val scastieMetalsOptionsDecoder: EntityDecoder[IO, ScastieMetalsOptions] = jsonOf[IO, ScastieMetalsOptions]
+    implicit val completionInfoDecoder: EntityDecoder[IO, CompletionInfoRequest]      = jsonOf[IO, CompletionInfoRequest]
 
-    HttpRoutes.of[F] {
+    HttpRoutes.of[IO] {
       case req @ POST -> Root / "metals" / "complete" => for {
           lspRequest       <- req.as[LSPRequestDTO]
           maybeCompletions <- metals.complete(lspRequest).value
