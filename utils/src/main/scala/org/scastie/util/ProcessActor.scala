@@ -21,9 +21,8 @@ object ProcessActor {
 
   def props(command: List[String],
             workingDir: Path = Paths.get(System.getProperty("user.dir")),
-            environment: Map[String, String] = Map.empty,
-            killOnExit: Boolean = false): Props = {
-    Props(new ProcessActor(command, workingDir, environment, killOnExit))
+            environment: Map[String, String] = Map.empty): Props = {
+    Props(new ProcessActor(command, workingDir, environment))
   }
 }
 
@@ -33,7 +32,7 @@ object ProcessActor {
   ! Exit
  */
 
-class ProcessActor(command: List[String], workingDir: Path, environment: Map[String, String], killOnExit: Boolean)
+class ProcessActor(command: List[String], workingDir: Path, environment: Map[String, String])
     extends Actor
     with Stash {
 
