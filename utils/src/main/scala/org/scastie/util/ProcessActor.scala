@@ -21,9 +21,8 @@ object ProcessActor {
 
   def props(command: List[String],
             workingDir: Path = Paths.get(System.getProperty("user.dir")),
-            environment: Map[String, String] = Map.empty,
-            killOnExit: Boolean = false): Props = {
-    Props(new ProcessActor(command, workingDir, environment, killOnExit))
+            environment: Map[String, String] = Map.empty): Props = {
+    Props(new ProcessActor(command, workingDir, environment))
   }
 }
 
@@ -33,7 +32,7 @@ object ProcessActor {
   ! Exit
  */
 
-class ProcessActor(command: List[String], workingDir: Path, environment: Map[String, String], killOnExit: Boolean)
+class ProcessActor(command: List[String], workingDir: Path, environment: Map[String, String])
     extends Actor
     with Stash {
 
@@ -122,8 +121,9 @@ class ProcessActor(command: List[String], workingDir: Path, environment: Map[Str
       stdin ! input
 
     case Exited(exitValue) =>
-      if (killOnExit) {
-        throw new Exception("process exited: " + exitValue)
+      println(s"Process exited with code: $exitValue")
+      if (exitValue != 0) {
+        throw new Exception(s"sbt shell failed (exit code: $exitValue)")
       }
   }
 }
