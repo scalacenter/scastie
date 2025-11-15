@@ -16,25 +16,30 @@ trait ScastieMetals:
   def completionInfo(request: CompletionInfoRequest): EitherT[IO, FailureType, String]
   def hover(request: LSPRequestDTO): EitherT[IO, FailureType, Hover]
   def signatureHelp(request: LSPRequestDTO): EitherT[IO, FailureType, SignatureHelp]
+  def diagnostics(request: LSPRequestDTO): EitherT[IO, FailureType, Set[Problem]]
   def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[IO, FailureType, Boolean]
 
 object ScastieMetalsImpl:
 
   def instance(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentationCompiler]): ScastieMetals =
     new ScastieMetals {
+
       private val dispatcher: MetalsDispatcher = new MetalsDispatcher(cache)
 
       def complete(request: LSPRequestDTO): EitherT[IO, FailureType, ScalaCompletionList] =
-        (dispatcher.getCompiler(request.options) >>= (_.complete(request.offsetParams)))
+        (dispatcher.getCompiler(request.options).semiflatMap(_.complete(request.offsetParams)))
 
       def completionInfo(request: CompletionInfoRequest): EitherT[IO, FailureType, String] =
-        dispatcher.getCompiler(request.options) >>= (_.completionItemResolve(request.completionItem))
+        dispatcher.getCompiler(request.options).semiflatMap(_.completionItemResolve(request.completionItem))
 
       def hover(request: LSPRequestDTO): EitherT[IO, FailureType, Hover] =
-        dispatcher.getCompiler(request.options).flatMapF(_.hover(request.offsetParams))
+        dispatcher.getCompiler(request.options) >>= (_.hover(request.offsetParams))
 
       def signatureHelp(request: LSPRequestDTO): EitherT[IO, FailureType, SignatureHelp] =
-        dispatcher.getCompiler(request.options) >>= (_.signatureHelp(request.offsetParams))
+        dispatcher.getCompiler(request.options).semiflatMap(_.signatureHelp(request.offsetParams))
+
+      def diagnostics(request: LSPRequestDTO): EitherT[IO, FailureType, Set[Problem]] =
+        dispatcher.getCompiler(request.options).semiflatMap(_.diagnostics(request.offsetParams))
 
       def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[IO, FailureType, Boolean] =
           dispatcher.areDependenciesSupported(config) >>=

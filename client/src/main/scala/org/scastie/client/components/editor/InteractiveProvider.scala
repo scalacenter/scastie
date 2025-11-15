@@ -24,12 +24,12 @@ case class InteractiveProvider(
   updateSettings: api.ScastieMetalsOptions ~=> Callback,
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
-  syntaxHighlighterGetter: () => Option[SyntaxHighlighter] = () => None,
-) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsSignatureHelp {
+  syntaxHighlighterGetter: () => Option[SyntaxHighlighter],
+) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsSignatureHelp with MetalsDiagnostics {
 
   def syntaxHighlighter: Option[SyntaxHighlighter] = syntaxHighlighterGetter()
 
-  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete, metalsSignatureHelp)
+  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete, metalsSignatureHelp, metalsDiags)
 
 }
 
@@ -85,27 +85,22 @@ object InteractiveProvider {
   import scala.scalajs.js.timers._
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-  val didDirectivesChange: (Option[CodeEditor], CodeEditor) => Unit = {
+  val didDirectivesChange: (CodeEditor, CodeEditor) => Unit = {
     var timeout: js.UndefOr[js.timers.SetTimeoutHandle] = js.undefined
-    var originalPrevious: Option[CodeEditor] = None
 
-    (prev, current) =>
-      if (originalPrevious.isEmpty && prev.isDefined) originalPrevious = prev
+    (prev, current) => {
       timeout.foreach(clearTimeout)
       timeout = setTimeout(1000.millis) {
-        originalPrevious.map { prev => {
-          val previousDirectives = takeDirectives(prev.value)
-          val newDirectives = takeDirectives(current.value)
-          originalPrevious = Some(current)
-          if (previousDirectives != newDirectives){
-            ScalaCliUtils.parse(newDirectives).foreach { case (scalaTarget, dependencies) =>
-              val options = api.ScastieMetalsOptions(dependencies, scalaTarget, current.value)
-              current.updateSettings(options).runNow()
-              current.setMetalsStatus(OutdatedScalaCli).runNow()
-            }
+        val previousDirectives = takeDirectives(prev.value)
+        val newDirectives = takeDirectives(current.value)
+        if (previousDirectives != newDirectives) {
+          ScalaCliUtils.parse(newDirectives).foreach { case (scalaTarget, dependencies) =>
+            val options = api.ScastieMetalsOptions(dependencies, scalaTarget)
+            (current.updateSettings(options) >> current.setMetalsStatus(OutdatedScalaCli)).runNow()
           }
-        }}
+        }
       }
+    }
   }
 
   private def didConfigChange(prevProps: CodeEditor, props: CodeEditor): Boolean =
@@ -120,19 +115,9 @@ object InteractiveProvider {
     syntaxHighlighterGetter: () => Option[SyntaxHighlighter]
   ): Callback = {
     if (props.metalsStatus != MetalsDisabled && props.target.targetType == api.ScalaTargetType.ScalaCli)
-      didDirectivesChange(prevProps, props)
+      prevProps.foreach(didDirectivesChange(_, props))
     Callback {
-      val extension = InteractiveProvider(
-        props.dependencies,
-        props.target,
-        props.value,
-        props.metalsStatus,
-        props.setMetalsStatus,
-        props.updateSettings,
-        props.isWorksheetMode,
-        props.isEmbedded,
-        syntaxHighlighterGetter
-      ).extension
+      val extension = InteractiveProvider(props, syntaxHighlighterGetter).extension
 
       val effects = interactive.reconfigure(extension)
       editorView.value.dispatch(TransactionSpec().setEffects(effects))

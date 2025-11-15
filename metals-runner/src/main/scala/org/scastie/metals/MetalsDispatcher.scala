@@ -50,7 +50,7 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
 
   logger.info(s"Metals working directory: $metalsWorkingDirectory")
 
-  private val presentationCompilers = PresentationCompilers[IO](metalsWorkingDirectory)
+  private val presentationCompilers = PresentationCompilers(metalsWorkingDirectory)
   private val supportedVersions     = Set("2.12", "2.13", "3")
 
   def getMtags(scalaVersion: String)=
@@ -74,11 +74,11 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
   def getCompiler(configuration: ScastieMetalsOptions): EitherT[IO, FailureType, ScastiePresentationCompiler] =
     EitherT:
       if !isSupportedVersion(configuration) then
-        IO.delay(
+        IO {
           PresentationCompilerFailure(
             s"Interactive features are not supported for Scala ${configuration.scalaTarget.binaryScalaVersion}."
           ).asLeft
-        )
+        }
       else
         cache
           .contains(configuration)
@@ -93,7 +93,7 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
                 compiler <- EitherT.right(
                   cache.getOrUpdateReleasable(configuration) {
                     initializeCompiler(configuration, mtags).map: newPC =>
-                      Releasable(newPC, IO.delay(newPC.underlyingPC.shutdown()))
+                      Releasable(newPC, IO(newPC.shutdown()))
                   })
               yield compiler
             .value
@@ -154,7 +154,7 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
     val scalaVersion = configuration.scalaTarget.scalaVersion
     presentationCompilers
       .createPresentationCompiler(classpath.toSeq, scalaVersion, mtags)
-      .map(ScastiePresentationCompiler.apply)
+      .flatMap(ScastiePresentationCompiler.apply)
   }
 
   /*
