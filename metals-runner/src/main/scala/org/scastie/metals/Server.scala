@@ -17,35 +17,37 @@ import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.middleware._
+import cats.effect.IO
+import cats.effect.IOApp
+import cats.effect.ExitCode
 
-object Server:
+object Server extends IOApp:
 
   val config                   = ConfigFactory.load().getConfig("scastie.metals")
   val cacheExpirationInSeconds = config.getInt("cache-expire-in-seconds")
   val serverPort               = config.getInt("port")
 
-  def stream[F[_]: Async]: Stream[F, Nothing] = {
-    val cache = Cache.expiring[F, ScastieMetalsOptions, ScastiePresentationCompiler](
-      ExpiringCache.Config(expireAfterRead = cacheExpirationInSeconds.seconds, maxSize = Some(64)),
-      None
-    )
+  val cache = Cache.expiring[IO, ScastieMetalsOptions, ScastiePresentationCompiler](
+    ExpiringCache.Config(expireAfterRead = cacheExpirationInSeconds.seconds, maxSize = Some(64)),
+    None
+  )
 
-    val finalHttpApp = (cache0: Cache[F, ScastieMetalsOptions, ScastiePresentationCompiler]) => {
-      val metalsImpl  = ScastieMetalsImpl.instance[F](cache0)
-      val httpApp     = ScastieMetalsRoutes.routes[F](metalsImpl).orNotFound
-      val corsService = CORS.policy.withAllowOriginAll(httpApp)
-      Logger.httpApp(true, false)(corsService)
-    }
+  override def run(args: List[String]): IO[ExitCode] =
 
-    Stream.resource(
-      cache.flatMap(cache =>
-        EmberServerBuilder
-          .default[F]
-          .withHost(ipv4"0.0.0.0")
-          .withPort(Port.fromInt(serverPort).getOrElse(port"8000"))
-          .withHttpApp(finalHttpApp(cache))
-          .build >>
-          Resource.eval(Async[F].never)
-      )
-    )
-  }.drain
+    val app = for {
+      cache <- cache
+      impl = ScastieMetalsImpl.instance(cache)
+      app = ScastieMetalsRoutes.routes(impl).orNotFound
+      corsApp = CORS.policy.withAllowOriginAll(app)
+      loggingApp = Logger.httpApp(true, false)(corsApp)
+      _ <- EmberServerBuilder
+        .default[IO]
+        .withHost(ipv4"0.0.0.0")
+        .withPort(Port.fromInt(serverPort).getOrElse(port"8000"))
+        .withHttpApp(loggingApp)
+        .build
+    } yield ()
+
+    app.useForever.as(ExitCode.Success)
+
+

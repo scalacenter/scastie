@@ -16,15 +16,46 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scalajs.js.Thenable.Implicits._
 import js.JSConverters._
 import EditorTextOps._
+import MetalsAutocompletion._
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
+import scala.scalajs.js.timers._
 
-trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
+object MetalsAutocompletion {
   val jsRegex = js.RegExp("\\.?\\w*")
   val selectionPattern = "\\$\\{\\d+:(.*?)\\}".r
+  val instantTriggerChars =  Set('.', '(', ')', '[', ']', ':', ',')
+}
+
+trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
 
   var wasPreviousIncomplete = true
   var previousWord = ""
 
   val completionInfoCache = HashMap.empty[String, dom.Node]
+
+  private def debounce(fn: OnChange):  OnChange = {
+    var timeout: js.UndefOr[js.timers.SetTimeoutHandle] = js.undefined
+
+    (code: String, view: EditorView) => {
+      val tokenLength = view
+        .lineBeforeCursor
+        .reverseIterator
+        .takeWhile(c => !c.isWhitespace || instantTriggerChars.contains(c))
+        .length
+
+      tokenLength match {
+        case 0 =>
+          timeout.foreach(clearTimeout)
+          fn(code, view)
+        case _ =>
+          timeout.foreach(clearTimeout)
+          timeout = setTimeout(250.millis) {
+            fn(code, view)
+          }
+      }
+    }
+  }
 
   /*
    * Creates additionalInsertInstructions e.g autoimport for completions
@@ -111,7 +142,7 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
     result
   }
 
-  private val autocompletionTrigger = onChangeCallback((code, view) => {
+  private val autocompletionTrigger = onChangeCallback(debounce, (code, view) => {
     val matchesPreviousToken = view.matchesPreviousToken(previousWord)
     if (wasPreviousIncomplete || !matchesPreviousToken) startCompletion(view)
     if (!matchesPreviousToken) wasPreviousIncomplete = true
