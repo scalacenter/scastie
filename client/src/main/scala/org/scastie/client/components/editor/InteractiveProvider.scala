@@ -24,9 +24,9 @@ case class InteractiveProvider(
   updateSettings: api.ScastieMetalsOptions ~=> Callback,
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
-) extends MetalsClient with MetalsAutocompletion with MetalsHover {
+) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsDiagnostics {
 
-  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete)
+  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete, metalsDiags)
 
 }
 
@@ -91,7 +91,7 @@ object InteractiveProvider {
           originalPrevious = Some(current)
           if (previousDirectives != newDirectives){
             ScalaCliUtils.parse(newDirectives).foreach { case (scalaTarget, dependencies) =>
-              val options = api.ScastieMetalsOptions(dependencies, scalaTarget, current.value)
+              val options = api.ScastieMetalsOptions(dependencies, scalaTarget)
               current.updateSettings(options).runNow()
               current.setMetalsStatus(OutdatedScalaCli).runNow()
             }
