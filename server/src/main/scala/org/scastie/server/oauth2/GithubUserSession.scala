@@ -45,12 +45,6 @@ class GithubUserSession(system: ActorSystem) {
   implicit val sessionManager: SessionManager[UUID] = new SessionManager[UUID](sessionConfig)
   implicit val refreshTokenStorage: ActorRefreshTokenStorage = new ActorRefreshTokenStorage(system)
 
-  private def generateUniqueUUID(): UUID = {
-    val uuid = UUID.randomUUID
-    if (usersData.contains(uuid)) generateUniqueUUID()
-    else uuid
-  }
-
   private def readSessionsFile(): Vector[(UUID, User, List[User])] = {
     if (Files.exists(usersSessions)) {
       val content = Files.readAllLines(usersSessions).toArray.mkString(nl)
@@ -104,7 +98,7 @@ class GithubUserSession(system: ActorSystem) {
   }
 
   def addUserData(userData: UserData): UUID = {
-    val uuid = generateUniqueUUID()
+    val uuid = UUID.randomUUID()
     appendSessionsFile(uuid, userData.user, userData.switchableUsers)
     storeUser(userData.user.login)
     uuid
