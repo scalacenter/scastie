@@ -55,11 +55,7 @@ class GithubUserSession(system: ActorSystem) {
     if (Files.exists(usersSessions)) {
       val content = Files.readAllLines(usersSessions).toArray.mkString(nl)
       try {
-        decode[Vector[(UUID, User, List[User])]](content).toOption.getOrElse{
-          decode[Vector[(UUID, User)]](content).toOption
-            .map(_.map { case (uuid, user) => (uuid, user, List.empty[User]) })
-            .getOrElse(Vector())
-        }
+        decode[Vector[(UUID, User, List[User])]](content).toOption.getOrElse(Vector())
       } catch {
         case NonFatal(e) =>
           logger.error("failed to read sessions", e)
