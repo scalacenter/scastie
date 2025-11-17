@@ -84,7 +84,7 @@ object InteractiveProvider {
     (prev, current) =>
       if (originalPrevious.isEmpty && prev.isDefined) originalPrevious = prev
       timeout.foreach(clearTimeout)
-      timeout = setTimeout(3000.millis) {
+      timeout = setTimeout(1000.millis) {
         originalPrevious.map { prev => {
           val previousDirectives = takeDirectives(prev.value)
           val newDirectives = takeDirectives(current.value)
