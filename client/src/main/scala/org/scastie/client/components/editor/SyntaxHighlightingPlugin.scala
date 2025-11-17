@@ -9,7 +9,10 @@ import typings.codemirrorView.mod._
 import scalajs.js
 import org.scalajs.dom
 
-class SyntaxHighlightingPlugin(editorView: hooks.Hooks.UseStateF[CallbackTo, EditorView]) {
+class SyntaxHighlightingPlugin(
+  editorView: hooks.Hooks.UseStateF[CallbackTo, EditorView],
+  onHighlighterReady: SyntaxHighlighter => Callback,
+) {
   val syntaxHighlightingExtension = new Compartment()
   val fallbackExtension = typings.codemirrorLanguage.mod.StreamLanguage.define(typings.codemirrorLegacyModes.modeClikeMod.scala_).extension
   
@@ -52,8 +55,6 @@ class SyntaxHighlightingPlugin(editorView: hooks.Hooks.UseStateF[CallbackTo, Edi
   def switchToTreesitterParser(scalaParser: Parser, language: Language, query: Query): Unit = {
     val highlighter = new SyntaxHighlighter(scalaParser, language, query)
     syntaxHighlighter = Some(highlighter)
-    InteractiveProvider.syntaxHighlighter = Some(highlighter)
-    
     val extension = ViewPlugin.define(editorView =>
       new SyntaxHighlightingHandler(scalaParser, language, query, editorView.state.doc.toString),
       PluginSpec[SyntaxHighlightingHandler]().setDecorations(_.decorations)
@@ -61,9 +62,9 @@ class SyntaxHighlightingPlugin(editorView: hooks.Hooks.UseStateF[CallbackTo, Edi
 
     val effects = syntaxHighlightingExtension.reconfigure(extension)
     val transactionSpec = TransactionSpec().setEffects(effects)
-    editorView.modState(editorView => {
+    (editorView.modState(editorView => {
         editorView.dispatch(transactionSpec)
         editorView
-    }).runNow()
+    }) >> onHighlighterReady(highlighter)).runNow()
   }
 }

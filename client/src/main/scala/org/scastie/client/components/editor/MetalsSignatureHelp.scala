@@ -13,7 +13,7 @@ import scalajs.js.Thenable.Implicits._
 import js.JSConverters._
 import org.scastie.api._
 
-trait MetalsSignatureHelp extends MetalsClient {
+trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
 
   private var currentSignature: Option[SignatureHelpDTO] = None
 
@@ -127,7 +127,7 @@ trait MetalsSignatureHelp extends MetalsClient {
     val doc = sig.documentation
     val label = sig.label.replaceAll("\\[|\\]", "")
 
-    val highlighted = InteractiveProvider.highlightSignatureHelp(label, Some(paramIdx))
+    val highlighted = highlight(label, Some(paramIdx))
 
     val node = dom.document.createElement("div")
     node.setAttribute("class", "cm-tooltip-signature-help")

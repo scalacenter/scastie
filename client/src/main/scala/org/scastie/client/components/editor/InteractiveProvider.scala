@@ -24,6 +24,7 @@ case class InteractiveProvider(
   updateSettings: api.ScastieMetalsOptions ~=> Callback,
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
+  syntaxHighlighter: Option[SyntaxHighlighter] = None,
 ) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsSignatureHelp {
 
   def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete, metalsSignatureHelp)
@@ -32,7 +33,7 @@ case class InteractiveProvider(
 
 object InteractiveProvider {
 
-  def apply(props: CodeEditor): InteractiveProvider = {
+  def apply(props: CodeEditor, syntaxHighlighter: Option[SyntaxHighlighter]): InteractiveProvider = {
     InteractiveProvider(
       props.dependencies,
       props.target,
@@ -41,11 +42,16 @@ object InteractiveProvider {
       props.setMetalsStatus,
       props.updateSettings,
       props.isWorksheetMode,
-      props.isEmbedded
+      props.isEmbedded,
+      syntaxHighlighter
     )
   }
 
   val interactive = new Compartment()
+
+  def renderMarkdown(markdown: String): String = {
+    typings.marked.mod.marked.`package`.parse(markdown).asInstanceOf[String]
+  }
 
   val highlightJS = typings.highlightJs.mod.default
   val highlightF: (String, String, String) => String = (str, lang, _) => {
@@ -62,19 +68,6 @@ object InteractiveProvider {
     .setHeaderIds(false)
     .setMangle(false)
   )
-
-  var syntaxHighlighter: Option[SyntaxHighlighter] = None
-
-  def highlightSignatureHelp(code: String, activeParameter: Option[Int] = None): String = {
-    syntaxHighlighter match {
-      case Some(highlighter) => highlighter.highlightSignatureHelp(code, activeParameter)
-      case None =>
-        val markdown = s"""```scala
-                          |$code
-                          |```""".stripMargin
-        marked(markdown)
-    }
-  }
 
   private def wasMetalsToggled(prevProps: CodeEditor, props: CodeEditor): Boolean =
     (prevProps.metalsStatus == MetalsDisabled && props.metalsStatus == MetalsLoading) ||
@@ -121,7 +114,8 @@ object InteractiveProvider {
   def reloadMetalsConfiguration(
     editorView: UseStateF[CallbackTo, EditorView],
     prevProps: Option[CodeEditor],
-    props: CodeEditor
+    props: CodeEditor,
+    syntaxHighlighter: Option[SyntaxHighlighter]
   ): Callback = {
     if (props.metalsStatus != MetalsDisabled && props.target.targetType == api.ScalaTargetType.ScalaCli)
       didDirectivesChange(prevProps, props)
@@ -134,7 +128,8 @@ object InteractiveProvider {
         props.setMetalsStatus,
         props.updateSettings,
         props.isWorksheetMode,
-        props.isEmbedded
+        props.isEmbedded,
+        syntaxHighlighter
       ).extension
 
       val effects = interactive.reconfigure(extension)

@@ -4,11 +4,26 @@ import typings.webTreeSitter.mod.{Language, Parser, Query, SyntaxNode}
 
 case class HighlightNode(start: Int, end: Int, cssClass: Option[String])
 
+trait SyntaxHighlightable {
+  def syntaxHighlighter: Option[SyntaxHighlighter]
+
+  def highlight(code: String, activeParameter: Option[Int] = None): String = {
+    syntaxHighlighter match {
+      case Some(highlighter) => highlighter.highlight(code, activeParameter)
+      case None =>
+        val markdown = s"""```scala
+                          |$code
+                          |```""".stripMargin
+        InteractiveProvider.renderMarkdown(markdown)
+    }
+  }
+}
+
 case class SyntaxHighlighter(parser: Parser, language: Language, query: Query) {
 
   parser.setLanguage(language)
 
-  def highlightSignatureHelp(label: String, activeParameter: Option[Int] = None): String = {
+  def highlight(label: String, activeParameter: Option[Int] = None): String = {
     val tree     = parser.parse(label)
     val captures = query.captures(tree.rootNode)
 
