@@ -197,9 +197,9 @@ lazy val baseJsSettings = Seq(
     .jsPlatform(
       autoScalaLibrary = true,
       scalaVersions = ScalaVersions.crossJS,
-      crossVersion = CrossVersion.fullWith(s"sjs${SbtShared.ScalaJSVersions.current.split('.').head}_", ""),
+      crossVersion = CrossVersion.full,
       axisValues = Nil,
-      settings = baseJsSettings
+      settings = baseJsSettings ++ Seq(moduleName := (name.value + "_sjs1"))
     )
     .settings(
       baseSettings,
