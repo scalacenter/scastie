@@ -84,7 +84,6 @@ object MainPanel {
         target = state.inputs.target,
         metalsStatus = state.metalsStatus,
         setMetalsStatus = backend.setMetalsStatus,
-        updateSettings = backend.updateSettings,
         dependencies = state.inputs.libraries,
       ).render
 

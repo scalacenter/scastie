@@ -15,31 +15,34 @@ object ScalaCliUtils {
   private val DepRegex = """//> *using +(dep|lib) +([^\s]+)""".r
   private val ToolkitRegex = """//> *using +toolkit +([^\s]+)""".r
 
-  def parse(codeHeader: List[String]): Future[(ScalaTarget, Set[ScalaDependency])] = {
-    val maybeDirective: Option[String] = codeHeader.collectFirst {
-      case ScalaVersionRegex(_, v) => Option(v).map(_.trim).filter(_.nonEmpty)
+  def getVersionDirective(codeHeader: List[String]): Future[String] = {
+    val maybeVersionDirective: Option[String] = codeHeader.collectFirst {
+      case ScalaVersionRegex(_, v) =>
+        Option(v).map(_.trim).filter(_.nonEmpty)
     }.flatten
-    val directivePresent: Boolean = codeHeader.exists(_.matches("//> *using +scala.*"))
-    val maybeVersion: Option[Future[String]] = maybeDirective.map(ScalaVersionUtil.resolveVersion)
 
-    val dependencies = codeHeader.collect {
-      case DepRegex(_, dep) => 
-        val cleanDep = dep.trim.stripPrefix("\"").stripSuffix("\"")
-        cleanDep
-    }.toSet
-    val maybeToolkitVersion = codeHeader.collectFirst {
+    ScalaVersionUtil.resolveVersion(maybeVersionDirective.getOrElse(BuildInfo.stableNext))
+  }
+
+  def getToolkitVersion(codeHeader: List[String]): Option[String] =
+    codeHeader.collectFirst {
       case ToolkitRegex(v) => if (v == "latest") "latest.stable" else v
     }
 
-    val versionFut = if (directivePresent && maybeVersion.isEmpty) {
-      Future.successful("")
-    } else {
-      maybeVersion.getOrElse(Future.successful(BuildInfo.stableNext))
-    }
+  def getDependencies(codeHeader: List[String]): Set[String] =
+    codeHeader.collect {
+      case DepRegex(_, dep) => dep.trim.stripPrefix("\"").stripSuffix("\"")
+    }.toSet
 
-    versionFut.map { version =>
+  def parse(codeHeader: List[String]): Future[(ScalaTarget, Set[ScalaDependency])] =
+    for {
+      version <- getVersionDirective(codeHeader)
+      dependencies = getDependencies(codeHeader)
+      toolkit   = getToolkitVersion(codeHeader)
+
+    } yield {
       val scalaTarget = ScalaCli(version)
-      val toolkitDependency = maybeToolkitVersion.map(ScalaDependency("org.scala-lang", "toolkit", scalaTarget, _))
+      val toolkitDependency = toolkit.map(ScalaDependency("org.scala-lang", "toolkit", scalaTarget, _))
       val deps = dependencies.flatMap { dep =>
         dep.split(":").toList match {
             case groupId :: "" :: artifactId :: version :: Nil =>
@@ -53,7 +56,6 @@ object ScalaCliUtils {
         }.toSet
       (scalaTarget, deps ++ toolkitDependency)
     }
-  }
 
   implicit class InputConverter(inputs: BaseInputs) {
     def setTarget(newTarget: ScalaTarget): BaseInputs = {
