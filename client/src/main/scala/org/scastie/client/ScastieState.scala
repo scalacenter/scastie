@@ -116,6 +116,7 @@ case class ScastieState(
   inputsHasChanged: Boolean,
   snippetState: SnippetState,
   user: Option[User],
+  switchableUsers: List[User] = List(),
   attachedDoms: Map[String, HTMLElement],
   inputs: BaseInputs,
   outputs: Outputs,
@@ -147,6 +148,7 @@ case class ScastieState(
     loadSnippet: Boolean = loadSnippet,
     scalaJsContent: Option[String] = snippetState.scalaJsContent,
     user: Option[User] = user,
+    switchableUsers: List[User] = switchableUsers,
     inputs: BaseInputs = inputs,
     outputs: Outputs = outputs,
     status: StatusState = status,
@@ -174,6 +176,7 @@ case class ScastieState(
         scalaJsContent = scalaJsContent
       ),
       user = user,
+      switchableUsers = switchableUsers,
       attachedDoms = attachedDoms,
       inputs = inputs.markAsCopied,
       outputs = outputs,
@@ -347,7 +350,7 @@ case class ScastieState(
 
   def setLoadSnippet(value: Boolean): ScastieState = copy(snippetState = snippetState.copy(loadSnippet = value))
 
-  def setUser(user: Option[User]): ScastieState = copyAndSave(user = user)
+  def setUserData(userData: Option[UserData]): ScastieState = copyAndSave(user = userData.map(_.user), switchableUsers = userData.map(_.switchableUsers).getOrElse(List()))
 
   def setCode(code: String): ScastieState = {
     if (inputs.code != code) {
