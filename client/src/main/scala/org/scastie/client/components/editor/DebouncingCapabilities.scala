@@ -17,32 +17,11 @@ trait DebouncingCapabilities {
     FacetConfig[OnChange, OnChange]().setCombine(input => over(input.toSeq))
   }
 
-  private def debounce(fn: OnChange):  OnChange = {
-    var timeout: js.UndefOr[js.timers.SetTimeoutHandle] = js.undefined
-
-    (code: String, view: EditorView) => {
-      val tokenLength = view
-        .lineBeforeCursor
-        .reverseIterator
-        .takeWhile(c => !c.isWhitespace || c == '.')
-        .length
-
-      tokenLength match {
-        case 0 => fn(code, view)
-        case _ =>
-          timeout.foreach(clearTimeout)
-          timeout = setTimeout(250.millis) {
-            fn(code, view)
-          }
-      }
-    }
-  }
-
   private def over(functions: Seq[OnChange]): OnChange = {
     (code: String, view: EditorView) => functions.foreach(f => f(code, view))
   }
 
-  protected def onChangeCallback(onChange: OnChange): Extension = {
+  protected def onChangeCallback(debounce: OnChange => OnChange, onChange: OnChange): Extension = {
     val debouncedOnChange = debounce(onChange)
 
     js.Array[Any](

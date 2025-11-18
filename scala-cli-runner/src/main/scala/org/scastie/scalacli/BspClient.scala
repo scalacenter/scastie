@@ -62,7 +62,7 @@ object BspClient {
   }
 
   case object Runner213 extends Runner {
-    val moduleName = "runner_2.13" 
+    val moduleName = "runner_2.13"
     def matches(scalaBinaryVersion: String): Boolean = scalaBinaryVersion == "2.13"
   }
 
@@ -95,7 +95,7 @@ object BspClient {
 
   def diagnosticToProblem(isWorksheet: Boolean, positionMapper: Option[PositionMapper] = None)(diag: Diagnostic): Problem = {
     val offset = Instrument.getMessageLineOffset(isWorksheet)
-    
+
     val startLine = diag.getRange.getStart.getLine + 1
     val endLine = diag.getRange.getEnd.getLine + 1
 
