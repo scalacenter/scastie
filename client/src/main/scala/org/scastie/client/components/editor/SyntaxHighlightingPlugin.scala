@@ -1,6 +1,5 @@
 package org.scastie.client.components.editor
 
-import typings.webTreeSitter.mod._
 import org.scalablytyped.runtime.StObject
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import japgolly.scalajs.react._
@@ -8,6 +7,10 @@ import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
 import scalajs.js
 import org.scalajs.dom
+import typings.webTreeSitter.mod.Language
+import typings.webTreeSitter.mod._
+import typings.webTreeSitter.mod.Parser
+import typings.webTreeSitter.mod.Query
 
 class SyntaxHighlightingPlugin(
   editorView: hooks.Hooks.UseStateF[CallbackTo, EditorView],
