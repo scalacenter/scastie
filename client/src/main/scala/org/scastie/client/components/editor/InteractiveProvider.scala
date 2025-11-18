@@ -24,8 +24,10 @@ case class InteractiveProvider(
   updateSettings: api.ScastieMetalsOptions ~=> Callback,
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
-  syntaxHighlighter: Option[SyntaxHighlighter] = None,
+  syntaxHighlighterGetter: () => Option[SyntaxHighlighter] = () => None,
 ) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsSignatureHelp {
+
+  def syntaxHighlighter: Option[SyntaxHighlighter] = syntaxHighlighterGetter()
 
   def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete, metalsSignatureHelp)
 
@@ -33,7 +35,7 @@ case class InteractiveProvider(
 
 object InteractiveProvider {
 
-  def apply(props: CodeEditor, syntaxHighlighter: Option[SyntaxHighlighter]): InteractiveProvider = {
+  def apply(props: CodeEditor, syntaxHighlighterGetter: () => Option[SyntaxHighlighter]): InteractiveProvider = {
     InteractiveProvider(
       props.dependencies,
       props.target,
@@ -43,7 +45,7 @@ object InteractiveProvider {
       props.updateSettings,
       props.isWorksheetMode,
       props.isEmbedded,
-      syntaxHighlighter
+      syntaxHighlighterGetter
     )
   }
 
@@ -115,7 +117,7 @@ object InteractiveProvider {
     editorView: UseStateF[CallbackTo, EditorView],
     prevProps: Option[CodeEditor],
     props: CodeEditor,
-    syntaxHighlighter: Option[SyntaxHighlighter]
+    syntaxHighlighterGetter: () => Option[SyntaxHighlighter]
   ): Callback = {
     if (props.metalsStatus != MetalsDisabled && props.target.targetType == api.ScalaTargetType.ScalaCli)
       didDirectivesChange(prevProps, props)
@@ -129,7 +131,7 @@ object InteractiveProvider {
         props.updateSettings,
         props.isWorksheetMode,
         props.isEmbedded,
-        syntaxHighlighter
+        syntaxHighlighterGetter
       ).extension
 
       val effects = interactive.reconfigure(extension)
