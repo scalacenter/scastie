@@ -70,7 +70,7 @@ case class ScalaDependency(groupId: String, artifact: String, target: ScalaTarge
   }
 }
 
-case class ScastieMetalsOptions(dependencies: Set[ScalaDependency], scalaTarget: ScalaTarget, code: String)
+case class ScastieMetalsOptions(dependencies: Set[ScalaDependency], scalaTarget: ScalaTarget)
 
 object ScastieMetalsOptions {
   implicit val scastieMetalsOptionsEncoder: Encoder[ScastieMetalsOptions] = deriveEncoder[ScastieMetalsOptions]
@@ -180,6 +180,38 @@ object LSPRequestDTO {
 object HoverDTO {
   implicit val hoverDTOEncoder: Encoder[HoverDTO] = deriveEncoder[HoverDTO]
   implicit val hoverDTODecoder: Decoder[HoverDTO] = deriveDecoder[HoverDTO]
+}
+
+case class SignatureHelpDTO(
+  signatures: Seq[SignatureInformationDTO],
+  activeSignature: Int,
+  activeParameter: Int
+)
+
+case class SignatureInformationDTO(
+  label: String,
+  documentation: String,
+  parameters: Seq[ParameterInformationDTO]
+)
+
+case class ParameterInformationDTO(
+  label: String,
+  documentation: String
+)
+
+object SignatureHelpDTO {
+  implicit val signatureHelpDTOEncoder: Encoder[SignatureHelpDTO] = deriveEncoder[SignatureHelpDTO]
+  implicit val signatureHelpDTODecoder: Decoder[SignatureHelpDTO] = deriveDecoder[SignatureHelpDTO]
+}
+
+object SignatureInformationDTO {
+  implicit val signatureInformationEncoder: Encoder[SignatureInformationDTO] = deriveEncoder[SignatureInformationDTO]
+  implicit val signatureInformationDecoder: Decoder[SignatureInformationDTO] = deriveDecoder[SignatureInformationDTO]
+}
+
+object ParameterInformationDTO {
+  implicit val parameterInformationEncoder: Encoder[ParameterInformationDTO] = deriveEncoder[ParameterInformationDTO]
+  implicit val parameterInformationDecoder: Decoder[ParameterInformationDTO] = deriveDecoder[ParameterInformationDTO]
 }
 
 object Project {

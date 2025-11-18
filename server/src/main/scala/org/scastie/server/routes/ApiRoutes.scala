@@ -69,7 +69,7 @@ class ApiRoutes(
                   id => complete(server.fetchOld(id))
                 ),
                 path("user" / "settings")(
-                  complete(server.fetchUser())
+                  complete(server.fetchUserData())
                 ),
                 path("user" / "snippets")(
                   complete(server.fetchUserSnippets())

@@ -19,20 +19,24 @@ import cats.effect.Async
 import cats.effect.Sync
 import cats.syntax.all._
 import meta.internal.mtags.MtagsEnrichments.XtensionAbsolutePath
+import scala.meta.pc.RawPresentationCompiler
+import scala.meta.internal.metals.clients.language.RawMetalsQuickPickResult
+import ch.epfl.scala.debugadapter.ScalaVersion
+import cats.effect.IO
 
-trait BlockingServiceLoader[F[_]] {
-  def load[T](cls: Class[T], className: String, classloader: URLClassLoader): F[T]
+trait BlockingServiceLoader {
+  def load[T](cls: Class[T], className: String, classloader: URLClassLoader): IO[T]
 }
 
 object BlockingServiceLoader {
 
-  def instance[F[_]: Sync](semaphore: Semaphore[F]) = new BlockingServiceLoader[F] {
+  def instance(semaphore: Semaphore[IO]) = new BlockingServiceLoader {
 
     /*
      * ServiceLoader is not thread safe. That's why we are blocking it's execution.
      */
-    def load[T](cls: Class[T], className: String, classloader: URLClassLoader): F[T] =
-      def load0: F[T] = Sync[F].delay {
+    def load[T](cls: Class[T], className: String, classloader: URLClassLoader): IO[T] =
+      def load0: IO[T] = IO.blocking {
         val services = ServiceLoader.load(cls, classloader).iterator()
         if (services.hasNext) services.next()
         else {
@@ -46,7 +50,7 @@ object BlockingServiceLoader {
         }
       }
 
-      Sync[F].uncancelable { poll =>
+      IO.uncancelable { poll =>
         poll(semaphore.acquire) *> poll(load0).guarantee(semaphore.release)
       }
 
@@ -65,11 +69,11 @@ object BlockingServiceLoader {
  * IMPORTANT, Presentation compilers are stored to make sure we are not loading same classes with Classloader.
  * They are also not thread safe that's why their creation for the first time for specific `scalaVersion` is blocking.
  */
-class PresentationCompilers[F[_]: Async](metalsWorkingDirectory: Path) {
+class PresentationCompilers(metalsWorkingDirectory: Path) {
   private val presentationCompilers: TrieMap[String, URLClassLoader] = TrieMap.empty
 
   // service loader must be blocking as it's not thread safe
-  private val serviceLoader: F[BlockingServiceLoader[F]] = Semaphore[F](1).map(BlockingServiceLoader.instance[F])
+  private val serviceLoader: IO[BlockingServiceLoader] = Semaphore[IO](1).map(BlockingServiceLoader.instance)
 
   val index = OnDemandSymbolIndex.empty()(
     using EmptyReportContext
@@ -81,19 +85,24 @@ class PresentationCompilers[F[_]: Async](metalsWorkingDirectory: Path) {
 
   JdkSources().foreach(jdk => index.addSourceJar(jdk, Scala213))
 
-  def createPresentationCompiler(classpath: Seq[Path], version: String, mtags: MtagsBinaries): F[PresentationCompiler] =
+  def createPresentationCompiler(classpath: Seq[Path], version: String, mtags: MtagsBinaries): IO[PresentationCompiler | RawPresentationCompiler] =
     prepareClasspathSearch(classpath, version) >>= { classpathSearch =>
       (mtags match {
-        case MtagsBinaries.BuildIn              => Sync[F].delay(ScalaPresentationCompiler(classpath = classpath))
+        case MtagsBinaries.BuildIn              => IO(ScalaPresentationCompiler(classpath = classpath))
         case artifacts: MtagsBinaries.Artifacts => presentationCompiler(artifacts, classpath)
-      }).map(pc =>
-        pc.newInstance("", classpath.filterNot(isSourceJar).asJava, Nil.asJava)
-          .withSearch(ScastieSymbolSearch(docs, classpathSearch))
-          .withWorkspace(metalsWorkingDirectory)
-      )
+      }).map {
+        case raw: RawPresentationCompiler =>
+          raw.newInstance("", classpath.filterNot(isSourceJar).asJava, Nil.asJava)
+            .withSearch(ScastieSymbolSearch(docs, classpathSearch))
+            .withWorkspace(metalsWorkingDirectory)
+        case normal: PresentationCompiler =>
+          normal.newInstance("", classpath.filterNot(isSourceJar).asJava, Nil.asJava)
+            .withSearch(ScastieSymbolSearch(docs, classpathSearch))
+            .withWorkspace(metalsWorkingDirectory)
+      }
     }
 
-  private def prepareClasspathSearch(classpath: Seq[Path], version: String): F[ClasspathSearch] = Sync[F].delay {
+  private def prepareClasspathSearch(classpath: Seq[Path], version: String): IO[ClasspathSearch] = IO {
     classpath.filter(isSourceJar).foreach { path => {
       val libVersion = ScalaVersions.scalaBinaryVersionFromJarName(path.getFileName.toString).getOrElse(version)
       index.addSourceJar(AbsolutePath(path), ScalaVersions.dialectForScalaVersion(libVersion, true))
@@ -106,19 +115,20 @@ class PresentationCompilers[F[_]: Async](metalsWorkingDirectory: Path) {
     jarFile.getFileName.toString.endsWith("-sources.jar")
   }
 
-  private def presentationCompiler(mtags: MtagsBinaries.Artifacts, scalaLibrary: Seq[Path]): F[PresentationCompiler] =
-    Sync[F].delay {
+  private def presentationCompiler(mtags: MtagsBinaries.Artifacts, scalaLibrary: Seq[Path]): IO[PresentationCompiler | RawPresentationCompiler] =
+    IO {
       presentationCompilers.getOrElseUpdate(
         ScalaVersions.dropVendorSuffix(mtags.scalaVersion),
         newPresentationCompilerClassLoader(mtags, scalaLibrary)
       )
     } >>= (classloader =>
       serviceLoader.flatMap(serviceLoader =>
-        val classname =
-          if (mtags.isScala3PresentationCompiler) "dotty.tools.pc.ScalaPresentationCompiler"
-          else classOf[ScalaPresentationCompiler].getName()
-
-        serviceLoader.load(classOf[PresentationCompiler], classname, classloader)
+        if (ScalaVersion(mtags.scalaVersion) >= ScalaVersion("3.8.0"))
+          serviceLoader.load(classOf[RawPresentationCompiler], "dotty.tools.pc.RawScalaPresentationCompiler" , classloader)
+        else if (mtags.isScala3PresentationCompiler)
+          serviceLoader.load(classOf[PresentationCompiler], "dotty.tools.pc.ScalaPresentationCompiler" , classloader)
+        else
+          serviceLoader.load(classOf[PresentationCompiler], classOf[ScalaPresentationCompiler].getName() , classloader)
       )
     )
 

@@ -8,22 +8,20 @@ import io.circe.disjunctionCodecs.encodeEither
 
 import org.http4s._
 import org.http4s.circe._
+import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.dsl.io._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.server._
+import cats.effect.IO
 
 object ScastieMetalsRoutes {
 
-  def routes[F[_]: Async](metals: ScastieMetals[F]): HttpRoutes[F] =
-    val dsl = new Http4sDsl[F] {}
+  def routes(metals: ScastieMetals): HttpRoutes[IO] =
+    val dsl = new Http4sDsl[IO] {}
     import dsl._
     import JavaConverters._
 
-    implicit val lspRequestDecoder: EntityDecoder[F, LSPRequestDTO]                  = jsonOf[F, LSPRequestDTO]
-    implicit val scastieMetalsOptionsDecoder: EntityDecoder[F, ScastieMetalsOptions] = jsonOf[F, ScastieMetalsOptions]
-    implicit val completionInfoDecoder: EntityDecoder[F, CompletionInfoRequest]      = jsonOf[F, CompletionInfoRequest]
-
-    HttpRoutes.of[F] {
+    HttpRoutes.of[IO] {
       case req @ POST -> Root / "metals" / "complete" => for {
           lspRequest       <- req.as[LSPRequestDTO]
           maybeCompletions <- metals.complete(lspRequest).value
@@ -45,7 +43,13 @@ object ScastieMetalsRoutes {
       case req @ POST -> Root / "metals" / "signatureHelp" => for {
           lspRequest    <- req.as[LSPRequestDTO]
           signatureHelp <- metals.signatureHelp(lspRequest).value
-          resp          <- Status.NotImplemented()
+          resp          <- Ok(signatureHelp.map(_.toSignatureHelpDTO).asJson)
+        } yield resp
+
+      case req @ POST -> Root / "metals" / "diagnostics" => for {
+          lspRequest           <- req.as[LSPRequestDTO]
+          diags                <- metals.diagnostics(lspRequest).value
+          resp                 <- Ok(diags.asJson)
         } yield resp
 
       case req @ POST -> Root / "metals" / "isConfigurationSupported" => for {

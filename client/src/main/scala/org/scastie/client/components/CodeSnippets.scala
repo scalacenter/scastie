@@ -23,7 +23,9 @@ final case class CodeSnippets(
     closeShareModal: Reusable[Callback],
     openShareModal: SnippetId ~=> Callback,
     loadProfile: Reusable[Future[List[SnippetSummary]]],
-    deleteSnippet: SnippetId ~=> Future[Boolean]
+    deleteSnippet: SnippetId ~=> Future[Boolean],
+    switchableUsers: List[User],
+    changeUser: User ~=> Callback
 ) {
 
   @inline def render: VdomElement = CodeSnippets.component(this)
@@ -124,9 +126,9 @@ object CodeSnippets {
         img(src := props.user.avatar_url + "&s=70", alt := "Your Github Avatar", cls := "image-button avatar")
       )
 
-    val userName = props.user.name.getOrElse("")
     val userLogin = props.user.login
-
+    val userName = props.user.name.getOrElse(userLogin)
+    
     val noSummaries =
       if (summaries.isEmpty) p(I18n.t("snippets.empty"))
       else EmptyVdom
@@ -145,6 +147,23 @@ object CodeSnippets {
         .reverse
     }
 
+    val orgList =
+      if (props.switchableUsers.nonEmpty)
+        div(cls := "org-list")(
+          props.switchableUsers.map { org =>
+            div(cls := "org-item")(
+              img(src := org.avatar_url + "&s=24", alt := org.login, cls := "avatar org-avatar"),
+              span(org.login),
+              button(
+                cls := s"switch-btn",
+                "Switch",
+                onClick --> props.changeUser(org)
+              )
+            )
+          }.toTagMod
+        )
+      else EmptyVdom
+
     div(cls := "code-snippets-container")(
       userAvatar,
       h2(userName),
@@ -152,6 +171,7 @@ object CodeSnippets {
         i(cls := "fa fa-github"),
         userLogin
       ),
+      orgList,
       h2(I18n.t("snippets.saved")),
       div(cls := "snippets")(
         noSummaries,

@@ -6,6 +6,7 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import org.scastie.api.User
+import org.scastie.api.UserData
 import com.softwaremill.session._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
@@ -30,9 +31,9 @@ class GithubUserSession(system: ActorSystem) {
   private val sessionConfig =
     SessionConfig.default(configuration.getString("session-secret"))
 
-  private lazy val users = {
-    val trie = TrieMap[UUID, User]()
-    trie ++= readSessionsFile()
+  private lazy val usersData: TrieMap[UUID, (User, List[User])] = {
+    val trie = TrieMap[UUID, (User, List[User])]()
+    trie ++= readSessionsFile().map { case (uuid, user, switchableUsers) => uuid -> (user, switchableUsers) }
     trie
   }
 
@@ -41,14 +42,20 @@ class GithubUserSession(system: ActorSystem) {
       _.toString(),
       (id: String) => Try { UUID.fromString(id) }
     )
-  implicit val sessionManager = new SessionManager[UUID](sessionConfig)
-  implicit val refreshTokenStorage = new ActorRefreshTokenStorage(system)
+  implicit val sessionManager: SessionManager[UUID] = new SessionManager[UUID](sessionConfig)
+  implicit val refreshTokenStorage: ActorRefreshTokenStorage = new ActorRefreshTokenStorage(system)
 
-  private def readSessionsFile(): Vector[(UUID, User)] = {
+  private def generateUniqueUUID(): UUID = {
+    val uuid = UUID.randomUUID
+    if (usersData.contains(uuid)) generateUniqueUUID()
+    else uuid
+  }
+
+  private def readSessionsFile(): Vector[(UUID, User, List[User])] = {
     if (Files.exists(usersSessions)) {
       val content = Files.readAllLines(usersSessions).toArray.mkString(nl)
       try {
-        decode[Vector[(UUID, User)]](content).toOption.getOrElse(Vector())
+        decode[Vector[(UUID, User, List[User])]](content).toOption.getOrElse(Vector())
       } catch {
         case NonFatal(e) =>
           logger.error("failed to read sessions", e)
@@ -59,11 +66,11 @@ class GithubUserSession(system: ActorSystem) {
     }
   }
 
-  private def appendSessionsFile(uuid: UUID, user: User): Unit = synchronized {
-    val pair = uuid -> user
-    users += pair
+  private def appendSessionsFile(uuid: UUID, user: User, switchableUsers: List[User]): Unit = synchronized {
+    val pair = uuid -> (user, switchableUsers)
+    usersData += pair
     val sessions = readSessionsFile()
-    val sessions0 = sessions :+ pair
+    val sessions0 = sessions :+ (uuid, user, switchableUsers)
 
     if (Files.exists(usersSessions)) {
       Files.delete(usersSessions)
@@ -78,10 +85,24 @@ class GithubUserSession(system: ActorSystem) {
     ()
   }
 
-  def addUser(user: User): UUID = {
-    val uuid = UUID.randomUUID
-    appendSessionsFile(uuid, user)
-    storeUser(user.login)
+  def switchUser(currentUserData: Option[UserData], requestedUser: User): UUID = {
+    currentUserData match {
+      case None =>
+        addUserData(UserData(requestedUser, List.empty))
+      case Some(data) =>
+        val currentUser = data.user
+        val newSwitchable =
+          data.switchableUsers.filterNot(_.login == requestedUser.login) :+ currentUser
+        val newUserData =
+          UserData(requestedUser, newSwitchable)
+        addUserData(newUserData)
+    }
+  }
+
+  def addUserData(userData: UserData): UUID = {
+    val uuid = generateUniqueUUID()
+    appendSessionsFile(uuid, userData.user, userData.switchableUsers)
+    storeUser(userData.user.login)
     uuid
   }
 
@@ -96,6 +117,8 @@ class GithubUserSession(system: ActorSystem) {
     }
   }
 
-  def getUser(id: Option[UUID]): Option[User] =
-    id.flatMap(users.get)
+  def getUserData(id: Option[UUID]): Option[UserData] =
+    id.flatMap(usersData.get).map { case (user, switchableUsers) =>
+      UserData(user, switchableUsers)
+    }
 }

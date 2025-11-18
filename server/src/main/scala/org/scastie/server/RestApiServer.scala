@@ -12,15 +12,18 @@ import akka.http.scaladsl.model.RemoteAddress
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration.DurationInt
 import org.scastie.storage.PolicyAcceptance
+import org.scastie.api.UserData
 
 class RestApiServer(
     dispatchActor: ActorRef,
     ip: RemoteAddress,
-    maybeUser: Option[User]
+    maybeUserData: Option[UserData]
 )(implicit executionContext: ExecutionContext)
     extends RestApi {
 
   implicit val timeout: Timeout = Timeout(20.seconds)
+
+  private val maybeUser: Option[User] = maybeUserData.map(_.user)
 
   private def wrap(inputs: BaseInputs): InputsWithIpAndUser =
     InputsWithIpAndUser(inputs, UserTrace(ip.toString, maybeUser))
@@ -84,8 +87,8 @@ class RestApiServer(
       .mapTo[Option[FetchResult]]
   }
 
-  def fetchUser(): Future[Option[User]] = {
-    Future.successful(maybeUser)
+  def fetchUserData(): Future[Option[UserData]] = {
+    Future.successful(maybeUserData)
   }
 
   def fetchUserSnippets(): Future[List[SnippetSummary]] = {

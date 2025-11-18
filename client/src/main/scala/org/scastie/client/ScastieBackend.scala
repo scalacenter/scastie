@@ -470,13 +470,28 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   def loadUser: Callback =
     Callback.future(
       restApiClient
-        .fetchUser()
-        .map(result => scope.modState(_.setUser(result)))
+        .fetchUserData()
+        .map(result => scope.modState(_.setUserData(result)))
     ) >> Callback.future(
       restApiClient
         .getPrivacyPolicyStatus()
         .map(result => scope.modState(_.setPrivacyPolicyPromptClosed(result)))
     )
+
+  def changeUser(user: User): Callback =
+    Callback.future(
+      restApiClient
+        .changeUser(user)
+        .map { userDataOpt =>
+          userDataOpt.foreach { userData =>
+            scope.modState(_.setUserData(Some(userData)))
+          }
+          setHome
+        }
+    )
+
+  val changeUser: User ~=> Callback =
+    Reusable.fn(user => changeUser(user))
 
   val formatCode: Reusable[Callback] = Reusable.always {
     scope.state.flatMap { state =>

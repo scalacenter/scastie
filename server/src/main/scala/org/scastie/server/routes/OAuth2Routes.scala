@@ -17,6 +17,12 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
 import scala.concurrent.ExecutionContext
+import org.scastie.api.User
+import io.circe._
+import io.circe.generic.semiauto._
+import io.circe.syntax._
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+import org.scastie.api.UserData
 
 class OAuth2Routes(github: Github, session: GithubUserSession)(
     implicit val executionContext: ExecutionContext
@@ -34,6 +40,7 @@ class OAuth2Routes(github: Github, session: GithubUserSession)(
                   Uri("https://github.com/login/oauth/authorize").withQuery(
                     Query(
                       "client_id" -> github.clientId,
+                      "scope" -> "read:org",
                       "state" -> {
                         val homeUri = "/"
                         if (home.isDefined) homeUri
@@ -64,8 +71,8 @@ class OAuth2Routes(github: Github, session: GithubUserSession)(
         pathPrefix("callback") {
           pathEnd {
             parameters("code", "state".?) { (code, state) =>
-              onSuccess(github.getUserWithOauth2(code)) { user =>
-                setSession(refreshable, usingCookies, session.addUser(user)) {
+              onSuccess(github.getUserDataWithOauth2(code)) { userData =>
+                setSession(refreshable, usingCookies, session.addUserData(userData)) {
                   setNewCsrfToken(checkHeader) { ctx =>
                     ctx.complete(
                       HttpResponse(
@@ -82,5 +89,40 @@ class OAuth2Routes(github: Github, session: GithubUserSession)(
           }
         }
       )
+    ) ~
+    post(
+      path("api" / "changeUser") {
+        entity(as[User]) { requestedUser =>
+          requiredSession(refreshable, usingCookies) { sessionId =>
+            val currentUserDataOpt: Option[UserData] = session.getUserData(Some(sessionId))
+            val canSwitch = currentUserDataOpt.exists { userData =>
+              userData.switchableUsers.exists(_.login == requestedUser.login)
+            }
+            if (canSwitch) {
+              val newUserUUID = session.switchUser(currentUserDataOpt, requestedUser)
+              val newUserDataOption = session.getUserData(Some(newUserUUID))
+              val newUserData = newUserDataOption.getOrElse(UserData(requestedUser, List.empty))
+              invalidateSession(refreshable, usingCookies) {
+                setSession(refreshable, usingCookies, newUserUUID) {
+                  setNewCsrfToken(checkHeader) { ctx =>
+                    ctx.complete(
+                      HttpResponse(
+                        status = StatusCodes.OK,
+                        entity = HttpEntity(
+                          ContentTypes.`application/json`,
+                          newUserData.asJson.noSpaces
+                        )
+                      )
+                    )
+                  }
+                }
+              }
+            }
+            else {
+              complete(StatusCodes.Forbidden)
+            }
+          }
+        }
+      }
     )
 }

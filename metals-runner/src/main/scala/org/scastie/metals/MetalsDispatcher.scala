@@ -23,6 +23,7 @@ import coursierapi.{Dependency, Fetch}
 import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext
 import com.typesafe.config.ConfigFactory
+import cats.effect.IO
 
 /*
  * MetalsDispatcher is responsible for managing the lifecycle of presentation compilers.
@@ -32,7 +33,7 @@ import com.typesafe.config.ConfigFactory
  *
  * @param cache - cache used for managing presentation compilers
  */
-class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, ScastiePresentationCompiler]) {
+class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentationCompiler]) {
   private val logger = LoggerFactory.getLogger(getClass)
 
   private val config            = ConfigFactory.load().getConfig("scastie.metals")
@@ -49,13 +50,13 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
 
   logger.info(s"Metals working directory: $metalsWorkingDirectory")
 
-  private val presentationCompilers = PresentationCompilers[F](metalsWorkingDirectory)
+  private val presentationCompilers = PresentationCompilers(metalsWorkingDirectory)
   private val supportedVersions     = Set("2.12", "2.13", "3")
 
   def getMtags(scalaVersion: String)=
     for
-      given ExecutionContext <- Sync[F].executionContext
-      mtags <- Sync[F].blocking(
+      given ExecutionContext <- IO.executionContext
+      mtags <- IO.blocking(
         mtagsResolver
           .resolve(scalaVersion)
           .toRight(PresentationCompilerFailure(s"Mtags couldn't be resolved for target: ${scalaVersion}."))
@@ -70,14 +71,14 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
    * @param configuration - scastie client configuration
    * @returns `EitherT[F, FailureType, ScastiePresentationCompiler]`
    */
-  def getCompiler(configuration: ScastieMetalsOptions): EitherT[F, FailureType, ScastiePresentationCompiler] =
+  def getCompiler(configuration: ScastieMetalsOptions): EitherT[IO, FailureType, ScastiePresentationCompiler] =
     EitherT:
       if !isSupportedVersion(configuration) then
-        Async[F].delay(
+        IO {
           PresentationCompilerFailure(
             s"Interactive features are not supported for Scala ${configuration.scalaTarget.binaryScalaVersion}."
           ).asLeft
-        )
+        }
       else
         cache
           .contains(configuration)
@@ -92,7 +93,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
                 compiler <- EitherT.right(
                   cache.getOrUpdateReleasable(configuration) {
                     initializeCompiler(configuration, mtags).map: newPC =>
-                      Releasable(newPC, Sync[F].delay(newPC.underlyingPC.shutdown()))
+                      Releasable(newPC, IO(newPC.shutdown()))
                   })
               yield compiler
             .value
@@ -109,7 +110,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
    * We must properly handle non compatibile library versions.
    * In sbt it is automatically resolved but here, we manually specify scala target.
    */
-  def areDependenciesSupported(configuration: ScastieMetalsOptions): EitherT[F, FailureType, Boolean] =
+  def areDependenciesSupported(configuration: ScastieMetalsOptions): EitherT[IO, FailureType, Boolean] =
     def scalaTargetString(scalaTarget: ScalaTarget): String =
       s"${scalaTarget.scalaVersion}" ++ (if scalaTarget.isInstanceOf[Js] then "JS" else "")
 
@@ -145,7 +146,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
   private def initializeCompiler(
     configuration: ScastieMetalsOptions,
     mtags: MtagsBinaries
-  ): F[ScastiePresentationCompiler] = (
+  ): IO[ScastiePresentationCompiler] = (
     getDependencyClasspath(configuration.dependencies, getScalaJsDependencies(configuration.scalaTarget)),
     getScalaLibrary(configuration.scalaTarget),
     getScalaTargetSources(configuration.scalaTarget)
@@ -153,7 +154,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
     val scalaVersion = configuration.scalaTarget.scalaVersion
     presentationCompilers
       .createPresentationCompiler(classpath.toSeq, scalaVersion, mtags)
-      .map(ScastiePresentationCompiler.apply)
+      .flatMap(ScastiePresentationCompiler.apply)
   }
 
   /*
@@ -174,8 +175,8 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
    * @param scalaTarget - scala target for scastie client configuration
    * @returns paths of downloaded files
    */
-  private def getScalaLibrary(scalaTarget: ScalaTarget): F[Set[Path]] =
-    Sync[F].blocking { Embedded.scalaLibrary(scalaTarget.scalaVersion).toSet }
+  private def getScalaLibrary(scalaTarget: ScalaTarget): IO[Set[Path]] =
+    IO.blocking { Embedded.scalaLibrary(scalaTarget.scalaVersion).toSet }
 
   /*
    * Fetches scala sources for given `scalaTarget`
@@ -183,7 +184,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
    * @param scalaTarget - scala target for scastie client configuration
    * @returns paths of downloaded files
    */
-  private def getScalaTargetSources(scalaTarget: ScalaTarget): F[Set[Path]] = Sync[F].blocking {
+  private def getScalaTargetSources(scalaTarget: ScalaTarget): IO[Set[Path]] = IO.blocking {
     if scalaTarget.scalaVersion.startsWith("3") then Embedded.downloadScala3Sources(scalaTarget.scalaVersion).toSet
     else Embedded.downloadScalaSources(scalaTarget.scalaVersion).toSet
   }
@@ -212,7 +213,7 @@ class MetalsDispatcher[F[_]: Async](cache: Cache[F, ScastieMetalsOptions, Scasti
   private def getDependencyClasspath(
     dependencies: Set[ScalaDependency],
     extraDependencies: Set[Dependency]
-  ): F[Set[Path]] = Sync[F].blocking {
+  ): IO[Set[Path]] = IO.blocking {
     val dep = dependencies.map {
       case ScalaDependency(groupId, artifact, target, version, true) =>
         Dependency.of(groupId, artifactWithBinaryVersion(artifact, target), version)

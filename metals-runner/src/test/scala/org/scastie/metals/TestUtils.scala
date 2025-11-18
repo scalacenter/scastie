@@ -19,13 +19,13 @@ import cats.data.OptionT
 
 object TestUtils extends Assertions with CatsEffectAssertions {
   val cache  = Cache.empty[IO, ScastieMetalsOptions, ScastiePresentationCompiler]
-  val server = ScastieMetalsImpl.instance[IO](cache)
+  val server = ScastieMetalsImpl.instance(cache)
 
   type DependencyForVersion = ScalaTarget => ScalaDependency
 
   val testTargets =
     List(BuildInfo.latestLTS, BuildInfo.stableLTS, BuildInfo.latestNext).map(Scala3.apply) ++
-      List(BuildInfo.latest213, BuildInfo.latest212).map(Scala2.apply)
+      List(BuildInfo.latest213, BuildInfo.latest212).map(Scala2.apply) :+ Scala3("3.8.0-RC1") // First RawPresentationCompiler
 
   val unsupportedVersions = List(BuildInfo.latest211, BuildInfo.latest210).map(Scala2.apply)
 
@@ -42,7 +42,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
   ): LSPRequestDTO =
     val offsetParamsComplete = testCode(code, isWorksheet)
     val dependencies0        = dependencies.map(_.apply(scalaTarget))
-    LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget, code), offsetParamsComplete)
+    LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget), offsetParamsComplete)
 
   def getCompat[A](scalaTarget: ScalaTarget, compat: Map[String, A], default: A): A =
     val binaryScalaVersion = scalaTarget.binaryScalaVersion
