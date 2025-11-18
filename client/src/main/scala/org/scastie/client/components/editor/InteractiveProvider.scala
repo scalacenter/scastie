@@ -91,10 +91,10 @@ object InteractiveProvider {
       timeout.foreach(clearTimeout)
       timeout = setTimeout(1000.millis) {
         val newDirectives = takeDirectives(current.value)
-        if (previousDirectives != newDirectives)
+        if (previousDirectives != newDirectives) {
           previousDirectives = newDirectives
           current.setMetalsStatus(OutdatedScalaCli).runNow()
-        if (previousDirectives != newDirectives) current.setMetalsStatus(OutdatedScalaCli).runNow()
+        }
       }
     }.when_(
       (prev.map(_.value).getOrElse("") != current.value) &&
