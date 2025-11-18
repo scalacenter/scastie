@@ -87,17 +87,22 @@ object InteractiveProvider {
 
   val didDirectivesChange: (CodeEditor, CodeEditor) => Unit = {
     var timeout: js.UndefOr[js.timers.SetTimeoutHandle] = js.undefined
+    var lastDirectives: Option[List[String]] = None
 
     (prev, current) => {
+      if (lastDirectives.isEmpty) {
+        lastDirectives = Some(takeDirectives(prev.value))
+      }
       timeout.foreach(clearTimeout)
+      val currentDirectives = takeDirectives(current.value)
+      val previousDirectives = lastDirectives.get
       timeout = setTimeout(1000.millis) {
-        val previousDirectives = takeDirectives(prev.value)
-        val newDirectives = takeDirectives(current.value)
-        if (previousDirectives != newDirectives) {
-          ScalaCliUtils.parse(newDirectives).foreach { case (scalaTarget, dependencies) =>
+        if (previousDirectives != currentDirectives) {
+          ScalaCliUtils.parse(currentDirectives).foreach { case (scalaTarget, dependencies) =>
             val options = api.ScastieMetalsOptions(dependencies, scalaTarget)
             (current.updateSettings(options) >> current.setMetalsStatus(OutdatedScalaCli)).runNow()
           }
+          lastDirectives = Some(currentDirectives)
         }
       }
     }
