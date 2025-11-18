@@ -965,7 +965,7 @@ w3c-keyname@^2.2.4:
   resolved "https://registry.npmjs.org/w3c-keyname/-/w3c-keyname-2.2.8.tgz"
   integrity sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==
 
-web-tree-sitter@0.24.3:
-  version "0.24.3"
-  resolved "https://registry.npmjs.org/web-tree-sitter/-/web-tree-sitter-0.24.3.tgz"
-  integrity sha512-uR9YNewr1S2EzPKE+y39nAwaTyobBaZRG/IsfkB/OT4v0lXtNj5WjtHKgn2h7eOYUWIZh5rK9Px7tI6S9CRKdA==
+web-tree-sitter@0.24.7:
+  version "0.24.7"
+  resolved "https://registry.yarnpkg.com/web-tree-sitter/-/web-tree-sitter-0.24.7.tgz#76d1da39407c8e4567d65b55bdbaca456b0700b4"
+  integrity sha512-CdC/TqVFbXqR+C51v38hv6wOPatKEUGxa39scAeFSm98wIhZxAYonhRQPSMmfZ2w7JDI0zQDdzdmgtNk06/krQ==

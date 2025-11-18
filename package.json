@@ -40,7 +40,7 @@
     "typescript": "^5.1.6",
     "vite": "^5.0.10",
     "vite-plugin-markdown": "^2.2.0",
-    "web-tree-sitter": "0.24.3"
+    "web-tree-sitter": "0.24.7"
   },
   "resolutions": {
     "@codemirror/state": "^6.3.3",

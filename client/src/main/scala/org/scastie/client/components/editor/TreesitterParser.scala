@@ -8,6 +8,6 @@ import scala.scalajs.js.annotation.JSGlobal
 
 @JSGlobal("Treesitter")
 @js.native
-class TreesitterParser() extends StObject with Parser {
+class TreesitterParser() extends Parser {
 
 }

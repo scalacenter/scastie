@@ -8,30 +8,54 @@ import typings.webTreeSitter.mod._
 import scala.collection.mutable.ListBuffer
 
 import scalajs.js
+import scala.collection.mutable.TreeMap
 
 class SyntaxHighlightingHandler(parser: Parser, language: Language, query: Query, initialState: String) extends js.Object {
   val queryCaptureNames = query.captureNames
 
-  var tree = parser.parse(initialState)
+  var tree = parser.parse(initialState).asInstanceOf[Tree]
   var decorations: DecorationSet = computeDecorations()
 
   private def computeDecorations(): DecorationSet = {
     val rangeSetBuilder = new RangeSetBuilder[Decoration]()
     val captures = query.captures(tree.rootNode)
 
-    captures.foldLeft(Option.empty[QueryCapture]){ (previousCapture, currentCapture) =>
-      if (!previousCapture.exists(_ == currentCapture)) {
-        val startPosition = currentCapture.node.startIndex
-        val endPosition = currentCapture.node.endIndex
+    // Group captures by their range - for identical ranges, keep only the last (highest priority)
+    val capturesByRange = captures.foldLeft(Map.empty[(Double, Double), QueryCapture]) { (acc, capture) =>
+      val range = (capture.node.startIndex, capture.node.endIndex)
+      acc + (range -> capture)
+    }
 
-        val mark = Decoration.mark(
-          MarkDecorationSpec()
-            .setInclusive(true)
-            .setClass(currentCapture.name.replace(".", "-")))
-        rangeSetBuilder.add(startPosition, endPosition, mark)
+    // Build non-overlapping segments by splitting parent ranges
+    val segments = TreeMap.empty[Double, (Double, String)]
+    val sortedBySize = capturesByRange.toSeq.sortBy { case ((start, end), _) => end - start }
 
+    sortedBySize.foreach { case ((start, end), capture) =>
+      val overlapping = segments.rangeTo(end).filter { case (segStart, (segEnd, _)) =>
+        segEnd > start
       }
-      Some(currentCapture)
+
+      var currentPos = start
+
+      overlapping.foreach { case (segStart, (segEnd, _)) =>
+        if (currentPos < segStart) {
+          segments += (currentPos -> (segStart, capture.name))
+        }
+        currentPos = currentPos max segEnd
+      }
+
+      if (currentPos < end) {
+        segments += (currentPos -> (end, capture.name))
+      }
+    }
+
+    segments.foreach { case (startPos, (endPos, captureName)) =>
+      val mark = Decoration.mark(
+        MarkDecorationSpec()
+          .setInclusive(true)
+          .setClass(captureName.replace(".", "-")))
+
+      rangeSetBuilder.add(startPos, endPos, mark)
     }
 
     rangeSetBuilder.finish()
