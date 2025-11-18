@@ -212,6 +212,7 @@ object CodeEditor {
       Editor.updateTheme(ref, prevProps, props, editorView) >>
       updateDiagnostics(editorView, prevProps, props) >>
       DecorationProvider.updateDecorations(editorView, prevProps, props) >>
+      InteractiveProvider.didDirectivesChange(prevProps, props) >>
       InteractiveProvider.reloadMetalsConfiguration(editorView, prevProps, props, () => sharedHighlighter)
   }
 

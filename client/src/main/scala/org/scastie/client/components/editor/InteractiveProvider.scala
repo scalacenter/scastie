@@ -85,22 +85,21 @@ object InteractiveProvider {
   import scala.scalajs.js.timers._
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-  val didDirectivesChange: (CodeEditor, CodeEditor) => Unit = {
+  val didDirectivesChange: (Option[CodeEditor], CodeEditor) => Callback = {
     var timeout: js.UndefOr[js.timers.SetTimeoutHandle] = js.undefined
 
-    (prev, current) => {
+    (prev, current) => Callback {
       timeout.foreach(clearTimeout)
       timeout = setTimeout(1000.millis) {
-        val previousDirectives = takeDirectives(prev.value)
+        val previousDirectives = takeDirectives(prev.map(_.value).getOrElse(""))
         val newDirectives = takeDirectives(current.value)
-        if (previousDirectives != newDirectives) {
-          ScalaCliUtils.parse(newDirectives).foreach { case (scalaTarget, dependencies) =>
-            val options = api.ScastieMetalsOptions(dependencies, scalaTarget)
-            (current.updateSettings(options) >> current.setMetalsStatus(OutdatedScalaCli)).runNow()
-          }
-        }
+        if (previousDirectives != newDirectives) current.setMetalsStatus(OutdatedScalaCli).runNow()
       }
-    }
+    }.when_(
+      (prev.map(_.value).getOrElse("") != current.value) &&
+      (current.target.targetType == api.ScalaTargetType.ScalaCli) &&
+      (current.metalsStatus != MetalsDisabled)
+    )
   }
 
   private def didConfigChange(prevProps: CodeEditor, props: CodeEditor): Boolean =
@@ -113,20 +112,25 @@ object InteractiveProvider {
     prevProps: Option[CodeEditor],
     props: CodeEditor,
     syntaxHighlighterGetter: () => Option[SyntaxHighlighter]
-  ): Callback = {
-    if (props.metalsStatus != MetalsDisabled && props.target.targetType == api.ScalaTargetType.ScalaCli)
-      prevProps.foreach(didDirectivesChange(_, props))
-    Callback {
-      val extension = InteractiveProvider(props, syntaxHighlighterGetter).extension
+  ): Callback = CallbackTo {
+      val updateCli: Callback =
+        if (props.metalsStatus != MetalsDisabled && props.target.targetType == api.ScalaTargetType.ScalaCli)
+          Callback.future {
+            ScalaCliUtils.parse(takeDirectives(props.value)).map { case (scalaTarget, dependencies) =>
+              val options = api.ScastieMetalsOptions(dependencies, scalaTarget)
+              props.updateSettings(options)
+            }
+          }
+        else Callback.empty
 
+      val extension = InteractiveProvider(props, syntaxHighlighterGetter).extension
       val effects = interactive.reconfigure(extension)
-      editorView.value.dispatch(TransactionSpec().setEffects(effects))
-    }.when_(props.visible && prevProps.exists(prevProps => {
+      updateCli >> Callback { editorView.value.dispatch(TransactionSpec().setEffects(effects)) }
+    }.flatten.when_(props.visible && prevProps.exists(prevProps => {
       didConfigChange(prevProps, props) ||
       (prevProps.visible != props.visible) ||
       wasMetalsToggled(prevProps, props) ||
       requiresDirectiveReload(prevProps, props)
     }))
-  }
-
 }
+
