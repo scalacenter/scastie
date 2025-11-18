@@ -57,7 +57,12 @@ final case class CodeEditor(visible: Boolean,
 
 object CodeEditor {
   
-  private def init(props: CodeEditor, ref: Ref.Simple[Element], editorView: UseStateF[CallbackTo, EditorView]): Callback = {
+  private def init(
+    props: CodeEditor,
+    ref: Ref.Simple[Element],
+    editorView: UseStateF[CallbackTo, EditorView],
+    syntaxHighlighterState: UseStateF[CallbackTo, Option[SyntaxHighlighter]]
+  ): Callback = {
 
     if(props.editorMode == Vim) {
       EditorKeymaps.registerVimCommands(props)
@@ -65,7 +70,10 @@ object CodeEditor {
     
     ref.foreachCB(divRef => {
 
-      val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView)
+      val onHighlighterReady: SyntaxHighlighter => Callback = highlighter =>
+        syntaxHighlighterState.setState(Some(highlighter))
+
+      val syntaxHighlighting = new SyntaxHighlightingPlugin(editorView, onHighlighterReady)
       val modeExtension: Extension =
         getExtension(props.editorMode)
       val extensions =
@@ -92,7 +100,7 @@ object CodeEditor {
         DecorationProvider(props),
         EditorState.tabSize.of(2),
         Prec.highest(EditorKeymaps.keymapping(props)),
-        InteractiveProvider.interactive.of(InteractiveProvider(props).extension),
+        InteractiveProvider.interactive.of(InteractiveProvider(props, syntaxHighlighterState.value).extension),
         SyntaxHighlightingTheme.highlightingTheme,
         lintGutter(),
         OnChangeHandler(props.codeChange),
@@ -196,13 +204,14 @@ object CodeEditor {
       props: CodeEditor,
       ref: Ref.Simple[Element],
       prevProps: Option[CodeEditor],
-      editorView: UseStateF[CallbackTo, EditorView]
+      editorView: UseStateF[CallbackTo, EditorView],
+      syntaxHighlighterState: UseStateF[CallbackTo, Option[SyntaxHighlighter]]
   ): Callback = {
     Editor.updateCode(editorView, props) >>
       Editor.updateTheme(ref, prevProps, props, editorView) >>
       updateDiagnostics(editorView, prevProps, props) >>
       DecorationProvider.updateDecorations(editorView, prevProps, props) >>
-      InteractiveProvider.reloadMetalsConfiguration(editorView, prevProps, props)
+      InteractiveProvider.reloadMetalsConfiguration(editorView, prevProps, props, syntaxHighlighterState.value)
   }
 
   val hooksComponent =
@@ -211,9 +220,12 @@ object CodeEditor {
       .useRef(Ref[Element])
       .useRef[Option[CodeEditor]](None)
       .useState(new EditorView())
-      .useEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
+      .useState(Option.empty[SyntaxHighlighter])
+      .useEffectOnMountBy((props, ref, prevProps, editorView, syntaxHighlighterState) =>
+        init(props, ref.value, editorView, syntaxHighlighterState)
+      )
       .useEffectBy(
-        (props, ref, prevProps, editorView) =>
+        (props, ref, prevProps, editorView, syntaxHighlighterState) =>
           Callback {
             if (prevProps.value.exists(_.editorMode != props.editorMode)) {
               val modeExtension: Extension =
@@ -225,9 +237,9 @@ object CodeEditor {
               )
             }
           } >>
-          updateComponent(props, ref.value, prevProps.value, editorView) >>
+          updateComponent(props, ref.value, prevProps.value, editorView, syntaxHighlighterState) >>
           prevProps.set(Some(props))
       )
-      .render((_, ref, _, _) => Editor.render(ref.value))
+      .render((_, ref, _, _, _) => Editor.render(ref.value))
 
 }

@@ -182,6 +182,38 @@ object HoverDTO {
   implicit val hoverDTODecoder: Decoder[HoverDTO] = deriveDecoder[HoverDTO]
 }
 
+case class SignatureHelpDTO(
+  signatures: Seq[SignatureInformationDTO],
+  activeSignature: Int,
+  activeParameter: Int
+)
+
+case class SignatureInformationDTO(
+  label: String,
+  documentation: String,
+  parameters: Seq[ParameterInformationDTO]
+)
+
+case class ParameterInformationDTO(
+  label: String,
+  documentation: String
+)
+
+object SignatureHelpDTO {
+  implicit val signatureHelpDTOEncoder: Encoder[SignatureHelpDTO] = deriveEncoder[SignatureHelpDTO]
+  implicit val signatureHelpDTODecoder: Decoder[SignatureHelpDTO] = deriveDecoder[SignatureHelpDTO]
+}
+
+object SignatureInformationDTO {
+  implicit val signatureInformationEncoder: Encoder[SignatureInformationDTO] = deriveEncoder[SignatureInformationDTO]
+  implicit val signatureInformationDecoder: Decoder[SignatureInformationDTO] = deriveDecoder[SignatureInformationDTO]
+}
+
+object ParameterInformationDTO {
+  implicit val parameterInformationEncoder: Encoder[ParameterInformationDTO] = deriveEncoder[ParameterInformationDTO]
+  implicit val parameterInformationDecoder: Decoder[ParameterInformationDTO] = deriveDecoder[ParameterInformationDTO]
+}
+
 object Project {
   implicit val projectEncoder: Encoder[Project] = deriveEncoder[Project]
   implicit val projectDecoder: Decoder[Project] = deriveDecoder[Project]

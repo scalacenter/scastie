@@ -31,6 +31,7 @@
   $TSNumber             : $base09;
   $TSOperator           : $base05;
   $TSParameter          : $base05;
+  $TSActiveParameter    : $base08;
   $TSParameterReference : $base05;
   $TSProperty           : $base05;
   $TSPunctDelimiter     : $base0F;
@@ -83,6 +84,7 @@
     .method-call { color: $TSMethod !important; }
     .constructor { color: $TSConstructor !important; }
     .parameter { color: $TSParameter; }
+    .active-parameter { color: $TSActiveParameter; }
     .keyword { color: $TSKeyword; }
     .keyword-function { color: $TSKeywordFunction; }
     .keyword-operator { color: $TSKeywordOperator; }

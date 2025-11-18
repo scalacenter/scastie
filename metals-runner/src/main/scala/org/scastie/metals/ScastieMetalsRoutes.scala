@@ -45,7 +45,7 @@ object ScastieMetalsRoutes {
       case req @ POST -> Root / "metals" / "signatureHelp" => for {
           lspRequest    <- req.as[LSPRequestDTO]
           signatureHelp <- metals.signatureHelp(lspRequest).value
-          resp          <- Status.NotImplemented()
+          resp          <- Ok(signatureHelp.map(_.toSignatureHelpDTO).asJson)
         } yield resp
 
       case req @ POST -> Root / "metals" / "isConfigurationSupported" => for {

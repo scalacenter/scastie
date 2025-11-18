@@ -24,15 +24,16 @@ case class InteractiveProvider(
   updateSettings: api.ScastieMetalsOptions ~=> Callback,
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
-) extends MetalsClient with MetalsAutocompletion with MetalsHover {
+  syntaxHighlighter: Option[SyntaxHighlighter] = None,
+) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsSignatureHelp {
 
-  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete)
+  def extension: js.Array[Any] = js.Array[Any](metalsHover, metalsAutocomplete, metalsSignatureHelp)
 
 }
 
 object InteractiveProvider {
 
-  def apply(props: CodeEditor): InteractiveProvider = {
+  def apply(props: CodeEditor, syntaxHighlighter: Option[SyntaxHighlighter]): InteractiveProvider = {
     InteractiveProvider(
       props.dependencies,
       props.target,
@@ -41,11 +42,16 @@ object InteractiveProvider {
       props.setMetalsStatus,
       props.updateSettings,
       props.isWorksheetMode,
-      props.isEmbedded
+      props.isEmbedded,
+      syntaxHighlighter
     )
   }
 
   val interactive = new Compartment()
+
+  def renderMarkdown(markdown: String): String = {
+    typings.marked.mod.marked.`package`.parse(markdown).asInstanceOf[String]
+  }
 
   val highlightJS = typings.highlightJs.mod.default
   val highlightF: (String, String, String) => String = (str, lang, _) => {
@@ -108,7 +114,8 @@ object InteractiveProvider {
   def reloadMetalsConfiguration(
     editorView: UseStateF[CallbackTo, EditorView],
     prevProps: Option[CodeEditor],
-    props: CodeEditor
+    props: CodeEditor,
+    syntaxHighlighter: Option[SyntaxHighlighter]
   ): Callback = {
     if (props.metalsStatus != MetalsDisabled && props.target.targetType == api.ScalaTargetType.ScalaCli)
       didDirectivesChange(prevProps, props)
@@ -121,7 +128,8 @@ object InteractiveProvider {
         props.setMetalsStatus,
         props.updateSettings,
         props.isWorksheetMode,
-        props.isEmbedded
+        props.isEmbedded,
+        syntaxHighlighter
       ).extension
 
       val effects = interactive.reconfigure(extension)
