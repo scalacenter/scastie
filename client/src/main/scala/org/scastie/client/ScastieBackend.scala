@@ -120,9 +120,6 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val setMetalsStatus: MetalsStatus ~=> Callback =
     Reusable.fn(status => scope.modState(_.setMetalsStatus(status)))
 
-  val updateSettings: ScastieMetalsOptions ~=> Callback =
-    Reusable.fn(newSettings => scope.modState(_.updateScalaCliSettings(newSettings)))
-
   val toggleMetalsStatus: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleMetalsStatus))
 

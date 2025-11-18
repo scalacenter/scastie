@@ -21,7 +21,6 @@ import io.circe.disjunctionCodecs.decoderEither
 
 trait MetalsClient {
   val updateStatus: MetalsStatus ~=> Callback
-  val updateSettings: ScastieMetalsOptions ~=> Callback
   val metalsStatus: MetalsStatus
   val dependencies: Set[ScalaDependency]
   val target: ScalaTarget

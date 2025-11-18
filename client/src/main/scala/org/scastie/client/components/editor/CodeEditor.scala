@@ -49,7 +49,6 @@ final case class CodeEditor(visible: Boolean,
                             target: ScalaTarget,
                             metalsStatus: MetalsStatus,
                             setMetalsStatus: MetalsStatus ~=> Callback,
-                            updateSettings: ScastieMetalsOptions ~=> Callback,
                             dependencies: Set[ScalaDependency])
     extends Editor {
   @inline def render: VdomElement = CodeEditor.hooksComponent(this)
