@@ -162,6 +162,8 @@ lazy val sbtRunner = project
       akka("testkit") % Test,
       akka("cluster"),
       akka("slf4j"),
+      "com.github.cb372" %% "scalacache-core" % "0.28.0",
+      "com.github.cb372" %% "scalacache-guava" % "0.28.0",
       "org.scalameta" %% "scalafmt-core" % "3.9.2",
       "io.circe" %% "circe-parser" % "0.14.6"
     ),

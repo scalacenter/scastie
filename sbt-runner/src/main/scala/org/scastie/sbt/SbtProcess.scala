@@ -6,6 +6,11 @@ import java.time.Instant
 import akka.actor.{ActorRef, Cancellable, FSM, Stash}
 import akka.pattern.ask
 import akka.util.Timeout
+import com.google.common.cache.CacheBuilder
+import scalacache._
+import scalacache.guava._
+import scalacache.modes.sync._
+
 import org.scastie.api._
 import org.scastie.instrumentation.InstrumentedInputs
 import org.scastie.util.ScastieFileUtil.{slurp, write}
@@ -24,6 +29,7 @@ object SbtProcess {
 
   sealed trait Data
   case class SbtData(currentInputs: SbtInputs) extends Data
+
   case class SbtRun(
       snippetId: SnippetId,
       inputs: SbtInputs,
@@ -31,7 +37,8 @@ object SbtProcess {
       progressActor: ActorRef,
       snippetActor: ActorRef,
       timeoutEvent: Option[Cancellable],
-      positionMapper: Option[PositionMapper] = None
+      positionMapper: Option[PositionMapper] = None,
+      inputsHash: String
   ) extends Data
   case class SbtStateTimeout(duration: FiniteDuration, state: SbtState) {
     def message: String = {
@@ -77,16 +84,37 @@ class SbtProcess(runTimeout: FiniteDuration,
   import context.dispatcher
 
   private var progressId = 0L
+  
+  val underlyingGuavaCache = CacheBuilder
+    .newBuilder()
+    .maximumSize(10000)
+    .expireAfterAccess(30, MINUTES)
+    .build[String, Entry[Set[Problem]]]()
+
+  implicit val sbtCache: Cache[Set[Problem]] =
+    GuavaCache(underlyingGuavaCache)
 
   def sendProgress(run: SbtRun, _p: SnippetProgress): Unit = {
+    val warnings = _p.compilationInfos.filter(_.severity == Warning)
+
+    val cachedWarnings: Set[Problem] = get(run.inputsHash).getOrElse {
+      if (warnings.nonEmpty) {
+        put(run.inputsHash)(warnings.toSet)
+        warnings.toSet
+      } else Set.empty
+    }
+
+    val mergedInfos = (_p.compilationInfos.toSet ++ cachedWarnings).toList
+    val p = _p.copy(compilationInfos = mergedInfos)
+
     progressId += 1
-    val p = _p.copy(id = Some(progressId))
-    run.progressActor ! p
+    val pWithId = p.copy(id = Some(progressId))
+    run.progressActor ! pWithId
     implicit val tm = Timeout(10.seconds)
-    (run.snippetActor ? p)
+    (run.snippetActor ? pWithId)
       .recover {
         case e =>
-          log.error(e, s"error while saving progress $p")
+          log.error(e, s"error while saving progress $pWithId")
       }
   }
 
@@ -189,7 +217,8 @@ class SbtProcess(runTimeout: FiniteDuration,
         isForcedProgramMode = false,
         progressActor = progressActor,
         snippetActor = sender(),
-        timeoutEvent = None
+        timeoutEvent = None,
+        inputsHash = taskInputs.toHash
       )
       sendProgress(_sbtRun, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snippetId)))
 
