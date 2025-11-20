@@ -16,8 +16,9 @@ import org.scastie.api._
 trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
 
   private var currentSignature: Option[SignatureHelpDTO] = None
+  private var lastActiveParameter: Option[Int] = None
 
-  private def isCursorInParens(doc: String, cursorPos: Int): Boolean = {
+  private def getParenPositions(doc: String, cursorPos: Int): Option[(Int, Int)] = {
     val openParenPos = doc.lastIndexOf('(', cursorPos - 1)
     val closeParenPos = doc.indexOf(')', cursorPos)
     val nextOpenParen = doc.indexOf('(', cursorPos)
@@ -29,7 +30,25 @@ trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
       cursorPos <= closeParenPos &&
       (nextOpenParen == -1 || nextOpenParen > closeParenPos)
 
-    isInParens
+    if (isInParens) Some((openParenPos, closeParenPos)) else None
+  }
+
+  private def isCursorInParens(doc: String, cursorPos: Int): Boolean = {
+    getParenPositions(doc, cursorPos).isDefined
+  }
+
+  private def countActiveParameter(doc: String, openParenPos: Int, cursorPos: Int): Int = {
+    doc
+      .substring(openParenPos + 1, Math.min(cursorPos, doc.length))
+      .foldLeft((0, 0)) { case ((paramIndex, parenDepth), char) =>
+        char match {
+          case '(' => (paramIndex, parenDepth + 1)
+          case ')' => (paramIndex, parenDepth - 1)
+          case ',' if parenDepth == 0 => (paramIndex + 1, parenDepth)
+          case _ => (paramIndex, parenDepth)
+        }
+      }
+      ._1
   }
 
   private def getSignatureTooltips(state: EditorState): js.Array[Tooltip] = {
@@ -85,10 +104,23 @@ trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
       val cursorPos = update.state.selection.main.head.toInt
       val doc = update.state.doc.toString
 
-      if (isCursorInParens(doc, cursorPos)) {
-        requestAndUpdateSignatureHelp(update.view, cursorPos)
-      } else {
-        currentSignature = None
+      getParenPositions(doc, cursorPos) match {
+        case Some((openPos, closePos)) =>
+          val activeParam = countActiveParameter(doc, openPos, cursorPos)
+
+          val shouldRequest = lastActiveParameter match {
+            case Some(lastParam) => lastParam != activeParam
+            case None => true
+          }
+
+          if (shouldRequest) {
+            lastActiveParameter = Some(activeParam)
+            requestAndUpdateSignatureHelp(update.view, cursorPos)
+          }
+
+        case None =>
+          currentSignature = None
+          lastActiveParameter = None
       }
     }
   })
