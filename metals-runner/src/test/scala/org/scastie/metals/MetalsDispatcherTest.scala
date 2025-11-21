@@ -20,7 +20,7 @@ import munit.CatsEffectSuite
 
 class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffectAssertions {
 
-  private val cache = Cache.expiring[IO, ScastieMetalsOptions, ScastiePresentationCompiler](
+  private val cache = Cache.expiring[IO, (String, ScastieMetalsOptions), ScastiePresentationCompiler](
     ExpiringCache.Config(expireAfterRead = 30.seconds),
     None
   )
@@ -31,7 +31,8 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     cache.use { cache =>
       val dispatcher = MetalsDispatcher(cache)
       val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
-      assertIO(dispatcher.getCompiler(options).isRight, true)
+      val userUuid   = "test-user-1"
+      assertIO(dispatcher.getCompiler(userUuid, options).isRight, true)
     }
   }
 
@@ -39,15 +40,16 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     cache.use { cache =>
       val dispatcher = MetalsDispatcher(cache)
       val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
+      val userUuid   = "test-user-1"
       val tasks = List
-        .fill(10)(dispatcher.getCompiler(options).semiflatMap(_.complete(ScastieOffsetParams("prin", 4, true))).value)
+        .fill(10)(dispatcher.getCompiler(userUuid, options).semiflatMap(_.complete(ScastieOffsetParams("prin", 4, true))).value)
         .parSequence
       assertIO(tasks.map(_.forall(_.isRight)), true)
     }
   }
 
   test("cache should properly shutdown presentation compiler") {
-    val cache = Cache.expiring[IO, ScastieMetalsOptions, ScastiePresentationCompiler](
+    val cache = Cache.expiring[IO, (String, ScastieMetalsOptions), ScastiePresentationCompiler](
       ExpiringCache.Config(expireAfterRead = 2.seconds),
       None
     )
@@ -56,8 +58,9 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       {
         val dispatcher = MetalsDispatcher(cache)
         val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
+        val userUuid   = "test-user-1"
         val task = for {
-          pc     <- dispatcher.getCompiler(options)
+          pc     <- dispatcher.getCompiler(userUuid, options)
           _      <- EitherT.right(IO.sleep(4.seconds))
           result <- EitherT.right(pc.complete(ScastieOffsetParams("print", 3, true)))
         } yield { result.items }
@@ -66,11 +69,62 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     }
   }
 
+  test("per-user caching: same user with same config reuses PC") {
+    cache.use { cache =>
+      val dispatcher = MetalsDispatcher(cache)
+      val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
+      val userUuid   = "test-user-1"
+
+      for {
+        pc1 <- dispatcher.getCompiler(userUuid, options).value
+        pc2 <- dispatcher.getCompiler(userUuid, options).value
+        _ <- assertIO(IO.pure(pc1.isRight && pc2.isRight), true)
+      } yield ()
+    }
+  }
+
+  test("per-user caching: same user with different config replaces PC") {
+    cache.use { cache =>
+      val dispatcher = MetalsDispatcher(cache)
+      val options1   = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
+      val options2   = ScastieMetalsOptions(Set.empty, Scala2.default)
+      val userUuid   = "test-user-1"
+
+      for {
+        pc1 <- dispatcher.getCompiler(userUuid, options1).value
+        pc2 <- dispatcher.getCompiler(userUuid, options2).value
+        keys <- cache.keys
+        _ <- assertIO(IO.pure(pc1.isRight && pc2.isRight), true)
+        userKeys = keys.filter(_._1 == userUuid)
+        _ <- assertIO(IO.pure(userKeys.size), 1)
+        _ <- assertIO(IO.pure(userKeys.head._2), options2)
+      } yield ()
+    }
+  }
+
+  test("per-user caching: different users with same config have separate PCs") {
+    cache.use { cache =>
+      val dispatcher = MetalsDispatcher(cache)
+      val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
+      val user1      = "test-user-1"
+      val user2      = "test-user-2"
+
+      for {
+        pc1 <- dispatcher.getCompiler(user1, options).value
+        pc2 <- dispatcher.getCompiler(user2, options).value
+        keys <- cache.keys
+        _ <- assertIO(IO.pure(pc1.isRight && pc2.isRight), true)
+        _ <- assertIO(IO.pure(keys.size), 2)
+      } yield ()
+    }
+  }
+
   test("parallel metals access same version") {
     cache.use { cache =>
       val dispatcher = MetalsDispatcher(cache)
       val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
-      val task       = dispatcher.getCompiler(options).value.parReplicateA(10000)
+      val userUuid   = "test-user-parallel"
+      val task       = dispatcher.getCompiler(userUuid, options).value.parReplicateA(10000)
       assertIO(task.map(results => results.nonEmpty && results.forall(_.isRight)), true)
     }
   }
@@ -86,7 +140,8 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       val task = List
         .fill(10000)(scala.util.Random.nextInt(scalaVersions.size - 1))
         .map { i =>
-          dispatcher.getCompiler(scalaOptions(i)).value
+          val userUuid = s"test-user-$i"
+          dispatcher.getCompiler(userUuid, scalaOptions(i)).value
         }
         .sequence
       assertIO(task.map(results => results.nonEmpty && results.forall(_.isRight)), true)
@@ -117,7 +172,8 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       val task = List
         .fill(10000)(scala.util.Random.nextInt(testCases.size - 1))
         .map { i =>
-          dispatcher.getCompiler(testCases(i)).value
+          val userUuid = s"test-user-$i"
+          dispatcher.getCompiler(userUuid, testCases(i)).value
         }
         .sequence
       assertIO(task.map(results => results.nonEmpty && results.forall(_.isRight)), true)

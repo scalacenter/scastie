@@ -27,7 +27,7 @@ object Server extends IOApp:
   val cacheExpirationInSeconds = config.getInt("cache-expire-in-seconds")
   val serverPort               = config.getInt("port")
 
-  val cache = Cache.expiring[IO, ScastieMetalsOptions, ScastiePresentationCompiler](
+  val cache = Cache.expiring[IO, (String, ScastieMetalsOptions), ScastiePresentationCompiler](
     ExpiringCache.Config(expireAfterRead = cacheExpirationInSeconds.seconds, maxSize = Some(64)),
     None
   )

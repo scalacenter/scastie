@@ -27,6 +27,7 @@ trait MetalsClient {
   val isWorksheetMode: Boolean
   val isEmbedded: Boolean
   val code: String
+  val user: Option[User]
   val scastieMetalsOptions = ScastieMetalsOptions(dependencies, target)
 
   private val isConfigurationSupported: Future[Boolean] = {
@@ -61,7 +62,8 @@ trait MetalsClient {
 
   protected def toLSPRequest(code: String, offset: Int): LSPRequestDTO = {
     val offsetParams = ScastieOffsetParams(code, offset, isWorksheetMode)
-    LSPRequestDTO(scastieMetalsOptions, offsetParams)
+    val clientUuid = user.map(_.login).orElse(Some(LocalStorage.getOrCreateClientUuid()))
+    LSPRequestDTO(scastieMetalsOptions, offsetParams, clientUuid)
   }
 
   protected def makeRequest[A](req: A, endpoint: String)(implicit writes: Encoder[A]): Future[Option[String]] = {

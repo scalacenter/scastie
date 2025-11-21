@@ -1,5 +1,6 @@
 package org.scastie.metals
 
+import java.util.UUID
 import cats.data.EitherT
 import cats.data.OptionT
 import cats.effect.Async
@@ -21,28 +22,39 @@ trait ScastieMetals:
 
 object ScastieMetalsImpl:
 
-  def instance(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentationCompiler]): ScastieMetals =
+  def instance(cache: Cache[IO, (String, ScastieMetalsOptions), ScastiePresentationCompiler]): ScastieMetals =
     new ScastieMetals {
 
       private val dispatcher: MetalsDispatcher = new MetalsDispatcher(cache)
 
+      /* Extracts userUuid from request. Falls back to generating a new UUID if not present. */
+      private def getUserUuid(clientUuid: Option[String]): String =
+        clientUuid.getOrElse(UUID.randomUUID().toString)
+
       def complete(request: LSPRequestDTO): EitherT[IO, FailureType, ScalaCompletionList] =
-        (dispatcher.getCompiler(request.options).semiflatMap(_.complete(request.offsetParams)))
+        val userUuid = getUserUuid(request.clientUuid)
+        dispatcher.getCompiler(userUuid, request.options).semiflatMap(_.complete(request.offsetParams))
 
       def completionInfo(request: CompletionInfoRequest): EitherT[IO, FailureType, String] =
-        dispatcher.getCompiler(request.options).semiflatMap(_.completionItemResolve(request.completionItem))
+        val userUuid = getUserUuid(request.clientUuid)
+        dispatcher.getCompiler(userUuid, request.options).semiflatMap(_.completionItemResolve(request.completionItem))
 
       def hover(request: LSPRequestDTO): EitherT[IO, FailureType, Hover] =
-        dispatcher.getCompiler(request.options) >>= (_.hover(request.offsetParams))
+        val userUuid = getUserUuid(request.clientUuid)
+        dispatcher.getCompiler(userUuid, request.options) >>= (_.hover(request.offsetParams))
 
       def signatureHelp(request: LSPRequestDTO): EitherT[IO, FailureType, SignatureHelp] =
-        dispatcher.getCompiler(request.options).semiflatMap(_.signatureHelp(request.offsetParams))
+        val userUuid = getUserUuid(request.clientUuid)
+        dispatcher.getCompiler(userUuid, request.options).semiflatMap(_.signatureHelp(request.offsetParams))
 
       def diagnostics(request: LSPRequestDTO): EitherT[IO, FailureType, Set[Problem]] =
-        dispatcher.getCompiler(request.options).semiflatMap(_.diagnostics(request.offsetParams))
+        val userUuid = getUserUuid(request.clientUuid)
+        dispatcher.getCompiler(userUuid, request.options).semiflatMap(_.diagnostics(request.offsetParams))
 
       def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[IO, FailureType, Boolean] =
-          dispatcher.areDependenciesSupported(config) >>=
-            (_ => dispatcher.getCompiler(config).map(_ => true))
+        /* For configuration check, we use a temporary UUID since we're just checking support */
+        val tempUuid = UUID.randomUUID().toString
+        dispatcher.areDependenciesSupported(config) >>=
+          (_ => dispatcher.getCompiler(tempUuid, config).map(_ => true))
 
     }

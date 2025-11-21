@@ -30,9 +30,9 @@ import cats.effect.IO
  * Each metals client configuration requires separate presentation compilers
  * to support cabailities for 3rd party capabilities.
  *
- * @param cache - cache used for managing presentation compilers
+ * @param cache - cache used for managing presentation compilers (keyed by userUuid and configuration)
  */
-class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentationCompiler]) {
+class MetalsDispatcher(cache: Cache[IO, (String, ScastieMetalsOptions), ScastiePresentationCompiler]) {
   private val logger = LoggerFactory.getLogger(getClass)
 
   private val config            = ConfigFactory.load().getConfig("scastie.metals")
@@ -71,10 +71,14 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
    * or fetches the `ScastiePresentationCompiler` from guava cache.
    * If the key is not present in guava cache, it is initialized
    *
+   * Per-user caching: Each user (identified by userUuid) can have at most one PC.
+   * If a user requests a PC with a different configuration, the old PC is removed and a new one is created.
+   *
+   * @param userUuid - unique identifier for the user (clientUuid for anonymous, GitHub login for authenticated)
    * @param configuration - scastie client configuration
    * @returns `EitherT[F, FailureType, ScastiePresentationCompiler]`
    */
-  def getCompiler(configuration: ScastieMetalsOptions): EitherT[IO, FailureType, ScastiePresentationCompiler] =
+  def getCompiler(userUuid: String, configuration: ScastieMetalsOptions): EitherT[IO, FailureType, ScastiePresentationCompiler] =
     EitherT:
       if !isSupportedVersion(configuration) then
         IO {
@@ -83,23 +87,40 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
           ).asLeft
         }
       else
+        val cacheKey = (userUuid, configuration)
         cache
-          .contains(configuration)
+          .contains(cacheKey)
           .flatMap: isCached =>
             if isCached then
               cache
-                .get(configuration)
+                .get(cacheKey)
                 .map(_.toRight(PresentationCompilerFailure("Can't extract presentation compiler from cache.")))
             else
               for
+                /* Find and remove old PC for this user (if exists with different config) */
+                _ <- EitherT.right[FailureType](findAndRemoveOldPCForUser(userUuid, configuration))
                 mtags    <- EitherT(getMtags(configuration.scalaTarget.scalaVersion))
                 compiler <- EitherT.right(
-                  cache.getOrUpdateReleasable(configuration) {
+                  cache.getOrUpdateReleasable(cacheKey) {
                     initializeCompiler(configuration, mtags).map: newPC =>
                       Releasable(newPC, newPC.shutdown())
                   })
               yield compiler
             .value
+
+  /*
+   * Finds and removes the old presentation compiler for a user if it exists with a different configuration.
+   * This ensures that each user has at most one PC at a time.
+   *
+   * @param userUuid - unique identifier for the user
+   * @param newConfiguration - the new configuration being requested
+   */
+  private def findAndRemoveOldPCForUser(userUuid: String, newConfiguration: ScastieMetalsOptions): IO[Unit] =
+    cache.keys.flatMap: allKeys =>
+      val oldKeysToRemove = allKeys.filter:
+        case (uuid, config) => uuid == userUuid && config != newConfiguration
+
+      oldKeysToRemove.toList.traverse_(cache.remove)
 
   /*
    * Checks if given configuration is supported. Currently it is based on scala binary version.
