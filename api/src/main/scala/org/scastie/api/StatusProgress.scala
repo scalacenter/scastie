@@ -3,14 +3,24 @@ package org.scastie.api
 import io.circe.generic.semiauto._
 import io.circe._
 
-case class SbtRunnerState(config: SbtInputs, tasks: Vector[TaskId], sbtState: ServerState)
+case class SbtRunnerState(
+  config: SbtInputs,
+  tasks: Vector[TaskId],
+  sbtState: ServerState,
+  hasRunningTask: Boolean
+)
 
 object SbtRunnerState {
   implicit val sbtRunnerStateEncoder: Encoder[SbtRunnerState] = deriveEncoder[SbtRunnerState]
   implicit val sbtRunnerStateDecoder: Decoder[SbtRunnerState] = deriveDecoder[SbtRunnerState]
 }
 
-case class ScalaCliRunnerState(config: ScalaCliInputs, tasks: Vector[TaskId], scalaCliState: ServerState)
+case class ScalaCliRunnerState(
+  config: ScalaCliInputs,
+  tasks: Vector[TaskId],
+  scalaCliState: ServerState,
+  hasRunningTask: Boolean
+)
 
 object ScalaCliRunnerState {
   implicit val scalaCliRunnerStateEncoder: Encoder[ScalaCliRunnerState] = deriveEncoder[ScalaCliRunnerState]

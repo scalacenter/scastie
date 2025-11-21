@@ -22,11 +22,6 @@ case class ScalaCliLoadBalancer[R, S <: ServerState](servers: Vector[ScalaCliSer
     copy(servers = servers.filterNot(_.ref == ref))
   }
 
-  def getRandomServer: Option[ScalaCliServer[R, S]] = {
-    def random[T](xs: Seq[T]) = if (xs.nonEmpty) Some(xs(Random.nextInt(xs.size))) else None
-    random(servers.filter(_.state.isReady))
-  }
-
   def add(task: Task[ScalaCliInputs]): Option[(ScalaCliServer[R, S], ScalaCliLoadBalancer[R, S])] = {
     log.info("Task added: {}", task.taskId)
 
