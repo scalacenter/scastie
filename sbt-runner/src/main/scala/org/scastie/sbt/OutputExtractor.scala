@@ -46,6 +46,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
 
     val isScalaJs = inputs.target.targetType == ScalaTargetType.JS
 
+    val isSbtError = output.line.startsWith("[error]") && isReloading
+
     val userOutput =
       if (problems.toList.flatten.isEmpty
           && instrumentations.toList.flatten.isEmpty
@@ -54,6 +56,8 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
           && !isHiddenSbtMessage
           && !isReloading
           && consoleOutput.isEmpty)
+        Some(output)
+      else if (isSbtError)
         Some(output)
       else None
 
@@ -64,9 +68,7 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
         (None, None)
       }
 
-    val isSbtError = output.line.startsWith("[error]") && isReloading
-
-    val isReallyDone = (isDone && !isReloading) || isSbtError
+    val isReallyDone = isDone && !isReloading
 
     val sbtProcessOutput =
       consoleOutput match {
