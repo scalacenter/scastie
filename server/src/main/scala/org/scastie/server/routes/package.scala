@@ -24,6 +24,11 @@ package object routes {
       matcherStart / _ / matcherEnd
     )(f)
 
+  def snippetIdLatest(matcherStart: String)(f: SnippetId => Route): Route =
+    path(matcherStart / Segment / uuidMatcher / "latest" ~ Slash.?) { (user, uuid) =>
+      f(SnippetId(uuid, Some(SnippetUserPart(user, -1))))
+    }
+
   def snippetIdExtension(extension: String)(f: SnippetId => Route): Route =
     snippetIdBase(
       _ ~ extension,

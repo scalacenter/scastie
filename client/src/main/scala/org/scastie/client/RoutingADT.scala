@@ -43,6 +43,11 @@ case class UserResourceUpdated(
     update: Int
 ) extends ResourcePage
 
+case class UserResourceLatest(
+    login: String,
+    uuid: String
+) extends ResourcePage
+
 case class EmbeddedAnonymousResource(
     uuid: String
 ) extends ResourcePage

@@ -118,7 +118,11 @@ object Scastie {
     val initialState = props.embedded match {
       case None => {
         props.snippetId match {
-          case Some(snippetId) => backend.loadSnippet(snippetId)
+          case Some(snippetId) =>
+            snippetId.user match {
+              case Some(SnippetUserPart(_, -1)) => backend.loadLatestSnippet(snippetId)
+              case _ => backend.loadSnippet(snippetId)
+            }
 
           case None => props.oldSnippetId match {
               case Some(id) => backend.loadOldSnippet(id)
@@ -136,7 +140,11 @@ object Scastie {
       }
       case Some(embededOptions) => {
         val setInputs = (embededOptions.snippetId, embededOptions.inputs) match {
-          case (Some(snippetId), _) => backend.loadSnippet(snippetId)
+          case (Some(snippetId), _) =>
+            snippetId.user match {
+              case Some(SnippetUserPart(_, -1)) => backend.loadLatestSnippet(snippetId)
+              case _ => backend.loadSnippet(snippetId)
+            }
 
           case (_, Some(inputs)) => backend.scope.modState(_.setInputs(inputs))
 

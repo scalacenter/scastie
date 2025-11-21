@@ -98,6 +98,14 @@ class RestApiClient(serverUrl: Option[String]) extends RestApi {
   def fetch(snippetId: SnippetId): Future[Option[FetchResult]] =
     get[FetchResult]("/snippets/" + snippetId.url)
 
+  def fetchLatest(snippetId: SnippetId): Future[Option[FetchResult]] =
+    snippetId.user match {
+      case Some(SnippetUserPart(login, _)) =>
+        get[FetchResult](s"/snippets/$login/${snippetId.base64UUID}/latest")
+      case None =>
+        fetch(snippetId)
+    }
+
   def fetchOld(id: Int): Future[Option[FetchResult]] =
     get[FetchResult](s"/old-snippets/$id")
 

@@ -246,5 +246,58 @@ class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues
       val removeUser = testContainer.deleteUser(UserLogin(username)).await
       assert(removeUser == true)
     }
+
+    test(s"[$typeName] readLatestSnippet returns latest version") {
+      val user = UserLogin("github-user-latest" + Random.nextInt())
+
+      val inputs1 = inputType.copyBaseInput(code = "version 1")
+      val snippetId1 = testContainer.save(inputs1, Some(user)).await
+
+      val inputs2 = inputType.copyBaseInput(code = "version 2")
+      val snippetId2 = testContainer.update(snippetId1, inputs2).await.get
+
+      val inputs3 = inputType.copyBaseInput(code = "version 3")
+      val snippetId3 = testContainer.update(snippetId2, inputs3).await.get
+
+      val latest = testContainer.readLatestSnippet(snippetId1).await.value
+
+      assert(latest.inputs.code == "version 3", "should return latest version")
+      assert(snippetId3.user.get.update == 2, "latest should be update 2")
+    }
+
+    test(s"[$typeName] readLatestSnippet with base snippet ID") {
+      val user = UserLogin("github-user-latest-base" + Random.nextInt())
+
+      val inputs1 = inputType.copyBaseInput(code = "first")
+      val snippetId1 = testContainer.save(inputs1, Some(user)).await
+
+      val inputs2 = inputType.copyBaseInput(code = "second")
+      val snippetId2 = testContainer.update(snippetId1, inputs2).await.get
+
+      val latestFromFirst = testContainer.readLatestSnippet(snippetId1).await.value
+      val latestFromSecond = testContainer.readLatestSnippet(snippetId2).await.value
+
+      assert(latestFromFirst.inputs.code == "second")
+      assert(latestFromSecond.inputs.code == "second")
+    }
+
+    test(s"[$typeName] readLatestSnippet with anonymous user") {
+      val inputs = inputType.copyBaseInput(code = "anonymous snippet")
+      val snippetId = testContainer.save(inputs, None).await
+
+      val latest = testContainer.readLatestSnippet(snippetId).await.value
+
+      assert(latest.inputs.code == "anonymous snippet")
+      assert(snippetId.user.isEmpty)
+    }
+
+    test(s"[$typeName] readLatestSnippet with non-existent snippet") {
+      val user = UserLogin("github-user-nonexistent" + Random.nextInt())
+      val nonExistentId = SnippetId("nonexistent", Some(SnippetUserPart(user.login, 0)))
+
+      val result = testContainer.readLatestSnippet(nonExistentId).await
+
+      assert(result.isEmpty, "should return None for non-existent snippet")
+    }
   }
 }
