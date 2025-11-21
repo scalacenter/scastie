@@ -88,6 +88,9 @@ package object components {
   implicit val sbtRunnerStateReuse: Reusability[Option[Vector[SbtRunnerState]]] =
     Reusability.byRefOr_==
 
+  implicit val scalaCliRunnerStateReuse: Reusability[Option[Vector[ScalaCliRunnerState]]] =
+      Reusability.byRefOr_==
+
   implicit val statusStateReuse: Reusability[StatusState] =
     Reusability.derive[StatusState]
 
