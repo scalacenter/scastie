@@ -8,7 +8,7 @@ import akka.actor.ActorSelection
 import java.time.Instant
 import scala.collection.immutable.Queue
 import org.scastie.util.SbtTask
-import org.scastie.util.ScalaCliActorTask
+import org.scastie.util.ScalaCliTask
 import org.scastie.api._
 import akka.util.Timeout
 import scala.concurrent.duration._
@@ -56,7 +56,7 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
         updateScalaCliBalancer(newBalancer)
 
         server.ref.tell(
-          ScalaCliActorTask(snippetId, scalaCliInputs, ip, progressActor),
+          ScalaCliTask(snippetId, scalaCliInputs, ip, progressActor),
           self
         )
       case _ => ()

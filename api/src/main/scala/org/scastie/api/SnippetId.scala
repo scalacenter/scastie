@@ -35,6 +35,8 @@ object SnippetUserPart {
 case class SnippetUserPart(login: String, update: Int = 0)
 
 object SnippetId {
+  def empty: SnippetId = SnippetId("", None)
+
   implicit val snippetIdEncoder: Encoder[SnippetId] = deriveEncoder[SnippetId]
   implicit val snippetIdDecoder: Decoder[SnippetId] = deriveDecoder[SnippetId]
 }

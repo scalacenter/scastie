@@ -27,43 +27,55 @@ object Status {
 
   def render(props: Status): VdomElement = {
     def renderSbtTask(tasks: Vector[TaskId]): VdomElement = {
-      if (props.isAdmin) {
-        if (tasks.isEmpty) {
-          div(I18n.t("status.no_task"))
-        } else {
-          ul(
-            tasks.zipWithIndex.map {
-              case (TaskId(snippetId), j) =>
-                li(key := snippetId.toString)(
+      if (tasks.isEmpty) {
+        div()
+      } else {
+        ul(cls := "task-list")(
+          tasks.zipWithIndex.map {
+            case (TaskId(snippetId), j) =>
+              li(key := j)(
+                if (props.isAdmin) {
                   props.router.link(Page.fromSnippetId(snippetId))(
                     s"${I18n.t("status.task")} $j"
                   )
-                )
-            }.toTagMod
-          )
-        }
-      } else {
-        div()
+                } else {
+                  span(s"${I18n.t("status.task")} $j")
+                }
+              )
+          }.toTagMod
+        )
       }
     }
 
-    def renderConfigurationSbt(serverInputs: SbtInputs): VdomElement = {
+    def renderRunnerStatus(hasRunningTask: Boolean): (String, String) = {
+      if (hasRunningTask) {
+        ("running", I18n.t("status.running"))
+      } else {
+        ("idle", I18n.t("status.idle"))
+      }
+    }
+
+    def renderConfigurationSbt(runnerState: SbtRunnerState): VdomElement = {
       val (cssConfig, label) =
         props.inputs match {
-          case sbtInputs: SbtInputs if (serverInputs.needsReload(sbtInputs)) => ("needs-reload", I18n.t("status.different_config"))
-          case _: ScalaCliInputs => ("different-target", I18n.t("status.different_target"))
-          case _ => ("ready", I18n.t("status.same_config"))
+          case sbtInputs: SbtInputs if (runnerState.config.needsReload(sbtInputs)) =>
+            ("needs-reload", I18n.t("status.different_config"))
+          case _: ScalaCliInputs =>
+            ("different-target", I18n.t("status.different_target"))
+          case _ =>
+            renderRunnerStatus(runnerState.hasRunningTask)
         }
 
       span(cls := "runner " + cssConfig)(label)
     }
 
-    def renderConfigurationCli(serverInputs: ScalaCliInputs): VdomElement = {
-      val (cssConfig, label) =
-        props.inputs match {
-          case _: SbtInputs => ("different-target", I18n.t("status.different_target"))
-          case _ => ("ready", I18n.t("status.same_config"))
-        }
+    def renderConfigurationCli(runnerState: ScalaCliRunnerState): VdomElement = {
+      val (cssConfig, label) = props.inputs match {
+        case _: SbtInputs =>
+          ("different-target", I18n.t("status.different_target"))
+        case _ =>
+          renderRunnerStatus(runnerState.hasRunningTask)
+      }
 
       span(cls := "runner " + cssConfig)(label)
     }
@@ -77,7 +89,7 @@ object Status {
               scalaCliRunners.zipWithIndex.map {
                 case (scalaCliRunner, i) =>
                   li(key := i)(
-                    renderConfigurationCli(scalaCliRunner.config),
+                    renderConfigurationCli(scalaCliRunner),
                     renderSbtTask(scalaCliRunner.tasks)
                   )
               }.toTagMod
@@ -96,7 +108,7 @@ object Status {
               sbtRunners.zipWithIndex.map {
                 case (sbtRunner, i) =>
                   li(key := i)(
-                    renderConfigurationSbt(sbtRunner.config),
+                    renderConfigurationSbt(sbtRunner),
                     renderSbtTask(sbtRunner.tasks)
                   )
               }.toTagMod

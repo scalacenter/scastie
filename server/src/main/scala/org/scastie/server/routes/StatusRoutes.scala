@@ -42,15 +42,21 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives)(implic
     }
 
   private def statusSource(isAdmin: Boolean) = {
+    def emptyTasks(tasks: Vector[TaskId]) = tasks.map(_ => TaskId(SnippetId.empty))
+
     def hideTask(progress: StatusProgress): StatusProgress =
       if (isAdmin) progress
       else
         progress match {
+          /* Hide details of tasks from non admin users */
           case StatusProgress.Sbt(runners) =>
-            // Hide the task Queue for non admin users,
-            // they will only see the runner count
             StatusProgress.Sbt(
-              runners.map(_.copy(tasks = Vector()))
+              runners.map(runner => runner.copy(tasks = emptyTasks(runner.tasks)))
+            )
+
+          case StatusProgress.ScalaCli(runners) =>
+            StatusProgress.ScalaCli(
+              runners.map(runner => runner.copy(tasks = emptyTasks(runner.tasks)))
             )
 
           case _ =>
