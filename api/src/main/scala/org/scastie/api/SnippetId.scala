@@ -5,7 +5,7 @@ import io.circe._
 
 object User {
   // low tech solution
-  val admins: Set[String] = Set("rochala", "julienrf")
+  val admins: Set[String] = Set("rochala", "julienrf", "warcholjakub")
 
   implicit val userEncoder: Encoder[User] = deriveEncoder[User]
   implicit val userDecoder: Decoder[User] = deriveDecoder[User]
