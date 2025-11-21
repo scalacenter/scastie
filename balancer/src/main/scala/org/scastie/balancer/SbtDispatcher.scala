@@ -40,7 +40,8 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
   }
 
   private def updateSbtBalancer(newBalancer: SbtBalancer): Unit = {
-    if (balancer != newBalancer) {
+    val oldBalancer = balancer.get
+    if (oldBalancer != newBalancer) {
       statusActor ! SbtLoadBalancerUpdate(newBalancer)
     }
     balancer.set(newBalancer)
@@ -137,7 +138,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
       }
 
     case ReceiveStatus(requester) =>
-      sender() ! LoadBalancerInfo(balancer.get, requester)
+      sender() ! SbtLoadBalancerInfo(balancer.get, requester)
 
     case Run(InputsWithIpAndUser(sbtTask: SbtInputs, userTrace), snippetId) =>
       run0(sbtTask, userTrace, snippetId)

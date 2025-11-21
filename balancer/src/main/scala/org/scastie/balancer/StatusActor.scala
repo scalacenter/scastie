@@ -10,12 +10,13 @@ import scala.collection.mutable
 import scala.concurrent.duration._
 
 import org.scastie.util.GraphStageForwarder
+import akka.actor.Terminated
 
 case object SubscribeStatus
 
 case class SbtLoadBalancerUpdate(newSbtBalancer: SbtBalancer)
 case class ScalaCliLoadBalancerUpdate(newScalaCliBalancer: ScalaCliBalancer)
-case class LoadBalancerInfo(sbtBalancer: SbtBalancer, requester: ActorRef)
+case class SbtLoadBalancerInfo(sbtBalancer: SbtBalancer, requester: ActorRef)
 case class ScalaCliLoadBalancerInfo(scalaCliBalancer: ScalaCliBalancer, requester: ActorRef)
 
 case class SetDispatcher(dispatchActor: ActorRef)
@@ -46,8 +47,13 @@ class StatusActor private () extends Actor with ActorLogging {
     }
 
     case (None, publisher: ActorRef) => {
+      context.watch(publisher)
       publishers += publisher
       dispatchActor.foreach(_ ! ReceiveStatus(publisher))
+    }
+
+    case Terminated(deadPublisher) => {
+      publishers = publishers.filterNot(_ == deadPublisher)
     }
 
     case SbtLoadBalancerUpdate(newSbtBalancer) => {
@@ -58,7 +64,7 @@ class StatusActor private () extends Actor with ActorLogging {
       publishers.foreach(_ ! convertScalaCli(newScalaCliBalancer))
     }
 
-    case LoadBalancerInfo(sbtBalancer, requester) => {
+    case SbtLoadBalancerInfo(sbtBalancer, requester) => {
       requester ! convertSbt(sbtBalancer)
     }
 
@@ -74,12 +80,14 @@ class StatusActor private () extends Actor with ActorLogging {
   private def convertSbt(newSbtBalancer: SbtBalancer): StatusProgress = {
     StatusProgress.Sbt(
       newSbtBalancer.servers.map(
-        server =>
+        server => {
           SbtRunnerState(
             config = server.lastConfig,
             tasks = server.mailbox.map(_.taskId),
-            sbtState = server.state
-        )
+            sbtState = server.state,
+            hasRunningTask = server.mailbox.nonEmpty
+          )
+        }
       )
     )
   }
@@ -93,7 +101,8 @@ class StatusActor private () extends Actor with ActorLogging {
           ScalaCliRunnerState(
             config = server.lastConfig,
             tasks = server.mailbox.map(_.taskId),
-            scalaCliState = server.state
+            scalaCliState = server.state,
+            hasRunningTask = server.mailbox.nonEmpty
         )
       )
     )

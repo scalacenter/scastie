@@ -16,6 +16,14 @@
       background-color: green;
     }
 
+    .running {
+      background-color: #28a745;
+    }
+
+    .idle {
+      background-color: #6c757d;
+    }
+
     .different-target {
       background-color: #7c7c7c; 
     }
@@ -29,9 +37,23 @@
       background-color: #dc9f12; 
     }
 
+    ul.task-list {
+      list-style-type: disc !important;
+      list-style-position: outside !important;
+      padding-left: 40px !important;
+      margin-top: 20px !important;
+      margin-bottom: 10px !important;
+      margin-left: 0 !important;
+      margin-right: 20px !important;
+    }
 
     * {
       margin: 20px;
+    }
+
+    ul.task-list li {
+      margin: 5px 0 !important;
+      display: list-item !important;
     }
   }
 }
