@@ -62,6 +62,9 @@ class ApiRoutes(
           encodeResponseWith(Gzip)(
             get(
               concat(
+                snippetIdLatest("snippets")(
+                  sid => complete(server.fetchLatest(sid))
+                ),
                 snippetIdStart("snippets")(
                   sid => complete(server.fetch(sid))
                 ),

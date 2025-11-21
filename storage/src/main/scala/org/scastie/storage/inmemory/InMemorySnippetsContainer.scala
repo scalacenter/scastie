@@ -65,6 +65,23 @@ trait InMemorySnippetsContainer extends SnippetsContainer {
     snippets.get(snippetId).map(m => FetchResult.create(m.inputs, m.progresses.toList))
   }
 
+  def readLatestSnippet(snippetId: SnippetId): Future[Option[FetchResult]] = Future {
+    snippetId.user match {
+      case Some(SnippetUserPart(login, _)) =>
+        snippets
+          .filter { case (id, _) =>
+            id.base64UUID == snippetId.base64UUID &&
+            id.user.exists(_.login == login)
+          }
+          .toSeq
+          .sortBy { case (id, _) => id.user.map(_.update).getOrElse(0) }
+          .lastOption
+          .map { case (_, storage) => FetchResult.create(storage.inputs, storage.progresses.toList) }
+      case None =>
+        snippets.get(snippetId).map(m => FetchResult.create(m.inputs, m.progresses.toList))
+    }
+  }
+
   def readOldSnippet(id: Int): Future[Option[FetchResult]] = Future(None)
 
   protected def insert(snippetId: SnippetId, inputs: BaseInputs): Future[Unit] = {

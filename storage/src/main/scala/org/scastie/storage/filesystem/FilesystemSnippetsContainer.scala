@@ -4,7 +4,6 @@ import org.scastie.api._
 import org.scastie.storage.OldScastieConverter
 import org.scastie.storage.SnippetsContainer
 import org.scastie.storage.UserLogin
-import io.circe._
 import io.circe.syntax._
 import io.circe.parser._
 
@@ -169,6 +168,35 @@ trait FilesystemSnippetsContainer extends SnippetsContainer with GenericFilesyst
     readInputs(snippetId).map(
       inputs => FetchResult.create(inputs, readOutputs(snippetId).getOrElse(Nil))
     )
+  }
+
+  def readLatestSnippet(snippetId: SnippetId): Future[Option[FetchResult]] = {
+    snippetId.user match {
+      case Some(SnippetUserPart(login, _)) =>
+        Future {
+          findLatestUpdate(login, snippetId.base64UUID).flatMap { latestUpdate =>
+            val latestId = SnippetId(snippetId.base64UUID, Some(SnippetUserPart(login, latestUpdate)))
+            readInputs(latestId).map(inputs =>
+              FetchResult.create(inputs, readOutputs(latestId).getOrElse(Nil))
+            )
+          }
+        }
+      case None =>
+        readSnippet(snippetId)
+    }
+  }
+
+  private def findLatestUpdate(login: String, base64UUID: String): Option[Int] = {
+    val dir = root.resolve(Paths.get(login, base64UUID))
+    if (!Files.isDirectory(dir)) {
+      None
+    } else {
+      import scala.jdk.StreamConverters._
+      Files.list(dir)
+        .toScala(LazyList)
+        .map(_.getFileName.toString.toInt)
+        .maxOption
+    }
   }
 
   protected def insert(snippetId: SnippetId, inputs: BaseInputs): Future[Unit] =

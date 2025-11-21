@@ -107,6 +107,25 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
     readMongoSnippet(snippetId).map(_.map(_.toFetchResult))
   }
 
+  def readLatestSnippet(snippetId: SnippetId): Future[Option[FetchResult]] = {
+    snippetId.user match {
+      case Some(SnippetUserPart(login, _)) =>
+        val query = and(
+          equal("snippetId.base64UUID", snippetId.base64UUID),
+          equal("snippetId.user.login", login)
+        )
+
+        snippets
+          .find(query)
+          .sort(Sorts.descending("snippetId.user.update"))
+          .first()
+          .headOption()
+          .map(_.flatMap(fromBson[MongoSnippet]).map(_.toFetchResult))
+      case None =>
+        readSnippet(snippetId)
+    }
+  }
+
   def listSnippets(user: UserLogin): Future[List[SnippetSummary]] = {
     val userSnippets = and(
       equal("snippetId.user.login", user.login),

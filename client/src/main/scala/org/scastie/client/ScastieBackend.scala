@@ -423,6 +423,14 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     )
   }
 
+  def loadLatestSnippet(snippetId: SnippetId): Callback = {
+    loadSnippetBase(
+      restApiClient.fetchLatest(snippetId),
+      afterLoading = _.setSnippetId(snippetId),
+      snippetId = Some(snippetId)
+    )
+  }
+
   private def loadSnippetBase(
       fetchSnippet: => Future[Option[FetchResult]],
       afterLoading: ScastieState => ScastieState = identity,

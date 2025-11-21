@@ -81,6 +81,12 @@ class RestApiServer(
       .mapTo[Option[FetchResult]]
   }
 
+  def fetchLatest(snippetId: SnippetId): Future[Option[FetchResult]] = {
+    dispatchActor
+      .ask(FetchLatestSnippet(snippetId))
+      .mapTo[Option[FetchResult]]
+  }
+
   def fetchOld(id: Int): Future[Option[FetchResult]] = {
     dispatchActor
       .ask(FetchOldSnippet(id))
