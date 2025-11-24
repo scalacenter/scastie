@@ -125,13 +125,6 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     run(input)(assertUserOutput(message))
   }
 
-  test("Scala.js warm-up") {
-    /* Pre-load Scala.js dependencies to avoid timeout in subsequent tests */
-    val scalaJs =
-      SbtInputs.default.copy(code = "1 + 1", target = Js.default)
-    run(scalaJs)(_.isDone)
-  }
-
   test("Scala.js support") {
     val scalaJs =
       SbtInputs.default.copy(code = "1 + 1", target = Js.default)
