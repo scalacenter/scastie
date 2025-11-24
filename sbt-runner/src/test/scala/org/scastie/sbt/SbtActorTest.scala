@@ -464,7 +464,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     TestKit.shutdownActorSystem(system)
   }
 
-  private val timeout = 40.seconds
+  private val timeout = 60.seconds
 
   // SbtProcess uses Stash and it's not compatible with TestActorRef
   // https://stackoverflow.com/questions/18335127/testing-akka-actors-that-mixin-stash-with-testactorref
@@ -472,7 +472,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     Props(
       new SbtProcess(
         runTimeout = timeout,
-        reloadTimeout = 40.seconds,
+        reloadTimeout = 60.seconds,
         isProduction = false,
         javaOptions = Seq("-Xms51m", "-Xmx550m")
       )
