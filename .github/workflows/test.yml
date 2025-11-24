@@ -23,16 +23,6 @@ jobs:
       with:
         jvm: temurin:17
         apps: sbt bloop
-    - name: Cache Coursier and sbt
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/coursier
-          ~/.ivy2/cache
-          ~/.sbt
-        key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt', 'project/**/*.scala', 'project/**/*.sbt', 'project/**/build.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-sbt-
     - name: Run tests
       run: |
         nix-shell --command "yarn install && sbt -DSnippetsContainerTest.mongo=true cachedCiTest"
