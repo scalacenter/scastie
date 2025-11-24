@@ -472,9 +472,9 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     Props(
       new SbtProcess(
         runTimeout = timeout,
-        reloadTimeout = timeout,
+        reloadTimeout = 20.seconds,
         isProduction = false,
-        javaOptions = Seq("-Xms128m", "-Xmx1024m")
+        javaOptions = Seq("-Xms51m", "-Xmx550m")
       )
     )
   )
