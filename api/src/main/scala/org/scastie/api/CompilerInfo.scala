@@ -71,6 +71,7 @@ object Problem {
 case class Problem(
   severity: Severity,
   line: Option[Int],
+  endLine: Option[Int],
   startColumn: Option[Int],
   endColumn: Option[Int],
   message: String,

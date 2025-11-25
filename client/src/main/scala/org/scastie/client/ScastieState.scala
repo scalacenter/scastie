@@ -470,7 +470,7 @@ case class ScastieState(
 
   def clearSnippetId: ScastieState = copyAndSave(snippetId = None)
 
-  private def info(message: String) = Problem(Info, None, None, None, message)
+  private def info(message: String) = Problem(Info, line = None, endLine = None, startColumn = None, endColumn = None, message = message)
 
   def setForcedProgramMode(forcedProgramMode: Boolean): ScastieState = {
     if (!forcedProgramMode) this

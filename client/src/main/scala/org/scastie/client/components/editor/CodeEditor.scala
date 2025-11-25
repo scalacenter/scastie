@@ -126,20 +126,25 @@ object CodeEditor {
 
   def problemToDiagnostic(problem: Problem, doc: Text): Diagnostic = {
     val maxLine = doc.lines.toInt
-    val line = problem.line.get.max(1).min(maxLine)
-    val lineInfo = doc.line(line)
-    val lineLength = lineInfo.length.toInt
+    val startLine = problem.line.get.max(1).min(maxLine)
+    val endLine = problem.endLine.getOrElse(startLine).max(1).min(maxLine)
+    val startLineInfo = doc.line(startLine)
+    val endLineInfo = doc.line(endLine)
+    val startLineLength = startLineInfo.length.toInt
+    val endLineLength = endLineInfo.length.toInt
 
     val preciseRangeOpt: Option[(Double, Double)] =
       if (problem.line.get > maxLine) {
-        val endPos = lineInfo.to
+        val endPos = startLineInfo.to
         Some((endPos, endPos))
       } else {
         (problem.startColumn, problem.endColumn) match {
-          case (Some(start), Some(end)) if start > 0 && end >= start =>
-            val clampedStart = (start min (lineLength + 1)) max 1
-            val clampedEnd = (end min (lineLength + 1)) max clampedStart
-            Some((lineInfo.from + clampedStart - 1, lineInfo.from + clampedEnd - 1))
+          case (Some(startCol), Some(endCol)) if startCol > 0 && endCol >= startCol =>
+            val clampedStart = (startCol min (startLineLength + 1)) max 1
+            val clampedEnd = (endCol min (endLineLength + 1)) max 1
+            val startPos = startLineInfo.from + clampedStart - 1
+            val endPos = endLineInfo.from + clampedEnd - 1
+            Some((startPos, endPos))
           case _ =>
             None
         }
@@ -149,7 +154,7 @@ object CodeEditor {
       case Some((start, end)) =>
         (start, end)
       case None =>
-        (lineInfo.from, lineInfo.to)
+        (startLineInfo.from, endLineInfo.to)
     }
 
     Diagnostic(startColumn, problem.message, parseSeverity(problem.severity), endColumn)
