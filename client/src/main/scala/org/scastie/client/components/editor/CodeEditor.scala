@@ -141,7 +141,7 @@ object CodeEditor {
         (problem.startColumn, problem.endColumn) match {
           case (Some(startCol), Some(endCol)) if startCol > 0 && endCol >= startCol =>
             val clampedStart = (startCol min (startLineLength + 1)) max 1
-            val clampedEnd = (endCol min (endLineLength + 1)) max 1
+            val clampedEnd = (endCol min (endLineLength + 1)) max clampedStart
             val startPos = startLineInfo.from + clampedStart - 1
             val endPos = endLineInfo.from + clampedEnd - 1
             Some((startPos, endPos))
