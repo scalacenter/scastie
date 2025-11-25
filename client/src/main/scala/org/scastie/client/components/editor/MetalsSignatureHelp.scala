@@ -18,19 +18,38 @@ trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
   private var currentSignature: Option[SignatureHelpDTO] = None
   private var lastActiveParameter: Option[Int] = None
 
+  private def isBetweenBrackets(openPos: Int, closePos: Int, cursorPos: Int, nextOpenPos: Int): Boolean =
+    openPos != -1 &&
+    closePos != -1 &&
+    cursorPos > openPos &&
+    cursorPos <= closePos &&
+    (nextOpenPos == -1 || nextOpenPos > closePos)
+
   private def getParenPositions(doc: String, cursorPos: Int): Option[(Int, Int)] = {
-    val openParenPos = doc.lastIndexOf('(', cursorPos - 1)
-    val closeParenPos = doc.indexOf(')', cursorPos)
-    val nextOpenParen = doc.indexOf('(', cursorPos)
+    val openRoundPos = doc.lastIndexOf('(', cursorPos - 1)
+    val closeRoundPos = doc.indexOf(')', cursorPos)
+    val nextOpenRound = doc.indexOf('(', cursorPos)
 
-    val isInParens =
-      openParenPos != -1 &&
-      closeParenPos != -1 &&
-      cursorPos > openParenPos &&
-      cursorPos <= closeParenPos &&
-      (nextOpenParen == -1 || nextOpenParen > closeParenPos)
+    val isInRoundParens =
+      isBetweenBrackets(openRoundPos, closeRoundPos, cursorPos, nextOpenRound)
 
-    if (isInParens) Some((openParenPos, closeParenPos)) else None
+    val openSquarePos = doc.lastIndexOf('[', cursorPos - 1)
+    val closeSquarePos = doc.indexOf(']', cursorPos)
+    val nextOpenSquare = doc.indexOf('[', cursorPos)
+
+    val isInSquareBrackets =
+      isBetweenBrackets(openSquarePos, closeSquarePos, cursorPos, nextOpenSquare)
+
+    if (isInRoundParens && isInSquareBrackets) {
+      if (openRoundPos > openSquarePos) Some((openRoundPos, closeRoundPos))
+      else Some((openSquarePos, closeSquarePos))
+    } else if (isInRoundParens) {
+      Some((openRoundPos, closeRoundPos))
+    } else if (isInSquareBrackets) {
+      Some((openSquarePos, closeSquarePos))
+    } else {
+      None
+    }
   }
 
   private def isCursorInParens(doc: String, cursorPos: Int): Boolean = {
@@ -40,12 +59,14 @@ trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
   private def countActiveParameter(doc: String, openParenPos: Int, cursorPos: Int): Int = {
     doc
       .substring(openParenPos + 1, Math.min(cursorPos, doc.length))
-      .foldLeft((0, 0)) { case ((paramIndex, parenDepth), char) =>
+      .foldLeft((0, 0, 0)) { case ((paramIndex, parenDepth, bracketDepth), char) =>
         char match {
-          case '(' => (paramIndex, parenDepth + 1)
-          case ')' => (paramIndex, parenDepth - 1)
-          case ',' if parenDepth == 0 => (paramIndex + 1, parenDepth)
-          case _ => (paramIndex, parenDepth)
+          case '(' => (paramIndex, parenDepth + 1, bracketDepth)
+          case ')' => (paramIndex, parenDepth - 1, bracketDepth)
+          case '[' => (paramIndex, parenDepth, bracketDepth + 1)
+          case ']' => (paramIndex, parenDepth, bracketDepth - 1)
+          case ',' if parenDepth == 0 && bracketDepth == 0 => (paramIndex + 1, parenDepth, bracketDepth)
+          case _ => (paramIndex, parenDepth, bracketDepth)
         }
       }
       ._1
