@@ -236,10 +236,11 @@ class SbtProcess(runTimeout: FiniteDuration,
       sendProgress(sbtRun, progress)
 
       if (progress.isSbtError) {
+        sbtRun.timeoutEvent.foreach(_.cancel())
+        val finalProgress = progress.copy(isDone = true)
+        sendProgress(sbtRun, finalProgress)
         throw new Exception("sbt error: " + output.line)
-      }
-
-      if (isPrompt(output.line)) {
+      } else if (isPrompt(output.line)) {
         gotoRunning(sbtRun)
       } else {
         stay()
