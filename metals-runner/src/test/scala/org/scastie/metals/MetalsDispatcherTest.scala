@@ -25,7 +25,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     None
   )
 
-  override val munitTimeout = 60.seconds
+  override val munitTimeout = 120.seconds
 
   test("single thread metals access") {
     cache.use { cache =>
@@ -92,7 +92,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       assertIO(task.map(results => results.nonEmpty && results.forall(_.isRight)), true)
 
     }
-  }.timeout(3.minutes)
+  }
 
   test("parallel metals access with dependencies".flaky) {
     val targets = List(

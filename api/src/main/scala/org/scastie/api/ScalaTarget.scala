@@ -164,9 +164,9 @@ case class Js(scalaVersion: String, scalaJsVersion: String) extends SbtScalaTarg
           case v if v.startsWith("3") =>
             renderLibWithSuffix(lib, s"${scalaJsVersionPrefix}_3.1.3")
           case v if v.startsWith("2.13") =>
-            renderLibWithSuffix(lib, s"${scalaJsVersionPrefix}_2.13")
+            renderLibWithSuffix(lib, s"${scalaJsVersionPrefix}_${BuildInfo.latest213}")
           case v if v.startsWith("2.12") =>
-            renderLibWithSuffix(lib, s"${scalaJsVersionPrefix}_2.12")
+            renderLibWithSuffix(lib, s"${scalaJsVersionPrefix}_${BuildInfo.latest212}")
           case _ => renderSbtCross(lib)
         }
       case _ => renderSbtCross(lib)

@@ -136,7 +136,7 @@ class SbtProcess(runTimeout: FiniteDuration,
 
     val props =
       ProcessActor.props(
-        command = List("sbt", "-debug"),
+        command = List("sbt"),
         workingDir = sbtDir,
         environment = Map(
           "SBT_OPTS" -> sbtOpts
