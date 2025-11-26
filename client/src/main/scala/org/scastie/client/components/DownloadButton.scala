@@ -7,8 +7,7 @@ import japgolly.scalajs.react._
 import vdom.all._
 
 import org.scalajs.dom
-import org.scalajs.dom.document
-import org.scalajs.dom.raw.BlobPropertyBag
+import scala.scalajs.js
 
 import org.scastie.client.i18n.I18n
 
@@ -30,17 +29,18 @@ object DownloadButton {
 
   // Helper to trigger a browser download via Blob
   def triggerFileDownload(filename: String, content: String, contentType: String = "text/x-scala"): Unit = {
-    val blob = new dom.Blob(
-      js.Array(content),
-      BlobPropertyBag(`type` = contentType)
-    )
-    val url = dom.URL.createObjectURL(blob)
-    val link = document.createElement("a").asInstanceOf[dom.html.Anchor]
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    val parts = js.Array(content)
+    val opts  = new dom.BlobPropertyBag(`type` = contentType)
+
+    val blob = new dom.Blob(parts, opts)
+    val url  = dom.URL.createObjectURL(blob)
+
+    val a = dom.document.createElement("a").asInstanceOf[dom.html.Anchor]
+    a.href = url
+    a.download = filename
+    dom.document.body.appendChild(a)
+    a.click()
+    a.remove()
     dom.URL.revokeObjectURL(url)
   }
 
