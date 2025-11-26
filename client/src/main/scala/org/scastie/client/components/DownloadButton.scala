@@ -29,11 +29,16 @@ object DownloadButton {
 
   // Helper to trigger a browser download via Blob
   def triggerFileDownload(filename: String, content: String, contentType: String = "text/x-scala"): Unit = {
-    val parts = js.Array(content)
-    val opts  = new dom.BlobPropertyBag(`type` = contentType)
+    // Create parts as BlobPart (String is accepted as a BlobPart)
+    val parts = js.Array(content.asInstanceOf[dom.BlobPart])
 
-    val blob = new dom.Blob(parts, opts)
-    val url  = dom.URL.createObjectURL(blob)
+    // BlobPropertyBag is a trait; construct via a dynamic literal and cast
+    val opts = js.Dynamic.literal("type" -> contentType).asInstanceOf[dom.BlobPropertyBag]
+
+    // Create the blob
+    val blob = new dom.Blob(parts.asInstanceOf[js.Iterable[dom.BlobPart]], opts)
+
+    val url = dom.URL.createObjectURL(blob)
 
     val a = dom.document.createElement("a").asInstanceOf[dom.html.Anchor]
     a.href = url
