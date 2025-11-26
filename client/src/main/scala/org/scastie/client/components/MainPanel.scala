@@ -170,6 +170,7 @@ object MainPanel {
         metalsStatus = state.metalsStatus,
         toggleMetalsStatus = backend.toggleMetalsStatus,
         scalaTarget = state.inputs.target,
+        code = state.inputs.code,
         language = state.language
       ).render.unless(props.isEmbedded || state.isPresentationMode)
 

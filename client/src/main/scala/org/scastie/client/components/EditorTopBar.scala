@@ -32,6 +32,7 @@ final case class EditorTopBar(clear: Reusable[Callback],
                               metalsStatus: MetalsStatus,
                               toggleMetalsStatus: Reusable[Callback],
                               scalaTarget: ScalaTarget,
+                              code: String,
                               language: String) {
   @inline def render: VdomElement = EditorTopBar.component(this)
 }
@@ -90,7 +91,12 @@ object EditorTopBar {
     val downloadButton =
       props.snippetId match {
         case Some(sid) =>
-          DownloadButton(snippetId = sid, language = props.language).render
+          DownloadButton(
+            snippetId = sid,
+            scalaTarget = props.scalaTarget,
+            code = props.code,
+            language = props.language
+          ).render
         case _ =>
           EmptyVdom
       }
