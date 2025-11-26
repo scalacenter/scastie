@@ -31,6 +31,17 @@ class ApiRoutes(
         concat(
           post(
             concat(
+              pathPrefix("v1") {
+                path("compile") {
+                  entity(as[CompilationRequestV1]) { request =>
+                    complete(
+                      server
+                        .run(SbtInputs.default.copy(code = request.code))
+                        .map(snippetId => CompilationResponseV1(snippetId, snippetId.url))
+                    )
+                  }
+                }
+              },
               path("run")(
                 entity(as[BaseInputs])(inputs => complete(server.run(inputs)))
               ),
