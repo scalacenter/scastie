@@ -113,11 +113,15 @@ case class OldScastiePresentationCompiler(underlyingPC: PresentationCompiler) ex
   private val logger = LoggerFactory.getLogger(getClass)
 
   def inifiniteCompilationDetection[Input, Output](task: IO[Output])(input: Input): IO[Output] =
-    task.timeout(30.seconds).onError { case _: TimeoutException =>
-      IO.pure {
-        logger.error("FATAL ERROR: Timeout while computing completions, possible inifinite compilation")
-        logger.error(input.toString)
-      }
+    task.timeout(30.seconds).onError { case e: Throwable =>
+      e match
+        case _: TimeoutException =>
+          IO.pure {
+            logger.error("FATAL ERROR: Timeout while computing completions, possible inifinite compilation")
+            logger.error(input.toString)
+          }
+        case _ =>
+          IO.unit
     }
 
   def complete(offsetParams: ScastieOffsetParams): IO[ScalaCompletionList] =
