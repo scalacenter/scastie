@@ -93,7 +93,7 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
                 compiler <- EitherT.right(
                   cache.getOrUpdateReleasable(configuration) {
                     initializeCompiler(configuration, mtags).map: newPC =>
-                      Releasable(newPC, IO(newPC.shutdown()))
+                      Releasable(newPC, newPC.shutdown())
                   })
               yield compiler
             .value

@@ -110,7 +110,7 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   test("report parsing error 2") {
     runCode("val x = 1a", allowFailure = true)(
       assertCompilationInfo(
-        assertProblemInfo("Invalid literal number, followed by identifier character", Some(1), Some(10), Some(10))(_)
+        assertProblemInfo("end of statement expected but identifier found", Some(1), Some(10), Some(11))(_)
       )
     )
   }
