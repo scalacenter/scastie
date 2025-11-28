@@ -49,6 +49,7 @@ trait SnippetsContainer {
       snippetId: SnippetId
   ): Future[Option[FetchResultScalaJsSourceMap]]
   def readSnippet(snippetId: SnippetId): Future[Option[FetchResult]]
+  def readLatestSnippet(snippetId: SnippetId): Future[Option[FetchResult]]
   protected def insert(snippetId: SnippetId, inputs: BaseInputs): Future[Unit]
   protected def hideFromUserProfile(snippetId: SnippetId): Future[Unit]
 
