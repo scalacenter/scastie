@@ -85,6 +85,7 @@ class Routing(defaultServerUrl: String) {
     val anon = snippetId
     val user = alpha / snippetId
     val userUpdate = alpha / snippetId / int
+    val userLatest = alpha / snippetId / "latest"
     val oldId = int
 
     (
@@ -100,6 +101,8 @@ class Routing(defaultServerUrl: String) {
         | dynamicRouteCT(oldId.caseClass[OldSnippetIdPage]) ~>
           dynRenderR((page, router) => renderOldSnippetIdPage(page, router))
         | dynamicRouteCT(anon.caseClass[AnonymousResource]) ~>
+          dynRenderR((page, router) => renderPage(page, router))
+        | dynamicRouteCT(userLatest.caseClass[UserResourceLatest]) ~>
           dynRenderR((page, router) => renderPage(page, router))
         | dynamicRouteCT(user.caseClass[UserResource]) ~>
           dynRenderR((page, router) => renderPage(page, router))
@@ -151,33 +154,32 @@ class Routing(defaultServerUrl: String) {
   private def renderPage(page: ResourcePage, router: RouterCtl[Page]): VdomElement = {
     val defaultEmbedded = Some(EmbeddedOptions.empty(defaultServerUrl))
 
-    val (embedded, snippetId) = page match {
+    case class PageInfo(embedded: Option[EmbeddedOptions], snippetId: SnippetId)
+
+    val pageInfo = page match {
       case AnonymousResource(uuid) =>
-        val snippetId = SnippetId(uuid, None)
-        (None, snippetId)
+        PageInfo(None, SnippetId(uuid, None))
       case UserResource(login, uuid) =>
-        val snippetId = SnippetId(uuid, Some(SnippetUserPart(login)))
-        (None, snippetId)
+        PageInfo(None, SnippetId(uuid, Some(SnippetUserPart(login))))
+      case UserResourceLatest(login, uuid) =>
+        /* Latest is represented with update -1 */
+        PageInfo(None, SnippetId(uuid, Some(SnippetUserPart(login, -1))))
       case UserResourceUpdated(login, uuid, update) =>
-        val snippetId = SnippetId(uuid, Some(SnippetUserPart(login, update)))
-        (None, snippetId)
+        PageInfo(None, SnippetId(uuid, Some(SnippetUserPart(login, update))))
       case EmbeddedAnonymousResource(uuid) =>
-        val snippetId = SnippetId(uuid, None)
-        (defaultEmbedded, snippetId)
+        PageInfo(defaultEmbedded, SnippetId(uuid, None))
       case EmbeddedUserResource(login, uuid) =>
-        val snippetId = SnippetId(uuid, Some(SnippetUserPart(login)))
-        (defaultEmbedded, snippetId)
+        PageInfo(defaultEmbedded, SnippetId(uuid, Some(SnippetUserPart(login))))
       case EmbeddedUserResourceUpdated(login, uuid, update) =>
-        val snippetId = SnippetId(uuid, Some(SnippetUserPart(login, update)))
-        (defaultEmbedded, snippetId)
+        PageInfo(defaultEmbedded, SnippetId(uuid, Some(SnippetUserPart(login, update))))
     }
 
     Scastie(
       scastieId = UUID.randomUUID(),
       router = Some(router),
-      snippetId = Some(snippetId),
+      snippetId = Some(pageInfo.snippetId),
       oldSnippetId = None,
-      embedded = embedded,
+      embedded = pageInfo.embedded,
       targetType = None,
       tryLibrary = None,
       code = None,

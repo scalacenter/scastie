@@ -41,6 +41,7 @@ case class DownloadSnippet(snippetId: SnippetId)
 case class ForkSnippet(snippetId: SnippetId, inputs: InputsWithIpAndUser)
 
 case class FetchSnippet(snippetId: SnippetId)
+case class FetchLatestSnippet(snippetId: SnippetId)
 case class FetchOldSnippet(id: Int)
 case class FetchUserSnippets(user: User)
 
@@ -192,6 +193,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     case FetchSnippet(snippetId) =>
       val sender = this.sender()
       logError(container.readSnippet(snippetId).map(sender ! _))
+
+    case FetchLatestSnippet(snippetId) =>
+      val sender = this.sender()
+      logError(container.readLatestSnippet(snippetId).map(sender ! _))
 
     case FetchOldSnippet(id) =>
       val sender = this.sender()
