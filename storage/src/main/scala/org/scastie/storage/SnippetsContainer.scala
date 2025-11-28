@@ -94,6 +94,7 @@ trait SnippetsContainer {
   final def downloadSnippet(snippetId: SnippetId): Future[Option[Path]] =
     readSnippet(snippetId).map(_.flatMap {
       case FetchResult(sbtInputs: SbtInputs, _) => Option(asZip(snippetId)(sbtInputs))
+      case FetchResult(scalaCliInputs: ScalaCliInputs, _) => Option(asScalaFile(snippetId)(scalaCliInputs))
       case _ => None
     })
 
@@ -123,6 +124,7 @@ trait SnippetsContainer {
   }
 
   private val snippetZip = Files.createTempDirectory(null)
+  private val snippetScala = Files.createTempDirectory(null)
 
   private def asZip(snippetId: SnippetId)(inputs: SbtInputs): Path = {
 
@@ -152,6 +154,16 @@ trait SnippetsContainer {
     }
 
     zippedProjectDir
+  }
+
+  private def asScalaFile(snippetId: SnippetId)(inputs: ScalaCliInputs): Path = {
+    val scalaFile = snippetScala.resolve(s"${snippetId.url}.scala")
+
+    if (!Files.exists(scalaFile)) {
+      Files.write(scalaFile, inputs.code.getBytes)
+    }
+
+    scalaFile
   }
 
   def close(): Unit = ()
