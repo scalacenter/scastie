@@ -1,6 +1,7 @@
-package org.scastie
-package client
+package org.scastie.client
 package components
+
+
 
 import org.scastie.api.{SnippetId, User, ScalaTarget}
 
