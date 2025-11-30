@@ -9,7 +9,7 @@ import scala.scalajs.js
 import scala.collection.concurrent.TrieMap
 import org.scastie.client.i18n.I18n
 
-final case class DownloadButton(snippetId: SnippetId, scalaTarget: ScalaTarget, code: String, language: String) {
+final case class DownloadButton(snippetId: SnippetId, scalaTarget: ScalaTarget, language: String) {
   @inline def render: VdomElement = DownloadButton.component(this)
 }
 
@@ -17,46 +17,27 @@ object DownloadButton {
   implicit val reusability: Reusability[DownloadButton] =
     Reusability.derive[DownloadButton]
 
-  private object BlobUrlCache {
-    private val cache = TrieMap.empty[String, String]
-
-    def getOrCreate(code: String): String =
-      cache.getOrElseUpdate(code, {
-        val parts = js.Array(code.asInstanceOf[dom.BlobPart])
-        val blob = new dom.Blob(parts.asInstanceOf[js.Iterable[dom.BlobPart]])
-        dom.URL.createObjectURL(blob)
-      })
-
-    def revokeAll(): Unit = {
-      cache.valuesIterator.foreach(dom.URL.revokeObjectURL)
-      cache.clear()
-    }
+  private def filesystemFriendlyName(snippetId: SnippetId): String = {
+    val raw = snippetId.toString
+    raw.replaceAll("[^A-Za-z0-9\\.\\-]+", "-")
+       .replaceAll("-{2,}", "-")
+       .replaceAll("(^-+)|(-+$)", "")
   }
 
-  private def safeFilenameFromSnippetId(snippetId: SnippetId): String = {
-    val base = Option(snippetId.toString).filter(_.nonEmpty).getOrElse("scastie-snippet")
-    base.replaceAll("/", "-")
-  }
+  private def downloadUrl(snippetId: SnippetId, language: String): String =
+    s"/api/download/${snippetId.toString}/${language}"
 
   def render(props: DownloadButton): VdomElement = {
     val isScalaCliTarget = props.scalaTarget.targetType == ScalaTargetType.ScalaCli
-    val filenameBase = safeFilenameFromSnippetId(props.snippetId)
-    val downloadFilename = s"$filenameBase.scala.zip"
-    val url = props.snippetId.url
-    val fullUrl = s"/api/download/$url"
+    val filenameBase = filesystemFriendlyName(props.snippetId)
+    val downloadFilename = s"$filenameBase.zip"
+    val fullUrl = downloadUrl(props.snippetId, props.language)
     val hrefAttr = if (isScalaCliTarget) "#" else fullUrl
 
     def onClickHandler(e: ReactMouseEvent): Callback =
       if (isScalaCliTarget) {
         e.preventDefaultCB >> Callback {
-          BlobUrlCache.revokeAll()
-          val blobUrl = BlobUrlCache.getOrCreate(props.code)
-          val a = dom.document.createElement("a").asInstanceOf[dom.html.Anchor]
-          a.href = blobUrl
-          a.download = s"$filenameBase.scala"
-          dom.document.body.appendChild(a)
-          a.click()
-          a.remove()
+          dom.console.log(s"Scala CLI download requested for ${props.snippetId}")
         }
       } else Callback.empty
 

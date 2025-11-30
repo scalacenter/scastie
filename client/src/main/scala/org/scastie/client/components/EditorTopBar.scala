@@ -94,7 +94,6 @@ object EditorTopBar {
           DownloadButton(
             snippetId = sid,
             scalaTarget = props.scalaTarget,
-            code = props.code,
             language = props.language
           ).render
         case _ =>
