@@ -1,6 +1,7 @@
 package org.scastie
 package client
 
+
 import io.circe.syntax._
 import io.circe._
 import io.circe.parser._
