@@ -58,7 +58,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       {
         val dispatcher = MetalsDispatcher(cache)
         val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
-        val userUuid   = "test-user-1"
+        val userUuid   = "5e460689-36b8-41db-b021-7dd273ecab88"
         val task = for {
           pc     <- dispatcher.getCompiler(userUuid, options)
           _      <- EitherT.right(IO.sleep(4.seconds))
@@ -73,7 +73,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     cache.use { cache =>
       val dispatcher = MetalsDispatcher(cache)
       val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
-      val userUuid   = "test-user-1"
+      val userUuid   = "5e460689-36b8-41db-b021-7dd273ecab88"
 
       for {
         pc1 <- dispatcher.getCompiler(userUuid, options).value
@@ -88,7 +88,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       val dispatcher = MetalsDispatcher(cache)
       val options1   = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
       val options2   = ScastieMetalsOptions(Set.empty, Scala2.default)
-      val userUuid   = "test-user-1"
+      val userUuid   = "5e460689-36b8-41db-b021-7dd273ecab88"
 
       for {
         pc1 <- dispatcher.getCompiler(userUuid, options1).value
@@ -105,8 +105,8 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     cache.use { cache =>
       val dispatcher = MetalsDispatcher(cache)
       val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
-      val user1      = "test-user-1"
-      val user2      = "test-user-2"
+      val user1      = "5e460689-36b8-41db-b021-7dd273ecab88"
+      val user2      = "7f6a1dc2-d936-4853-9345-161f3617c649"
 
       for {
         pc1 <- dispatcher.getCompiler(user1, options).value
