@@ -16,83 +16,38 @@ import org.scastie.api._
 trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
 
   private var currentSignature: Option[SignatureHelpDTO] = None
-  private var lastActiveParameter: Option[Int] = None
+  private var lastContext: Option[(Int, Int)] = None
 
-  private def isBetweenBrackets(openPos: Int, closePos: Int, cursorPos: Int, nextOpenPos: Int): Boolean =
-    openPos != -1 &&
-    closePos != -1 &&
-    cursorPos > openPos &&
-    cursorPos <= closePos &&
-    (nextOpenPos == -1 || nextOpenPos > closePos)
-
-  private def getParenPositions(doc: String, cursorPos: Int): Option[(Int, Int)] = {
-    val openRoundPos = doc.lastIndexOf('(', cursorPos - 1)
-    val closeRoundPos = doc.indexOf(')', cursorPos)
-    val nextOpenRound = doc.indexOf('(', cursorPos)
-
-    val isInRoundParens =
-      isBetweenBrackets(openRoundPos, closeRoundPos, cursorPos, nextOpenRound)
-
-    val openSquarePos = doc.lastIndexOf('[', cursorPos - 1)
-    val closeSquarePos = doc.indexOf(']', cursorPos)
-    val nextOpenSquare = doc.indexOf('[', cursorPos)
-
-    val isInSquareBrackets =
-      isBetweenBrackets(openSquarePos, closeSquarePos, cursorPos, nextOpenSquare)
-
-    if (isInRoundParens && isInSquareBrackets) {
-      if (openRoundPos > openSquarePos) Some((openRoundPos, closeRoundPos))
-      else Some((openSquarePos, closeSquarePos))
-    } else if (isInRoundParens) {
-      Some((openRoundPos, closeRoundPos))
-    } else if (isInSquareBrackets) {
-      Some((openSquarePos, closeSquarePos))
-    } else {
-      None
+  private def parseAndFindContext(doc: String, cursorPos: Int): Option[TreeSitterArgumentFinder.ArgumentContext] = {
+    syntaxHighlighter.flatMap { h =>
+      try {
+        val tree = h.parser.parse(doc)
+        TreeSitterArgumentFinder.findArgumentContext(tree, cursorPos)
+      } catch {
+        case _: Throwable => None
+      }
     }
   }
 
-  private def isCursorInParens(doc: String, cursorPos: Int): Boolean = {
-    getParenPositions(doc, cursorPos).isDefined
-  }
-
-  private def countActiveParameter(doc: String, openParenPos: Int, cursorPos: Int): Int = {
-    doc
-      .substring(openParenPos + 1, Math.min(cursorPos, doc.length))
-      .foldLeft((0, 0, 0)) { case ((paramIndex, parenDepth, bracketDepth), char) =>
-        char match {
-          case '(' => (paramIndex, parenDepth + 1, bracketDepth)
-          case ')' => (paramIndex, parenDepth - 1, bracketDepth)
-          case '[' => (paramIndex, parenDepth, bracketDepth + 1)
-          case ']' => (paramIndex, parenDepth, bracketDepth - 1)
-          case ',' if parenDepth == 0 && bracketDepth == 0 => (paramIndex + 1, parenDepth, bracketDepth)
-          case _ => (paramIndex, parenDepth, bracketDepth)
-        }
-      }
-      ._1
-  }
-
   private def getSignatureTooltips(state: EditorState): js.Array[Tooltip] = {
-    val cursorPos = state.selection.main.head.toInt
-    val doc = state.doc.toString
+    currentSignature match {
+      case Some(sigHelp) =>
+        val cursorPos = state.selection.main.head.toInt
+        val node = getSignatureHelpNode(sigHelp)
+        val line = state.doc.lineAt(cursorPos).number
+        val showAbove = line > 2
 
-    if (isCursorInParens(doc, cursorPos) && currentSignature.isDefined) {
-      val sigHelp = currentSignature.get
-      val node = getSignatureHelpNode(sigHelp)
-
-      val line = state.doc.lineAt(cursorPos).number
-      val showAbove = line > 2
-
-      js.Array(
-        js.Dynamic.literal(
-          pos = cursorPos.toDouble,
-          above = showAbove,
-          strictSide = true,
-          create = (_: EditorView) => TooltipView(node.domToHtml.get)
-        ).asInstanceOf[Tooltip]
-      )
-    } else {
-      js.Array[Tooltip]()
+        js.Array(
+          js.Dynamic.literal(
+            pos = cursorPos.toDouble,
+            above = showAbove,
+            strictSide = true,
+            create = (_: EditorView) => TooltipView(node.domToHtml.get)
+          ).asInstanceOf[Tooltip]
+        )
+      
+      case None =>
+        js.Array[Tooltip]()
     }
   }
 
@@ -125,27 +80,26 @@ trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
       val cursorPos = update.state.selection.main.head.toInt
       val doc = update.state.doc.toString
 
-      getParenPositions(doc, cursorPos) match {
-        case Some((openPos, closePos)) =>
-          val activeParam = countActiveParameter(doc, openPos, cursorPos)
-
-          val shouldRequest = lastActiveParameter match {
-            case Some(lastParam) => lastParam != activeParam
-            case None => true
-          }
+      parseAndFindContext(doc, cursorPos) match {
+        case Some(context) =>
+          val currentCtx = (context.openPos, context.activeParam)
+          val shouldRequest = lastContext.forall(_ != currentCtx)
 
           if (shouldRequest) {
-            lastActiveParameter = Some(activeParam)
+            lastContext = Some(currentCtx)
             requestAndUpdateSignatureHelp(update.view, cursorPos)
           }
 
-        case None =>
+        case None if currentSignature.isDefined =>
           currentSignature = None
-          lastActiveParameter = None
+          lastContext = None
+          update.view.dispatch(TransactionSpec())
+
+        case None =>
+          lastContext = None
       }
     }
   })
-
 
   private def requestSignatureHelp(code: String, pos: Int): js.Promise[Option[SignatureHelpDTO]] = {
     /* FIXME: For overloaded methods like:
@@ -177,9 +131,7 @@ trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
     val sigIdx = sigHelp.activeSignature
     val paramIdx = sigHelp.activeParameter
     val sig = sigHelp.signatures(sigIdx)
-    val doc = sig.documentation
     val label = sig.label.replaceAll("\\[|\\]", "")
-
     val highlighted = highlight(label, Some(paramIdx))
 
     val node = dom.document.createElement("div")
