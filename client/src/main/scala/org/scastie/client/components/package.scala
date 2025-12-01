@@ -108,4 +108,7 @@ package object components {
 
   implicit val scastieBackendReuse: Reusability[ScastieBackend] =
     Reusability.byRefOr_==
+
+  implicit val clientUuidReuse: Reusability[ClientUuid] =
+    Reusability.byRefOr_==
 }

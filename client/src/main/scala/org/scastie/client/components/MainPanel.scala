@@ -85,7 +85,7 @@ object MainPanel {
         metalsStatus = state.metalsStatus,
         setMetalsStatus = backend.setMetalsStatus,
         dependencies = state.inputs.libraries,
-        clientUuid = state.clientUuid
+        clientUuid = state.clientUuid.value
       ).render
 
     val console =

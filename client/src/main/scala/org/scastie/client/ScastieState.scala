@@ -12,6 +12,12 @@ import org.scastie.client.scalacli.ScalaCliUtils._
 import org.scastie.runtime.api._
 import RuntimeCodecs._
 
+case class ClientUuid(value: String)
+
+object ClientUuid {
+  def generate(): ClientUuid = ClientUuid(java.util.UUID.randomUUID().toString)
+}
+
 sealed trait MetalsStatus {
   val info: String
 }
@@ -81,7 +87,7 @@ object ScastieState {
       isEmbedded = isEmbedded,
       editorMode = Default,
       language = I18n.getLanguage,
-      clientUuid = java.util.UUID.randomUUID().toString
+      clientUuid = ClientUuid.generate()
     )
   }
 
@@ -98,7 +104,7 @@ object ScastieState {
 
   implicit val dontSerializeMetalsStatus: Codec[MetalsStatus] = dontSerialize[MetalsStatus](MetalsLoading)
 
-  implicit val dontSerializeClientUuid: Codec[String] = dontSerialize[String](java.util.UUID.randomUUID().toString)
+  implicit val dontSerializeClientUuid: Codec[ClientUuid] = dontSerialize[ClientUuid](ClientUuid.generate())
 
   implicit val scastieStateEncoder: Encoder[ScastieState] = deriveEncoder[ScastieState]
   implicit val scastieStateDecoder: Decoder[ScastieState] = deriveDecoder[ScastieState]
@@ -130,7 +136,7 @@ case class ScastieState(
   scalaCliConversionError: Option[String] = None,
   editorMode: EditorMode = Default,
   language: String = "en",
-  clientUuid: String = java.util.UUID.randomUUID().toString
+  clientUuid: ClientUuid = ClientUuid.generate()
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean         = snippetState.loadSnippet
@@ -161,7 +167,7 @@ case class ScastieState(
     scalaCliConversionError: Option[String] = scalaCliConversionError,
     editorMode: EditorMode = editorMode,
     language: String = language,
-    clientUuid: String = clientUuid
+    clientUuid: ClientUuid = clientUuid
   ): ScastieState = {
     val state0 = copy(
       view = view,
