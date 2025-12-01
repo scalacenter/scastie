@@ -122,7 +122,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     cache.use { cache =>
       val dispatcher = MetalsDispatcher(cache)
       val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
-      val userUuid   = "test-user-parallel"
+      val userUuid   = "5e460689-36b8-41db-b021-7dd273ecab88"
       val task       = dispatcher.getCompiler(userUuid, options).value.parReplicateA(10000)
       assertIO(task.map(results => results.nonEmpty && results.forall(_.isRight)), true)
     }
@@ -139,7 +139,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       val task = List
         .fill(10000)(scala.util.Random.nextInt(scalaVersions.size - 1))
         .map { i =>
-          val userUuid = s"test-user-$i"
+          val userUuid = java.util.UUID.randomUUID().toString
           dispatcher.getCompiler(userUuid, scalaOptions(i)).value
         }
         .sequence
@@ -171,7 +171,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       val task = List
         .fill(10000)(scala.util.Random.nextInt(testCases.size - 1))
         .map { i =>
-          val userUuid = s"test-user-$i"
+          val userUuid = java.util.UUID.randomUUID().toString
           dispatcher.getCompiler(userUuid, testCases(i)).value
         }
         .sequence
