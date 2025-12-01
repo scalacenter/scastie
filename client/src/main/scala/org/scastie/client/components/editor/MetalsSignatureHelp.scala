@@ -20,12 +20,8 @@ trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
 
   private def parseAndFindContext(doc: String, cursorPos: Int): Option[TreeSitterArgumentFinder.ArgumentContext] = {
     syntaxHighlighter.flatMap { h =>
-      try {
-        val tree = h.parser.parse(doc)
-        TreeSitterArgumentFinder.findArgumentContext(tree, cursorPos)
-      } catch {
-        case _: Throwable => None
-      }
+      val tree = h.parser.parse(doc)
+      TreeSitterArgumentFinder.findArgumentContext(tree, cursorPos)
     }
   }
 
