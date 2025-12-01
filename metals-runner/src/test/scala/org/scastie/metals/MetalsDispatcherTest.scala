@@ -69,7 +69,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     }
   }
 
-  test("per-user caching: same user with same config reuses PC") {
+  test("caching: same user with same config reuses PC") {
     cache.use { cache =>
       val dispatcher = MetalsDispatcher(cache)
       val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
@@ -83,7 +83,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     }
   }
 
-  test("per-user caching: same user with different config replaces PC") {
+  test("caching: same user with different config creates separate cache entries") {
     cache.use { cache =>
       val dispatcher = MetalsDispatcher(cache)
       val options1   = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
@@ -96,13 +96,12 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
         keys <- cache.keys
         _ <- assertIO(IO.pure(pc1.isRight && pc2.isRight), true)
         userKeys = keys.filter(_._1 == userUuid)
-        _ <- assertIO(IO.pure(userKeys.size), 1)
-        _ <- assertIO(IO.pure(userKeys.head._2), options2)
+        _ <- assertIO(IO.pure(userKeys.size), 2)
       } yield ()
     }
   }
 
-  test("per-user caching: different users with same config have separate PCs") {
+  test("caching: different users with same config have separate PCs") {
     cache.use { cache =>
       val dispatcher = MetalsDispatcher(cache)
       val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.latestLTS))
