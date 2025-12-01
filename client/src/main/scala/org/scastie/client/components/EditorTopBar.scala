@@ -1,40 +1,42 @@
 package org.scastie.client
 package components
 
-
-
-import org.scastie.api.{SnippetId, User, ScalaTarget}
-
+import org.scastie.api.{SnippetId, User, ScalaTarget, ScalaTargetType}
 import org.scastie.client.i18n.I18n
+// Import the missing types from the parent package
+import org.scastie.client.{Page, View, MetalsStatus}
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
-import org.scastie.api.ScalaTargetType
+import org.scalajs.dom
+import scala.scalajs.js
 
-final case class EditorTopBar(clear: Reusable[Callback],
-                              closeNewSnippetModal: Reusable[Callback],
-                              closeEmbeddedModal: Reusable[Callback],
-                              openEmbeddedModal: Reusable[Callback],
-                              formatCode: Reusable[Callback],
-                              newSnippet: Reusable[Callback],
-                              openNewSnippetModal: Reusable[Callback],
-                              save: Reusable[Callback],
-                              toggleWorksheetMode: Reusable[Callback],
-                              router: Option[RouterCtl[Page]],
-                              inputsHasChanged: Boolean,
-                              isDarkTheme: Boolean,
-                              isNewSnippetModalClosed: Boolean,
-                              isEmbeddedModalClosed: Boolean,
-                              isRunning: Boolean,
-                              isStatusOk: Boolean,
-                              snippetId: Option[SnippetId],
-                              user: Option[User],
-                              view: StateSnapshot[View],
-                              isWorksheetMode: Boolean,
-                              metalsStatus: MetalsStatus,
-                              toggleMetalsStatus: Reusable[Callback],
-                              scalaTarget: ScalaTarget,
-                              code: String,
-                              language: String) {
+final case class EditorTopBar(
+  clear: Reusable[Callback],
+  closeNewSnippetModal: Reusable[Callback],
+  closeEmbeddedModal: Reusable[Callback],
+  openEmbeddedModal: Reusable[Callback],
+  formatCode: Reusable[Callback],
+  newSnippet: Reusable[Callback],
+  openNewSnippetModal: Reusable[Callback],
+  save: Reusable[Callback],
+  toggleWorksheetMode: Reusable[Callback],
+  router: Option[RouterCtl[Page]],
+  inputsHasChanged: Boolean,
+  isDarkTheme: Boolean,
+  isNewSnippetModalClosed: Boolean,
+  isEmbeddedModalClosed: Boolean,
+  isRunning: Boolean,
+  isStatusOk: Boolean,
+  snippetId: Option[SnippetId],
+  user: Option[User],
+  view: StateSnapshot[View],
+  isWorksheetMode: Boolean,
+  metalsStatus: MetalsStatus,
+  toggleMetalsStatus: Reusable[Callback],
+  scalaTarget: ScalaTarget,
+  code: String,
+  language: String
+) {
   @inline def render: VdomElement = EditorTopBar.component(this)
 }
 
@@ -89,13 +91,34 @@ object EditorTopBar {
       props.view.value,
     ).render
 
+    // Define the download logic for Scala CLI
+    val downloadScalaCli: Option[Callback] = 
+      if (props.scalaTarget.targetType == ScalaTargetType.ScalaCli) {
+        Some(Callback {
+          val content = props.code
+          val options = new dom.BlobPropertyBag { `type` = "text/x-scala" }
+          // Fix: Explicitly type the array as containing BlobParts
+          val blob = new dom.Blob(js.Array[dom.BlobPart](content), options)
+          val url = dom.URL.createObjectURL(blob)
+          
+          val link = dom.document.createElement("a").asInstanceOf[dom.html.Anchor]
+          link.href = url
+          link.download = "scastie-snippet.scala" 
+          dom.document.body.appendChild(link)
+          link.click()
+          dom.document.body.removeChild(link)
+          dom.URL.revokeObjectURL(url)
+        })
+      } else None
+
     val downloadButton =
       props.snippetId match {
         case Some(sid) =>
           DownloadButton(
             snippetId = sid,
             scalaTarget = props.scalaTarget,
-            language = props.language
+            language = props.language,
+            onClick = downloadScalaCli
           ).render
         case _ =>
           EmptyVdom

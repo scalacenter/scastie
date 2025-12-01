@@ -1,23 +1,23 @@
-package org.scastie.client
-package components
+package org.scastie.client.components
 
 import org.scastie.api._
 import japgolly.scalajs.react._
 import vdom.all._
-import org.scalajs.dom
 import org.scastie.client.i18n.I18n
 
 final case class DownloadButton(
   snippetId: SnippetId,
   scalaTarget: ScalaTarget,
-  language: String
+  language: String,
+  onClick: Option[Callback] = None
 ) {
   @inline def render: VdomElement = DownloadButton.component(this)
 }
 
 object DownloadButton {
-  implicit val reusability: Reusability[DownloadButton] =
-    Reusability.derive[DownloadButton]
+  // Reusability optimization removed to ensure the onClick closure (which captures code)
+  // is always up-to-date. The component is lightweight enough to re-render.
+  implicit val reusability: Reusability[DownloadButton] = Reusability.never
 
   private def filenameFromSnippetId(snippetId: SnippetId): String = {
     val raw = snippetId.toString
@@ -36,16 +36,18 @@ object DownloadButton {
     val filenameBase = filenameFromSnippetId(props.snippetId)
     val downloadFilename = s"$filenameBase.zip"
     val fullUrl = downloadUrl(props.snippetId, props.language)
+    
+    // If it's Scala CLI, we use a dummy href and handle the click manually
     val hrefAttr = if (isScalaCliTarget) "#" else fullUrl
 
-    def onClickHandler(e: ReactMouseEvent): Callback =
-      if (isScalaCliTarget)
-        e.preventDefaultCB >> Callback {
-          org.scalajs.dom.console.log(
-            s"Scala CLI download requested for ${props.snippetId}"
-          )
-        }
-      else Callback.empty
+    def handleClick(e: ReactMouseEvent): Callback = {
+      props.onClick match {
+        case Some(cb) if isScalaCliTarget => 
+          e.preventDefaultCB >> cb
+        case _ => 
+          Callback.empty
+      }
+    }
 
     li(
       a(
@@ -54,7 +56,7 @@ object DownloadButton {
         title := I18n.t("editor.download"),
         role := "button",
         cls := "btn",
-        onClick ==> ((e: ReactMouseEvent) => onClickHandler(e))
+        onClick ==> handleClick
       )(I18n.t("editor.download"))
     )
   }

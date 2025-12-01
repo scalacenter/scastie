@@ -110,12 +110,12 @@
 
 "@esbuild/darwin-arm64@0.18.20":
   version "0.18.20"
-  resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.18.20.tgz"
+  resolved "https://registry.yarnpkg.com/@esbuild/darwin-arm64/-/darwin-arm64-0.18.20.tgz#08172cbeccf95fbc383399a7f39cfbddaeb0d7c1"
   integrity sha512-bxRHW5kHU38zS2lPTPOyuyTm+S+eobPUnTNkdJEfAddYgEcll4xkT8DB9d2008DtTbl7uJag2HuE5NZAZgnNEA==
 
 "@esbuild/darwin-arm64@0.19.10":
   version "0.19.10"
-  resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.19.10.tgz"
+  resolved "https://registry.yarnpkg.com/@esbuild/darwin-arm64/-/darwin-arm64-0.19.10.tgz#8462a55db07c1b2fad61c8244ce04469ef1043be"
   integrity sha512-YSRRs2zOpwypck+6GL3wGXx2gNP7DXzetmo5pHXLrY/VIMsS59yKfjPizQ4lLt5vEI80M41gjm2BxrGZ5U+VMA==
 
 "@esbuild/darwin-x64@0.18.20":
@@ -230,12 +230,12 @@
 
 "@esbuild/linux-x64@0.18.20":
   version "0.18.20"
-  resolved "https://registry.yarnpkg.com/@esbuild/linux-x64/-/linux-x64-0.18.20.tgz#c7690b3417af318a9b6f96df3031a8865176d338"
+  resolved "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.18.20.tgz"
   integrity sha512-UYqiqemphJcNsFEskc73jQ7B9jgwjWrSayxawS6UVFZGWrAAtkzjxSqnoclCXxWtfwLdzU+vTpcNYhpn43uP1w==
 
 "@esbuild/linux-x64@0.19.10":
   version "0.19.10"
-  resolved "https://registry.yarnpkg.com/@esbuild/linux-x64/-/linux-x64-0.19.10.tgz#898c72eeb74d9f2fb43acf316125b475548b75ce"
+  resolved "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.19.10.tgz"
   integrity sha512-SpYNEqg/6pZYoc+1zLCjVOYvxfZVZj6w0KROZ3Fje/QrM3nfvT2llI+wmKSrWuX6wmZeTapbarvuNNK/qepSgA==
 
 "@esbuild/netbsd-x64@0.18.20":
@@ -344,7 +344,7 @@
 
 "@rollup/rollup-darwin-arm64@4.9.1":
   version "4.9.1"
-  resolved "https://registry.npmjs.org/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.9.1.tgz"
+  resolved "https://registry.yarnpkg.com/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.9.1.tgz#9aaefe33a5481d66322d1c62f368171c03eabe2b"
   integrity sha512-LtYcLNM+bhsaKAIGwVkh5IOWhaZhjTfNOkGzGqdHvhiCUVuJDalvDxEdSnhFzAn+g23wgsycmZk1vbnaibZwwA==
 
 "@rollup/rollup-darwin-x64@4.9.1":
@@ -374,12 +374,12 @@
 
 "@rollup/rollup-linux-x64-gnu@4.9.1":
   version "4.9.1"
-  resolved "https://registry.yarnpkg.com/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.9.1.tgz#0983385dd753a2e0ecaddea7a81dd37fea5114f5"
+  resolved "https://registry.npmjs.org/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.9.1.tgz"
   integrity sha512-kr8rEPQ6ns/Lmr/hiw8sEVj9aa07gh1/tQF2Y5HrNCCEPiCBGnBUt9tVusrcBBiJfIt1yNaXN6r1CCmpbFEDpg==
 
 "@rollup/rollup-linux-x64-musl@4.9.1":
   version "4.9.1"
-  resolved "https://registry.yarnpkg.com/@rollup/rollup-linux-x64-musl/-/rollup-linux-x64-musl-4.9.1.tgz#eb7494ebc5199cbd2e5c38c2b8acbe2603f35e03"
+  resolved "https://registry.npmjs.org/@rollup/rollup-linux-x64-musl/-/rollup-linux-x64-musl-4.9.1.tgz"
   integrity sha512-t4QSR7gN+OEZLG0MiCgPqMWZGwmeHhsM4AkegJ0Kiy6TnJ9vZ8dEIwHw1LcZKhbHxTY32hp9eVCMdR3/I8MGRw==
 
 "@rollup/rollup-win32-arm64-msvc@4.9.1":
@@ -664,7 +664,7 @@ front-matter@^4.0.0:
 
 fsevents@~2.3.2, fsevents@~2.3.3:
   version "2.3.3"
-  resolved "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz"
+  resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
   integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
 
 github-markdown-css@^5.2.0:
@@ -967,5 +967,5 @@ w3c-keyname@^2.2.4:
 
 web-tree-sitter@0.24.7:
   version "0.24.7"
-  resolved "https://registry.yarnpkg.com/web-tree-sitter/-/web-tree-sitter-0.24.7.tgz#76d1da39407c8e4567d65b55bdbaca456b0700b4"
+  resolved "https://registry.npmjs.org/web-tree-sitter/-/web-tree-sitter-0.24.7.tgz"
   integrity sha512-CdC/TqVFbXqR+C51v38hv6wOPatKEUGxa39scAeFSm98wIhZxAYonhRQPSMmfZ2w7JDI0zQDdzdmgtNk06/krQ==
