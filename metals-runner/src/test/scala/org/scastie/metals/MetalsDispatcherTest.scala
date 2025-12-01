@@ -139,7 +139,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       val task = List
         .fill(10000)(scala.util.Random.nextInt(scalaVersions.size - 1))
         .map { i =>
-          val userUuid = java.util.UUID.randomUUID().toString
+          val userUuid = s"test-user-$i"
           dispatcher.getCompiler(userUuid, scalaOptions(i)).value
         }
         .sequence
@@ -171,7 +171,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
       val task = List
         .fill(10000)(scala.util.Random.nextInt(testCases.size - 1))
         .map { i =>
-          val userUuid = java.util.UUID.randomUUID().toString
+          val userUuid = s"test-user-$i"
           dispatcher.getCompiler(userUuid, testCases(i)).value
         }
         .sequence
