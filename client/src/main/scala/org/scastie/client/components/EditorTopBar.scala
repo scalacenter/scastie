@@ -3,7 +3,6 @@ package components
 
 import org.scastie.api.{SnippetId, User, ScalaTarget, ScalaTargetType}
 import org.scastie.client.i18n.I18n
-// Import the missing types from the parent package
 import org.scastie.client.{Page, View, MetalsStatus}
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
@@ -91,13 +90,11 @@ object EditorTopBar {
       props.view.value,
     ).render
 
-    // Define the download logic for Scala CLI
     val downloadScalaCli: Option[Callback] = 
       if (props.scalaTarget.targetType == ScalaTargetType.ScalaCli) {
         Some(Callback {
           val content = props.code
           val options = new dom.BlobPropertyBag { `type` = "text/x-scala" }
-          // Fix: Explicitly type the array as containing BlobParts
           val blob = new dom.Blob(js.Array[dom.BlobPart](content), options)
           val url = dom.URL.createObjectURL(blob)
           
