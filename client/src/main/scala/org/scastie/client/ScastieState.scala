@@ -80,7 +80,8 @@ object ScastieState {
       status = StatusState.empty,
       isEmbedded = isEmbedded,
       editorMode = Default,
-      language = I18n.getLanguage
+      language = I18n.getLanguage,
+      clientUuid = java.util.UUID.randomUUID().toString
     )
   }
 
@@ -96,6 +97,8 @@ object ScastieState {
     dontSerializeOption[EventStream[SnippetProgress]]
 
   implicit val dontSerializeMetalsStatus: Codec[MetalsStatus] = dontSerialize[MetalsStatus](MetalsLoading)
+
+  implicit val dontSerializeClientUuid: Codec[String] = dontSerialize[String](java.util.UUID.randomUUID().toString)
 
   implicit val scastieStateEncoder: Encoder[ScastieState] = deriveEncoder[ScastieState]
   implicit val scastieStateDecoder: Decoder[ScastieState] = deriveDecoder[ScastieState]
@@ -126,7 +129,8 @@ case class ScastieState(
   transient: Boolean = false,
   scalaCliConversionError: Option[String] = None,
   editorMode: EditorMode = Default,
-  language: String = "en"
+  language: String = "en",
+  clientUuid: String = java.util.UUID.randomUUID().toString
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean         = snippetState.loadSnippet
@@ -156,7 +160,8 @@ case class ScastieState(
     transient: Boolean = transient,
     scalaCliConversionError: Option[String] = scalaCliConversionError,
     editorMode: EditorMode = editorMode,
-    language: String = language
+    language: String = language,
+    clientUuid: String = clientUuid
   ): ScastieState = {
     val state0 = copy(
       view = view,
@@ -186,7 +191,8 @@ case class ScastieState(
       transient = transient,
       scalaCliConversionError = scalaCliConversionError,
       editorMode = editorMode,
-      language = language
+      language = language,
+      clientUuid = clientUuid
     )
 
     if (!isEmbedded && !transient) {

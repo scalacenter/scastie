@@ -24,7 +24,7 @@ case class InteractiveProvider(
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
   syntaxHighlighterGetter: () => Option[SyntaxHighlighter],
-  user: Option[api.User]
+  clientUuid: String
 ) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsSignatureHelp with MetalsDiagnostics {
 
   def syntaxHighlighter: Option[SyntaxHighlighter] = syntaxHighlighterGetter()
@@ -45,7 +45,7 @@ object InteractiveProvider {
       props.isWorksheetMode,
       props.isEmbedded,
       syntaxHighlighterGetter,
-      props.user
+      props.clientUuid
     )
   }
 
@@ -129,7 +129,7 @@ object InteractiveProvider {
                 props.isWorksheetMode,
                 props.isEmbedded,
                 syntaxHighlighterGetter,
-                props.user
+                props.clientUuid
               )
             }
           }

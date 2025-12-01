@@ -50,7 +50,7 @@ final case class CodeEditor(visible: Boolean,
                             metalsStatus: MetalsStatus,
                             setMetalsStatus: MetalsStatus ~=> Callback,
                             dependencies: Set[ScalaDependency],
-                            user: Option[User])
+                            clientUuid: String)
     extends Editor {
   @inline def render: VdomElement = CodeEditor.hooksComponent(this)
 }

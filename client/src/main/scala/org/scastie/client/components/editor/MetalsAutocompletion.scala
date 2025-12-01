@@ -1,7 +1,6 @@
 package org.scastie.client.components.editor
 
 import org.scastie.api
-import org.scastie.client.LocalStorage
 import japgolly.scalajs.react._
 import org.scalajs.dom
 import typings.codemirrorAutocomplete.anon
@@ -128,8 +127,7 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
     lazy val maybeCachedResult = completionInfoCache.get(key)
       .map(node => js.Promise.resolve[dom.Node](node))
       .getOrElse {
-        val clientUuid = user.map(_.login).orElse(Some(LocalStorage.getOrCreateClientUuid()))
-        makeRequest(api.CompletionInfoRequest(scastieMetalsOptions, completionItemDTO, clientUuid), "completionItemResolve")
+        makeRequest(api.CompletionInfoRequest(scastieMetalsOptions, completionItemDTO, Some(clientUuid)), "completionItemResolve")
           .map { maybeText =>
             parseMetalsResponse[String](maybeText).filter(_.nonEmpty).map { completionInfo =>
               val node = dom.document.createElement("div")
