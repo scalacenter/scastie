@@ -71,10 +71,9 @@ class MetalsDispatcher(cache: Cache[IO, (String, ScastieMetalsOptions), ScastieP
    * or fetches the `ScastiePresentationCompiler` from guava cache.
    * If the key is not present in guava cache, it is initialized
    *
-   * Per-user caching: Each user (identified by userUuid) can have at most one PC.
-   * If a user requests a PC with a different configuration, the old PC is removed and a new one is created.
+   * Caching: Presentation compilers are cached by (userUuid, configuration).
    *
-   * @param userUuid - unique identifier for the user (clientUuid for anonymous, GitHub login for authenticated)
+   * @param userUuid - unique identifier for the user (random UUID generated per session)
    * @param configuration - scastie client configuration
    * @returns `EitherT[F, FailureType, ScastiePresentationCompiler]`
    */
@@ -97,8 +96,6 @@ class MetalsDispatcher(cache: Cache[IO, (String, ScastieMetalsOptions), ScastieP
                 .map(_.toRight(PresentationCompilerFailure("Can't extract presentation compiler from cache.")))
             else
               for
-                /* Find and remove old PC for this user (if exists with different config) */
-                _ <- EitherT.right[FailureType](findAndRemoveOldPCForUser(userUuid, configuration))
                 mtags    <- EitherT(getMtags(configuration.scalaTarget.scalaVersion))
                 compiler <- EitherT.right(
                   cache.getOrUpdateReleasable(cacheKey) {
@@ -107,20 +104,6 @@ class MetalsDispatcher(cache: Cache[IO, (String, ScastieMetalsOptions), ScastieP
                   })
               yield compiler
             .value
-
-  /*
-   * Finds and removes the old presentation compiler for a user if it exists with a different configuration.
-   * This ensures that each user has at most one PC at a time.
-   *
-   * @param userUuid - unique identifier for the user
-   * @param newConfiguration - the new configuration being requested
-   */
-  private def findAndRemoveOldPCForUser(userUuid: String, newConfiguration: ScastieMetalsOptions): IO[Unit] =
-    cache.keys.flatMap: allKeys =>
-      val oldKeysToRemove = allKeys.filter:
-        case (uuid, config) => uuid == userUuid && config != newConfiguration
-
-      oldKeysToRemove.toList.traverse_(cache.remove)
 
   /*
    * Checks if given configuration is supported. Currently it is based on scala binary version.
