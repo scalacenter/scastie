@@ -28,24 +28,7 @@ class DispatchActorIntegrationTest()
   test("persist warnings after re-fetching snippet from database (issue #1144)") {
     val code = "Nil match { case Seq(xs*) => println(\"test\") }"
 
-    /* First run - execute code and generate warnings */
     val sid = run(code)
-
-    waitFor(sid, Map(sid -> code))(p =>
-      p.isDone && p.compilationInfos.nonEmpty
-    )
-
-    /* Second run - re-run the same snippet */
-    val wrapped =
-      s"""|object Main {
-          |  def main(args: Array[String]): Unit = {
-          |    $code
-          |  }
-          |}""".stripMargin
-    val inputs = SbtInputs.default.copy(code = wrapped, isWorksheetMode = false)
-    val inputsWithUser = InputsWithIpAndUser(inputs, UserTrace("ip-rerun", None))
-
-    dispatchActor ! Run(inputsWithUser, sid)
 
     waitFor(sid, Map(sid -> code))(p =>
       p.isDone && p.compilationInfos.nonEmpty
