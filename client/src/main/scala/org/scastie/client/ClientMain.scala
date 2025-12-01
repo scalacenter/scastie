@@ -176,6 +176,7 @@ object ScastieEmbedded {
   }
 
   def renderScastie(embeddedOptions: EmbeddedOptions, snippetId: Option[SnippetId]): HTMLElement = {
+    I18n.setLanguage("en")
 
     val container = dom.document
       .createElement("div")
