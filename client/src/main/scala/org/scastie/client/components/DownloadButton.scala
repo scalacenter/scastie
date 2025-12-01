@@ -15,8 +15,6 @@ final case class DownloadButton(
 }
 
 object DownloadButton {
-  // Reusability optimization removed to ensure the onClick closure (which captures code)
-  // is always up-to-date. The component is lightweight enough to re-render.
   implicit val reusability: Reusability[DownloadButton] = Reusability.never
 
   private def filenameFromSnippetId(snippetId: SnippetId): String = {
@@ -37,7 +35,6 @@ object DownloadButton {
     val downloadFilename = s"$filenameBase.zip"
     val fullUrl = downloadUrl(props.snippetId, props.language)
     
-    // If it's Scala CLI, we use a dummy href and handle the click manually
     val hrefAttr = if (isScalaCliTarget) "#" else fullUrl
 
     def handleClick(e: ReactMouseEvent): Callback = {
