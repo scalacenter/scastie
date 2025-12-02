@@ -14,12 +14,20 @@ object TestTaskId {
 case class TestServerRef(id: Int)
 
 trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
-  type TestServer0 = SbtServer[TestServerRef, ServerState]
+  type TestSbtServer = SbtServer[TestServerRef, ServerState]
+  type TestScalaCliServer = ScalaCliServer[TestServerRef, ServerState]
 
-  type TestLoadBalancer0 = LoadBalancer[TestServerRef, ServerState]
+  type TestSbtLoadBalancer = SbtLoadBalancer[TestServerRef, ServerState]
+  type TestScalaCliLoadBalancer = ScalaCliLoadBalancer[TestServerRef, ServerState]
 
   @transient private var taskId = 1000
-  def add(balancer: TestLoadBalancer0, config: SbtInputs): TestLoadBalancer0 = synchronized {
+  def add(balancer: TestSbtLoadBalancer, config: SbtInputs): TestSbtLoadBalancer = synchronized {
+    val (_, balancer0) = balancer.add(Task(config, nextIp, TestTaskId(taskId), Instant.now)).get
+    taskId += 1
+    balancer0
+  }
+
+  def addScalaCli(balancer: TestScalaCliLoadBalancer, config: ScalaCliInputs): TestScalaCliLoadBalancer = synchronized {
     val (_, balancer0) = balancer.add(Task(config, nextIp, TestTaskId(taskId), Instant.now)).get
     taskId += 1
     balancer0
@@ -43,7 +51,7 @@ trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
     }
   }
 
-  def assertConfigs(balancer: TestLoadBalancer0)(columns: Seq[String]*): Assertion = {
+  def assertConfigs(balancer: TestSbtLoadBalancer)(columns: Seq[String]*): Assertion = {
     assert(
       Multiset(balancer.servers.map(_.currentConfig.sbtConfigExtra)) == Multiset(
         columns.flatten.map(i => sbtConfig(i.toString).sbtConfigExtra)
@@ -52,18 +60,32 @@ trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
   }
 
   @transient private var serverId = 0
-  def server(
+  def sbtServer(
       c: String,
       mailbox: Vector[Task[SbtInputs]] = Vector(),
       state: ServerState = ServerState.Unknown
-  ): TestServer0 = synchronized {
+  ): TestSbtServer = synchronized {
     val t = SbtServer(TestServerRef(serverId), sbtConfig(c), state, mailbox)
     serverId += 1
     t
   }
 
-  def servers(columns: Seq[String]*): Vector[TestServer0] = {
-    columns.to(Vector).flatten.map(c => server(c))
+  def sbtServers(columns: Seq[String]*): Vector[TestSbtServer] = {
+    columns.to(Vector).flatten.map(c => sbtServer(c))
+  }
+
+  def scalaCliServer(
+      c: String,
+      mailbox: Vector[Task[ScalaCliInputs]] = Vector(),
+      state: ServerState = ServerState.Unknown
+  ): TestScalaCliServer = synchronized {
+    val t = ScalaCliServer(TestServerRef(serverId), scalaCliConfig(c), state, mailbox)
+    serverId += 1
+    t
+  }
+
+  def scalaCliServers(columns: Seq[String]*): Vector[TestScalaCliServer] = {
+    columns.to(Vector).flatten.map(c => scalaCliServer(c))
   }
 
   @transient private var currentIp = 0
@@ -77,6 +99,7 @@ trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
 
   def code(code: String) = SbtInputs.default.copy(code = code)
   def sbtConfig(sbtConfig: String) = SbtInputs.default.copy(sbtConfigExtra = sbtConfig)
+  def scalaCliConfig(code: String) = ScalaCliInputs.default.copy(code = code)
 
   def history(columns: Seq[String]*): TaskHistory = {
     val records =

@@ -6,6 +6,7 @@ import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import org.scastie.api._
 import org.scastie.sbt._
+import org.scastie.scalacli._
 import org.scastie.util.ReconnectInfo
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.BeforeAndAfterAll
@@ -82,6 +83,10 @@ class DispatchActorIntegrationTest()
   private val sbtSystem =
     ActorSystem("SbtRunner", RemotePortConfig(sbtAkkaPort))
 
+  private val scalaCliAkkaPort = 5250
+  private val scalaCliSystem =
+    ActorSystem("ScalaCliRunner", RemotePortConfig(scalaCliAkkaPort))
+
   private val progressActor = TestProbe()
   private val statusActor = TestProbe()
   private val sbtActorReadyProbe = TestProbe()
@@ -122,6 +127,24 @@ class DispatchActorIntegrationTest()
       false
     }
   }
+
+  private val scalaCliActor =
+    scalaCliSystem.actorOf(
+      Props(
+        new ScalaCliActor(
+          isProduction = false,
+          reconnectInfo = Some(
+            ReconnectInfo(
+              serverHostname = localhost,
+              serverAkkaPort = serverAkkaPort,
+              actorHostname = localhost,
+              actorAkkaPort = scalaCliAkkaPort
+            )
+          )
+        )
+      ),
+      name = "ScalaCliActor"
+    )
 
   private val dispatchActor =
     webSystem.actorOf(
@@ -179,6 +202,7 @@ class DispatchActorIntegrationTest()
   override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(webSystem)
     TestKit.shutdownActorSystem(sbtSystem)
+    TestKit.shutdownActorSystem(scalaCliSystem)
     TestKit.shutdownActorSystem(system)
   }
 }
