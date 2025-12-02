@@ -4,6 +4,7 @@ package components
 import org.scastie.api.{SnippetId, User, ScalaTarget, ScalaTargetType}
 import org.scastie.client.i18n.I18n
 import org.scastie.client.{Page, View, MetalsStatus}
+import org.scastie.client.components.DownloadButton.filenameFromSnippetId
 
 import japgolly.scalajs.react._, vdom.all._, extra.router._, extra._
 import org.scalajs.dom
@@ -100,7 +101,8 @@ object EditorTopBar {
           
           val link = dom.document.createElement("a").asInstanceOf[dom.html.Anchor]
           link.href = url
-          link.download = "scastie-snippet.scala" 
+          val baseFilename = props.snippetId.map(filenameFromSnippetId).getOrElse("scastie-snippet")
+          link.download = s"$baseFilename.scala" 
           dom.document.body.appendChild(link)
           link.click()
           dom.document.body.removeChild(link)
