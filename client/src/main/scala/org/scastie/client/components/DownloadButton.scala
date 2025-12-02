@@ -54,7 +54,9 @@ object DownloadButton {
         role := "button",
         cls := "btn",
         onClick ==> handleClick
-      )(I18n.t("editor.download"))
+      )(
+        **i(cls := "fa fa-download"),**
+        I18n.t("editor.download"))
     )
   }
 
