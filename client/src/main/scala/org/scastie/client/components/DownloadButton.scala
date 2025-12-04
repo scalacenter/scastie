@@ -34,7 +34,6 @@ object DownloadButton {
     val filenameBase = filenameFromSnippetId(props.snippetId)
     val downloadFilename = s"$filenameBase.zip"
     val fullUrl = downloadUrl(props.snippetId, props.language)
-    
     val hrefAttr = if (isScalaCliTarget) "#" else fullUrl
 
     def handleClick(e: ReactMouseEvent): Callback = {
