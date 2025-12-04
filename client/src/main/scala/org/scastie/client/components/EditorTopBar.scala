@@ -102,7 +102,7 @@ object EditorTopBar {
           val link = dom.document.createElement("a").asInstanceOf[dom.html.Anchor]
           link.href = url
           val baseFilename = props.snippetId.map(filenameFromSnippetId).getOrElse("scastie-snippet")
-          link.download = s"$baseFilename.scala" 
+          link.download = s"$baseFilename.scala"
           
           dom.document.body.appendChild(link)
           link.click()
