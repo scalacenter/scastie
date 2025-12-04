@@ -17,7 +17,7 @@ final case class DownloadButton(
 object DownloadButton {
   implicit val reusability: Reusability[DownloadButton] = Reusability.never
 
-  private def filenameFromSnippetId(snippetId: SnippetId): String = {
+  def filenameFromSnippetId(snippetId: SnippetId): String = {
     val raw = snippetId.toString
     raw.replaceAll("[^A-Za-z0-9\\.\\-]+", "-")
        .replaceAll("-{2,}", "-")
@@ -55,8 +55,9 @@ object DownloadButton {
         cls := "btn",
         onClick ==> handleClick
       )(
-        **i(cls := "fa fa-download"),**
-        I18n.t("editor.download"))
+        i(cls := "fa fa-download"),
+        I18n.t("editor.download")
+      )
     )
   }
 
