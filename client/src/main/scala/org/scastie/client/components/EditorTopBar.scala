@@ -98,7 +98,6 @@ object EditorTopBar {
           val options = new dom.BlobPropertyBag { `type` = "text/x-scala" }
           val blob = new dom.Blob(js.Array[dom.BlobPart](content), options)
           val url = dom.URL.createObjectURL(blob)
-          
           val link = dom.document.createElement("a").asInstanceOf[dom.html.Anchor]
           link.href = url
           val baseFilename = props.snippetId.map(filenameFromSnippetId).getOrElse("scastie-snippet")
