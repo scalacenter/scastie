@@ -56,7 +56,7 @@ object DownloadButton {
         onClick ==> handleClick
       )(
         i(cls := "fa fa-download"),
-        I18n.t("editor.download")
+        span(I18n.t("editor.download"))
       )
     )
   }
