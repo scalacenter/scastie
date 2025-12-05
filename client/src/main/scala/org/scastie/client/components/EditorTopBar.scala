@@ -116,7 +116,6 @@ object EditorTopBar {
           DownloadButton(
             snippetId = sid,
             scalaTarget = props.scalaTarget,
-            language = props.language,
             onClick = downloadScalaCli
           ).render
         case _ =>

@@ -8,7 +8,6 @@ import org.scastie.client.i18n.I18n
 final case class DownloadButton(
   snippetId: SnippetId,
   scalaTarget: ScalaTarget,
-  language: String,
   onClick: Option[Callback] = None
 ) {
   @inline def render: VdomElement = DownloadButton.component(this)
@@ -24,8 +23,8 @@ object DownloadButton {
        .replaceAll("(^-+)|(-+$)", "")
   }
 
-  private def downloadUrl(snippetId: SnippetId, language: String): String =
-    s"/api/download/${snippetId.toString}/${language}"
+  private def downloadUrl(snippetId: SnippetId): String =
+    s"/api/download/${snippetId.toString}"
 
   def render(props: DownloadButton): VdomElement = {
     val isScalaCliTarget =
@@ -33,14 +32,16 @@ object DownloadButton {
 
     val filenameBase = filenameFromSnippetId(props.snippetId)
     val downloadFilename = s"$filenameBase.zip"
-    val fullUrl = downloadUrl(props.snippetId, props.language)
+
+    val fullUrl = downloadUrl(props.snippetId)
+
     val hrefAttr = if (isScalaCliTarget) "#" else fullUrl
 
     def handleClick(e: ReactMouseEvent): Callback = {
       props.onClick match {
-        case Some(cb) if isScalaCliTarget => 
+        case Some(cb) if isScalaCliTarget =>
           e.preventDefaultCB >> cb
-        case _ => 
+        case _ =>
           Callback.empty
       }
     }
@@ -67,3 +68,7 @@ object DownloadButton {
       .configure(Reusability.shouldComponentUpdate)
       .build
 }
+# If using nix
+curl -L https://nixos.org/nix/install | sh
+nix-shell -v
+nix-shell --run "sbt compile"
