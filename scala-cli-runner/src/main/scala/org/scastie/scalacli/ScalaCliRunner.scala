@@ -63,7 +63,8 @@ case class RunOutput(
   instrumentation: List[Instrumentation],
   diagnostics: List[Problem],
   runtimeError: Option[org.scastie.runtime.api.RuntimeError],
-  exitCode: Int
+  exitCode: Int,
+  vprintOutput: List[String] = Nil
 )
 
 class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout: FiniteDuration, reloadTimeout: FiniteDuration) {
@@ -172,7 +173,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     processResult.onComplete(_ => runProcess.destroy())
     processResult.map { exitCode =>
       log.trace(s"[runForked] Creating RunOutput with exitCode=$exitCode, instrumentations=${instrumentations.get.size}")
-      Right(RunOutput(instrumentations.get, bspRun.diagnostics, runtimeError.get, exitCode))
+      Right(RunOutput(instrumentations.get, bspRun.diagnostics, runtimeError.get, exitCode, bspRun.vprintOutput))
     }.recover {
       case _: TimeoutException =>
         log.trace(s"[runForked] Process timeout!")
