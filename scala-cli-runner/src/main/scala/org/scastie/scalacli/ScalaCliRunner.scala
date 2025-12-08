@@ -75,13 +75,13 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
 
   def runTask(snippetId: SnippetId, inputs: ScalaCliInputs, timeout: FiniteDuration, onOutput: ProcessOutput => Any): Future[Either[ScalaCliError, RunOutput]] = {
     log.info(s"Running task with snippetId=$snippetId")
-    log.trace(s"[${snippetId.base64UUID} - ScalaCliRunner:runTask] Starting runTask")
+    log.trace(s"[${snippetId.base64UUID} - runTask] Starting runTask")
     build(snippetId, inputs).flatMap {
       case Right((value, positionMapper)) =>
-        log.trace(s"[${snippetId.base64UUID} - ScalaCliRunner:runTask] Build successful, running forked")
+        log.trace(s"[${snippetId.base64UUID} - runTask] Build successful, running forked")
         runForked(value, inputs.isWorksheetMode, onOutput, positionMapper)
       case Left(value) =>
-        log.trace(s"[${snippetId.base64UUID} - ScalaCliRunner:runTask] Build failed: ${value.msg}")
+        log.trace(s"[${snippetId.base64UUID} - runTask] Build failed: ${value.msg}")
         Future.successful(Left[ScalaCliError, RunOutput](value))
     }
   }
@@ -91,7 +91,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     inputs: BaseInputs,
   ): Future[Either[ScalaCliError, (BspClient.BuildOutput, Option[PositionMapper])]] = {
 
-    log.trace(s"[${snippetId} - ScalaCliRunner:build] Starting Scala CLI run")
+    log.trace(s"[${snippetId} - build] Starting Scala CLI run")
 
     val (instrumentedInput, positionMapper) = InstrumentedInputs(inputs) match {
       case Right(value) => (value.inputs, value.positionMapper)
@@ -101,28 +101,28 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     }
 
     Files.write(scalaMain, instrumentedInput.code.getBytes)
-    log.trace(s"[${snippetId.base64UUID} - ScalaCliRunner:build] Calling bspClient.build")
+    log.trace(s"[${snippetId.base64UUID} - build] Calling bspClient.build")
 
     bspClient.build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target, positionMapper).value.recover {
       case timeout: TimeoutException =>
-        log.trace(s"[${snippetId.base64UUID} - ScalaCliRunner:build] BSP timeout")
+        log.trace(s"[${snippetId.base64UUID} - build] BSP timeout")
         BspTaskTimeout("Build Server Timeout Exception").asLeft
       case err =>
-        log.trace(s"[${snippetId.base64UUID} - ScalaCliRunner:build] BSP error: ${err.getMessage}")
+        log.trace(s"[${snippetId.base64UUID} - build] BSP error: ${err.getMessage}")
         InternalBspError(err.getMessage).asLeft
     }
     .map {
         case Right(buildOutput) =>
-          log.trace(s"[${snippetId.base64UUID} - ScalaCliRunner:build] Build successful, diagnostics: ${buildOutput.diagnostics.size}")
+          log.trace(s"[${snippetId.base64UUID} - build] Build successful, diagnostics: ${buildOutput.diagnostics.size}")
           Right((buildOutput, positionMapper))
         case Left(CompilationError(diagnostics)) =>
-          log.trace(s"[${snippetId.base64UUID} - ScalaCliRunner:build] CompilationError with ${diagnostics.size} diagnostics")
+          log.trace(s"[${snippetId.base64UUID} - build] CompilationError with ${diagnostics.size} diagnostics")
           if (diagnostics.isEmpty) {
-            log.warn(s"[${snippetId.base64UUID} - ScalaCliRunner:build] ⚠️ CompilationError with EMPTY diagnostics!")
+            log.warn(s"[${snippetId.base64UUID} - build] CompilationError with EMPTY diagnostics!")
           }
           Left(CompilationError(diagnostics))
         case Left(other) =>
-          log.trace(s"[${snippetId.base64UUID} - ScalaCliRunner:build] Other error: ${other.msg}")
+          log.trace(s"[${snippetId.base64UUID} - build] Other error: ${other.msg}")
           Left(other)
       }
   }

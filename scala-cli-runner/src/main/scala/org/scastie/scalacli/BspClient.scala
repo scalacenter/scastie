@@ -185,13 +185,13 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
     f(bspServer).orTimeout(timeout.length, timeout.unit).asScala
 
   private def reloadWorkspace(retry: Int = 0): BspTask[Unit] = {
-    log.trace(s"[BspClient:reloadWorkspace] Starting workspace reload, retry=$retry, current diagnostics=${diagnostics.get().size}")
+    log.trace(s"[reloadWorkspace] Starting workspace reload, retry=$retry, current diagnostics=${diagnostics.get().size}")
     EitherT(requestWithTimeout(_.workspaceReload())(using reloadTimeout).flatMap {
       case gsonMap: LinkedTreeMap[?, ?] if !gsonMap.isEmpty =>
           val gson = new Gson()
           val error = gson.fromJson(gson.toJson(gsonMap), classOf[ResponseError])
           log.info(s"Reload failed: ${error.getMessage}")
-          log.trace(s"[BspClient:reloadWorkspace] Reload failed, diagnostics after failure=${diagnostics.get().size}")
+          log.trace(s"[reloadWorkspace] Reload failed, diagnostics after failure=${diagnostics.get().size}")
           if (retry < 3) {
             log.info(s"Reload failed, retry #$retry/3")
             reloadWorkspace(retry + 1).value
@@ -199,7 +199,7 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
             Future.successful(Left(InternalBspError(error.getMessage)))
           }
       case _ =>
-        log.trace(s"[BspClient:reloadWorkspace] Reload successful, diagnostics after reload=${diagnostics.get().size}")
+        log.trace(s"[reloadWorkspace] Reload successful, diagnostics after reload=${diagnostics.get().size}")
         Future.successful(().asRight)
     })
   }
@@ -230,27 +230,27 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
 
   private def compile(id: String, isWorksheet: Boolean, buildTargetId: BuildTargetIdentifier, positionMapper: Option[PositionMapper]): BspTask[CompileResult] = EitherT {
     val currentDiagnostics = diagnostics.get()
-    log.trace(s"[$id - BspClient:compile] Starting compilation, current diagnostics count: ${currentDiagnostics.size}")
+    log.trace(s"[$id - compile] Starting compilation, current diagnostics count: ${currentDiagnostics.size}")
 
     val params: CompileParams = new CompileParams(Collections.singletonList(buildTargetId))
     requestWithTimeout(_.buildTargetCompile(params))(using compilationTimeout).map { compileResult =>
       val statusCode = compileResult.getStatusCode
       val diagsBeforeGet = diagnostics.get()
-      log.trace(s"[$id - BspClient:compile] Compilation finished, statusCode=$statusCode, diagnostics before get: ${diagsBeforeGet.size}")
+      log.trace(s"[$id - compile] Compilation finished, statusCode=$statusCode, diagnostics before get: ${diagsBeforeGet.size}")
 
       statusCode match {
         case StatusCode.OK =>
-          log.trace(s"[$id - BspClient:compile] Status OK")
+          log.trace(s"[$id - compile] Status OK")
           Right(compileResult)
         case StatusCode.ERROR =>
           val problems = diagnostics.getAndSet(Nil).map(diagnosticToProblem(isWorksheet, positionMapper))
-          log.trace(s"[$id - BspClient:compile] Status ERROR, problems count: ${problems.size}")
+          log.trace(s"[$id - compile] Status ERROR, problems count: ${problems.size}")
           if (problems.isEmpty) {
-            log.warn(s"[$id - BspClient:compile] ERROR status but no diagnostics!")
+            log.warn(s"[$id - compile] ERROR status but no diagnostics!")
           }
           Left(CompilationError(problems))
         case StatusCode.CANCELLED =>
-          log.trace(s"[$id - BspClient:compile] Status CANCELLED")
+          log.trace(s"[$id - compile] Status CANCELLED")
           Left(InternalBspError("Compilation cancelled"))
       }
     }
@@ -305,24 +305,24 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
   }
 
   def build(taskId: String, isWorksheet: Boolean, target: ScalaTarget, positionMapper: Option[PositionMapper]): BspTask[BuildOutput] = {
-    log.trace(s"[$taskId - BspClient:build] Starting build")
+    log.trace(s"[$taskId - build] Starting build")
     println("Reloading")
     for {
       _ <- reloadWorkspace()
-      _ = log.trace(s"[$taskId - BspClient:build] Workspace reloaded")
+      _ = log.trace(s"[$taskId - build] Workspace reloaded")
       _ = println("Build target")
       buildTarget <- getFirstBuildTarget()
-      _ = log.trace(s"[$taskId - BspClient:build] Got build target")
+      _ = log.trace(s"[$taskId - build] Got build target")
       _ = println("Compile")
       compileResult <- compile(taskId, isWorksheet, buildTarget.id, positionMapper)
-      _ = log.trace(s"[$taskId - BspClient:build] Compilation done")
+      _ = log.trace(s"[$taskId - build] Compilation done")
       _ = println("Get jvm")
       jvmRunEnvironment <- getJvmRunEnvironment(buildTarget.id)
-      _ = log.trace(s"[$taskId - BspClient:build] Got JVM environment")
+      _ = log.trace(s"[$taskId - build] Got JVM environment")
       _ = println("Create process")
       process <- makeProcess(jvmRunEnvironment, buildTarget, isWorksheet)
       finalDiags = diagnostics.getAndSet(Nil)
-      _ = log.trace(s"[$taskId - BspClient:build] Build complete, final diagnostics: ${finalDiags.size}")
+      _ = log.trace(s"[$taskId - build] Build complete, final diagnostics: ${finalDiags.size}")
     } yield BuildOutput(process, finalDiags.map(diagnosticToProblem(isWorksheet, positionMapper)))
   }
 
