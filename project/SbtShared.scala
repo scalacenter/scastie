@@ -36,7 +36,7 @@ object SbtShared {
     val stableNext = "3.8.2"
     val latestLTS  = "3.3.7"
     val latestNext = "3.8.2"
-    val js         = latest213
+    val js         = stableLTS
     val sbt        = latest212
     val jvm        = latest213
     val cross      =
@@ -101,7 +101,8 @@ object SbtShared {
         "-encoding",
         "UTF-8",
         "-feature",
-        "-unchecked"
+        "-unchecked",
+        "-language:implicitConversions"
       )
 
       if (scalaV == ScalaVersions.latest210 || scalaV.startsWith("3.")) base
@@ -119,6 +120,10 @@ object SbtShared {
 
   lazy val baseNoCrossSettings = baseSettings ++ Seq(
     scalaVersion := ScalaVersions.jvm
+  )
+
+  lazy val baseNoCross3Settings = baseSettings ++ Seq(
+    scalaVersion := ScalaVersions.stableLTS
   )
 
 lazy val baseJsSettings = Seq(

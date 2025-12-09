@@ -63,7 +63,7 @@ class StatusRoutes(statusActor: ActorRef, userDirectives: UserDirectives)(implic
             progress
         }
     Source
-      .fromFuture((statusActor ? SubscribeStatus)(2.seconds).mapTo[Source[StatusProgress, NotUsed]])
+      .future((statusActor ? SubscribeStatus)(2.seconds).mapTo[Source[StatusProgress, NotUsed]])
       .flatMapConcat(s => s.map(hideTask))
   }
 

@@ -38,7 +38,7 @@ class ProgressRoutes(progressActor: ActorRef) {
       snippetId: SnippetId
   ): Source[SnippetProgress, NotUsed] = {
     Source
-      .fromFuture((progressActor ? SubscribeProgress(snippetId))(1.second).mapTo[Source[SnippetProgress, NotUsed]])
+      .future((progressActor ? SubscribeProgress(snippetId))(1.second).mapTo[Source[SnippetProgress, NotUsed]])
       .flatMapConcat(identity)
   }
 

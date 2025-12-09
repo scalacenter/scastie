@@ -27,7 +27,10 @@ object EmbeddedOverlay {
 
       props.embeddedSnippetId match {
         case Some(snippetId) if !props.inputsHasChanged => open(snippetId)
-        case _ => props.save.asCBO.flatMap(open)
+        case _ => props.save.flatMap {
+          case Some(snippetId) => open(snippetId)
+          case None => Callback.empty
+        }
       }
     }
 

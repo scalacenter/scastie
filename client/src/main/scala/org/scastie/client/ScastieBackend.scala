@@ -330,37 +330,6 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       )
     )
 
-  val acceptPolicy: Reusable[Callback] =
-    Reusable.always(
-      Callback.future {
-        restApiClient.acceptPrivacyPolicy().map { result =>
-          scope.modState(_.setPrivacyPolicyPromptClosed(result))
-        }
-      }
-    )
-
-  val removeUserFromPolicyStatus: Reusable[Callback] =
-    Reusable.always(
-      Callback.future {
-        restApiClient.removeUserFromPolicyStatus().map { result =>
-          scope.modState(_.setPrivacyPolicyPromptClosed(result)).map(_ => {
-            if (result) document.location.reload()
-          })
-        }
-      }
-    )
-
-  val removeAllUserSnippets: Reusable[Callback] =
-    Reusable.always(
-      Callback.future {
-        restApiClient.removeAllUserSnippets().map(Callback(_))
-      }
-    )
-
-  val refusePrivacyPolicy: Reusable[Callback] = Reusable.always(
-    removeAllUserSnippets >> removeUserFromPolicyStatus
-  )
-
   private def saveCallback(sId: SnippetId): Callback = {
     val setState = scope.modState(_.setCleanInputs.setSnippetId(sId).setLoadSnippet(false))
     val page = Page.fromSnippetId(sId)
@@ -490,16 +459,11 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     }
   }
 
-  def loadUser: Callback =
-    Callback.future(
-      restApiClient
-        .fetchUserData()
-        .map(result => scope.modState(_.setUserData(result)))
-    ) >> Callback.future(
-      restApiClient
-        .getPrivacyPolicyStatus()
-        .map(result => scope.modState(_.setPrivacyPolicyPromptClosed(result)))
-    )
+  def loadUser: Callback = Callback.future {
+    restApiClient
+      .fetchUserData()
+      .map(result => scope.modState(_.setUserData(result)))
+  }
 
   def changeUser(user: User): Callback =
     Callback.future(

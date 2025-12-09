@@ -7,7 +7,7 @@ import typings.codemirrorState.mod._
 import typings.codemirrorView.mod._
 import typings.highlightJs.mod.{HighlightOptions => HLJSOptions}
 import typings.markedHighlight.mod._
-import typings.marked.mod.marked.MarkedExtension
+import typings.marked.mod.marked.{MarkedExtension, MarkedOptions}
 
 import scala.util.Try
 
@@ -49,10 +49,6 @@ object InteractiveProvider {
 
   val interactive = new Compartment()
 
-  def renderMarkdown(markdown: String): String = {
-    typings.marked.mod.marked.`package`.parse(markdown).asInstanceOf[String]
-  }
-
   val highlightJS = typings.highlightJs.mod.default
   val highlightF: (String, String, String) => String = (str, lang, _) => {
     if (lang != null && highlightJS.getLanguage(lang) != null && lang != "") {
@@ -62,12 +58,17 @@ object InteractiveProvider {
     }
   }
 
-  val marked = typings.marked.mod.marked.`package`
-  marked.use(markedHighlight(SynchronousOptions.apply(highlightF)).asInstanceOf[MarkedExtension])
-  marked.setOptions(typings.marked.mod.marked.MarkedOptions()
+  typings.marked.mod.marked.use(markedHighlight(SynchronousOptions.apply(highlightF)).asInstanceOf[MarkedExtension])
+  typings.marked.mod.marked.setOptions(MarkedOptions()
     .setHeaderIds(false)
     .setMangle(false)
   )
+
+  def marked(content: String): String = typings.marked.mod.marked.parse(content)
+
+  def renderMarkdown(markdown: String): String = {
+    marked(markdown)
+  }
 
   private def wasMetalsToggled(prevProps: CodeEditor, props: CodeEditor): Boolean =
     (prevProps.metalsStatus == MetalsDisabled && props.metalsStatus == MetalsLoading) ||
