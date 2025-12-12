@@ -101,6 +101,20 @@
     }
   }
 
+  .cm-actions {
+    cursor: pointer;
+    margin-left: 0px;
+    padding: 0px;
+
+    color: #5fa8dd;
+    background-color: transparent;
+    
+    &:hover {
+      color: #93c5fd;
+      text-decoration: underline;
+    }
+  }
+
   .cm-hints.presentation-mode {
     margin-left: 0;
     margin-top: -$editor-topbar-height;

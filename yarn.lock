@@ -41,13 +41,13 @@
   dependencies:
     "@codemirror/language" "^6.0.0"
 
-"@codemirror/lint@^6.0.0", "@codemirror/lint@^6.4.2":
-  version "6.4.2"
-  resolved "https://registry.npmjs.org/@codemirror/lint/-/lint-6.4.2.tgz"
-  integrity sha512-wzRkluWb1ptPKdzlsrbwwjYCPLgzU6N88YBAmlZi8WFyuiEduSd05MnJYNogzyc8rPK7pj6m95ptUApc8sHKVA==
+"@codemirror/lint@^6.0.0", "@codemirror/lint@^6.9.2":
+  version "6.9.2"
+  resolved "https://registry.yarnpkg.com/@codemirror/lint/-/lint-6.9.2.tgz#09ed0aedec13381c9e36e1ac5d126027740c3ef4"
+  integrity sha512-sv3DylBiIyi+xKwRCJAAsBZZZWo82shJ/RTMymLabAdtbkV5cSKwWDeCgtUq3v8flTaXS2y1kKkICuRYtUswyQ==
   dependencies:
     "@codemirror/state" "^6.0.0"
-    "@codemirror/view" "^6.0.0"
+    "@codemirror/view" "^6.35.0"
     crelt "^1.0.5"
 
 "@codemirror/search@^6.0.0", "@codemirror/search@^6.5.5":
@@ -64,7 +64,7 @@
   resolved "https://registry.npmjs.org/@codemirror/state/-/state-6.3.3.tgz"
   integrity sha512-0wufKcTw2dEwEaADajjHf6hBy1sh3M6V0e+q4JKIhLuiMSe5td5HOWpUdvKth1fT1M9VYOboajoBHpkCd7PG7A==
 
-"@codemirror/view@^6.0.0", "@codemirror/view@^6.17.0", "@codemirror/view@^6.22.3":
+"@codemirror/view@^6.0.0", "@codemirror/view@^6.17.0", "@codemirror/view@^6.22.3", "@codemirror/view@^6.35.0":
   version "6.22.3"
   resolved "https://registry.npmjs.org/@codemirror/view/-/view-6.22.3.tgz"
   integrity sha512-rqnq+Zospwoi3x1vZ8BGV1MlRsaGljX+6qiGYmIpJ++M+LCC+wjfDaPklhwpWSgv7pr/qx29KiAKQBH5+DOn4w==
