@@ -67,11 +67,11 @@ object ScaladexSearch {
       for {
         response <- dom.fetch(scaladexApiUrl + "/project" + query)
         text <- response.text()
-        
+
         artifactResponse <- dom.fetch(scaladexApiUrl + s"/v1/projects/${project.organization}/${project.repository}/versions/latest")
         artifactText <- artifactResponse.text()
         artifactJson = parse(artifactText).getOrElse(Json.Null)
-        
+
         matchingArtifact: Option[Json] = artifactJson.asArray.getOrElse(Vector.empty).find { artifactObj =>
           val artifactId = artifactObj.hcursor.get[String]("artifactId").getOrElse("")
           val targetSuffix = target.targetType match {
@@ -547,16 +547,21 @@ object ScaladexSearch {
     val (scastieRuntime, rest) = props.libraries.partition(_.groupId == "org.scastie")
     val librariesFromList = Future.sequence(rest.toList.map(getProject)).map(_.flatten)
 
-    Callback.future { librariesFromList.map { libraries =>
-      Callback.sequence {
-        val failedLibraries = rest.diff(libraries.map(_.release).toSet)
-        val removalTask = failedLibraries.map(failed => props.removeScalaDependency(failed)) // + display some kind of popup
-        val addTask = libraries
-          .filterNot(library => failedLibraries.contains(library.release))
-          .map(selected => state.modState(_.addSelected(selected)))
-        removalTask.toList ++ addTask
+    librariesFromList.foreach { libraries =>
+      val failedLibraries = rest.diff(libraries.map(_.release).toSet)
+
+      libraries
+        .filterNot(library => failedLibraries.contains(library.release))
+        .foreach { selected =>
+          state.modState(_.addSelected(selected)).runNow()
+        }
+
+      failedLibraries.foreach { failed =>
+        props.removeScalaDependency(failed).runNow() // + display some kind of popup
       }
-    }}
+    }
+
+    Callback.empty
   }
 
   private val component =
