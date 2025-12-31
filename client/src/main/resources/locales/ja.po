@@ -1,0 +1,367 @@
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2025-12-31 15:35+0900\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
+
+# --- Section: Topbar ---
+msgid "topbar.feedback"
+msgstr "フィードバック"
+
+msgid "topbar.gitter"
+msgstr "Scastie gitter"
+
+msgid "topbar.github_issues"
+msgstr "Github issues"
+
+msgid "topbar.language_label"
+msgstr "言語: "
+
+msgid "topbar.login"
+msgstr "ログイン"
+
+msgid "topbar.feedback_tooltip"
+msgstr "Gitter.im チャットを開いてフィードバックする"
+
+msgid "topbar.github_tooltip"
+msgstr "GitHub で issue を新規作成する"
+
+msgid "topbar.snippets"
+msgstr "スニペット"
+
+msgid "topbar.snippets_tooltip"
+msgstr "自分のコードスニペットを見る"
+
+msgid "topbar.logout"
+msgstr "ログアウト"
+
+# --- Section: Code Snippets ---
+msgid "snippets.delete"
+msgstr "削除"
+
+msgid "snippets.share"
+msgstr "共有"
+
+msgid "snippets.empty"
+msgstr "スニペットはまだ何も保存されていません!"
+
+msgid "snippets.saved"
+msgstr "保存したコードスニペット"
+
+msgid "snippets.update"
+msgstr "更新: "
+
+# --- Section: Sidebar ---
+msgid "sidebar.editor_mode_default"
+msgstr "既定"
+
+msgid "sidebar.theme_light"
+msgstr "ライト"
+
+msgid "sidebar.theme_dark"
+msgstr "ダーク"
+
+msgid "sidebar.theme_dark_tooltip"
+msgstr "暗いテーマにする (F2)"
+
+msgid "sidebar.theme_light_tooltip"
+msgstr "明るいテーマにする (F2)"
+
+msgid "sidebar.privacy_policy"
+msgstr "プライバシーポリシー"
+
+msgid "sidebar.privacy_policy_tooltip"
+msgstr "プライバシーポリシーを表示する"
+
+msgid "sidebar.help"
+msgstr "ヘルプ"
+
+msgid "sidebar.help_tooltip"
+msgstr "ヘルプメニューを表示する"
+
+msgid "sidebar.status_unknown"
+msgstr "不明"
+
+msgid "sidebar.status_up"
+msgstr "動作中"
+
+msgid "sidebar.status_down"
+msgstr "動作停止"
+
+msgid "sidebar.status_tooltip"
+msgstr "ランナーの状態を表示する"
+
+msgid "sidebar.editor"
+msgstr "エディタ"
+
+msgid "sidebar.build_settings"
+msgstr "ビルド設定"
+
+# --- Section: Login Window ---
+
+msgid "sidebar.login_title"
+msgstr "Scastie にログイン"
+
+msgid "sidebar.login_github"
+msgstr "GitHub でログインする"
+
+# The translation of `privacy policy` must remain inside the curly brackets.
+msgid "sidebar.login_agreement"
+msgstr "サインインすることで、{プライバシーポリシー}に同意したものとします。"
+
+# --- Section: Editor Topbar ---
+msgid "editor.run"
+msgstr "実行"
+
+msgid "editor.status_unknown_warning"
+msgstr "警告: 不明な状態"
+
+msgid "editor.running"
+msgstr "実行中"
+
+msgid "editor.running_tooltip"
+msgstr "あなたのコードを実行しています..."
+
+msgid "editor.new_snippet_title"
+msgstr "新しいコードスニペット"
+
+msgid "editor.new"
+msgstr "新規作成"
+
+msgid "editor.new_tooltip"
+msgstr "新しいスニペット"
+
+msgid "editor.new_confirmation"
+msgstr "スニペットを新規に作成しますか？"
+
+msgid "editor.format_tooltip"
+msgstr "コードを整形する"
+
+msgid "editor.format"
+msgstr "整形"
+
+msgid "editor.clear_messages"
+msgstr "メッセージを消去する"
+
+msgid "editor.worksheet_on_tooltip"
+msgstr "ワークシートモード (トップレベルの式をそれぞれ評価して表示) を有効化する"
+
+msgid "editor.worksheet_off_tooltip"
+msgstr "ワークシートモード (トップレベルの式をそれぞれ評価して表示) を無効化する"
+
+msgid "editor.worksheet_unsupported"
+msgstr "この設定はワークシートモードをサポートしていません"
+
+msgid "editor.worksheet"
+msgstr "ワークシート"
+
+msgid "editor.download"
+msgstr "ダウンロード"
+
+msgid "editor.embed"
+msgstr "埋め込む"
+
+msgid "editor.embed_title"
+msgstr "コードスニペットを共有する"
+
+msgid "editor.embed_subtitle"
+msgstr "自分のコードスニペットをコピーして共有する"
+
+msgid "editor.share_snippet"
+msgstr "自分のコードスニペットの URL をコピーして共有する:"
+
+msgid "editor.metals_status"
+msgstr "Metals 状態"
+
+msgid "editor.metals_loading"
+msgstr "コンパイラを読み込み中"
+
+msgid "editor.metals_ready"
+msgstr "Metals 準備完了"
+
+msgid "editor.metals_disabled"
+msgstr "Metals は無効です"
+
+msgid "editor.metals_unsupported"
+msgstr "サポートされない設定です"
+
+msgid "editor.metals_network_error"
+msgstr "ネットワークエラー"
+
+# --- Section: Build Settings ---
+msgid "build.reset_title"
+msgstr "ビルド設定をリセット"
+
+msgid "build.reset_confirmation"
+msgstr "ビルド設定をリセットしますか？"
+
+msgid "build.reset"
+msgstr "リセット"
+
+msgid "build.reset_tooltip"
+msgstr "自分の設定をリセットする"
+
+msgid "build.target"
+msgstr "ターゲット"
+
+msgid "build.scala_version"
+msgstr "Scala バージョン"
+
+msgid "build.libraries"
+msgstr "ライブラリ"
+
+msgid "build.sbt_config"
+msgstr "追加の Sbt 設定"
+
+msgid "build.sbt_base_config"
+msgstr "Sbt ベース設定 (読み取り専用)"
+
+msgid "build.sbt_plugins_config"
+msgstr "Sbt ベースプラグイン設定 (読み取り専用)"
+
+msgid "build.enable_toolkit"
+msgstr "Toolkit を有効にする"
+
+msgid "build.search_placeholder"
+msgstr "'cats' で検索"
+
+msgid "build.other"
+msgstr "その他"
+
+# The translation of `Scala version directive on Scala-CLI documentation` must remain inside the curly brackets.
+msgid "build.scala_cli_version_doc"
+msgstr "特定のバージョンのScalaをScala-CLIで利用したい場合は、ディレクティブを利用してください。{Scala バージョン ディレクティブについて Scala-CLI ドキュメントで確認してください}。"
+
+# The translation of `Dependency directive on Scala-CLI documentation` must remain inside the curly brackets.
+msgid "build.scala_cli_dependency_doc"
+msgstr "Scala-CLIでライブラリを利用するには、ディレクティブを利用してください。{依存性 ディレクティブについて Scala-CLI ドキュメントで確認してください}。"
+
+# --- Section: Console ---
+msgid "console.title"
+msgstr "端末"
+
+# --- Section: Help Window ---
+msgid "help.title"
+msgstr "Scastie について"
+
+msgid "help.description"
+msgstr "Scastie は sbt 設定に対応した、Scala 向けの対話的なプレイグラウンドです。"
+
+# The translation of `keyboard shortcuts` must remain inside the curly brackets.
+msgid "help.sublime_support"
+msgstr "Scastie エディタは Sublime Text の {キーボードショートカット} をサポートしています。"
+
+msgid "help.editor_modes"
+msgstr "エディタモード"
+
+msgid "help.editor_modes_1"
+msgstr "Scastie エディタは複数のキーボードモードをサポートしています。"
+
+msgid "help.editor_modes_2"
+msgstr "サイドバーのセレクタを使って、デフォルト、Vim、Emacsモードを切り替えられます。"
+
+msgid "help.editor_modes_3"
+msgstr "それぞれのモードは各エディタの利用者向けに、使いやすいキー割り当てとナビゲーションを提供します。"
+
+msgid "help.save"
+msgstr "保存"
+
+msgid "help.save_description"
+msgstr "自分のコードを実行・保存します。"
+
+msgid "help.new_description"
+msgstr "現在のエディタインスタンスのコード行を全て消去し、sbt 設定をリセットします。"
+
+msgid "help.clear_messages_description"
+msgstr "現在のエディタインスタンスが表示した全てのメッセージを消去します。"
+
+# The translation of `configuration section` must remain inside the curly brackets.
+msgid "help.format_description"
+msgstr "コード整形は scalafmt が行います。コメントで整形の設定が可能です。{設定セクション}を参照してください。"
+
+# The code must remain inside the curly brackets.
+msgid "help.worksheet_description"
+msgstr "デフォルトで有効です。ワークシートモードはプログラムのそれぞれの行の値と型を表示します。{html"<h1>Hello</h1>"}のようなHTMLブロックを追加し、宣言のそばに出力することもできます"
+
+msgid "help.worksheet_packages_warning"
+msgstr "ワークシートモードではパッケージを使えません。パッケージを使いたい場合は、モードをオフにして main メソッドと println ステートメントを追加してください。"
+
+msgid "help.download_description"
+msgstr "現在のスニペットを sbt 設定とともに zip パッケージにします。"
+
+msgid "help.embed_description"
+msgstr "外部の web ページに埋め込むことができる URL を作成します。"
+
+msgid "help.console_description"
+msgstr "Scastie の端末を使って、自分のコードの出力を確認できます。"
+
+msgid "help.build_settings_description"
+msgstr "ビルド設定では Scala のバージョンを変更したり、ライブラリを追加したり、ターゲットを選択したり、カスタムの sbt 設定を追加することもできます。"
+
+msgid "help.snippets_title"
+msgstr "ユーザのコードスニペット"
+
+msgid "help.snippets_description"
+msgstr "保存した自分のコード片がここに表示されます。削除したり共有することもできます。"
+
+msgid "help.vim_commands"
+msgstr "Vim コマンド"
+
+msgid "help.vim_description"
+msgstr "Vim モードがエディタで有効な場合は、Vim コマンドバーで以下のコマンドを使用できます (ノーマルモードで ':' を押下します):"
+
+msgid "help.vim_run"
+msgstr " — コードを保存・実行する"
+
+msgid "help.vim_format"
+msgstr " — コードを整形する"
+
+msgid "help.vim_clear"
+msgstr " — メッセージを消去する"
+
+msgid "help.vim_help"
+msgstr " — このヘルプダイアログを表示する"
+
+msgid "help.vim_navigation"
+msgstr "エディタでは、Vim 標準のナビゲーションや編集コマンドも使用できます。"
+
+# The translation of `Gitter` must remain inside the curly brackets.
+msgid "help.feedback_description"
+msgstr "私たちの {Gitter} チャンネルに参加して問題点をお知らせ下さい。"
+
+msgid "help.buildinfo"
+msgstr "ビルド情報"
+
+# The repository name `scalacenter/scastie` must remain inside the curly brackets.
+msgid "help.github_info"
+msgstr "Github の {scalacenter/scastie} で提供されます"
+
+msgid "help.license"
+msgstr "ライセンス"
+
+msgid "help.original_idea"
+msgstr "Scastie はAleh Aleshka (OlegYch) によるオリジナルアイデアです"
+
+# --- Section: Status ---
+msgid "status.no_task"
+msgstr "実行中のタスクはありません"
+
+msgid "status.task"
+msgstr "タスク"
+
+msgid "status.different_config"
+msgstr "異なる設定"
+
+msgid "status.same_config"
+msgstr "同一の設定"
+
+msgid "status.sbt_runner_config"
+msgstr "Sbt ランナー"
+
+msgid "status.sbt_runners"
+msgstr "Sbt ランナー"

@@ -7,8 +7,15 @@ import scala.scalajs.js.annotation.JSImport
 @js.native
 object EnPo extends js.Any
 
+@JSImport("@resources/locales/ja.po?raw", JSImport.Default)
+@js.native
+object JaPo extends js.Any
+
 object Languages {
+
   val available: Map[String, String] = Map(
-    "en" -> (EnPo.asInstanceOf[String])
+    "en" -> (EnPo.asInstanceOf[String]),
+    "ja" -> (JaPo.asInstanceOf[String])
   )
+
 }
