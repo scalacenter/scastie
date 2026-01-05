@@ -345,7 +345,7 @@ msgid "help.license"
 msgstr "ライセンス"
 
 msgid "help.original_idea"
-msgstr "Scastie はAleh Aleshka (OlegYch) によるオリジナルアイデアです"
+msgstr "Scastie は Aleh Aleshka (OlegYch) によるオリジナルアイデアです"
 
 # --- Section: Status ---
 msgid "status.no_task"
