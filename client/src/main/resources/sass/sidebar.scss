@@ -50,8 +50,16 @@
     .actions-bottom {
       position: absolute;
       bottom: 0px;
+      width: 100%;
       .btn {
-        width: 149px;
+        white-space: normal;
+        line-height: 1.4;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        span {
+          overflow-wrap: break-word;
+          word-break: break-word;
+        }
       }
     }
   }
