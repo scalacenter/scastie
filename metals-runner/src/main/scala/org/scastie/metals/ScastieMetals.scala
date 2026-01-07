@@ -1,16 +1,17 @@
 package org.scastie.metals
 
 import java.util.UUID
+import scala.concurrent.duration.*
+
 import cats.data.EitherT
 import cats.data.OptionT
 import cats.effect.Async
+import cats.effect.IO
 import cats.syntax.all._
 import com.evolutiongaming.scache.Cache
-import org.scastie.api._
-import org.eclipse.lsp4j._
-import cats.effect.IO
 import com.evolutiongaming.scache.ExpiringCache
-import scala.concurrent.duration.*
+import org.eclipse.lsp4j._
+import org.scastie.api._
 
 trait ScastieMetals:
   def complete(request: LSPRequestDTO): EitherT[IO, FailureType, ScalaCompletionList]
@@ -27,29 +28,43 @@ object ScastieMetalsImpl:
 
       private val dispatcher: MetalsDispatcher = new MetalsDispatcher(cache)
 
-      /* Extracts userUuid from request. Falls back to generating a new UUID if not present. */
-      private def getUserUuid(clientUuid: Option[String]): String =
-        clientUuid.getOrElse(UUID.randomUUID().toString)
+      /* Extracts userUuid from request. Returns error if not present. */
+      private def getUserUuid(clientUuid: Option[String]): Either[FailureType, String] =
+        clientUuid.toRight(PresentationCompilerFailure("Request does not contain client UUID"))
 
       def complete(request: LSPRequestDTO): EitherT[IO, FailureType, ScalaCompletionList] =
-        val userUuid = getUserUuid(request.clientUuid)
-        dispatcher.getCompiler(userUuid, request.options).semiflatMap(_.complete(request.offsetParams))
+        for
+          userUuid <- EitherT.fromEither[IO](getUserUuid(request.clientUuid))
+          compiler <- dispatcher.getCompiler(userUuid, request.options)
+          result   <- EitherT.liftF(compiler.complete(request.offsetParams))
+        yield result
 
       def completionInfo(request: CompletionInfoRequest): EitherT[IO, FailureType, String] =
-        val userUuid = getUserUuid(request.clientUuid)
-        dispatcher.getCompiler(userUuid, request.options).semiflatMap(_.completionItemResolve(request.completionItem))
+        for
+          userUuid <- EitherT.fromEither[IO](getUserUuid(request.clientUuid))
+          compiler <- dispatcher.getCompiler(userUuid, request.options)
+          result   <- EitherT.liftF(compiler.completionItemResolve(request.completionItem))
+        yield result
 
       def hover(request: LSPRequestDTO): EitherT[IO, FailureType, Hover] =
-        val userUuid = getUserUuid(request.clientUuid)
-        dispatcher.getCompiler(userUuid, request.options) >>= (_.hover(request.offsetParams))
+        for
+          userUuid <- EitherT.fromEither[IO](getUserUuid(request.clientUuid))
+          result   <- dispatcher.getCompiler(userUuid, request.options) >>= (_.hover(request.offsetParams))
+        yield result
 
       def signatureHelp(request: LSPRequestDTO): EitherT[IO, FailureType, SignatureHelp] =
-        val userUuid = getUserUuid(request.clientUuid)
-        dispatcher.getCompiler(userUuid, request.options).semiflatMap(_.signatureHelp(request.offsetParams))
+        for
+          userUuid <- EitherT.fromEither[IO](getUserUuid(request.clientUuid))
+          compiler <- dispatcher.getCompiler(userUuid, request.options)
+          result   <- EitherT.liftF(compiler.signatureHelp(request.offsetParams))
+        yield result
 
       def diagnostics(request: LSPRequestDTO): EitherT[IO, FailureType, Set[Problem]] =
-        val userUuid = getUserUuid(request.clientUuid)
-        dispatcher.getCompiler(userUuid, request.options).semiflatMap(_.diagnostics(request.offsetParams))
+        for
+          userUuid <- EitherT.fromEither[IO](getUserUuid(request.clientUuid))
+          compiler <- dispatcher.getCompiler(userUuid, request.options)
+          result   <- EitherT.liftF(compiler.diagnostics(request.offsetParams))
+        yield result
 
       def isConfigurationSupported(config: ScastieMetalsOptions): EitherT[IO, FailureType, Boolean] =
         /* For configuration check, we use a temporary UUID since we're just checking support */
