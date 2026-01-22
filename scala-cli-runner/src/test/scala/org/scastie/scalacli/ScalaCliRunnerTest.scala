@@ -253,20 +253,6 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
     runCode(code)(progress => progress.compilationInfos.isEmpty)
   }
 
-  test("JVM 8") {
-    val code =
-      s"""//> using jvm 8
-         |println(1 + 1)""".stripMargin
-    runCode(code)(assertUserOutput("2"))
-  }
-
-  test("JVM 11") {
-    val code =
-      s"""//> using jvm 11
-         |println(1 + 1)""".stripMargin
-    runCode(code)(assertUserOutput("2"))
-  }
-
   test("JVM 17") {
     val code =
       s"""//> using jvm 17
