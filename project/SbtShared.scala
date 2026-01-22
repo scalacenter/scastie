@@ -30,11 +30,12 @@ object SbtShared {
     val latest35   = "3.5.2"
     val latest36   = "3.6.4"
     val latest37   = "3.7.4"
+    val latest38   = "3.8.1"
     val scala313   = "3.1.3"
     val stableLTS  = "3.3.7"
-    val stableNext = "3.7.4"
+    val stableNext = "3.8.1"
     val latestLTS  = "3.3.7"
-    val latestNext = "3.8.0-RC1"
+    val latestNext = "3.8.2-RC1"
     val js         = latest213
     val sbt        = latest212
     val jvm        = latest213
@@ -177,6 +178,7 @@ lazy val baseJsSettings = Seq(
         "latest35"              -> ScalaVersions.latest35,
         "latest36"              -> ScalaVersions.latest36,
         "latest37"              -> ScalaVersions.latest37,
+        "latest38"              -> ScalaVersions.latest38,
         "stableLTS"             -> ScalaVersions.stableLTS,
         "stableNext"            -> ScalaVersions.stableNext,
         "latestLTS"             -> ScalaVersions.latestLTS,

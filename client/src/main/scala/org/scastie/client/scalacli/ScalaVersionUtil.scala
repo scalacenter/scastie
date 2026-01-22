@@ -86,7 +86,8 @@ object ScalaVersionUtil {
             "3.4"  -> BuildInfo.latest34,
             "3.5"  -> BuildInfo.latest35,
             "3.6"  -> BuildInfo.latest36,
-            "3.7"  -> BuildInfo.latest37
+            "3.7"  -> BuildInfo.latest37,
+            "3.8"  -> BuildInfo.latest38
           )
 
         stableVersions.get(version) match {

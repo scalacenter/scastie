@@ -171,7 +171,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
 
   test("no warnings by default") {
     val scala =
-      SbtInputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Xfatal-warnings")""")
+      SbtInputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Werror")""")
     run(scala)(assertUserOutput("2"))
   }
 
@@ -336,7 +336,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
                 |""".stripMargin
     )
     run(dotty)(assertCompilationInfo { info =>
-      assert(info.message.contains("Extension method foo will never be selected from type Json"))
+      assert(info.message.contains("Extension method foo will never be selected from type \u001B[33mJson\u001B[0m"))
       assert(info.line.contains(5))
     })
   }
