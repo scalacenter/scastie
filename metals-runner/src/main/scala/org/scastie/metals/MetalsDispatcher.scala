@@ -10,7 +10,6 @@ import scala.meta.internal.metals.Embedded
 import scala.meta.internal.metals.MtagsBinaries
 import scala.meta.internal.metals.MtagsResolver
 import scala.meta.internal.semver.SemVer
-import scala.util.control.NonFatal
 
 import cats.data.EitherT
 import cats.data.OptionT
@@ -19,8 +18,7 @@ import cats.syntax.all._
 import com.evolutiongaming.scache.{Cache, Releasable}
 import org.scastie.api._
 import org.scastie.api.ScalaTarget._
-import coursier.{Dependency, Fetch, Module, Organization, ModuleName, Classifier}
-import coursier.version.VersionConstraint
+import coursierapi.{Dependency, Fetch, MavenRepository, Repository}
 import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext
 import com.typesafe.config.ConfigFactory
@@ -53,6 +51,10 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
 
   private val presentationCompilers = PresentationCompilers(metalsWorkingDirectory)
   private val supportedVersions     = Set("2.12", "2.13", "3")
+  private val repositories          = Seq(
+    Repository.central(),
+    MavenRepository.of("https://central.sonatype.com/repository/maven-snapshots/")
+  )
 
   def getMtags(scalaVersion: String)=
     for
@@ -190,19 +192,6 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
     else Embedded.downloadScalaSources(scalaTarget.scalaVersion).toSet
   }
 
-  /* 
-   * Creates coursier Dependency from org, artifact and version
-   * @param org - organization of the dependency
-   * @param artifact - artifact name of the dependency
-   * @param version - version of the dependency
-   * @returns coursier Dependency
-   */
-  private def makeDependency(org: String, artifact: String, version: String): Dependency =
-    Dependency(
-      Module(Organization(org), ModuleName(artifact)),
-      VersionConstraint(version)
-    )
-
   /*
    * Fetches scalajs sources when `scalaTarget` is `scalajs`
    *
@@ -211,9 +200,9 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
    */
   private def getScalaJsDependencies(scalaTarget: ScalaTarget): Set[Dependency] = scalaTarget match
     case Js(scalaVersion, scalaJsVersion) if scalaVersion.startsWith("3") =>
-      Set(makeDependency("org.scala-js", "scalajs-library_2.13", scalaJsVersion))
+      Set(Dependency.of("org.scala-js", "scalajs-library_2.13", scalaJsVersion))
     case Js(scalaVersion, scalaJsVersion) => Set(
-        makeDependency("org.scala-js", artifactWithBinaryVersion("scalajs-library", Scala2(scalaVersion)), scalaJsVersion)
+        Dependency.of("org.scala-js", artifactWithBinaryVersion("scalajs-library", Scala2(scalaVersion)), scalaJsVersion)
       )
     case _ => Set.empty
 
@@ -230,18 +219,21 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
   ): IO[Set[Path]] = IO.blocking {
     val dep = dependencies.map {
       case ScalaDependency(groupId, artifact, target, version, true) =>
-        makeDependency(groupId, artifactWithBinaryVersion(artifact, target), version)
+        Dependency.of(groupId, artifactWithBinaryVersion(artifact, target), version)
       case ScalaDependency(groupId, artifact, target, version, false) =>
-        makeDependency(groupId, artifact, version)
+        Dependency.of(groupId, artifact, version)
     }.toSeq ++ extraDependencies
 
-    val fetch = Fetch()
-      .withRepositories(Embedded.repositories)
-      .withDependencies(dep)
-      .withClassifiers(Set(Classifier.sources))
-      .withMainArtifacts(true)
-
-    fetch.run().map(_.toPath).toSet
+    Fetch
+      .create()
+      .addRepositories(repositories*)
+      .withDependencies(dep*)
+      .withClassifiers(Set("sources").asJava)
+      .withMainArtifacts()
+      .fetch()
+      .asScala
+      .map(file => Path.of(file.getPath))
+      .toSet
   }
 
 }

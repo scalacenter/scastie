@@ -129,7 +129,7 @@ lazy val metalsRunner = project
     maintainer   := "scalacenter",
     scalaVersion := ScalaVersions.stableLTS,
     libraryDependencies ++= Seq(
-      "org.scalameta"        % "metals"              % "1.6.4" cross (CrossVersion.for3Use2_13),
+      "org.scalameta"        % "metals"              % "1.6.5" cross (CrossVersion.for3Use2_13),
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "0.21.1",
       "org.http4s"          %% "http4s-ember-server" % "0.23.24",
       "org.http4s"          %% "http4s-ember-client" % "0.23.24",
@@ -141,7 +141,7 @@ lazy val metalsRunner = project
       "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"  % Test,
       "org.virtuslab"        % "using_directives"    % "1.1.0",
       "io.circe" %% "circe-parser" % "0.14.6",
-      "io.get-coursier" %% "coursier" % "2.1.6" cross (CrossVersion.for3Use2_13),
+      "io.get-coursier" % "interface" % "1.0.29-M3",
     )
   )
   .enablePlugins(JavaServerAppPackaging, sbtdocker.DockerPlugin)
@@ -404,7 +404,7 @@ lazy val scalaCliRunner = project
       "ch.epfl.scala" % "bsp4j" % "2.1.0-M7",
       "org.typelevel" %% "cats-core" % "2.10.0",
       "io.circe" %% "circe-parser" % "0.14.6",
-      "io.get-coursier" %% "coursier" % "2.1.6",
+      "io.get-coursier" % "interface" % "1.0.29-M3",
     ),
     docker / imageNames := Seq(
       ImageName(namespace = Some(dockerOrg), repository = "scastie-scala-cli-runner", tag = Some(gitHashNow)),
