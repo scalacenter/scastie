@@ -32,7 +32,7 @@ import cats.syntax.all._
 import org.scastie.instrumentation.Instrument
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
-import coursier._
+import coursierapi.{Fetch, Dependency}
 import org.scastie.buildinfo.BuildInfo
 import org.scastie.api._
 import scala.util.Try
@@ -42,7 +42,6 @@ import com.google.gson.Gson
 import com.google.gson.internal.LinkedTreeMap
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseError
 import scala.util.control.NonFatal
-import org.apache.commons.io.IOUtils
 import java.io.PrintWriter
 import java.lang
 import org.scastie.instrumentation.PositionMapper
@@ -80,9 +79,13 @@ object BspClient {
   }
 
   private def getRunner(runner: Runner) = {
-    Fetch().addDependencies(
-      Dependency(Module(Organization("org.scastie"), ModuleName(runner.moduleName)), BuildInfo.versionRuntime)
-    ).run().filter(_.getName.contains(runner.moduleName)).map(_.toURI.toString).asRight
+    Fetch.create()
+      .addDependencies(Dependency.of("org.scastie", runner.moduleName, BuildInfo.versionRuntime))
+      .fetch()
+      .asScala
+      .filter(_.getName.contains(runner.moduleName))
+      .map(_.toURI.toString)
+      .asRight
   }
 
   private def diagSeverityToSeverity(severity: DiagnosticSeverity): Severity = {
