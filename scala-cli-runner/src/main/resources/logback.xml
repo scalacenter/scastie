@@ -7,24 +7,9 @@
       </encoder>
   </appender>
 
-  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>/var/log/scastie/scala-cli-runner.log</file>
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>/var/log/scastie/scala-cli-runner.%d{yyyy-MM-dd}.log</fileNamePattern>
-      <maxHistory>7</maxHistory>
-    </rollingPolicy>
-    <encoder>
-      <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36}:%line | %msg%n</pattern>
-    </encoder>
-  </appender>
 
   <logger name="akka" level="INFO" />
-  <logger name="org.scastie.scalacli" level="TRACE" />
-  <logger name="ScalaCliRunner" level="TRACE" />
-  <logger name="BspClient" level="TRACE" />
-
   <root level="INFO">
       <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="FILE"/>
   </root>
 </configuration>
