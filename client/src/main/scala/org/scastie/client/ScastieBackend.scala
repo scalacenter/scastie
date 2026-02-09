@@ -374,9 +374,9 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
               state.snippetId match {
                 case Some(snippetId) =>
                   if (snippetId.isOwnedBy(state.user)) {
-                    update0(snippetId)
+                    if (state.inputsHasChanged) update0(snippetId) else run
                   } else {
-                    fork0(snippetId)
+                    if (state.inputsHasChanged) fork0(snippetId) else run
                   }
                 case None => save0
               }
