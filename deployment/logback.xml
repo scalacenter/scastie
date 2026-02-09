@@ -11,6 +11,16 @@
     </encoder>
   </appender>
 
+  <appender name="CONSOLE_INFO" class="ch.qos.logback.core.ConsoleAppender">
+    <target>System.out</target>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36}:%line | %msg%n</pattern>
+    </encoder>
+  </appender>
+
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>output.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -33,6 +43,21 @@
   </appender>
 
   <logger name="akka" level="INFO"/>
+  <logger name="org.scastie.scalacli" level="TRACE" additivity="false">
+    <appender-ref ref="FILE" />
+    <appender-ref ref="CONSOLE_INFO" />
+    <appender-ref ref="SENTRY" />
+  </logger>
+  <logger name="ScalaCliRunner" level="TRACE" additivity="false">
+    <appender-ref ref="FILE" />
+    <appender-ref ref="CONSOLE_INFO" />
+    <appender-ref ref="SENTRY" />
+  </logger>
+  <logger name="BspClient" level="TRACE" additivity="false">
+    <appender-ref ref="FILE" />
+    <appender-ref ref="CONSOLE_INFO" />
+    <appender-ref ref="SENTRY" />
+  </logger>
 
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>
