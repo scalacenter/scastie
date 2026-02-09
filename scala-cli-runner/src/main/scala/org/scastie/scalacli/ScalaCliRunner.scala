@@ -75,9 +75,14 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
 
   def runTask(snippetId: SnippetId, inputs: ScalaCliInputs, timeout: FiniteDuration, onOutput: ProcessOutput => Any): Future[Either[ScalaCliError, RunOutput]] = {
     log.info(s"Running task with snippetId=$snippetId")
+    log.trace(s"[${snippetId.base64UUID} - runTask] Starting runTask")
     build(snippetId, inputs).flatMap {
-      case Right((value, positionMapper)) => runForked(value, inputs.isWorksheetMode, onOutput, positionMapper)
-      case Left(value) => Future.successful(Left[ScalaCliError, RunOutput](value))
+      case Right((value, positionMapper)) =>
+        log.trace(s"[${snippetId.base64UUID} - runTask] Build successful, running forked")
+        runForked(value, inputs.isWorksheetMode, onOutput, positionMapper)
+      case Left(value) =>
+        log.trace(s"[${snippetId.base64UUID} - runTask] Build failed: ${value.msg}")
+        Future.successful(Left[ScalaCliError, RunOutput](value))
     }
   }
 
@@ -85,6 +90,8 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     snippetId: SnippetId,
     inputs: BaseInputs,
   ): Future[Either[ScalaCliError, (BspClient.BuildOutput, Option[PositionMapper])]] = {
+
+    log.trace(s"[${snippetId} - build] Starting Scala CLI run")
 
     val (instrumentedInput, positionMapper) = InstrumentedInputs(inputs) match {
       case Right(value) => (value.inputs, value.positionMapper)
@@ -94,14 +101,29 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     }
 
     Files.write(scalaMain, instrumentedInput.code.getBytes)
+    log.trace(s"[${snippetId.base64UUID} - build] Calling bspClient.build")
+
     bspClient.build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target, positionMapper).value.recover {
-      case timeout: TimeoutException => BspTaskTimeout("Build Server Timeout Exception").asLeft
-      case err => InternalBspError(err.getMessage).asLeft
+      case timeout: TimeoutException =>
+        log.trace(s"[${snippetId.base64UUID} - build] BSP timeout")
+        BspTaskTimeout("Build Server Timeout Exception").asLeft
+      case err =>
+        log.trace(s"[${snippetId.base64UUID} - build] BSP error: ${err.getMessage}")
+        InternalBspError(err.getMessage).asLeft
     }
     .map {
-        case Right(buildOutput) => Right((buildOutput, positionMapper))
-        case Left(CompilationError(diagnostics)) => Left(CompilationError(diagnostics))
-        case Left(other) => Left(other)
+        case Right(buildOutput) =>
+          log.trace(s"[${snippetId.base64UUID} - build] Build successful, diagnostics: ${buildOutput.diagnostics.size}")
+          Right((buildOutput, positionMapper))
+        case Left(CompilationError(diagnostics)) =>
+          log.trace(s"[${snippetId.base64UUID} - build] CompilationError with ${diagnostics.size} diagnostics")
+          if (diagnostics.isEmpty) {
+            log.warn(s"[${snippetId.base64UUID} - build] CompilationError with EMPTY diagnostics!")
+          }
+          Left(CompilationError(diagnostics))
+        case Left(other) =>
+          log.trace(s"[${snippetId.base64UUID} - build] Other error: ${other.msg}")
+          Left(other)
       }
   }
 
@@ -111,6 +133,8 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     onOutput: ProcessOutput => Any,
     positionMapper: Option[PositionMapper] = None
   ): Future[Either[ScastieRuntimeError, RunOutput]] = {
+    log.trace(s"[runForked] Starting forked execution, diagnostics: ${bspRun.diagnostics.size}")
+
     val outputBuffer: ListBuffer[String] = ListBuffer()
     val instrumentations: AtomicReference[List[Instrumentation]] = new AtomicReference(List())
     val runtimeError: AtomicReference[Option[org.scastie.runtime.api.RuntimeError]] = new AtomicReference(None)
@@ -139,15 +163,23 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
       (ferr: String) => forwardAndStorePrint(ferr, ProcessOutputType.StdErr)
     ))
 
-    val processResult = CompletableFuture.supplyAsync { () => runProcess.exitValue() }.orTimeout(10, TimeUnit.SECONDS).asScala
+    val processResult = CompletableFuture.supplyAsync { () =>
+      log.trace(s"[runForked] Waiting for process exitValue")
+      val code = runProcess.exitValue()
+      log.trace(s"[runForked] Process exited with code: $code")
+      code
+    }.orTimeout(10, TimeUnit.SECONDS).asScala
     processResult.onComplete(_ => runProcess.destroy())
     processResult.map { exitCode =>
+      log.trace(s"[runForked] Creating RunOutput with exitCode=$exitCode, instrumentations=${instrumentations.get.size}")
       Right(RunOutput(instrumentations.get, bspRun.diagnostics, runtimeError.get, exitCode))
     }.recover {
       case _: TimeoutException =>
+        log.trace(s"[runForked] Process timeout!")
         forwardAndStorePrint("Timeout exceeded.", ProcessOutputType.StdErr)
         Left(RuntimeTimeout("Timeout exceeded."))
       case err =>
+        log.trace(s"[runForked] Process error: $err")
         forwardAndStorePrint(s"Unknown exception $err", ProcessOutputType.StdErr)
         Left(InternalRuntimeError(s"Unknown exception $err"))
     }
