@@ -4,6 +4,7 @@ import org.scastie.balancer.DownloadSnippet
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.model.headers.RawHeader
 
 import akka.actor.ActorRef
 import akka.pattern.ask
@@ -22,7 +23,10 @@ class DownloadRoutes(dispatchActor: ActorRef) {
         sid =>
           onSuccess((dispatchActor ? DownloadSnippet(sid)).mapTo[Option[Path]]) {
             case Some(path) =>
-              getFromFile(path.toFile)
+              val fileName = path.getFileName.toString
+              respondWithHeader(RawHeader("Content-Disposition", s"attachment; filename=\"$fileName\"")) {
+                getFromFile(path.toFile)
+              }
             case None =>
               throw new Exception(
                 s"Can't serve project ${sid.base64UUID} to user ${sid.user.getOrElse("anon")}"
