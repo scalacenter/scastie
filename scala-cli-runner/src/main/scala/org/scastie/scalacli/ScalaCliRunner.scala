@@ -64,7 +64,7 @@ case class RunOutput(
   diagnostics: List[Problem],
   runtimeError: Option[org.scastie.runtime.api.RuntimeError],
   exitCode: Int,
-  vprintOutput: List[String] = Nil
+  bspLogs: List[String] = Nil
 )
 
 class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout: FiniteDuration, reloadTimeout: FiniteDuration) {
@@ -83,6 +83,8 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
         runForked(value, inputs.isWorksheetMode, onOutput, positionMapper)
       case Left(value) =>
         log.trace(s"[${snippetId.base64UUID} - runTask] Build failed: ${value.msg}")
+        val remainingLogs = bspClient.bspLogs.getAndSet(Nil)
+        remainingLogs.foreach(msg => onOutput(ProcessOutput(msg, ProcessOutputType.StdErr, None)))
         Future.successful(Left[ScalaCliError, RunOutput](value))
     }
   }
@@ -173,7 +175,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     processResult.onComplete(_ => runProcess.destroy())
     processResult.map { exitCode =>
       log.trace(s"[runForked] Creating RunOutput with exitCode=$exitCode, instrumentations=${instrumentations.get.size}")
-      Right(RunOutput(instrumentations.get, bspRun.diagnostics, runtimeError.get, exitCode, bspRun.vprintOutput))
+      Right(RunOutput(instrumentations.get, bspRun.diagnostics, runtimeError.get, exitCode, bspRun.bspLogs))
     }.recover {
       case _: TimeoutException =>
         log.trace(s"[runForked] Process timeout!")
