@@ -50,7 +50,7 @@ object BspClient {
 
   private val gson = new Gson()
 
-  case class BuildOutput(process: ProcessBuilder, diagnostics: List[Problem], vprintOutput: List[String] = Nil)
+  case class BuildOutput(process: ProcessBuilder, diagnostics: List[Problem], bspLogs: List[String] = Nil)
 
   sealed trait Runner {
     def moduleName: String
@@ -169,7 +169,7 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
 
   private implicit val defaultTimeout: FiniteDuration = FiniteDuration(10, TimeUnit.SECONDS)
   val diagnostics: AtomicReference[List[Diagnostic]] = new AtomicReference(Nil)
-  val vprintOutput: AtomicReference[List[String]] = new AtomicReference(Nil)
+  val bspLogs: AtomicReference[List[String]] = new AtomicReference(Nil)
   val gson = new Gson
 
   private val log = Logger("BspClient")
@@ -364,7 +364,7 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
     } yield BuildOutput(
               process,
               diagnostics.getAndSet(Nil).map(diagnosticToProblem(isWorksheet, positionMapper)),
-              vprintOutput.getAndSet(Nil)
+              bspLogs.getAndSet(Nil)
             )
   }
 
@@ -432,9 +432,8 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
       log.debug(s"LogMessageParams: $params")
 
       val message = params.getMessage
-      if (message != null && !message.trim.isEmpty &&
-          (message.contains("[[syntax trees at end of") || vprintOutput.get.nonEmpty)) {
-        vprintOutput.getAndUpdate(_ :+ message)
+      if (message != null && !message.trim.isEmpty) {
+        bspLogs.getAndUpdate(_ :+ message)
       }
     }
     def onBuildShowMessage(params: ShowMessageParams): Unit =  log.debug(s"ShowMessageParams: $params")
