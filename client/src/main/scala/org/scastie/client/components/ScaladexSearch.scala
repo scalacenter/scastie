@@ -547,28 +547,23 @@ object ScaladexSearch {
     val (scastieRuntime, rest) = props.libraries.partition(_.groupId == "org.scastie")
     val librariesFromList = Future.sequence(rest.toList.map(getProject)).map(_.flatten)
 
-    librariesFromList.foreach { libraries =>
-      val failedLibraries = rest.diff(libraries.map(_.release).toSet)
-
-      libraries
-        .filterNot(library => failedLibraries.contains(library.release))
-        .foreach { selected =>
-          state.modState(_.addSelected(selected)).runNow()
-        }
-
-      failedLibraries.foreach { failed =>
-        props.removeScalaDependency(failed).runNow() // + display some kind of popup
+    Callback.future { librariesFromList.map { libraries =>
+      Callback.sequence {
+        val failedLibraries = rest.diff(libraries.map(_.release).toSet)
+        val removalTask = failedLibraries.map(failed => props.removeScalaDependency(failed)) // + display some kind of popup
+        val addTask = libraries
+          .filterNot(library => failedLibraries.contains(library.release))
+          .map(selected => state.modState(_.addSelected(selected)))
+        removalTask.toList ++ addTask
       }
-    }
-
-    Callback.empty
+    }}
   }
 
   private val component =
     ScalaFnComponent
       .withHooks[ScaladexSearch]
       .useState(SearchState.default)
-      .useEffectOnMountBy((props, state) => updateState(props, state))
+      .useEffectWithDepsBy((props, _) => props.libraries)((props, state) => _ => updateState(props, state))
       .renderWithReuse((props, state) => render(props, state))
 
       // .useLayoutEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
