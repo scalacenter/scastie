@@ -14,9 +14,9 @@ import org.scalatest.funsuite.AnyFunSuiteLike
 import scala.concurrent._
 import scala.concurrent.duration._
 
-class LoadBalancerRecoveryTest()
+class DispatchActorIntegrationTest()
     extends TestKit(
-      ActorSystem("LoadBalancerRecoveryTest", RemotePortConfig(0))
+      ActorSystem("DispatchActorIntegrationTest", RemotePortConfig(0))
     )
     with ImplicitSender
     with AnyFunSuiteLike
@@ -24,6 +24,29 @@ class LoadBalancerRecoveryTest()
 
   // import system.dispatcher
   implicit val timeout: Timeout = Timeout(25.seconds)
+
+  test("persist warnings after re-fetching snippet from database (issue #1144)") {
+    val code = "Nil match { case Seq(xs*) => println(\"test\") }"
+
+    val sid = run(code)
+
+    waitFor(sid, Map(sid -> code))(p =>
+      p.isDone && p.compilationInfos.nonEmpty
+    )
+
+    val fetchResult = Await.result(
+      (dispatchActor.ask(FetchSnippet(sid))).mapTo[Option[FetchResult]],
+      15.seconds
+    )
+
+    assert(fetchResult.isDefined, "Snippet should be found in storage")
+    val progresses = fetchResult.get.progresses
+    assert(progresses.nonEmpty, "Fetched snippet should have progress information")
+
+    val lastProgress = progresses.last
+    assert(lastProgress.compilationInfos.nonEmpty,
+      s"Fetched snippet should retain compilation warnings, but got: ${lastProgress.compilationInfos}")
+  }
 
   test("recover from crash") {
     val crash =

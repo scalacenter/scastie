@@ -4,6 +4,8 @@ import io.circe.generic.semiauto._
 import io.circe._
 import org.scastie.buildinfo.BuildInfo
 
+import java.security.MessageDigest
+
 import System.{lineSeparator => nl}
 
 sealed trait BaseInputs {
@@ -137,6 +139,9 @@ case class SbtInputs(
   def needsReload(other: SbtInputs): Boolean = {
     sbtInputs != other.sbtInputs
   }
+
+  def toHash: String =
+    MessageDigest.getInstance("SHA-256").digest(SbtInputs.sbtInputsEncoder(this).noSpaces.getBytes).map("%02x".format(_)).mkString
 
   override def toString: String = {
     if (this == SbtInputs.default) {
