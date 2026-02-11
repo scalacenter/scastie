@@ -21,13 +21,17 @@ object TreeSitterArgumentFinder {
     }
   }
 
+  private def getSafeParent(node: SyntaxNode): Option[SyntaxNode] = {
+    val p = node.parent
+    if (p == null || js.isUndefined(p)) None
+    else Some(p.asInstanceOf[SyntaxNode])
+  }
+
   @tailrec
   private def findArgumentContextFromNode(node: SyntaxNode, cursorPos: Int): Option[ArgumentContext] = {
     findArgumentList(node) match {
       case Some(argList) if hasNestedArgumentsAtCursor(argList, cursorPos) =>
-        Option(argList.parent)
-          .filterNot(p => js.isUndefined(p.asInstanceOf[js.Any]))
-          .map(_.asInstanceOf[SyntaxNode]) match {
+        getSafeParent(argList) match {
             case Some(parent) => findArgumentContextFromNode(parent, cursorPos)
             case None => None
           }
@@ -45,17 +49,15 @@ object TreeSitterArgumentFinder {
 
   @tailrec
   private def findArgumentList(node: SyntaxNode): Option[SyntaxNode] = {
-    if (node == null || js.isUndefined(node.asInstanceOf[js.Any])) {
+    if (node == null || js.isUndefined(node)) {
       None
     } else if (node.`type` == "arguments" || node.`type` == "type_arguments") {
       Some(node)
     } else {
-      Option(node.parent)
-        .filterNot(p => js.isUndefined(p.asInstanceOf[js.Any]))
-        .map(_.asInstanceOf[SyntaxNode]) match {
-          case Some(parent) => findArgumentList(parent)
-          case None => None
-        }
+      getSafeParent(node) match {
+        case Some(parent) => findArgumentList(parent)
+        case None => None
+      }
     }
   }
   
@@ -81,8 +83,7 @@ object TreeSitterArgumentFinder {
   private def getChildren(node: SyntaxNode): Iterator[SyntaxNode] = {
     (0 until node.childCount.toInt).iterator
       .map(i => node.child(i.toDouble))
-      .filter(child => child != null && !js.isUndefined(child.asInstanceOf[js.Any]))
-      .map(_.asInstanceOf[SyntaxNode])
+      .filter(child => child != null && !js.isUndefined(child))
   }
 
   def isCursorInArguments(tree: Tree, cursorPos: Int): Boolean = {
