@@ -17,8 +17,7 @@ import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 import scala.sys.process.{ Process, ProcessBuilder }
 import java.util.Optional
-import org.scastie.api.Problem
-import org.scastie.api.Severity
+import org.scastie.api.{Problem, Severity}
 import org.scastie.api
 import java.util.concurrent.TimeUnit
 import org.eclipse.lsp4j.jsonrpc.messages.CancelParams
@@ -48,6 +47,9 @@ import org.scastie.instrumentation.PositionMapper
 
 
 object BspClient {
+
+  private val gson = new Gson()
+
   case class BuildOutput(process: ProcessBuilder, diagnostics: List[Problem])
 
   sealed trait Runner {
@@ -96,32 +98,64 @@ object BspClient {
     else api.Error
   }
 
+  private def mapBspPosition(line: Int, char: Int, positionMapper: Option[PositionMapper], offset: Int): (Int, Int) = {
+    positionMapper match {
+      case Some(mapper) =>
+        /* BSP is 0-indexed, mapper expects 1-indexed */
+        val bspLine = line + 1
+        /* Convert back to 0-indexed */
+        (mapper.mapLine(bspLine) - 1, mapper.mapColumn(bspLine, char + 1) - 1)
+      case None =>
+        (line + offset, char)
+    }
+  }
+
+  private def convertBspActionToScastie(bspAction: ch.epfl.scala.bsp4j.ScalaAction, positionMapper: Option[PositionMapper], offset: Int): api.ScalaAction = {
+    val edit = Option(bspAction.getEdit).map { bspEdit =>
+      val changes = Option(bspEdit.getChanges)
+        .map(_.asScala.toList.map { bspTextEdit =>
+          val bspRange = bspTextEdit.getRange
+          val (startLine, startChar) = mapBspPosition(bspRange.getStart.getLine, bspRange.getStart.getCharacter, positionMapper, offset)
+          val (endLine, endChar) = mapBspPosition(bspRange.getEnd.getLine, bspRange.getEnd.getCharacter, positionMapper, offset)
+
+          val range = api.DiagnosticRange(
+            start = api.DiagnosticPosition(line = startLine, character = startChar),
+            end = api.DiagnosticPosition(line = endLine, character = endChar)
+          )
+          api.ScalaTextEdit(range = range, newText = bspTextEdit.getNewText)
+        })
+        .getOrElse(List.empty)
+
+      api.ScalaWorkspaceEdit(changes = changes)
+    }
+
+    api.ScalaAction(
+      title = bspAction.getTitle,
+      description = Option(bspAction.getDescription),
+      edit = edit
+    )
+  }
+
   def diagnosticToProblem(isWorksheet: Boolean, positionMapper: Option[PositionMapper] = None)(diag: Diagnostic): Problem = {
     val offset = Instrument.getMessageLineOffset(isWorksheet)
+    val bspRange = diag.getRange
 
-    val startLine = diag.getRange.getStart.getLine + 1
-    val endLine = diag.getRange.getEnd.getLine + 1
+    val (startLine, startChar) = mapBspPosition(bspRange.getStart.getLine, bspRange.getStart.getCharacter, positionMapper, offset)
+    val (_, endChar) = mapBspPosition(bspRange.getEnd.getLine, bspRange.getEnd.getCharacter, positionMapper, offset)
 
-    val startColumn = Some(diag.getRange.getStart.getCharacter + 1)
-    val endColumn = Some(diag.getRange.getEnd.getCharacter + 1)
-
-    val (mappedStartCol, mappedEndCol, mappedStartLine) = positionMapper match {
-      case Some(mapper) =>
-        (
-          startColumn.map(col => mapper.mapColumn(startLine, col)),
-          endColumn.map(col => mapper.mapColumn(startLine, col)),
-          mapper.mapLine(startLine)
-        )
-      case None =>
-        (startColumn, endColumn, startLine + offset)
-    }
+    val actions: Option[List[org.scastie.api.ScalaAction]] = for {
+      data <- Option(diag.getData())
+      scalaDiag <- Try(gson.fromJson(data.toString, classOf[ScalaDiagnostic])).toOption
+      bspActions <- Option(scalaDiag.getActions())
+    } yield bspActions.asScala.toList.map(bspAction => convertBspActionToScastie(bspAction, positionMapper, offset))
 
     Problem(
       diagSeverityToSeverity(diag.getSeverity()),
-      Option(mappedStartLine),
-      mappedStartCol,
-      mappedEndCol,
-      diag.getMessage()
+      Option(startLine + 1),
+      Some(startChar + 1),
+      Some(endChar + 1),
+      diag.getMessage(),
+      actions
     )
   }
 

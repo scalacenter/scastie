@@ -127,4 +127,40 @@ object JavaConverters {
       gson.fromJson(completionData.toString, classOf[CompletionItemData]).symbol
     }
 
+  extension (codeAction: CodeAction)
+    def toScalaAction(worksheetOffset: Int, worksheetLineOffset: Int): ScalaAction = {
+      val edit = Option(codeAction.getEdit).map { workspaceEdit =>
+        val allChanges = Option(workspaceEdit.getChanges)
+          .map { changesMap =>
+            changesMap.asScala.values.flatMap(_.asScala).toList
+          }
+          .getOrElse(List.empty)
+
+        val scalaTextEdits = allChanges.map { textEdit =>
+          val lspRange = textEdit.getRange
+          val start = lspRange.getStart
+          val end = lspRange.getEnd
+
+          val adjustedStartLine = start.getLine - worksheetLineOffset
+          val adjustedStartChar = start.getCharacter - worksheetOffset
+          val adjustedEndLine = end.getLine - worksheetLineOffset
+          val adjustedEndChar = end.getCharacter - worksheetOffset
+
+          val range = DiagnosticRange(
+            start = DiagnosticPosition(adjustedStartLine, adjustedStartChar),
+            end = DiagnosticPosition(adjustedEndLine, adjustedEndChar)
+          )
+          ScalaTextEdit(range, textEdit.getNewText)
+        }
+
+        ScalaWorkspaceEdit(scalaTextEdits)
+      }
+
+      ScalaAction(
+        title = codeAction.getTitle,
+        description = Option(codeAction.getKind),
+        edit = edit
+      )
+    }
+
 }

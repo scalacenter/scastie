@@ -11,7 +11,10 @@ import java.net.URI
 import scala.meta.pc.CancelToken
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.DiagnosticSeverity
+import org.eclipse.lsp4j.CodeAction
 import org.scastie.api._
+import scala.jdk.CollectionConverters._
+import org.scastie.metals.JavaConverters._
 
 object DTOExtensions {
   val wrapperIndent = "  "
@@ -31,13 +34,24 @@ object DTOExtensions {
       val worksheetLineOffset = if isWorksheetMode then 1 else 0 // wrapper object
       val worksheetOffset = if isWorksheetMode then wrapperIndent.length else 0 // wrapper indent
 
+      val actions: Option[List[ScalaAction]] = Option(diagnostic.getData())
+        .collect { case wrapper: java.util.List[_] => wrapper }
+        .map { list =>
+          list.asScala.toList.collect {
+            case codeAction: CodeAction =>
+              codeAction.toScalaAction(worksheetOffset, worksheetLineOffset)
+          }
+        }
+        .filter(_.nonEmpty)
+
       /* Diags are 1-based in editor but in compler they are 0-based, thus magic + 1 */
       Problem(
         diagSeverityToSeverity(diagnostic.getSeverity()),
         Option(diagnostic.getRange().getStart().getLine() - worksheetLineOffset + 1),
         Option(diagnostic.getRange().getStart().getCharacter() - worksheetOffset + 1),
         Option(diagnostic.getRange().getEnd().getCharacter() - worksheetOffset + 1),
-        diagnostic.getMessage()
+        diagnostic.getMessage(),
+        actions
       )
 
   extension (offsetParams: ScastieOffsetParams)

@@ -41,7 +41,13 @@ trait MetalsDiagnostics extends MetalsClient with DebouncingCapabilities {
     makeRequest(toLSPRequest(code, 0), "diagnostics").map { maybeText =>
       if (myGeneration == MetalsDiagnostics.currentGeneration) {
         parseMetalsResponse[Set[api.Problem]](maybeText).map { problems =>
-          val diags = problems.map(CodeEditor.problemToDiagnostic(_, view.state.doc)).toJSArray
+          val diags = problems.map { prob =>
+            val diagnostic = CodeEditor.problemToDiagnostic(prob, view.state.doc)
+            CodeEditor.problemToActions(prob, view.state.doc).foreach { actions =>
+              diagnostic.setActions(actions.toJSArray)
+            }
+            diagnostic
+          }.toJSArray
           view.update(js.Array(view.state.update(setDiagnostics(view.state, diags))))
         }
       } else None

@@ -153,17 +153,62 @@ object CodeEditor {
     }
 
     Diagnostic(startColumn, problem.message, parseSeverity(problem.severity), endColumn)
-      .setRenderMessage(CallbackTo {
+      .setRenderMessage((_: EditorView) => {
         val wrapper = dom.document.createElement("pre")
         wrapper.innerHTML = HTMLFormatter.format(problem.message)
         wrapper
       })
   }
 
+  /* e.g.: line: 5, character: 10 -> offset: 67 */
+  private def positionToOffset(line: Int, character: Int, doc: Text): Int = {
+    val clampedLine = ((line + 1) min doc.lines.toInt) max 1
+    val lineInfo = doc.line(clampedLine)
+    (lineInfo.from.toInt + character).min(doc.length.toInt)
+  }
+
+  def problemToActions(problem: Problem, doc: Text): Option[List[Action]] = {
+    problem.actions.map { scalaActions =>
+      scalaActions.map { scalaAction =>
+        Action(
+          apply = (view: EditorView, _: Double, _: Double) => {
+            scalaAction.edit.foreach { workspaceEdit =>
+              val changes = workspaceEdit.changes.map { textEdit =>
+                val from = positionToOffset(textEdit.range.start.line, textEdit.range.start.character, doc)
+                val to = positionToOffset(textEdit.range.end.line, textEdit.range.end.character, doc)
+
+                js.Dynamic.literal(
+                  "from" -> from,
+                  "to" -> to,
+                  "insert" -> textEdit.newText
+                )
+              }
+
+              view.dispatch(js.Dynamic.literal(
+                "changes" -> js.Array(changes: _*)
+              ).asInstanceOf[TransactionSpec])
+            }
+
+            Callback.empty
+          },
+          name = scalaAction.title
+        ).setMarkClass("cm-actions")
+      }
+    }
+  }
+
   private def getDecorations(props: CodeEditor, doc: Text): js.Array[Diagnostic] = {
     val errors = props.compilationInfos
       .filter(prob => prob.line.isDefined)
-      .map(problemToDiagnostic(_, doc))
+      .map { prob =>
+        val diagnostic = problemToDiagnostic(prob, doc)
+
+        problemToActions(prob, doc).foreach { actions =>
+          diagnostic.setActions(actions.toJSArray)
+        }
+
+        diagnostic
+      }
 
     val runtimeErrors = props.runtimeError.map(runtimeError => {
       val line = runtimeError.line.getOrElse(1).min(doc.lines.toInt)
@@ -171,7 +216,7 @@ object CodeEditor {
       val msg = if (runtimeError.fullStack.nonEmpty) runtimeError.fullStack else runtimeError.message
 
       Diagnostic(lineInfo.from, msg, codemirrorLintStrings.error, lineInfo.to)
-          .setRenderMessage(CallbackTo {
+          .setRenderMessage((_: EditorView) => {
             val wrapper = dom.document.createElement("pre")
             wrapper.innerHTML = HTMLFormatter.format(msg)
             wrapper
