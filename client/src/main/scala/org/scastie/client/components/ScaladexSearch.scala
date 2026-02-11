@@ -67,11 +67,11 @@ object ScaladexSearch {
       for {
         response <- dom.fetch(scaladexApiUrl + "/project" + query)
         text <- response.text()
-        
+
         artifactResponse <- dom.fetch(scaladexApiUrl + s"/v1/projects/${project.organization}/${project.repository}/versions/latest")
         artifactText <- artifactResponse.text()
         artifactJson = parse(artifactText).getOrElse(Json.Null)
-        
+
         matchingArtifact: Option[Json] = artifactJson.asArray.getOrElse(Vector.empty).find { artifactObj =>
           val artifactId = artifactObj.hcursor.get[String]("artifactId").getOrElse("")
           val targetSuffix = target.targetType match {
@@ -563,7 +563,7 @@ object ScaladexSearch {
     ScalaFnComponent
       .withHooks[ScaladexSearch]
       .useState(SearchState.default)
-      .useEffectOnMountBy((props, state) => updateState(props, state))
+      .useEffectWithDepsBy((props, _) => props.libraries)((props, state) => _ => updateState(props, state))
       .renderWithReuse((props, state) => render(props, state))
 
       // .useLayoutEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
