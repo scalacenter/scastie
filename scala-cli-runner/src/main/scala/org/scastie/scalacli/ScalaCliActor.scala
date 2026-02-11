@@ -22,7 +22,7 @@ import scala.io.{Source => IOSource}
 import scala.util.control.NonFatal
 import akka.actor.ActorSelection
 import scala.concurrent.duration.FiniteDuration
-import org.scastie.util.ScalaCliActorTask
+import org.scastie.util.ScalaCliTask
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
@@ -46,7 +46,7 @@ class ScalaCliActor(
   private val runner: ScalaCliRunner = new ScalaCliRunner(coloredStackTrace, workingDir, compilationTimeout, reloadTimeout)
 
   override def receive: Receive = reconnectBehavior orElse { message => message match {
-    case task: ScalaCliActorTask => runTask(task, sender())
+    case task: ScalaCliTask => runTask(task, sender())
     case StopRunner =>
       runner.end()
       sender() ! RunnerTerminated
@@ -67,8 +67,8 @@ class ScalaCliActor(
   private def makeOutput(str: List[String]): Option[ProcessOutput] = makeOutput(str.mkString("\n"))
 
   // Run task
-  private def runTask(task: ScalaCliActorTask, author: ActorRef): Unit = {
-    val ScalaCliActorTask(snippetId, inputs, ip, progressActor) = task
+  private def runTask(task: ScalaCliTask, author: ActorRef): Unit = {
+    val ScalaCliTask(snippetId, inputs, ip, progressActor) = task
     val progressId: AtomicLong = new AtomicLong(0L)
 
     val onOutput: ProcessOutput => Any = output =>
