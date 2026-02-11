@@ -12,12 +12,6 @@ import org.scastie.client.scalacli.ScalaCliUtils._
 import org.scastie.runtime.api._
 import RuntimeCodecs._
 
-case class ClientUuid(value: String)
-
-object ClientUuid {
-  def generate(): ClientUuid = ClientUuid(java.util.UUID.randomUUID().toString)
-}
-
 sealed trait MetalsStatus {
   val info: String
 }
@@ -59,6 +53,8 @@ case class SnippetState(
 
 object ScastieState {
 
+  val clientUuid: String = java.util.UUID.randomUUID().toString
+
   def default(isEmbedded: Boolean): ScastieState = {
     ScastieState(
       view = View.Editor,
@@ -86,8 +82,7 @@ object ScastieState {
       status = StatusState.empty,
       isEmbedded = isEmbedded,
       editorMode = Default,
-      language = I18n.getLanguage,
-      clientUuid = ClientUuid.generate()
+      language = I18n.getLanguage
     )
   }
 
@@ -103,8 +98,6 @@ object ScastieState {
     dontSerializeOption[EventStream[SnippetProgress]]
 
   implicit val dontSerializeMetalsStatus: Codec[MetalsStatus] = dontSerialize[MetalsStatus](MetalsLoading)
-
-  implicit val dontSerializeClientUuid: Codec[ClientUuid] = dontSerialize[ClientUuid](ClientUuid.generate())
 
   implicit val scastieStateEncoder: Encoder[ScastieState] = deriveEncoder[ScastieState]
   implicit val scastieStateDecoder: Decoder[ScastieState] = deriveDecoder[ScastieState]
@@ -135,8 +128,7 @@ case class ScastieState(
   transient: Boolean = false,
   scalaCliConversionError: Option[String] = None,
   editorMode: EditorMode = Default,
-  language: String = "en",
-  clientUuid: ClientUuid = ClientUuid.generate()
+  language: String = "en"
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean         = snippetState.loadSnippet
@@ -166,8 +158,7 @@ case class ScastieState(
     transient: Boolean = transient,
     scalaCliConversionError: Option[String] = scalaCliConversionError,
     editorMode: EditorMode = editorMode,
-    language: String = language,
-    clientUuid: ClientUuid = clientUuid
+    language: String = language
   ): ScastieState = {
     val state0 = copy(
       view = view,
@@ -197,8 +188,7 @@ case class ScastieState(
       transient = transient,
       scalaCliConversionError = scalaCliConversionError,
       editorMode = editorMode,
-      language = language,
-      clientUuid = clientUuid
+      language = language
     )
 
     if (!isEmbedded && !transient) {

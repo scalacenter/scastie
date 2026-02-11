@@ -113,6 +113,18 @@ class MetalsDispatcher(cache: Cache[IO, (String, ScastieMetalsOptions), ScastieP
     supportedVersions.contains(configuration.scalaTarget.binaryScalaVersion)
 
   /*
+   * Validates configuration without creating a presentation compiler.
+   * Checks version support and mtags resolution.
+   */
+  def checkConfiguration(conf: ScastieMetalsOptions): EitherT[IO, FailureType, Boolean] =
+    if !isSupportedVersion(conf) then
+      EitherT.leftT(PresentationCompilerFailure(
+        s"Interactive features are not supported for Scala ${conf.scalaTarget.binaryScalaVersion}."
+      ))
+    else
+      EitherT(getMtags(conf.scalaTarget.scalaVersion)).map(_ => true)
+
+  /*
    * This is workaround for bad scaladex search UI in scastie.
    * We must properly handle non compatibile library versions.
    * In sbt it is automatically resolved but here, we manually specify scala target.
