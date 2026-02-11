@@ -82,16 +82,6 @@ class ScalaCliActor(
 
     runner.runTask(snippetId, inputs, runTimeout, onOutput).map {
       case Right(output) =>
-        if (output.bspLogs.nonEmpty) {
-          sendProgress(progressActor, author, SnippetProgress.default.copy(
-            id = Some(progressId.getAndIncrement()),
-            ts = Some(Instant.now.toEpochMilli),
-            snippetId = Some(snippetId),
-            isDone = false,
-            userOutput = makeOutput(output.bspLogs),
-          ))
-        }
-
         sendProgress(progressActor, author, SnippetProgress.default.copy(
           id = Some(progressId.getAndIncrement()),
           ts = Some(Instant.now.toEpochMilli),
