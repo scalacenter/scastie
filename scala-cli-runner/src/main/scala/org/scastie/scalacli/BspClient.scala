@@ -363,7 +363,7 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
       _ = log.trace(s"[$taskId - build] Build complete, final diagnostics: ${finalDiags.size}")
     } yield BuildOutput(
               process,
-              diagnostics.getAndSet(Nil).map(diagnosticToProblem(isWorksheet, positionMapper)),
+              finalDiags.map(diagnosticToProblem(isWorksheet, positionMapper)),
               bspLogs.getAndSet(Nil)
             )
   }
