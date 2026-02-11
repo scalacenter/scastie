@@ -16,43 +16,34 @@ import org.scastie.api._
 trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
 
   private var currentSignature: Option[SignatureHelpDTO] = None
+  private var lastContext: Option[(Int, Int)] = None
 
-  private def isCursorInParens(doc: String, cursorPos: Int): Boolean = {
-    val openParenPos = doc.lastIndexOf('(', cursorPos - 1)
-    val closeParenPos = doc.indexOf(')', cursorPos)
-    val nextOpenParen = doc.indexOf('(', cursorPos)
-
-    val isInParens =
-      openParenPos != -1 &&
-      closeParenPos != -1 &&
-      cursorPos > openParenPos &&
-      cursorPos <= closeParenPos &&
-      (nextOpenParen == -1 || nextOpenParen > closeParenPos)
-
-    isInParens
+  private def parseAndFindContext(doc: String, cursorPos: Int): Option[TreeSitterArgumentFinder.ArgumentContext] = {
+    syntaxHighlighter.flatMap { h =>
+      val tree = h.parser.parse(doc)
+      TreeSitterArgumentFinder.findArgumentContext(tree, cursorPos)
+    }
   }
 
   private def getSignatureTooltips(state: EditorState): js.Array[Tooltip] = {
-    val cursorPos = state.selection.main.head.toInt
-    val doc = state.doc.toString
+    currentSignature match {
+      case Some(sigHelp) =>
+        val cursorPos = state.selection.main.head.toInt
+        val node = getSignatureHelpNode(sigHelp)
+        val line = state.doc.lineAt(cursorPos).number
+        val showAbove = line > 2
 
-    if (isCursorInParens(doc, cursorPos) && currentSignature.isDefined) {
-      val sigHelp = currentSignature.get
-      val node = getSignatureHelpNode(sigHelp)
-
-      val line = state.doc.lineAt(cursorPos).number
-      val showAbove = line > 2
-
-      js.Array(
-        js.Dynamic.literal(
-          pos = cursorPos.toDouble,
-          above = showAbove,
-          strictSide = true,
-          create = (_: EditorView) => TooltipView(node.domToHtml.get)
-        ).asInstanceOf[Tooltip]
-      )
-    } else {
-      js.Array[Tooltip]()
+        js.Array(
+          js.Dynamic.literal(
+            pos = cursorPos.toDouble,
+            above = showAbove,
+            strictSide = true,
+            create = (_: EditorView) => TooltipView(node.domToHtml.get)
+          ).asInstanceOf[Tooltip]
+        )
+      
+      case None =>
+        js.Array[Tooltip]()
     }
   }
 
@@ -85,14 +76,26 @@ trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
       val cursorPos = update.state.selection.main.head.toInt
       val doc = update.state.doc.toString
 
-      if (isCursorInParens(doc, cursorPos)) {
-        requestAndUpdateSignatureHelp(update.view, cursorPos)
-      } else {
-        currentSignature = None
+      parseAndFindContext(doc, cursorPos) match {
+        case Some(context) =>
+          val currentCtx = (context.openPos, context.activeParam)
+          val shouldRequest = lastContext.forall(_ != currentCtx)
+
+          if (shouldRequest) {
+            lastContext = Some(currentCtx)
+            requestAndUpdateSignatureHelp(update.view, cursorPos)
+          }
+
+        case None if currentSignature.isDefined =>
+          currentSignature = None
+          lastContext = None
+          update.view.dispatch(TransactionSpec())
+
+        case None =>
+          lastContext = None
       }
     }
   })
-
 
   private def requestSignatureHelp(code: String, pos: Int): js.Promise[Option[SignatureHelpDTO]] = {
     /* FIXME: For overloaded methods like:
@@ -124,9 +127,7 @@ trait MetalsSignatureHelp extends MetalsClient with SyntaxHighlightable {
     val sigIdx = sigHelp.activeSignature
     val paramIdx = sigHelp.activeParameter
     val sig = sigHelp.signatures(sigIdx)
-    val doc = sig.documentation
     val label = sig.label.replaceAll("\\[|\\]", "")
-
     val highlighted = highlight(label, Some(paramIdx))
 
     val node = dom.document.createElement("div")
