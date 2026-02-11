@@ -63,8 +63,7 @@ case class RunOutput(
   instrumentation: List[Instrumentation],
   diagnostics: List[Problem],
   runtimeError: Option[org.scastie.runtime.api.RuntimeError],
-  exitCode: Int,
-  bspLogs: List[String] = Nil
+  exitCode: Int
 )
 
 class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout: FiniteDuration, reloadTimeout: FiniteDuration) {
@@ -77,16 +76,15 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
   def runTask(snippetId: SnippetId, inputs: ScalaCliInputs, timeout: FiniteDuration, onOutput: ProcessOutput => Any): Future[Either[ScalaCliError, RunOutput]] = {
     log.info(s"Running task with snippetId=$snippetId")
     log.trace(s"[${snippetId.base64UUID} - runTask] Starting runTask")
+    bspClient.setLogMessageCallback(msg => onOutput(ProcessOutput(msg, ProcessOutputType.StdOut, None)))
     build(snippetId, inputs).flatMap {
       case Right((value, positionMapper)) =>
         log.trace(s"[${snippetId.base64UUID} - runTask] Build successful, running forked")
         runForked(value, inputs.isWorksheetMode, onOutput, positionMapper)
       case Left(value) =>
         log.trace(s"[${snippetId.base64UUID} - runTask] Build failed: ${value.msg}")
-        val remainingLogs = bspClient.bspLogs.getAndSet(Nil)
-        remainingLogs.foreach(msg => onOutput(ProcessOutput(msg, ProcessOutputType.StdErr, None)))
         Future.successful(Left[ScalaCliError, RunOutput](value))
-    }
+    }.andThen { case _ => bspClient.clearLogMessageCallback() }
   }
 
   def build(
@@ -175,7 +173,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     processResult.onComplete(_ => runProcess.destroy())
     processResult.map { exitCode =>
       log.trace(s"[runForked] Creating RunOutput with exitCode=$exitCode, instrumentations=${instrumentations.get.size}")
-      Right(RunOutput(instrumentations.get, bspRun.diagnostics, runtimeError.get, exitCode, bspRun.bspLogs))
+      Right(RunOutput(instrumentations.get, bspRun.diagnostics, runtimeError.get, exitCode))
     }.recover {
       case _: TimeoutException =>
         log.trace(s"[runForked] Process timeout!")

@@ -50,7 +50,7 @@ object BspClient {
 
   private val gson = new Gson()
 
-  case class BuildOutput(process: ProcessBuilder, diagnostics: List[Problem], bspLogs: List[String] = Nil)
+  case class BuildOutput(process: ProcessBuilder, diagnostics: List[Problem])
 
   sealed trait Runner {
     def moduleName: String
@@ -169,7 +169,10 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
 
   private implicit val defaultTimeout: FiniteDuration = FiniteDuration(10, TimeUnit.SECONDS)
   val diagnostics: AtomicReference[List[Diagnostic]] = new AtomicReference(Nil)
-  val bspLogs: AtomicReference[List[String]] = new AtomicReference(Nil)
+  private val logMessageCallback: AtomicReference[String => Unit] = new AtomicReference(_ => ())
+
+  def setLogMessageCallback(callback: String => Unit): Unit = logMessageCallback.set(callback)
+  def clearLogMessageCallback(): Unit = logMessageCallback.set(_ => ())
   val gson = new Gson
 
   private val log = Logger("BspClient")
@@ -361,11 +364,7 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
       process <- makeProcess(jvmRunEnvironment, buildTarget, isWorksheet)
       finalDiags = diagnostics.getAndSet(Nil)
       _ = log.trace(s"[$taskId - build] Build complete, final diagnostics: ${finalDiags.size}")
-    } yield BuildOutput(
-              process,
-              finalDiags.map(diagnosticToProblem(isWorksheet, positionMapper)),
-              bspLogs.getAndSet(Nil)
-            )
+    } yield BuildOutput(process, finalDiags.map(diagnosticToProblem(isWorksheet, positionMapper)))
   }
 
   // Kills the BSP connection and makes this object
@@ -430,10 +429,9 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
     }
     def onBuildLogMessage(params: LogMessageParams): Unit = {
       log.debug(s"LogMessageParams: $params")
-
       val message = params.getMessage
       if (message != null && !message.trim.isEmpty) {
-        bspLogs.getAndUpdate(_ :+ message)
+        logMessageCallback.get()(message)
       }
     }
     def onBuildShowMessage(params: ShowMessageParams): Unit =  log.debug(s"ShowMessageParams: $params")
