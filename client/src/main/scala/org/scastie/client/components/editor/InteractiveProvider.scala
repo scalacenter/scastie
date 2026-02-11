@@ -23,7 +23,7 @@ case class InteractiveProvider(
   updateStatus: MetalsStatus ~=> Callback,
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
-  syntaxHighlighterGetter: () => Option[SyntaxHighlighter],
+  syntaxHighlighterGetter: () => Option[SyntaxHighlighter]
 ) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsSignatureHelp with MetalsDiagnostics {
 
   def syntaxHighlighter: Option[SyntaxHighlighter] = syntaxHighlighterGetter()

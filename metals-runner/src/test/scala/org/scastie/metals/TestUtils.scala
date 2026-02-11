@@ -18,7 +18,7 @@ import cats.data.EitherT
 import cats.data.OptionT
 
 object TestUtils extends Assertions with CatsEffectAssertions {
-  val cache  = Cache.empty[IO, ScastieMetalsOptions, ScastiePresentationCompiler]
+  val cache  = Cache.empty[IO, (String, ScastieMetalsOptions), ScastiePresentationCompiler]
   val server = ScastieMetalsImpl.instance(cache)
 
   type DependencyForVersion = ScalaTarget => ScalaDependency
@@ -42,7 +42,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
   ): LSPRequestDTO =
     val offsetParamsComplete = testCode(code, isWorksheet)
     val dependencies0        = dependencies.map(_.apply(scalaTarget))
-    LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget), offsetParamsComplete)
+    LSPRequestDTO(ScastieMetalsOptions(dependencies0, scalaTarget), offsetParamsComplete, Some("test-user"))
 
   def getCompat[A](scalaTarget: ScalaTarget, compat: Map[String, A], default: A): A =
     val binaryScalaVersion = scalaTarget.binaryScalaVersion
@@ -127,7 +127,7 @@ object TestUtils extends Assertions with CatsEffectAssertions {
     val comp = server.complete(request).getOrElse(ScalaCompletionList(Set(), false)).flatMap { cmps =>
       cmps.items
         .map { cmp =>
-          val infoRequest = CompletionInfoRequest(request._1, cmp)
+          val infoRequest = CompletionInfoRequest(request.options, cmp, request.clientUuid)
           server.completionInfo(infoRequest).value
         }
         .toList

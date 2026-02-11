@@ -30,9 +30,9 @@ import cats.effect.IO
  * Each metals client configuration requires separate presentation compilers
  * to support cabailities for 3rd party capabilities.
  *
- * @param cache - cache used for managing presentation compilers
+ * @param cache - cache used for managing presentation compilers (keyed by userUuid and configuration)
  */
-class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentationCompiler]) {
+class MetalsDispatcher(cache: Cache[IO, (String, ScastieMetalsOptions), ScastiePresentationCompiler]) {
   private val logger = LoggerFactory.getLogger(getClass)
 
   private val config            = ConfigFactory.load().getConfig("scastie.metals")
@@ -71,10 +71,13 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
    * or fetches the `ScastiePresentationCompiler` from guava cache.
    * If the key is not present in guava cache, it is initialized
    *
+   * Caching: Presentation compilers are cached by (userUuid, configuration).
+   *
+   * @param userUuid - unique identifier for the user (random UUID generated per session)
    * @param configuration - scastie client configuration
    * @returns `EitherT[F, FailureType, ScastiePresentationCompiler]`
    */
-  def getCompiler(configuration: ScastieMetalsOptions): EitherT[IO, FailureType, ScastiePresentationCompiler] =
+  def getCompiler(userUuid: String, configuration: ScastieMetalsOptions): EitherT[IO, FailureType, ScastiePresentationCompiler] =
     EitherT:
       if !isSupportedVersion(configuration) then
         IO {
@@ -83,18 +86,19 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
           ).asLeft
         }
       else
+        val cacheKey = (userUuid, configuration)
         cache
-          .contains(configuration)
+          .contains(cacheKey)
           .flatMap: isCached =>
             if isCached then
               cache
-                .get(configuration)
+                .get(cacheKey)
                 .map(_.toRight(PresentationCompilerFailure("Can't extract presentation compiler from cache.")))
             else
               for
                 mtags    <- EitherT(getMtags(configuration.scalaTarget.scalaVersion))
                 compiler <- EitherT.right(
-                  cache.getOrUpdateReleasable(configuration) {
+                  cache.getOrUpdateReleasable(cacheKey) {
                     initializeCompiler(configuration, mtags).map: newPC =>
                       Releasable(newPC, newPC.shutdown())
                   })
@@ -107,6 +111,18 @@ class MetalsDispatcher(cache: Cache[IO, ScastieMetalsOptions, ScastiePresentatio
    */
   private def isSupportedVersion(configuration: ScastieMetalsOptions): Boolean =
     supportedVersions.contains(configuration.scalaTarget.binaryScalaVersion)
+
+  /*
+   * Validates configuration without creating a presentation compiler.
+   * Checks version support and mtags resolution.
+   */
+  def checkConfiguration(conf: ScastieMetalsOptions): EitherT[IO, FailureType, Boolean] =
+    if !isSupportedVersion(conf) then
+      EitherT.leftT(PresentationCompilerFailure(
+        s"Interactive features are not supported for Scala ${conf.scalaTarget.binaryScalaVersion}."
+      ))
+    else
+      EitherT(getMtags(conf.scalaTarget.scalaVersion)).map(_ => true)
 
   /*
    * This is workaround for bad scaladex search UI in scastie.

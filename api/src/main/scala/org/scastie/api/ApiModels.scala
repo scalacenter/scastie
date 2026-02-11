@@ -113,8 +113,8 @@ object InvalidScalaVersion {
   implicit val invalidScalaVersionDecoder: Decoder[InvalidScalaVersion] = deriveDecoder[InvalidScalaVersion]
 }
 
-case class LSPRequestDTO(options: ScastieMetalsOptions, offsetParams: ScastieOffsetParams)
-case class CompletionInfoRequest(options: ScastieMetalsOptions, completionItem: CompletionItemDTO)
+case class LSPRequestDTO(options: ScastieMetalsOptions, offsetParams: ScastieOffsetParams, clientUuid: Option[String] = None)
+case class CompletionInfoRequest(options: ScastieMetalsOptions, completionItem: CompletionItemDTO, clientUuid: Option[String] = None)
 
 object CompletionInfoRequest {
   implicit val completionInfoRequestEncoder: Encoder[CompletionInfoRequest] = deriveEncoder[CompletionInfoRequest]
