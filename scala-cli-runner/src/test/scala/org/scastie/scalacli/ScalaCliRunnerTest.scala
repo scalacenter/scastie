@@ -296,6 +296,21 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
     runCode("case class A(i:Int) extends AnyVal; A(1)")(_.instrumentations.headOption.exists(_.render == Value("A(1)", "A")))
   }
 
+  test("capture -Vprint:typer output") {
+    val code =
+      s"""
+         |//> using scala 3
+         |//> using options -Vprint:typer
+         |val x = 1
+         |println("test")""".stripMargin
+    runCode(code)(progress => {
+      progress.userOutput.exists(out =>
+        out.line.contains("[[syntax trees at end of") &&
+        out.line.contains("typer")
+      )
+    })
+  }
+
   test("#304 null pointer") {
     runCode(
       """|trait A {
