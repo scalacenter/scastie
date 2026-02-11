@@ -158,13 +158,19 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
     val problems = extract[List[Problem]](line)
 
     val problemsWithMappedPositions = problems.map {
-      _.map(problem =>
+      _.map(problem => {
+        val mappedLine = mapLine(problem.line, sbtRun.positionMapper, lineOffset)
+        val mappedEndLine = mapLine(problem.endLine, sbtRun.positionMapper, lineOffset)
+        val mappedStartColumn = mapColumn(problem.startColumn.map(_ + 1), problem.line, sbtRun.positionMapper)
+        val mappedEndColumn = mapColumn(problem.endColumn.map(_ + 1), problem.endLine, sbtRun.positionMapper)
+
         problem.copy(
-          line = mapLine(problem.line, sbtRun.positionMapper, lineOffset),
-          startColumn = mapColumn(problem.startColumn.map(_ + 1), problem.line, sbtRun.positionMapper),
-          endColumn = mapColumn(problem.endColumn.map(_ + 1), problem.line, sbtRun.positionMapper)
+          line = mappedLine,
+          endLine = mappedEndLine,
+          startColumn = mappedStartColumn,
+          endColumn = mappedEndColumn
         )
-      )
+      })
     }
 
     def annoying(in: Problem): Boolean = {

@@ -8,12 +8,12 @@ import org.scastie.api._
 import scala.meta.inputs.Input
 import scala.meta.parsers.Parsed
 
-case class InstrumentationFailureReport(message: String, line: Option[Int], startColumn: Option[Int] = None, endColumn: Option[Int] = None) {
+case class InstrumentationFailureReport(message: String, line: Option[Int], endLine: Option[Int] = None, startColumn: Option[Int] = None, endColumn: Option[Int] = None) {
   def toProgress(snippetId: SnippetId): SnippetProgress = {
     SnippetProgress.default.copy(
       ts = Some(Instant.now.toEpochMilli),
       snippetId = Some(snippetId),
-      compilationInfos = List(Problem(Error, line, startColumn, endColumn, message))
+      compilationInfos = List(Problem(Error, line, endLine, startColumn, endColumn, message))
     )
   }
 }
@@ -50,14 +50,15 @@ object InstrumentedInputs {
                 case _ => false
               }
               val positionMapper = PositionMapper(error.pos.input.text, isScalaCli)
-              val errorLine = positionMapper.mapLine(error.pos.startLine + 1) max 1
+              val errorStartLine = positionMapper.mapLine(error.pos.startLine + 1) max 1
+              val errorEndLine = positionMapper.mapLine(error.pos.endLine + 1) max 1
               val errorStartCol = error.pos.startColumn + 1
               val errorEndCol = error.pos.endColumn + 1
 
               Right(InstrumentedInputs(
                 inputs = inputs0.copyBaseInput(code = error.pos.input.text),
                 isForcedProgramMode = false,
-                optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorLine), Some(errorStartCol), Some(errorEndCol))),
+                optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorStartLine), Some(errorEndLine), Some(errorStartCol), Some(errorEndCol))),
                 positionMapper = Some(positionMapper)
               ))
 

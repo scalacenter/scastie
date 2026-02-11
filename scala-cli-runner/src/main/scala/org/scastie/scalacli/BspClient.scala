@@ -141,7 +141,7 @@ object BspClient {
     val bspRange = diag.getRange
 
     val (startLine, startChar) = mapBspPosition(bspRange.getStart.getLine, bspRange.getStart.getCharacter, positionMapper, offset)
-    val (_, endChar) = mapBspPosition(bspRange.getEnd.getLine, bspRange.getEnd.getCharacter, positionMapper, offset)
+    val (endLine, endChar) = mapBspPosition(bspRange.getEnd.getLine, bspRange.getEnd.getCharacter, positionMapper, offset)
 
     val actions: Option[List[org.scastie.api.ScalaAction]] = for {
       data <- Option(diag.getData())
@@ -152,6 +152,7 @@ object BspClient {
     Problem(
       diagSeverityToSeverity(diag.getSeverity()),
       Option(startLine + 1),
+      Option(endLine + 1),
       Some(startChar + 1),
       Some(endChar + 1),
       diag.getMessage(),

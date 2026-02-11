@@ -42,8 +42,9 @@ object CompilerReporter {
               case xsbti.Severity.Error => api.Error
             }
           api.Problem(
-            severity, 
+            severity,
             toOption(p.position.line).map(_.toInt),
+            toOption(p.position.endLine).map(_.toInt),
             toOption(p.position.startColumn).map(_.toInt),
             toOption(p.position.endColumn).map(_.toInt),
             p.message
