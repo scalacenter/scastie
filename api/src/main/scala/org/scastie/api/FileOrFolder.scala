@@ -7,8 +7,7 @@ import io.circe.syntax._
 sealed trait FileOrFolder {
   val name: String
   val path: String
-  val isFolder: Boolean
-  val isRoot: Boolean
+  def isFolder: Boolean
 }
 
 object FileOrFolder {
@@ -30,13 +29,14 @@ object FileOrFolder {
 case class File(
   override val name: String,
   content: String = "",
-  override val path: String = "",
-  override val isFolder: Boolean = false,
-  override val isRoot: Boolean = false
-) extends FileOrFolder
+  override val path: String = ""
+) extends FileOrFolder {
+  def isFolder: Boolean = false
+}
 
 object File {
-  implicit val fileEncoder: Encoder[File] = deriveEncoder[File]
+  implicit val fileEncoder: Encoder[File] =
+    deriveEncoder[File].mapJson(_.deepMerge(Json.obj("isFolder" -> Json.fromBoolean(false))))
   implicit val fileDecoder: Decoder[File] = deriveDecoder[File]
 }
 
@@ -46,7 +46,8 @@ object Folder {
     Folder("root", List(File("Main.scala", code, "/root/Main.scala")), "/root", isRoot = true)
   }
 
-  implicit val folderEncoder: Encoder[Folder] = deriveEncoder[Folder]
+  implicit val folderEncoder: Encoder[Folder] =
+    deriveEncoder[Folder].mapJson(_.deepMerge(Json.obj("isFolder" -> Json.fromBoolean(true))))
   implicit val folderDecoder: Decoder[Folder] = deriveDecoder[Folder]
 }
 
@@ -54,9 +55,9 @@ case class Folder(
   override val name: String,
   children: List[FileOrFolder] = List(),
   override val path: String = "",
-  override val isRoot: Boolean = false,
-  override val isFolder: Boolean = true
+  isRoot: Boolean = false
 ) extends FileOrFolder {
+  def isFolder: Boolean = true
 
   def isEmpty: Boolean = children.isEmpty
 
