@@ -1,0 +1,20 @@
+@import "commonvars";
+
+@mixin sidepaneTheme($class) {
+
+  .side-pane {
+    background: linear-gradient(to bottom, $topbar-background $header-height, $sidepane-background $header-height);
+    color: $option-color;
+  }
+
+  .side-pane-toggle {
+    background: $sidebar-background;
+  }
+
+  .file-selected {
+    background: $selected-option-background;
+    color: white;
+    font-weight: bold;
+  }
+
+}

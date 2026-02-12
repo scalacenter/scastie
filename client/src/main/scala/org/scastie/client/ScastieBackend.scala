@@ -138,6 +138,9 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val toggleConsole: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleConsole))
 
+  val toggleSidePane: Reusable[Callback] =
+    Reusable.always(scope.modState(_.toggleSidePane))
+
   val openResetModal: Reusable[Callback] =
     Reusable.always(scope.modState(_.openResetModal))
 

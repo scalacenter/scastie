@@ -128,7 +128,8 @@ case class ScastieState(
   transient: Boolean = false,
   scalaCliConversionError: Option[String] = None,
   editorMode: EditorMode = Default,
-  language: String = "en"
+  language: String = "en",
+  isSidePaneOpen: Boolean = true
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean         = snippetState.loadSnippet
@@ -258,6 +259,8 @@ case class ScastieState(
   def toggleLineNumbers: ScastieState = copyAndSave(showLineNumbers = !showLineNumbers)
 
   def togglePresentationMode: ScastieState = copyAndSave(isPresentationMode = !isPresentationMode)
+
+  def toggleSidePane: ScastieState = copy(isSidePaneOpen = !isSidePaneOpen)
 
   def toggleWorksheetMode: ScastieState = copyAndSave(
     inputs = inputs.toggleWorksheet,

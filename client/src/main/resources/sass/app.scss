@@ -6,6 +6,9 @@
 @import "sidebar";
 @import "sidebar-theme";
 
+@import "sidepane";
+@import "sidepane-theme";
+
 @import "snippet";
 @import "snippet-theme";
 
@@ -75,6 +78,7 @@ h1 {
 }
 
 @include sidebar();
+@include sidepane();
 @include snippet();
 @include buildSettings();
 @include status();
@@ -99,6 +103,7 @@ h1 {
 
       @include topbarTheme($class);
       @include sidebarTheme($class);
+      @include sidepaneTheme($class);
       @include snippetTheme($class);
       @include buildSettingsTheme($class);
       @include statusTheme($class);
