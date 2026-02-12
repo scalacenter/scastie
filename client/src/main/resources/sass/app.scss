@@ -9,6 +9,9 @@
 @import "sidepane";
 @import "sidepane-theme";
 
+@import "tabstrip";
+@import "tabstrip-theme";
+
 @import "snippet";
 @import "snippet-theme";
 
@@ -77,6 +80,7 @@ h1 {
   color: white;
 }
 
+@include tabstrip();
 @include sidebar();
 @include sidepane();
 @include snippet();
@@ -102,6 +106,7 @@ h1 {
       }
 
       @include topbarTheme($class);
+      @include tabstripTheme($class);
       @include sidebarTheme($class);
       @include sidepaneTheme($class);
       @include snippetTheme($class);
