@@ -10,7 +10,7 @@ import org.scalajs.dom
 import org.scalajs.dom.HTMLScriptElement
 import org.scastie.api._
 import org.scastie.client._
-import org.scastie.client.components.fileHierarchy.{FileHierarchy, File, Folder}
+import org.scastie.client.components.fileHierarchy.FileHierarchy
 
 final case class Scastie(
   router: Option[RouterCtl[Page]],
@@ -48,7 +48,7 @@ object Scastie {
   )
 
   private def setTitle(state: ScastieState, props: Scastie) = {
-    def scastieCode = if (state.inputs.code.isEmpty) "Scastie" else state.inputs.code + " - Scastie"
+    def scastieCode = if (state.inputs.code.childHeadFileContent.isEmpty) "Scastie" else state.inputs.code.childHeadFileContent + " - Scastie"
     if (!props.isEmbedded) {
       if (state.inputsHasChanged) {
         Callback(dom.document.title = "* " + scastieCode)
@@ -91,7 +91,7 @@ object Scastie {
           i(cls := s"fa fa-${if (state.isSidePaneOpen) "angle-left" else "angle-right"}")
         ),
         div(cls := "side-pane-content")(
-          FileHierarchy(Folder("a", List()), scope.backend.openFile).render
+          FileHierarchy(state.inputs.code, scope.backend.openFile, scope.backend.moveFile).render
         ).when(state.isSidePaneOpen)
       ).unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(
@@ -239,7 +239,7 @@ object Scastie {
       val state = {
         val scheme      = LocalStorage.load.map(_.isDarkTheme)
         val editorMode  = LocalStorage.load.map(_.editorMode)
-        val loadedState = ScastieState.default(props.isEmbedded).copy(inputs = SbtInputs.default.copy(code = ""))
+        val loadedState = ScastieState.default(props.isEmbedded).copy(inputs = SbtInputs.default.copy(code = Folder.singleton("")))
         val loadedStateWithMode = editorMode.map(mode => loadedState.copy(editorMode = mode)).getOrElse(loadedState)
         val loadedStateWithScheme =
           scheme.map(theme => loadedStateWithMode.copy(isDarkTheme = theme)).getOrElse(loadedStateWithMode)

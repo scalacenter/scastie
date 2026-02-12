@@ -115,7 +115,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
       }
 
     case Replay(SbtRun(snippetId, inputs, progressActor, snippetActor)) =>
-      log.info("Replay: " + inputs.code)
+      log.info("Replay: " + inputs.code.childHeadFileContent)
 
     case RunnerConnect(runnerHostname, runnerAkkaPort) =>
       if (!remoteSbtSelections.contains(SocketAddress(runnerHostname, runnerAkkaPort))) {

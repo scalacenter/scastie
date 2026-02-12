@@ -1,5 +1,6 @@
 package org.scastie.client.components.fileHierarchy
 
+import org.scastie.api._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all.cls
 import japgolly.scalajs.react.vdom.html_<^._

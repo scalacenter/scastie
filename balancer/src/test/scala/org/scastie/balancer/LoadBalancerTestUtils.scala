@@ -75,12 +75,12 @@ trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
 
   def server(v: Int): TestServerRef = TestServerRef(v)
 
-  def code(code: String) = SbtInputs.default.copy(code = code)
+  def code(code: String) = SbtInputs.default.copy(code = Folder.singleton(code))
   def sbtConfig(sbtConfig: String) = SbtInputs.default.copy(sbtConfigExtra = sbtConfig)
 
   def history(columns: Seq[String]*): TaskHistory = {
     val records =
-      columns.to(Vector).flatten.map(i => Task(SbtInputs.default.copy(code = i.toString), nextIp, TestTaskId(1), Instant.now)).reverse
+      columns.to(Vector).flatten.map(i => Task(SbtInputs.default.copy(code = Folder.singleton(i.toString)), nextIp, TestTaskId(1), Instant.now)).reverse
 
     TaskHistory(Vector(records: _*), maxSize = 20)
   }

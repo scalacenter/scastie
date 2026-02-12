@@ -92,7 +92,7 @@ object ScalaCliUtils {
       val scalaCliTarget = ScalaCli(inputs.target.scalaVersion)
       val newLibraries = inputs.libraries.map(_.copy(target = scalaCliTarget))
 
-      val (previousDirectives, remainingCode) = inputs.code.linesIterator.span(_.startsWith("//>"))
+      val (previousDirectives, remainingCode) = inputs.code.childHeadFileContent.linesIterator.span(_.startsWith("//>"))
       val directives = (scalaCliTarget.versionDirective +: newLibraries.map(_.renderScalaCli).toList).mkString("\n")
       val codeWithoutDirectives = remainingCode.mkString("\n")
 
@@ -102,7 +102,7 @@ object ScalaCliUtils {
       ScalaCliInputs.default.copy(
         isWorksheetMode = inputs.isWorksheetMode,
         isShowingInUserProfile = false,
-        code = codeWithDirectives,
+        code = Folder.singleton(codeWithDirectives),
         target = scalaCliTarget,
         libraries = newLibraries,
         forked = None

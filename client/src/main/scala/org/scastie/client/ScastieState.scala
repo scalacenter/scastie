@@ -7,8 +7,8 @@ import org.scalajs.dom.{Position => _}
 import org.scalajs.dom.HTMLElement
 import org.scastie.api._
 import org.scastie.api.EditorMode._
-import org.scastie.client.components.fileHierarchy.File
-import org.scastie.client.components.tabStrip.TabStrip.TabStripState
+import org.scastie.api.FileOrFolderUtils
+import org.scastie.client.components.tabStrip.TabStrip.{Tab, TabStripState}
 import org.scastie.client.i18n.I18n
 import org.scastie.client.scalacli.ScalaCliUtils._
 import org.scastie.runtime.api._
@@ -267,15 +267,25 @@ case class ScastieState(
 
   def toggleSidePane: ScastieState = copy(isSidePaneOpen = !isSidePaneOpen)
 
-  def openFile(f: File): ScastieState = {
-    val newTabs = if (tabStripState.activeTabs.exists(_.path == f.path)) tabStripState.activeTabs
-                  else tabStripState.activeTabs ::: List(f)
-    copy(tabStripState = TabStripState(Some(f), newTabs))
+  def selectedFileContent: String = {
+    tabStripState.selectedTab.flatMap { tab =>
+      FileOrFolderUtils.allFiles(inputs.code).find(_.path == tab.tabId).map(_.content)
+    }.getOrElse(inputs.code.childHeadFileContent)
   }
 
-  def closeTab(f: File): ScastieState = {
-    val closeIdx = tabStripState.activeTabs.indexWhere(_.path == f.path)
-    val newTabs = tabStripState.activeTabs.filterNot(_.path == f.path)
+  def openFile(f: File): ScastieState = {
+    val tab = Tab.fromFile(f)
+    val activeTabs = tabStripState.activeTabs
+    copy(
+      tabStripState =
+        if (activeTabs.exists(_.tabId == tab.tabId)) TabStripState(Some(tab), activeTabs)
+        else TabStripState(Some(tab), activeTabs :+ tab)
+    )
+  }
+
+  def closeTab(tab: Tab): ScastieState = {
+    val closeIdx = tabStripState.activeTabs.indexWhere(_.tabId == tab.tabId)
+    val newTabs = tabStripState.activeTabs.filterNot(_.tabId == tab.tabId)
     val newSelection = {
       if (newTabs.isEmpty) None
       else if (newTabs.size <= closeIdx) Some(newTabs.last)
@@ -284,8 +294,37 @@ case class ScastieState(
     copy(tabStripState = TabStripState(newSelection, newTabs))
   }
 
-  def changeTabSelection(f: File): ScastieState = {
-    copy(tabStripState = tabStripState.copy(selectedTab = Some(f)))
+  def changeTabSelection(tab: Tab): ScastieState = {
+    copy(tabStripState = tabStripState.copy(selectedTab = Some(tab)))
+  }
+
+  def changeSelectedFileContent(newContent: String): ScastieState = {
+    tabStripState.selectedTab match {
+      case Some(tab) =>
+        FileOrFolderUtils.allFiles(inputs.code).find(_.path == tab.tabId) match {
+          case Some(file) =>
+            val updatedCode = FileOrFolderUtils.updateFile(inputs.code, file.copy(content = newContent))
+            setRootFolder(updatedCode)
+          case None => this
+        }
+      case None => this
+    }
+  }
+
+  def moveFile(srcPath: String, dstPath: String): ScastieState = {
+    val newCode = FileOrFolderUtils.move(inputs.code, srcPath, dstPath)
+    setRootFolder(newCode)
+  }
+
+  def setRootFolder(code: Folder): ScastieState = {
+    if (inputs.code != code) {
+      copyAndSave(
+        inputs = inputs.copyBaseInput(code = code),
+        inputsHasChanged = true
+      )
+    } else {
+      this
+    }
   }
 
   def toggleWorksheetMode: ScastieState = copyAndSave(
@@ -383,16 +422,8 @@ case class ScastieState(
 
   def setUserData(userData: Option[UserData]): ScastieState = copyAndSave(user = userData.map(_.user), switchableUsers = userData.map(_.switchableUsers).getOrElse(List()))
 
-  def setCode(code: String): ScastieState = {
-    if (inputs.code != code) {
-      copyAndSave(
-        inputs = inputs.copyBaseInput(code = code),
-        inputsHasChanged = true
-      )
-    } else {
-      this
-    }
-  }
+  def setCode(code: String): ScastieState =
+    setRootFolder(Folder.singleton(code))
 
   def setInputs(inputs: BaseInputs): ScastieState = copyAndSave(inputs = inputs)
 
