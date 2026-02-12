@@ -1,40 +1,46 @@
 package org.scastie.client.components.tabStrip
 
-import org.scastie.client.components.fileHierarchy.File
+import org.scastie.api.File
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
-final case class TabStrip(tabs: TabStrip.TabStripState, changeSelection: File => Callback, closeTab: File => Callback) {
-  @inline def render: VdomElement = TabStrip.TabStripComponent(tabs, changeSelection, closeTab)
+final case class TabStrip(tabStripState: TabStrip.TabStripState, changeSelection: TabStrip.Tab => Callback, closeTab: TabStrip.Tab => Callback) {
+  @inline def render: VdomElement = TabStrip.TabStripComponent(tabStripState, changeSelection, closeTab)
 }
 
 object TabStrip {
 
-  case class TabStripState(selectedTab: Option[File], activeTabs: List[File])
+  case class Tab(tabId: String, title: String)
+
+  object Tab {
+    def fromFile(file: File): Tab = Tab(file.path, file.name)
+  }
+
+  case class TabStripState(selectedTab: Option[Tab], activeTabs: List[Tab])
 
   object TabStripState {
     val empty: TabStripState = TabStripState(None, List())
   }
 
-  private val TabStripComponent = ScalaFnComponent.withHooks[(TabStripState, File => Callback, File => Callback)]
+  private val TabStripComponent = ScalaFnComponent.withHooks[(TabStripState, Tab => Callback, Tab => Callback)]
     .render($ => {
-      val tabs: List[File] = $._1.activeTabs
-      val selectedTab: Option[File] = $._1.selectedTab
+      val tabs: List[Tab] = $._1.activeTabs
+      val selectedTab: Option[Tab] = $._1.selectedTab
       val changeSelection = $._2
       val closeTab = $._3
 
-      val handleTabClickCb: File => Callback = {
-        file => changeSelection(file)
+      val handleTabClickCb: Tab => Callback = {
+        tab => changeSelection(tab)
       }
 
       <.div(
         ^.className := "tab-strip",
-        tabs.map { file: File =>
+        tabs.map { tab: Tab =>
           renderTab(
-            file.name,
-            file.path,
-            selectedTab.exists(_.path == file.path)
-          )(handleTabClickCb(file), closeTab(file))
+            tab.title,
+            tab.tabId,
+            selectedTab.exists(_.tabId == tab.tabId)
+          )(handleTabClickCb(tab), closeTab(tab))
         }.toVdomArray
       )
     })

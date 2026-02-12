@@ -68,7 +68,7 @@ object MainPanel {
         isEmbedded = props.isEmbedded,
         editorMode = state.editorMode,
         showLineNumbers = state.showLineNumbers,
-        value = state.inputs.code,
+        value = state.selectedFileContent,
         attachedDoms = state.attachedDoms,
         instrumentations = state.outputs.instrumentations,
         compilationInfos = state.outputs.compilationInfos,
@@ -81,7 +81,7 @@ object MainPanel {
         toggleLineNumbers = backend.toggleLineNumbers,
         togglePresentationMode = backend.togglePresentationMode,
         formatCode = backend.formatCode,
-        codeChange = backend.codeChange,
+        codeChange = if (state.tabStripState.selectedTab.isDefined) backend.selectedFileCodeChange else backend.codeChange,
         target = state.inputs.target,
         metalsStatus = state.metalsStatus,
         setMetalsStatus = backend.setMetalsStatus,
@@ -200,7 +200,10 @@ object MainPanel {
         cls := "content",
         div(cls := "editor-container inner-container", show(View.Editor))(
           div(cls := "code", consoleCssForEditor)(
-            editor,
+            if (!props.isEmbedded && state.tabStripState.selectedTab.isEmpty)
+              div(cls := "editor-placeholder")("Open a file to start editing")
+            else
+              editor,
             embeddedMenu
           ),
           console
