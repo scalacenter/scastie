@@ -15,6 +15,7 @@ import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scastie.runtime.api.RuntimeError
 import org.scastie.client.components.ScaladexSearch
+import org.scastie.client.components.fileHierarchy.File
 import org.scastie.client.scalacli.ScalaCliUtils._
 
 case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendScope[Scastie, ScastieState]) {
@@ -140,6 +141,15 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
 
   val toggleSidePane: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleSidePane))
+
+  val openFile: File => Callback =
+    f => scope.modState(_.openFile(f))
+
+  val closeTab: File => Callback =
+    f => scope.modState(_.closeTab(f))
+
+  val changeTabSelection: File => Callback =
+    f => scope.modState(_.changeTabSelection(f))
 
   val openResetModal: Reusable[Callback] =
     Reusable.always(scope.modState(_.openResetModal))

@@ -7,6 +7,8 @@ import org.scalajs.dom.{Position => _}
 import org.scalajs.dom.HTMLElement
 import org.scastie.api._
 import org.scastie.api.EditorMode._
+import org.scastie.client.components.fileHierarchy.File
+import org.scastie.client.components.tabStrip.TabStrip.TabStripState
 import org.scastie.client.i18n.I18n
 import org.scastie.client.scalacli.ScalaCliUtils._
 import org.scastie.runtime.api._
@@ -99,6 +101,8 @@ object ScastieState {
 
   implicit val dontSerializeMetalsStatus: Codec[MetalsStatus] = dontSerialize[MetalsStatus](MetalsLoading)
 
+  implicit val dontSerializeTabStripState: Codec[TabStripState] = dontSerialize[TabStripState](TabStripState.empty)
+
   implicit val scastieStateEncoder: Encoder[ScastieState] = deriveEncoder[ScastieState]
   implicit val scastieStateDecoder: Decoder[ScastieState] = deriveDecoder[ScastieState]
 
@@ -129,7 +133,8 @@ case class ScastieState(
   scalaCliConversionError: Option[String] = None,
   editorMode: EditorMode = Default,
   language: String = "en",
-  isSidePaneOpen: Boolean = true
+  isSidePaneOpen: Boolean = true,
+  tabStripState: TabStripState = TabStripState.empty
 ) {
   def snippetId: Option[SnippetId] = snippetState.snippetId
   def loadSnippet: Boolean         = snippetState.loadSnippet
@@ -261,6 +266,27 @@ case class ScastieState(
   def togglePresentationMode: ScastieState = copyAndSave(isPresentationMode = !isPresentationMode)
 
   def toggleSidePane: ScastieState = copy(isSidePaneOpen = !isSidePaneOpen)
+
+  def openFile(f: File): ScastieState = {
+    val newTabs = if (tabStripState.activeTabs.exists(_.path == f.path)) tabStripState.activeTabs
+                  else tabStripState.activeTabs ::: List(f)
+    copy(tabStripState = TabStripState(Some(f), newTabs))
+  }
+
+  def closeTab(f: File): ScastieState = {
+    val closeIdx = tabStripState.activeTabs.indexWhere(_.path == f.path)
+    val newTabs = tabStripState.activeTabs.filterNot(_.path == f.path)
+    val newSelection = {
+      if (newTabs.isEmpty) None
+      else if (newTabs.size <= closeIdx) Some(newTabs.last)
+      else Some(newTabs(closeIdx))
+    }
+    copy(tabStripState = TabStripState(newSelection, newTabs))
+  }
+
+  def changeTabSelection(f: File): ScastieState = {
+    copy(tabStripState = tabStripState.copy(selectedTab = Some(f)))
+  }
 
   def toggleWorksheetMode: ScastieState = copyAndSave(
     inputs = inputs.toggleWorksheet,

@@ -2,7 +2,7 @@
 
 @mixin tabstripTheme($class) {
   .tab-strip {
-    background-color: slategray;
+    background-color: $sidebar-background;
 
     .tab-strip-item {
       background-color: #185463;

@@ -195,7 +195,7 @@ object MainPanel {
       presentationModeClass,
       topBar,
       editorTopBar,
-      TabStrip().render.unless(props.isEmbedded || state.isPresentationMode),
+      TabStrip(state.tabStripState, backend.changeTabSelection, backend.closeTab).render.unless(props.isEmbedded || state.isPresentationMode),
       div(
         cls := "content",
         div(cls := "editor-container inner-container", show(View.Editor))(
