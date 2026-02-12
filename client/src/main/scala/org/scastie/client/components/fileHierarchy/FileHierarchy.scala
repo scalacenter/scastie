@@ -24,30 +24,36 @@ final case class FileHierarchy(rootFolder: Folder) {
 
 object FileHierarchy {
 
-  val initialState =
-    Folder("Folder A",
-      List(
-        File("File A.1"),
-        Folder("Folder A.B", List(
-          File("File A.B.1"),
-          File("File A.B.2"),
-          File("FA.B.2"),
-          File("File A.B.3")
-        )),
-        File("File A.2"),
-        File("File A.3"),
-        Folder("File A.C", List(
-          File("File A.C.1")
-        ))
-      )
-    )
+  val initialState: (Folder, String) = {
+    (
+      Folder("Folder A",
+        List(
+          File("File A.1"),
+          Folder("Folder A.B", List(
+            File("File A.B.1"),
+            File("File A.B.2"),
+            File("FA.B.2"),
+            File("File A.B.3")
+          )),
+          File("File A.2"),
+          File("File A.3"),
+          Folder("File A.C", List(
+            File("File A.C.1")
+          ))
+        )
+      ),
+      "File A.B.1")
+  }
 
   val component =
     ScalaFnComponent.withHooks[Unit]
       .useState(initialState)
-      .render($ =>
+      .render($ => {
+        val fn: String => Callback = {
+          s => $.hook1.setState($.hook1.value._1, s)
+        }
         <.div(
-          FileOrFolderNode($.hook1.value, true, 0).render
+          FileOrFolderNode($.hook1.value._1, $.hook1.value._2, 0, fn).render
         )
-      )
+      })
 }
