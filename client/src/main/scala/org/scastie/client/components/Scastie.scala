@@ -10,6 +10,7 @@ import org.scalajs.dom
 import org.scalajs.dom.HTMLScriptElement
 import org.scastie.api._
 import org.scastie.client._
+import org.scastie.client.components.fileHierarchy.{FileHierarchy, Folder}
 
 final case class Scastie(
   router: Option[RouterCtl[Page]],
@@ -70,7 +71,9 @@ object Scastie {
 
     val forceDesktopClass = (cls := "force-desktop").when(state.isDesktopForced)
 
-    div(cls := s"app $theme", forceDesktopClass)(
+    val sidePaneClass = if (state.isSidePaneOpen) "side-pane-open" else "side-pane-closed"
+
+    div(cls := s"app $theme $sidePaneClass", forceDesktopClass)(
       SideBar(
         isDarkTheme = state.isDarkTheme,
         status = state.status,
@@ -83,6 +86,14 @@ object Scastie {
         setEditorMode = scope.backend.setEditorMode,
         language = state.language
       ).render.unless(props.isEmbedded || state.isPresentationMode),
+      div(cls := "side-pane")(
+        div(cls := "side-pane-toggle", onClick --> scope.backend.toggleSidePane)(
+          i(cls := s"fa fa-${if (state.isSidePaneOpen) "angle-left" else "angle-right"}")
+        ),
+        div(cls := "side-pane-content")(
+          FileHierarchy(Folder("a", List())).render
+        ).when(state.isSidePaneOpen)
+      ).unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(
         state,
         scope.backend,
