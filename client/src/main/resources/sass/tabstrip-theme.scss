@@ -1,0 +1,31 @@
+@import "commonvars";
+
+@mixin tabstripTheme($class) {
+  .tab-strip {
+    background-color: slategray;
+
+    .tab-strip-item {
+      background-color: #185463;
+
+      &:hover {
+        background-color: #15414c;
+      }
+
+      span, p {
+        color: white;
+      }
+
+      &.active {
+        background-color: $editor-background;
+        box-shadow: inset 0 3px 0 0 lightpink;
+      }
+
+      .close-btn {
+        &:hover {
+          background-color: gainsboro;
+          color: black;
+        }
+      }
+    }
+  }
+}

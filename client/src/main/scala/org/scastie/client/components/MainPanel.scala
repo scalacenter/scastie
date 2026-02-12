@@ -4,6 +4,7 @@ import org.scastie.client.ScastieBackend
 import org.scastie.client.ScastieState
 import org.scastie.client.View
 import org.scastie.client.components.editor.CodeEditor
+import org.scastie.client.components.tabStrip.TabStrip
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
 
@@ -194,6 +195,7 @@ object MainPanel {
       presentationModeClass,
       topBar,
       editorTopBar,
+      TabStrip().render.unless(props.isEmbedded || state.isPresentationMode),
       div(
         cls := "content",
         div(cls := "editor-container inner-container", show(View.Editor))(
