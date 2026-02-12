@@ -11,6 +11,10 @@
     background: $sidebar-background;
   }
 
+  .file-mouse-over {
+    background-color: $sidebar-background;
+  }
+
   .file-selected {
     background: $selected-option-background;
     color: white;
