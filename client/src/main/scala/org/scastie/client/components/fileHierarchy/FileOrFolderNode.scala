@@ -4,21 +4,23 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all.cls
 import japgolly.scalajs.react.vdom.html_<^._
 
+case class DragInfo(start: Boolean, end: Boolean, f: FileOrFolder)
 
-final case class FileOrFolderNode(file: FileOrFolder, selectedFile: String, depth: Int, selectFile: String => Callback) {
+final case class FileOrFolderNode(file: FileOrFolder, selectedFile: String, depth: Int, selectFile: String => Callback, dragStartOrEnd: DragInfo => Callback) {
 
-  @inline def render: VdomElement = FileOrFolderNode.component((file, selectedFile, depth, selectFile))
+  @inline def render: VdomElement = FileOrFolderNode.component((file, selectedFile, depth, selectFile, dragStartOrEnd))
 }
 
 object FileOrFolderNode {
 
 
-  val component = ScalaFnComponent.withHooks[(FileOrFolder, String, Int, String => Callback)]
+  val component = ScalaFnComponent.withHooks[(FileOrFolder, String, Int, String => Callback, DragInfo => Callback)]
 
-    .useState(true)
+    .useState(true) //isExpanded
+    .useState(false) //isMouseOver
 
-    .render((props, isExpanded) => {
-      val (file, s, depth, selectFile) = props
+    .render((props, isExpanded, isMouseOver) => {
+      val (file, s, depth, selectFile, dragStartOrEnd) = props
 
       var fafa = "file-o"
       if (file.isFolder) {
@@ -37,10 +39,32 @@ object FileOrFolderNode {
         Callback.empty
       }
 
+      val onDragStart = (e: ReactDragEvent) => {
+        dragStartOrEnd(DragInfo(start = true, end = false, file))
+      }
+
+      val onDragOver = (e: ReactDragEvent) => {
+        isMouseOver.setState(true).when(file.isFolder) >>
+          dragStartOrEnd(DragInfo(start = false, end = false, file))
+      }
+
+      val onDragEnd = (e: ReactDragEvent) => {
+        dragStartOrEnd(DragInfo(start = false, end = true, file))
+      }
+
       <.div(
         <.div(
-          ^.cls := s"hierarchy-list-row ${if (file.name.equals(s)) "file-selected" else ""}",
+          ^.cls := s"hierarchy-list-row",
+          ^.cls := s"${if (file.name.equals(s)) " file-selected" else ""}",
+          ^.cls := s"${if (isMouseOver.value) "file-mouse-over" else ""}",
           ^.onClick ==> handleClick,
+          ^.draggable := true,
+          ^.onDragStart ==> onDragStart,
+          ^.onDragEnd ==> onDragEnd,
+          ^.onDragOver ==> onDragOver,
+          ^.onDragLeave --> isMouseOver.setState(false),
+          ^.onMouseOver --> isMouseOver.setState(true),
+          ^.onMouseLeave --> isMouseOver.setState(false),
           ^.key := file.name,
           <.div(
             ^.paddingLeft := s"${16 * depth}px",
@@ -54,7 +78,7 @@ object FileOrFolderNode {
             file match {
               case folder: Folder =>
                 folder.files.map {
-                  f: FileOrFolder => FileOrFolderNode(f, s, depth + 1, selectFile).render
+                  f: FileOrFolder => FileOrFolderNode(f, s, depth + 1, selectFile, dragStartOrEnd).render
                 }.toVdomArray
               case _: File => EmptyVdom
             }
