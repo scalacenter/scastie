@@ -32,7 +32,7 @@ object FileOrFolderNode {
 
       val handleClick = (e: ReactMouseEvent) => {
         e.stopPropagation()
-        selectFile(file.name).runNow()
+        selectFile(file.path).runNow()
         if (file.isFolder) {
           isExpanded.modState(x => !x).runNow()
         }
@@ -55,7 +55,7 @@ object FileOrFolderNode {
       <.div(
         <.div(
           ^.cls := s"hierarchy-list-row",
-          ^.cls := s"${if (file.name.equals(s)) " file-selected" else ""}",
+          ^.cls := s"${if (file.path.equals(s)) " file-selected" else ""}",
           ^.cls := s"${if (isMouseOver.value) "file-mouse-over" else ""}",
           ^.onClick ==> handleClick,
           ^.draggable := true,
@@ -65,11 +65,12 @@ object FileOrFolderNode {
           ^.onDragLeave --> isMouseOver.setState(false),
           ^.onMouseOver --> isMouseOver.setState(true),
           ^.onMouseLeave --> isMouseOver.setState(false),
-          ^.key := file.name,
+          ^.key := file.path,
           <.div(
             ^.paddingLeft := s"${16 * depth}px",
             <.i(^.className := s"fa fa-${fafa}"),
-            file.name
+            file.name,
+            " (" + file.path + ")"
           )
         ),
 
@@ -77,7 +78,7 @@ object FileOrFolderNode {
           if (isExpanded.value) {
             file match {
               case folder: Folder =>
-                folder.files.map {
+                folder.children.map {
                   f: FileOrFolder => FileOrFolderNode(f, s, depth + 1, selectFile, dragStartOrEnd).render
                 }.toVdomArray
               case _: File => EmptyVdom
