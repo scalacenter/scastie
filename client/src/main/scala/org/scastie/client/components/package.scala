@@ -103,6 +103,21 @@ package object components {
   implicit val reusabilityEditorModeToCallback: Reusability[EditorMode => Callback] =
     Reusability.byRefOr_==
 
+  implicit val fileReuse: Reusability[File] =
+    Reusability.byRefOr_==
+
+  implicit val folderReuse: Reusability[Folder] =
+    Reusability.byRefOr_==
+
+  implicit val fileOrFolderReuse: Reusability[FileOrFolder] =
+    Reusability.byRefOr_==
+
+  implicit val tabReuse: Reusability[tabStrip.TabStrip.Tab] =
+    Reusability.byRefOr_==
+
+  implicit val tabStripStateReuse: Reusability[tabStrip.TabStrip.TabStripState] =
+    Reusability.byRefOr_==
+
   implicit val scastieStateReuse: Reusability[ScastieState] =
     Reusability.derive[ScastieState]
 
