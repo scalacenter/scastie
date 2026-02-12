@@ -21,9 +21,9 @@ case class InstrumentationFailureReport(message: String, line: Option[Int], star
 object InstrumentedInputs {
   def apply(inputs0: BaseInputs): Either[InstrumentationFailureReport, InstrumentedInputs] = {
     if (inputs0.isWorksheetMode) {
-      val instrumented = Instrument(inputs0.code, inputs0.target).map {
+      val instrumented = Instrument(inputs0.code.childHeadFileContent, inputs0.target).map {
         case InstrumentationSuccess(instrumentedCode, positionMapper) =>
-          (inputs0.copyBaseInput(code = instrumentedCode), positionMapper)
+          (inputs0.copyBaseInput(code = Folder.singleton(instrumentedCode)), positionMapper)
       }
 
       instrumented match {
@@ -55,7 +55,7 @@ object InstrumentedInputs {
               val errorEndCol = error.pos.endColumn + 1
 
               Right(InstrumentedInputs(
-                inputs = inputs0.copyBaseInput(code = error.pos.input.text),
+                inputs = inputs0.copyBaseInput(code = Folder.singleton(error.pos.input.text)),
                 isForcedProgramMode = false,
                 optionalParsingError = Some(InstrumentationFailureReport(error.message, Some(errorLine), Some(errorStartCol), Some(errorEndCol))),
                 positionMapper = Some(positionMapper)

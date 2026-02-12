@@ -8,14 +8,14 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.util.Effect.Id
-import org.scalajs.dom.{Position => _, _}
+import org.scalajs.dom.{Position => _, File => _, _}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scastie.runtime.api.RuntimeError
 import org.scastie.client.components.ScaladexSearch
-import org.scastie.client.components.fileHierarchy.File
+import org.scastie.client.components.tabStrip.TabStrip.Tab
 import org.scastie.client.scalacli.ScalaCliUtils._
 
 case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendScope[Scastie, ScastieState]) {
@@ -62,7 +62,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       val setData = scope.state.map(state => {
         state
           .copy(isDesktopForced = false)
-          .setInputs(SbtInputs.default.copyBaseInput(code = ""))
+          .setInputs(SbtInputs.default.copyBaseInput(code = Folder.singleton("")))
           .clearOutputs
           .clearSnippetId
           .setChangedInputs
@@ -145,11 +145,17 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val openFile: File => Callback =
     f => scope.modState(_.openFile(f))
 
-  val closeTab: File => Callback =
-    f => scope.modState(_.closeTab(f))
+  val moveFile: (String, String) => Callback =
+    (srcPath, dstPath) => scope.modState(_.moveFile(srcPath, dstPath))
 
-  val changeTabSelection: File => Callback =
-    f => scope.modState(_.changeTabSelection(f))
+  val closeTab: Tab => Callback =
+    tab => scope.modState(_.closeTab(tab))
+
+  val changeTabSelection: Tab => Callback =
+    tab => scope.modState(_.changeTabSelection(tab))
+
+  val selectedFileCodeChange: String ~=> Callback =
+    Reusable.fn(newContent => scope.modState(_.changeSelectedFileContent(newContent)))
 
   val openResetModal: Reusable[Callback] =
     Reusable.always(scope.modState(_.openResetModal))
@@ -515,13 +521,13 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     scope.state.flatMap { state =>
       Callback.future {
         restApiClient
-          .format(FormatRequest(state.inputs.code, state.inputs.isWorksheetMode, state.inputs.target))
+          .format(FormatRequest(state.inputs.code.childHeadFileContent, state.inputs.isWorksheetMode, state.inputs.target))
           .map {
             case FormatResponse(formattedCode) =>
               scope.modState { s =>
                 // avoid overriding user's code if he/she types while it's formatting
                 if (s.inputs.code == state.inputs.code)
-                  s.clearOutputsPreserveConsole.setCode(formattedCode)
+                  s.clearOutputsPreserveConsole.changeSelectedFileContent(formattedCode)
                 else s
               }
           }

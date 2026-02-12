@@ -190,6 +190,15 @@
         overflow: hidden;
       }
 
+      .editor-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        opacity: 0.5;
+        font-size: 48px;
+      }
+
       .console-container {
         $handler-height: 6px;
         font-family: $code-font-family;

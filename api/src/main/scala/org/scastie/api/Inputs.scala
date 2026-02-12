@@ -11,7 +11,7 @@ import System.{lineSeparator => nl}
 sealed trait BaseInputs {
   val isWorksheetMode: Boolean
   val isShowingInUserProfile: Boolean
-  val code: String
+  val code: Folder
   val target: ScalaTarget
   val libraries: Set[ScalaDependency]
   val forked: Option[SnippetId]
@@ -33,7 +33,7 @@ sealed trait BaseInputs {
   def copyBaseInput(
     isWorksheetMode: Boolean = this.isWorksheetMode,
     isShowingInUserProfile: Boolean = this.isShowingInUserProfile,
-    code: String = this.code,
+    code: Folder = this.code,
     libraries: Set[ScalaDependency] = this.libraries,
     forked: Option[SnippetId] = this.forked,
   ): BaseInputs = this match {
@@ -59,7 +59,7 @@ object BaseInputs {
   implicit val baseInputDecoder: Decoder[BaseInputs] = deriveDecoder[BaseInputs]
 }
 
-case class ShortInputs(code: String, target: ScalaTarget)
+case class ShortInputs(code: Folder, target: ScalaTarget)
 
 object ShortInputs {
   implicit val shortInputsEncoder: Encoder[ShortInputs] = deriveEncoder[ShortInputs]
@@ -71,7 +71,7 @@ object SbtInputs {
 
   def default: SbtInputs = SbtInputs(
     isWorksheetMode = true,
-    code = defaultCode,
+    code = Folder.singleton(defaultCode),
     target = Scala3.default,
     libraries = Set(),
     librariesFromList = List(),
@@ -95,7 +95,7 @@ object SbtInputs {
 
 case class ScalaCliInputs(
   isWorksheetMode: Boolean,
-  code: String,
+  code: Folder,
   target: ScalaCli,
   isShowingInUserProfile: Boolean,
   forked: Option[SnippetId] = None,
@@ -109,7 +109,7 @@ object ScalaCliInputs {
 
   def default: ScalaCliInputs = ScalaCliInputs(
     isWorksheetMode = true,
-    code = defaultCode,
+    code = Folder.singleton(defaultCode),
     target = ScalaCli.default,
     isShowingInUserProfile = false,
     forked = None
@@ -121,7 +121,7 @@ object ScalaCliInputs {
 
 case class SbtInputs(
     isWorksheetMode: Boolean,
-    code: String,
+    code: Folder,
     target: SbtScalaTarget,
     libraries: Set[ScalaDependency],
     librariesFromList: List[(ScalaDependency, Project)],
@@ -148,7 +148,7 @@ case class SbtInputs(
       "Inputs.default"
     } else if (this.copy(code = SbtInputs.default.code) == SbtInputs.default) {
       "Inputs.default" + nl +
-        code + nl
+        code.childHeadFileContent + nl
     } else {
 
       val showSbtConfigExtra =
@@ -167,12 +167,12 @@ case class SbtInputs(
           |$sbtPluginsConfigExtra
           |
           |code
-          |$code
+          |${code.childHeadFileContent}
           |""".stripMargin
     }
   }
 
-  lazy val isDefault: Boolean = copy(code = "").withSavedConfig == SbtInputs.default.copy(code = "").withSavedConfig
+  lazy val isDefault: Boolean = copy(code = Folder.singleton("")).withSavedConfig == SbtInputs.default.copy(code = Folder.singleton("")).withSavedConfig
 
   def modifyConfig(inputs: SbtInputs => SbtInputs): SbtInputs = inputs(this).copy(sbtConfigSaved = None, sbtPluginsConfigSaved = None)
 
