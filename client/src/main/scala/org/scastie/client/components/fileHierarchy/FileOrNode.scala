@@ -9,7 +9,7 @@ sealed trait FileOrFolder {
   val isRoot: Boolean
 }
 
-case class File(override val name: String, content: String = "<empty content>", override val path: String = "") extends FileOrFolder {
+case class File(override val name: String, content: String = "", override val path: String = "") extends FileOrFolder {
   override val isFolder: Boolean = false
   override val isRoot: Boolean = false
 }
@@ -111,6 +111,13 @@ object FileOrFolderUtils {
         case folder: Folder => recomputePaths(folder, prefix + "/" + f.name)
         case file: File => file.copy(path = prefix + "/" + f.name + "/" + file.name)
       })
+  }
+
+  def allFiles(root: Folder): List[File] = {
+    root.children.flatMap {
+      case f: File => List(f)
+      case l: Folder => allFiles(l)
+    }
   }
 
   def prependPath(p: String, fileOrFolder: FileOrFolder): FileOrFolder = {

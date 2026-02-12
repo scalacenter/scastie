@@ -10,7 +10,7 @@ import org.scalajs.dom
 import org.scalajs.dom.HTMLScriptElement
 import org.scastie.api._
 import org.scastie.client._
-import org.scastie.client.components.fileHierarchy.{FileHierarchy, Folder}
+import org.scastie.client.components.fileHierarchy.{FileHierarchy, File, Folder}
 
 final case class Scastie(
   router: Option[RouterCtl[Page]],
@@ -91,7 +91,7 @@ object Scastie {
           i(cls := s"fa fa-${if (state.isSidePaneOpen) "angle-left" else "angle-right"}")
         ),
         div(cls := "side-pane-content")(
-          FileHierarchy(Folder("a", List())).render
+          FileHierarchy(Folder("a", List()), scope.backend.openFile).render
         ).when(state.isSidePaneOpen)
       ).unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(

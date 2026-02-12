@@ -5,8 +5,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
 
-final case class FileHierarchy(rootFolder: Folder) {
-  @inline def render: VdomElement = FileHierarchy.component()
+final case class FileHierarchy(rootFolder: Folder, openFile: File => Callback) {
+  @inline def render: VdomElement = FileHierarchy.component((rootFolder, openFile))
 }
 
 object FileHierarchy {
@@ -16,28 +16,32 @@ object FileHierarchy {
   val initialState = FileHierarchyState(
     root = recomputePaths(
       Folder("root", isRoot = true)
-        .add2("i.txt")
-        .add2("j.txt")
-        .add2("A/k.txt")
-        .add2("B", isFolder = true)),
+        .add(File("ClientMain.scala", "client main content"))
+        .add(File("LocalStorage.scala", "local storage content"))
+        .add(Folder("awesomeFolder")
+          .add(File("Routing.scala", "routing content"))
+          .add(File("data.txt", "data content"))
+        )
+        .add(Folder("other"))),
     selectedFile = "root",
     dragSrc = "",
     dragOver = "")
 
   val component =
-    ScalaFnComponent.withHooks[Unit]
+    ScalaFnComponent.withHooks[(Folder, File => Callback)]
       .useState(initialState)
-      .render($ => {
-        val selectFile: String => Callback = {
-          s =>
-            $.hook1.modState(_.copy(selectedFile = s))
+      .render((props, fhs) => {
+        val openFile = props._2
+
+        val selectFile: File => Callback = {
+          f => openFile(f)
         }
         val dragInfoUpdate: DragInfo => Callback = {
           di =>
             if (di.start && !di.end) {
-              $.hook1.modState(_.copy(dragSrc = di.f.path))
+              fhs.modState(_.copy(dragSrc = di.f.path))
             } else if (!di.start && di.end) {
-              $.hook1.modState {
+              fhs.modState {
                 case FileHierarchyState(root, selectedFile, dragSrc, dragOver) =>
                   val srcPath = dragSrc
                   val dstPath = dragOver
@@ -49,13 +53,13 @@ object FileHierarchy {
               }.runNow()
               Callback.empty
             } else if (!di.start && !di.end) {
-              $.hook1.modState(_.copy(dragOver = di.f.path))
+              fhs.modState(_.copy(dragOver = di.f.path))
             } else {
               Callback.throwException(new IllegalArgumentException())
             }
         }
         <.div(
-          FileOrFolderNode($.hook1.value.root, $.hook1.value.selectedFile, 0, selectFile, dragInfoUpdate).render
+          FileOrFolderNode(fhs.value.root, fhs.value.selectedFile, 0, selectFile, dragInfoUpdate).render
         )
       })
 }
