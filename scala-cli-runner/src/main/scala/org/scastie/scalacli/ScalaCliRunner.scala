@@ -76,6 +76,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
   def runTask(snippetId: SnippetId, inputs: ScalaCliInputs, timeout: FiniteDuration, onOutput: ProcessOutput => Any): Future[Either[ScalaCliError, RunOutput]] = {
     log.info(s"Running task with snippetId=$snippetId")
     log.trace(s"[${snippetId.base64UUID} - runTask] Starting runTask")
+    bspClient.setLogMessageCallback(msg => onOutput(ProcessOutput(msg, ProcessOutputType.StdOut, None)))
     build(snippetId, inputs).flatMap {
       case Right((value, positionMapper)) =>
         log.trace(s"[${snippetId.base64UUID} - runTask] Build successful, running forked")
@@ -83,7 +84,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
       case Left(value) =>
         log.trace(s"[${snippetId.base64UUID} - runTask] Build failed: ${value.msg}")
         Future.successful(Left[ScalaCliError, RunOutput](value))
-    }
+    }.andThen { case _ => bspClient.clearLogMessageCallback() }
   }
 
   def build(

@@ -169,6 +169,10 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
 
   private implicit val defaultTimeout: FiniteDuration = FiniteDuration(10, TimeUnit.SECONDS)
   val diagnostics: AtomicReference[List[Diagnostic]] = new AtomicReference(Nil)
+  private val logMessageCallback: AtomicReference[String => Unit] = new AtomicReference(_ => ())
+
+  def setLogMessageCallback(callback: String => Unit): Unit = logMessageCallback.set(callback)
+  def clearLogMessageCallback(): Unit = logMessageCallback.set(_ => ())
   val gson = new Gson
 
   private val log = Logger("BspClient")
@@ -423,7 +427,13 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
       val afterCount = diagnostics.get().size
       log.trace(s"[BspClient:onBuildPublishDiagnostics] after=$afterCount")
     }
-    def onBuildLogMessage(params: LogMessageParams): Unit = log.debug(s"LogMessageParams: $params")
+    def onBuildLogMessage(params: LogMessageParams): Unit = {
+      log.debug(s"LogMessageParams: $params")
+      val message = params.getMessage
+      if (message != null && !message.trim.isEmpty) {
+        logMessageCallback.get()(message)
+      }
+    }
     def onBuildShowMessage(params: ShowMessageParams): Unit =  log.debug(s"ShowMessageParams: $params")
     def onBuildTargetDidChange(params: DidChangeBuildTarget): Unit =  log.debug(s"DidChangeBuildTarget: $params")
     def onBuildTaskFinish(params: TaskFinishParams): Unit =  log.debug(s"TaskFinishParams: $params")
