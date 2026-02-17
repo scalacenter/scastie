@@ -61,7 +61,7 @@ trait MetalsClient {
 
   protected def toLSPRequest(code: String, offset: Int): LSPRequestDTO = {
     val offsetParams = ScastieOffsetParams(code, offset, isWorksheetMode)
-    LSPRequestDTO(scastieMetalsOptions, offsetParams)
+    LSPRequestDTO(scastieMetalsOptions, offsetParams, Some(ScastieState.clientUuid))
   }
 
   protected def makeRequest[A](req: A, endpoint: String)(implicit writes: Encoder[A]): Future[Option[String]] = {

@@ -53,6 +53,8 @@ case class SnippetState(
 
 object ScastieState {
 
+  val clientUuid: String = java.util.UUID.randomUUID().toString
+
   def default(isEmbedded: Boolean): ScastieState = {
     ScastieState(
       view = View.Editor,
