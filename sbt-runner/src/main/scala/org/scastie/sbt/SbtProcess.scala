@@ -322,7 +322,7 @@ class SbtProcess(runTimeout: FiniteDuration,
     writeFile(buildFile, prompt + "\n" + inputs.sbtConfig)
     Files.deleteIfExists(sbtDir.resolve(Js.targetFilename))
     Files.deleteIfExists(sbtDir.resolve(Js.sourceMapFilename))
-    write(codeFile, inputs.code, truncate = true)
+    write(codeFile, inputs.code.childHeadFileContent, truncate = true)
   }
 
   private def writeFile(path: Path, content: String): Unit = {

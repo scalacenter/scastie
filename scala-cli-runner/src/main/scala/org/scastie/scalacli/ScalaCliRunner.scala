@@ -101,7 +101,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
         (inputs, None)
     }
 
-    Files.write(scalaMain, instrumentedInput.code.getBytes)
+    Files.write(scalaMain, instrumentedInput.code.childHeadFileContent.getBytes)
     log.trace(s"[${snippetId.base64UUID} - build] Calling bspClient.build")
 
     bspClient.build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target, positionMapper).value.recover {

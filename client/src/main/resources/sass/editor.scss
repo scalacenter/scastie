@@ -128,9 +128,7 @@
         top: 0;
         bottom: 0;
         right: 0;
-        left: $sidebar-width;
         display: inline-block;
-        width: calc(100% - #{$sidebar-width});
       }
 
       .main-panel.presentation-mode {
@@ -148,6 +146,16 @@
             height: calc(100% - #{$console-height});
           }
         }
+      }
+
+      .side-pane-open .main-panel:not(.presentation-mode) {
+        left: $sidebar-width + $sidepane-width;
+        width: calc(100% - #{$sidebar-width + $sidepane-width});
+      }
+
+      .side-pane-closed .main-panel:not(.presentation-mode) {
+        left: $sidebar-width + $sidepane-toggle-width;
+        width: calc(100% - #{$sidebar-width + $sidepane-toggle-width});
       }
     }
 
@@ -180,6 +188,15 @@
       .code {
         width: 100%;
         overflow: hidden;
+      }
+
+      .editor-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        opacity: 0.5;
+        font-size: 48px;
       }
 
       .console-container {
@@ -306,13 +323,22 @@
       @include tablet {
         .force-desktop {
           .main-panel {
-            width: calc(100% - #{$force-desktop-width});  
-          }      
+            width: calc(100% - #{$force-desktop-width});
+          }
+        }
+      }
+    }
+
+    &:not(.embedded) {
+      @include tablet {
+        .side-pane-open .main-panel:not(.presentation-mode) {
+          left: $sidebar-tablet-width + $sidepane-width;
+          width: calc(100% - #{$sidebar-tablet-width + $sidepane-width});
         }
 
-        .main-panel:not(.presentation-mode) {
-          left: $sidebar-tablet-width;
-          width: calc(100% - #{$sidebar-tablet-width});
+        .side-pane-closed .main-panel:not(.presentation-mode) {
+          left: $sidebar-tablet-width + $sidepane-toggle-width;
+          width: calc(100% - #{$sidebar-tablet-width + $sidepane-toggle-width});
         }
 
         .editor-topbar {

@@ -4,6 +4,7 @@ import org.scastie.client.ScastieBackend
 import org.scastie.client.ScastieState
 import org.scastie.client.View
 import org.scastie.client.components.editor.CodeEditor
+import org.scastie.client.components.tabStrip.TabStrip
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all._
 
@@ -67,7 +68,7 @@ object MainPanel {
         isEmbedded = props.isEmbedded,
         editorMode = state.editorMode,
         showLineNumbers = state.showLineNumbers,
-        value = state.inputs.code,
+        value = state.selectedFileContent,
         attachedDoms = state.attachedDoms,
         instrumentations = state.outputs.instrumentations,
         compilationInfos = state.outputs.compilationInfos,
@@ -80,7 +81,7 @@ object MainPanel {
         toggleLineNumbers = backend.toggleLineNumbers,
         togglePresentationMode = backend.togglePresentationMode,
         formatCode = backend.formatCode,
-        codeChange = backend.codeChange,
+        codeChange = if (state.tabStripState.selectedTab.isDefined) backend.selectedFileCodeChange else backend.codeChange,
         target = state.inputs.target,
         metalsStatus = state.metalsStatus,
         setMetalsStatus = backend.setMetalsStatus,
@@ -194,11 +195,15 @@ object MainPanel {
       presentationModeClass,
       topBar,
       editorTopBar,
+      TabStrip(state.tabStripState, backend.changeTabSelection, backend.closeTab).render.unless(props.isEmbedded || state.isPresentationMode),
       div(
         cls := "content",
         div(cls := "editor-container inner-container", show(View.Editor))(
           div(cls := "code", consoleCssForEditor)(
-            editor,
+            if (!props.isEmbedded && state.tabStripState.selectedTab.isEmpty)
+              div(cls := "editor-placeholder")("Open a file to start editing")
+            else
+              editor,
             embeddedMenu
           ),
           console
