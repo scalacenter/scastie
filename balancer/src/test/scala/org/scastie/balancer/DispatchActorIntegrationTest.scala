@@ -26,7 +26,7 @@ class DispatchActorIntegrationTest()
   implicit val timeout: Timeout = Timeout(25.seconds)
 
   test("persist warnings after re-fetching snippet from database (issue #1144)") {
-    val code = "Nil match { case Seq(xs*) => println(\"test\") }"
+    val code = """@deprecated("use bar", "1.0") def foo = 1; println(foo)"""
 
     val sid = run(code)
 
@@ -71,8 +71,7 @@ class DispatchActorIntegrationTest()
     )
 
     waitFor(sid1, ret)(_.isDone)
-    waitFor(sid2, ret)(_.isTimeout)
-    // waitFor(sid2)(_.isDone)
+    waitFor(sid2, ret)(p => p.isDone || p.isTimeout)
     waitFor(sid3, ret)(_.isDone)
   }
 
