@@ -40,8 +40,7 @@ object ChangelogModal {
         div(cls := "changelog-feature")(
           h3("Actionable diagnostics (", prLink(1238), ")"),
           p(
-            "Scastie can now suggest quick fixes for compiler diagnostics. ",
-            "When a diagnostic has an associated code action, you'll see it directly in the editor."
+            "Scastie now supports actionable diagnostics — click on suggested fixes to apply them directly to your code."
           ),
           img(src := "https://github.com/user-attachments/assets/d9a896eb-123c-45d9-be5a-5795245c62ff", alt := "Actionable diagnostics demo")
         ),
