@@ -196,6 +196,18 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val closeEmbeddedModal: Reusable[Callback] =
     Reusable.always(scope.modState(_.closeEmbeddedModal))
 
+  val openChangelogModal: Reusable[Callback] =
+    Reusable.always(scope.modState(_.openChangelogModal))
+
+  val closeChangelogModal: Reusable[Callback] =
+    Reusable.always(
+      scope.modState(_.closeChangelogModal) >>
+        Callback(org.scalajs.dom.window.localStorage.setItem(
+          "lastSeenChangelogVersion",
+          org.scastie.client.components.ChangelogModal.currentVersion
+        ))
+    )
+
   val forceDesktop: Reusable[Callback] =
     Reusable.always(scope.modState(_.forceDesktop))
 

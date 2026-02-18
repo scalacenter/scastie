@@ -18,7 +18,8 @@ object ModalState {
     isResetModalClosed = true,
     isNewSnippetModalClosed = true,
     isEmbeddedClosed = true,
-    isLoginModalClosed = true
+    isLoginModalClosed = true,
+    isChangelogModalClosed = true
   )
 
   def default: ModalState = ModalState(
@@ -29,7 +30,8 @@ object ModalState {
     isResetModalClosed = true,
     isNewSnippetModalClosed = true,
     isEmbeddedClosed = true,
-    isLoginModalClosed = true
+    isLoginModalClosed = true,
+    isChangelogModalClosed = true
   )
 }
 
@@ -42,7 +44,8 @@ case class ModalState(
     isResetModalClosed: Boolean,
     isNewSnippetModalClosed: Boolean,
     isEmbeddedClosed: Boolean,
-    isLoginModalClosed: Boolean
+    isLoginModalClosed: Boolean,
+    isChangelogModalClosed: Boolean
 ) {
   val isShareModalClosed: SnippetId ~=> Boolean =
     Reusable.fn(
