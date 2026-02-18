@@ -167,7 +167,13 @@ object Scastie {
     }
 
     val maybeOpenChangelog = {
-      val lastSeen = Option(dom.window.localStorage.getItem("lastSeenChangelogVersion")).getOrElse("")
+      val lastSeen = try {
+        Option(dom.window.localStorage.getItem("lastSeenChangelogVersion")).getOrElse("")
+      } catch {
+        case e: Throwable =>
+          dom.console.error("Failed to access localStorage key 'lastSeenChangelogVersion':", e)
+          ""
+      }
       if (lastSeen != ChangelogModal.currentVersion)
         backend.openChangelogModal.value
       else
