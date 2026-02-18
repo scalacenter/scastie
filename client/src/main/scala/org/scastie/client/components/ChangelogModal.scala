@@ -1,7 +1,9 @@
 package org.scastie.client.components
 
 import japgolly.scalajs.react._
+import scalajs.js
 import vdom.all._
+import scala.scalajs.js.annotation.JSImport
 
 final case class ChangelogModal(isDarkTheme: Boolean, isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = ChangelogModal.component(this)
@@ -11,15 +13,16 @@ object ChangelogModal {
   implicit val reusability: Reusability[ChangelogModal] =
     Reusability.derive[ChangelogModal]
 
-  val currentVersion: String = "2026-02-18"
+  @js.native
+  @JSImport("@scastieRoot/changelog.md", "html")
+  val changelogHTMLContent: String = js.native
+
+  private val versionRegex = """<!--\s*version:\s*(\S+)\s*-->""".r
+
+  val currentVersion: String =
+    versionRegex.findFirstMatchIn(changelogHTMLContent).map(_.group(1)).getOrElse("unknown")
 
   private def render(props: ChangelogModal): VdomElement = {
-    def prLink(number: Int) =
-      a(href := s"https://github.com/scalacenter/scastie/pull/$number", target := "_blank", rel := "nofollow", s"#$number")
-
-    def ghUser(username: String) =
-      a(href := s"https://github.com/$username", target := "_blank", rel := "nofollow", cls := "changelog-contributor", s"@$username")
-
     Modal(
       title = "What's new in Scastie",
       isDarkTheme = props.isDarkTheme,
@@ -27,57 +30,7 @@ object ChangelogModal {
       close = props.close,
       modalCss = TagMod(),
       modalId = "changelog",
-      content = div(cls := "changelog-content markdown-body")(
-        /* Highlighted features */
-        div(cls := "changelog-feature")(
-          h3("Japanese translation (", prLink(1243), ")"),
-          p(
-            "Scastie now supports Japanese as a UI language. ",
-            "Thanks to ", ghUser("windymelt"), " for this contribution!"
-          )
-        ),
-
-        div(cls := "changelog-feature")(
-          h3("Actionable diagnostics (", prLink(1238), ")"),
-          p(
-            "Scastie now supports actionable diagnostics — click on suggested fixes to apply them directly to your code."
-          ),
-          img(src := "https://github.com/user-attachments/assets/d9a896eb-123c-45d9-be5a-5795245c62ff", alt := "Actionable diagnostics demo")
-        ),
-
-        div(cls := "changelog-feature")(
-          h3("Better build error reporting (", prLink(1235), ")"),
-          p(
-            "All BSP log messages are now captured and forwarded to the console, so you can see full output. ",
-            "This enables using flags like ", code("-Vprint"), " to inspect intermediate compilation phases."
-          ),
-          img(src := "https://github.com/user-attachments/assets/79eb7491-715e-475c-8358-e12f746221c0", alt := "Vprint flag demo")
-        ),
-
-        /* Bug fixes */
-        hr(),
-        h3("Bug Fixes"),
-        ul(
-          li("Fix signature help spam by caching active parameter (", prLink(1220), ")"),
-          li("Fix libraries not loading in Build Settings (", prLink(1240), ")"),
-          li("Fix download button (", prLink(1231), ")"),
-          li("Fix nightly version resolution (", prLink(1245), ")"),
-          li("Prevent duplicate snippet URLs when saving without changes (", prLink(1242), ")"),
-          li("Prevent stale diagnostics after version change (", prLink(1247), ")"),
-          li("Fix language in embed mode (", prLink(1233), ")")
-        ),
-
-        h3("Improvements"),
-        ul(
-          li("Per-user presentation compiler caching (", prLink(1224), ")"),
-          li("Consistent warning display with compilation info cache (", prLink(1169), ")")
-        ),
-
-        h3("Version Bumps"),
-        ul(
-          li("Scala 3.8.2-RC3 (", prLink(1253), ")")
-        )
-      )
+      content = div(cls := "changelog-content markdown-body", dangerouslySetInnerHtml := changelogHTMLContent)
     ).render
   }
 
