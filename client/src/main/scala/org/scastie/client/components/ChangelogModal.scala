@@ -48,9 +48,8 @@ object ChangelogModal {
         div(cls := "changelog-feature")(
           h3("Better build error reporting (", prLink(1235), ")"),
           p(
-            "All BSP log messages are now captured and forwarded, ",
-            "giving you more context to diagnose configuration issues. ",
-            "This also enables using compiler flags like ", code("-Vprint"), " to inspect intermediate compilation phases."
+            "All BSP log messages are now captured and forwarded to the console, so you can see full output. ",
+            "This enables using flags like ", code("-Vprint"), " to inspect intermediate compilation phases."
           ),
           img(src := "https://github.com/user-attachments/assets/79eb7491-715e-475c-8358-e12f746221c0", alt := "Vprint flag demo")
         ),
