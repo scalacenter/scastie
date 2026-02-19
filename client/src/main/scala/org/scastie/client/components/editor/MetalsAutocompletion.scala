@@ -42,7 +42,7 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
       val tokenLength = view
         .lineBeforeCursor
         .reverseIterator
-        .takeWhile(c => !c.isWhitespace || !instantTriggerChars.contains(c))
+        .takeWhile(c => !c.isWhitespace && !instantTriggerChars.contains(c))
         .length
 
       tokenLength match {
