@@ -304,6 +304,10 @@ case class ScastieState(
 
   def closeEmbeddedModal: ScastieState = copyAndSave(modalState = modalState.copy(isEmbeddedClosed = true))
 
+  def openChangelogModal: ScastieState = copyAndSave(modalState = modalState.copy(isChangelogModalClosed = false))
+
+  def closeChangelogModal: ScastieState = copyAndSave(modalState = modalState.copy(isChangelogModalClosed = true))
+
   def forceDesktop: ScastieState = copyAndSave(isDesktopForced = true)
 
   def openConsole: ScastieState = {

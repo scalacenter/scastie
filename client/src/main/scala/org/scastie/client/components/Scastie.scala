@@ -110,7 +110,12 @@ object Scastie {
         isDarkTheme = state.isDarkTheme,
         isClosed = state.modalState.isPrivacyPolicyModalClosed,
         close = scope.backend.closePrivacyPolicyModal
-      ).render
+      ).render,
+      ChangelogModal(
+        isDarkTheme = state.isDarkTheme,
+        isClosed = state.modalState.isChangelogModalClosed,
+        close = scope.backend.closeChangelogModal
+      ).render.unless(props.isEmbedded)
     )
   }
 
@@ -161,7 +166,21 @@ object Scastie {
       }
     }
 
-    initialState >> backend.loadUser
+    val maybeOpenChangelog = {
+      val lastSeen = try {
+        Option(dom.window.localStorage.getItem("lastSeenChangelogVersion")).getOrElse("")
+      } catch {
+        case e: Throwable =>
+          dom.console.error("Failed to access localStorage key 'lastSeenChangelogVersion':", e)
+          ""
+      }
+      if (lastSeen != ChangelogModal.currentVersion)
+        backend.openChangelogModal.value
+      else
+        Callback.empty
+    }
+
+    initialState >> backend.loadUser >> maybeOpenChangelog
   }
 
   val playgroundMainRegex = "let ScastiePlaygroundMain".r
