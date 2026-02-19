@@ -1,5 +1,3 @@
-<!-- version: 2026-02-18 -->
-
 ### Japanese translation ([#1243](https://github.com/scalacenter/scastie/pull/1243))
 
 Scastie now supports Japanese as a UI language. Thanks to [@windymelt](https://github.com/windymelt) for this contribution!

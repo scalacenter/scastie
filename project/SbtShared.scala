@@ -71,12 +71,13 @@ object SbtShared {
   val gitHashNow    = gitHash()
   val gitIsDirtyNow = gitIsDirty()
 
+  val versionBase = "1.1.0"
+
   val versionNow = {
-    val base = "1.0.0"
-    if (gitIsDirtyNow) base + "-SNAPSHOT"
+    if (gitIsDirtyNow) versionBase + "-SNAPSHOT"
     else {
       val hash = gitHashNow
-      s"$base+$hash"
+      s"$versionBase+$hash"
     }
   }
 
@@ -167,6 +168,7 @@ lazy val baseJsSettings = Seq(
         organization,
         "runtimeProjectName"    -> runtimeProjectName,
         "versionRuntime"        -> versionRuntime,
+        "versionBase"           -> versionBase,
         "latest210"             -> ScalaVersions.latest210,
         "latest211"             -> ScalaVersions.latest211,
         "latest212"             -> ScalaVersions.latest212,

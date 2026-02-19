@@ -4,6 +4,7 @@ import japgolly.scalajs.react._
 import scalajs.js
 import vdom.all._
 import scala.scalajs.js.annotation.JSImport
+import org.scastie.buildinfo.BuildInfo
 
 final case class ChangelogModal(isDarkTheme: Boolean, isClosed: Boolean, close: Reusable[Callback]) {
   @inline def render: VdomElement = ChangelogModal.component(this)
@@ -17,14 +18,11 @@ object ChangelogModal {
   @JSImport("@scastieRoot/changelog.md", "html")
   val changelogHTMLContent: String = js.native
 
-  private val versionRegex = """<!--\s*version:\s*(\S+)\s*-->""".r
-
-  val currentVersion: String =
-    versionRegex.findFirstMatchIn(changelogHTMLContent).map(_.group(1)).getOrElse("unknown")
+  val currentVersion: String = BuildInfo.versionBase
 
   private def render(props: ChangelogModal): VdomElement = {
     Modal(
-      title = "What's new in Scastie",
+      title = s"What's new in Scastie ($currentVersion)",
       isDarkTheme = props.isDarkTheme,
       isClosed = props.isClosed,
       close = props.close,
