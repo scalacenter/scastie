@@ -81,10 +81,10 @@ class StatusActor private () extends Actor with ActorLogging {
     StatusProgress.Sbt(
       newSbtBalancer.servers.map(
         server => {
-          SbtRunnerState(
+          RunnerState(
             config = server.lastConfig,
             tasks = server.mailbox.map(_.taskId),
-            sbtState = server.state,
+            serverState = server.state,
             hasRunningTask = server.mailbox.nonEmpty
           )
         }
@@ -98,10 +98,10 @@ class StatusActor private () extends Actor with ActorLogging {
     StatusProgress.ScalaCli(
       newScalaCliBalancer.servers.map(
         server =>
-          ScalaCliRunnerState(
+          RunnerState(
             config = server.lastConfig,
             tasks = server.mailbox.map(_.taskId),
-            scalaCliState = server.state,
+            serverState = server.state,
             hasRunningTask = server.mailbox.nonEmpty
         )
       )
