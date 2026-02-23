@@ -41,7 +41,7 @@ case class SbtLoadBalancer[R, S <: ServerState](servers: Vector[SbtServer[R, S]]
       val selectedServer = availableServers.maxBy { s =>
         (
           s.mailbox.length < 3, //allow reload if server gets busy
-          !s.currentConfig.needsReload(task.config), //pick those without need for reload
+          !s.configAfterMailbox.needsReload(task.config), //pick those without need for reload
           -s.mailbox.length, //then those least busy
           lastTenMinutes(s.mailbox ++ s.history.data).exists(!_.config.needsReload(task.config)), //then those which use(d) this config
           lastWithIp(s.mailbox).orElse(lastWithIp(s.history.data)).map(_.ts.toEpochMilli), //then one most recently used by this ip, if any
