@@ -107,7 +107,7 @@ object PositionMapper {
     line == "$t}" ||
     line.startsWith(s"import $runtimePackage") ||
     line.startsWith(s"object $instrumentedObject extends ScastieApp with $instrumentationRecorderT") ||
-    (line.startsWith("//> using") && isScalaCli)
+    (line.trim.startsWith("//> using") && isScalaCli)
   }
 
   private def isWrappedUserCode(line: String): Boolean = {

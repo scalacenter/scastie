@@ -71,6 +71,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
   private val log = Logger("ScalaCliRunner")
   private var bspClient = new BspClient(coloredStackTrace, workingDir, compilationTimeout, reloadTimeout)
   private val scalaMain = workingDir.resolve("Main.scala")
+  private var lastInputs: Option[ScalaCliInputs] = None
   Files.createDirectories(scalaMain.getParent())
 
   def runTask(snippetId: SnippetId, inputs: ScalaCliInputs, timeout: FiniteDuration, onOutput: ProcessOutput => Any): Future[Either[ScalaCliError, RunOutput]] = {
@@ -102,9 +103,15 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     }
 
     Files.write(scalaMain, instrumentedInput.code.getBytes)
-    log.trace(s"[${snippetId.base64UUID} - build] Calling bspClient.build")
+    val scalaCliInputs = inputs.asInstanceOf[ScalaCliInputs]
+    val needsReload = lastInputs match {
+      case None       => true
+      case Some(prev) => scalaCliInputs.needsReload(prev)
+    }
+    lastInputs = Some(scalaCliInputs)
+    log.trace(s"[${snippetId.base64UUID} - build] Calling bspClient.build (needsReload=$needsReload)")
 
-    bspClient.build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target, positionMapper).value.recover {
+    bspClient.build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target, positionMapper, needsReload).value.recover {
       case timeout: TimeoutException =>
         log.trace(s"[${snippetId.base64UUID} - build] BSP timeout")
         BspTaskTimeout("Build Server Timeout Exception").asLeft

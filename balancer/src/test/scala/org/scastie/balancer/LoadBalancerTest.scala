@@ -172,4 +172,71 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(emptyBalancer.add(task).isEmpty)
   }
 
+  test("[ScalaCliLoadBalancer] prefers server with matching directives") {
+    val cats = "//> using dep org.typelevel::cats-core:2.10.0\nprintln(1)"
+    val zio = "//> using dep dev.zio::zio:2.0.0\nprintln(1)"
+
+    val balancer = ScalaCliLoadBalancer(Vector(
+      scalaCliServer(cats),
+      scalaCliServer(zio),
+    ))
+
+    val balancer1 = addScalaCli(balancer, scalaCliConfig(cats))
+    val catsServer = balancer1.servers.find(_.mailbox.nonEmpty).get
+    assert(catsServer.lastConfig.code == cats)
+  }
+
+  test("[ScalaCliLoadBalancer] prefers server without reload over less busy server") {
+    val cats = "//> using dep org.typelevel::cats-core:2.10.0\nprintln(1)"
+    val zio = "//> using dep dev.zio::zio:2.0.0\nprintln(1)"
+
+    /* Server 0: matching directives, 1 task in mailbox. Server 1: different directives, empty */
+    val matchingServer = scalaCliServer(cats, mailbox = Vector(
+      Task(scalaCliConfig(cats), nextIp, TestTaskId(100), Instant.now)
+    ))
+    val emptyServer = scalaCliServer(zio)
+
+    val balancer = ScalaCliLoadBalancer(Vector(matchingServer, emptyServer))
+    val balancer1 = addScalaCli(balancer, scalaCliConfig(cats))
+
+    val assigned = balancer1.servers.find(_.mailbox.size == 2).get
+    assert(assigned.id == matchingServer.id)
+  }
+
+  test("[ScalaCliLoadBalancer] falls back to least busy when no directive match") {
+    val cats = "//> using dep org.typelevel::cats-core:2.10.0\nprintln(1)"
+    val zio = "//> using dep dev.zio::zio:2.0.0\nprintln(1)"
+    val circe = "//> using dep io.circe::circe-core:0.14.0\nprintln(1)"
+
+    /* Neither server matches the incoming task's directives */
+    val busyServer = scalaCliServer(cats, mailbox = Vector(
+      Task(scalaCliConfig(cats), nextIp, TestTaskId(100), Instant.now)
+    ))
+    val idleServer = scalaCliServer(zio)
+
+    val balancer = ScalaCliLoadBalancer(Vector(busyServer, idleServer))
+    val balancer1 = addScalaCli(balancer, scalaCliConfig(circe))
+
+    val assigned = balancer1.servers.find(_.mailbox.exists(_.config.code == circe)).get
+    assert(assigned.id == idleServer.id)
+  }
+
+  test("[ScalaCliLoadBalancer] allows reload when server is busy (mailbox >= 3)") {
+    val cats = "//> using dep org.typelevel::cats-core:2.10.0\nprintln(1)"
+    val zio = "//> using dep dev.zio::zio:2.0.0\nprintln(1)"
+
+    def makeTask(i: Int) = Task(scalaCliConfig(cats), nextIp, TestTaskId(i), Instant.now)
+
+    /* Server with matching directives but 3 tasks in mailbox */
+    val busyServer = scalaCliServer(cats, mailbox = Vector(makeTask(100), makeTask(101), makeTask(102)))
+    /* Server with different directives but empty */
+    val idleServer = scalaCliServer(zio)
+
+    val balancer = ScalaCliLoadBalancer(Vector(busyServer, idleServer))
+    val balancer1 = addScalaCli(balancer, scalaCliConfig(cats))
+
+    val assigned = balancer1.servers.find(_.mailbox.size == 1).get
+    assert(assigned.id == idleServer.id)
+  }
+
 }

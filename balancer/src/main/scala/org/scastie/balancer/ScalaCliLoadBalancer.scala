@@ -29,7 +29,13 @@ case class ScalaCliLoadBalancer[R, S <: ServerState](servers: Vector[ScalaCliSer
       servers.partition(_.state.isReady)
 
     if (availableServers.nonEmpty) {
-      val selectedServer = availableServers.minBy(_.mailbox.length)
+      val selectedServer = availableServers.maxBy { s =>
+        (
+          s.mailbox.length < 3, // allow reload if server gets busy
+          !s.currentConfig.needsReload(task.config), // pick those without need for reload
+          -s.mailbox.length // then those least busy
+        )
+      }
       val updatedServers = availableServers.map(old => if (old.id == selectedServer.id) old.add(task) else old)
       Some(
         (

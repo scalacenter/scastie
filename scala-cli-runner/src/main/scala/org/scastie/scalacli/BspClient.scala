@@ -346,11 +346,12 @@ class BspClient(coloredStackTrace: Boolean, workingDir: Path, compilationTimeout
     }
   }
 
-  def build(taskId: String, isWorksheet: Boolean, target: ScalaTarget, positionMapper: Option[PositionMapper]): BspTask[BuildOutput] = {
+  def build(taskId: String, isWorksheet: Boolean, target: ScalaTarget, positionMapper: Option[PositionMapper], needsReload: Boolean = true): BspTask[BuildOutput] = {
+    if (needsReload) log.info(s"[$taskId - build] Directives changed, reloading workspace")
+    else log.info(s"[$taskId - build] Directives unchanged, skipping reload")
     log.trace(s"[$taskId - build] Starting build")
-    println("Reloading")
     for {
-      _ <- reloadWorkspace()
+      _ <- if (needsReload) reloadWorkspace() else EitherT.rightT[Future, BuildError](())
       _ = log.trace(s"[$taskId - build] Workspace reloaded")
       _ = println("Build target")
       buildTarget <- getFirstBuildTarget()
