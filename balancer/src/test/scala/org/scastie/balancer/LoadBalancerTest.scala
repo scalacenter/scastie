@@ -5,9 +5,9 @@ import java.time.Instant
 import org.scastie.api.ServerState
 
 class LoadBalancerTest extends LoadBalancerTestUtils {
-  test("simple cache miss") {
-    val balancer = LoadBalancer(
-      servers(
+  test("[SbtLoadBalancer] simple cache miss") {
+    val balancer = SbtLoadBalancer(
+      sbtServers(
         2 * "c1",
         1 * "c2",
         1 * "c3",
@@ -24,9 +24,9 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     )
   }
 
-  test("cache hit (simple)") {
-    val balancer = LoadBalancer(
-      servers(
+  test("[SbtLoadBalancer] cache hit (simple)") {
+    val balancer = SbtLoadBalancer(
+      sbtServers(
         5 * "c1"
       ),
     )
@@ -36,9 +36,9 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     )
   }
 
-  test("draw cache miss") {
-    val balancer = LoadBalancer(
-      servers(
+  test("[SbtLoadBalancer] draw cache miss") {
+    val balancer = SbtLoadBalancer(
+      sbtServers(
         5 * "c1"
       ),
     )
@@ -48,9 +48,9 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     )
   }
 
-  test("server notify when it's done") {
-    val balancer = LoadBalancer(
-      servers(1 * "c1"),
+  test("[SbtLoadBalancer] server notify when it's done") {
+    val balancer = SbtLoadBalancer(
+      sbtServers(1 * "c1"),
     )
 
     val server = balancer.servers.head
@@ -68,9 +68,9 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(balancer1.servers.head.mailbox == Vector())
   }
 
-  test("run two tasks") {
-    val balancer = LoadBalancer(
-      servers(1 * "c1"),
+  test("[SbtLoadBalancer] run two tasks") {
+    val balancer = SbtLoadBalancer(
+      sbtServers(1 * "c1"),
     )
 
     val server = balancer.servers.head
@@ -106,22 +106,68 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(server3.currentTaskId.isEmpty)
   }
 
-  test("remove a server") {
+  test("[SbtLoadBalancer] remove a server") {
     val ref = TestServerRef(1)
 
-    val balancer = LoadBalancer(
-      Vector(SbtServer(ref, sbtConfig("c1"), ServerState.Unknown)),
+    val balancer = SbtLoadBalancer(
+      Vector(Server(ref, sbtConfig("c1"), ServerState.Unknown)),
     )
     assert(balancer.removeServer(ref).servers.isEmpty)
   }
 
-  test("empty balancer") {
+  test("[SbtLoadBalancer] empty balancer") {
 
-    val emptyBalancer = LoadBalancer(
+    val emptyBalancer = SbtLoadBalancer(
       servers = Vector(),
     )
 
     val task = Task(code("c1"), nextIp, TestTaskId(1), Instant.now)
+
+    assert(emptyBalancer.add(task).isEmpty)
+  }
+
+  test("[ScalaCliLoadBalancer] selects server with shortest mailbox") {
+    val balancer = ScalaCliLoadBalancer(
+      scalaCliServers(
+        2 * "c1",
+        1 * "c2",
+        1 * "c3"
+      ),
+    )
+
+    val balancer1 = addScalaCli(balancer, scalaCliConfig("code1"))
+    assert(balancer1.servers.count(_.mailbox.nonEmpty) == 1)
+  }
+
+  test("[ScalaCliLoadBalancer] distributes load") {
+    val balancer = ScalaCliLoadBalancer(
+      scalaCliServers(
+        3 * "c1"
+      ),
+    )
+
+    val balancer1 = addScalaCli(balancer, scalaCliConfig("code1"))
+    val balancer2 = addScalaCli(balancer1, scalaCliConfig("code2"))
+    val balancer3 = addScalaCli(balancer2, scalaCliConfig("code3"))
+
+    assert(balancer3.servers.forall(_.mailbox.size == 1))
+  }
+
+  test("[ScalaCliLoadBalancer] remove a server") {
+    val ref = TestServerRef(1)
+
+    val balancer = ScalaCliLoadBalancer(
+      Vector(Server(ref, scalaCliConfig("c1"), ServerState.Unknown)),
+    )
+    assert(balancer.removeServer(ref).servers.isEmpty)
+  }
+
+  test("[ScalaCliLoadBalancer] empty balancer") {
+    val emptyBalancer = ScalaCliLoadBalancer(
+      servers = Vector(),
+    )
+
+    val task = Task(scalaCliConfig("c1"), nextIp, TestTaskId(1), Instant.now)
 
     assert(emptyBalancer.add(task).isEmpty)
   }

@@ -351,7 +351,7 @@ msgstr "Scastie is an original idea from Aleh Aleshka (OlegYch)"
 
 # --- Section: Status ---
 msgid "status.no_task"
-msgstr "No Task Running"
+msgstr "No task running"
 
 msgid "status.task"
 msgstr "Task"
@@ -362,8 +362,17 @@ msgstr "Different Configuration"
 msgid "status.same_config"
 msgstr "Same Configuration"
 
-msgid "status.sbt_runner_config"
-msgstr "Sbt runner"
+msgid "status.different_target"
+msgstr "Different Target"
 
 msgid "status.sbt_runners"
-msgstr "Sbt Runners"
+msgstr "SBT Runners"
+
+msgid "status.scala_cli_runners"
+msgstr "Scala-CLI Runners"
+
+msgid "status.running"
+msgstr "Running"
+
+msgid "status.idle"
+msgstr "Idle"

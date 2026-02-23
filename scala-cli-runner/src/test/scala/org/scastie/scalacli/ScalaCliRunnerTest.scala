@@ -23,7 +23,7 @@ import org.scalatest.tagobjects.Retryable
 
 import scala.concurrent.duration._
 import akka.testkit.TestActorRef
-import org.scastie.util.ScalaCliActorTask
+import org.scastie.util.ScalaCliTask
 import org.scastie.util.StopRunner
 import org.scastie.util.RunnerTerminated
 
@@ -462,7 +462,7 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
     val ip = "my-ip"
     val progressActor = TestProbe()
 
-    scalaCliActor ! ScalaCliActorTask(snippetId, inputs, ip, progressActor.ref)
+    scalaCliActor ! ScalaCliTask(snippetId, inputs, ip, progressActor.ref)
 
     val totalTimeout =
       if (firstRun) timeout + 30.seconds

@@ -33,14 +33,15 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
     val sbtServers = remoteSbtSelections.to(Vector).map {
       case (_, ref) =>
         val state: ServerState = ServerState.Unknown
-        SbtServer(ref, SbtInputs.default, state)
+        Server(ref, SbtInputs.default, state)
     }
 
-    new AtomicReference(LoadBalancer(servers = sbtServers))
+    new AtomicReference(SbtLoadBalancer(servers = sbtServers))
   }
 
   private def updateSbtBalancer(newBalancer: SbtBalancer): Unit = {
-    if (balancer != newBalancer) {
+    val oldBalancer = balancer.get
+    if (oldBalancer != newBalancer) {
       statusActor ! SbtLoadBalancerUpdate(newBalancer)
     }
     balancer.set(newBalancer)
@@ -131,13 +132,13 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
 
         updateSbtBalancer(
           balancer.get.addServer(
-            SbtServer(ref, SbtInputs.default, state)
+            Server(ref, SbtInputs.default, state)
           )
         )
       }
 
     case ReceiveStatus(requester) =>
-      sender() ! LoadBalancerInfo(balancer.get, requester)
+      sender() ! SbtLoadBalancerInfo(balancer.get, requester)
 
     case Run(InputsWithIpAndUser(sbtTask: SbtInputs, userTrace), snippetId) =>
       run0(sbtTask, userTrace, snippetId)

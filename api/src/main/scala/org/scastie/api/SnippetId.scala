@@ -5,7 +5,7 @@ import io.circe._
 
 object User {
   // low tech solution
-  val admins: Set[String] = Set("rochala", "julienrf")
+  val admins: Set[String] = Set("rochala", "julienrf", "warcholjakub")
 
   implicit val userEncoder: Encoder[User] = deriveEncoder[User]
   implicit val userDecoder: Decoder[User] = deriveDecoder[User]
@@ -35,6 +35,8 @@ object SnippetUserPart {
 case class SnippetUserPart(login: String, update: Int = 0)
 
 object SnippetId {
+  def empty: SnippetId = SnippetId("", None)
+
   implicit val snippetIdEncoder: Encoder[SnippetId] = deriveEncoder[SnippetId]
   implicit val snippetIdDecoder: Decoder[SnippetId] = deriveDecoder[SnippetId]
 }
