@@ -86,7 +86,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   test("report parsing error") {
     runCode("\nval x = 4444444444444444444\n", allowFailure = true)(
       assertCompilationInfo(
-        assertProblemInfo("integer number too large for Int", Some(2), Some(9), Some(28))(_)
+        assertProblemInfo("integer number too large for Int", Some(2), Some(2), Some(9), Some(28))(_)
       )
     )
   }
@@ -94,7 +94,7 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   test("report parsing error 2") {
     runCode("val x = 1a", allowFailure = true)(
       assertCompilationInfo(
-        assertProblemInfo("Invalid literal number, followed by identifier character", Some(1), Some(10), Some(10))(_)
+        assertProblemInfo("Invalid literal number, followed by identifier character", Some(1), Some(1), Some(10), Some(10))(_)
       )
     )
   }
@@ -102,7 +102,18 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   test("report compilation error") {
     runCode("val x = err", allowFailure = true)(
       assertCompilationInfo (
-        assertProblemInfo("not found: value err", Some(1), Some(9), Some(12))(_)
+        assertProblemInfo("not found: value err", Some(1), Some(1), Some(9), Some(12))(_)
+      )
+    )
+  }
+
+  test("report multi-line type error") {
+    runCode("""val x: Int = List(
+              |  1,
+              |  2
+              |)""".stripMargin, allowFailure = true)(
+      assertCompilationInfo(
+        assertProblemInfo("type mismatch;\n found   : List[Int]\n required: Int", Some(1), Some(4), Some(14), Some(2))(_)
       )
     )
   }
@@ -533,11 +544,13 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
   private def assertProblemInfo(
     message: String = "",
     line: Option[Int] = None,
+    endLine: Option[Int] = None,
     startColumn: Option[Int] = None,
     endColumn: Option[Int] = None
   )(info: Problem): Unit = {
     assert(info.message == message)
     assert(info.line == line)
+    assert(info.endLine == endLine.orElse(line))
     assert(info.startColumn == startColumn)
     assert(info.endColumn == endColumn)
   }

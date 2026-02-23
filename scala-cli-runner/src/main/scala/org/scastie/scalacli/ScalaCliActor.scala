@@ -133,7 +133,7 @@ class ScalaCliActor(
       snippetId = Some(snippetId),
       isTimeout = isTimeout,
       isDone = true,
-      compilationInfos = List(Problem(Error, Some(-1), None, None, error)),
+      compilationInfos = List(Problem(Error, Some(-1), Some(-1), None, None, error)),
       buildOutput = Some(ProcessOutput(error, ProcessOutputType.StdErr, None))
     )
   }

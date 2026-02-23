@@ -102,7 +102,7 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   test("report parsing error") {
     runCode("\nval x = 4444444444444444444\n", allowFailure = true)(
       assertCompilationInfo (
-        assertProblemInfo("number too large", Some(2), Some(9), Some(28))(_)
+        assertProblemInfo("number too large", Some(2), Some(2), Some(9), Some(28))(_)
       )
     )
   }
@@ -110,7 +110,7 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   test("report parsing error 2") {
     runCode("val x = 1a", allowFailure = true)(
       assertCompilationInfo(
-        assertProblemInfo("end of statement expected but identifier found", Some(1), Some(10), Some(11))(_)
+        assertProblemInfo("end of statement expected but identifier found", Some(1), Some(1), Some(10), Some(11))(_)
       )
     )
   }
@@ -118,7 +118,18 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   test("report compilation error") {
     runCode("val x = err", allowFailure = true)(
       assertCompilationInfo (
-        assertProblemInfo("Not found: err", Some(1), Some(9), Some(12))(_)
+        assertProblemInfo("Not found: err", Some(1), Some(1), Some(9), Some(12))(_)
+      )
+    )
+  }
+
+  test("report multi-line type error") {
+    runCode("""val x: Int = List(
+              |  1,
+              |  2
+              |)""".stripMargin, allowFailure = true)(
+      assertCompilationInfo(
+        assertProblemInfo("Found:    List[Int]\nRequired: Int", Some(1), Some(4), Some(14), Some(2))(_)
       )
     )
   }
@@ -484,11 +495,13 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
   private def assertProblemInfo(
     message: String = "",
     line: Option[Int] = None,
+    endLine: Option[Int] = None,
     startColumn: Option[Int] = None,
     endColumn: Option[Int] = None
   )(info: Problem): Unit = {
     assert(info.message == message)
     assert(info.line == line)
+    assert(info.endLine == endLine.orElse(line))
     assert(info.startColumn == startColumn)
     assert(info.endColumn == endColumn)
   }

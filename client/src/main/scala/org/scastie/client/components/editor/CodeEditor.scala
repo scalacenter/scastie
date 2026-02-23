@@ -124,40 +124,58 @@ object CodeEditor {
     })
   }
 
-  def problemToDiagnostic(problem: Problem, doc: Text): Diagnostic = {
+  def problemToDiagnostics(problem: Problem, doc: Text): Seq[Diagnostic] = {
     val maxLine = doc.lines.toInt
-    val line = problem.line.get.max(1).min(maxLine)
-    val lineInfo = doc.line(line)
-    val lineLength = lineInfo.length.toInt
+    val startLine = problem.line.get.max(1).min(maxLine)
+    val endLine = problem.endLine.getOrElse(startLine).max(1).min(maxLine)
 
-    val preciseRangeOpt: Option[(Double, Double)] =
-      if (problem.line.get > maxLine) {
-        val endPos = lineInfo.to
-        Some((endPos, endPos))
-      } else {
-        (problem.startColumn, problem.endColumn) match {
-          case (Some(start), Some(end)) if start > 0 && end >= start =>
-            val clampedStart = (start min (lineLength + 1)) max 1
-            val clampedEnd = (end min (lineLength + 1)) max clampedStart
-            Some((lineInfo.from + clampedStart - 1, lineInfo.from + clampedEnd - 1))
-          case _ =>
-            None
-        }
-      }
-
-    val (startColumn, endColumn) = preciseRangeOpt match {
-      case Some((start, end)) =>
-        (start, end)
-      case None =>
-        (lineInfo.from, lineInfo.to)
+    val renderMessage = (_: EditorView) => {
+      val wrapper = dom.document.createElement("pre")
+      wrapper.innerHTML = HTMLFormatter.format(problem.message)
+      wrapper
     }
 
-    Diagnostic(startColumn, problem.message, parseSeverity(problem.severity), endColumn)
-      .setRenderMessage((_: EditorView) => {
-        val wrapper = dom.document.createElement("pre")
-        wrapper.innerHTML = HTMLFormatter.format(problem.message)
-        wrapper
-      })
+    val actions = problemToActions(problem, doc)
+
+    /* Split multi-line diagnostics into per-line diagnostics for proper tooltip positioning */
+    (startLine to endLine).map { lineNum =>
+      val lineInfo = doc.line(lineNum)
+      val isStartLine = lineNum == startLine
+      val isEndLine = lineNum == endLine
+
+      val from = if (isStartLine) {
+        problem.startColumn match {
+          case Some(col) if col > 0 =>
+            val clampedStart = (col min (lineInfo.length.toInt + 1)) max 1
+            lineInfo.from + clampedStart - 1
+          case _ =>
+            lineInfo.from
+        }
+      } else {
+        lineInfo.from
+      }
+
+      val to = if (isEndLine) {
+        if (problem.line.get > maxLine && isStartLine) {
+          lineInfo.to
+        } else {
+          problem.endColumn match {
+            case Some(col) if col > 0 =>
+              val clampedEnd = (col min (lineInfo.length.toInt + 1)) max 1
+              (lineInfo.from + clampedEnd - 1) min lineInfo.to
+            case _ =>
+              lineInfo.to
+          }
+        }
+      } else {
+        lineInfo.to
+      }
+
+      val diagnostic = Diagnostic(from, problem.message, parseSeverity(problem.severity), to)
+        .setRenderMessage(renderMessage)
+      actions.foreach(a => diagnostic.setActions(a.toJSArray))
+      diagnostic
+    }
   }
 
   /* e.g.: line: 5, character: 10 -> offset: 67 */
@@ -200,15 +218,7 @@ object CodeEditor {
   private def getDecorations(props: CodeEditor, doc: Text): js.Array[Diagnostic] = {
     val errors = props.compilationInfos
       .filter(prob => prob.line.isDefined)
-      .map { prob =>
-        val diagnostic = problemToDiagnostic(prob, doc)
-
-        problemToActions(prob, doc).foreach { actions =>
-          diagnostic.setActions(actions.toJSArray)
-        }
-
-        diagnostic
-      }
+      .flatMap(problemToDiagnostics(_, doc))
 
     val runtimeErrors = props.runtimeError.map(runtimeError => {
       val line = runtimeError.line.getOrElse(1).min(doc.lines.toInt)
