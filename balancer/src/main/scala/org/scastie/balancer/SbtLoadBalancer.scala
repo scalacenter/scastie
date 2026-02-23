@@ -8,16 +8,6 @@ import org.slf4j.LoggerFactory
 
 import scala.util.Random
 
-case class Ip(v: String)
-
-case class Task[T <: BaseInputs](config: T, ip: Ip, taskId: TaskId, ts: Instant)
-
-case class TaskHistory(data: Vector[Task[SbtInputs]], maxSize: Int) {
-  def add(task: Task[SbtInputs]): TaskHistory = {
-    val cappedData = if (data.length < maxSize) data else data.drop(1)
-    copy(data = cappedData :+ task)
-  }
-}
 case class SbtLoadBalancer[R, S <: ServerState](servers: Vector[SbtServer[R, S]]) {
   private val log = LoggerFactory.getLogger(getClass)
 

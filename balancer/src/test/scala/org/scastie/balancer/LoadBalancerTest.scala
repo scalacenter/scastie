@@ -110,7 +110,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val ref = TestServerRef(1)
 
     val balancer = SbtLoadBalancer(
-      Vector(SbtServer(ref, sbtConfig("c1"), ServerState.Unknown)),
+      Vector(Server(ref, sbtConfig("c1"), ServerState.Unknown)),
     )
     assert(balancer.removeServer(ref).servers.isEmpty)
   }
@@ -157,7 +157,7 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     val ref = TestServerRef(1)
 
     val balancer = ScalaCliLoadBalancer(
-      Vector(ScalaCliServer(ref, scalaCliConfig("c1"), ServerState.Unknown)),
+      Vector(Server(ref, scalaCliConfig("c1"), ServerState.Unknown)),
     )
     assert(balancer.removeServer(ref).servers.isEmpty)
   }

@@ -33,7 +33,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
     val sbtServers = remoteSbtSelections.to(Vector).map {
       case (_, ref) =>
         val state: ServerState = ServerState.Unknown
-        SbtServer(ref, SbtInputs.default, state)
+        Server(ref, SbtInputs.default, state)
     }
 
     new AtomicReference(SbtLoadBalancer(servers = sbtServers))
@@ -132,7 +132,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
 
         updateSbtBalancer(
           balancer.get.addServer(
-            SbtServer(ref, SbtInputs.default, state)
+            Server(ref, SbtInputs.default, state)
           )
         )
       }

@@ -14,8 +14,8 @@ object TestTaskId {
 case class TestServerRef(id: Int)
 
 trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
-  type TestSbtServer = SbtServer[TestServerRef, ServerState]
-  type TestScalaCliServer = ScalaCliServer[TestServerRef, ServerState]
+  type TestSbtServer = Server[TestServerRef, ServerState, SbtInputs]
+  type TestScalaCliServer = Server[TestServerRef, ServerState, ScalaCliInputs]
 
   type TestSbtLoadBalancer = SbtLoadBalancer[TestServerRef, ServerState]
   type TestScalaCliLoadBalancer = ScalaCliLoadBalancer[TestServerRef, ServerState]
@@ -65,7 +65,7 @@ trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
       mailbox: Vector[Task[SbtInputs]] = Vector(),
       state: ServerState = ServerState.Unknown
   ): TestSbtServer = synchronized {
-    val t = SbtServer(TestServerRef(serverId), sbtConfig(c), state, mailbox)
+    val t = Server(TestServerRef(serverId), sbtConfig(c), state, mailbox)
     serverId += 1
     t
   }
@@ -79,7 +79,7 @@ trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
       mailbox: Vector[Task[ScalaCliInputs]] = Vector(),
       state: ServerState = ServerState.Unknown
   ): TestScalaCliServer = synchronized {
-    val t = ScalaCliServer(TestServerRef(serverId), scalaCliConfig(c), state, mailbox)
+    val t = Server(TestServerRef(serverId), scalaCliConfig(c), state, mailbox)
     serverId += 1
     t
   }
@@ -101,7 +101,7 @@ trait LoadBalancerTestUtils extends AnyFunSuite with TestUtils {
   def sbtConfig(sbtConfig: String) = SbtInputs.default.copy(sbtConfigExtra = sbtConfig)
   def scalaCliConfig(code: String) = ScalaCliInputs.default.copy(code = code)
 
-  def history(columns: Seq[String]*): TaskHistory = {
+  def history(columns: Seq[String]*): TaskHistory[SbtInputs] = {
     val records =
       columns.to(Vector).flatten.map(i => Task(SbtInputs.default.copy(code = i.toString), nextIp, TestTaskId(1), Instant.now)).reverse
 

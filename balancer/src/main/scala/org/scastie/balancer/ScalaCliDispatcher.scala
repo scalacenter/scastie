@@ -30,7 +30,7 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
     val scalaCliServers = remoteServers.to(Vector).map {
       case (_, ref) =>
         val state: ServerState = ServerState.Unknown
-        ScalaCliServer(ref, ScalaCliInputs.default, state)
+        Server(ref, ScalaCliInputs.default, state)
     }
 
     new AtomicReference(ScalaCliLoadBalancer(servers = scalaCliServers))
@@ -85,7 +85,7 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
 
         updateScalaCliBalancer(
           balancer.get.addServer(
-            ScalaCliServer(ref, ScalaCliInputs.default, state)
+            Server(ref, ScalaCliInputs.default, state)
           )
         )
       }
