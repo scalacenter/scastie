@@ -149,7 +149,7 @@ object Instrument {
 
   def separateDirectives(code: String, targetType: ScalaTargetType, additionalDirectives: Seq[String]): (String, String) = {
     if (targetType == ScalaTargetType.ScalaCli) {
-      val directiveRegex = """^//>.*(?:\n|$)""".r
+      val directiveRegex = """^\s*//>.*(?:\n|$)""".r
       val lines = code.linesWithSeparators.toList
       val (directives, rest) = lines.partition(line => directiveRegex.pattern.matcher(line).matches)
       val directivesStr = directives.mkString

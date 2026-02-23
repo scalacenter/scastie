@@ -102,7 +102,7 @@ case class ScalaCliInputs(
   libraries: Set[ScalaDependency] = Set.empty
 ) extends BaseInputs {
 
-  private lazy val directives: String = code.linesIterator.filter(_.startsWith("//> using")).mkString("\n")
+  private lazy val directives: String = code.linesIterator.filter(_.trim.startsWith("//> using")).mkString("\n")
 
   def needsReload(other: ScalaCliInputs): Boolean = directives != other.directives
 }
