@@ -76,16 +76,16 @@ class DispatchActorIntegrationTest()
     waitFor(sid3, ret)(_.isDone)
   }
 
-  private val serverAkkaPort = 15000
-  private val webSystem = ActorSystem("Web", RemotePortConfig(serverAkkaPort))
+  private val serverRemotePort = 15000
+  private val webSystem = ActorSystem("Web", RemotePortConfig(serverRemotePort))
 
-  private val sbtAkkaPort = 5150
+  private val sbtRemotePort = 5150
   private val sbtSystem =
-    ActorSystem("SbtRunner", RemotePortConfig(sbtAkkaPort))
+    ActorSystem("SbtRunner", RemotePortConfig(sbtRemotePort))
 
-  private val scalaCliAkkaPort = 5250
+  private val scalaCliRemotePort = 5250
   private val scalaCliSystem =
-    ActorSystem("ScalaCliRunner", RemotePortConfig(scalaCliAkkaPort))
+    ActorSystem("ScalaCliRunner", RemotePortConfig(scalaCliRemotePort))
 
   private val progressActor = TestProbe()
   private val statusActor = TestProbe()
@@ -105,9 +105,9 @@ class DispatchActorIntegrationTest()
           reconnectInfo = Some(
             ReconnectInfo(
               serverHostname = localhost,
-              serverAkkaPort = serverAkkaPort,
+              serverRemotePort = serverRemotePort,
               actorHostname = localhost,
-              actorAkkaPort = sbtAkkaPort
+              actorRemotePort = sbtRemotePort
             )
           )
         )
@@ -136,9 +136,9 @@ class DispatchActorIntegrationTest()
           reconnectInfo = Some(
             ReconnectInfo(
               serverHostname = localhost,
-              serverAkkaPort = serverAkkaPort,
+              serverRemotePort = serverRemotePort,
               actorHostname = localhost,
-              actorAkkaPort = scalaCliAkkaPort
+              actorRemotePort = scalaCliRemotePort
             )
           )
         )

@@ -25,7 +25,7 @@ object ScalaCliMain {
     assert(scala.sys.process.Process("which scala-cli").! == 0, "scala-cli is not installed")
 
     val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
-    logger.info("akka tcp config")
+    logger.info("remote tcp config")
     logger.info("  '" + config2.getString("hostname") + "'")
     logger.info("  " + config2.getInt("port"))
 
@@ -70,9 +70,9 @@ object ScalaCliMain {
     // Reconnect info
     val reconnectInfo = ReconnectInfo(
       serverHostname = serverConfig.getString("hostname"),
-      serverAkkaPort = serverConfig.getInt("akka-port"),
+      serverRemotePort = serverConfig.getInt("remote-port"),
       actorHostname = scalaCliConfig.getString("hostname"),
-      actorAkkaPort = scalaCliConfig.getInt("akka-port")
+      actorRemotePort = scalaCliConfig.getInt("remote-port")
     )
 
     system.actorOf(
@@ -92,9 +92,9 @@ object ScalaCliMain {
     logger.info("  compilationTimeout: {}", compilationTimeout)
     logger.info("  isProduction: {}", isProduction)
     logger.info("  runner hostname: {}", reconnectInfo.actorHostname)
-    logger.info("  runner port: {}", reconnectInfo.actorAkkaPort)
+    logger.info("  runner port: {}", reconnectInfo.actorRemotePort)
     logger.info("  server hostname: {}", reconnectInfo.serverHostname)
-    logger.info("  server port: {}", reconnectInfo.serverAkkaPort)
+    logger.info("  server port: {}", reconnectInfo.serverRemotePort)
 
     logger.info("ScalaCliActor started")
 

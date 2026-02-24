@@ -5,7 +5,6 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, ActorRef, Props, Stash}
-import akka.contrib.process._
 import akka.stream.scaladsl.{Flow, Framing, Sink, Source}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, ThrottleMode}
 import akka.util.ByteString

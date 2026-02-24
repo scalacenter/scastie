@@ -58,7 +58,7 @@ class ScalaCliActor(
     if (isProduction) {
       reconnectInfo.foreach { info =>
         import info._
-        balancer(context, info) ! RunnerConnect(actorHostname, actorAkkaPort)
+        balancer(context, info) ! RunnerConnect(actorHostname, actorRemotePort)
       }
     }
   }
@@ -142,7 +142,7 @@ class ScalaCliActor(
   def balancer(context: ActorContext, info: ReconnectInfo): ActorSelection = {
     import info._
     context.actorSelection(
-      s"akka://Web@$serverHostname:$serverAkkaPort/user/DispatchActor/ScalaCliDispatcher"
+      s"akka://Web@$serverHostname:$serverRemotePort/user/DispatchActor/ScalaCliDispatcher"
     )
   }
 

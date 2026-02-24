@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2009-2014 Typesafe Inc. <http://www.typesafe.com>
  */
-package akka.contrib.process
+package org.scastie.util
 
 import akka.actor.{Actor, ActorLogging, ActorRef, NoSerializationVerificationNeeded, Props, SupervisorStrategy, Terminated}
 import akka.stream.{ActorAttributes, IOResult}

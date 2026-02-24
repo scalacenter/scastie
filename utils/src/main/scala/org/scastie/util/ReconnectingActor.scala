@@ -7,7 +7,7 @@ import org.scastie.api.ActorConnected
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-case class ReconnectInfo(serverHostname: String, serverAkkaPort: Int, actorHostname: String, actorAkkaPort: Int)
+case class ReconnectInfo(serverHostname: String, serverRemotePort: Int, actorHostname: String, actorRemotePort: Int)
 
 trait ActorReconnecting extends Actor with ActorLogging {
 
@@ -54,12 +54,12 @@ trait ActorReconnecting extends Actor with ActorLogging {
           .map(info => ev.remoteAddress.host.contains(info.serverHostname))
           .getOrElse(false)
 
-      val isServerAkkaPort =
+      val isServerRemotePort =
         reconnectInfo
-          .map(info => ev.remoteAddress.port.contains(info.serverAkkaPort))
+          .map(info => ev.remoteAddress.port.contains(info.serverRemotePort))
           .getOrElse(false)
 
-      if (isServerHostname && isServerAkkaPort && ev.inbound) {
+      if (isServerHostname && isServerRemotePort && ev.inbound) {
         log.warning("Disconnected from server")
         onDisconnected()
         setupReconnectCallback(context)
