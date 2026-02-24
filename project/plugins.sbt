@@ -1,6 +1,6 @@
 addSbtPlugin("com.eed3si9n"        % "sbt-assembly"        % "2.1.5")
-addSbtPlugin("com.github.sbt"      % "sbt-native-packager" % "1.11.7")
-  .exclude("org.scala-lang.modules", "scala-parser-combinators_2.12")
+addSbtPlugin(("com.github.sbt"      % "sbt-native-packager" % "1.11.7")
+  .exclude("org.scala-lang.modules", "scala-parser-combinators_2.12"))
 addSbtPlugin("io.spray"            % "sbt-revolver"        % "0.10.0")
 addSbtPlugin("se.marcuslonnberg"   % "sbt-docker"          % "1.11.0")
 addSbtPlugin("com.eed3si9n"        % "sbt-buildinfo"       % "0.11.0")
