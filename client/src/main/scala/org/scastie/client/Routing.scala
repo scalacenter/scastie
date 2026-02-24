@@ -118,7 +118,7 @@ class Routing(defaultServerUrl: String) {
           embedded / userUpdate.caseClass[EmbeddedUserResourceUpdated]
         ) ~>
           dynRenderR((page, router) => renderPage(page, router))
-    ).notFound(redirectToPage(Home)(SetRouteVia.HistoryReplace))
+    ).notFound(redirectToPage(Home)(using SetRouteVia.HistoryReplace))
       .renderWith((page, router) => layout(page, router))
   }
 

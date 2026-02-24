@@ -99,13 +99,6 @@ object Scastie {
         close = scope.backend.closeLoginModal,
         openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal
       ).render,
-      PrivacyPolicyPrompt(
-        isDarkTheme = state.isDarkTheme,
-        isClosed = state.modalState.isPrivacyPolicyPromptClosed,
-        acceptPrivacyPolicy = scope.backend.acceptPolicy,
-        refusePrivacyPolicy = scope.backend.refusePrivacyPolicy,
-        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal
-      ).render,
       PrivacyPolicyModal(
         isDarkTheme = state.isDarkTheme,
         isClosed = state.modalState.isPrivacyPolicyModalClosed,
@@ -290,7 +283,7 @@ object Scastie {
     }
     .backend(ScastieBackend(scastieId, serverUrl, _))
     .renderPS(render)
-    .componentWillMount { current =>
+    .componentDidMount { current =>
       start(current.props, current.backend) >>
         setTitle(current.state, current.props) >>
         current.backend.closeNewSnippetModal >>
@@ -304,21 +297,20 @@ object Scastie {
     .componentDidUpdate { scope =>
       setTitle(scope.prevState, scope.currentProps) >>
         scope.modState(_.scalaJsScriptLoaded) >>
-        executeScalaJs(scastieId, scope.currentState)
-    }
-    .componentWillReceiveProps { scope =>
-      val next    = scope.nextProps.snippetId
-      val current = scope.currentProps.snippetId
-      val state   = scope.state
-      val backend = scope.backend
+        executeScalaJs(scastieId, scope.currentState) >>
+        {
+          val next    = scope.currentProps.snippetId
+          val prev    = scope.prevProps.snippetId
+          val backend = scope.backend
 
-      val loadSnippet: CallbackOption[Unit] = for {
-        snippetId <- CallbackOption.option(next)
-        _         <- CallbackOption.require(next != current)
-        _         <- backend.loadSnippet(snippetId).toCBO >> backend.setView(View.Editor)
-      } yield ()
+          val loadSnippet: CallbackOption[Unit] = for {
+            snippetId <- CallbackOption.option(next)
+            _         <- CallbackOption.require(next != prev)
+            _         <- backend.loadSnippet(snippetId).toCBO >> backend.setView(View.Editor)
+          } yield ()
 
-      setTitle(state, scope.nextProps) >> loadSnippet.toCallback
+          loadSnippet.toCallback
+        }
     }
     .configure(Reusability.shouldComponentUpdate)
     .build

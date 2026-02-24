@@ -164,7 +164,6 @@ object BuildSettings {
     val targetSpecificSettings = props.inputs match {
       case sbtInputs: SbtInputs           => sbtBuildSettingsPanel(props, sbtInputs)
       case scalaCliInputs: ScalaCliInputs => scalaCliBuildSettingsPanel(props, scalaCliInputs)
-      case _                              => div()()
     }
 
     div(cls := "build-settings-container")(

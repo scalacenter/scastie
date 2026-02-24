@@ -107,9 +107,9 @@ class WebSocketStream[T: Decoder](uri: String, handler: EventStreamHandler[T]) e
   val fullUri: String = s"$protocol://${window.location.host}${uri}"
   val socket: WebSocket = new WebSocket(uri)
 
-  socket.onopen = onOpen _
-  socket.onclose = onClose _
-  socket.onmessage = onMessage _
+  socket.onopen = e => onOpen(e)
+  socket.onclose = e => onClose(e)
+  socket.onmessage = e => onMessage(e)
 }
 
 class EventSourceStream[T: Decoder](uri: String, handler: EventStreamHandler[T]) extends EventStream[T](handler) {
@@ -144,7 +144,7 @@ class EventSourceStream[T: Decoder](uri: String, handler: EventStreamHandler[T])
   }
 
   val eventSource: EventSource = new EventSource(uri)
-  eventSource.onopen = onOpen _
-  eventSource.onmessage = onMessage _
-  eventSource.onerror = onError _
+  eventSource.onopen = e => onOpen(e)
+  eventSource.onmessage = e => onMessage(e)
+  eventSource.onerror = e => onError(e)
 }

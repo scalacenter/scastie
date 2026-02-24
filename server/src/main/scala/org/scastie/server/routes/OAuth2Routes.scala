@@ -35,7 +35,7 @@ class OAuth2Routes(github: Github, session: GithubUserSession)(
         path("login") {
           parameter("home".?)(
             home =>
-              optionalHeaderValueByType[Referer](()) { referrer =>
+              optionalHeaderValueByType(Referer) { referrer =>
                 redirect(
                   Uri("https://github.com/login/oauth/authorize").withQuery(
                     Query(
@@ -54,7 +54,7 @@ class OAuth2Routes(github: Github, session: GithubUserSession)(
           )
         },
         path("logout") {
-          headerValueByType[Referer](()) { referrer =>
+          headerValueByType(Referer) { referrer =>
             requiredSession(refreshable, usingCookies) { _ =>
               invalidateSession(refreshable, usingCookies) { ctx =>
                 ctx.complete(

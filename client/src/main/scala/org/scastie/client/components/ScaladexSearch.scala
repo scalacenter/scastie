@@ -78,6 +78,7 @@ object ScaladexSearch {
             case ScalaTargetType.Scala3 => "_3"
             case ScalaTargetType.Scala2 => s"_${target.binaryScalaVersion}"
             case ScalaTargetType.JS => s"_sjs1_${target.binaryScalaVersion}"
+            case _ => ""
           }
           artifactId == artifact || artifactId == s"${artifact}${targetSuffix}"
         }
@@ -176,7 +177,7 @@ object ScaladexSearch {
       if (query.nonEmpty) {
         results.sortBy({ case (project, artifact, _, _) =>
           -matchScore(query, artifact, project)
-        })(Ordering[Int])
+        })(using Ordering[Int])
       } else {
         results.sortBy { case (project, artifact, _, _) =>
           (project.organization, project.repository, artifact)
@@ -214,19 +215,15 @@ object ScaladexSearch {
   private val scaladexApiUrl = scaladexBaseUrl + "/api"
 
   private implicit val projectOrdering: Ordering[Project] =
-    Ordering.by { project: Project =>
+    Ordering.by {(project: Project) =>
       (project.organization, project.repository)
     }
 
   private implicit val scalaDependenciesOrdering: Ordering[ScalaDependency] =
-    Ordering.by { scalaDependency: ScalaDependency =>
-      scalaDependency.artifact
-    }
+    Ordering.by((scalaDep: ScalaDependency) => scalaDep.artifact)
 
   private implicit val selectedOrdering: Ordering[Selected] =
-    Ordering.by { selected: Selected =>
-      (selected.project, selected.release)
-    }
+    Ordering.by((sel: Selected) => (sel.project, sel.release))
 
   private val projectListRef = Ref[HTMLElement]
   private val searchInputRef = Ref[HTMLInputElement]
@@ -235,9 +232,9 @@ object ScaladexSearch {
   private def render(props: ScaladexSearch, state: hooks.Hooks.UseStateF[CallbackTo, SearchState]): VdomElement = {
     def keyDown(e: ReactKeyboardEventFromInput): Callback = {
 
-      if (e.keyCode == KeyCode.Down || e.keyCode == KeyCode.Up) {
+      if (e.keyCode == dom.KeyCode.Down || e.keyCode == dom.KeyCode.Up) {
         val diff =
-          if (e.keyCode == KeyCode.Down) +1
+          if (e.keyCode == dom.KeyCode.Down) +1
           else -1
 
         def clamp(max: Int, v: Int) =
@@ -271,7 +268,7 @@ object ScaladexSearch {
           e.preventDefaultCB >>
           scrollToSelectedProject
 
-      } else if (e.keyCode == KeyCode.Enter) {
+      } else if (e.keyCode == dom.KeyCode.Enter) {
 
         def addArtifactIfInRange =
           for {
