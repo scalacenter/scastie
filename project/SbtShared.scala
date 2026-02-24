@@ -101,8 +101,7 @@ object SbtShared {
         "-encoding",
         "UTF-8",
         "-feature",
-        "-unchecked",
-        "-language:implicitConversions"
+        "-unchecked"
       )
 
       if (scalaV == ScalaVersions.latest210 || scalaV.startsWith("3.")) base
@@ -123,7 +122,8 @@ object SbtShared {
   )
 
   lazy val baseNoCross3Settings = baseSettings ++ Seq(
-    scalaVersion := ScalaVersions.stableNext
+    scalaVersion := ScalaVersions.stableNext,
+    scalacOptions += "-language:implicitConversions"
   )
 
 lazy val baseJsSettings = Seq(

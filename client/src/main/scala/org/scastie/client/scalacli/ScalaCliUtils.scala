@@ -57,18 +57,18 @@ object ScalaCliUtils {
       (scalaTarget, deps ++ toolkitDependency)
     }
 
-  implicit class InputConverter(inputs: BaseInputs) {
+  extension (inputs: BaseInputs) {
     def setTarget(newTarget: ScalaTarget): BaseInputs = {
       inputs -> newTarget match {
         case (sbtInputs: SbtInputs, newSbtScalaTarget: SbtScalaTarget) => sbtInputs.copy(target = newSbtScalaTarget)
         case (scalaCliInputs: ScalaCliInputs, newScalaCliTarget: ScalaCli) => scalaCliInputs.copy(target = newScalaCliTarget)
-        case (_: ScalaCliInputs, newSbtScalaTarget: SbtScalaTarget) => convertToSbt(newSbtScalaTarget)
-        case (_: SbtInputs, _: ScalaCli) => convertToScalaCli
+        case (_: ScalaCliInputs, newSbtScalaTarget: SbtScalaTarget) => inputs.convertToSbt(newSbtScalaTarget)
+        case (_: SbtInputs, _: ScalaCli) => inputs.convertToScalaCli
         case _ => inputs
       }
     }
 
-    private def convertToSbt(newSbtScalaTarget: SbtScalaTarget): SbtInputs = {
+    def convertToSbt(newSbtScalaTarget: SbtScalaTarget): SbtInputs = {
       val oldInputsVersion = inputs.target.scalaVersion
       val correctScalaVersions = allVersions(newSbtScalaTarget.targetType)
       val convertedTarget = oldInputsVersion match {
@@ -88,7 +88,7 @@ object ScalaCliUtils {
       )
     }
 
-    private def convertToScalaCli: ScalaCliInputs = {
+    def convertToScalaCli: ScalaCliInputs = {
       val scalaCliTarget = ScalaCli(inputs.target.scalaVersion)
       val newLibraries = inputs.libraries.map(_.copy(target = scalaCliTarget))
 
