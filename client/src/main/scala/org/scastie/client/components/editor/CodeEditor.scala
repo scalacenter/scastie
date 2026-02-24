@@ -203,7 +203,7 @@ object CodeEditor {
               }
 
               view.dispatch(js.Dynamic.literal(
-                "changes" -> js.Array(changes: _*)
+                "changes" -> js.Array(changes*)
               ).asInstanceOf[TransactionSpec])
             }
 

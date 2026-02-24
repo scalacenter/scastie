@@ -83,7 +83,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     Reusable.fn(language => scope.modState(_.setLanguage(language)))
 
   val setViewReused: View ~=> Callback =
-    Reusable.fn(setView _)
+    Reusable.fn(setView)
 
   def setView(newView: View): Callback =
     scope.modState(_.setView(newView))

@@ -443,7 +443,7 @@ case class ScastieState(
   def addProgress(progress: SnippetProgress): ScastieState = coalesceUpdates { self =>
     val state = self
       .addOutputs(progress.compilationInfos, progress.instrumentations)
-      .logOutput(progress.userOutput, UserOutput.apply _)
+      .logOutput(progress.userOutput, UserOutput.apply)
       .logOutput(progress.buildOutput, ConsoleOutput.systemOutput(inputs.target))
       .setForcedProgramMode(progress.isForcedProgramMode)
       .setRuntimeError(progress.runtimeError)

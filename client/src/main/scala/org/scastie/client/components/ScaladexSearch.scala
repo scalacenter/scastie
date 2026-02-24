@@ -177,7 +177,7 @@ object ScaladexSearch {
       if (query.nonEmpty) {
         results.sortBy({ case (project, artifact, _, _) =>
           -matchScore(query, artifact, project)
-        })(Ordering[Int])
+        })(using Ordering[Int])
       } else {
         results.sortBy { case (project, artifact, _, _) =>
           (project.organization, project.repository, artifact)

@@ -114,7 +114,7 @@ trait MetalsAutocompletion extends MetalsClient with DebouncingCapabilities {
         from = fromPos.toDouble,
         to = toPos.toDouble max currentCursorPosition,
         insert = insertText
-      ).asInstanceOf[ChangeSpec] +: createAdditionalTextEdits(completion.additionalInsertInstructions, view)):_*
+      ).asInstanceOf[ChangeSpec] +: createAdditionalTextEdits(completion.additionalInsertInstructions, view))*
     ).setSelection(selection)
   }
 
