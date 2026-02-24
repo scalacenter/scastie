@@ -11,3 +11,5 @@
 -J-XX:MaxHeapFreeRatio=20
 #should be enough to compile this project
 -J-Xmx2g
+#avoid JIT compiler being disabled when code cache fills up on long sbt sessions
+-J-XX:NonProfiledCodeHeapSize=192m
