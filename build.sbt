@@ -271,7 +271,7 @@ lazy val server = project
     libraryDependencies ++= Seq(
       "org.apache.commons"                   % "commons-text"   % "1.11.0",
       "org.apache.pekko"                    %% "pekko-http"      % pekkoHttpVersion,
-      "com.github.pjfanning"                %% "pekko-http-session-core" % "0.8.0",
+      "com.softwaremill.pekko-http-session" %% "core" % "0.7.1",
       "org.apache.pekko"                    %% "pekko-http-cors" % "1.3.0",
       pekko("cluster"),
       pekko("slf4j"),
