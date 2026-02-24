@@ -8,7 +8,7 @@ addSbtPlugin("org.scala-js"        % "sbt-scalajs"         % SbtShared.ScalaJSVe
 addSbtPlugin("com.github.reibitto" % "sbt-welcome"         % "0.5.0")
 
 addSbtPlugin("org.olegych"                %% "sbt-cached-ci"          % "1.0.4")
-addSbtPlugin("org.scalablytyped.converter" % "sbt-converter"          % "1.0.0-beta44")
+addSbtPlugin("org.scalablytyped.converter" % "sbt-converter"          % "1.0.0-beta45")
 addSbtPlugin("com.evolution"               % "sbt-artifactory-plugin" % "0.0.2")
 
 //workaround https://github.com/sbt/sbt/issues/5374
