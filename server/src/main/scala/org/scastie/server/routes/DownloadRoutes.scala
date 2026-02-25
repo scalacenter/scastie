@@ -2,16 +2,16 @@ package org.scastie.web.routes
 
 import org.scastie.balancer.DownloadSnippet
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.model.headers.RawHeader
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.model.headers.RawHeader
 
-import akka.actor.ActorRef
-import akka.pattern.ask
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.pattern.ask
 
 import java.nio.file.Path
 
-import akka.util.Timeout
+import org.apache.pekko.util.Timeout
 import scala.concurrent.duration.DurationInt
 
 class DownloadRoutes(dispatchActor: ActorRef) {

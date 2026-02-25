@@ -2,7 +2,7 @@ package org.scastie.sbt
 
 import org.scastie.api._
 import org.scastie.util._
-import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
+import org.apache.pekko.actor.{Actor, ActorContext, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 
 import scala.concurrent.duration._
 
@@ -21,7 +21,7 @@ class SbtActor(system: ActorSystem,
   def balancer(context: ActorContext, info: ReconnectInfo): ActorSelection = {
     import info._
     context.actorSelection(
-      s"akka://Web@$serverHostname:$serverRemotePort/user/DispatchActor/SbtDispatcher"
+      s"pekko://Web@$serverHostname:$serverRemotePort/user/DispatchActor/SbtDispatcher"
     )
   }
 

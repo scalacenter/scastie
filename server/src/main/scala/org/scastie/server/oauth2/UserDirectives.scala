@@ -3,10 +3,10 @@ package org.scastie.web.oauth2
 import org.scastie.api.User
 import org.scastie.api.UserData
 
-import akka.http.scaladsl._
+import org.apache.pekko.http.scaladsl._
 import server._
 
-import com.softwaremill.session._
+import com.softwaremill.pekkohttpsession._
 import SessionDirectives._
 import SessionOptions._
 

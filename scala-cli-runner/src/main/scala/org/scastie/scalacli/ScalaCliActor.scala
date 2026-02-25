@@ -1,10 +1,10 @@
 package org.scastie.scalacli
 
-import akka.actor.ActorSystem
-import akka.actor.ActorRef
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorContext
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.Actor
+import org.apache.pekko.actor.ActorLogging
+import org.apache.pekko.actor.ActorContext
 import org.scastie.util.ActorReconnecting
 import org.scastie.util.ReconnectInfo
 import org.scastie.api._
@@ -20,12 +20,12 @@ import scala.sys.process._
 import java.nio.charset.StandardCharsets
 import scala.io.{Source => IOSource}
 import scala.util.control.NonFatal
-import akka.actor.ActorSelection
+import org.apache.pekko.actor.ActorSelection
 import scala.concurrent.duration.FiniteDuration
 import org.scastie.util.ScalaCliTask
-import akka.util.Timeout
+import org.apache.pekko.util.Timeout
 import scala.concurrent.duration._
-import akka.pattern.ask
+import org.apache.pekko.pattern.ask
 import org.agrona.concurrent.status.AtomicCounter
 import java.util.concurrent.atomic.AtomicLong
 import java.nio.file.Files
@@ -142,7 +142,7 @@ class ScalaCliActor(
   def balancer(context: ActorContext, info: ReconnectInfo): ActorSelection = {
     import info._
     context.actorSelection(
-      s"akka://Web@$serverHostname:$serverRemotePort/user/DispatchActor/ScalaCliDispatcher"
+      s"pekko://Web@$serverHostname:$serverRemotePort/user/DispatchActor/ScalaCliDispatcher"
     )
   }
 

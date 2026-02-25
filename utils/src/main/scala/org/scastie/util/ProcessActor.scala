@@ -4,10 +4,10 @@ import java.nio.file._
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.{Actor, ActorRef, Props, Stash}
-import akka.stream.scaladsl.{Flow, Framing, Sink, Source}
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, ThrottleMode}
-import akka.util.ByteString
+import org.apache.pekko.actor.{Actor, ActorRef, Props, Stash}
+import org.apache.pekko.stream.scaladsl.{Flow, Framing, Sink, Source}
+import org.apache.pekko.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, ThrottleMode}
+import org.apache.pekko.util.ByteString
 import org.scastie.api.{ProcessOutput, ProcessOutputType}
 import org.slf4j.LoggerFactory
 

@@ -3,9 +3,9 @@ package org.scastie.sbt
 import java.nio.file._
 import java.time.Instant
 
-import akka.actor.{ActorRef, Cancellable, FSM, Stash}
-import akka.pattern.ask
-import akka.util.Timeout
+import org.apache.pekko.actor.{ActorRef, Cancellable, FSM, Stash}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.util.Timeout
 import com.google.common.cache.CacheBuilder
 import scalacache._
 import scalacache.guava._

@@ -3,7 +3,7 @@ package org.scastie.scalacli
 import org.scastie.util.ScastieFileUtil.writeRunningPid
 import org.scastie.util.ReconnectInfo
 
-import akka.actor.{ActorSystem, Props}
+import org.apache.pekko.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Await
@@ -24,7 +24,7 @@ object ScalaCliMain {
 
     assert(scala.sys.process.Process("which scala-cli").! == 0, "scala-cli is not installed")
 
-    val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
+    val config2 = ConfigFactory.load().getConfig("pekko.remote.artery.canonical")
     logger.info("remote tcp config")
     logger.info("  '" + config2.getString("hostname") + "'")
     logger.info("  " + config2.getInt("port"))

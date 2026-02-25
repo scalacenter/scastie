@@ -1,9 +1,9 @@
 package org.scastie.balancer
 
-import akka.actor.{ActorSystem, Props}
-import akka.pattern.ask
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import akka.util.Timeout
+import org.apache.pekko.actor.{ActorSystem, Props}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.testkit.{ImplicitSender, TestKit, TestProbe}
+import org.apache.pekko.util.Timeout
 import org.scastie.api._
 import org.scastie.sbt._
 import org.scastie.scalacli._
@@ -210,7 +210,7 @@ class DispatchActorIntegrationTest()
 object RemotePortConfig {
   def apply(port: Int): Config =
     ConfigFactory.parseString(
-      s"""|akka {
+      s"""|pekko {
           |  actor {
           |    provider = cluster
           |    allow-java-serialization = on

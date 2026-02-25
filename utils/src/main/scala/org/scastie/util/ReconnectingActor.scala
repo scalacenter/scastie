@@ -1,7 +1,7 @@
 package org.scastie.util
 
-import akka.actor.{Actor, ActorContext, ActorLogging, Cancellable}
-import akka.remote.DisassociatedEvent
+import org.apache.pekko.actor.{Actor, ActorContext, ActorLogging, Cancellable}
+import org.apache.pekko.remote.DisassociatedEvent
 import org.scastie.api.ActorConnected
 
 import scala.concurrent.ExecutionContext.Implicits.global

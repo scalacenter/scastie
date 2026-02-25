@@ -1,19 +1,19 @@
 package org.scastie.balancer
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
+import org.apache.pekko.actor.Actor
+import org.apache.pekko.actor.ActorLogging
 import com.typesafe.config.Config
-import akka.actor.ActorRef
-import akka.actor.ActorSelection
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSelection
 import java.time.Instant
 import scala.collection.immutable.Queue
 import org.scastie.util.SbtTask
 import org.scastie.util.ScalaCliTask
 import org.scastie.api._
-import akka.util.Timeout
+import org.apache.pekko.util.Timeout
 import scala.concurrent.duration._
-import akka.pattern.ask
-import akka.remote.DisassociatedEvent
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.remote.DisassociatedEvent
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.jdk.CollectionConverters._
 import scala.collection.concurrent.TrieMap
@@ -72,11 +72,11 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
       val sender = this.sender()
       ping(remoteServers.values.toList).andThen(s => sender ! RunnerPong)
 
-    case RunnerConnect(runnerHostname, runnerAkkaPort) =>
-      if (!remoteServers.contains(SocketAddress(runnerHostname, runnerAkkaPort))) {
-        log.info("Connected runner {}", runnerAkkaPort)
+    case RunnerConnect(runnerHostname, runnerPort) =>
+      if (!remoteServers.contains(SocketAddress(runnerHostname, runnerPort))) {
+        log.info("Connected runner {}", runnerPort)
 
-        val address = SocketAddress(runnerHostname, runnerAkkaPort)
+        val address = SocketAddress(runnerHostname, runnerPort)
         val ref = connectRunner(getRemoteActorPath("ScalaCliRunner", address, "ScalaCliActor"))
 
         remoteServers.addOne(address -> ref)

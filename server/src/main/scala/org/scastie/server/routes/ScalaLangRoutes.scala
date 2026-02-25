@@ -5,14 +5,14 @@ import org.scastie.web.oauth2._
 
 import org.scastie.balancer._
 
-import akka.util.Timeout
-import akka.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.util.Timeout
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
 
-import akka.http.scaladsl.model.StatusCodes.Created
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.model.StatusCodes.Created
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.server.Directives._
 
-import akka.pattern.ask
+import org.apache.pekko.pattern.ask
 
 import scala.concurrent.duration.DurationInt
 
