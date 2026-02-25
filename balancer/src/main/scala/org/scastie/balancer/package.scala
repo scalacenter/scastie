@@ -1,6 +1,6 @@
 package org.scastie
 
-import akka.actor.ActorSelection
+import org.apache.pekko.actor.ActorSelection
 import org.scastie.api.{SbtInputs, ScalaCliInputs, ServerState}
 
 package object balancer {

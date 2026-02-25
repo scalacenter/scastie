@@ -5,9 +5,10 @@ import com.typesafe.sbt.SbtNativePackager.Universal
 import org.scalajs.linker.interface.ModuleSplitStyle
 import SbtShared._
 
-def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.6.19"
+def pekko(module: String) = "org.apache.pekko" %% ("pekko-" + module) % pekkoVersion
 
-val akkaHttpVersion = "10.2.9"
+val pekkoHttpVersion = "1.3.0"
+val pekkoVersion = "1.4.0"
 
 addCommandAlias("startAll", "scalaCliRunner/reStart;sbtRunner/reStart;server/reStart;metalsRunner/reStart;client/fastLinkJS")
 addCommandAlias("startAllProd", "scalaCliRunner/reStart;sbtRunner/reStart;metalsRunner/reStart;server/buildTreesitterWasm;server/fullLinkJS/reStart")
@@ -66,12 +67,11 @@ lazy val utils = project
   .settings(
     resolvers += Resolver.typesafeRepo("releases"),
     libraryDependencies ++= Seq(
-      akka("protobuf"),
-      akka("stream"),
-      akka("actor"),
-      akka("remote"),
-      akka("slf4j"),
-      akka("testkit") % Test
+      pekko("stream"),
+      pekko("actor"),
+      pekko("remote"),
+      pekko("slf4j"),
+      pekko("testkit") % Test
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm))
@@ -158,10 +158,10 @@ lazy val sbtRunner = project
     reStart                  := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     resolvers ++= Resolver.sonatypeOssRepos("public"),
     libraryDependencies ++= Seq(
-      akka("actor"),
-      akka("testkit") % Test,
-      akka("cluster"),
-      akka("slf4j"),
+      pekko("actor"),
+      pekko("testkit") % Test,
+      pekko("cluster"),
+      pekko("slf4j"),
       "com.github.cb372" %% "scalacache-core" % "0.28.0",
       "com.github.cb372" %% "scalacache-guava" % "0.28.0",
       "org.scalameta" %% "scalafmt-core" % "3.9.2",
@@ -269,15 +269,15 @@ lazy val server = project
       Seq(outputWasmDirectory / treeSitterScalaOutputName, outputWasmDirectory / treeSitterOutputName)
     },
     libraryDependencies ++= Seq(
-      "org.apache.commons"                  % "commons-text"   % "1.11.0",
-      "com.typesafe.akka"                  %% "akka-http"      % akkaHttpVersion,
-      "com.softwaremill.akka-http-session" %% "core"           % "0.7.1",
-      "ch.megard"                          %% "akka-http-cors" % "1.2.0",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.39.2",
-      akka("cluster"),
-      akka("slf4j"),
-      akka("testkit")      % Test,
-      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
+      "org.apache.commons"                   % "commons-text"   % "1.11.0",
+      "org.apache.pekko"                    %% "pekko-http"      % pekkoHttpVersion,
+      "com.softwaremill.pekko-http-session" %% "core" % "0.7.1",
+      "org.apache.pekko"                    %% "pekko-http-cors" % "1.3.0",
+      pekko("cluster"),
+      pekko("slf4j"),
+      pekko("testkit")     % Test,
+      "com.github.pjfanning" %% "pekko-http-circe"   % "3.8.0",
+      "org.apache.pekko"  %% "pekko-http-testkit" % pekkoHttpVersion % Test
     )
   )
   .enablePlugins(JavaServerAppPackaging)
@@ -288,7 +288,7 @@ lazy val balancer = project
   .settings(loggingAndTest)
   .settings(smallRunnerRuntimeDependenciesInTest)
   .settings(
-    libraryDependencies += akka("testkit") % Test
+    libraryDependencies += pekko("testkit") % Test
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, storage, sbtRunner % Test, scalaCliRunner % Test)
 
@@ -399,10 +399,10 @@ lazy val scalaCliRunner = project
     reStart                  := reStart.dependsOn(runnerRuntimeDependencies: _*).evaluated,
     resolvers ++= Resolver.sonatypeOssRepos("public"),
     libraryDependencies ++= Seq(
-      akka("actor"),
-      akka("testkit") % Test,
-      akka("cluster"),
-      akka("slf4j"),
+      pekko("actor"),
+      pekko("testkit") % Test,
+      pekko("cluster"),
+      pekko("slf4j"),
       "ch.epfl.scala" % "bsp4j" % "2.1.0-M7",
       "org.typelevel" %% "cats-core" % "2.10.0",
       "io.circe" %% "circe-parser" % "0.14.6",

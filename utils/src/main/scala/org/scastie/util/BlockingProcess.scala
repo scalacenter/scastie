@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2009-2014 Typesafe Inc. <http://www.typesafe.com>
  */
-package akka.contrib.process
+package org.scastie.util
 
-import akka.actor.{Actor, ActorLogging, ActorRef, NoSerializationVerificationNeeded, Props, SupervisorStrategy, Terminated}
-import akka.stream.{ActorAttributes, IOResult}
-import akka.stream.scaladsl.{Sink, Source, StreamConverters}
-import akka.util.{ByteString, Helpers}
+import org.apache.pekko.actor.{Actor, ActorLogging, ActorRef, NoSerializationVerificationNeeded, Props, SupervisorStrategy, Terminated}
+import org.apache.pekko.stream.{ActorAttributes, IOResult}
+import org.apache.pekko.stream.scaladsl.{Sink, Source, StreamConverters}
+import org.apache.pekko.util.{ByteString, Helpers}
 import java.io.File
 import java.lang.{Process => JavaProcess, ProcessBuilder => JavaProcessBuilder}
 import java.util.concurrent.TimeUnit
@@ -25,16 +25,16 @@ object BlockingProcess {
    * The configuration key to use in order to override the dispatcher used for blocking IO.
    */
   final val BlockingIODispatcherId =
-    "akka.process.blocking-process.blocking-io-dispatcher-id"
+    "pekko.process.blocking-process.blocking-io-dispatcher-id"
 
   /**
    * Sent to the receiver on startup - specifies the streams used for managing input, output and error respectively.
    * This message should only be received by the parent of the BlockingProcess and should not be passed across the
    * JVM boundary (the publishers are not serializable).
    *
-   * @param stdin a `akka.stream.scaladsl.Sink[ByteString, Future[IOResult]]` for the standard input stream of the process
-   * @param stdout a `akka.stream.scaladsl.Source[ByteString, Future[IOResult]]` for the standard output stream of the process
-   * @param stderr a `akka.stream.scaladsl.Source[ByteString, Future[IOResult]]` for the standard error stream of the process
+  * @param stdin a `org.apache.pekko.stream.scaladsl.Sink[ByteString, Future[IOResult]]` for the standard input stream of the process
+  * @param stdout a `org.apache.pekko.stream.scaladsl.Source[ByteString, Future[IOResult]]` for the standard output stream of the process
+  * @param stderr a `org.apache.pekko.stream.scaladsl.Source[ByteString, Future[IOResult]]` for the standard error stream of the process
    */
   case class Started(pid: Option[Long],
                      stdin: Sink[ByteString, Future[IOResult]],
@@ -129,7 +129,7 @@ object BlockingProcess {
  * stdout and stderr events. When the process exists (determined by periodically polling process.isAlive()) then
  * the process's exit code is communicated to the receiver in a BlockingProcess.Exited event.
  *
- * A dispatcher as indicated by the "akka.process.blocking-process.blocking-io-dispatcher-id" setting is used
+ * A dispatcher as indicated by the "pekko.process.blocking-process.blocking-io-dispatcher-id" setting is used
  * internally by the actor as various JDK calls are made which can block.
  */
 class BlockingProcess(command: immutable.Seq[String], directory: File, environment: Map[String, String], stdioTimeout: Duration)
@@ -223,7 +223,7 @@ private object ProcessDestroyer {
    * The configuration key to use for the inspection interval.
    */
   final val InspectionInterval =
-    "akka.process.blocking-process.inspection-interval"
+    "pekko.process.blocking-process.inspection-interval"
 
   /**
    * Inspect the Process to ensure it is still alive. This is necessary because

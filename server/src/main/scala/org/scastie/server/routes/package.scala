@@ -2,8 +2,8 @@ package org.scastie.web
 
 import org.scastie.api._
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{PathMatcher, Route}
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.{PathMatcher, Route}
 
 package object routes {
   def snippetIdStart(matcherStart: String)(f: SnippetId => Route): Route =

@@ -1,8 +1,8 @@
 package org.scastie.sbt
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.testkit.TestActor.AutoPilot
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import org.apache.pekko.actor.{ActorRef, ActorSystem, Props}
+import org.apache.pekko.testkit.TestActor.AutoPilot
+import org.apache.pekko.testkit.{ImplicitSender, TestKit, TestProbe}
 import org.scastie.runtime.api._
 import org.scastie.api._
 import org.scastie.util.SbtTask

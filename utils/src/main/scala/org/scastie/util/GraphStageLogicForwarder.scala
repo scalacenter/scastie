@@ -1,8 +1,8 @@
 package org.scastie.util
 
-import akka.actor.ActorRef
-import akka.stream.{Outlet, SourceShape}
-import akka.stream.stage.{GraphStageLogic, OutHandler}
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.stream.{Outlet, SourceShape}
+import org.apache.pekko.stream.stage.{GraphStageLogic, OutHandler}
 
 import scala.collection.mutable.{Queue => MQueue}
 import scala.reflect.runtime.universe._

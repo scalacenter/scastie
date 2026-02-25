@@ -1,25 +1,25 @@
 package org.scastie.balancer
 
-import akka.event
-import akka.actor.Actor
-import akka.actor.ActorRef
+import org.apache.pekko.event
+import org.apache.pekko.actor.Actor
+import org.apache.pekko.actor.ActorRef
 import com.typesafe.config.Config
-import akka.actor.ActorLogging
+import org.apache.pekko.actor.ActorLogging
 import com.typesafe.config.ConfigFactory
-import akka.actor.ActorSelection
+import org.apache.pekko.actor.ActorSelection
 import org.scastie.api._
 import org.scastie.util._
 import scala.concurrent.Future
-import akka.remote.DisassociatedEvent
+import org.apache.pekko.remote.DisassociatedEvent
 import java.time.Instant
 import scala.concurrent._
-import akka.pattern.ask
+import org.apache.pekko.pattern.ask
 
 import scala.concurrent.duration._
 import java.util.concurrent.Executors
-import akka.actor.Address
-import akka.actor.ActorSystem
-import akka.util.Timeout
+import org.apache.pekko.actor.Address
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.util.Timeout
 import java.util.concurrent.atomic.AtomicReference
 
 class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorRef)
@@ -118,13 +118,13 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
     case Replay(SbtRun(snippetId, inputs, progressActor, snippetActor)) =>
       log.info("Replay: " + inputs.code)
 
-    case RunnerConnect(runnerHostname, runnerAkkaPort) =>
-      if (!remoteSbtSelections.contains(SocketAddress(runnerHostname, runnerAkkaPort))) {
-        log.info("Connected Runner {}", runnerAkkaPort)
+    case RunnerConnect(runnerHostname, runnerPekkoPort) =>
+      if (!remoteSbtSelections.contains(SocketAddress(runnerHostname, runnerPekkoPort))) {
+        log.info("Connected Runner {}", runnerPekkoPort)
 
-        val address = SocketAddress(runnerHostname, runnerAkkaPort)
+        val address = SocketAddress(runnerHostname, runnerPekkoPort)
         val ref = connectRunner(getRemoteActorPath("SbtRunner", address, "SbtActor"))
-        val sel = SocketAddress(runnerHostname, runnerAkkaPort) -> ref
+        val sel = SocketAddress(runnerHostname, runnerPekkoPort) -> ref
 
         remoteSbtSelections.addOne(sel)
 
