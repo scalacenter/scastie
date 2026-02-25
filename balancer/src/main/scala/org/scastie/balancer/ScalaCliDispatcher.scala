@@ -72,11 +72,11 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
       val sender = this.sender()
       ping(remoteServers.values.toList).andThen(s => sender ! RunnerPong)
 
-    case RunnerConnect(runnerHostname, runnerPort) =>
-      if (!remoteServers.contains(SocketAddress(runnerHostname, runnerPort))) {
-        log.info("Connected runner {}", runnerPort)
+    case RunnerConnect(runnerHostname, runnerPekkoPort) =>
+      if (!remoteServers.contains(SocketAddress(runnerHostname, runnerPekkoPort))) {
+        log.info("Connected runner {}", runnerPekkoPort)
 
-        val address = SocketAddress(runnerHostname, runnerPort)
+        val address = SocketAddress(runnerHostname, runnerPekkoPort)
         val ref = connectRunner(getRemoteActorPath("ScalaCliRunner", address, "ScalaCliActor"))
 
         remoteServers.addOne(address -> ref)
