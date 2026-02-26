@@ -82,8 +82,6 @@ trait InMemorySnippetsContainer extends SnippetsContainer {
     }
   }
 
-  def readOldSnippet(id: Int): Future[Option[FetchResult]] = Future(None)
-
   protected def insert(snippetId: SnippetId, inputs: BaseInputs): Future[Unit] = {
     val adjustedInputs = inputs match {
       case sbtInputs: SbtInputs => sbtInputs.withSavedConfig

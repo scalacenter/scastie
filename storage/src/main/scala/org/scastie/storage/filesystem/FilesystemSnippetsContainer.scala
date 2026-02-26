@@ -1,7 +1,6 @@
 package org.scastie.storage.filesystem
 
 import org.scastie.api._
-import org.scastie.storage.OldScastieConverter
 import org.scastie.storage.SnippetsContainer
 import org.scastie.storage.UserLogin
 import io.circe.syntax._
@@ -125,30 +124,6 @@ trait FilesystemSnippetsContainer extends SnippetsContainer with GenericFilesyst
           .toList
           .sortBy(-_.time)
       } else Nil
-    }
-  }
-
-  def readOldSnippet(id: Int): Future[Option[FetchResult]] = {
-
-    def oldPath(id: Int): Path =
-      oldRoot
-        .resolve("paste%20d".format(id).replaceAll(" ", "0"))
-        .resolve("src/main/scala/")
-
-    def readOldInputs(id: Int): Option[BaseInputs] = {
-      slurp(oldPath(id).resolve("test.scala"))
-        .map(OldScastieConverter.convertOldInput)
-    }
-
-    def readOldOutputs(id: Int): Option[List[SnippetProgress]] = {
-      slurp(oldPath(id).resolve("output.txt"))
-        .map(OldScastieConverter.convertOldOutput)
-    }
-
-    Future {
-      readOldInputs(id).map(
-        inputs => FetchResult.create(inputs, readOldOutputs(id).getOrElse(Nil))
-      )
     }
   }
 

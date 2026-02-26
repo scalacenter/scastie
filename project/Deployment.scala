@@ -397,6 +397,9 @@ class Deployment(
     val isMongoDB = config.containerType == "mongo"
     val mongodbConfig = if (deploymentType == Production) "mongodb-prod.conf" else "mongodb-staging.conf"
 
+    val isPostgres = config.containerType == "postgres"
+    val postgresConfig = if (deploymentType == Production) "postgres-prod.conf" else "postgres-staging.conf"
+
     val content =
       s"""|#!/usr/bin/env bash
           |
@@ -408,6 +411,11 @@ class Deployment(
           |
           |if [ ! -f ${baseDir}${mongodbConfig} ] && ${isMongoDB}; then
           |  echo "mongodb configuration file: ${baseDir}${mongodbConfig} is missing"
+          |  exit 1
+          |fi
+          |
+          |if [ ! -f ${baseDir}${postgresConfig} ] && ${isPostgres}; then
+          |  echo "postgres configuration file: ${baseDir}${postgresConfig} is missing"
           |  exit 1
           |fi
           |
