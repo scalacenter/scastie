@@ -213,7 +213,7 @@ trait PostgresConverters {
       severity <- decode[org.scastie.api.Severity](pg.severity).toOption
     } yield Problem(
       severity = severity,
-      line = pg.line,
+      startLine = pg.startLine,
       endLine = pg.endLine,
       startColumn = pg.startColumn,
       endColumn = pg.endColumn,

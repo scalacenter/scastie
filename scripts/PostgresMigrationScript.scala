@@ -46,6 +46,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration.*
 import scala.util.Try
 
+// TODO: fix and test
+
 @main def migrate = {
   val rootLogger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger]
   rootLogger.setLevel(Level.INFO)

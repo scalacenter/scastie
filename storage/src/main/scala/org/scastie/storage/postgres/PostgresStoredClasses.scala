@@ -67,7 +67,7 @@ case class PostgresCompilationInfos[T[_]](
   // id: T[Long],
   progressId: T[Long],
   severity: T[String],
-  line: T[Option[Int]],
+  startLine: T[Option[Int]],
   endLine: T[Option[Int]],
   startColumn: T[Option[Int]],
   endColumn: T[Option[Int]],

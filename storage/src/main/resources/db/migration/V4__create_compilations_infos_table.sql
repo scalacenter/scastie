@@ -2,7 +2,7 @@ CREATE TABLE compilation_infos (
     id BIGSERIAL PRIMARY KEY,
     progress_id BIGINT NOT NULL,
     severity VARCHAR(32) NOT NULL,
-    line INT,
+    start_line INT,
     end_line INT,
     start_column INT,
     end_column INT,
