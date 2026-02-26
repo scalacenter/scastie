@@ -18,6 +18,7 @@ import org.mongodb.scala._
 import org.mongodb.scala.model.Filters
 import org.scastie.api.*
 
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -58,13 +59,18 @@ import scala.concurrent.duration.*
       time = mongo.time
     )
 
+  val failedSnippets = ArrayBuffer.empty[String]
+
   def saveSnippetInNewDatabase(snippets: Seq[Snippet]): Future[Unit] = {
     Future.traverse(snippets.grouped(10).toSeq) { batch =>
       Future.traverse(batch) { s =>
-        for {
+        (for {
           _ <- pgContainer.insertWithExistingId(s.snippetId, s.inputs)
           _ <- Future.sequence(s.progresses.map(pgContainer.appendOutput))
-        } yield ()
+        } yield ()).recover { case e: Throwable =>
+          pprint.pprintln(s"Failed to migrate snippet ${s.snippetId.url}: ${e.getMessage}")
+          failedSnippets += s.snippetId.url
+        }
       }
     }.map(_ => ())
   }
@@ -194,6 +200,11 @@ import scala.concurrent.duration.*
     } yield ()
 
     Await.result(migrationFuture, Duration.Inf)
+
+    if (failedSnippets.nonEmpty) {
+      pprint.pprintln(s"${failedSnippets.size} snippets failed to migrate:")
+      failedSnippets.foreach(url => pprint.pprintln(s"  - $url"))
+    }
 
   } catch {
     case t: Throwable => t.printStackTrace()

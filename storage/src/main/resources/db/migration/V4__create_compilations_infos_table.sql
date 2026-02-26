@@ -9,3 +9,4 @@ CREATE TABLE compilation_infos (
     message TEXT NOT NULL,
     FOREIGN KEY (progress_id) REFERENCES progresses(id) ON DELETE CASCADE
 );
+CREATE INDEX idx_compilation_infos_progress_id ON compilation_infos(progress_id);

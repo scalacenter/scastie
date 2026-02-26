@@ -42,8 +42,6 @@ class PostgresContainer(
     }
   }
 
-  if (runMigrations) migrate()
-
   private val dataSource = useConnectionPool match {
     case true =>
       val ds = new HikariDataSource()
@@ -60,6 +58,8 @@ class PostgresContainer(
       ds.setPassword(password)
       ds
   }
+
+  if (runMigrations) migrate()
 
   private implicit val dialect: DialectConfig = PostgresDialect
 
@@ -79,13 +79,19 @@ class PostgresContainer(
     }
   )
 
-  private def migrate(): Unit = {
-    val flyway = Flyway
-      .configure()
-      .dataSource(jdbcUrl, user, password)
-      .load()
+  override def close(): Unit = {
+    dataSource match {
+      case ds: HikariDataSource => ds.close()
+      case _ =>
+    }
+  }
 
-    flyway.migrate()
+  private def migrate(): Unit = {
+    Flyway
+      .configure()
+      .dataSource(dataSource)
+      .load()
+      .migrate()
   }
 
 }

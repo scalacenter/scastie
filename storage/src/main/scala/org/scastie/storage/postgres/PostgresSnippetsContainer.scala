@@ -268,7 +268,7 @@ trait PostgresSnippetsContainer extends SnippetsContainer with PostgresConverter
     }
   }
 
-  def delete(snippetId: SnippetId): Future[Boolean] = {
+  def delete(snippetId: SnippetId): Future[Boolean] = Future {
     db.transaction { db =>
       val snippetOpt = db
         .run(
@@ -278,7 +278,7 @@ trait PostgresSnippetsContainer extends SnippetsContainer with PostgresConverter
         .headOption
 
       snippetOpt match {
-        case None => Future(false)
+        case None => false
 
         case Some(snippet) =>
           /* Delete the snippet itself */
@@ -295,7 +295,7 @@ trait PostgresSnippetsContainer extends SnippetsContainer with PostgresConverter
             db.run(PostgresInputs.delete(_.hash === snippet.inputsHash))
           }
 
-          Future(true)
+          true
       }
     }
   }

@@ -10,3 +10,5 @@ CREATE TABLE snippets (
     time BIGINT NOT NULL,
     FOREIGN KEY (inputs_hash) REFERENCES inputs(hash)
 );
+CREATE INDEX idx_snippets_username ON snippets(username);
+CREATE INDEX idx_snippets_simple_snippet_id ON snippets(simple_snippet_id);

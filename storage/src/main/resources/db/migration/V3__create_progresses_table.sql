@@ -11,3 +11,4 @@ CREATE TABLE progresses (
     ts BIGINT,
     FOREIGN KEY (snippet_id) REFERENCES snippets(snippet_id) ON DELETE CASCADE
 );
+CREATE INDEX idx_progresses_snippet_id ON progresses(snippet_id);
