@@ -15,24 +15,6 @@ case class RuntimeError(
 
 object RuntimeError {
 
-  def fromJsonString(json: String): Option[RuntimeError] = {
-    val msgPattern   = """"message":"(.*?)"""".r
-    val linePattern  = """"line":(null|\d+)""".r
-    val stackPattern = """"fullStack":"(.*?)"""".r
-
-    for {
-      msgMatch   <- msgPattern.findFirstMatchIn(json)
-      stackMatch <- stackPattern.findFirstMatchIn(json)
-      lineMatch  <- linePattern.findFirstMatchIn(json)
-      msg   = msgMatch.group(1)
-      stack = stackMatch.group(1)
-      line  = lineMatch.group(1) match {
-        case "null" => None
-        case numStr => Some(numStr.toInt)
-      }
-    } yield RuntimeError(msg, line, stack)
-  }
-
   def wrap[T](in: => T): Either[Option[RuntimeError], T] = {
     try {
       Right(in)

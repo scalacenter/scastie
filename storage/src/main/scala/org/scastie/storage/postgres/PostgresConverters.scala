@@ -9,6 +9,7 @@ import org.scastie.api.ScalaCliInputs
 import org.scastie.api.ScalaDependency
 import org.scastie.api.SnippetId
 import org.scastie.api.SnippetProgress
+import org.scastie.api.RuntimeCodecs._
 import org.scastie.runtime.api._
 import org.scastie.runtime.api.Instrumentation
 
@@ -64,7 +65,7 @@ trait PostgresConverters {
     .into[PostgresProgresses[Sc]]
     .withFieldConst(_.snippetId, snippetId)
     .withFieldConst(_.id, 0L)
-    .withFieldComputed(_.runtimeError, _.runtimeError.map(_.asJsonString))
+    .withFieldComputed(_.runtimeError, _.runtimeError.map(_.asJson.noSpaces))
     .transform
 
   def fromPostgresProgress(
@@ -82,7 +83,7 @@ trait PostgresConverters {
       buildOutput = buildOutput,
       compilationInfos = compilationInfos,
       instrumentations = instrumentations,
-      runtimeError = RuntimeError.fromJsonString(pg.runtimeError.getOrElse("")),
+      runtimeError = pg.runtimeError.flatMap(decode[RuntimeError](_).toOption),
       scalaJsContent = pg.scalaJsContent,
       scalaJsSourceMapContent = pg.scalaJsSourceMapContent,
       isDone = pg.isDone,
@@ -193,13 +194,13 @@ trait PostgresConverters {
   def toPostgresInstrumentation(progressId: Long, instr: Instrumentation): PostgresInstrumentations[Sc] = instr
     .into[PostgresInstrumentations[Sc]]
     .withFieldConst(_.progressId, progressId)
-    .withFieldComputed(_.position, _.position.asJsonString)
-    .withFieldComputed(_.render, _.render.asJsonString)
+    .withFieldComputed(_.position, _.position.asJson.noSpaces)
+    .withFieldComputed(_.render, _.render.asJson.noSpaces)
     .transform
 
   def fromPostgresInstrumentation(pg: PostgresInstrumentations[Sc]): Option[Instrumentation] = for {
-    pos    <- Position.fromJsonString(pg.position)
-    render <- Render.fromJsonString(pg.render)
+    pos    <- decode[Position](pg.position).toOption
+    render <- decode[Render](pg.render).toOption
   } yield Instrumentation(pos, render)
 
   def toPostgresCompilationInfo(progressId: Long, problem: Problem): PostgresCompilationInfos[Sc] = problem
