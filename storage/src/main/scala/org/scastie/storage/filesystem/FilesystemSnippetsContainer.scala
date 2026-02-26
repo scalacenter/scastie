@@ -1,7 +1,6 @@
 package org.scastie.storage.filesystem
 
 import org.scastie.api._
-import org.scastie.storage.OldScastieConverter
 import org.scastie.storage.SnippetsContainer
 import org.scastie.storage.UserLogin
 import io.circe.syntax._

@@ -205,6 +205,30 @@ trait PostgresSnippetsContainer extends SnippetsContainer with PostgresConverter
     readPostgresSnippet(id).map(_.toFetchResult)
   }
 
+  def readLatestSnippet(snippetId: SnippetId): Future[Option[FetchResult]] = {
+    snippetId.user match {
+      case Some(SnippetUserPart(login, _)) =>
+        Future {
+          db.transaction { db =>
+            val latestSnippet = db.run(
+              PostgresSnippets.select
+                .filter(_.simpleSnippetId === snippetId.base64UUID)
+                .filter(_.username === login)
+                .sortBy(-_.time)
+                .take(1)
+            ).headOption
+
+            latestSnippet.flatMap { s =>
+              val latestId = SnippetId.fromString(s.snippetId)
+              readPostgresSnippet(latestId).map(_.toFetchResult)
+            }
+          }
+        }
+      case None =>
+        readSnippet(snippetId)
+    }
+  }
+
   def readScalaJs(snippetId: SnippetId): Future[Option[FetchResultScalaJs]] = Future {
     readPostgresSnippet(snippetId).map(m => FetchResultScalaJs(m.scalaJsContent))
   }

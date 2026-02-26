@@ -188,7 +188,6 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
       val sender = this.sender()
       logError(container.readSnippet(snippetId).map(sender ! _))
 
-    // ! TODO
     case FetchLatestSnippet(snippetId) =>
       val sender = this.sender()
       logError(container.readLatestSnippet(snippetId).map(sender ! _))

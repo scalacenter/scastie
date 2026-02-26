@@ -68,6 +68,9 @@ case class PostgresCompilationInfos[T[_]](
   progressId: T[Long],
   severity: T[String],
   line: T[Option[Int]],
+  endLine: T[Option[Int]],
+  startColumn: T[Option[Int]],
+  endColumn: T[Option[Int]],
   message: T[String]
 )
 object PostgresCompilationInfos extends Table[PostgresCompilationInfos]

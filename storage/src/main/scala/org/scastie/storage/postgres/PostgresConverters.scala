@@ -214,6 +214,9 @@ trait PostgresConverters {
     } yield Problem(
       severity = severity,
       line = pg.line,
+      endLine = pg.endLine,
+      startColumn = pg.startColumn,
+      endColumn = pg.endColumn,
       message = pg.message
     )
   }
