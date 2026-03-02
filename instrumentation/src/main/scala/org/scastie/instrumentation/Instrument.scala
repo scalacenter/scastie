@@ -199,10 +199,10 @@ object Instrument {
       else None
     }
 
-    val maybeDialect = target match {
+    val maybeDialect = (target match {
       case Typelevel(scalaVersion) => typelevel(scalaVersion)
       case target                  => scala(target.scalaVersion)
-    }
+    }).map(_.withAllowCaptureChecking(true))
 
     val isScalaCli = target match {
       case _: ScalaCli => true
