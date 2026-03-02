@@ -111,7 +111,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
     lastInputs = Some(scalaCliInputs)
     log.trace(s"[${snippetId.base64UUID} - build] Calling bspClient.build (needsReload=$needsReload)")
 
-    bspClient.build(snippetId.base64UUID, inputs.isWorksheetMode, inputs.target, positionMapper, needsReload).value.recover {
+    bspClient.build(snippetId.base64UUID, instrumentedInput.isWorksheetMode, inputs.target, positionMapper, needsReload).value.recover {
       case timeout: TimeoutException =>
         log.trace(s"[${snippetId.base64UUID} - build] BSP timeout")
         BspTaskTimeout("Build Server Timeout Exception").asLeft
