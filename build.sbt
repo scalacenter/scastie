@@ -300,7 +300,13 @@ lazy val storage = project
     libraryDependencies ++= Seq(
       "org.mongodb.scala" %% "mongo-scala-driver" % "4.11.1",
       "net.lingala.zip4j"  % "zip4j"              % "2.11.5",
-      "io.circe" %% "circe-parser" % "0.14.6"
+      "io.circe" %% "circe-parser" % "0.14.6",
+      "com.lihaoyi" %% "scalasql" % "0.2.2",
+      "io.scalaland" %% "chimney" % "1.8.2",
+      "org.postgresql" % "postgresql" % "42.7.8",
+      "org.flywaydb" % "flyway-core" % "11.13.2",
+      "org.flywaydb" % "flyway-database-postgresql" % "11.13.2",
+      "com.zaxxer" % "HikariCP" % "7.0.2"
     )
   )
   .dependsOn(api.jvm(ScalaVersions.jvm), utils, instrumentation)
