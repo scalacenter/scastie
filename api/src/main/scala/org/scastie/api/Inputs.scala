@@ -128,6 +128,9 @@ case class ScalaCliInputs(
 
   private lazy val directives: String = code.linesIterator.filter(_.trim.startsWith("//> using")).mkString("\n")
 
+  lazy val pcScalacOptions: List[String] =
+    ScalaCliInputs.extractPcScalacOptions(code.linesIterator.takeWhile(_.trim.startsWith("//>")).toList)
+
   def needsReload(other: ScalaCliInputs): Boolean = directives != other.directives
 }
 
