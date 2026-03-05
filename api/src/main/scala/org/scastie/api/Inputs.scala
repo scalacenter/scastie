@@ -57,6 +57,11 @@ sealed trait BaseInputs {
 object BaseInputs {
   implicit val baseInputsEncoder: Encoder[BaseInputs] = deriveEncoder[BaseInputs]
   implicit val baseInputDecoder: Decoder[BaseInputs] = deriveDecoder[BaseInputs]
+
+  private val pcRelevantPrefixes = List("-language:", "-source:", "-X", "-Y")
+
+  def filterPcRelevant(options: List[String]): List[String] =
+    options.filter(flag => pcRelevantPrefixes.exists(flag.startsWith))
 }
 
 case class ShortInputs(code: String, target: ScalaTarget)
@@ -87,6 +92,25 @@ object SbtInputs {
     isShowingInUserProfile = false,
     forked = None
   )
+  /* scalacOptions += "-deprecation" */
+  private val scalacOptionsPlusEquals = """scalacOptions\s*\+=\s*"([^"]+)"""".r
+
+  /* scalacOptions ++= Seq(
+     "-deprecation",
+     "-encoding", "UTF-8",
+     "-feature",
+     "-unchecked"
+    ) */
+  private val scalacOptionsPlusPlusEquals = """scalacOptions\s*\+\+=\s*Seq\s*\(([^)]*)\)""".r
+  private val quotedString = """"([^"]+)"""".r
+
+  def extractPcScalacOptions(sbtConfig: String): List[String] = {
+    val plusEquals = scalacOptionsPlusEquals.findAllMatchIn(sbtConfig).map(_.group(1)).toList
+    val plusPlusEquals = scalacOptionsPlusPlusEquals.findAllMatchIn(sbtConfig).flatMap { m =>
+      quotedString.findAllMatchIn(m.group(1)).map(_.group(1))
+    }.toList
+    BaseInputs.filterPcRelevant(plusEquals ++ plusPlusEquals)
+  }
 
   implicit val sbtInputsEncoder: Encoder[SbtInputs] = deriveEncoder[SbtInputs]
   implicit val sbtInputsDecoder: Decoder[SbtInputs] = deriveDecoder[SbtInputs]
@@ -108,6 +132,18 @@ case class ScalaCliInputs(
 }
 
 object ScalaCliInputs {
+  /* // >using option -language:experimental.captureChecking */
+  private val optionRegex = """//>\s*using\s+option\s+(.+)""".r
+  /* //> using options -Xfatal-warnings -Yexplicit-nulls */
+  private val optionsRegex = """//>\s*using\s+options\s+(.+)""".r
+
+  def extractPcScalacOptions(codeHeader: List[String]): List[String] =
+    BaseInputs.filterPcRelevant(codeHeader.flatMap {
+      case optionsRegex(flags) => flags.trim.split("\\s+").toList
+      case optionRegex(flag) => List(flag.trim)
+      case _ => Nil
+    })
+
   val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
 
   def default: ScalaCliInputs = ScalaCliInputs(
@@ -136,6 +172,8 @@ case class SbtInputs(
     forked: Option[SnippetId] = None
 ) extends BaseInputs {
   val librariesFrom: Map[ScalaDependency, Project] = librariesFromList.toMap
+
+  lazy val pcScalacOptions: List[String] = SbtInputs.extractPcScalacOptions(sbtConfigExtra)
 
   private lazy val sbtInputs: (String, String) = (sbtConfig, sbtPluginsConfig)
 
