@@ -132,7 +132,7 @@ case class ScalaCliInputs(
 }
 
 object ScalaCliInputs {
-  /* // >using option -language:experimental.captureChecking */
+  /* //> using option -language:experimental.captureChecking */
   private val optionRegex = """//>\s*using\s+option\s+(.+)""".r
   /* //> using options -Xfatal-warnings -Yexplicit-nulls */
   private val optionsRegex = """//>\s*using\s+options\s+(.+)""".r
