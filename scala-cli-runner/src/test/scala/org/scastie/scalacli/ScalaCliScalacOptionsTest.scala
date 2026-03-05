@@ -38,4 +38,14 @@ class ScalaCliScalacOptionsTest extends AnyFunSuite {
   test("returns empty for empty input") {
     assert(ScalaCliInputs.extractPcScalacOptions(Nil) == Nil)
   }
+
+  test("handles quoted option values") {
+    val directives = List("""//> using option "-language:experimental.captureChecking"""")
+    assert(ScalaCliInputs.extractPcScalacOptions(directives) == List("-language:experimental.captureChecking"))
+  }
+
+  test("handles quoted multiple options") {
+    val directives = List("""//> using options "-Xfatal-warnings" "-Yexplicit-nulls"""")
+    assert(ScalaCliInputs.extractPcScalacOptions(directives) == List("-Xfatal-warnings", "-Yexplicit-nulls"))
+  }
 }

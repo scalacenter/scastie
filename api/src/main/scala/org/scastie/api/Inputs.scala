@@ -140,10 +140,12 @@ object ScalaCliInputs {
   /* //> using options -Xfatal-warnings -Yexplicit-nulls */
   private val optionsRegex = """//>\s*using\s+options\s+(.+)""".r
 
+  private def stripQuotes(s: String): String = s.stripPrefix("\"").stripSuffix("\"")
+
   def extractPcScalacOptions(codeHeader: List[String]): List[String] =
     BaseInputs.filterPcRelevant(codeHeader.flatMap {
-      case optionsRegex(flags) => flags.trim.split("\\s+").toList
-      case optionRegex(flag) => List(flag.trim)
+      case optionsRegex(flags) => flags.trim.split("\\s+").toList.map(stripQuotes)
+      case optionRegex(flag) => List(stripQuotes(flag.trim))
       case _ => Nil
     })
 
