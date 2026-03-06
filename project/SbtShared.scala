@@ -21,6 +21,7 @@ object SbtShared {
     val latest210  = "2.10.7"
     val latest211  = "2.11.12"
     val latest212  = "2.12.21"
+    val oldest213  = "2.13.0"
     val latest213  = "2.13.18"
     val old3       = "3.0.2"
     val latest31   = "3.1.3"
@@ -40,7 +41,7 @@ object SbtShared {
     val sbt        = latest212
     val jvm        = latest213
     val cross      =
-      List(latest210, latest211, latest212, latest213, old3, stableLTS, stableNext, js, sbt, jvm).distinct
+      List(latest210, latest211, latest212, oldest213, old3, stableLTS, stableNext).distinct
     val crossJS    = List(latest212, latest213, old3, scala313, js).distinct
   }
 
@@ -172,6 +173,7 @@ lazy val baseJsSettings = Seq(
         "latest210"             -> ScalaVersions.latest210,
         "latest211"             -> ScalaVersions.latest211,
         "latest212"             -> ScalaVersions.latest212,
+        "oldest213"             -> ScalaVersions.oldest213,
         "latest213"             -> ScalaVersions.latest213,
         "latest31"              -> ScalaVersions.latest31,
         "latest32"              -> ScalaVersions.latest32,
