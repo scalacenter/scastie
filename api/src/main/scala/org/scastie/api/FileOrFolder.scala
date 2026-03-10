@@ -93,7 +93,7 @@ case class Folder(
       case head :: tail =>
         val newIntermediate = Folder(head, path = this.path + "/" + head)
         val folder          = children.find(_.name.equals(head)).getOrElse(newIntermediate).asInstanceOf[Folder]
-        copy(children = children :+ folder.add2(tail.mkString("/"), isFolder))
+        copy(children = children.filterNot(_.name == head) :+ folder.add2(tail.mkString("/"), isFolder))
     }
   }
 

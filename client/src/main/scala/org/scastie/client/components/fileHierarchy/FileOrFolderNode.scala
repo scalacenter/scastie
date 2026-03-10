@@ -23,22 +23,17 @@ object FileOrFolderNode {
     .render((props, isExpanded, isMouseOver) => {
       val (file, s, depth, selectFile, dragStartOrEnd) = props
 
-      var fafa = "file-o"
-      if (file.isFolder) {
-        fafa = "folder"
-        if (isExpanded.value) {
-          fafa = "folder-open"
-        }
+      val icon = file match {
+        case _: Folder if isExpanded.value => "folder-open"
+        case _: Folder                     => "folder"
+        case _: File                       => "file-o"
       }
 
       val handleClick = (e: ReactMouseEvent) => {
-        e.stopPropagation()
-        if (file.isFolder) {
-          isExpanded.modState(x => !x).runNow()
-        } else {
-          selectFile(file.asInstanceOf[File]).runNow()
-        }
-        Callback.empty
+        e.stopPropagationCB >> (file match {
+          case _: Folder    => isExpanded.modState(x => !x)
+          case f: File      => selectFile(f)
+        })
       }
 
       val onDragStart = (e: ReactDragEvent) => {
@@ -70,7 +65,7 @@ object FileOrFolderNode {
           ^.key := file.path,
           <.div(
             ^.paddingLeft := s"${16 * depth}px",
-            <.i(^.className := s"fa fa-${fafa}"),
+            <.i(^.className := s"fa fa-${icon}"),
             file.name
           )
         ),
