@@ -15,7 +15,7 @@ import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scastie.runtime.api.RuntimeError
 import org.scastie.client.components.ScaladexSearch
-import org.scastie.client.components.tabStrip.TabStrip.Tab
+import org.scastie.client.components.tabStrip.TabStrip.{Tab, TabStripState}
 import org.scastie.client.scalacli.ScalaCliUtils._
 
 case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendScope[Scastie, ScastieState]) {
@@ -145,8 +145,28 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
   val openFile: File => Callback =
     f => scope.modState(_.openFile(f))
 
-  val moveFile: (String, String) => Callback =
-    (srcPath, dstPath) => scope.modState(_.moveFile(srcPath, dstPath))
+  val moveFileOrFolder: (FileOrFolder, String) => Callback =
+    (f, dstFolderPath) => {
+      scope.modState(ss => {
+        val newRoot = FileOrFolderUtils.move(ss.inputs.code, f.path, dstFolderPath)
+        ss.setRootFolder(newRoot)
+      }) >>
+      scope.modState(ss => {
+        def updateTab(tab: Tab): Tab = {
+          if (tab.tabId == f.path)
+            tab.copy(tabId = dstFolderPath + "/" + f.name)
+          else tab
+        }
+
+        def isInF(tab: Tab): Boolean =
+          f.isFolder && FileOrFolderUtils.find(f.asInstanceOf[Folder], tab.tabId).nonEmpty
+
+        ss.copy(tabStripState = ss.tabStripState match {
+          case TabStripState(selectedTab, activeTabs) =>
+            TabStripState(selectedTab.filterNot(isInF).map(updateTab), activeTabs.filterNot(isInF).map(updateTab))
+        })
+      })
+    }
 
   val closeTab: Tab => Callback =
     tab => scope.modState(_.closeTab(tab))

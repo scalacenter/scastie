@@ -91,7 +91,7 @@ object Scastie {
           i(cls := s"fa fa-${if (state.isSidePaneOpen) "angle-left" else "angle-right"}")
         ),
         div(cls := "side-pane-content")(
-          FileHierarchy(state.inputs.code, scope.backend.openFile, scope.backend.moveFile).render
+          FileHierarchy(state.inputs.code, scope.backend.openFile, scope.backend.moveFileOrFolder).render
         ).when(state.isSidePaneOpen)
       ).unless(props.isEmbedded || state.isPresentationMode),
       MainPanel(

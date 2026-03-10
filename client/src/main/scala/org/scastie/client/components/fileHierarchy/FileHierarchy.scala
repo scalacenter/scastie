@@ -5,46 +5,50 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
 
-final case class FileHierarchy(rootFolder: Folder, openFile: File => Callback, moveFile: (String, String) => Callback) {
-  @inline def render: VdomElement = FileHierarchy.component((rootFolder, openFile, moveFile))
+/**
+ * @param rootFolder       hierarchy to display
+ * @param openFile         when user clicks on a file in this hierarchy this function is called
+ * @param moveFileOrFolder when user moves a file or folder this function is called, the string is the destination folder path
+ */
+final case class FileHierarchy(rootFolder: Folder, openFile: File => Callback, moveFileOrFolder: (FileOrFolder, String) => Callback) {
+  @inline def render: VdomElement = FileHierarchy.component((rootFolder, openFile, moveFileOrFolder))
 }
 
 object FileHierarchy {
 
-  case class FileHierarchyState(selectedFile: String, dragSrc: String, dragOver: String)
+  /**
+   * @param selectedFile currently selected file in the hierarchy view
+   * @param dragOver     FileOrFolder's path that the user could drop to
+   */
+  private case class FileHierarchyState(selectedFile: String, dragOver: String)
 
-  val initialState = FileHierarchyState(
-    selectedFile = "",
-    dragSrc = "",
-    dragOver = "")
+  private val initialFhs = FileHierarchyState(selectedFile = "/root", dragOver = "")
 
-  val component =
-    ScalaFnComponent.withHooks[(Folder, File => Callback, (String, String) => Callback)]
-      .useState(initialState)
-      .render((props, fhs) => {
-        val rootFolder = props._1
-        val openFile = props._2
-        val moveFileCb = props._3
+  private val component = ScalaFnComponent.withHooks[(Folder, File => Callback, (FileOrFolder, String) => Callback)]
+    .useState(initialFhs)
+    .render((props, fhs) => {
+      val rootFolder: Folder = props._1
+      val openFile: File => Callback = props._2
+      val moveFileOrFolder: (FileOrFolder, String) => Callback = props._3
 
-        val selectFile: File => Callback = {
-          f => openFile(f)
-        }
-        val dragInfoUpdate: DragInfo => Callback = {
-          di =>
-            if (di.start && !di.end) {
-              fhs.modState(_.copy(dragSrc = di.f.path))
-            } else if (!di.start && di.end) {
-              val srcPath = fhs.value.dragSrc
-              val dstPath = fhs.value.dragOver
-              moveFileCb(srcPath, dstPath)
-            } else if (!di.start && !di.end) {
-              fhs.modState(_.copy(dragOver = di.f.path))
-            } else {
-              Callback.throwException(new IllegalArgumentException())
-            }
-        }
-        <.div(
-          FileOrFolderNode(rootFolder, fhs.value.selectedFile, 0, selectFile, dragInfoUpdate).render
-        )
-      })
+      val selectFile: File => Callback = {
+        (f: File) => openFile(f) >> fhs.modState(_.copy(selectedFile = f.path))
+      }
+
+      val dragInfoUpdate: DragInfo => Callback = {
+        dragInfo =>
+          if (dragInfo.end) {
+            val src = dragInfo.fileOrFolder
+            val dstPath = fhs.value.dragOver
+
+            moveFileOrFolder(src, dstPath) >>
+            fhs.setState(FileHierarchyState(selectedFile = dstPath + "/" + src.name, dragOver = ""))
+          } else {
+            fhs.modState(_.copy(dragOver = dragInfo.fileOrFolder.path))
+          }
+      }
+      <.div(
+        FileOrFolderNode(rootFolder, fhs.value.selectedFile, 0, selectFile, dragInfoUpdate).render
+      )
+    })
 }

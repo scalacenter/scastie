@@ -311,11 +311,6 @@ case class ScastieState(
     }
   }
 
-  def moveFile(srcPath: String, dstPath: String): ScastieState = {
-    val newCode = FileOrFolderUtils.move(inputs.code, srcPath, dstPath)
-    setRootFolder(newCode)
-  }
-
   def setRootFolder(code: Folder): ScastieState = {
     if (inputs.code != code) {
       copyAndSave(
