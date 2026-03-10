@@ -22,7 +22,7 @@ object FileHierarchy {
    */
   private case class FileHierarchyState(selectedFile: String, dragOver: String)
 
-  private val initialFhs = FileHierarchyState(selectedFile = "/root", dragOver = "")
+  private val initialFhs = FileHierarchyState(selectedFile = "", dragOver = "")
 
   private val component = ScalaFnComponent.withHooks[(Folder, File => Callback, (FileOrFolder, String) => Callback)]
     .useState(initialFhs)
@@ -40,9 +40,13 @@ object FileHierarchy {
           if (dragInfo.end) {
             val src = dragInfo.fileOrFolder
             val dstPath = fhs.value.dragOver
-
-            moveFileOrFolder(src, dstPath) >>
-            fhs.setState(FileHierarchyState(selectedFile = dstPath + "/" + src.name, dragOver = ""))
+            if (dstPath.isEmpty) {
+              /* do nothing if the user never dragged over a folder and just dropped the fileOrFolder on a file */
+              Callback.empty
+            } else {
+              moveFileOrFolder(src, dstPath) >>
+              fhs.setState(FileHierarchyState(selectedFile = dstPath + "/" + src.name, dragOver = ""))
+            }
           } else {
             fhs.modState(_.copy(dragOver = dragInfo.fileOrFolder.path))
           }
