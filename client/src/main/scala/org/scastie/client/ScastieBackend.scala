@@ -154,7 +154,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       scope.modState(ss => {
         def updateTab(tab: Tab): Tab = {
           if (tab.tabId == f.path)
-            tab.copy(tabId = dstFolderPath + "/" + f.name)
+            tab.copy(tabId = dstFolderPath.stripSuffix("/") + "/" + f.name)
           else tab
         }
 

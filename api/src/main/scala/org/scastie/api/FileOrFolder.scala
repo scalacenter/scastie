@@ -7,6 +7,7 @@ import io.circe.syntax._
 sealed trait FileOrFolder {
   val name: String
   val path: String
+
   def isFolder: Boolean
 }
 
@@ -40,26 +41,22 @@ object File {
   implicit val fileDecoder: Decoder[File] = deriveDecoder[File]
 }
 
-object Folder {
-
-  def singleton(code: String): Folder = {
-    Folder("root", List(File("Main.scala", code, "/root/Main.scala")), "/root", isRoot = true)
-  }
-
-  implicit val folderEncoder: Encoder[Folder] =
-    deriveEncoder[Folder].mapJson(_.deepMerge(Json.obj("isFolder" -> Json.fromBoolean(true))))
-  implicit val folderDecoder: Decoder[Folder] = deriveDecoder[Folder]
-}
-
 case class Folder(
   override val name: String,
   children: List[FileOrFolder] = List(),
-  override val path: String = "",
-  isRoot: Boolean = false
+  override val path: String = ""
 ) extends FileOrFolder {
   def isFolder: Boolean = true
 
   def isEmpty: Boolean = children.isEmpty
+
+  def summary: String = {
+    import System.{lineSeparator => nl}
+    children.headOption match {
+      case Some(File(_, content, _)) => content.split(nl).take(3).mkString(nl)
+      case _ => this.toString.take(200) + "..."
+    }
+  }
 
   def childHeadFileContent: String = {
     children.headOption match {
@@ -68,35 +65,17 @@ case class Folder(
     }
   }
 
-  def take(i: Int): String = childHeadFileContent.take(i)
+}
 
-  def split(nl: String): Array[String] = childHeadFileContent.split(nl)
+object Folder {
 
-  def add(ff: FileOrFolder): Folder = {
-    if (this.path.nonEmpty) {
-      val f = FileOrFolderUtils.prependPath(this.path, ff)
-      this.copy(children = this.children :+ f)
-    } else {
-      val rootName = name
-      val f        = if (isRoot) FileOrFolderUtils.prependPath(rootName, ff) else ff
-      this.copy(children = this.children :+ f)
-    }
+  def singleton(code: String): Folder = {
+    Folder("", List(File("code.scala", code, "/code.scala")), "/")
   }
 
-  def add2(path: String, isFolder: Boolean = false): Folder = {
-    path.split("/").toList match {
-      case Nil => this
-      case head :: Nil =>
-        val newFilePath = this.path + "/" + head
-        val newFile     = if (isFolder) Folder(head, path = newFilePath) else File(head, newFilePath)
-        copy(children = children :+ newFile)
-      case head :: tail =>
-        val newIntermediate = Folder(head, path = this.path + "/" + head)
-        val folder          = children.find(_.name.equals(head)).getOrElse(newIntermediate).asInstanceOf[Folder]
-        copy(children = children.filterNot(_.name == head) :+ folder.add2(tail.mkString("/"), isFolder))
-    }
-  }
-
+  implicit val folderEncoder: Encoder[Folder] =
+    deriveEncoder[Folder].mapJson(_.deepMerge(Json.obj("isFolder" -> Json.fromBoolean(true))))
+  implicit val folderDecoder: Decoder[Folder] = deriveDecoder[Folder]
 }
 
 object FileOrFolderUtils {
@@ -159,11 +138,13 @@ object FileOrFolderUtils {
   }
 
   def recomputePaths(f: Folder, prefix: String = ""): Folder = {
+    val isRoot = f.name.isEmpty
+    val currFolderPath = if (isRoot) prefix else prefix + "/" + f.name
     f.copy(
-      path = prefix + "/" + f.name,
+      path = if (isRoot) "/" else currFolderPath,
       children = f.children.map {
-        case folder: Folder => recomputePaths(folder, prefix + "/" + f.name)
-        case file: File     => file.copy(path = prefix + "/" + f.name + "/" + file.name)
+        case folder: Folder => recomputePaths(folder, prefix = currFolderPath)
+        case file: File     => file.copy(path = currFolderPath + "/" + file.name)
       }
     )
   }
@@ -181,17 +162,6 @@ object FileOrFolderUtils {
       case f: File                           => f
       case l: Folder                         => updateFile(l, newFile)
     })
-  }
-
-  def prependPath(p: String, fileOrFolder: FileOrFolder): FileOrFolder = {
-    fileOrFolder match {
-      case f: File =>
-        val nonEmptyPath = if (f.path.isEmpty) f.name else f.path
-        f.copy(path = p + "/" + nonEmptyPath)
-      case f: Folder =>
-        val nonEmptyPath = if (f.path.isEmpty) f.name else f.path
-        f.copy(children = f.children.map(x => prependPath(p + "/" + f.name, x)), path = p + "/" + nonEmptyPath)
-    }
   }
 
 }

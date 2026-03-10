@@ -45,7 +45,7 @@ object FileHierarchy {
               Callback.empty
             } else {
               moveFileOrFolder(src, dstPath) >>
-              fhs.setState(FileHierarchyState(selectedFile = dstPath + "/" + src.name, dragOver = ""))
+              fhs.setState(FileHierarchyState(selectedFile = dstPath.stripSuffix("/") + "/" + src.name, dragOver = ""))
             }
           } else {
             fhs.modState(_.copy(dragOver = dragInfo.fileOrFolder.path))
