@@ -1,10 +1,10 @@
 package org.scastie.web
 
-import akka.actor.ActorSystem
-import akka.actor.Props
-import akka.http.scaladsl._
-import akka.stream.ActorMaterializer
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.actor.Props
+import org.apache.pekko.http.scaladsl._
+import org.apache.pekko.stream.ActorMaterializer
+import org.apache.pekko.http.cors.scaladsl.CorsDirectives._
 import org.scastie.balancer._
 import org.scastie.util.ScastieFileUtil
 import org.scastie.web.oauth2._
@@ -29,8 +29,8 @@ object ServerMain {
       if (args.isEmpty) 9000
       else args.head.toInt
 
-    val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
-    logger.info("akka tcp config")
+    val config2 = ConfigFactory.load().getConfig("pekko.remote.artery.canonical")
+    logger.info("pekko tcp config")
     logger.info(config2.getString("hostname"))
     logger.info(config2.getInt("port").toString)
 

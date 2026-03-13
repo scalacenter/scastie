@@ -1,17 +1,17 @@
 package org.scastie.web.oauth2
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl._
-import akka.http.scaladsl.model.HttpMethods.POST
-import akka.http.scaladsl.model.Uri._
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl._
+import org.apache.pekko.http.scaladsl.model.HttpMethods.POST
+import org.apache.pekko.http.scaladsl.model.Uri._
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.headers._
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.scastie.api.User
 import io.circe._
 import io.circe.generic.semiauto._
 import com.typesafe.config.ConfigFactory
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import com.github.pjfanning.pekkohttpcirce.FailFastCirceSupport
 
 import scala.concurrent.Future
 
