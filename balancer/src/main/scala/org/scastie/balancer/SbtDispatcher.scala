@@ -143,6 +143,17 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
     case Run(InputsWithIpAndUser(sbtTask: SbtInputs, userTrace), snippetId) =>
       run0(sbtTask, userTrace, snippetId)
 
+    case CleanUpStaleTasks =>
+      val staleTaskMaxAge = 2.minutes
+      val oldBalancer = balancer.get
+      val newBalancer = oldBalancer.cleanUpStaleTasks(staleTaskMaxAge)
+      if (oldBalancer != newBalancer) {
+        val oldCount = oldBalancer.servers.map(_.mailbox.size).sum
+        val newCount = newBalancer.servers.map(_.mailbox.size).sum
+        log.info("Cleaned up {} stale SBT tasks", oldCount - newCount)
+        updateSbtBalancer(newBalancer)
+      }
+
     case p: Ping.type =>
       val sender = this.sender()
       ping(remoteSbtSelections.values.toList).andThen(s => sender ! RunnerPong)

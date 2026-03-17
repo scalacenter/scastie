@@ -3,6 +3,7 @@ package org.scastie.balancer
 import org.scastie.api._
 
 import java.time.Instant
+import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
 
 case class Ip(v: String)
@@ -39,5 +40,10 @@ case class Server[R, S, C <: BaseInputs](
 
   def add(task: Task[C]): Server[R, S, C] = {
     copy(mailbox = mailbox :+ task)
+  }
+
+  def cleanUpStaleTasks(maxAge: FiniteDuration): Server[R, S, C] = {
+    val cutoff = Instant.now.minusMillis(maxAge.toMillis)
+    copy(mailbox = mailbox.filter(_.ts.isAfter(cutoff)))
   }
 }

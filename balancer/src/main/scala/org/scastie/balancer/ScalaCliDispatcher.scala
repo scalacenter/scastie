@@ -114,6 +114,17 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
     case ReceiveStatus(requester) =>
       sender() ! ScalaCliLoadBalancerInfo(balancer.get, requester)
 
+    case CleanUpStaleTasks =>
+      val staleTaskMaxAge = 2.minutes
+      val oldBalancer = balancer.get
+      val newBalancer = oldBalancer.cleanUpStaleTasks(staleTaskMaxAge)
+      if (oldBalancer != newBalancer) {
+        val oldCount = oldBalancer.servers.map(_.mailbox.size).sum
+        val newCount = newBalancer.servers.map(_.mailbox.size).sum
+        log.info("Cleaned up {} stale Scala-CLI tasks", oldCount - newCount)
+        updateScalaCliBalancer(newBalancer)
+      }
+
     case event: DisassociatedEvent =>
       for {
         host <- event.remoteAddress.host

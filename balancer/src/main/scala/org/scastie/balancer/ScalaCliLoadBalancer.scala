@@ -5,6 +5,7 @@ import java.time.Instant
 import org.scastie.api._
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
 
 case class ScalaCliLoadBalancer[R, S <: ServerState](servers: Vector[ScalaCliServer[R, S]]) {
@@ -50,5 +51,9 @@ case class ScalaCliLoadBalancer[R, S <: ServerState](servers: Vector[ScalaCliSer
       }
       None
     }
+  }
+
+  def cleanUpStaleTasks(maxAge: FiniteDuration): ScalaCliLoadBalancer[R, S] = {
+    copy(servers = servers.map(_.cleanUpStaleTasks(maxAge)))
   }
 }

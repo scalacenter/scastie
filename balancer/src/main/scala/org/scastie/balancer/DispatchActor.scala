@@ -62,6 +62,8 @@ case class Done(progress: SnippetProgress, retries: Int)
 
 case object Ping
 
+case object CleanUpStaleTasks
+
 /**
   * This Actor creates and takes care of two dispatchers: SbtDispatcher and ScalaCliDispatcher.
   * It will receive every request and forward to the proper dispatcher every request.
@@ -98,6 +100,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   system.scheduler.schedule(0.seconds, 30.seconds) {
     self ! Ping
+  }
+
+  system.scheduler.schedule(1.minute, 1.minute) {
+    sbtDispatcher ! CleanUpStaleTasks
+    scliDispatcher ! CleanUpStaleTasks
   }
 
   override def preStart(): Unit = {
