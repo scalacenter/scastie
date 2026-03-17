@@ -2,6 +2,7 @@ package org.scastie
 package balancer
 
 import java.time.Instant
+import scala.concurrent.duration._
 import org.scastie.api.ServerState
 
 class LoadBalancerTest extends LoadBalancerTestUtils {
@@ -219,6 +220,59 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
     val assigned = balancer1.servers.find(_.mailbox.exists(_.config.code == circe)).get
     assert(assigned.id == idleServer.id)
+  }
+
+  test("[Server] cleanUpStaleTasks removes old tasks and retains recent ones") {
+    val staleTs = Instant.now.minusSeconds(300)
+    val freshTs = Instant.now
+
+    val staleTask = Task(sbtConfig("c1"), nextIp, TestTaskId(1), staleTs)
+    val freshTask = Task(sbtConfig("c1"), nextIp, TestTaskId(2), freshTs)
+
+    val server = sbtServer("c1", mailbox = Vector(staleTask, freshTask))
+    val cleaned = server.cleanUpStaleTasks(2.minutes)
+
+    assert(cleaned.mailbox.size == 1)
+    assert(cleaned.mailbox.head.taskId == TestTaskId(2))
+  }
+
+  test("[SbtLoadBalancer] cleanUpStaleTasks propagates across all servers") {
+    val staleTs = Instant.now.minusSeconds(300)
+    val freshTs = Instant.now
+
+    val server1 = sbtServer("c1", mailbox = Vector(
+      Task(sbtConfig("c1"), nextIp, TestTaskId(1), staleTs),
+      Task(sbtConfig("c1"), nextIp, TestTaskId(2), freshTs),
+    ))
+    val server2 = sbtServer("c2", mailbox = Vector(
+      Task(sbtConfig("c2"), nextIp, TestTaskId(3), staleTs),
+    ))
+
+    val balancer = SbtLoadBalancer(Vector(server1, server2))
+    val cleaned = balancer.cleanUpStaleTasks(2.minutes)
+
+    assert(cleaned.servers(0).mailbox.size == 1)
+    assert(cleaned.servers(0).mailbox.head.taskId == TestTaskId(2))
+    assert(cleaned.servers(1).mailbox.isEmpty)
+  }
+
+  test("[ScalaCliLoadBalancer] cleanUpStaleTasks propagates across all servers") {
+    val staleTs = Instant.now.minusSeconds(300)
+    val freshTs = Instant.now
+
+    val server1 = scalaCliServer("c1", mailbox = Vector(
+      Task(scalaCliConfig("c1"), nextIp, TestTaskId(1), staleTs),
+    ))
+    val server2 = scalaCliServer("c2", mailbox = Vector(
+      Task(scalaCliConfig("c2"), nextIp, TestTaskId(2), freshTs),
+    ))
+
+    val balancer = ScalaCliLoadBalancer(Vector(server1, server2))
+    val cleaned = balancer.cleanUpStaleTasks(2.minutes)
+
+    assert(cleaned.servers(0).mailbox.isEmpty)
+    assert(cleaned.servers(1).mailbox.size == 1)
+    assert(cleaned.servers(1).mailbox.head.taskId == TestTaskId(2))
   }
 
   test("[ScalaCliLoadBalancer] allows reload when server is busy (mailbox >= 3)") {

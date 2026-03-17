@@ -98,22 +98,28 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   import context._
 
-  system.scheduler.schedule(0.seconds, 30.seconds) {
-    self ! Ping
-  }
-
-  system.scheduler.schedule(1.minute, 1.minute) {
-    sbtDispatcher ! CleanUpStaleTasks
-    scliDispatcher ! CleanUpStaleTasks
-  }
+  private var pingSchedule: Option[akka.actor.Cancellable] = None
+  private var cleanUpSchedule: Option[akka.actor.Cancellable] = None
 
   override def preStart(): Unit = {
     statusActor ! SetDispatcher(self)
     context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
+
+    pingSchedule = Some(system.scheduler.scheduleWithFixedDelay(0.seconds, 30.seconds) { () =>
+      self ! Ping
+    })
+
+    cleanUpSchedule = Some(system.scheduler.scheduleWithFixedDelay(1.minute, 1.minute) { () =>
+      sbtDispatcher ! CleanUpStaleTasks
+      scliDispatcher ! CleanUpStaleTasks
+    })
+
     super.preStart()
   }
 
   override def postStop(): Unit = {
+    pingSchedule.foreach(_.cancel())
+    cleanUpSchedule.foreach(_.cancel())
     super.postStop()
     container.close()
   }

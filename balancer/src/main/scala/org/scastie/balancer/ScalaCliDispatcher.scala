@@ -23,6 +23,7 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
   extends BaseDispatcher[ActorSelection, ServerState](config) {
 
   private val parent = context.parent
+  private val staleTaskMaxAge = FiniteDuration(config.getDuration("stale-task-max-age").toMillis, MILLISECONDS)
 
   val remoteServers = getRemoteServers("scli", "ScalaCliRunner", "ScalaCliActor")
 
@@ -115,7 +116,6 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
       sender() ! ScalaCliLoadBalancerInfo(balancer.get, requester)
 
     case CleanUpStaleTasks =>
-      val staleTaskMaxAge = 2.minutes
       val oldBalancer = balancer.get
       val newBalancer = oldBalancer.cleanUpStaleTasks(staleTaskMaxAge)
       if (oldBalancer != newBalancer) {

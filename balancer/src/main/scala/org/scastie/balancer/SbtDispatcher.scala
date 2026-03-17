@@ -26,6 +26,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
   extends BaseDispatcher[ActorSelection, ServerState](config) with Actor {
 
   private val parent = context.parent
+  private val staleTaskMaxAge = FiniteDuration(config.getDuration("stale-task-max-age").toMillis, MILLISECONDS)
 
   val remoteSbtSelections = getRemoteServers("sbt", "SbtRunner", "SbtActor")
 
@@ -144,7 +145,6 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
       run0(sbtTask, userTrace, snippetId)
 
     case CleanUpStaleTasks =>
-      val staleTaskMaxAge = 2.minutes
       val oldBalancer = balancer.get
       val newBalancer = oldBalancer.cleanUpStaleTasks(staleTaskMaxAge)
       if (oldBalancer != newBalancer) {
