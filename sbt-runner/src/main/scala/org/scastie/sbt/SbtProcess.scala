@@ -18,6 +18,7 @@ import org.scastie.util._
 import org.scastie.instrumentation.PositionMapper
 
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 import scala.util.Random
 
 object SbtProcess {
@@ -253,12 +254,13 @@ class SbtProcess(runTimeout: FiniteDuration,
             goto(Ready)
         }
       } catch {
-        case e: Exception =>
+        case NonFatal(e) =>
           log.error(e, "Failed to prepare snippet {}", snippetId)
           sendProgress(_sbtRun, SnippetProgress.default.copy(
             ts = Some(Instant.now.toEpochMilli),
             snippetId = Some(snippetId),
             isDone = true,
+            isSbtError = true,
             buildOutput = Some(ProcessOutput("Internal error, please retry", ProcessOutputType.StdErr, None))
           ))
           throw e
