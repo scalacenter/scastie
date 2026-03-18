@@ -223,33 +223,45 @@ class SbtProcess(runTimeout: FiniteDuration,
       )
       sendProgress(_sbtRun, SnippetProgress.default.copy(isDone = false, ts = Some(Instant.now.toEpochMilli), snippetId = Some(snippetId)))
 
-      InstrumentedInputs(taskInputs) match {
-        case Right(instrumented) =>
-          val sbtRun = _sbtRun.copy(
-            inputs = instrumented.inputs.asInstanceOf[SbtInputs], 
-            isForcedProgramMode = instrumented.isForcedProgramMode,
-            positionMapper = instrumented.positionMapper
-          )
-          val isReloading = stateInputs.needsReload(sbtRun.inputs)
-          setInputs(sbtRun.inputs)
+      try {
+        InstrumentedInputs(taskInputs) match {
+          case Right(instrumented) =>
+            val sbtRun = _sbtRun.copy(
+              inputs = instrumented.inputs.asInstanceOf[SbtInputs],
+              isForcedProgramMode = instrumented.isForcedProgramMode,
+              positionMapper = instrumented.positionMapper
+            )
+            val isReloading = stateInputs.needsReload(sbtRun.inputs)
+            setInputs(sbtRun.inputs)
 
-          instrumented.optionalParsingError.foreach { error =>
-            sendProgress(sbtRun, error.toProgress(snippetId).copy(isDone = false))
-          }
+            instrumented.optionalParsingError.foreach { error =>
+              sendProgress(sbtRun, error.toProgress(snippetId).copy(isDone = false))
+            }
 
-          if (isReloading) {
-            process ! Input("reload;compile/compileInputs")
-            gotoWithTimeout(sbtRun, Reloading, reloadTimeout)
-          } else {
-            gotoRunning(sbtRun)
-          }
+            if (isReloading) {
+              process ! Input("reload;compile/compileInputs")
+              gotoWithTimeout(sbtRun, Reloading, reloadTimeout)
+            } else {
+              gotoRunning(sbtRun)
+            }
 
-        case Left(report) =>
-          log.info(s"Instrumentation error: ${report.message}")
-          val sbtRun = _sbtRun
-          setInputs(sbtRun.inputs)
-          sendProgress(sbtRun, report.toProgress(snippetId))
-          goto(Ready)
+          case Left(report) =>
+            log.info(s"Instrumentation error: ${report.message}")
+            val sbtRun = _sbtRun
+            setInputs(sbtRun.inputs)
+            sendProgress(sbtRun, report.toProgress(snippetId))
+            goto(Ready)
+        }
+      } catch {
+        case e: Exception =>
+          log.error(e, "Failed to prepare snippet {}", snippetId)
+          sendProgress(_sbtRun, SnippetProgress.default.copy(
+            ts = Some(Instant.now.toEpochMilli),
+            snippetId = Some(snippetId),
+            isDone = true,
+            buildOutput = Some(ProcessOutput("Internal error, please retry", ProcessOutputType.StdErr, None))
+          ))
+          throw e
       }
   }
 
