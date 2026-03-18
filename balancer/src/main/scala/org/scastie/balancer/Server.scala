@@ -47,8 +47,8 @@ case class Server[R, S, C <: BaseInputs](
     else copy(mailbox = mailbox.map(t => if (t.taskId == taskId) t.copy(lastSeen = now) else t))
   }
 
-  def cleanUpStaleTasks(maxAge: FiniteDuration): Server[R, S, C] = {
-    val cutoff = Instant.now.minusMillis(maxAge.toMillis)
+  def cleanUpStaleTasks(maxAge: FiniteDuration, now: Instant = Instant.now): Server[R, S, C] = {
+    val cutoff = now.minusMillis(maxAge.toMillis)
     if (mailbox.forall(_.lastSeen.isAfter(cutoff))) this
     else {
       val (keep, stale) = mailbox.partition(_.lastSeen.isAfter(cutoff))
