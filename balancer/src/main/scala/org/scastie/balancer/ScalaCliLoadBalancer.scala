@@ -53,7 +53,13 @@ case class ScalaCliLoadBalancer[R, S <: ServerState](servers: Vector[ScalaCliSer
     }
   }
 
+  def refreshTaskLastSeen(taskId: TaskId): ScalaCliLoadBalancer[R, S] = {
+    copy(servers = servers.map(_.refreshTaskLastSeen(taskId)))
+  }
+
   def cleanUpStaleTasks(maxAge: FiniteDuration): ScalaCliLoadBalancer[R, S] = {
-    copy(servers = servers.map(_.cleanUpStaleTasks(maxAge)))
+    val cleaned = servers.map(_.cleanUpStaleTasks(maxAge))
+    if (servers.indices.forall(i => servers(i) eq cleaned(i))) this
+    else copy(servers = cleaned)
   }
 }

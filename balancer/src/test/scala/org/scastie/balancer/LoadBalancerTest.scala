@@ -222,30 +222,60 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(assigned.id == idleServer.id)
   }
 
-  test("[Server] cleanUpStaleTasks removes old tasks and retains recent ones") {
-    val staleTs = Instant.now.minusSeconds(300)
-    val freshTs = Instant.now
+  test("[Server] cleanUpStaleTasks removes tasks with stale lastSeen and retains recent ones") {
+    val staleLastSeen = Instant.now.minusSeconds(300)
+    val freshLastSeen = Instant.now
 
-    val staleTask = Task(sbtConfig("c1"), nextIp, TestTaskId(1), staleTs)
-    val freshTask = Task(sbtConfig("c1"), nextIp, TestTaskId(2), freshTs)
+    val staleTask = Task(sbtConfig("c1"), nextIp, TestTaskId(1), Instant.now, lastSeen = staleLastSeen)
+    val freshTask = Task(sbtConfig("c2"), nextIp, TestTaskId(2), Instant.now, lastSeen = freshLastSeen)
 
-    val server = sbtServer("c1", mailbox = Vector(staleTask, freshTask))
+    val server = sbtServer("c0", mailbox = Vector(staleTask, freshTask))
     val cleaned = server.cleanUpStaleTasks(2.minutes)
 
     assert(cleaned.mailbox.size == 1)
     assert(cleaned.mailbox.head.taskId == TestTaskId(2))
   }
 
+  test("[Server] cleanUpStaleTasks moves stale tasks to history and updates lastConfig") {
+    val staleLastSeen = Instant.now.minusSeconds(300)
+
+    val staleTask = Task(sbtConfig("c1"), nextIp, TestTaskId(1), Instant.now, lastSeen = staleLastSeen)
+
+    val server = sbtServer("c0", mailbox = Vector(staleTask))
+    val cleaned = server.cleanUpStaleTasks(2.minutes)
+
+    assert(cleaned.mailbox.isEmpty)
+    assert(cleaned.history.data.size == 1)
+    assert(cleaned.history.data.head.taskId == TestTaskId(1))
+    assert(cleaned.lastConfig == sbtConfig("c1"))
+  }
+
+  test("[Server] refreshTaskLastSeen keeps task alive through cleanup") {
+    val oldTs = Instant.now.minusSeconds(300)
+    val task = Task(sbtConfig("c1"), nextIp, TestTaskId(1), oldTs, lastSeen = oldTs)
+
+    val server = sbtServer("c0", mailbox = Vector(task))
+
+    /* Before refresh: task is stale */
+    val cleanedBefore = server.cleanUpStaleTasks(2.minutes)
+    assert(cleanedBefore.mailbox.isEmpty)
+
+    /* After refresh: task is kept alive */
+    val refreshed = server.refreshTaskLastSeen(TestTaskId(1))
+    val cleanedAfter = refreshed.cleanUpStaleTasks(2.minutes)
+    assert(cleanedAfter.mailbox.size == 1)
+    assert(cleanedAfter.mailbox.head.taskId == TestTaskId(1))
+  }
+
   test("[SbtLoadBalancer] cleanUpStaleTasks propagates across all servers") {
-    val staleTs = Instant.now.minusSeconds(300)
-    val freshTs = Instant.now
+    val staleLastSeen = Instant.now.minusSeconds(300)
 
     val server1 = sbtServer("c1", mailbox = Vector(
-      Task(sbtConfig("c1"), nextIp, TestTaskId(1), staleTs),
-      Task(sbtConfig("c1"), nextIp, TestTaskId(2), freshTs),
+      Task(sbtConfig("c1"), nextIp, TestTaskId(1), Instant.now, lastSeen = staleLastSeen),
+      Task(sbtConfig("c1"), nextIp, TestTaskId(2), Instant.now),
     ))
     val server2 = sbtServer("c2", mailbox = Vector(
-      Task(sbtConfig("c2"), nextIp, TestTaskId(3), staleTs),
+      Task(sbtConfig("c2"), nextIp, TestTaskId(3), Instant.now, lastSeen = staleLastSeen),
     ))
 
     val balancer = SbtLoadBalancer(Vector(server1, server2))
@@ -254,17 +284,17 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(cleaned.servers(0).mailbox.size == 1)
     assert(cleaned.servers(0).mailbox.head.taskId == TestTaskId(2))
     assert(cleaned.servers(1).mailbox.isEmpty)
+    assert(cleaned.servers(1).history.data.size == 1)
   }
 
   test("[ScalaCliLoadBalancer] cleanUpStaleTasks propagates across all servers") {
-    val staleTs = Instant.now.minusSeconds(300)
-    val freshTs = Instant.now
+    val staleLastSeen = Instant.now.minusSeconds(300)
 
     val server1 = scalaCliServer("c1", mailbox = Vector(
-      Task(scalaCliConfig("c1"), nextIp, TestTaskId(1), staleTs),
+      Task(scalaCliConfig("c1"), nextIp, TestTaskId(1), Instant.now, lastSeen = staleLastSeen),
     ))
     val server2 = scalaCliServer("c2", mailbox = Vector(
-      Task(scalaCliConfig("c2"), nextIp, TestTaskId(2), freshTs),
+      Task(scalaCliConfig("c2"), nextIp, TestTaskId(2), Instant.now),
     ))
 
     val balancer = ScalaCliLoadBalancer(Vector(server1, server2))

@@ -78,6 +78,10 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
       val sender = this.sender()
       if (progress.isDone) {
         self ! Done(progress, retries = 100)
+      } else {
+        progress.snippetId.foreach { sid =>
+          balancer.set(balancer.get.refreshTaskLastSeen(TaskId(sid)))
+        }
       }
       (parent ? progress).map(sender ! _)
 
@@ -147,10 +151,9 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
     case CleanUpStaleTasks =>
       val oldBalancer = balancer.get
       val newBalancer = oldBalancer.cleanUpStaleTasks(staleTaskMaxAge)
-      if (oldBalancer != newBalancer) {
-        val oldCount = oldBalancer.servers.map(_.mailbox.size).sum
-        val newCount = newBalancer.servers.map(_.mailbox.size).sum
-        log.info("Cleaned up {} stale SBT tasks", oldCount - newCount)
+      if (oldBalancer ne newBalancer) {
+        val staleTaskIds = oldBalancer.servers.flatMap(_.mailbox).filterNot(t => newBalancer.servers.flatMap(_.mailbox).contains(t)).map(_.taskId)
+        log.info("Cleaned up {} stale SBT tasks: {}", staleTaskIds.size, staleTaskIds.mkString(", "))
         updateSbtBalancer(newBalancer)
       }
 

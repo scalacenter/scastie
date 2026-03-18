@@ -8,7 +8,7 @@ import scala.util.Random
 
 case class Ip(v: String)
 
-case class Task[T <: BaseInputs](config: T, ip: Ip, taskId: TaskId, ts: Instant)
+case class Task[T <: BaseInputs](config: T, ip: Ip, taskId: TaskId, ts: Instant, lastSeen: Instant = Instant.now)
 
 case class TaskHistory[C <: BaseInputs](data: Vector[Task[C]], maxSize: Int) {
   def add(task: Task[C]): TaskHistory[C] = {
@@ -42,8 +42,20 @@ case class Server[R, S, C <: BaseInputs](
     copy(mailbox = mailbox :+ task)
   }
 
+  def refreshTaskLastSeen(taskId: TaskId, now: Instant = Instant.now): Server[R, S, C] = {
+    copy(mailbox = mailbox.map(t => if (t.taskId == taskId) t.copy(lastSeen = now) else t))
+  }
+
   def cleanUpStaleTasks(maxAge: FiniteDuration): Server[R, S, C] = {
     val cutoff = Instant.now.minusMillis(maxAge.toMillis)
-    copy(mailbox = mailbox.filter(_.ts.isAfter(cutoff)))
+    if (mailbox.forall(_.lastSeen.isAfter(cutoff))) this
+    else {
+      val (keep, stale) = mailbox.partition(_.lastSeen.isAfter(cutoff))
+      copy(
+        lastConfig = stale.lastOption.map(_.config).getOrElse(lastConfig),
+        mailbox = keep,
+        history = stale.foldLeft(history)(_.add(_)),
+      )
+    }
   }
 }
