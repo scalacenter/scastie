@@ -123,7 +123,8 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
       val oldBalancer = balancer.get
       val newBalancer = oldBalancer.cleanUpStaleTasks(staleTaskMaxAge)
       if (oldBalancer ne newBalancer) {
-        val staleTaskIds = oldBalancer.servers.flatMap(_.mailbox).filterNot(t => newBalancer.servers.flatMap(_.mailbox).contains(t)).map(_.taskId)
+        val remainingTaskIds = newBalancer.servers.flatMap(_.mailbox).map(_.taskId).toSet
+        val staleTaskIds = oldBalancer.servers.flatMap(_.mailbox).map(_.taskId).filterNot(remainingTaskIds)
         log.info("Cleaned up {} stale Scala-CLI tasks: {}", staleTaskIds.size, staleTaskIds.mkString(", "))
         updateScalaCliBalancer(newBalancer)
       }

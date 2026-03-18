@@ -105,14 +105,9 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
     statusActor ! SetDispatcher(self)
     context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
 
-    pingSchedule = Some(system.scheduler.scheduleWithFixedDelay(0.seconds, 30.seconds) { () =>
-      self ! Ping
-    })
+    pingSchedule = Some(system.scheduler.scheduleWithFixedDelay(0.seconds, 30.seconds, self, Ping))
 
-    cleanUpSchedule = Some(system.scheduler.scheduleWithFixedDelay(1.minute, 1.minute) { () =>
-      sbtDispatcher ! CleanUpStaleTasks
-      scliDispatcher ! CleanUpStaleTasks
-    })
+    cleanUpSchedule = Some(system.scheduler.scheduleWithFixedDelay(1.minute, 1.minute, self, CleanUpStaleTasks))
 
     super.preStart()
   }
@@ -274,6 +269,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
           sbtDispatcher ! run
       }
     }
+
+    case CleanUpStaleTasks =>
+      sbtDispatcher ! CleanUpStaleTasks
+      scliDispatcher ! CleanUpStaleTasks
 
     case ping: Ping.type =>
       implicit val timeout: Timeout = Timeout(10.seconds)

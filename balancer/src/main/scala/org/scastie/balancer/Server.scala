@@ -43,7 +43,8 @@ case class Server[R, S, C <: BaseInputs](
   }
 
   def refreshTaskLastSeen(taskId: TaskId, now: Instant = Instant.now): Server[R, S, C] = {
-    copy(mailbox = mailbox.map(t => if (t.taskId == taskId) t.copy(lastSeen = now) else t))
+    if (!mailbox.exists(_.taskId == taskId)) this
+    else copy(mailbox = mailbox.map(t => if (t.taskId == taskId) t.copy(lastSeen = now) else t))
   }
 
   def cleanUpStaleTasks(maxAge: FiniteDuration): Server[R, S, C] = {
