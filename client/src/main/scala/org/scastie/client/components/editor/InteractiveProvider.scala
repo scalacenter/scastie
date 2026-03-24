@@ -23,7 +23,8 @@ case class InteractiveProvider(
   updateStatus: MetalsStatus ~=> Callback,
   isWorksheetMode: Boolean,
   isEmbedded: Boolean,
-  syntaxHighlighterGetter: () => Option[SyntaxHighlighter]
+  syntaxHighlighterGetter: () => Option[SyntaxHighlighter],
+  scalacOptions: List[String] = Nil
 ) extends MetalsClient with MetalsAutocompletion with MetalsHover with MetalsSignatureHelp with MetalsDiagnostics {
 
   def syntaxHighlighter: Option[SyntaxHighlighter] = syntaxHighlighterGetter()
@@ -43,7 +44,8 @@ object InteractiveProvider {
       props.setMetalsStatus,
       props.isWorksheetMode,
       props.isEmbedded,
-      syntaxHighlighterGetter
+      syntaxHighlighterGetter,
+      props.pcScalacOptions
     )
   }
 
@@ -106,7 +108,8 @@ object InteractiveProvider {
   private def didConfigChange(prevProps: CodeEditor, props: CodeEditor): Boolean =
       props.target != prevProps.target ||
         props.dependencies != prevProps.dependencies ||
-        props.isWorksheetMode != prevProps.isWorksheetMode
+        props.isWorksheetMode != prevProps.isWorksheetMode ||
+        props.pcScalacOptions != prevProps.pcScalacOptions
 
   def reloadMetalsConfiguration(
     editorView: UseStateF[CallbackTo, EditorView],
@@ -117,7 +120,7 @@ object InteractiveProvider {
       val newExtension: AsyncCallback[InteractiveProvider] =
         if (props.metalsStatus != MetalsDisabled && props.target.targetType == api.ScalaTargetType.ScalaCli)
           AsyncCallback.fromFuture {
-            ScalaCliUtils.parse(takeDirectives(props.value)).map { case (scalaTarget, dependencies) =>
+            ScalaCliUtils.parse(takeDirectives(props.value)).map { case (scalaTarget, dependencies, scalacOptions) =>
               InteractiveProvider(
                 dependencies,
                 scalaTarget,
@@ -126,7 +129,8 @@ object InteractiveProvider {
                 props.setMetalsStatus,
                 props.isWorksheetMode,
                 props.isEmbedded,
-                syntaxHighlighterGetter
+                syntaxHighlighterGetter,
+                scalacOptions
               )
             }
           }
