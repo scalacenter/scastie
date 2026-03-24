@@ -62,6 +62,8 @@ case class Done(progress: SnippetProgress, retries: Int)
 
 case object Ping
 
+case object CleanUpStaleTasks
+
 /**
   * This Actor creates and takes care of two dispatchers: SbtDispatcher and ScalaCliDispatcher.
   * It will receive every request and forward to the proper dispatcher every request.
@@ -96,17 +98,23 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
 
   import context._
 
-  system.scheduler.schedule(0.seconds, 30.seconds) {
-    self ! Ping
-  }
+  private var pingSchedule: Option[akka.actor.Cancellable] = None
+  private var cleanUpSchedule: Option[akka.actor.Cancellable] = None
 
   override def preStart(): Unit = {
     statusActor ! SetDispatcher(self)
     context.system.eventStream.subscribe(self, classOf[DisassociatedEvent])
+
+    pingSchedule = Some(system.scheduler.scheduleWithFixedDelay(0.seconds, 30.seconds, self, Ping))
+
+    cleanUpSchedule = Some(system.scheduler.scheduleWithFixedDelay(1.minute, 1.minute, self, CleanUpStaleTasks))
+
     super.preStart()
   }
 
   override def postStop(): Unit = {
+    pingSchedule.foreach(_.cancel())
+    cleanUpSchedule.foreach(_.cancel())
     super.postStop()
     container.close()
   }
@@ -261,6 +269,10 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
           sbtDispatcher ! run
       }
     }
+
+    case CleanUpStaleTasks =>
+      sbtDispatcher ! CleanUpStaleTasks
+      scliDispatcher ! CleanUpStaleTasks
 
     case ping: Ping.type =>
       implicit val timeout: Timeout = Timeout(10.seconds)
