@@ -4,24 +4,24 @@ package routes
 
 import oauth2._
 
-import com.softwaremill.session.SessionDirectives._
-import com.softwaremill.session.SessionOptions._
-import com.softwaremill.session.CsrfDirectives._
-import com.softwaremill.session.CsrfOptions._
+import com.softwaremill.pekkohttpsession.SessionDirectives._
+import com.softwaremill.pekkohttpsession.SessionOptions._
+import com.softwaremill.pekkohttpsession.CsrfDirectives._
+import com.softwaremill.pekkohttpsession.CsrfOptions._
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.Uri.Query
-import akka.http.scaladsl.model.StatusCodes.TemporaryRedirect
-import akka.http.scaladsl.model.headers.Referer
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.Uri.Query
+import org.apache.pekko.http.scaladsl.model.StatusCodes.TemporaryRedirect
+import org.apache.pekko.http.scaladsl.model.headers.Referer
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Route
 
 import scala.concurrent.ExecutionContext
 import org.scastie.api.User
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.syntax._
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+import com.github.pjfanning.pekkohttpcirce.FailFastCirceSupport._
 import org.scastie.api.UserData
 
 class OAuth2Routes(github: Github, session: GithubUserSession)(
