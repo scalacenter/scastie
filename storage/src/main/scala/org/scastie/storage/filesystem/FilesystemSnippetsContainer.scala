@@ -113,7 +113,7 @@ trait FilesystemSnippetsContainer extends SnippetsContainer with GenericFilesyst
                       List(
                         SnippetSummary(
                           snippetId,
-                          inputs.code.split(nl).take(3).mkString(nl),
+                          inputs.code.summary,
                           getFileTimestamp(snippetId)
                         )
                       )
