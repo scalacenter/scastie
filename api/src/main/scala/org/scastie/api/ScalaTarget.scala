@@ -3,6 +3,7 @@ package org.scastie.api
 import org.scastie.buildinfo.BuildInfo
 import io.circe.generic.semiauto._
 import io.circe._
+import io.circe.syntax._
 
 sealed trait ScalaTarget {
   val targetType: ScalaTargetType
@@ -296,7 +297,25 @@ case class ScalaCli(scalaVersion: String) extends ScalaTarget {
 }
 
 object ScalaTarget {
-  implicit val scalaTargetEncoder: Encoder[ScalaTarget] = deriveEncoder[ScalaTarget]
-  implicit val scalaTargetDecoder: Decoder[ScalaTarget] = deriveDecoder[ScalaTarget]
+  implicit val scalaTargetEncoder: Encoder[ScalaTarget] = Encoder.instance {
+    case s: Scala2 => Json.obj("Scala2" -> s.asJson)
+    case s: Scala3 => Json.obj("Scala3" -> s.asJson)
+    case s: ScalaCli => Json.obj("ScalaCli" -> s.asJson)
+    case s: Js => Json.obj("Js" -> s.asJson)
+    case s: Native => Json.obj("Native" -> s.asJson)
+    case s: Typelevel => Json.obj("Typelevel" -> s.asJson)
+  }
+
+  implicit val scalaTargetDecoder: Decoder[ScalaTarget] = Decoder.instance { cursor =>
+    cursor.keys.flatMap(_.headOption) match {
+      case Some("Scala2") => cursor.downField("Scala2").as[Scala2]
+      case Some("Scala3") => cursor.downField("Scala3").as[Scala3]
+      case Some("ScalaCli") => cursor.downField("ScalaCli").as[ScalaCli]
+      case Some("Js") => cursor.downField("Js").as[Js]
+      case Some("Native") => cursor.downField("Native").as[Native]
+      case Some("Typelevel") => cursor.downField("Typelevel").as[Typelevel]
+      case other => Left(DecodingFailure(s"Unknown ScalaTarget type: $other", cursor.history))
+    }
+  }
 }
 
