@@ -27,6 +27,7 @@ case class Server[R, S, C <: BaseInputs](
 
   def currentTaskId: Option[TaskId] = mailbox.headOption.map(_.taskId)
   def currentConfig: C = mailbox.headOption.map(_.config).getOrElse(lastConfig)
+  def configAfterMailbox: C = mailbox.lastOption.map(_.config).getOrElse(lastConfig)
 
   def done(taskId: TaskId): Server[R, S, C] = {
     val (newMailbox, done) = mailbox.partition(_.taskId != taskId)
