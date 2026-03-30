@@ -8,7 +8,7 @@
   </appender>
 
 
-  <logger name="akka" level="INFO" />
+  <logger name="org.apache.pekko" level="INFO" />
   <root level="INFO">
       <appender-ref ref="CONSOLE"/>
   </root>

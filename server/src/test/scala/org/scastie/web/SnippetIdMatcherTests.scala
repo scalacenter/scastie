@@ -1,11 +1,11 @@
 package org.scastie.web.routes
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
 import org.scastie.api.{SnippetId, SnippetUserPart}
 import org.scalatest.funsuite.AnyFunSuite
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import com.github.pjfanning.pekkohttpcirce.FailFastCirceSupport
 
 
 class SnippetIdMatcherTests extends AnyFunSuite with ScalatestRouteTest {

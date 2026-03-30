@@ -1,19 +1,19 @@
 package org.scastie.web.routes
 
-import akka.actor.ActorRef
-import akka.http.scaladsl.coding.Coders.Gzip
-import akka.http.scaladsl.coding.Coders.NoCoding
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.{`Cache-Control`, CacheDirectives}
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.RouteResult
-import akka.pattern.ask
-import akka.stream.Materializer
-import akka.stream.scaladsl.StreamConverters
-import akka.util.ByteString
-import akka.util.Timeout
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.http.scaladsl.coding.Coders.Gzip
+import org.apache.pekko.http.scaladsl.coding.Coders.NoCoding
+import org.apache.pekko.http.scaladsl.model.HttpEntity
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.headers.{`Cache-Control`, CacheDirectives}
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.server.RouteResult
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.StreamConverters
+import org.apache.pekko.util.ByteString
+import org.apache.pekko.util.Timeout
 import org.scastie.api.FetchResult
 import org.scastie.api.SnippetId
 import org.scastie.api.SnippetUserPart
