@@ -13,10 +13,10 @@ msgstr ""
 
 # --- Section: Topbar ---
 msgid "topbar.feedback"
-msgstr "Feedback"
+msgstr "Opiniões & Comentários"
 
 msgid "topbar.gitter"
-msgstr "gitter do Scastie"
+msgstr "Gitter do Scastie"
 
 msgid "topbar.github_issues"
 msgstr "Issues no Github"
@@ -28,7 +28,7 @@ msgid "topbar.login"
 msgstr "Entrar"
 
 msgid "topbar.feedback_tooltip"
-msgstr "Abrir Gitter.ao Chat para nos trazer feedback"
+msgstr "Abrir Chat do Gitter.im para nós trazer comentários"
 
 msgid "topbar.github_tooltip"
 msgstr "Criar nova issue no GitHub"
@@ -90,13 +90,13 @@ msgid "sidebar.status_unknown"
 msgstr "Desonhecido"
 
 msgid "sidebar.status_up"
-msgstr "Ligado"
+msgstr "Ativo"
 
 msgid "sidebar.status_down"
-msgstr "Desligado"
+msgstr "Desativado"
 
 msgid "sidebar.status_tooltip"
-msgstr "Mostrar status dos executores"
+msgstr "Mostrar estado dos executores"
 
 msgid "sidebar.editor"
 msgstr "Editor"
@@ -121,7 +121,7 @@ msgid "editor.run"
 msgstr "Executar"
 
 msgid "editor.status_unknown_warning"
-msgstr "aviso: status desconhecido"
+msgstr "Aviso: estado desconhecido"
 
 msgid "editor.running"
 msgstr "Executando"
@@ -151,10 +151,10 @@ msgid "editor.clear_messages"
 msgstr "Limpar Mensagens"
 
 msgid "editor.worksheet_on_tooltip"
-msgstr "Ligar modo Planilha (avalie e retorne each cada expressão de nivel superior)"
+msgstr "Ligar modo Planilha (avalia e retorna cada expressão de nivel superior)"
 
 msgid "editor.worksheet_off_tooltip"
-msgstr "Desligar modo Planilha (avalie e retorne each cada expressão de nivel superior)"
+msgstr "Desligar modo Planilha (avalia e retorna cada expressão de nivel superior)"
 
 msgid "editor.worksheet_unsupported"
 msgstr "Essa Configuração não suporta o modo Planilha"
@@ -178,7 +178,7 @@ msgid "editor.share_snippet"
 msgstr "Copie e compartilhe o URL dos seus fragmentos de código:"
 
 msgid "editor.metals_status"
-msgstr "Status do Metals"
+msgstr "Estado do Metals"
 
 msgid "editor.metals_loading"
 msgstr "Compilador está carregando"
@@ -200,7 +200,7 @@ msgid "build.reset_title"
 msgstr "Reiniciar Build"
 
 msgid "build.reset_confirmation"
-msgstr "Tem certeza que você quer reinicias a build?"
+msgstr "Tem certeza que você quer reiniciar a build?"
 
 msgid "build.reset"
 msgstr "Reiniciar"
@@ -221,10 +221,10 @@ msgid "build.sbt_config"
 msgstr "Configuração extra de SBT"
 
 msgid "build.sbt_base_config"
-msgstr "Configuração de SBT base (readonly)"
+msgstr "Configuração de SBT base (somente leitura)"
 
 msgid "build.sbt_plugins_config"
-msgstr "Configuração de plugins SBT base (readonly)"
+msgstr "Configuração de plugins SBT base (somente leitura)"
 
 msgid "build.enable_toolkit"
 msgstr "Habilitar Toolkit"
@@ -233,7 +233,7 @@ msgid "build.search_placeholder"
 msgstr "Buscar por 'cats'"
 
 msgid "build.other"
-msgstr "Outro"
+msgstr "Outros"
 
 # The translation of `Scala version directive on Scala-CLI documentation` must remain inside the curly brackets.
 msgid "build.scala_cli_version_doc"
@@ -252,7 +252,7 @@ msgid "help.title"
 msgstr "Ajuda sobre o Scastie"
 
 msgid "help.description"
-msgstr "O Scastie é um playground interativo para o Scala com suporte para configuração sbt."
+msgstr "O Scastie é uma ferramente interativa para o Scala com suporte para configuração sbt."
 
 # The translation of `keyboard shortcuts` must remain inside the curly brackets.
 msgid "help.sublime_support"
@@ -262,7 +262,7 @@ msgid "help.editor_modes"
 msgstr "Modos de editor"
 
 msgid "help.editor_modes_1"
-msgstr "O editor do Scastie suporta multiplos modos de teclado. "
+msgstr "O editor do Scastie suporta múltiplos modos de teclado. "
 
 msgid "help.editor_modes_2"
 msgstr "Você pode trocar entre os modos Pardão, Vim, e Emacs usando o seletor na barra lateral. "
@@ -277,7 +277,7 @@ msgid "help.save_description"
 msgstr "Executar e salvar seu código."
 
 msgid "help.new_description"
-msgstr "Remove todas as suas linhas de código da instância atual do editor e reseta a configuração sbt."
+msgstr "Remove todas as suas linhas de código da instância atual do editor e limpa a configuração sbt."
 
 msgid "help.clear_messages_description"
 msgstr "Remove todas as mensagens da instância atual do editor."
@@ -288,10 +288,10 @@ msgstr "A formatação de código é feita pelo scalafmt. Você pode configurar 
 
 # The code must remain inside the curly brackets.
 msgid "help.worksheet_description"
-msgstr "Habilitado por padrão, o modo Planilha da o valor e o tipo de cada linha do seu programa. você pode também adicionar blocos HTML como: {html"<h1>Olá</h1>"} para a renderizar próximo a declaração."
+msgstr "Habilitado por padrão, o modo Planilha denomina o valor e o tipo de cada linha do seu programa. você pode também adicionar blocos HTML como: {html"<h1>Olá</h1>"} para os renderizar próximo a declaração."
 
 msgid "help.worksheet_packages_warning"
-msgstr "No modo Planilha você não pode usar pacotes. Se você quiser usar, desligue o Modo e adicione um metódo principal e afirmações de println."
+msgstr "No modo Planilha você não pode usar pacotes. Se você quiser usar, desligue o modo e adicione um metódo principal e afirmações de println."
 
 msgid "help.download_description"
 msgstr "Criar um pacote .zip com configuração sbt para o fragmento atual."
@@ -303,7 +303,7 @@ msgid "help.console_description"
 msgstr "Você pode ver a saída do seu código no console do Scastie."
 
 msgid "help.build_settings_description"
-msgstr "em configurações de Build você pode mudar a versão do Scala e adicionar bibliotecas, escolha seu alvo desejado e até adicione sua própria configuração sbt customizada."
+msgstr "em configurações de Build você pode mudar a versão do Scala e adicionar bibliotecas, escolher seu alvo desejado e até adicionar sua própria configuração sbt customizada."
 
 msgid "help.snippets_title"
 msgstr "Fragmentos de Código do Usuário"
@@ -375,4 +375,4 @@ msgid "status.running"
 msgstr "Executando"
 
 msgid "status.idle"
-msgstr "Inativo"
+msgstr "Ocioso"
