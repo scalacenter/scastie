@@ -107,7 +107,7 @@ object TopBar {
             },
             option(value := "en", "English"),
             option(value := "ja", "日本語"),
-			option(value := "br", "Poruguês BR")
+            option(value := "pt-BR", "Português BR")
           )
         ),
         profileButton
