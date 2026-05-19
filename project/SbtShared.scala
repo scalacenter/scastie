@@ -71,7 +71,7 @@ object SbtShared {
   val gitHashNow    = gitHash()
   val gitIsDirtyNow = gitIsDirty()
 
-  val versionBase = "1.1.1"
+  val versionBase = "1.1.2"
 
   val versionNow = {
     if (gitIsDirtyNow) versionBase + "-SNAPSHOT"
