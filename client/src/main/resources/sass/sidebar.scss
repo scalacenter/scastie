@@ -47,6 +47,18 @@
       }
     }
 
+    .actions-top .btn {
+      white-space: normal;
+      line-height: 1.4;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      span {
+        overflow-wrap: break-word;
+        word-break: break-word;
+      }
+    }
+
     .actions-bottom {
       position: absolute;
       bottom: 0px;

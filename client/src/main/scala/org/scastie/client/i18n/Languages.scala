@@ -11,11 +11,16 @@ object EnPo extends js.Any
 @js.native
 object JaPo extends js.Any
 
+@JSImport("@resources/locales/pt-BR.po?raw", JSImport.Default)
+@js.native
+object PtBRPo extends js.Any
+
 object Languages {
 
   val available: Map[String, String] = Map(
     "en" -> (EnPo.asInstanceOf[String]),
-    "ja" -> (JaPo.asInstanceOf[String])
+    "ja" -> (JaPo.asInstanceOf[String]),
+    "pt-BR" -> (PtBRPo.asInstanceOf[String])
   )
 
 }

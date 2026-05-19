@@ -1,0 +1,378 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 18/05/26\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: Brazilian Portuguese\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
+
+# --- Section: Topbar ---
+msgid "topbar.feedback"
+msgstr "Opiniões & Comentários"
+
+msgid "topbar.gitter"
+msgstr "Gitter do Scastie"
+
+msgid "topbar.github_issues"
+msgstr "Issues no Github"
+
+msgid "topbar.language_label"
+msgstr "Linguagem: "
+
+msgid "topbar.login"
+msgstr "Entrar"
+
+msgid "topbar.feedback_tooltip"
+msgstr "Abrir Chat do Gitter.im para nós enviar comentários & opiniões"
+
+msgid "topbar.github_tooltip"
+msgstr "Criar nova issue no GitHub"
+
+msgid "topbar.snippets"
+msgstr "Fragmentos"
+
+msgid "topbar.snippets_tooltip"
+msgstr "Ir aos seus fragmentos de código"
+
+msgid "topbar.logout"
+msgstr "Sair"
+
+# --- Section: Code Snippets ---
+msgid "snippets.delete"
+msgstr "Deletar"
+
+msgid "snippets.share"
+msgstr "Compartilhar"
+
+msgid "snippets.empty"
+msgstr "Sem fragmentos de código salvos (ainda!)"
+
+msgid "snippets.saved"
+msgstr "Fragmentos de Código Salvos"
+
+msgid "snippets.update"
+msgstr "Atualização: "
+
+# --- Section: Sidebar ---
+msgid "sidebar.editor_mode_default"
+msgstr "Padrão"
+
+msgid "sidebar.theme_light"
+msgstr "Claro"
+
+msgid "sidebar.theme_dark"
+msgstr "Escuro"
+
+msgid "sidebar.theme_dark_tooltip"
+msgstr "Selecionar Tema Escuro (F2)"
+
+msgid "sidebar.theme_light_tooltip"
+msgstr "Selecionar Tema Claro (F2)"
+
+msgid "sidebar.privacy_policy"
+msgstr "Política de Privacidade"
+
+msgid "sidebar.privacy_policy_tooltip"
+msgstr "Mostrar política de privacidade"
+
+msgid "sidebar.help"
+msgstr "Ajuda"
+
+msgid "sidebar.help_tooltip"
+msgstr "Mostrar menu de ajuda"
+
+msgid "sidebar.status_unknown"
+msgstr "Desonhecido"
+
+msgid "sidebar.status_up"
+msgstr "Ativo"
+
+msgid "sidebar.status_down"
+msgstr "Desativado"
+
+msgid "sidebar.status_tooltip"
+msgstr "Mostrar estado dos executores"
+
+msgid "sidebar.editor"
+msgstr "Editor"
+
+msgid "sidebar.build_settings"
+msgstr "Configurações da Build"
+
+# --- Section: Login Window ---
+
+msgid "sidebar.login_title"
+msgstr "Entrar no Scastie"
+
+msgid "sidebar.login_github"
+msgstr "Continuar com GitHub"
+
+# The translation of `privacy policy` must remain inside the curly brackets.
+msgid "sidebar.login_agreement"
+msgstr "Ao entrar, você concorda com nossa {política de privacidade}."
+
+# --- Section: Editor Topbar ---
+msgid "editor.run"
+msgstr "Executar"
+
+msgid "editor.status_unknown_warning"
+msgstr "Aviso: estado desconhecido"
+
+msgid "editor.running"
+msgstr "Executando"
+
+msgid "editor.running_tooltip"
+msgstr "Executando seu Código..."
+
+msgid "editor.new_snippet_title"
+msgstr "Novo Fragmento de Código"
+
+msgid "editor.new"
+msgstr "Novo"
+
+msgid "editor.new_tooltip"
+msgstr "Novo Fragmento"
+
+msgid "editor.new_confirmation"
+msgstr "Tem certeza que você quer criar um novo Fragmento?"
+
+msgid "editor.format_tooltip"
+msgstr "Formatar Código"
+
+msgid "editor.format"
+msgstr "Formatar"
+
+msgid "editor.clear_messages"
+msgstr "Limpar Mensagens"
+
+msgid "editor.worksheet_on_tooltip"
+msgstr "Ligar modo Planilha (avalia e retorna cada expressão de nivel superior)"
+
+msgid "editor.worksheet_off_tooltip"
+msgstr "Desligar modo Planilha (avalia e retorna cada expressão de nivel superior)"
+
+msgid "editor.worksheet_unsupported"
+msgstr "Essa Configuração não suporta o modo Planilha"
+
+msgid "editor.worksheet"
+msgstr "Planilha"
+
+msgid "editor.download"
+msgstr "Baixar"
+
+msgid "editor.embed"
+msgstr "Incorporar"
+
+msgid "editor.embed_title"
+msgstr "Compartilhe seu Fragmento de Código"
+
+msgid "editor.embed_subtitle"
+msgstr "Copie e incorpore seu fragmento de código"
+
+msgid "editor.share_snippet"
+msgstr "Copie e compartilhe o URL dos seus fragmentos de código:"
+
+msgid "editor.metals_status"
+msgstr "Estado do Metals"
+
+msgid "editor.metals_loading"
+msgstr "Compilador está carregando"
+
+msgid "editor.metals_ready"
+msgstr "Metals está pronto"
+
+msgid "editor.metals_disabled"
+msgstr "Metals Desabilitado"
+
+msgid "editor.metals_unsupported"
+msgstr "Configuração não-suportada"
+
+msgid "editor.metals_network_error"
+msgstr "Erro de Rede"
+
+# --- Section: Build Settings ---
+msgid "build.reset_title"
+msgstr "Reiniciar Build"
+
+msgid "build.reset_confirmation"
+msgstr "Tem certeza que você quer reiniciar a build?"
+
+msgid "build.reset"
+msgstr "Reiniciar"
+
+msgid "build.reset_tooltip"
+msgstr "Reiniciar sua Configuração"
+
+msgid "build.target"
+msgstr "Alvo"
+
+msgid "build.scala_version"
+msgstr "Versão do Scala"
+
+msgid "build.libraries"
+msgstr "Bibliotecas"
+
+msgid "build.sbt_config"
+msgstr "Configuração extra de SBT"
+
+msgid "build.sbt_base_config"
+msgstr "Configuração de SBT base (somente leitura)"
+
+msgid "build.sbt_plugins_config"
+msgstr "Configuração de plugins SBT base (somente leitura)"
+
+msgid "build.enable_toolkit"
+msgstr "Habilitar Toolkit"
+
+msgid "build.search_placeholder"
+msgstr "Buscar por 'cats'"
+
+msgid "build.other"
+msgstr "Outros"
+
+# The translation of `Scala version directive on Scala-CLI documentation` must remain inside the curly brackets.
+msgid "build.scala_cli_version_doc"
+msgstr "Para usar uma versão específica do Scala com Scala-CLI, use diretivas. Veja {Diretiva de versão do scala na documentação do Scala-CLI}."
+
+# The translation of `Dependency directive on Scala-CLI documentation` must remain inside the curly brackets.
+msgid "build.scala_cli_dependency_doc"
+msgstr "Para usar bibliotecas com Scala-CLI, use diretivas. Veja {Diretiva de dependência na documentação do Scala-CLI}."
+
+# --- Section: Console ---
+msgid "console.title"
+msgstr "Console"
+
+# --- Section: Help Window ---
+msgid "help.title"
+msgstr "Ajuda sobre o Scastie"
+
+msgid "help.description"
+msgstr "O Scastie é uma ferramente interativa para o Scala com suporte para configuração sbt."
+
+# The translation of `keyboard shortcuts` must remain inside the curly brackets.
+msgid "help.sublime_support"
+msgstr "O editor do Scastie suporta Texto Sublime {teclas de atalho}."
+
+msgid "help.editor_modes"
+msgstr "Modos de editor"
+
+msgid "help.editor_modes_1"
+msgstr "O editor do Scastie suporta múltiplos modos de teclado. "
+
+msgid "help.editor_modes_2"
+msgstr "Você pode trocar entre os modos Pardão, Vim, e Emacs usando o seletor na barra lateral. "
+
+msgid "help.editor_modes_3"
+msgstr "cada modo providência teclas de atalho familiares e navegação para usuários desses editores."
+
+msgid "help.save"
+msgstr "Salvar"
+
+msgid "help.save_description"
+msgstr "Executar e salvar seu código."
+
+msgid "help.new_description"
+msgstr "Remove todas as suas linhas de código da instância atual do editor e limpa a configuração sbt."
+
+msgid "help.clear_messages_description"
+msgstr "Remove todas as mensagens da instância atual do editor."
+
+# The translation of `configuration section` must remain inside the curly brackets.
+msgid "help.format_description"
+msgstr "A formatação de código é feita pelo scalafmt. Você pode configurar a formatação com comentários em seu código. Leia a {Seção de Configuração}."
+
+# The code must remain inside the curly brackets.
+msgid "help.worksheet_description"
+msgstr "Habilitado por padrão, o modo Planilha denomina o valor e o tipo de cada linha do seu programa. você pode também adicionar blocos HTML como: {html"<h1>Olá</h1>"} para os renderizar próximo a declaração."
+
+msgid "help.worksheet_packages_warning"
+msgstr "No modo Planilha você não pode usar pacotes. Se você quiser usar, desligue o modo e adicione um metódo principal e afirmações de println."
+
+msgid "help.download_description"
+msgstr "Criar um pacote .zip com configuração sbt para o fragmento atual."
+
+msgid "help.embed_description"
+msgstr "Criar um url incorporado em páginas da web externas."
+
+msgid "help.console_description"
+msgstr "Você pode ver a saída do seu código no console do Scastie."
+
+msgid "help.build_settings_description"
+msgstr "em configurações de Build você pode mudar a versão do Scala e adicionar bibliotecas, escolher seu alvo desejado e até adicionar sua própria configuração sbt customizada."
+
+msgid "help.snippets_title"
+msgstr "Fragmentos de Código do Usuário"
+
+msgid "help.snippets_description"
+msgstr "Seus fragmentos de código salvos aparecerão aqui e você poderá compartilhar ou deletar eles."
+
+msgid "help.vim_commands"
+msgstr "Comandos Vim"
+
+msgid "help.vim_description"
+msgstr "Se o modo Vim for habilitado no editor, você pode usar os seguintes comandos na barra de comandos Vim (pressione ':' no modo normal):"
+
+msgid "help.vim_run"
+msgstr " — Executar e salvar seu código"
+
+msgid "help.vim_format"
+msgstr " — Formatar código"
+
+msgid "help.vim_clear"
+msgstr " — Limpar mensagens"
+
+msgid "help.vim_help"
+msgstr " — Mostrar esse diálogo de ajuda"
+
+msgid "help.vim_navigation"
+msgstr "Você também pode usar navegação Vim padrão e comandos de edição no editor."
+
+# The translation of `Gitter` must remain inside the curly brackets.
+msgid "help.feedback_description"
+msgstr "Você pode acessar nosso canal do {Gitter} e enviar sugestões."
+
+msgid "help.buildinfo"
+msgstr "Informação sobre a Build"
+
+# The repository name `scalacenter/scastie` must remain inside the curly brackets.
+msgid "help.github_info"
+msgstr "Está disponivel no Github em {scalacenter/scastie}."
+
+msgid "help.license"
+msgstr "Licensa"
+
+msgid "help.original_idea"
+msgstr "Scastie é uma ideia original de Aleh Aleshka (OlegYch)"
+
+# --- Section: Status ---
+msgid "status.no_task"
+msgstr "Nenhuma Tarefa sendo Executada"
+
+msgid "status.task"
+msgstr "Tarefa"
+
+msgid "status.different_config"
+msgstr "Configuração Diferente"
+
+msgid "status.same_config"
+msgstr "Mesma Configuração"
+
+msgid "status.different_target"
+msgstr "Alvo Diferente"
+
+msgid "status.sbt_runners"
+msgstr "Condutores SBT"
+
+msgid "status.scala_cli_runners"
+msgstr "Condutores Scala-CLI"
+
+msgid "status.running"
+msgstr "Executando"
+
+msgid "status.idle"
+msgstr "Ocioso"
