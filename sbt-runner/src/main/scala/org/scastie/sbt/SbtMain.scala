@@ -3,7 +3,7 @@ package org.scastie.sbt
 import org.scastie.util.ScastieFileUtil.writeRunningPid
 import org.scastie.util.ReconnectInfo
 
-import akka.actor.{ActorSystem, Props}
+import org.apache.pekko.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Await
@@ -18,8 +18,8 @@ object SbtMain {
 
     val system = ActorSystem("SbtRunner")
 
-    val config2 = ConfigFactory.load().getConfig("akka.remote.artery.canonical")
-    logger.info("akka tcp config")
+    val config2 = ConfigFactory.load().getConfig("pekko.remote.artery.canonical")
+    logger.info("remote tcp config")
     logger.info("  '" + config2.getString("hostname") + "'")
     logger.info("  " + config2.getInt("port"))
 
@@ -57,18 +57,18 @@ object SbtMain {
     val reconnectInfo =
       ReconnectInfo(
         serverHostname = serverConfig.getString("hostname"),
-        serverAkkaPort = serverConfig.getInt("akka-port"),
+        serverRemotePort = serverConfig.getInt("remote-port"),
         actorHostname = sbtConfig.getString("hostname"),
-        actorAkkaPort = sbtConfig.getInt("akka-port")
+        actorRemotePort = sbtConfig.getInt("remote-port")
       )
 
     logger.info("  runTimeout: {}", runTimeout)
     logger.info("  reloadTimeout: {}", reloadTimeout)
     logger.info("  isProduction: {}", isProduction)
     logger.info("  runner hostname: {}", reconnectInfo.actorHostname)
-    logger.info("  runner port: {}", reconnectInfo.actorAkkaPort)
+    logger.info("  runner port: {}", reconnectInfo.actorRemotePort)
     logger.info("  server hostname: {}", reconnectInfo.serverHostname)
-    logger.info("  server port: {}", reconnectInfo.serverAkkaPort)
+    logger.info("  server port: {}", reconnectInfo.serverRemotePort)
 
     system.actorOf(
       Props(

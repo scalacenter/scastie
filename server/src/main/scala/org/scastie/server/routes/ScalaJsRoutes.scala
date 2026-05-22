@@ -2,13 +2,13 @@ package org.scastie.web.routes
 
 import org.scastie.api._
 
-import akka.util.Timeout
+import org.apache.pekko.util.Timeout
 
-import akka.pattern.ask
-import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.coding.Coders.Gzip
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.coding.Coders.Gzip
 
 import scala.concurrent.duration.DurationInt
 

@@ -100,7 +100,7 @@ class ScastieConfig(val configurationFile: File) {
 
   val serverConfig = config.getConfig("org.scastie.web")
   val serverHostname = serverConfig.getString("hostname")
-  val serverAkkaPort = serverConfig.getInt("akka-port")
+  val serverRemotePort = serverConfig.getInt("remote-port")
 
   val metalsConfig = config.getConfig("org.scastie.metals")
   val metalsPort = metalsConfig.getInt("port")
@@ -204,7 +204,7 @@ class Deployment(
          |    -e RUNNER_PRODUCTION=true \\
          |    -e RUNNER_PORT=$$port \\
          |    -e SERVER_HOSTNAME=${config.serverHostname} \\
-         |    -e SERVER_AKKA_PORT=${config.serverAkkaPort} \\
+         |    -e SERVER_REMOTE_PORT=${config.serverRemotePort} \\
          |    -e RUNNER_HOSTNAME=${config.runnersHostname} \\
          |    -e COURSIER_CACHE=${sharedCacheDirectory("coursier")} \\
          |    $dockerImagePath
