@@ -5,6 +5,7 @@ import org.scastie.buildinfo.BuildInfo
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import org.scalajs.dom
+import typings.fuseJs.mod.{default => Fuse, IFuseOptions, FuseOptionKeyObject}
 
 import scala.concurrent.Future
 
@@ -148,22 +149,6 @@ object ScaladexSearch {
       .map(selected => (selected.project, selected.release.artifact, None, selected.release.target))
       .toSet
 
-    private def matchScore(query: String, artifact: String, project: Project): Int = {
-      val queryLower = query.toLowerCase
-      val artifactLower = artifact.toLowerCase
-      val projectLower = project.repository.toLowerCase
-      val orgLower = project.organization.toLowerCase
-
-      (queryLower, artifactLower, projectLower, orgLower) match {
-        case (q, a, _, _) if a == q => 1000
-        case (q, a, _, _) if a.startsWith(q) => 800
-        case (q, a, _, _) if a.contains(q) => 600
-        case (q, _, p, _) if p.contains(q) => 400
-        case (q, _, _, o) if o.contains(q) => 200
-        case _ => 0
-      }
-    }
-
     val search: List[(Project, String, Option[String], ScalaTarget)] = {
       val results = projects
         .flatMap {
@@ -174,9 +159,29 @@ object ScaladexSearch {
         }
 
       if (query.nonEmpty) {
-        results.sortBy({ case (project, artifact, _, _) =>
-          -matchScore(query, artifact, project)
-        })(Ordering[Int])
+        val jsItems: js.Array[js.Dynamic] = js.Array(results.map { case (project, artifact, _, _) =>
+          js.Dynamic.literal(
+            artifact = artifact,
+            repository = project.repository,
+            organization = project.organization
+          ): js.Dynamic
+        }: _*)
+
+        val options = IFuseOptions[js.Dynamic]()
+          .setKeysVarargs(
+            FuseOptionKeyObject[js.Dynamic]("artifact").setWeight(2.0),
+            FuseOptionKeyObject[js.Dynamic]("repository").setWeight(1.0),
+            FuseOptionKeyObject[js.Dynamic]("organization").setWeight(0.5)
+          )
+          .setThreshold(0.4)
+          .setFieldNormWeight(2.0)
+
+        val fuse = new Fuse(jsItems, options)
+        val fuseResults = fuse.search(query)
+
+        fuseResults.toList.map { result =>
+          results(result.refIndex.toInt)
+        }
       } else {
         results.sortBy { case (project, artifact, _, _) =>
           (project.organization, project.repository, artifact)
