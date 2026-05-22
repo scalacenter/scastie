@@ -126,7 +126,7 @@ object CodeEditor {
 
   def problemToDiagnostics(problem: Problem, doc: Text): Seq[Diagnostic] = {
     val maxLine = doc.lines.toInt
-    val startLine = problem.line.get.max(1).min(maxLine)
+    val startLine = problem.startLine.get.max(1).min(maxLine)
     val endLine = problem.endLine.getOrElse(startLine).max(1).min(maxLine)
 
     val renderMessage = (_: EditorView) => {
@@ -156,7 +156,7 @@ object CodeEditor {
       }
 
       val to = if (isEndLine) {
-        if (problem.line.get > maxLine && isStartLine) {
+        if (problem.startLine.get > maxLine && isStartLine) {
           lineInfo.to
         } else {
           problem.endColumn match {
@@ -217,7 +217,7 @@ object CodeEditor {
 
   private def getDecorations(props: CodeEditor, doc: Text): js.Array[Diagnostic] = {
     val errors = props.compilationInfos
-      .filter(prob => prob.line.isDefined)
+      .filter(prob => prob.startLine.isDefined)
       .flatMap(problemToDiagnostics(_, doc))
 
     val runtimeErrors = props.runtimeError.map(runtimeError => {
