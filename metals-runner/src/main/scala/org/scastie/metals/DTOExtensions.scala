@@ -51,7 +51,7 @@ object DTOExtensions {
         Option(diagnostic.getRange().getEnd().getLine() - worksheetLineOffset + 1),
         Option(diagnostic.getRange().getStart().getCharacter() - worksheetOffset + 1),
         Option(diagnostic.getRange().getEnd().getCharacter() - worksheetOffset + 1),
-        diagnostic.getMessage(),
+        diagnostic.getMessage().map(identity, _.getValue),
         actions
       )
 
