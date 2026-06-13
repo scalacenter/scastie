@@ -70,7 +70,7 @@ case class ScalaDependency(groupId: String, artifact: String, target: ScalaTarge
   }
 }
 
-case class ScastieMetalsOptions(dependencies: Set[ScalaDependency], scalaTarget: ScalaTarget)
+case class ScastieMetalsOptions(dependencies: Set[ScalaDependency], scalaTarget: ScalaTarget, scalacOptions: List[String] = Nil)
 
 object ScastieMetalsOptions {
   implicit val scastieMetalsOptionsEncoder: Encoder[ScastieMetalsOptions] = deriveEncoder[ScastieMetalsOptions]
