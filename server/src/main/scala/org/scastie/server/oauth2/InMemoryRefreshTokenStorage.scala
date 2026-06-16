@@ -1,9 +1,9 @@
 package org.scastie.web.oauth2
 
-import com.softwaremill.session.{RefreshTokenData, RefreshTokenStorage, RefreshTokenLookupResult}
-import akka.actor.{Actor, ActorSystem, Props}
-import akka.pattern.ask
-import akka.util.Timeout
+import com.softwaremill.pekkohttpsession.{RefreshTokenData, RefreshTokenStorage, RefreshTokenLookupResult}
+import org.apache.pekko.actor.{Actor, ActorSystem, Props}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.util.Timeout
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

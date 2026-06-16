@@ -27,7 +27,7 @@ import scala.concurrent.duration.FiniteDuration
 import io.circe._
 import io.circe.parser._
 import scala.collection.mutable.ListBuffer
-import akka.pattern.after
+import org.apache.pekko.pattern.after
 import java.lang
 import java.util.concurrent.atomic.AtomicReference
 import cats.syntax.all._

@@ -4,10 +4,10 @@ package web
 import org.scastie.api._
 import balancer._
 
-import akka.pattern.ask
-import akka.actor.ActorRef
-import akka.util.Timeout
-import akka.http.scaladsl.model.RemoteAddress
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.util.Timeout
+import org.apache.pekko.http.scaladsl.model.RemoteAddress
 
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration.DurationInt
