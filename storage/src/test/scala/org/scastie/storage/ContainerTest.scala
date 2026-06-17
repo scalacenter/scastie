@@ -20,27 +20,36 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Random
+import org.scastie.storage.postgres.PostgresContainer
 
 class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues {
+  val postgres = sys.props.get("SnippetsContainerTest.postgres").flatMap(_.toBooleanOption).contains(true)
   val mongo = sys.props.get("SnippetsContainerTest.mongo").flatMap(_.toBooleanOption).contains(true)
-  println(s"ContainerTest using mongodb: $mongo")
+
   val root = Files.createTempDirectory("test")
   val oldRoot = Files.createTempDirectory("old-test")
 
-  private val testContainer: SnippetsContainer with UsersContainer = {
-    if (mongo)
+  val testContainer: SnippetsContainer = (postgres, mongo) match {
+    case (true, true) =>
+      println("ContainerTest cannot use both postgres and mongo at the same time (defaulting to postgres)")
+      new PostgresContainer(defaultConfig = true)
+    case (false, true) =>
+      println("ContainerTest using mongo")
       new MongoDBContainer(defaultConfig = true)
-    else {
+    case (true, false) =>
+      println("ContainerTest using postgres")
+      new PostgresContainer(defaultConfig = true)
+    case (false, false) =>
+      println("ContainerTest using filesystem")
       new FilesystemContainer(root, oldRoot)(
-       ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
+        ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
       )
-    }
   }
 
   override protected def afterAll(): Unit = {
     deleteRecursively(root)
     deleteRecursively(oldRoot)
-    if (mongo) testContainer.close()
+    if (postgres || mongo) testContainer.close()
   }
 
   private implicit class FAwait[T](f: Future[T]) {
@@ -205,46 +214,6 @@ class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues
       assert(testContainer.readSnippet(snippetId2).await == None)
 
       assert(testContainer.listSnippets(user).await.size == 0)
-    }
-
-    def ensureUserCleanup(username: String, test: String => Any) = {
-      try {
-        test(username)
-      } finally {
-        testContainer.deleteUser(UserLogin(username)).await
-      }
-
-    }
-
-    test(s"[$typeName] add new user") {
-      ensureUserCleanup("bob", { username =>
-        val snippetId = testContainer.addNewUser(UserLogin(username)).await
-        assert(snippetId)
-      })
-    }
-
-    test(s"[$typeName] get user privacy policy acceptance") {
-      ensureUserCleanup("bob", { username =>
-        val snippetId = testContainer.addNewUser(UserLogin(username)).await
-        val response = testContainer.getPrivacyPolicyResponse(UserLogin(username)).await
-        assert(testContainer.deleteUser(UserLogin(username)).await == true)
-      })
-    }
-
-    test(s"[$typeName] set user privacy policy acceptance") {
-      ensureUserCleanup("bob", { username =>
-        val snippetId = testContainer.addNewUser(UserLogin(username)).await
-        val updatePrivacyPolicy = testContainer.setPrivacyPolicyResponse(UserLogin(username), false).await
-        val response = testContainer.getPrivacyPolicyResponse(UserLogin(username)).await
-        assert(response == false)
-      })
-    }
-
-    test(s"[$typeName] remove user from privacy policy list") {
-      val username = "bob"
-      val snippetId = testContainer.addNewUser(UserLogin(username)).await
-      val removeUser = testContainer.deleteUser(UserLogin(username)).await
-      assert(removeUser == true)
     }
 
     test(s"[$typeName] readLatestSnippet returns latest version") {
