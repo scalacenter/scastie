@@ -180,6 +180,18 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     run(scala)(assertUserOutput("2"))
   }
 
+  test("Scala 2.13.0 support") {
+    val scala =
+      SbtInputs.default.copy(code = "println(1 + 1)", target = Scala2("2.13.0"))
+    run(scala)(assertUserOutput("2"))
+  }
+
+  test("Scala 2.13.17 support") {
+    val scala =
+      SbtInputs.default.copy(code = "println(1 + 1)", target = Scala2("2.13.17"))
+    run(scala)(assertUserOutput("2"))
+  }
+
   test("no warnings by default") {
     val scala =
       SbtInputs.default.copy(code = "println(1 + 1)", sbtConfigExtra = """scalacOptions ++= List("-Werror")""")
