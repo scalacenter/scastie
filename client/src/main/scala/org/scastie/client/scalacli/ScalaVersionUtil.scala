@@ -6,6 +6,7 @@ import org.scalajs.dom
 import scala.util.matching.Regex
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scastie.buildinfo.BuildInfo
+import org.scastie.api.ScalaVersions
 
 object ScalaVersionUtil {
     val location = dom.window.location
@@ -102,4 +103,7 @@ object ScalaVersionUtil {
               Future.successful(version)
           }
     }
+
+    def resolveScala3Nightly: Future[Option[String]] =
+        resolveVersion(scala3Nightly).map(v => Option.when(ScalaVersions.isNightly(v))(v))
 }
