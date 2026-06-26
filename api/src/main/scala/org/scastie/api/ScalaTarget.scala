@@ -255,7 +255,12 @@ case class Scala3(scalaVersion: String) extends SbtScalaTarget {
     else renderSbtDouble(lib)
   }
 
-  def sbtConfig: String = sbtConfigScalaVersion
+  def sbtConfig: String =
+    if (ScalaVersions.isNightly(scalaVersion))
+      // TODO: change this to "resolvers += Resolver.scalaNightlyRepository" after upgrading to sbt 1.11.5
+      s"""|$sbtConfigScalaVersion
+          |resolvers += "scala-nightly" at "https://repo.scala-lang.org/artifactory/maven-nightlies"""".stripMargin
+    else sbtConfigScalaVersion
 
   def sbtPluginsConfig: String = ""
 

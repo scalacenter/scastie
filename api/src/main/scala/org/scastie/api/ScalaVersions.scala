@@ -129,4 +129,6 @@ object ScalaVersions {
 
   def find(tpe: ScalaTargetType, sv: String): String =
     allVersions(tpe).find(_.startsWith(sv)).getOrElse(sv)
+
+  def isNightly(version: String): Boolean = version.endsWith("-NIGHTLY")
 }

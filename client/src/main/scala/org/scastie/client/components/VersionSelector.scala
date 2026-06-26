@@ -6,6 +6,8 @@ import japgolly.scalajs.react._
 
 import vdom.all._
 import org.scastie.buildinfo.BuildInfo
+import org.scastie.client.scalacli.ScalaVersionUtil
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 case class VersionSelector(scalaTarget: SbtScalaTarget, onChange: ScalaTarget ~=> Callback) {
   @inline def render: VdomElement = VersionSelector.versionSelectorHook(this)
@@ -16,7 +18,11 @@ object VersionSelector {
   val versionSelectorHook =
     ScalaFnComponent
       .withHooks[VersionSelector]
-      .render(props => {
+      .useState(Option.empty[String])
+      .useEffectOnMountBy((_, nightly) =>
+        Callback.future(ScalaVersionUtil.resolveScala3Nightly.map(nightly.setState))
+      )
+      .render((props, nightly) => {
         def versionSelectors(scalaVersion: String) =
           props.scalaTarget match {
             case d: Scala2       => Scala2.apply(scalaVersion)
@@ -49,12 +55,29 @@ object VersionSelector {
               )
             }
             .toTagMod,
+          TagMod.when(props.scalaTarget.targetType == ScalaTargetType.Scala3)(
+            nightly.value match {
+              case Some(nightlyVersion) =>
+                li(
+                  input(
+                    `type` := "radio",
+                    id := "scala-nightly",
+                    name := "scalaV",
+                    onChange --> props.onChange(Scala3(nightlyVersion)),
+                    checked := ScalaVersions.isNightly(props.scalaTarget.scalaVersion)
+                  ),
+                  label(`for` := "scala-nightly", className := "radio", role := "button", "Nightly")
+                )
+              case None => EmptyVdom
+            }
+          ),
           li(
             label(
               div(cls := "select-wrapper"){
                 val isRecommended = ScalaVersions
                     .suggestedScalaVersions(props.scalaTarget.targetType)
-                    .contains(props.scalaTarget.scalaVersion)
+                    .contains(props.scalaTarget.scalaVersion) ||
+                  ScalaVersions.isNightly(props.scalaTarget.scalaVersion)
 
                 select(
                   name := "scalaVersion",

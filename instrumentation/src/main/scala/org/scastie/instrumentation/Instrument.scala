@@ -61,6 +61,8 @@ object Instrument {
 
   def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int, isScalaJs: Boolean): Patch = {
 
+    // TODO: rename `$t` to a `$`-free identifier to silence the warning:
+    // "The identifier `$t` should not contain `$`, which is reserved for internal compiler use."
     val treeQuote =
       tpeTree match {
         case None      => s"val $$t = $term"
