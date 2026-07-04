@@ -20,12 +20,12 @@ case class AttachedDom(uuid: String, folded: Boolean = false) extends Render {
   def fold: AttachedDom = copy(folded = true)
 }
 
-object Instrumentation {
-  val instrumentedObject = "Playground"
-}
-
 case class Instrumentation(position: Position, render: Render) {
   def asJsonString: String = s"""{"position":${position.asJsonString},"render":${render.asJsonString}}"""
+}
+
+object Instrumentation {
+  val instrumentedObject = "Playground"
 }
 
 case class Position(start: Int, end: Int) {
