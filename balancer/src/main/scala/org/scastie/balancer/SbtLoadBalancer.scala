@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit
 import org.scastie.api._
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
 
 case class SbtLoadBalancer[R, S <: ServerState](servers: Vector[SbtServer[R, S]]) {
@@ -67,4 +68,13 @@ case class SbtLoadBalancer[R, S <: ServerState](servers: Vector[SbtServer[R, S]]
     }
   }
 
+  def refreshTaskLastSeen(taskId: TaskId): SbtLoadBalancer[R, S] = {
+    copy(servers = servers.map(_.refreshTaskLastSeen(taskId)))
+  }
+
+  def cleanUpStaleTasks(maxAge: FiniteDuration): SbtLoadBalancer[R, S] = {
+    val cleaned = servers.map(_.cleanUpStaleTasks(maxAge))
+    if (servers.indices.forall(i => servers(i) eq cleaned(i))) this
+    else copy(servers = cleaned)
+  }
 }
