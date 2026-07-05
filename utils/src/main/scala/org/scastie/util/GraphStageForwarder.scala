@@ -1,8 +1,8 @@
 package org.scastie.util
 
-import akka.actor.ActorRef
-import akka.stream.{Attributes, Outlet, SourceShape}
-import akka.stream.stage.{GraphStage, GraphStageLogic}
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.stream.{Attributes, Outlet, SourceShape}
+import org.apache.pekko.stream.stage.{GraphStage, GraphStageLogic}
 
 import scala.reflect.runtime.universe._
 

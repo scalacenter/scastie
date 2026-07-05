@@ -2,7 +2,7 @@ package org.scastie.util
 
 import org.scastie.api._
 
-import akka.actor.ActorRef
+import org.apache.pekko.actor.ActorRef
 
 case class SbtTask(snippetId: SnippetId, inputs: SbtInputs, ip: String, login: Option[String], progressActor: ActorRef)
 
