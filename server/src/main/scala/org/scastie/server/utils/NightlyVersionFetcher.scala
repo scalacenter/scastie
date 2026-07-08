@@ -9,13 +9,10 @@ object NightlyVersionFetcher {
   private val ttlMillis: Long = 60 * 60 * 1000 // 1 hour
   private val cache = new ConcurrentHashMap[String, (String, Long)]()
 
-  /*
-    Both Scala 2 and Scala 3 nightlies are now on the unified repo.scala-lang.org repository
-    See: https://www.scala-lang.org/news/new-scala-nightlies-repo.html
-  */
+  // ! Due to the current infrastructure setup, we must use repo2.scala-lang.org instead of repo.scala-lang.org.
   private val urls = Map(
-    "scala2" -> "https://repo.scala-lang.org/artifactory/maven-nightlies/org/scala-lang/scala-compiler/maven-metadata.xml",
-    "scala3" -> "https://repo.scala-lang.org/artifactory/maven-nightlies/org/scala-lang/scala3-compiler_3/maven-metadata.xml"
+    "scala2" -> "https://repo2.scala-lang.org/artifactory/maven-nightlies/org/scala-lang/scala-compiler/maven-metadata.xml",
+    "scala3" -> "https://repo2.scala-lang.org/artifactory/maven-nightlies/org/scala-lang/scala3-compiler_3/maven-metadata.xml"
   )
 
   def fetchRaw(api: String)(implicit ec: ExecutionContext): Future[String] = Future {
