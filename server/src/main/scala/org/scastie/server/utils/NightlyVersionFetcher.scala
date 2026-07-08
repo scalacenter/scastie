@@ -9,7 +9,7 @@ object NightlyVersionFetcher {
   private val ttlMillis: Long = 60 * 60 * 1000 // 1 hour
   private val cache = new ConcurrentHashMap[String, (String, Long)]()
 
-  // ! The frontend must use repo2.scala-lang.org instead of repo.scala-lang.org because of the current infra setup.
+  // ! Due to the current infrastructure setup, we must use repo2.scala-lang.org instead of repo.scala-lang.org.
   private val urls = Map(
     "scala2" -> "https://repo2.scala-lang.org/artifactory/maven-nightlies/org/scala-lang/scala-compiler/maven-metadata.xml",
     "scala3" -> "https://repo2.scala-lang.org/artifactory/maven-nightlies/org/scala-lang/scala3-compiler_3/maven-metadata.xml"
