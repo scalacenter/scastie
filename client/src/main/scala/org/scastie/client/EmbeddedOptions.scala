@@ -41,7 +41,7 @@ case class EmbeddedOptions(snippetId: Option[SnippetId],
 
   def setCode(code: String): EmbeddedOptions = {
     val inputs0: BaseInputs = inputs.getOrElse(ScalaCliInputs.default)
-    copy(inputs = Some(inputs0.copyBaseInput(code = code)))
+    copy(inputs = Some(inputs0.copyBaseInput(code = Folder.singleton(code))))
   }
 }
 
@@ -182,13 +182,13 @@ object EmbeddedOptions {
           scalaTarget match {
             case Some(_: ScalaCli) => ScalaCli.defaultCode
             case Some(_: Scala3) => Scala3.defaultCode
-            case _ => default.code
+            case _ => default.code.childHeadFileContent
           }
 
         val inputs0 =
           default.copyBaseInput(
             isWorksheetMode = isWorksheetMode.getOrElse(default.isWorksheetMode),
-            code = code.getOrElse(defaultCode),
+            code = Folder.singleton(code.getOrElse(defaultCode)),
           )
         Some(inputs0)
       } else {

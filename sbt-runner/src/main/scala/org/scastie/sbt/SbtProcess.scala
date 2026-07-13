@@ -18,6 +18,7 @@ import org.scastie.util._
 import org.scastie.instrumentation.PositionMapper
 
 import scala.concurrent.duration._
+import scala.reflect.io.Directory
 import scala.util.Random
 
 object SbtProcess {
@@ -129,8 +130,8 @@ class SbtProcess(runTimeout: FiniteDuration,
   // log.info(s"sbtVersion: $sbtVersion")
   write(projectDir.resolve("build.properties"), s"sbt.version = ${org.scastie.buildinfo.BuildInfo.sbtVersion}")
   private val pluginFile = projectDir.resolve("plugins.sbt")
-  private val codeFile = sbtDir.resolve("src/main/scala/main.scala")
-  Files.createDirectories(codeFile.getParent)
+  private val scalaDir = sbtDir.resolve("src/main/scala")
+  Files.createDirectories(scalaDir)
 
   private def scalaJsContent(): Option[String] = {
     slurp(sbtDir.resolve(Js.targetFilename))
@@ -210,7 +211,7 @@ class SbtProcess(runTimeout: FiniteDuration,
 
   when(Ready) {
     case Event(task @ SbtTask(snippetId, taskInputs, ip, login, progressActor), SbtData(stateInputs)) =>
-      println(s"Running: (login: $login, ip: $ip) \n ${taskInputs.code.take(30)}")
+      println(s"Running: (login: $login, ip: $ip) \n ${taskInputs.code.toString.take(30)}")
 
       val _sbtRun = SbtRun(
         snippetId = snippetId,
@@ -323,7 +324,14 @@ class SbtProcess(runTimeout: FiniteDuration,
     writeFile(buildFile, prompt + "\n" + inputs.sbtConfig)
     Files.deleteIfExists(sbtDir.resolve(Js.targetFilename))
     Files.deleteIfExists(sbtDir.resolve(Js.sourceMapFilename))
-    write(codeFile, inputs.code, truncate = true)
+    new Directory(scalaDir.toFile).deleteRecursively()
+    Files.createDirectories(scalaDir)
+
+    FileOrFolderUtils.allFiles(inputs.code).foreach(f => {
+      val path = scalaDir.resolve(f.path.substring(1))
+      Files.createDirectories(path.getParent)
+      write(path, f.content, truncate = true)
+    })
   }
 
   private def writeFile(path: Path, content: String): Unit = {
