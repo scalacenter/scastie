@@ -457,6 +457,21 @@ class SbtActorTest() extends TestKit(ActorSystem("SbtActorTest")) with ImplicitS
     })
   }
 
+  test("crash in setInputs sends isDone and recovers") {
+    /* delete the project directory so the next run crashes in setInputs */
+    runCode(
+      """|import java.io.File
+         |import java.nio.file.Files
+         |val projectDir = new File("project")
+         |Files.walk(projectDir.toPath).sorted(java.util.Comparator.reverseOrder()).forEach(Files.delete(_))
+         |println("done")""".stripMargin,
+    )(assertUserOutput("done"))
+
+    runCode("1 + 1", allowFailure = true)(_.isDone)
+
+    runCode("""println("recovered")""")(assertUserOutput("recovered"))
+  }
+
   (1 to 2).foreach { i =>
     test(s"[$i] warnings persist (issue #1144)") {
       runCode("Nil match { case Seq(xs*) => println(\"test\") }")( progress =>
