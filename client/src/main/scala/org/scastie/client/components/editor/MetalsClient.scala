@@ -27,7 +27,8 @@ trait MetalsClient {
   val isWorksheetMode: Boolean
   val isEmbedded: Boolean
   val code: String
-  val scastieMetalsOptions = ScastieMetalsOptions(dependencies, target)
+  val scalacOptions: List[String]
+  val scastieMetalsOptions = ScastieMetalsOptions(dependencies, target, scalacOptions)
 
   private val isConfigurationSupported: Future[Boolean] = {
     if (metalsStatus == MetalsDisabled || isEmbedded) Future.successful(false)
