@@ -172,7 +172,7 @@ class MetalsDispatcher(cache: Cache[IO, (String, ScastieMetalsOptions), ScastieP
   ).mapN(_ ++ _ ++ _) >>= { classpath =>
     val scalaVersion = configuration.scalaTarget.scalaVersion
     presentationCompilers
-      .createPresentationCompiler(classpath.toSeq, scalaVersion, mtags)
+      .createPresentationCompiler(classpath.toSeq, scalaVersion, mtags, configuration.scalacOptions)
       .flatMap(ScastiePresentationCompiler.apply)
   }
 

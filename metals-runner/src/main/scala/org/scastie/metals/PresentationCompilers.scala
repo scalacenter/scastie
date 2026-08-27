@@ -85,18 +85,18 @@ class PresentationCompilers(metalsWorkingDirectory: Path) {
 
   JdkSources().foreach(jdk => index.addSourceJar(jdk, Scala213))
 
-  def createPresentationCompiler(classpath: Seq[Path], version: String, mtags: MtagsBinaries): IO[PresentationCompiler | RawPresentationCompiler] =
+  def createPresentationCompiler(classpath: Seq[Path], version: String, mtags: MtagsBinaries, scalacOptions: List[String] = Nil): IO[PresentationCompiler | RawPresentationCompiler] =
     prepareClasspathSearch(classpath, version) >>= { classpathSearch =>
       (mtags match {
         case MtagsBinaries.BuildIn              => IO(ScalaPresentationCompiler(classpath = classpath))
         case artifacts: MtagsBinaries.Artifacts => presentationCompiler(artifacts, classpath)
       }).map {
         case raw: RawPresentationCompiler =>
-          raw.newInstance("", classpath.filterNot(isSourceJar).asJava, Nil.asJava)
+          raw.newInstance("", classpath.filterNot(isSourceJar).asJava, scalacOptions.asJava)
             .withSearch(ScastieSymbolSearch(docs, classpathSearch))
             .withWorkspace(metalsWorkingDirectory)
         case normal: PresentationCompiler =>
-          normal.newInstance("", classpath.filterNot(isSourceJar).asJava, Nil.asJava)
+          normal.newInstance("", classpath.filterNot(isSourceJar).asJava, scalacOptions.asJava)
             .withSearch(ScastieSymbolSearch(docs, classpathSearch))
             .withWorkspace(metalsWorkingDirectory)
       }
