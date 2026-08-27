@@ -84,7 +84,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
 ```
 .
 ├── api                 | autowire api (rpc server <=> browser)
-│                       |   models for server <=> sbt (akka-remote)
+│                       |   models for server <=> sbt (pekko-remote)
 ├── balancer            | distribute load based on sbt configuration
 ├── bin                 | scalfmt runner
 ├── build.sbt           | build definition
@@ -110,7 +110,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
 
  Scala.js Client     run/save/format                                               +-------------------------------------------+
  +---------------------+  AutowireApi      +---------------------+                +-------------------------------------------+|
- |      ScastieBackend |  (HTTP)           | +------------+      | akka+remote   +-------------------------------------------+||
+ |      ScastieBackend |  (HTTP)           | +------------+      | pekko+remote   +-------------------------------------------+||
  |          +--------+ +-----------------> | |LoadBalancer| <------------------+ |    SbtActor                Sbt(Process)   |||
  |          |        | |                   | +------------+      |             | |   +----------+             +-----------+  |||
  |          |        | |                   |                     |             +---> |          |  <------->  |sbt|scastie|  ||+
@@ -120,7 +120,7 @@ You can install a pre-commit hook with `bin/hooks.sh`
  |          |        | |                   |                     |
  |          |        | |                   |                     |                 +-------------------------------------------+
  |          |        | |                   | SnippetContainer(DB)|                +-------------------------------------------+|
- |          |        | |                   |                     | akka+remote   +-------------------------------------------+||
+ |          |        | |                   |                     | pekko+remote   +-------------------------------------------+||
  |          |        | | <-----------------+ oauth               | <-----------+ |    ScalaCliActor           ScalaCli(Bsp)  |||
  |          +--------+ |  SnippetProgress  | static ressources   |             | |   +----------+             +-----------+  |||
  |                     |  (sse/websocket)  +---------------------+             +---> |          |  <------->  |scala-cli  |  ||+

@@ -1,14 +1,14 @@
 package org.scastie.balancer
 
 import com.typesafe.config.Config
-import akka.actor.ActorSelection
+import org.apache.pekko.actor.ActorSelection
 import org.scastie.api.ActorConnected
-import akka.actor.ActorLogging
-import akka.actor.Actor
-import akka.actor.ActorRef
+import org.apache.pekko.actor.ActorLogging
+import org.apache.pekko.actor.Actor
+import org.apache.pekko.actor.ActorRef
 import scala.concurrent.Future
-import akka.pattern.ask
-import akka.util.Timeout
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.util.Timeout
 import scala.concurrent.duration._
 import org.scastie.api.RunnerPing
 import scala.collection.concurrent.TrieMap
@@ -39,7 +39,7 @@ abstract class BaseDispatcher[R, S](config: Config) extends Actor with ActorLogg
     runnerName: String,
     runnerAddress: SocketAddress,
     actorName: String
-  ) = s"akka://$runnerName@${runnerAddress.host}:${runnerAddress.port}/user/$actorName"
+  ) = s"pekko://$runnerName@${runnerAddress.host}:${runnerAddress.port}/user/$actorName"
 
   def connectRunner(path: String): ActorSelection = {
     val selection = context.actorSelection(path)

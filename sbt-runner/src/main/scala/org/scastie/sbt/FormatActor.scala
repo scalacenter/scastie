@@ -3,7 +3,7 @@ package sbt
 
 import scala.meta._
 
-import akka.actor.Actor
+import org.apache.pekko.actor.Actor
 
 import org.scastie.api.FormatRequest
 import org.scastie.api.FormatResponse

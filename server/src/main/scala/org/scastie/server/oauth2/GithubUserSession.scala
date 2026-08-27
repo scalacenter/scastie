@@ -4,10 +4,10 @@ import java.lang.System.{lineSeparator => nl}
 import java.nio.file._
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import org.scastie.api.User
 import org.scastie.api.UserData
-import com.softwaremill.session._
+import com.softwaremill.pekkohttpsession._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import io.circe.syntax._
