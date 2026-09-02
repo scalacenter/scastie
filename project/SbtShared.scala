@@ -33,6 +33,7 @@ object SbtShared {
     val latest38   = "3.8.4"
     val latest39   = "3.9.0"
     val scala313   = "3.1.3"
+    val previousLTS = latest33
     val stableLTS  = "3.9.0"
     val stableNext = "3.9.0"
     val latestLTS  = "3.9.0"
@@ -141,7 +142,7 @@ lazy val baseJsSettings = Seq(
   lazy val api = projectMatrix
     .in(file("api"))
     .settings(apiSettings)
-    .jvmPlatform(Seq(ScalaVersions.jvm, ScalaVersions.stableLTS, ScalaVersions.stableNext, ScalaVersions.sbt))
+    .jvmPlatform(Seq(ScalaVersions.jvm, ScalaVersions.previousLTS, ScalaVersions.stableLTS, ScalaVersions.stableNext, ScalaVersions.sbt))
     .jsPlatform(Seq(ScalaVersions.js), baseJsSettings)
     .enablePlugins(BuildInfoPlugin)
 
