@@ -47,7 +47,7 @@ object SbtShared {
   }
 
   object ScalaJSVersions {
-    val current = "1.20.1"
+    val current = "1.22.0"
   }
 
   val scalaCliVersion = "1.9.1"
@@ -184,6 +184,7 @@ lazy val baseJsSettings = Seq(
         "latest37"              -> ScalaVersions.latest37,
         "latest38"              -> ScalaVersions.latest38,
         "latest39"              -> ScalaVersions.latest39,
+        "previousLTS"           -> ScalaVersions.previousLTS,
         "stableLTS"             -> ScalaVersions.stableLTS,
         "stableNext"            -> ScalaVersions.stableNext,
         "latestLTS"             -> ScalaVersions.latestLTS,
