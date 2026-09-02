@@ -61,20 +61,18 @@ object Instrument {
 
   def instrumentOne(term: Term, tpeTree: Option[Type], offset: Int, isScalaJs: Boolean): Patch = {
 
-    // TODO: rename `$t` to a `$`-free identifier to silence the warning:
-    // "The identifier `$t` should not contain `$`, which is reserved for internal compiler use."
     val treeQuote =
       tpeTree match {
-        case None      => s"val $$t = $term"
-        case Some(tpe) => s"val $$t: $tpe = $term"
+        case None      => s"val $instrumentedValue = $term"
+        case Some(tpe) => s"val $instrumentedValue: $tpe = $term"
       }
 
     val startPos = term.pos.start - offset
     val endPos   = term.pos.end - offset
 
     val renderCall =
-      if (!isScalaJs) s"$runtimeT.render($$t)"
-      else s"$runtimeT.render($$t, attach)"
+      if (!isScalaJs) s"$runtimeT.render($instrumentedValue)"
+      else s"$runtimeT.render($instrumentedValue, attach)"
 
     val replacement =
       s"""|scala.Predef.locally {
@@ -82,7 +80,7 @@ object Instrument {
           |$treeQuote;
           |$$doc.binder($renderCall, $startPos, $endPos);
           |$$doc.endStatement();
-          |$$t}""".stripMargin
+          |$instrumentedValue}""".stripMargin
 
     Patch(term.tokens.head, term.tokens.last, replacement)
   }

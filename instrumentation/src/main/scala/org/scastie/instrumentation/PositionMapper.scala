@@ -40,7 +40,7 @@ case class PositionMapper private (
 
 object PositionMapper {
 
-  private val instrumentationPrefix: String = "val $t = "
+  private val instrumentationPrefix: String = s"val $instrumentedValue = "
   private val prefixOffset: Int             = instrumentationPrefix.length
 
   /**
@@ -104,7 +104,7 @@ object PositionMapper {
     line.matches("""\$doc\.endStatement\(\);""") ||
     line.matches("""\$doc\.binder\(.+,\s*\d+,\s*\d+\);""") ||
     line == "scala.Predef.locally {" ||
-    line == "$t}" ||
+    line == s"$instrumentedValue}" ||
     line.startsWith(s"import $runtimePackage") ||
     line.startsWith(s"object $instrumentedObject extends ScastieApp with $instrumentationRecorderT") ||
     (line.trim.startsWith("//> using") && isScalaCli)

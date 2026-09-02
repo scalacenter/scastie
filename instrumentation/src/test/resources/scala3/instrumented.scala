@@ -4,26 +4,26 @@ class Animal:
 end Animal
 scala.Predef.locally {
 $doc.startStatement(25, 30);
-val $t = 1 + 2;
-$doc.binder(_root_.org.scastie.runtime.Runtime.render($t), 25, 30);
+val _t = 1 + 2;
+$doc.binder(_root_.org.scastie.runtime.Runtime.render(_t), 25, 30);
 $doc.endStatement();
-$t}
+_t}
 
 
 
 scala.Predef.locally {
 $doc.startStatement(34, 39);
-val $t = 1 + 5;
-$doc.binder(_root_.org.scastie.runtime.Runtime.render($t), 34, 39);
+val _t = 1 + 5;
+$doc.binder(_root_.org.scastie.runtime.Runtime.render(_t), 34, 39);
 $doc.endStatement();
-$t}
+_t}
 scala.Predef.locally {
 $doc.startStatement(40, 61);
-val $t = println:
+val _t = println:
     "animal";
-$doc.binder(_root_.org.scastie.runtime.Runtime.render($t), 40, 61);
+$doc.binder(_root_.org.scastie.runtime.Runtime.render(_t), 40, 61);
 $doc.endStatement();
-$t}
+_t}
 }
 object Main {
   def suppressUnusedWarnsScastie = Html

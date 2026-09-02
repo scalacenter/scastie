@@ -2,18 +2,18 @@ import _root_.org.scastie.runtime._
 object Playground extends ScastieApp with _root_.org.scastie.runtime.InstrumentationRecorder {
 scala.Predef.locally {
 $doc.startStatement(0, 5);
-val $t = 1 + 1;
-$doc.binder(_root_.org.scastie.runtime.Runtime.render($t), 0, 5);
+val _t = 1 + 1;
+$doc.binder(_root_.org.scastie.runtime.Runtime.render(_t), 0, 5);
 $doc.endStatement();
-$t}
+_t}
 
 scala.Predef.locally {
 $doc.startStatement(7, 14);
-val $t = 1 +
+val _t = 1 +
   a;
-$doc.binder(_root_.org.scastie.runtime.Runtime.render($t), 7, 14);
+$doc.binder(_root_.org.scastie.runtime.Runtime.render(_t), 7, 14);
 $doc.endStatement();
-$t}
+_t}
 }
 object Main {
   def suppressUnusedWarnsScastie = Html

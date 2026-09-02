@@ -35,25 +35,25 @@ class PositionMapperSpecs extends AnyFunSuite {
                     |object $instrumentedObject extends ScastieApp with $instrumentationRecorderT {
                     |scala.Predef.locally {
                     |$$doc.startStatement(0, 16);
-                    |val $$t = println("test1"); 
-                    |$$doc.binder($runtimeT.render($$t), 0, 16);
+                    |val _t = println("test1"); 
+                    |$$doc.binder($runtimeT.render(_t), 0, 16);
                     |$$doc.endStatement();
-                    |$$t}
+                    |_t}
                     |val y = 1
                     |scala.Predef.locally {
                     |$$doc.startStatement(26, 42);
-                    |val $$t = println("test2"); 
-                    |$$doc.binder($runtimeT.render($$t), 26, 42);
+                    |val _t = println("test2"); 
+                    |$$doc.binder($runtimeT.render(_t), 26, 42);
                     |$$doc.endStatement();
-                    |$$t}
+                    |_t}
                     |}
                     |""".stripMargin
 
     val positionMapper = PositionMapper(code1)
 
-    assert(positionMapper.mapLine(5) == 1)  // val $t = println("test1");
+    assert(positionMapper.mapLine(5) == 1)  // val _t = println("test1");
     assert(positionMapper.mapLine(9) == 2)  // val y = 1
-    assert(positionMapper.mapLine(12) == 3) // val $t = println("test2");
+    assert(positionMapper.mapLine(12) == 3) // val _t = println("test2");
 
     assert(positionMapper.mapColumn(9, 5) == 5)   // no offset
     assert(positionMapper.mapColumn(12, 15) == 6) // offset of 9
@@ -72,10 +72,10 @@ class PositionMapperSpecs extends AnyFunSuite {
           |
           |scala.Predef.locally {
           |$$doc.startStatement(0, 15);
-          |val $$t = println("test"); 
-          |$$doc.binder($runtimeT.render($$t), 0, 15);
+          |val _t = println("test"); 
+          |$$doc.binder($runtimeT.render(_t), 0, 15);
           |$$doc.endStatement();
-          |$$t}
+          |_t}
           |val x = 1
           |}
           |""".stripMargin
@@ -83,7 +83,7 @@ class PositionMapperSpecs extends AnyFunSuite {
     val positionMapper = PositionMapper(code1)
 
     assert(positionMapper.mapLine(2) == 1)  // experimental import
-    assert(positionMapper.mapLine(7) == 2)  // val $t = println("test");
+    assert(positionMapper.mapLine(7) == 2)  // val _t = println("test");
     assert(positionMapper.mapLine(11) == 3) // val x = 1
 
     assert(positionMapper.mapColumn(7, 15) == 6) // offset of 9
@@ -100,18 +100,18 @@ class PositionMapperSpecs extends AnyFunSuite {
                     |object $instrumentedObject extends ScastieApp with $instrumentationRecorderT {
                     |scala.Predef.locally {
                     |$$doc.startStatement(0, 25);
-                    |val $$t = println:
+                    |val _t = println:
                     |  "multiline"; 
-                    |$$doc.binder($runtimeT.render($$t), 0, 25);
+                    |$$doc.binder($runtimeT.render(_t), 0, 25);
                     |$$doc.endStatement();
-                    |$$t}
+                    |_t}
                     |val x = 1
                     |}
                     |""".stripMargin
 
     val positionMapper = PositionMapper(code1)
 
-    assert(positionMapper.mapLine(5) == 1)  // val $t = println:
+    assert(positionMapper.mapLine(5) == 1)  // val _t = println:
     assert(positionMapper.mapLine(6) == 2)  // "multiline";
     assert(positionMapper.mapLine(10) == 3) // val x = 1
 
@@ -134,10 +134,10 @@ class PositionMapperSpecs extends AnyFunSuite {
                     |
                     |scala.Predef.locally {
                     |$$doc.startStatement(15, 31);
-                    |val $$t = println("test"); 
-                    |$$doc.binder($runtimeT.render($$t), 15, 31);
+                    |val _t = println("test"); 
+                    |$$doc.binder($runtimeT.render(_t), 15, 31);
                     |$$doc.endStatement();
-                    |$$t}
+                    |_t}
                     |// Comment 2
                     |val x = 1
                     |}
@@ -147,7 +147,7 @@ class PositionMapperSpecs extends AnyFunSuite {
 
     assert(positionMapper.mapLine(3) == 1)  // Comment 1
     assert(positionMapper.mapLine(4) == 2)  // empty line
-    assert(positionMapper.mapLine(7) == 3)  // val $t = println("test");
+    assert(positionMapper.mapLine(7) == 3)  // val _t = println("test");
     assert(positionMapper.mapLine(11) == 4) // Comment 2
     assert(positionMapper.mapLine(12) == 5) // val x = 1
 
@@ -200,16 +200,16 @@ class PositionMapperSpecs extends AnyFunSuite {
                     |object $instrumentedObject extends ScastieApp with $instrumentationRecorderT {
                     |scala.Predef.locally {
                     |$$doc.startStatement(0, 11);
-                    |val $$t = println(42); 
-                    |$$doc.binder($runtimeT.render($$t), 0, 11);
+                    |val _t = println(42); 
+                    |$$doc.binder($runtimeT.render(_t), 0, 11);
                     |$$doc.endStatement();
-                    |$$t}
+                    |_t}
                     |}
                     |""".stripMargin
 
     val positionMapper = PositionMapper(code1)
 
-    assert(positionMapper.mapLine(5) == 1) // val $t = println(42);
+    assert(positionMapper.mapLine(5) == 1) // val _t = println(42);
 
     assert(positionMapper.mapColumn(5, 15) == 6) // offset of 9
   }
@@ -256,20 +256,20 @@ class PositionMapperSpecs extends AnyFunSuite {
                     |// Processing
                     |scala.Predef.locally {
                     |$$doc.startStatement(25, 75);
-                    |val $$t = data.foreach { x =>
+                    |val _t = data.foreach { x =>
                     |  println(s"Processing: $$x")
                     |}; 
-                    |$$doc.binder($runtimeT.render($$t), 25, 75);
+                    |$$doc.binder($runtimeT.render(_t), 25, 75);
                     |$$doc.endStatement();
-                    |$$t}
+                    |_t}
                     |
                     |val result = data.map(_ * 2)
                     |scala.Predef.locally {
                     |$$doc.startStatement(106, 120);
-                    |val $$t = println(result); 
-                    |$$doc.binder($runtimeT.render($$t), 106, 120);
+                    |val _t = println(result); 
+                    |$$doc.binder($runtimeT.render(_t), 106, 120);
                     |$$doc.endStatement();
-                    |$$t}
+                    |_t}
                     |}
                     |""".stripMargin
 
@@ -279,9 +279,9 @@ class PositionMapperSpecs extends AnyFunSuite {
     assert(positionMapper.mapLine(7) == 4)   // Setup comment
     assert(positionMapper.mapLine(8) == 5)   // val data = List(1, 2, 3)
     assert(positionMapper.mapLine(10) == 7)  // Processing comment
-    assert(positionMapper.mapLine(13) == 8)  // val $t = data.foreach...
+    assert(positionMapper.mapLine(13) == 8)  // val _t = data.foreach...
     assert(positionMapper.mapLine(20) == 12) // val result = data.map(_ * 2)
-    assert(positionMapper.mapLine(23) == 13) // val $t = println(result);
+    assert(positionMapper.mapLine(23) == 13) // val _t = println(result);
 
     assert(positionMapper.mapColumn(13, 15) == 6)  // offset of 9
     assert(positionMapper.mapColumn(23, 20) == 11) // offset of 9
@@ -298,25 +298,25 @@ class PositionMapperSpecs extends AnyFunSuite {
                     |object $instrumentedObject extends ScastieApp with $instrumentationRecorderT {
                     |scala.Predef.locally {
                     |$$doc.startStatement(0, 15);
-                    |val $$t = println("test"); 
-                    |$$doc.binder($runtimeT.render($$t), 0, 15);
+                    |val _t = println("test"); 
+                    |$$doc.binder($runtimeT.render(_t), 0, 15);
                     |$$doc.endStatement();
-                    |$$t}
+                    |_t}
                     |val y = 2
                     |scala.Predef.locally {
                     |$$doc.startStatement(25, 40);
-                    |val $$t = println("test"); 
-                    |$$doc.binder($runtimeT.render($$t), 25, 40);
+                    |val _t = println("test"); 
+                    |$$doc.binder($runtimeT.render(_t), 25, 40);
                     |$$doc.endStatement();
-                    |$$t}
+                    |_t}
                     |val z = 3
                     |}
                     |""".stripMargin
 
     val positionMapper = PositionMapper(code1)
 
-    assert(positionMapper.mapLine(5) == 1)  // val $t = println("test"); #1
-    assert(positionMapper.mapLine(12) == 3) // val $t = println("test"); #2
+    assert(positionMapper.mapLine(5) == 1)  // val _t = println("test"); #1
+    assert(positionMapper.mapLine(12) == 3) // val _t = println("test"); #2
     assert(positionMapper.mapLine(9) == 2)  // val y = 2
     assert(positionMapper.mapLine(16) == 4) // val z = 3
 
@@ -338,16 +338,16 @@ class PositionMapperSpecs extends AnyFunSuite {
                     |// Lorem ipsum
                     |scala.Predef.locally {
                     |$$doc.startStatement(39, 42);
-                    |val $$t = 1/0;
-                    |$$doc.binder($runtimeT.render($$t), 39, 42);
+                    |val _t = 1/0;
+                    |$$doc.binder($runtimeT.render(_t), 39, 42);
                     |$$doc.endStatement();
-                    |$$t}
+                    |_t}
                     |}
                     |""".stripMargin
 
     val positionMapper = PositionMapper(code1, true)
 
-    assert(positionMapper.mapLine(9) == 3) // val $t = 1/0;
+    assert(positionMapper.mapLine(9) == 3) // val _t = 1/0;
 
     assert(positionMapper.mapColumn(9, 12) == 3) // offset of 9
   }
