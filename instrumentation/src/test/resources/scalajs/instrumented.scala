@@ -5,10 +5,10 @@ import org.scalajs.dom.html.Canvas
 
 scala.Predef.locally {
 $doc.startStatement(59, 116);
-val _t = dom.document.createElement("canvas").asInstanceOf[Canvas];
-$doc.binder(_root_.org.scastie.runtime.Runtime.render(_t, attach), 59, 116);
+val `$t` = dom.document.createElement("canvas").asInstanceOf[Canvas];
+$doc.binder(_root_.org.scastie.runtime.Runtime.render(`$t`, attach), 59, 116);
 $doc.endStatement();
-_t}
+`$t`}
 }
 @_root_.scala.scalajs.js.annotation.JSExportTopLevel("ScastiePlaygroundMain") class ScastiePlaygroundMain {
   def suppressUnusedWarnsScastie = Html
