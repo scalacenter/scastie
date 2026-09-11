@@ -128,7 +128,7 @@ lazy val metalsRunner = project
       .value,
     maintainer   := "scalacenter",
     // TODO: investigate possible solutions to enable metals to be on the newest Scala 3 versions
-    scalaVersion := ScalaVersions.previousLTS,
+    scalaVersion := ScalaVersions.prevStableLTS,
     libraryDependencies ++= Seq(
       "org.scalameta"        % "metals"              % "1.6.7" cross (CrossVersion.for3Use2_13),
       "org.eclipse.lsp4j"    % "org.eclipse.lsp4j"   % "1.0.0",
@@ -146,7 +146,7 @@ lazy val metalsRunner = project
     )
   )
   .enablePlugins(JavaServerAppPackaging, sbtdocker.DockerPlugin)
-  .dependsOn(api.jvm(ScalaVersions.previousLTS))
+  .dependsOn(api.jvm(ScalaVersions.prevStableLTS))
 
 lazy val sbtRunner = project
   .in(file("sbt-runner"))

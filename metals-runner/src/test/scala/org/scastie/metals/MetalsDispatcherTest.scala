@@ -57,7 +57,7 @@ class MetalsDispatcherTest extends CatsEffectSuite with Assertions with CatsEffe
     cache.use { cache =>
       {
         val dispatcher = MetalsDispatcher(cache)
-        val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.previousLTS))
+        val options    = ScastieMetalsOptions(Set.empty, Scala3(BuildInfo.prevStableLTS))
         val userUuid   = "5e460689-36b8-41db-b021-7dd273ecab88"
         val task = for {
           pc     <- dispatcher.getCompiler(userUuid, options)
