@@ -57,9 +57,9 @@ object OldScastieConverter {
             convertLine(line)(converter)
         }
 
-      converterFn(SbtInputs.default).copyBaseInput(code = code)
+      converterFn(SbtInputs.default).copyBaseInput(code = Folder.singleton(code))
     } else {
-      SbtInputs.default.copy(code = content.trim)
+      SbtInputs.default.copy(code = Folder.singleton(content.trim))
     }
   }
 
