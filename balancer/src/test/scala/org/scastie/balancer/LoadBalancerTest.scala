@@ -126,6 +126,26 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
     assert(emptyBalancer.add(task).isEmpty)
   }
 
+  test("[SbtLoadBalancer] willNeedReload considers last task in mailbox, not first") {
+    val c1 = sbtConfig("c1")
+    val c2 = sbtConfig("c2")
+
+    /*
+      Server A: lastConfig=c1, mailbox=[c2] — last task is c2, so adding c1 WILL need reload
+      Server B: lastConfig=c2, mailbox=[c1] — last task is c1, so adding c1 WON'T need reload
+    */
+    val serverA = sbtServer("c1", mailbox = Vector(
+      Task(c2, nextIp, TestTaskId(100), Instant.now)
+    ))
+    val serverB = sbtServer("c2", mailbox = Vector(
+      Task(c1, nextIp, TestTaskId(101), Instant.now)
+    ))
+
+    val balancer = SbtLoadBalancer(Vector(serverA, serverB))
+    val (assigned, _) = balancer.add(Task(c1, nextIp, TestTaskId(1), Instant.now)).get
+    assert(assigned.id == serverB.id)
+  }
+
   test("[ScalaCliLoadBalancer] selects server with shortest mailbox") {
     val balancer = ScalaCliLoadBalancer(
       scalaCliServers(
@@ -219,6 +239,29 @@ class LoadBalancerTest extends LoadBalancerTestUtils {
 
     val assigned = balancer1.servers.find(_.mailbox.exists(_.config.code == circe)).get
     assert(assigned.id == idleServer.id)
+  }
+
+  test("[ScalaCliLoadBalancer] willNeedReload considers last task in mailbox, not first") {
+    val cats = "//> using dep org.typelevel::cats-core:2.10.0\nprintln(1)"
+    val zio = "//> using dep dev.zio::zio:2.0.0\nprintln(1)"
+
+    /*
+      Server A: lastConfig=cats, mailbox=[zio] — last task is zio, so adding cats WILL need reload
+      Server B: lastConfig=zio, mailbox=[cats] — last task is cats, so adding cats WON'T need reload
+      Should pick server B despite its lastConfig being zio
+    */
+    val serverA = scalaCliServer(cats, mailbox = Vector(
+      Task(scalaCliConfig(zio), nextIp, TestTaskId(100), Instant.now)
+    ))
+    val serverB = scalaCliServer(zio, mailbox = Vector(
+      Task(scalaCliConfig(cats), nextIp, TestTaskId(101), Instant.now)
+    ))
+
+    val balancer = ScalaCliLoadBalancer(Vector(serverA, serverB))
+    val balancer1 = addScalaCli(balancer, scalaCliConfig(cats))
+
+    val assigned = balancer1.servers.find(_.mailbox.size == 2).get
+    assert(assigned.id == serverB.id)
   }
 
   test("[ScalaCliLoadBalancer] allows reload when server is busy (mailbox >= 3)") {

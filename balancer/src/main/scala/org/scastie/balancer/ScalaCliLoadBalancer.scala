@@ -32,7 +32,7 @@ case class ScalaCliLoadBalancer[R, S <: ServerState](servers: Vector[ScalaCliSer
       val selectedServer = availableServers.maxBy { s =>
         (
           s.mailbox.length < 3, // allow reload if server gets busy
-          !s.currentConfig.needsReload(task.config), // pick those without need for reload
+          !s.configAfterMailbox.needsReload(task.config), // pick those without need for reload
           -s.mailbox.length // then those least busy
         )
       }
