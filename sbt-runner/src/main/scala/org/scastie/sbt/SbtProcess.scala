@@ -61,7 +61,7 @@ object SbtProcess {
         compilationInfos = List(
           Problem(
             Error,
-            line = None,
+            startLine = None,
             endLine = None,
             startColumn = None,
             endColumn = None,

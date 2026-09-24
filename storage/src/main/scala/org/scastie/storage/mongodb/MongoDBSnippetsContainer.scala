@@ -171,13 +171,6 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
   ): Future[Option[FetchResultScalaJsSourceMap]] = readMongoSnippet(snippetId).map(
     _.map(m => FetchResultScalaJsSourceMap(m.scalaJsSourceMapContent))
   )
-
-  def readOldSnippet(id: Int): Future[Option[FetchResult]] = snippets
-    .find(equal("oldId", id))
-    .first()
-    .headOption()
-    .map(_.flatMap(fromBson[MongoSnippet]).map(_.toFetchResult))
-
   override def removeUserSnippets(user: UserLogin): Future[Boolean] = {
     val query = or(
       equal("user", user.login),
