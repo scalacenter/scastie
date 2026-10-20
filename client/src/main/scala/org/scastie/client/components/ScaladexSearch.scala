@@ -341,15 +341,18 @@ object ScaladexSearch {
 
     def fetchProjects(query: String): Callback = {
       val target = props.scalaTarget
+      def search(target: SbtScalaTarget): Future[List[(Project, ScalaTarget)]] =
+        queryAndParse(target, query).recover { case error =>
+          dom.console.warn(s"Scaladex search failed: ${error.getMessage}")
+          Nil
+        }
+
       Callback.future {
-        val projsForThisTarget = queryAndParse(target, query)
+        val projsForThisTarget = search(target)
         val projects: Future[List[(Project, ScalaTarget)]] = target match {
-          // If scala3 but no scala 3 versions available, offer 2.13 artifacts
+          // Scala 3 also offers 2.13 artifacts
           case Scala3(_) =>
-            projsForThisTarget.flatMap { ls =>
-              queryAndParse(Scala2(BuildInfo.latest213), query)
-                .map(arts213 => ls ::: arts213)
-            }
+            projsForThisTarget.zipWith(search(Scala2(BuildInfo.latest213)))(_ ::: _)
           case _ => projsForThisTarget
         }
 
