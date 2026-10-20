@@ -15,6 +15,8 @@ import dom.{HTMLInputElement, HTMLElement}
 import scalajs.js.Thenable.Implicits._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
+import scala.scalajs.js.timers._
+import scala.concurrent.duration.DurationInt
 
 import io.circe._
 import io.circe.syntax._
@@ -213,11 +215,11 @@ object ScaladexSearch {
     }
 
     def setProjects(projects: List[(Project, ScalaTarget)]): SearchState = {
-      copy(projects = projects)
+      copy(projects = projects, selectedIndex = 0)
     }
 
     def clearProjects: SearchState = {
-      copy(projects = List())
+      copy(projects = List(), selectedIndex = 0)
     }
   }
 
@@ -243,8 +245,13 @@ object ScaladexSearch {
   private val projectListRef = Ref[HTMLElement]
   private val searchInputRef = Ref[HTMLInputElement]
 
+  private val searchDebounce = 300.millis
 
-  private def render(props: ScaladexSearch, state: hooks.Hooks.UseStateF[CallbackTo, SearchState]): VdomElement = {
+  private def render(
+      props: ScaladexSearch,
+      state: hooks.Hooks.UseStateF[CallbackTo, SearchState],
+      pendingSearch: hooks.Hooks.UseRef[Option[SetTimeoutHandle]]
+  ): VdomElement = {
     def keyDown(e: ReactKeyboardEventFromInput): Callback = {
 
       if (e.keyCode == KeyCode.Down || e.keyCode == KeyCode.Up) {
@@ -318,34 +325,36 @@ object ScaladexSearch {
       state.modState(s => s.copy(selectedIndex = index))
 
     def resetQuery: Callback =
-      state.modState(s => s.copy(query = "", projects = Nil))
+      state.modState(_.copy(query = "")) >> scheduleFetch("")
 
     def setQuery(e: ReactEventFromInput): Callback = {
-      state.modState(_.copy(query = e.target.value)) >> fetchProjects()
+      val query = e.target.value
+      state.modState(_.copy(query = query)) >> scheduleFetch(query)
     }
 
-    def fetchProjects(): Callback = {
-      def fetch(target: SbtScalaTarget, searchState: SearchState): Callback = {
-        if (!searchState.query.isEmpty) {
+    def scheduleFetch(query: String): Callback = Callback {
+      pendingSearch.value.foreach(clearTimeout)
+      pendingSearch.value =
+        if (query.isEmpty) None
+        else Some(setTimeout(searchDebounce)(fetchProjects(query).runNow()))
+    } >> state.modState(_.clearProjects).when_(query.isEmpty)
 
-          val projsForThisTarget = queryAndParse(target, searchState.query)
-          val projects: Future[List[(Project, ScalaTarget)]] = target match {
-            // If scala3 but no scala 3 versions available, offer 2.13 artifacts
-            case Scala3(_) =>
-              projsForThisTarget.flatMap { ls =>
-                queryAndParse(Scala2(BuildInfo.latest213), searchState.query)
-                  .map(arts213 => ls ::: arts213)
-              }
-            case _ => projsForThisTarget
-          }
+    def fetchProjects(query: String): Callback = {
+      val target = props.scalaTarget
+      Callback.future {
+        val projsForThisTarget = queryAndParse(target, query)
+        val projects: Future[List[(Project, ScalaTarget)]] = target match {
+          // If scala3 but no scala 3 versions available, offer 2.13 artifacts
+          case Scala3(_) =>
+            projsForThisTarget.flatMap { ls =>
+              queryAndParse(Scala2(BuildInfo.latest213), query)
+                .map(arts213 => ls ::: arts213)
+            }
+          case _ => projsForThisTarget
+        }
 
-          Callback.future(
-            projects.map(projects => state.modState(_.setProjects(projects)))
-          )
-        } else state.modState(_.clearProjects)
+        projects.map(projects => state.modState(s => if (s.query == query) s.setProjects(projects) else s))
       }
-
-      fetch(props.scalaTarget, state.value)
     }
 
     def selectedIndex(index: Int, selected: Int) =
@@ -575,7 +584,9 @@ object ScaladexSearch {
       .withHooks[ScaladexSearch]
       .useState(SearchState.default)
       .useEffectWithDepsBy((props, _) => props.libraries)((props, state) => _ => updateState(props, state))
-      .renderWithReuse((props, state) => render(props, state))
+      .useRef(Option.empty[SetTimeoutHandle])
+      .useEffectOnMountBy((_, _, pendingSearch) => CallbackTo(Callback(pendingSearch.value.foreach(clearTimeout))))
+      .renderWithReuse((props, state, pendingSearch) => render(props, state, pendingSearch))
 
       // .useLayoutEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
       // .useEffectBy(
