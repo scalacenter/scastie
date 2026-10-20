@@ -195,6 +195,10 @@ object ScaladexSearch {
       copy(selecteds = selecteds.filterNot(_.release.matches(selected.release)))
     }
 
+    def retainSelecteds(libraries: Set[ScalaDependency]): SearchState = {
+      copy(selecteds = selecteds.filter(selected => libraries.exists(_.matches(selected.release))))
+    }
+
     def addSelected(selected: Selected): SearchState = {
       copy(
         selecteds = selected :: selecteds.filterNot(_.release.matches(selected.release))
@@ -549,16 +553,21 @@ object ScaladexSearch {
     }
 
     val (scastieRuntime, rest) = props.libraries.partition(_.groupId == "org.scastie")
+    val unresolved = rest.toList.filterNot { dependency =>
+      state.value.selecteds.exists(selected => selected.release.matches(dependency) && selected.release.version == dependency.version)
+    }
 
-    Callback.future {
-      Future.sequence(rest.toList.map(dependency => getProject(dependency).transform(Success(_)))).map { outcomes =>
-        val resolved = rest.toList.zip(outcomes)
+    def resolveUnresolved = Callback.future {
+      Future.sequence(unresolved.map(dependency => getProject(dependency).transform(Success(_)))).map { outcomes =>
+        val resolved = unresolved.zip(outcomes)
         val found = resolved.collect { case (_, Success(Some(selected))) => selected }
         val notFound = resolved.collect { case (dependency, Success(None)) => dependency }
         state.modState(s => found.foldLeft(s)(_.addSelected(_))) >>
           Callback.traverse(notFound)(props.removeScalaDependency(_)) // + display some kind of popup
       }
     }
+
+    state.modState(_.retainSelecteds(rest)) >> resolveUnresolved
   }
 
   private val component =
