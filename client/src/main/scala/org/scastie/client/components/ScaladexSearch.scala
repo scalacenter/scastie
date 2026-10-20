@@ -545,9 +545,8 @@ object ScaladexSearch {
     }
 
     val (scastieRuntime, rest) = props.libraries.partition(_.groupId == "org.scastie")
-    val librariesFromList = Future.sequence(rest.toList.map(getProject)).map(_.flatten)
 
-    Callback.future { librariesFromList.map { libraries =>
+    Callback.future { Future.sequence(rest.toList.map(getProject)).map(_.flatten).map { libraries =>
       Callback.sequence {
         val failedLibraries = rest.diff(libraries.map(_.release).toSet)
         val removalTask = failedLibraries.map(failed => props.removeScalaDependency(failed)) // + display some kind of popup
