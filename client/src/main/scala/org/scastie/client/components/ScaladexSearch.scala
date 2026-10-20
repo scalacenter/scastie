@@ -7,6 +7,7 @@ import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import org.scalajs.dom
 
 import scala.concurrent.Future
+import scala.util.Success
 
 import vdom.all._
 import dom.ext.KeyCode
@@ -46,12 +47,18 @@ object ScaladexSearch {
   private def toQuery(in: Map[String, String]): String =
     in.map { case (k, v) => s"$k=$v" }.mkString("?", "&", "")
 
+  private final case class ScaladexNotFound(url: String) extends Exception(s"Scaladex responded with 404 for $url")
+
+  private def fetchText(url: String): Future[String] =
+    dom.fetch(url).toFuture.flatMap { response =>
+      if (response.ok) response.text().toFuture
+      else if (response.status == 404) Future.failed(ScaladexNotFound(url))
+      else Future.failed(new Exception(s"Scaladex responded with ${response.status} for $url"))
+    }
+
   def queryAndParse(t: SbtScalaTarget, query: String): Future[List[(Project, ScalaTarget)]] = {
     val q = toQuery(t.scaladexRequest + ("q" -> query))
-    for {
-      response <- dom.fetch(scaladexApiUrl + "/search" + q)
-      text <- response.text()
-    } yield {
+    fetchText(scaladexApiUrl + "/search" + q).map { text =>
       decode[List[Project]](text).getOrElse(Nil).map(_ -> t)
     }
   }
@@ -65,11 +72,10 @@ object ScaladexSearch {
       )
 
       for {
-        response <- dom.fetch(scaladexApiUrl + "/project" + query)
-        text <- response.text()
+        text <- fetchText(scaladexApiUrl + "/project" + query)
 
-        artifactResponse <- dom.fetch(scaladexApiUrl + s"/v1/projects/${project.organization}/${project.repository}/versions/latest")
-        artifactText <- artifactResponse.text()
+        artifactText <- fetchText(scaladexApiUrl + s"/v1/projects/${project.organization}/${project.repository}/versions/latest")
+          .recover { case _: ScaladexNotFound => "[]" }
         artifactJson = parse(artifactText).getOrElse(Json.Null)
 
         matchingArtifact: Option[Json] = artifactJson.asArray.getOrElse(Vector.empty).find { artifactObj =>
@@ -112,6 +118,8 @@ object ScaladexSearch {
               case Some(selected) if !state.value.selecteds.exists(_.release.matches(selected.release)) =>
                 state.modState(_.addSelected(selected)) >> props.addScalaDependency(selected.release -> selected.project)
               case _ => Callback(())
+            }.recover { case error =>
+              Callback(dom.console.warn(s"Could not add $artifact: ${error.getMessage}"))
             }
           case _ => Future.successful(Callback(()))
         }
@@ -421,10 +429,10 @@ object ScaladexSearch {
       if (state.value.search.isEmpty) display.none
       else display.inlineBlock
 
-    val toolkitEnabled = props.libraries.exists { dep =>
-      dep.groupId == "org.scala-lang" &&
-      dep.artifact == "toolkit"
-    }
+    def isToolkit(dep: ScalaDependency): Boolean =
+      dep.groupId == "org.scala-lang" && dep.artifact == "toolkit"
+
+    val toolkitEnabled = props.libraries.exists(isToolkit)
 
     def handleToolkitToggle(enabled: Boolean): Callback = {
       val toolkitProject = Project(
@@ -438,13 +446,9 @@ object ScaladexSearch {
 
       if (enabled)
         addArtifact((toolkitProject, artifact, versionOpt), props.scalaTarget, state, props)
-      else {
-        val toolkitSelecteds = state.value.selecteds.filter { selected =>
-          selected.release.groupId == "org.scala-lang" &&
-          selected.release.artifact == "toolkit"
-        }
-        Callback.traverse(toolkitSelecteds)(removeSelected)
-      }
+      else
+        Callback.traverse(props.libraries.filter(isToolkit).toList)(props.removeScalaDependency(_)) >>
+          state.modState(s => s.copy(selecteds = s.selecteds.filterNot(selected => isToolkit(selected.release))))
     }
 
     val toolkitSwitchElem = toolkitSwitch(
@@ -536,24 +540,25 @@ object ScaladexSearch {
               target,
               Some(dependency.version)
             ).map(_.toList)
+              .recover { case _: ScaladexNotFound => Nil }
           }
         }
 
         possibleProjects.map(_.flatten.find(_.release.groupId == dependency.groupId))
-          .recover(_ => None)
       }
     }
 
     val (scastieRuntime, rest) = props.libraries.partition(_.groupId == "org.scastie")
 
-    Callback.future { Future.sequence(rest.toList.map(getProject)).map(_.flatten).map { libraries =>
-      Callback.sequence {
-        val failedLibraries = rest.filterNot(dependency => libraries.exists(_.release.matches(dependency)))
-        val removalTask = failedLibraries.map(failed => props.removeScalaDependency(failed)) // + display some kind of popup
-        val addTask = libraries.map(selected => state.modState(_.addSelected(selected)))
-        removalTask.toList ++ addTask
+    Callback.future {
+      Future.sequence(rest.toList.map(dependency => getProject(dependency).transform(Success(_)))).map { outcomes =>
+        val resolved = rest.toList.zip(outcomes)
+        val found = resolved.collect { case (_, Success(Some(selected))) => selected }
+        val notFound = resolved.collect { case (dependency, Success(None)) => dependency }
+        state.modState(s => found.foldLeft(s)(_.addSelected(_))) >>
+          Callback.traverse(notFound)(props.removeScalaDependency(_)) // + display some kind of popup
       }
-    }}
+    }
   }
 
   private val component =
