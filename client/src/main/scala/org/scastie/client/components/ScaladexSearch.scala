@@ -82,7 +82,7 @@ object ScaladexSearch {
           artifactId == artifact || artifactId == s"${artifact}${targetSuffix}"
         }
         matchingGroupId = matchingArtifact.flatMap(obj => obj.hcursor.get[String]("groupId").toOption)
-        matchingVersion = matchingArtifact.flatMap(obj => obj.hcursor.get[String]("version").toOption).orElse(version)
+        matchingVersion = version.orElse(matchingArtifact.flatMap(obj => obj.hcursor.get[String]("version").toOption))
       } yield {
         decode[ReleaseOptions](text).toOption.map{ options =>
           {
@@ -548,11 +548,9 @@ object ScaladexSearch {
 
     Callback.future { Future.sequence(rest.toList.map(getProject)).map(_.flatten).map { libraries =>
       Callback.sequence {
-        val failedLibraries = rest.diff(libraries.map(_.release).toSet)
+        val failedLibraries = rest.filterNot(dependency => libraries.exists(_.release.matches(dependency)))
         val removalTask = failedLibraries.map(failed => props.removeScalaDependency(failed)) // + display some kind of popup
-        val addTask = libraries
-          .filterNot(library => failedLibraries.contains(library.release))
-          .map(selected => state.modState(_.addSelected(selected)))
+        val addTask = libraries.map(selected => state.modState(_.addSelected(selected)))
         removalTask.toList ++ addTask
       }
     }}
