@@ -7,6 +7,7 @@ import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import org.scalajs.dom
 
 import scala.concurrent.Future
+import scala.util.Success
 
 import vdom.all._
 import dom.ext.KeyCode
@@ -14,6 +15,8 @@ import dom.{HTMLInputElement, HTMLElement}
 import scalajs.js.Thenable.Implicits._
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
+import scala.scalajs.js.timers._
+import scala.concurrent.duration.DurationInt
 
 import io.circe._
 import io.circe.syntax._
@@ -46,12 +49,18 @@ object ScaladexSearch {
   private def toQuery(in: Map[String, String]): String =
     in.map { case (k, v) => s"$k=$v" }.mkString("?", "&", "")
 
+  private final case class ScaladexNotFound(url: String) extends Exception(s"Scaladex responded with 404 for $url")
+
+  private def fetchText(url: String): Future[String] =
+    dom.fetch(url).toFuture.flatMap { response =>
+      if (response.ok) response.text().toFuture
+      else if (response.status == 404) Future.failed(ScaladexNotFound(url))
+      else Future.failed(new Exception(s"Scaladex responded with ${response.status} for $url"))
+    }
+
   def queryAndParse(t: SbtScalaTarget, query: String): Future[List[(Project, ScalaTarget)]] = {
     val q = toQuery(t.scaladexRequest + ("q" -> query))
-    for {
-      response <- dom.fetch(scaladexApiUrl + "/search" + q)
-      text <- response.text()
-    } yield {
+    fetchText(scaladexApiUrl + "/search" + q).map { text =>
       decode[List[Project]](text).getOrElse(Nil).map(_ -> t)
     }
   }
@@ -65,11 +74,10 @@ object ScaladexSearch {
       )
 
       for {
-        response <- dom.fetch(scaladexApiUrl + "/project" + query)
-        text <- response.text()
+        text <- fetchText(scaladexApiUrl + "/project" + query)
 
-        artifactResponse <- dom.fetch(scaladexApiUrl + s"/v1/projects/${project.organization}/${project.repository}/versions/latest")
-        artifactText <- artifactResponse.text()
+        artifactText <- fetchText(scaladexApiUrl + s"/v1/projects/${project.organization}/${project.repository}/versions/latest")
+          .recover { case _: ScaladexNotFound => "[]" }
         artifactJson = parse(artifactText).getOrElse(Json.Null)
 
         matchingArtifact: Option[Json] = artifactJson.asArray.getOrElse(Vector.empty).find { artifactObj =>
@@ -82,7 +90,7 @@ object ScaladexSearch {
           artifactId == artifact || artifactId == s"${artifact}${targetSuffix}"
         }
         matchingGroupId = matchingArtifact.flatMap(obj => obj.hcursor.get[String]("groupId").toOption)
-        matchingVersion = matchingArtifact.flatMap(obj => obj.hcursor.get[String]("version").toOption).orElse(version)
+        matchingVersion = version.orElse(matchingArtifact.flatMap(obj => obj.hcursor.get[String]("version").toOption))
       } yield {
         decode[ReleaseOptions](text).toOption.map{ options =>
           {
@@ -112,6 +120,8 @@ object ScaladexSearch {
               case Some(selected) if !state.value.selecteds.exists(_.release.matches(selected.release)) =>
                 state.modState(_.addSelected(selected)) >> props.addScalaDependency(selected.release -> selected.project)
               case _ => Callback(())
+            }.recover { case error =>
+              Callback(dom.console.warn(s"Could not add $artifact: ${error.getMessage}"))
             }
           case _ => Future.successful(Callback(()))
         }
@@ -187,6 +197,10 @@ object ScaladexSearch {
       copy(selecteds = selecteds.filterNot(_.release.matches(selected.release)))
     }
 
+    def retainSelecteds(libraries: Set[ScalaDependency]): SearchState = {
+      copy(selecteds = selecteds.filter(selected => libraries.exists(_.matches(selected.release))))
+    }
+
     def addSelected(selected: Selected): SearchState = {
       copy(
         selecteds = selected :: selecteds.filterNot(_.release.matches(selected.release))
@@ -201,11 +215,11 @@ object ScaladexSearch {
     }
 
     def setProjects(projects: List[(Project, ScalaTarget)]): SearchState = {
-      copy(projects = projects)
+      copy(projects = projects, selectedIndex = 0)
     }
 
     def clearProjects: SearchState = {
-      copy(projects = List())
+      copy(projects = List(), selectedIndex = 0)
     }
   }
 
@@ -231,8 +245,13 @@ object ScaladexSearch {
   private val projectListRef = Ref[HTMLElement]
   private val searchInputRef = Ref[HTMLInputElement]
 
+  private val searchDebounce = 300.millis
 
-  private def render(props: ScaladexSearch, state: hooks.Hooks.UseStateF[CallbackTo, SearchState]): VdomElement = {
+  private def render(
+      props: ScaladexSearch,
+      state: hooks.Hooks.UseStateF[CallbackTo, SearchState],
+      pendingSearch: hooks.Hooks.UseRef[Option[SetTimeoutHandle]]
+  ): VdomElement = {
     def keyDown(e: ReactKeyboardEventFromInput): Callback = {
 
       if (e.keyCode == KeyCode.Down || e.keyCode == KeyCode.Up) {
@@ -306,34 +325,39 @@ object ScaladexSearch {
       state.modState(s => s.copy(selectedIndex = index))
 
     def resetQuery: Callback =
-      state.modState(s => s.copy(query = "", projects = Nil))
+      state.modState(_.copy(query = "")) >> scheduleFetch("")
 
     def setQuery(e: ReactEventFromInput): Callback = {
-      state.modState(_.copy(query = e.target.value)) >> fetchProjects()
+      val query = e.target.value
+      state.modState(_.copy(query = query)) >> scheduleFetch(query)
     }
 
-    def fetchProjects(): Callback = {
-      def fetch(target: SbtScalaTarget, searchState: SearchState): Callback = {
-        if (!searchState.query.isEmpty) {
+    def scheduleFetch(query: String): Callback = Callback {
+      pendingSearch.value.foreach(clearTimeout)
+      pendingSearch.value =
+        if (query.isEmpty) None
+        else Some(setTimeout(searchDebounce)(fetchProjects(query).runNow()))
+    } >> state.modState(_.clearProjects).when_(query.isEmpty)
 
-          val projsForThisTarget = queryAndParse(target, searchState.query)
-          val projects: Future[List[(Project, ScalaTarget)]] = target match {
-            // If scala3 but no scala 3 versions available, offer 2.13 artifacts
-            case Scala3(_) =>
-              projsForThisTarget.flatMap { ls =>
-                queryAndParse(Scala2(BuildInfo.latest213), searchState.query)
-                  .map(arts213 => ls ::: arts213)
-              }
-            case _ => projsForThisTarget
-          }
+    def fetchProjects(query: String): Callback = {
+      val target = props.scalaTarget
+      def search(target: SbtScalaTarget): Future[List[(Project, ScalaTarget)]] =
+        queryAndParse(target, query).recover { case error =>
+          dom.console.warn(s"Scaladex search failed: ${error.getMessage}")
+          Nil
+        }
 
-          Callback.future(
-            projects.map(projects => state.modState(_.setProjects(projects)))
-          )
-        } else state.modState(_.clearProjects)
+      Callback.future {
+        val projsForThisTarget = search(target)
+        val projects: Future[List[(Project, ScalaTarget)]] = target match {
+          // Scala 3 also offers 2.13 artifacts
+          case Scala3(_) =>
+            projsForThisTarget.zipWith(search(Scala2(BuildInfo.latest213)))(_ ::: _)
+          case _ => projsForThisTarget
+        }
+
+        projects.map(projects => state.modState(s => if (s.query == query) s.setProjects(projects) else s))
       }
-
-      fetch(props.scalaTarget, state.value)
     }
 
     def selectedIndex(index: Int, selected: Int) =
@@ -421,10 +445,10 @@ object ScaladexSearch {
       if (state.value.search.isEmpty) display.none
       else display.inlineBlock
 
-    val toolkitEnabled = props.libraries.exists { dep =>
-      dep.groupId == "org.scala-lang" &&
-      dep.artifact == "toolkit"
-    }
+    def isToolkit(dep: ScalaDependency): Boolean =
+      dep.groupId == "org.scala-lang" && dep.artifact == "toolkit"
+
+    val toolkitEnabled = props.libraries.exists(isToolkit)
 
     def handleToolkitToggle(enabled: Boolean): Callback = {
       val toolkitProject = Project(
@@ -438,13 +462,9 @@ object ScaladexSearch {
 
       if (enabled)
         addArtifact((toolkitProject, artifact, versionOpt), props.scalaTarget, state, props)
-      else {
-        val toolkitSelecteds = state.value.selecteds.filter { selected =>
-          selected.release.groupId == "org.scala-lang" &&
-          selected.release.artifact == "toolkit"
-        }
-        Callback.traverse(toolkitSelecteds)(removeSelected)
-      }
+      else
+        Callback.traverse(props.libraries.filter(isToolkit).toList)(props.removeScalaDependency(_)) >>
+          state.modState(s => s.copy(selecteds = s.selecteds.filterNot(selected => isToolkit(selected.release))))
     }
 
     val toolkitSwitchElem = toolkitSwitch(
@@ -536,27 +556,30 @@ object ScaladexSearch {
               target,
               Some(dependency.version)
             ).map(_.toList)
+              .recover { case _: ScaladexNotFound => Nil }
           }
         }
 
         possibleProjects.map(_.flatten.find(_.release.groupId == dependency.groupId))
-          .recover(_ => None)
       }
     }
 
     val (scastieRuntime, rest) = props.libraries.partition(_.groupId == "org.scastie")
-    val librariesFromList = Future.sequence(rest.toList.map(getProject)).map(_.flatten)
+    val unresolved = rest.toList.filterNot { dependency =>
+      state.value.selecteds.exists(selected => selected.release.matches(dependency) && selected.release.version == dependency.version)
+    }
 
-    Callback.future { librariesFromList.map { libraries =>
-      Callback.sequence {
-        val failedLibraries = rest.diff(libraries.map(_.release).toSet)
-        val removalTask = failedLibraries.map(failed => props.removeScalaDependency(failed)) // + display some kind of popup
-        val addTask = libraries
-          .filterNot(library => failedLibraries.contains(library.release))
-          .map(selected => state.modState(_.addSelected(selected)))
-        removalTask.toList ++ addTask
+    def resolveUnresolved = Callback.future {
+      Future.sequence(unresolved.map(dependency => getProject(dependency).transform(Success(_)))).map { outcomes =>
+        val resolved = unresolved.zip(outcomes)
+        val found = resolved.collect { case (_, Success(Some(selected))) => selected }
+        val notFound = resolved.collect { case (dependency, Success(None)) => dependency }
+        state.modState(s => found.foldLeft(s)(_.addSelected(_))) >>
+          Callback.traverse(notFound)(props.removeScalaDependency(_)) // + display some kind of popup
       }
-    }}
+    }
+
+    state.modState(_.retainSelecteds(rest)) >> resolveUnresolved
   }
 
   private val component =
@@ -564,7 +587,9 @@ object ScaladexSearch {
       .withHooks[ScaladexSearch]
       .useState(SearchState.default)
       .useEffectWithDepsBy((props, _) => props.libraries)((props, state) => _ => updateState(props, state))
-      .renderWithReuse((props, state) => render(props, state))
+      .useRef(Option.empty[SetTimeoutHandle])
+      .useEffectOnMountBy((_, _, pendingSearch) => CallbackTo(Callback(pendingSearch.value.foreach(clearTimeout))))
+      .renderWithReuse((props, state, pendingSearch) => render(props, state, pendingSearch))
 
       // .useLayoutEffectOnMountBy((props, ref, prevProps, editorView) => init(props, ref.value, editorView))
       // .useEffectBy(
