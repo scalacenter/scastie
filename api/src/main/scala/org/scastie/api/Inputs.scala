@@ -181,6 +181,8 @@ case class SbtInputs(
 
   def withSavedConfig: SbtInputs = copy(sbtConfigSaved = Some(sbtConfigGenerated), sbtPluginsConfigSaved = Some(sbtPluginsConfigGenerated))
 
+  def withTarget(target: SbtScalaTarget): SbtInputs = modifyConfig(_.copy(target = target))
+
   def clearDependencies: SbtInputs = {
     modifyConfig {
       _.copy(

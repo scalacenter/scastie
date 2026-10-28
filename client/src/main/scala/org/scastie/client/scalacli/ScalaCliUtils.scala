@@ -60,7 +60,7 @@ object ScalaCliUtils {
   implicit class InputConverter(inputs: BaseInputs) {
     def setTarget(newTarget: ScalaTarget): BaseInputs = {
       inputs -> newTarget match {
-        case (sbtInputs: SbtInputs, newSbtScalaTarget: SbtScalaTarget) => sbtInputs.copy(target = newSbtScalaTarget)
+        case (sbtInputs: SbtInputs, newSbtScalaTarget: SbtScalaTarget) => sbtInputs.withTarget(newSbtScalaTarget)
         case (scalaCliInputs: ScalaCliInputs, newScalaCliTarget: ScalaCli) => scalaCliInputs.copy(target = newScalaCliTarget)
         case (_: ScalaCliInputs, newSbtScalaTarget: SbtScalaTarget) => convertToSbt(newSbtScalaTarget)
         case (_: SbtInputs, _: ScalaCli) => convertToScalaCli
