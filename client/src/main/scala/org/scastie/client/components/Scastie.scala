@@ -303,7 +303,7 @@ object Scastie {
     }
     .componentDidUpdate { scope =>
       setTitle(scope.prevState, scope.currentProps) >>
-        scope.modState(_.scalaJsScriptLoaded) >>
+        scope.modState(_.scalaJsScriptLoaded).when_(scope.currentState.snippetState.scalaJsContent.nonEmpty) >>
         executeScalaJs(scastieId, scope.currentState)
     }
     .componentWillReceiveProps { scope =>

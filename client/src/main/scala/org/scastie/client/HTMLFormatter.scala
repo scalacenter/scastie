@@ -8,15 +8,26 @@ object HTMLFormatter {
     text.iterator
       .foldLeft(new StringBuilder()) { (s, c) =>
         escapeMap.get(c) match {
-          case Some(str)                                   => s ++= str
-          case _ if c >= ' ' || "\n\r\t\u001b".contains(c) => s += c
-          case _                                           => s // noop
+          case Some(str)          => s ++= str
+          case _ if !isDropped(c) => s += c
+          case _                  => s // noop
         }
       }
       .toString
 
-  def format(notEscapedAndUnformatted: String) = {
+  private def isDropped(c: Char): Boolean = c < ' ' && !"\n\r\t\u001b".contains(c)
+
+  def format(notEscapedAndUnformatted: String, openBefore: List[String] = Nil) = {
     val escaped = escape(notEscapedAndUnformatted)
-    AnsiColorFormatter.formatToHtml(escaped)
+    AnsiColorFormatter.formatToHtml(escaped, openBefore)
   }
+
+  def openAfter(notEscapedAndUnformatted: String, openBefore: List[String]): List[String] =
+    if (notEscapedAndUnformatted.indexOf('\u001b') < 0) openBefore
+    else {
+      val kept =
+        if (notEscapedAndUnformatted.exists(isDropped)) notEscapedAndUnformatted.filterNot(isDropped)
+        else notEscapedAndUnformatted
+      AnsiColorFormatter.openAfter(kept, openBefore)
+    }
 }

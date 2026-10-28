@@ -29,18 +29,37 @@ object AnsiColorFormatter extends AnsiColor {
     INVISIBLE -> "ansi-invisible"
   )
 
-  def formatToHtml(unformatted: String): String = {
-    unformatted
-      .foldLeft("" -> 0) {
-        case ((_r, d), c) =>
-          val r = _r + c
-          val replaced = colors.collectFirst {
-            case (ansiCode, replacement) if r.endsWith(ansiCode) =>
-              if (ansiCode == RESET) r.replace(ansiCode, "</span>" * d) -> 0
-              else r.replace(ansiCode, s"""<span class="$replacement">""") -> (d + 1)
-          }
-          replaced.getOrElse(r -> d)
+  private val ansiCode = "\u001b\\[\\d+m".r
+
+  private def applyCode(open: List[String], code: String): (String, List[String]) =
+    if (code == RESET) ("</span>" * open.size, Nil)
+    else
+      colors.get(code) match {
+        case Some(cls) => (spanStart(cls), cls :: open)
+        case None      => (code, open)
       }
-      ._1
+
+  private def spanStart(cls: String): String = s"""<span class="$cls">"""
+
+  def openAfter(text: String, openBefore: List[String]): List[String] =
+    ansiCode
+      .findAllMatchIn(text)
+      .foldLeft(openBefore)((open, m) => applyCode(open, m.matched)._2)
+      .distinctBy(cssProperty)
+
+  private def cssProperty(cls: String): String =
+    if (cls.startsWith("ansi-color-")) "color"
+    else if (cls.startsWith("ansi-bg-color-")) "background-color"
+    else cls
+
+  def formatToHtml(unformatted: String, openBefore: List[String] = Nil): String = {
+    val reopened = openBefore.reverseIterator.map(spanStart).toVector
+    val (parts, open, end) =
+      ansiCode.findAllMatchIn(unformatted).foldLeft((reopened, openBefore, 0)) {
+        case ((parts, open, end), m) =>
+          val (html, nextOpen) = applyCode(open, m.matched)
+          (parts :+ unformatted.substring(end, m.start) :+ html, nextOpen, m.end)
+      }
+    (parts :+ unformatted.substring(end) :+ "</span>" * open.size).mkString
   }
 }
