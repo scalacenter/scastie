@@ -220,6 +220,9 @@ case class ScastieState(
     if (transient) update(this) else update(this.copy(transient = true)).copyAndSave(transient = false)
   }
 
+  private def withoutSaving(update: ScastieState => ScastieState) =
+    update(this.copy(transient = true)).copy(transient = transient)
+
   def isBuildDefault: Boolean = inputs match {
     case sbtInputs: SbtInputs => sbtInputs.isDefault
     case _                    => true
@@ -440,7 +443,10 @@ case class ScastieState(
     )
   }
 
-  def addProgress(progress: SnippetProgress): ScastieState = coalesceUpdates { self =>
+  def addProgress(progress: SnippetProgress): ScastieState =
+    if (progress.isDone) coalesceUpdates(applyProgress(progress)) else withoutSaving(applyProgress(progress))
+
+  private def applyProgress(progress: SnippetProgress)(self: ScastieState): ScastieState = {
     val state = self
       .addOutputs(progress.compilationInfos, progress.instrumentations)
       .logOutput(progress.userOutput, UserOutput.apply _)
@@ -459,9 +465,9 @@ case class ScastieState(
     statusUpdate match {
       case StatusProgress.KeepAlive       => this
       case StatusProgress.Sbt(sbtRunners) =>
-        copyAndSave(status = status.copy(sbtRunners = Some(sbtRunners)))
+        copy(status = status.copy(sbtRunners = Some(sbtRunners)))
       case StatusProgress.ScalaCli(scalaCliRunners) =>
-        copyAndSave(status = status.copy(scalaCliRunners = Some(scalaCliRunners)))
+        copy(status = status.copy(scalaCliRunners = Some(scalaCliRunners)))
     }
   }
 
