@@ -51,9 +51,8 @@ object Console {
       if (users.isEmpty) props.consoleOutputs
       else users
 
-    def renderConsoleOutputs: String = {
-      s"<pre>${HTMLFormatter.format(toShow.map(_.show).mkString("\n"))}</pre>"
-    }
+    val openBeforeEachLine =
+      toShow.scanLeft(List.empty[String])((open, output) => HTMLFormatter.openAfter(output.show, open))
 
     div(cls := "console-container", consoleCss)(
       div(cls := "console", displayConsole)(
@@ -72,9 +71,10 @@ object Console {
             i(cls := "fa fa-caret-down")
           )
         ),
-        div.withRef(consoleElement)(
-          cls := "output-console",
-          dangerouslySetInnerHtml := renderConsoleOutputs
+        div.withRef(consoleElement)(cls := "output-console")(
+          pre(toShow.zip(openBeforeEachLine).zipWithIndex.toTagMod { case ((output, open), index) =>
+            consoleLine.withKey(index)(ConsoleLine(output, open))
+          })
         )
       ),
       div(cls := "switcher-show", role := "button", onClick --> props.open)(
@@ -94,6 +94,19 @@ object Console {
       )
     )
   }
+
+  private final case class ConsoleLine(output: ConsoleOutput, openBefore: List[String])
+
+  private implicit val consoleLineReusability: Reusability[ConsoleLine] = Reusability.by_==
+
+  private val consoleLine =
+    ScalaComponent
+      .builder[ConsoleLine]("ConsoleLine")
+      .render_P { line =>
+        span(display.block, dangerouslySetInnerHtml := HTMLFormatter.format(line.output.show + "\n", line.openBefore))
+      }
+      .configure(Reusability.shouldComponentUpdate)
+      .build
 
   private val component =
     ScalaComponent

@@ -31,19 +31,35 @@ object AnsiColorFormatter extends AnsiColor {
 
   private val ansiCode = "\u001b\\[\\d+m".r
 
-  def formatToHtml(unformatted: String): String = {
-    val (parts, _, end) =
-      ansiCode.findAllMatchIn(unformatted).foldLeft((Vector.empty[String], 0, 0)) {
-        case ((parts, openSpans, end), m) =>
-          val (html, nextOpenSpans) =
-            if (m.matched == RESET) ("</span>" * openSpans, 0)
-            else
-              colors.get(m.matched) match {
-                case Some(cls) => (s"""<span class="$cls">""", openSpans + 1)
-                case None      => (m.matched, openSpans)
-              }
-          (parts :+ unformatted.substring(end, m.start) :+ html, nextOpenSpans, m.end)
+  private def applyCode(open: List[String], code: String): (String, List[String]) =
+    if (code == RESET) ("</span>" * open.size, Nil)
+    else
+      colors.get(code) match {
+        case Some(cls) => (spanStart(cls), cls :: open)
+        case None      => (code, open)
       }
-    (parts :+ unformatted.substring(end)).mkString
+
+  private def spanStart(cls: String): String = s"""<span class="$cls">"""
+
+  def openAfter(text: String, openBefore: List[String]): List[String] =
+    ansiCode
+      .findAllMatchIn(text)
+      .foldLeft(openBefore)((open, m) => applyCode(open, m.matched)._2)
+      .distinctBy(cssProperty)
+
+  private def cssProperty(cls: String): String =
+    if (cls.startsWith("ansi-color-")) "color"
+    else if (cls.startsWith("ansi-bg-color-")) "background-color"
+    else cls
+
+  def formatToHtml(unformatted: String, openBefore: List[String] = Nil): String = {
+    val reopened = openBefore.reverseIterator.map(spanStart).toVector
+    val (parts, open, end) =
+      ansiCode.findAllMatchIn(unformatted).foldLeft((reopened, openBefore, 0)) {
+        case ((parts, open, end), m) =>
+          val (html, nextOpen) = applyCode(open, m.matched)
+          (parts :+ unformatted.substring(end, m.start) :+ html, nextOpen, m.end)
+      }
+    (parts :+ unformatted.substring(end) :+ "</span>" * open.size).mkString
   }
 }
