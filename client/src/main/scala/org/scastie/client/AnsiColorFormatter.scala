@@ -29,18 +29,21 @@ object AnsiColorFormatter extends AnsiColor {
     INVISIBLE -> "ansi-invisible"
   )
 
+  private val ansiCode = "\u001b\\[\\d+m".r
+
   def formatToHtml(unformatted: String): String = {
-    unformatted
-      .foldLeft("" -> 0) {
-        case ((_r, d), c) =>
-          val r = _r + c
-          val replaced = colors.collectFirst {
-            case (ansiCode, replacement) if r.endsWith(ansiCode) =>
-              if (ansiCode == RESET) r.replace(ansiCode, "</span>" * d) -> 0
-              else r.replace(ansiCode, s"""<span class="$replacement">""") -> (d + 1)
-          }
-          replaced.getOrElse(r -> d)
+    val (parts, _, end) =
+      ansiCode.findAllMatchIn(unformatted).foldLeft((Vector.empty[String], 0, 0)) {
+        case ((parts, openSpans, end), m) =>
+          val (html, nextOpenSpans) =
+            if (m.matched == RESET) ("</span>" * openSpans, 0)
+            else
+              colors.get(m.matched) match {
+                case Some(cls) => (s"""<span class="$cls">""", openSpans + 1)
+                case None      => (m.matched, openSpans)
+              }
+          (parts :+ unformatted.substring(end, m.start) :+ html, nextOpenSpans, m.end)
       }
-      ._1
+    (parts :+ unformatted.substring(end)).mkString
   }
 }
