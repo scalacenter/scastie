@@ -300,4 +300,14 @@ class ContainerTest extends AnyFunSuite with BeforeAndAfterAll with OptionValues
       assert(result.isEmpty, "should return None for non-existent snippet")
     }
   }
+
+  test("[SbtInputs] changing scala version of a saved snippet updates its sbt config") {
+    val snippetId = testContainer.save(SbtInputs.default.withTarget(Scala3("3.7.3")), user = None).await
+    val loaded = testContainer.readSnippet(snippetId).await.value.inputs.asInstanceOf[SbtInputs]
+
+    val resavedId = testContainer.save(loaded.withTarget(Scala3("3.8.4")), user = None).await
+    val resaved = testContainer.readSnippet(resavedId).await.value.inputs.asInstanceOf[SbtInputs]
+
+    assert(resaved.sbtConfigSaved == Some(SbtInputs.default.copy(target = Scala3("3.8.4")).sbtConfigGenerated))
+  }
 }
