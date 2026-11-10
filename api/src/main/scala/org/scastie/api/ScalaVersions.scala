@@ -17,6 +17,7 @@ object ScalaVersions {
       case ScalaTargetType.Scala3 =>
         List(
           BuildInfo.latestNext,
+          "3.10.0",
           BuildInfo.stableNext,
           BuildInfo.latestLTS,
           BuildInfo.stableLTS,
