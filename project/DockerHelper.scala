@@ -3,7 +3,7 @@ import sbtdocker.DockerPlugin.autoImport._
 import java.nio.file.Path
 
 object DockerHelper {
-  val alpineImageName = "alpine:3.17"
+  val alpineImageName = "alpine:3.24"
 
   def javaProject(baseDirectory: Path, organization: String, artifactZip: Path, configPath: Path): Dockerfile = {
     val containerUsername = "scastie"
@@ -44,7 +44,7 @@ object DockerHelper {
       add(configPath.toFile, configDestination)
       add(artifactZip.toFile, artifactTargetPath)
 
-      runRaw(s"jar -xvf /app/$artifactZipFileName")
+      runRaw(s"/usr/lib/jvm/java-17-openjdk/bin/jar -xvf /app/$artifactZipFileName")
       runRaw(s"mv $artifactName server")
       runRaw("chmod +x server/bin/server")
 
