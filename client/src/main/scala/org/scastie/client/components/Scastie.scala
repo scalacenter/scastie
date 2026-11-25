@@ -99,13 +99,6 @@ object Scastie {
         close = scope.backend.closeLoginModal,
         openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal
       ).render,
-      PrivacyPolicyPrompt(
-        isDarkTheme = state.isDarkTheme,
-        isClosed = state.modalState.isPrivacyPolicyPromptClosed,
-        acceptPrivacyPolicy = scope.backend.acceptPolicy,
-        refusePrivacyPolicy = scope.backend.refusePrivacyPolicy,
-        openPrivacyPolicyModal = scope.backend.openPrivacyPolicyModal
-      ).render,
       PrivacyPolicyModal(
         isDarkTheme = state.isDarkTheme,
         isClosed = state.modalState.isPrivacyPolicyModalClosed,

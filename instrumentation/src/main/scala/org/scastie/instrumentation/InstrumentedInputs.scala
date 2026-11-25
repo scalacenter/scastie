@@ -8,12 +8,12 @@ import org.scastie.api._
 import scala.meta.inputs.Input
 import scala.meta.parsers.Parsed
 
-case class InstrumentationFailureReport(message: String, line: Option[Int], endLine: Option[Int] = None, startColumn: Option[Int] = None, endColumn: Option[Int] = None) {
+case class InstrumentationFailureReport(message: String, startLine: Option[Int], endLine: Option[Int] = None, startColumn: Option[Int] = None, endColumn: Option[Int] = None) {
   def toProgress(snippetId: SnippetId): SnippetProgress = {
     SnippetProgress.default.copy(
       ts = Some(Instant.now.toEpochMilli),
       snippetId = Some(snippetId),
-      compilationInfos = List(Problem(Error, line, endLine, startColumn, endColumn, message))
+      compilationInfos = List(Problem(Error, startLine, endLine, startColumn, endColumn, message))
     )
   }
 }

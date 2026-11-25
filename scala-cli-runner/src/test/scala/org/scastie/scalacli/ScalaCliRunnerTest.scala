@@ -347,7 +347,7 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
 
     runCode(code, allowFailure = true, isWorksheet = true)(assertCompilationInfo { info =>
       assert(info.message == "Not found: printl - did you mean print? or perhaps printf or println?")
-      assert(info.line == Some(3)) // error lines are 1-based
+      assert(info.startLine == Some(3)) // error lines are 1-based
     })
 
   }
@@ -362,7 +362,7 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
 
     runCode(code, allowFailure = true, isWorksheet = false)(assertCompilationInfo { info =>
       assert(info.message == "Illegal start of toplevel definition")
-      assert(info.line == Some(3)) // error lines are 1 based
+      assert(info.startLine == Some(3)) // error lines are 1 based
     })
   }
 
@@ -494,14 +494,14 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
 
   private def assertProblemInfo(
     message: String = "",
-    line: Option[Int] = None,
+    startLine: Option[Int] = None,
     endLine: Option[Int] = None,
     startColumn: Option[Int] = None,
     endColumn: Option[Int] = None
   )(info: Problem): Unit = {
     assert(info.message == message)
-    assert(info.line == line)
-    assert(info.endLine == endLine.orElse(line))
+    assert(info.startLine == startLine)
+    assert(info.endLine == endLine.orElse(startLine))
     assert(info.startColumn == startColumn)
     assert(info.endColumn == endColumn)
   }

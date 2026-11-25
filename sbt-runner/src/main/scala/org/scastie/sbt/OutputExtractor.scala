@@ -159,13 +159,13 @@ class OutputExtractor(getScalaJsContent: () => Option[String],
 
     val problemsWithMappedPositions = problems.map {
       _.map(problem => {
-        val mappedLine = mapLine(problem.line, sbtRun.positionMapper, lineOffset)
+        val mappedLine = mapLine(problem.startLine, sbtRun.positionMapper, lineOffset)
         val mappedEndLine = mapLine(problem.endLine, sbtRun.positionMapper, lineOffset)
-        val mappedStartColumn = mapColumn(problem.startColumn.map(_ + 1), problem.line, sbtRun.positionMapper)
+        val mappedStartColumn = mapColumn(problem.startColumn.map(_ + 1), problem.startLine, sbtRun.positionMapper)
         val mappedEndColumn = mapColumn(problem.endColumn.map(_ + 1), problem.endLine, sbtRun.positionMapper)
 
         problem.copy(
-          line = mappedLine,
+          startLine = mappedLine,
           endLine = mappedEndLine,
           startColumn = mappedStartColumn,
           endColumn = mappedEndColumn
