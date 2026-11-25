@@ -182,6 +182,22 @@ class ScalaCliRunnerTest extends TestKit(ActorSystem("ScalaCliRunnerTest")) with
     })
   }
 
+  test("Scala 2.13.0 support") {
+    val code =
+      s"""//> using scala 2.13.0
+         |val hello = "Hello World!"
+         |println(hello)""".stripMargin
+    runCode(code)(assertUserOutput(output => assert(output.line == "Hello World!")))
+  }
+
+  test("Scala 2.13.17 support") {
+    val code =
+      s"""//> using scala 2.13.17
+         |val hello = "Hello World!"
+         |println(hello)""".stripMargin
+    runCode(code)(assertUserOutput(output => assert(output.line == "Hello World!")))
+  }
+
   test("Scala 3.0 support") {
     val code =
       s"""//> using scala 3
