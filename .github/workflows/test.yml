@@ -11,12 +11,12 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Start mongodb
       uses: supercharge/mongodb-github-action@1.12.1
 
-    - uses: cachix/install-nix-action@v24
+    - uses: cachix/install-nix-action@v26
       with:
         nix_path: nixpkgs=channel:nixos-23.11
     - uses: VirtusLab/scala-cli-setup@main
