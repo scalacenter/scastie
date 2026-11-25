@@ -102,7 +102,7 @@ class ScalaCliRunner(coloredStackTrace: Boolean, workingDir: Path, compilationTi
         (inputs, None)
     }
 
-    Files.write(scalaMain, instrumentedInput.code.getBytes)
+    Files.write(scalaMain, instrumentedInput.code.childHeadFileContent.getBytes)
     val scalaCliInputs = inputs.asInstanceOf[ScalaCliInputs]
     val needsReload = lastInputs match {
       case None       => true

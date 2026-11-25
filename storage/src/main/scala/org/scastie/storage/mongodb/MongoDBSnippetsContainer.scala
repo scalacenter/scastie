@@ -10,7 +10,6 @@ import org.mongodb.scala.model._
 import org.scastie.api._
 import org.scastie.storage._
 
-import java.lang.System.{lineSeparator => nl}
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -156,7 +155,7 @@ trait MongoDBSnippetsContainer extends SnippetsContainer with GenericMongoContai
         val sortedSnippets = results.getOrElse(Nil).flatten.sortBy(-_.time)
         sortedSnippets
           .map(result =>
-            SnippetSummary(result.snippetId, result.inputs.code.split(nl).take(3).mkString(nl), result.time)
+            SnippetSummary(result.snippetId, result.inputs.code.summary, result.time)
           )
           .toList
       })

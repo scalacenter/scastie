@@ -1,0 +1,57 @@
+@import "commonvars";
+
+@mixin sidepane() {
+  .side-pane {
+    position: absolute;
+    top: 0;
+    padding-top: $header-height;
+    bottom: 0;
+    left: $sidebar-width;
+    overflow-y: auto;
+  }
+
+  .side-pane-open .side-pane {
+    width: $sidepane-width;
+  }
+
+  .side-pane-closed .side-pane {
+    width: $sidepane-toggle-width;
+    overflow: hidden;
+  }
+
+  .side-pane-toggle {
+    width: 100%;
+    cursor: pointer;
+    text-align: center;
+    line-height: 30px;
+    .fa {
+      font-size: 55px;
+      width: auto;
+    }
+  }
+
+  .hierarchy-list-row {
+    padding: 8px;
+
+    div {
+      display: flex;
+      flex-direction: row;
+    }
+  }
+
+  .file-selected {
+  }
+
+  @include phone {
+    .side-pane,
+    .side-pane-toggle {
+      display: none;
+    }
+  }
+
+  @include tablet {
+    .side-pane {
+      left: $sidebar-tablet-width;
+    }
+  }
+}

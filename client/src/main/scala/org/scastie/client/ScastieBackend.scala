@@ -8,13 +8,14 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Scala.BackendScope
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.util.Effect.Id
-import org.scalajs.dom.{Position => _, _}
+import org.scalajs.dom.{Position => _, File => _, _}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scastie.runtime.api.RuntimeError
 import org.scastie.client.components.ScaladexSearch
+import org.scastie.client.components.tabStrip.TabStrip.{Tab, TabStripState}
 import org.scastie.client.scalacli.ScalaCliUtils._
 
 case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: BackendScope[Scastie, ScastieState]) {
@@ -61,7 +62,7 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
       val setData = scope.state.map(state => {
         state
           .copy(isDesktopForced = false)
-          .setInputs(SbtInputs.default.copyBaseInput(code = ""))
+          .setInputs(SbtInputs.default.copyBaseInput(code = Folder.singleton("")))
           .clearOutputs
           .clearSnippetId
           .setChangedInputs
@@ -137,6 +138,44 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
 
   val toggleConsole: Reusable[Callback] =
     Reusable.always(scope.modState(_.toggleConsole))
+
+  val toggleSidePane: Reusable[Callback] =
+    Reusable.always(scope.modState(_.toggleSidePane))
+
+  val openFile: File => Callback =
+    f => scope.modState(_.openFile(f))
+
+  val moveFileOrFolder: (FileOrFolder, String) => Callback =
+    (f, dstFolderPath) => {
+      scope.modState(ss => {
+        val newRoot = FileOrFolderUtils.move(ss.inputs.code, f.path, dstFolderPath)
+        ss.setRootFolder(newRoot)
+      }) >>
+      scope.modState(ss => {
+        def updateTab(tab: Tab): Tab = {
+          if (tab.tabId == f.path)
+            tab.copy(tabId = dstFolderPath.stripSuffix("/") + "/" + f.name)
+          else tab
+        }
+
+        def isInF(tab: Tab): Boolean =
+          f.isFolder && FileOrFolderUtils.find(f.asInstanceOf[Folder], tab.tabId).nonEmpty
+
+        ss.copy(tabStripState = ss.tabStripState match {
+          case TabStripState(selectedTab, activeTabs) =>
+            TabStripState(selectedTab.filterNot(isInF).map(updateTab), activeTabs.filterNot(isInF).map(updateTab))
+        })
+      })
+    }
+
+  val closeTab: Tab => Callback =
+    tab => scope.modState(_.closeTab(tab))
+
+  val changeTabSelection: Tab => Callback =
+    tab => scope.modState(_.changeTabSelection(tab))
+
+  val selectedFileCodeChange: String ~=> Callback =
+    Reusable.fn(newContent => scope.modState(_.changeSelectedFileContent(newContent)))
 
   val openResetModal: Reusable[Callback] =
     Reusable.always(scope.modState(_.openResetModal))
@@ -520,13 +559,13 @@ case class ScastieBackend(scastieId: UUID, serverUrl: Option[String], scope: Bac
     scope.state.flatMap { state =>
       Callback.future {
         restApiClient
-          .format(FormatRequest(state.inputs.code, state.inputs.isWorksheetMode, state.inputs.target))
+          .format(FormatRequest(state.inputs.code.childHeadFileContent, state.inputs.isWorksheetMode, state.inputs.target))
           .map {
             case FormatResponse(formattedCode) =>
               scope.modState { s =>
                 // avoid overriding user's code if he/she types while it's formatting
                 if (s.inputs.code == state.inputs.code)
-                  s.clearOutputsPreserveConsole.setCode(formattedCode)
+                  s.clearOutputsPreserveConsole.changeSelectedFileContent(formattedCode)
                 else s
               }
           }

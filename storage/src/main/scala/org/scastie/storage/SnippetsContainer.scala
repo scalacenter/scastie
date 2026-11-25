@@ -83,7 +83,7 @@ trait SnippetsContainer {
     readSnippet(snippetId).map(
       _.flatMap(
         snippet =>
-          Instrument(snippet.inputs.code, snippet.inputs.target) match {
+          Instrument(snippet.inputs.code.childHeadFileContent, snippet.inputs.target) match {
             case Right(InstrumentationSuccess(instrumentedCode, _)) =>
               Some(FetchResultScalaSource(instrumentedCode))
             case _ => None
@@ -142,7 +142,7 @@ trait SnippetsContainer {
 
       val codeFile = projectDir.resolve(s"src/main/scala/main.${if (inputs.isWorksheetMode) "sc" else "scala"}")
       Files.createDirectories(codeFile.getParent)
-      Files.write(codeFile, inputs.code.getBytes)
+      Files.write(codeFile, inputs.code.childHeadFileContent.getBytes)
       val buildPropsFile = projectDir.resolve("project/build.properties")
       Files.write(buildPropsFile, s"sbt.version=${org.scastie.buildinfo.BuildInfo.sbtVersion}".getBytes)
     }
@@ -160,7 +160,7 @@ trait SnippetsContainer {
     val scalaFile = snippetScala.resolve(s"${snippetId.url}.scala")
 
     if (!Files.exists(scalaFile)) {
-      Files.write(scalaFile, inputs.code.getBytes)
+      Files.write(scalaFile, inputs.code.childHeadFileContent.getBytes)
     }
 
     scalaFile

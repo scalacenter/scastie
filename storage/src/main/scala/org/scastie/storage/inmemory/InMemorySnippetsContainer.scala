@@ -7,7 +7,6 @@ import org.scastie.storage.UserLogin
 import scala.collection.mutable
 import scala.concurrent.Future
 
-import System.{lineSeparator => nl}
 
 
 trait InMemorySnippetsContainer extends SnippetsContainer {
@@ -41,7 +40,7 @@ trait InMemorySnippetsContainer extends SnippetsContainer {
       .map { m =>
         SnippetSummary(
           m.snippetId,
-          m.inputs.code.split(nl).take(3).mkString(nl),
+          m.inputs.code.summary,
           m.time
         )
       }
