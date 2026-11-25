@@ -1,5 +1,6 @@
 package org.scastie.client.components
 
+import org.scastie.api.{SbtInputs, ScalaCliInputs}
 import org.scastie.client.ScastieBackend
 import org.scastie.client.ScastieState
 import org.scastie.client.View
@@ -84,7 +85,12 @@ object MainPanel {
         target = state.inputs.target,
         metalsStatus = state.metalsStatus,
         setMetalsStatus = backend.setMetalsStatus,
-        dependencies = state.inputs.libraries
+        dependencies = state.inputs.libraries,
+        pcScalacOptions = state.inputs match {
+          case sbt: SbtInputs => sbt.pcScalacOptions
+          case cli: ScalaCliInputs => cli.pcScalacOptions
+          case _ => Nil
+        }
       ).render
 
     val console =

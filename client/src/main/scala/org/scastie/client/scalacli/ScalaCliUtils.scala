@@ -34,7 +34,7 @@ object ScalaCliUtils {
       case DepRegex(_, dep) => dep.trim.stripPrefix("\"").stripSuffix("\"")
     }.toSet
 
-  def parse(codeHeader: List[String]): Future[(ScalaTarget, Set[ScalaDependency])] =
+  def parse(codeHeader: List[String]): Future[(ScalaTarget, Set[ScalaDependency], List[String])] =
     for {
       version <- getVersionDirective(codeHeader)
       dependencies = getDependencies(codeHeader)
@@ -54,7 +54,8 @@ object ScalaCliUtils {
             case _ => None
           }
         }.toSet
-      (scalaTarget, deps ++ toolkitDependency)
+      val scalacOptions = ScalaCliInputs.extractPcScalacOptions(codeHeader)
+      (scalaTarget, deps ++ toolkitDependency, scalacOptions)
     }
 
   implicit class InputConverter(inputs: BaseInputs) {
