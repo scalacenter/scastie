@@ -1,9 +1,9 @@
 package org.scastie.balancer
 
-import akka.actor.{ActorSystem, Props}
-import akka.pattern.ask
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import akka.util.Timeout
+import org.apache.pekko.actor.{ActorSystem, Props}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.testkit.{ImplicitSender, TestKit, TestProbe}
+import org.apache.pekko.util.Timeout
 import org.scastie.api._
 import org.scastie.sbt._
 import org.scastie.scalacli._
@@ -76,16 +76,16 @@ class DispatchActorIntegrationTest()
     waitFor(sid3, ret)(_.isDone)
   }
 
-  private val serverAkkaPort = 15000
-  private val webSystem = ActorSystem("Web", RemotePortConfig(serverAkkaPort))
+  private val serverRemotePort = 15000
+  private val webSystem = ActorSystem("Web", RemotePortConfig(serverRemotePort))
 
-  private val sbtAkkaPort = 5150
+  private val sbtRemotePort = 5150
   private val sbtSystem =
-    ActorSystem("SbtRunner", RemotePortConfig(sbtAkkaPort))
+    ActorSystem("SbtRunner", RemotePortConfig(sbtRemotePort))
 
-  private val scalaCliAkkaPort = 5250
+  private val scalaCliRemotePort = 5250
   private val scalaCliSystem =
-    ActorSystem("ScalaCliRunner", RemotePortConfig(scalaCliAkkaPort))
+    ActorSystem("ScalaCliRunner", RemotePortConfig(scalaCliRemotePort))
 
   private val progressActor = TestProbe()
   private val statusActor = TestProbe()
@@ -105,9 +105,9 @@ class DispatchActorIntegrationTest()
           reconnectInfo = Some(
             ReconnectInfo(
               serverHostname = localhost,
-              serverAkkaPort = serverAkkaPort,
+              serverRemotePort = serverRemotePort,
               actorHostname = localhost,
-              actorAkkaPort = sbtAkkaPort
+              actorRemotePort = sbtRemotePort
             )
           )
         )
@@ -136,9 +136,9 @@ class DispatchActorIntegrationTest()
           reconnectInfo = Some(
             ReconnectInfo(
               serverHostname = localhost,
-              serverAkkaPort = serverAkkaPort,
+              serverRemotePort = serverRemotePort,
               actorHostname = localhost,
-              actorAkkaPort = scalaCliAkkaPort
+              actorRemotePort = scalaCliRemotePort
             )
           )
         )
@@ -210,7 +210,7 @@ class DispatchActorIntegrationTest()
 object RemotePortConfig {
   def apply(port: Int): Config =
     ConfigFactory.parseString(
-      s"""|akka {
+      s"""|pekko {
           |  actor {
           |    provider = cluster
           |    allow-java-serialization = on

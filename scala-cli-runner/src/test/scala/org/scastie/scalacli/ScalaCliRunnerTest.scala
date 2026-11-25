@@ -10,9 +10,9 @@ import org.scastie.api._
 import org.scastie.runtime.api._
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.testkit.TestActor.AutoPilot
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import org.apache.pekko.actor.{ActorRef, ActorSystem, Props}
+import org.apache.pekko.testkit.TestActor.AutoPilot
+import org.apache.pekko.testkit.{ImplicitSender, TestKit, TestProbe}
 import org.scastie.runtime.api._
 import org.scastie.api._
 import org.scastie.util.SbtTask
@@ -22,7 +22,7 @@ import org.scalatest.Retries
 import org.scalatest.tagobjects.Retryable
 
 import scala.concurrent.duration._
-import akka.testkit.TestActorRef
+import org.apache.pekko.testkit.TestActorRef
 import org.scastie.util.ScalaCliTask
 import org.scastie.util.StopRunner
 import org.scastie.util.RunnerTerminated

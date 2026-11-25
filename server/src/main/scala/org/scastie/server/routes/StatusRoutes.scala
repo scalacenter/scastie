@@ -1,15 +1,15 @@
 package org.scastie.web.routes
 
-import akka.NotUsed
-import akka.actor.ActorRef
-import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.sse.ServerSentEvent
-import akka.http.scaladsl.model.ws.TextMessage._
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{Route, _}
-import akka.pattern.ask
-import akka.stream.scaladsl._
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.http.scaladsl.marshalling.sse.EventStreamMarshalling._
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.sse.ServerSentEvent
+import org.apache.pekko.http.scaladsl.model.ws.TextMessage._
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.{Route, _}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.stream.scaladsl._
 import org.scastie.api._
 import org.scastie.balancer._
 import org.scastie.web.oauth2.UserDirectives

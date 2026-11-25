@@ -1,14 +1,14 @@
 package org.scastie.web.routes
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.coding.Coders.Gzip
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{Directive1, Route}
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.http.scaladsl.coding.Coders.Gzip
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.{Directive1, Route}
 import org.scastie.api._
 import org.scastie.web._
 import org.scastie.web.oauth2._
 import org.scastie.server.utils.NightlyVersionFetcher
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import com.github.pjfanning.pekkohttpcirce.FailFastCirceSupport
 
 class ApiRoutes(
     dispatchActor: ActorRef,

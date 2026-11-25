@@ -42,7 +42,7 @@
     <minimumEventLevel>WARN</minimumEventLevel>
   </appender>
 
-  <logger name="akka" level="INFO"/>
+  <logger name="org.apache.pekko" level="INFO"/>
   <logger name="org.scastie.scalacli" level="TRACE" additivity="false">
     <appender-ref ref="FILE" />
     <appender-ref ref="CONSOLE_INFO" />

@@ -2,15 +2,15 @@ package org.scastie.balancer
 
 import org.scastie.api._
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.stream.scaladsl.Source
+import org.apache.pekko.actor.{Actor, ActorLogging, ActorRef, Props}
+import org.apache.pekko.stream.scaladsl.Source
 import java.util.concurrent.TimeUnit
 
 import scala.collection.mutable
 import scala.concurrent.duration._
 
 import org.scastie.util.GraphStageForwarder
-import akka.actor.Terminated
+import org.apache.pekko.actor.Terminated
 
 case object SubscribeStatus
 

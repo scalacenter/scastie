@@ -1,16 +1,16 @@
 package org.scastie.balancer
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.ActorSelection
-import akka.actor.OneForOneStrategy
-import akka.actor.SupervisorStrategy
-import akka.actor.Props
-import akka.event
-import akka.pattern.ask
-import akka.remote.DisassociatedEvent
-import akka.util.Timeout
+import org.apache.pekko.actor.Actor
+import org.apache.pekko.actor.ActorLogging
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSelection
+import org.apache.pekko.actor.OneForOneStrategy
+import org.apache.pekko.actor.SupervisorStrategy
+import org.apache.pekko.actor.Props
+import org.apache.pekko.event
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.remote.DisassociatedEvent
+import org.apache.pekko.util.Timeout
 import org.scastie.api._
 import org.scastie.storage._
 import org.scastie.storage.filesystem._

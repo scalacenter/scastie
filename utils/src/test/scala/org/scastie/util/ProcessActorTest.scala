@@ -3,8 +3,8 @@ package org.scastie.util
 import java.io.File
 import java.nio.file.{Files, StandardCopyOption}
 
-import akka.actor.{Actor, ActorRef, ActorSystem}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import org.apache.pekko.actor.{Actor, ActorRef, ActorSystem}
+import org.apache.pekko.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import org.scastie.api.ProcessOutput
 import org.scastie.api.ProcessOutputType._
 import org.scastie.util.ProcessActor._
