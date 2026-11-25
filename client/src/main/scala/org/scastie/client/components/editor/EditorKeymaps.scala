@@ -160,13 +160,18 @@ object KeyBinding {
     JSKeyBinding()
       .setRun(view =>
         if (!acceptCompletion(view)) {
-          view.dispatch(
-            TransactionSpec()
-              .setChanges(
-                js.Dynamic.literal(from = view.state.selection.main.head, insert = "  ").asInstanceOf[ChangeSpec]
-              )
-              .setSelection(EditorSelection.single(view.state.selection.main.head + 2))
-          )
+          val sel = view.state.selection.main
+          if (sel.head != sel.anchor) {
+            indentMore(view.asInstanceOf[anon.Dispatch])
+          } else {
+            view.dispatch(
+              TransactionSpec()
+                .setChanges(
+                  js.Dynamic.literal(from = sel.head, insert = "  ").asInstanceOf[ChangeSpec]
+                )
+                .setSelection(EditorSelection.single(sel.head + 2))
+            )
+          }
           true
         } else false
       )
