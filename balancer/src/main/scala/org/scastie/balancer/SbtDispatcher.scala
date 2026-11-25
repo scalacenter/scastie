@@ -26,6 +26,7 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
   extends BaseDispatcher[ActorSelection, ServerState](config) with Actor {
 
   private val parent = context.parent
+  private val staleTaskMaxAge = FiniteDuration(config.getDuration("stale-task-max-age").toMillis, MILLISECONDS)
 
   val remoteSbtSelections = getRemoteServers("sbt", "SbtRunner", "SbtActor")
 
@@ -77,6 +78,10 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
       val sender = this.sender()
       if (progress.isDone) {
         self ! Done(progress, retries = 100)
+      } else {
+        progress.snippetId.foreach { sid =>
+          balancer.set(balancer.get.refreshTaskLastSeen(TaskId(sid)))
+        }
       }
       (parent ? progress).map(sender ! _)
 
@@ -142,6 +147,16 @@ class SbtDispatcher(config: Config, progressActor: ActorRef, statusActor: ActorR
 
     case Run(InputsWithIpAndUser(sbtTask: SbtInputs, userTrace), snippetId) =>
       run0(sbtTask, userTrace, snippetId)
+
+    case CleanUpStaleTasks =>
+      val oldBalancer = balancer.get
+      val newBalancer = oldBalancer.cleanUpStaleTasks(staleTaskMaxAge)
+      if (oldBalancer ne newBalancer) {
+        val remainingTaskIds = newBalancer.servers.flatMap(_.mailbox).map(_.taskId).toSet
+        val staleTaskIds = oldBalancer.servers.flatMap(_.mailbox).map(_.taskId).filterNot(remainingTaskIds)
+        log.info("Cleaned up {} stale SBT tasks: {}", staleTaskIds.size, staleTaskIds.mkString(", "))
+        updateSbtBalancer(newBalancer)
+      }
 
     case p: Ping.type =>
       val sender = this.sender()

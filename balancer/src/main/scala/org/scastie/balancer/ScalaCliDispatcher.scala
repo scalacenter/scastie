@@ -23,6 +23,7 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
   extends BaseDispatcher[ActorSelection, ServerState](config) {
 
   private val parent = context.parent
+  private val staleTaskMaxAge = FiniteDuration(config.getDuration("stale-task-max-age").toMillis, MILLISECONDS)
 
   val remoteServers = getRemoteServers("scli", "ScalaCliRunner", "ScalaCliActor")
 
@@ -95,6 +96,10 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
       val sender = this.sender()
       if (progress.isDone) {
         self ! Done(progress, retries = 100)
+      } else {
+        progress.snippetId.foreach { sid =>
+          balancer.set(balancer.get.refreshTaskLastSeen(TaskId(sid)))
+        }
       }
       (parent ? progress).map(sender ! _)
 
@@ -113,6 +118,16 @@ class ScalaCliDispatcher(config: Config, progressActor: ActorRef, statusActor: A
 
     case ReceiveStatus(requester) =>
       sender() ! ScalaCliLoadBalancerInfo(balancer.get, requester)
+
+    case CleanUpStaleTasks =>
+      val oldBalancer = balancer.get
+      val newBalancer = oldBalancer.cleanUpStaleTasks(staleTaskMaxAge)
+      if (oldBalancer ne newBalancer) {
+        val remainingTaskIds = newBalancer.servers.flatMap(_.mailbox).map(_.taskId).toSet
+        val staleTaskIds = oldBalancer.servers.flatMap(_.mailbox).map(_.taskId).filterNot(remainingTaskIds)
+        log.info("Cleaned up {} stale Scala-CLI tasks: {}", staleTaskIds.size, staleTaskIds.mkString(", "))
+        updateScalaCliBalancer(newBalancer)
+      }
 
     case event: DisassociatedEvent =>
       for {
